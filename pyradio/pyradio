@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-# TODO:
-# Handle screen resize correctly
-# Allow adding and removing of stations
-# Allow muting/pausing of audio
+# PyRadio: Curses based Internet Radio Player
+#
 
 import os
 import sys
@@ -11,26 +9,34 @@ import curses
 import thread
 import subprocess
 
-RESIZE_EVENT = False
-
 stations = [
+	("Afterhours.FM (Trance/Progressive)", "http://at2.ah.fm:80"),	
+	("BBC Radio 1", "mms://wmlive-acl.bbc.co.uk/wms/radio1/radio1_nb_e1s1"),
+	("Digitally Imported: Chillout", "http://di.fm/mp3/chillout.pls"),
+	("Digitally Imported: Trance", "http://di.fm/mp3/trance.pls"),
+	("Digitally Imported: Classic Techno", "http://di.fm/mp3/classictechno.pls"),
+	("Electronic Culture", "http://www.shouted.fm/tunein/electro-dsl.m3u"),
+	("Frequence 3 (Pop)", "http://streams.frequence3.net/hd-mp3.m3u"),
+	("Mostly Classical", "http://www.sky.fm/mp3/classical.pls"),
+	("Proton Radio (House/Dance)", "http://www.protonradio.com:8000"),
+	("Ragga Kings", "http://www.raggakings.net/listen.m3u"),
+	("Secret Agent (Downtempo)", "http://somafm.com/secretagent.pls"),
+	("Slay Radio (C64 Remix)", "http://sc.slayradio.org:8000/listen.pls"),
+	("Smooth FM (Jazz)", "http://66.55.143.195:9028"),
 	("SomaFM: Groove Salad", "http://somafm.com/startstream=groovesalad.pls"),
 	("SomaFM: Beat Blender", "http://somafm.com/startstream=beatblender.pls"),
 	("SomaFM: Cliq Hop", "http://somafm.com/startstream=cliqhop.pls"),
 	("SomaFM: Sonic Universe", "http://somafm.com/startstream=sonicuniverse.pls"),
-	("Digitally Imported Chillout", "http://di.fm/mp3/chillout.pls"),
-	("Secret Agent", "http://somafm.com/secretagent.pls"),
-	("Slay Radio", "http://sc.slayradio.org:8000/listen.pls"),
-	("Frequence 3", "http://streams.frequence3.net/hd-mp3.m3u"),
-	("Smooth FM (Jazz)", "http://66.55.143.195:9028"),
-	("Smooth Jazz Cafe", "http://64.72.125.3:8004"),
-	("Virgin Radio", "http://www.smgradio.com/core/audio/mp3/live.pls?service=vrbb"),
+	("SomaFM: Tags Trance Trip", "http://somafm.com/tagstrance.pls"),
+	("Virgin Radio (Pop)", "http://www.smgradio.com/core/audio/mp3/live.pls?service=vrbb"),
 ]
 
 class Log(object):
+	""" Log class that outputs text to a curses screen """	
+
 	def __init__(self, cursesScreen):	
 		self.cursesScreen = cursesScreen
-		self.width = cursesScreen.getmaxyx()[1] - 4
+		self.width = cursesScreen.getmaxyx()[1] - 5
 	def write(self, str):
 		self.cursesScreen.erase()		
 		self.cursesScreen.addstr(0, 1, str[0: self.width].replace("\r", "").replace("\n", ""))
@@ -40,9 +46,14 @@ class Log(object):
 		pass
 
 class Player(object):
+	""" Media player class. Playing is handled by mplayer """
 	process = None
+
 	def __init__(self, outputStream):
 		self.outputStream = outputStream
+
+	def __del__(self):
+		self.close()
 
 	def updateStatus(self):
 		try:
@@ -54,27 +65,33 @@ class Player(object):
 
 	def play(self, url):
 		self.close()
-		self.process = subprocess.Popen("mplayer %s -quiet" % url, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+		self.process = subprocess.Popen(["mplayer", "-quiet", url], shell=False, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
 		thread.start_new_thread(self.updateStatus, ())
 
-	def close(self):
+	def sendCommand(self, command):
 		if(self.process != None):
 			try:
-				self.process.stdin.write('q')
+				self.process.stdin.write(command)
 			except: pass
-			self.process = None
+			
+	def mute(self):
+		self.sendCommand("m")
 
-class Interface(object):
-	""" ncurses interface of the program """
+	def pause(self):
+		self.sendCommand("p")
+	
+	def close(self):
+		self.sendCommand("q")
+		if self.process != None:	
+			os.kill(self.process.pid, 9)
+			self.process.wait()
+		self.process = None
 
-	display_modes = ['']
-	start_pos = 0
+class PyRadio(object):
+	startPos = 0
 	selection = 0
-	def __init__(self, args):
-		self.test = 'this'
 
-	def init_and_run(self, stdscr):
-		""" called by ncurses.wrapper """
+	def setup(self, stdscr):
 		self.stdscr = stdscr
 
 		try:
@@ -90,99 +107,74 @@ class Interface(object):
 		curses.init_pair(6, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
 		curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_GREEN)
 
-		self.max_y, self.max_x = stdscr.getmaxyx()
+		self.maxY, self.maxX = stdscr.getmaxyx()
 
-		self.head_win = curses.newwin(1, self.max_x, 0, 0)
-		self.body_win = curses.newwin(self.max_y-2, self.max_x, 1, 0)
-		self.footer_win = curses.newwin(1, self.max_x, self.max_y-1, 0)
-		self.init_head_win()
-		self.init_body_win()
-		self.init_footer_win()
+		self.headWin = curses.newwin(1, self.maxX, 0, 0)
+		self.bodyWin = curses.newwin(self.maxY-2, self.maxX, 1, 0)
+		self.footerWin = curses.newwin(1, self.maxX, self.maxY-1, 0)
+		self.initHead()
+		self.initBody()
+		self.initFooter()
 
-		self.log = Log(self.footer_win)
+		self.log = Log(self.footerWin)
 		self.player = Player(self.log)
 
 		curses.doupdate()
 
 		self.run()
 
-	def init_head_win(self):
-		""" Initializes the head/information window """
+	def initHead(self):
 		info = " PyRadio 0.1 "
-		self.head_win.addstr(0, 0, info, curses.color_pair(4))
-		x = self.head_win.getyx()[1]
-		rightStr = "www.plasis.co.uk/pyradio"
-		self.head_win.addstr(0, self.max_x - len(rightStr) - 1, rightStr, curses.color_pair(2))
-		self.head_win.bkgd(' ', curses.color_pair(7))
-		self.head_win.noutrefresh()
+		self.headWin.addstr(0, 0, info, curses.color_pair(4))
+		rightStr = "www.coderholic.com/pyradio"
+		self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr, curses.color_pair(2))
+		self.headWin.bkgd(' ', curses.color_pair(7))
+		self.headWin.noutrefresh()
 
-	def init_body_win(self):
+	def initBody(self):
 		""" Initializes the body/story window """
-		self.body_win.timeout(100)
-		self.body_win.keypad(1)
-		self.body_max_y, self.body_max_x = self.body_win.getmaxyx()
-#		wait_msg = "Loading stations"
-#		self.body_win.addstr(self.body_max_y/2, self.body_max_x/2 - len(wait_msg)/2, wait_msg, curses.color_pair(3))
-		self.body_win.box()
-		self.body_win.noutrefresh()
+		self.bodyWin.timeout(100)
+		self.bodyWin.keypad(1)
+		self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
+		self.bodyWin.noutrefresh()
 		self.refreshBody()
 
-	def init_footer_win(self):
+	def initFooter(self):
 		""" Initializes the body/story window """
-		self.footer_max_y, self.body_footer_x = self.footer_win.getmaxyx()
-#		self.body_win.addstr(self.body_max_y/2, self.body_max_x/2 - len(wait_msg)/2, wait_msg, curses.color_pair(3))
-		self.footer_win.bkgd(' ', curses.color_pair(7))
-		self.footer_win.noutrefresh()
+		self.footerWin.bkgd(' ', curses.color_pair(7))
+		self.footerWin.noutrefresh()
 
 	def refreshBody(self):
-		self.body_win.erase()
-		self.body_win.box()		
+		self.bodyWin.erase()
+		self.bodyWin.box()		
 	
-		self.body_win.move(1, 1)
-		max_display = self.body_max_y
-		for idx in range(max_display - 1):
+		self.bodyWin.move(1, 1)
+		maxDisplay = self.bodyMaxY - 1
+		for idx in range(maxDisplay - 1):
+			if(idx > maxDisplay): break			
 			try:
-				station = stations[idx + self.start_pos]
+				station = stations[idx + self.startPos]
 				col = curses.color_pair(5)
-				if idx == self.selection: 
+				if idx + self.startPos == self.selection: 
 					col = curses.color_pair(6)
-					self.body_win.hline(idx + 1, 1, ' ', self.body_max_x - 2, col)
-				self.body_win.addstr(idx + 1, 1, station[0], col)
+					self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
+				self.bodyWin.addstr(idx + 1, 1, station[0], col)
 
 			except IndexError:
 				break
 
-	def resize(self):
-		h, w = gethw()
-		if not h:
-			return
-
-		curses.endwin()
-		os.environ["LINES"] = str(h)
-		os.environ["COLUMNS"] = str(w)
-
-		self.body_max_y, self.body_max_x = self.body_win.getmaxyx()
-
-		curses.doupdate()
-		
 	def run(self):
-		global RESIZE_EVENT
 		while True:
 			try:
-				if RESIZE_EVENT:
-					RESIZE_EVENT = False
-					self.resize()
-				c = self.body_win.getch()	# getch() has a 100ms timeout
-				ret = self.handle_keystroke(c)
+				c = self.bodyWin.getch()
+				ret = self.keypress(c)
 				if (ret == -1): return
 			except KeyboardInterrupt:
 				break
-			except curses.error, e:
-				raise ProgError, "Curses Error: %s" % e
 
-	def handle_keystroke(self, char):
+	def keypress(self, char):
 		if char == curses.KEY_EXIT or char == ord('q'):
-			self.player.close()			
+			self.player.close()
 			return -1
 
 		elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
@@ -191,6 +183,8 @@ class Interface(object):
 			return
 		elif char == curses.KEY_DOWN or char== ord('j'):
 			if self.selection < len(stations) - 1:
+				if self.selection - self.startPos > (self.bodyMaxY - 4):
+					self.startPos += 1				
 				self.selection += 1
 				self.refreshBody()
 			return
@@ -198,9 +192,14 @@ class Interface(object):
 			# Scroll stories up by one
 			if self.selection > 0:
 				self.selection -= 1
+				if self.selection < self.startPos:
+					self.startPos -= 1
 				self.refreshBody()
+			return
+		elif char == ord('m'):
+			self.player.mute()
 			return
 
 if __name__ == "__main__":
-		interface = Interface("")
-		curses.wrapper(interface.init_and_run)
+	pyRadio = PyRadio()
+	curses.wrapper(pyRadio.setup)
