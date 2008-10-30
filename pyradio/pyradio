@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 # PyRadio: Curses based Internet Radio Player
-#
+# http://www.coderholic.com/pyradio
+# Ben Dowling - 2008
 
 import os
 import sys
@@ -37,9 +38,9 @@ class Log(object):
 	def __init__(self, cursesScreen):	
 		self.cursesScreen = cursesScreen
 		self.width = cursesScreen.getmaxyx()[1] - 5
-	def write(self, str):
+	def write(self, msg):
 		self.cursesScreen.erase()		
-		self.cursesScreen.addstr(0, 1, str[0: self.width].replace("\r", "").replace("\n", ""))
+		self.cursesScreen.addstr(0, 1, msg[0: self.width].replace("\r", "").replace("\n", ""))
 		self.cursesScreen.refresh()
 
 	def readline(self):
@@ -63,7 +64,7 @@ class Player(object):
 				input = self.process.stdout.readline()
 		except: pass
 
-	def play(self, url):
+	def play(self, url):		
 		self.close()
 		self.process = subprocess.Popen(["mplayer", "-quiet", url], shell=False, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
 		thread.start_new_thread(self.updateStatus, ())
@@ -83,7 +84,7 @@ class Player(object):
 	def close(self):
 		self.sendCommand("q")
 		if self.process != None:	
-			os.kill(self.process.pid, 9)
+			os.kill(self.process.pid, 15)
 			self.process.wait()
 		self.process = None
 
@@ -178,7 +179,9 @@ class PyRadio(object):
 			return -1
 
 		elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+			name = stations[self.selection][0]
 			url = stations[self.selection][1]
+			self.log.write('Playing ' + name)
 			self.player.play(url)
 			return
 		elif char == curses.KEY_DOWN or char== ord('j'):
