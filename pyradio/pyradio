@@ -4,9 +4,6 @@
 # http://www.coderholic.com/pyradio
 # Ben Dowling - 2009
 
-# TODO: 
-# - Allow CSV stations file path to be provided as a command line argument
-
 import os
 import sys
 import curses
@@ -243,9 +240,12 @@ if __name__ == "__main__":
 		("SomaFM: Sonic Universe", "http://somafm.com/startstream=sonicuniverse.pls"),
 		("SomaFM: Tags Trance Trip", "http://somafm.com/tagstrance.pls"),
 	]
-
+    
+	csvFile = "stations.csv"
+	if len(sys.argv) > 1 and sys.argv[1]: csvFile = sys.argv[1]
+		
 	try:
-		csv = open("stations.csv", "r")
+		csv = open(csvFile, "r")
 		stations = []
 		for line in csv.readlines():
 			line = line.strip()
@@ -256,7 +256,7 @@ if __name__ == "__main__":
 			except:
 				print "Error, skipping ", line
 	except IOError:
-		print "No stations.csv file exists in the current directory. Using default stations list"
+		print "Could not open stations file '%s'. Using default stations list" % csvFile
 		
 	pyRadio = PyRadio(stations)
 	curses.wrapper(pyRadio.setup)
