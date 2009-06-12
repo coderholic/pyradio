@@ -2,35 +2,16 @@
 
 # PyRadio: Curses based Internet Radio Player
 # http://www.coderholic.com/pyradio
-# Ben Dowling - 2008
+# Ben Dowling - 2009
+
+# TODO: 
+# - Allow CSV stations file path to be provided as a command line argument
 
 import os
 import sys
 import curses
 import thread
 import subprocess
-
-stations = [
-	("Afterhours.FM (Trance/Progressive)", "http://at2.ah.fm:80"),	
-	("BBC Radio 1", "mms://wmlive-acl.bbc.co.uk/wms/radio1/radio1_nb_e1s1"),
-	("Digitally Imported: Chillout", "http://di.fm/mp3/chillout.pls"),
-	("Digitally Imported: Trance", "http://di.fm/mp3/trance.pls"),
-	("Digitally Imported: Classic Techno", "http://di.fm/mp3/classictechno.pls"),
-	("Electronic Culture", "http://www.shouted.fm/tunein/electro-dsl.m3u"),
-	("Frequence 3 (Pop)", "http://streams.frequence3.net/hd-mp3.m3u"),
-	("Mostly Classical", "http://www.sky.fm/mp3/classical.pls"),
-	("Proton Radio (House/Dance)", "http://www.protonradio.com:8000"),
-	("Ragga Kings", "http://www.raggakings.net/listen.m3u"),
-	("Secret Agent (Downtempo)", "http://somafm.com/secretagent.pls"),
-	("Slay Radio (C64 Remix)", "http://sc.slayradio.org:8000/listen.pls"),
-	("Smooth FM (Jazz)", "http://66.55.143.195:9028"),
-	("SomaFM: Groove Salad", "http://somafm.com/startstream=groovesalad.pls"),
-	("SomaFM: Beat Blender", "http://somafm.com/startstream=beatblender.pls"),
-	("SomaFM: Cliq Hop", "http://somafm.com/startstream=cliqhop.pls"),
-	("SomaFM: Sonic Universe", "http://somafm.com/startstream=sonicuniverse.pls"),
-	("SomaFM: Tags Trance Trip", "http://somafm.com/tagstrance.pls"),
-	("Virgin Radio (Pop)", "http://www.smgradio.com/core/audio/mp3/live.pls?service=vrbb"),
-]
 
 class Log(object):
 	""" Log class that outputs text to a curses screen """	
@@ -87,11 +68,21 @@ class Player(object):
 			os.kill(self.process.pid, 15)
 			self.process.wait()
 		self.process = None
+        
+	def volumeUp(self):
+		self.sendCommand("*")
+
+	def volumeDown(self):
+		self.sendCommand("/")
 
 class PyRadio(object):
 	startPos = 0
 	selection = 0
-
+	playing = -1
+	
+	def __init__(self, stations):
+		self.stations = stations
+	
 	def setup(self, stdscr):
 		self.stdscr = stdscr
 
@@ -107,7 +98,9 @@ class PyRadio(object):
 		curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLACK)
 		curses.init_pair(6, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
 		curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_GREEN)
-
+		curses.init_pair(8, curses.COLOR_MAGENTA, curses.COLOR_BLACK)	
+		curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)	
+		
 		self.maxY, self.maxX = stdscr.getmaxyx()
 
 		self.headWin = curses.newwin(1, self.maxX, 0, 0)
@@ -125,7 +118,7 @@ class PyRadio(object):
 		self.run()
 
 	def initHead(self):
-		info = " PyRadio 0.1 "
+		info = " PyRadio 0.2 "
 		self.headWin.addstr(0, 0, info, curses.color_pair(4))
 		rightStr = "www.coderholic.com/pyradio"
 		self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr, curses.color_pair(2))
@@ -154,10 +147,17 @@ class PyRadio(object):
 		for idx in range(maxDisplay - 1):
 			if(idx > maxDisplay): break			
 			try:
-				station = stations[idx + self.startPos]
+				station = self.stations[idx + self.startPos]
 				col = curses.color_pair(5)
-				if idx + self.startPos == self.selection: 
+
+				if idx + self.startPos == self.selection and self.selection == self.playing: 
+					col = curses.color_pair(9)
+					self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
+				elif idx + self.startPos == self.selection: 
 					col = curses.color_pair(6)
+					self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
+				elif idx + self.startPos == self.playing:
+					col = curses.color_pair(4)
 					self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
 				self.bodyWin.addstr(idx + 1, 1, station[0], col)
 
@@ -174,35 +174,89 @@ class PyRadio(object):
 				break
 
 	def keypress(self, char):
+		# Number of stations to change with the page up/down keys
+		pageChange = 5
+		# Maximum number of stations that fit on the screen at once
+		maxDisplayedItems = self.bodyMaxY - 2
+
 		if char == curses.KEY_EXIT or char == ord('q'):
 			self.player.close()
 			return -1
-
 		elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
-			name = stations[self.selection][0]
-			url = stations[self.selection][1]
+			self.playing = self.selection
+			name = self.stations[self.selection][0]
+			url = self.stations[self.selection][1].strip()
 			self.log.write('Playing ' + name)
 			self.player.play(url)
+			self.refreshBody()
 			return
 		elif char == curses.KEY_DOWN or char== ord('j'):
-			if self.selection < len(stations) - 1:
-				if self.selection - self.startPos > (self.bodyMaxY - 4):
-					self.startPos += 1				
+			if self.selection < len(self.stations) - 1:
 				self.selection += 1
+				if self.selection - self.startPos >= maxDisplayedItems:
+					self.startPos += 1								
 				self.refreshBody()
 			return
 		elif char == curses.KEY_UP or char == ord('k'):
-			# Scroll stories up by one
 			if self.selection > 0:
 				self.selection -= 1
 				if self.selection < self.startPos:
 					self.startPos -= 1
 				self.refreshBody()
 			return
+		elif char == ord('+'):
+			self.player.volumeUp()
+			return
+		elif char == ord('-'):
+			self.player.volumeDown()
+			return            
+		elif char == curses.KEY_PPAGE:
+			self.selection = max(0, self.selection - pageChange)
+			if self.selection < self.startPos:
+				self.startPos = self.selection
+			self.refreshBody()
+			return
+		elif char == curses.KEY_NPAGE:
+			self.selection = min(len(self.stations) - 1, self.selection + pageChange)
+			if self.selection - self.startPos >= maxDisplayedItems:
+				self.startPos = self.selection - maxDisplayedItems + 1
+			self.refreshBody()
+			return
 		elif char == ord('m'):
 			self.player.mute()
 			return
 
 if __name__ == "__main__":
-	pyRadio = PyRadio()
+	# Default stations list
+	stations = [
+		("Digitally Imported: Chillout", "http://di.fm/mp3/chillout.pls"),
+		("Digitally Imported: Trance", "http://di.fm/mp3/trance.pls"),
+		("Digitally Imported: Classic Techno", "http://di.fm/mp3/classictechno.pls"),
+		("Frequence 3 (Pop)", "http://streams.frequence3.net/hd-mp3.m3u"),
+		("Mostly Classical", "http://www.sky.fm/mp3/classical.pls"),
+		("Ragga Kings", "http://www.raggakings.net/listen.m3u"),
+		("Secret Agent (Downtempo)", "http://somafm.com/secretagent.pls"),
+		("Slay Radio (C64 Remix)", "http://sc.slayradio.org:8000/listen.pls"),
+		("SomaFM: Groove Salad", "http://somafm.com/startstream=groovesalad.pls"),
+		("SomaFM: Beat Blender", "http://somafm.com/startstream=beatblender.pls"),
+		("SomaFM: Cliq Hop", "http://somafm.com/startstream=cliqhop.pls"),
+		("SomaFM: Sonic Universe", "http://somafm.com/startstream=sonicuniverse.pls"),
+		("SomaFM: Tags Trance Trip", "http://somafm.com/tagstrance.pls"),
+	]
+
+	try:
+		csv = open("stations.csv", "r")
+		stations = []
+		for line in csv.readlines():
+			line = line.strip()
+			if not line: continue	
+			try:
+				(name, url) = line.split(",")
+				stations.append((name, url))
+			except:
+				print "Error, skipping ", line
+	except IOError:
+		print "No stations.csv file exists in the current directory. Using default stations list"
+		
+	pyRadio = PyRadio(stations)
 	curses.wrapper(pyRadio.setup)
