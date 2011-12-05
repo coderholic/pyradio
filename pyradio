@@ -66,7 +66,11 @@ class Player(object):
 
     def play(self, stream_url):
         self.close()
-        self.process = subprocess.Popen(["mplayer", "-quiet", stream_url], shell=False, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if stream_url[-3:] in ['m3u', 'pls']:
+            opts = ["mplayer", "-quiet", "-playlist", stream_url]
+        else:
+            opts = ["mplayer", "-quiet", stream_url]
+        self.process = subprocess.Popen(opts, shell=False, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
         thread.start_new_thread(self.updateStatus, ())
 
     def sendCommand(self, command):
