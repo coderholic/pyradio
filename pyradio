@@ -235,7 +235,11 @@ class PyRadio(object):
         name = self.stations[self.selection][0]
         stream_url = self.stations[self.selection][1].strip()
         self.log.write('Playing ' + name)
-        self.player.play(stream_url)
+        try:
+            self.player.play(stream_url)
+        except OSError, e:
+            self.log.write('Error starting player. Are you sure mplayer is installed?')
+
 
     def keypress(self, char):
         # Number of stations to change with the page up/down keys
