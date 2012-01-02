@@ -10,12 +10,9 @@ import curses
 import thread
 import random
 import subprocess
-import logging
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
-logging.basicConfig(filename=rel('log.txt'), level=logging.INFO)
-
 
 class Log(object):
     """ Log class that outputs text to a curses screen """
@@ -128,8 +125,6 @@ class PyRadio(object):
         self.log = Log()
         self.player = Player(self.log)
 
-        logging.info("Started")
-
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()
 
@@ -209,7 +204,6 @@ class PyRadio(object):
         while True:
             try:
                 c = self.bodyWin.getch()
-                logging.info(c)
                 ret = self.keypress(c)
                 if (ret == -1):
                     return
