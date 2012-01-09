@@ -299,7 +299,7 @@ if __name__ == "__main__":
         ("SomaFM: Sonic Universe", "http://somafm.com/startstream=sonicuniverse.pls"),
         ("SomaFM: Tags Trance Trip", "http://somafm.com/tagstrance.pls"),
     ]
-    csvFile = os.path.join(os.path.abspath(os.path.dirname(__file__)), "stations.csv")
+    csvFile = os.path.join(os.path.expanduser("~/.pyradio"), "stations.csv")
     if len(sys.argv) > 1 and sys.argv[1]:
         csvFile = sys.argv[1]
 
