@@ -67,7 +67,10 @@ class Player(object):
             opts = ["mplayer", "-quiet", "-playlist", stream_url]
         else:
             opts = ["mplayer", "-quiet", stream_url]
-        self.process = subprocess.Popen(opts, shell=False, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+        self.process = subprocess.Popen(opts, shell=False,
+                                        stdout=subprocess.PIPE,
+                                        stdin=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT)
         thread.start_new_thread(self.updateStatus, ())
 
     def sendCommand(self, command):
@@ -154,7 +157,8 @@ class PyRadio(object):
         info = " PyRadio 0.2 "
         self.headWin.addstr(0, 0, info, curses.color_pair(4))
         rightStr = "www.coderholic.com/pyradio"
-        self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr, curses.color_pair(2))
+        self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr,
+                            curses.color_pair(2))
         self.headWin.bkgd(' ', curses.color_pair(7))
         self.headWin.noutrefresh()
 
@@ -184,7 +188,8 @@ class PyRadio(object):
                 station = self.stations[idx + self.startPos]
                 col = curses.color_pair(5)
 
-                if idx + self.startPos == self.selection and self.selection == self.playing:
+                if idx + self.startPos == self.selection and \
+                   self.selection == self.playing:
                     col = curses.color_pair(9)
                     self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
                 elif idx + self.startPos == self.selection:
@@ -232,7 +237,8 @@ class PyRadio(object):
         try:
             self.player.play(stream_url)
         except OSError, e:
-            self.log.write('Error starting player. Are you sure mplayer is installed?')
+            self.log.write('Error starting player.' \
+                           'Are you sure mplayer is installed?')
 
 
     def keypress(self, char):
@@ -287,16 +293,20 @@ if __name__ == "__main__":
     stations = [
         ("Digitally Imported: Chillout", "http://di.fm/mp3/chillout.pls"),
         ("Digitally Imported: Trance", "http://di.fm/mp3/trance.pls"),
-        ("Digitally Imported: Classic Techno", "http://di.fm/mp3/classictechno.pls"),
+        ("Digitally Imported: Classic Techno",
+         "http://di.fm/mp3/classictechno.pls"),
         ("Frequence 3 (Pop)", "http://streams.frequence3.net/hd-mp3.m3u"),
         ("Mostly Classical", "http://www.sky.fm/mp3/classical.pls"),
         ("Ragga Kings", "http://www.raggakings.net/listen.m3u"),
         ("Secret Agent (Downtempo)", "http://somafm.com/secretagent.pls"),
         ("Slay Radio (C64 Remix)", "http://sc.slayradio.org:8000/listen.pls"),
-        ("SomaFM: Groove Salad", "http://somafm.com/startstream=groovesalad.pls"),
-        ("SomaFM: Beat Blender", "http://somafm.com/startstream=beatblender.pls"),
+        ("SomaFM: Groove Salad",
+         "http://somafm.com/startstream=groovesalad.pls"),
+        ("SomaFM: Beat Blender",
+         "http://somafm.com/startstream=beatblender.pls"),
         ("SomaFM: Cliq Hop", "http://somafm.com/startstream=cliqhop.pls"),
-        ("SomaFM: Sonic Universe", "http://somafm.com/startstream=sonicuniverse.pls"),
+        ("SomaFM: Sonic Universe",
+         "http://somafm.com/startstream=sonicuniverse.pls"),
         ("SomaFM: Tags Trance Trip", "http://somafm.com/tagstrance.pls"),
     ]
     csvFile = os.path.join(os.path.expanduser("~/.pyradio"), "stations.csv")
@@ -316,7 +326,8 @@ if __name__ == "__main__":
             except:
                 print "Error, skipping ", line
     except IOError:
-        print "Could not open stations file '%s'. Using default stations list" % csvFile
+        print "Could not open stations file '%s'. " \
+              "Using default stations list" % csvFile
 
     pyRadio = PyRadio(stations)
     curses.wrapper(pyRadio.setup)
