@@ -36,7 +36,7 @@ class Log(object):
 
         if self.cursesScreen:
             self.cursesScreen.erase()
-            self.cursesScreen.addstr(0, 1, self.msg[0: self.width].replace("\r", "").replace("\n", ""))
+            self.cursesScreen.addstr(0, 1, self.msg[0: self.width].rstrip())
             self.cursesScreen.refresh()
 
     def readline(self):
