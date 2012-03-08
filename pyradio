@@ -61,6 +61,9 @@ class Player(object):
         except:
             pass
 
+    def is_playing(self):
+        return bool(self.process)
+
     def play(self, stream_url):
         self.close()
         if stream_url.split("?")[0][-3:] in ['m3u', 'pls']:
@@ -246,6 +249,14 @@ class PyRadio(object):
             return -1
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             self.playSelection()
+            self.refreshBody()
+            return
+        elif char == ord(' '):
+            if self.player.is_playing():
+                self.player.close()
+                self.log.write('Playback stopped')
+            else:
+                self.playSelection()
             self.refreshBody()
             return
         elif char == curses.KEY_DOWN or char == ord('j'):
