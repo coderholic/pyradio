@@ -347,5 +347,6 @@ if __name__ == "__main__":
         print "Could not open stations file '%s'. " \
               "Using default stations list" % csvFile
 
+    stations.sort()
     pyRadio = PyRadio(stations)
     curses.wrapper(pyRadio.setup)
