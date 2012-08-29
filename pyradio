@@ -11,8 +11,10 @@ import thread
 import random
 import subprocess
 
+
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
+
 
 class Log(object):
     """ Log class that outputs text to a curses screen """
@@ -36,11 +38,13 @@ class Log(object):
 
         if self.cursesScreen:
             self.cursesScreen.erase()
-            self.cursesScreen.addstr(0, 1, self.msg[0: self.width].replace("\r", "").replace("\n", ""))
+            self.cursesScreen.addstr(0, 1, self.msg[0: self.width]
+                                     .replace("\r", "").replace("\n", ""))
             self.cursesScreen.refresh()
 
     def readline(self):
         pass
+
 
 class Player(object):
     """ Media player class. Playing is handled by mplayer """
@@ -79,7 +83,7 @@ class Player(object):
 
     def sendCommand(self, command):
         """ send keystroke command to mplayer """
-        if(self.process != None):
+        if(self.process is not None):
             try:
                 self.process.stdin.write(command)
             except:
@@ -96,7 +100,7 @@ class Player(object):
     def close(self):
         """ exit pyradio (and kill mplayer instance) """
         self.sendCommand("q")
-        if self.process != None:
+        if self.process is not None:
             os.kill(self.process.pid, 15)
             self.process.wait()
         self.process = None
@@ -108,6 +112,7 @@ class Player(object):
     def volumeDown(self):
         """ decrease mplayer's volume """
         self.sendCommand("/")
+
 
 class PyRadio(object):
     startPos = 0
@@ -143,13 +148,12 @@ class PyRadio(object):
 
         self.run()
 
-
     def setupAndDrawScreen(self):
         self.maxY, self.maxX = self.stdscr.getmaxyx()
 
         self.headWin = curses.newwin(1, self.maxX, 0, 0)
-        self.bodyWin = curses.newwin(self.maxY-2, self.maxX, 1, 0)
-        self.footerWin = curses.newwin(1, self.maxX, self.maxY-1, 0)
+        self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
+        self.footerWin = curses.newwin(1, self.maxX, self.maxY - 1, 0)
         self.initHead()
         self.initBody()
         self.initFooter()
@@ -199,7 +203,7 @@ class PyRadio(object):
                 col = curses.color_pair(5)
 
                 if idx + self.startPos == self.selection and \
-                   self.selection == self.playing:
+                        self.selection == self.playing:
                     col = curses.color_pair(9)
                     self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
                 elif idx + self.startPos == self.selection:
@@ -246,16 +250,13 @@ class PyRadio(object):
         self.log.write('Playing ' + name)
         try:
             self.player.play(stream_url)
-        except OSError, e:
-            self.log.write('Error starting player.' \
+        except OSError:
+            self.log.write('Error starting player.'
                            'Are you sure mplayer is installed?')
-
 
     def keypress(self, char):
         # Number of stations to change with the page up/down keys
         pageChange = 5
-        # Maximum number of stations that fit on the screen at once
-        maxDisplayedItems = self.bodyMaxY - 2
 
         if char == curses.KEY_EXIT or char == ord('q'):
             self.player.close()
