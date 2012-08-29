@@ -23,11 +23,11 @@ meta = dict(
     long_description=read('README.md'),
     platforms=('Any'),
 
-    author='Kirill Klenov',
-    author_email='horneds@gmail.com',
+    author='Ben Dowling',
     url=' http://github.com/coderholic/pyradio',
 
     packages=find_packages(),
+    include_package_data=True,
 
     entry_points={
         'console_scripts': [
