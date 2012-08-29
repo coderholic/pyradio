@@ -22,7 +22,7 @@ class Log(object):
     cursesScreen = None
 
     def __init__(self):
-        pass
+        self.width = None
 
     def setScreen(self, cursesScreen):
         self.cursesScreen = cursesScreen
@@ -121,6 +121,7 @@ class PyRadio(object):
     def __init__(self, stations, play=False):
         self.stations = stations
         self.play = play
+        self.stdscr = None
 
     def setup(self, stdscr):
         self.stdscr = stdscr
@@ -168,7 +169,9 @@ class PyRadio(object):
         curses.doupdate()
 
     def initHead(self):
-        info = " PyRadio 0.2 "
+        from pyradio import version
+
+        info = " PyRadio %s " % version
         self.headWin.addstr(0, 0, info, curses.color_pair(4))
         rightStr = "www.coderholic.com/pyradio"
         self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr,
