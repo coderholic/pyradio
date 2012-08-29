@@ -3,13 +3,12 @@
 # PyRadio: Curses based Internet Radio Player
 # http://www.coderholic.com/pyradio
 # Ben Dowling - 2009 - 2010
-
-import os
-import sys
+# Kirill Klenov - 2012
 import curses
-import thread
+import os
 import random
 import subprocess
+import thread
 
 
 def rel(path):
@@ -119,8 +118,9 @@ class PyRadio(object):
     selection = 0
     playing = -1
 
-    def __init__(self, stations):
+    def __init__(self, stations, play=False):
         self.stations = stations
+        self.play = play
 
     def setup(self, stdscr):
         self.stdscr = stdscr
@@ -220,6 +220,12 @@ class PyRadio(object):
         self.bodyWin.refresh()
 
     def run(self):
+
+        if self.play:
+            self.setStation(random.randint(0, len(self.stations)))
+            self.playSelection()
+            self.refreshBody()
+
         while True:
             try:
                 c = self.bodyWin.getch()
@@ -261,92 +267,62 @@ class PyRadio(object):
         if char == curses.KEY_EXIT or char == ord('q'):
             self.player.close()
             return -1
-        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+
+        if char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             self.playSelection()
             self.refreshBody()
             return
-        elif char == ord(' '):
+
+        if char == ord(' '):
             if self.player.is_playing():
                 self.player.close()
                 self.log.write('Playback stopped')
             else:
                 self.playSelection()
+
             self.refreshBody()
             return
-        elif char == curses.KEY_DOWN or char == ord('j'):
+
+        if char == curses.KEY_DOWN or char == ord('j'):
             self.setStation(self.selection + 1)
             self.refreshBody()
             return
-        elif char == curses.KEY_UP or char == ord('k'):
+
+        if char == curses.KEY_UP or char == ord('k'):
             self.setStation(self.selection - 1)
             self.refreshBody()
             return
-        elif char == ord('+'):
+
+        if char == ord('+'):
             self.player.volumeUp()
             return
-        elif char == ord('-'):
+
+        if char == ord('-'):
             self.player.volumeDown()
             return
-        elif char == curses.KEY_PPAGE:
+
+        if char == curses.KEY_PPAGE:
             self.setStation(self.selection - pageChange)
             self.refreshBody()
             return
-        elif char == curses.KEY_NPAGE:
+
+        if char == curses.KEY_NPAGE:
             self.setStation(self.selection + pageChange)
             self.refreshBody()
             return
-        elif char == ord('m'):
+
+        if char == ord('m'):
             self.player.mute()
             return
-        elif char == ord('r'):
+
+        if char == ord('r'):
             # Pick a random radio station
             self.setStation(random.randint(0, len(self.stations)))
             self.playSelection()
             self.refreshBody()
-        elif char == ord('#') or char == curses.KEY_RESIZE:
+
+        if char == ord('#') or char == curses.KEY_RESIZE:
             self.setupAndDrawScreen()
-            #self.refreshBody()
 
-if __name__ == "__main__":
-    # Default stations list
-    stations = [
-        ("Digitally Imported: Chillout", "http://di.fm/mp3/chillout.pls"),
-        ("Digitally Imported: Trance", "http://di.fm/mp3/trance.pls"),
-        ("Digitally Imported: Classic Techno",
-         "http://di.fm/mp3/classictechno.pls"),
-        ("Frequence 3 (Pop)", "http://streams.frequence3.net/hd-mp3.m3u"),
-        ("Mostly Classical", "http://www.sky.fm/mp3/classical.pls"),
-        ("Ragga Kings", "http://www.raggakings.net/listen.m3u"),
-        ("Secret Agent (Downtempo)", "http://somafm.com/secretagent.pls"),
-        ("Slay Radio (C64 Remix)", "http://sc.slayradio.org:8000/listen.pls"),
-        ("SomaFM: Groove Salad",
-         "http://somafm.com/startstream=groovesalad.pls"),
-        ("SomaFM: Beat Blender",
-         "http://somafm.com/startstream=beatblender.pls"),
-        ("SomaFM: Cliq Hop", "http://somafm.com/startstream=cliqhop.pls"),
-        ("SomaFM: Sonic Universe",
-         "http://somafm.com/startstream=sonicuniverse.pls"),
-        ("SomaFM: Tags Trance Trip", "http://somafm.com/tagstrance.pls"),
-    ]
-    csvFile = os.path.join(os.path.expanduser("~/.pyradio"), "stations.csv")
-    if len(sys.argv) > 1 and sys.argv[1]:
-        csvFile = sys.argv[1]
 
-    try:
-        csv = open(csvFile, "r")
-        stations = []
-        for line in csv.readlines():
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                (name, url) = line.split(",")
-                stations.append((name, url))
-            except:
-                print "Error, skipping ", line
-    except IOError:
-        print "Could not open stations file '%s'. " \
-              "Using default stations list" % csvFile
-
-    pyRadio = PyRadio(stations)
-    curses.wrapper(pyRadio.setup)
+# pymode:lint_ignore=W901
