@@ -2,13 +2,13 @@ import csv
 import sys
 import curses
 from argparse import ArgumentParser
-from os import path as op
+from os import path as op, getenv
 
 from .radio import PyRadio
 
 
 DEFAULT_FILE = ''
-for path in ['~/.pyradio/stations.csv', '~/.pyradio', op.join(op.dirname(__file__), 'stations.csv')]:
+for path in [op.join(getenv('HOME', '~'), '.pyradio', 'stations.csv'), op.join(getenv('HOME', '~'), '.pyradio'), op.join(op.dirname(__file__), 'stations.csv')]:
     if op.exists(path) and op.isfile(path):
         DEFAULT_FILE = path
         break
