@@ -3,119 +3,28 @@
 # PyRadio: Curses based Internet Radio Player
 # http://www.coderholic.com/pyradio
 # Ben Dowling - 2009 - 2010
-
-import os
-import sys
+# Kirill Klenov - 2012
 import curses
-import thread
 import random
-import subprocess
+import os
+
+from .log import Log
+from .player import Player
+
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
 
-class Log(object):
-    """ Log class that outputs text to a curses screen """
-
-    msg = None
-    cursesScreen = None
-
-    def __init__(self):
-        pass
-
-    def setScreen(self, cursesScreen):
-        self.cursesScreen = cursesScreen
-        self.width = cursesScreen.getmaxyx()[1] - 5
-
-        # Redisplay the last message
-        if self.msg:
-            self.write(self.msg)
-
-    def write(self, msg):
-        self.msg = msg.strip()
-
-        if self.cursesScreen:
-            self.cursesScreen.erase()
-            self.cursesScreen.addstr(0, 1, self.msg[0: self.width].replace("\r", "").replace("\n", ""))
-            self.cursesScreen.refresh()
-
-    def readline(self):
-        pass
-
-class Player(object):
-    """ Media player class. Playing is handled by mplayer """
-    process = None
-
-    def __init__(self, outputStream):
-        self.outputStream = outputStream
-
-    def __del__(self):
-        self.close()
-
-    def updateStatus(self):
-        try:
-            user_input = self.process.stdout.readline()
-            while(user_input != ''):
-                self.outputStream.write(user_input)
-                user_input = self.process.stdout.readline()
-        except:
-            pass
-
-    def is_playing(self):
-        return bool(self.process)
-
-    def play(self, stream_url):
-        """ use mplayer to play a stream """
-        self.close()
-        if stream_url.split("?")[0][-3:] in ['m3u', 'pls']:
-            opts = ["mplayer", "-quiet", "-playlist", stream_url]
-        else:
-            opts = ["mplayer", "-quiet", stream_url]
-        self.process = subprocess.Popen(opts, shell=False,
-                                        stdout=subprocess.PIPE,
-                                        stdin=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT)
-        thread.start_new_thread(self.updateStatus, ())
-
-    def sendCommand(self, command):
-        """ send keystroke command to mplayer """
-        if(self.process != None):
-            try:
-                self.process.stdin.write(command)
-            except:
-                pass
-
-    def mute(self):
-        """ mute mplayer """
-        self.sendCommand("m")
-
-    def pause(self):
-        """ pause streaming (if possible) """
-        self.sendCommand("p")
-
-    def close(self):
-        """ exit pyradio (and kill mplayer instance) """
-        self.sendCommand("q")
-        if self.process != None:
-            os.kill(self.process.pid, 15)
-            self.process.wait()
-        self.process = None
-
-    def volumeUp(self):
-        """ increase mplayer's volume """
-        self.sendCommand("*")
-
-    def volumeDown(self):
-        """ decrease mplayer's volume """
-        self.sendCommand("/")
 
 class PyRadio(object):
     startPos = 0
     selection = 0
     playing = -1
 
-    def __init__(self, stations):
+    def __init__(self, stations, play=False):
         self.stations = stations
+        self.play = play
+        self.stdscr = None
 
     def setup(self, stdscr):
         self.stdscr = stdscr
@@ -143,13 +52,12 @@ class PyRadio(object):
 
         self.run()
 
-
     def setupAndDrawScreen(self):
         self.maxY, self.maxX = self.stdscr.getmaxyx()
 
         self.headWin = curses.newwin(1, self.maxX, 0, 0)
-        self.bodyWin = curses.newwin(self.maxY-2, self.maxX, 1, 0)
-        self.footerWin = curses.newwin(1, self.maxX, self.maxY-1, 0)
+        self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
+        self.footerWin = curses.newwin(1, self.maxX, self.maxY - 1, 0)
         self.initHead()
         self.initBody()
         self.initFooter()
@@ -164,7 +72,9 @@ class PyRadio(object):
         curses.doupdate()
 
     def initHead(self):
-        info = " PyRadio 0.2 "
+        from pyradio import version
+
+        info = " PyRadio %s " % version
         self.headWin.addstr(0, 0, info, curses.color_pair(4))
         rightStr = "www.coderholic.com/pyradio"
         self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr,
@@ -199,7 +109,7 @@ class PyRadio(object):
                 col = curses.color_pair(5)
 
                 if idx + self.startPos == self.selection and \
-                   self.selection == self.playing:
+                        self.selection == self.playing:
                     col = curses.color_pair(9)
                     self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
                 elif idx + self.startPos == self.selection:
@@ -208,7 +118,7 @@ class PyRadio(object):
                 elif idx + self.startPos == self.playing:
                     col = curses.color_pair(4)
                     self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
-                self.bodyWin.addstr(idx + 1, 1, station[0], col)
+                self.bodyWin.addstr(idx + 1, 1, "%2.d. %s" % (idx + self.startPos + 1, station[0]), col)
 
             except IndexError:
                 break
@@ -216,6 +126,13 @@ class PyRadio(object):
         self.bodyWin.refresh()
 
     def run(self):
+
+        if not self.play is False:
+            num = (self.play and (int(self.play) - 1) or random.randint(0, len(self.stations)))
+            self.setStation(num)
+            self.playSelection()
+            self.refreshBody()
+
         while True:
             try:
                 c = self.bodyWin.getch()
@@ -246,106 +163,73 @@ class PyRadio(object):
         self.log.write('Playing ' + name)
         try:
             self.player.play(stream_url)
-        except OSError, e:
-            self.log.write('Error starting player.' \
+        except OSError:
+            self.log.write('Error starting player.'
                            'Are you sure mplayer is installed?')
-
 
     def keypress(self, char):
         # Number of stations to change with the page up/down keys
         pageChange = 5
-        # Maximum number of stations that fit on the screen at once
-        maxDisplayedItems = self.bodyMaxY - 2
 
         if char == curses.KEY_EXIT or char == ord('q'):
             self.player.close()
             return -1
-        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+
+        if char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             self.playSelection()
             self.refreshBody()
             return
-        elif char == ord(' '):
+
+        if char == ord(' '):
             if self.player.is_playing():
                 self.player.close()
                 self.log.write('Playback stopped')
             else:
                 self.playSelection()
+
             self.refreshBody()
             return
-        elif char == curses.KEY_DOWN or char == ord('j'):
+
+        if char == curses.KEY_DOWN or char == ord('j'):
             self.setStation(self.selection + 1)
             self.refreshBody()
             return
-        elif char == curses.KEY_UP or char == ord('k'):
+
+        if char == curses.KEY_UP or char == ord('k'):
             self.setStation(self.selection - 1)
             self.refreshBody()
             return
-        elif char == ord('+'):
+
+        if char == ord('+'):
             self.player.volumeUp()
             return
-        elif char == ord('-'):
+
+        if char == ord('-'):
             self.player.volumeDown()
             return
-        elif char == curses.KEY_PPAGE:
+
+        if char == curses.KEY_PPAGE:
             self.setStation(self.selection - pageChange)
             self.refreshBody()
             return
-        elif char == curses.KEY_NPAGE:
+
+        if char == curses.KEY_NPAGE:
             self.setStation(self.selection + pageChange)
             self.refreshBody()
             return
-        elif char == ord('m'):
+
+        if char == ord('m'):
             self.player.mute()
             return
-        elif char == ord('r'):
+
+        if char == ord('r'):
             # Pick a random radio station
             self.setStation(random.randint(0, len(self.stations)))
             self.playSelection()
             self.refreshBody()
-        elif char == ord('#') or char == curses.KEY_RESIZE:
+
+        if char == ord('#') or char == curses.KEY_RESIZE:
             self.setupAndDrawScreen()
-            #self.refreshBody()
 
-if __name__ == "__main__":
-    # Default stations list
-    stations = [
-        ("Digitally Imported: Chillout", "http://di.fm/mp3/chillout.pls"),
-        ("Digitally Imported: Trance", "http://di.fm/mp3/trance.pls"),
-        ("Digitally Imported: Classic Techno",
-         "http://di.fm/mp3/classictechno.pls"),
-        ("Frequence 3 (Pop)", "http://streams.frequence3.net/hd-mp3.m3u"),
-        ("Mostly Classical", "http://www.sky.fm/mp3/classical.pls"),
-        ("Ragga Kings", "http://www.raggakings.net/listen.m3u"),
-        ("Secret Agent (Downtempo)", "http://somafm.com/secretagent.pls"),
-        ("Slay Radio (C64 Remix)", "http://sc.slayradio.org:8000/listen.pls"),
-        ("SomaFM: Groove Salad",
-         "http://somafm.com/startstream=groovesalad.pls"),
-        ("SomaFM: Beat Blender",
-         "http://somafm.com/startstream=beatblender.pls"),
-        ("SomaFM: Cliq Hop", "http://somafm.com/startstream=cliqhop.pls"),
-        ("SomaFM: Sonic Universe",
-         "http://somafm.com/startstream=sonicuniverse.pls"),
-        ("SomaFM: Tags Trance Trip", "http://somafm.com/tagstrance.pls"),
-    ]
-    csvFile = os.path.join(os.path.expanduser("~/.pyradio"), "stations.csv")
-    if len(sys.argv) > 1 and sys.argv[1]:
-        csvFile = sys.argv[1]
 
-    try:
-        csv = open(csvFile, "r")
-        stations = []
-        for line in csv.readlines():
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                (name, url) = line.split(",")
-                stations.append((name, url))
-            except:
-                print "Error, skipping ", line
-    except IOError:
-        print "Could not open stations file '%s'. " \
-              "Using default stations list" % csvFile
-
-    pyRadio = PyRadio(stations)
-    curses.wrapper(pyRadio.setup)
+# pymode:lint_ignore=W901
