@@ -5,112 +5,15 @@
 # Ben Dowling - 2009 - 2010
 # Kirill Klenov - 2012
 import curses
-import os
 import random
-import subprocess
-import thread
+import os
+
+from .log import Log
+from .player import Player
 
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
-
-
-class Log(object):
-    """ Log class that outputs text to a curses screen """
-
-    msg = None
-    cursesScreen = None
-
-    def __init__(self):
-        self.width = None
-
-    def setScreen(self, cursesScreen):
-        self.cursesScreen = cursesScreen
-        self.width = cursesScreen.getmaxyx()[1] - 5
-
-        # Redisplay the last message
-        if self.msg:
-            self.write(self.msg)
-
-    def write(self, msg):
-        self.msg = msg.strip()
-
-        if self.cursesScreen:
-            self.cursesScreen.erase()
-            self.cursesScreen.addstr(0, 1, self.msg[0: self.width]
-                                     .replace("\r", "").replace("\n", ""))
-            self.cursesScreen.refresh()
-
-    def readline(self):
-        pass
-
-
-class Player(object):
-    """ Media player class. Playing is handled by mplayer """
-    process = None
-
-    def __init__(self, outputStream):
-        self.outputStream = outputStream
-
-    def __del__(self):
-        self.close()
-
-    def updateStatus(self):
-        try:
-            user_input = self.process.stdout.readline()
-            while(user_input != ''):
-                self.outputStream.write(user_input)
-                user_input = self.process.stdout.readline()
-        except:
-            pass
-
-    def is_playing(self):
-        return bool(self.process)
-
-    def play(self, stream_url):
-        """ use mplayer to play a stream """
-        self.close()
-        if stream_url.split("?")[0][-3:] in ['m3u', 'pls']:
-            opts = ["mplayer", "-quiet", "-playlist", stream_url]
-        else:
-            opts = ["mplayer", "-quiet", stream_url]
-        self.process = subprocess.Popen(opts, shell=False,
-                                        stdout=subprocess.PIPE,
-                                        stdin=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT)
-        thread.start_new_thread(self.updateStatus, ())
-
-    def sendCommand(self, command):
-        """ send keystroke command to mplayer """
-        if(self.process is not None):
-            try:
-                self.process.stdin.write(command)
-            except:
-                pass
-
-    def mute(self):
-        """ mute mplayer """
-        self.sendCommand("m")
-
-    def pause(self):
-        """ pause streaming (if possible) """
-        self.sendCommand("p")
-
-    def close(self):
-        """ exit pyradio (and kill mplayer instance) """
-        self.sendCommand("q")
-        if self.process is not None:
-            os.kill(self.process.pid, 15)
-            self.process.wait()
-        self.process = None
-
-    def volumeUp(self):
-        """ increase mplayer's volume """
-        self.sendCommand("*")
-
-    def volumeDown(self):
-        """ decrease mplayer's volume """
-        self.sendCommand("/")
 
 
 class PyRadio(object):
@@ -215,7 +118,7 @@ class PyRadio(object):
                 elif idx + self.startPos == self.playing:
                     col = curses.color_pair(4)
                     self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
-                self.bodyWin.addstr(idx + 1, 1, station[0], col)
+                self.bodyWin.addstr(idx + 1, 1, "%2.d. %s" % (idx + self.startPos + 1, station[0]), col)
 
             except IndexError:
                 break
@@ -224,8 +127,9 @@ class PyRadio(object):
 
     def run(self):
 
-        if self.play:
-            self.setStation(random.randint(0, len(self.stations)))
+        if not self.play is False:
+            num = (self.play and (int(self.play) - 1) or random.randint(0, len(self.stations)))
+            self.setStation(num)
             self.playSelection()
             self.refreshBody()
 
