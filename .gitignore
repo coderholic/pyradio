@@ -1,0 +1,7 @@
+.ropeproject
+*.pyc
+*.orig
+dist
+*.egg-info
+build
+.vimrc

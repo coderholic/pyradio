@@ -1,0 +1,2 @@
+recursive-include pyradio *
+exclude *.pyc *.orig
