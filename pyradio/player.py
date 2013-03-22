@@ -1,5 +1,9 @@
 import subprocess
-import thread
+try:
+    #Python3
+    import _thread as thread
+except ImportError:
+    import thread
 import os
 
 
