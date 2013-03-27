@@ -39,13 +39,14 @@ class Player(object):
     def isPlaying(self):
         return bool(self.process)
 
-    def play(self, stream_url):
+    def play(self, streamUrl):
         """ use mplayer to play a stream """
         self.close()
-        if stream_url.split("?")[0][-3:] in ['m3u', 'pls']:
-            opts = ["mplayer", "-quiet", "-playlist", stream_url]
+        opts = []
+        if streamUrl.split("?")[0][-3:] in ['m3u', 'pls']:
+            opts = self.buildStartOpts(streamUrl, True)
         else:
-            opts = ["mplayer", "-quiet", stream_url]
+            opts = self.buildStartOpts(streamUrl, False)
         self.process = subprocess.Popen(opts, shell=False,
                                         stdout=subprocess.PIPE,
                                         stdin=subprocess.PIPE,
@@ -53,7 +54,34 @@ class Player(object):
         t = threading.Thread(target=self.updateStatus, args=())
         t.start()
 
-    def sendCommand(self, command):
+    def buildStartOpts(self, streamUrl, playList):
+        pass
+
+    def mute(self):
+        pass
+
+    def close(self):
+        pass
+
+    def volumeUp(self):
+        pass
+
+    def volumeDown(self):
+        pass
+
+
+class MpPlayer(Player):
+    """Implementation of Player object for MPlayer"""
+
+    def buildStartOpts(self, streamUrl, playList=False):
+        """ Builds the options to pass to subprocess."""
+        if playList:
+            opts = ["mplayer", "-quiet", "-playlist", streamUrl]
+        else:
+            opts = ["mplayer", "-quiet", streamUrl]
+        return opts
+
+    def __sendCommand(self, command):
         """ send keystroke command to mplayer """
         if(self.process is not None):
             try:
@@ -63,15 +91,15 @@ class Player(object):
 
     def mute(self):
         """ mute mplayer """
-        self.sendCommand("m")
+        self.__sendCommand("m")
 
     def pause(self):
         """ pause streaming (if possible) """
-        self.sendCommand("p")
+        self.__sendCommand("p")
 
     def close(self):
         """ exit pyradio (and kill mplayer instance) """
-        self.sendCommand("q")
+        self.__sendCommand("q")
         if self.process is not None:
             os.kill(self.process.pid, 15)
             self.process.wait()
@@ -79,8 +107,8 @@ class Player(object):
 
     def volumeUp(self):
         """ increase mplayer's volume """
-        self.sendCommand("*")
+        self.__sendCommand("*")
 
     def volumeDown(self):
         """ decrease mplayer's volume """
-        self.sendCommand("/")
+        self.__sendCommand("/")

@@ -5,11 +5,15 @@
 # Ben Dowling - 2009 - 2010
 # Kirill Klenov - 2012
 import curses
-import random
+import logging
 import os
+import random
 
 from .log import Log
-from .player import Player
+from .player import MpPlayer
+
+
+logger = logging.getLogger(__name__)
 
 
 def rel(path):
@@ -45,7 +49,8 @@ class PyRadio(object):
         curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
 
         self.log = Log()
-        self.player = Player(self.log)
+        # For the time being, only MPlayer is supported.
+        self.player = MpPlayer(self.log)
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()
