@@ -21,7 +21,8 @@ def shell():
     parser.add_argument("--stations", "-s", default=DEFAULT_FILE,
                         help="Path on stations csv file.")
     parser.add_argument("--play", "-p", nargs='?', default=False,
-                        help="Start and play. The value is num station or empty for random.")
+                        help="Start and play. "
+                        "The value is num station or empty for random.")
     parser.add_argument("--add", "-a", action='store_true',
                         help="Add station to list.")
     parser.add_argument("--list", "-l", action='store_true',
