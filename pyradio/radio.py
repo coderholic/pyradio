@@ -118,7 +118,9 @@ class PyRadio(object):
                 elif idx + self.startPos == self.playing:
                     col = curses.color_pair(4)
                     self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
-                self.bodyWin.addstr(idx + 1, 1, "%2.d. %s" % (idx + self.startPos + 1, station[0]), col)
+                self.bodyWin.addstr(idx + 1, 1,
+                                    "%2.d. %s" % (idx + self.startPos + 1,
+                                    station[0]), col)
 
             except IndexError:
                 break
@@ -128,7 +130,8 @@ class PyRadio(object):
     def run(self):
 
         if not self.play is False:
-            num = (self.play and (int(self.play) - 1) or random.randint(0, len(self.stations)))
+            num = (self.play and (int(self.play) - 1)
+                   or random.randint(0, len(self.stations)))
             self.setStation(num)
             self.playSelection()
             self.refreshBody()
@@ -181,7 +184,7 @@ class PyRadio(object):
             return
 
         if char == ord(' '):
-            if self.player.is_playing():
+            if self.player.isPlaying():
                 self.player.close()
                 self.log.write('Playback stopped')
             else:

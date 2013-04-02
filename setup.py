@@ -7,8 +7,12 @@ from setuptools import setup, find_packages
 from pyradio import version, __project__, __license__
 
 
-read = lambda f: open(op.join(op.dirname(__file__), f)).read() if op.exists(f) else ''
-
+def read(filename):
+    ret = ''
+    if op.exists(filename):
+        with open(op.join(op.dirname(__file__), filename)) as f:
+            ret = f.read()
+    return ret
 
 install_requires = []
 if version_info < (2, 7):
@@ -22,19 +26,15 @@ meta = dict(
     description=read('DESCRIPTION'),
     long_description=read('README.md'),
     platforms=('Any'),
-
     author='Ben Dowling',
     url=' http://github.com/coderholic/pyradio',
-
     packages=find_packages(),
     include_package_data=True,
-
     entry_points={
         'console_scripts': [
             'pyradio = pyradio.main:shell',
         ]
     },
-
     install_requires=install_requires,
     test_suite = 'tests',
 )

@@ -1,10 +1,9 @@
 import subprocess
-try:
-    #Python3
-    import _thread as thread
-except ImportError:
-    import thread
+import threading
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Player(object):
@@ -18,15 +17,26 @@ class Player(object):
         self.close()
 
     def updateStatus(self):
+        if (logger.isEnabledFor(logging.DEBUG)):
+            logger.debug("updateStatus thread started.")
         try:
-            user_input = self.process.stdout.readline()
-            while(user_input != ''):
-                self.outputStream.write(user_input)
-                user_input = self.process.stdout.readline()
+            out = self.process.stdout
+            while(True):
+                subsystemOut = out.readline().decode("utf-8")
+                if subsystemOut == '':
+                    break
+                subsystemOut = subsystemOut.strip()
+                subsystemOut = subsystemOut.replace("\r", "").replace("\n", "")
+                if (logger.isEnabledFor(logging.DEBUG)):
+                    logger.debug("User input: {}".format(subsystemOut))
+                self.outputStream.write(subsystemOut)
         except:
-            pass
+            logger.error("Error in updateStatus thread.",
+                         stack_info=True)
+        if (logger.isEnabledFor(logging.DEBUG)):
+            logger.debug("updateStatus thread stopped.")
 
-    def is_playing(self):
+    def isPlaying(self):
         return bool(self.process)
 
     def play(self, stream_url):
@@ -40,7 +50,8 @@ class Player(object):
                                         stdout=subprocess.PIPE,
                                         stdin=subprocess.PIPE,
                                         stderr=subprocess.STDOUT)
-        thread.start_new_thread(self.updateStatus, ())
+        t = threading.Thread(target=self.updateStatus, args=())
+        t.start()
 
     def sendCommand(self, command):
         """ send keystroke command to mplayer """
