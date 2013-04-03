@@ -1,4 +1,11 @@
-2013-03-16	stac47
+2013-04-03  stac47
+
+	* Version 0.5.1
+	* Fixed regression on bottom panel not updated in Python 3
+	* Support of VLC as the underlying player
+	* Probing the multimedia player available on the host system
+
+2013-03-16  stac47
 
 	* Version 0.5.0
 	* Fix compatibility issue with Python 3
