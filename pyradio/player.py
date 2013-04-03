@@ -60,11 +60,11 @@ class Player(object):
         if(self.process is not None):
             try:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug("Command: {}".format(str(command)).strip())
-                self.process.stdin.write(bytes(command, "utf-8"))
+                    logger.debug("Command: {}".format(command).strip())
+                self.process.stdin.write(command.encode("utf-8"))
             except:
                 msg = "Error when sending: {}"
-                logger.error(msg.format(str(command)).strip(),
+                logger.error(msg.format(command).strip(),
                              exc_info=True)
 
     def close(self):
