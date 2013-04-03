@@ -32,7 +32,7 @@ class Player(object):
                 self.outputStream.write(subsystemOut)
         except:
             logger.error("Error in updateStatus thread.",
-                         stack_info=True)
+                         exc_info=True)
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug("updateStatus thread stopped.")
 
@@ -65,7 +65,6 @@ class Player(object):
             except:
                 msg = "Error when sending: {}"
                 logger.error(msg.format(str(command)).strip(),
-                             stack_info=True,
                              exc_info=True)
 
     def close(self):
