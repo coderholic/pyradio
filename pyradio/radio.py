@@ -49,8 +49,7 @@ class PyRadio(object):
         curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
 
         self.log = Log()
-        # For the time being, only MPlayer is supported.
-        #self.player = VlcPlayer(self.log)
+        # For the time being, supported players are mplayer and vlc.
         self.player = player.probePlayer()(self.log)
 
         self.stdscr.nodelay(0)
