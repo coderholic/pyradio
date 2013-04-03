@@ -9,6 +9,7 @@ clean:
 	rm -rf build dist docs/_build
 	find . -name "*.pyc" -delete
 	find . -name "*.orig" -delete
+	find . -name "*.log" -delete
 
 .PHONY: register
 register:

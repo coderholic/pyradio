@@ -7,8 +7,8 @@ Ben Dowling - [http://www.coderholic.com/pyradio](http://www.coderholic.com/pyra
 
 ## Requirements
 
-* python 2.6+
-* mplayer
+* python 2.6+/3.2+
+* mplayer or vlc
 
 
 ## Installation
