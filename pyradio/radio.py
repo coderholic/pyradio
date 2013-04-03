@@ -10,7 +10,7 @@ import os
 import random
 
 from .log import Log
-from .player import MpPlayer
+from . import player
 
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,8 @@ class PyRadio(object):
 
         self.log = Log()
         # For the time being, only MPlayer is supported.
-        self.player = MpPlayer(self.log)
+        #self.player = VlcPlayer(self.log)
+        self.player = player.probePlayer()(self.log)
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()

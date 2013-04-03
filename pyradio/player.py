@@ -40,27 +40,53 @@ class Player(object):
         return bool(self.process)
 
     def play(self, streamUrl):
-        """ use mplayer to play a stream """
+        """ use a multimedia player to play a stream """
         self.close()
         opts = []
-        if streamUrl.split("?")[0][-3:] in ['m3u', 'pls']:
-            opts = self.buildStartOpts(streamUrl, True)
-        else:
-            opts = self.buildStartOpts(streamUrl, False)
+        isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
+        opts = self._buildStartOpts(streamUrl, isPlayList)
         self.process = subprocess.Popen(opts, shell=False,
                                         stdout=subprocess.PIPE,
                                         stdin=subprocess.PIPE,
                                         stderr=subprocess.STDOUT)
         t = threading.Thread(target=self.updateStatus, args=())
         t.start()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Player started")
 
-    def buildStartOpts(self, streamUrl, playList):
+    def _sendCommand(self, command):
+        """ send keystroke command to mplayer """
+
+        if(self.process is not None):
+            try:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("Command: {}".format(str(command)).strip())
+                self.process.stdin.write(bytes(command, "utf-8"))
+            except:
+                msg = "Error when sending: {}"
+                logger.error(msg.format(str(command)).strip(),
+                             stack_info=True,
+                             exc_info=True)
+
+    def close(self):
+        """ exit pyradio (and kill mplayer instance) """
+
+        # First close the subprocess
+        self._stop()
+
+        # Here is fallback solution and cleanup
+        if self.process is not None:
+            os.kill(self.process.pid, 15)
+            self.process.wait()
+        self.process = None
+
+    def _buildStartOpts(self, streamUrl, playList):
         pass
 
     def mute(self):
         pass
 
-    def close(self):
+    def _stop(self):
         pass
 
     def volumeUp(self):
@@ -73,42 +99,97 @@ class Player(object):
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
 
-    def buildStartOpts(self, streamUrl, playList=False):
+    PLAYER_CMD = "mplayer"
+
+    def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
         if playList:
-            opts = ["mplayer", "-quiet", "-playlist", streamUrl]
+            opts = [self.PLAYER_CMD, "-quiet", "-playlist", streamUrl]
         else:
-            opts = ["mplayer", "-quiet", streamUrl]
+            opts = [self.PLAYER_CMD, "-quiet", streamUrl]
         return opts
-
-    def __sendCommand(self, command):
-        """ send keystroke command to mplayer """
-        if(self.process is not None):
-            try:
-                self.process.stdin.write(command)
-            except:
-                pass
 
     def mute(self):
         """ mute mplayer """
-        self.__sendCommand("m")
+        self._sendCommand("m")
 
     def pause(self):
         """ pause streaming (if possible) """
-        self.__sendCommand("p")
+        self._sendCommand("p")
 
-    def close(self):
+    def _stop(self):
         """ exit pyradio (and kill mplayer instance) """
-        self.__sendCommand("q")
-        if self.process is not None:
-            os.kill(self.process.pid, 15)
-            self.process.wait()
-        self.process = None
+        self._sendCommand("q")
 
     def volumeUp(self):
         """ increase mplayer's volume """
-        self.__sendCommand("*")
+        self._sendCommand("*")
 
     def volumeDown(self):
         """ decrease mplayer's volume """
-        self.__sendCommand("/")
+        self._sendCommand("/")
+
+
+class VlcPlayer(Player):
+    """Implementation of Player for VLC"""
+
+    PLAYER_CMD = "cvlc"
+
+    muted = False
+
+    def _buildStartOpts(self, streamUrl, playList=False):
+        """ Builds the options to pass to subprocess."""
+        opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
+        return opts
+
+    def mute(self):
+        """ mute mplayer """
+
+        if not self.muted:
+            self._sendCommand("volume 0\n")
+            self.muted = True
+        else:
+            self._sendCommand("volume 256\n")
+            self.muted = False
+
+    def pause(self):
+        """ pause streaming (if possible) """
+        self._sendCommand("stop\n")
+
+    def _stop(self):
+        """ exit pyradio (and kill mplayer instance) """
+        self._sendCommand("shutdown\n")
+
+    def volumeUp(self):
+        """ increase mplayer's volume """
+        self._sendCommand("volup\n")
+
+    def volumeDown(self):
+        """ decrease mplayer's volume """
+        self._sendCommand("voldown\n")
+
+
+def probePlayer():
+    """ Probes the multimedia players which are available on the host
+    system."""
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("Probing available multimedia players...")
+    implementedPlayers = Player.__subclasses__()
+    if logger.isEnabledFor(logging.INFO):
+        logger.info("Implemented players: " +
+                    ", ".join([player.PLAYER_CMD
+                              for player in implementedPlayers]))
+
+    for player in implementedPlayers:
+        try:
+            p = subprocess.Popen([player.PLAYER_CMD, "--help"],
+                                 stdout=subprocess.PIPE,
+                                 stdin=subprocess.PIPE,
+                                 shell=False)
+            p.terminate()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("{} supported.".format(str(player)))
+            return player
+        except OSError:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("{} not supported.".format(str(player)))
