@@ -189,6 +189,7 @@ class PyRadio(object):
         if char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             self.playSelection()
             self.refreshBody()
+            self.setupAndDrawScreen()
             return
 
         if char == ord(' '):

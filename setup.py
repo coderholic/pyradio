@@ -27,6 +27,7 @@ meta = dict(
     long_description=read('README.md'),
     platforms=('Any'),
     author='Ben Dowling',
+    author_email='ben.m.dowling@gmail.com',
     url=' http://github.com/coderholic/pyradio',
     packages=find_packages(),
     include_package_data=True,
