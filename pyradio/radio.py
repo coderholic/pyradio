@@ -12,6 +12,9 @@ import random
 from .log import Log
 from . import player
 
+import locale
+locale.setlocale(locale.LC_ALL,"")
+
 
 logger = logging.getLogger(__name__)
 
@@ -238,6 +241,5 @@ class PyRadio(object):
 
         if char == ord('#') or char == curses.KEY_RESIZE:
             self.setupAndDrawScreen()
-
 
 # pymode:lint_ignore=W901
