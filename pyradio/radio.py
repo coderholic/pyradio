@@ -13,7 +13,7 @@ from .log import Log
 from . import player
 
 import locale
-locale.setlocale(locale.LC_ALL,"")
+locale.setlocale(locale.LC_ALL, "")
 
 
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class PyRadio(object):
     def initHead(self):
         from pyradio import version
 
-        info = " PyRadio %s " % version
+        info = " PyRadio {0} ".format(version)
         self.headWin.addstr(0, 0, info, curses.color_pair(4))
         rightStr = "www.coderholic.com/pyradio"
         self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr,
@@ -106,34 +106,29 @@ class PyRadio(object):
     def refreshBody(self):
         self.bodyWin.erase()
         self.bodyWin.box()
-
         self.bodyWin.move(1, 1)
         maxDisplay = self.bodyMaxY - 1
-        for idx in range(maxDisplay - 1):
-            if(idx > maxDisplay):
-                break
-            try:
-                station = self.stations[idx + self.startPos]
-                col = curses.color_pair(5)
-
-                if idx + self.startPos == self.selection and \
-                        self.selection == self.playing:
-                    col = curses.color_pair(9)
-                    self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
-                elif idx + self.startPos == self.selection:
-                    col = curses.color_pair(6)
-                    self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
-                elif idx + self.startPos == self.playing:
-                    col = curses.color_pair(4)
-                    self.bodyWin.hline(idx + 1, 1, ' ', self.bodyMaxX - 2, col)
-                self.bodyWin.addstr(idx + 1, 1,
-                                    "%2.d. %s" % (idx + self.startPos + 1,
-                                    station[0]), col)
-
-            except IndexError:
-                break
-
+        for lineNum in range(maxDisplay - 1):
+            i = lineNum + self.startPos
+            if i < len(self.stations):
+                self.__displayBodyLine(lineNum, self.stations[i])
         self.bodyWin.refresh()
+
+    def __displayBodyLine(self, lineNum, station):
+        col = curses.color_pair(5)
+
+        if lineNum + self.startPos == self.selection and \
+                self.selection == self.playing:
+            col = curses.color_pair(9)
+            self.bodyWin.hline(lineNum + 1, 1, ' ', self.bodyMaxX - 2, col)
+        elif lineNum + self.startPos == self.selection:
+            col = curses.color_pair(6)
+            self.bodyWin.hline(lineNum + 1, 1, ' ', self.bodyMaxX - 2, col)
+        elif lineNum + self.startPos == self.playing:
+            col = curses.color_pair(4)
+            self.bodyWin.hline(lineNum + 1, 1, ' ', self.bodyMaxX - 2, col)
+        line = "{0}. {1}".format(lineNum + self.startPos + 1, station[0])
+        self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
     def run(self):
 
@@ -155,8 +150,12 @@ class PyRadio(object):
 
     def setStation(self, number):
         """ Select the given station number """
-        number = max(0, number)
-        number = min(number, len(self.stations) - 1)
+        # If we press up at the first station, we go to the last one
+        # and if we press down on the last one we go back to the first one.
+        if number < 0:
+            number = len(self.stations) - 1
+        elif number >= len(self.stations):
+            number = 0
 
         self.selection = number
 
