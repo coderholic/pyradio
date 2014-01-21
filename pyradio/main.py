@@ -1,11 +1,31 @@
 import csv
 import sys
 import curses
+import logging
 from argparse import ArgumentParser
 from os import path, getenv
 
 from .radio import PyRadio
 
+PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+
+def __configureLogger():
+    logger = logging.getLogger("pyradio")
+    logger.setLevel(logging.DEBUG)
+
+    # Handler
+    fh = logging.FileHandler("pyradio.log")
+    fh.setLevel(logging.DEBUG)
+
+    # create formatter
+    formatter = logging.Formatter(PATTERN)
+
+    # add formatter to ch
+    fh.setFormatter(formatter)
+
+    # add ch to logger
+    logger.addHandler(fh)
 
 DEFAULT_FILE = ''
 for p in [path.join(getenv('HOME', '~'), '.pyradio', 'stations.csv'),
@@ -27,6 +47,8 @@ def shell():
                         help="Add station to list.")
     parser.add_argument("--list", "-l", action='store_true',
                         help="List of added stations.")
+    parser.add_argument("--debug", "-d", action='store_true',
+                        help="Start pyradio in debug mode.")
     args = parser.parse_args()
 
     # No need to parse the file if we add station
@@ -50,6 +72,11 @@ def shell():
             print(('{0:50s} {1:s}'.format(name, url)))
         sys.exit()
 
+    if args.debug:
+        __configureLogger()
+        print("Debug mode acitvated")
+
+    # Starts the radio gui.
     pyradio = PyRadio(stations, play=args.play)
     curses.wrapper(pyradio.setup)
 
