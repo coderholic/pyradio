@@ -53,7 +53,7 @@ def shell():
 
     # No need to parse the file if we add station
     if args.add:
-        params = input("Enter the name: "), input("Enter the url: ")
+        params = raw_input("Enter the name: "), raw_input("Enter the url: ")
         with open(args.stations, 'a') as cfgfile:
             writter = csv.writer(cfgfile)
             writter.writerow(params)
