@@ -59,11 +59,11 @@ def shell():
             writter.writerow(params)
             sys.exit()
 
-        with open(args.stations, 'r') as cfgfile:
-            stations = []
-            for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
-                name, url = [s.strip() for s in row]
-                stations.append((name, url))
+    with open(args.stations, 'r') as cfgfile:
+        stations = []
+        for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
+            name, url = [s.strip() for s in row]
+            stations.append((name, url))
 
     if args.list:
         for name, url in stations:
