@@ -22,7 +22,7 @@ class Player(object):
         try:
             out = self.process.stdout
             while(True):
-                subsystemOut = out.readline().decode("utf-8")
+                subsystemOut = out.readline().decode("utf-8", "ignore")
                 if subsystemOut == '':
                     break
                 subsystemOut = subsystemOut.strip()
