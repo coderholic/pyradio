@@ -200,6 +200,11 @@ class PyRadio(object):
         else:
             self.jumpnr = ""
 
+        if char == ord('g'):
+            self.setStation(0)
+            self.refreshBody()
+            return
+
         if char == curses.KEY_EXIT or char == ord('q'):
             self.player.close()
             return -1
