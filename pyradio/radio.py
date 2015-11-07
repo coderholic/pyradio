@@ -189,6 +189,7 @@ class PyRadio(object):
                 self.setStation(-1)
             else:
                 jumpto=min(int(self.jumpnr)-1,len(self.stations)-1)
+                jumpto=max(0,jumpto)
                 self.setStation(jumpto)
             self.jumpnr = ""
             self.refreshBody()
