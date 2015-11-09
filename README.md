@@ -52,11 +52,13 @@ The second step is to install the python package:
 
 ## Controls
 ```
-Up/Down/PgUp/PgDown 	Change station selection
-Enter 					Play selected station
--/+						Change volume
-m						Mute
-r						Select and play a random station
-Space                   Stop/start playing selected station
-Esc/q					Quit
+Up/Down/j/k/PgUp/PgDown 	Change station selection
+Enter 				        Play selected station
+-/+						    Change volume
+m						    Mute
+r						    Select and play a random station
+g						    Jump to first station
+<n>G					    Jump to n-th station
+Space                       Stop/start playing selected station
+Esc/q					    Quit
 ```
