@@ -136,8 +136,10 @@ class PyRadio(object):
     def run(self):
 
         if not self.play is False:
-            num = (self.play and (int(self.play) - 1)
-                   or random.randint(0, len(self.stations)))
+            if self.play is None:
+                num = random.randint(0, len(self.stations))
+            else:
+                num = int(self.play) - 1
             self.setStation(num)
             self.playSelection()
             self.refreshBody()
