@@ -1,29 +1,25 @@
-Digitally Imported: Chillout, http://listen.di.fm/public3/chillout.pls
-Digitally Imported: Chillout Dreams, http://listen.di.fm/public3/chilloutdreams.pls
-Digitally Imported: Soulful House, http://listen.di.fm/public3/soulfulhouse.pls
-Digitally Imported: Funky House, http://listen.di.fm/public3/funkyhouse.pls
-Digitally Imported: Progressive, http://listen.di.fm/public3/progressive.pls
-Digitally Imported: Lounge, http://listen.di.fm/public3/lounge.pls
-Digitally Imported: PsyChill, http://listen.di.fm/public3/psychill.pls
-Electronic Culture, http://www.shouted.fm/tunein/electro-dsl.m3u
-Frequence 3 (Pop), http://streams.frequence3.net/hd-mp3.m3u
-Ragga Kings, http://www.raggakings.net/listen.m3u
-SKY.FM: Mostly Classical, http://www.sky.fm/mp3/classical.pls
-SKY.FM: Jazz, http://www.sky.fm/mp3/jazz.pls
-SKY.FM: Smooth Jazz, http://www.sky.fm/mp3/smoothjazz.pls
-SKY.FM: Uptempo Smooth Jazz, http://www.sky.fm/mp3/uptemposmoothjazz.pls
-SKY.FM: Best of the 80s, http://www.sky.fm/mp3/the80s.pls
-SKY.FM: Salsa, http://www.sky.fm/mp3/salsa.pls
-SKY.FM: Simply Soundtracks, http://www.sky.fm/mp3/soundtracks.pls
-SKY.FM: Classic Rap, http://www.sky.fm/mp3/classicrap.pls
-Slay Radio (C64 Remix), http://www.slayradio.org/tune_in.php/128kbps/listen.m3u
-SomaFM: Groove Salad (Chillout), http://somafm.com/startstream=groovesalad.pls
-SomaFM: Beat Blender (House), http://somafm.com/startstream=beatblender.pls
-SomaFM: Cliq Hop, http://somafm.com/startstream=cliqhop.pls
-SomaFM: Sonic Universe (Jazz), http://somafm.com/startstream=sonicuniverse.pls
-SomaFM: Tags Trance Trip (Progressive), http://somafm.com/tagstrance.pls
-SomaFM: Illinois Street Lounge (Lounge), http://somafm.com/illstreet.pls
-SomaFM: Secret Agent (Downtempo), http://somafm.com/secretagent.pls
-SomaFM: Covers, http://somafm.com/covers.pls
-SomaFM: Digitalis (Rock), http://somafm.com/digitalis.pls
-SomaFM: PopTron! (Pop), http://somafm.com/poptron.pls
+# Find lots more stations at http://www.iheart.com,
+Alternative (BAGeL Radio - SomaFM),http://somafm.com/bagel.pls
+Alternative (The Alternative Project),http://c9.prod.playlists.ihrhls.com/4447/playlist.m3u8
+American Roots (Boot Liquor - SomaFM),http://somafm.com/bootliquor.pls
+Celtic (ThistleRadio - SomaFM),http://somafm.com/thistle.pls
+Chillout (Groove Salad - SomaFM),http://somafm.com/startstream=groovesalad.pls
+Commodore 64 Remixes (Slay Radio),http://www.slayradio.org/tune_in.php/128kbps/listen.m3u
+Covers (SomaFM),http://somafm.com/covers.pls
+Downtempo (Secret Agent - SomaFM),http://somafm.com/secretagent.pls
+Dub Step (Dub Step Beyond - SomaFM),http://somafm.com/dubstep.pls
+Electronic/Dance (Electronic Culture),http://www.shouted.fm/tunein/electro-dsl.m3u
+Folk (Folk Forward - SomaFM),http://somafm.com/folkfwd.pls
+Hip Hop (Hot 97 NYC),http://playerservices.streamtheworld.com/pls/WQHTAAC.pls
+Hip Hop (Power 1051 NYC),http://c11.prod.playlists.ihrhls.com/1481/playlist.m3u8
+House (Beat Blender - SomaFM),http://somafm.com/startstream=beatblender.pls
+Indie Pop (Indie Pop Rocks! - SomaFM),http://somafm.com/indiepop130.pls
+Intelligent dance music (Cliq Hop - SomaFM),http://somafm.com/startstream=cliqhop.pls
+Jazz (Sonic Universe - SomaFM),http://somafm.com/startstream=sonicuniverse.pls
+Lounge (Illinois Street Lounge - SomaFM),http://somafm.com/illstreet.pls
+Pop (PopTron! - SomaFM),http://somafm.com/poptron.pls
+Pop/Rock/Urban  (Frequence 3 - Paris) ,http://streams.frequence3.net/hd-mp3.m3u
+Progressive (Tags Trance Trip - SomaFM),http://somafm.com/tagstrance.pls
+Public Radio (WNYC - Public Radio from New York to the World),http://wnyc-iheart.streamguys.com/wnycfm-iheart.aac
+Reggae Dancehall (Ragga Kings),http://www.raggakings.net/listen.m3u
+Rock (Digitalis - SomaFM),http://somafm.com/digitalis.pls
