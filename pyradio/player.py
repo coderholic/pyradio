@@ -22,7 +22,7 @@ class Player(object):
         try:
             out = self.process.stdout
             while(True):
-                subsystemOut = out.readline().decode("utf-8")
+                subsystemOut = out.readline().decode("utf-8", "ignore")
                 if subsystemOut == '':
                     break
                 subsystemOut = subsystemOut.strip()
@@ -95,8 +95,7 @@ class Player(object):
         pass
 
     def volumeDefaultHalf(self):
-    pass
-
+		pass
 
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
@@ -183,9 +182,7 @@ class VlcPlayer(Player):
         """ decrease mplayer's volume """
         self._sendCommand("voldown\n")
 
-
-
-
+		
 def probePlayer():
     """ Probes the multimedia players which are available on the host
     system."""
