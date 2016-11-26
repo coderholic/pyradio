@@ -62,6 +62,8 @@ def shell():
     with open(args.stations, 'r') as cfgfile:
         stations = []
         for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
+            if not row:
+                continue
             name, url = [s.strip() for s in row]
             stations.append((name, url))
 
