@@ -94,11 +94,17 @@ class Player(object):
     def volumeDown(self):
         pass
 
+    def volumeDefaultHalf(self):
+		pass
 
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
 
     PLAYER_CMD = "mplayer"
+
+    volumeDefaultHalved = False
+    if os.system("grep -R -s 'volume' '~/.mplayer/config'"):
+        volumeDefaultHalved = True
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
@@ -127,6 +133,15 @@ class MpPlayer(Player):
     def volumeDown(self):
         """ decrease mplayer's volume """
         self._sendCommand("/")
+
+    def volumeDefaultHalf(self):
+        """ set mplayer's volume default to 50% by editing config file.  else remove config edit """
+        if not self.volumeDefaultHalved:
+            os.system("echo 'volume=50' >> ~/.mplayer/config")
+            self.volumeDefaultHalved = True
+        else:
+            os.system("sed -i '/volume=50/d' ~/.mplayer/config")
+            self.volumeDefaultHalved = False
 
 
 class VlcPlayer(Player):
@@ -167,7 +182,7 @@ class VlcPlayer(Player):
         """ decrease mplayer's volume """
         self._sendCommand("voldown\n")
 
-
+		
 def probePlayer():
     """ Probes the multimedia players which are available on the host
     system."""
