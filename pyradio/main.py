@@ -3,7 +3,8 @@ import sys
 import curses
 import logging
 from argparse import ArgumentParser
-from os import path, getenv
+from os import path, getenv, mkdir
+from shutil import copyfile
 
 from .radio import PyRadio
 
@@ -27,10 +28,26 @@ def __configureLogger():
     # add ch to logger
     logger.addHandler(fh)
 
+
+def check_stations(usr, root):
+    ''' Reclocate a station.csv copy in user home for easy manage.
+        Ej not need sudo when you add new station, etc '''
+
+    if path.exists(path.join(usr, 'station.csv')):
+        return
+    else:
+        mkdir(usr)
+        copyfile(root, path.join(usr, 'station.csv'))
+
+
+usr_path = path.join(getenv('HOME', '~'), '.config', 'pyradio')
+root_path = path.join(path.dirname(__file__), 'stations.csv')
+check_stations(usr_path, root_path)
+
 DEFAULT_FILE = ''
-for p in [path.join(getenv('HOME', '~'), '.pyradio', 'stations.csv'),
+for p in [path.join(usr_path, 'station.csv'),
           path.join(getenv('HOME', '~'), '.pyradio'),
-          path.join(path.dirname(__file__), 'stations.csv')]:
+          root_path]:
     if path.exists(p) and path.isfile(p):
         DEFAULT_FILE = p
         break
