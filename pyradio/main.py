@@ -38,16 +38,16 @@ for p in [path.join(getenv('HOME', '~'), '.pyradio', 'stations.csv'),
 
 def shell():
     parser = ArgumentParser(description="Console radio player")
-    parser.add_argument("--stations", "-s", default=DEFAULT_FILE,
-                        help="Path on stations csv file.")
+    parser.add_argument("-s", "--stations", default=DEFAULT_FILE,
+                        help="Use specified station CSV file.")
     parser.add_argument("--play", "-p", nargs='?', default=False,
-                        help="Start and play. "
+                        help="Start and play."
                         "The value is num station or empty for random.")
-    parser.add_argument("--add", "-a", action='store_true',
+    parser.add_argument("-a", "--add", action='store_true',
                         help="Add station to list.")
-    parser.add_argument("--list", "-l", action='store_true',
+    parser.add_argument("-l", "--list", action='store_true',
                         help="List of added stations.")
-    parser.add_argument("--debug", "-d", action='store_true',
+    parser.add_argument("-d", "--debug", action='store_true',
                         help="Start pyradio in debug mode.")
     args = parser.parse_args()
 

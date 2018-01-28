@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class Player(object):
-    """ Media player class. Playing is handled by mplayer """
+    """ Media player class. Playing is handled by player sub classes """
     process = None
 
     def __init__(self, outputStream):
@@ -55,7 +55,7 @@ class Player(object):
             logger.debug("Player started")
 
     def _sendCommand(self, command):
-        """ send keystroke command to mplayer """
+        """ send keystroke command to player """
 
         if(self.process is not None):
             try:
@@ -68,7 +68,7 @@ class Player(object):
                              exc_info=True)
 
     def close(self):
-        """ exit pyradio (and kill mplayer instance) """
+        """ exit pyradio (and kill player instance) """
 
         # First close the subprocess
         self._stop()
@@ -102,9 +102,9 @@ class MpvPlayer(Player):
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
         if playList:
-            opts = [self.PLAYER_CMD, "-quiet", "-playlist", streamUrl]
+            opts = [self.PLAYER_CMD, "--no-video", "--playlist", streamUrl]
         else:
-            opts = [self.PLAYER_CMD, "-quiet", streamUrl]
+            opts = [self.PLAYER_CMD, "--no-video", streamUrl]
         return opts
 
     def mute(self):
@@ -175,7 +175,7 @@ class VlcPlayer(Player):
         return opts
 
     def mute(self):
-        """ mute mplayer """
+        """ mute vlc """
 
         if not self.muted:
             self._sendCommand("volume 0\n")
@@ -189,15 +189,15 @@ class VlcPlayer(Player):
         self._sendCommand("stop\n")
 
     def _stop(self):
-        """ exit pyradio (and kill mplayer instance) """
+        """ exit pyradio (and kill vlc instance) """
         self._sendCommand("shutdown\n")
 
     def volumeUp(self):
-        """ increase mplayer's volume """
+        """ increase vlc's volume """
         self._sendCommand("volup\n")
 
     def volumeDown(self):
-        """ decrease mplayer's volume """
+        """ decrease vlc's volume """
         self._sendCommand("voldown\n")
 
 

@@ -4,13 +4,11 @@ Command line internet radio player.
 
 Ben Dowling - [http://www.coderholic.com/pyradio](http://www.coderholic.com/pyradio)
 
-
 ## Requirements
 
 * python 2.6+/3.2+
 * mpv, mplayer or vlc installed and in your path.
 * Pip
-
 
 ## Installation via Pip
 
@@ -38,7 +36,7 @@ The second step is to use pip to install the python package:
 
 	pip install pyradio
 
-## Building from source:
+## Building from source
 
 #### MaxOSX and Linux:
 
@@ -48,35 +46,33 @@ The second step is to install the build:
 
 	sudo python setup.py install
 
-
-## Shell
+## Shell commands
 
     $ pyradio -h
 
-    usage: main.py [-h] [--stations STATIONS] [--random] [--add] [--list]
+    usage: main.py [--help] [--stations <path>] [--random] [--add] [--list]
 
     Console radio player
 
     optional arguments:
-    -h, --help            show this help message and exit
-    --stations STATIONS, -s STATIONS
-                            Path on stations csv file.
-    --random, -r          Start and play random station.
-    --add, -a             Add station to list.
-    --list, -l            List of added stations.
-    --debug, -d           Debug mode (pyradio.log created)
+    -h, --help            Show this help message and exit.
+    -s, --stations <path> Use specified station CSV file.
+    -r, --random          Start and play a random station.
+    -a, --add             Add station to list.
+    -l, --list            List of added stations.
+    -d, --debug           Debug mode (pyradio.log created).
                           To be attached with any bug report.
 
-
 ## Controls
+
 ```
-Up/Down/j/k/PgUp/PgDown 	Change station selection
-Enter 				        Play selected station
--/+						    Change volume
-m						    Mute
-r						    Select and play a random station
-g						    Jump to first station
-<n>G					    Jump to n-th station
-Space                       Stop/start playing selected station
-Esc/q					    Quit
+Up/Down/j/k/PgUp/PgDown Change station selection.
+Enter                   Play selected station.
+-/+                     Change volume.
+m                       Mute.
+r                       Select and play a random station.
+g                       Jump to first station.
+<n>G                    Jump to n-th station.
+Space                   Stop/start playing selected station.
+Esc/q                   Quit.
 ```
