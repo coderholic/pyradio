@@ -8,16 +8,21 @@ Ben Dowling - [http://www.coderholic.com/pyradio](http://www.coderholic.com/pyra
 ## Requirements
 
 * python 2.6+/3.2+
-* mplayer or vlc installed and in your path
+* mpv, mplayer or vlc installed and in your path.
+* Pip
 
 
-## Installation
+## Installation via Pip
 
-The first thing is to make sure MPlayer and VLC are installed and are in the
+This is the simplist method for installing PyRadio.
+
+The first thing is to make sure MPV, MPlayer or VLC are installed and are in the
 PATH. To check this, go in your favorite terminal and make sure thiese programs
-are launched when you type "mplayer" or "cvlc".
+are launched when you type "mpv", "mplayer" or "cvlc".
 
-MacOSX tip: MPlayer is one of the available packages provided by
+#### MacOSX:
+
+MPlayer is one of the available packages provided by
 [Homebrew](https://github.com/Homebrew/homebrew). But it is not the case of
 VLC. Nevertheless, pyradio will also work with the binary of the application
 [VLC](http://www.videolan.org/vlc/download-macosx.html). You simply can add a
@@ -26,9 +31,21 @@ PATH):
 
     ln -s /Applications/VLC.app/Contents/MacOS/VLC cvlc
 
-The second step is to install the python package:
+The second step is to use pip to install the python package:
 
     pip install pyradio
+
+#### Linux:
+
+	pip install pyradio
+
+## Building from source:
+
+	python setup.py build
+
+The second step is to install the build:
+
+	sudo python setup.py install
 
 
 ## Shell
