@@ -102,9 +102,9 @@ class MpvPlayer(Player):
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
         if playList:
-            opts = [self.PLAYER_CMD, "--no-video", "--playlist", streamUrl]
+            opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl]
         else:
-            opts = [self.PLAYER_CMD, "--no-video", streamUrl]
+            opts = [self.PLAYER_CMD, "--quiet", streamUrl]
         return opts
 
     def mute(self):
