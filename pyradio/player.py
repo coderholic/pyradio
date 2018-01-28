@@ -94,6 +94,39 @@ class Player(object):
     def volumeDown(self):
         pass
 
+class MpvPlayer(Player):
+    """Implementation of Player object for MPV"""
+
+    PLAYER_CMD = "mpv"
+
+    def _buildStartOpts(self, streamUrl, playList=False):
+        """ Builds the options to pass to subprocess."""
+        if playList:
+            opts = [self.PLAYER_CMD, "-quiet", "-playlist", streamUrl]
+        else:
+            opts = [self.PLAYER_CMD, "-quiet", streamUrl]
+        return opts
+
+    def mute(self):
+        """ mute mpv """
+        self._sendCommand("m")
+
+    def pause(self):
+        """ pause streaming (if possible) """
+        self._sendCommand("p")
+
+    def _stop(self):
+        """ exit pyradio (and kill mpv instance) """
+        self._sendCommand("q")
+
+    def volumeUp(self):
+        """ increase mpv's volume """
+        self._sendCommand("*")
+
+    def volumeDown(self):
+        """ decrease mpv's volume """
+        self._sendCommand("/")
+
 
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
