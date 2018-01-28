@@ -99,33 +99,36 @@ class MpvPlayer(Player):
 
     PLAYER_CMD = "mpv"
 
+    os.system("rm /tmp/mpvsocket");
+
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
         if playList:
-            opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl]
+            opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
         else:
-            opts = [self.PLAYER_CMD, "--quiet", streamUrl]
+            opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
         return opts
 
     def mute(self):
         """ mute mpv """
-        self._sendCommand("m")
+        os.system("echo 'cycle mute' | socat - /tmp/mpvsocket");
 
     def pause(self):
         """ pause streaming (if possible) """
-        self._sendCommand("p")
+        os.system("echo 'cycle pause' | socat - /tmp/mpvsocket");
 
     def _stop(self):
         """ exit pyradio (and kill mpv instance) """
-        self._sendCommand("q")
+        os.system("echo 'quit' | socat - /tmp/mpvsocket");
+        os.system("rm /tmp/mpvsocket");
 
     def volumeUp(self):
         """ increase mpv's volume """
-        self._sendCommand("*")
+        os.system("echo 'cycle volume' | socat - /tmp/mpvsocket");
 
     def volumeDown(self):
         """ decrease mpv's volume """
-        self._sendCommand("/")
+        os.system("echo 'cycle volume down' | socat - /tmp/mpvsocket");
 
 
 class MpPlayer(Player):
