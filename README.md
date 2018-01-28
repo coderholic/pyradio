@@ -22,12 +22,11 @@ are launched when you type "mpv", "mplayer" or "cvlc".
 
 #### MacOSX:
 
-MPlayer is one of the available packages provided by
-[Homebrew](https://github.com/Homebrew/homebrew). But it is not the case of
-VLC. Nevertheless, pyradio will also work with the binary of the application
-[VLC](http://www.videolan.org/vlc/download-macosx.html). You simply can add a
-symbolic link to the executable as follows (this link must of course be in your
-PATH):
+MPlayer is one of the available packages provided by [Homebrew](https://github.com/Homebrew/homebrew).
+
+But it is not the case of VLC. Nevertheless, pyradio will also work with the binary of the application [VLC](http://www.videolan.org/vlc/download-macosx.html).
+
+You simply can add a symbolic link to the executable as follows (this link must of course be in your PATH):
 
     ln -s /Applications/VLC.app/Contents/MacOS/VLC cvlc
 
@@ -40,6 +39,8 @@ The second step is to use pip to install the python package:
 	pip install pyradio
 
 ## Building from source:
+
+#### MaxOSX and Linux:
 
 	python setup.py build
 
