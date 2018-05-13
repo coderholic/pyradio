@@ -103,10 +103,29 @@ class MpvPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
-        if playList:
-            opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
+
+        """ Test for newer MPV versions as it supports different IPC flags. """
+        p = subprocess.Popen([self.PLAYER_CMD, "--input-ipc-server"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
+        out = p.communicate()
+        if "error" not in out[0]:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("--input-ipc-server is supported.")
+            newerMpv = 1;
         else:
-            opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("--input-ipc-server is not supported.")
+            newerMpv = 0;
+
+        if playList:
+            if newerMpv:
+                opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
+            else:
+                opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-unix-socket=/tmp/mpvsocket"]
+        else:
+            if newerMpv:
+                opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
+            else:
+                opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-unix-socket=/tmp/mpvsocket"]
         return opts
 
     def mute(self):
