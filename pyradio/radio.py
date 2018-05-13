@@ -4,6 +4,8 @@
 # http://www.coderholic.com/pyradio
 # Ben Dowling - 2009 - 2010
 # Kirill Klenov - 2012
+# Peter Stevenson (2E0PGS) - 2018
+
 import curses
 import logging
 import os

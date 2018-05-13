@@ -9,7 +9,7 @@ Ben Dowling - [http://www.coderholic.com/pyradio](http://www.coderholic.com/pyra
 * python 2.6+/3.2+
 * python-pip
 * mpv, mplayer or vlc installed and in your path.
-* socat
+* socat (if you wish to use MPV)
 
 ## Installation via pip
 
