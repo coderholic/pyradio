@@ -4,6 +4,8 @@
 # http://www.coderholic.com/pyradio
 # Ben Dowling - 2009 - 2010
 # Kirill Klenov - 2012
+# Peter Stevenson (2E0PGS) - 2018
+
 import curses
 import logging
 import os
@@ -55,7 +57,7 @@ class PyRadio(object):
         curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
 
         self.log = Log()
-        # For the time being, supported players are mplayer and vlc.
+        # For the time being, supported players are mpv, mplayer and vlc.
         self.player = player.probePlayer()(self.log)
 
         self.stdscr.nodelay(0)
@@ -180,7 +182,7 @@ class PyRadio(object):
             self.player.play(stream_url)
         except OSError:
             self.log.write('Error starting player.'
-                           'Are you sure mplayer is installed?')
+                           'Are you sure a supported player is installed?')
 
     def keypress(self, char):
         # Number of stations to change with the page up/down keys

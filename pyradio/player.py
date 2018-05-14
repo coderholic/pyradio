@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class Player(object):
-    """ Media player class. Playing is handled by mplayer """
+    """ Media player class. Playing is handled by player sub classes """
     process = None
 
     def __init__(self, outputStream):
@@ -55,7 +55,7 @@ class Player(object):
             logger.debug("Player started")
 
     def _sendCommand(self, command):
-        """ send keystroke command to mplayer """
+        """ send keystroke command to player """
 
         if(self.process is not None):
             try:
@@ -68,7 +68,7 @@ class Player(object):
                              exc_info=True)
 
     def close(self):
-        """ exit pyradio (and kill mplayer instance) """
+        """ exit pyradio (and kill player instance) """
 
         # First close the subprocess
         self._stop()
@@ -93,6 +93,61 @@ class Player(object):
 
     def volumeDown(self):
         pass
+
+class MpvPlayer(Player):
+    """Implementation of Player object for MPV"""
+
+    PLAYER_CMD = "mpv"
+
+    os.system("rm /tmp/mpvsocket");
+
+    def _buildStartOpts(self, streamUrl, playList=False):
+        """ Builds the options to pass to subprocess."""
+
+        """ Test for newer MPV versions as it supports different IPC flags. """
+        p = subprocess.Popen([self.PLAYER_CMD, "--input-ipc-server"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
+        out = p.communicate()
+        if "not found" not in out[0]:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("--input-ipc-server is supported.")
+            newerMpv = 1;
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("--input-ipc-server is not supported.")
+            newerMpv = 0;
+
+        if playList:
+            if newerMpv:
+                opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
+            else:
+                opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-unix-socket=/tmp/mpvsocket"]
+        else:
+            if newerMpv:
+                opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
+            else:
+                opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-unix-socket=/tmp/mpvsocket"]
+        return opts
+
+    def mute(self):
+        """ mute mpv """
+        os.system("echo 'cycle mute' | socat - /tmp/mpvsocket");
+
+    def pause(self):
+        """ pause streaming (if possible) """
+        os.system("echo 'cycle pause' | socat - /tmp/mpvsocket");
+
+    def _stop(self):
+        """ exit pyradio (and kill mpv instance) """
+        os.system("echo 'quit' | socat - /tmp/mpvsocket");
+        os.system("rm /tmp/mpvsocket");
+
+    def volumeUp(self):
+        """ increase mpv's volume """
+        os.system("echo 'cycle volume' | socat - /tmp/mpvsocket");
+
+    def volumeDown(self):
+        """ decrease mpv's volume """
+        os.system("echo 'cycle volume down' | socat - /tmp/mpvsocket");
 
 
 class MpPlayer(Player):
@@ -142,7 +197,7 @@ class VlcPlayer(Player):
         return opts
 
     def mute(self):
-        """ mute mplayer """
+        """ mute vlc """
 
         if not self.muted:
             self._sendCommand("volume 0\n")
@@ -156,15 +211,15 @@ class VlcPlayer(Player):
         self._sendCommand("stop\n")
 
     def _stop(self):
-        """ exit pyradio (and kill mplayer instance) """
+        """ exit pyradio (and kill vlc instance) """
         self._sendCommand("shutdown\n")
 
     def volumeUp(self):
-        """ increase mplayer's volume """
+        """ increase vlc's volume """
         self._sendCommand("volup\n")
 
     def volumeDown(self):
-        """ decrease mplayer's volume """
+        """ decrease vlc's volume """
         self._sendCommand("voldown\n")
 
 
