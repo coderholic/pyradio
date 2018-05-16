@@ -107,7 +107,7 @@ class MpvPlayer(Player):
         """ Test for newer MPV versions as it supports different IPC flags. """
         p = subprocess.Popen([self.PLAYER_CMD, "--input-ipc-server"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
         out = p.communicate()
-        if "not found" not in out[0]:
+        if "not found" not in str(out[0]):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug("--input-ipc-server is supported.")
             newerMpv = 1;
