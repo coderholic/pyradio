@@ -240,7 +240,7 @@ class PyRadio(object):
             self.refreshBody()
             return
 
-        if char == ord('+'):
+        if char == ord('+') or char == ord('='):
             self.player.volumeUp()
             return
 
