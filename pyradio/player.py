@@ -99,7 +99,8 @@ class MpvPlayer(Player):
 
     PLAYER_CMD = "mpv"
 
-    os.system("rm /tmp/mpvsocket");
+    if os.path.exists('/tmp/mpvsocket'):
+        os.system("rm /tmp/mpvsocket");
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
