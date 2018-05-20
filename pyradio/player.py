@@ -2,6 +2,7 @@ import subprocess
 import threading
 import os
 import logging
+from os.path import expanduser
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +112,6 @@ class MpvPlayer(Player):
         volume-max=300
         volume=50"""
 
-        from os.path import expanduser
         home = expanduser("~")
         if os.path.exists(home + "/.config/mpv/mpv.conf"):
             with open(home + "/.config/mpv/mpv.conf") as f:
