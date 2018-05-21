@@ -112,11 +112,11 @@ class MpvPlayer(Player):
         volume-max=300
         volume=50"""
 
-        home = expanduser("~")
-        if os.path.exists(home + "/.config/mpv/mpv.conf"):
-            with open(home + "/.config/mpv/mpv.conf") as f:
-                conf = f.read()
-            if "[pyradio]" in conf:
+        config_file = expanduser("~") + "/.config/mpv/mpv.conf"
+        if os.path.exists(config_file):
+            with open(config_file) as f:
+                config_string = f.read()
+            if "[pyradio]" in config_string:
                 return True
         return False
 
