@@ -100,6 +100,12 @@ class MpvPlayer(Player):
 
     PLAYER_CMD = "mpv"
 
+    """ USE_PROFILE
+    -1 : not checked yet
+     0 : do not use
+     1 : use profile"""
+    USE_PROFILE = -1
+
     if os.path.exists('/tmp/mpvsocket'):
         os.system("rm /tmp/mpvsocket");
 
@@ -117,8 +123,8 @@ class MpvPlayer(Player):
             with open(config_file) as f:
                 config_string = f.read()
             if "[pyradio]" in config_string:
-                return True
-        return False
+                return 1
+        return 0
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
@@ -145,7 +151,10 @@ class MpvPlayer(Player):
                 opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
             else:
                 opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-unix-socket=/tmp/mpvsocket"]
-        if self._configHasProfile():
+        if self.USE_PROFILE == -1:
+            self.USE_PROFILE = self._configHasProfile()
+
+        if self.USE_PROFILE == 1:
             opts.append("--profile=pyradio")
         return opts
 
