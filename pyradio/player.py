@@ -118,12 +118,14 @@ class MpvPlayer(Player):
         volume-max=300
         volume=50"""
 
-        config_file = expanduser("~") + "/.config/mpv/mpv.conf"
-        if os.path.exists(config_file):
-            with open(config_file) as f:
-                config_string = f.read()
-            if "[pyradio]" in config_string:
-                return 1
+        config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
+        config_files.append("/etc/mpv/mpv.conf")
+        for config_file in config_files:
+            if os.path.exists(config_file):
+                with open(config_file) as f:
+                    config_string = f.read()
+                if "[pyradio]" in config_string:
+                    return 1
         return 0
 
     def _buildStartOpts(self, streamUrl, playList=False):
@@ -156,6 +158,8 @@ class MpvPlayer(Player):
 
         if self.USE_PROFILE == 1:
             opts.append("--profile=pyradio")
+            if (logger.isEnabledFor(logging.DEBUG)):
+                logger.debug("using profile [pyradio]")
         return opts
 
     def mute(self):
@@ -185,12 +189,46 @@ class MpPlayer(Player):
 
     PLAYER_CMD = "mplayer"
 
+    """ USE_PROFILE
+    -1 : not checked yet
+     0 : do not use
+     1 : use profile"""
+    USE_PROFILE = -1
+
+    def _configHasProfile(self):
+        """ Checks if mplayer config has [pyradio] entry / profile.
+
+        Profile example:
+
+        [pyradio]
+        softvol=yes
+        volstep=2
+        volume=28"""
+
+        config_files = [expanduser("~") + "/.mplayer/config"]
+        config_files.append("/etc/mplayer/mplayer.conf")
+        for config_file in config_files:
+            if os.path.exists(config_file):
+                with open(config_file) as f:
+                    config_string = f.read()
+                if "[pyradio]" in config_string:
+                    return 1
+        return 0
+
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
         if playList:
             opts = [self.PLAYER_CMD, "-quiet", "-playlist", streamUrl]
         else:
             opts = [self.PLAYER_CMD, "-quiet", streamUrl]
+        if self.USE_PROFILE == -1:
+            self.USE_PROFILE = self._configHasProfile()
+
+        if self.USE_PROFILE == 1:
+            opts.append("-profile")
+            opts.append("pyradio")
+            if (logger.isEnabledFor(logging.DEBUG)):
+                logger.debug("using profile [pyradio]")
         return opts
 
     def mute(self):

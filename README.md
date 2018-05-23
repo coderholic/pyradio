@@ -77,3 +77,34 @@ g                       Jump to first station.
 Space                   Stop/start playing selected station.
 Esc/q                   Quit.
 ```
+
+## Player default volume
+
+### mpv
+
+mpv uses profiles to customize its behavior.
+
+Users can define a profile called "[pyradio]" in mpv's configuration file (e.g. ~/.config/mpv/mpv.conf) and pyradio will use it when playing.
+
+Example:
+
+    [pyradio]
+    max-volume=300
+    volume=50
+
+### mplayer
+
+mplayer uses profiles to customize its behavior as well.
+
+Users can define a profile called "[pyradio]" in mplayers's configuration file (e.g. ~/.config/mplayer/mplayer.conf) and pyradio will use it when playing.
+
+Example:
+
+    [pyradio]
+    softvol=yes
+    volstep=2
+    volume=28
+
+### vlc
+
+vlc by default saves the volume, so no customization is necessary.
