@@ -89,7 +89,7 @@ Users can define a profile called "**[pyradio]**" in mpv's configuration file (e
 Example:
 
     [pyradio]
-    max-volume=300
+    volume-max=300
     volume=50
 
 ### mplayer

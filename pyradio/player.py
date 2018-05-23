@@ -11,6 +11,8 @@ class Player(object):
     """ Media player class. Playing is handled by player sub classes """
     process = None
 
+    volume = -1
+
     def __init__(self, outputStream):
         self.outputStream = outputStream
 
@@ -31,6 +33,8 @@ class Player(object):
                 if (logger.isEnabledFor(logging.DEBUG)):
                     logger.debug("User input: {}".format(subsystemOut))
                 self.outputStream.write(subsystemOut)
+                if "Volume:" in subsystemOut:
+                    self.volume = ''.join(c for c in subsystemOut if c.isdigit())
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
@@ -106,8 +110,42 @@ class MpvPlayer(Player):
      1 : use profile"""
     USE_PROFILE = -1
 
+    """ True if profile comes from ~/.config/mpv/mpv.conf """
+    PROFILE_FROM_USER = False
+
     if os.path.exists('/tmp/mpvsocket'):
         os.system("rm /tmp/mpvsocket");
+
+    def save_mpv_volume(self):
+        ret_string = "Volume already saved"
+        if self.volume == -1:
+            """ inform no change """
+            return ret_string
+        else:
+            """ change volume """
+            profile_found = False
+            config_file = expanduser("~") + "/.config/mpv/mpv.conf"
+            ret_string = "Volume saved: {}%".format(str(self.volume))
+            if self.PROFILE_FROM_USER:
+                if os.path.exists(config_file):
+                    with open(config_file, 'r') as c:
+                        config_strings = c.readlines()
+                    for i, a_line in enumerate(config_strings):
+                        if not profile_found:
+                            if "[pyradio]" in a_line:
+                                profile_found = True
+                        else:
+                            if a_line.startswith("volume="):
+                                config_strings[i]="volume=" + str(self.volume) + "\n"
+                                break
+                    with open(config_file, "w") as c:
+                        c.writelines(config_strings)
+                    self.volume = -1
+            """ no user profile or user config file does not exist """
+            if not profile_found:
+                with open(config_file, "a") as c:
+                    c.write("\n[pyradio]\nvolume={}\n".format(str(self.volume)))
+            return ret_string
 
     def _configHasProfile(self):
         """ Checks if mpv config has [pyradio] entry / profile.
@@ -120,11 +158,13 @@ class MpvPlayer(Player):
 
         config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
         config_files.append("/etc/mpv/mpv.conf")
-        for config_file in config_files:
+        for i, config_file in enumerate(config_files):
             if os.path.exists(config_file):
                 with open(config_file) as f:
                     config_string = f.read()
                 if "[pyradio]" in config_string:
+                    if i == 0:
+                        self.PROFILE_FROM_USER = True
                     return 1
         return 0
 
@@ -195,6 +235,9 @@ class MpPlayer(Player):
      1 : use profile"""
     USE_PROFILE = -1
 
+    """ True if profile comes from ~/.mplayer/config """
+    PROFILE_FROM_USER = False
+
     def _configHasProfile(self):
         """ Checks if mplayer config has [pyradio] entry / profile.
 
@@ -207,11 +250,13 @@ class MpPlayer(Player):
 
         config_files = [expanduser("~") + "/.mplayer/config"]
         config_files.append("/etc/mplayer/mplayer.conf")
-        for config_file in config_files:
+        for i, config_file in enumerate(config_files):
             if os.path.exists(config_file):
                 with open(config_file) as f:
                     config_string = f.read()
                 if "[pyradio]" in config_string:
+                    if i == 0:
+                        self.PROFILE_FROM_USER = True
                     return 1
         return 0
 
