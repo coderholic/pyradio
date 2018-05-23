@@ -84,7 +84,7 @@ Esc/q                   Quit.
 
 mpv uses profiles to customize its behavior.
 
-Users can define a profile called "[pyradio]" in mpv's configuration file (e.g. ~/.config/mpv/mpv.conf) and pyradio will use it when playing.
+Users can define a profile called "**[pyradio]**" in mpv's configuration file (e.g. *~/.config/mpv/mpv.conf*) and pyradio will use it when playing.
 
 Example:
 
@@ -96,7 +96,7 @@ Example:
 
 mplayer uses profiles to customize its behavior as well.
 
-Users can define a profile called "[pyradio]" in mplayers's configuration file (e.g. ~/.config/mplayer/mplayer.conf) and pyradio will use it when playing.
+Users can define a profile called "**[pyradio]**" in mplayers's configuration file (e.g. *~/.mplayer/config*) and pyradio will use it when playing.
 
 Example:
 
