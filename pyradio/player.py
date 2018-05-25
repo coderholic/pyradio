@@ -35,6 +35,8 @@ class Player(object):
                 self.outputStream.write(subsystemOut)
                 if "Volume:" in subsystemOut:
                     self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                    if (logger.isEnabledFor(logging.DEBUG)):
+                        logger.debug("Read volume {}".format(self.volume))
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
