@@ -279,7 +279,7 @@ class MpPlayer(Player):
     if sys.platform.startswith('darwin'):
         config_files.append("/usr/local/etc/mplayer/mplayer.conf")
     elif sys.platform.startswith('win'):
-        pass
+        config_files[0] = os.path.join(os.getenv('APPDATA'), "mplayer", "config")
     else:
         # linux, freebsd, etc.
         config_files.append("/etc/mplayer/mplayer.conf")
