@@ -70,6 +70,7 @@ The second step is to install the build:
 Up/Down/j/k/PgUp/PgDown Change station selection.
 Enter                   Play selected station.
 -/+                     Change volume.
+v                       Save volume (mpv and mplayer only).
 m                       Mute.
 r                       Select and play a random station.
 g                       Jump to first station.
