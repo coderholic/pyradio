@@ -23,13 +23,17 @@ class Player(object):
     def save_volume(self):
         pass
 
-    def _do_save_volume(self, config_file, config_string):
+    def _do_save_volume(self, config_string):
         ret_string = "Volume already saved"
         if self.volume == -1:
             """ inform no change """
+            if (logger.isEnabledFor(logging.DEBUG)):
+                logger.debug("Volume is -1. Aborting...")
             return ret_string
         else:
             """ change volume """
+            if (logger.isEnabledFor(logging.DEBUG)):
+                logger.debug("Volume is {}%. Saving...".format(self.volume))
             profile_found = False
             config_file = self.config_files[0]
             ret_string = "Volume saved: {}%".format(str(self.volume))
@@ -51,20 +55,26 @@ class Player(object):
                     except EnvironmentError:
                         return "Error: Volume not saved!!!"
                     self.volume = -1
-            else:
-                new_profile_string = "volume=100\n\n" + config_string
+
             """ no user profile or user config file does not exist """
             if not profile_found:
                 if not os.path.isdir(os.path.dirname(config_file)):
                     try:
                         os.mkdir(os.path.dirname(config_file))
                     except OSError:
+                        if (logger.isEnabledFor(logging.DEBUG)):
+                            logger.debug("Error saving file {}".format(config_file))
                         return "Error: Volume not saved!!!"
+                new_profile_string = "volume=100\n\n" + config_string
                 try:
                     with open(config_file, "a") as c:
                         c.write(new_profile_string.format(str(self.volume)))
                 except EnvironmentError:
+                    if (logger.isEnabledFor(logging.DEBUG)):
+                        logger.debug("Error saving file {}".format(config_file))
                     return "Error: Volume not saved!!!"
+                self.volume = -1
+                self.PROFILE_FROM_USER = True
             return ret_string
 
     def updateStatus(self):
@@ -174,14 +184,7 @@ class MpvPlayer(Player):
         os.system("rm /tmp/mpvsocket");
 
     def save_volume(self):
-        if self.volume == -1:
-            if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug("Volume is -1. Aborting...")
-            return "Volume already saved"
-        if (logger.isEnabledFor(logging.DEBUG)):
-            logger.debug("Volume is {}%. Saving...".format(self.volume))
-        return self._do_save_volume(self.config_files[0],
-            "[pyradio]\nvolume={}\n" )
+        return self._do_save_volume("[pyradio]\nvolume={}\n")
 
     def _configHasProfile(self):
         """ Checks if mpv config has [pyradio] entry / profile.
@@ -282,14 +285,7 @@ class MpPlayer(Player):
         config_files.append("/etc/mplayer/mplayer.conf")
 
     def save_volume(self):
-        if self.volume == -1:
-            if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug("Volume is -1. Aborting...")
-            return "Volume already saved"
-        if (logger.isEnabledFor(logging.DEBUG)):
-            logger.debug("Volume is {}%. Saving...".format(self.volume))
-        return self._do_save_volume(self.config_files[0],
-            "[pyradio]\nsoftvol=yes\nvolstep=1\nvolume={}\n" )
+        return self._do_save_volume("[pyradio]\nsoftvol=yes\nvolstep=1\nvolume={}\n")
 
     def _configHasProfile(self):
         """ Checks if mplayer config has [pyradio] entry / profile.
