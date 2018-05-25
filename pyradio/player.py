@@ -1,5 +1,6 @@
 import subprocess
 import threading
+import sys
 import os
 import logging
 from os.path import expanduser
@@ -18,6 +19,53 @@ class Player(object):
 
     def __del__(self):
         self.close()
+
+    def save_volume(self):
+        pass
+
+    def _do_save_volume(self, config_file, config_string):
+        ret_string = "Volume already saved"
+        if self.volume == -1:
+            """ inform no change """
+            return ret_string
+        else:
+            """ change volume """
+            profile_found = False
+            config_file = self.config_files[0]
+            ret_string = "Volume saved: {}%".format(str(self.volume))
+            if os.path.exists(config_file):
+                if self.PROFILE_FROM_USER:
+                    with open(config_file, 'r') as c:
+                        config_strings = c.readlines()
+                    for i, a_line in enumerate(config_strings):
+                        if not profile_found:
+                            if "[pyradio]" in a_line:
+                                profile_found = True
+                        else:
+                            if a_line.startswith("volume="):
+                                config_strings[i]="volume=" + str(self.volume) + "\n"
+                                break
+                    try:
+                        with open(config_file, "w") as c:
+                            c.writelines(config_strings)
+                    except EnvironmentError:
+                        return "Error: Volume not saved!!!"
+                    self.volume = -1
+            else:
+                new_profile_string = "volume=100\n\n" + config_string
+            """ no user profile or user config file does not exist """
+            if not profile_found:
+                if not os.path.isdir(os.path.dirname(config_file)):
+                    try:
+                        os.mkdir(os.path.dirname(config_file))
+                    except OSError:
+                        return "Error: Volume not saved!!!"
+                try:
+                    with open(config_file, "a") as c:
+                        c.write(new_profile_string.format(str(self.volume)))
+                except EnvironmentError:
+                    return "Error: Volume not saved!!!"
+            return ret_string
 
     def updateStatus(self):
         if (logger.isEnabledFor(logging.DEBUG)):
@@ -115,48 +163,21 @@ class MpvPlayer(Player):
     """ True if profile comes from ~/.config/mpv/mpv.conf """
     PROFILE_FROM_USER = False
 
+    config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
+    if sys.platform.startswith('darwin'):
+        config_files.append("/usr/local/etc/mpv/mpv.conf")
+    elif sys.platform.startswith('win'):
+        config_files[0] = os.path.join(os.getenv('APPDATA'), "mpv", "mpv.conf")
+    else:
+        # linux, freebsd, etc.
+        config_files.append("/etc/mpv/mpv.conf")
+
     if os.path.exists('/tmp/mpvsocket'):
         os.system("rm /tmp/mpvsocket");
 
-    def save_mpv_volume(self):
-        ret_string = "Volume already saved"
-        if self.volume == -1:
-            """ inform no change """
-            return ret_string
-        else:
-            """ change volume """
-            profile_found = False
-            config_file = expanduser("~") + "/.config/mpv/mpv.conf"
-            ret_string = "Volume saved: {}%".format(str(self.volume))
-            new_profile_string="\n[pyradio]\nvolume={}\n"
-            if os.path.exists(config_file):
-                if self.PROFILE_FROM_USER:
-                    with open(config_file, 'r') as c:
-                        config_strings = c.readlines()
-                    for i, a_line in enumerate(config_strings):
-                        if not profile_found:
-                            if "[pyradio]" in a_line:
-                                profile_found = True
-                        else:
-                            if a_line.startswith("volume="):
-                                config_strings[i]="volume=" + str(self.volume) + "\n"
-                                break
-                    try:
-                        with open(config_file, "w") as c:
-                            c.writelines(config_strings)
-                    except EnvironmentError:
-                        return "Error while saving volume"
-                    self.volume = -1
-            else:
-                new_profile_string = "volume=100\n" + new_profile_string
-            """ no user profile or user config file does not exist """
-            if not profile_found:
-                try:
-                    with open(config_file, "a") as c:
-                        c.write(new_profile_string.format(str(self.volume)))
-                except EnvironmentError:
-                    return "Error while saving volume"
-            return ret_string
+    def save_volume(self):
+        return self._do_save_volume(self.config_files[0],
+            "[pyradio]\nvolume={}\n" )
 
     def _configHasProfile(self):
         """ Checks if mpv config has [pyradio] entry / profile.
@@ -167,9 +188,7 @@ class MpvPlayer(Player):
         volume-max=300
         volume=50"""
 
-        config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
-        config_files.append("/etc/mpv/mpv.conf")
-        for i, config_file in enumerate(config_files):
+        for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
                 with open(config_file) as f:
                     config_string = f.read()
@@ -249,6 +268,19 @@ class MpPlayer(Player):
     """ True if profile comes from ~/.mplayer/config """
     PROFILE_FROM_USER = False
 
+    config_files = [expanduser("~") + "/.mplayer/config"]
+    if sys.platform.startswith('darwin'):
+        config_files.append("/usr/local/etc/mplayer/mplayer.conf")
+    elif sys.platform.startswith('win'):
+        pass
+    else:
+        # linux, freebsd, etc.
+        config_files.append("/etc/mplayer/mplayer.conf")
+
+    def save_volume(self):
+        return self._do_save_volume(self.config_files[0],
+            "[pyradio]\nsoftvol=yes\nvolstep=1\nvolume={}\n" )
+
     def _configHasProfile(self):
         """ Checks if mplayer config has [pyradio] entry / profile.
 
@@ -259,9 +291,7 @@ class MpPlayer(Player):
         volstep=2
         volume=28"""
 
-        config_files = [expanduser("~") + "/.mplayer/config"]
-        config_files.append("/etc/mplayer/mplayer.conf")
-        for i, config_file in enumerate(config_files):
+        for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
                 with open(config_file) as f:
                     config_string = f.read()
@@ -314,6 +344,9 @@ class VlcPlayer(Player):
     PLAYER_CMD = "cvlc"
 
     muted = False
+
+    def save_volume(self):
+        pass
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""

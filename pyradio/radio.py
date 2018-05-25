@@ -189,10 +189,9 @@ class PyRadio(object):
         pageChange = 5
 
         if char == ord('v'):
-            if hasattr(self.player, 'save_mpv_volume'):
-                self.log.write(self.player.save_mpv_volume())
-            else:
-                self.log.write('Saving volume not supported')
+            ret_string = self.player.save_volume()
+            if ret_string:
+                self.log.write(ret_string)
             return
 
         if char == ord('G'):
