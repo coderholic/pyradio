@@ -128,8 +128,9 @@ class MpvPlayer(Player):
             profile_found = False
             config_file = expanduser("~") + "/.config/mpv/mpv.conf"
             ret_string = "Volume saved: {}%".format(str(self.volume))
-            if self.PROFILE_FROM_USER:
-                if os.path.exists(config_file):
+            new_profile_string="\n[pyradio]\nvolume={}\n"
+            if os.path.exists(config_file):
+                if self.PROFILE_FROM_USER:
                     with open(config_file, 'r') as c:
                         config_strings = c.readlines()
                     for i, a_line in enumerate(config_strings):
@@ -140,13 +141,21 @@ class MpvPlayer(Player):
                             if a_line.startswith("volume="):
                                 config_strings[i]="volume=" + str(self.volume) + "\n"
                                 break
-                    with open(config_file, "w") as c:
-                        c.writelines(config_strings)
+                    try:
+                        with open(config_file, "w") as c:
+                            c.writelines(config_strings)
+                    except EnvironmentError:
+                        return "Error while saving volume"
                     self.volume = -1
+            else:
+                new_profile_string = "volume=100\n" + new_profile_string
             """ no user profile or user config file does not exist """
             if not profile_found:
-                with open(config_file, "a") as c:
-                    c.write("\n[pyradio]\nvolume={}\n".format(str(self.volume)))
+                try:
+                    with open(config_file, "a") as c:
+                        c.write(new_profile_string.format(str(self.volume)))
+                except EnvironmentError:
+                    return "Error while saving volume"
             return ret_string
 
     def _configHasProfile(self):
