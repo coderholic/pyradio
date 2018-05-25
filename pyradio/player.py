@@ -83,8 +83,6 @@ class Player(object):
                 self.outputStream.write(subsystemOut)
                 if "Volume:" in subsystemOut:
                     self.volume = ''.join(c for c in subsystemOut if c.isdigit())
-                    if (logger.isEnabledFor(logging.DEBUG)):
-                        logger.debug("Read volume {}".format(self.volume))
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
@@ -176,6 +174,12 @@ class MpvPlayer(Player):
         os.system("rm /tmp/mpvsocket");
 
     def save_volume(self):
+        if self.volume == -1:
+            if (logger.isEnabledFor(logging.DEBUG)):
+                logger.debug("Volume is -1. Aborting...")
+            return "Volume already saved"
+        if (logger.isEnabledFor(logging.DEBUG)):
+            logger.debug("Volume is {}%. Saving...".format(self.volume))
         return self._do_save_volume(self.config_files[0],
             "[pyradio]\nvolume={}\n" )
 
@@ -278,6 +282,12 @@ class MpPlayer(Player):
         config_files.append("/etc/mplayer/mplayer.conf")
 
     def save_volume(self):
+        if self.volume == -1:
+            if (logger.isEnabledFor(logging.DEBUG)):
+                logger.debug("Volume is -1. Aborting...")
+            return "Volume already saved"
+        if (logger.isEnabledFor(logging.DEBUG)):
+            logger.debug("Volume is {}%. Saving...".format(self.volume))
         return self._do_save_volume(self.config_files[0],
             "[pyradio]\nsoftvol=yes\nvolstep=1\nvolume={}\n" )
 
