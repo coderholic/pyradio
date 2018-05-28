@@ -39,20 +39,53 @@ class Player(object):
             ret_string = "Volume saved: {}%".format(str(self.volume))
             if os.path.exists(config_file):
                 if self.PROFILE_FROM_USER:
-                    with open(config_file, 'r') as c:
-                        config_strings = c.readlines()
-                    for i, a_line in enumerate(config_strings):
-                        if not profile_found:
-                            if "[pyradio]" in a_line:
-                                profile_found = True
-                        else:
-                            if a_line.startswith("volume="):
-                                config_strings[i]="volume=" + str(self.volume) + "\n"
+                    with open(config_file, 'r') as c_file:
+                        config_string = c_file.read()
+
+                    if "[pyradio]" in config_string:
+                        profile_found = True
+
+                        """ split on [pyradio]
+                        last item has our options """
+                        sections = config_string.split("[pyradio]")
+
+                        """ split at [ - i.e. isolate consecutive profiles
+                        first item has pyradio options """
+                        py_section = sections[-1].split("[")
+
+                        """ split to lines in order to get '^volume=' """
+                        py_options = py_section[0].split("\n")
+
+                        """ replace volume line """
+                        vol_set = False
+                        for i, opt in enumerate(py_options):
+                            if opt.startswith("volume="):
+                                py_options[i]="volume=" + str(self.volume)
+                                vol_set = True
                                 break
+                        """ or add it if it does not exist """
+                        if not vol_set:
+                            py_options.append("volume=" + str(self.volume))
+
+                        """ join lines together in py_section's first item """
+                        py_section[0] = "\n".join(py_options)
+
+                        """ join consecutive profiles (if exist)
+                        in last item of sections """
+                        if len(py_section) > 1:
+                            sections[-1] = "[".join(py_section)
+                        else:
+                            sections[-1] = py_section[0]
+
+                        """ finally get the string back together """
+                        config_string = "[pyradio]".join(sections)
+
                     try:
-                        with open(config_file, "w") as c:
-                            c.writelines(config_strings)
+                        with open(config_file, "w") as c_file:
+                            c_file.write(config_string)
                     except EnvironmentError:
+                        if (logger.isEnabledFor(logging.DEBUG)):
+                            logger.debug("Error saving file {}".format(config_file))
                         return "Error: Volume not saved!!!"
                     self.volume = -1
 
@@ -67,8 +100,8 @@ class Player(object):
                         return "Error: Volume not saved!!!"
                 new_profile_string = "volume=100\n\n" + config_string
                 try:
-                    with open(config_file, "a") as c:
-                        c.write(new_profile_string.format(str(self.volume)))
+                    with open(config_file, "a") as c_file:
+                        c_file.write(new_profile_string.format(str(self.volume)))
                 except EnvironmentError:
                     if (logger.isEnabledFor(logging.DEBUG)):
                         logger.debug("Error saving file {}".format(config_file))
