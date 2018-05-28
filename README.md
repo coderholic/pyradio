@@ -70,6 +70,7 @@ The second step is to install the build:
 Up/Down/j/k/PgUp/PgDown Change station selection.
 Enter                   Play selected station.
 -/+                     Change volume.
+v                       Save volume (mpv and mplayer only).
 m                       Mute.
 r                       Select and play a random station.
 g                       Jump to first station.
@@ -88,8 +89,9 @@ Users can define a profile called "**[pyradio]**" in mpv's configuration file (e
 
 Example:
 
+    volume=100
+
     [pyradio]
-    max-volume=300
     volume=50
 
 ### mplayer
@@ -100,9 +102,11 @@ Users can define a profile called "**[pyradio]**" in mplayers's configuration fi
 
 Example:
 
+    volume=100
+
     [pyradio]
     softvol=yes
-    volstep=2
+    volstep=1
     volume=28
 
 ### vlc

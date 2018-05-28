@@ -188,6 +188,12 @@ class PyRadio(object):
         # Number of stations to change with the page up/down keys
         pageChange = 5
 
+        if char == ord('v'):
+            ret_string = self.player.save_volume()
+            if ret_string:
+                self.log.write(ret_string)
+            return
+
         if char == ord('G'):
             if self.jumpnr == "":
                 self.setStation(-1)
