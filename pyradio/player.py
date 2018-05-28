@@ -1,9 +1,9 @@
 import subprocess
 import threading
-import sys
 import os
 import logging
 from os.path import expanduser
+from sys import platform
 
 logger = logging.getLogger(__name__)
 
@@ -172,9 +172,9 @@ class MpvPlayer(Player):
     PROFILE_FROM_USER = False
 
     config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
-    if sys.platform.startswith('darwin'):
+    if platform.startswith('darwin'):
         config_files.append("/usr/local/etc/mpv/mpv.conf")
-    elif sys.platform.startswith('win'):
+    elif platform.startswith('win'):
         config_files[0] = os.path.join(os.getenv('APPDATA'), "mpv", "mpv.conf")
     else:
         # linux, freebsd, etc.
@@ -276,9 +276,9 @@ class MpPlayer(Player):
     PROFILE_FROM_USER = False
 
     config_files = [expanduser("~") + "/.mplayer/config"]
-    if sys.platform.startswith('darwin'):
+    if platform.startswith('darwin'):
         config_files.append("/usr/local/etc/mplayer/mplayer.conf")
-    elif sys.platform.startswith('win'):
+    elif platform.startswith('win'):
         config_files[0] = os.path.join(os.getenv('APPDATA'), "mplayer", "config")
     else:
         # linux, freebsd, etc.
