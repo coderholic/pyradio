@@ -47,6 +47,16 @@ The second step is to install the build:
 
 	sudo python setup.py install
 
+## Windows
+
+On Windows, only mplayer or vlc can be used (mpv requires an additional program called socat, which does not exist on this platform).
+
+In case mplayer is the player of choise, users must manually execute it on a "Command Prompt" window, so that it caches Windows fonts. This has be done once, right after mplayer is installed.
+
+Example:
+
+    mplayer -playlist "http://somafm.com/startstream=groovesalad.pls"
+
 ## Shell commands
 
     $ pyradio -h

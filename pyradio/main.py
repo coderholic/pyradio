@@ -39,8 +39,10 @@ def check_stations(usr, root):
         mkdir(usr)
         copyfile(root, path.join(usr, 'station.csv'))
 
-
-usr_path = path.join(getenv('HOME', '~'), '.config', 'pyradio')
+if sys.platform.startswith('win'):
+    usr_path = path.join(getenv('APPDATA'), 'pyradio')
+else:
+    usr_path = path.join(getenv('HOME', '~'), '.config', 'pyradio')
 root_path = path.join(path.dirname(__file__), 'stations.csv')
 check_stations(usr_path, root_path)
 
