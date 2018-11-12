@@ -132,13 +132,19 @@ class Player(object):
                     self.oldUserInput[0] = subsystemOut
                     if "icy-title:" in subsystemOut:
                             self.oldUserInput[2] = subsystemOut
-                            self.outputStream.write(subsystemOut)
+                            if self.a_thread:
+                                if not self.a_thread.isAlive():
+                                    self.outputStream.write(subsystemOut)
+                            else:
+                                self.outputStream.write(subsystemOut)
                     else:
                         if self.oldUserInput[1] != subsystemOut:
+                            if self.a_thread:
+                                self.a_thread.cancel()
+                            self.threadUpdateTitle()
                             self.oldUserInput[1] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
                             self.outputStream.write(subsystemOut)
-                            self.threadUpdateTitle()
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
@@ -146,12 +152,11 @@ class Player(object):
             logger.debug("updateStatus thread stopped.")
 
     def threadUpdateTitle(self, delay=2):
-        if a_thread:
-            if a_thread.isAlive():
-                a_thread.cancel()
+        if self.a_thread:
+            self.a_thread.cancel()
         try:
-           a_thread = threading.Timer(delay, updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
-           a_thread.start()
+           self.a_thread = threading.Timer(delay, updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
+           self.a_thread.start()
         except:
             if (logger.isEnabledFor(logging.DEBUG)):
                 logger.debug("title update thread start failed")
