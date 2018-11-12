@@ -4,14 +4,20 @@ import os
 import logging
 from os.path import expanduser
 from sys import platform
+import _thread
+from time import sleep
 
 logger = logging.getLogger(__name__)
 
+def updateTitle(delay, mstr, mmsg):
+    sleep(delay)
+    mstr.write(mmsg)
 
 class Player(object):
     """ Media player class. Playing is handled by player sub classes """
     process = None
-
+    # 0: old user input, 1: old volume input, 2: old title input
+    oldUserInput = [ '', '' , '' ]
     volume = -1
 
     def __init__(self, outputStream):
@@ -121,16 +127,35 @@ class Player(object):
                     break
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace("\r", "").replace("\n", "")
-                if (logger.isEnabledFor(logging.DEBUG)):
-                    logger.debug("User input: {}".format(subsystemOut))
-                self.outputStream.write(subsystemOut)
-                if "Volume:" in subsystemOut:
-                    self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                if self.oldUserInput[0] != subsystemOut:
+                    if (logger.isEnabledFor(logging.DEBUG)):
+                        logger.debug("User input: {}".format(subsystemOut))
+                    self.oldUserInput[0] = subsystemOut
+                    if "Volume:" in subsystemOut:
+                        if self.oldUserInput[1] != subsystemOut:
+                            self.oldUserInput[1] = subsystemOut
+                            self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                            self.outputStream.write(subsystemOut)
+                            self.threadUpdateTitle(1)
+
+                    else:
+                            if "Volume " not in subsystemOut:
+                                self.oldUserInput[2] = subsystemOut
+                            self.outputStream.write(subsystemOut)
+
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug("updateStatus thread stopped.")
+
+    def threadUpdateTitle(self, delay):
+        try:
+           _thread.start_new_thread(updateTitle ,  ( delay , self.outputStream, self.oldUserInput[2]) )
+        except:
+            if (logger.isEnabledFor(logging.DEBUG)):
+                logger.debug("title update thread start failed")
+            pass
 
     def isPlaying(self):
         return bool(self.process)
