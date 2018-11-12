@@ -131,18 +131,15 @@ class Player(object):
                     if (logger.isEnabledFor(logging.DEBUG)):
                         logger.debug("User input: {}".format(subsystemOut))
                     self.oldUserInput[0] = subsystemOut
-                    if "Volume:" in subsystemOut:
+                    if "icy-title:" in subsystemOut:
+                            self.oldUserInput[2] = subsystemOut
+                            self.outputStream.write(subsystemOut)
+                    else:
                         if self.oldUserInput[1] != subsystemOut:
                             self.oldUserInput[1] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
                             self.outputStream.write(subsystemOut)
                             self.threadUpdateTitle(1)
-
-                    else:
-                            if "Volume " not in subsystemOut:
-                                self.oldUserInput[2] = subsystemOut
-                            self.outputStream.write(subsystemOut)
-
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
