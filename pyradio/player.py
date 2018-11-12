@@ -4,8 +4,6 @@ import os
 import logging
 from os.path import expanduser
 from sys import platform
-import _thread
-from time import sleep
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +17,7 @@ class Player(object):
     # 0: old user input, 1: old volume input, 2: old title input
     oldUserInput = [ '', '' , '' ]
     volume = -1
+    a_thread = None
 
     def __init__(self, outputStream):
         self.outputStream = outputStream
@@ -139,20 +138,23 @@ class Player(object):
                             self.oldUserInput[1] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
                             self.outputStream.write(subsystemOut)
-                            self.threadUpdateTitle(1)
+                            self.threadUpdateTitle()
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug("updateStatus thread stopped.")
 
-    def threadUpdateTitle(self, delay):
+    def threadUpdateTitle(self, delay=2):
+        if a_thread:
+            if a_thread.isAlive():
+                a_thread.cancel()
         try:
-           _thread.start_new_thread(updateTitle ,  ( delay , self.outputStream, self.oldUserInput[2]) )
+           a_thread = threading.Timer(delay, updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
+           a_thread.start()
         except:
             if (logger.isEnabledFor(logging.DEBUG)):
                 logger.debug("title update thread start failed")
-            pass
 
     def isPlaying(self):
         return bool(self.process)
