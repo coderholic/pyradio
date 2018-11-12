@@ -7,17 +7,12 @@ from sys import platform
 
 logger = logging.getLogger(__name__)
 
-def updateTitle(delay, mstr, mmsg):
-    sleep(delay)
-    mstr.write(mmsg)
 
 class Player(object):
     """ Media player class. Playing is handled by player sub classes """
     process = None
-    # 0: old user input, 1: old volume input, 2: old title input
-    oldUserInput = [ '', '' , '' ]
+
     volume = -1
-    a_thread = None
 
     def __init__(self, outputStream):
         self.outputStream = outputStream
@@ -126,40 +121,16 @@ class Player(object):
                     break
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace("\r", "").replace("\n", "")
-                if self.oldUserInput[0] != subsystemOut:
-                    if (logger.isEnabledFor(logging.DEBUG)):
-                        logger.debug("User input: {}".format(subsystemOut))
-                    self.oldUserInput[0] = subsystemOut
-                    if "icy-title:" in subsystemOut:
-                            self.oldUserInput[2] = subsystemOut
-                            if self.a_thread:
-                                if not self.a_thread.isAlive():
-                                    self.outputStream.write(subsystemOut)
-                            else:
-                                self.outputStream.write(subsystemOut)
-                    else:
-                        if self.oldUserInput[1] != subsystemOut:
-                            if self.a_thread:
-                                self.a_thread.cancel()
-                            self.threadUpdateTitle()
-                            self.oldUserInput[1] = subsystemOut
-                            self.volume = ''.join(c for c in subsystemOut if c.isdigit())
-                            self.outputStream.write(subsystemOut)
+                if (logger.isEnabledFor(logging.DEBUG)):
+                    logger.debug("User input: {}".format(subsystemOut))
+                self.outputStream.write(subsystemOut)
+                if "Volume:" in subsystemOut:
+                    self.volume = ''.join(c for c in subsystemOut if c.isdigit())
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug("updateStatus thread stopped.")
-
-    def threadUpdateTitle(self, delay=2):
-        if self.a_thread:
-            self.a_thread.cancel()
-        try:
-           self.a_thread = threading.Timer(delay, updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
-           self.a_thread.start()
-        except:
-            if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug("title update thread start failed")
 
     def isPlaying(self):
         return bool(self.process)
