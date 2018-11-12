@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 class Player(object):
     """ Media player class. Playing is handled by player sub classes """
     process = None
-
+    # old user input old volume, old title
+    oldUserInput = [ '', '' , '' ]
     volume = -1
 
     def __init__(self, outputStream):
@@ -121,11 +122,21 @@ class Player(object):
                     break
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace("\r", "").replace("\n", "")
-                if (logger.isEnabledFor(logging.DEBUG)):
-                    logger.debug("User input: {}".format(subsystemOut))
-                self.outputStream.write(subsystemOut)
-                if "Volume:" in subsystemOut:
-                    self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                if self.oldUserInput[0] != subsystemOut:
+                    self.oldUserInput[0] = subsystemOut
+                    if "Volume:" in subsystemOut:
+                        if self.oldUserInput[1] != subsystemOut:
+                            self.oldUserInput[1] = subsystemOut
+                            self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                            self.outputStream.write(subsystemOut)
+                            if (logger.isEnabledFor(logging.DEBUG)):
+                                logger.debug("User input: {}".format(subsystemOut))
+                    else:
+                            self.oldUserInput[2] = subsystemOut
+                            self.outputStream.write(subsystemOut)
+                            if (logger.isEnabledFor(logging.DEBUG)):
+                                logger.debug("User input: {}".format(subsystemOut))
+
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
