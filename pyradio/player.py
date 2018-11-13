@@ -7,9 +7,6 @@ from sys import platform
 
 logger = logging.getLogger(__name__)
 
-def updateTitle(*arg, **karg):
-    arg[0].write(arg[1])
-
 class Player(object):
     """ Media player class. Playing is handled by player sub classes """
     process = None
@@ -155,11 +152,14 @@ class Player(object):
                 if self.a_thread.isAlive():
                     self.a_thread.cancel()
             try:
-               self.a_thread = threading.Timer(delay, updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
+               self.a_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
                self.a_thread.start()
             except:
                 if (logger.isEnabledFor(logging.DEBUG)):
                     logger.debug("title update thread start failed")
+
+    def updateTitle(self, *arg, **karg):
+        arg[0].write(arg[1])
 
     def isPlaying(self):
         return bool(self.process)
