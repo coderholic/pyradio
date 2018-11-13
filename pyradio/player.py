@@ -7,9 +7,8 @@ from sys import platform
 
 logger = logging.getLogger(__name__)
 
-def updateTitle(delay, mstr, mmsg):
-    sleep(delay)
-    mstr.write(mmsg)
+def updateTitle(*arg, **karg):
+    arg[0].write(arg[1])
 
 class Player(object):
     """ Media player class. Playing is handled by player sub classes """
@@ -130,31 +129,37 @@ class Player(object):
                     if (logger.isEnabledFor(logging.DEBUG)):
                         logger.debug("User input: {}".format(subsystemOut))
                     self.oldUserInput[0] = subsystemOut
-                    if "icy-title:" in subsystemOut:
-                            self.oldUserInput[2] = subsystemOut
-                            self.outputStream.write(subsystemOut)
-                    else:
+                    if "Volume" in subsystemOut:
                         if self.oldUserInput[1] != subsystemOut:
                             self.oldUserInput[1] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
                             self.outputStream.write(subsystemOut)
                             self.threadUpdateTitle()
+                    else:
+                        if "icy-title:" in subsystemOut:
+                            self.oldUserInput[2] = subsystemOut
+                        if self.a_thread is None:
+                            self.outputStream.write(subsystemOut)
+                        else:
+                            if (not self.a_thread.isAlive()):
+                                self.outputStream.write(subsystemOut)
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug("updateStatus thread stopped.")
 
-    def threadUpdateTitle(self, delay=2):
-        if a_thread:
-            if a_thread.isAlive():
-                a_thread.cancel()
-        try:
-           a_thread = threading.Timer(delay, updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
-           a_thread.start()
-        except:
-            if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug("title update thread start failed")
+    def threadUpdateTitle(self, delay=1):
+        if self.oldUserInput[2] != '':
+            if self.a_thread is not None:
+                if self.a_thread.isAlive():
+                    self.a_thread.cancel()
+            try:
+               self.a_thread = threading.Timer(delay, updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
+               self.a_thread.start()
+            except:
+                if (logger.isEnabledFor(logging.DEBUG)):
+                    logger.debug("title update thread start failed")
 
     def isPlaying(self):
         return bool(self.process)
@@ -192,6 +197,9 @@ class Player(object):
 
         # First close the subprocess
         self._stop()
+
+        if self.a_thread is not None:
+            self.a_thread.cancel()
 
         # Here is fallback solution and cleanup
         if self.process is not None:
