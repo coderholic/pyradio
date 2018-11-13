@@ -13,7 +13,7 @@ class Player(object):
     # 0: old user input, 1: old volume input, 2: old title input
     oldUserInput = [ '', '' , '' ]
     volume = -1
-    a_thread = None
+    delay_thread = None
 
     def __init__(self, outputStream):
         self.outputStream = outputStream
@@ -133,12 +133,14 @@ class Player(object):
                             self.outputStream.write(subsystemOut)
                             self.threadUpdateTitle()
                     else:
+                        if oldUserInput[2] == '' or (not subsystemOut.startswith('icy-title:')):
+                            self.oldUserInput[2] = subsystemOut
                         if "icy-title:" in subsystemOut:
                             self.oldUserInput[2] = subsystemOut
-                        if self.a_thread is None:
+                        if self.delay_thread is None:
                             self.outputStream.write(subsystemOut)
                         else:
-                            if (not self.a_thread.isAlive()):
+                            if (not self.delay_thread.isAlive()):
                                 self.outputStream.write(subsystemOut)
         except:
             logger.error("Error in updateStatus thread.",
@@ -148,15 +150,15 @@ class Player(object):
 
     def threadUpdateTitle(self, delay=1):
         if self.oldUserInput[2] != '':
-            if self.a_thread is not None:
-                if self.a_thread.isAlive():
-                    self.a_thread.cancel()
+            if self.delay_thread is not None:
+                if self.delay_thread.isAlive():
+                    self.delay_thread.cancel()
             try:
-               self.a_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
-               self.a_thread.start()
+               self.delay_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
+               self.delay_thread.start()
             except:
                 if (logger.isEnabledFor(logging.DEBUG)):
-                    logger.debug("title update thread start failed")
+                    logger.debug("delay thread start failed")
 
     def updateTitle(self, *arg, **karg):
         arg[0].write(arg[1])
@@ -198,10 +200,9 @@ class Player(object):
         # First close the subprocess
         self._stop()
 
-        if self.a_thread is not None:
-            self.a_thread.cancel()
-
         # Here is fallback solution and cleanup
+        if self.delay_thread is not None:
+            self.delay_thread.cancel()
         if self.process is not None:
             os.kill(self.process.pid, 15)
             self.process.wait()
