@@ -190,6 +190,7 @@ class Player(object):
     def play(self, streamUrl):
         """ use a multimedia player to play a stream """
         self.close()
+        self.oldUserInput = [ '', '' , '' ]
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)
