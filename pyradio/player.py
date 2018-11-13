@@ -233,7 +233,6 @@ class Player(object):
         # Here is fallback solution and cleanup
         if self.delay_thread is not None:
             self.delay_thread.cancel()
-            self.delay_thread.wait()
         if self.process is not None:
             os.kill(self.process.pid, 15)
             self.process.wait()
