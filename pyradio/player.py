@@ -10,8 +10,14 @@ logger = logging.getLogger(__name__)
 class Player(object):
     """ Media player class. Playing is handled by player sub classes """
     process = None
-    # 0: old user input, 1: old volume input, 2: old title input
+
+    # 0: old user input     - used to early suppress output
+    #                         in case of consecutive equal messages
+    # 1: old volume input   - used to suppress output (and firing of delay thread)
+    #                         in case of consecutive equal volume messages
+    # 2: old title input	- printed by delay thread
     oldUserInput = [ '', '' , '' ]
+
     volume = -1
     delay_thread = None
     icy_found = False
@@ -142,8 +148,14 @@ class Player(object):
                         if self.isIcyEntry(subsystemOut):
                             self.oldUserInput[2] = subsystemOut
                             self.icy_found = True
-                        # make sure title will not pop-up
-                        # while Volume value is on
+
+                        # mplayer sends first icy-title too early; it gets overwritten
+                        # once we get the first, we block all but icy messages
+                        # (whenever we get an input, we print the previous icy message)
+                        if self.icy_found and (self.PLAYER_CMD == 'mplayer'):
+                            subsystemOut = self.oldUserInput[2]
+
+                        # make sure title will not pop-up while Volume value is on
                         if self.delay_thread is None:
                             self.outputStream.write(self.formatTitleString(subsystemOut))
                         else:
@@ -171,16 +183,11 @@ class Player(object):
         arg[0].write(arg[1])
 
     def isIcyEntry(self, a_string):
-        # tokens: mpv , mplayer , TODO vlc
-        ch = ('icy-title:' , 'ICY Info:')
-        for a_ch in ch:
-            if a_string.startswith(a_ch):
-                return True
-        return False
+        pass
 
     def formatTitleString(self, titleString):
         return titleString
-        
+
     def formatVolumeString(self, volumeString):
         return volumeString
 
@@ -191,6 +198,7 @@ class Player(object):
         """ use a multimedia player to play a stream """
         self.close()
         self.oldUserInput = [ '', '' , '' ]
+        self.icy_found = False
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)
@@ -225,6 +233,7 @@ class Player(object):
         # Here is fallback solution and cleanup
         if self.delay_thread is not None:
             self.delay_thread.cancel()
+            self.delay_thread.wait()
         if self.process is not None:
             os.kill(self.process.pid, 15)
             self.process.wait()
@@ -350,7 +359,14 @@ class MpvPlayer(Player):
 
     def formatTitleString(self, titleString):
         return titleString.replace('icy-title: ', 'ICY Title: ')
-        
+
+    def isIcyEntry(self, a_string):
+        # put accepted tokens in tupple
+        ch = ('icy-title:', 'Exiting... (Quit)')
+        for a_ch in ch:
+            if a_string.startswith(a_ch):
+                return True
+        return False
 
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
@@ -440,9 +456,17 @@ class MpPlayer(Player):
             return tmp[:tmp.find("';Stream")]
         else:
             return titleString
-        
+
     def formatVolumeString(self, volumeString):
         return volumeString[volumeString.find('Volume: '):].replace(' %','%')
+
+    def isIcyEntry(self, a_string):
+        # put accepted tokkens in tupple
+        ch = ('ICY Info:', 'Exiting... (Quit)')
+        for a_ch in ch:
+            if a_string.startswith(a_ch):
+                return True
+        return False
 
 class VlcPlayer(Player):
     """Implementation of Player for VLC"""
@@ -485,6 +509,17 @@ class VlcPlayer(Player):
         """ decrease vlc's volume """
         self._sendCommand("voldown\n")
 
+    def isIcyEntry(self, a_string):
+        # put accepted tokkens in tuple
+        #ch = ()
+        #for a_ch in ch:
+        #    if a_string.startswith(a_ch):
+        #        return True
+        #return False
+        #
+        # I have never manages to run pyradio with cvlc backend
+        # so, if anyone does, let him have all messages
+        return True
 
 def probePlayer():
     """ Probes the multimedia players which are available on the host
