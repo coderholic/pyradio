@@ -131,7 +131,7 @@ class Player(object):
                         if self.oldUserInput[1] != subsystemOut:
                             self.oldUserInput[1] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
-                            self.outputStream.write(subsystemOut)
+                            self.outputStream.write(self.formatVolumeString(subsystemOut))
                             self.threadUpdateTitle()
                     else:
                         # get all input before we get first icy-title
@@ -145,10 +145,10 @@ class Player(object):
                         # make sure title will not pop-up
                         # while Volume value is on
                         if self.delay_thread is None:
-                            self.outputStream.write(subsystemOut)
+                            self.outputStream.write(self.formatTitleString(subsystemOut))
                         else:
                             if (not self.delay_thread.isAlive()):
-                                self.outputStream.write(subsystemOut)
+                                self.outputStream.write(self.formatTitleString(subsystemOut))
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
@@ -161,7 +161,7 @@ class Player(object):
                 if self.delay_thread.isAlive():
                     self.delay_thread.cancel()
             try:
-               self.delay_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self.oldUserInput[2] ] )
+               self.delay_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self.formatTitleString(self.oldUserInput[2]) ] )
                self.delay_thread.start()
             except:
                 if (logger.isEnabledFor(logging.DEBUG)):
@@ -177,6 +177,12 @@ class Player(object):
             if a_string.startswith(a_ch):
                 return True
         return False
+
+    def formatTitleString(self, titleString):
+        return titleString
+        
+    def formatVolumeString(self, volumeString):
+        return volumeString
 
     def isPlaying(self):
         return bool(self.process)
@@ -341,6 +347,9 @@ class MpvPlayer(Player):
         """ decrease mpv's volume """
         os.system("echo 'cycle volume down' | socat - /tmp/mpvsocket");
 
+    def formatTitleString(self, titleString):
+        return titleString.replace('icy-title: ', 'ICY Title: ')
+        
 
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
@@ -424,6 +433,15 @@ class MpPlayer(Player):
         """ decrease mplayer's volume """
         self._sendCommand("/")
 
+    def formatTitleString(self, titleString):
+        if "StreamTitle='" in titleString:
+            tmp = titleString[titleString.find("StreamTitle='"):].replace("StreamTitle='", "ICY Title: ")
+            return tmp[:tmp.find("';Stream")]
+        else:
+            return titleString
+        
+    def formatVolumeString(self, volumeString):
+        return volumeString[volumeString.find('Volume: '):].replace(' %','%')
 
 class VlcPlayer(Player):
     """Implementation of Player for VLC"""
