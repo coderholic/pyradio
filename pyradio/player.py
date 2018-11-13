@@ -14,7 +14,7 @@ class Player(object):
     oldUserInput = [ '', '' , '' ]
     volume = -1
     delay_thread = None
-    icy_title_found = False
+    icy_found = False
 
     def __init__(self, outputStream):
         self.outputStream = outputStream
@@ -26,7 +26,7 @@ class Player(object):
         pass
 
     def _do_save_volume(self, config_string):
-        ret_string = "Volume already saved"
+        ret_string = "Volume: already saved..."
         if self.volume == -1:
             """ inform no change """
             if (logger.isEnabledFor(logging.DEBUG)):
@@ -38,7 +38,7 @@ class Player(object):
                 logger.debug("Volume is {}%. Saving...".format(self.volume))
             profile_found = False
             config_file = self.config_files[0]
-            ret_string = "Volume saved: {}%".format(str(self.volume))
+            ret_string = "Volume: {}% - saved".format(str(self.volume))
             if os.path.exists(config_file):
                 if self.PROFILE_FROM_USER:
                     with open(config_file, 'r') as c_file:
@@ -88,7 +88,7 @@ class Player(object):
                     except EnvironmentError:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug("Error saving file {}".format(config_file))
-                        return "Error: Volume not saved!!!"
+                        return "Volume: {}% - NOT saved (Error writing file)".format(str(self.volume))
                     self.volume = -1
 
             """ no user profile or user config file does not exist """
@@ -99,7 +99,7 @@ class Player(object):
                     except OSError:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug("Error saving file {}".format(config_file))
-                        return "Error: Volume not saved!!!"
+                        return "Volume: {}% - NOT saved (Error writing file)".format(str(self.volume))
                 new_profile_string = "volume=100\n\n" + config_string
                 try:
                     with open(config_file, "a") as c_file:
@@ -107,7 +107,7 @@ class Player(object):
                 except EnvironmentError:
                     if (logger.isEnabledFor(logging.DEBUG)):
                         logger.debug("Error saving file {}".format(config_file))
-                    return "Error: Volume not saved!!!"
+                    return "Volume: {}% - NOT saved (Error writing file)".format(str(self.volume))
                 self.volume = -1
                 self.PROFILE_FROM_USER = True
             return ret_string
@@ -127,7 +127,7 @@ class Player(object):
                     if (logger.isEnabledFor(logging.DEBUG)):
                         logger.debug("User input: {}".format(subsystemOut))
                     self.oldUserInput[0] = subsystemOut
-                    if "Volume" in subsystemOut:
+                    if "Volume: " in subsystemOut:
                         if self.oldUserInput[1] != subsystemOut:
                             self.oldUserInput[1] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
@@ -135,13 +135,13 @@ class Player(object):
                             self.threadUpdateTitle()
                     else:
                         # get all input before we get first icy-title
-                        if (not self.icy_title_found):
+                        if (not self.icy_found):
                             self.oldUserInput[2] = subsystemOut
                         # once we get the first icy-title,
                         # get only icy-title entries
-                        if "icy-title:" in subsystemOut:
+                        if self.isIcyEntry(subsystemOut):
                             self.oldUserInput[2] = subsystemOut
-                            self.icy_title_found = True
+                            self.icy_found = True
                         if self.delay_thread is None:
                             self.outputStream.write(subsystemOut)
                         else:
@@ -167,6 +167,14 @@ class Player(object):
 
     def updateTitle(self, *arg, **karg):
         arg[0].write(arg[1])
+
+    def isIcyEntry(self, a_string):
+        # tokens: mpv , mplayer , TODO vlc
+        ch = ('icy-title:' , 'ICY Info:')
+        for a_ch in ch:
+            if a_string.startswith(a_ch):
+                return True
+        return False
 
     def isPlaying(self):
         return bool(self.process)
