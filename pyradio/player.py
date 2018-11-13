@@ -14,6 +14,7 @@ class Player(object):
     oldUserInput = [ '', '' , '' ]
     volume = -1
     delay_thread = None
+    icy_title_found = False
 
     def __init__(self, outputStream):
         self.outputStream = outputStream
@@ -133,10 +134,14 @@ class Player(object):
                             self.outputStream.write(subsystemOut)
                             self.threadUpdateTitle()
                     else:
-                        if oldUserInput[2] == '' or (not subsystemOut.startswith('icy-title:')):
+                        # get all input before we get first icy-title
+                        if (not self.icy_title_found):
                             self.oldUserInput[2] = subsystemOut
+                        # once we get the first icy-title,
+                        # get only icy-title entries
                         if "icy-title:" in subsystemOut:
                             self.oldUserInput[2] = subsystemOut
+                            self.icy_title_found = True
                         if self.delay_thread is None:
                             self.outputStream.write(subsystemOut)
                         else:
