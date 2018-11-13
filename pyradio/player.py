@@ -142,6 +142,8 @@ class Player(object):
                         if self.isIcyEntry(subsystemOut):
                             self.oldUserInput[2] = subsystemOut
                             self.icy_found = True
+                        # make sure title will not pop-up
+                        # while Volume value is on
                         if self.delay_thread is None:
                             self.outputStream.write(subsystemOut)
                         else:
