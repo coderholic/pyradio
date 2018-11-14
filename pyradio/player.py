@@ -149,10 +149,10 @@ class Player(object):
                             self.oldUserInput[2] = subsystemOut
                             self.icy_found = True
 
-                        # mplayer sends first icy-title too early; it gets overwritten
-                        # once we get the first, we block all but icy messages
-                        # (whenever we get an input, we print the previous icy message)
-                        if self.icy_found and (self.PLAYER_CMD == 'mplayer'):
+                        # some servers sends first icy-title too early; it gets overwritten once
+                        # we get the first, so we block all but icy messages, after the first one
+                        # is received (whenever we get an input, we print the previous icy message)
+                        if self.icy_found:
                             subsystemOut = self.oldUserInput[2]
 
                         # make sure title will not pop-up while Volume value is on
@@ -516,7 +516,7 @@ class VlcPlayer(Player):
         #        return True
         #return False
         #
-        # I have never manages to run pyradio with cvlc backend
+        # I have never managed to run pyradio with cvlc backend
         # so, if anyone does, let him have all messages
         return True
 
