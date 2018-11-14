@@ -452,7 +452,7 @@ class MpPlayer(Player):
     def formatTitleString(self, titleString):
         if "StreamTitle='" in titleString:
             tmp = titleString[titleString.find("StreamTitle='"):].replace("StreamTitle='", "ICY Title: ")
-            return tmp[:tmp.find("';Stream")]
+            return tmp[:tmp.find("';")]
         else:
             return titleString
 
