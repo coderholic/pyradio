@@ -183,7 +183,10 @@ class Player(object):
         arg[0].write(arg[1])
 
     def isIcyEntry(self, a_string):
-        pass
+        for a_tokken in self.icy_tokkens:
+            if a_string.startswith(a_tokken):
+                return True
+        return False
 
     def formatTitleString(self, titleString):
         return titleString
@@ -257,6 +260,10 @@ class MpvPlayer(Player):
     """Implementation of Player object for MPV"""
 
     PLAYER_CMD = "mpv"
+
+    """ items of this tupple are considered icy-title
+        and get displayed after first icy-title is received """
+    icy_tokkens = ('icy-title:', 'Exiting... (Quit)')
 
     """ USE_PROFILE
     -1 : not checked yet
@@ -359,18 +366,14 @@ class MpvPlayer(Player):
     def formatTitleString(self, titleString):
         return titleString.replace('icy-title: ', 'ICY Title: ')
 
-    def isIcyEntry(self, a_string):
-        # put accepted tokens in tupple
-        ch = ('icy-title:', 'Exiting... (Quit)')
-        for a_ch in ch:
-            if a_string.startswith(a_ch):
-                return True
-        return False
-
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
 
     PLAYER_CMD = "mplayer"
+
+    """ items of this tupple are considered icy-title
+        and get displayed after first icy-title is received """
+    icy_tokkens = ('ICY Info:', 'Exiting... (Quit)')
 
     """ USE_PROFILE
     -1 : not checked yet
@@ -459,18 +462,14 @@ class MpPlayer(Player):
     def formatVolumeString(self, volumeString):
         return volumeString[volumeString.find('Volume: '):].replace(' %','%')
 
-    def isIcyEntry(self, a_string):
-        # put accepted tokkens in tupple
-        ch = ('ICY Info:', 'Exiting... (Quit)')
-        for a_ch in ch:
-            if a_string.startswith(a_ch):
-                return True
-        return False
-
 class VlcPlayer(Player):
     """Implementation of Player for VLC"""
 
     PLAYER_CMD = "cvlc"
+
+    """ items of this tupple are considered icy-title
+        and get displayed after first icy-title is received """
+    icy_tokkens = ()
 
     muted = False
 
@@ -509,13 +508,6 @@ class VlcPlayer(Player):
         self._sendCommand("voldown\n")
 
     def isIcyEntry(self, a_string):
-        # put accepted tokkens in tuple
-        #ch = ()
-        #for a_ch in ch:
-        #    if a_string.startswith(a_ch):
-        #        return True
-        #return False
-        #
         # I have never managed to run pyradio with cvlc backend
         # so, if anyone does, let him have all messages
         return True
