@@ -11,12 +11,12 @@ class Player(object):
     """ Media player class. Playing is handled by player sub classes """
     process = None
 
-    # 0: old user input     - used to early suppress output
-    #                         in case of consecutive equal messages
-    # 1: old volume input   - used to suppress output (and firing of delay thread)
-    #                         in case of consecutive equal volume messages
-    # 2: old title input	- printed by delay thread
-    oldUserInput = [ '', '' , '' ]
+    # Input:   old user input     - used to early suppress output
+    #                               in case of consecutive equal messages
+    # Volume:  old volume input   - used to suppress output (and firing of delay thread)
+    #                               in case of consecutive equal volume messages
+    # Title:   old title input    - printed by delay thread
+    oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
 
     volume = -1
     delay_thread = None
@@ -129,31 +129,31 @@ class Player(object):
                     break
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace("\r", "").replace("\n", "")
-                if self.oldUserInput[0] != subsystemOut:
+                if self.oldUserInput['Input'] != subsystemOut:
                     if (logger.isEnabledFor(logging.DEBUG)):
                         logger.debug("User input: {}".format(subsystemOut))
-                    self.oldUserInput[0] = subsystemOut
+                    self.oldUserInput['Input'] = subsystemOut
                     if "Volume: " in subsystemOut:
-                        if self.oldUserInput[1] != subsystemOut:
-                            self.oldUserInput[1] = subsystemOut
+                        if self.oldUserInput['Volume'] != subsystemOut:
+                            self.oldUserInput['Volume'] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
                             self.outputStream.write(self.formatVolumeString(subsystemOut))
                             self.threadUpdateTitle()
                     else:
                         # get all input before we get first icy-title
                         if (not self.icy_found):
-                            self.oldUserInput[2] = subsystemOut
+                            self.oldUserInput['Title'] = subsystemOut
                         # once we get the first icy-title,
                         # get only icy-title entries
                         if self.isIcyEntry(subsystemOut):
-                            self.oldUserInput[2] = subsystemOut
+                            self.oldUserInput['Title'] = subsystemOut
                             self.icy_found = True
 
                         # some servers sends first icy-title too early; it gets overwritten once
                         # we get the first, so we block all but icy messages, after the first one
                         # is received (whenever we get an input, we print the previous icy message)
                         if self.icy_found:
-                            subsystemOut = self.oldUserInput[2]
+                            subsystemOut = self.oldUserInput['Title']
 
                         # make sure title will not pop-up while Volume value is on
                         if self.delay_thread is None:
@@ -168,12 +168,12 @@ class Player(object):
             logger.debug("updateStatus thread stopped.")
 
     def threadUpdateTitle(self, delay=1):
-        if self.oldUserInput[2] != '':
+        if self.oldUserInput['Title'] != '':
             if self.delay_thread is not None:
                 if self.delay_thread.isAlive():
                     self.delay_thread.cancel()
             try:
-               self.delay_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self.formatTitleString(self.oldUserInput[2]) ] )
+               self.delay_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self.formatTitleString(self.oldUserInput['Title']) ] )
                self.delay_thread.start()
             except:
                 if (logger.isEnabledFor(logging.DEBUG)):
@@ -197,7 +197,7 @@ class Player(object):
     def play(self, streamUrl):
         """ use a multimedia player to play a stream """
         self.close()
-        self.oldUserInput = [ '', '' , '' ]
+        self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
         self.icy_found = False
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
