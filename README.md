@@ -58,8 +58,7 @@ The second step is to install the build:
     optional arguments:
     -h, --help            Show this help message and exit.
     -s, --stations <path> Use specified station CSV file.
-    -p, --play [play]     Start and play.The value is num station or empty for random.
-    -r, --random          Start and play a random station.
+    -p, --play [play]     Start and play. The value is num station or empty for random.
     -a, --add             Add station to list.
     -l, --list            List of added stations.
     -u, --use-player      Specify which player to use (mpv, mplayer or cvlc).
