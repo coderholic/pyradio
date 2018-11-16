@@ -395,7 +395,7 @@ class MpPlayer(Player):
         config_files.append("/etc/mplayer/mplayer.conf")
 
     def save_volume(self):
-        return self._do_save_volume("[pyradio]\nsoftvol=yes\nvolstep=1\nvolume={}\n")
+        return self._do_save_volume("[pyradio]\nvolstep=1\nvolume={}\n")
 
     def _configHasProfile(self):
         """ Checks if mplayer config has [pyradio] entry / profile.
@@ -403,7 +403,6 @@ class MpPlayer(Player):
         Profile example:
 
         [pyradio]
-        softvol=yes
         volstep=2
         volume=28"""
 
