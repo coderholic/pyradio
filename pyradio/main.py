@@ -10,6 +10,7 @@ from .radio import PyRadio
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
+IMPLEMENTED_PLAYERS =('mpv', 'mplayer', 'cvlc')
 
 def __configureLogger():
     logger = logging.getLogger("pyradio")
@@ -68,7 +69,15 @@ def shell():
                         help="List of added stations.")
     parser.add_argument("-d", "--debug", action='store_true',
                         help="Start pyradio in debug mode.")
+    parser.add_argument("-u", "--use-player", default='',
+            help="Use specified player. Supported players: mpv, mplayer, cvlc.")
     args = parser.parse_args()
+
+    if args.use_player != '':
+        if args.use_player not in IMPLEMENTED_PLAYERS:
+            print('Error: Requested player "' + args.use_player + '" not supported.')
+            print("       Supported players: mpv, mplayer, cvlc")
+            sys.exit(1)
 
     # No need to parse the file if we add station
     if args.add:
@@ -99,7 +108,7 @@ def shell():
         print("Debug mode acitvated")
 
     # Starts the radio gui.
-    pyradio = PyRadio(stations, play=args.play)
+    pyradio = PyRadio(stations, play=args.play, req_player=args.use_player)
     curses.wrapper(pyradio.setup)
 
 

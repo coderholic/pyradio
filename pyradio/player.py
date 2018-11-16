@@ -4,15 +4,24 @@ import os
 import logging
 from os.path import expanduser
 from sys import platform
+from sys import exit
 
 logger = logging.getLogger(__name__)
-
 
 class Player(object):
     """ Media player class. Playing is handled by player sub classes """
     process = None
 
+    # Input:   old user input     - used to early suppress output
+    #                               in case of consecutive equal messages
+    # Volume:  old volume input   - used to suppress output (and firing of delay thread)
+    #                               in case of consecutive equal volume messages
+    # Title:   old title input    - printed by delay thread
+    oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
+
     volume = -1
+    delay_thread = None
+    icy_found = False
 
     def __init__(self, outputStream):
         self.outputStream = outputStream
@@ -24,7 +33,7 @@ class Player(object):
         pass
 
     def _do_save_volume(self, config_string):
-        ret_string = "Volume already saved"
+        ret_string = "Volume: already saved..."
         if self.volume == -1:
             """ inform no change """
             if (logger.isEnabledFor(logging.DEBUG)):
@@ -36,7 +45,7 @@ class Player(object):
                 logger.debug("Volume is {}%. Saving...".format(self.volume))
             profile_found = False
             config_file = self.config_files[0]
-            ret_string = "Volume saved: {}%".format(str(self.volume))
+            ret_string = "Volume: {}% - saved".format(str(self.volume))
             if os.path.exists(config_file):
                 if self.PROFILE_FROM_USER:
                     with open(config_file, 'r') as c_file:
@@ -86,7 +95,7 @@ class Player(object):
                     except EnvironmentError:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug("Error saving file {}".format(config_file))
-                        return "Error: Volume not saved!!!"
+                        return "Volume: {}% - NOT saved (Error writing file)".format(str(self.volume))
                     self.volume = -1
 
             """ no user profile or user config file does not exist """
@@ -97,7 +106,7 @@ class Player(object):
                     except OSError:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug("Error saving file {}".format(config_file))
-                        return "Error: Volume not saved!!!"
+                        return "Volume: {}% - NOT saved (Error writing file)".format(str(self.volume))
                 new_profile_string = "volume=100\n\n" + config_string
                 try:
                     with open(config_file, "a") as c_file:
@@ -105,7 +114,7 @@ class Player(object):
                 except EnvironmentError:
                     if (logger.isEnabledFor(logging.DEBUG)):
                         logger.debug("Error saving file {}".format(config_file))
-                    return "Error: Volume not saved!!!"
+                    return "Volume: {}% - NOT saved (Error writing file)".format(str(self.volume))
                 self.volume = -1
                 self.PROFILE_FROM_USER = True
             return ret_string
@@ -121,16 +130,70 @@ class Player(object):
                     break
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace("\r", "").replace("\n", "")
-                if (logger.isEnabledFor(logging.DEBUG)):
-                    logger.debug("User input: {}".format(subsystemOut))
-                self.outputStream.write(subsystemOut)
-                if "Volume:" in subsystemOut:
-                    self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                if self.oldUserInput['Input'] != subsystemOut:
+                    if (logger.isEnabledFor(logging.DEBUG)):
+                        logger.debug("User input: {}".format(subsystemOut))
+                    self.oldUserInput['Input'] = subsystemOut
+                    if "Volume: " in subsystemOut:
+                        if self.oldUserInput['Volume'] != subsystemOut:
+                            self.oldUserInput['Volume'] = subsystemOut
+                            self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                            self.outputStream.write(self.formatVolumeString(subsystemOut))
+                            self.threadUpdateTitle()
+                    else:
+                        # get all input before we get first icy-title
+                        if (not self.icy_found):
+                            self.oldUserInput['Title'] = subsystemOut
+                        # once we get the first icy-title,
+                        # get only icy-title entries
+                        if self.isIcyEntry(subsystemOut):
+                            self.oldUserInput['Title'] = subsystemOut
+                            self.icy_found = True
+
+                        # some servers sends first icy-title too early; it gets overwritten once
+                        # we get the first, so we block all but icy messages, after the first one
+                        # is received (whenever we get an input, we print the previous icy message)
+                        if self.icy_found:
+                            subsystemOut = self.oldUserInput['Title']
+
+                        # make sure title will not pop-up while Volume value is on
+                        if self.delay_thread is None:
+                            self.outputStream.write(self.formatTitleString(subsystemOut))
+                        else:
+                            if (not self.delay_thread.isAlive()):
+                                self.outputStream.write(self.formatTitleString(subsystemOut))
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug("updateStatus thread stopped.")
+
+    def threadUpdateTitle(self, delay=1):
+        if self.oldUserInput['Title'] != '':
+            if self.delay_thread is not None:
+                if self.delay_thread.isAlive():
+                    self.delay_thread.cancel()
+            try:
+               self.delay_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self.formatTitleString(self.oldUserInput['Title']) ] )
+               self.delay_thread.start()
+            except:
+                if (logger.isEnabledFor(logging.DEBUG)):
+                    logger.debug("delay thread start failed")
+
+    def updateTitle(self, *arg, **karg):
+        arg[0].write(arg[1])
+
+    def isIcyEntry(self, a_string):
+        for a_tokken in self.icy_tokkens:
+            if a_string.startswith(a_tokken):
+                return True
+        return False
+
+    def formatTitleString(self, titleString):
+        return titleString
+
+    def formatVolumeString(self, volumeString):
+        return volumeString
 
     def isPlaying(self):
         return bool(self.process)
@@ -138,6 +201,8 @@ class Player(object):
     def play(self, streamUrl):
         """ use a multimedia player to play a stream """
         self.close()
+        self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
+        self.icy_found = False
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)
@@ -170,6 +235,8 @@ class Player(object):
         self._stop()
 
         # Here is fallback solution and cleanup
+        if self.delay_thread is not None:
+            self.delay_thread.cancel()
         if self.process is not None:
             os.kill(self.process.pid, 15)
             self.process.wait()
@@ -194,6 +261,10 @@ class MpvPlayer(Player):
     """Implementation of Player object for MPV"""
 
     PLAYER_CMD = "mpv"
+
+    """ items of this tupple are considered icy-title
+        and get displayed after first icy-title is received """
+    icy_tokkens = ('icy-title:', 'Exiting... (Quit)')
 
     """ USE_PROFILE
     -1 : not checked yet
@@ -293,11 +364,17 @@ class MpvPlayer(Player):
         """ decrease mpv's volume """
         os.system("echo 'cycle volume down' | socat - /tmp/mpvsocket");
 
+    def formatTitleString(self, titleString):
+        return titleString.replace('icy-title: ', 'ICY Title: ')
 
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
 
     PLAYER_CMD = "mplayer"
+
+    """ items of this tupple are considered icy-title
+        and get displayed after first icy-title is received """
+    icy_tokkens = ('ICY Info:', 'Exiting... (Quit)')
 
     """ USE_PROFILE
     -1 : not checked yet
@@ -376,11 +453,24 @@ class MpPlayer(Player):
         """ decrease mplayer's volume """
         self._sendCommand("/")
 
+    def formatTitleString(self, titleString):
+        if "StreamTitle='" in titleString:
+            tmp = titleString[titleString.find("StreamTitle='"):].replace("StreamTitle='", "ICY Title: ")
+            return tmp[:tmp.find("';")]
+        else:
+            return titleString
+
+    def formatVolumeString(self, volumeString):
+        return volumeString[volumeString.find('Volume: '):].replace(' %','%')
 
 class VlcPlayer(Player):
     """Implementation of Player for VLC"""
 
     PLAYER_CMD = "cvlc"
+
+    """ items of this tupple are considered icy-title
+        and get displayed after first icy-title is received """
+    icy_tokkens = ()
 
     muted = False
 
@@ -418,10 +508,15 @@ class VlcPlayer(Player):
         """ decrease vlc's volume """
         self._sendCommand("voldown\n")
 
+    def isIcyEntry(self, a_string):
+        # I have never managed to run pyradio with cvlc backend
+        # so, if anyone does, let him have all messages
+        return True
 
-def probePlayer():
+def probePlayer(requested_player=''):
     """ Probes the multimedia players which are available on the host
     system."""
+    ret_player = None
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug("Probing available multimedia players...")
     implementedPlayers = Player.__subclasses__()
@@ -431,15 +526,34 @@ def probePlayer():
                               for player in implementedPlayers]))
 
     for player in implementedPlayers:
-        try:
-            p = subprocess.Popen([player.PLAYER_CMD, "--help"],
-                                 stdout=subprocess.PIPE,
-                                 stdin=subprocess.PIPE,
-                                 shell=False)
-            p.terminate()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("{} supported.".format(str(player)))
-            return player
-        except OSError:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("{} not supported.".format(str(player)))
+        if requested_player == '':
+            ret_player = check_player(player)
+            if ret_player is not None:
+                break
+        else:
+            if player.PLAYER_CMD == requested_player:
+                ret_player = check_player(player)
+
+    if ret_player is None:
+        if requested_player == '':
+            logger.error("No supported player found. Terminating...")
+        else:
+            logger.error('Requested player "' + requested_player + '" not supported. Terminating...')
+        exit(1)
+    return ret_player
+
+
+def check_player(a_player):
+    try:
+        p = subprocess.Popen([a_player.PLAYER_CMD, "--help"],
+                             stdout=subprocess.PIPE,
+                             stdin=subprocess.PIPE,
+                             shell=False)
+        p.terminate()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("{} supported.".format(str(a_player)))
+        return a_player
+    except OSError:
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("{} not supported.".format(str(a_player)))
+        return None
