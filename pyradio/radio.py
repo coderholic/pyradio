@@ -31,10 +31,11 @@ class PyRadio(object):
     playing = -1
     jumpnr = ""
 
-    def __init__(self, stations, play=False):
+    def __init__(self, stations, play=False, req_player=''):
         self.stations = stations
         self.play = play
         self.stdscr = None
+        self.requested_player = req_player
 
     def setup(self, stdscr):
         if logger.isEnabledFor(logging.DEBUG):
@@ -58,7 +59,7 @@ class PyRadio(object):
 
         self.log = Log()
         # For the time being, supported players are mpv, mplayer and vlc.
-        self.player = player.probePlayer()(self.log)
+        self.player = player.probePlayer(requested_player=self.requested_player)(self.log)
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()

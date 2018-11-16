@@ -4,6 +4,7 @@ import os
 import logging
 from os.path import expanduser
 from sys import platform
+from sys import exit
 
 logger = logging.getLogger(__name__)
 
@@ -512,9 +513,10 @@ class VlcPlayer(Player):
         # so, if anyone does, let him have all messages
         return True
 
-def probePlayer():
+def probePlayer(requested_player=''):
     """ Probes the multimedia players which are available on the host
     system."""
+    ret_player = None
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug("Probing available multimedia players...")
     implementedPlayers = Player.__subclasses__()
@@ -524,15 +526,34 @@ def probePlayer():
                               for player in implementedPlayers]))
 
     for player in implementedPlayers:
-        try:
-            p = subprocess.Popen([player.PLAYER_CMD, "--help"],
-                                 stdout=subprocess.PIPE,
-                                 stdin=subprocess.PIPE,
-                                 shell=False)
-            p.terminate()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("{} supported.".format(str(player)))
-            return player
-        except OSError:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("{} not supported.".format(str(player)))
+        if requested_player == '':
+            ret_player = check_player(player)
+            if ret_player is not None:
+                break
+        else:
+            if player.PLAYER_CMD == requested_player:
+                ret_player = check_player(player)
+
+    if ret_player is None:
+        if requested_player == '':
+            logger.error("No supported player found. Terminating...")
+        else:
+            logger.error('Requested player "' + requested_player + '" not supported. Terminating...')
+        exit(1)
+    return ret_player
+
+
+def check_player(a_player):
+    try:
+        p = subprocess.Popen([a_player.PLAYER_CMD, "--help"],
+                             stdout=subprocess.PIPE,
+                             stdin=subprocess.PIPE,
+                             shell=False)
+        p.terminate()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("{} supported.".format(str(a_player)))
+        return a_player
+    except OSError:
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("{} not supported.".format(str(a_player)))
+        return None
