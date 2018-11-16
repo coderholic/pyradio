@@ -60,7 +60,7 @@ def shell():
     parser = ArgumentParser(description="Console radio player")
     parser.add_argument("-s", "--stations", default=DEFAULT_FILE,
                         help="Use specified station CSV file.")
-    parser.add_argument("--play", "-p", nargs='?', default=False,
+    parser.add_argument("-p", "--play", nargs='?', default=False,
                         help="Start and play."
                         "The value is num station or empty for random.")
     parser.add_argument("-a", "--add", action='store_true',
@@ -70,7 +70,8 @@ def shell():
     parser.add_argument("-d", "--debug", action='store_true',
                         help="Start pyradio in debug mode.")
     parser.add_argument("-u", "--use-player", default='',
-            help="Use specified player. Supported players: mpv, mplayer, cvlc.")
+            help="Use specified player."
+                        "Supported players: mpv, mplayer, cvlc.")
     args = parser.parse_args()
 
     if args.use_player != '':
