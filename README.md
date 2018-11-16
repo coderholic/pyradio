@@ -61,6 +61,7 @@ The second step is to install the build:
     -r, --random          Start and play a random station.
     -a, --add             Add station to list.
     -l, --list            List of added stations.
+    -u, --use-player      Specify which player to use (mpv, mplayer or cvlc).
     -d, --debug           Debug mode (pyradio.log created).
                           To be attached with any bug report.
 
