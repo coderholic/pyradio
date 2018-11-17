@@ -10,6 +10,7 @@ import curses
 import logging
 import os
 import random
+from sys import version as python_version
 
 from .log import Log
 from . import player
@@ -39,7 +40,7 @@ class PyRadio(object):
 
     def setup(self, stdscr):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("GUI initialization")
+            logger.debug("GUI initialization on python v. {}".format(python_version))
         self.stdscr = stdscr
 
         try:
