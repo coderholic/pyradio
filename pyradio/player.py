@@ -236,6 +236,7 @@ class Player(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug("Command: {}".format(command).strip())
                 self.process.stdin.write(command.encode("utf-8"))
+                self.process.stdin.flush()
             except:
                 msg = "Error when sending: {}"
                 logger.error(msg.format(command).strip(),
