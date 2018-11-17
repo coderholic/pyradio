@@ -19,6 +19,7 @@ class Player(object):
     # Title:   old title input    - printed by delay thread
     oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
 
+    """ volume percentage """
     volume = -1
     delay_thread = None
     icy_found = False
@@ -134,7 +135,7 @@ class Player(object):
                     if (logger.isEnabledFor(logging.DEBUG)):
                         logger.debug("User input: {}".format(subsystemOut))
                     self.oldUserInput['Input'] = subsystemOut
-                    if "Volume: " in subsystemOut:
+                    if self.volume_string in subsystemOut:
                         if self.oldUserInput['Volume'] != subsystemOut:
                             self.oldUserInput['Volume'] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
@@ -193,7 +194,8 @@ class Player(object):
         return titleString
 
     def formatVolumeString(self, volumeString):
-        return volumeString
+        self.actual_volume = int(volumeString.split(self.volume_string)[1].split(',')[0])
+        return 'Volume: {}%'.format(int(100 * self.actual_volume / self.max_volume))
 
     def isPlaying(self):
         return bool(self.process)
@@ -274,6 +276,9 @@ class MpvPlayer(Player):
 
     """ True if profile comes from ~/.config/mpv/mpv.conf """
     PROFILE_FROM_USER = False
+
+    """ String to denote volume change """
+    volume_string = 'Volume: '
 
     config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
     if platform.startswith('darwin'):
@@ -385,6 +390,9 @@ class MpPlayer(Player):
     """ True if profile comes from ~/.mplayer/config """
     PROFILE_FROM_USER = False
 
+    """ String to denote volume change """
+    volume_string = 'Volume: '
+
     config_files = [expanduser("~") + "/.mplayer/config"]
     if platform.startswith('darwin'):
         config_files.append("/usr/local/etc/mplayer/mplayer.conf")
@@ -473,6 +481,13 @@ class VlcPlayer(Player):
 
     muted = False
 
+    """ String to denote volume change """
+    volume_string = '( audio volume: '
+
+    """ vlc reports volume in values 0..512 """
+    actual_volume = -1
+    max_volume = 512
+
     def save_volume(self):
         pass
 
@@ -540,7 +555,6 @@ def probePlayer(requested_player=''):
             logger.error('Requested player "' + requested_player + '" not supported. Terminating...')
         exit(1)
     return ret_player
-
 
 def check_player(a_player):
     try:
