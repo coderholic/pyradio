@@ -207,7 +207,7 @@ class PyRadio(object):
             self.refreshBody()
             return
 
-        if char in map(ord,map(str,range(0,9))):
+        if char in map(ord,map(str,range(0,10))):
             self.jumpnr += chr(char)
             return
         else:
