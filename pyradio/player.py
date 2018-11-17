@@ -12,6 +12,8 @@ class Player(object):
     """ Media player class. Playing is handled by player sub classes """
     process = None
 
+    icy_title_prefix = 'ICY Title: '
+
     # Input:   old user input     - used to early suppress output
     #                               in case of consecutive equal messages
     # Volume:  old volume input   - used to suppress output (and firing of delay thread)
@@ -23,6 +25,9 @@ class Player(object):
     volume = -1
     delay_thread = None
     icy_found = False
+
+    """ vlc only content filtering string """
+    vlc_filter = "http stream debug: "
 
     def __init__(self, outputStream):
         self.outputStream = outputStream
@@ -129,6 +134,10 @@ class Player(object):
                 subsystemOut = out.readline().decode("utf-8", "ignore")
                 if subsystemOut == '':
                     break
+                """ for cvlc we only want web messages """
+                if self.PLAYER_CMD == 'cvlc':
+                    if (self.vlc_filter not in subsystemOut) and (self.volume_string not in subsystemOut):
+                        continue
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace("\r", "").replace("\n", "")
                 if self.oldUserInput['Input'] != subsystemOut:
@@ -194,8 +203,10 @@ class Player(object):
         return titleString
 
     def formatVolumeString(self, volumeString):
-        self.actual_volume = int(volumeString.split(self.volume_string)[1].split(',')[0])
-        return 'Volume: {}%'.format(int(100 * self.actual_volume / self.max_volume))
+        return volumeString
+
+    def formatTitleString(self, titleString):
+        return titleString
 
     def isPlaying(self):
         return bool(self.process)
@@ -370,7 +381,7 @@ class MpvPlayer(Player):
         os.system("echo 'cycle volume down' | socat - /tmp/mpvsocket");
 
     def formatTitleString(self, titleString):
-        return titleString.replace('icy-title: ', 'ICY Title: ')
+        return titleString.replace('icy-title: ', self.icy_title_prefix)
 
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
@@ -462,13 +473,13 @@ class MpPlayer(Player):
 
     def formatTitleString(self, titleString):
         if "StreamTitle='" in titleString:
-            tmp = titleString[titleString.find("StreamTitle='"):].replace("StreamTitle='", "ICY Title: ")
+            tmp = titleString[titleString.find("StreamTitle='"):].replace("StreamTitle='", self.icy_title_prefix)
             return tmp[:tmp.find("';")]
         else:
             return titleString
 
     def formatVolumeString(self, volumeString):
-        return volumeString[volumeString.find('Volume: '):].replace(' %','%')
+        return volumeString[volumeString.find(self.volume_string):].replace(' %','%')
 
 class VlcPlayer(Player):
     """Implementation of Player for VLC"""
@@ -477,7 +488,7 @@ class VlcPlayer(Player):
 
     """ items of this tupple are considered icy-title
         and get displayed after first icy-title is received """
-    icy_tokkens = ()
+    icy_tokkens = ('Icy-Title=', 'Exiting... (Quit)')
 
     muted = False
 
@@ -493,7 +504,8 @@ class VlcPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
-        opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
+        #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
+        opts = [self.PLAYER_CMD, "-Irc", "-vv", streamUrl]
         return opts
 
     def mute(self):
@@ -522,10 +534,17 @@ class VlcPlayer(Player):
         """ decrease vlc's volume """
         self._sendCommand("voldown\n")
 
-    def isIcyEntry(self, a_string):
-        # I have never managed to run pyradio with cvlc backend
-        # so, if anyone does, let him have all messages
-        return True
+    def formatVolumeString(self, volumeString):
+        self.actual_volume = int(volumeString.split(self.volume_string)[1].split(',')[0])
+        return 'Volume: {}%'.format(int(100 * self.actual_volume / self.max_volume))
+
+    def formatTitleString(self, titleString):
+        sp = titleString.split(self.icy_tokkens[0])
+        if sp[0] == titleString:
+            return titleString
+        else:
+            return self.icy_title_prefix + sp[1]
+
 
 def probePlayer(requested_player=''):
     """ Probes the multimedia players which are available on the host
