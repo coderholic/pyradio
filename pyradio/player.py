@@ -536,7 +536,7 @@ class VlcPlayer(Player):
         self._sendCommand("voldown\n")
 
     def formatVolumeString(self, volumeString):
-        self.actual_volume = int(volumeString.split(self.volume_string)[1].split(',')[0])
+        self.actual_volume = int(volumeString.split(self.volume_string)[1].split(',')[0].split()[0])
         return 'Volume: {}%'.format(int(100 * self.actual_volume / self.max_volume))
 
     def formatTitleString(self, titleString):
