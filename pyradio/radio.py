@@ -223,7 +223,8 @@ class PyRadio(object):
             self.player.close()
             return -1
 
-        if char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+        if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                curses.KEY_RIGHT, ord('l')):
             self.playSelection()
             self.refreshBody()
             self.setupAndDrawScreen()
@@ -239,14 +240,6 @@ class PyRadio(object):
             self.refreshBody()
             return
 
-        if char == curses.KEY_RIGHT or char == ord('l'):
-            if self.player.isPlaying():
-                self.player.close()
-                self.log.write('Playback stopped')
-            self.playSelection()
-            self.refreshBody()
-            return
-
         if char == curses.KEY_DOWN or char == ord('j'):
             self.setStation(self.selection + 1)
             self.refreshBody()
@@ -257,11 +250,11 @@ class PyRadio(object):
             self.refreshBody()
             return
 
-        if char == ord('+') or char == ord('='):
+        if char == ord('+') or char == ord('=') or char == ord('.'):
             self.player.volumeUp()
             return
 
-        if char == ord('-'):
+        if char == ord('-') or char == ord(','):
             self.player.volumeDown()
             return
 

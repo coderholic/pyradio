@@ -35,17 +35,17 @@ The second step is to use pip to install the python package:
 
 #### Linux
 
-	pip install pyradio
+    pip install pyradio
 
 ## Building from source
 
 #### MaxOSX and Linux
 
-	python setup.py build
+    python setup.py build
 
 The second step is to install the build:
 
-	sudo python setup.py install
+    sudo python setup.py install
 
 ## Shell commands
 
@@ -69,14 +69,14 @@ The second step is to install the build:
 
 ```
 Up/Down/j/k/PgUp/PgDown Change station selection.
-Enter                   Play selected station.
--/+                     Change volume.
+Enter/Right/l           Play selected station.
+-/+ or ,/.              Change volume.
 v                       Save volume (mpv and mplayer only).
 m                       Mute.
 r                       Select and play a random station.
 g                       Jump to first station.
 <n>G                    Jump to n-th station.
-Space                   Stop/start playing selected station.
+Space/Left/h            Stop/start playing selected station.
 Esc/q                   Quit.
 ```
 
