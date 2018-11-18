@@ -513,10 +513,13 @@ class VlcPlayer(Player):
         """ mute vlc """
 
         if not self.muted:
+            if self.actual_volume == -1:
+                # read actual_volume
+                self._sendCommand("voldown 0\n")
             self._sendCommand("volume 0\n")
             self.muted = True
         else:
-            self._sendCommand("volume 256\n")
+            self._sendCommand("volume {}\n".format(self.actual_volume))
             self.muted = False
 
     def pause(self):
