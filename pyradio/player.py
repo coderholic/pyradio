@@ -362,24 +362,24 @@ class MpvPlayer(Player):
 
     def mute(self):
         """ mute mpv """
-        os.system("echo 'cycle mute' | socat - /tmp/mpvsocket");
+        os.system("echo 'cycle mute' | socat - /tmp/mpvsocket 2>/dev/null");
 
     def pause(self):
         """ pause streaming (if possible) """
-        os.system("echo 'cycle pause' | socat - /tmp/mpvsocket");
+        os.system("echo 'cycle pause' | socat - /tmp/mpvsocket 2>/dev/null");
 
     def _stop(self):
         """ exit pyradio (and kill mpv instance) """
-        os.system("echo 'quit' | socat - /tmp/mpvsocket");
+        os.system("echo 'quit' | socat - /tmp/mpvsocket 2>/dev/null");
         os.system("rm /tmp/mpvsocket");
 
     def volumeUp(self):
         """ increase mpv's volume """
-        os.system("echo 'cycle volume' | socat - /tmp/mpvsocket");
+        os.system("echo 'cycle volume' | socat - /tmp/mpvsocket 2>/dev/null");
 
     def volumeDown(self):
         """ decrease mpv's volume """
-        os.system("echo 'cycle volume down' | socat - /tmp/mpvsocket");
+        os.system("echo 'cycle volume down' | socat - /tmp/mpvsocket 2>/dev/null");
 
     def formatTitleString(self, titleString):
         return titleString.replace('icy-title: ', self.icy_title_prefix)
