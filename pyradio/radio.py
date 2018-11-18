@@ -229,13 +229,21 @@ class PyRadio(object):
             self.setupAndDrawScreen()
             return
 
-        if char == ord(' '):
+        if char == ord(' ') or char == curses.KEY_LEFT or char == ord('h'):
             if self.player.isPlaying():
                 self.player.close()
                 self.log.write('Playback stopped')
             else:
                 self.playSelection()
 
+            self.refreshBody()
+            return
+
+        if char == curses.KEY_RIGHT or char == ord('l'):
+            if self.player.isPlaying():
+                self.player.close()
+                self.log.write('Playback stopped')
+            self.playSelection()
             self.refreshBody()
             return
 
