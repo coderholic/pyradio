@@ -181,7 +181,7 @@ class PyRadio(object):
         stream_url = self.stations[self.selection][1].strip()
         self.log.write('Playing ' + name)
         try:
-            self.player.play(stream_url)
+            self.player.Play(stream_url)
         except OSError:
             self.log.write('Error starting player.'
                            'Are you sure a supported player is installed?')
@@ -269,7 +269,7 @@ class PyRadio(object):
             return
 
         if char == ord('m'):
-            self.player.mute()
+            self.player.toggleMute()
             return
 
         if char == ord('r'):

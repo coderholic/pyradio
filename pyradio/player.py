@@ -12,7 +12,8 @@ class Player(object):
     """ Media player class. Playing is handled by player sub classes """
     process = None
 
-    icy_title_prefix = 'ICY Title: '
+    icy_title_prefix = 'Title: '
+    muted_prefix = ''
 
     # Input:   old user input     - used to early suppress output
     #                               in case of consecutive equal messages
@@ -29,9 +30,6 @@ class Player(object):
 
     """ make it possible to change volume but not show it """
     show_volume = True
-
-    """ vlc only content filtering string """
-    vlc_filter = "http stream debug: "
 
     def __init__(self, outputStream):
         self.outputStream = outputStream
@@ -138,10 +136,8 @@ class Player(object):
                 subsystemOut = out.readline().decode("utf-8", "ignore")
                 if subsystemOut == '':
                     break
-                """ for cvlc we only want web messages """
-                if self.PLAYER_CMD == 'cvlc':
-                    if (self.vlc_filter not in subsystemOut) and (self.volume_string not in subsystemOut):
-                        continue
+                if not self._is_accepted_input(subsystemOut):
+                    continue
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace("\r", "").replace("\n", "")
                 if self.oldUserInput['Input'] != subsystemOut:
@@ -154,8 +150,8 @@ class Player(object):
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
 
                             # do this here, so that cvlc actual_volume gets updated
-                            # this is done in formatVolumeString
-                            string_to_show = self.formatVolumeString(subsystemOut)
+                            # this is done in _format_volume_string
+                            string_to_show = self._format_volume_string(subsystemOut)
 
                             if self.show_volume:
                                 self.outputStream.write(string_to_show)
@@ -166,7 +162,7 @@ class Player(object):
                             self.oldUserInput['Title'] = subsystemOut
                         # once we get the first icy-title,
                         # get only icy-title entries
-                        if self.isIcyEntry(subsystemOut):
+                        if self._is_icy_entry(subsystemOut):
                             self.oldUserInput['Title'] = subsystemOut
                             self.icy_found = True
 
@@ -178,10 +174,10 @@ class Player(object):
 
                         # make sure title will not pop-up while Volume value is on
                         if self.delay_thread is None:
-                            self.outputStream.write(self.formatTitleString(subsystemOut))
+                            self.outputStream.write(self.muted_prefix + self._format_title_string(subsystemOut))
                         else:
                             if (not self.delay_thread.isAlive()):
-                                self.outputStream.write(self.formatTitleString(subsystemOut))
+                                self.outputStream.write(self.muted_prefix + self._format_title_string(subsystemOut))
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
@@ -194,7 +190,7 @@ class Player(object):
                 if self.delay_thread.isAlive():
                     self.delay_thread.cancel()
             try:
-               self.delay_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self.formatTitleString(self.oldUserInput['Title']) ] )
+               self.delay_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self._format_title_string(self.oldUserInput['Title']) ] )
                self.delay_thread.start()
             except:
                 if (logger.isEnabledFor(logging.DEBUG)):
@@ -203,31 +199,29 @@ class Player(object):
     def updateTitle(self, *arg, **karg):
         arg[0].write(arg[1])
 
-    def isIcyEntry(self, a_string):
+    def _is_icy_entry(self, a_string):
         for a_tokken in self.icy_tokkens:
             if a_string.startswith(a_tokken):
                 return True
         return False
 
-    def formatTitleString(self, titleString):
-        return titleString
+    def _format_title_string(self, title_string):
+        return title_string
 
-    def formatVolumeString(self, volumeString):
-        return volumeString
-
-    def formatTitleString(self, titleString):
-        return titleString
+    def _format_volume_string(self, volume_string):
+        return volume_string
 
     def isPlaying(self):
         return bool(self.process)
 
-    def play(self, streamUrl):
+    def Play(self, streamUrl):
         """ use a multimedia player to play a stream """
         self.close()
         self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
         self.icy_found = False
         self.muted = False
         self.show_volume = True
+        self.muted_prefix = ''
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)
@@ -271,17 +265,55 @@ class Player(object):
     def _buildStartOpts(self, streamUrl, playList):
         pass
 
-    def mute(self):
+    def toggleMute(self):
+        """ mute / unmute player """
+
+        if not self.muted:
+            self._mute()
+            if self.delay_thread is not None:
+                self.delay_thread.cancel()
+            self.muted_prefix = '[Muted] '
+            self.muted = True
+            self.show_volume = False
+        else:
+            self._mute()
+            self.muted_prefix = ''
+            self.muted = False
+            self.show_volume = True
+        if self.oldUserInput['Title'] == '':
+            self.outputStream.write(self.muted_prefix + self._format_title_string(self.oldUserInput['Input']))
+        else:
+            self.outputStream.write(self.muted_prefix + self._format_title_string(self.oldUserInput['Title']))
+
+    def _mute(self):
         pass
 
     def _stop(self):
         pass
 
     def volumeUp(self):
-        pass
+        """ increase volume """
+        if self.muted is not True:
+            self._volume_up()
 
     def volumeDown(self):
+        """ decrease volume """
+        if self.muted is not True:
+            self._volume_down()
+
+    def _volume_up(self):
         pass
+
+    def _volume_down(self):
+        pass
+
+    def _is_accepted_input(self, input_string):
+        """ subclasses are able to reject input messages
+            thus limiting message procesing.
+            By default, all messages are accepted.
+
+            Currently implemented for vlc only."""
+        return True
 
 class MpvPlayer(Player):
     """Implementation of Player object for MPV"""
@@ -372,7 +404,7 @@ class MpvPlayer(Player):
                 logger.debug("using profile [pyradio]")
         return opts
 
-    def mute(self):
+    def _mute(self):
         """ mute mpv """
         os.system("echo 'cycle mute' | socat - /tmp/mpvsocket 2>/dev/null");
 
@@ -385,16 +417,17 @@ class MpvPlayer(Player):
         os.system("echo 'quit' | socat - /tmp/mpvsocket 2>/dev/null");
         os.system("rm /tmp/mpvsocket");
 
-    def volumeUp(self):
+    def _volume_up(self):
         """ increase mpv's volume """
         os.system("echo 'cycle volume' | socat - /tmp/mpvsocket 2>/dev/null");
 
-    def volumeDown(self):
+    def _volume_down(self):
         """ decrease mpv's volume """
         os.system("echo 'cycle volume down' | socat - /tmp/mpvsocket 2>/dev/null");
 
-    def formatTitleString(self, titleString):
-        return titleString.replace('icy-title: ', self.icy_title_prefix)
+    def _format_title_string(self, title_string):
+        """ format mpv's title """
+        return title_string.replace('icy-title: ', self.icy_title_prefix)
 
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
@@ -464,7 +497,7 @@ class MpPlayer(Player):
                 logger.debug("using profile [pyradio]")
         return opts
 
-    def mute(self):
+    def _mute(self):
         """ mute mplayer """
         self._sendCommand("m")
 
@@ -476,23 +509,25 @@ class MpPlayer(Player):
         """ exit pyradio (and kill mplayer instance) """
         self._sendCommand("q")
 
-    def volumeUp(self):
+    def _volume_up(self):
         """ increase mplayer's volume """
         self._sendCommand("*")
 
-    def volumeDown(self):
+    def _volume_down(self):
         """ decrease mplayer's volume """
         self._sendCommand("/")
 
-    def formatTitleString(self, titleString):
-        if "StreamTitle='" in titleString:
-            tmp = titleString[titleString.find("StreamTitle='"):].replace("StreamTitle='", self.icy_title_prefix)
+    def _format_title_string(self, title_string):
+        """ format mplayer's title """
+        if "StreamTitle='" in title_string:
+            tmp = title_string[title_string.find("StreamTitle='"):].replace("StreamTitle='", self.icy_title_prefix)
             return tmp[:tmp.find("';")]
         else:
-            return titleString
+            return title_string
 
-    def formatVolumeString(self, volumeString):
-        return volumeString[volumeString.find(self.volume_string):].replace(' %','%')
+    def _format_volume_string(self, volume_string):
+        """ format mplayer's volume """
+        return volume_string[volume_string.find(self.volume_string):].replace(' %','%')
 
 class VlcPlayer(Player):
     """Implementation of Player for VLC"""
@@ -521,7 +556,7 @@ class VlcPlayer(Player):
         opts = [self.PLAYER_CMD, "-Irc", "-vv", streamUrl]
         return opts
 
-    def mute(self):
+    def _mute(self):
         """ mute vlc """
 
         if not self.muted:
@@ -530,11 +565,8 @@ class VlcPlayer(Player):
                 self.show_volume = False
                 self._sendCommand("voldown 0\n")
             self._sendCommand("volume 0\n")
-            self.muted = True
         else:
             self._sendCommand("volume {}\n".format(self.actual_volume))
-            self.muted = False
-            self.show_volume = True
 
     def pause(self):
         """ pause streaming (if possible) """
@@ -544,26 +576,45 @@ class VlcPlayer(Player):
         """ exit pyradio (and kill vlc instance) """
         self._sendCommand("shutdown\n")
 
-    def volumeUp(self):
+    def _volume_up(self):
         """ increase vlc's volume """
-        if self.muted is not True:
-            self._sendCommand("volup\n")
+        self._sendCommand("volup\n")
 
-    def volumeDown(self):
+    def _volume_down(self):
         """ decrease vlc's volume """
-        if self.muted is not True:
-            self._sendCommand("voldown\n")
+        self._sendCommand("voldown\n")
 
-    def formatVolumeString(self, volumeString):
-        self.actual_volume = int(volumeString.split(self.volume_string)[1].split(',')[0].split()[0])
+    def _format_volume_string(self, volume_string):
+        """ format vlc's volume """
+        self.actual_volume = int(volume_string.split(self.volume_string)[1].split(',')[0].split()[0])
         return 'Volume: {}%'.format(int(100 * self.actual_volume / self.max_volume))
 
-    def formatTitleString(self, titleString):
-        sp = titleString.split(self.icy_tokkens[0])
-        if sp[0] == titleString:
-            return titleString
+    def _format_title_string(self, title_string):
+        """ format vlc's title """
+        sp = title_string.split(self.icy_tokkens[0])
+        if sp[0] == title_string:
+            ret_string = title_string
         else:
-            return self.icy_title_prefix + sp[1]
+            ret_string = self.icy_title_prefix + sp[1]
+        if not self.icy_found:
+            ret_string = ret_string.split('] ')[-1]
+        return ret_string
+
+    def _is_accepted_input(self, input_string):
+        """ vlc input filtering """
+        ret = False
+        accept_filter = (self.volume_string, "http stream debug: ")
+        reject_filter = ()
+        for n in accept_filter:
+            if n in input_string:
+                ret = True
+                break
+        if ret:
+            for n in reject_filter:
+                if n in input_string:
+                    ret = False
+                    break
+        return ret
 
 def probePlayer(requested_player=''):
     """ Probes the multimedia players which are available on the host
