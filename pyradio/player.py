@@ -23,8 +23,12 @@ class Player(object):
 
     """ volume percentage """
     volume = -1
+
     delay_thread = None
     icy_found = False
+
+    """ make it possible to change volume but not show it """
+    show_volume = True
 
     """ vlc only content filtering string """
     vlc_filter = "http stream debug: "
@@ -148,8 +152,14 @@ class Player(object):
                         if self.oldUserInput['Volume'] != subsystemOut:
                             self.oldUserInput['Volume'] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
-                            self.outputStream.write(self.formatVolumeString(subsystemOut))
-                            self.threadUpdateTitle()
+
+                            # do this here, so that cvlc actual_volume gets updated
+                            # this is done in formatVolumeString
+                            string_to_show = self.formatVolumeString(subsystemOut)
+
+                            if self.show_volume:
+                                self.outputStream.write(string_to_show)
+                                self.threadUpdateTitle()
                     else:
                         # get all input before we get first icy-title
                         if (not self.icy_found):
@@ -216,6 +226,8 @@ class Player(object):
         self.close()
         self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
         self.icy_found = False
+        self.muted = False
+        self.show_volume = True
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)
@@ -515,12 +527,14 @@ class VlcPlayer(Player):
         if not self.muted:
             if self.actual_volume == -1:
                 # read actual_volume
+                self.show_volume = False
                 self._sendCommand("voldown 0\n")
             self._sendCommand("volume 0\n")
             self.muted = True
         else:
             self._sendCommand("volume {}\n".format(self.actual_volume))
             self.muted = False
+            self.show_volume = True
 
     def pause(self):
         """ pause streaming (if possible) """
@@ -532,11 +546,13 @@ class VlcPlayer(Player):
 
     def volumeUp(self):
         """ increase vlc's volume """
-        self._sendCommand("volup\n")
+        if self.muted is not True:
+            self._sendCommand("volup\n")
 
     def volumeDown(self):
         """ decrease vlc's volume """
-        self._sendCommand("voldown\n")
+        if self.muted is not True:
+            self._sendCommand("voldown\n")
 
     def formatVolumeString(self, volumeString):
         self.actual_volume = int(volumeString.split(self.volume_string)[1].split(',')[0].split()[0])
@@ -548,7 +564,6 @@ class VlcPlayer(Player):
             return titleString
         else:
             return self.icy_title_prefix + sp[1]
-
 
 def probePlayer(requested_player=''):
     """ Probes the multimedia players which are available on the host
