@@ -168,6 +168,7 @@ class PyRadio(object):
         self.txtWin.refresh()
 
     def __displayBodyLine(self, lineNum, station):
+        col = curses.color_pair(5)
 
         if lineNum + self.startPos == self.selection and \
                 self.selection == self.playing:
