@@ -57,6 +57,7 @@ for p in [path.join(usr_path, 'station.csv'),
 
 
 def shell():
+    requested_player = ''
     parser = ArgumentParser(description="Console radio player")
     parser.add_argument("-s", "--stations", default=DEFAULT_FILE,
                         help="Use specified station CSV file.")
@@ -71,14 +72,14 @@ def shell():
                         help="Start pyradio in debug mode.")
     parser.add_argument("-u", "--use-player", default='',
             help="Use specified player."
-                        "Supported players: mpv, mplayer, cvlc.")
+                        "Supported players: mpv, mplayer, vlc.")
     args = parser.parse_args()
 
     if args.use_player != '':
-        if args.use_player not in IMPLEMENTED_PLAYERS:
-            print('Error: Requested player "' + args.use_player + '" not supported.')
-            print("       Supported players: mpv, mplayer, cvlc")
-            sys.exit(1)
+        if args.use_player == 'vlc':
+            requested_player = 'cvlc'
+        else:
+            requested_player = args.use_player
 
     # No need to parse the file if we add station
     if args.add:
@@ -108,8 +109,9 @@ def shell():
         __configureLogger()
         print("Debug mode acitvated")
 
+
     # Starts the radio gui.
-    pyradio = PyRadio(stations, play=args.play, req_player=args.use_player)
+    pyradio = PyRadio(stations, play=args.play, req_player=requested_player)
     curses.wrapper(pyradio.setup)
 
 

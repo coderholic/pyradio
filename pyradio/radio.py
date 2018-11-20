@@ -31,6 +31,7 @@ class PyRadio(object):
     selection = 0
     playing = -1
     jumpnr = ""
+    has_player = True
 
     def __init__(self, stations, play=False, req_player=''):
         self.stations = stations
@@ -60,7 +61,10 @@ class PyRadio(object):
 
         self.log = Log()
         # For the time being, supported players are mpv, mplayer and vlc.
-        self.player = player.probePlayer(requested_player=self.requested_player)(self.log)
+        try:
+            self.player = player.probePlayer(requested_player=self.requested_player)(self.log)
+        except:
+            self.has_player = False
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()
@@ -138,24 +142,32 @@ class PyRadio(object):
         self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
     def run(self):
+        if self.has_player:
+            self.log.write('Selected player: {}'.format(self._format_player_string()))
+            if not self.play is False:
+                if self.play is None:
+                    num = random.randint(0, len(self.stations))
+                else:
+                    num = int(self.play) - 1
+                self.setStation(num)
+                self.playSelection()
+                self.refreshBody()
 
-        if not self.play is False:
-            if self.play is None:
-                num = random.randint(0, len(self.stations))
+            while True:
+                try:
+                    c = self.bodyWin.getch()
+                    ret = self.keypress(c)
+                    if (ret == -1):
+                        return
+                except KeyboardInterrupt:
+                    break
+        else:
+            if self.requested_player:
+                self.log.write('Player "{}" not available. Press any key to exit....'.format(self.requested_player))
             else:
-                num = int(self.play) - 1
-            self.setStation(num)
-            self.playSelection()
-            self.refreshBody()
-
-        while True:
-            try:
-                c = self.bodyWin.getch()
-                ret = self.keypress(c)
-                if (ret == -1):
-                    return
-            except KeyboardInterrupt:
-                break
+                self.log.write("No player available. Press any key to exit....")
+            c = self.bodyWin.getch()
+            ret = self.keypress(c)
 
     def setStation(self, number):
         """ Select the given station number """
@@ -186,7 +198,15 @@ class PyRadio(object):
             self.log.write('Error starting player.'
                            'Are you sure a supported player is installed?')
 
+    def _format_player_string(self):
+        if self.player.PLAYER_CMD == 'cvlc':
+            return 'vlc'
+        return self.player.PLAYER_CMD
+
     def keypress(self, char):
+        if self.has_player is False:
+            return
+
         # Number of stations to change with the page up/down keys
         pageChange = 5
 
