@@ -77,6 +77,8 @@ class PyRadio(object):
         self.headWin = curses.newwin(1, self.maxX, 0, 0)
         self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
         self.footerWin = curses.newwin(1, self.maxX, self.maxY - 1, 0)
+        # txtWin used mainly for error reports
+        self.txtWin = curses.newwin(self.maxY - 4, self.maxX - 4, 2, 2)
         self.initHead()
         self.initBody()
         self.initFooter()
@@ -107,7 +109,28 @@ class PyRadio(object):
         #self.bodyWin.keypad(1)
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
         self.bodyWin.noutrefresh()
-        self.refreshBody()
+        if self.has_player:
+            self.refreshBody()
+        else:
+            if self.requested_player:
+                txt = """Rypadio is not able to use the player you specified.
+
+                This means that either you misspelled its name, or this particular
+                player is not supported by PyRadio.
+                
+                PyRadio currently supports three players: mpv, mplayer and vlc,
+                automatically detected in this order."""
+            else:
+                txt = """PyRadio is not able to detect any players."
+
+                PyRadio currently supports three players: mpv, mplayer and vlc,
+                automatically detected in this order.
+                
+                Please install any one of them and try again.
+                
+                Please keep in mind that if mpv is installed, socat must be
+                installed as well."""
+            self.refreshNoPlayerBody(txt)
 
     def initFooter(self):
         """ Initializes the body/story window """
@@ -125,8 +148,26 @@ class PyRadio(object):
                 self.__displayBodyLine(lineNum, self.stations[i])
         self.bodyWin.refresh()
 
-    def __displayBodyLine(self, lineNum, station):
+    def refreshNoPlayerBody(self, a_string):
         col = curses.color_pair(5)
+        self.bodyWin.erase()
+        self.bodyWin.box()
+        self.bodyWin.move(1, 1)
+        maxDisplay = self.bodyMaxY - 1
+        col = curses.color_pair(5)
+        lines = a_string.split('\n')
+        lineNum = 0
+        self.txtWin.erase()
+        for line in lines:
+            try:
+                self.txtWin.addstr(lineNum , 0, line.strip(), col)
+            except:
+                break
+            lineNum += 1
+        self.bodyWin.refresh()
+        self.txtWin.refresh()
+
+    def __displayBodyLine(self, lineNum, station):
 
         if lineNum + self.startPos == self.selection and \
                 self.selection == self.playing:

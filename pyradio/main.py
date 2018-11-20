@@ -107,7 +107,7 @@ def shell():
 
     if args.debug:
         __configureLogger()
-        print("Debug mode acitvated")
+        print('Debug mode acitvated; printing messages to file: "pyradio.log"')
 
 
     # Starts the radio gui.
