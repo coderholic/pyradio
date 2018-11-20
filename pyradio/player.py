@@ -151,7 +151,7 @@ class Player(object):
 
                             # do this here, so that cvlc actual_volume gets updated
                             # this is done in _format_volume_string
-                            string_to_show = self._format_volume_string(subsystemOut)
+                            string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
                             if self.show_volume:
                                 self.outputStream.write(string_to_show)
@@ -164,7 +164,9 @@ class Player(object):
                         # get only icy-title entries
                         if self._is_icy_entry(subsystemOut):
                             self.oldUserInput['Title'] = subsystemOut
-                            self.icy_found = True
+                            if not self.icy_found:
+                                self.icy_found = True
+                                self.threadUpdateTitle()
 
                         # some servers sends first icy-title too early; it gets overwritten once
                         # we get the first, so we block all but icy messages, after the first one
@@ -174,10 +176,12 @@ class Player(object):
 
                         # make sure title will not pop-up while Volume value is on
                         if self.delay_thread is None:
-                            self.outputStream.write(self.muted_prefix + self._format_title_string(subsystemOut))
+                            string_to_show = self.muted_prefix + self._format_title_string(subsystemOut)
+                            self.outputStream.write(string_to_show)
                         else:
                             if (not self.delay_thread.isAlive()):
-                                self.outputStream.write(self.muted_prefix + self._format_title_string(subsystemOut))
+                                string_to_show = self.muted_prefix + self._format_title_string(subsystemOut)
+                                self.outputStream.write(string_to_show)
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
@@ -214,7 +218,7 @@ class Player(object):
     def isPlaying(self):
         return bool(self.process)
 
-    def Play(self, streamUrl):
+    def play(self, streamUrl):
         """ use a multimedia player to play a stream """
         self.close()
         self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
@@ -429,6 +433,10 @@ class MpvPlayer(Player):
         """ format mpv's title """
         return title_string.replace('icy-title: ', self.icy_title_prefix)
 
+    def _format_volume_string(self, volume_string):
+        """ format mplayer's volume """
+        return '[' + volume_string[volume_string.find(self.volume_string):].replace('ume', '')+'] '
+
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
 
@@ -527,7 +535,7 @@ class MpPlayer(Player):
 
     def _format_volume_string(self, volume_string):
         """ format mplayer's volume """
-        return volume_string[volume_string.find(self.volume_string):].replace(' %','%')
+        return '[' + volume_string[volume_string.find(self.volume_string):].replace(' %','%').replace('ume', '')+'] '
 
 class VlcPlayer(Player):
     """Implementation of Player for VLC"""
@@ -587,7 +595,7 @@ class VlcPlayer(Player):
     def _format_volume_string(self, volume_string):
         """ format vlc's volume """
         self.actual_volume = int(volume_string.split(self.volume_string)[1].split(',')[0].split()[0])
-        return 'Volume: {}%'.format(int(100 * self.actual_volume / self.max_volume))
+        return '[Vol: {}%] '.format(int(100 * self.actual_volume / self.max_volume))
 
     def _format_title_string(self, title_string):
         """ format vlc's title """
