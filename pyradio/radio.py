@@ -259,7 +259,7 @@ class PyRadio(object):
             ret_string = self.player.save_volume()
             if ret_string:
                 self.log.write(ret_string)
-                self.player.threadUpdateTitle(delay=1)
+                self.player.threadUpdateTitle(self.player.status_update_lock)
             return
 
         if char in (ord('G'), ):
