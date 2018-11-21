@@ -31,7 +31,12 @@ class PyRadio(object):
     selection = 0
     playing = -1
     jumpnr = ""
-    has_player = True
+
+    """
+        error_code: -1 no error
+                     0 no player
+    """
+    error_code = -1
 
     def __init__(self, stations, play=False, req_player=''):
         self.stations = stations
@@ -64,7 +69,8 @@ class PyRadio(object):
         try:
             self.player = player.probePlayer(requested_player=self.requested_player)(self.log)
         except:
-            self.has_player = False
+            # no player
+            self.error_code = 0
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()
@@ -109,9 +115,7 @@ class PyRadio(object):
         #self.bodyWin.keypad(1)
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
         self.bodyWin.noutrefresh()
-        if self.has_player:
-            self.refreshBody()
-        else:
+        if self.error_code == 0:
             if self.requested_player:
                 txt = """Rypadio is not able to use the player you specified.
 
@@ -131,6 +135,9 @@ class PyRadio(object):
                 Please keep in mind that if mpv is installed, socat must be
                 installed as well."""
             self.refreshNoPlayerBody(txt)
+        else:
+            self.refreshBody()
+
 
     def initFooter(self):
         """ Initializes the body/story window """
@@ -150,17 +157,13 @@ class PyRadio(object):
 
     def refreshNoPlayerBody(self, a_string):
         col = curses.color_pair(5)
-        self.bodyWin.erase()
         self.bodyWin.box()
-        self.bodyWin.move(1, 1)
-        maxDisplay = self.bodyMaxY - 1
-        col = curses.color_pair(5)
         lines = a_string.split('\n')
         lineNum = 0
         self.txtWin.erase()
         for line in lines:
             try:
-                self.txtWin.addstr(lineNum , 0, line.strip(), col)
+                self.txtWin.addstr(lineNum , 0, line.strip().replace('\r', ''), col)
             except:
                 break
             lineNum += 1
@@ -184,7 +187,13 @@ class PyRadio(object):
         self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
     def run(self):
-        if self.has_player:
+        if self.error_code == 0:
+            if self.requested_player:
+                self.log.write('Player "{}" not available. Press any key to exit....'.format(self.requested_player))
+            else:
+                self.log.write("No player available. Press any key to exit....")
+            self.bodyWin.getch()
+        else:
             self.log.write('Selected player: {}'.format(self._format_player_string()))
             if not self.play is False:
                 if self.play is None:
@@ -203,13 +212,6 @@ class PyRadio(object):
                         return
                 except KeyboardInterrupt:
                     break
-        else:
-            if self.requested_player:
-                self.log.write('Player "{}" not available. Press any key to exit....'.format(self.requested_player))
-            else:
-                self.log.write("No player available. Press any key to exit....")
-            c = self.bodyWin.getch()
-            ret = self.keypress(c)
 
     def setStation(self, number):
         """ Select the given station number """
@@ -246,7 +248,8 @@ class PyRadio(object):
         return self.player.PLAYER_CMD
 
     def keypress(self, char):
-        if self.has_player is False:
+        # if no player, don't serve keyboard
+        if self.error_code == 0:
             return
 
         # Number of stations to change with the page up/down keys
@@ -295,7 +298,7 @@ class PyRadio(object):
             self.setupAndDrawScreen()
             return
 
-        if char in (ord(' '), curses.KEY_LEFT, char == ord('h')):
+        if char in (ord(' '), curses.KEY_LEFT, ord('h')):
             if self.player.isPlaying():
                 self.player.close()
                 self.log.write('Playback stopped')
