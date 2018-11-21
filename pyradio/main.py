@@ -17,7 +17,7 @@ def __configureLogger():
     logger.setLevel(logging.DEBUG)
 
     # Handler
-    fh = logging.FileHandler("pyradio.log")
+    fh = logging.FileHandler(path.expanduser("~")+path.sep+"pyradio.log")
     fh.setLevel(logging.DEBUG)
 
     # create formatter

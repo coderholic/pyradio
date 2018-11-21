@@ -13,7 +13,7 @@ class Player(object):
     process = None
 
     icy_title_prefix = 'Title: '
-    muted_prefix = ''
+    title_prefix = ''
 
     # Input:   old user input     - used to early suppress output
     #                               in case of consecutive equal messages
@@ -176,11 +176,11 @@ class Player(object):
 
                         # make sure title will not pop-up while Volume value is on
                         if self.delay_thread is None:
-                            string_to_show = self.muted_prefix + self._format_title_string(subsystemOut)
+                            string_to_show = self.title_prefix + self._format_title_string(subsystemOut)
                             self.outputStream.write(string_to_show)
                         else:
                             if (not self.delay_thread.isAlive()):
-                                string_to_show = self.muted_prefix + self._format_title_string(subsystemOut)
+                                string_to_show = self.title_prefix + self._format_title_string(subsystemOut)
                                 self.outputStream.write(string_to_show)
         except:
             logger.error("Error in updateStatus thread.",
@@ -194,7 +194,7 @@ class Player(object):
                 if self.delay_thread.isAlive():
                     self.delay_thread.cancel()
             try:
-               self.delay_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self._format_title_string(self.oldUserInput['Title']) ] )
+               self.delay_thread = threading.Timer(delay, self.updateTitle,  [ self.outputStream, self.title_prefix + self._format_title_string(self.oldUserInput['Title']) ] )
                self.delay_thread.start()
             except:
                 if (logger.isEnabledFor(logging.DEBUG)):
@@ -225,7 +225,7 @@ class Player(object):
         self.icy_found = False
         self.muted = False
         self.show_volume = True
-        self.muted_prefix = ''
+        self.title_prefix = ''
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)
@@ -276,18 +276,18 @@ class Player(object):
             self._mute()
             if self.delay_thread is not None:
                 self.delay_thread.cancel()
-            self.muted_prefix = '[Muted] '
+            self.title_prefix = '[Muted] '
             self.muted = True
             self.show_volume = False
         else:
             self._mute()
-            self.muted_prefix = ''
+            self.title_prefix = ''
             self.muted = False
             self.show_volume = True
         if self.oldUserInput['Title'] == '':
-            self.outputStream.write(self.muted_prefix + self._format_title_string(self.oldUserInput['Input']))
+            self.outputStream.write(self.title_prefix + self._format_title_string(self.oldUserInput['Input']))
         else:
-            self.outputStream.write(self.muted_prefix + self._format_title_string(self.oldUserInput['Title']))
+            self.outputStream.write(self.title_prefix + self._format_title_string(self.oldUserInput['Title']))
 
     def _mute(self):
         pass

@@ -252,14 +252,14 @@ class PyRadio(object):
         # Number of stations to change with the page up/down keys
         pageChange = 5
 
-        if char == ord('v'):
+        if char in (ord('v'), ):
             ret_string = self.player.save_volume()
             if ret_string:
                 self.log.write(ret_string)
                 self.player.threadUpdateTitle(delay=1)
             return
 
-        if char == ord('G'):
+        if char in (ord('G'), ):
             if self.jumpnr == "":
                 self.setStation(-1)
             else:
@@ -276,13 +276,16 @@ class PyRadio(object):
         else:
             self.jumpnr = ""
 
-        if char == ord('g'):
+        if char in (ord('g'), ):
             self.setStation(0)
             self.refreshBody()
             return
 
-        if char == curses.KEY_EXIT or char == ord('q'):
-            self.player.close()
+        if char in (curses.KEY_EXIT, ord('q')):
+            try:
+                self.player.close()
+            except:
+                pass
             return -1
 
         if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
@@ -292,7 +295,7 @@ class PyRadio(object):
             self.setupAndDrawScreen()
             return
 
-        if char == ord(' ') or char == curses.KEY_LEFT or char == ord('h'):
+        if char in (ord(' '), curses.KEY_LEFT, char == ord('h')):
             if self.player.isPlaying():
                 self.player.close()
                 self.log.write('Playback stopped')
@@ -302,45 +305,45 @@ class PyRadio(object):
             self.refreshBody()
             return
 
-        if char == curses.KEY_DOWN or char == ord('j'):
+        if char in (curses.KEY_DOWN, ord('j')):
             self.setStation(self.selection + 1)
             self.refreshBody()
             return
 
-        if char == curses.KEY_UP or char == ord('k'):
+        if char in (curses.KEY_UP, ord('k')):
             self.setStation(self.selection - 1)
             self.refreshBody()
             return
 
-        if char == ord('+') or char == ord('=') or char == ord('.'):
+        if char in (ord('+'), ord('='), ord('.')):
             self.player.volumeUp()
             return
 
-        if char == ord('-') or char == ord(','):
+        if char in (ord('-'), ord(',')):
             self.player.volumeDown()
             return
 
-        if char == curses.KEY_PPAGE:
+        if char in (curses.KEY_PPAGE, ):
             self.setStation(self.selection - pageChange)
             self.refreshBody()
             return
 
-        if char == curses.KEY_NPAGE:
+        if char in (curses.KEY_NPAGE, ):
             self.setStation(self.selection + pageChange)
             self.refreshBody()
             return
 
-        if char == ord('m'):
+        if char in (ord('m'), ):
             self.player.toggleMute()
             return
 
-        if char == ord('r'):
+        if char in (ord('r'), ):
             # Pick a random radio station
             self.setStation(random.randint(0, len(self.stations)))
             self.playSelection()
             self.refreshBody()
 
-        if char == ord('#') or char == curses.KEY_RESIZE:
+        if char in (ord('#'), curses.KEY_RESIZE):
             self.setupAndDrawScreen()
 
 # pymode:lint_ignore=W901
