@@ -246,6 +246,7 @@ class Player(object):
         t.start()
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("Player started")
+        self._no_mute_on_startup()
 
     def _sendCommand(self, command):
         """ send keystroke command to player """
@@ -299,9 +300,14 @@ class Player(object):
             self.outputStream.write(self.title_prefix + self._format_title_string(self.oldUserInput['Title']))
 
     def _mute(self):
+        """ to be implemented on subclasses """
         pass
 
     def _stop(self):
+        pass
+
+    def _get_volume(self):
+        """ get volume, if player can report it """
         pass
 
     def volumeUp(self):
@@ -309,15 +315,21 @@ class Player(object):
         if self.muted is not True:
             self._volume_up()
 
+    def _volume_up(self):
+        """ to be implemented on subclasses """
+        pass
+
     def volumeDown(self):
         """ decrease volume """
         if self.muted is not True:
             self._volume_down()
 
-    def _volume_up(self):
+    def _volume_down(self):
+        """ to be implemented on subclasses """
         pass
 
-    def _volume_down(self):
+    def _no_mute_on_startup(self):
+        """ make sure player does not start muted, i.e. volume=0 """
         pass
 
     def _is_accepted_input(self, input_string):
@@ -578,9 +590,7 @@ class VlcPlayer(Player):
 
         if not self.muted:
             if self.actual_volume == -1:
-                # read actual_volume
-                self.show_volume = False
-                self._sendCommand("voldown 0\n")
+                self._get_volume()
             self._sendCommand("volume 0\n")
         else:
             self._sendCommand("volume {}\n".format(self.actual_volume))
@@ -632,6 +642,20 @@ class VlcPlayer(Player):
                     ret = False
                     break
         return ret
+
+    def _get_volume(self):
+        """ get vlc's actual_volume"""
+        self.show_volume = False
+        self._sendCommand("voldown 0\n")
+
+    def _no_mute_on_startup(self):
+        """ make sure vlc does not start muted """
+        self._get_volume()
+        while self.actual_volume == -1:
+            pass
+        if self.actual_volume == 0:
+            self._sendCommand('volume {}\n'.format(int(self.max_volume*0.25)))
+        self.show_volume = True
 
 def probePlayer(requested_player=''):
     """ Probes the multimedia players which are available on the host
