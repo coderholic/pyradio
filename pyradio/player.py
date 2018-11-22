@@ -43,19 +43,24 @@ class Player(object):
         pass
 
     def _do_save_volume(self, config_string):
-        ret_string = "Volume: already saved..."
+        ret_strings = ('Volume: already saved...',
+                    'Volume: {}% saved',
+                    'Volume: {}% NOT saved (Error writing file)')
+        log_strings = ('Volume is -1. Aborting...',
+                    'Volume is {}%. Saving...',
+                    'Error saving profile "{}"')
         if self.volume == -1:
             """ inform no change """
             if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug("Volume is -1. Aborting...")
-            return ret_string
+                logger.debug(log_strings[0])
+            return ret_strings[0]
         else:
             """ change volume """
             if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug("Volume is {}%. Saving...".format(self.volume))
+                logger.debug(log_strings[1].format(self.volume))
             profile_found = False
             config_file = self.config_files[0]
-            ret_string = "Volume: {}% - saved".format(str(self.volume))
+            ret_string = ret_strings[1].format(str(self.volume))
             if os.path.exists(config_file):
                 if self.PROFILE_FROM_USER:
                     with open(config_file, 'r') as c_file:
@@ -104,8 +109,8 @@ class Player(object):
                             c_file.write(config_string)
                     except EnvironmentError:
                         if (logger.isEnabledFor(logging.DEBUG)):
-                            logger.debug("Error saving file {}".format(config_file))
-                        return "Volume: {}% - NOT saved (Error writing file)".format(str(self.volume))
+                            logger.debug(log_strings[2].format(config_file))
+                        return ret_strings[2].format(str(self.volume))
                     self.volume = -1
 
             """ no user profile or user config file does not exist """
@@ -115,16 +120,16 @@ class Player(object):
                         os.mkdir(os.path.dirname(config_file))
                     except OSError:
                         if (logger.isEnabledFor(logging.DEBUG)):
-                            logger.debug("Error saving file {}".format(config_file))
-                        return "Volume: {}% - NOT saved (Error writing file)".format(str(self.volume))
+                            logger.debug(log_strings[2].format(config_file))
+                        return ret_strings[2].format(str(self.volume))
                 new_profile_string = "volume=100\n\n" + config_string
                 try:
                     with open(config_file, "a") as c_file:
                         c_file.write(new_profile_string.format(str(self.volume)))
                 except EnvironmentError:
                     if (logger.isEnabledFor(logging.DEBUG)):
-                        logger.debug("Error saving file {}".format(config_file))
-                    return "Volume: {}% - NOT saved (Error writing file)".format(str(self.volume))
+                        logger.debug(log_strings[2].format(config_file))
+                    return ret_strings[2].format(str(self.volume))
                 self.volume = -1
                 self.PROFILE_FROM_USER = True
             return ret_string
