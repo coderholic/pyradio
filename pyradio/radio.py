@@ -119,8 +119,8 @@ class PyRadio(object):
             if self.requested_player:
                 txt = """Rypadio is not able to use the player you specified.
 
-                This means that either you misspelled its name, or this particular
-                player is not supported by PyRadio.
+                This means that either this particular player is not supported
+                by PyRadio, or that you have simply misspelled its name.
                 
                 PyRadio currently supports three players: mpv, mplayer and vlc,
                 automatically detected in this order."""
@@ -237,7 +237,7 @@ class PyRadio(object):
         stream_url = self.stations[self.selection][1].strip()
         self.log.write('Playing ' + name)
         try:
-            self.player.play(stream_url)
+            self.player.play(name, stream_url)
         except OSError:
             self.log.write('Error starting player.'
                            'Are you sure a supported player is installed?')

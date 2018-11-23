@@ -26,7 +26,6 @@ class Player(object):
     volume = -1
 
     delay_thread = None
-    icy_found = False
 
     """ make it possible to change volume but not show it """
     show_volume = True
@@ -152,6 +151,7 @@ class Player(object):
                         logger.debug("User input: {}".format(subsystemOut))
                     self.oldUserInput['Input'] = subsystemOut
                     if self.volume_string in subsystemOut:
+                        #logger.error("***** volume")
                         if self.oldUserInput['Volume'] != subsystemOut:
                             self.oldUserInput['Volume'] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
@@ -163,24 +163,9 @@ class Player(object):
                             if self.show_volume:
                                 self.outputStream.write(string_to_show, args[0])
                                 self.threadUpdateTitle(args[0])
-                    else:
-                        # get all input before we get first icy-title
-                        if (not self.icy_found):
-                            self.oldUserInput['Title'] = subsystemOut
-                        # once we get the first icy-title,
-                        # get only icy-title entries
-                        if self._is_icy_entry(subsystemOut):
-                            self.oldUserInput['Title'] = subsystemOut
-                            if not self.icy_found:
-                                self.icy_found = True
-                                self.threadUpdateTitle(args[0])
-
-                        # some servers sends first icy-title too early; it gets overwritten once
-                        # we get the first, so we block all but icy messages, after the first one
-                        # is received (whenever we get an input, we print the previous icy message)
-                        if self.icy_found:
-                            subsystemOut = self.oldUserInput['Title']
-
+                    elif self._is_icy_entry(subsystemOut):
+                        #logger.error("***** icy_entry")
+                        self.oldUserInput['Title'] = subsystemOut
                         # make sure title will not pop-up while Volume value is on
                         ok_to_display = False
                         if self.delay_thread is None:
@@ -191,6 +176,10 @@ class Player(object):
                         if ok_to_display:
                             string_to_show = self.title_prefix + self._format_title_string(subsystemOut)
                             self.outputStream.write(string_to_show, args[0])
+                    else:
+                        if self.oldUserInput['Title'] == '':
+                            self.oldUserInput['Title'] = "Playing station: {}".format(self.name)
+                            self.outputStream.write(self.oldUserInput['Title'])
         except:
             logger.error("Error in updateStatus thread.",
                          exc_info=True)
@@ -213,8 +202,9 @@ class Player(object):
         arg[0].write(arg[1], arg[2])
 
     def _is_icy_entry(self, a_string):
+        #logger.error("**** a_string = {}".format(a_string))
         for a_tokken in self.icy_tokkens:
-            if a_string.startswith(a_tokken):
+            if a_tokken in a_string:
                 return True
         return False
 
@@ -227,14 +217,15 @@ class Player(object):
     def isPlaying(self):
         return bool(self.process)
 
-    def play(self, streamUrl):
+    def play(self, name, streamUrl):
         """ use a multimedia player to play a stream """
         self.close()
+        self.name = name
         self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
-        self.icy_found = False
         self.muted = False
         self.show_volume = True
         self.title_prefix = ''
+        self.outputStream.write('Station: {}'.format(name), self.status_update_lock)
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)
@@ -347,7 +338,7 @@ class MpvPlayer(Player):
 
     """ items of this tupple are considered icy-title
         and get displayed after first icy-title is received """
-    icy_tokkens = ('icy-title:', 'Exiting... (Quit)')
+    icy_tokkens = ('icy-title: ', 'Exiting... (Quit)')
 
     """ USE_PROFILE
     -1 : not checked yet
@@ -452,7 +443,7 @@ class MpvPlayer(Player):
 
     def _format_title_string(self, title_string):
         """ format mpv's title """
-        return title_string.replace('icy-title: ', self.icy_title_prefix)
+        return title_string.replace(self.icy_tokkens[0], self.icy_title_prefix)
 
     def _format_volume_string(self, volume_string):
         """ format mplayer's volume """
@@ -565,7 +556,7 @@ class VlcPlayer(Player):
 
     """ items of this tupple are considered icy-title
         and get displayed after first icy-title is received """
-    icy_tokkens = ('Icy-Title=', 'Exiting... (Quit)')
+    icy_tokkens = ('New Icy-Title=', 'Exiting... (Quit)')
 
     muted = False
 
@@ -623,8 +614,6 @@ class VlcPlayer(Player):
             ret_string = title_string
         else:
             ret_string = self.icy_title_prefix + sp[1]
-        if not self.icy_found:
-            ret_string = ret_string.split('] ')[-1]
         return ret_string
 
     def _is_accepted_input(self, input_string):
@@ -682,7 +671,7 @@ def probePlayer(requested_player=''):
         if requested_player == '':
             logger.error("No supported player found. Terminating...")
         else:
-            logger.error('Requested player "' + requested_player + '" not supported. Terminating...')
+            logger.error('Requested player "{}" not supported. Terminating...'.format(requested_player))
         exit(1)
     return ret_player
 
