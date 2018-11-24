@@ -99,9 +99,14 @@ class PyRadio(object):
         curses.doupdate()
 
     def initHead(self):
-        from pyradio import version
-
-        info = " PyRadio {0} ".format(version)
+        # git_short_hash can be set at build time
+        # if so, it will be shown instead of version
+        git_short_hash = ''
+        if git_short_hash:
+            info = " PyRadio ({0}) ".format(git_short_hash)
+        else:
+            from pyradio import version
+            info = " PyRadio {0} ".format(version)
         self.headWin.addstr(0, 0, info, curses.color_pair(4))
         rightStr = "www.coderholic.com/pyradio"
         self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr,
