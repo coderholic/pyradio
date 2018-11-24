@@ -664,15 +664,14 @@ def probePlayer(requested_player=''):
             if ret_player is not None:
                 break
         else:
-            if player.PLAYER_CMD == requested_player:
-                ret_player = check_player(player)
+            req = requested_player.split(',')
+            for r_player in req:
+                if player.PLAYER_CMD == r_player or \
+                        player.PLAYER_CMD == 'c' + r_player:
+                    ret_player = check_player(player)
+                    if ret_player is not None:
+                        break
 
-    if ret_player is None:
-        if requested_player == '':
-            logger.error("No supported player found. Terminating...")
-        else:
-            logger.error('Requested player "{}" not supported. Terminating...'.format(requested_player))
-        exit(1)
     return ret_player
 
 def check_player(a_player):

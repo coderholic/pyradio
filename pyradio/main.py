@@ -58,7 +58,7 @@ for p in [path.join(usr_path, 'station.csv'),
 
 def shell():
     requested_player = ''
-    parser = ArgumentParser(description="Console radio player")
+    parser = ArgumentParser(description="Curses based Internet radio player")
     parser.add_argument("-s", "--stations", default=DEFAULT_FILE,
                         help="Use specified station CSV file.")
     parser.add_argument("-p", "--play", nargs='?', default=False,
@@ -71,15 +71,13 @@ def shell():
     parser.add_argument("-d", "--debug", action='store_true',
                         help="Start pyradio in debug mode.")
     parser.add_argument("-u", "--use-player", default='',
-            help="Use specified player."
-                        "Supported players: mpv, mplayer, vlc.")
+            help="Use specified player. "
+            "A comma-separated list can be used to specify detection order. "
+            "Supported players: mpv, mplayer, vlc.")
     args = parser.parse_args()
 
     if args.use_player != '':
-        if args.use_player == 'vlc':
-            requested_player = 'cvlc'
-        else:
-            requested_player = args.use_player
+        requested_player = args.use_player
 
     # No need to parse the file if we add station
     if args.add:

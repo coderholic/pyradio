@@ -189,7 +189,10 @@ class PyRadio(object):
     def run(self):
         if self.error_code == 0:
             if self.requested_player:
-                self.log.write('Player "{}" not available. Press any key to exit....'.format(self.requested_player))
+                if ',' in self.requested_player:
+                    self.log.write('None of "{}" players is available. Press any key to exit....'.format(self.requested_player))
+                else:
+                    self.log.write('Player "{}" not available. Press any key to exit....'.format(self.requested_player))
             else:
                 self.log.write("No player available. Press any key to exit....")
             self.bodyWin.getch()
