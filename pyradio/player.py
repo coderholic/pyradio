@@ -156,11 +156,11 @@ class Player(object):
                             self.oldUserInput['Volume'] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
 
-                            # do this here, so that cvlc actual_volume gets updated
-                            # this is done in _format_volume_string
+                            # IMPORTANT: do this here, so that cvlc actual_volume
+                            # gets updated in _format_volume_string
                             string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
-                            if self.show_volume:
+                            if self.show_volume and self.oldUserInput['Title']:
                                 self.outputStream.write(string_to_show, args[0])
                                 self.threadUpdateTitle(args[0])
                     elif self._is_icy_entry(subsystemOut):
