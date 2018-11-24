@@ -46,7 +46,7 @@ class PyRadio(object):
 
     def setup(self, stdscr):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("GUI initialization on python v. {}".format(python_version))
+            logger.debug("GUI initialization on python v. {}".format(python_version).replace('\n', ' ').replace('\r', ' '))
         self.stdscr = stdscr
 
         try:
@@ -104,6 +104,8 @@ class PyRadio(object):
         git_short_hash = ''
         if git_short_hash:
             info = " PyRadio ({0}) ".format(git_short_hash)
+            if logger.isEnabledFor(logging.INFO):
+                logger.info("RyRadio running from git: https://github.com/coderholic/pyradio/commit/{}".format(git_short_hash))
         else:
             from pyradio import version
             info = " PyRadio {0} ".format(version)
@@ -126,7 +128,7 @@ class PyRadio(object):
 
                 This means that either this particular player is not supported
                 by PyRadio, or that you have simply misspelled its name.
-                
+
                 PyRadio currently supports three players: mpv, mplayer and vlc,
                 automatically detected in this order."""
             else:
@@ -134,9 +136,9 @@ class PyRadio(object):
 
                 PyRadio currently supports three players: mpv, mplayer and vlc,
                 automatically detected in this order.
-                
+
                 Please install any one of them and try again.
-                
+
                 Please keep in mind that if mpv is installed, socat must be
                 installed as well."""
             self.refreshNoPlayerBody(txt)

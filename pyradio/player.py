@@ -658,20 +658,24 @@ def probePlayer(requested_player=''):
                     ", ".join([player.PLAYER_CMD
                               for player in implementedPlayers]))
 
-    for player in implementedPlayers:
-        if requested_player == '':
-            ret_player = check_player(player)
-            if ret_player is not None:
-                break
-        else:
-            req = requested_player.split(',')
-            for r_player in req:
-                if player.PLAYER_CMD == r_player or \
-                        player.PLAYER_CMD == 'c' + r_player:
+    if requested_player:
+        req = requested_player.split(',')
+        for r_player in req:
+            if r_player == 'vlc':
+                r_player = 'cvlc'
+            for player in implementedPlayers:
+                if player.PLAYER_CMD == r_player:
                     ret_player = check_player(player)
                     if ret_player is not None:
                         break
-
+            if ret_player is None:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Requested player "{}" not supported'.format(r_player))
+    else:
+        for player in implementedPlayers:
+            ret_player = check_player(player)
+            if ret_player is not None:
+                break
     return ret_player
 
 def check_player(a_player):
