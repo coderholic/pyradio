@@ -106,7 +106,6 @@ Example:
     volume=100
 
     [pyradio]
-    softvol=yes
     volstep=1
     volume=28
 
