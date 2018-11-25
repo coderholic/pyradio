@@ -56,7 +56,6 @@ The second step is to install the build:
     Console radio player
 
     optional arguments:
-    -h, --help            Show this help message and exit.
     -s, --stations <path> Use specified station CSV file.
     -p, --play [play]     Start and play. The value is num station or empty for random.
     -a, --add             Add station to list.
@@ -64,19 +63,21 @@ The second step is to install the build:
     -u, --use-player      Specify which player to use (mpv, mplayer or cvlc).
     -d, --debug           Debug mode (pyradio.log created).
                           To be attached with any bug report.
+    -h, --help            Show this help message and exit.
 
 ## Controls
 
 ```
 Up/Down/j/k/PgUp/PgDown Change station selection.
-Enter/Right/l           Play selected station.
--/+ or ,/.              Change volume.
-v                       Save volume (mpv and mplayer only).
-m                       Mute.
-r                       Select and play a random station.
 g                       Jump to first station.
-<n>G                    Jump to n-th station.
+<n>G                    Jump to n-th / last station.
+Enter/Right/l           Play selected station.
+r                       Select and play a random station.
 Space/Left/h            Stop/start playing selected station.
+-/+ or ,/.              Change volume.
+m                       Mute.
+v                       Save volume (not applicable for vlc).
+?,/                     Show keys help.
 Esc/q                   Quit.
 ```
 
