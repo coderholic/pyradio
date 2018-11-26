@@ -51,6 +51,16 @@ class PyRadio(object):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("GUI initialization on python v. {}".format(python_version).replace('\n', ' ').replace('\r', ' '))
         self.stdscr = stdscr
+        from pyradio import version
+        # git_short_hash can be set at build time
+        # if so, it will be shown instead of version
+        git_short_hash = ''
+        if git_short_hash:
+            self.info = " PyRadio {0}-{1} ".format(version, git_short_hash)
+            if logger.isEnabledFor(logging.INFO):
+                logger.info("RyRadio running from git: https://github.com/coderholic/pyradio/commit/{}".format(git_short_hash))
+        else:
+            self.info = " PyRadio {0} ".format(version)
 
         try:
             curses.curs_set(0)
@@ -88,7 +98,7 @@ class PyRadio(object):
         self.footerWin = curses.newwin(1, self.maxX, self.maxY - 1, 0)
         # txtWin used mainly for error reports
         self.txtWin = curses.newwin(self.maxY - 4, self.maxX - 4, 2, 2)
-        self.initHead()
+        self.initHead(self.info)
         self.initBody()
         self.initFooter()
 
@@ -101,17 +111,7 @@ class PyRadio(object):
 
         curses.doupdate()
 
-    def initHead(self):
-        from pyradio import version
-        # git_short_hash can be set at build time
-        # if so, it will be shown instead of version
-        git_short_hash = ''
-        if git_short_hash:
-            info = " PyRadio {0}-{1} ".format(version, git_short_hash)
-            if logger.isEnabledFor(logging.INFO):
-                logger.info("RyRadio running from git: https://github.com/coderholic/pyradio/commit/{}".format(git_short_hash))
-        else:
-            info = " PyRadio {0} ".format(version)
+    def initHead(self, info):
         self.headWin.addstr(0, 0, info, curses.color_pair(4))
         rightStr = "www.coderholic.com/pyradio"
         self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr,
@@ -414,7 +414,7 @@ class PyRadio(object):
         self.hWin.box()
         self.hWin.addstr(0, int((mwidth-len(caption))/2), caption, caption_col)
         for i, n in enumerate(lines):
-            self.hWin.addstr(i+1, 2, n, caption_col)
+            self.hWin.addstr(i+1, 2, n.replace('_', ' '), caption_col)
         self.hWin.addstr(mheight - 1, int(mwidth-len(prompt)-1), prompt)
 
         self.hWin.refresh()
