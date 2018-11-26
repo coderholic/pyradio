@@ -48,8 +48,8 @@ class PyRadio(object):
         self.requested_player = req_player
 
     def setup(self, stdscr):
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("GUI initialization on python v. {}".format(python_version).replace('\n', ' ').replace('\r', ' '))
+        if logger.isEnabledFor(logging.INFO):
+            logger.info("GUI initialization on python v. {}".format(python_version).replace('\n', ' ').replace('\r', ' '))
         self.stdscr = stdscr
         from pyradio import version
         # git_short_hash can be set at build time

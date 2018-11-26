@@ -3,7 +3,7 @@ import sys
 import curses
 import logging
 from argparse import ArgumentParser
-from os import path, getenv, mkdir
+from os import path, getenv, makedirs
 from shutil import copyfile
 
 from .radio import PyRadio
@@ -17,7 +17,7 @@ def __configureLogger():
     logger.setLevel(logging.DEBUG)
 
     # Handler
-    fh = logging.FileHandler(path.expanduser("~")+path.sep+"pyradio.log")
+    fh = logging.FileHandler(path.join(path.expanduser("~"), "pyradio.log"))
     fh.setLevel(logging.DEBUG)
 
     # create formatter
@@ -37,7 +37,12 @@ def check_stations(usr, root):
     if path.exists(path.join(usr, 'station.csv')):
         return
     else:
-        mkdir(usr)
+        if not path.exists(usr):
+            try:
+                makedirs(usr)
+            except:
+                print('Error: Cannot create config directory "{}"'.format(usr))
+                sys.exit(1)
         copyfile(root, path.join(usr, 'station.csv'))
 
 if sys.platform.startswith('win'):
