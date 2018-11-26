@@ -1,3 +1,13 @@
+2018-11-26  s-n-g
+
+	* PyRadio will not crash when no player found.
+	* Added '-u' option to specify player to use (or detection order)
+	* A help message can be displayed (shortcut '?' or '/')
+	* vlc will never start muted
+	* Volume value is displayed while changing
+	* Volume can be saved for mpv and mplayer (shortcut 'v')
+	* pyradio.log is always saved in home directory
+
 2013-04-03  stac47
 
 	* Version 0.5.1
