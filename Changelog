@@ -1,12 +1,17 @@
 2018-11-26  s-n-g
 
 	* PyRadio will not crash when no player found.
+	* PyRadio will only display station name and icy-title (if received)
+	* PyRadio version will include git short hash when not an a git tag
+	  (i.e.not on a	release)
 	* Added '-u' option to specify player to use (or detection order)
 	* A help message can be displayed (shortcut '?' or '/')
 	* vlc will never start muted
 	* Volume value is displayed while changing
 	* Volume can be saved for mpv and mplayer (shortcut 'v')
 	* pyradio.log is always saved in home directory
+	* Added man page, thanks to AUR package pyradio-git (not installed
+	  by default; it's up to the packagers to do it)
 
 2013-04-03  stac47
 
