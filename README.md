@@ -49,21 +49,28 @@ The second step is to install the build:
 
 ## Shell commands
 
-    $ pyradio -h
+```
+$ pyradio -h
 
-    usage: main.py [--help] [--stations <path>] [--random] [--add] [--list]
+usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-a] [-l] [-d] [-u USE_PLAYER]
 
-    Console radio player
+Curses based Internet radio player
 
-    optional arguments:
-    -s, --stations <path> Use specified station CSV file.
-    -p, --play [play]     Start and play. The value is num station or empty for random.
-    -a, --add             Add station to list.
-    -l, --list            List of added stations.
-    -u, --use-player      Specify which player to use (mpv, mplayer or cvlc).
-    -d, --debug           Debug mode (pyradio.log created).
-                          To be attached with any bug report.
-    -h, --help            Show this help message and exit.
+optional arguments:
+  -h, --help            show this help message and exit
+  -s STATIONS, --stations STATIONS
+                        Use specified station CSV file.
+  -p [PLAY], --play [PLAY]
+                        Start and play.The value is num station or empty for
+                        random.
+  -a, --add             Add station to list.
+  -l, --list            List of added stations.
+  -d, --debug           Start pyradio in debug mode.
+  -u USE_PLAYER, --use-player USE_PLAYER
+                        Use specified player. A comma-separated list can be
+                        used to specify detection order. Supported players:
+                        mpv, mplayer, vlc.
+```
 
 ## Controls
 
