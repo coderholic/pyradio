@@ -685,6 +685,16 @@ def check_player(a_player):
                              stdin=subprocess.PIPE,
                              shell=False)
         p.terminate()
+
+        # for mpv to work, socat is required...
+        if a_player.PLAYER_CMD == 'mpv':
+            logger.debug("mpv found... Checking for socat...")
+            p = subprocess.Popen(['socat', "-h"],
+                                 stdout=subprocess.PIPE,
+                                 stdin=subprocess.PIPE,
+                                 shell=False)
+            p.terminate()
+
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("{} supported.".format(str(a_player)))
         return a_player

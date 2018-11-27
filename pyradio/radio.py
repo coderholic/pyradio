@@ -52,15 +52,17 @@ class PyRadio(object):
             logger.info("GUI initialization on python v. {}".format(python_version).replace('\n', ' ').replace('\r', ' '))
         self.stdscr = stdscr
         from pyradio import version
-        # git_short_hash can be set at build time
-        # if so, it will be shown instead of version
-        git_short_hash = ''
-        if git_short_hash:
-            self.info = " PyRadio {0}-{1} ".format(version, git_short_hash)
+        self.info = " PyRadio {0} ".format(version)
+        # git_description can be set at build time
+        # if so, revision will be shown along with the version
+        # if revision is not 0
+        git_description = ''
+        if git_description:
+            git_info = git_description.split('-')
+            if git_info[1] != '0':
+                self.info = " PyRadio {0}-r{1} ".format(version, git_info[1])
             if logger.isEnabledFor(logging.INFO):
-                logger.info("RyRadio running from git: https://github.com/coderholic/pyradio/commit/{}".format(git_short_hash))
-        else:
-            self.info = " PyRadio {0} ".format(version)
+                logger.info("RyRadio running from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1]))
 
         try:
             curses.curs_set(0)
