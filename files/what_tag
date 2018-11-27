@@ -1,0 +1,12 @@
+#!/bin/bash
+a_tag=$(sed -n '/^version_info/p' pyradio/__init__.py | sed -e 's/.*(//' -e 's/)//' -e 's/, /./g')
+echo "Current version: $a_tag
+
+To create a local tag for this version, type:
+    git tag $a_tag
+When ready to push, type
+    git push origin master
+    git push origin --tags
+"
+
+

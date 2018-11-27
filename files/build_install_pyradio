@@ -1,0 +1,45 @@
+#!/bin/bash
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        -h|--help)
+            echo "Usage: $0 [2/3]
+
+Available options:
+  2  build against python v. 2.x
+  3  build against python v. 3.x
+
+If no option is used, will build using the
+default python version
+"
+            exit
+            ;;
+        2)
+            TO_PYTHON=2
+            shift
+            ;;
+        3)
+            TO_PYTHON=3
+            shift
+            ;;
+        *)    # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+exit
+
+# delete any files that were left from previous attempt
+sudo find . -iname "*.pyc" -delete 2>/dev/null
+sudo find . -iname "*.egg" -delete 2>/dev/null
+
+descr=$(git describe --long --tags)
+[ -z "$descr" ] || sed -i "s/git_description = ''/git_description = '${descr}'/" pyradio/radio.py
+python"${TO_PYTHON}" setup.py build && {
+echo "***** installing..."
+sudo python"${TO_PYTHON}" setup.py install 
+}
+[ -z "$descr" ] || sed -i "s/git_description = '[^']*'/git_description = ''/" pyradio/radio.py
