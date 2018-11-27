@@ -27,7 +27,7 @@
 </header>
 <h1 id="pyradio">PyRadio</h1>
 <p>Command line internet radio player.</p>
-<p>Ben Dowling - <a href="http://www.coderholic.com/pyradio">http://www.coderholic.com/pyradio</a></p>
+<p>Ben Dowling - <a href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of contents</h2>
 <ul>
 <li><a href="#requirements">Requirements</a></li>
@@ -113,8 +113,8 @@ Esc/q                     Quit.</pre>
 <p>will instruct <strong>PyRadio</strong> to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.</p>
 <h2 id="player-default-volume-level">Player default volume level</h2>
 <p>MPV and MPlayer, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with VLC.</p>
-<p>This introduces a problem to <strong>PyRadio</strong>: every time we change a station (i.e restart playback), even though we may have already set the volume to a desired level, the playback starts at the player’s default level.</p>
-<p>The way to come around it, is to save our desired volume level in a way that it will be used by the player whenever is restarted.</p>
+<p>This introduces a problem to <strong>PyRadio</strong>: every time a user plays a station (i.e restarts playback), even though he may have already set the volume to a desired level, the playback starts at the player’s default level.</p>
+<p>The way to come around it, is to save the desired volume level in a way that it will be used by the player whenever it is restarted.</p>
 <p>This is done by typing “<strong><em>v</em></strong>” right after setting a desired volume level.</p>
 <h3 id="mpv">MPV</h3>
 <p>MPV uses profiles to customize its behavior.</p>

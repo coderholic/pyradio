@@ -2,7 +2,7 @@
 
 Command line internet radio player.
 
-Ben Dowling - [http://www.coderholic.com/pyradio](http://www.coderholic.com/pyradio)
+Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 ## Table of contents
 
@@ -134,9 +134,9 @@ will instruct **PyRadio** to look for VLC, then MPlayer and finaly for MPV and u
 
 MPV and MPlayer, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with VLC.
 
-This introduces a problem to **PyRadio**: every time we change a station (i.e restart playback), even though we may have already set the volume to a desired level, the playback starts at the player's default level.
+This introduces a problem to **PyRadio**: every time a user plays a station (i.e restarts playback), even though he may have already set the volume to a desired level, the playback starts at the player's default level.
 
-The way to come around it, is to save our desired volume level in a way that it will be used by the player whenever is restarted.
+The way to come around it, is to save the desired volume level in a way that it will be used by the player whenever it is restarted.
 
 This is done by typing "***v***" right after setting a desired volume level.
 
