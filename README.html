@@ -101,6 +101,7 @@ Esc/q                     Quit.</pre>
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file (named <em>stations.csv</em>), where each line contains two columns, the first being the station name and the second being the stream URL.</p>
 <p><strong>PyRadio</strong> will by default use the user’s configuration file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations. If this file is not found, it will be created and populated with a default set of stations.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2em;"><strong>Tip:</strong> If you already have a custom <em>stations.csv</em> file, but want to update it with <strong>PyRadio</strong>’s default one, you just rename it, run <strong>PyRadio</strong> (so that the default one get created) and then merge the two files.</p>
+<p>A different file can be used when the <strong>-s</strong> command line option is used.</p>
 <h2 id="player-detection-selection">Player detection / selection</h2>
 <p><strong>PyRadio</strong> is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.</p>
 <p>Currently, it supports MPV, MPlayer and VLC, and it will look for them in that order. If none of them is found, the program will terminate with an error.</p>

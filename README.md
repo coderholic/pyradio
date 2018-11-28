@@ -108,6 +108,8 @@ Esc/q                     Quit.
 
 **Tip:** If you already have a custom *stations.csv* file, but want to update it with **PyRadio**'s default one, you just rename it, run **PyRadio** (so that the default one get created) and then merge the two files.
 
+A different file can be used when the **-s** command line option is used.
+
 ## Player detection / selection
 
 **PyRadio** is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.
