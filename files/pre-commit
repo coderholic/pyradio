@@ -1,8 +1,8 @@
 #!/bin/bash
 [ -z "$(git status | grep 'modified:' | grep README.md)" ] || {
-    echo '% PyRadio README' > int.md
-    cat README.md >> int.md
-    pandoc -s -t html int.md -o README.html || exit 1
+    echo '% PyRadio README' > tmp.md
+    cat README.md >> tmp.md
+    pandoc -s -t html tmp.md -o README.html || exit 1
     sed -i '/<style /a \
     html {margin: 2em;} \
     h2 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} \
@@ -11,7 +11,6 @@
     dd {margin: 1em;} \
     dt {font-weight: bold;} \
     pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6;}' README.html
-    #sed -i -e 's/div.sourceCode { margin: 1em 0; }/div.sourceCode { margin: 1em 0;  background-color: #F6F6F6; margin: 1em; }/' -e 's/pre.sourceCode { margin: 0; }/pre.sourceCode { margin: 2em; }/' -e '/class="title"/d' README.html
     sed -i -e 's/<code>//g' \
         -e 's{</code>{{g' \
         -e 's{<a href="#pyradio">pyradio</a>{[pyradio]{' \
@@ -19,7 +18,7 @@
         -e 's/<li><p>/<li>/g' \
         -e 's{</</p></li>{</li>{g' \
         -e '/h1 class="title"/d' README.html
-    rm int.md
+    rm tmp.md
     git add README.html
 }
 

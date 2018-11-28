@@ -47,4 +47,16 @@ Check it out:
 files/what_tag
 ```
 
+### How this works
+1. set package version in ***pyradio/__init__.py***.
+2. run this script to get help. This script will read the version from said file, and help you create the corresponding tag.
+3. commit your changes, both local and remote.
+
+When this is done, you will have a tag on the remote repository denoting the release of a new package version.
+
+**Why go in all this trouble?**
+
+Well, when the package is built against the tagged commit, the tag/version will be displayed. So far, so good.
+
+When the package is built against an adjunct commit, the tag/version will be followed by the revision number (i.e. number of commits ahead of the tagged commit).
 

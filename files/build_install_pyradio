@@ -7,11 +7,11 @@ do
             echo "Usage: $0 [2/3]
 
 Available options:
-  2  build against python v. 2.x
-  3  build against python v. 3.x
+  2  build using python v. 2.x
+  3  build using python v. 3.x
 
-If no option is used, will build using the
-default python version
+If no option is used, will build using
+system default python
 "
             exit
             ;;
