@@ -48,7 +48,7 @@ files/what_tag
 ```
 
 ### How this works
-1. set package version in ***pyradio/__init__.py***.
+1. set package version in ***pyradio/\_\_init\_\_.py***.
 2. run this script to get help. This script will read the version from said file, and help you create the corresponding tag.
 3. commit your changes, both local and remote.
 
