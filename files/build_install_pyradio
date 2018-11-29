@@ -30,7 +30,6 @@ system default python
     esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
-exit
 
 # delete any files that were left from previous attempt
 sudo find . -iname "*.pyc" -delete 2>/dev/null
