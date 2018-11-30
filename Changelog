@@ -6,7 +6,7 @@
 	  (i.e.not on a	release tag)
 	* Added '-u' option to specify player to use (or detection order)
 	* A help message can be displayed (shortcut '?' or '/')
-	* vlc will never start muted
+	* vlc will unmute on exit
 	* Volume value is displayed while changing
 	* Volume can be saved for mpv and mplayer (shortcut 'v')
 	* pyradio.log is always saved in home directory

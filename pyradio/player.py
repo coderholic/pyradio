@@ -584,10 +584,14 @@ class VlcPlayer(Player):
 
         if self.muted:
             self._sendCommand("volume {}\n".format(self.actual_volume))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('VLC unmuted: {0} ({1}%)'.format(self.actual_volume, int(100 * self.actual_volume / self.max_volume)))
         else:
             if self.actual_volume == -1:
                 self._get_volume()
             self._sendCommand("volume 0\n")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('VLC muted: 0 (0%)')
 
     def pause(self):
         """ pause streaming (if possible) """
@@ -652,6 +656,12 @@ class VlcPlayer(Player):
                 self._sendCommand('volume {}\n'.format(self.actual_volume))
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Unmuting VLC on exit: {} (25%)'.format(self.actual_volume))
+            elif self.muted:
+                if self.actual_volume > 0:
+                    self._sendCommand('volume {}\n'.format(self.actual_volume))
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('VLC volume restored on exit: {0} ({1}%)'.format(self.actual_volume, int(100 * self.actual_volume / self.max_volume)))
+
             self.show_volume = True
 
 def probePlayer(requested_player=''):

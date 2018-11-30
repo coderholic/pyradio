@@ -1,0 +1,154 @@
+.\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
+.\" This manual is freely distributable under the terms of the GPL.
+.\"
+.TH PYRADIO 1 "November 2018"
+
+.SH NAME
+.PP
+pyradio \- a curses Internet radio player.
+
+.SH SYNOPSIS
+.PP
+\fBpyradio\fR\ [\fIOPTIONS\fR]
+
+.SH DESCRIPTION
+.PP
+.B pyradio
+is a command line Internet radio player based on curses, that uses external media players to perform the actual playback. 
+.PP
+It currently supports the following players: \fIMPV\fR, \fIMPlayer\fR and \fIVLC\fR.
+
+.SH OPTIONS
+
+.IP \fB-s\fR,\fB\ \--stations\ \fR[\fISTATIONS\fR]
+Use specified station CSV file.
+.IP \fB-p\fR,\fB\ \--play\ \fR\<\fIPLAY\fR\>
+Play station number \fR\<\fIPLAY\fR\>. Select randome station if \fR\<\fIPLAY\fR\> not specified.
+.IP \fB-a\fR,\fB\ \--add             
+Add station to list.
+.IP \fB-l\fR,\fB\ \--list            
+List of added stations.
+.IP \fB-u\fR,\fB\ \--use-player\ \fR[\fIUSE_PLAYER\fR]
+Specify which player to use (\fImpv\fR,\ \fImplayer\fR\ or\ \fIvlc\fR). A comma-separated list of players can be givven, thus specifying detection order.
+.IP \fB-d\fR,\fB\ \--debug           
+Enable \fBDEBUG MODE\fR.
+.IP \fB-h\fR,\fB\ \--help            
+Show usage information and exit.
+
+.SH CONTROLS
+
+.IP \fBUp\fR/\fBDown\fR/\fBPgUp\fR/\fBPgDown     
+Change station selection
+.IP \fBj\fR/\fBk
+Change station selection (vi-like)
+.IP \fBEnter\fR/\fBRight\fR/\fBl
+Play selected station
+.IP \fBr                       
+Select and play a random station
+.IP \fBSpace\fR/\fBLeft\fR/\fBh     
+Stop/start playing selected station
+.IP \fB-\fR/\fB+\fR\ or\ \fB,\fR/\fB.             
+Change volume
+.IP \fBm                       
+Mute
+.IP \fBv
+Save volume (\fIMPV\fR and \fIMPlayer\fR only)
+.IP \fB?\fR\ or\ \fB/
+Show keys help
+.IP \fBEsc\fR/\fBq                   
+Quit
+
+.SH STATIONS FILE
+.PP
+\fBpyradio\fR reads the stations to use from a CSV file (named \fIstations.csv\fR), where each line contains two columns, the first being the station name and the second being the stream URL.
+.PP
+\fBpyradio\fR will by default use the user's configuration file (e.g. \fI~/.config/pyradio/stations.csv\fR) to read the stations. If this file is not found, it will be created and populated with a default set of stations.
+
+.IP \fBTip:
+If you already have a custom \fIstations.csv\fR file, but want to update it with \fBpyradio\fR's default one, you just rename it, run \fBpyradio\fR (so that the default one get created) and then merge the two files.
+.PP
+A different file can be used when the \fB-s\fR command line option is used.
+
+.SH PLAYER DETECTION / SELECTION
+.PP
+\fBpyradio\fR is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.
+.PP
+Currently, it supports \fIMPV\fR, \fIMPlayer\fR and \fIVLC\fR, and it will look for them in that order. If none of them is found, the program will terminate with an error.
+.PP
+MPV will be used only when the \fIsocat\fR multipurpose relay is also installed.
+.PP
+Users can alter this default behavior by using the \fB-u\fR command line option. This option will permit the user either to specify the player to use, or change the detection order.
+.PP
+Example:
+
+.IP \fBpyradio\ -u\ vlc
+will instruct \fBpyradio\fR to use VLC; if it is not found, the program will terminate with an error.
+
+.IP \fBpyradio\ -u\ vlc,mplayer,mpv
+will instruct \fBpyradio\fR to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.
+
+.SH PLAYER DEFAULT VOLUME LEVEL
+.PP
+\fIMPV\fR and \fIMPlayer\fR, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with \fIVLC\fR.
+.PP
+This introduces a problem to \fBpyradio\fR: every time a user plays a station (i.e restarts playback), even though he may have already set the volume to a desired level, the playback starts at the player's default level.
+.PP
+The way to come around it, is to save the desired volume level in a way that it will be used by the player whenever it is restarted.
+.PP
+This is done by typing "\fBv\fR" right after setting a desired volume level.
+.PP
+\fBMPV\fR
+.PP
+\fIMPV\fR uses profiles to customize its behavior.
+.PP
+\fBpyradio\fR defines a profile called "\fI[pyradio]\fR" in MPV's configuration file (e.g. \fI~/.config/mpv/mpv.conf\fR). This profile will be used every time playback is started.
+.PP
+Example:
+
+.HP
+
+\fIvolume=100
+
+[pyradio]
+.br
+volume=50
+
+.PP
+\fBMPlayer\fR
+.PP
+\fIMPlayer\fR uses profiles to customize its behavior as well.
+.PP
+\fBpyradio\fR defines a profile called "\fI[pyradio]\fR" in MPV's configuration file (e.g. \fI~/.mplayer/config\fR). This profile will be used every time playback is started.
+.PP
+Example:
+
+.HP
+
+\fIvolume=100
+
+[pyradio]
+.br
+volstep=1
+.br
+volume=28
+
+.SH DEBUG MODE
+.PP
+Adding the \fB-d\fR option to the command line will instruct \fBpyradio\fR to enter \fBDebug mode\fR, which means that it will print debug messages to a file. This file will always reside in the user's home directory and will be named \fIpyradio.log\fR.
+.PP
+In case of a bug or a glitch, please include this file to the issue you will open in github  at \<\fIhttps://github.com/coderholic/pyradio/issues\fR\>
+
+.SH FILES
+.PP
+.I /usr/share/doc/pyradio/stations.csv
+
+.I /usr/share/doc/pyradio/README.md
+
+.I /usr/share/doc/pyradio/README.html
+
+.I /usr/share/licenses/pyradio/LICENSE
+
+.SH AUTHOR
+.PP
+ \fBBen Dowling\fR\ \<\fIhttps://github.com/coderholic\fR\>
+
