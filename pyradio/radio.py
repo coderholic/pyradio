@@ -161,10 +161,11 @@ class PyRadio(object):
         self.bodyWin.box()
         self.bodyWin.move(1, 1)
         maxDisplay = self.bodyMaxY - 1
+        pad = len(str(len(self.stations)))
         for lineNum in range(maxDisplay - 1):
             i = lineNum + self.startPos
             if i < len(self.stations):
-                self.__displayBodyLine(lineNum, self.stations[i])
+                self.__displayBodyLine(lineNum, pad, self.stations[i])
         self.bodyWin.refresh()
 
     def refreshNoPlayerBody(self, a_string):
@@ -182,7 +183,7 @@ class PyRadio(object):
         self.bodyWin.refresh()
         self.txtWin.refresh()
 
-    def __displayBodyLine(self, lineNum, station):
+    def __displayBodyLine(self, lineNum, pad, station):
         col = curses.color_pair(5)
 
         if lineNum + self.startPos == self.selection and \
@@ -195,7 +196,7 @@ class PyRadio(object):
         elif lineNum + self.startPos == self.playing:
             col = curses.color_pair(4)
             self.bodyWin.hline(lineNum + 1, 1, ' ', self.bodyMaxX - 2, col)
-        line = "{0}. {1}".format(lineNum + self.startPos + 1, station[0])
+        line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
         self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
     def run(self):
