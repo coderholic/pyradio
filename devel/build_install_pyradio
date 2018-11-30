@@ -35,7 +35,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 sudo find . -iname "*.pyc" -delete 2>/dev/null
 sudo find . -iname "*.egg" -delete 2>/dev/null
 
-descr=$(git describe --long --tags)
+descr=$(git describe --long --tags 2>/dev/null)
 [ -z "$descr" ] || sed -i "s/git_description = ''/git_description = '${descr}'/" pyradio/radio.py
 python"${TO_PYTHON}" setup.py build && {
 echo "***** installing..."
