@@ -8,7 +8,7 @@ This file will help a normal user to build and install **PyRadio** using
 
 From the repository directory, type
 ```
-files/build_install_pyradio -h
+devel/build_install_pyradio -h
 ```
 for options.
 
@@ -31,7 +31,7 @@ this hook, you will not be able to commit your changes.
 
 To install it, execute
 ```
-cp files/pre-commit .git/hooks
+cp devel/pre-commit .git/hooks
 ```
 
 ## 2. what_tag
@@ -44,7 +44,7 @@ what you should do manually.
 
 Check it out:
 ```
-files/what_tag
+devel/what_tag
 ```
 
 ### How this works
