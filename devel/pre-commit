@@ -2,7 +2,6 @@
 for afile in README.md build.md
 do
 #[ -z "$(git status | grep ${afile})" ] || {
-[ -z "$(git status | grep 'modified:' | grep ${afile})" ] || {
     out=${afile/%.md/.html}
     echo '% PyRadio README' > tmp.md
     cat ${afile} >> tmp.md
@@ -25,9 +24,8 @@ do
         -e 's/<p><strong>Tip:/<p style="margin: 1.5em 4em 0 4em; text-indent: -2em;"><strong>Tip:/' \
         -e 's/<li><p>/<li>/g' \
         -e 's{</</p></li>{</li>{g' \
-        -e 's/\.md">/.html">/' \
+        -e 's/\.md">/.html">/g' \
         -e '/h1 class="title"/d' ${out}
     rm tmp.md
     git add ${out}
-}
 done
