@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 for afile in README.md build.md
 do
 #[ -z "$(git status | grep ${afile})" ] || {
