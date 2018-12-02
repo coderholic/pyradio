@@ -1,5 +1,6 @@
-2018-11-27  s-n-g
+2018-12-02  s-n-g
 
+	* Version 0.6.0
 	* PyRadio will not crash when no player found.
 	* PyRadio will only display station name and icy-title (if received)
 	* PyRadio version will include git revision when not on a git tag
