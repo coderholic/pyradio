@@ -1,10 +1,11 @@
 #!/bin/bash
 help(){
-echo "Usage: $0 [2/3]
+echo "Usage: $0 [2/3/-u]
 
 Available options:
-  2  build using python v. 2.x
-  3  build using python v. 3.x
+  2   build using python v. 2.x
+  3   build using python v. 3.x
+  -u  uninstall pyradio
 
 If no option is used, will build using system default 
 
@@ -21,12 +22,23 @@ Checking python availability:"
             echo
 }
 
+uninstall(){
+    sudo rm -f `which pyradio` 2>/dev/null
+    sudo rm -rf /usr/share/doc/pyradio 2>/dev/null
+    sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null
+    echo "PyRadio successfully uninstalled"
+}
+
 while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
         -h|--help)
             help
+            exit
+            ;;
+        -u)
+            uninstall
             exit
             ;;
         2)
@@ -65,7 +77,12 @@ descr=$(git describe --long --tags 2>/dev/null || echo not_from_git)
 # build and install project
 python"${TO_PYTHON}" setup.py build && {
 echo "***** installing..."
-sudo python"${TO_PYTHON}" setup.py install 
+sudo python"${TO_PYTHON}" setup.py install && {
+    gzip -k pyradio.1
+    sudo mv pyradio.1.gz /usr/share/man/man1
+    sudo mkdir /usr/share/doc/pyradio 2>/dev/null
+    sudo cp README.* build.* /usr/share/doc/pyradio
+}
 }
 
 # restore files to original state
