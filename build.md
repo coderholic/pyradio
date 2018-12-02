@@ -11,8 +11,8 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [Linux](#linux)
         * [macOS](#macos)
     * [Performing the installation](#performing-the-installation)
-        * [a. Development version](#a.-development-version)
-        * [b. Stable version](#b.-stable-version)
+        * [Development version](#development-version)
+        * [Stable version](#stable-version)
 * [Return to main doc](README.md)
 
 ## Building from source
@@ -108,13 +108,13 @@ git clone https://github.com/coderholic/pyradio.git
 
 Then you have to decide to either build the development version or one of the available stable versions.
 
-### a. Development version
+### Development version
 
 ```
 devel/build_install_pyradio
 ```
 
-### b. Stable version
+### Stable version
 
 Get tag information.
 
