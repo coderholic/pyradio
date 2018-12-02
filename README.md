@@ -18,7 +18,6 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 ## Requirements
 
 * python 2.6+/3.2+
-* python-pip
 * MPV, MPlayer or VLC installed and in your path.
 * [socat](http://www.dest-unreach.org/socat/) (if you wish to use MPV)
 
