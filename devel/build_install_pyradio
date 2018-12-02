@@ -1,18 +1,32 @@
 #!/bin/bash
-while [[ $# -gt 0 ]]
-do
-    key="$1"
-    case $key in
-        -h|--help)
-            echo "Usage: $0 [2/3]
+help(){
+echo "Usage: $0 [2/3]
 
 Available options:
   2  build using python v. 2.x
   3  build using python v. 3.x
 
-If no option is used, will build using
-system default python
-"
+If no option is used, will build using system default 
+
+Checking python availability:"
+
+            for n in "" 2 3;do
+                echo -n "  python${n}"
+                [ -z "$n" ] && echo -n " "
+                echo -n "   ...   "
+                python${n} --version 2>/dev/null 1>&2 && {
+                    python${n} --version
+                } || echo not found
+            done
+            echo
+}
+
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        -h|--help)
+            help
             exit
             ;;
         2)
@@ -31,14 +45,28 @@ system default python
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+# check dependencies :)
+for prog in git sed ;do
+    ${prog} --version 2>/dev/null 1>&2 || {
+        echo "Error: ${prog} not found."
+        echo "       Please install it and try again."
+        exit 1
+    }
+done
+
 # delete any files that were left from previous attempt
 sudo find . -iname "*.pyc" -delete 2>/dev/null
 sudo find . -iname "*.egg" -delete 2>/dev/null
 
-descr=$(git describe --long --tags 2>/dev/null)
+# add git repo info to project
+descr=$(git describe --long --tags 2>/dev/null || echo not_from_git)
 [ -z "$descr" ] || sed -i "s/git_description = ''/git_description = '${descr}'/" pyradio/radio.py
+
+# build and install project
 python"${TO_PYTHON}" setup.py build && {
 echo "***** installing..."
 sudo python"${TO_PYTHON}" setup.py install 
 }
+
+# restore files to original state
 [ -z "$descr" ] || sed -i "s/git_description = '[^']*'/git_description = ''/" pyradio/radio.py
