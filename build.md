@@ -12,7 +12,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [macOS](#macos)
     * [Performing the installation](#performing-the-installation)
         * [a. Development version](#a.-development-version)
-        * [b. Stable version]
+        * [b. Stable version](#b.-stable-version)
 * [Return to main doc](README.md)
 
 ## Building from source
