@@ -7,9 +7,8 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 ## Table of contents
 
 * [Requirements](#requirements)
-* [Installation via pip](#installation-via-pip)
-* [Building from source](#building-from-source)
-* [Shell commands](#shell-commands)
+* [Installation](#installation)
+* [Command line options](#command-line-options)
 * [Controls](#controls)
 * [Stations file](#stations-file)
 * [Player detection / selection](#player-detection-selection)
@@ -23,43 +22,13 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * MPV, MPlayer or VLC installed and in your path.
 * [socat](http://www.dest-unreach.org/socat/) (if you wish to use MPV)
 
-## Installation via pip
+## Installation 
 
-This is the simplist method for installing **PyRadio**.
+The best way to install **PyRadio** is via a distribution package, if one exists (e.g. *Arch Linux* and derivatives can install [pyradio-git](https://aur.archlinux.org/packages/pyradio-git/) from AUR).
 
-The first thing is to make sure MPV, MPlayer or VLC are installed and are in the
-PATH. To check this, go in your favorite terminal and make sure these programs
-are launched when you type "mpv", "mplayer" or "cvlc".
+In any other case, and since **PyRadio** is currently not available via pip, you will have to [build it from source](build.md).
 
-#### MacOSX
-
-MPlayer is one of the available packages provided by [Homebrew](https://github.com/Homebrew/homebrew).
-
-But it is not the case of VLC. Nevertheless, **PyRadio** will also work with the binary of the application [VLC](http://www.videolan.org/vlc/download-macosx.html).
-
-You simply can add a symbolic link to the executable as follows (this link must of course be in your PATH):
-
-    ln -s /Applications/VLC.app/Contents/MacOS/VLC cvlc
-
-The second step is to use pip to install the python package:
-
-    pip install pyradio
-
-#### Linux
-
-    pip install pyradio
-
-## Building from source
-
-#### MaxOSX and Linux
-
-    python setup.py build
-
-The second step is to install the build:
-
-    sudo python setup.py install
-
-## Shell commands
+## Command line options
 
 ```
 $ pyradio -h

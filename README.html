@@ -31,9 +31,8 @@
 <h2 id="table-of-contents">Table of contents</h2>
 <ul>
 <li><a href="#requirements">Requirements</a></li>
-<li><a href="#installation-via-pip">Installation via pip</a></li>
-<li><a href="#building-from-source">Building from source</a></li>
-<li><a href="#shell-commands">Shell commands</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#command-line-options">Command line options</a></li>
 <li><a href="#controls">Controls</a></li>
 <li><a href="#stations-file">Stations file</a></li>
 <li><a href="#player-detection-selection">Player detection / selection</a></li>
@@ -47,24 +46,10 @@
 <li>MPV, MPlayer or VLC installed and in your path.</li>
 <li><a href="http://www.dest-unreach.org/socat/">socat</a> (if you wish to use MPV)</li>
 </ul>
-<h2 id="installation-via-pip">Installation via pip</h2>
-<p>This is the simplist method for installing <strong>PyRadio</strong>.</p>
-<p>The first thing is to make sure MPV, MPlayer or VLC are installed and are in the PATH. To check this, go in your favorite terminal and make sure these programs are launched when you type “mpv”, “mplayer” or “cvlc”.</p>
-<h4 id="macosx">MacOSX</h4>
-<p>MPlayer is one of the available packages provided by <a href="https://github.com/Homebrew/homebrew">Homebrew</a>.</p>
-<p>But it is not the case of VLC. Nevertheless, <strong>PyRadio</strong> will also work with the binary of the application <a href="http://www.videolan.org/vlc/download-macosx.html">VLC</a>.</p>
-<p>You simply can add a symbolic link to the executable as follows (this link must of course be in your PATH):</p>
-<pre>ln -s /Applications/VLC.app/Contents/MacOS/VLC cvlc</pre>
-<p>The second step is to use pip to install the python package:</p>
-<pre>pip install pyradio</pre>
-<h4 id="linux">Linux</h4>
-<pre>pip install pyradio</pre>
-<h2 id="building-from-source">Building from source</h2>
-<h4 id="maxosx-and-linux">MaxOSX and Linux</h4>
-<pre>python setup.py build</pre>
-<p>The second step is to install the build:</p>
-<pre>sudo python setup.py install</pre>
-<h2 id="shell-commands">Shell commands</h2>
+<h2 id="installation">Installation</h2>
+<p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (e.g. <em>Arch Linux</em> and derivatives can install <a href="https://aur.archlinux.org/packages/pyradio-git/">pyradio-git</a> from AUR).</p>
+<p>In any other case, and since <strong>PyRadio</strong> is currently not available via pip, you will have to <a href="build.md">build it from source</a>.</p>
+<h2 id="command-line-options">Command line options</h2>
 <pre>$ pyradio -h
 
 usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-a] [-l] [-d] [-u USE_PLAYER]
