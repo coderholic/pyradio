@@ -91,7 +91,7 @@ b\. ***Homebrew package***
 
 ```
 brew cask install vlc
-sudo ln -l /usr/local/bin/vlc /usr/local/bin/cvlc
+sudo ln -s /usr/local/bin/vlc /usr/local/bin/cvlc
 ```
 
 Your system is ready now for **pyradio** to be installed. You can follow the instructions given at "[Performing the installation](#performing-the-installation)".
