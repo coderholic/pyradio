@@ -104,6 +104,7 @@ First thing you do is get the source
 
 ```
 git clone https://github.com/coderholic/pyradio.git
+cd pyradio
 ```
 
 Then you have to decide to either build the development version or one of the available stable versions.
