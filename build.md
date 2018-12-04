@@ -100,7 +100,7 @@ Your system is ready now for **pyradio** to be installed. You can follow the ins
 
 ## Performing the installation
 
-First thing you do is get the source
+First thing you do is get the source. Open a **terminal** and type:
 
 ```
 git clone https://github.com/coderholic/pyradio.git
