@@ -3,7 +3,11 @@ for afile in README.md build.md
 do
 #[ -z "$(git status | grep ${afile})" ] || {
     out=${afile/%.md/.html}
-    echo '% PyRadio README' > tmp.md
+    if [ "$afile" = "README.md" ];then
+        echo '% PyRadio README' > tmp.md
+    elif [ "$afile" = "build.md" ];then
+        echo '% PyRadio Build Instructions' > tmp.md
+    fi
     cat ${afile} >> tmp.md
     pandoc -s -t html tmp.md -o ${out} || {
         echo "Error: pandoc not found"
