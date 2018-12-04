@@ -31,7 +31,7 @@ this hook, you will not be able to commit your changes.
 
 To install it, execute
 ```
-ln -s ../../devel/pre-commit pre-commit
+ln -s devel/pre-commit .git/hooks/pre-commit
 ```
 
 ## 2. what_tag
