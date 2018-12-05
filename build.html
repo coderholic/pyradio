@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PyRadio Build Instructions</title>
+  <style type="text/css">
+    html {margin: 2em;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} 
+    h3 {margin-top: 2em;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6;}
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 id="building-pyradio-from-source">Building PyRadio from source</h1>
+<p>Command line internet radio player.</p>
+<p>Ben Dowling - <a href="https://github.com/coderholic">https://github.com/coderholic</a></p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#building-from-source">Building from source</a>
+<ul>
+<li><a href="#preparing-for-the-installation">Preparing for the installation</a>
+<ul>
+<li><a href="#linux">Linux</a></li>
+<li><a href="#macos">macOS</a></li>
+</ul></li>
+<li><a href="#performing-the-installation">Performing the installation</a>
+<ul>
+<li><a href="#development-version">Development version</a></li>
+<li><a href="#stable-version">Stable version</a></li>
+</ul></li>
+</ul></li>
+<li><a href="README.html">Return to main doc</a></li>
+</ul>
+<h2 id="building-from-source">Building from source</h2>
+<p>Reasons to build from source</p>
+<ul>
+<li>A pre-built package is not available to you.</li>
+<li>You want to use a particular python version. For example, most pre-built packages nowadays are built using python 3.x. If for any reason you have to use python 2.x, this is the way to go.</li>
+</ul>
+<p>For the installation you will need <strong><em>git</em></strong> and <strong><em>setuptools</em></strong> (e.g. <em>python-setuptools</em>, <em>python3-setuptools</em> or <em>python2-setuptools</em>) to be already installed.</p>
+<p>Finally, you will use the <strong><em>build_install_pyradio</em></strong> script, located int the <strong><em>devel</em></strong> directory.</p>
+<p>To see your options, execute:</p>
+<pre>devel/build_install_pyradio -h</pre>
+<h2 id="preparing-for-the-installation">Preparing for the installation</h2>
+<p>Before installing <strong>PyRadio</strong> you have to prepare your system, so that you end up with a working installation. The process depends on the OS you are on.</p>
+<h3 id="linux">Linux</h3>
+<p>Use your distribution method to install <em>python-setuptools</em>, <em>git</em>, <em>sed</em> and any one of <em>MPV</em>, <em>MPlayer</em> and/or <em>VLC</em>.</p>
+<p>When you are done, proceed to “<a href="#performing-the-installation">Performing the installation</a>”.</p>
+<h3 id="macos">macOS</h3>
+<p>Everything you need to install, run and keep <strong>pyradio</strong> up-to-date is available on <a href="https://github.com/Homebrew/homebrew">Homebrew</a>. If you haven’t already downloaded its client, go ahead and do it.</p>
+<p>Open a <strong>terminal</strong> and type:</p>
+<pre>/usr/bin/ruby -e &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</pre>
+<p>Then just install <strong>git</strong>:</p>
+<pre>brew install git</pre>
+<p>Now it’s time to install a media player. You are free to install any one of them or even more than one…</p>
+<p>1. <strong><em>MPV</em></strong></p>
+<pre>brew install mpv socat</pre>
+<p>2. <strong><em>MPlayer</em></strong></p>
+<pre>brew install mplayer</pre>
+<p>3. <strong><em>VLC</em></strong></p>
+<p>You can get VLC from the official site or from <a href="https://github.com/Homebrew/homebrew">Homebrew</a>.</p>
+<p>a. <strong><em>Oficial package</em></strong></p>
+<p>You just go to <a href="http://www.videolan.org/vlc/download-macos.html">videolan.org</a>, download and install the program as you usually do with any other application.</p>
+<p>Finally, add a symbolic link to the executable as follows:</p>
+<pre>sudo ln -s /Applications/VLC.app/Contents/MacOS/VLC /usr/bin/cvlc</pre>
+<p>b. <strong><em>Homebrew package</em></strong></p>
+<pre>brew cask install vlc
+sudo ln -s /usr/local/bin/vlc /usr/local/bin/cvlc</pre>
+<p>Your system is ready now for <strong>pyradio</strong> to be installed. You can follow the instructions given at “<a href="#performing-the-installation">Performing the installation</a>”.</p>
+<h2 id="performing-the-installation">Performing the installation</h2>
+<p>First thing you do is get the source. Open a <strong>terminal</strong> and type:</p>
+<pre>git clone https://github.com/coderholic/pyradio.git
+cd pyradio</pre>
+<p>Then you have to decide to either build the development version or one of the available stable versions.</p>
+<h3 id="development-version">Development version</h3>
+<pre>devel/build_install_pyradio</pre>
+<h3 id="stable-version">Stable version</h3>
+<p>Get tag information.</p>
+<pre>git fetch --all --tags --prune
+git tag</pre>
+<p>This will report to you something similar to:</p>
+<pre>0.1
+0.4
+0.6.0</pre>
+<p>Now is the time to pick a version.</p>
+<p>For this example we will go with v. <strong>0.6.0</strong>.</p>
+<pre>git checkout tags/0.6.0 -b 0.6.0</pre>
+<p>Finally, build and install</p>
+<pre>devel/build_install_pyradio</pre>
+</body>
+</html>

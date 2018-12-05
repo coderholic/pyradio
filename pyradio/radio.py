@@ -31,7 +31,15 @@ class PyRadio(object):
     selection = 0
     playing = -1
     jumpnr = ""
-    has_player = True
+    hWin = None
+
+    """
+        if above 100, it is mode of operation
+        error_code:  -1 no error
+                      0 no player
+                    100 main help
+    """
+    error_code = -1
 
     def __init__(self, stations, play=False, req_player=''):
         self.stations = stations
@@ -40,9 +48,25 @@ class PyRadio(object):
         self.requested_player = req_player
 
     def setup(self, stdscr):
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("GUI initialization on python v. {}".format(python_version))
+        if logger.isEnabledFor(logging.INFO):
+            logger.info("GUI initialization on python v. {}".format(python_version).replace('\n', ' ').replace('\r', ' '))
         self.stdscr = stdscr
+        from pyradio import version
+        self.info = " PyRadio {0} ".format(version)
+        # git_description can be set at build time
+        # if so, revision will be shown along with the version
+        # if revision is not 0
+        git_description = ''
+        if git_description:
+            if git_description == 'not_from_git':
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info("RyRadio built from zip file (revision unknown)")
+            else:
+                git_info = git_description.split('-')
+                if git_info[1] != '0':
+                    self.info = " PyRadio {0}-r{1} ".format(version, git_info[1])
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info("RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1]))
 
         try:
             curses.curs_set(0)
@@ -64,7 +88,8 @@ class PyRadio(object):
         try:
             self.player = player.probePlayer(requested_player=self.requested_player)(self.log)
         except:
-            self.has_player = False
+            # no player
+            self.error_code = 0
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()
@@ -79,7 +104,7 @@ class PyRadio(object):
         self.footerWin = curses.newwin(1, self.maxX, self.maxY - 1, 0)
         # txtWin used mainly for error reports
         self.txtWin = curses.newwin(self.maxY - 4, self.maxX - 4, 2, 2)
-        self.initHead()
+        self.initHead(self.info)
         self.initBody()
         self.initFooter()
 
@@ -92,10 +117,7 @@ class PyRadio(object):
 
         curses.doupdate()
 
-    def initHead(self):
-        from pyradio import version
-
-        info = " PyRadio {0} ".format(version)
+    def initHead(self, info):
         self.headWin.addstr(0, 0, info, curses.color_pair(4))
         rightStr = "www.coderholic.com/pyradio"
         self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr,
@@ -109,15 +131,13 @@ class PyRadio(object):
         #self.bodyWin.keypad(1)
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
         self.bodyWin.noutrefresh()
-        if self.has_player:
-            self.refreshBody()
-        else:
+        if self.error_code == 0:
             if self.requested_player:
                 txt = """Rypadio is not able to use the player you specified.
 
-                This means that either you misspelled its name, or this particular
-                player is not supported by PyRadio.
-                
+                This means that either this particular player is not supported
+                by PyRadio, or that you have simply misspelled its name.
+
                 PyRadio currently supports three players: mpv, mplayer and vlc,
                 automatically detected in this order."""
             else:
@@ -125,12 +145,15 @@ class PyRadio(object):
 
                 PyRadio currently supports three players: mpv, mplayer and vlc,
                 automatically detected in this order.
-                
+
                 Please install any one of them and try again.
-                
+
                 Please keep in mind that if mpv is installed, socat must be
                 installed as well."""
             self.refreshNoPlayerBody(txt)
+        else:
+            self.refreshBody()
+
 
     def initFooter(self):
         """ Initializes the body/story window """
@@ -142,32 +165,29 @@ class PyRadio(object):
         self.bodyWin.box()
         self.bodyWin.move(1, 1)
         maxDisplay = self.bodyMaxY - 1
+        pad = len(str(len(self.stations)))
         for lineNum in range(maxDisplay - 1):
             i = lineNum + self.startPos
             if i < len(self.stations):
-                self.__displayBodyLine(lineNum, self.stations[i])
+                self.__displayBodyLine(lineNum, pad, self.stations[i])
         self.bodyWin.refresh()
 
     def refreshNoPlayerBody(self, a_string):
         col = curses.color_pair(5)
-        self.bodyWin.erase()
         self.bodyWin.box()
-        self.bodyWin.move(1, 1)
-        maxDisplay = self.bodyMaxY - 1
-        col = curses.color_pair(5)
         lines = a_string.split('\n')
         lineNum = 0
         self.txtWin.erase()
         for line in lines:
             try:
-                self.txtWin.addstr(lineNum , 0, line.strip(), col)
+                self.txtWin.addstr(lineNum , 0, line.replace('\r', '').strip(), col)
             except:
                 break
             lineNum += 1
         self.bodyWin.refresh()
         self.txtWin.refresh()
 
-    def __displayBodyLine(self, lineNum, station):
+    def __displayBodyLine(self, lineNum, pad, station):
         col = curses.color_pair(5)
 
         if lineNum + self.startPos == self.selection and \
@@ -180,11 +200,20 @@ class PyRadio(object):
         elif lineNum + self.startPos == self.playing:
             col = curses.color_pair(4)
             self.bodyWin.hline(lineNum + 1, 1, ' ', self.bodyMaxX - 2, col)
-        line = "{0}. {1}".format(lineNum + self.startPos + 1, station[0])
+        line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
         self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
     def run(self):
-        if self.has_player:
+        if self.error_code == 0:
+            if self.requested_player:
+                if ',' in self.requested_player:
+                    self.log.write('None of "{}" players is available. Press any key to exit....'.format(self.requested_player))
+                else:
+                    self.log.write('Player "{}" not available. Press any key to exit....'.format(self.requested_player))
+            else:
+                self.log.write("No player available. Press any key to exit....")
+            self.bodyWin.getch()
+        else:
             self.log.write('Selected player: {}'.format(self._format_player_string()))
             if not self.play is False:
                 if self.play is None:
@@ -203,13 +232,6 @@ class PyRadio(object):
                         return
                 except KeyboardInterrupt:
                     break
-        else:
-            if self.requested_player:
-                self.log.write('Player "{}" not available. Press any key to exit....'.format(self.requested_player))
-            else:
-                self.log.write("No player available. Press any key to exit....")
-            c = self.bodyWin.getch()
-            ret = self.keypress(c)
 
     def setStation(self, number):
         """ Select the given station number """
@@ -235,7 +257,7 @@ class PyRadio(object):
         stream_url = self.stations[self.selection][1].strip()
         self.log.write('Playing ' + name)
         try:
-            self.player.play(stream_url)
+            self.player.play(name, stream_url)
         except OSError:
             self.log.write('Error starting player.'
                            'Are you sure a supported player is installed?')
@@ -246,101 +268,163 @@ class PyRadio(object):
         return self.player.PLAYER_CMD
 
     def keypress(self, char):
-        if self.has_player is False:
+        # if no player, don't serve keyboard
+        if self.error_code == 0:
             return
 
-        # Number of stations to change with the page up/down keys
-        pageChange = 5
-
-        if char == ord('v'):
-            ret_string = self.player.save_volume()
-            if ret_string:
-                self.log.write(ret_string)
-                self.player.threadUpdateTitle(delay=1)
+        elif self.error_code == 100:
+            self.hWin = None
+            self.setupAndDrawScreen()
+            self.error_code = -1
             return
 
-        if char == ord('G'):
-            if self.jumpnr == "":
-                self.setStation(-1)
-            else:
-                jumpto=min(int(self.jumpnr)-1,len(self.stations)-1)
-                jumpto=max(0,jumpto)
-                self.setStation(jumpto)
-            self.jumpnr = ""
-            self.refreshBody()
-            return
-
-        if char in map(ord,map(str,range(0,10))):
-            self.jumpnr += chr(char)
-            return
         else:
-            self.jumpnr = ""
+            # Number of stations to change with the page up/down keys
+            pageChange = 5
 
-        if char == ord('g'):
-            self.setStation(0)
-            self.refreshBody()
-            return
+            if char in (ord('?'), ord('/')):
+                txt = """Up/j/PgUpn
+                         Down/k/PgDown    Change station selection.
+                         g                Jump to first station.
+                         <n>G             Jump to n-th / last station.
+                         Enter/Right/l    Play selected station.
+                         r                Select and play a random station.
+                         Space/Left/h     Stop/start playing selected station.
+                         -/+ or ,/.       Change volume.
+                         m                Mute.
+                         v                Save volume (not applicable with vlc).
+                         #                Redraw window.
+                         Esc/q            Quit. """
+                self._show_help(txt)
+                return
 
-        if char == curses.KEY_EXIT or char == ord('q'):
-            self.player.close()
-            return -1
+            if char in (ord('v'), ):
+                ret_string = self.player.save_volume()
+                if ret_string:
+                    self.log.write(ret_string)
+                    self.player.threadUpdateTitle(self.player.status_update_lock)
+                return
 
-        if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                curses.KEY_RIGHT, ord('l')):
-            self.playSelection()
-            self.refreshBody()
-            self.setupAndDrawScreen()
-            return
+            if char in (ord('G'), ):
+                if self.jumpnr == "":
+                    self.setStation(-1)
+                else:
+                    jumpto=min(int(self.jumpnr)-1,len(self.stations)-1)
+                    jumpto=max(0,jumpto)
+                    self.setStation(jumpto)
+                self.jumpnr = ""
+                self.refreshBody()
+                return
 
-        if char == ord(' ') or char == curses.KEY_LEFT or char == ord('h'):
-            if self.player.isPlaying():
-                self.player.close()
-                self.log.write('Playback stopped')
+            if char in map(ord,map(str,range(0,10))):
+                self.jumpnr += chr(char)
+                return
             else:
+                self.jumpnr = ""
+
+            if char in (ord('g'), ):
+                self.setStation(0)
+                self.refreshBody()
+                return
+
+            if char in (curses.KEY_EXIT, ord('q')):
+                try:
+                    self.player.close()
+                except:
+                    pass
+                return -1
+
+            if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                    curses.KEY_RIGHT, ord('l')):
                 self.playSelection()
+                self.refreshBody()
+                self.setupAndDrawScreen()
+                return
 
-            self.refreshBody()
-            return
+            if char in (ord(' '), curses.KEY_LEFT, ord('h')):
+                if self.player.isPlaying():
+                    self.player.close()
+                    self.log.write('Playback stopped')
+                else:
+                    self.playSelection()
 
-        if char == curses.KEY_DOWN or char == ord('j'):
-            self.setStation(self.selection + 1)
-            self.refreshBody()
-            return
+                self.refreshBody()
+                return
 
-        if char == curses.KEY_UP or char == ord('k'):
-            self.setStation(self.selection - 1)
-            self.refreshBody()
-            return
+            if char in (curses.KEY_DOWN, ord('j')):
+                self.setStation(self.selection + 1)
+                self.refreshBody()
+                return
 
-        if char == ord('+') or char == ord('=') or char == ord('.'):
-            self.player.volumeUp()
-            return
+            if char in (curses.KEY_UP, ord('k')):
+                self.setStation(self.selection - 1)
+                self.refreshBody()
+                return
 
-        if char == ord('-') or char == ord(','):
-            self.player.volumeDown()
-            return
+            if char in (ord('+'), ord('='), ord('.')):
+                self.player.volumeUp()
+                return
 
-        if char == curses.KEY_PPAGE:
-            self.setStation(self.selection - pageChange)
-            self.refreshBody()
-            return
+            if char in (ord('-'), ord(',')):
+                self.player.volumeDown()
+                return
 
-        if char == curses.KEY_NPAGE:
-            self.setStation(self.selection + pageChange)
-            self.refreshBody()
-            return
+            if char in (curses.KEY_PPAGE, ):
+                self.setStation(self.selection - pageChange)
+                self.refreshBody()
+                return
 
-        if char == ord('m'):
-            self.player.toggleMute()
-            return
+            if char in (curses.KEY_NPAGE, ):
+                self.setStation(self.selection + pageChange)
+                self.refreshBody()
+                return
 
-        if char == ord('r'):
-            # Pick a random radio station
-            self.setStation(random.randint(0, len(self.stations)))
-            self.playSelection()
-            self.refreshBody()
+            if char in (ord('m'), ):
+                self.player.toggleMute()
+                return
 
-        if char == ord('#') or char == curses.KEY_RESIZE:
-            self.setupAndDrawScreen()
+            if char in (ord('r'), ):
+                # Pick a random radio station
+                self.setStation(random.randint(0, len(self.stations)))
+                self.playSelection()
+                self.refreshBody()
+
+            if char in (ord('#'), curses.KEY_RESIZE):
+                self.headWin = False
+                self.setupAndDrawScreen()
+
+    def _show_help(self, txt, ret_code=100):
+        self.error_code = ret_code
+        txt_col = curses.color_pair(5)
+        box_col = curses.color_pair(2)
+        caption_col = curses.color_pair(4)
+        caption = ' Help '
+        prompt = ' Press any key to hide '
+        lines = txt.split('\n')
+        st_lines = [item.replace('\r','') for item in lines]
+        lines = [item.strip() for item in st_lines]
+        mheight = len(lines) + 2
+        mwidth = len(max(lines, key=len)) + 4
+
+        if self.maxY - 2 < mheight or self.maxX < mwidth:
+            txt="Window too small to show help..."
+            mheight = 3
+            mwidth = len(txt) + 4
+            if self.maxX < mwidth:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('  ***  Window too small even to show help warning  ***')
+                self.error_code = -1
+                return
+            lines = [ txt , ] 
+        self.hWin = curses.newwin(mheight,mwidth,int((self.maxY-mheight)/2),int((self.maxX-mwidth)/2))
+        self.hWin.attrset(box_col)
+        self.hWin.box()
+        self.hWin.addstr(0, int((mwidth-len(caption))/2), caption, caption_col)
+        for i, n in enumerate(lines):
+            self.hWin.addstr(i+1, 2, n.replace('_', ' '), caption_col)
+        self.hWin.addstr(mheight - 1, int(mwidth-len(prompt)-1), prompt)
+
+        self.hWin.refresh()
+
 
 # pymode:lint_ignore=W901

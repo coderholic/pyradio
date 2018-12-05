@@ -1,0 +1,37 @@
+#!/bin/bash
+cReset="[0m"
+cBold="[1m"
+colorGreen=2
+colorRed=1
+colorYellow=3
+cGreen="[0;3${colorGreen}m"${cBold}
+cRed="[1;3${colorRed}m"${cBold}
+cYellow="[1;3${colorYellow}m"${cBold}
+
+
+echo -ne "Reading version from ${cYellow}pyradio/__init__.py${cReset} ... "
+a_tag=$(sed -n '/^version_info/p' pyradio/__init__.py 2>/dev/null | sed -e 's/.*(//' -e 's/)//' -e 's/, /./g')
+[ -z "$a_tag" ] && {
+echo -e "${cRed}failed${cReset}
+
+To execute this script, go to the topmost directory
+of the repository and type
+    ${cGreen}files/what_tag${cReset}
+"
+exit 1
+}
+echo -e "${cGreen}done${cReset}
+Current version: ${cGreen}$a_tag${cReset}
+
+To create a local tag for this version, type:
+    ${cGreen}git tag $a_tag${cReset}
+When ready to push, type
+    ${cGreen}git push origin master${cReset}
+    ${cGreen}git push origin --tags${cReset}
+
+To delete a this tag, type
+    (local)    ${cRed}git tag --delete $a_tag${cReset}
+    (remote)   ${cRed}git push --delete origin $a_tag${cReset}
+"
+
+

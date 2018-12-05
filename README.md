@@ -2,91 +2,119 @@
 
 Command line internet radio player.
 
-Ben Dowling - [http://www.coderholic.com/pyradio](http://www.coderholic.com/pyradio)
+Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
+
+## Table of contents
+
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Command line options](#command-line-options)
+* [Controls](#controls)
+* [Stations file](#stations-file)
+* [Player detection / selection](#player-detection-selection)
+* [Player default volume level](#player-default-volume-level)
+* [Debug mode](#debug-mode)
 
 ## Requirements
 
 * python 2.6+/3.2+
-* python-pip
-* mpv, mplayer or vlc installed and in your path.
-* socat (if you wish to use MPV)
+* MPV, MPlayer or VLC installed and in your path.
+* [socat](http://www.dest-unreach.org/socat/) (if you wish to use MPV)
 
-## Installation via pip
+## Installation 
 
-This is the simplist method for installing PyRadio.
+The best way to install **PyRadio** is via a distribution package, if one exists (e.g. *Arch Linux* and derivatives can install [pyradio-git](https://aur.archlinux.org/packages/pyradio-git/) from AUR).
 
-The first thing is to make sure MPV, MPlayer or VLC are installed and are in the
-PATH. To check this, go in your favorite terminal and make sure thiese programs
-are launched when you type "mpv", "mplayer" or "cvlc".
+In any other case, and since **PyRadio** is currently not available via pip, you will have to [build it from source](build.md).
 
-#### MacOSX
+## Command line options
 
-MPlayer is one of the available packages provided by [Homebrew](https://github.com/Homebrew/homebrew).
+```
+$ pyradio -h
 
-But it is not the case of VLC. Nevertheless, pyradio will also work with the binary of the application [VLC](http://www.videolan.org/vlc/download-macosx.html).
+usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-a] [-l] [-d] [-u USE_PLAYER]
 
-You simply can add a symbolic link to the executable as follows (this link must of course be in your PATH):
+Curses based Internet radio player
 
-    ln -s /Applications/VLC.app/Contents/MacOS/VLC cvlc
-
-The second step is to use pip to install the python package:
-
-    pip install pyradio
-
-#### Linux
-
-    pip install pyradio
-
-## Building from source
-
-#### MaxOSX and Linux
-
-    python setup.py build
-
-The second step is to install the build:
-
-    sudo python setup.py install
-
-## Shell commands
-
-    $ pyradio -h
-
-    usage: main.py [--help] [--stations <path>] [--random] [--add] [--list]
-
-    Console radio player
-
-    optional arguments:
-    -h, --help            Show this help message and exit.
-    -s, --stations <path> Use specified station CSV file.
-    -p, --play [play]     Start and play. The value is num station or empty for random.
-    -a, --add             Add station to list.
-    -l, --list            List of added stations.
-    -u, --use-player      Specify which player to use (mpv, mplayer or cvlc).
-    -d, --debug           Debug mode (pyradio.log created).
-                          To be attached with any bug report.
+optional arguments:
+  -h, --help            show this help message and exit
+  -s STATIONS, --stations STATIONS
+                        Use specified station CSV file.
+  -p [PLAY], --play [PLAY]
+                        Start and play.The value is num station or empty for
+                        random.
+  -a, --add             Add station to list.
+  -l, --list            List of added stations.
+  -d, --debug           Start pyradio in debug mode.
+  -u USE_PLAYER, --use-player USE_PLAYER
+                        Use specified player. A comma-separated list can be
+                        used to specify detection order. Supported players:
+                        mpv, mplayer, vlc.
+```
 
 ## Controls
 
 ```
-Up/Down/j/k/PgUp/PgDown Change station selection.
-Enter/Right/l           Play selected station.
--/+ or ,/.              Change volume.
-v                       Save volume (mpv and mplayer only).
-m                       Mute.
-r                       Select and play a random station.
-g                       Jump to first station.
-<n>G                    Jump to n-th station.
-Space/Left/h            Stop/start playing selected station.
-Esc/q                   Quit.
+Up/Down/j/k/PgUp/PgDown   Change station selection.
+g                         Jump to first station.
+<n>G                      Jump to n-th / last station.
+Enter/Right/l             Play selected station.
+r                         Select and play a random station.
+Space/Left/h              Stop/start playing selected station.
+-/+ or ,/.                Change volume.
+m                         Mute.
+v                         Save volume (not applicable for vlc).
+?,/                       Show keys help.
+Esc/q                     Quit.
 ```
 
-## Player default volume
+## Stations file
 
-### mpv
+**PyRadio** reads the stations to use from a CSV file (named *stations.csv*), where each line contains two columns, the first being the station name and the second being the stream URL.
 
-mpv uses profiles to customize its behavior.
+**PyRadio** will by default use the user's configuration file (e.g. *~/.config/pyradio/stations.csv*) to read the stations. If this file is not found, it will be created and populated with a default set of stations.
 
-Users can define a profile called "**[pyradio]**" in mpv's configuration file (e.g. *~/.config/mpv/mpv.conf*) and pyradio will use it when playing.
+**Tip:** If you already have a custom *stations.csv* file, but want to update it with **PyRadio**'s default one, you just rename it, run **PyRadio** (so that the default one get created) and then merge the two files.
+
+A different file can be used when the **-s** command line option is used.
+
+## Player detection / selection
+
+**PyRadio** is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.
+
+Currently, it supports MPV, MPlayer and VLC, and it will look for them in that order. If none of them is found, the program will terminate with an error.
+
+MPV will be used only when the [socat](http://www.dest-unreach.org/socat/) multipurpose relay is also installed.
+
+Users can alter this default behavior by using the ***-u*** command line option. This option will permit the user either to specify the player to use, or change the detection order.
+
+Example:
+
+```
+pyradio -u vlc
+```
+will instruct **PyRadio** to use VLC; if it is not found, the program will terminate with an error.
+
+```
+pyradio -u vlc,mplayer,mpv
+```
+will instruct **PyRadio** to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.
+
+## Player default volume level
+
+MPV and MPlayer, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with VLC.
+
+This introduces a problem to **PyRadio**: every time a user plays a station (i.e restarts playback), even though he may have already set the volume to a desired level, the playback starts at the player's default level.
+
+The way to come around it, is to save the desired volume level in a way that it will be used by the player whenever it is restarted.
+
+This is done by typing "***v***" right after setting a desired volume level.
+
+### MPV
+
+MPV uses profiles to customize its behavior.
+
+**PyRadio** defines a profile called "**[pyradio]**" in MPV's configuration file (e.g. *~/.config/mpv/mpv.conf*). This profile will be used every time playback is started.
 
 Example:
 
@@ -95,21 +123,23 @@ Example:
     [pyradio]
     volume=50
 
-### mplayer
+### MPlayer
 
-mplayer uses profiles to customize its behavior as well.
+MPlayer uses profiles to customize its behavior as well.
 
-Users can define a profile called "**[pyradio]**" in mplayers's configuration file (e.g. *~/.mplayer/config*) and pyradio will use it when playing.
+**PyRadio** defines a profile called "**[pyradio]**" in MPV's configuration file (e.g. *~/.mplayer/config*). This profile will be used every time playback is started.
+
 
 Example:
 
     volume=100
 
     [pyradio]
-    softvol=yes
     volstep=1
     volume=28
 
-### vlc
+## Debug mode
 
-vlc by default saves the volume, so no customization is necessary.
+Adding the ***-d*** option to the command line will instruct **PyRadio** to enter *Debug mode*, which means that it will print debug messages to a file. This file will always reside in the user's home directory and will be named *pyradio.log*.
+
+In case of a bug or a glitch, please include this file to the issue you will [open in github](https://github.com/coderholic/pyradio/issues).
