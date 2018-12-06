@@ -26,6 +26,7 @@ do
         -e 's{</code>{{g' \
         -e 's{<a href="#pyradio">pyradio</a>{[pyradio]{' \
         -e 's/<p><strong>Tip:/<p style="margin: 1.5em 4em 0 4em; text-indent: -2em;"><strong>Tip:/' \
+        -e 's/<p><strong>Note:/<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:/' \
         -e 's/<li><p>/<li>/g' \
         -e 's{</</p></li>{</li>{g' \
         -e 's/\.md">/.html">/g' \

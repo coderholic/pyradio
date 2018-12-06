@@ -1,12 +1,11 @@
-import csv
 import sys
 import curses
 import logging
 from argparse import ArgumentParser
-from os import path, getenv, makedirs
-from shutil import copyfile
+from os import path, getenv
 
 from .radio import PyRadio
+from .stations import PyRadioStations
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
@@ -29,42 +28,10 @@ def __configureLogger():
     # add ch to logger
     logger.addHandler(fh)
 
-
-def check_stations(usr, root):
-    ''' Reclocate a station.csv copy in user home for easy manage.
-        Ej not need sudo when you add new station, etc '''
-
-    if path.exists(path.join(usr, 'station.csv')):
-        return
-    else:
-        if not path.exists(usr):
-            try:
-                makedirs(usr)
-            except:
-                print('Error: Cannot create config directory "{}"'.format(usr))
-                sys.exit(1)
-        copyfile(root, path.join(usr, 'station.csv'))
-
-if sys.platform.startswith('win'):
-    usr_path = path.join(getenv('APPDATA'), 'pyradio')
-else:
-    usr_path = path.join(getenv('HOME', '~'), '.config', 'pyradio')
-root_path = path.join(path.dirname(__file__), 'stations.csv')
-check_stations(usr_path, root_path)
-
-DEFAULT_FILE = ''
-for p in [path.join(usr_path, 'station.csv'),
-          path.join(getenv('HOME', '~'), '.pyradio'),
-          root_path]:
-    if path.exists(p) and path.isfile(p):
-        DEFAULT_FILE = p
-        break
-
-
 def shell():
     requested_player = ''
     parser = ArgumentParser(description="Curses based Internet radio player")
-    parser.add_argument("-s", "--stations", default=DEFAULT_FILE,
+    parser.add_argument("-s", "--stations", default='',
                         help="Use specified station CSV file.")
     parser.add_argument("-p", "--play", nargs='?', default=False,
                         help="Start and play."
@@ -81,6 +48,9 @@ def shell():
             "Supported players: mpv, mplayer, vlc.")
     args = parser.parse_args()
 
+
+    stations_cnf = PyRadioStations()
+
     if args.use_player != '':
         requested_player = args.use_player
 
@@ -90,21 +60,15 @@ def shell():
             params = raw_input("Enter the name: "), raw_input("Enter the url: ")
         else:
             params = input("Enter the name: "), input("Enter the url: ")
-        with open(args.stations, 'a') as cfgfile:
-            writter = csv.writer(cfgfile)
-            writter.writerow(params)
-            sys.exit()
+        stations_cnf.append(params, args.stations)
+        sys.exit()
 
-    with open(args.stations, 'r') as cfgfile:
-        stations = []
-        for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
-            if not row:
-                continue
-            name, url = [s.strip() for s in row]
-            stations.append((name, url))
+    if stations_cnf.read(args.stations) == 0:
+        print("Error reading stations file...")
+        sys.exit(1)
 
     if args.list:
-        for name, url in stations:
+        for name, url in stations_cnf.stations:
             print(('{0:50s} {1:s}'.format(name, url)))
         sys.exit()
 
@@ -114,7 +78,8 @@ def shell():
 
 
     # Starts the radio gui.
-    pyradio = PyRadio(stations, play=args.play, req_player=requested_player)
+    #pyradio = PyRadio(stations, play=args.play, req_player=requested_player)
+    pyradio = PyRadio(stations_cnf, play=args.play, req_player=requested_player)
     curses.wrapper(pyradio.setup)
 
 

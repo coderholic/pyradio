@@ -41,8 +41,8 @@ class PyRadio(object):
     """
     error_code = -1
 
-    def __init__(self, stations, play=False, req_player=''):
-        self.stations = stations
+    def __init__(self, stations_cnf, play=False, req_player=''):
+        self.cnf = stations_cnf
         self.play = play
         self.stdscr = None
         self.requested_player = req_player
@@ -165,11 +165,11 @@ class PyRadio(object):
         self.bodyWin.box()
         self.bodyWin.move(1, 1)
         maxDisplay = self.bodyMaxY - 1
-        pad = len(str(len(self.stations)))
+        pad = len(str(len(self.cnf.stations)))
         for lineNum in range(maxDisplay - 1):
             i = lineNum + self.startPos
-            if i < len(self.stations):
-                self.__displayBodyLine(lineNum, pad, self.stations[i])
+            if i < len(self.cnf.stations):
+                self.__displayBodyLine(lineNum, pad, self.cnf.stations[i])
         self.bodyWin.refresh()
 
     def refreshNoPlayerBody(self, a_string):
@@ -217,7 +217,7 @@ class PyRadio(object):
             self.log.write('Selected player: {}'.format(self._format_player_string()))
             if not self.play is False:
                 if self.play is None:
-                    num = random.randint(0, len(self.stations))
+                    num = random.randint(0, len(self.cnf.stations))
                 else:
                     num = int(self.play) - 1
                 self.setStation(num)
@@ -238,8 +238,8 @@ class PyRadio(object):
         # If we press up at the first station, we go to the last one
         # and if we press down on the last one we go back to the first one.
         if number < 0:
-            number = len(self.stations) - 1
-        elif number >= len(self.stations):
+            number = len(self.cnf.stations) - 1
+        elif number >= len(self.cnf.stations):
             number = 0
 
         self.selection = number
@@ -253,8 +253,8 @@ class PyRadio(object):
 
     def playSelection(self):
         self.playing = self.selection
-        name = self.stations[self.selection][0]
-        stream_url = self.stations[self.selection][1].strip()
+        name = self.cnf.stations[self.selection][0]
+        stream_url = self.cnf.stations[self.selection][1].strip()
         self.log.write('Playing ' + name)
         try:
             self.player.play(name, stream_url)
@@ -309,7 +309,7 @@ class PyRadio(object):
                 if self.jumpnr == "":
                     self.setStation(-1)
                 else:
-                    jumpto=min(int(self.jumpnr)-1,len(self.stations)-1)
+                    jumpto=min(int(self.jumpnr)-1,len(self.cnf.stations)-1)
                     jumpto=max(0,jumpto)
                     self.setStation(jumpto)
                 self.jumpnr = ""
@@ -385,7 +385,7 @@ class PyRadio(object):
 
             if char in (ord('r'), ):
                 # Pick a random radio station
-                self.setStation(random.randint(0, len(self.stations)))
+                self.setStation(random.randint(0, len(self.cnf.stations)))
                 self.playSelection()
                 self.refreshBody()
 

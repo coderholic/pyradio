@@ -69,6 +69,9 @@ If you already have a custom \fIstations.csv\fR file, but want to update it with
 .PP
 A different file can be used when the \fB-s\fR command line option is used.
 
+.IP \fBNote:
+Older versions used to use \fI~/.pyradio\fR as default stations file. If this file is found, it will be copied to use's config directory (e.g. \fI~/.config/pyradio\fR) and renamed to \fIstations.csv\fR or if this file exists, to \fIpyradio.csv\fR. In this case, this file will be the default one.
+
 .SH PLAYER DETECTION / SELECTION
 .PP
 \fBpyradio\fR is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.

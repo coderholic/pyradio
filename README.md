@@ -78,6 +78,8 @@ Esc/q                     Quit.
 
 A different file can be used when the **-s** command line option is used.
 
+**Note:** Older versions used to use ***~/.pyradio*** as default stations file. If this file is found, it will be copied to use's config directory (e.g. ***~/.config/pyradio***) and renamed to ***stations.csv*** or if this file exists, to ***pyradio.csv***. In this case, this file will be the default one.
+
 ## Player detection / selection
 
 **PyRadio** is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.
