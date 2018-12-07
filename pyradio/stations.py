@@ -75,7 +75,7 @@ class PyRadioStations(object):
         """ Read a csv file """
 
         if stationFile:
-            self.stations = stationFile
+            self.stations_file = stationFile
 
         self.stations = []
         with open(self.stations_file, 'r') as cfgfile:
