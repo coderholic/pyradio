@@ -5,6 +5,7 @@
 # Ben Dowling - 2009 - 2010
 # Kirill Klenov - 2012
 # Peter Stevenson (2E0PGS) - 2018
+# Spiros Georgaras - 2018
 
 import curses
 import logging
@@ -21,6 +22,12 @@ locale.setlocale(locale.LC_ALL, "")
 
 logger = logging.getLogger(__name__)
 
+""" Modes of Operation """
+NORMAL_MODE = -1
+NO_PLAYER_ERROR_MODE = 0
+MAIN_HELP_MODE = 100
+PLAYLIST_MODE = 101
+PLAYLIST_HELP_MODE = 102
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -29,17 +36,12 @@ def rel(path):
 class PyRadio(object):
     startPos = 0
     selection = 0
+    selection_backup = 0
     playing = -1
     jumpnr = ""
     hWin = None
 
-    """
-        if above 100, it is mode of operation
-        error_code:  -1 no error
-                      0 no player
-                    100 main help
-    """
-    error_code = -1
+    operation_mode = NORMAL_MODE
 
     def __init__(self, stations_cnf, play=False, req_player=''):
         self.cnf = stations_cnf
@@ -89,7 +91,7 @@ class PyRadio(object):
             self.player = player.probePlayer(requested_player=self.requested_player)(self.log)
         except:
             # no player
-            self.error_code = 0
+            self.operation_mode = NO_PLAYER_ERROR_MODE
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()
@@ -131,7 +133,7 @@ class PyRadio(object):
         #self.bodyWin.keypad(1)
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
         self.bodyWin.noutrefresh()
-        if self.error_code == 0:
+        if self.operation_mode == NO_PLAYER_ERROR_MODE:
             if self.requested_player:
                 txt = """Rypadio is not able to use the player you specified.
 
@@ -168,8 +170,15 @@ class PyRadio(object):
         pad = len(str(len(self.cnf.stations)))
         for lineNum in range(maxDisplay - 1):
             i = lineNum + self.startPos
-            if i < len(self.cnf.stations):
-                self.__displayBodyLine(lineNum, pad, self.cnf.stations[i])
+            if self.operation_mode == PLAYLIST_MODE:
+                """ display existing playlists """
+                col = curses.color_pair(5)
+                self.bodyWin.addstr(0, 2, ' Select playlist to open ', col)
+                pass
+            else:
+                """ display stations """
+                if i < len(self.cnf.stations):
+                    self.__displayBodyLine(lineNum, pad, self.cnf.stations[i])
         self.bodyWin.refresh()
 
     def refreshNoPlayerBody(self, a_string):
@@ -204,7 +213,7 @@ class PyRadio(object):
         self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
     def run(self):
-        if self.error_code == 0:
+        if self.operation_mode == NO_PLAYER_ERROR_MODE:
             if self.requested_player:
                 if ',' in self.requested_player:
                     self.log.write('None of "{}" players is available. Press any key to exit....'.format(self.requested_player))
@@ -269,13 +278,20 @@ class PyRadio(object):
 
     def keypress(self, char):
         # if no player, don't serve keyboard
-        if self.error_code == 0:
+        if self.operation_mode == NO_PLAYER_ERROR_MODE:
             return
 
-        elif self.error_code == 100:
+        elif self.operation_mode == MAIN_HELP_MODE:
+            """ Main help in on, just update """
             self.hWin = None
+            self.operation_mode = -1
             self.setupAndDrawScreen()
-            self.error_code = -1
+            return
+
+        elif self.operation_mode == PLAYLIST_HELP_MODE:
+            """ open playlist help """
+            self.operation_mode = PLAYLIST_MODE
+            self.refreshBody()
             return
 
         else:
@@ -283,26 +299,30 @@ class PyRadio(object):
             pageChange = 5
 
             if char in (ord('?'), ord('/')):
-                txt = """Up/j/PgUpn
-                         Down/k/PgDown    Change station selection.
-                         g                Jump to first station.
-                         <n>G             Jump to n-th / last station.
-                         Enter/Right/l    Play selected station.
-                         r                Select and play a random station.
-                         Space/Left/h     Stop/start playing selected station.
-                         -/+ or ,/.       Change volume.
-                         m                Mute.
-                         v                Save volume (not applicable with vlc).
-                         #                Redraw window.
-                         Esc/q            Quit. """
-                self._show_help(txt)
-                return
-
-            if char in (ord('v'), ):
-                ret_string = self.player.save_volume()
-                if ret_string:
-                    self.log.write(ret_string)
-                    self.player.threadUpdateTitle(self.player.status_update_lock)
+                if self.operation_mode == PLAYLIST_MODE:
+                    txt = """Up/j/PgUp
+                             Down/k/PgDown    Change playlist selection.
+                             Enter/Right/l
+                             Space/Left/h     Open selected playlist.
+                             g                Jump to first playlist.
+                             <n>G             Jump to n-th / last playlist.
+                             Esc/q            Cancel. """
+                    self._show_help(txt, mode_to_set=PLAYLIST_HELP_MODE)
+                else:
+                    txt = """Up/j/PgUp
+                             Down/k/PgDown    Change station selection.
+                             g                Jump to first station.
+                             <n>G             Jump to n-th / last station.
+                             Enter/Right/l    Play selected station.
+                             r                Select and play a random station.
+                             Space/Left/h     Stop/start playing selected station.
+                             -/+ or ,/.       Change volume.
+                             m                Mute.
+                             v                Save volume (not applicable with vlc).
+                             o                Open playlist.
+                             #                Redraw window.
+                             Esc/q            Quit. """
+                    self._show_help(txt)
                 return
 
             if char in (ord('G'), ):
@@ -328,11 +348,19 @@ class PyRadio(object):
                 return
 
             if char in (curses.KEY_EXIT, ord('q')):
-                try:
-                    self.player.close()
-                except:
-                    pass
-                return -1
+                if self.operation_mode == PLAYLIST_MODE:
+                    """ return to stations view """
+                    self.selection = self.selection_backup
+                    self.operation_mode = NORMAL_MODE
+                    self.refreshBody()
+                    return
+                else:
+                    """ exit """
+                    try:
+                        self.player.close()
+                    except:
+                        pass
+                    return -1
 
             if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                     curses.KEY_RIGHT, ord('l')):
@@ -361,14 +389,6 @@ class PyRadio(object):
                 self.refreshBody()
                 return
 
-            if char in (ord('+'), ord('='), ord('.')):
-                self.player.volumeUp()
-                return
-
-            if char in (ord('-'), ord(',')):
-                self.player.volumeDown()
-                return
-
             if char in (curses.KEY_PPAGE, ):
                 self.setStation(self.selection - pageChange)
                 self.refreshBody()
@@ -379,22 +399,49 @@ class PyRadio(object):
                 self.refreshBody()
                 return
 
-            if char in (ord('m'), ):
-                self.player.toggleMute()
-                return
+            if self.operation_mode == NORMAL_MODE:
+                if char in (ord('o'), ):
+                    """ open playlist """
+                    tmp = self.selection
+                    self.selection = self.selection_backup
+                    self.selection_backup= tmp
+                    self.operation_mode = PLAYLIST_MODE
+                    self.refreshBody()
+                    return
 
-            if char in (ord('r'), ):
-                # Pick a random radio station
-                self.setStation(random.randint(0, len(self.cnf.stations)))
-                self.playSelection()
-                self.refreshBody()
+                if char in (ord('v'), ):
+                    ret_string = self.player.save_volume()
+                    if ret_string:
+                        self.log.write(ret_string)
+                        self.player.threadUpdateTitle(self.player.status_update_lock)
+                    return
 
-            if char in (ord('#'), curses.KEY_RESIZE):
-                self.headWin = False
-                self.setupAndDrawScreen()
+                if char in (ord('+'), ord('='), ord('.')):
+                    self.player.volumeUp()
+                    return
 
-    def _show_help(self, txt, ret_code=100):
-        self.error_code = ret_code
+                if char in (ord('-'), ord(',')):
+                    self.player.volumeDown()
+                    return
+
+                if char in (ord('m'), ):
+                    self.player.toggleMute()
+                    return
+
+                if char in (ord('r'), ):
+                    # Pick a random radio station
+                    self.setStation(random.randint(0, len(self.cnf.stations)))
+                    self.playSelection()
+                    self.refreshBody()
+                    return
+
+                if char in (ord('#'), curses.KEY_RESIZE):
+                    self.headWin = False
+                    self.setupAndDrawScreen()
+                    return
+
+    def _show_help(self, txt, mode_to_set=MAIN_HELP_MODE):
+        self.operation_mode = mode_to_set
         txt_col = curses.color_pair(5)
         box_col = curses.color_pair(2)
         caption_col = curses.color_pair(4)
@@ -413,7 +460,7 @@ class PyRadio(object):
             if self.maxX < mwidth:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('  ***  Window too small even to show help warning  ***')
-                self.error_code = -1
+                self.operation_mode = NORMAL_MODE
                 return
             lines = [ txt , ] 
         self.hWin = curses.newwin(mheight,mwidth,int((self.maxY-mheight)/2),int((self.maxX-mwidth)/2))
