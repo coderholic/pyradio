@@ -298,13 +298,14 @@ class PyRadio(object):
             return 'vlc'
         return self.player.PLAYER_CMD
 
-    def _show_help(self, txt, mode_to_set=MAIN_HELP_MODE):
+    def _show_help(self, txt,
+                mode_to_set=MAIN_HELP_MODE, 
+                caption=' Help ',
+                prompt=' Press any key to hide '):
         self.operation_mode = mode_to_set
         txt_col = curses.color_pair(5)
         box_col = curses.color_pair(2)
         caption_col = curses.color_pair(4)
-        caption = ' Help '
-        prompt = ' Press any key to hide '
         lines = txt.split('\n')
         st_lines = [item.replace('\r','') for item in lines]
         lines = [item.strip() for item in st_lines]
@@ -324,17 +325,18 @@ class PyRadio(object):
         self.hWin = curses.newwin(mheight,mwidth,int((self.maxY-mheight)/2),int((self.maxX-mwidth)/2))
         self.hWin.attrset(box_col)
         self.hWin.box()
-        self.hWin.addstr(0, int((mwidth-len(caption))/2), caption, caption_col)
+        if caption.strip():
+            self.hWin.addstr(0, int((mwidth-len(caption))/2), caption, caption_col)
         for i, n in enumerate(lines):
             self.hWin.addstr(i+1, 2, n.replace('_', ' '), caption_col)
-        self.hWin.addstr(mheight - 1, int(mwidth-len(prompt)-1), prompt)
-
+        if prompt.strip():
+            self.hWin.addstr(mheight - 1, int(mwidth-len(prompt)-1), prompt)
         self.hWin.refresh()
 
     def _read_playlists(self, force=False):
-        if force:
-            self.playlists.clear()
-        if not self.playlists:
+        if force is True:
+            self.playlists = []
+        if self.playlists == []:
             files = glob.glob(join(self.cnf.stations_dir, '*.csv'))
             for a_file in files:
                 a_file_name = basename(a_file).replace('.csv', '')
@@ -466,7 +468,7 @@ class PyRadio(object):
                 self.refreshBody()
                 return
 
-            if char in (curses.KEY_EXIT, ord('q')):
+            if char in (curses.KEY_EXIT, ord('q'), 27):
                 if self.operation_mode == PLAYLIST_MODE:
                     """ return to stations view """
                     self.selections[self.operation_mode] = (self.selection, self.startPos, self.playlists)
@@ -505,13 +507,36 @@ class PyRadio(object):
                 self.refreshBody()
                 return
 
+            if self.player.isPlaying():
+                if char in (ord('+'), ord('='), ord('.')):
+                    self.player.volumeUp()
+                    return
+
+                if char in (ord('-'), ord(',')):
+                    self.player.volumeDown()
+                    return
+
+                if char in (ord('m'), ):
+                    self.player.toggleMute()
+                    return
+
+                if char in (ord('v'), ):
+                    if self.player.isPlaying():
+                        ret_string = self.player.save_volume()
+                        if ret_string:
+                            self.log.write(ret_string)
+                            self.player.threadUpdateTitle(self.player.status_update_lock)
+                    return
+
             if self.operation_mode == NORMAL_MODE:
                 if char in (ord('o'), ):
                     """ open playlist """
-                    self._read_playlists()
+                    txt = '''Reading playlists. Please wait...'''
+                    self._show_help(txt, NORMAL_MODE, caption=' ', prompt=' ')
                     self.selections[self.operation_mode] = (self.selection, self.startPos, self.cnf.stations)
                     self.operation_mode = PLAYLIST_MODE
                     self.selection, self.startPos, self.stations = self.selections[self.operation_mode]
+                    self._read_playlists()
                     self.refreshBody()
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('MODE: NORMAL_MODE -> PLAYLIST_MODE')
@@ -534,36 +559,13 @@ class PyRadio(object):
                     self.refreshBody()
                     return
 
-                if char in (ord('v'), ):
-                    if self.player.isPlaying():
-                        ret_string = self.player.save_volume()
-                        if ret_string:
-                            self.log.write(ret_string)
-                            self.player.threadUpdateTitle(self.player.status_update_lock)
-                    return
-
-                if char in (ord('+'), ord('='), ord('.')):
-                    if self.player.isPlaying():
-                        self.player.volumeUp()
-                    return
-
-                if char in (ord('-'), ord(',')):
-                    if self.player.isPlaying():
-                        self.player.volumeDown()
-                    return
-
-                if char in (ord('m'), ):
-                    if self.player.isPlaying():
-                        self.player.toggleMute()
-                    return
-
-                if char in (ord('r'), ):
-                    if self.player.isPlaying():
-                        # Pick a random radio station
-                        self.setStation(random.randint(0, len(self.stations)))
-                        self.playSelection()
-                        self.refreshBody()
-                    return
+                    if char in (ord('r'), ):
+                        if self.player.isPlaying():
+                            # Pick a random radio station
+                            self.setStation(random.randint(0, len(self.stations)))
+                            self.playSelection()
+                            self.refreshBody()
+                        return
 
             elif self.operation_mode == PLAYLIST_MODE:
 
@@ -577,6 +579,26 @@ class PyRadio(object):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('MODE: Cancel PLAYLIST_MODE -> NORMAL_MODE')
                     return
+
+                if char in (ord('r'), ):
+                    """ read playlists from disk """
+                    txt = '''Reading playlists. Please wait...'''
+                    self._show_help(txt, PLAYLIST_MODE, caption=' ', prompt=' ')
+                    old_playlist = self.playlists[self.selection][0]
+                    self._read_playlists(force=True)
+                    """ refresh reference """
+                    self.stations = self.playlists
+                    old_found = False
+                    for i, a_playlist in enumerate(self.playlists):
+                        if a_playlist[0] == old_playlist:
+                            old_found = True
+                            self.setStation(i)
+                            break
+                    if old_found is False:
+                        self.selections[self.operation_mode] = (0, 0, self.playlists)
+                    else:
+                        self.selections[self.operation_mode] = (self.selection, self.startPos, self.playlists)
+                    self.refreshBody()
 
 
 # pymode:lint_ignore=W901

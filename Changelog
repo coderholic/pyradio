@@ -1,6 +1,7 @@
 2018-12-08  s-n-g
 
 	* make sure config dir exists before doing anything with it
+	* ESCAPE now works for exit/cancel
 	* error_code renamed to operation_mode
 
 2018-12-02  s-n-g
