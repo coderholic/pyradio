@@ -7,32 +7,40 @@ class PyRadioStations(object):
     """ PyRadio stations file management """
 
     stations_file = ''
+    stations_dir = ''
 
     def __init__(self, stationFile=''):
 
         if sys.platform.startswith('win'):
-            usr_path = path.join(getenv('APPDATA'), 'pyradio')
+            self.stations_dir = path.join(getenv('APPDATA'), 'pyradio')
         else:
-            usr_path = path.join(getenv('HOME', '~'), '.config', 'pyradio')
+            self.stations_dir = path.join(getenv('HOME', '~'), '.config', 'pyradio')
+        """ Make sure config dir exists """
+        if not path.exists(self.stations_dir):
+            try:
+                makedirs(self.stations_dir)
+            except:
+                print('Error: Cannot create config directory: "{}"'.format(self.stations_dir))
+                sys.exit(1)
         root_path = path.join(path.dirname(__file__), 'stations.csv')
 
         """ If a station.csv file exitst, which is wrong,
             we rename it to stations.csv """
-        if path.exists(path.join(usr_path, 'station.csv')):
-                copyfile(path.join(usr_path, 'station.csv'),
-                        path.join(usr_path, 'stations.csv'))
-                remove(path.join(usr_path, 'station.csv'))
+        if path.exists(path.join(self.stations_dir, 'station.csv')):
+                copyfile(path.join(self.stations_dir, 'station.csv'),
+                        path.join(self.stations_dir, 'stations.csv'))
+                remove(path.join(self.stations_dir, 'station.csv'))
 
-        self._move_old_csv(usr_path)
-        self._check_stations_csv(usr_path, root_path)
+        self._move_old_csv(self.stations_dir)
+        self._check_stations_csv(self.stations_dir, root_path)
 
         if stationFile:
             if path.exists(stationFile) and path.isfile(stationFile):
                 self.stations_file = stationFile
 
         if not self.stations_file:
-            for p in [path.join(usr_path, 'pyradio.csv'),
-                      path.join(usr_path, 'stations.csv'),
+            for p in [path.join(self.stations_dir, 'pyradio.csv'),
+                      path.join(self.stations_dir, 'stations.csv'),
                       root_path]:
                 if path.exists(p) and path.isfile(p):
                     self.stations_file = p
@@ -63,12 +71,6 @@ class PyRadioStations(object):
         if path.exists(path.join(usr, 'stations.csv')):
             return
         else:
-            if not path.exists(usr):
-                try:
-                    makedirs(usr)
-                except:
-                    print('Error: Cannot create config directory "{}"'.format(usr))
-                    sys.exit(1)
             copyfile(root, path.join(usr, 'stations.csv'))
 
     def read(self, stationFile=''):

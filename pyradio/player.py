@@ -30,6 +30,8 @@ class Player(object):
     """ make it possible to change volume but not show it """
     show_volume = True
 
+    muted = False
+
     status_update_lock = threading.Lock()
 
     def __init__(self, outputStream):

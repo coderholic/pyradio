@@ -11,7 +11,10 @@ import curses
 import logging
 import os
 import random
+import glob
 from sys import version as python_version
+from os.path import join, basename, getmtime, getsize
+from time import ctime
 
 from .log import Log
 from . import player
@@ -36,12 +39,15 @@ def rel(path):
 class PyRadio(object):
     startPos = 0
     selection = 0
-    selection_backup = 0
+    selection_normal = 0
+    selection_playlist = 0
     playing = -1
     jumpnr = ""
     hWin = None
 
     operation_mode = NORMAL_MODE
+    
+    playlists = []
 
     def __init__(self, stations_cnf, play=False, req_player=''):
         self.cnf = stations_cnf
@@ -92,6 +98,8 @@ class PyRadio(object):
         except:
             # no player
             self.operation_mode = NO_PLAYER_ERROR_MODE
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('MODE = NO_PLAYER_ERROR_MODE')
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()
@@ -154,6 +162,14 @@ class PyRadio(object):
                 installed as well."""
             self.refreshNoPlayerBody(txt)
         else:
+            if self.operation_mode == MAIN_HELP_MODE:
+                self.operation_mode = NORMAL_MODE
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('MODE: MAIN_HELP_MODE => NORMAL_MODE')
+            elif self.operation_mode == PLAYLIST_HELP_MODE:
+                self.operation_mode = PLAYLIST_MODE
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('MODE: PLAYLIST_HELP_MODE =>  PLAYLIST_MODE')
             self.refreshBody()
 
 
@@ -167,16 +183,20 @@ class PyRadio(object):
         self.bodyWin.box()
         self.bodyWin.move(1, 1)
         maxDisplay = self.bodyMaxY - 1
-        pad = len(str(len(self.cnf.stations)))
+        if self.operation_mode == PLAYLIST_MODE:
+            """ display playlists header """
+            col = curses.color_pair(5)
+            self.bodyWin.addstr(0, 2, ' Select playlist to open ', col)
         for lineNum in range(maxDisplay - 1):
             i = lineNum + self.startPos
             if self.operation_mode == PLAYLIST_MODE:
                 """ display existing playlists """
-                col = curses.color_pair(5)
-                self.bodyWin.addstr(0, 2, ' Select playlist to open ', col)
-                pass
+                pad = len(str(len(self.playlists)))
+                if i < len(self.playlists):
+                    self.__displayBodyLine(lineNum, pad, self.playlists[i])
             else:
                 """ display stations """
+                pad = len(str(len(self.cnf.stations)))
                 if i < len(self.cnf.stations):
                     self.__displayBodyLine(lineNum, pad, self.cnf.stations[i])
         self.bodyWin.refresh()
@@ -209,7 +229,10 @@ class PyRadio(object):
         elif lineNum + self.startPos == self.playing:
             col = curses.color_pair(4)
             self.bodyWin.hline(lineNum + 1, 1, ' ', self.bodyMaxX - 2, col)
-        line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
+        if self.operation_mode == NORMAL_MODE:
+            line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
+        elif self.operation_mode == PLAYLIST_MODE:
+            line = self._format_playlist_line(lineNum, pad, station)
         self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
     def run(self):
@@ -276,170 +299,6 @@ class PyRadio(object):
             return 'vlc'
         return self.player.PLAYER_CMD
 
-    def keypress(self, char):
-        # if no player, don't serve keyboard
-        if self.operation_mode == NO_PLAYER_ERROR_MODE:
-            return
-
-        elif self.operation_mode == MAIN_HELP_MODE:
-            """ Main help in on, just update """
-            self.hWin = None
-            self.operation_mode = -1
-            self.setupAndDrawScreen()
-            return
-
-        elif self.operation_mode == PLAYLIST_HELP_MODE:
-            """ open playlist help """
-            self.operation_mode = PLAYLIST_MODE
-            self.refreshBody()
-            return
-
-        else:
-            # Number of stations to change with the page up/down keys
-            pageChange = 5
-
-            if char in (ord('?'), ord('/')):
-                if self.operation_mode == PLAYLIST_MODE:
-                    txt = """Up/j/PgUp
-                             Down/k/PgDown    Change playlist selection.
-                             Enter/Right/l
-                             Space/Left/h     Open selected playlist.
-                             g                Jump to first playlist.
-                             <n>G             Jump to n-th / last playlist.
-                             Esc/q            Cancel. """
-                    self._show_help(txt, mode_to_set=PLAYLIST_HELP_MODE)
-                else:
-                    txt = """Up/j/PgUp
-                             Down/k/PgDown    Change station selection.
-                             g                Jump to first station.
-                             <n>G             Jump to n-th / last station.
-                             Enter/Right/l    Play selected station.
-                             r                Select and play a random station.
-                             Space/Left/h     Stop/start playing selected station.
-                             -/+ or ,/.       Change volume.
-                             m                Mute.
-                             v                Save volume (not applicable with vlc).
-                             o                Open playlist.
-                             #                Redraw window.
-                             Esc/q            Quit. """
-                    self._show_help(txt)
-                return
-
-            if char in (ord('G'), ):
-                if self.jumpnr == "":
-                    self.setStation(-1)
-                else:
-                    jumpto=min(int(self.jumpnr)-1,len(self.cnf.stations)-1)
-                    jumpto=max(0,jumpto)
-                    self.setStation(jumpto)
-                self.jumpnr = ""
-                self.refreshBody()
-                return
-
-            if char in map(ord,map(str,range(0,10))):
-                self.jumpnr += chr(char)
-                return
-            else:
-                self.jumpnr = ""
-
-            if char in (ord('g'), ):
-                self.setStation(0)
-                self.refreshBody()
-                return
-
-            if char in (curses.KEY_EXIT, ord('q')):
-                if self.operation_mode == PLAYLIST_MODE:
-                    """ return to stations view """
-                    self.selection = self.selection_backup
-                    self.operation_mode = NORMAL_MODE
-                    self.refreshBody()
-                    return
-                else:
-                    """ exit """
-                    try:
-                        self.player.close()
-                    except:
-                        pass
-                    return -1
-
-            if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-                    curses.KEY_RIGHT, ord('l')):
-                self.playSelection()
-                self.refreshBody()
-                self.setupAndDrawScreen()
-                return
-
-            if char in (ord(' '), curses.KEY_LEFT, ord('h')):
-                if self.player.isPlaying():
-                    self.player.close()
-                    self.log.write('Playback stopped')
-                else:
-                    self.playSelection()
-
-                self.refreshBody()
-                return
-
-            if char in (curses.KEY_DOWN, ord('j')):
-                self.setStation(self.selection + 1)
-                self.refreshBody()
-                return
-
-            if char in (curses.KEY_UP, ord('k')):
-                self.setStation(self.selection - 1)
-                self.refreshBody()
-                return
-
-            if char in (curses.KEY_PPAGE, ):
-                self.setStation(self.selection - pageChange)
-                self.refreshBody()
-                return
-
-            if char in (curses.KEY_NPAGE, ):
-                self.setStation(self.selection + pageChange)
-                self.refreshBody()
-                return
-
-            if self.operation_mode == NORMAL_MODE:
-                if char in (ord('o'), ):
-                    """ open playlist """
-                    tmp = self.selection
-                    self.selection = self.selection_backup
-                    self.selection_backup= tmp
-                    self.operation_mode = PLAYLIST_MODE
-                    self.refreshBody()
-                    return
-
-                if char in (ord('v'), ):
-                    ret_string = self.player.save_volume()
-                    if ret_string:
-                        self.log.write(ret_string)
-                        self.player.threadUpdateTitle(self.player.status_update_lock)
-                    return
-
-                if char in (ord('+'), ord('='), ord('.')):
-                    self.player.volumeUp()
-                    return
-
-                if char in (ord('-'), ord(',')):
-                    self.player.volumeDown()
-                    return
-
-                if char in (ord('m'), ):
-                    self.player.toggleMute()
-                    return
-
-                if char in (ord('r'), ):
-                    # Pick a random radio station
-                    self.setStation(random.randint(0, len(self.cnf.stations)))
-                    self.playSelection()
-                    self.refreshBody()
-                    return
-
-                if char in (ord('#'), curses.KEY_RESIZE):
-                    self.headWin = False
-                    self.setupAndDrawScreen()
-                    return
-
     def _show_help(self, txt, mode_to_set=MAIN_HELP_MODE):
         self.operation_mode = mode_to_set
         txt_col = curses.color_pair(5)
@@ -472,6 +331,251 @@ class PyRadio(object):
         self.hWin.addstr(mheight - 1, int(mwidth-len(prompt)-1), prompt)
 
         self.hWin.refresh()
+
+    def _read_playlists(self, force=False):
+        if force:
+            self.playlists.clear()
+        if not self.playlists:
+            files = glob.glob(join(self.cnf.stations_dir, '*.csv'))
+            for a_file in files:
+                a_file_name = basename(a_file).replace('.csv', '')
+                a_file_size = self._bytes_to_human(getsize(a_file))
+                a_file_time = ctime(getmtime(a_file))
+                self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
+
+    def _bytes_to_human(self, B):
+        ''' Return the given bytes as a human friendly KB, MB, GB, or TB string '''
+        KB = float(1024)
+        MB = float(KB ** 2) # 1,048,576
+        GB = float(KB ** 3) # 1,073,741,824
+        TB = float(KB ** 4) # 1,099,511,627,776
+
+        if B < KB:
+            return '{0} {1}'.format(B,'Bytes' if 0 == B > 1 else 'Byte')
+        B = float(B)
+        if KB <= B < MB:
+            return '{0:.2f} KB'.format(B/KB)
+        elif MB <= B < GB:
+            return '{0:.2f} MB'.format(B/MB)
+        elif GB <= B < TB:
+            return '{0:.2f} GB'.format(B/GB)
+        elif TB <= B:
+            return '{0:.2f} TB'.format(B/TB)
+
+    def _format_playlist_line(self, lineNum, pad, station):
+        """ format playlist line so that if fills self.maxX """
+        line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
+        f_data = ' [{0}, {1}]'.format(station[2], station[1])
+        if len(line) + len(f_data) > self.bodyMaxX -2:
+            """ this is too long, try to shorten it
+                by removing file size """
+            f_data = ' [{0}]'.format(station[1])
+        if len(line) + len(f_data) > self.bodyMaxX - 2:
+            """ still too long. start removing chars """
+            while len(line) + len(f_data) > self.bodyMaxX - 3:
+                f_data = f_data[:-1]
+            f_data += ']'
+        """ if too short, pad f_data to the right """
+        if len(line) + len(f_data) < self.maxX - 2:
+            while len(line) + len(f_data) < self.maxX - 2:
+                line += ' '
+        line += f_data
+        return line
+
+    def keypress(self, char):
+        if char in (ord('#'), curses.KEY_RESIZE):
+            self.headWin = False
+            self.setupAndDrawScreen()
+            return
+
+        # if no player, don't serve keyboard
+        if self.operation_mode == NO_PLAYER_ERROR_MODE:
+            return
+
+        elif self.operation_mode == MAIN_HELP_MODE:
+            """ Main help in on, just update """
+            self.hWin = None
+            self.operation_mode = NORMAL_MODE
+            self.setupAndDrawScreen()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('MODE: MAIN_HELP_MODE -> NORMAL_MODE')
+            return
+
+        elif self.operation_mode == PLAYLIST_HELP_MODE:
+            """ open playlist help """
+            self.operation_mode = PLAYLIST_MODE
+            self.refreshBody()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('MODE: PLAYLIST_HELP_MODE -> PLAYLIST_MODE')
+            return
+
+        else:
+            # Number of stations to change with the page up/down keys
+            pageChange = 5
+
+            if char in (ord('?'), ord('/')):
+                if self.operation_mode == PLAYLIST_MODE:
+                    txt = """Up/j/PgUp
+                             Down/k/PgDown    Change playlist selection.
+                             g                Jump to first playlist.
+                             <n>G             Jump to n-th / last playlist.
+                             Enter            Open selected playlist.
+                             r                Re-read playlists from disk.
+                             #                Redraw window.
+                             Esc/q            Cancel. """
+                    self._show_help(txt, mode_to_set=PLAYLIST_HELP_MODE)
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE = PLAYLIST_HELP_MODE')
+                else:
+                    txt = """Up/j/PgUp
+                             Down/k/PgDown    Change station selection.
+                             g                Jump to first station.
+                             <n>G             Jump to n-th / last station.
+                             Enter/Right/l    Play selected station.
+                             r                Select and play a random station.
+                             Space/Left/h     Stop/start playing selected station.
+                             -/+ or ,/.       Change volume.
+                             m                Mute / unmute player.
+                             v                Save volume (not applicable with vlc).
+                             o                Open playlist.
+                             #                Redraw window.
+                             Esc/q            Quit. """
+                    self._show_help(txt)
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE = MAIN_HELP_MODE')
+                return
+
+            if char in (ord('G'), ):
+                if self.jumpnr == "":
+                    self.setStation(-1)
+                else:
+                    jumpto=min(int(self.jumpnr)-1,len(self.cnf.stations)-1)
+                    jumpto=max(0,jumpto)
+                    self.setStation(jumpto)
+                self.jumpnr = ""
+                self.refreshBody()
+                return
+
+            if char in map(ord,map(str,range(0,10))):
+                self.jumpnr += chr(char)
+                return
+            else:
+                self.jumpnr = ""
+
+            if char in (ord('g'), ):
+                self.setStation(0)
+                self.refreshBody()
+                return
+
+            if char in (curses.KEY_EXIT, ord('q')):
+                if self.operation_mode == PLAYLIST_MODE:
+                    """ return to stations view """
+                    self.selection_playlist = self.selection
+                    self.selection = self.selection_normal
+                    self.operation_mode = NORMAL_MODE
+                    self.refreshBody()
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: Cancel PLAYLIST_MODE -> NORMAL_MODE')
+                    return
+                else:
+                    """ exit """
+                    try:
+                        self.player.close()
+                    except:
+                        pass
+                    return -1
+
+            if char in (curses.KEY_DOWN, ord('j')):
+                self.setStation(self.selection + 1)
+                self.refreshBody()
+                return
+
+            if char in (curses.KEY_UP, ord('k')):
+                self.setStation(self.selection - 1)
+                self.refreshBody()
+                return
+
+            if char in (curses.KEY_PPAGE, ):
+                self.setStation(self.selection - pageChange)
+                self.refreshBody()
+                return
+
+            if char in (curses.KEY_NPAGE, ):
+                self.setStation(self.selection + pageChange)
+                self.refreshBody()
+                return
+
+            if self.operation_mode == NORMAL_MODE:
+                if char in (ord('o'), ):
+                    """ open playlist """
+                    self._read_playlists()
+                    self.selection_normal = self.selection
+                    self.selection = self.selection_playlist
+                    self.operation_mode = PLAYLIST_MODE
+                    self.refreshBody()
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: NORMAL_MODE -> PLAYLIST_MODE')
+                    return
+
+                if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                        curses.KEY_RIGHT, ord('l')):
+                    self.playSelection()
+                    self.refreshBody()
+                    self.setupAndDrawScreen()
+                    return
+
+                if char in (ord(' '), curses.KEY_LEFT, ord('h')):
+                    if self.player.isPlaying():
+                        self.player.close()
+                        self.log.write('Playback stopped')
+                    else:
+                        self.playSelection()
+
+                    self.refreshBody()
+                    return
+
+                if char in (ord('v'), ):
+                    if self.player.isPlaying():
+                        ret_string = self.player.save_volume()
+                        if ret_string:
+                            self.log.write(ret_string)
+                            self.player.threadUpdateTitle(self.player.status_update_lock)
+                    return
+
+                if char in (ord('+'), ord('='), ord('.')):
+                    if self.player.isPlaying():
+                        self.player.volumeUp()
+                    return
+
+                if char in (ord('-'), ord(',')):
+                    if self.player.isPlaying():
+                        self.player.volumeDown()
+                    return
+
+                if char in (ord('m'), ):
+                    if self.player.isPlaying():
+                        self.player.toggleMute()
+                    return
+
+                if char in (ord('r'), ):
+                    if self.player.isPlaying():
+                        # Pick a random radio station
+                        self.setStation(random.randint(0, len(self.cnf.stations)))
+                        self.playSelection()
+                        self.refreshBody()
+                    return
+
+            elif self.operation_mode == PLAYLIST_MODE:
+
+                if char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+                    """ return to stations view """
+                    self.selection_playlist = self.selection
+                    self.selection = self.selection_normal
+                    self.operation_mode = NORMAL_MODE
+                    self.refreshBody()
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: Cancel PLAYLIST_MODE -> NORMAL_MODE')
+                    return
 
 
 # pymode:lint_ignore=W901
