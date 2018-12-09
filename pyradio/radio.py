@@ -551,13 +551,14 @@ class PyRadio(object):
                     self.playing = self.cnf.read_playlists(force=True)
                     """ refresh reference """
                     self.stations = self.cnf.playlists
-                    old_found = False
-                    for i, a_playlist in enumerate(self.cnf.playlists):
-                        if a_playlist[0] == old_playlist:
-                            old_found = True
-                            self.setStation(i)
-                            break
-                    if old_found is False:
+                    #old_found = False
+                    #for i, a_playlist in enumerate(self.cnf.playlists):
+                    #    if a_playlist[0] == old_playlist:
+                    #        old_found = True
+                    #        self.setStation(i)
+                    #        break
+                    #if old_found is False:
+                    if self.playing == -1:
                         self.selections[self.operation_mode] = (0, 0, -1, self.cnf.playlists)
                     else:
                         self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
