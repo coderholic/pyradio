@@ -9,7 +9,13 @@ class PyRadioStations(object):
     """ PyRadio stations file management """
 
     stations_file = ''
+    stations_filename_only = ''
+    previous_stations_file = ''
+
+    """ this is always on users config dir """
     stations_dir = ''
+
+    stations_file_in_config_dir = False
 
     stations = []
     playlists = []
@@ -43,7 +49,9 @@ class PyRadioStations(object):
 
         if stationFile:
             if path.exists(stationFile) and path.isfile(stationFile):
-                self.stations_file = stationFile
+                self.previous_stations_file = self.stations_file
+                self.stations_file = path.abspath(stationFile)
+                self.stations_filename_only = path.basename(self.stations_file)
 
         if not self.stations_file:
             for p in [path.join(self.stations_dir, 'pyradio.csv'),
@@ -55,7 +63,7 @@ class PyRadioStations(object):
 
     def _move_old_csv(self, usr):
         """ if a ~/.pyradio files exists, relocate it in user
-            config folder and rename it to stations.csv, or if 
+            config folder and rename it to stations.csv, or if
             that exists, to pyradio.csv """
 
         src = path.join(getenv('HOME', '~'), '.pyradio')
@@ -80,11 +88,31 @@ class PyRadioStations(object):
         else:
             copyfile(root, path.join(usr, 'stations.csv'))
 
+    def is_in_config_dir(self):
+        """ Check if a csv file is in the config dir """
+        if path.dirname(self.stations_file) == self.stations_dir:
+            self.stations_file_in_config_dir = True
+        else:
+            self.stations_file_in_config_dir = False
+        return self.stations_file_in_config_dir
+
     def read(self, stationFile=''):
-        """ Read a csv file """
+        """ Read a csv file
+            Returns: number, boolean
+              number:
+                x  -  number of stations or
+               -1  -  error
+              boolean
+               True if file is in the config dir
+               """
 
         if stationFile:
-            self.stations_file = stationFile
+            if path.exists(stationFile) and path.isfile(stationFile):
+                self.previous_stations_file = self.stations_file
+                self.stations_file = path.abspath(stationFile)
+                self.stations_filename_only = path.basename(self.stations_file)
+            else:
+                return -1, False
 
         self.stations = []
         with open(self.stations_file, 'r') as cfgfile:
@@ -95,8 +123,8 @@ class PyRadioStations(object):
                     name, url = [s.strip() for s in row]
                     self.stations.append((name, url))
             except:
-                return 0
-        return len(self.stations)
+                return -1, False
+        return len(self.stations), self.is_in_config_dir()
 
     def _bytes_to_human(self, B):
         ''' Return the given bytes as a human friendly KB, MB, GB, or TB string '''
@@ -133,18 +161,21 @@ class PyRadioStations(object):
         if force is True:
             self.playlists = []
         if self.playlists == []:
+            self.selected_playlist = -1
             files = glob.glob(path.join(self.stations_dir, '*.csv'))
-            for a_file in files:
-                a_file_name = path.basename(a_file).replace('.csv', '')
-                a_file_size = self._bytes_to_human(path.getsize(a_file))
-                a_file_time = ctime(path.getmtime(a_file))
-                self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
+            if len(files) == 0:
+                return 0, -1
+            else:
+                for a_file in files:
+                    a_file_name = path.basename(a_file).replace('.csv', '')
+                    a_file_size = self._bytes_to_human(path.getsize(a_file))
+                    a_file_time = ctime(path.getmtime(a_file))
+                    self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
         """ get already loaded playlist id """
-        self.selected_playlist = -1
         for i, a_playlist in enumerate(self.playlists):
             if a_playlist[-1] == self.stations_file:
                 self.selected_playlist = i
                 break
-        return self.selected_playlist
+        return len(self.playlists), self.selected_playlist
 
 

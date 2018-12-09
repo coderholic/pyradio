@@ -30,6 +30,8 @@ NORMAL_MODE = 0
 PLAYLIST_MODE = 1
 MAIN_HELP_MODE = 100
 PLAYLIST_HELP_MODE = 101
+PLAYLIST_LOAD_ERROR_MODE = 102
+PLAYLIST_SCAN_ERROR_MODE = 103
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -160,10 +162,12 @@ class PyRadio(object):
         else:
             if self.operation_mode == MAIN_HELP_MODE:
                 self.operation_mode = NORMAL_MODE
+                self.hWin = None
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('MODE: MAIN_HELP_MODE => NORMAL_MODE')
             elif self.operation_mode == PLAYLIST_HELP_MODE:
                 self.operation_mode = PLAYLIST_MODE
+                self.hWin = None
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('MODE: PLAYLIST_HELP_MODE =>  PLAYLIST_MODE')
             self.refreshBody()
@@ -290,7 +294,7 @@ class PyRadio(object):
         return self.player.PLAYER_CMD
 
     def _show_help(self, txt,
-                mode_to_set=MAIN_HELP_MODE, 
+                mode_to_set=MAIN_HELP_MODE,
                 caption=' Help ',
                 prompt=' Press any key to hide '):
         self.operation_mode = mode_to_set
@@ -344,6 +348,23 @@ class PyRadio(object):
         line += f_data
         return line
 
+    def read_playlists(self, force=False):
+        num_of_playlists, playing = self.cnf.read_playlists(force)
+        if num_of_playlists == 0:
+            txt = '''No playlists found!!!
+
+            This should never have happened; PyRadio is missing its
+            default playlist. Therefore, it has to terminate now.
+            It will re-create it the next time it is lounched.
+            '''
+            self._show_help(txt.format(self.cnf.stations_filename_only),
+                    mode_to_set = PLAYLIST_SCAN_ERROR_MODE,
+                    caption = ' Error ',
+                    prompt = ' Press any key to exit ')
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('No playlists found!!!')
+        return num_of_playlists, playing
+
     def keypress(self, char):
         if char in (ord('#'), curses.KEY_RESIZE):
             self.headWin = False
@@ -353,6 +374,15 @@ class PyRadio(object):
         # if no player, don't serve keyboard
         if self.operation_mode == NO_PLAYER_ERROR_MODE:
             return
+
+        elif self.operation_mode == PLAYLIST_SCAN_ERROR_MODE:
+            """ exit """
+            try:
+                self.player.close()
+            except:
+                pass
+            return -1
+
 
         elif self.operation_mode == MAIN_HELP_MODE:
             """ Main help in on, just update """
@@ -499,11 +529,14 @@ class PyRadio(object):
                     self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
                     self.operation_mode = PLAYLIST_MODE
                     self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
-                    self.playing = self.cnf.read_playlists()
-                    self.refreshBody()
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: NORMAL_MODE -> PLAYLIST_MODE')
-                    return
+                    num_of_playlists, self.playing = self.read_playlists()
+                    if num_of_playlists == 0:
+                        return
+                    else:
+                        self.refreshBody()
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('MODE: NORMAL_MODE -> PLAYLIST_MODE')
+                        return
 
                 if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                         curses.KEY_RIGHT, ord('l')):
@@ -548,21 +581,18 @@ class PyRadio(object):
                     txt = '''Reading playlists. Please wait...'''
                     self._show_help(txt, PLAYLIST_MODE, caption=' ', prompt=' ')
                     old_playlist = self.cnf.playlists[self.selection][0]
-                    self.playing = self.cnf.read_playlists(force=True)
-                    """ refresh reference """
-                    self.stations = self.cnf.playlists
-                    #old_found = False
-                    #for i, a_playlist in enumerate(self.cnf.playlists):
-                    #    if a_playlist[0] == old_playlist:
-                    #        old_found = True
-                    #        self.setStation(i)
-                    #        break
-                    #if old_found is False:
-                    if self.playing == -1:
-                        self.selections[self.operation_mode] = (0, 0, -1, self.cnf.playlists)
+                    num_of_playlists, self.playing = self.read_playlists(force=True)
+                    if num_of_playlists == 0:
+                        return
                     else:
-                        self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
-                    self.refreshBody()
+                        """ refresh reference """
+                        relf.stations = self.cnf.playlists
+                        if self.playing == -1:
+                            self.selections[self.operation_mode] = (0, 0, -1, self.cnf.playlists)
+                        else:
+                            self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
+                        self.refreshBody()
+
 
 
 # pymode:lint_ignore=W901

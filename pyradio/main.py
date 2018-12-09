@@ -63,8 +63,9 @@ def shell():
         stations_cnf.append(params, args.stations)
         sys.exit()
 
-    if stations_cnf.read(args.stations) == 0:
-        print("Error reading stations file...")
+    ret, foreign_file = stations_cnf.read(args.stations)
+    if ret == -1:
+        print("Error loading playlist file...")
         sys.exit(1)
 
     if args.list:
