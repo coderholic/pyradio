@@ -11,7 +11,6 @@ import curses
 import logging
 import os
 import random
-import glob
 from sys import version as python_version
 from os.path import join, basename, getmtime, getsize
 from time import ctime
@@ -43,13 +42,11 @@ class PyRadio(object):
     jumpnr = ""
     hWin = None
 
-    playlists = []
-
     def __init__(self, stations_cnf, play=False, req_player=''):
         self.cnf = stations_cnf
-        self.selections = [ (0, 0, self.cnf.stations),
-                            (0, 0, self.playlists)]
-        self.selection, self.startPos, self.stations = self.selections[self.operation_mode]
+        self.selections = [ (0, 0, -1, self.cnf.stations),
+                            (0, 0, -1, self.cnf.playlists)]
+        self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
         self.play = play
         self.stdscr = None
         self.requested_player = req_player
@@ -171,7 +168,6 @@ class PyRadio(object):
                     logger.debug('MODE: PLAYLIST_HELP_MODE =>  PLAYLIST_MODE')
             self.refreshBody()
 
-
     def initFooter(self):
         """ Initializes the body/story window """
         self.footerWin.bkgd(' ', curses.color_pair(7))
@@ -185,19 +181,14 @@ class PyRadio(object):
         if self.operation_mode == PLAYLIST_MODE:
             """ display playlists header """
             col = curses.color_pair(5)
-            self.bodyWin.addstr(0, 2, ' Select playlist to open ', col)
+            w_header = ' Select playlist to open '
+            self.bodyWin.addstr(0, int((self.bodyMaxX - len(w_header)) / 2),
+                    w_header, col)
         for lineNum in range(maxDisplay - 1):
             i = lineNum + self.startPos
-            if self.operation_mode == PLAYLIST_MODE:
-                """ display existing playlists """
-                pad = len(str(len(self.stations)))
-                if i < len(self.stations):
-                    self.__displayBodyLine(lineNum, pad, self.stations[i])
-            else:
-                """ display stations """
-                pad = len(str(len(self.stations)))
-                if i < len(self.stations):
-                    self.__displayBodyLine(lineNum, pad, self.stations[i])
+            pad = len(str(len(self.stations)))
+            if i < len(self.stations):
+                self.__displayBodyLine(lineNum, pad, self.stations[i])
         self.bodyWin.refresh()
 
     def refreshNoPlayerBody(self, a_string):
@@ -333,36 +324,6 @@ class PyRadio(object):
             self.hWin.addstr(mheight - 1, int(mwidth-len(prompt)-1), prompt)
         self.hWin.refresh()
 
-    def _read_playlists(self, force=False):
-        if force is True:
-            self.playlists = []
-        if self.playlists == []:
-            files = glob.glob(join(self.cnf.stations_dir, '*.csv'))
-            for a_file in files:
-                a_file_name = basename(a_file).replace('.csv', '')
-                a_file_size = self._bytes_to_human(getsize(a_file))
-                a_file_time = ctime(getmtime(a_file))
-                self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
-
-    def _bytes_to_human(self, B):
-        ''' Return the given bytes as a human friendly KB, MB, GB, or TB string '''
-        KB = float(1024)
-        MB = float(KB ** 2) # 1,048,576
-        GB = float(KB ** 3) # 1,073,741,824
-        TB = float(KB ** 4) # 1,099,511,627,776
-
-        if B < KB:
-            return '{0} {1}'.format(B,'Bytes' if 0 == B > 1 else 'Byte')
-        B = float(B)
-        if KB <= B < MB:
-            return '{0:.2f} KB'.format(B/KB)
-        elif MB <= B < GB:
-            return '{0:.2f} MB'.format(B/MB)
-        elif GB <= B < TB:
-            return '{0:.2f} GB'.format(B/GB)
-        elif TB <= B:
-            return '{0:.2f} TB'.format(B/TB)
-
     def _format_playlist_line(self, lineNum, pad, station):
         """ format playlist line so that if fills self.maxX """
         line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
@@ -471,9 +432,10 @@ class PyRadio(object):
             if char in (curses.KEY_EXIT, ord('q'), 27):
                 if self.operation_mode == PLAYLIST_MODE:
                     """ return to stations view """
-                    self.selections[self.operation_mode] = (self.selection, self.startPos, self.playlists)
+                    self.jumpnr = ''
+                    self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
                     self.operation_mode = NORMAL_MODE
-                    self.selection, self.startPos, self.stations = self.selections[self.operation_mode]
+                    self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
                     self.stations = self.cnf.stations
                     self.refreshBody()
                     if logger.isEnabledFor(logging.DEBUG):
@@ -533,10 +495,11 @@ class PyRadio(object):
                     """ open playlist """
                     txt = '''Reading playlists. Please wait...'''
                     self._show_help(txt, NORMAL_MODE, caption=' ', prompt=' ')
-                    self.selections[self.operation_mode] = (self.selection, self.startPos, self.cnf.stations)
+                    self.jumpnr = ''
+                    self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
                     self.operation_mode = PLAYLIST_MODE
-                    self.selection, self.startPos, self.stations = self.selections[self.operation_mode]
-                    self._read_playlists()
+                    self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
+                    self.playing = self.cnf.read_playlists()
                     self.refreshBody()
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('MODE: NORMAL_MODE -> PLAYLIST_MODE')
@@ -571,9 +534,9 @@ class PyRadio(object):
 
                 if char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
                     """ return to stations view """
-                    self.selections[self.operation_mode] = (self.selection, self.startPos, self.playlists)
+                    self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
                     self.operation_mode = NORMAL_MODE
-                    self.selection, self.startPos, self.stations = self.selections[self.operation_mode]
+                    self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
                     self.stations = self.cnf.stations
                     self.refreshBody()
                     if logger.isEnabledFor(logging.DEBUG):
@@ -584,20 +547,20 @@ class PyRadio(object):
                     """ read playlists from disk """
                     txt = '''Reading playlists. Please wait...'''
                     self._show_help(txt, PLAYLIST_MODE, caption=' ', prompt=' ')
-                    old_playlist = self.playlists[self.selection][0]
-                    self._read_playlists(force=True)
+                    old_playlist = self.cnf.playlists[self.selection][0]
+                    self.playing = self.cnf.read_playlists(force=True)
                     """ refresh reference """
-                    self.stations = self.playlists
+                    self.stations = self.cnf.playlists
                     old_found = False
-                    for i, a_playlist in enumerate(self.playlists):
+                    for i, a_playlist in enumerate(self.cnf.playlists):
                         if a_playlist[0] == old_playlist:
                             old_found = True
                             self.setStation(i)
                             break
                     if old_found is False:
-                        self.selections[self.operation_mode] = (0, 0, self.playlists)
+                        self.selections[self.operation_mode] = (0, 0, -1, self.cnf.playlists)
                     else:
-                        self.selections[self.operation_mode] = (self.selection, self.startPos, self.playlists)
+                        self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
                     self.refreshBody()
 
 
