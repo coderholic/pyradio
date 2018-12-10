@@ -1,50 +1,51 @@
-2018-12-08  s-n-g
+2018-12-10  s-n-g
 
-	* make sure config dir exists before doing anything with it
-	* ESCAPE now works for exit/cancel
-	* error_code renamed to operation_mode
+    * make sure config dir exists before doing anything with it
+    * make sure the playlist is valis (-s option)
+    * ESCAPE now works for exit/cancel
+    * error_code renamed to operation_mode
 
 2018-12-02  s-n-g
 
-	* Version 0.6.0
-	* PyRadio will not crash when no player found.
-	* PyRadio will only display station name and icy-title (if received)
-	* PyRadio version will include git revision when not on a git tag
-	  (i.e.not on a	release tag)
-	* Added '-u' option to specify player to use (or detection order)
-	* A help message can be displayed (shortcut '?' or '/')
-	* vlc will unmute on exit
-	* Volume value is displayed while changing
-	* Volume can be saved for mpv and mplayer (shortcut 'v')
-	* pyradio.log is always saved in home directory
-	* Both mpv and socat must be installed for mpv to be used as player
-	* Added man page, thanks to AUR package pyradio-git (not installed
-	  by default; it's up to the packagers to do it)
+    * Version 0.6.0
+    * PyRadio will not crash when no player found.
+    * PyRadio will only display station name and icy-title (if received)
+    * PyRadio version will include git revision when not on a git tag
+      (i.e.not on a release tag)
+    * Added '-u' option to specify player to use (or detection order)
+    * A help message can be displayed (shortcut '?' or '/')
+    * vlc will unmute on exit
+    * Volume value is displayed while changing
+    * Volume can be saved for mpv and mplayer (shortcut 'v')
+    * pyradio.log is always saved in home directory
+    * Both mpv and socat must be installed for mpv to be used as player
+    * Added man page, thanks to AUR package pyradio-git (not installed
+      by default; it's up to the packagers to do it)
 
 2013-04-03  stac47
 
-	* Version 0.5.1
-	* Fixed regression on bottom panel not updated in Python 3
-	* Support of VLC as the underlying player
-	* Probing the multimedia player available on the host system
+    * Version 0.5.1
+    * Fixed regression on bottom panel not updated in Python 3
+    * Support of VLC as the underlying player
+    * Probing the multimedia player available on the host system
 
 2013-03-16  stac47
 
-	* Version 0.5.0
-	* Fix compatibility issue with Python 3
+    * Version 0.5.0
+    * Fix compatibility issue with Python 3
 
 2012-08-31  klen
 
-	* Version 0.4.2
-	* Add '-p' option
+    * Version 0.4.2
+    * Add '-p' option
 
 2012-08-30  klen
 
-	* Version 0.4.1
-	* Fix user stations loading
+    * Version 0.4.1
+    * Fix user stations loading
 
 2012-08-29  klen
 
-	* Version 0.4.0
-	* Add console interface
-	* Published on pypi
+    * Version 0.4.0
+    * Add console interface
+    * Published on pypi
