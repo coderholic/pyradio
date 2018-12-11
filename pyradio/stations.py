@@ -159,21 +159,19 @@ class PyRadioStations(object):
             writter = csv.writer(cfgfile)
             writter.writerow(params)
 
-    def read_playlists(self, force=False):
-        if force is True:
-            self.playlists = []
-        if self.playlists == []:
-            self.selected_playlist = -1
-            files = glob.glob(path.join(self.stations_dir, '*.csv'))
-            if len(files) == 0:
-                return 0, -1
-            else:
-                for a_file in files:
-                    a_file_name = ''.join(path.basename(a_file).split('.')[:-1])
-                    a_file_size = self._bytes_to_human(path.getsize(a_file))
-                    a_file_time = ctime(path.getmtime(a_file))
-                    self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
-            self.playlists.sort()
+    def read_playlists(self):
+        self.playlists = []
+        self.selected_playlist = -1
+        files = glob.glob(path.join(self.stations_dir, '*.csv'))
+        if len(files) == 0:
+            return 0, -1
+        else:
+            for a_file in files:
+                a_file_name = ''.join(path.basename(a_file).split('.')[:-1])
+                a_file_size = self._bytes_to_human(path.getsize(a_file))
+                a_file_time = ctime(path.getmtime(a_file))
+                self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
+        self.playlists.sort()
         """ get already loaded playlist id """
         for i, a_playlist in enumerate(self.playlists):
             if a_playlist[-1] == self.stations_file:

@@ -375,8 +375,8 @@ class PyRadio(object):
         line += f_data
         return line
 
-    def read_playlists(self, force=False):
-        num_of_playlists, playing = self.cnf.read_playlists(force)
+    def read_playlists(self):
+        num_of_playlists, playing = self.cnf.read_playlists()
         if num_of_playlists == 0:
             txt = '''No playlists found!!!
 
@@ -585,6 +585,7 @@ class PyRadio(object):
                     self.operation_mode = PLAYLIST_MODE
                     self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
                     self.number_of_items, self.playing = self.read_playlists()
+                    self.stations = self.cnf.playlists
                     if self.number_of_items == 0:
                         return
                     else:
@@ -648,7 +649,7 @@ class PyRadio(object):
                     txt = '''Reading playlists. Please wait...'''
                     self._show_help(txt, PLAYLIST_MODE, caption=' ', prompt=' ')
                     old_playlist = self.cnf.playlists[self.selection][0]
-                    self.number_of_items, self.playing = self.read_playlists(force=True)
+                    self.number_of_items, self.playing = self.read_playlists()
                     if self.number_of_items == 0:
                         return
                     else:
