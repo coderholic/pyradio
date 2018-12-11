@@ -37,7 +37,7 @@ class PyRadioStations(object):
             except:
                 print('Error: Cannot create config directory: "{}"'.format(self.stations_dir))
                 sys.exit(1)
-        root_path = path.join(path.dirname(__file__), 'stations.csv')
+        self.root_path = path.join(path.dirname(__file__), 'stations.csv')
 
         """ If a station.csv file exitst, which is wrong,
             we rename it to stations.csv """
@@ -47,21 +47,7 @@ class PyRadioStations(object):
                 remove(path.join(self.stations_dir, 'station.csv'))
 
         self._move_old_csv(self.stations_dir)
-        self._check_stations_csv(self.stations_dir, root_path)
-
-        if stationFile:
-            if path.exists(stationFile) and path.isfile(stationFile):
-                self.previous_stations_file = self.stations_file
-                self.stations_file = path.abspath(stationFile)
-
-        if not self.stations_file:
-            for p in [path.join(self.stations_dir, 'pyradio.csv'),
-                      path.join(self.stations_dir, 'stations.csv'),
-                      root_path]:
-                if path.exists(p) and path.isfile(p):
-                    self.stations_file = p
-                    break
-        self.stations_filename_only = path.basename(self.stations_file)
+        self._check_stations_csv(self.stations_dir, self.root_path)
 
     def _move_old_csv(self, usr):
         """ if a ~/.pyradio files exists, relocate it in user
@@ -107,15 +93,19 @@ class PyRadioStations(object):
                """
         if stationFile:
             if path.exists(stationFile) and path.isfile(stationFile):
-                self.previous_stations_file = self.stations_file
-                self.stations_file = path.abspath(stationFile)
-                self.stations_filename_only = path.basename(self.stations_file)
+                pass
             else:
-                self.number_of_stations = -1
                 return -1
+        else:
+            for p in [path.join(self.stations_dir, 'pyradio.csv'),
+                      path.join(self.stations_dir, 'stations.csv'),
+                      self.root_path]:
+                if path.exists(p) and path.isfile(p):
+                    stationFile = p
+                    break
 
         self._reading_stations = []
-        with open(self.stations_file, 'r') as cfgfile:
+        with open(stationFile, 'r') as cfgfile:
             try:
                 for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                     if not row:
@@ -124,13 +114,19 @@ class PyRadioStations(object):
                     self._reading_stations.append((name, url))
             except:
                 self._reading_stations = []
-                self.number_of_stations = -1
                 return -1
         self.stations = list(self._reading_stations)
         self._reading_stations = []
+        self._get_playlist_elements(stationFile)
+        self.previous_stations_file = self.stations_file
         self._is_playlist_in_config_dir()
         self.number_of_stations = len(self.stations)
         return self.number_of_stations
+
+    def _get_playlist_elements(self, a_playlist):
+        self.stations_file = path.abspath(a_playlist)
+        self.stations_filename_only = path.basename(self.stations_file)
+        self.stations_filename_only_no_extension = ''.join(self.stations_filename_only.split('.')[:-1])
 
     def _bytes_to_human(self, B):
         ''' Return the given bytes as a human friendly KB, MB, GB, or TB string '''
@@ -173,7 +169,7 @@ class PyRadioStations(object):
                 return 0, -1
             else:
                 for a_file in files:
-                    a_file_name = path.basename(a_file).replace('.csv', '')
+                    a_file_name = ''.join(path.basename(a_file).split('.')[:-1])
                     a_file_size = self._bytes_to_human(path.getsize(a_file))
                     a_file_time = ctime(path.getmtime(a_file))
                     self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])

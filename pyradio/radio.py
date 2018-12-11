@@ -204,11 +204,11 @@ class PyRadio(object):
 
     def _print_body_header(self):
         if self.operation_mode == NORMAL_MODE:
-            w_header= ''.join(self.cnf.stations_filename_only.split('.')[:-1])
+            w_header = self.cnf.stations_filename_only_no_extension
             while len(w_header)> self.bodyMaxX - 14:
                 w_header = w_header[:-1]
             self.bodyWin.addstr(0,
-                    int((self.bodyMaxX - len(w_header)) / 2), '[',
+                    int((self.bodyMaxX - len(w_header)) / 2) - 1, '[',
                     curses.color_pair(5))
             self.bodyWin.addstr(w_header,curses.color_pair(4))
             self.bodyWin.addstr(']',curses.color_pair(5))
@@ -238,7 +238,6 @@ class PyRadio(object):
 
     def __displayBodyLine(self, lineNum, pad, station):
         col = curses.color_pair(5)
-
         if lineNum + self.startPos == self.selection and \
                 self.selection == self.playing:
             col = curses.color_pair(9)
@@ -251,7 +250,8 @@ class PyRadio(object):
             self.bodyWin.hline(lineNum + 1, 1, ' ', self.bodyMaxX - 2, col)
         if self.operation_mode == NORMAL_MODE:
             line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
-        elif self.operation_mode == PLAYLIST_MODE:
+        elif self.operation_mode == PLAYLIST_MODE or \
+                self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
             line = self._format_playlist_line(lineNum, pad, station)
         self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
@@ -392,6 +392,16 @@ class PyRadio(object):
                 logger.error('No playlists found!!!')
         return num_of_playlists, playing
 
+    def _print_playlist_loading_error(self):
+        txt ="""Playlist loading failed!
+
+        This means that either the file is corrupted,
+        or you are not permitted to access it.
+        """
+        self._show_help(txt, PLAYLIST_LOAD_ERROR_MODE,
+                caption = ' Error ',
+                prompt = ' Press any key ')
+
     def keypress(self, char):
         if char in (ord('#'), curses.KEY_RESIZE):
             cur_mode = self.operation_mode
@@ -401,7 +411,9 @@ class PyRadio(object):
                 cur_mode == PLAYLIST_HELP_MODE:
                     curses.ungetch('/')
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('sending "/"')
+                        logger.debug('Reopening help (sending "/")')
+            elif cur_mode == PLAYLIST_LOAD_ERROR_MODE:
+                self._print_playlist_loading_error()
             return
 
         # if no player, don't serve keyboard
@@ -426,12 +438,14 @@ class PyRadio(object):
                 logger.debug('MODE: MAIN_HELP_MODE -> NORMAL_MODE')
             return
 
-        elif self.operation_mode == PLAYLIST_HELP_MODE:
+        elif self.operation_mode == PLAYLIST_HELP_MODE or \
+                self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
             """ open playlist help """
             self.operation_mode = PLAYLIST_MODE
             self.refreshBody()
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: PLAYLIST_HELP_MODE -> PLAYLIST_MODE')
+                if self.operation_mode == PLAYLIST_HELP_MODE:
+                    logger.debug('MODE: PLAYLIST_HELP_MODE -> PLAYLIST_MODE')
             return
 
         else:
@@ -611,13 +625,15 @@ class PyRadio(object):
                     """ return to stations view """
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Loading playlist: {}'.format(self.stations[self.selection][-1]))
-                    self.number_of_items = self.cnf.read_playlist_file(self.stations[self.selection][-1])
-                    if self.number_of_items == -1:
+                    ret = self.cnf.read_playlist_file(self.stations[self.selection][-1])
+                    if ret == -1:
+                        self.stations = self.cnf.playlists
+                        self._print_playlist_loading_error()
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Error loading playlist: {}'.format(self.stations[self.selection][-1]))
-                        pass
-                        # TODO: ????
+                        return
                     else:
+                        self.number_of_items = ret
                         self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
                         self.operation_mode = NORMAL_MODE
                         self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
