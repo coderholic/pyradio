@@ -24,6 +24,8 @@ class PyRadioStations(object):
     selected_playlist = -1
     number_of_stations = -1
 
+    dirty = False
+
     def __init__(self, stationFile=''):
 
         if sys.platform.startswith('win'):
@@ -121,6 +123,7 @@ class PyRadioStations(object):
         self.previous_stations_file = self.stations_file
         self._is_playlist_in_config_dir()
         self.number_of_stations = len(self.stations)
+        self.dirty = False
         return self.number_of_stations
 
     def _get_playlist_elements(self, a_playlist):
@@ -147,7 +150,7 @@ class PyRadioStations(object):
         elif TB <= B:
             return '{0:.2f} TB'.format(B/TB)
 
-    def append(self, params, stationFile=''):
+    def append_station(self, params, stationFile=''):
         """ Append a station to csv file"""
 
         if stationFile:
@@ -158,6 +161,12 @@ class PyRadioStations(object):
         with open(st_file, 'a') as cfgfile:
             writter = csv.writer(cfgfile)
             writter.writerow(params)
+
+    def remove_station(self, a_station):
+        self.dirty = True
+        ret = self.stations.pop(a_station)
+        self.number_of_stations = len(self.stations)
+        return ret, self.number_of_stations
 
     def read_playlists(self):
         self.playlists = []

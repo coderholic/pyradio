@@ -60,7 +60,7 @@ def shell():
             params = raw_input("Enter the name: "), raw_input("Enter the url: ")
         else:
             params = input("Enter the name: "), input("Enter the url: ")
-        stations_cnf.append(params, args.stations)
+        stations_cnf.append_station(params, args.stations)
         sys.exit()
 
     ret = stations_cnf.read_playlist_file(args.stations)

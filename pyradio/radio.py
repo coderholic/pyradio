@@ -11,8 +11,7 @@ import curses
 import logging
 import os
 import random
-from sys import version as python_version
-from sys import version_info
+from sys import version as python_version, version_info
 from os.path import join, basename, getmtime, getsize
 from time import ctime
 
@@ -29,10 +28,11 @@ logger = logging.getLogger(__name__)
 NO_PLAYER_ERROR_MODE = -1
 NORMAL_MODE = 0
 PLAYLIST_MODE = 1
+REMOVE_STATION_MODE = 50
 MAIN_HELP_MODE = 100
 PLAYLIST_HELP_MODE = 101
-PLAYLIST_LOAD_ERROR_MODE = 102
-PLAYLIST_SCAN_ERROR_MODE = 103
+PLAYLIST_LOAD_ERROR_MODE = 200
+PLAYLIST_SCAN_ERROR_MODE = 201
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -205,11 +205,15 @@ class PyRadio(object):
 
     def _print_body_header(self):
         if self.operation_mode == NORMAL_MODE:
+            align = 1
             w_header = self.cnf.stations_filename_only_no_extension
+            if self.cnf.dirty:
+                align += 1
+                w_header = '*' + self.cnf.stations_filename_only_no_extension
             while len(w_header)> self.bodyMaxX - 14:
                 w_header = w_header[:-1]
             self.bodyWin.addstr(0,
-                    int((self.bodyMaxX - len(w_header)) / 2) - 1, '[',
+                    int((self.bodyMaxX - len(w_header)) / 2) - align, '[',
                     curses.color_pair(5))
             self.bodyWin.addstr(w_header,curses.color_pair(4))
             self.bodyWin.addstr(']',curses.color_pair(5))
@@ -249,7 +253,8 @@ class PyRadio(object):
         elif lineNum + self.startPos == self.playing:
             col = curses.color_pair(4)
             self.bodyWin.hline(lineNum + 1, 1, ' ', self.bodyMaxX - 2, col)
-        if self.operation_mode == NORMAL_MODE:
+        if self.operation_mode == NORMAL_MODE or \
+            self.operation_mode == REMOVE_STATION_MODE:
             line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
         elif self.operation_mode == PLAYLIST_MODE or \
                 self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
@@ -324,7 +329,8 @@ class PyRadio(object):
     def _show_help(self, txt,
                 mode_to_set=MAIN_HELP_MODE,
                 caption=' Help ',
-                prompt=' Press any key to hide '):
+                prompt=' Press any key to hide ',
+                too_small_msg='Window too small to show message'):
         self.operation_mode = mode_to_set
         txt_col = curses.color_pair(5)
         box_col = curses.color_pair(2)
@@ -336,7 +342,7 @@ class PyRadio(object):
         mwidth = len(max(lines, key=len)) + 4
 
         if self.maxY - 2 < mheight or self.maxX < mwidth:
-            txt="Window too small to show help..."
+            txt = too_small_msg
             mheight = 3
             mwidth = len(txt) + 4
             if self.maxX < mwidth:
@@ -418,6 +424,42 @@ class PyRadio(object):
                 caption = ' Error ',
                 prompt = ' Press any key ')
 
+    def _align_stations(self):
+        """ refresh reference """
+        self.stations = self.cnf.stations
+        self.selection = 0
+        self.startPos = 0
+        self.playing = -1
+        found = False
+        for i, a_station in enumerate(self.stations):
+            if a_station[0] == self.station_name:
+                self.selection = i
+                max_lines = self.maxY - 4
+                if self.selection > max_lines:
+                    if self.selection > len(self.stations) - max_lines:
+                        self.startPos = len(self.stations) - max_lines
+                    else:
+                        self.startPos = int(self.selection+1/max_lines) - int(max_lines/2)
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('new selection = {}'.format(self.selection))
+                if self.player.isPlaying():
+                    self.playing = self.selection
+                found = True
+                break
+        if found is False:
+            """ stop player """
+            self.player.close()
+            self.log.write('Playback stopped')
+
+    def _remove_station(self):
+        txt = '''Are you sure you want to delete station:
+        "{}"?
+
+        Press "y" to confirm
+        or any other key to cancel'''
+        self._show_help(txt.format(self.stations[self.selection][0]), 
+                REMOVE_STATION_MODE, caption = ' Station Deletion ', prompt = '')
+
     def keypress(self, char):
         if char in (ord('#'), curses.KEY_RESIZE):
             cur_mode = self.operation_mode
@@ -430,6 +472,11 @@ class PyRadio(object):
                         logger.debug('Reopening help (sending "/")')
             elif cur_mode == PLAYLIST_LOAD_ERROR_MODE:
                 self._print_playlist_loading_error()
+            elif cur_mode == REMOVE_STATION_MODE:
+                self._remove_station()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Reopening delete confirmation')
+                pass
             return
 
         # if no player, don't serve keyboard
@@ -462,6 +509,28 @@ class PyRadio(object):
             if logger.isEnabledFor(logging.DEBUG):
                 if self.operation_mode == PLAYLIST_HELP_MODE:
                     logger.debug('MODE: PLAYLIST_HELP_MODE -> PLAYLIST_MODE')
+            return
+
+        elif self.operation_mode == REMOVE_STATION_MODE:
+            if char == ord('y'):
+                deleted_station, self.number_of_items = self.cnf.remove_station(self.selection)
+                if self.player.isPlaying:
+                    if self.selection == self.playing:
+                        try:
+                            self.player.close()
+                        except:
+                            pass
+                        finally:
+                            self.playing = -1
+                            self.log.write('Playback stopped')
+                if self.selection == self.number_of_items:
+                    self.selection -= 1
+                    if self.startPos > 0:
+                        self.startPos -= 1
+            self.operation_mode = NORMAL_MODE
+            self.setupAndDrawScreen()
+            if self.operation_mode == PLAYLIST_HELP_MODE:
+                logger.debug('MODE: REMOVE_STATION_MODE -> NORMAL_MODE')
             return
 
         else:
@@ -610,7 +679,7 @@ class PyRadio(object):
                             logger.debug('MODE: NORMAL_MODE -> PLAYLIST_MODE')
                         return
 
-                if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                         curses.KEY_RIGHT, ord('l')):
                     if self.number_of_items > 0:
                         self.playSelection()
@@ -618,7 +687,7 @@ class PyRadio(object):
                         self.setupAndDrawScreen()
                     return
 
-                if char in (ord(' '), curses.KEY_LEFT, ord('h')):
+                elif char in (ord(' '), curses.KEY_LEFT, ord('h')):
                     if self.number_of_items > 0:
                         if self.player.isPlaying():
                             self.player.close()
@@ -626,6 +695,10 @@ class PyRadio(object):
                         else:
                             self.playSelection()
                         self.refreshBody()
+                    return
+
+                elif char in(ord('x'), curses.KEY_DC):
+                    self._remove_station()
                     return
 
                 if char in (ord('r'), ):
@@ -660,7 +733,7 @@ class PyRadio(object):
                             logger.debug('MODE: Cancel PLAYLIST_MODE -> NORMAL_MODE')
                     return
 
-                if char in (ord('r'), ):
+                elif char in (ord('r'), ):
                     """ read playlists from disk """
                     txt = '''Reading playlists. Please wait...'''
                     self._show_help(txt, PLAYLIST_MODE, caption=' ', prompt=' ')
@@ -676,32 +749,5 @@ class PyRadio(object):
                         else:
                             self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
                         self.refreshBody()
-
-    def _align_stations(self):
-        """ refresh reference """
-        self.stations = self.cnf.stations
-        self.selection = 0
-        self.startPos = 0
-        self.playing = -1
-        found = False
-        for i, a_station in enumerate(self.stations):
-            if a_station[0] == self.station_name:
-                self.selection = i
-                max_lines = self.maxY - 4
-                if self.selection > max_lines:
-                    if self.selection > len(self.stations) - max_lines:
-                        self.startPos = len(self.stations) - max_lines
-                    else:
-                        self.startPos = int(self.selection+1/max_lines) - int(max_lines/2)
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('new selection = {}'.format(self.selection))
-                if self.player.isPlaying():
-                    self.playing = self.selection
-                found = True
-                break
-        if found is False:
-            """ stop player """
-            self.player.close()
-            self.log.write('Playback stopped')
 
 # pymode:lint_ignore=W901
