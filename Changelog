@@ -1,7 +1,7 @@
 2018-12-10  s-n-g
 
     * make sure config dir exists before doing anything with it
-    * make sure the playlist is valis (-s option)
+    * make sure the playlist is valid (-s option)
     * ESCAPE now works for exit/cancel
     * error_code renamed to operation_mode
 

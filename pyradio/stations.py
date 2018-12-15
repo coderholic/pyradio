@@ -78,6 +78,16 @@ class PyRadioStations(object):
         else:
             copyfile(root, path.join(usr, 'stations.csv'))
 
+    def is_same_playlist(self, a_playlist):
+        """ Checks if a [laylist is already loaded """
+        if a_playlist == self.stations_file:
+            return True
+        else:
+            return False
+
+    def is_playlist_reloaded(self):
+        return self.is_same_playlist(self.previous_stations_file)
+
     def _is_playlist_in_config_dir(self):
         """ Check if a csv file is in the config dir """
         if path.dirname(self.stations_file) == self.stations_dir:
@@ -93,6 +103,7 @@ class PyRadioStations(object):
                 x  -  number of stations or
                -1  -  error
                """
+        prev_file = self.stations_file
         if stationFile:
             if path.exists(stationFile) and path.isfile(stationFile):
                 pass
@@ -120,7 +131,7 @@ class PyRadioStations(object):
         self.stations = list(self._reading_stations)
         self._reading_stations = []
         self._get_playlist_elements(stationFile)
-        self.previous_stations_file = self.stations_file
+        self.previous_stations_file = prev_file
         self._is_playlist_in_config_dir()
         self.number_of_stations = len(self.stations)
         self.dirty = False
