@@ -200,11 +200,13 @@ class PyRadio(object):
         maxDisplay = self.bodyMaxY - 1
         self._print_body_header()
         if self.number_of_items > 0:
+            pad = len(str(len(self.stations)))
             for lineNum in range(maxDisplay - 1):
                 i = lineNum + self.startPos
-                pad = len(str(len(self.stations)))
                 if i < len(self.stations):
                     self.__displayBodyLine(lineNum, pad, self.stations[i])
+                else:
+                    break
         self.bodyWin.refresh()
 
     def _print_body_header(self):
@@ -432,73 +434,100 @@ class PyRadio(object):
         """ refresh reference """
         self.stations = self.cnf.stations
 
-        old_selection = self.selection - 1
-        if self.player.isPlaying():
-            if self.stations:
-                """ The playlist is not empty """
-                if self.stations[self.playing][0] == self.active_stations[1][0]:
-                    """ ok, self.playing found, just find selection """
-                    self.selection = self._get_station_id(self.active_stations[0][0])
+        if not self.stations:
+            """ The playlist is empty """
+            if self.player.isPlaying():
+                self._stop_player()
+            self.playing,self.selection, self.stations, \
+                self.number_of_items = (-1, 0, 0, 0)
+            self.operation_mode = NORMAL_MODE
+            return
+        else:
+
+            if cur_mode == REMOVE_STATION_MODE:
+                self.number_of_items = len(self.stations)
+                if self.player.isPlaying():
+                    if self.selection == self.playing:
+                        self._stop_player()
+                        self.playing = -1
+                    elif self.selection < self.playing:
+                        self.playing -= 1
                 else:
-                    """ station playing id changed, try previous station """
-                    self.playing -= 1
+                    self.playing = -1
+
+                if self.selection >= self.number_of_items:
+                    self.selection -= 1
+                    logger.debug('selection - 1: {}'.format(self.selection))
+                    logger.debug('startPos: {}'.format(self.startPos))
+                    self.startPos = self.number_of_items - self.maxY + 4
+                    if self.startPos < 0:
+                        self.startPos = 0
+                    logger.debug('startPos: {}'.format(self.startPos))
+                else:
+                    """ is selection visible? """
+                    pass
+                    # TODO
+                #while self.startPos + self.maxY > self.number_of_items:
+                #    self.startPos -= 1
+                #    if self.startPos > self.number_of_items:
+                #        self.startPos = self.number_of_items
+                #        break
+            else:
+                old_selection = self.selection - 1
+
+                if self.player.isPlaying():
+                    """ The playlist is not empty """
                     if self.stations[self.playing][0] == self.active_stations[1][0]:
                         """ ok, self.playing found, just find selection """
                         self.selection = self._get_station_id(self.active_stations[0][0])
                     else:
-                        """ self.playing still not found, have to scan playlist """
-                        self.selection, self.playing = self._get_stations_ids((
-                            self.active_stations[0][0],
-                            self.active_stations[1][0]))
-                        if self.playing == -1:
-                            self._stop_player()
-            else:
-                """ The playlist is empty """
-                self._stop_player()
-                self.playing,self.selection, self.stations, \
-                    self.number_of_items = (-1, 0, 0, 0)
-                self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
-                self.refreshBody()
-                return
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('self.playing = {}'.format(self.playing))
+                        """ station playing id changed, try previous station """
+                        self.playing -= 1
+                        if self.stations[self.playing][0] == self.active_stations[1][0]:
+                            """ ok, self.playing found, just find selection """
+                            self.selection = self._get_station_id(self.active_stations[0][0])
+                        else:
+                            """ self.playing still not found, have to scan playlist """
+                            self.selection, self.playing = self._get_stations_ids((
+                                self.active_stations[0][0],
+                                self.active_stations[1][0]))
+                            if self.playing == -1:
+                                self._stop_player()
 
-        if cur_mode == NORMAL_MODE:
-            """ Reloading playlist """
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('playlist reloaded')
-            # TODO
-            if self.player.isPlaying():
-                pass
-            else:
-                self.playing = -1
-        elif cur_mode == REMOVE_STATION_MODE:
-            if old_selection < 0:
-                old_selection = 0
-                self.selection = old_selection
-            # TODO
-        elif cur_mode == PLAYLIST_MODE:
-            """ Opening another playlist """
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('new playlist')
-            if self.player.isPlaying():
-                self.selection = self.playing
-                self.startPos = 0
-                max_lines = self.maxY - 4
-                #logger.debug('self.playing = {}'.format(self.playing))
-                if self.selection >= max_lines:
-                    if self.selection > len(self.stations) - max_lines:
-                        self.startPos = len(self.stations) - max_lines
-                        logger.debug('1')
-                    else:
-                        self.startPos = int(self.selection+1/max_lines) - int(max_lines/2)
-                        logger.debug('2')
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('new selection = {}'.format(self.selection))
-                pass
-            else:
-                self.selection = 0
-                self.startPos = 0
+                    logger.debug('self.playing = {}'.format(self.playing))
+
+                if cur_mode == NORMAL_MODE:
+                    """ Reloading playlist """
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('playlist reloaded')
+                    # TODO
+                    if self.player.isPlaying():
+                        pass
+                    else:
+                        self.playing = -1
+                elif cur_mode == PLAYLIST_MODE:
+                    """ Opening another playlist """
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('new playlist')
+                    if self.player.isPlaying():
+                        self.selection = self.playing
+                        self.startPos = 0
+                        max_lines = self.maxY - 4
+                        #logger.debug('self.playing = {}'.format(self.playing))
+                        if self.selection >= max_lines:
+                            if self.selection > len(self.stations) - max_lines:
+                                self.startPos = len(self.stations) - max_lines
+                                logger.debug('1')
+                            else:
+                                self.startPos = int(self.selection+1/max_lines) - int(max_lines/2)
+                                logger.debug('2')
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('new selection = {}'.format(self.selection))
+                        pass
+                    else:
+                        self.selection = 0
+                        self.startPos = 0
 
         self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
         if logger.isEnabledFor(logging.DEBUG):
@@ -539,7 +568,7 @@ class PyRadio(object):
                 pass
             finally:
                 self.playing = -1
-                self.log.write('Playback stopped ({})'.format(self._format_player_string()))
+                self.log.write('{}: Playback stopped'.format(self._format_player_string()))
                 #self.log.write('Playback stopped')
 
     def _remove_station(self):
@@ -805,7 +834,8 @@ class PyRadio(object):
                     return
 
                 elif char in(ord('x'), curses.KEY_DC):
-                    self._remove_station()
+                    if self.number_of_items > 0:
+                        self._remove_station()
                     return
 
                 elif char in (ord('r'), ):

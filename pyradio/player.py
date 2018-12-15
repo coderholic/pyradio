@@ -343,7 +343,7 @@ class MpvPlayer(Player):
 
     """ items of this tupple are considered icy-title
         and get displayed after first icy-title is received """
-    icy_tokkens = ('icy-title: ', 'Exiting... (Quit)')
+    icy_tokkens = ('icy-title: ', )
 
     """ USE_PROFILE
     -1 : not checked yet
@@ -461,7 +461,7 @@ class MpPlayer(Player):
 
     """ items of this tupple are considered icy-title
         and get displayed after first icy-title is received """
-    icy_tokkens = ('ICY Info:', 'Exiting... (Quit)')
+    icy_tokkens = ('ICY Info:', )
 
     """ USE_PROFILE
     -1 : not checked yet
@@ -561,7 +561,7 @@ class VlcPlayer(Player):
 
     """ items of this tupple are considered icy-title
         and get displayed after first icy-title is received """
-    icy_tokkens = ('New Icy-Title=', 'Exiting... (Quit)')
+    icy_tokkens = ('New Icy-Title=', )
 
     muted = False
 
