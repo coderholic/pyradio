@@ -65,7 +65,7 @@ def shell():
 
     ret = stations_cnf.read_playlist_file(args.stations)
     if ret == -1:
-        print('Error loading playlist: "{}"'.format(stations_cnf.stations_file))
+        print('Error loading playlist: "{}"'.format(args.stations))
         sys.exit(1)
 
     if args.list:

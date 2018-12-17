@@ -104,18 +104,27 @@ class PyRadioStations(object):
                -1  -  error
                """
         prev_file = self.stations_file
+        ret = -1
         if stationFile:
-            if path.exists(stationFile) and path.isfile(stationFile):
-                pass
-            else:
-                return -1
+            try_files = [ stationFile ]
+            if not stationFile.endswith('.csv'):
+                stationFile += '.csv'
+            try_files.append(path.join(self.stations_dir, stationFile))
+            for stationFile in try_files:
+                if path.exists(stationFile) and path.isfile(stationFile):
+                    ret = 0
+                    break
         else:
             for p in [path.join(self.stations_dir, 'pyradio.csv'),
                       path.join(self.stations_dir, 'stations.csv'),
                       self.root_path]:
                 if path.exists(p) and path.isfile(p):
                     stationFile = p
+                    ret = 0
                     break
+
+        if ret == -1:
+            return -1
 
         self._reading_stations = []
         with open(stationFile, 'r') as cfgfile:
