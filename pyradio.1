@@ -14,7 +14,7 @@ pyradio \- a curses Internet radio player.
 .SH DESCRIPTION
 .PP
 .B pyradio
-is a command line Internet radio player based on curses, that uses external media players to perform the actual playback. 
+is a command line Internet radio player based on curses, that uses external media players to perform the actual playback.
 .PP
 It currently supports the following players: \fIMPV\fR, \fIMPlayer\fR and \fIVLC\fR.
 
@@ -24,38 +24,40 @@ It currently supports the following players: \fIMPV\fR, \fIMPlayer\fR and \fIVLC
 Use specified station CSV file.
 .IP \fB-p\fR,\fB\ \--play\ \fR\<\fIPLAY\fR\>
 Play station number \fR\<\fIPLAY\fR\>. Select randome station if \fR\<\fIPLAY\fR\> not specified.
-.IP \fB-a\fR,\fB\ \--add             
+.IP \fB-a\fR,\fB\ \--add
 Add station to list.
-.IP \fB-l\fR,\fB\ \--list            
+.IP \fB-ls\fR,\fB\ \--list-playlists
+List of available playlists in config dir.
+.IP \fB-l\fR,\fB\ \--list
 List of added stations.
 .IP \fB-u\fR,\fB\ \--use-player\ \fR[\fIUSE_PLAYER\fR]
 Specify which player to use (\fImpv\fR,\ \fImplayer\fR\ or\ \fIvlc\fR). A comma-separated list of players can be givven, thus specifying detection order.
-.IP \fB-d\fR,\fB\ \--debug           
+.IP \fB-d\fR,\fB\ \--debug
 Enable \fBDEBUG MODE\fR.
-.IP \fB-h\fR,\fB\ \--help            
+.IP \fB-h\fR,\fB\ \--help
 Show usage information and exit.
 
 .SH CONTROLS
 
-.IP \fBUp\fR/\fBDown\fR/\fBPgUp\fR/\fBPgDown     
+.IP \fBUp\fR/\fBDown\fR/\fBPgUp\fR/\fBPgDown
 Change station selection
 .IP \fBj\fR/\fBk
 Change station selection (vi-like)
 .IP \fBEnter\fR/\fBRight\fR/\fBl
 Play selected station
-.IP \fBr                       
+.IP \fBr
 Select and play a random station
-.IP \fBSpace\fR/\fBLeft\fR/\fBh     
+.IP \fBSpace\fR/\fBLeft\fR/\fBh
 Stop/start playing selected station
-.IP \fB-\fR/\fB+\fR\ or\ \fB,\fR/\fB.             
+.IP \fB-\fR/\fB+\fR\ or\ \fB,\fR/\fB.
 Change volume
-.IP \fBm                       
+.IP \fBm
 Mute
 .IP \fBv
 Save volume (\fIMPV\fR and \fIMPlayer\fR only)
 .IP \fB?\fR\ or\ \fB/
 Show keys help
-.IP \fBEsc\fR/\fBq                   
+.IP \fBEsc\fR/\fBq
 Quit
 
 .SH STATIONS FILE
@@ -143,11 +145,13 @@ In case of a bug or a glitch, please include this file to the issue you will ope
 
 .SH FILES
 .PP
-.I /usr/share/doc/pyradio/stations.csv
-
 .I /usr/share/doc/pyradio/README.md
 
 .I /usr/share/doc/pyradio/README.html
+
+.I /usr/share/doc/pyradio/build.md
+
+.I /usr/share/doc/pyradio/build.html
 
 .I /usr/share/licenses/pyradio/LICENSE
 

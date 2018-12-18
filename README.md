@@ -32,7 +32,7 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 ```
 $ pyradio -h
 
-usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-a] [-l] [-d] [-u USE_PLAYER]
+usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-a] [-ls] [-l] [-d] [-u USE_PLAYER]
 
 Curses based Internet radio player
 
@@ -44,6 +44,7 @@ optional arguments:
                         Start and play.The value is num station or empty for
                         random.
   -a, --add             Add station to list.
+  -ls, --list-playlists List of available playlists.
   -l, --list            List of added stations.
   -d, --debug           Start pyradio in debug mode.
   -u USE_PLAYER, --use-player USE_PLAYER

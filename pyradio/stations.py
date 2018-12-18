@@ -208,4 +208,9 @@ class PyRadioStations(object):
                 break
         return len(self.playlists), self.selected_playlist
 
-
+    def list_playlists(self):
+        print('Playlists found in "{}"'.format(self.stations_dir))
+        num_of_playlists, selected_playlist = self.read_playlists()
+        pad = len(str(len(self.playlists)))
+        for i, a_playlist in enumerate(self.playlists):
+            print('  {0}. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))

@@ -38,6 +38,8 @@ def shell():
                         "The value is num station or empty for random.")
     parser.add_argument("-a", "--add", action='store_true',
                         help="Add station to list.")
+    parser.add_argument("-ls", "--list-playlists", action='store_true',
+                        help="List of available playlists in config dir.")
     parser.add_argument("-l", "--list", action='store_true',
                         help="List of added stations.")
     parser.add_argument("-d", "--debug", action='store_true',
@@ -68,9 +70,13 @@ def shell():
         print('Error loading playlist: "{}"'.format(args.stations))
         sys.exit(1)
 
+    if args.list_playlists:
+        stations_cnf.list_playlists()
+        sys.exit()
+
     if args.list:
         for name, url in stations_cnf.stations:
-            print(('{0:50s} {1:s}'.format(name, url)))
+            print(('{0:50.50s} {1:s}'.format(name, url)))
         sys.exit()
 
     if args.debug:
