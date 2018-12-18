@@ -103,6 +103,7 @@ class PyRadioStations(object):
                 x  -  number of stations or
                -1  -  error
                """
+        orig_input = stationFile
         prev_file = self.stations_file
         ret = -1
         if stationFile:
@@ -124,7 +125,18 @@ class PyRadioStations(object):
                     break
 
         if ret == -1:
-            return -1
+            if orig_input.isdigit():
+                """ Check if playlist number was specified """
+                sel = int(orig_input) - 1
+                if sel < 0:
+                    return -1
+                n, f = self.read_playlists()
+                if sel <= n-1:
+                    stationFile=self.playlists[sel][-1]
+                else:
+                    return -1
+            else:
+                return -1
 
         self._reading_stations = []
         with open(stationFile, 'r') as cfgfile:
@@ -211,6 +223,6 @@ class PyRadioStations(object):
     def list_playlists(self):
         print('Playlists found in "{}"'.format(self.stations_dir))
         num_of_playlists, selected_playlist = self.read_playlists()
-        pad = len(str(len(self.playlists)))
+        pad = len(str(num_of_playlists))
         for i, a_playlist in enumerate(self.playlists):
             print('  {0}. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
