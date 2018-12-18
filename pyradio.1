@@ -60,7 +60,7 @@ Show keys help
 .IP \fBEsc\fR/\fBq
 Quit
 
-.SH STATIONS FILE
+.SH ABOUT PLAYLIST FILES
 .PP
 \fBpyradio\fR reads the stations to use from a CSV file (named \fIstations.csv\fR), where each line contains two columns, the first being the station name and the second being the stream URL.
 .PP
@@ -68,11 +68,59 @@ Quit
 
 .IP \fBTip:
 If you already have a custom \fIstations.csv\fR file, but want to update it with \fBpyradio\fR's default one, you just rename it, run \fBpyradio\fR (so that the default one get created) and then merge the two files.
-.PP
-A different file can be used when the \fB-s\fR command line option is used.
 
 .IP \fBNote:
 Older versions used to use \fI~/.pyradio\fR as default stations file. If this file is found, it will be copied to use's config directory (e.g. \fI~/.config/pyradio\fR) and renamed to \fIstations.csv\fR or if this file exists, to \fIpyradio.csv\fR. In this case, this file will be the default one.
+
+.PP
+\fBSpecifying\ a\ stations\ file\ (command\ line)
+
+.PP
+\fBpyradio\fR will normally load its default playlist file, as described above, upon its execution. A different file can be loaded when the \fI-s\fR command line option is used.
+
+.PP
+The \fI-s\fR option will accept:
+
+.HP
+
+\fI*\fR a relative or absolute file name.
+
+\fI*\fR the name of a playlist file which is already in its configuration directory.
+
+\fI*\fR the number of a playlist file, as provided by the \fI-ls\fR command line option.
+
+.PP
+\fBExamples:\fR
+
+.HP
+To load a playlist called "\fIblues.csv\fR", one would use the command:
+
+.RS 5
+\fBpyradio -s /path/to/\fIblues.csv\fR
+
+.RE
+If this file was saved inside \fBpyradio\fR's configuration directory, one could use the following command:
+
+.RS 5
+\fBpyradio -s \fIblues\fR
+
+.RE
+To use the playlist number, one would execute the commands:
+
+.RS 5
+
+\fB$ pyradio -ls
+
+Playlists found in "/home/user/.config/pyradio"
+  1. hip-hop
+  2. party
+  3. stations
+  4. huge
+  \fI5. blues\fB
+  6. rock
+  7. pop
+
+$ pyradio -s \fI5\fR
 
 .SH PLAYER DETECTION / SELECTION
 .PP

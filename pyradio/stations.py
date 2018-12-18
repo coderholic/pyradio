@@ -125,15 +125,17 @@ class PyRadioStations(object):
                     break
 
         if ret == -1:
+            """ Check if playlist number was specified """
             if orig_input.isdigit():
-                """ Check if playlist number was specified """
                 sel = int(orig_input) - 1
                 if sel < 0:
+                    """ negative playlist number """
                     return -1
                 n, f = self.read_playlists()
                 if sel <= n-1:
                     stationFile=self.playlists[sel][-1]
                 else:
+                    """ playlist number sel does not exit """
                     return -1
             else:
                 return -1
@@ -149,6 +151,7 @@ class PyRadioStations(object):
             except:
                 self._reading_stations = []
                 return -1
+
         self.stations = list(self._reading_stations)
         self._reading_stations = []
         self._get_playlist_elements(stationFile)

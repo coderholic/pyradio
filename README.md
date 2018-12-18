@@ -10,7 +10,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Installation](#installation)
 * [Command line options](#command-line-options)
 * [Controls](#controls)
-* [Stations file](#stations-file)
+* [About Playlist files](#about-playlist-files)
 * [Player detection / selection](#player-detection-selection)
 * [Player default volume level](#player-default-volume-level)
 * [Debug mode](#debug-mode)
@@ -44,7 +44,7 @@ optional arguments:
                         Start and play.The value is num station or empty for
                         random.
   -a, --add             Add station to list.
-  -ls, --list-playlists List of available playlists.
+  -ls, --list-playlists List of available playlists in config dir.
   -l, --list            List of added stations.
   -d, --debug           Start pyradio in debug mode.
   -u USE_PLAYER, --use-player USE_PLAYER
@@ -69,17 +69,55 @@ v                         Save volume (not applicable for vlc).
 Esc/q                     Quit.
 ```
 
-## Stations file
+## About Playlist files
 
 **PyRadio** reads the stations to use from a CSV file (named *stations.csv*), where each line contains two columns, the first being the station name and the second being the stream URL.
 
-**PyRadio** will by default use the user's configuration file (e.g. *~/.config/pyradio/stations.csv*) to read the stations. If this file is not found, it will be created and populated with a default set of stations.
+**PyRadio** will by default use the user's configuration file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
 
 **Tip:** If you already have a custom *stations.csv* file, but want to update it with **PyRadio**'s default one, you just rename it, run **PyRadio** (so that the default one get created) and then merge the two files.
 
-A different file can be used when the **-s** command line option is used.
 
 **Note:** Older versions used to use ***~/.pyradio*** as default stations file. If this file is found, it will be copied to use's config directory (e.g. ***~/.config/pyradio***) and renamed to ***stations.csv*** or if this file exists, to ***pyradio.csv***. In this case, this file will be the default one.
+
+### Specifying a stations file (command line)
+
+**PyRadio** will normally load its default playlist file, as described above, upon its execution. A different file can be loaded when the **-s** command line option is used.
+
+The ***-s*** option will accept:
+
+* a relative or absolute file name.
+* the name of a playlist file which is already in its configuration directory.
+* the number of a playlist file, as provided by the ***-ls*** command line option.
+
+Examples:
+
+To load a playlist called "***blues.csv***", one would use the command:
+
+```
+pyradio -s /path/to/blues.csv
+```
+
+If this file was saved inside ***PyRadio***'s configuration directory, one could use the following command:
+
+```
+pyradio -s blues
+```
+
+To use the playlist number, one would execute the commands:
+
+```
+$ pyradio -ls
+Playlists found in "/home/user/.config/pyradio"
+  1. hip-hop
+  2. party
+  3. stations
+  4. huge
+  5. blues
+  6. rock
+  7. pop
+$ pyradio -s 5
+```
 
 ## Player detection / selection
 
