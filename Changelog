@@ -1,8 +1,9 @@
-2018-12-10  s-n-g
+2018-12-18  s-n-g
 
     * make sure config dir exists before doing anything with it
     * make sure the playlist is valid (-s option)
     * ESCAPE now works for exit/cancel
+	* ESCDELAY set to 25ms. Refer to https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses for more info
     * error_code renamed to operation_mode
 
 2018-12-02  s-n-g

@@ -2,7 +2,7 @@ import sys
 import curses
 import logging
 from argparse import ArgumentParser
-from os import path, getenv
+from os import path, getenv, environ
 
 from .radio import PyRadio
 from .stations import PyRadioStations
@@ -81,6 +81,9 @@ def shell():
     # Starts the radio gui.
     #pyradio = PyRadio(stations, play=args.play, req_player=requested_player)
     pyradio = PyRadio(stations_cnf, play=args.play, req_player=requested_player)
+    """ Setting ESCAPE key delay to 25ms
+    Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses"""
+    environ.setdefault('ESCDELAY', '25')
     curses.wrapper(pyradio.setup)
 
 
