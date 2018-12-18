@@ -56,6 +56,8 @@ class PyRadio(object):
         we mark it as selected """
     active_stations = [ [ '', 0 ], [ '', -1 ] ]
 
+    confirm_station_deletion = True
+
     # Number of stations to change with the page up/down keys
     pageChange = 5
 
@@ -443,9 +445,10 @@ class PyRadio(object):
             self.operation_mode = NORMAL_MODE
             return
         else:
+            self.number_of_items = len(self.stations)
 
             if cur_mode == REMOVE_STATION_MODE:
-                self.number_of_items = len(self.stations)
+                """ Remove selected station """
                 if self.player.isPlaying():
                     if self.selection == self.playing:
                         self._stop_player()
@@ -455,26 +458,13 @@ class PyRadio(object):
                 else:
                     self.playing = -1
 
-                if self.selection >= self.number_of_items:
-                    self.selection -= 1
-                    logger.debug('selection - 1: {}'.format(self.selection))
-                    logger.debug('startPos: {}'.format(self.startPos))
-                    self.startPos = self.number_of_items - self.maxY + 4
-                    if self.startPos < 0:
-                        self.startPos = 0
-                    logger.debug('startPos: {}'.format(self.startPos))
-                else:
-                    """ is selection visible? """
-                    pass
-                    # TODO
-                #while self.startPos + self.maxY > self.number_of_items:
-                #    self.startPos -= 1
-                #    if self.startPos > self.number_of_items:
-                #        self.startPos = self.number_of_items
-                #        break
+                if self.selection > self.number_of_items - self.bodyMaxY:
+                    self.startPos -= 1
+                    if self.selection >= self.number_of_items:
+                        self.selection -= 1
+                if self.startPos < 0:
+                    self.startPos = 0
             else:
-                old_selection = self.selection - 1
-
                 if self.player.isPlaying():
                     """ The playlist is not empty """
                     if self.stations[self.playing][0] == self.active_stations[1][0]:
@@ -572,13 +562,17 @@ class PyRadio(object):
                 #self.log.write('Playback stopped')
 
     def _remove_station(self):
-        txt = '''Are you sure you want to delete station:
-        "{}"?
+        if self.confirm_station_deletion:
+            txt = '''Are you sure you want to delete station:
+            "{}"?
 
-        Press "y" to confirm
-        or any other key to cancel'''
-        self._show_help(txt.format(self.stations[self.selection][0]),
-                REMOVE_STATION_MODE, caption = ' Station Deletion ', prompt = '')
+            Press "y" to confirm, "Y" to confirm and not
+            be asked again, or any other key to cancel'''
+            self._show_help(txt.format(self.stations[self.selection][0]),
+                    REMOVE_STATION_MODE, caption = ' Station Deletion ', prompt = '')
+        else:
+            self.operation_mode = REMOVE_STATION_MODE
+            curses.ungetch('y')
 
     def reload_current_playlist(self):
         playing = self.playing
@@ -656,17 +650,13 @@ class PyRadio(object):
             return
 
         elif self.operation_mode == REMOVE_STATION_MODE:
-            if char == ord('y'):
+            if char in (ord('y'), ord('Y')):
                 self._get_active_stations()
                 deleted_station, self.number_of_items = self.cnf.remove_station(self.selection)
                 self.operation_mode = NORMAL_MODE
                 self._align_stations_and_refresh(REMOVE_STATION_MODE)
-                #if self.player.isPlaying:
-                #    self._stop_player()
-                #if self.selection == self.number_of_items:
-                #    self.selection -= 1
-                #    if self.startPos > 0:
-                #        self.startPos -= 1
+                if char == ord('Y'):
+                    self.confirm_station_deletion = False
             self.operation_mode = NORMAL_MODE
             self.setupAndDrawScreen()
             if self.operation_mode == PLAYLIST_HELP_MODE:
