@@ -65,6 +65,8 @@ Space/Left/h              Stop/start playing selected station.
 -/+ or ,/.                Change volume.
 m                         Mute.
 v                         Save volume (not applicable for vlc).
+o                         Open playlist.
+DEL,x                     Delete selected station.
 ?,/                       Show keys help.
 Esc/q                     Quit.
 ```
@@ -80,7 +82,7 @@ Esc/q                     Quit.
 
 **Note:** Older versions used to use ***~/.pyradio*** as default stations file. If this file is found, it will be copied to use's config directory (e.g. ***~/.config/pyradio***) and renamed to ***stations.csv*** or if this file exists, to ***pyradio.csv***. In this case, this file will be the default one.
 
-### Specifying a stations file (command line)
+### Specifying a playlist to load (command line)
 
 **PyRadio** will normally load its default playlist file, as described above, upon its execution. A different file can be loaded when the **-s** command line option is used.
 

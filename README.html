@@ -80,6 +80,8 @@ Space/Left/h              Stop/start playing selected station.
 -/+ or ,/.                Change volume.
 m                         Mute.
 v                         Save volume (not applicable for vlc).
+o                         Open playlist.
+DEL,x                     Delete selected station.
 ?,/                       Show keys help.
 Esc/q                     Quit.</pre>
 <h2 id="about-playlist-files">About Playlist files</h2>
@@ -87,7 +89,7 @@ Esc/q                     Quit.</pre>
 <p><strong>PyRadio</strong> will by default use the user’s configuration file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2em;"><strong>Tip:</strong> If you already have a custom <em>stations.csv</em> file, but want to update it with <strong>PyRadio</strong>’s default one, you just rename it, run <strong>PyRadio</strong> (so that the default one get created) and then merge the two files.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong><em>~/.pyradio</em></strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong><em>~/.config/pyradio</em></strong>) and renamed to <strong><em>stations.csv</em></strong> or if this file exists, to <strong><em>pyradio.csv</em></strong>. In this case, this file will be the default one.</p>
-<h3 id="specifying-a-stations-file-command-line">Specifying a stations file (command line)</h3>
+<h3 id="specifying-a-playlist-to-load-command-line">Specifying a playlist to load (command line)</h3>
 <p><strong>PyRadio</strong> will normally load its default playlist file, as described above, upon its execution. A different file can be loaded when the <strong>-s</strong> command line option is used.</p>
 <p>The <strong><em>-s</em></strong> option will accept:</p>
 <ul>
