@@ -29,12 +29,15 @@ NO_PLAYER_ERROR_MODE = -1
 NORMAL_MODE = 0
 PLAYLIST_MODE = 1
 REMOVE_STATION_MODE = 50
+SAVE_PLAYLIST_MODE = 51
 MAIN_HELP_MODE = 100
 PLAYLIST_HELP_MODE = 101
 PLAYLIST_LOAD_ERROR_MODE = 200
 PLAYLIST_RELOAD_ERROR_MODE = 201
 PLAYLIST_RELOAD_CONFIRM_MODE = 202
 PLAYLIST_SCAN_ERROR_MODE = 203
+SAVE_PLAYLIST_ERROR_1_MODE = 204
+SAVE_PLAYLIST_ERROR_2_MODE = 205
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -270,7 +273,9 @@ class PyRadio(object):
         if self.operation_mode == NORMAL_MODE or \
             self.operation_mode == REMOVE_STATION_MODE or \
             self.operation_mode == PLAYLIST_RELOAD_ERROR_MODE or \
-            self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
+            self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE or \
+            self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE or \
+            self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE:
             line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
         elif self.operation_mode == PLAYLIST_MODE or \
                 self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
@@ -364,6 +369,17 @@ class PyRadio(object):
             curses.ungetch('y')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = Auto REMOVE_STATION_MODE')
+
+    def saveCurrentPlaylist(self, stationFile =''):
+        ret = self.cnf.save_playlist_file(stationFile)
+        if ret == 0:
+            self.refreshBody()
+        elif ret == -1:
+            self._print_save_playlist_error_1()
+        elif ret == -2:
+            self._print_save_playlist_error_2()
+        if ret < 0 and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Error saving playlist: "{}"'.format(self.cnf.stations_file))
 
     def reloadCurrentPlaylist(self):
         if logger.isEnabledFor(logging.DEBUG):
@@ -532,6 +548,28 @@ class PyRadio(object):
                 caption = ' Playlist Reload ',
                 prompt = ' ')
 
+    def _print_save_playlist_error_1(self):
+        txt = '''Saving current playlist failed!
+
+            Could not open file for writing
+            "{}"
+            '''
+        self._show_help(txt.format(self.cnf.stations_file.replace('.csv', '.txt')), 
+                mode_to_set = SAVE_PLAYLIST_ERROR_1_MODE,
+                caption = ' Error ',
+                prompt = ' Press any key ')
+
+    def _print_save_playlist_error_2(self):
+        txt = '''Saving current playlist failed!
+
+            You will find a copy of the saved playlist in
+            "{}"
+            '''
+        self._show_help(txt.format(self.cnf.stations_file.replace('.csv', '.txt')), 
+                mode_to_set = SAVE_PLAYLIST_ERROR_2_MODE,
+                caption = ' Error ',
+                prompt = ' Press any key ')
+
     def _align_stations_and_refresh(self, cur_mode):
         """ refresh reference """
         self.stations = self.cnf.stations
@@ -673,20 +711,19 @@ class PyRadio(object):
             self.setupAndDrawScreen()
             if cur_mode == MAIN_HELP_MODE or \
                 cur_mode == PLAYLIST_HELP_MODE:
-                    curses.ungetch('/')
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Reopening help (sending "/")')
+                    curses.ungetch('?')
             elif cur_mode == PLAYLIST_LOAD_ERROR_MODE:
                 self._print_playlist_load_error()
             elif cur_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
                 self._print_playlist_reload_confirmation()
             elif cur_mode == PLAYLIST_RELOAD_ERROR_MODE:
                 self._print_playlist_reload_error()
+            elif cur_mode == SAVE_PLAYLIST_ERROR_1_MODE:
+                self._print_save_playlist_error_1()
+            elif cur_mode == SAVE_PLAYLIST_ERROR_2_MODE:
+                self._print_save_playlist_error_2()
             elif cur_mode == REMOVE_STATION_MODE:
                 self.removeStation()
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Reopening delete confirmation')
-                pass
             return
 
         elif self.operation_mode == NO_PLAYER_ERROR_MODE:
@@ -740,6 +777,18 @@ class PyRadio(object):
                     logger.debug('MODE: PLAYLIST_LOAD_ERROR_MODE -> PLAYLIST_MODE')
             return
 
+        elif self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE or \
+                self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE:
+            """ close playlist help """
+            if logger.isEnabledFor(logging.DEBUG):
+                if self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE:
+                    logger.debug('MODE: SAVE_PLAYLIST_ERROR_1_MODE -> NORMAL_MODE')
+                else:
+                    logger.debug('MODE: SAVE_PLAYLIST_ERROR_2_MODE -> NORMAL_MODE')
+            self.operation_mode = NORMAL_MODE
+            self.refreshBody()
+            return
+
         elif self.operation_mode == REMOVE_STATION_MODE:
             if char in (ord('y'), ord('Y')):
                 self._get_active_stations()
@@ -786,6 +835,7 @@ class PyRadio(object):
                              m                Mute / unmute player.
                              v                Save volume (not applicable with vlc).
                              o                Open playlist.
+                             s                Save playlist.
                              DEL,x            Delete selected station.
                              #                Redraw window.
                              Esc/q            Quit. """
@@ -923,6 +973,12 @@ class PyRadio(object):
                 elif char in(ord('x'), curses.KEY_DC):
                     if self.number_of_items > 0:
                         self.removeStation()
+                    return
+
+                elif char in(ord('s'), curses.KEY_DC):
+                    if self.number_of_items > 0 and \
+                            self.cnf.dirty:
+                        self.saveCurrentPlaylist()
                     return
 
                 elif char in (ord('r'), ):

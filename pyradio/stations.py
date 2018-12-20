@@ -3,7 +3,7 @@ import sys
 import glob
 from os import path, getenv, makedirs, remove
 from time import ctime
-from shutil import copyfile
+from shutil import copyfile, move
 
 class PyRadioStations(object):
     """ PyRadio stations file management """
@@ -160,6 +160,41 @@ class PyRadioStations(object):
         self.number_of_stations = len(self.stations)
         self.dirty = False
         return self.number_of_stations
+
+    def save_playlist_file(self, stationFile=''):
+        """ Save a playlist
+        Create a txt file and write stations in it.
+        Then rename it to final target
+        
+        return    0: All ok
+                 -1: Error writing file
+                 -2: Error renaming file
+        """
+        if stationFile:
+            st_file = stationFile
+        else:
+            st_file = self.stations_file
+
+        st_new_file = st_file.replace('.csv', '.txt')
+
+        tmp_stations = self.stations[:]
+        tmp_stations.reverse()
+        tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '' ])
+        tmp_stations.reverse()
+        try:
+            with open(st_new_file, 'w') as cfgfile:
+                writter = csv.writer(cfgfile)
+                for a_station in tmp_stations:
+                    writter.writerow(a_station)
+        except:
+            return -1
+        try:
+            move(st_new_file, st_file)
+        except:
+            return -2
+        self.dirty = False
+        return 0
+
 
     def _get_playlist_elements(self, a_playlist):
         self.stations_file = path.abspath(a_playlist)

@@ -66,6 +66,7 @@ Space/Left/h              Stop/start playing selected station.
 m                         Mute.
 v                         Save volume (not applicable for vlc).
 o                         Open playlist.
+s                         Save playlist.
 DEL,x                     Delete selected station.
 ?,/                       Show keys help.
 Esc/q                     Quit.
