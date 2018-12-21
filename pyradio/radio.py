@@ -30,6 +30,7 @@ NORMAL_MODE = 0
 PLAYLIST_MODE = 1
 REMOVE_STATION_MODE = 50
 SAVE_PLAYLIST_MODE = 51
+ASK_TO_SAVE_PLAYLIST_MODE = 52
 MAIN_HELP_MODE = 100
 PLAYLIST_HELP_MODE = 101
 PLAYLIST_LOAD_ERROR_MODE = 200
@@ -64,6 +65,8 @@ class PyRadio(object):
     active_stations = [ [ '', 0 ], [ '', -1 ] ]
 
     confirm_station_deletion = True
+    confirm_playlist_reload = True
+    auto_save_playlist = False
 
     # Number of stations to change with the page up/down keys
     pageChange = 5
@@ -520,9 +523,9 @@ class PyRadio(object):
     def _print_playlist_load_error(self):
         txt ="""Playlist loading failed!
 
-        This means that either the file is corrupt,
-        or you are not permitted to access it.
-        """
+            This means that either the file is corrupt,
+            or you are not permitted to access it.
+            """
         self._show_help(txt, PLAYLIST_LOAD_ERROR_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ')
@@ -530,22 +533,32 @@ class PyRadio(object):
     def _print_playlist_reload_error(self):
         txt ='''Playlist reloading failed!
 
-        You have probably edited the playlist with an
-        external program. Please re-edit it and make
-        sure that only one "," exists in each line.
-        '''
+            You have probably edited the playlist with an
+            external program. Please re-edit it and make
+            sure that only one "," exists in each line.
+            '''
         self._show_help(txt, PLAYLIST_RELOAD_ERROR_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ')
 
     def _print_playlist_reload_confirmation(self):
-        txt ='''This playlist has not been modified within 
-        PyRadio. Do you still want to reload it?
-        
-        Press "y" to confirm
-        or any other key to cancel '''
+        txt ='''This playlist has not been modified within
+            PyRadio. Do you still want to reload it?
+
+            Press "y" to confirm, "Y" to confirm and not
+            be asked again, or any other key to cancel'''
         self._show_help(txt, PLAYLIST_RELOAD_CONFIRM_MODE,
                 caption = ' Playlist Reload ',
+                prompt = ' ')
+
+   def _print_save_modified_playlist(self):
+        txt ='''This playlist has been modified within
+            PyRadio. Do you want to save it?
+
+            Press "y" to confirm, "Y" to confirm and not
+            be asked again, or any other key to cancel'''
+        self._show_help(txt, ASK_TO_SAVE_PLAYLIST_MODE,
+                caption = ' Playlist Modified ',
                 prompt = ' ')
 
     def _print_save_playlist_error_1(self):
@@ -554,7 +567,7 @@ class PyRadio(object):
             Could not open file for writing
             "{}"
             '''
-        self._show_help(txt.format(self.cnf.stations_file.replace('.csv', '.txt')), 
+        self._show_help(txt.format(self.cnf.stations_file.replace('.csv', '.txt')),
                 mode_to_set = SAVE_PLAYLIST_ERROR_1_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ')
@@ -565,7 +578,7 @@ class PyRadio(object):
             You will find a copy of the saved playlist in
             "{}"
             '''
-        self._show_help(txt.format(self.cnf.stations_file.replace('.csv', '.txt')), 
+        self._show_help(txt.format(self.cnf.stations_file.replace('.csv', '.txt')),
                 mode_to_set = SAVE_PLAYLIST_ERROR_2_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ')
@@ -664,6 +677,25 @@ class PyRadio(object):
 
         self.refreshBody()
 
+    def _open_playlist(self):
+        """ open playlist """
+        self._get_active_stations()
+        txt = '''Reading playlists. Please wait...'''
+        self._show_help(txt, NORMAL_MODE, caption=' ', prompt=' ')
+        self.jumpnr = ''
+        self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
+        self.operation_mode = PLAYLIST_MODE
+        self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
+        self.number_of_items, self.playing = self.readPlaylists()
+        self.stations = self.cnf.playlists
+        if self.number_of_items == 0:
+            return
+        else:
+            self.refreshBody()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('MODE: NORMAL_MODE -> PLAYLIST_MODE')
+            return
+
     def _get_station_id(self, find):
         for i, a_station in enumerate(self.stations):
             if a_station[0] == find:
@@ -745,8 +777,10 @@ class PyRadio(object):
             return
 
         elif self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
-            if char in (ord('y'), ):
+            if char in (ord('y'), ord('Y')):
                 self.reloadCurrentPlaylist()
+                if char == 'Y':
+                    self.confirm_playlist_reload = False
             else:
                 """ close confirmation message """
                 self.stations = self.cnf.stations
@@ -935,23 +969,17 @@ class PyRadio(object):
 
             if self.operation_mode == NORMAL_MODE:
                 if char in (ord('o'), ):
-                    """ open playlist """
-                    self._get_active_stations()
-                    txt = '''Reading playlists. Please wait...'''
-                    self._show_help(txt, NORMAL_MODE, caption=' ', prompt=' ')
-                    self.jumpnr = ''
-                    self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
-                    self.operation_mode = PLAYLIST_MODE
-                    self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
-                    self.number_of_items, self.playing = self.readPlaylists()
-                    self.stations = self.cnf.playlists
-                    if self.number_of_items == 0:
-                        return
+                    if self.cnf.dirty:
+                        if self.auto_save_playlist:
+                            # TODO save playlist
+                            #      open playlist
+                            pass
+                        else:
+                            # TODO ask to save playlist
+                            pass
                     else:
-                        self.refreshBody()
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('MODE: NORMAL_MODE -> PLAYLIST_MODE')
-                        return
+                        self._open_playlist()
+                    return
 
                 elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                         curses.KEY_RIGHT, ord('l')):
@@ -992,9 +1020,17 @@ class PyRadio(object):
                 elif char in (ord('R'), ):
                     # Reload current playlist
                     if self.cnf.dirty:
-                        pass
+                        if self.confirm_playlist_reload:
+                            pass
+                        else:
+                            self.operation_mode = PLAYLIST_RELOAD_CONFIRM_MODE
+                            curses.ungetch('y')
                     else:
-                        self._print_playlist_reload_confirmation()
+                        if self.confirm_playlist_reload:
+                            self._print_playlist_reload_confirmation()
+                        else:
+                            self.operation_mode = PLAYLIST_RELOAD_CONFIRM_MODE
+                            curses.ungetch('y')
                     return
 
             elif self.operation_mode == PLAYLIST_MODE:
