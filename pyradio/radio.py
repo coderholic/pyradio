@@ -943,10 +943,10 @@ class PyRadio(object):
                     return
                 else:
                     """ exit """
-                    try:
-                        self.player.close()
-                    except:
-                        pass
+                    self.stopPlayer()
+                    if self.cnf.dirty:
+                        """ Try to auto save playlist on exit """
+                        self.saveCurrentPlaylist()
                     return -1
 
             if char in (curses.KEY_DOWN, ord('j')):

@@ -173,6 +173,8 @@ class PyRadioStations(object):
         if stationFile:
             st_file = stationFile
         else:
+            if self.dirty is False:
+                return 0
             st_file = self.stations_file
 
         st_new_file = st_file.replace('.csv', '.txt')
