@@ -278,7 +278,8 @@ class PyRadio(object):
             self.operation_mode == PLAYLIST_RELOAD_ERROR_MODE or \
             self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE or \
             self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE or \
-            self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE:
+            self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE or \
+            self.operation_mode == ASK_TO_SAVE_PLAYLIST_MODE:
             line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
         elif self.operation_mode == PLAYLIST_MODE or \
                 self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
@@ -375,14 +376,14 @@ class PyRadio(object):
 
     def saveCurrentPlaylist(self, stationFile =''):
         ret = self.cnf.save_playlist_file(stationFile)
-        if ret == 0:
-            self.refreshBody()
-        elif ret == -1:
+        self.refreshBody()
+        if ret == -1:
             self._print_save_playlist_error_1()
         elif ret == -2:
             self._print_save_playlist_error_2()
         if ret < 0 and logger.isEnabledFor(logging.DEBUG):
             logger.debug('Error saving playlist: "{}"'.format(self.cnf.stations_file))
+        return ret
 
     def reloadCurrentPlaylist(self):
         if logger.isEnabledFor(logging.DEBUG):
@@ -551,15 +552,20 @@ class PyRadio(object):
                 caption = ' Playlist Reload ',
                 prompt = ' ')
 
-   def _print_save_modified_playlist(self):
+    def _print_save_modified_playlist(self):
         txt ='''This playlist has been modified within
             PyRadio. Do you want to save it?
+
+            If you choose not to save it now, all modifi-
+            cations will be lost.
 
             Press "y" to confirm, "Y" to confirm and not
             be asked again, or any other key to cancel'''
         self._show_help(txt, ASK_TO_SAVE_PLAYLIST_MODE,
                 caption = ' Playlist Modified ',
                 prompt = ' ')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('MODE = ASK_TO_SAVE_PLAYLIST_MODE')
 
     def _print_save_playlist_error_1(self):
         txt = '''Saving current playlist failed!
@@ -746,6 +752,8 @@ class PyRadio(object):
                     curses.ungetch('?')
             elif cur_mode == PLAYLIST_LOAD_ERROR_MODE:
                 self._print_playlist_load_error()
+            elif cur_mode == ASK_TO_SAVE_PLAYLIST_MODE:
+                self._print_save_modified_playlist()
             elif cur_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
                 self._print_playlist_reload_confirmation()
             elif cur_mode == PLAYLIST_RELOAD_ERROR_MODE:
@@ -774,6 +782,25 @@ class PyRadio(object):
             self.setupAndDrawScreen()
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE: MAIN_HELP_MODE -> NORMAL_MODE')
+            return
+
+        elif self.operation_mode == ASK_TO_SAVE_PLAYLIST_MODE:
+            if char in (ord('y'), ord('Y')):
+                if char == 'Y':
+                    self.auto_save_playlist = True
+                ret = self.saveCurrentPlaylist()
+                if ret == 0:
+                    self._open_playlist()
+                else:
+                    self.operation_mode = NORMAL_MODE
+                    self.refreshBody()
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: Canceled ASK_TO_SAVE_PLAYLIST_MODE -> NORMAL_MODE')
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('MODE: Cancel ASK_TO_SAVE_PLAYLIST_MODE -> NORMAL_MODE')
+                self.operation_mode = NORMAL_MODE
+                self.refreshBody()
             return
 
         elif self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
@@ -976,7 +1003,7 @@ class PyRadio(object):
                             pass
                         else:
                             # TODO ask to save playlist
-                            pass
+                            self._print_save_modified_playlist()
                     else:
                         self._open_playlist()
                     return
