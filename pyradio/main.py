@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from os import path, getenv, environ
 
 from .radio import PyRadio
-from .stations import PyRadioStations
+from .config import PyRadioConfig
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
@@ -50,8 +50,16 @@ def shell():
             "Supported players: mpv, mplayer, vlc.")
     args = parser.parse_args()
 
-
-    stations_cnf = PyRadioStations()
+    print('Reading config...')
+    sys.stdout.flush()
+    pyradio_config = PyRadioConfig()
+    ret = pyradio_config.read_config()
+    if ret == -1:
+        print('Error opening config: "{}"'.format(pyradio_config.config_file))
+        sys.exit(1)
+    elif ret == -2:
+        print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
+        sys.exit(1)
 
     if args.use_player != '':
         requested_player = args.use_player
@@ -62,31 +70,40 @@ def shell():
             params = raw_input("Enter the name: "), raw_input("Enter the url: ")
         else:
             params = input("Enter the name: "), input("Enter the url: ")
-        stations_cnf.append_station(params, args.stations)
+        pyradio_config.append_station(params, args.stations)
         sys.exit()
 
-    ret = stations_cnf.read_playlist_file(args.stations)
+    print('Reading playlist...')
+    sys.stdout.flush()
+    ret = pyradio_config.read_playlist_file(args.stations)
     if ret == -1:
         print('Error loading playlist: "{}"'.format(args.stations))
         sys.exit(1)
 
     if args.list_playlists:
-        stations_cnf.list_playlists()
+        pyradio_config.list_playlists()
         sys.exit()
 
     if args.list:
-        for name, url in stations_cnf.stations:
+        for name, url in pyradio_config.stations:
             print(('{0:50.50s} {1:s}'.format(name, url)))
         sys.exit()
 
     if args.debug:
         __configureLogger()
-        print('Debug mode acitvated; printing messages to file: "pyradio.log"')
+        print('Debug mode acitvated; printing messages to file: "~/pyradio.log"')
 
+    if requested_player is '':
+        requested_player = pyradio_config.player_to_use
+    #else:
+    #    pyradio_config.requested_player_to_use = requested_player
+
+    if args.play is not None:
+        if args.play is False:
+            args.play = pyradio_config.default_station
 
     # Starts the radio gui.
-    #pyradio = PyRadio(stations, play=args.play, req_player=requested_player)
-    pyradio = PyRadio(stations_cnf, play=args.play, req_player=requested_player)
+    pyradio = PyRadio(pyradio_config, play=args.play, req_player=requested_player)
     """ Setting ESCAPE key delay to 25ms
     Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses"""
     environ.setdefault('ESCDELAY', '25')

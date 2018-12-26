@@ -64,15 +64,11 @@ class PyRadio(object):
         we continue playing, otherwise, we stop playback """
     active_stations = [ [ '', 0 ], [ '', -1 ] ]
 
-    confirm_station_deletion = True
-    confirm_playlist_reload = True
-    auto_save_playlist = False
-
     # Number of stations to change with the page up/down keys
     pageChange = 5
 
-    def __init__(self, stations_cnf, play=False, req_player=''):
-        self.cnf = stations_cnf
+    def __init__(self, pyradio_config, play=False, req_player=''):
+        self.cnf = pyradio_config
         self.selections = [ (0, 0, -1, self.cnf.stations),
                             (0, 0, -1, self.cnf.playlists)]
         self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
@@ -240,7 +236,7 @@ class PyRadio(object):
         if self.operation_mode == NORMAL_MODE:
             align = 1
             w_header = self.cnf.stations_filename_only_no_extension
-            if self.cnf.dirty:
+            if self.cnf.dirty_playlist:
                 align += 1
                 w_header = '*' + self.cnf.stations_filename_only_no_extension
             while len(w_header)> self.bodyMaxX - 14:
@@ -298,11 +294,12 @@ class PyRadio(object):
             self.bodyWin.getch()
         else:
             self.log.write('Selected player: {}'.format(self._format_player_string()))
-            if not self.play is False:
+            if self.play is not False:
                 if self.play is None:
                     num = random.randint(0, len(self.stations))
                 else:
-                    num = int(self.play) - 1
+                    if self.play.replace('-', '').isdigit():
+                        num = int(self.play) - 1
                 self.setStation(num)
                 if self.number_of_items > 0:
                     self.playSelection()
@@ -358,7 +355,7 @@ class PyRadio(object):
             #self.log.write('Playback stopped')
 
     def removeStation(self):
-        if self.confirm_station_deletion:
+        if self.cnf.confirm_station_deletion:
             txt = '''Are you sure you want to delete station:
             "{}"?
 
@@ -424,7 +421,7 @@ class PyRadio(object):
         #playing = self.playing
         #selection = self.selections
         #number_of_items = self.number_of_items
-        #if self.player.isPlaying() and self.cnf.dirty:
+        #if self.player.isPlaying() and self.cnf.dirty_playlist:
         #    # TODO: ask to save previous playlist
         #    pass
 
@@ -787,7 +784,7 @@ class PyRadio(object):
         elif self.operation_mode == ASK_TO_SAVE_PLAYLIST_MODE:
             if char in (ord('y'), ord('Y')):
                 if char == 'Y':
-                    self.auto_save_playlist = True
+                    self.cnf.auto_save_playlist = True
                 ret = self.saveCurrentPlaylist()
                 if ret == 0:
                     self._open_playlist()
@@ -807,7 +804,7 @@ class PyRadio(object):
             if char in (ord('y'), ord('Y')):
                 self.reloadCurrentPlaylist()
                 if char == 'Y':
-                    self.confirm_playlist_reload = False
+                    self.cnf.confirm_playlist_reload = False
             else:
                 """ close confirmation message """
                 self.stations = self.cnf.stations
@@ -859,7 +856,7 @@ class PyRadio(object):
                 self.operation_mode = NORMAL_MODE
                 self._align_stations_and_refresh(REMOVE_STATION_MODE)
                 if char == ord('Y'):
-                    self.confirm_station_deletion = False
+                    self.cnf.confirm_station_deletion = False
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('MODE: REMOVE_STATION_MODE -> NORMAL_MODE')
             else:
@@ -943,10 +940,15 @@ class PyRadio(object):
                     return
                 else:
                     """ exit """
-                    self.stopPlayer()
-                    if self.cnf.dirty:
-                        """ Try to auto save playlist on exit """
-                        self.saveCurrentPlaylist()
+                    if self.player:
+                        self.stopPlayer()
+                        if self.cnf.dirty_playlist:
+                            """ Try to auto save playlist on exit
+                                Do not check result!!! """
+                            self.saveCurrentPlaylist()
+                        """ Try to auto save config on exit
+                            Do not check result!!! """
+                        self.cnf._save_config()
                     return -1
 
             if char in (curses.KEY_DOWN, ord('j')):
@@ -996,8 +998,8 @@ class PyRadio(object):
 
             if self.operation_mode == NORMAL_MODE:
                 if char in (ord('o'), ):
-                    if self.cnf.dirty:
-                        if self.auto_save_playlist:
+                    if self.cnf.dirty_playlist:
+                        if self.cnf.auto_save_playlist:
                             # TODO save playlist
                             #      open playlist
                             pass
@@ -1032,7 +1034,7 @@ class PyRadio(object):
 
                 elif char in(ord('s'), curses.KEY_DC):
                     if self.number_of_items > 0 and \
-                            self.cnf.dirty:
+                            self.cnf.dirty_playlist:
                         self.saveCurrentPlaylist()
                     return
 
@@ -1046,14 +1048,14 @@ class PyRadio(object):
 
                 elif char in (ord('R'), ):
                     # Reload current playlist
-                    if self.cnf.dirty:
-                        if self.confirm_playlist_reload:
+                    if self.cnf.dirty_playlist:
+                        if self.cnf.confirm_playlist_reload:
                             pass
                         else:
                             self.operation_mode = PLAYLIST_RELOAD_CONFIRM_MODE
                             curses.ungetch('y')
                     else:
-                        if self.confirm_playlist_reload:
+                        if self.cnf.confirm_playlist_reload:
                             self._print_playlist_reload_confirmation()
                         else:
                             self.operation_mode = PLAYLIST_RELOAD_CONFIRM_MODE

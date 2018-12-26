@@ -1,0 +1,43 @@
+# PyRadio Configuration File
+
+# Player selection
+# This is the eqivelant to the -u , --use-player command line parameter
+# Specify the player to use with PyRadio, or the player detection order
+# Example:
+#   player = vlc
+# or
+#   player = vlc,mpv, mplayer
+player = mpv, mplayer, vlc
+
+# Default playlist
+# This is the playlist to open if none is specified
+# You can scecify full path to CSV file, or if the playlist is in the
+# config directory, playlist name (filename without extension or
+# playlist number (as reported by -ls command line option)
+default_playlist = stations
+
+# Default station
+# This is the equivalent to the -p , --play command line parameter
+# The station number within the default playlist to play
+# Value is 0..number of stations, -1 means no auto play
+# "random" means play a random station
+default_station = -1
+
+# Playlist management
+#
+# Specify whether you will be asked to confirm
+# every station deletion action
+# Valid values: True, true, False, false
+confirm_station_deletion = True
+
+# Specify whether you will be asked to confirm
+# playlist reloading, when the playlist has not
+# been modified within Pyradio
+# Valid values: True, true, False, false
+confirm_playlist_reload = True
+
+# Specify whether you will be asked to save a
+# modified playlist whenever it needs saving
+# Valid values: True, true, False, false
+auto_save_playlist = False
+

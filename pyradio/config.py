@@ -1,9 +1,14 @@
 import csv
 import sys
+import logging
 import glob
 from os import path, getenv, makedirs, remove
 from time import ctime
 from shutil import copyfile, move
+from .log import Log
+
+logger = logging.getLogger(__name__)
+
 
 class PyRadioStations(object):
     """ PyRadio stations file management """
@@ -24,7 +29,7 @@ class PyRadioStations(object):
     selected_playlist = -1
     number_of_stations = -1
 
-    dirty = False
+    dirty_playlist = False
 
     def __init__(self, stationFile=''):
 
@@ -98,12 +103,12 @@ class PyRadioStations(object):
 
     def read_playlist_file(self, stationFile=''):
         """ Read a csv file
-            Returns: number, boolean
-              number:
+            Returns: number
                 x  -  number of stations or
                -1  -  error
                """
         orig_input = stationFile
+        logger.debug('orig_input = {}'.format(orig_input))
         prev_file = self.stations_file
         ret = -1
         if stationFile:
@@ -128,15 +133,18 @@ class PyRadioStations(object):
             """ Check if playlist number was specified """
             if orig_input.isdigit():
                 sel = int(orig_input) - 1
-                if sel < 0:
+                if sel == -1:
+                    stationFile = path.join(self.stations_dir, 'stations.csv')
+                elif sel < 0:
                     """ negative playlist number """
                     return -1
-                n, f = self.read_playlists()
-                if sel <= n-1:
-                    stationFile=self.playlists[sel][-1]
                 else:
-                    """ playlist number sel does not exit """
-                    return -1
+                    n, f = self.read_playlists()
+                    if sel <= n-1:
+                        stationFile=self.playlists[sel][-1]
+                    else:
+                        """ playlist number sel does not exit """
+                        return -1
             else:
                 return -1
 
@@ -158,7 +166,7 @@ class PyRadioStations(object):
         self.previous_stations_file = prev_file
         self._is_playlist_in_config_dir()
         self.number_of_stations = len(self.stations)
-        self.dirty = False
+        self.dirty_playlist = False
         return self.number_of_stations
 
     def save_playlist_file(self, stationFile=''):
@@ -173,7 +181,9 @@ class PyRadioStations(object):
         if stationFile:
             st_file = stationFile
         else:
-            if self.dirty is False:
+            if self.dirty_playlist is False:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Playlist not modified...')
                 return 0
             st_file = self.stations_file
 
@@ -189,14 +199,17 @@ class PyRadioStations(object):
                 for a_station in tmp_stations:
                     writter.writerow(a_station)
         except:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Cannot open playlist file for writing,,,')
             return -1
         try:
             move(st_new_file, st_file)
         except:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Cannot rename playlist file...')
             return -2
-        self.dirty = False
+        self.dirty_playlist = False
         return 0
-
 
     def _get_playlist_elements(self, a_playlist):
         self.stations_file = path.abspath(a_playlist)
@@ -235,7 +248,7 @@ class PyRadioStations(object):
             writter.writerow(params)
 
     def remove_station(self, a_station):
-        self.dirty = True
+        self.dirty_playlist = True
         ret = self.stations.pop(a_station)
         self.number_of_stations = len(self.stations)
         return ret, self.number_of_stations
@@ -266,3 +279,225 @@ class PyRadioStations(object):
         pad = len(str(num_of_playlists))
         for i, a_playlist in enumerate(self.playlists):
             print('  {0}. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
+
+class PyRadioConfig(PyRadioStations):
+
+    def __init__(self):
+        self.player_to_use = ''
+        self.requested_player_to_use = ''
+        self.confirm_station_deletion = True
+        self.confirm_playlist_reload = True
+        self.auto_save_playlist = False
+        self.default_playlist = 'stations'
+        self.default_station = '-1'
+
+        self.dirty_config = False
+
+        PyRadioStations.__init__(self)
+
+        self._check_config_file(self.stations_dir)
+        self.config_file = path.join(self.stations_dir, 'config')
+
+    @property
+    def requested_player_to_use(self):
+        return self.__requested_player_to_use
+
+    @requested_player_to_use.setter
+    def requested_player_to_use(self, val):
+        self.__requested_player_to_use = val.replace(' ', '')
+        if self.__player_to_use != self.__requested_player_to_use:
+            self.__player_to_use = self.requested_player_to_use
+            self.__dirty_config = True
+
+    @property
+    def player_to_use(self):
+        return self.__player_to_use
+
+    @player_to_use.setter
+    def player_to_use(self, val):
+        self.__player_to_use = val
+        self.__dirty_config = True
+
+    @property
+    def default_playlist(self):
+        return self.__default_playlist
+
+    @default_playlist.setter
+    def default_playlist(self, val):
+        self.__default_playlist = val
+        self.__dirty_config = True
+
+    @property
+    def default_station(self):
+        return self.__default_station
+
+    @default_station.setter
+    def default_station(self, val):
+        self.__default_station = val
+        self.__dirty_config = True
+
+    @property
+    def confirm_station_deletion(self):
+        return self.__confirm_station_deletion
+
+    @confirm_station_deletion.setter
+    def confirm_station_deletion(self, val):
+        self.__confirm_station_deletion = val
+        self.__dirty_config = True
+
+    @property
+    def confirm_playlist_reload(self):
+        return self.__confirm_playlist_reload
+
+    @confirm_playlist_reload.setter
+    def confirm_playlist_reload(self, val):
+        self.__confirm_playlist_reload = val
+        self.__dirty_config = True
+
+    @property
+    def auto_save_playlist(self):
+        return self.__auto_save_playlist
+
+    @auto_save_playlist.setter
+    def auto_save_playlist(self, val):
+        self.__auto_save_playlist = val
+        self.__dirty_config = True
+
+    @property
+    def dirty_config(self):
+        return self.__dirty_config
+
+    @dirty_config.setter
+    def dirty_config(self, val):
+        self.__dirty_config = val
+
+    def _check_config_file(self, usr):
+        ''' Make sure a config file exists in the config diro '''
+
+        config_file = path.join(path.dirname(__file__), 'config')
+        if path.exists(path.join(usr, 'config')):
+            return
+        else:
+            copyfile(config_file, path.join(usr, 'config'))
+
+    def read_config(self):
+        lines = []
+        try:
+            with open(self.config_file, 'r') as cfgfile:
+                lines = [line.strip() for line in cfgfile if line.strip() and not line.startswith('#') ]
+
+        except:
+            self.__dirty_config = False
+            return -1
+        for line in lines:
+            sp = line.replace(' ', '').split('=')
+            if len(sp) != 2:
+                return -2
+            if sp[1] == '':
+                return -2
+            if sp[0] == 'player':
+                self.__player_to_use = sp[1].lower()
+            elif sp[0] == 'default_playlist':
+                self.__default_playlist = sp[1].strip()
+            elif sp[0] == 'default_station':
+                st = sp[1].strip()
+                if st == '-1':
+                    self.__default_station = False
+                elif st == 'random':
+                    self.__default_station = None
+                else:
+                    self.__default_station = st
+            elif sp[0] == 'confirm_station_deletion':
+                if sp[1].lower() == 'false':
+                    self.__confirm_station_deletion = False
+                else:
+                    self.__confirm_station_deletion = False
+            elif sp[0] == 'confirm_playlist_reload':
+                if sp[1].lower() == 'false':
+                    self.__confirm_station_deletion = False
+                else:
+                    self.__confirm_station_deletion = True
+            elif sp[0] == 'auto_save_playlist':
+                if sp[1].lower() == 'true':
+                    self.__auto_save_playlist = True
+                else:
+                    self.__auto_save_playlist = False
+        self.__dirty_config = False
+        return 0
+
+    def _save_config(self):
+        if self.__dirty_config is False:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Config not saved (not modified)')
+            return 0
+        txt ='''# PyRadio Configuration File
+
+# Player selection
+# This is the equivalent to the -u , --use-player command line parameter
+# Specify the player to use with PyRadio, or the player detection order
+# Example:
+#   player = vlc
+# or
+#   player = vlc,mpv, mplayer
+player = {0}
+
+# Default playlist
+# This is the playlist to open if none is specified
+# You can scecify full path to CSV file, or if the playlist is in the
+# config directory, playlist name (filename without extension) or
+# playlist number (as reported by -ls command line option)
+default_playlist = {1}
+
+# Default station
+# This is the equivalent to the -p , --play command line parameter
+# The station number within the default playlist to play
+# Value is 0..number of stations, -1 means no auto play
+# "random" means play a random station
+default_station = {2}
+
+# Playlist management
+#
+# Specify whether you will be asked to confirm
+# every station deletion action
+# Valid values: True, true, False, false
+confirm_station_deletion = {3}
+
+# Specify whether you will be asked to confirm
+# playlist reloading, when the playlist has not
+# been modified within Pyradio
+# Valid values: True, true, False, false
+confirm_playlist_reload = {4}
+
+# Specify whether you will be asked to save a
+# modified playlist whenever it needs saving
+# Valid values: True, true, False, false
+auto_save_playlist = {5}
+
+'''
+        copyfile(self.config_file, self.config_file + '.bck')
+        if self.__default_station is None:
+            self.__default_station = '-1'
+        try:
+            with open(self.config_file, 'w') as cfgfile:
+                cfgfile.write(txt.format(self.__player_to_use,
+                    self.__default_playlist,
+                    self.__default_station,
+                    self.__confirm_station_deletion,
+                    self.__confirm_playlist_reload,
+                    self.__auto_save_playlist))
+        except:
+            logger.error('Error saving config')
+            return -1
+        try:
+            remove(self.config_file + '.bck')
+        except:
+            pass
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Config saved')
+        return 0
+
+    def read_playlist_file(self, stationFile=''):
+        if stationFile.strip() == '':
+            stationFile = self.default_playlist
+        return super(PyRadioConfig, self).read_playlist_file(stationFile)
+
