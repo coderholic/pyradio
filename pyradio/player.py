@@ -685,7 +685,7 @@ def probePlayer(requested_player=''):
                 if player.PLAYER_CMD == r_player:
                     ret_player = check_player(player)
                     if ret_player is not None:
-                        break
+                        return ret_player
             if ret_player is None:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Requested player "{}" not supported'.format(r_player))
