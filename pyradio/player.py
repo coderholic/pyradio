@@ -34,6 +34,8 @@ class Player(object):
 
     status_update_lock = threading.Lock()
 
+    ctrl_c_pressed = False
+
     def __init__(self, outputStream):
         self.outputStream = outputStream
 
@@ -603,6 +605,8 @@ class VlcPlayer(Player):
 
     def _stop(self):
         """ exit pyradio (and kill vlc instance) """
+        if self.ctrl_c_pressed:
+            return
         self._sendCommand("shutdown\n")
 
     def _volume_up(self):
@@ -650,6 +654,8 @@ class VlcPlayer(Player):
 
     def _no_mute_on_stop_playback(self):
         """ make sure vlc does not stop muted """
+        if self.ctrl_c_pressed:
+            return
         if self.isPlaying():
             if self.actual_volume == -1:
                 self._get_volume()

@@ -11,6 +11,7 @@ import curses
 import logging
 import os
 import random
+import signal
 from sys import version as python_version, version_info
 from os.path import join, basename, getmtime, getsize
 from time import ctime
@@ -291,8 +292,12 @@ class PyRadio(object):
                     self.log.write('Player "{}" not available. Press any key to exit....'.format(self.requested_player))
             else:
                 self.log.write("No player available. Press any key to exit....")
-            self.bodyWin.getch()
+            try:
+                self.bodyWin.getch()
+            except KeyboardInterrupt:
+                pass
         else:
+            #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write('Selected player: {}'.format(self._format_player_string()))
             if self.play is not False:
                 if self.play is None:
@@ -312,7 +317,21 @@ class PyRadio(object):
                     if (ret == -1):
                         return
                 except KeyboardInterrupt:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Ctrl-C pressed... Exiting...')
+                    self.player.ctrl_c_pressed = True
+                    self.ctrl_c_handler(signal.SIGINT, 0)
                     break
+
+    def ctrl_c_handler(self, signum, frame):
+        self.ctrl_c_pressed = True
+        if self.cnf.dirty_playlist:
+            """ Try to auto save playlist on exit
+                Do not check result!!! """
+            self.saveCurrentPlaylist()
+        """ Try to auto save config on exit
+            Do not check result!!! """
+        self.cnf._save_config()
 
     def setStation(self, number):
         """ Select the given station number """
@@ -942,13 +961,7 @@ class PyRadio(object):
                     """ exit """
                     if self.player:
                         self.stopPlayer()
-                        if self.cnf.dirty_playlist:
-                            """ Try to auto save playlist on exit
-                                Do not check result!!! """
-                            self.saveCurrentPlaylist()
-                        """ Try to auto save config on exit
-                            Do not check result!!! """
-                        self.cnf._save_config()
+                        self.ctrl_c_handler(0,0)
                     return -1
 
             if char in (curses.KEY_DOWN, ord('j')):
