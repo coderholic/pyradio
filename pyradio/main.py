@@ -50,9 +50,14 @@ def shell():
             "Supported players: mpv, mplayer, vlc.")
     args = parser.parse_args()
 
-    print('Reading config...')
     sys.stdout.flush()
     pyradio_config = PyRadioConfig()
+
+    if args.list_playlists:
+        pyradio_config.list_playlists()
+        sys.exit()
+
+    print('Reading config...')
     ret = pyradio_config.read_config()
     if ret == -1:
         print('Error opening config: "{}"'.format(pyradio_config.config_file))
@@ -79,10 +84,6 @@ def shell():
     if ret == -1:
         print('Error loading playlist: "{}"'.format(args.stations))
         sys.exit(1)
-
-    if args.list_playlists:
-        pyradio_config.list_playlists()
-        sys.exit()
 
     if args.list:
         for name, url in pyradio_config.stations:
