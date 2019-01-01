@@ -11,7 +11,7 @@ import curses
 import logging
 import os
 import random
-import signal
+#import signal
 from sys import version as python_version, version_info
 from os.path import join, basename, getmtime, getsize
 from time import ctime
