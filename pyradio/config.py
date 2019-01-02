@@ -101,52 +101,68 @@ class PyRadioStations(object):
             self.foreign_file = True
         self.foreign_copy_asked = False
 
-    def read_playlist_file(self, stationFile=''):
-        """ Read a csv file
-            Returns: number
-                x  -  number of stations or
-               -1  -  error
+    def _get_playlist_abspath_from_data(self, stationFile=''):
+        """ Get playlist absolute path
+            Returns: playlist path, result
+              Result is:
+                0  -  playlist found
+               -2  -  playlist not found
+               -3  -  negative number specified
+               -4  -  number not found
                """
-        orig_input = stationFile
-        logger.debug('orig_input = {}'.format(orig_input))
-        prev_file = self.stations_file
         ret = -1
+        orig_input = stationFile
         if stationFile:
-            try_files = [ stationFile ]
-            if not stationFile.endswith('.csv'):
+            if stationFile.endswith('.csv'):
+                """ relative or absolute path """
+                stationFile = path.abspath(stationFile)
+            else:
+                """ try to find it in config dir """
                 stationFile += '.csv'
-            try_files.append(path.join(self.stations_dir, stationFile))
-            for stationFile in try_files:
-                if path.exists(stationFile) and path.isfile(stationFile):
-                    ret = 0
-                    break
+                stationFile = path.join(self.stations_dir, stationFile)
+            if path.exists(stationFile) and path.isfile(stationFile):
+                return stationFile, 0
         else:
             for p in [path.join(self.stations_dir, 'pyradio.csv'),
                       path.join(self.stations_dir, 'stations.csv'),
                       self.root_path]:
                 if path.exists(p) and path.isfile(p):
-                    stationFile = p
-                    ret = 0
-                    break
+                    return p, 0
 
         if ret == -1:
             """ Check if playlist number was specified """
-            if orig_input.isdigit():
+            if orig_input.replace('-', '').isdigit():
                 sel = int(orig_input) - 1
                 if sel == -1:
                     stationFile = path.join(self.stations_dir, 'stations.csv')
+                    return stationFile, 0
                 elif sel < 0:
                     """ negative playlist number """
-                    return -1
+                    return '', -3
                 else:
                     n, f = self.read_playlists()
                     if sel <= n-1:
                         stationFile=self.playlists[sel][-1]
+                        return stationFile, 0
                     else:
                         """ playlist number sel does not exit """
-                        return -1
+                        return '', -4
             else:
-                return -1
+                return '', -2
+
+    def read_playlist_file(self, stationFile=''):
+        """ Read a csv file
+            Returns: number
+                x  -  number of stations or
+               -1  -  playlist is malformed
+               -2  -  playlist not found
+               """
+        prev_file = self.stations_file
+
+        ret = 0
+        stationFile, ret = self._get_playlist_abspath_from_data(stationFile)
+        if ret < 0:
+            return ret
 
         self._reading_stations = []
         with open(stationFile, 'r') as cfgfile:
@@ -243,7 +259,10 @@ class PyRadioStations(object):
         else:
             st_file = self.stations_file
 
-        with open(st_file, 'a') as cfgfile:
+        st_file, ret = self._get_playlist_abspath_from_data(st_file)
+        if ret < -1:
+            return ret
+        with open(st_file, 'w') as cfgfile:
             writter = csv.writer(cfgfile)
             writter.writerow(params)
 

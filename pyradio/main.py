@@ -57,14 +57,15 @@ def shell():
         pyradio_config.list_playlists()
         sys.exit()
 
-    print('Reading config...')
-    ret = pyradio_config.read_config()
-    if ret == -1:
-        print('Error opening config: "{}"'.format(pyradio_config.config_file))
-        sys.exit(1)
-    elif ret == -2:
-        print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
-        sys.exit(1)
+    if args.list is False and args.add is False:
+        print('Reading config...')
+        ret = pyradio_config.read_config()
+        if ret == -1:
+            print('Error opening config: "{}"'.format(pyradio_config.config_file))
+            sys.exit(1)
+        elif ret == -2:
+            print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
+            sys.exit(1)
 
     if args.use_player != '':
         requested_player = args.use_player
@@ -75,15 +76,17 @@ def shell():
             params = raw_input("Enter the name: "), raw_input("Enter the url: ")
         else:
             params = input("Enter the name: "), input("Enter the url: ")
-        pyradio_config.append_station(params, args.stations)
+        ret = pyradio_config.append_station(params, args.stations)
+        if ret < 0:
+            print_playlist_selection_error(pyradio_config, ret)
         sys.exit()
 
-    print('Reading playlist...')
+    if args.list is False:
+        print('Reading playlist...')
     sys.stdout.flush()
     ret = pyradio_config.read_playlist_file(args.stations)
-    if ret == -1:
-        print('Error loading playlist: "{}"'.format(args.stations))
-        sys.exit(1)
+    if ret < 0:
+        print_playlist_selection_error(pyradio_config, ret)
 
     if args.list:
         for name, url in pyradio_config.stations:
@@ -92,16 +95,18 @@ def shell():
 
     if args.debug:
         __configureLogger()
-        print('Debug mode acitvated; printing messages to file: "~/pyradio.log"')
+        print('Debug mode activated; printing messages to file: "~/pyradio.log"')
 
     if requested_player is '':
         requested_player = pyradio_config.player_to_use
     #else:
     #    pyradio_config.requested_player_to_use = requested_player
 
-    if args.play is not None:
-        if args.play is False:
+    if args.play is False:
+        if args.stations == '':
             args.play = pyradio_config.default_station
+    if args.play == '-1':
+        args.play = False
 
     # Starts the radio gui.
     pyradio = PyRadio(pyradio_config, play=args.play, req_player=requested_player)
@@ -110,6 +115,22 @@ def shell():
     environ.setdefault('ESCDELAY', '25')
     curses.wrapper(pyradio.setup)
 
+def print_playlist_selection_error(cnf, ret, exit_if_malformed=True):
+    if exit_if_malformed:
+        if ret == -1:
+            print('Error: playlist is malformed: "{}"'.format(args.stations))
+            sys.exit(1)
+
+    if ret == -2:
+        print('Error: Specified playlist not found')
+        sys.exit(1)
+    elif ret == -3:
+        print('Error: Negative playlist number specified')
+        sys.exit(1)
+    elif ret == -4:
+        print('Error: Specified numbered playlist not found')
+        cnf.list_playlists()
+        sys.exit(1)
 
 if __name__ == '__main__':
     shell()
