@@ -37,7 +37,8 @@ PLAYLIST_HELP_MODE = 101
 PLAYLIST_LOAD_ERROR_MODE = 200
 PLAYLIST_RELOAD_ERROR_MODE = 201
 PLAYLIST_RELOAD_CONFIRM_MODE = 202
-PLAYLIST_SCAN_ERROR_MODE = 203
+PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE = 203
+PLAYLIST_SCAN_ERROR_MODE = 204
 SAVE_PLAYLIST_ERROR_1_MODE = 204
 SAVE_PLAYLIST_ERROR_2_MODE = 205
 
@@ -274,6 +275,7 @@ class PyRadio(object):
             self.operation_mode == REMOVE_STATION_MODE or \
             self.operation_mode == PLAYLIST_RELOAD_ERROR_MODE or \
             self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE or \
+            self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE or \
             self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE or \
             self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE or \
             self.operation_mode == ASK_TO_SAVE_PLAYLIST_MODE:
@@ -320,7 +322,7 @@ class PyRadio(object):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Ctrl-C pressed... Exiting...')
                     self.player.ctrl_c_pressed = True
-                    self.ctrl_c_handler(signal.SIGINT, 0)
+                    self.ctrl_c_handler(0, 0)
                     break
 
     def ctrl_c_handler(self, signum, frame):
@@ -401,7 +403,7 @@ class PyRadio(object):
             logger.debug('Error saving playlist: "{}"'.format(self.cnf.stations_file))
         return ret
 
-    def reloadCurrentPlaylist(self):
+    def reloadCurrentPlaylist(self, mode):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Reloading current playlist')
         self._get_active_stations()
@@ -419,7 +421,10 @@ class PyRadio(object):
             self.operation_mode = NORMAL_MODE
             self._align_stations_and_refresh(PLAYLIST_RELOAD_CONFIRM_MODE)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: PLAYLIST_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
+                if mode == PLAYLIST_RELOAD_CONFIRM_MODE:
+                    logger.debug('MODE: PLAYLIST_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
+                else:
+                    logger.debug('MODE: PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
         return
 
 
@@ -565,6 +570,17 @@ class PyRadio(object):
             Press "y" to confirm, "Y" to confirm and not
             be asked again, or any other key to cancel'''
         self._show_help(txt, PLAYLIST_RELOAD_CONFIRM_MODE,
+                caption = ' Playlist Reload ',
+                prompt = ' ')
+
+    def _print_playlist_dirty_reload_confirmation(self):
+        txt ='''This playlist has been modified within PyRadio.
+            If you reload it now, all modifications will be
+            lost. Do you still want to reload it?
+
+            Press "y" to confirm, "Y" to confirm and not be
+            asked again, or "n" to cancel'''
+        self._show_help(txt, PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE,
                 caption = ' Playlist Reload ',
                 prompt = ' ')
 
@@ -772,6 +788,8 @@ class PyRadio(object):
                 self._print_save_modified_playlist()
             elif cur_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
                 self._print_playlist_reload_confirmation()
+            elif cur_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
+                self._print_playlist_dirty_reload_confirmation()
             elif cur_mode == PLAYLIST_RELOAD_ERROR_MODE:
                 self._print_playlist_reload_error()
             elif cur_mode == SAVE_PLAYLIST_ERROR_1_MODE:
@@ -780,6 +798,29 @@ class PyRadio(object):
                 self._print_save_playlist_error_2()
             elif cur_mode == REMOVE_STATION_MODE:
                 self.removeStation()
+            return
+
+        elif char in (ord('+'), ord('='), ord('.')):
+            if self.player.isPlaying():
+                self.player.volumeUp()
+            return
+
+        elif char in (ord('-'), ord(',')):
+            if self.player.isPlaying():
+                self.player.volumeDown()
+            return
+
+        elif char in (ord('m'), ):
+            if self.player.isPlaying():
+                self.player.toggleMute()
+            return
+
+        elif char in (ord('v'), ):
+            if self.player.isPlaying():
+                ret_string = self.player.save_volume()
+                if ret_string:
+                    self.log.write(ret_string)
+                    self.player.threadUpdateTitle(self.player.status_update_lock)
             return
 
         elif self.operation_mode == NO_PLAYER_ERROR_MODE:
@@ -821,7 +862,7 @@ class PyRadio(object):
 
         elif self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
             if char in (ord('y'), ord('Y')):
-                self.reloadCurrentPlaylist()
+                self.reloadCurrentPlaylist(PLAYLIST_RELOAD_CONFIRM_MODE)
                 if char == 'Y':
                     self.cnf.confirm_playlist_reload = False
             else:
@@ -831,6 +872,22 @@ class PyRadio(object):
                 self.refreshBody()
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('MODE: Cancel PLAYLIST_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
+            return
+
+        elif self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
+            if char in (ord('y'), ord('Y')):
+                self.reloadCurrentPlaylist(PLAYLIST_DIRTY__RELOAD_CONFIRM_MODE)
+                if char == 'Y':
+                    self.cnf.confirm_playlist_reload = False
+            elif char in (ord('n'), ):
+                """ close confirmation message """
+                self.stations = self.cnf.stations
+                self.operation_mode = NORMAL_MODE
+                self.refreshBody()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('MODE: Cancel PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
+            else:
+                pass
             return
 
         elif self.operation_mode == PLAYLIST_RELOAD_ERROR_MODE:
@@ -887,7 +944,7 @@ class PyRadio(object):
 
         else:
 
-            if char in (ord('?'), ord('/')):
+            if char in (ord('?'), ):
                 if self.operation_mode == PLAYLIST_MODE:
                     txt = """Up/j/PgUp
                              Down/k/PgDown    Change playlist selection.
@@ -911,8 +968,7 @@ class PyRadio(object):
                              -/+ or ,/.       Change volume.
                              m                Mute / unmute player.
                              v                Save volume (not applicable with vlc).
-                             o                Open playlist.
-                             s                Save playlist.
+                             o s R            Open / Save / Reload playlist.
                              DEL,x            Delete selected station.
                              #                Redraw window.
                              Esc/q            Quit. """
@@ -988,27 +1044,6 @@ class PyRadio(object):
                     self.refreshBody()
                 return
 
-            if self.player.isPlaying():
-                if char in (ord('+'), ord('='), ord('.')):
-                    self.player.volumeUp()
-                    return
-
-                if char in (ord('-'), ord(',')):
-                    self.player.volumeDown()
-                    return
-
-                if char in (ord('m'), ):
-                    self.player.toggleMute()
-                    return
-
-                if char in (ord('v'), ):
-                    if self.player.isPlaying():
-                        ret_string = self.player.save_volume()
-                        if ret_string:
-                            self.log.write(ret_string)
-                            self.player.threadUpdateTitle(self.player.status_update_lock)
-                    return
-
             if self.operation_mode == NORMAL_MODE:
                 if char in (ord('o'), ):
                     if self.cnf.dirty_playlist:
@@ -1063,7 +1098,7 @@ class PyRadio(object):
                     # Reload current playlist
                     if self.cnf.dirty_playlist:
                         if self.cnf.confirm_playlist_reload:
-                            pass
+                            self._print_playlist_dirty_reload_confirmation()
                         else:
                             self.operation_mode = PLAYLIST_RELOAD_CONFIRM_MODE
                             curses.ungetch('y')
