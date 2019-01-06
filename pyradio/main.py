@@ -36,22 +36,34 @@ def shell():
     parser.add_argument("-p", "--play", nargs='?', default=False,
                         help="Start and play."
                         "The value is num station or empty for random.")
+    parser.add_argument("-u", "--use-player", default='',
+            help="Use specified player. "
+            "A comma-separated list can be used to specify detection order. "
+            "Supported players: mpv, mplayer, vlc.")
     parser.add_argument("-a", "--add", action='store_true',
                         help="Add station to list.")
     parser.add_argument("-ls", "--list-playlists", action='store_true',
                         help="List of available playlists in config dir.")
     parser.add_argument("-l", "--list", action='store_true',
-                        help="List of added stations.")
+                        help="List of available stations in a playlist.")
+    parser.add_argument("-scd", "--show-config-dir", action='store_true',
+                        help="Print config directory location and exit.")
+    parser.add_argument("-ocd", "--open-config-dir", action='store_true',
+                        help="Open config directory with default file manager.")
     parser.add_argument("-d", "--debug", action='store_true',
                         help="Start pyradio in debug mode.")
-    parser.add_argument("-u", "--use-player", default='',
-            help="Use specified player. "
-            "A comma-separated list can be used to specify detection order. "
-            "Supported players: mpv, mplayer, vlc.")
     args = parser.parse_args()
 
     sys.stdout.flush()
     pyradio_config = PyRadioConfig()
+
+    if args.show_config_dir:
+        print('PyRadio config dir: "{}"'.format(pyradio_config.stations_dir))
+        sys.exit()
+
+    if args.open_config_dir:
+        open_conf_dir(pyradio_config)
+        sys.exit()
 
     if args.list_playlists:
         pyradio_config.list_playlists()
@@ -131,6 +143,17 @@ def print_playlist_selection_error(cnf, ret, exit_if_malformed=True):
         print('Error: Specified numbered playlist not found')
         cnf.list_playlists()
         sys.exit(1)
+
+def open_conf_dir(cnf):
+    import subprocess
+    import os
+    import platform
+    if platform.system().lower() == "windows":
+        os.startfile(cnf.stations_dir)
+    elif platform.system().lower() == "darwin":
+        subprocess.Popen(["open", cnf.stations_dir])
+    else:
+        subprocess.Popen(["xdg-open", cnf.stations_dir])
 
 if __name__ == '__main__':
     shell()

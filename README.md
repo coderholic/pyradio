@@ -10,6 +10,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Installation](#installation)
 * [Command line options](#command-line-options)
 * [Controls](#controls)
+* [Config file](#config-file)
 * [About Playlist files](#about-playlist-files)
 * [Player detection / selection](#player-detection-selection)
 * [Player default volume level](#player-default-volume-level)
@@ -21,7 +22,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * MPV, MPlayer or VLC installed and in your path.
 * [socat](http://www.dest-unreach.org/socat/) (if you wish to use MPV)
 
-## Installation 
+## Installation
 
 The best way to install **PyRadio** is via a distribution package, if one exists (e.g. *Arch Linux* and derivatives can install [pyradio-git](https://aur.archlinux.org/packages/pyradio-git/) from AUR).
 
@@ -32,7 +33,8 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 ```
 $ pyradio -h
 
-usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-a] [-ls] [-l] [-d] [-u USE_PLAYER]
+usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
+               [-scd] [-ocd] [-d]
 
 Curses based Internet radio player
 
@@ -43,15 +45,25 @@ optional arguments:
   -p [PLAY], --play [PLAY]
                         Start and play.The value is num station or empty for
                         random.
-  -a, --add             Add station to list.
-  -ls, --list-playlists List of available playlists in config dir.
-  -l, --list            List of added stations.
-  -d, --debug           Start pyradio in debug mode.
   -u USE_PLAYER, --use-player USE_PLAYER
                         Use specified player. A comma-separated list can be
                         used to specify detection order. Supported players:
                         mpv, mplayer, vlc.
+  -a, --add             Add station to list.
+  -ls, --list-playlists List of available playlists in config dir.
+  -l, --list            List of available stations in a playlist.
+  -scd, --show-config-dir
+                        Print config directory location and exit.
+  -ocd, --open-config-dir
+                        Open config directory with default file manager.
+  -d, --debug           Start pyradio in debug mode.
 ```
+
+The following options can also be set in **PyRadio**'s [configuration file](#config-file):
+
+* **-s** - parameter **default_playlist** (default value: **stations**)
+* **-p** - parameter **default_station** (default value: **-1**)
+* **-u** - parameter **player** (default value: **mpv, mplayer, vlc**)
 
 ## Controls
 
@@ -71,11 +83,19 @@ DEL,x                     Delete selected station.
 Esc/q                     Quit.
 ```
 
+## Config file
+
+**PyRadio** upon its execution tries to read its configuration file (i.e. *~/.config/pyradio/config*). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and ***PyRadio*** will terminate.
+
+The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see [here](pyradio/config)), so that manual editing is really easy. The best practice to manually edit this file is executing ***PyRadio*** with the **-ocd** command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.
+
+The file can also be altered while **PyRadio** is running. This process is transparent to the user; **PyRadio** will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).
+
 ## About Playlist files
 
-**PyRadio** reads the stations to use from a CSV file (named *stations.csv*), where each line contains two columns, the first being the station name and the second being the stream URL.
+**PyRadio** reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.
 
-**PyRadio** will by default use the user's configuration file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
+**PyRadio** will by default load the user's stations file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
 
 **Tip:** If you already have a custom *stations.csv* file, but want to update it with **PyRadio**'s default one, you just rename it, run **PyRadio** (so that the default one get created) and then merge the two files.
 
@@ -121,6 +141,22 @@ Playlists found in "/home/user/.config/pyradio"
 $ pyradio -s 5
 ```
 
+**Note:** The default playlist to load can also be set in **PyRadio**'s [configuration file](#config-file), parameter **default_playlist** (default value is ***stations***).
+
+### Managing playlists (within PyRadio)
+
+Once **PyRadio** has been loaded, one can perform a series of actions on the current playlist and set of playlists saved in its configuration directory.
+
+Currently, the following actions are available:
+
+One thing you may want to do is remove a station from a playlist, e.g. when found that it not longer works. You can do that by pressing "***DEL***" or "***x***".
+
+Then, when this is done, you can either save the modified playlist, by pressing "***s***", or reload the playlist from disk, by pressing "***R***".
+
+Finally, opening another playlist is also possible. Just press "***o***" and you will be presented with a list of saved playists to choose from. These playlists must be saved beforehand in **PyRadio**'s configuration directory.
+
+While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in **PyRadio**'s configuration file for future reference.
+
 ## Player detection / selection
 
 **PyRadio** is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.
@@ -142,6 +178,8 @@ will instruct **PyRadio** to use VLC; if it is not found, the program will termi
 pyradio -u vlc,mplayer,mpv
 ```
 will instruct **PyRadio** to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.
+
+**Note:** The default player to use can also be set in **PyRadio**'s [configuration file](#config-file), parameter **player** (default value is ***mpv, mplayer, vlc***).
 
 ## Player default volume level
 

@@ -7,7 +7,7 @@ Available options:
   3   build using python v. 3.x
   -u  uninstall pyradio
 
-If no option is used, will build using system default 
+If no option is used, will build using system default
 
 Checking python availability:"
 

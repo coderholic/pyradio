@@ -271,18 +271,11 @@ class PyRadio(object):
             col = curses.color_pair(4)
             self.bodyWin.hline(lineNum + 1, 1, ' ', self.bodyMaxX - 2, col)
 
-        if self.operation_mode == NORMAL_MODE or \
-            self.operation_mode == REMOVE_STATION_MODE or \
-            self.operation_mode == PLAYLIST_RELOAD_ERROR_MODE or \
-            self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE or \
-            self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE or \
-            self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE or \
-            self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE or \
-            self.operation_mode == ASK_TO_SAVE_PLAYLIST_MODE:
-            line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
-        elif self.operation_mode == PLAYLIST_MODE or \
+        if self.operation_mode == PLAYLIST_MODE or \
                 self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
             line = self._format_playlist_line(lineNum, pad, station)
+        else:
+            line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
         self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
     def run(self):
@@ -418,10 +411,11 @@ class PyRadio(object):
                 logger.debug('Error reloading playlist: "{}"'.format(self.cnf.stations_file))
         else:
             self.number_of_items = ret
+            cur_mode = self.operation_mode
             self.operation_mode = NORMAL_MODE
-            self._align_stations_and_refresh(PLAYLIST_RELOAD_CONFIRM_MODE)
+            self._align_stations_and_refresh(NORMAL_MODE)
             if logger.isEnabledFor(logging.DEBUG):
-                if mode == PLAYLIST_RELOAD_CONFIRM_MODE:
+                if cur_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
                     logger.debug('MODE: PLAYLIST_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
                 else:
                     logger.debug('MODE: PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
@@ -588,11 +582,11 @@ class PyRadio(object):
         txt ='''This playlist has been modified within
             PyRadio. Do you want to save it?
 
-            If you choose not to save it now, all modifi-
-            cations will be lost.
+            If you choose not to save it now, all
+            modifications will be lost.
 
             Press "y" to confirm, "Y" to confirm and not
-            be asked again, or any other key to cancel'''
+            be asked again, or "n" to cancel'''
         self._show_help(txt, ASK_TO_SAVE_PLAYLIST_MODE,
                 caption = ' Playlist Modified ',
                 prompt = ' ')
@@ -624,8 +618,9 @@ class PyRadio(object):
     def _align_stations_and_refresh(self, cur_mode):
         """ refresh reference """
         self.stations = self.cnf.stations
+        self.number_of_items = len(self.stations)
 
-        if not self.stations:
+        if self.number_of_items == 0:
             """ The playlist is empty """
             if self.player.isPlaying():
                 self.stopPlayer()
@@ -634,7 +629,6 @@ class PyRadio(object):
             self.operation_mode = NORMAL_MODE
             return
         else:
-            self.number_of_items = len(self.stations)
 
             if cur_mode == REMOVE_STATION_MODE:
                 """ Remove selected station """
@@ -673,46 +667,19 @@ class PyRadio(object):
                             if self.playing == -1:
                                 self.stopPlayer()
 
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('self.playing = {}'.format(self.playing))
-
-                if cur_mode == NORMAL_MODE:
-                    """ Reloading playlist """
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('playlist reloaded')
-                    # TODO
-                    if self.player.isPlaying():
-                        pass
-                    else:
-                        self.playing = -1
-                elif cur_mode == PLAYLIST_MODE:
-                    """ Opening another playlist """
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('new playlist')
-                    if self.player.isPlaying():
-                        self.selection = self.playing
-                        self.startPos = 0
-                        max_lines = self.maxY - 4
-                        #logger.debug('self.playing = {}'.format(self.playing))
-                        if self.selection >= max_lines:
-                            if self.selection > len(self.stations) - max_lines:
-                                self.startPos = len(self.stations) - max_lines
-                                logger.debug('1')
-                            else:
-                                self.startPos = int(self.selection+1/max_lines) - int(max_lines/2)
-                                logger.debug('2')
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('new selection = {}'.format(self.selection))
-                        pass
-                    else:
-                        self.selection = 0
-                        self.startPos = 0
+                    max_lines = self.maxY - 4
+                    self.selection = self.playing
+                    self.startPos = 0
+                    if self.selection >= max_lines:
+                        if self.selection > len(self.stations) - max_lines:
+                            self.startPos = len(self.stations) - max_lines
+                        else:
+                            self.startPos = int(self.selection+1/max_lines) - int(max_lines/2)
+                else:
+                    self.selection = 0
+                    self.startPos = 0
 
         self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('self.selection = {}'.format(self.selection))
-            logger.debug('len = {}'.format(len(self.stations)))
-
         self.refreshBody()
 
     def _open_playlist(self):
@@ -874,9 +841,10 @@ class PyRadio(object):
                     logger.debug('MODE: Cancel PLAYLIST_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
             return
 
-        elif self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
+        elif self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE or \
+                self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
             if char in (ord('y'), ord('Y')):
-                self.reloadCurrentPlaylist(PLAYLIST_DIRTY__RELOAD_CONFIRM_MODE)
+                self.reloadCurrentPlaylist(PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
                 if char == 'Y':
                     self.cnf.confirm_playlist_reload = False
             elif char in (ord('n'), ):
@@ -885,7 +853,10 @@ class PyRadio(object):
                 self.operation_mode = NORMAL_MODE
                 self.refreshBody()
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: Cancel PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
+                    if self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
+                        logger.debug('MODE: Cancel PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
+                    else:
+                        logger.debug('MODE: Cancel PLAYLIST_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
             else:
                 pass
             return
