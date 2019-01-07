@@ -151,7 +151,7 @@ Currently, the following actions are available:
 
 One thing you may want to do is remove a station from a playlist, e.g. when found that it not longer works. You can do that by pressing "***DEL***" or "***x***".
 
-Then, when this is done, you can either save the modified playlist, by pressing "***s***", or reload the playlist from disk, by pressing "***R***".
+Then, when this is done, you can either save the modified playlist, by pressing "***s***", or reload the playlist from disk, by pressing "***R***". A modified playlist will automatically be saved when **PyRadio** exits (or Ctrl-C is pressed).
 
 Finally, opening another playlist is also possible. Just press "***o***" and you will be presented with a list of saved playists to choose from. These playlists must be saved beforehand in **PyRadio**'s configuration directory.
 
