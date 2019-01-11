@@ -153,9 +153,17 @@ One thing you may want to do is remove a station from a playlist, e.g. when foun
 
 Then, when this is done, you can either save the modified playlist, by pressing "***s***", or reload the playlist from disk, by pressing "***R***". A modified playlist will automatically be saved when **PyRadio** exits (or Ctrl-C is pressed).
 
-Finally, opening another playlist is also possible. Just press "***o***" and you will be presented with a list of saved playists to choose from. These playlists must be saved beforehand in **PyRadio**'s configuration directory.
+Finally, opening another playlist is also possible. Just press "***o***" and you will be presented with a list of saved playlists to choose from. These playlists must be saved beforehand in **PyRadio**'s configuration directory.
 
 While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in **PyRadio**'s configuration file for future reference.
+
+### Managing "foreign" playlists
+
+A playlist that does not reside within the program's configuration directory is considered a "***foreign***" playlist. This playlist can only be opened by the **-s** command line option.
+
+When this happens, **PyRadio** will offer you the choise to copy the playlist in its configuration directory, thus making it available for manipulation within the program.
+
+If a playlist of the same name already exists in the configuration directory, the "***foreign***" playlist will be time-stamped. For example, if a "***foreign***" playlist is named "*stations.csv*", it will be named "*2019-01-11_13:35:47_stations.csv*" (provided that the action was taked on January 11, 2019 at 13:35:47).
 
 ## Player detection / selection
 

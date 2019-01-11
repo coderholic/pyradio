@@ -503,10 +503,20 @@ class PyRadio(object):
         if caption.strip():
             self.helpWin.addstr(0, int((mwidth-len(caption))/2), caption, caption_col)
         for i, n in enumerate(lines):
-            self.helpWin.addstr(i+1, 2, n.replace('_', ' '), caption_col)
+            self.helpWin.addstr(i+1, 2, self._replace_starting_undesscore(n), caption_col)
         if prompt.strip():
             self.helpWin.addstr(mheight - 1, int(mwidth-len(prompt)-1), prompt)
         self.helpWin.refresh()
+
+    def _replace_starting_undesscore(self, a_string):
+        ret = ''
+        for i, ch in enumerate(a_string):
+            if ch == '_':
+                ret += ' '
+            else:
+                ret += a_string[i:]
+                break
+        return ret
 
     def _format_playlist_line(self, lineNum, pad, station):
         """ format playlist line so that if fills self.maxX """

@@ -156,7 +156,7 @@ The default playlist to load can also be set in \fBpyradio\fR’s configuration 
 .RE
 .PP
 .B
-Managing playlists (within PyRadio)
+MANAGING PLAYLISTS (WITHIN PYRADIO)
 
 Once \fBpyradio\fR has been loaded, one can perform a series of actions on the current playlist and set of playlists saved in its configuration directory.
 
@@ -169,6 +169,16 @@ Then, when this is done, you can either save the modified playlist, by pressing 
 Finally, opening another playlist is also possible. Just press "\fIo\fR" and you will be presented with a list of saved playists to choose from. These playlists must be saved beforehand in \fBpyradio\fR's configuration directory.
 
 While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in **PyRadio**'s configuration file for future reference.
+
+.PP
+.B
+MANAGING “FOREIGN” PLAYLISTS
+
+A playlist that does not reside within the program’s configuration directory is considered a "\fIforeign\fR" playlist. This playlist can only be opened by the \fB-s\fR command line option.
+
+When this happens, \fBpyradio\fR will offer you the choise to copy the playlist in its configuration directory, thus making it available for manipulation within the program.
+
+If a playlist of the same name already exists in the configuration directory, the "\fIforeign\fR" playlist will be time-stamped. For example, if a "\fIforeign\fR" playlist is named "\fIstations.csv\fR", it will be named "\fI2019-01-11_13:35:47_stations.csv\fR" (provided that the action was taked on January 11, 2019 at 13:35:47).
 
 .SH PLAYER DETECTION / SELECTION
 .PP

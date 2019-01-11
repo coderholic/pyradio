@@ -1,18 +1,22 @@
-2019-01-06  s-n-g
+2019-01-11  s-n-g
 
 	* added command line options -ls, -scd, -ocd
     * make sure config dir exists before doing anything with it
     * make sure the playlist is valid (-s option)
 	* Option -s accepts playlist name only, if it exists in config dir, or
-	playlist number as reported by the -ls command line parameter
+	  playlist number as reported by the -ls command line parameter
 	* -a command line parameter works in combination with -s
 	* started implementing playlist management. Now we can open another
-	playlist, remove a station from a playlist and save a playlist.
-	TODO: rename playlist, copy playlist, add station, edit station
+	  playlist, remove a station from a playlist and save a playlist.
+	  TODO: rename playlist, copy playlist, add station, edit station
 	* added configuration file (~/.config/pyradio/config)
-	TODO: edit configuration file within PyRadio
+	  TODO: edit configuration file within PyRadio
     * ESCAPE now works for exit/cancel
 	* ESCDELAY set to 25ms. Refer to https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses for more info
+	* "Foreign" playlist handing added. A playlist that does not reside in
+	  PyRadio's config dir (called a "foreign playlist") can now be copyied
+	  there, making it available for opening from within PyRadio.
+	* minor errors fixed
     * error_code renamed to operation_mode
 
 2018-12-02  s-n-g
