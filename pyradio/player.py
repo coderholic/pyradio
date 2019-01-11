@@ -182,9 +182,9 @@ class Player(object):
                             self.outputStream.write(string_to_show, args[0])
                     else:
                         if self.oldUserInput['Title'] == '':
-                            self.oldUserInput['Title'] = "Playing station: {}".format(self.name)
+                            self.oldUserInput['Title'] = "Opening station: {}".format(self.name)
                             if (logger.isEnabledFor(logging.DEBUG)):
-                                logger.debug('Playing station: "{}"'.format(self.name))
+                                logger.debug('Opening station: "{}"'.format(self.name))
                             self.outputStream.write(self.oldUserInput['Title'])
         except:
             logger.error("Error in updateStatus thread.",
