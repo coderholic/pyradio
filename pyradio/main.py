@@ -90,7 +90,7 @@ def shell():
             params = input("Enter the name: "), input("Enter the url: ")
         ret = pyradio_config.append_station(params, args.stations)
         if ret < 0:
-            print_playlist_selection_error(pyradio_config, ret)
+            print_playlist_selection_error(args.stations, pyradio_config, ret)
         sys.exit()
 
     if args.list is False:
@@ -98,7 +98,7 @@ def shell():
     sys.stdout.flush()
     ret = pyradio_config.read_playlist_file(args.stations)
     if ret < 0:
-        print_playlist_selection_error(pyradio_config, ret)
+        print_playlist_selection_error(args.stations, pyradio_config, ret)
 
     if args.list:
         for name, url in pyradio_config.stations:
@@ -127,10 +127,11 @@ def shell():
     environ.setdefault('ESCDELAY', '25')
     curses.wrapper(pyradio.setup)
 
-def print_playlist_selection_error(cnf, ret, exit_if_malformed=True):
+def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True):
     if exit_if_malformed:
         if ret == -1:
-            print('Error: playlist is malformed: "{}"'.format(args.stations))
+            print('Error: playlist is malformed: "{}"'.format(a_selection))
+            #print('Error: playlist is malformed: "{}"'.format(args.stations))
             sys.exit(1)
 
     if ret == -2:

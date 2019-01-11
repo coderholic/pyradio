@@ -4,6 +4,7 @@ import logging
 import glob
 from os import path, getenv, makedirs, remove
 from time import ctime
+from datetime import datetime
 from shutil import copyfile, move
 from .log import Log
 
@@ -15,11 +16,14 @@ class PyRadioStations(object):
 
     stations_file = ''
     stations_filename_only = ''
+    stations_filename_only_no_extension = ''
+    foreign_filename_only_no_extension = ''
     previous_stations_file = ''
 
     """ this is always on users config dir """
     stations_dir = ''
 
+    """ True if playlist not in config dir """
     foreign_file = False
 
     stations = []
@@ -83,8 +87,33 @@ class PyRadioStations(object):
         else:
             copyfile(root, path.join(usr, 'stations.csv'))
 
+    def copy_playlist_to_config_dir(self):
+        """ Copy a foreign playlist in config dir
+            Returns:
+                -1: error copying file
+                 0: success
+                 1: playlist renamed
+        """
+        ret = 0
+        st = path.join(self.stations_dir, self.stations_filename_only)
+        if path.exists(st):
+            ret = 1
+            st = datetime.now().strftime("%Y-%m-%d_%H:%M:%S_")
+            st = path.join(self.stations_dir, st + self.stations_filename_only)
+            try:
+                copyfile(self.stations_file, st)
+            except:
+                logger.error('Cannot copy playlist: "{}"'.format(self.stations_file))
+                ret = -1
+                return
+            self._get_playlist_elements(st)
+            self.foreign_file = False
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Playlist copied to: "{}"'.format(self.stations_filename_only_no_extension))
+        return ret
+
     def is_same_playlist(self, a_playlist):
-        """ Checks if a [laylist is already loaded """
+        """ Checks if a playlist is already loaded """
         if a_playlist == self.stations_file:
             return True
         else:
@@ -97,8 +126,10 @@ class PyRadioStations(object):
         """ Check if a csv file is in the config dir """
         if path.dirname(self.stations_file) == self.stations_dir:
             self.foreign_file = False
+            self.foreign_filename_only_no_extension = ''
         else:
             self.foreign_file = True
+            self.foreign_filename_only_no_extension = self.stations_filename_only_no_extension
         self.foreign_copy_asked = False
 
     def _get_playlist_abspath_from_data(self, stationFile=''):

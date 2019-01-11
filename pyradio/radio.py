@@ -41,6 +41,9 @@ PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE = 203
 PLAYLIST_SCAN_ERROR_MODE = 204
 SAVE_PLAYLIST_ERROR_1_MODE = 204
 SAVE_PLAYLIST_ERROR_2_MODE = 205
+FOREIGN_PLAYLIST_ASK_MODE = 300
+FOREIGN_PLAYLIST_MESSAGE_MODE = 301
+FOREIGN_PLAYLIST_COPY_ERROR_MODE = 302
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -305,6 +308,10 @@ class PyRadio(object):
                     self.playSelection()
                 self.refreshBody()
 
+            if self.cnf.foreign_file:
+                """ ask to copy this playlist in config dir """
+                self._print_handle_foreign_playlist()
+
             while True:
                 try:
                     c = self.bodyWin.getch()
@@ -536,6 +543,49 @@ class PyRadio(object):
         line += f_data
         return line
 
+    def _print_handle_foreign_playlist(self):
+        txt ='''This is a "foreign" playlist (i.e. it does not
+            reside in PyRadio's config directory).
+            If you want to be able to easily load it again
+            in the future, it should be copied there.
+
+            Do you want to copy it in the config directory?
+
+            Press "y" to confirm or "n" to reject'''
+        self._show_help(txt, FOREIGN_PLAYLIST_ASK_MODE,
+                caption = ' Foreign playlist ',
+                prompt = ' ')
+
+    def _print_foreign_playlist_message(self):
+        """ reset previous message """
+        self.operation_mode = NORMAL_MODE
+        self.refreshBody()
+        """ display new message """
+        txt='''A playlist by this name:
+            __"{0}"
+            already exists in the config directory.
+
+            This playlist was saved as:
+            __"{1}"
+            '''.format(self.cnf.foreign_filename_only_no_extension,
+                    self.cnf.stations_filename_only_no_extension)
+        self._show_help(txt, FOREIGN_PLAYLIST_MESSAGE_MODE,
+                caption = ' Foreign playlist ',
+                prompt = ' Press any key ')
+
+    def _print_foreign_playlist_copy_error(self):
+        """ reset previous message """
+        self.operation_mode = NORMAL_MODE
+        self.refreshBody()
+        txt ='''Foreign playlist copying failed!
+
+            Make sure the file is not open with another
+            application and try to load it again
+            '''
+        self._show_help(txt, FOREIGN_PLAYLIST_COPY_ERROR_MODE,
+                caption = ' Error ',
+                prompt = ' Press any key ')
+
     def _print_playlist_load_error(self):
         txt ="""Playlist loading failed!
 
@@ -765,6 +815,12 @@ class PyRadio(object):
                 self._print_save_playlist_error_2()
             elif cur_mode == REMOVE_STATION_MODE:
                 self.removeStation()
+            elif cur_mode == FOREIGN_PLAYLIST_ASK_MODE:
+                self._print_handle_foreign_playlist()
+            elif cur_mode == FOREIGN_PLAYLIST_MESSAGE_MODE:
+                self._print_foreign_playlist_message()
+            elif cur_mode == FOREIGN_PLAYLIST_COPY_ERROR_MODE:
+                self._print_foreign_playlist_copy_error()
             return
 
         elif char in (ord('+'), ord('='), ord('.')):
@@ -911,6 +967,39 @@ class PyRadio(object):
                     logger.debug('MODE: Cancel REMOVE_STATION_MODE -> NORMAL_MODE')
             self.operation_mode = NORMAL_MODE
             self.setupAndDrawScreen()
+            return
+
+        elif self.operation_mode == FOREIGN_PLAYLIST_ASK_MODE:
+            if char in (ord('y'), ):
+                ret = self.cnf.copy_playlist_to_config_dir()
+                if ret == 0:
+                    self.operation_mode = NORMAL_MODE
+                    self.refreshBody()
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: FOREIGN_PLAYLIST_ASK_MODE -> NORMAL_MODE')
+                elif ret == 1:
+                    self._print_foreign_playlist_message()
+                else:
+                    """ error """
+                    self._print_foreign_playlist_copy_error()
+            elif char in (ord('n'), ):
+                self.operation_mode = NORMAL_MODE
+                self.refreshBody()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('MODE: Cancel FOREIGN_PLAYLIST_ASK_MODE -> NORMAL_MODE')
+            return
+
+        elif self.operation_mode == FOREIGN_PLAYLIST_MESSAGE_MODE or \
+                self.operation_mode == FOREIGN_PLAYLIST_COPY_ERROR_MODE:
+            """ Just update """
+            self.helpWin = None
+            self.operation_mode = NORMAL_MODE
+            self.refreshBody()
+            if logger.isEnabledFor(logging.DEBUG):
+                if self.operation_mode == FOREIGN_PLAYLIST_MESSAGE_MODE:
+                    logger.debug('MODE: FOREIGN_PLAYLIST_MESSAGE_MODE -> NORMAL_MODE')
+                else:
+                    logger.debug('MODE: FOREIGN_PLAYLIST_COPY_ERROR_MODE -> NORMAL_MODE')
             return
 
         else:
