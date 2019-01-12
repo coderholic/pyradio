@@ -1,3 +1,5 @@
+from sys import version_info
+
 class Log(object):
     """ Log class that outputs text to a curses screen """
 
@@ -16,7 +18,10 @@ class Log(object):
             self.write(self.msg)
 
     def write(self, msg, thread_lock=None):
-        self.msg = msg.strip()
+        if version_info < (3, 0):
+            self.msg = msg.encode('utf-8', 'ignore').strip()
+        else:
+            self.msg = msg.strip()
 
         if self.cursesScreen:
             if thread_lock is not None:

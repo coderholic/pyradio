@@ -3,7 +3,7 @@ import threading
 import os
 import logging
 from os.path import expanduser
-from sys import platform
+from sys import platform, version_info
 from sys import exit
 
 logger = logging.getLogger(__name__)
@@ -152,7 +152,11 @@ class Player(object):
                 subsystemOut = subsystemOut.replace("\r", "").replace("\n", "")
                 if self.oldUserInput['Input'] != subsystemOut:
                     if (logger.isEnabledFor(logging.DEBUG)):
-                        logger.debug("User input: {}".format(subsystemOut))
+                        if version_info < (3, 0):
+                            disp = subsystemOut.encode('utf-8', 'ignore').strip()
+                            logger.debug("User input: {}".format(disp))
+                        else:
+                            logger.debug("User input: {}".format(subsystemOut))
                     self.oldUserInput['Input'] = subsystemOut
                     if self.volume_string in subsystemOut:
                         #logger.error("***** volume")
@@ -251,7 +255,7 @@ class Player(object):
             try:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug("Command: {}".format(command).strip())
-                self.process.stdin.write(command.encode("utf-8"))
+                self.process.stdin.write(command.encode('utf-8', 'ignore'))
                 self.process.stdin.flush()
             except:
                 msg = "Error when sending: {}"
