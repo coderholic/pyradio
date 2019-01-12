@@ -687,6 +687,7 @@ class PyRadio(object):
             self.playing,self.selection, self.stations, \
                 self.number_of_items = (-1, 0, 0, 0)
             self.operation_mode = NORMAL_MODE
+            self.refreshBody()
             return
         else:
 
