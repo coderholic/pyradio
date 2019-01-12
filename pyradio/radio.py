@@ -39,8 +39,8 @@ PLAYLIST_RELOAD_ERROR_MODE = 201
 PLAYLIST_RELOAD_CONFIRM_MODE = 202
 PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE = 203
 PLAYLIST_SCAN_ERROR_MODE = 204
-SAVE_PLAYLIST_ERROR_1_MODE = 204
-SAVE_PLAYLIST_ERROR_2_MODE = 205
+SAVE_PLAYLIST_ERROR_1_MODE = 205
+SAVE_PLAYLIST_ERROR_2_MODE = 206
 FOREIGN_PLAYLIST_ASK_MODE = 300
 FOREIGN_PLAYLIST_MESSAGE_MODE = 301
 FOREIGN_PLAYLIST_COPY_ERROR_MODE = 302
@@ -646,7 +646,8 @@ class PyRadio(object):
             modifications will be lost.
 
             Press "y" to confirm, "Y" to confirm and not
-            be asked again, or "n" to cancel'''
+            be asked again, "n" to reject, or "q" or
+            "ESCAPE" to cancel'''
         self._show_help(txt, ASK_TO_SAVE_PLAYLIST_MODE,
                 caption = ' Playlist Modified ',
                 prompt = ' ')
@@ -882,12 +883,9 @@ class PyRadio(object):
                 ret = self.saveCurrentPlaylist()
                 if ret == 0:
                     self._open_playlist()
-                else:
-                    self.operation_mode = NORMAL_MODE
-                    self.refreshBody()
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: Canceled ASK_TO_SAVE_PLAYLIST_MODE -> NORMAL_MODE')
-            else:
+            elif char in (ord('n'), ):
+                    self._open_playlist()
+            elif char in (curses.KEY_EXIT, ord('q'), 27):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('MODE: Cancel ASK_TO_SAVE_PLAYLIST_MODE -> NORMAL_MODE')
                 self.operation_mode = NORMAL_MODE
@@ -951,7 +949,7 @@ class PyRadio(object):
 
         elif self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE or \
                 self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE:
-            """ close playlist help """
+            """ close error message """
             if logger.isEnabledFor(logging.DEBUG):
                 if self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE:
                     logger.debug('MODE: SAVE_PLAYLIST_ERROR_1_MODE -> NORMAL_MODE')
