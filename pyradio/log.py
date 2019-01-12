@@ -19,7 +19,7 @@ class Log(object):
 
     def write(self, msg, thread_lock=None):
         if version_info < (3, 0):
-            self.msg = msg.encode('utf-8', 'ignore').strip()
+            self.msg = msg.encode('utf-8', 'replace').strip()
         else:
             self.msg = msg.strip()
 

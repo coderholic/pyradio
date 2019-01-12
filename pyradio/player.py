@@ -143,7 +143,7 @@ class Player(object):
         try:
             out = self.process.stdout
             while(True):
-                subsystemOut = out.readline().decode("utf-8", "ignore")
+                subsystemOut = out.readline().decode("utf-8", "replace")
                 if subsystemOut == '':
                     break
                 if not self._is_accepted_input(subsystemOut):
@@ -153,7 +153,7 @@ class Player(object):
                 if self.oldUserInput['Input'] != subsystemOut:
                     if (logger.isEnabledFor(logging.DEBUG)):
                         if version_info < (3, 0):
-                            disp = subsystemOut.encode('utf-8', 'ignore').strip()
+                            disp = subsystemOut.encode('utf-8', 'replace').strip()
                             logger.debug("User input: {}".format(disp))
                         else:
                             logger.debug("User input: {}".format(subsystemOut))
@@ -255,7 +255,7 @@ class Player(object):
             try:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug("Command: {}".format(command).strip())
-                self.process.stdin.write(command.encode('utf-8', 'ignore'))
+                self.process.stdin.write(command.encode('utf-8', 'replace'))
                 self.process.stdin.flush()
             except:
                 msg = "Error when sending: {}"

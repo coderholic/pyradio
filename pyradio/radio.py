@@ -523,18 +523,18 @@ class PyRadio(object):
         line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
         f_data = ' [{0}, {1}]'.format(station[2], station[1])
         if version_info < (3, 0):
-            if len(line.decode('utf-8', 'ignore')) + len(f_data.decode('utf-8', 'ignore')) > self.bodyMaxX -2:
+            if len(line.decode('utf-8', 'replace')) + len(f_data.decode('utf-8', 'replace')) > self.bodyMaxX -2:
                 """ this is too long, try to shorten it
                     by removing file size """
                 f_data = ' [{0}]'.format(station[1])
-            if len(line.decode('utf-8', 'ignore')) + len(f_data.decode('utf-8', 'ignore')) > self.bodyMaxX - 2:
+            if len(line.decode('utf-8', 'replace')) + len(f_data.decode('utf-8', 'replace')) > self.bodyMaxX - 2:
                 """ still too long. start removing chars """
-                while len(line.decode('utf-8', 'ignore')) + len(f_data.decode('utf-8', 'ignore')) > self.bodyMaxX - 3:
+                while len(line.decode('utf-8', 'replace')) + len(f_data.decode('utf-8', 'replace')) > self.bodyMaxX - 3:
                     f_data = f_data[:-1]
                 f_data += ']'
             """ if too short, pad f_data to the right """
-            if len(line.decode('utf-8', 'ignore')) + len(f_data.decode('utf-8', 'ignore')) < self.maxX - 2:
-                while len(line.decode('utf-8', 'ignore')) + len(f_data.decode('utf-8', 'ignore')) < self.maxX - 2:
+            if len(line.decode('utf-8', 'replace')) + len(f_data.decode('utf-8', 'replace')) < self.maxX - 2:
+                while len(line.decode('utf-8', 'replace')) + len(f_data.decode('utf-8', 'replace')) < self.maxX - 2:
                     line += ' '
         else:
             if len(line) + len(f_data) > self.bodyMaxX -2:
