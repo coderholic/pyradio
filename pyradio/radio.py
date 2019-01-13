@@ -677,6 +677,7 @@ class PyRadio(object):
                 prompt = ' Press any key ')
 
     def _align_stations_and_refresh(self, cur_mode):
+        need_to_scan_playlist = False
         """ refresh reference """
         self.stations = self.cnf.stations
         self.number_of_items = len(self.stations)
@@ -691,7 +692,8 @@ class PyRadio(object):
             self.refreshBody()
             return
         else:
-
+            #if logger.isEnabledFor(logging.DEBUG):
+            #    logger.debug('self.playing = {}'.format(self.playing))
             if cur_mode == REMOVE_STATION_MODE:
                 """ Remove selected station """
                 if self.player.isPlaying():
@@ -712,34 +714,59 @@ class PyRadio(object):
             else:
                 if self.player.isPlaying():
                     """ The playlist is not empty """
-                    if self.stations[self.playing][0] == self.active_stations[1][0]:
-                        """ ok, self.playing found, just find selection """
-                        self.selection = self._get_station_id(self.active_stations[0][0])
+                    if self.playing > self.number_of_items - 1:
+                        """ Previous playing station is now invalid
+                            Need to scan playlist """
+                        need_to_scan_playlist = True
                     else:
-                        """ station playing id changed, try previous station """
-                        self.playing -= 1
                         if self.stations[self.playing][0] == self.active_stations[1][0]:
                             """ ok, self.playing found, just find selection """
                             self.selection = self._get_station_id(self.active_stations[0][0])
                         else:
-                            """ self.playing still not found, have to scan playlist """
-                            self.selection, self.playing = self._get_stations_ids((
-                                self.active_stations[0][0],
-                                self.active_stations[1][0]))
-                            if self.playing == -1:
-                                self.stopPlayer()
+                            """ station playing id changed, try previous station """
+                            self.playing -= 1
+                            if self.stations[self.playing][0] == self.active_stations[1][0]:
+                                """ ok, self.playing found, just find selection """
+                                self.selection = self._get_station_id(self.active_stations[0][0])
+                            else:
+                                """ self.playing still not found, have to scan playlist """
+                                need_to_scan_playlist = True
+                else:
+                    """ not playing, can i get a selection? """
+                    need_to_scan_playlist = True
 
-                    max_lines = self.maxY - 4
+            if need_to_scan_playlist:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Scanning playlist for stations...')
+                self.selection, self.playing = self._get_stations_ids((
+                    self.active_stations[0][0],
+                    self.active_stations[1][0]))
+                if self.playing == -1:
+                    self.stopPlayer()
+                need_to_calulate_position = True
+
+                """ calculate new position """
+                max_lines = self.maxY - 4
+                if self.playing >= 0:
                     self.selection = self.playing
-                    self.startPos = 0
+                self.startPos = 0
+                if self.selection < 0:
+                    self.selection = 0
+                else:
                     if self.selection >= max_lines:
                         if self.selection > len(self.stations) - max_lines:
                             self.startPos = len(self.stations) - max_lines
                         else:
                             self.startPos = int(self.selection+1/max_lines) - int(max_lines/2)
-                else:
-                    self.selection = 0
-                    self.startPos = 0
+
+            """ make sure we have a valid selection """
+            if self.selection < 0:
+                self.selection = 0
+                self.startPos = 0
+
+            #if logger.isEnabledFor(logging.DEBUG):
+            #    logger.debug('self.selection = {}'.format(self.selection))
+            #    logger.debug('self.playing = {}'.format(self.playing))
 
         self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
         self.refreshBody()
@@ -772,19 +799,27 @@ class PyRadio(object):
     def _get_stations_ids(self, find):
         ch = -2
         i_find = [ -1, -1 ]
+        debug_str = (u'selection', u'playing')
         for j, a_find in enumerate(find):
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('looking for {}'.format(a_find))
+            if a_find.strip():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(u'** Looking for {0} station: "{1}"'.format(debug_str[j], a_find))
 
-            for i, a_station in enumerate(self.stations):
-                if i_find[j] == -1:
-                    if a_station[0] == a_find:
-                        i_find[j] = i
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('found at {}'.format(i))
-                        ch += 1
-                        if ch == 0:
+                for i, a_station in enumerate(self.stations):
+                    if i_find[j] == -1:
+                        if j == 1 and find[0] == find[1]:
+                            """ No need to scan again for the same station """
+                            i_find[1] = i_find[0]
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug(u'** Got it at {}'.format(i_find[0]))
                             break
+                        if a_station[0] == a_find:
+                            i_find[j] = i
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug(u'** Found at {}'.format(i))
+                            ch += 1
+                            if ch == 0:
+                                break
         return i_find
 
     def _get_active_stations(self):
