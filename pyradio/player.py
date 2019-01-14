@@ -219,10 +219,22 @@ class Player(object):
         return False
 
     def _format_title_string(self, title_string):
-        return title_string
+        return self._title_string_format_text_tag(title_string)
+
+    def _title_string_format_text_tag(self, a_string):
+        i = a_string.find(' - text="')
+        if i == -1:
+            return a_string
+        else:
+            ret_string = a_string[:i] + '|' + a_string[i+9:]
+            i = ret_string.find('"')
+            if i == -1:
+                return ret_string.replace('|', ': "')
+            else:
+                return ret_string[:i+1].replace('|', ': "')
 
     def _format_volume_string(self, volume_string):
-        return volume_string
+        return self._title_string_format_text_tag(volume_string)
 
     def isPlaying(self):
         return bool(self.process)
@@ -456,7 +468,7 @@ class MpvPlayer(Player):
 
     def _format_title_string(self, title_string):
         """ format mpv's title """
-        return title_string.replace(self.icy_tokkens[0], self.icy_title_prefix)
+        return self._title_string_format_text_tag(title_string.replace(self.icy_tokkens[0], self.icy_title_prefix))
 
     def _format_volume_string(self, volume_string):
         """ format mplayer's volume """
@@ -554,9 +566,10 @@ class MpPlayer(Player):
         """ format mplayer's title """
         if "StreamTitle='" in title_string:
             tmp = title_string[title_string.find("StreamTitle='"):].replace("StreamTitle='", self.icy_title_prefix)
-            return tmp[:tmp.find("';")]
+            ret_string = tmp[:tmp.find("';")]
         else:
-            return title_string
+            ret_string = title_string
+        return self._title_string_format_text_tag(ret_string)
 
     def _format_volume_string(self, volume_string):
         """ format mplayer's volume """
@@ -633,7 +646,7 @@ class VlcPlayer(Player):
             ret_string = title_string
         else:
             ret_string = self.icy_title_prefix + sp[1]
-        return ret_string
+        return self._title_string_format_text_tag(ret_string)
 
     def _is_accepted_input(self, input_string):
         """ vlc input filtering """
