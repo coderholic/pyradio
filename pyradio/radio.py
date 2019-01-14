@@ -1054,7 +1054,7 @@ class PyRadio(object):
                              Down/k/PgDown    Change playlist selection.
                              g                Jump to first playlist.
                              <n>G             Jump to n-th / last playlist.
-                             Enter            Open selected playlist.
+                             Enter/Right/l    Open selected playlist.
                              r                Re-read playlists from disk.
                              #                Redraw window.
                              Esc/q            Cancel. """
@@ -1216,7 +1216,8 @@ class PyRadio(object):
 
             elif self.operation_mode == PLAYLIST_MODE:
 
-                if char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+                if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                        curses.KEY_RIGHT, ord('l')):
                     """ return to stations view """
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Loading playlist: "{}"'.format(self.stations[self.selection][-1]))

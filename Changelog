@@ -1,4 +1,4 @@
-2019-01-11  s-n-g
+2019-01-14  s-n-g
 
 	* added command line options -ls, -scd, -ocd
     * make sure config dir exists before doing anything with it
