@@ -140,7 +140,7 @@ $ pyradio -s 5</pre>
 <h3 id="managing-foreign-playlists">Managing “foreign” playlists</h3>
 <p>A playlist that does not reside within the program’s configuration directory is considered a “<strong><em>foreign</em></strong>” playlist. This playlist can only be opened by the <strong>-s</strong> command line option.</p>
 <p>When this happens, <strong>PyRadio</strong> will offer you the choise to copy the playlist in its configuration directory, thus making it available for manipulation within the program.</p>
-<p>If a playlist of the same name already exists in the configuration directory, the “<strong><em>foreign</em></strong>” playlist will be time-stamped. For example, if a “<strong><em>foreign</em></strong>” playlist is named “<em>stations.csv</em>”, it will be named “<em>2019-01-11_13:35:47_stations.csv</em>” (provided that the action was taked on January 11, 2019 at 13:35:47).</p>
+<p>If a playlist of the same name already exists in the configuration directory, the “<strong><em>foreign</em></strong>” playlist will be time-stamped. For example, if a “<strong><em>foreign</em></strong>” playlist is named “<em>stations.csv</em>”, it will be named “<em>2019-01-11_13-35-47_stations.csv</em>” (provided that the action was taked on January 11, 2019 at 13:35:47).</p>
 <h2 id="player-detection-selection">Player detection / selection</h2>
 <p><strong>PyRadio</strong> is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.</p>
 <p>Currently, it supports MPV, MPlayer and VLC, and it will look for them in that order. If none of them is found, the program will terminate with an error.</p>

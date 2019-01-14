@@ -163,7 +163,7 @@ A playlist that does not reside within the program's configuration directory is 
 
 When this happens, **PyRadio** will offer you the choise to copy the playlist in its configuration directory, thus making it available for manipulation within the program.
 
-If a playlist of the same name already exists in the configuration directory, the "***foreign***" playlist will be time-stamped. For example, if a "***foreign***" playlist is named "*stations.csv*", it will be named "*2019-01-11_13:35:47_stations.csv*" (provided that the action was taked on January 11, 2019 at 13:35:47).
+If a playlist of the same name already exists in the configuration directory, the "***foreign***" playlist will be time-stamped. For example, if a "***foreign***" playlist is named "*stations.csv*", it will be named "*2019-01-11_13-35-47_stations.csv*" (provided that the action was taked on January 11, 2019 at 13:35:47).
 
 ## Player detection / selection
 

@@ -98,7 +98,7 @@ class PyRadioStations(object):
         st = path.join(self.stations_dir, self.stations_filename_only)
         if path.exists(st):
             ret = 1
-            st = datetime.now().strftime("%Y-%m-%d_%H:%M:%S_")
+            st = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_")
             st = path.join(self.stations_dir, st + self.stations_filename_only)
             try:
                 copyfile(self.stations_file, st)
