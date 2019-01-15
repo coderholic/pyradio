@@ -226,12 +226,13 @@ class Player(object):
         if i == -1:
             return a_string
         else:
-            ret_string = a_string[:i] + '|' + a_string[i+9:]
-            i = ret_string.find('"')
-            if i == -1:
-                return ret_string.replace('|', ': "')
+            ret_string = a_string[:i]
+            text_string = a_string[i+9:]
+            final_text_string = text_string[:text_string.find('"')]
+            if ret_string == self.icy_title_prefix + final_text_string:
+                return ret_string
             else:
-                return ret_string[:i+1].replace('|', ': "')
+                return ret_string + ': "' + final_text_string + '"'
 
     def _format_volume_string(self, volume_string):
         return self._title_string_format_text_tag(volume_string)
