@@ -36,6 +36,8 @@ class Player(object):
 
     ctrl_c_pressed = False
 
+    _station_encoding = 'utf-8'
+
     def __init__(self, outputStream):
         self.outputStream = outputStream
 
@@ -143,7 +145,11 @@ class Player(object):
         try:
             out = self.process.stdout
             while(True):
-                subsystemOut = out.readline().decode("utf-8", "replace")
+                subsystemOutRaw = out.readline()
+                try:
+                    subsystemOut = subsystemOutRaw.decode(self._station_encoding, "replace")
+                except:
+                    subsystemOut = subsystemOutRaw.decode("utf-8", "replace")
                 if subsystemOut == '':
                     break
                 if not self._is_accepted_input(subsystemOut):
@@ -240,7 +246,7 @@ class Player(object):
     def isPlaying(self):
         return bool(self.process)
 
-    def play(self, name, streamUrl):
+    def play(self, name, streamUrl, encoding = ''):
         """ use a multimedia player to play a stream """
         self.close()
         self.name = name
@@ -249,6 +255,10 @@ class Player(object):
         self.show_volume = True
         self.title_prefix = ''
         self.outputStream.write('Station: {}'.format(name), self.status_update_lock)
+        if encoding:
+            self._station_encoding = encoding
+        else:
+            self._station_encoding = 'utf-8'
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)

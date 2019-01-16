@@ -357,9 +357,13 @@ class PyRadio(object):
         self.playing = self.selection
         name = self.stations[self.selection][0]
         stream_url = self.stations[self.selection][1].strip()
+        try:
+            enc = self.stations[self.selection][2].strip()
+        except:
+            enc = ''
         self.log.write('Playing ' + name)
         try:
-            self.player.play(name, stream_url)
+            self.player.play(name, stream_url, self.get_active_encoding(enc))
         except OSError:
             self.log.write('Error starting player.'
                            'Are you sure a supported player is installed?')
@@ -837,6 +841,13 @@ class PyRadio(object):
                 self.active_stations = [
                         [ '', self.selection ],
                         [ '', -1 ] ]
+
+    def get_active_encoding(self, an_encoding):
+        logger.debug('default_encoding = {}'.format(self.cnf.default_encoding))
+        if an_encoding:
+            return an_encoding
+        else:
+            return self.cnf.default_encoding
 
     def keypress(self, char):
         if char in (ord('#'), curses.KEY_RESIZE):

@@ -23,6 +23,24 @@ default_playlist = stations
 # "random" means play a random station
 default_station = -1
 
+# Default encoding
+# This is the encoding used by default when reading data provided by
+# a station (such as song title, etc.) If reading said data ends up
+# in an error, 'utf-8' will be used instead.
+#
+# A valid encoding list can be found (depends on python version):
+#   https://docs.python.org/2.3/lib/node130.html
+#   https://docs.python.org/2.4/lib/standard-encodings.html
+#   https://docs.python.org/2.5/lib/standard-encodings.html
+#   https://docs.python.org/2.6/library/codecs.html#standard-encodings
+# For python 3:
+#   https://docs.python.org/3.0/library/codecs.html#standard-encodings
+#   (replace 3.0 with specific version)
+#
+# Default value: utf-8
+default_encoding = utf-8
+
+
 # Playlist management
 #
 # Specify whether you will be asked to confirm

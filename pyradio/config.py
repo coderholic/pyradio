@@ -340,6 +340,7 @@ class PyRadioConfig(PyRadioStations):
         self.auto_save_playlist = False
         self.default_playlist = 'stations'
         self.default_station = '-1'
+        self.default_encoding = 'utf-8'
 
         self.dirty_config = False
 
@@ -366,6 +367,15 @@ class PyRadioConfig(PyRadioStations):
     @player_to_use.setter
     def player_to_use(self, val):
         self.__player_to_use = val
+        self.__dirty_config = True
+
+    @property
+    def default_encoding(self):
+        return self.__default_encoding
+
+    @default_encoding.setter
+    def default_encoding(self, val):
+        self.__default_encoding = val
         self.__dirty_config = True
 
     @property
@@ -446,7 +456,9 @@ class PyRadioConfig(PyRadioStations):
             if sp[1] == '':
                 return -2
             if sp[0] == 'player':
-                self.__player_to_use = sp[1].lower()
+                self.__player_to_use = sp[1].lower().strip()
+            elif sp[0] == 'default_encoding':
+                self.__default_encoding = sp[1].strip()
             elif sp[0] == 'default_playlist':
                 self.__default_playlist = sp[1].strip()
             elif sp[0] == 'default_station':
@@ -505,23 +517,41 @@ default_playlist = {1}
 # "random" means play a random station
 default_station = {2}
 
+# Default encoding
+# This is the encoding used by default when reading data provided by
+# a station (such as song title, etc.) If reading said data ends up
+# in an error, 'utf-8' will be used instead.
+#
+# A valid encoding list can be found (depends on python version):
+#   https://docs.python.org/2.3/lib/node130.html
+#   https://docs.python.org/2.4/lib/standard-encodings.html
+#   https://docs.python.org/2.5/lib/standard-encodings.html
+#   https://docs.python.org/2.6/library/codecs.html#standard-encodings
+# For python 3:
+#   https://docs.python.org/3.0/library/codecs.html#standard-encodings
+#   (replace 3.0 with specific version)
+#
+# Default value: utf-8
+default_encoding = {3}
+
+
 # Playlist management
 #
 # Specify whether you will be asked to confirm
 # every station deletion action
 # Valid values: True, true, False, false
-confirm_station_deletion = {3}
+confirm_station_deletion = {4}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within Pyradio
 # Valid values: True, true, False, false
-confirm_playlist_reload = {4}
+confirm_playlist_reload = {5}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
-auto_save_playlist = {5}
+auto_save_playlist = {6}
 
 '''
         copyfile(self.config_file, self.config_file + '.bck')
