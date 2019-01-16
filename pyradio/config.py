@@ -562,6 +562,7 @@ auto_save_playlist = {6}
                 cfgfile.write(txt.format(self.__player_to_use,
                     self.__default_playlist,
                     self.__default_station,
+                    self.__default_encoding,
                     self.__confirm_station_deletion,
                     self.__confirm_playlist_reload,
                     self.__auto_save_playlist))
