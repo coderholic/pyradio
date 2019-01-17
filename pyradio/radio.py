@@ -843,7 +843,6 @@ class PyRadio(object):
                         [ '', -1 ] ]
 
     def get_active_encoding(self, an_encoding):
-        logger.debug('default_encoding = {}'.format(self.cnf.default_encoding))
         if an_encoding:
             return an_encoding
         else:
@@ -924,7 +923,7 @@ class PyRadio(object):
 
         elif self.operation_mode == ASK_TO_SAVE_PLAYLIST_MODE:
             if char in (ord('y'), ord('Y')):
-                if char == 'Y':
+                if char == ord('Y'):
                     self.cnf.auto_save_playlist = True
                 ret = self.saveCurrentPlaylist()
                 if ret == 0:
@@ -938,26 +937,12 @@ class PyRadio(object):
                 self.refreshBody()
             return
 
-        elif self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
-            if char in (ord('y'), ord('Y')):
-                self.reloadCurrentPlaylist(PLAYLIST_RELOAD_CONFIRM_MODE)
-                if char == 'Y':
-                    self.cnf.confirm_playlist_reload = False
-            else:
-                """ close confirmation message """
-                self.stations = self.cnf.stations
-                self.operation_mode = NORMAL_MODE
-                self.refreshBody()
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: Cancel PLAYLIST_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
-            return
-
         elif self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE or \
                 self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
             if char in (ord('y'), ord('Y')):
-                self.reloadCurrentPlaylist(PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
-                if char == 'Y':
+                if char == ord('Y'):
                     self.cnf.confirm_playlist_reload = False
+                self.reloadCurrentPlaylist(PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
             elif char in (ord('n'), ):
                 """ close confirmation message """
                 self.stations = self.cnf.stations

@@ -33,6 +33,10 @@ class PyRadioStations(object):
     selected_playlist = -1
     number_of_stations = -1
 
+    """ new_format: True:  3 columns (name,URL,encoding)
+        new_format: False: 2 columns (name,URL) """
+    new_format = False
+
     dirty_playlist = False
 
     def __init__(self, stationFile=''):
@@ -189,6 +193,8 @@ class PyRadioStations(object):
                -2  -  playlist not found
                """
         prev_file = self.stations_file
+        prev_format = self.new_format
+        self.new_format = False
 
         ret = 0
         stationFile, ret = self._get_playlist_abspath_from_data(stationFile)
@@ -201,10 +207,16 @@ class PyRadioStations(object):
                 for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                     if not row:
                         continue
-                    name, url = [s.strip() for s in row]
-                    self._reading_stations.append((name, url))
+                    try:
+                        name, url = [s.strip() for s in row]
+                        self._reading_stations.append((name, url, ''))
+                    except:
+                        name, url, enc = [s.strip() for s in row]
+                        self._reading_stations.append((name, url, enc))
+                        self.new_format = True
             except:
                 self._reading_stations = []
+                self.new_format = prev_format
                 return -1
 
         self.stations = list(self._reading_stations)
@@ -214,7 +226,29 @@ class PyRadioStations(object):
         self._is_playlist_in_config_dir()
         self.number_of_stations = len(self.stations)
         self.dirty_playlist = False
+        if logger.isEnabledFor(logging.DEBUG):
+            if self.new_format:
+                logger.debug('Playlist is in new format')
+            else:
+                logger.debug('Playlist is in old format')
         return self.number_of_stations
+
+    def _playlist_format_changed(self):
+        """ Check if we have new or old format
+            and report if format has changed
+            
+            Format type can change by editing encoding,
+            deleting a non-utf-8 station etc.
+        """
+        new_format = False
+        for n in self.stations:
+            if n[2] != '':
+                new_format = True
+                break
+        if self.new_format == new_format:
+            return False
+        else:
+            return True
 
     def save_playlist_file(self, stationFile=''):
         """ Save a playlist
@@ -225,26 +259,34 @@ class PyRadioStations(object):
                  -1: Error writing file
                  -2: Error renaming file
         """
+        if self._playlist_format_changed():
+            self.dirty_playlist = True
+            self.new_format = not self.new_format
+
         if stationFile:
             st_file = stationFile
         else:
-            if self.dirty_playlist is False:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Playlist not modified...')
-                return 0
             st_file = self.stations_file
+
+        if self.dirty_playlist is False:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Playlist not modified...')
+            return 0
 
         st_new_file = st_file.replace('.csv', '.txt')
 
         tmp_stations = self.stations[:]
         tmp_stations.reverse()
-        tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '' ])
+        if self.new_format:
+            tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '', '' ])
+        else:
+            tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '' ])
         tmp_stations.reverse()
         try:
             with open(st_new_file, 'w') as cfgfile:
                 writter = csv.writer(cfgfile)
                 for a_station in tmp_stations:
-                    writter.writerow(a_station)
+                    writter.writerow(self._format_playlist_row(a_station))
         except:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Cannot open playlist file for writing,,,')
@@ -257,6 +299,14 @@ class PyRadioStations(object):
             return -2
         self.dirty_playlist = False
         return 0
+
+    def _format_playlist_row(self, a_row):
+        """ Return a 2-column if in old format, or
+            a 3-column row if in new format """
+        if self.new_format:
+            return a_row
+        else:
+            return a_row[:-1]
 
     def _get_playlist_elements(self, a_playlist):
         self.stations_file = path.abspath(a_playlist)
@@ -473,12 +523,12 @@ class PyRadioConfig(PyRadioStations):
                 if sp[1].lower() == 'false':
                     self.__confirm_station_deletion = False
                 else:
-                    self.__confirm_station_deletion = False
+                    self.__confirm_station_deletion = True
             elif sp[0] == 'confirm_playlist_reload':
                 if sp[1].lower() == 'false':
-                    self.__confirm_station_deletion = False
+                    self.__confirm_playlist_reload = False
                 else:
-                    self.__confirm_station_deletion = True
+                    self.__confirm_playlist_reload = True
             elif sp[0] == 'auto_save_playlist':
                 if sp[1].lower() == 'true':
                     self.__auto_save_playlist = True
