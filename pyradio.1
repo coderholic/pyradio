@@ -90,6 +90,8 @@ The file can also be altered while \fBpyradio\fR is running. This process is tra
 .PP
 \fBpyradio\fR reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.
 .PP
+Optionally, a third column can be inserted, stating the encoding used by the station (more on this at \fBSPECIFYING STATIONS' ENCODING\fR).
+.PP
 \fBpyradio\fR will by default load the user's stations file (e.g. \fI~/.config/pyradio/stations.csv\fR). If this file is not found, it will be created and populated with a default set of stations.
 
 .IP \fBTip:
@@ -168,7 +170,7 @@ Then, when this is done, you can either save the modified playlist, by pressing 
 
 Finally, opening another playlist is also possible. Just press "\fIo\fR" and you will be presented with a list of saved playists to choose from. These playlists must be saved beforehand in \fBpyradio\fR's configuration directory.
 
-While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in **PyRadio**'s configuration file for future reference.
+While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in \fBpyradio\fR's configuration file for future reference.
 
 .PP
 .B
@@ -179,6 +181,97 @@ A playlist that does not reside within the program’s configuration directory i
 When this happens, \fBpyradio\fR will offer you the choise to copy the playlist in its configuration directory, thus making it available for manipulation within the program.
 
 If a playlist of the same name already exists in the configuration directory, the "\fIforeign\fR" playlist will be time-stamped. For example, if a "\fIforeign\fR" playlist is named "\fIstations.csv\fR", it will be named "\fI2019-01-11_13-35-47_stations.csv\fR" (provided that the action was taked on January 11, 2019 at 13:35:47).
+
+.SH SPECIFYING STATIONS' ENCODING
+
+Normally, stations provide information about their status (including the title of the song playing, which \fBpyradio\fR displays) in Unicode (\fIutf-8\fR encoded). Therefore, \fBpyradio\fR will use \fIutf-8\fR to decode such data, by default.
+
+In an ideal world that would be the case for all stations and everything would be ok and as far as \fBpyradio\fR is concerned, songs' titles would be correctly displayed. Unfortunately, this is not the case.
+
+A lot of stations encode and transmit data in a different encoding (typically the encoding used at the region the come from). The result in \fBpyradio\fR would be that a song title would be incorrectly displayed, not displayed at all, or trying to displaying it might even break \fBpyradio\fR's layout.
+
+.IP \fBNote\fR
+\fIvlc\fR will not work in this case; it presumably tries to decode the said data beforehand, probably using \fIutf-8\fR by default, and when it fails, it provides a "\fI(null)\fR" string, instead of the actual data. So, you'd better not use \fIvlc\fR if such stations are in your playlists.
+
+.PP
+\fBpyradio\fR addresses this issue by allowing the user to declare the encoding to use either in a station by station mode or globally.
+
+.PP
+.B
+STATION BY STATION ENCODING DECLARATION
+
+As previously stated, a \fBpyradio\fR's playlist can optionally contain a third column (in addition to the station name and station URL columns), which declares the station's encoding.
+
+So, when a \fInon-utf-8\fR encoded station is inserted in a playlist, its encoding can also be declared along with its other data. The drawback of this feature is that an encoding must be declared for \fBall stations\fR (so that the \fBCSV\fR file structure remains valid). To put it simple, since one station comprises the third column, all stations must do so as well.
+
+This may seem intimidating (and difficult to achieve), but it's actually really simple; just add a "\fI,\fR" character at the end of the line of each station that uses the default encoding. In this way, all stations comprise the third column (either by declaring an actual encoding or leaving it empty).
+
+Example:
+
+Suppose we have a playlist with one \fIutf-8\fR encoded station:
+
+.HP
+
+\fIStation1\fB,\fIStation1_URL
+
+.PP
+Now we want to add "\fIStation2\fR" which is \fIiso-8859-7\fR (Greek) encoded.
+
+Since we know \fBall stations\fR must comprise the third (encoding) column, we add it to the existing station:
+
+
+.HP
+
+\fIStation1\fB,\fIStation1_URL\fB,
+
+.PP
+This way we add an empty encoding, forcing 
+.PP
+Finally, we insert the new station to the playlist:
+
+.HP
+
+\fIStation1\fB,\fIStation1_URL\fB,\fI
+.br
+Station2\fB,\fIStation2_URL\fB,\fIiso-8859-7
+
+.IP \fBNote\fR
+Using the \fB-a\fR command line option will save you all this trouble, as it will automatically take care of creating a valid \fBCSV\fR file.
+
+.PP
+.B
+GLOBAL ENCODING DECLARATION
+
+\fBpyradio\fR's configuration file contains the parameter \fBdefault_encoding\fR, which by default is set to \fIutf-8\fR.
+
+Setting this parameter to a different encoding, will permit \fBpyradio\fR to successfully decode such stations.
+
+This would be useful in the case where most of your stations do not use \fIutf-8\fR. Instead of editing the playlist and add the encoding to each and every affected station, you just set it globally.
+
+.PP
+.B
+FINDING THE RIGHT ENCODING
+
+A valid encoding list can be found (depends on python version):
+
+.HP
+
+\fIhttps://docs.python.org/2.3/lib/node130.html
+
+https://docs.python.org/2.4/lib/standard-encodings.html
+
+https://docs.python.org/2.5/lib/standard-encodings.html
+
+.PP
+
+Or use this URL
+
+.HP
+
+\fIhttps://docs.python.org/2.6/library/codecs.html#standard-encodings
+
+.PP
+replacing \fI2.6\fR with specific version: \fI2.7\fR, \fI3.0\fR up to current python version.
 
 .SH PLAYER DETECTION / SELECTION
 .PP

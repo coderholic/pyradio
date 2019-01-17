@@ -32,10 +32,10 @@ default_station = -1
 #   https://docs.python.org/2.3/lib/node130.html
 #   https://docs.python.org/2.4/lib/standard-encodings.html
 #   https://docs.python.org/2.5/lib/standard-encodings.html
+# Or use this URL
 #   https://docs.python.org/2.6/library/codecs.html#standard-encodings
-# For python 3:
-#   https://docs.python.org/3.0/library/codecs.html#standard-encodings
-#   (replace 3.0 with specific version)
+# replacing 2.6 with specific version:
+#   2.7, 3.0 up to current python version.
 #
 # Default value: utf-8
 default_encoding = utf-8

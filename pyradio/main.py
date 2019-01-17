@@ -82,23 +82,30 @@ def shell():
     if args.use_player != '':
         requested_player = args.use_player
 
-    # No need to parse the file if we add station
-    if args.add:
-        if sys.version_info < (3, 0):
-            params = raw_input("Enter the name: "), raw_input("Enter the url: ")
-        else:
-            params = input("Enter the name: "), input("Enter the url: ")
-        ret = pyradio_config.append_station(params, args.stations)
-        if ret < 0:
-            print_playlist_selection_error(args.stations, pyradio_config, ret)
-        sys.exit()
-
-    if args.list is False:
+    if args.list is False and args.add is False:
         print('Reading playlist...')
     sys.stdout.flush()
     ret = pyradio_config.read_playlist_file(args.stations)
     if ret < 0:
         print_playlist_selection_error(args.stations, pyradio_config, ret)
+
+    # No need to parse the file if we add station
+    # Actually we do need to do so now, so that we
+    # handle 2-column vs. 3-column playlists
+    if args.add:
+        if sys.version_info < (3, 0):
+            params = raw_input("Enter the name: "), raw_input("Enter the url: "), raw_input("Enter the encoding (leave empty for 'utf-8'): ")
+        else:
+            params = input("Enter the name: "), input("Enter the url: "), input("Enter the encoding (leave empty for 'utf-8'): ")
+        msg = ('name', 'url')
+        for i, a_param in enumerate(params):
+            if a_param.strip() == '':
+                print('** Error: No {} entered. Aborting...'.format(msg[i]))
+                sys.exit(1)
+        ret = pyradio_config.append_station(params, args.stations)
+        if ret < 0:
+            print_playlist_selection_error(args.stations, pyradio_config, ret)
+        sys.exit()
 
     if args.list:
         for name, url in pyradio_config.stations:

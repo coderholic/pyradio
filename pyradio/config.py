@@ -551,6 +551,7 @@ class PyRadioConfig(PyRadioStations):
 #   player = vlc
 # or
 #   player = vlc,mpv, mplayer
+# Default value: mpv,mplayer,vlc
 player = {0}
 
 # Default playlist
@@ -558,6 +559,7 @@ player = {0}
 # You can scecify full path to CSV file, or if the playlist is in the
 # config directory, playlist name (filename without extension) or
 # playlist number (as reported by -ls command line option)
+# Default value: stations
 default_playlist = {1}
 
 # Default station
@@ -565,6 +567,7 @@ default_playlist = {1}
 # The station number within the default playlist to play
 # Value is 0..number of stations, -1 means no auto play
 # "random" means play a random station
+# Default value: -1
 default_station = {2}
 
 # Default encoding
@@ -576,10 +579,10 @@ default_station = {2}
 #   https://docs.python.org/2.3/lib/node130.html
 #   https://docs.python.org/2.4/lib/standard-encodings.html
 #   https://docs.python.org/2.5/lib/standard-encodings.html
+# Or use this URL
 #   https://docs.python.org/2.6/library/codecs.html#standard-encodings
-# For python 3:
-#   https://docs.python.org/3.0/library/codecs.html#standard-encodings
-#   (replace 3.0 with specific version)
+# replacing 2.6 with specific version: 
+#   2.7, 3.0 up to current python version.
 #
 # Default value: utf-8
 default_encoding = {3}
@@ -590,17 +593,20 @@ default_encoding = {3}
 # Specify whether you will be asked to confirm
 # every station deletion action
 # Valid values: True, true, False, false
+# Default value: True
 confirm_station_deletion = {4}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within Pyradio
 # Valid values: True, true, False, false
+# Default value: True
 confirm_playlist_reload = {5}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
+# Default value: False
 auto_save_playlist = {6}
 
 '''

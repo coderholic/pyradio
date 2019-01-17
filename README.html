@@ -36,6 +36,7 @@
 <li><a href="#controls">Controls</a></li>
 <li><a href="#config-file">Config file</a></li>
 <li><a href="#about-playlist-files">About Playlist files</a></li>
+<li><a href="#specifying-stations-encoding">Specifying stations’ encoding</a></li>
 <li><a href="#player-detection-selection">Player detection / selection</a></li>
 <li><a href="#player-default-volume-level">Player default volume level</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
@@ -102,6 +103,7 @@ Esc/q                     Quit.</pre>
 <p>The file can also be altered while <strong>PyRadio</strong> is running. This process is transparent to the user; <strong>PyRadio</strong> will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).</p>
 <h2 id="about-playlist-files">About Playlist files</h2>
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
+<p>Optionally, a third column can be inserted, stating the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
 <p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2em;"><strong>Tip:</strong> If you already have a custom <em>stations.csv</em> file, but want to update it with <strong>PyRadio</strong>’s default one, you just rename it, run <strong>PyRadio</strong> (so that the default one get created) and then merge the two files.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong><em>~/.pyradio</em></strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong><em>~/.config/pyradio</em></strong>) and renamed to <strong><em>stations.csv</em></strong> or if this file exists, to <strong><em>pyradio.csv</em></strong>. In this case, this file will be the default one.</p>
@@ -139,8 +141,44 @@ $ pyradio -s 5</pre>
 <p>While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in <strong>PyRadio</strong>’s configuration file for future reference.</p>
 <h3 id="managing-foreign-playlists">Managing “foreign” playlists</h3>
 <p>A playlist that does not reside within the program’s configuration directory is considered a “<strong><em>foreign</em></strong>” playlist. This playlist can only be opened by the <strong>-s</strong> command line option.</p>
-<p>When this happens, <strong>PyRadio</strong> will offer you the choise to copy the playlist in its configuration directory, thus making it available for manipulation within the program.</p>
-<p>If a playlist of the same name already exists in the configuration directory, the “<strong><em>foreign</em></strong>” playlist will be time-stamped. For example, if a “<strong><em>foreign</em></strong>” playlist is named “<em>stations.csv</em>”, it will be named “<em>2019-01-11_13-35-47_stations.csv</em>” (provided that the action was taked on January 11, 2019 at 13:35:47).</p>
+<p>When this happens, <strong>PyRadio</strong> will offer you the choice to copy the playlist in its configuration directory, thus making it available for manipulation within the program.</p>
+<p>If a playlist of the same name already exists in the configuration directory, the “<strong><em>foreign</em></strong>” playlist will be time-stamped. For example, if a “<strong><em>foreign</em></strong>” playlist is named “<em>stations.csv</em>”, it will be named “<em>2019-01-11_13-35-47_stations.csv</em>” (provided that the action was taken on January 11, 2019 at 13:35:47).</p>
+<h2 id="specifying-stations-encoding">Specifying stations’ encoding</h2>
+<p>Normally, stations provide information about their status (including the title of the song playing, which <strong>PyRadio</strong> displays) in Unicode (<strong>utf-8</strong> encoded). Therefore, <strong>PyRadio</strong> will use <strong>utf-8</strong> to decode such data, by default.</p>
+<p>In an ideal world that would be the case for all stations and everything would be ok and as far as <strong>PyRadio</strong> is concerned, songs’ titles would be correctly displayed. Unfortunately, this is not the case.</p>
+<p>A lot of stations encode and transmit data in a different encoding (typically the encoding used at the region the come from). The result in <strong>PyRadio</strong> would be that a song title would be incorrectly displayed, not displayed at all, or trying to displaying it might even break <strong>PyRadio</strong>’s layout.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> <strong>vlc</strong> will not work in this case; it presumably tries to decode the said data beforehand, probably using <strong>utf-8</strong> by default, and when it fails, it provides a “<strong><em>(null)</em></strong>” string, instead of the actual data. So, you’d better not use <strong>vlc</strong> if such stations are in your playlists.</p>
+<p><strong>PyRadio</strong> addresses this issue by allowing the user to declare the encoding to use either in a station by station mode or globally.</p>
+<h3 id="station-by-station-encoding-declaration">Station by station encoding declaration</h3>
+<p>As previously stated, a <strong>PyRadio</strong>’s playlist can optionally contain a third column (in addition to the station name and station URL columns), which declares the station’s encoding.</p>
+<p>So, when a <strong>non-utf-8</strong> encoded station is inserted in a playlist, its encoding can also be declared along with its other data. The drawback of this feature is that an encoding must be declared for <strong>all stations</strong> (so that the <strong><em>CSV</em></strong> file structure remains valid). To put it simple, since one station comprises the third column, all stations must do so as well.</p>
+<p>This may seem intimidating (and difficult to achieve), but it’s actually really simple; just add a “<strong>,</strong>” character at the end of the line of each station that uses the default encoding. In this way, all stations comprise the third column (either by declaring an actual encoding or leaving it empty).</p>
+<p>Example:</p>
+<p>Suppose we have a playlist with one <strong>utf-8</strong> encoded station:</p>
+<pre>Station1,Station1_URL</pre>
+<p>Now we want to add “<strong><em>Station2</em></strong>” which is <strong><em>iso-8859-7</em></strong> (Greek) encoded.</p>
+<p>Since we know <strong>all stations</strong> must comprise the third (encoding) column, we add it to the existing station:</p>
+<pre>Station1,Station1_URL,</pre>
+<p>Finally, we insert the new station to the playlist:</p>
+<pre>Station1,Station1_URL,
+Station2,Station2_URL,iso-8859-7</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Using the <strong><em>-a</em></strong> command line option will save you all this trouble, as it will automatically take care of creating a valid <strong><em>CSV</em></strong> file.</p>
+<h3 id="global-encoding-declaration">Global encoding declaration</h3>
+<p><strong>PyRadio</strong>’s configuration file contains the parameter <strong><em>default_encoding</em></strong>, which by default is set to <strong>utf-8</strong>.</p>
+<p>Setting this parameter to a different encoding, will permit <strong>PyRadio</strong> to successfully decode such stations.</p>
+<p>This would be useful in the case where most of your stations do not use <strong>utf-8</strong>. Instead of editing the playlist and add the encoding to each and every affected station, you just set it globally.</p>
+<h3 id="finding-the-right-encoding">Finding the right encoding</h3>
+<p>A valid encoding list can be found (depends on python version):</p>
+<ul>
+<li><a href="https://docs.python.org/2.3/lib/node130.html">https://docs.python.org/2.3/lib/node130.html</a></p></li>
+<li><a href="https://docs.python.org/2.4/lib/standard-encodings.html">https://docs.python.org/2.4/lib/standard-encodings.html</a></p></li>
+<li><a href="https://docs.python.org/2.5/lib/standard-encodings.html">https://docs.python.org/2.5/lib/standard-encodings.html</a></p></li>
+</ul>
+<p>Or use this URL</p>
+<ul>
+<li><a href="https://docs.python.org/2.6/library/codecs.html#standard-encodings">https://docs.python.org/2.6/library/codecs.html#standard-encodings</a></li>
+</ul>
+<p>replacing <strong>2.6</strong> with specific version: <strong>2.7</strong>, <strong>3.0</strong> up to current python version.</p>
 <h2 id="player-detection-selection">Player detection / selection</h2>
 <p><strong>PyRadio</strong> is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.</p>
 <p>Currently, it supports MPV, MPlayer and VLC, and it will look for them in that order. If none of them is found, the program will terminate with an error.</p>
