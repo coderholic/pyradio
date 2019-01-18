@@ -350,9 +350,9 @@ class PyRadioStations(object):
 
             st_file, ret = self._get_playlist_abspath_from_data(st_file)
             if ret < -1:
-                return -1
+                return ret
             try:
-                with open(st_file, 'w') as cfgfile:
+                with open(st_file, 'a') as cfgfile:
                     writter = csv.writer(cfgfile)
                     writter.writerow(params)
                 return 0
@@ -360,7 +360,11 @@ class PyRadioStations(object):
                 return -5
         else:
             self.stations.append([ params[0], params[1], params[2] ])
-            ret = self.save_playlist_file(stationFile)
+            self.dirty_playlist = True
+            st_file, ret = self._get_playlist_abspath_from_data(stationFile)
+            if ret < -1:
+                return ret
+            ret = self.save_playlist_file(st_file)
             if ret < 0:
                 ret -= 4
             return ret

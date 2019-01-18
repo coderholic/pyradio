@@ -99,9 +99,10 @@ def shell():
             params = input("Enter the name: "), input("Enter the url: "), input("Enter the encoding (leave empty for 'utf-8'): ")
         msg = ('name', 'url')
         for i, a_param in enumerate(params):
-            if a_param.strip() == '':
-                print('** Error: No {} entered. Aborting...'.format(msg[i]))
-                sys.exit(1)
+            if i < 2:
+                if a_param.strip() == '':
+                    print('** Error: No {} entered. Aborting...'.format(msg[i]))
+                    sys.exit(1)
         ret = pyradio_config.append_station(params, args.stations)
         if ret < 0:
             print_playlist_selection_error(args.stations, pyradio_config, ret)
