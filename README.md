@@ -176,7 +176,7 @@ In an ideal world that would be the case for all stations and everything would b
 
 A lot of stations encode and transmit data in a different encoding (typically the encoding used at the region the come from). The result in **PyRadio** would be that a song title would be incorrectly displayed, not displayed at all, or trying to displaying it might even break **PyRadio**'s layout.
 
-**Note:** **vlc** will not work in this case; it presumably tries to decode the said data beforehand, probably using **utf-8** by default, and when it fails, it provides a "***(null)***" string, instead of the actual data. So, you'd better not use **vlc** if such stations are in your playlists.
+**Note:** **vlc** will not work in this case; it presumably tries to decode the said data beforehand, probably using **utf-8** by default, and when it fails, it provides a "**(null)**" string, instead of the actual data. So, you'd better not use **vlc** if such stations are in your playlists.
 
 **PyRadio** addresses this issue by allowing the user to declare the encoding to use either in a station by station mode or globally.
 

@@ -108,8 +108,16 @@ def shell():
         sys.exit()
 
     if args.list:
-        for name, url in pyradio_config.stations:
-            print(('{0:50.50s} {1:s}'.format(name, url)))
+        header_format_string, format_string = get_format_string(pyradio_config.stations)
+        header_string = header_format_string.format('[Name]','[URL]','[Encoding]')
+        print(header_string)
+        print(len(header_string) * '-')
+        for num, a_station in enumerate(pyradio_config.stations):
+            if a_station[2]:
+                encoding = a_station[2]
+            else:
+                encoding = pyradio_config.default_encoding
+            print(format_string.format(str(num+1), a_station[0], a_station[1], encoding))
         sys.exit()
 
     if args.debug:
@@ -151,6 +159,12 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
         print('Error: Specified numbered playlist not found')
         cnf.list_playlists()
         sys.exit(1)
+    elif ret == -5:
+        print('Error: Failed to write playlist')
+        sys.exit(1)
+    elif ret == -6:
+        print('Error: Failed to rename playlist')
+        sys.exit(1)
 
 def open_conf_dir(cnf):
     import subprocess
@@ -162,6 +176,18 @@ def open_conf_dir(cnf):
         subprocess.Popen(["open", cnf.stations_dir])
     else:
         subprocess.Popen(["xdg-open", cnf.stations_dir])
+
+def get_format_string(stations):
+    len0 = len1 = 0
+    for n in stations:
+        if len(n[0]) > len0:
+            len0 = len(n[0])
+        if len(n[1]) > len1:
+            len1 = len(n[1])
+    num = len(str(len(stations)))
+    format_string = '{0:>' + str(num) + '.' + str(num) + 's}. ' + '{1:' + str(len0) + '.' + str(len0) + 's} | {2:' + str(len1) + '.' + str(len1) + 's} | {3}'
+    header_format_string = '{0:' + str(len0+num+2) + '.' + str(len0+num+2) + 's} | {1:' + str(len1) + '.' + str(len1) + 's} | {2}'
+    return header_format_string, format_string
 
 if __name__ == '__main__':
     shell()

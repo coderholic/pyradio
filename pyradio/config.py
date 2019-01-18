@@ -236,7 +236,7 @@ class PyRadioStations(object):
     def _playlist_format_changed(self):
         """ Check if we have new or old format
             and report if format has changed
-            
+
             Format type can change by editing encoding,
             deleting a non-utf-8 station etc.
         """
@@ -254,7 +254,7 @@ class PyRadioStations(object):
         """ Save a playlist
         Create a txt file and write stations in it.
         Then rename it to final target
-        
+
         return    0: All ok
                  -1: Error writing file
                  -2: Error renaming file
@@ -333,19 +333,37 @@ class PyRadioStations(object):
             return '{0:.2f} TB'.format(B/TB)
 
     def append_station(self, params, stationFile=''):
-        """ Append a station to csv file"""
+        """ Append a station to csv file
 
-        if stationFile:
-            st_file = stationFile
+        return    0: All ok
+                 -2  -  playlist not found
+                 -3  -  negative number specified
+                 -4  -  number not found
+                 -5: Error writing file
+                 -6: Error renaming file
+        """
+        if self.new_format:
+            if stationFile:
+                st_file = stationFile
+            else:
+                st_file = self.stations_file
+
+            st_file, ret = self._get_playlist_abspath_from_data(st_file)
+            if ret < -1:
+                return -1
+            try:
+                with open(st_file, 'w') as cfgfile:
+                    writter = csv.writer(cfgfile)
+                    writter.writerow(params)
+                return 0
+            except:
+                return -5
         else:
-            st_file = self.stations_file
-
-        st_file, ret = self._get_playlist_abspath_from_data(st_file)
-        if ret < -1:
+            self.stations.append([ params[0], params[1], params[2] ])
+            ret = self.save_playlist_file(stationFile)
+            if ret < 0:
+                ret -= 4
             return ret
-        with open(st_file, 'w') as cfgfile:
-            writter = csv.writer(cfgfile)
-            writter.writerow(params)
 
     def remove_station(self, a_station):
         self.dirty_playlist = True
