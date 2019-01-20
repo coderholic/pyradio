@@ -24,7 +24,11 @@ Checking python availability:"
 
 uninstall(){
     sudo rm -f `which pyradio` 2>/dev/null
-    sudo rm -rf /usr/share/doc/pyradio 2>/dev/null
+    if [ -d /usr/share/doc/pyradio ];then
+        sudo rm -rf /usr/share/doc/pyradio 2>/dev/null
+    else
+        sudo rm -rf /usr/local/share/doc/pyradio 2>/dev/null
+    fi
     sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null
     echo "PyRadio successfully uninstalled"
 }
@@ -109,10 +113,32 @@ python"${TO_PYTHON}" setup.py build && {
     sudo python"${TO_PYTHON}" setup.py install && {
         gzip -k pyradio.1
         sudo mv pyradio.1.gz /usr/share/man/man1
-        sudo mkdir /usr/share/doc/pyradio 2>/dev/null
-        sudo cp README.* build.* /usr/share/doc/pyradio
+        DOC=/usr/share/doc/pyradio
+        sudo mkdir "$DOC" 2>/dev/null
+        if [ ! -d "$DOC" ];then
+            # Mac OS SIP protects /usr
+            DOC=/usr/local/share/doc/pyradio
+            mkdir "$DOC"
+        fi
+        for n in README.* build.*
+        do
+            sudo cp "$n" "$DOC"
+        done
+        # copy LICENCE
+        if [ "$DOC" = "/usr/share/doc/pyradio" ];then
+            sudo mkdir -p /usr/share/licenses/pyradio 2>/dev/null
+            sudo cp LICENCE /usr/share/licenses/pyradio
+        else
+            sudo cp LICENCE "$DOC"
+        fi
     }
 }
 
 # restore files to original state
-[ -z "$descr" ] || git checkout pyradio/radio.py
+[ -z "$descr" ] || {
+    echo "s/git_description = '[^']*'/git_description = ''/" > sed.$$
+    sed -f  sed.$$ pyradio/radio.py > tmp-radio.py
+    mv tmp-radio.py pyradio/radio.py
+    #git checkout pyradio/radio.py
+}
+rm sed.$$ 2>/dev/null
