@@ -59,6 +59,12 @@ Then just install **git**:
 brew install git
 ```
 
+Depending on your Mac OS version, you may have to install **sed** too:
+
+```
+brew install gnu-sed --default-names
+```
+
 Now it's time to install a media player. You are free to install any one of them or even more than one...
 
 1\. ***MPV***

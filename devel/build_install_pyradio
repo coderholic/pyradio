@@ -57,12 +57,29 @@ do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+## check dependencies :)
+#for prog in git sed ;do
+#    ${prog} --version 2>/dev/null 1>&2 || {
+#        echo "Error: ${prog} not found."
+#        echo "       Please install it and try again."
+#        exit 1
+#    }
+#done
+
 # check dependencies :)
 for prog in git sed ;do
     ${prog} --version 2>/dev/null 1>&2 || {
-        echo "Error: ${prog} not found."
-        echo "       Please install it and try again."
-        exit 1
+        if [ "${prog}" = "sed" ];then
+            sed 's/a/b/' LICENCE > /dev/null ||{
+                echo "Error: ${prog} not found."
+                echo "       Please install it and try again."
+                exit 1
+            }
+        else
+                echo "Error: ${prog} not found."
+                echo "       Please install it and try again."
+                exit 1
+        fi
     }
 done
 
@@ -72,18 +89,30 @@ sudo find . -iname "*.egg" -delete 2>/dev/null
 
 # add git repo info to project
 descr=$(git describe --long --tags 2>/dev/null || echo not_from_git)
-[ -z "$descr" ] || sed -i "s/git_description = ''/git_description = '${descr}'/" pyradio/radio.py
+
+[ -z "$descr" ] || {
+    echo -n "s/git_description = ''/git_description = '" > sed.$$
+    echo -n "${descr}" >> sed.$$
+    echo "'/" >> sed.$$
+    sed -f sed.$$ pyradio/radio.py > tmp-radio.py && mv tmp-radio.py pyradio/radio.py || {
+        # failed... restore radio.py
+        # and build without revision info
+        git checkout pyradio/radio.py
+        descr=''
+    }
+}
+rm sed.$$ 2>/dev/null
 
 # build and install project
 python"${TO_PYTHON}" setup.py build && {
-echo "***** installing..."
-sudo python"${TO_PYTHON}" setup.py install && {
-    gzip -k pyradio.1
-    sudo mv pyradio.1.gz /usr/share/man/man1
-    sudo mkdir /usr/share/doc/pyradio 2>/dev/null
-    sudo cp README.* build.* /usr/share/doc/pyradio
-}
+    echo "***** installing..."
+    sudo python"${TO_PYTHON}" setup.py install && {
+        gzip -k pyradio.1
+        sudo mv pyradio.1.gz /usr/share/man/man1
+        sudo mkdir /usr/share/doc/pyradio 2>/dev/null
+        sudo cp README.* build.* /usr/share/doc/pyradio
+    }
 }
 
 # restore files to original state
-[ -z "$descr" ] || sed -i "s/git_description = '[^']*'/git_description = ''/" pyradio/radio.py
+[ -z "$descr" ] || git checkout pyradio/radio.py
