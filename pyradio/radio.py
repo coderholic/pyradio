@@ -14,6 +14,7 @@ import random
 #import signal
 from sys import version as python_version, version_info
 from os.path import join, basename, getmtime, getsize
+from platform import system
 from time import ctime
 
 from .log import Log
@@ -84,7 +85,7 @@ class PyRadio(object):
 
     def setup(self, stdscr):
         if logger.isEnabledFor(logging.INFO):
-            logger.info("GUI initialization on python v. {}".format(python_version).replace('\n', ' ').replace('\r', ' '))
+            logger.info("GUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), system()))
         self.stdscr = stdscr
         from pyradio import version
         self.info = " PyRadio {0} ".format(version)
