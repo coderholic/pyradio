@@ -1,5 +1,6 @@
-2019-01-18  s-n-g
+2019-01-21  s-n-g
 
+	* Version 0.7.0
 	* added command line options -ls, -scd, -ocd
     * make sure config dir exists before doing anything with it
     * make sure the playlist is valid (-s option)
@@ -22,6 +23,7 @@
 	* '/' win no longer display help ('?' is still valid)
 	* minor errors fixed
     * error_code renamed to operation_mode
+	* build script working on MacOS
 
 2018-12-02  s-n-g
 
