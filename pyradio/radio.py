@@ -18,6 +18,7 @@ from platform import system
 from time import ctime
 
 from .log import Log
+from .edit import PyRadioSearch
 from . import player
 
 import locale
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 NO_PLAYER_ERROR_MODE = -1
 NORMAL_MODE = 0
 PLAYLIST_MODE = 1
+SEARCH_MODE = 2
 REMOVE_STATION_MODE = 50
 SAVE_PLAYLIST_MODE = 51
 ASK_TO_SAVE_PLAYLIST_MODE = 52
@@ -72,6 +74,8 @@ class PyRadio(object):
 
     # Number of stations to change with the page up/down keys
     pageChange = 5
+
+    search = None
 
     def __init__(self, pyradio_config, play=False, req_player=''):
         self.cnf = pyradio_config
@@ -131,6 +135,13 @@ class PyRadio(object):
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()
+
+        if self.search is None:
+            self.search = PyRadioSearch(parent=self.bodyWin,
+                box_color = curses.color_pair(5),
+                caption_color = curses.color_pair(5),
+                edit_color = curses.color_pair(8),
+                cursor_color = curses.color_pair(6))
 
         self.run()
 
@@ -484,7 +495,7 @@ class PyRadio(object):
                 too_small_msg='Window too small to show message'):
         self.operation_mode = mode_to_set
         txt_col = curses.color_pair(5)
-        box_col = curses.color_pair(2)
+        box_col = curses.color_pair(3)
         caption_col = curses.color_pair(4)
         lines = txt.split('\n')
         st_lines = [item.replace('\r','') for item in lines]
@@ -879,6 +890,27 @@ class PyRadio(object):
                 self._print_foreign_playlist_message()
             elif cur_mode == FOREIGN_PLAYLIST_COPY_ERROR_MODE:
                 self._print_foreign_playlist_copy_error()
+            elif cur_mode == SEARCH_MODE:
+                self.search.show(self.bodyWin, repaint=True)
+            return
+
+        elif self.operation_mode == SEARCH_MODE:
+            ret = self.search.keypress(char)
+            if ret == 0:
+                # perform search
+                # TODO: show search result
+                self.operation_mode = NORMAL_MODE
+                self.refreshBody()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('MODE: SEARCH_MODE -> NORMAL_MODE')
+                self.search.get_next(self.stations, self.selection)
+            elif ret == -1:
+                # cancel search
+                self.operation_mode = NORMAL_MODE
+                self.refreshBody()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('MODE: Cancel SEARCH_MODE -> NORMAL_MODE')
+
             return
 
         elif char in (ord('+'), ord('='), ord('.')):
@@ -1078,6 +1110,13 @@ class PyRadio(object):
                         logger.debug('MODE = MAIN_HELP_MODE')
                 return
 
+            if char in (curses.KEY_END, ):
+                if self.number_of_items > 0:
+                    self.setStation(-1)
+                    self.jumpnr = ""
+                    self.refreshBody()
+                return
+
             if char in (ord('G'), ):
                 if self.number_of_items > 0:
                     if self.jumpnr == "":
@@ -1097,7 +1136,7 @@ class PyRadio(object):
             else:
                 self.jumpnr = ""
 
-            if char in (ord('g'), ):
+            if char in (ord('g'), curses.KEY_HOME):
                 self.setStation(0)
                 self.refreshBody()
                 return
@@ -1181,7 +1220,7 @@ class PyRadio(object):
                         self.removeStation()
                     return
 
-                elif char in(ord('s'), curses.KEY_DC):
+                elif char in(ord('s'), ):
                     if self.number_of_items > 0 and \
                             self.cnf.dirty_playlist:
                         self.saveCurrentPlaylist()
@@ -1209,6 +1248,25 @@ class PyRadio(object):
                         else:
                             self.operation_mode = PLAYLIST_RELOAD_CONFIRM_MODE
                             curses.ungetch('y')
+                    return
+
+                elif char in (ord('/'), ):
+                    self.search.show(self.bodyWin)
+                    self.operation_mode = SEARCH_MODE
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: NORMAL_MODE -> SEARCH_MODE')
+                    return
+
+                elif char in (ord('n'), ):
+                    """ search forward """
+                    if self.search.get_next(self.stations, self.selection) is None:
+                        curses.ungetch('/')
+                    return
+
+                elif char in (ord('p'), ):
+                    """ search backwards """
+                    if self.search.get_previous(self.stations, self.selection) is None:
+                        curses.ungetch('/')
                     return
 
             elif self.operation_mode == PLAYLIST_MODE:
