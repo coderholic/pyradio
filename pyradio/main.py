@@ -124,6 +124,12 @@ def shell():
     if args.debug:
         __configureLogger()
         print('Debug mode activated; printing messages to file: "~/pyradio.log"')
+    else:
+        ''' Refer to https://docs.python.org/3.7/howto/logging.html
+            section "What happens if no configuration is provided"
+        '''
+        logging.raiseExceptions = False
+        logging.lastResort = None
 
     if requested_player is '':
         requested_player = pyradio_config.player_to_use

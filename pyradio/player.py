@@ -36,6 +36,9 @@ class Player(object):
 
     ctrl_c_pressed = False
 
+    """ When found in station transmission, playback is on """
+    _playing_token_string = 'AO: ['
+
     _station_encoding = 'utf-8'
 
     def __init__(self, outputStream):
@@ -197,8 +200,8 @@ class Player(object):
                                 logger.debug('Opening station: "{}"'.format(self.name))
                             self.outputStream.write(self.oldUserInput['Title'])
         except:
-            logger.error("Error in updateStatus thread.",
-                         exc_info=True)
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error("Error in updateStatus thread.", exc_info=True)
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug("updateStatus thread stopped.")
 
@@ -282,8 +285,8 @@ class Player(object):
                 self.process.stdin.flush()
             except:
                 msg = "Error when sending: {}"
-                logger.error(msg.format(command).strip(),
-                             exc_info=True)
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error(msg.format(command).strip(), exc_info=True)
 
     def close(self):
         """ exit pyradio (and kill player instance) """
@@ -387,8 +390,8 @@ class MpvPlayer(Player):
 
     """ String to denote volume change """
     volume_string = 'Volume: '
-
     config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
+
     if platform.startswith('darwin'):
         config_files.append("/usr/local/etc/mpv/mpv.conf")
     elif platform.startswith('win'):
@@ -604,6 +607,9 @@ class VlcPlayer(Player):
     actual_volume = -1
     max_volume = 512
 
+    """ When found in station transmission, playback is on """
+    _playing_token_string = 'Content-Type: audio'
+
     def save_volume(self):
         pass
 
@@ -744,7 +750,8 @@ def check_player(a_player):
 
         # for mpv to work, socat is required...
         if a_player.PLAYER_CMD == 'mpv':
-            logger.debug("mpv found... Checking for socat...")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("mpv found... Checking for socat...")
             p = subprocess.Popen(['socat', "-h"],
                                  stdout=subprocess.PIPE,
                                  stdin=subprocess.PIPE,

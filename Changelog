@@ -1,3 +1,9 @@
+2019-01-30  s-n-g
+
+	* Trying to minimize the possibility of curses layout breakage
+	* Adding search function for both player and playlist mode
+	* Stations name is limited to window width
+
 2019-01-21  s-n-g
 
 	* Version 0.7.0

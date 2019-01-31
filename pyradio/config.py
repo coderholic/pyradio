@@ -107,7 +107,8 @@ class PyRadioStations(object):
             try:
                 copyfile(self.stations_file, st)
             except:
-                logger.error('Cannot copy playlist: "{}"'.format(self.stations_file))
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('Cannot copy playlist: "{}"'.format(self.stations_file))
                 ret = -1
                 return
             self._get_playlist_elements(st)
@@ -645,7 +646,8 @@ auto_save_playlist = {6}
                     self.__confirm_playlist_reload,
                     self.__auto_save_playlist))
         except:
-            logger.error('Error saving config')
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('Error saving config')
             return -1
         try:
             remove(self.config_file + '.bck')
