@@ -6,6 +6,8 @@ class Log(object):
     msg = None
     cursesScreen = None
 
+    last_written_string = ''
+
     def __init__(self):
         self.width = None
 
@@ -34,6 +36,7 @@ class Log(object):
             self.cursesScreen.refresh()
             if thread_lock is not None:
                 thread_lock.release()
+            self.last_written_string = msg
 
     def readline(self):
         pass

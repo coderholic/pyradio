@@ -1,35 +1,42 @@
-2019-01-30  s-n-g
+2019-02-01  s-n-g
 
-	* Trying to minimize the possibility of curses layout breakage
-	* Adding search function for both player and playlist mode
-	* Stations name is limited to window width
+    * Trying to minimize the possibility of curses layout breakage
+    * Start of playback detection implemented. This is done by
+      detecting the players audio decoder info, which actually mean
+      that playback is on. If not detected within a timeout value,
+      failure to connect is presumed
+    * Volume adjustment, saving and muting inhibited before start
+      of playback is detected
+    * Adding search function for both player and playlist mode
+    * Stations name is limited to window width
+	* Station title is validated before displayed
 
 2019-01-21  s-n-g
 
-	* Version 0.7.0
-	* added command line options -ls, -scd, -ocd
+    * Version 0.7.0
+    * added command line options -ls, -scd, -ocd
     * make sure config dir exists before doing anything with it
     * make sure the playlist is valid (-s option)
-	* Option -s accepts playlist name only, if it exists in config dir, or
-	  playlist number as reported by the -ls command line option
-	* -a command line option works in combination with -s
-	* -l command line option prints a tabular list
-	* started implementing playlist management. Now we can open another
-	  playlist, remove a station from a playlist and save a playlist.
-	  TODO: rename playlist, copy playlist, add station, edit station
-	* added configuration file (~/.config/pyradio/config)
-	  TODO: edit configuration file within PyRadio
-	* Input encoding can now de set either in a station by
-	  station mode or globally
+    * Option -s accepts playlist name only, if it exists in config dir, or
+      playlist number as reported by the -ls command line option
+    * -a command line option works in combination with -s
+    * -l command line option prints a tabular list
+    * started implementing playlist management. Now we can open another
+      playlist, remove a station from a playlist and save a playlist.
+      TODO: rename playlist, copy playlist, add station, edit station
+    * added configuration file (~/.config/pyradio/config)
+      TODO: edit configuration file within PyRadio
+    * Input encoding can now de set either in a station by
+      station mode or globally
     * ESCAPE now works for exit/cancel
-	* ESCDELAY set to 25ms. Refer to https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses for more info
-	* "Foreign" playlist handing added. A playlist that does not reside in
-	  PyRadio's config dir (called a "foreign playlist") can now be copyied
-	  there, making it available for opening from within PyRadio.
-	* '/' win no longer display help ('?' is still valid)
-	* minor errors fixed
+    * ESCDELAY set to 25ms. Refer to https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses for more info
+    * "Foreign" playlist handing added. A playlist that does not reside in
+      PyRadio's config dir (called a "foreign playlist") can now be copyied
+      there, making it available for opening from within PyRadio.
+    * '/' win no longer display help ('?' is still valid)
+    * minor errors fixed
     * error_code renamed to operation_mode
-	* build script working on MacOS
+    * build script working on MacOS
 
 2018-12-02  s-n-g
 

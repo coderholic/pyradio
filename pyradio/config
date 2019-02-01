@@ -40,6 +40,17 @@ default_station = -1
 # Default value: utf-8
 default_encoding = utf-8
 
+# Connection timeout
+# PyRadio will wait for this number of seconds to get a station/server
+# message indicating that playback has actually started.
+# If this does not happen (within this number of seconds after the
+# connection is initiated), PyRadio will consider the station
+# unreachable, and display the "Connection failed" message.
+#
+# Valid values: 1 - ..
+# Default value: 10
+connection_timeout = 10
+
 
 # Playlist management
 #

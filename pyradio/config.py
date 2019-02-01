@@ -414,6 +414,7 @@ class PyRadioConfig(PyRadioStations):
         self.default_playlist = 'stations'
         self.default_station = '-1'
         self.default_encoding = 'utf-8'
+        self.connection_timeout = '10'
 
         self.dirty_config = False
 
@@ -497,6 +498,15 @@ class PyRadioConfig(PyRadioStations):
         self.__dirty_config = True
 
     @property
+    def connection_timeout(self):
+        return self.__connection_timeout
+
+    @connection_timeout.setter
+    def connection_timeout(self, val):
+        self.__connection_timeout = val
+        self.__dirty_config = True
+
+    @property
     def dirty_config(self):
         return self.__dirty_config
 
@@ -530,6 +540,8 @@ class PyRadioConfig(PyRadioStations):
                 return -2
             if sp[0] == 'player':
                 self.__player_to_use = sp[1].lower().strip()
+            elif sp[0] == 'connection_timeout':
+                self.__connection_timeout = sp[1].strip()
             elif sp[0] == 'default_encoding':
                 self.__default_encoding = sp[1].strip()
             elif sp[0] == 'default_playlist':
@@ -610,6 +622,16 @@ default_station = {2}
 # Default value: utf-8
 default_encoding = {3}
 
+# Connection timeout
+# PyRadio will wait for this number of seconds to get a station/server
+# message indicating that playback has actually started.
+# If this does not happen (within this number of seconds after the
+# connection is initiated), PyRadio will consider the station
+# unreachable, and display the "Connection failed" message.
+#
+# Valid values: 1 - ..
+# Default value: 10
+connection_timeout = {4}
 
 # Playlist management
 #
@@ -617,20 +639,20 @@ default_encoding = {3}
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {4}
+confirm_station_deletion = {5}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within Pyradio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {5}
+confirm_playlist_reload = {6}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {6}
+auto_save_playlist = {7}
 
 '''
         copyfile(self.config_file, self.config_file + '.bck')
@@ -642,6 +664,7 @@ auto_save_playlist = {6}
                     self.__default_playlist,
                     self.__default_station,
                     self.__default_encoding,
+                    self,__connection_timeout,
                     self.__confirm_station_deletion,
                     self.__confirm_playlist_reload,
                     self.__auto_save_playlist))

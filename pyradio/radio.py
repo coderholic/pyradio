@@ -80,6 +80,8 @@ class PyRadio(object):
     _stations_search = None
     _playlists_search = None
 
+    _last_played_station = ''
+
     def __init__(self, pyradio_config, play=False, req_player=''):
         self.cnf = pyradio_config
         self.selections = [ (0, 0, -1, self.cnf.stations),
@@ -129,7 +131,7 @@ class PyRadio(object):
         self.log = Log()
         # For the time being, supported players are mpv, mplayer and vlc.
         try:
-            self.player = player.probePlayer(requested_player=self.requested_player)(self.log)
+            self.player = player.probePlayer(requested_player=self.requested_player)(self.log, self.cnf.connection_timeout, self.connectionFailed)
         except:
             # no player
             self.operation_mode = NO_PLAYER_ERROR_MODE
@@ -253,6 +255,7 @@ class PyRadio(object):
                 else:
                     break
         self.bodyWin.refresh()
+        self._redisplay_transient_window()
 
     def refreshNoPlayerBody(self, a_string):
         col = curses.color_pair(5)
@@ -388,20 +391,25 @@ class PyRadio(object):
 
     def playSelection(self):
         self.playing = self.selection
-        name = self.stations[self.selection][0]
+        self._last_played_station = self.stations[self.selection][0]
         stream_url = self.stations[self.selection][1].strip()
         try:
             enc = self.stations[self.selection][2].strip()
         except:
             enc = ''
-        self.log.write('Playing ' + name)
+        self.log.write('Playing ' + self._last_played_station)
         try:
-            self.player.play(name, stream_url, self.get_active_encoding(enc))
+            self.player.play(self._last_played_station, stream_url, self.get_active_encoding(enc))
         except OSError:
             self.log.write('Error starting player.'
                            'Are you sure a supported player is installed?')
 
-    def stopPlayer(self):
+    def connectionFailed(self):
+        self.stopPlayer(False)
+        self.refreshBody()
+        self.log.write('Failed to connect to: "{}"'.format(self._last_played_station))
+
+    def stopPlayer(self, show_message=True):
         """ stop player """
         try:
             self.player.close()
@@ -409,7 +417,8 @@ class PyRadio(object):
             pass
         finally:
             self.playing = -1
-            self.log.write('{}: Playback stopped'.format(self._format_player_string()))
+            if show_message:
+                self.log.write('{}: Playback stopped'.format(self._format_player_string()))
             #self.log.write('Playback stopped')
 
     def removeStation(self):
@@ -838,11 +847,11 @@ class PyRadio(object):
     def _get_stations_ids(self, find):
         ch = -2
         i_find = [ -1, -1 ]
-        debug_str = (u'selection', u'playing')
+        debug_str = ('selection', 'playing')
         for j, a_find in enumerate(find):
             if a_find.strip():
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(u'** Looking for {0} station: "{1}"'.format(debug_str[j], a_find))
+                    logger.debug('** Looking for {0} station: "{1}"'.format(debug_str[j], a_find))
 
                 for i, a_station in enumerate(self.stations):
                     if i_find[j] == -1:
@@ -850,12 +859,12 @@ class PyRadio(object):
                             """ No need to scan again for the same station """
                             i_find[1] = i_find[0]
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug(u'** Got it at {}'.format(i_find[0]))
+                                logger.debug('** Got it at {}'.format(i_find[0]))
                             break
                         if a_station[0] == a_find:
                             i_find[j] = i
                             if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug(u'** Found at {}'.format(i))
+                                logger.debug('** Found at {}'.format(i))
                             ch += 1
                             if ch == 0:
                                 break
@@ -883,39 +892,39 @@ class PyRadio(object):
         else:
             return self.cnf.default_encoding
 
+    def _redisplay_transient_window(self):
+            if self.operation_mode == MAIN_HELP_MODE or \
+                self.operation_mode == PLAYLIST_HELP_MODE:
+                    curses.ungetch('?')
+            elif self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
+                self._print_playlist_load_error()
+            elif self.operation_mode == ASK_TO_SAVE_PLAYLIST_MODE:
+                self._print_save_modified_playlist()
+            elif self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
+                self._print_playlist_reload_confirmation()
+            elif self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
+                self._print_playlist_dirty_reload_confirmation()
+            elif self.operation_mode == PLAYLIST_RELOAD_ERROR_MODE:
+                self._print_playlist_reload_error()
+            elif self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE:
+                self._print_save_playlist_error_1()
+            elif self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE:
+                self._print_save_playlist_error_2()
+            elif self.operation_mode == REMOVE_STATION_MODE:
+                self.removeStation()
+            elif self.operation_mode == FOREIGN_PLAYLIST_ASK_MODE:
+                self._print_handle_foreign_playlist()
+            elif self.operation_mode == FOREIGN_PLAYLIST_MESSAGE_MODE:
+                self._print_foreign_playlist_message()
+            elif self.operation_mode == FOREIGN_PLAYLIST_COPY_ERROR_MODE:
+                self._print_foreign_playlist_copy_error()
+            elif self.operation_mode == SEARCH_NORMAL_MODE or \
+                    self.operation_mode == SEARCH_PLAYLIST_MODE:
+                self.search.show(self.bodyWin, repaint=True)
+
     def keypress(self, char):
         if char in (ord('#'), curses.KEY_RESIZE):
-            cur_mode = self.operation_mode
-            self.headWin = False
             self.setupAndDrawScreen()
-            if cur_mode == MAIN_HELP_MODE or \
-                cur_mode == PLAYLIST_HELP_MODE:
-                    curses.ungetch('?')
-            elif cur_mode == PLAYLIST_LOAD_ERROR_MODE:
-                self._print_playlist_load_error()
-            elif cur_mode == ASK_TO_SAVE_PLAYLIST_MODE:
-                self._print_save_modified_playlist()
-            elif cur_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
-                self._print_playlist_reload_confirmation()
-            elif cur_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
-                self._print_playlist_dirty_reload_confirmation()
-            elif cur_mode == PLAYLIST_RELOAD_ERROR_MODE:
-                self._print_playlist_reload_error()
-            elif cur_mode == SAVE_PLAYLIST_ERROR_1_MODE:
-                self._print_save_playlist_error_1()
-            elif cur_mode == SAVE_PLAYLIST_ERROR_2_MODE:
-                self._print_save_playlist_error_2()
-            elif cur_mode == REMOVE_STATION_MODE:
-                self.removeStation()
-            elif cur_mode == FOREIGN_PLAYLIST_ASK_MODE:
-                self._print_handle_foreign_playlist()
-            elif cur_mode == FOREIGN_PLAYLIST_MESSAGE_MODE:
-                self._print_foreign_playlist_message()
-            elif cur_mode == FOREIGN_PLAYLIST_COPY_ERROR_MODE:
-                self._print_foreign_playlist_copy_error()
-            elif cur_mode == SEARCH_NORMAL_MODE or \
-                    cur_mode == SEARCH_PLAYLIST_MODE:
-                self.search.show(self.bodyWin, repaint=True)
             return
 
         elif self.operation_mode == SEARCH_NORMAL_MODE or \
@@ -955,67 +964,85 @@ class PyRadio(object):
                 return
 
         elif char in (ord('/'), ):
-            self.search.string = ''
-            self.search.show(self.bodyWin)
-            if self.operation_mode == NORMAL_MODE:
-                self.operation_mode = SEARCH_NORMAL_MODE
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: NORMAL_MODE -> SEARCH_NORMAL_MODE')
-            else:
-                self.operation_mode = SEARCH_PLAYLIST_MODE
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: PLAYLIST_MODE -> SEARCH_PLAYLIST_MODE')
+            if self.operation_mode == NORMAL_MODE or \
+                    self.operation_mode == PLAYLIST_MODE:
+                self.search.string = ''
+                self.search.show(self.bodyWin)
+                if self.operation_mode == NORMAL_MODE:
+                    self.operation_mode = SEARCH_NORMAL_MODE
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: NORMAL_MODE -> SEARCH_NORMAL_MODE')
+                else:
+                    self.operation_mode = SEARCH_PLAYLIST_MODE
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: PLAYLIST_MODE -> SEARCH_PLAYLIST_MODE')
             return
 
         elif char in (ord('n'), ):
-            """ search forward """
-            if self.search.string:
-                sel = self.selection + 1
-                if sel == len(self.stations):
-                    sel = 0
-                ret = self.search.get_next(self.stations, sel)
-                if ret is not None:
-                    self.setStation(ret)
-                    self.refreshBody()
-            else:
+            if self.operation_mode == NORMAL_MODE or \
+                    self.operation_mode == PLAYLIST_MODE:
+                """ search forward """
+                if self.search.string:
+                    sel = self.selection + 1
+                    if sel == len(self.stations):
+                        sel = 0
+                    ret = self.search.get_next(self.stations, sel)
+                    if ret is not None:
+                        self.setStation(ret)
+                        self.refreshBody()
+                else:
+                        curses.ungetch('/')
+            return
+
+        elif char in (ord('N'), ):
+            if self.operation_mode == NORMAL_MODE or \
+                    self.operation_mode == PLAYLIST_MODE:
+                """ search backwards """
+                if self.search.string:
+                    sel = self.selection - 1
+                    if sel < 0:
+                        sel = len(self.stations) - 1
+                    ret = self.search.get_previous(self.stations, sel)
+                    if ret is not None:
+                        self.setStation(ret)
+                        self.refreshBody()
+                else:
                     curses.ungetch('/')
             return
 
-        elif char in (ord('p'), ):
-            """ search backwards """
-            if self.search.string:
-                sel = self.selection - 1
-                if sel < 0:
-                    sel = len(self.stations) - 1
-                ret = self.search.get_previous(self.stations, sel)
-                if ret is not None:
-                    self.setStation(ret)
-                    self.refreshBody()
-            else:
-                curses.ungetch('/')
-            return
-
         elif char in (ord('+'), ord('='), ord('.')):
-            if self.player.isPlaying():
+            if self.player.playback_is_on:
                 self.player.volumeUp()
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Volume adjustment inhibited because playback is off')
             return
 
         elif char in (ord('-'), ord(',')):
-            if self.player.isPlaying():
+            if self.player.playback_is_on:
                 self.player.volumeDown()
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Volume adjustment inhibited because playback is off')
             return
 
         elif char in (ord('m'), ):
-            if self.player.isPlaying():
+            if self.player.playback_is_on:
                 self.player.toggleMute()
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Muting inhibited because playback is off')
             return
 
         elif char in (ord('v'), ):
-            if self.player.isPlaying():
+            if self.player.playback_is_on:
                 ret_string = self.player.save_volume()
                 if ret_string:
                     self.log.write(ret_string)
                     self.player.threadUpdateTitle(self.player.status_update_lock)
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Volume save inhibited because playback is off')
             return
 
         elif self.operation_mode == NO_PLAYER_ERROR_MODE:

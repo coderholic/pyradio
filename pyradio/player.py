@@ -26,6 +26,7 @@ class Player(object):
     volume = -1
 
     delay_thread = None
+    connection_timeout_thread = None
 
     """ make it possible to change volume but not show it """
     show_volume = True
@@ -37,12 +38,19 @@ class Player(object):
     ctrl_c_pressed = False
 
     """ When found in station transmission, playback is on """
-    _playing_token_string = 'AO: ['
+    _playback_token_tuple = ( 'AO: [', )
+
+    playback_is_on = False
 
     _station_encoding = 'utf-8'
 
-    def __init__(self, outputStream):
+    def __init__(self, outputStream, playback_timeout, playback_timeout_handler):
         self.outputStream = outputStream
+        try:
+            self.playback_timeout = int(playback_timeout)
+        except:
+            self.playback_timeout = 10
+        self.playback_timeout_handler = playback_timeout_handler
 
     def __del__(self):
         self.close()
@@ -142,6 +150,12 @@ class Player(object):
                 self.PROFILE_FROM_USER = True
             return ret_string
 
+    def _is_in_playback_token(self, a_string):
+        for a_token in self._playback_token_tuple:
+            if a_token in a_string:
+                return True
+        return False
+
     def updateStatus(self, *args):
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug("updateStatus thread started.")
@@ -180,24 +194,42 @@ class Player(object):
                             if self.show_volume and self.oldUserInput['Title']:
                                 self.outputStream.write(string_to_show, args[0])
                                 self.threadUpdateTitle(args[0])
+                    elif self._is_in_playback_token(subsystemOut):
+                        if self.connection_timeout_thread is not None:
+                            self.connection_timeout_thread.cancel()
+                        if (logger.isEnabledFor(logging.INFO)):
+                            logger.info('start of playback detected')
+                        if self.outputStream.last_written_string.startswith('Connecting '):
+                            new_input = self.outputStream.last_written_string.replace('Connecting to', 'Playing')
+                            self.outputStream.write(new_input, args[0])
+                            if self.oldUserInput['Title'] == '':
+                                self.oldUserInput['Input'] = new_input
+                            else:
+                                self.oldUserInput['Title'] = new_input
+                        self.playback_is_on = True
                     elif self._is_icy_entry(subsystemOut):
                         #logger.error("***** icy_entry")
-                        self.oldUserInput['Title'] = subsystemOut
-                        # make sure title will not pop-up while Volume value is on
-                        ok_to_display = False
-                        if self.delay_thread is None:
-                            ok_to_display = True
-                        else:
-                            if (not self.delay_thread.isAlive()):
+                        title = self._format_title_string(subsystemOut)
+                        if title[len(self.icy_title_prefix):].strip():
+                            self.oldUserInput['Title'] = subsystemOut
+                            # make sure title will not pop-up while Volume value is on
+                            ok_to_display = False
+                            if self.delay_thread is None:
                                 ok_to_display = True
-                        if ok_to_display:
-                            string_to_show = self.title_prefix + self._format_title_string(subsystemOut)
-                            self.outputStream.write(string_to_show, args[0])
+                            else:
+                                if (not self.delay_thread.isAlive()):
+                                    ok_to_display = True
+                            if ok_to_display:
+                                string_to_show = self.title_prefix + title
+                                self.outputStream.write(string_to_show, args[0])
+                        else:
+                            if (logger.isEnabledFor(logging.INFO)):
+                                logger.info('Icy-Title is NOT valid')
                     else:
                         if self.oldUserInput['Title'] == '':
-                            self.oldUserInput['Title'] = "Opening station: {}".format(self.name)
+                            self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
                             if (logger.isEnabledFor(logging.DEBUG)):
-                                logger.debug('Opening station: "{}"'.format(self.name))
+                                logger.debug('Connecting to: "{}"'.format(self.name))
                             self.outputStream.write(self.oldUserInput['Title'])
         except:
             if logger.isEnabledFor(logging.ERROR):
@@ -257,6 +289,7 @@ class Player(object):
         self.muted = False
         self.show_volume = True
         self.title_prefix = ''
+        self.playback_is_on = False
         self.outputStream.write('Station: {}'.format(name), self.status_update_lock)
         if encoding:
             self._station_encoding = encoding
@@ -271,6 +304,14 @@ class Player(object):
                                         stderr=subprocess.STDOUT)
         t = threading.Thread(target=self.updateStatus, args=(self.status_update_lock, ))
         t.start()
+        # start playback check timer thread
+        try:
+            self.connection_timeout_thread = threading.Timer(self.playback_timeout, self.playback_timeout_handler)
+            self.connection_timeout_thread.start()
+        except:
+            self.connection_timeout_thread = None
+            if (logger.isEnabledFor(logging.DEBUG)):
+                logger.debug("playback detection thread start failed")
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("Player started")
 
@@ -297,6 +338,8 @@ class Player(object):
         self._stop()
 
         # Here is fallback solution and cleanup
+        if self.connection_timeout_thread is not None:
+            self.connection_timeout_thread.cancel()
         if self.delay_thread is not None:
             self.delay_thread.cancel()
         if self.process is not None:
@@ -608,7 +651,7 @@ class VlcPlayer(Player):
     max_volume = 512
 
     """ When found in station transmission, playback is on """
-    _playing_token_string = 'Content-Type: audio'
+    _playback_token_tuple = ('Content-Type: audio', )
 
     def save_volume(self):
         pass
