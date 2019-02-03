@@ -228,8 +228,8 @@ class Player(object):
                     else:
                         if self.oldUserInput['Title'] == '':
                             self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
-                            if (logger.isEnabledFor(logging.DEBUG)):
-                                logger.debug('Connecting to: "{}"'.format(self.name))
+                            if (logger.isEnabledFor(logging.INFO)):
+                                logger.info('Connecting to: "{}"'.format(self.name))
                             self.outputStream.write(self.oldUserInput['Title'])
         except:
             if logger.isEnabledFor(logging.ERROR):
@@ -290,7 +290,9 @@ class Player(object):
         self.show_volume = True
         self.title_prefix = ''
         self.playback_is_on = False
-        self.outputStream.write('Station: {}'.format(name), self.status_update_lock)
+        self.outputStream.write('Station: "{}"'.format(name), self.status_update_lock)
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Selected Station: "{}"'.format(name))
         if encoding:
             self._station_encoding = encoding
         else:
@@ -626,6 +628,12 @@ class MpPlayer(Player):
             ret_string = tmp[:tmp.find("';")]
         else:
             ret_string = title_string
+        if '"artist":"' in ret_string:
+            """ work on format:
+                ICY Info: START_SONG='{"artist":"Clelia Cafiero","title":"M. Mussorgsky-Quadri di un'esposizione"}';
+                Fund on "ClassicaViva Web Radio: Classical"
+            """
+            ret_string = self.icy_title_prefix + ret_string[ret_string.find('"artist":')+10:].replace('","title":"', ' - ').replace('"}\';', '')
         return self._title_string_format_text_tag(ret_string)
 
     def _format_volume_string(self, volume_string):

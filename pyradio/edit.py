@@ -2,7 +2,7 @@ import curses
 import curses.ascii
 import logging
 from sys import version_info
-from .simple_widgets import SimpleCursesLineEdit
+from .simple_curses_widgets import SimpleCursesLineEdit
 from .log import Log
 
 import locale
@@ -16,8 +16,8 @@ class PyRadioSearch(SimpleCursesLineEdit):
 
     def __init__(self, parent, begin_y, begin_x, **kwargs):
         SimpleCursesLineEdit.__init__(self, parent, begin_y, begin_x,
-            key_up_function_handler=self._get_history_previous,
-            key_down_function_handler=self._get_history_next,
+            key_up_function_handler=self._get_history_next,
+            key_down_function_handler=self._get_history_previous,
             **kwargs)
         if version_info < (3, 0):
             self._range_command='xrange'

@@ -1,12 +1,15 @@
-2019-02-01  s-n-g
+2019-02-03  s-n-g
 
-    * Trying to minimize the possibility of curses layout breakage
+    * Avoiding curses layout breakage due to BROKEN PIPE errors
     * Start of playback detection implemented. This is done by
       detecting the players audio decoder info, which actually mean
       that playback is on. If not detected within a timeout value,
       failure to connect is presumed
-    * Volume adjustment, saving and muting inhibited before start
+    * Volume adjustment, saving and muting is inhibited before start
       of playback is detected
+	* Playing a station in random order will not stop until a
+	  working station is acquired or another action is taken (e.g 
+	  pressing a key)
     * Adding search function for both player and playlist mode
     * Stations name is limited to window width
 	* Station title is validated before displayed

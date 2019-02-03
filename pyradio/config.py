@@ -627,7 +627,8 @@ default_encoding = {3}
 # message indicating that playback has actually started.
 # If this does not happen (within this number of seconds after the
 # connection is initiated), PyRadio will consider the station
-# unreachable, and display the "Connection failed" message.
+# unreachable, and display the "Failed to connect to: [station]"
+# message.
 #
 # Valid values: 1 - ..
 # Default value: 10
