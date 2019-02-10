@@ -29,6 +29,11 @@ def __configureLogger():
     logger.addHandler(fh)
 
 def shell():
+    # set window title
+    try:
+        sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player\x07")
+    except:
+        pass
     requested_player = ''
     parser = ArgumentParser(description="Curses based Internet radio player")
     parser.add_argument("-s", "--stations", default='',

@@ -9,9 +9,10 @@ class SimpleCursesLineEdit(object):
     """ Class to insert one line of text
     Python 3 supports all chars
     Python 2 supports ascii only
-    
+
     """
     string = ''
+    _string = ''
 
     """ windows """
     parent_win = None
@@ -57,6 +58,8 @@ class SimpleCursesLineEdit(object):
         for key, value in kwargs.items():
             if key == 'boxed':
                 self._boxed = value
+            elif key == 'string':
+                self._string = value
             elif key == 'string_len':
                 self._string_len = value
             elif key == 'caption':
@@ -109,6 +112,15 @@ class SimpleCursesLineEdit(object):
             self._focused = val
             self.refreshEditWindow()
 
+    @property
+    def string(self):
+        return self._string
+
+    @string.setter
+    def string(self, val):
+        self._string = val
+        self._curs_pos = len(self._string)
+
     def getmaxyx(self):
         return self._caption_win.getmaxyx()
 
@@ -159,8 +171,8 @@ class SimpleCursesLineEdit(object):
             active_cursor_color = self.caption_color
         self._edit_win.erase()
         #self._edit_win.bkgd('-', curses.A_REVERSE)
-        if self.string:
-            self._edit_win.addstr(0, 0, self.string, active_edit_color)
+        if self._string:
+            self._edit_win.addstr(0, 0, self._string, active_edit_color)
         else:
             self._curs_pos = 0
         if self.log is not None:
@@ -202,7 +214,7 @@ class SimpleCursesLineEdit(object):
         if char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             """ ENTER """
             if self._has_history:
-                self._input_history.add_to_history(self.string)
+                self._input_history.add_to_history(self._string)
             return 0
         elif char in (curses.KEY_EXIT, 27):
             self._edit_win.nodelay(True)
@@ -212,7 +224,7 @@ class SimpleCursesLineEdit(object):
             self._edit_win.nodelay(False)
             if char == -1:
                 """ ESCAPE """
-                self.string = ''
+                self._string = ''
                 self._curs_pos = 0
                 return -1
             else:
@@ -220,8 +232,8 @@ class SimpleCursesLineEdit(object):
         elif char in (curses.KEY_RIGHT, curses.ascii.ACK):
             """ KEY_RIGHT, Alt-F """
             self._curs_pos += 1
-            if len(self.string) < self._curs_pos:
-                self._curs_pos = len(self.string)
+            if len(self._string) < self._curs_pos:
+                self._curs_pos = len(self._string)
         elif char in (curses.KEY_LEFT, ):
             """ KEY_LEFT """
             self._curs_pos -= 1
@@ -232,15 +244,15 @@ class SimpleCursesLineEdit(object):
             self._curs_pos = 0
         elif char in (curses.KEY_END, curses.ascii.ENQ):
             """ KEY_END, ^E """
-            self._curs_pos = len(self.string)
+            self._curs_pos = len(self._string)
         elif char in (curses.KEY_DC, curses.ascii.EOT):
             """ DEL key, ^D """
-            if self._curs_pos < len(self.string):
-                self.string = self.string[:self._curs_pos] + self.string[self._curs_pos+1:]
+            if self._curs_pos < len(self._string):
+                self._string = self._string[:self._curs_pos] + self._string[self._curs_pos+1:]
         elif char in (curses.KEY_BACKSPACE, curses.ascii.BS,127):
             """ KEY_BACKSPACE """
             if self._curs_pos > 0:
-                self.string = self.string[:self._curs_pos-1] + self.string[self._curs_pos:]
+                self._string = self._string[:self._curs_pos-1] + self._string[self._curs_pos:]
                 self._curs_pos -= 1
         elif char in (curses.KEY_UP, curses.ascii.DLE):
             """ KEY_UP, ^N """
@@ -301,27 +313,27 @@ class SimpleCursesLineEdit(object):
                     curses.ungetch(char)
         elif char in (curses.ascii.VT, ):
             """ Ctrl-K - delete to end of line """
-            self.string = self.string[:self._curs_pos]
+            self._string = self._string[:self._curs_pos]
         elif 0<= char <=31:
             pass
         else:
-            if len(self.string) + 1 == self._max_width:
+            if len(self._string) + 1 == self._max_width:
                 return 1
             if version_info < (3, 0):
                 if 32 <= char < 127:
                     # accept only ascii characters
-                    if len(self.string) == self._curs_pos:
-                        self.string += chr(char)
+                    if len(self._string) == self._curs_pos:
+                        self._string += chr(char)
                         self._curs_pos += 1
                     else:
-                        self.string = self.string[:self._curs_pos] + chr(char) + self.string[self._curs_pos:]
+                        self._string = self._string[:self._curs_pos] + chr(char) + self._string[self._curs_pos:]
             else:
                 char = self._get_char(win, char)
-                if len(self.string) == self._curs_pos:
-                    self.string += char
+                if len(self._string) == self._curs_pos:
+                    self._string += char
                     self._curs_pos += 1
                 else:
-                    self.string = self.string[:self._curs_pos] + char + self.string[self._curs_pos:]
+                    self._string = self._string[:self._curs_pos] + char + self._string[self._curs_pos:]
 
         self.refreshEditWindow()
         return 1
@@ -362,8 +374,33 @@ class SimpleCursesLineEdit(object):
             out = ''.join([chr(b) for b in bytes])
         else:
             buf = bytearray(bytes)
-            out = buf.decode('utf-8')
+            out = self._decode_string(buf)
+            #out = buf.decode('utf-8')
         return out
+
+    def _encode_string(self, data):
+        encodings = ['utf-8', locale.getpreferredencoding(False), 'latin1']
+        for enc in encodings:
+            try:
+                data = data.encode(enc)
+            except:
+                continue
+            break
+
+        assert type(data) != bytes  # Latin1 should have worked.
+        return data
+
+    def _decode_string(self, data):
+        encodings = ['utf-8', locale.getpreferredencoding(False), 'latin1']
+        for enc in encodings:
+            try:
+                data = data.decode(enc)
+            except:
+                continue
+            break
+
+        assert type(data) != bytes  # Latin1 should have worked.
+        return data
 
     def _log(self, msg):
         with open(self._log_file, 'a') as log_file:

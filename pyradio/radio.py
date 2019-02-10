@@ -493,28 +493,6 @@ class PyRadio(object):
                     logger.debug('MODE: PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
         return
 
-
-
-        #self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
-        #self.operation_mode = self.window_mode = PLAYLIST_MODE
-        #self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
-        #self.number_of_items, self.playing = self.read_playlists()
-        #self.stations = self.cnf.playlists
-        #if self.number_of_items == 0:
-        #    return
-        #else:
-        #    self.refreshBody()
-        #    if logger.isEnabledFor(logging.DEBUG):
-        #        logger.debug('MODE: NORMAL_MODE -> PLAYLIST_MODE')
-        #    return
-
-        #playing = self.playing
-        #selection = self.selections
-        #number_of_items = self.number_of_items
-        #if self.player.isPlaying() and self.cnf.dirty_playlist:
-        #    # TODO: ask to save previous playlist
-        #    pass
-
     def readPlaylists(self):
         num_of_playlists, playing = self.cnf.read_playlists()
         if num_of_playlists == 0:
@@ -1026,22 +1004,22 @@ class PyRadio(object):
                 self.refreshBody()
                 return
 
-        elif char in (ord('/'), ):
-            self.jumpnr = ''
-            self._random_requested = False
-            if self.operation_mode == NORMAL_MODE or \
-                    self.operation_mode == PLAYLIST_MODE:
-                self.search.string = ''
-                self.search.show(self.bodyWin)
-                if self.operation_mode == NORMAL_MODE:
-                    self.operation_mode = SEARCH_NORMAL_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: NORMAL_MODE -> SEARCH_NORMAL_MODE')
-                else:
-                    self.operation_mode = SEARCH_PLAYLIST_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: PLAYLIST_MODE -> SEARCH_PLAYLIST_MODE')
-            return
+        #elif char in (ord('/'), ):
+        #    self.jumpnr = ''
+        #    self._random_requested = False
+        #    if self.operation_mode == NORMAL_MODE or \
+        #            self.operation_mode == PLAYLIST_MODE:
+        #        #self.search.string = '부'
+        #        self.search.show(self.bodyWin)
+        #        if self.operation_mode == NORMAL_MODE:
+        #            self.operation_mode = SEARCH_NORMAL_MODE
+        #            if logger.isEnabledFor(logging.DEBUG):
+        #                logger.debug('MODE: NORMAL_MODE -> SEARCH_NORMAL_MODE')
+        #        else:
+        #            self.operation_mode = SEARCH_PLAYLIST_MODE
+        #            if logger.isEnabledFor(logging.DEBUG):
+        #                logger.debug('MODE: PLAYLIST_MODE -> SEARCH_PLAYLIST_MODE')
+        #    return
 
         elif char in (ord('n'), ) and \
                 (self.operation_mode == NORMAL_MODE or \
@@ -1274,36 +1252,7 @@ class PyRadio(object):
 
             if char in (ord('?'), ):
                 self.jumpnr = ''
-                if self.operation_mode == PLAYLIST_MODE:
-                    txt = """Up/j/PgUp
-                             Down/k/PgDown    Change playlist selection.
-                             g                Jump to first playlist.
-                             <n>G             Jump to n-th / last playlist.
-                             Enter/Right/l    Open selected playlist.
-                             r                Re-read playlists from disk.
-                             #                Redraw window.
-                             Esc/q            Cancel. """
-                    self._show_help(txt, mode_to_set=PLAYLIST_HELP_MODE)
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE = PLAYLIST_HELP_MODE')
-                else:
-                    txt = """Up/j/PgUp
-                             Down/k/PgDown    Change station selection.
-                             g                Jump to first station.
-                             <n>G             Jump to n-th / last station.
-                             Enter/Right/l    Play selected station.
-                             r                Select and play a random station.
-                             Space/Left/h     Stop/start playing selected station.
-                             -/+ or ,/.       Change volume.
-                             m                Mute / unmute player.
-                             v                Save volume (not applicable with vlc).
-                             o s R            Open / Save / Reload playlist.
-                             DEL,x            Delete selected station.
-                             #                Redraw window.
-                             Esc/q            Quit. """
-                    self._show_help(txt)
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE = MAIN_HELP_MODE')
+                self._print_help()
                 return
 
             if char in (curses.KEY_END, ):
@@ -1404,11 +1353,13 @@ class PyRadio(object):
                     self._random_requested = False
                     if self.cnf.dirty_playlist:
                         if self.cnf.auto_save_playlist:
-                            # TODO save playlist
-                            #      open playlist
+                            # save playlist and open playlist
                             pass
+                            ret = self.saveCurrentPlaylist()
+                            if ret == 0:
+                                self._open_playlist()
                         else:
-                            # TODO ask to save playlist
+                            # ask to save playlist
                             self._print_save_modified_playlist()
                     else:
                         self._open_playlist()

@@ -14,7 +14,7 @@ do
         rm tmp.md
         exit 1
     }
-    sed -i '/<style /a \
+    sed -i '/<style[^>]*>/a \
     html {margin: 2em;} \
     h2 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} \
     h3 {margin-top: 2em;} \

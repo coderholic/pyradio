@@ -1,5 +1,6 @@
-2019-02-03  s-n-g
+2019-02-10  s-n-g
 
+	* Version 0.7.1
     * Avoiding curses layout breakage due to BROKEN PIPE errors
     * Start of playback detection implemented. This is done by
       detecting the players audio decoder info, which actually mean
@@ -10,7 +11,6 @@
 	* Playing a station in random order will not stop until a
 	  working station is acquired or another action is taken (e.g 
 	  pressing a key)
-    * Adding search function for both player and playlist mode
     * Stations name is limited to window width
 	* Station title is validated before displayed
 
