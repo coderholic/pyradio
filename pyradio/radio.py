@@ -1021,41 +1021,41 @@ class PyRadio(object):
         #                logger.debug('MODE: PLAYLIST_MODE -> SEARCH_PLAYLIST_MODE')
         #    return
 
-        elif char in (ord('n'), ) and \
-                (self.operation_mode == NORMAL_MODE or \
-                self.operation_mode == PLAYLIST_MODE):
-            self.jumpnr = ''
-            self._random_requested = False
-            """ search forward """
-            if self.search.string:
-                sel = self.selection + 1
-                if sel == len(self.stations):
-                    sel = 0
-                ret = self.search.get_next(self.stations, sel)
-                if ret is not None:
-                    self.setStation(ret)
-                    self.refreshBody()
-            else:
-                    curses.ungetch('/')
-            return
+        #elif char in (ord('n'), ) and \
+        #        (self.operation_mode == NORMAL_MODE or \
+        #        self.operation_mode == PLAYLIST_MODE):
+        #    self.jumpnr = ''
+        #    self._random_requested = False
+        #    """ search forward """
+        #    if self.search.string:
+        #        sel = self.selection + 1
+        #        if sel == len(self.stations):
+        #            sel = 0
+        #        ret = self.search.get_next(self.stations, sel)
+        #        if ret is not None:
+        #            self.setStation(ret)
+        #            self.refreshBody()
+        #    else:
+        #            curses.ungetch('/')
+        #    return
 
-        elif char in (ord('N'), ) and \
-                (self.operation_mode == NORMAL_MODE or \
-                self.operation_mode == PLAYLIST_MODE):
-            self.jumpnr = ''
-            self._random_requested = False
-            """ search backwards """
-            if self.search.string:
-                sel = self.selection - 1
-                if sel < 0:
-                    sel = len(self.stations) - 1
-                ret = self.search.get_previous(self.stations, sel)
-                if ret is not None:
-                    self.setStation(ret)
-                    self.refreshBody()
-            else:
-                curses.ungetch('/')
-            return
+        #elif char in (ord('N'), ) and \
+        #        (self.operation_mode == NORMAL_MODE or \
+        #        self.operation_mode == PLAYLIST_MODE):
+        #    self.jumpnr = ''
+        #    self._random_requested = False
+        #    """ search backwards """
+        #    if self.search.string:
+        #        sel = self.selection - 1
+        #        if sel < 0:
+        #            sel = len(self.stations) - 1
+        #        ret = self.search.get_previous(self.stations, sel)
+        #        if ret is not None:
+        #            self.setStation(ret)
+        #            self.refreshBody()
+        #    else:
+        #        curses.ungetch('/')
+        #    return
 
         elif char in (ord('+'), ord('='), ord('.')):
             self.jumpnr = ''
