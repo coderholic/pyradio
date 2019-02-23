@@ -15,6 +15,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Specifying stations' encoding](#specifying-stations-encoding)
 * [Player detection / selection](#player-detection-selection)
 * [Player default volume level](#player-default-volume-level)
+* [PyRadio Themes](#pyradio-themes)
 * [Debug mode](#debug-mode)
 
 ## Requirements
@@ -35,7 +36,7 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 $ pyradio -h
 
 usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-               [-scd] [-ocd] [-d]
+               [-t THEME] [-scd] [-ocd] [-d]
 
 Curses based Internet radio player
 
@@ -51,8 +52,11 @@ optional arguments:
                         used to specify detection order. Supported players:
                         mpv, mplayer, vlc.
   -a, --add             Add station to list.
-  -ls, --list-playlists List of available playlists in config dir.
+  -ls, --list-playlists
+                        List of available playlists in config dir.
   -l, --list            List of available stations in a playlist.
+  -t THEME, --theme THEME
+                        Use specified theme.
   -scd, --show-config-dir
                         Print config directory location and exit.
   -ocd, --open-config-dir
@@ -65,6 +69,7 @@ The following options can also be set in **PyRadio**'s [configuration file](#con
 * **-s** - parameter **default_playlist** (default value: **stations**)
 * **-p** - parameter **default_station** (default value: **-1**)
 * **-u** - parameter **player** (default value: **mpv, mplayer, vlc**)
+* **-t** - parameter **theme** (default value: **dark**)
 
 ## Controls
 
@@ -80,6 +85,7 @@ m                         Mute.
 v                         Save volume (not applicable for vlc).
 o s R                     Open / Save / Reload playlist.
 DEL,x                     Delete selected station.
+t T                       Load theme / Toggle transparency.
 ?                         Show keys help.
 Esc/q                     Quit.
 ```
@@ -303,6 +309,15 @@ Example:
     [pyradio]
     volstep=1
     volume=28
+
+## PyRadio Themes
+
+**PyRadio** comes with 4 preconfigured (hardcoded) themes:
+
+1. **dark** (8 color theme). This is the appearance **PyRadio** has always had. Enabled by default.
+2. **light** (8 color thmem). A theme for light terminal background settings.
+3. **white_on_black** or **wob** (256 color b&w theme). A theme for dark terminal background settings.
+4. **black_on_white** or **bow** (256 color b&w theme). A theme for light terminal background settings.
 
 ## Debug mode
 

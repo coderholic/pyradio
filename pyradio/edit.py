@@ -38,7 +38,7 @@ class PyRadioSearch(SimpleCursesLineEdit):
             self._caption_win.addstr(0, x-1, u'\u2524'.encode('utf-8'), self.box_color)
         except:
             pass
-        if repaint is False:
+        if not repaint:
             self.string = ''
             self._curs_pos = 0
             self._input_history.reset_index()

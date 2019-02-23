@@ -38,7 +38,7 @@ def shell():
     parser = ArgumentParser(description="Curses based Internet radio player")
     parser.add_argument("-s", "--stations", default='',
                         help="Use specified station CSV file.")
-    parser.add_argument("-p", "--play", nargs='?', default=False,
+    parser.add_argument("-p", "--play", nargs='?', default='False',
                         help="Start and play."
                         "The value is num station or empty for random.")
     parser.add_argument("-u", "--use-player", default='',
@@ -51,6 +51,7 @@ def shell():
                         help="List of available playlists in config dir.")
     parser.add_argument("-l", "--list", action='store_true',
                         help="List of available stations in a playlist.")
+    parser.add_argument("-t", "--theme", default='', help="Use specified theme. ")
     parser.add_argument("-scd", "--show-config-dir", action='store_true',
                         help="Print config directory location and exit.")
     parser.add_argument("-ocd", "--open-config-dir", action='store_true',
@@ -141,14 +142,21 @@ def shell():
     #else:
     #    pyradio_config.requested_player_to_use = requested_player
 
-    if args.play is False:
+    if args.play == 'False':
         if args.stations == '':
             args.play = pyradio_config.default_station
     if args.play == '-1':
-        args.play = False
+        args.play = 'False'
+
+    theme_to_use = args.theme
+    if not theme_to_use:
+        theme_to_use = pyradio_config.theme
 
     # Starts the radio gui.
-    pyradio = PyRadio(pyradio_config, play=args.play, req_player=requested_player)
+    pyradio = PyRadio(pyradio_config, 
+            play=args.play, 
+            req_player=requested_player,
+            theme=theme_to_use)
     """ Setting ESCAPE key delay to 25ms
     Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses"""
     environ.setdefault('ESCDELAY', '25')

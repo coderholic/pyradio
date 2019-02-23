@@ -1,3 +1,11 @@
+2019-02-22  s-n-g
+
+	* Theme support added (4 hardcoded themes)
+	* Command line option -t (--theme) THEME added
+	* Config option "theme" added
+	* Key "T" will toggle transparency / use terminal's background color
+	* Alt keyboard combinations will not be considered as ESCAPE char
+
 2019-02-10  s-n-g
 
 	* Version 0.7.1

@@ -19,6 +19,7 @@ from time import ctime
 
 from .log import Log
 from .edit import PyRadioSearch
+from .themes import *
 from . import player
 
 import locale
@@ -87,8 +88,13 @@ class PyRadio(object):
 
     _random_requested = False
 
-    def __init__(self, pyradio_config, play=False, req_player=''):
+    _theme = PyRadioTheme()
+    _theme_name = 'dark'
+
+    def __init__(self, pyradio_config, play=False, req_player='', theme=''):
         self.cnf = pyradio_config
+        if theme:
+            self._theme_name = theme
         self.selections = [ (0, 0, -1, self.cnf.stations),
                             (0, 0, -1, self.cnf.playlists)]
         self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
@@ -126,15 +132,9 @@ class PyRadio(object):
         except:
             pass
 
-        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-        curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(6, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
-        curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_GREEN)
-        curses.init_pair(8, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-        curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
+        curses.use_default_colors()
+        self._theme._transparent = self.cnf.use_transparency
+        self._theme.readAndApplyTheme(self._theme_name)
 
         self.log = Log()
         # For the time being, supported players are mpv, mplayer and vlc.
@@ -184,6 +184,9 @@ class PyRadio(object):
         self.txtWin = None
         self.txtWin = curses.newwin(self.maxY - 4, self.maxX - 4, 2, 2)
         self.initHead(self.info)
+        # for light color scheme
+         # TODO
+        self.bodyWin.bkgdset(' ', curses.color_pair(5))
         self.initBody()
         self.initFooter()
 
@@ -197,10 +200,18 @@ class PyRadio(object):
         curses.doupdate()
 
     def initHead(self, info):
-        self.headWin.addstr(0, 0, info, curses.color_pair(4))
-        rightStr = "www.coderholic.com/pyradio"
-        self.headWin.addstr(0, self.maxX - len(rightStr) - 1, rightStr,
-                            curses.color_pair(2))
+        d_info = info + (self.maxX - len(info)) * ' '
+        try:
+            self.headWin.addstr(0, 0, d_info, curses.color_pair(4))
+        except:
+            pass
+        rightStr = " www.coderholic.com/pyradio"
+        rightStr = " https://github.com/coderholic/pyradio"
+        try:
+            self.headWin.addstr(0, self.maxX - len(rightStr) -1, rightStr,
+                                curses.color_pair(2))
+        except:
+            pass
         self.headWin.bkgd(' ', curses.color_pair(7))
         self.headWin.noutrefresh()
 
@@ -302,7 +313,7 @@ class PyRadio(object):
             self.bodyWin.addstr(0,
                     int((self.bodyMaxX - len(w_header)) / 2),
                     w_header,
-                    curses.color_pair(5))
+                    curses.color_pair(4))
 
     def __displayBodyLine(self, lineNum, pad, station):
         col = curses.color_pair(5)
@@ -341,7 +352,7 @@ class PyRadio(object):
         else:
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write('Selected player: {}'.format(self._format_player_string()))
-            if self.play is not False:
+            if self.play != 'False':
                 if self.play is None:
                     num = random.randint(0, len(self.stations))
                     self._random_requested = True
@@ -520,7 +531,7 @@ class PyRadio(object):
                 caption=' Help ',
                 prompt=' Press any key to hide ',
                 too_small_msg='Window too small to show message'):
-        self.headWin = None
+        self.helpWin = None
         self.operation_mode = mode_to_set
         txt_col = curses.color_pair(5)
         box_col = curses.color_pair(3)
@@ -542,12 +553,23 @@ class PyRadio(object):
                 return
             lines = [ txt , ]
         self.helpWin = curses.newwin(mheight,mwidth,int((self.maxY-mheight)/2),int((self.maxX-mwidth)/2))
-        self.helpWin.attrset(box_col)
+        self.helpWin.bkgdset(' ', box_col)
+        self.helpWin.erase()
         self.helpWin.box()
         if caption.strip():
             self.helpWin.addstr(0, int((mwidth-len(caption))/2), caption, caption_col)
+        splited = []
         for i, n in enumerate(lines):
-            self.helpWin.addstr(i+1, 2, self._replace_starting_undesscore(n), caption_col)
+            a_line = self._replace_starting_undesscore(n)
+            splited = a_line.split('|')
+            for part, part_string in enumerate(splited):
+                if part_string.strip():
+                    if part == 0:
+                        self.helpWin.addstr(i+1, 2, splited[part], caption_col)
+                    elif part % 2 == 0:
+                        self.helpWin.addstr(splited[part], caption_col)
+                    else:
+                        self.helpWin.addstr(splited[part], txt_col)
         if prompt.strip():
             self.helpWin.addstr(mheight - 1, int(mwidth-len(prompt)-1), prompt)
         self.helpWin.refresh()
@@ -599,32 +621,34 @@ class PyRadio(object):
 
     def _print_help(self):
         if self.operation_mode == PLAYLIST_MODE:
-            txt = """Up/j/PgUp
-                     Down/k/PgDown    Change playlist selection.
-                     g                Jump to first playlist.
-                     <n>G             Jump to n-th / last playlist.
-                     Enter/Right/l    Open selected playlist.
-                     r                Re-read playlists from disk.
-                     #                Redraw window.
-                     Esc/q            Cancel. """
+            txt = """Up|/|j|/|PgUp
+                     Down|/|k|/|PgDown    |Change playlist selection.
+                     g                |Jump to first playlist.
+                     <n>G             |Jump to n-th / last playlist.
+                     Enter|/|Right|/|l    |Open selected playlist.
+                     r                |Re-read playlists from disk.
+                     t T              |Load |t|heme / |T|oggle transparency.
+                     #                |Redraw window.
+                     Esc|/|q            |Cancel. """
             self._show_help(txt, mode_to_set=PLAYLIST_HELP_MODE)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = PLAYLIST_HELP_MODE')
         else:
-            txt = """Up/j/PgUp
-                     Down/k/PgDown    Change station selection.
-                     g                Jump to first station.
-                     <n>G             Jump to n-th / last station.
-                     Enter/Right/l    Play selected station.
-                     r                Select and play a random station.
-                     Space/Left/h     Stop/start playing selected station.
-                     -/+ or ,/.       Change volume.
-                     m                Mute / unmute player.
-                     v                Save volume (not applicable with vlc).
-                     o s R            Open / Save / Reload playlist.
-                     DEL,x            Delete selected station.
-                     #                Redraw window.
-                     Esc/q            Quit. """
+            txt = """Up|/|j|/|PgUp
+                     Down|/|k|/|PgDown    |Change station selection.
+                     g                |Jump to first station.
+                     <n>G             |Jump to n-th / last station.
+                     Enter|/|Right|/|l    |Play selected station.
+                     r                |Select and play a random station.
+                     Space|/|Left|/|h     |Stop/start playing selected station.
+                     -|/|+| or |,|/|.       |Change volume.
+                     m                |Mute / unmute player.
+                     v                |Save volume (not applicable with vlc).
+                     o s R            ||O|pen / |S|ave / |R|eload playlist.
+                     DEL|,|x            |Delete selected station.
+                     t T              |Load |t|heme / |T|oggle transparency.
+                     #                |Redraw window.
+                     Esc|/|q            |Quit. """
             self._show_help(txt)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = MAIN_HELP_MODE')
@@ -958,6 +982,13 @@ class PyRadio(object):
             self.playSelection()
             self.refreshBody()
 
+    def _toggle_transparency(self):
+            self._theme.toggleTransparency()
+            self.headWin.refresh()
+            self.bodyWin.refresh()
+            self.footerWin.refresh()
+            self.cnf.use_transparency = self._theme._transparent
+
     def keypress(self, char):
         if char in (ord('#'), curses.KEY_RESIZE):
             self.setupAndDrawScreen()
@@ -1057,6 +1088,10 @@ class PyRadio(object):
         #        curses.ungetch('/')
         #    return
 
+        elif char in (ord('T'), ):
+            self._toggle_transparency()
+            return
+
         elif char in (ord('+'), ord('='), ord('.')):
             self.jumpnr = ''
             if self.player.isPlaying():
@@ -1124,10 +1159,15 @@ class PyRadio(object):
             elif char in (ord('n'), ):
                     self._open_playlist()
             elif char in (curses.KEY_EXIT, ord('q'), 27):
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: Cancel ASK_TO_SAVE_PLAYLIST_MODE -> NORMAL_MODE')
-                self.operation_mode = self.window_mode = NORMAL_MODE
-                self.refreshBody()
+                self.bodyWin.nodelay(True)
+                char = self.bodyWin.getch()
+                self.bodyWin.nodelay(False)
+                if char == -1:
+                    """ ESCAPE """
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: Cancel ASK_TO_SAVE_PLAYLIST_MODE -> NORMAL_MODE')
+                    self.operation_mode = self.window_mode = NORMAL_MODE
+                    self.refreshBody()
             return
 
         elif self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
@@ -1294,26 +1334,33 @@ class PyRadio(object):
                 return
 
             if char in (curses.KEY_EXIT, ord('q'), 27):
-                self.jumpnr = ''
-                self._random_requested = False
-                if self.operation_mode == PLAYLIST_MODE:
-                    """ return to stations view """
+                self.bodyWin.nodelay(True)
+                char = self.bodyWin.getch()
+                self.bodyWin.nodelay(False)
+                if char == -1:
+                    """ ESCAPE """
                     self.jumpnr = ''
-                    self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
-                    self.operation_mode = self.window_mode = NORMAL_MODE
-                    self.search = self._stations_search
-                    self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
-                    self.stations = self.cnf.stations
-                    self.refreshBody()
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: Cancel PLAYLIST_MODE -> NORMAL_MODE')
-                    return
+                    self._random_requested = False
+                    if self.operation_mode == PLAYLIST_MODE:
+                        """ return to stations view """
+                        self.jumpnr = ''
+                        self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
+                        self.operation_mode = self.window_mode = NORMAL_MODE
+                        self.search = self._stations_search
+                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
+                        self.stations = self.cnf.stations
+                        self.refreshBody()
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('MODE: Cancel PLAYLIST_MODE -> NORMAL_MODE')
+                        return
+                    else:
+                        """ exit """
+                        if self.player:
+                            self.stopPlayer()
+                            self.ctrl_c_handler(0,0)
+                        return -1
                 else:
-                    """ exit """
-                    if self.player:
-                        self.stopPlayer()
-                        self.ctrl_c_handler(0,0)
-                    return -1
+                    return
 
             if char in (curses.KEY_DOWN, ord('j')):
                 self.jumpnr = ''

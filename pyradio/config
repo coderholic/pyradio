@@ -52,6 +52,24 @@ default_encoding = utf-8
 # Default value: 10
 connection_timeout = 10
 
+# Default theme
+# Hardcooded themes:
+#   dark (default) (8 colors)
+#   light (8 colors
+#   black_on_white (bow) (256 colors)
+#   white_on_black (wob) (256 colors)
+# Default value = 'dark'
+theme = dark
+
+# Transparency setting
+# If False, theme colors will be used.
+# If True and a compositor is running, the stations' window
+# background will be transparent. If True and a compositor is 
+# not running, the terminal's background color will be used.
+# Valid values: True, true, False, false
+# Default value: False
+use_transparency = False
+
 
 # Playlist management
 #

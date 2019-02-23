@@ -8,6 +8,7 @@ from datetime import datetime
 from shutil import copyfile, move
 from .log import Log
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -269,7 +270,7 @@ class PyRadioStations(object):
         else:
             st_file = self.stations_file
 
-        if self.dirty_playlist is False:
+        if not self.dirty_playlist:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Playlist not modified...')
             return 0
@@ -415,6 +416,8 @@ class PyRadioConfig(PyRadioStations):
         self.default_station = '-1'
         self.default_encoding = 'utf-8'
         self.connection_timeout = '10'
+        self.theme = 'dark'
+        self.use_transparency = False
 
         self.dirty_config = False
 
@@ -441,6 +444,15 @@ class PyRadioConfig(PyRadioStations):
     @player_to_use.setter
     def player_to_use(self, val):
         self.__player_to_use = val
+        self.__dirty_config = True
+
+    @property
+    def use_transparency(self):
+        return self.__use_transparency
+
+    @use_transparency.setter
+    def use_transparency(self, val):
+        self.__use_transparency = val
         self.__dirty_config = True
 
     @property
@@ -507,6 +519,15 @@ class PyRadioConfig(PyRadioStations):
         self.__dirty_config = True
 
     @property
+    def theme(self):
+        return self.__theme
+
+    @theme.setter
+    def theme(self, val):
+        self.__theme = val
+        self.__dirty_config = True
+
+    @property
     def dirty_config(self):
         return self.__dirty_config
 
@@ -515,13 +536,21 @@ class PyRadioConfig(PyRadioStations):
         self.__dirty_config = val
 
     def _check_config_file(self, usr):
-        ''' Make sure a config file exists in the config diro '''
+        ''' Make sure a config file exists in the config dir '''
+        package_config_file = path.join(path.dirname(__file__), 'config')
+        user_config_file = path.join(usr, 'config')
 
-        config_file = path.join(path.dirname(__file__), 'config')
-        if path.exists(path.join(usr, 'config')):
-            return
-        else:
-            copyfile(config_file, path.join(usr, 'config'))
+        ''' restore config from bck file '''
+        if path.exists(user_config_file + '.restore'):
+            try:
+                copyfile(user_config_file + '.restore', user_config_file))
+                remove(self.user_config_file + '.restore')
+            except:
+                pass
+
+        ''' Copy package config into user dir '''
+        if not path.exists(user_config_file):
+            copyfile(package_config_file, user_config_file))
 
     def read_config(self):
         lines = []
@@ -544,12 +573,14 @@ class PyRadioConfig(PyRadioStations):
                 self.__connection_timeout = sp[1].strip()
             elif sp[0] == 'default_encoding':
                 self.__default_encoding = sp[1].strip()
+            elif sp[0] == 'theme':
+                self.__theme = sp[1].strip()
             elif sp[0] == 'default_playlist':
                 self.__default_playlist = sp[1].strip()
             elif sp[0] == 'default_station':
                 st = sp[1].strip()
                 if st == '-1':
-                    self.__default_station = False
+                    self.__default_station = 'False'
                 elif st == 'random':
                     self.__default_station = None
                 else:
@@ -569,11 +600,16 @@ class PyRadioConfig(PyRadioStations):
                     self.__auto_save_playlist = True
                 else:
                     self.__auto_save_playlist = False
+            elif sp[0] == 'use_transparency':
+                if sp[1].lower() == 'true':
+                    self.__use_transparency = True
+                else:
+                    self.__use_transparency = False
         self.__dirty_config = False
         return 0
 
     def _save_config(self):
-        if self.__dirty_config is False:
+        if not self.__dirty_config:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (not modified)')
             return 0
@@ -634,29 +670,48 @@ default_encoding = {3}
 # Default value: 10
 connection_timeout = {4}
 
+# Default theme
+# Hardcooded themes:
+#   dark (default) (8 colors)
+#   light (8 colors
+#   black_on_white (bow) (256 colors)
+#   white_on_black (wob) (256 colors)
+# Default value = 'dark'
+theme = {5}
+
+# Transparency setting
+# If False, theme colors will be used.
+# If True and a compositor is running, the stations' window
+# background will be transparent. If True and a compositor is 
+# not running, the terminal's background color will be used.
+# Valid values: True, true, False, false
+# Default value: False
+use_transparency = {6}
+
+
 # Playlist management
 #
 # Specify whether you will be asked to confirm
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {5}
+confirm_station_deletion = {7}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within Pyradio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {6}
+confirm_playlist_reload = {8}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {7}
+auto_save_playlist = {9}
 
 '''
-        copyfile(self.config_file, self.config_file + '.bck')
+        copyfile(self.config_file, self.config_file + '.restore')
         if self.__default_station is None:
             self.__default_station = '-1'
         try:
@@ -665,7 +720,9 @@ auto_save_playlist = {7}
                     self.__default_playlist,
                     self.__default_station,
                     self.__default_encoding,
-                    self,__connection_timeout,
+                    self.__connection_timeout,
+                    self.__theme,
+                    self.__use_transparency,
                     self.__confirm_station_deletion,
                     self.__confirm_playlist_reload,
                     self.__auto_save_playlist))
@@ -674,7 +731,7 @@ auto_save_playlist = {7}
                 logger.error('Error saving config')
             return -1
         try:
-            remove(self.config_file + '.bck')
+            remove(self.config_file + '.restore')
         except:
             pass
         if logger.isEnabledFor(logging.INFO):

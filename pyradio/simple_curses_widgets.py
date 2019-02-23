@@ -207,7 +207,7 @@ class SimpleCursesLineEdit(object):
             0: exit edit mode, string isvalid
            -1: cancel
         """
-        if self._focused is False:
+        if not self._focused:
             return 1
         if self.log is not None:
             self.log('char = {}\n'.format(char))

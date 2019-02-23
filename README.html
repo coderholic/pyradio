@@ -39,6 +39,7 @@
 <li><a href="#specifying-stations-encoding">Specifying stations’ encoding</a></li>
 <li><a href="#player-detection-selection">Player detection / selection</a></li>
 <li><a href="#player-default-volume-level">Player default volume level</a></li>
+<li><a href="#pyradio-themes">PyRadio Themes</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
 </ul>
 <h2 id="requirements">Requirements</h2>
@@ -54,7 +55,7 @@
 <pre>$ pyradio -h
 
 usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-               [-scd] [-ocd] [-d]
+               [-t THEME] [-scd] [-ocd] [-d]
 
 Curses based Internet radio player
 
@@ -70,8 +71,11 @@ optional arguments:
                         used to specify detection order. Supported players:
                         mpv, mplayer, vlc.
   -a, --add             Add station to list.
-  -ls, --list-playlists List of available playlists in config dir.
+  -ls, --list-playlists
+                        List of available playlists in config dir.
   -l, --list            List of available stations in a playlist.
+  -t THEME, --theme THEME
+                        Use specified theme.
   -scd, --show-config-dir
                         Print config directory location and exit.
   -ocd, --open-config-dir
@@ -82,6 +86,7 @@ optional arguments:
 <li><strong>-s</strong> - parameter <strong>default_playlist</strong> (default value: <strong>stations</strong>)</li>
 <li><strong>-p</strong> - parameter <strong>default_station</strong> (default value: <strong>-1</strong>)</li>
 <li><strong>-u</strong> - parameter <strong>player</strong> (default value: <strong>mpv, mplayer, vlc</strong>)</li>
+<li><strong>-t</strong> - parameter <strong>theme</strong> (default value: <strong>dark</strong>)</li>
 </ul>
 <h2 id="controls">Controls</h2>
 <pre>Up/Down/j/k/PgUp/PgDown   Change station selection.
@@ -95,6 +100,7 @@ m                         Mute.
 v                         Save volume (not applicable for vlc).
 o s R                     Open / Save / Reload playlist.
 DEL,x                     Delete selected station.
+t T                       Load theme / Toggle transparency.
 ?                         Show keys help.
 Esc/q                     Quit.</pre>
 <h2 id="config-file">Config file</h2>
@@ -212,6 +218,14 @@ volume=50</pre>
 [pyradio]
 volstep=1
 volume=28</pre>
+<h2 id="pyradio-themes">PyRadio Themes</h2>
+<p><strong>PyRadio</strong> comes with 4 preconfigured (hardcoded) themes:</p>
+<ol type="1">
+<li><strong>dark</strong> (8 color theme). This is the appearance <strong>PyRadio</strong> has always had. Enabled by default.</li>
+<li><strong>light</strong> (8 color thmem). A theme for light terminal background settings.</li>
+<li><strong>white_on_black</strong> or <strong>wob</strong> (256 color b&amp;w theme). A theme for dark terminal background settings.</li>
+<li><strong>black_on_white</strong> or <strong>bow</strong> (256 color b&amp;w theme). A theme for light terminal background settings.</li>
+</ol>
 <h2 id="debug-mode">Debug mode</h2>
 <p>Adding the <strong><em>-d</em></strong> option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a href="https://github.com/coderholic/pyradio/issues">open in github</a>.</p>
