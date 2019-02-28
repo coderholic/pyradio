@@ -3,6 +3,7 @@ import copy
 import sys
 import logging
 import glob
+from sys import version_info
 from os import path, getenv, makedirs, remove
 from shutil import copyfile, move
 from .log import Log
@@ -41,20 +42,31 @@ class PyRadioTheme(object):
         self._active_colors = None
         self._read_colors = None
 
+    def _do_init_pairs(self):
+        # not used
+        curses.init_pair(1, curses.COLOR_CYAN, self._active_colors['Stations'][BACKGROUND])
+        # PyRadio URL
+        curses.init_pair(2, self._active_colors['PyRadio URL'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
+        # help border
+        curses.init_pair(3, self._active_colors['Messages Border'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
+        # station playing no cursor
+        curses.init_pair(4, self._active_colors['Active Station'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
+        # body win
+        curses.init_pair(5, self._active_colors['Stations'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
+        # cursor
+        curses.init_pair(6, self._active_colors['Normal Cursor'][FOREGROUND], self._active_colors['Normal Cursor'][BACKGROUND])
+        # status bar
+        curses.init_pair(7, self._active_colors['Status Bar'][FOREGROUND], self._active_colors['Status Bar'][BACKGROUND])
+        # search cursor
+        curses.init_pair(8, self._active_colors['Normal Cursor'][BACKGROUND], self._active_colors['Stations'][BACKGROUND])
+        # cursor when playing
+        curses.init_pair(9, self._active_colors['Active Cursor'][FOREGROUND], self._active_colors['Active Cursor'][BACKGROUND])
+
     def restoreActiveTheme(self):
         self._active_colors = copy.deepcopy(self._read_colors)
         if self._transparent:
             self._active_colors['Stations'][BACKGROUND] = -1
-        curses.init_pair(1, curses.COLOR_CYAN, self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(2, self._active_colors['PyRadio URL'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(3, self._active_colors['Messages Border'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(4, self._active_colors['Active Station'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(5, self._active_colors['Stations'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(6, self._active_colors['Normal Cursor'][FOREGROUND], self._active_colors['Normal Cursor'][BACKGROUND])
-        curses.init_pair(7, self._active_colors['Status Bar'][FOREGROUND], self._active_colors['Status Bar'][BACKGROUND])
-        curses.init_pair(8, self._active_colors['Normal Cursor'][BACKGROUND], self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(9, self._active_colors['Active Cursor'][FOREGROUND], self._active_colors['Active Cursor'][BACKGROUND])
-
+        self._do_init_pairs()
 
     def readAndApplyTheme(self, a_theme):
         self.open_theme(a_theme)
@@ -62,15 +74,7 @@ class PyRadioTheme(object):
         self._active_colors = copy.deepcopy(self._colors)
         if self._transparent:
             self._active_colors['Stations'][BACKGROUND] = -1
-        curses.init_pair(1, curses.COLOR_CYAN, self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(2, self._active_colors['PyRadio URL'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(3, self._active_colors['Messages Border'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(4, self._active_colors['Active Station'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(5, self._active_colors['Stations'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(6, self._active_colors['Normal Cursor'][FOREGROUND], self._active_colors['Normal Cursor'][BACKGROUND])
-        curses.init_pair(7, self._active_colors['Status Bar'][FOREGROUND], self._active_colors['Status Bar'][BACKGROUND])
-        curses.init_pair(8, self._active_colors['Normal Cursor'][BACKGROUND], self._active_colors['Stations'][BACKGROUND])
-        curses.init_pair(9, self._active_colors['Active Cursor'][FOREGROUND], self._active_colors['Active Cursor'][BACKGROUND])
+        self._do_init_pairs()
         self._read_colors = copy.deepcopy(self._colors)
 
 
@@ -145,10 +149,342 @@ class PyRadioTheme(object):
             # TODO: read a theme from disk
             self._load_default_theme()
 
-        if self._colors_max >= curses.COLORS:
+        if self._colors_max > curses.COLORS:
             # TODO: return error
             self._load_default_theme()
 
     def toggleTransparency(self):
         self._transparent = not self._transparent
         self.restoreActiveTheme()
+
+    def getTransparency(self):
+        return self._transparent
+
+class PyRadioThemeSelector(object):
+    """ aaa
+    """
+    TITLE = ' Available Themes '
+    parent = None
+    _win = None
+    _width = _height = X = Y = 0
+    selection = _selection = _start_pos = _items = 0
+
+
+    _themes = []
+
+
+    # display the 4 internal themes
+    _items = 4
+
+    # window background
+    _bg_pair = 0
+
+    # page up, down
+    # when zero it will be _items / 2
+    _page_jump = 0
+
+    jumpnr = ''
+
+    log = None
+    _log_file = ''
+
+    _max_title_width = 20
+    _categories = 1
+
+    transparent = False
+    _transparent = False
+
+    def __init__(self, parent,
+            applied_theme_name, config_theme_name,
+            title_color_pair, box_color_pair,
+            applied_color_pair, normal_color_pair,
+            cursor_color_pair, applied_cursor_color_pair,
+            is_transparent, log_file=''):
+        self.parent = parent
+        self._applied_theme_name = applied_theme_name
+        self._config_theme_name = config_theme_name
+        self._title_color_pair = title_color_pair
+        self._box_color_pair = box_color_pair
+        self._cursor_color_pair = cursor_color_pair
+        self._applied_cursor_color_pair = applied_cursor_color_pair
+        self._applied_color_pair = applied_color_pair
+        self._normal_color_pair = normal_color_pair
+        self._transparent = is_transparent
+        if log_file:
+            self._log_file = log_file
+            self.log = self._log
+
+        self._themes = []
+
+    def show(self):
+        self._themes = []
+        self._themes = [ [ 'dark', 'dark' ] ]
+        self._themes.append([ 'light', 'light' ])
+        self._themes.append([ 'black_on_white', 'black_on_white' ])
+        self._themes.append([ 'white_on_black', 'white_on_black' ])
+        self._max_title_width = len(self.TITLE)
+
+
+        ###################################################################
+        #self._themes.append([ 'p light', 'p light' ])
+        #self._themes.append([ 'p black_on_white', 'p black_on_white' ])
+        #self._themes.append([ 'p white_on_black', 'p white_on_black' ])
+        ###################################################################
+        #self._themes.append([ 'my light', 'my light' ])
+        #self._themes.append([ 'my black_on_white', 'my black_on_white' ])
+        #self._themes.append([ 'my white_on_black', 'my white_on_black' ])
+        ###################################################################
+
+        for a_theme in self._themes:
+            if len(a_theme[0]) > self._max_title_width:
+                self._max_title_width = len(a_theme[0])
+
+        if self.log:
+            self.log('max_title_width = {}\n'.format(self._max_title_width))
+        self._get_config_and_applied_theme()
+        self._get_metrics()
+
+    def theme_name(self, val):
+        if val < len(self._themes):
+            return self._themes[val][0]
+        return ''
+
+    def theme_path(self, val):
+        if val < len(self._themes):
+            return self._themes[val][1]
+        return ''
+
+    def _short_to_normal_theme_name(self, a_theme_name):
+        if a_theme_name == 'bow':
+            return 'black_on_white'
+        elif a_theme_name == 'wob':
+            return 'white_on_black'
+        return a_theme_name
+
+    def _get_config_and_applied_theme(self):
+        self._config_theme_name = self._short_to_normal_theme_name(self._config_theme_name)
+        self._applied_theme_name = self._short_to_normal_theme_name(self._applied_theme_name)
+        if self.log:
+            self.log('config theme name = "{0}", applied theme name = "{1}"\n'.format(self._config_theme_name, self._applied_theme_name))
+        self._config_theme = -1
+        self._applied_theme = -1
+        found = 0
+        for i, a_theme in enumerate(self._themes):
+            if a_theme[0] == self._config_theme_name:
+                self._config_theme = i
+                found += 1
+            if a_theme[0] == self._applied_theme_name:
+                self._applied_theme = i
+                found += 1
+            if found == 2:
+                break
+
+        if self.log:
+            self.log('config theme = {0}, applied theme = {1}\n'.format(self._config_theme, self._applied_theme))
+        if self._applied_theme == -1:
+            self._selection = 0
+        else:
+            self._selection = self._applied_theme
+
+    def _get_metrics(self):
+        maxY, maxX = self.parent.getmaxyx()
+        num_of_themes = len(self._themes)
+        if num_of_themes > 4:
+            if num_of_themes + 2 < maxY - 2:
+                self._items = num_of_themes
+                self.Y = int((maxY - self._items + 2) / 2)
+            else:
+                self._items = maxY - 4
+                self.Y = 2
+        else:
+            self.Y = int((maxY - self._items + 2) / 2)
+        self._height = self._items + 2
+
+        if self.log:
+            self.log('max_title_width = {}\n'.format(self._max_title_width))
+        self._width = self._max_title_width + 4
+        if self.log:
+            self.log('width = {}\n'.format(self._width))
+        self.X = int((maxX - self._width) / 2)
+
+
+
+        self._page_jump = int(self._items / 2)
+        self._win = None
+        self._win=curses.newwin(self._height, self._width, self.Y, self.X)
+        self._win.bkgdset(' ', curses.color_pair(self._box_color_pair))
+        #self._win.erase()
+        self._draw_box()
+        self.refresh()
+
+    def getmaxyx(self):
+        return self._width, self._height
+
+    @property
+    def transparent(self):
+        return self._transparent
+
+    @transparent.setter
+    def transparent(self, val):
+        self._transparent = val
+        self.refresh()
+
+    @property
+    def selection(self):
+        return self._selection
+
+    @selection.setter
+    def selection(self, val):
+        old_selection = self._selection
+        if val < 0:
+            self._selection =0
+            self._start_pos = 0
+        elif val >= len(self._themes):
+            self._selection = len(self._themes) - 1
+            self._start_pos = len(self._themes) - self._items
+        else:
+            self._selection = val
+            if self._selection >= len(self._themes):
+                self._selection = len(self._themes) - 1
+                self._start_pos = len(self._themes) - self._items
+
+            if self._selection > old_selection:
+                while self._selection >= self._start_pos + self._items:
+                    self._start_pos += self._items
+                if self._start_pos >= len(self._themes) - self._items:
+                    self._start_pos = len(self._themes) - self._items
+            else:
+                while self._selection < self._start_pos:
+                    self._start_pos -= self._items
+                if self._start_pos < 0:
+                    self._start_pos = 0
+        self.refresh()
+
+    def refresh(self):
+        if self.log:
+            self.log('======================\n')
+            self.log('{}\n'.format(self._themes))
+        for i in range(self._start_pos, self._start_pos + self._items):
+            token = ' '
+            if self._start_pos + i == self.selection:
+                # on selection, display cursor
+                if self._selection == self._applied_theme:
+                    col = curses.color_pair(self._applied_cursor_color_pair)
+                else:
+                    col = curses.color_pair(self._cursor_color_pair)
+            else:
+                if self._start_pos + i == self._applied_theme:
+                    col = curses.color_pair(self._applied_color_pair)
+                else:
+                    col = curses.color_pair(self._normal_color_pair)
+            self._win.hline(i + 1, 1, ' ', self._max_title_width + 2, col)
+            if self._start_pos + i == self._config_theme:
+                token = '*'
+            self._win.addstr(i+1, 1, token + self._themes[i][0], col)
+
+        try:
+            self._win.move(sel, self._width - 2)
+        except:
+            pass
+        # display trasnparency
+        if self._transparent:
+            self._win.addstr(self._height-1, self._width -4, '[T]', curses.color_pair(self._box_color_pair))
+        else:
+            self._draw_box()
+        self._win.refresh()
+        curses.doupdate()
+
+    def _draw_box(self):
+        self._win.box()
+        self._win.move(0,1)
+        self._win.addstr(self.TITLE, curses.color_pair(self._title_color_pair))
+
+    def _go_up(self):
+        self._selection -= 1
+        if self._selection < 0:
+            self._selection = 0
+            self._start_pos = 0
+        elif self._selection == self._start_pos -1:
+            self._start_pos -= 1
+        self.refresh()
+
+    def _go_down(self):
+        self._selection += 1
+        if self._selection == len(self._themes):
+            self.selection = len(self._themes)
+        elif self._selection == self._start_pos + self._items:
+            self._start_pos += 1
+        self.refresh()
+
+    def _go_home(self):
+        self._selection = 0
+        self._start_pos =0
+        self.refresh()
+
+    def _go_end(self):
+        self.selection = len(self._themes)
+
+    def keypress(self, char):
+        """ returns theme_id, save_theme
+            return_id
+              0-..  : id in self._theme
+              -1    : end or canel
+              -2    : go no
+            save_them
+              True  : theme is to be saved in config
+              False : theme is not to be saved in config
+        """
+        if char in (curses.KEY_ENTER, ord('\n'),
+                ord('\r'), ord('l'),
+                curses.KEY_RIGHT):
+            self._applied_theme = self._selection
+            self._applied_theme_name = self._themes[self._selection][0]
+            self.refresh()
+            return self._selection, False
+        elif char in (ord(' '), ):
+            self._applied_theme = self._selection
+            self._applied_theme_name = self._themes[self._selection][0]
+            self._config_theme = self._selection
+            self._config_theme_name = self._themes[self._selection][0]
+            self.refresh()
+            return self._selection, True
+        elif char in (curses.KEY_UP, ord('k')):
+            self.jumpnr = ''
+            self._go_up()
+        elif char in (curses.KEY_DOWN, ord('j')):
+            self.jumpnr = ''
+            self._go_down()
+        elif char in (curses.KEY_HOME, ord('g')):
+            self.jumpnr = ''
+            self._go_home()
+        elif char in (curses.KEY_END, ord('G')):
+            if self.jumpnr == '':
+                self._go_end()
+            else:
+                num = int(self.jumpnr) - 1
+                if num >= 0:
+                    self.selection = num
+                    self.jumpnr = ''
+        elif char in (curses.KEY_NPAGE, ):
+            self.jumpnr = ''
+            self.selection = self._selection + self._page_jump
+        elif char in (curses.KEY_PPAGE, ):
+            self.jumpnr = ''
+            self.selection = self._selection - self._page_jump
+        elif char in map(ord,map(str,range(0,10))):
+            self.jumpnr += chr(char)
+        elif char in (curses.KEY_EXIT, 27, ord('q')):
+            self.jumpnr = ''
+            self._win.nodelay(True)
+            char = self._win.getch()
+            self._win.nodelay(False)
+            if char == -1:
+                """ ESCAPE """
+                self._selection = -1
+                return -1, False
+        return -2, False
+
+    def _log(self, msg):
+        with open(self._log_file, 'a') as log_file:
+            log_file.write(msg)
+

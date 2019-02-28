@@ -543,14 +543,14 @@ class PyRadioConfig(PyRadioStations):
         ''' restore config from bck file '''
         if path.exists(user_config_file + '.restore'):
             try:
-                copyfile(user_config_file + '.restore', user_config_file))
+                copyfile(user_config_file + '.restore', user_config_file)
                 remove(self.user_config_file + '.restore')
             except:
                 pass
 
         ''' Copy package config into user dir '''
         if not path.exists(user_config_file):
-            copyfile(package_config_file, user_config_file))
+            copyfile(package_config_file, user_config_file)
 
     def read_config(self):
         lines = []

@@ -49,6 +49,8 @@ SAVE_PLAYLIST_ERROR_2_MODE = 206
 FOREIGN_PLAYLIST_ASK_MODE = 300
 FOREIGN_PLAYLIST_MESSAGE_MODE = 301
 FOREIGN_PLAYLIST_COPY_ERROR_MODE = 302
+THEME_MODE = 400
+NOT_IMPLEMENTED_YET_MODE = 1000
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -90,6 +92,7 @@ class PyRadio(object):
 
     _theme = PyRadioTheme()
     _theme_name = 'dark'
+    _theme_slector = None
 
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
         self.cnf = pyradio_config
@@ -526,6 +529,21 @@ class PyRadio(object):
             return 'vlc'
         return self.player.PLAYER_CMD
 
+    def _show_theme_selector(self):
+        self.jumpnr = ''
+        self._theme_slector = None
+        self._theme_slector = PyRadioThemeSelector(self.bodyWin,
+                self._theme_name, self.cnf.theme,
+                4, 3, 4, 5, 6, 9, self._theme.getTransparency())
+                #'/home/spiros/edit.log')
+        self._theme_slector.show()
+
+        if logger.isEnabledFor(logging.DEBUG):
+            if self.operation_mode == NORMAL_MODE:
+                logger.debug('MODE: NORMAL_MODE => THEME_MODE')
+            else:
+                logger.debug('MODE: PLAYLIST_MODE => THEME_MODE')
+
     def _show_help(self, txt,
                 mode_to_set=MAIN_HELP_MODE,
                 caption=' Help ',
@@ -652,6 +670,14 @@ class PyRadio(object):
             self._show_help(txt)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = MAIN_HELP_MODE')
+
+    def _print_not_implemented_yet(self):
+        self.previous_operation_mode = self.operation_mode
+        txt = '''This feature has not been implemented yet...
+        '''
+        self._show_help(txt, NOT_IMPLEMENTED_YET_MODE,
+                caption = ' PyRadio ',
+                prompt = ' Press any key... ')
 
     def _print_handle_foreign_playlist(self):
         txt ='''This is a "foreign" playlist (i.e. it does not
@@ -974,6 +1000,9 @@ class PyRadio(object):
             elif self.operation_mode == SEARCH_NORMAL_MODE or \
                     self.operation_mode == SEARCH_PLAYLIST_MODE:
                 self.search.show(self.bodyWin, repaint=True)
+            elif self.operation_mode == THEME_MODE:
+                self._theme_slector.parent = self.bodyWin
+                self._show_theme_selector()
 
     def play_random(self):
         # Pick a random radio station
@@ -984,12 +1013,61 @@ class PyRadio(object):
 
     def _toggle_transparency(self):
             self._theme.toggleTransparency()
+            if self.operation_mode == THEME_MODE:
+                self._theme_slector.transparent = self._theme.getTransparency()
             self.headWin.refresh()
             self.bodyWin.refresh()
             self.footerWin.refresh()
-            self.cnf.use_transparency = self._theme._transparent
+            self.cnf.use_transparency = self._theme.getTransparency()
 
     def keypress(self, char):
+
+        if self.operation_mode == NOT_IMPLEMENTED_YET_MODE:
+            self.helpWin = None
+            self.operation_mode = self.previous_operation_mode
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('MODE: Exiting NOT_IMPLEMENTED_YET_MODE')
+            self.refreshBody()
+            return
+
+        if char in (ord('t'), ):
+            if self.window_mode != THEME_MODE and  \
+                    self.operation_mode != MAIN_HELP_MODE and \
+                    self.operation_mode != PLAYLIST_HELP_MODE:
+                self.previous_operation_mode = self.operation_mode
+                self.operation_mode = self.window_mode = THEME_MODE
+
+                self._show_theme_selector()
+                return
+
+        if self.operation_mode == THEME_MODE:
+            if char not in (ord('m'), ord('v'), ord('.'),
+                    ord(','), ord('+'), ord('-'), ord('T'),
+                    ord('#'), curses.KEY_RESIZE):
+                theme_id, save_theme = self._theme_slector.keypress(char)
+                if theme_id == -1:
+                    """ cancel or hide """
+                    self._theme_slector = None
+                    self.operation_mode = self.window_mode = self.previous_operation_mode
+                    if logger.isEnabledFor(logging.DEBUG):
+                        if self.operation_mode == NORMAL_MODE:
+                            logger.debug('MODE: THEME_MODE => NORMAL_MODE')
+                        else:
+                            logger.debug('MODE: THEME_MODE => PLAYLIST_HELP_MODE')
+                    self.refreshBody()
+                elif theme_id >= 0:
+                    """ valid theme selection """
+                    self._theme_name = self._theme_slector.theme_name(theme_id)
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Activating theme: {}'.format(self._theme_name))
+                    self._theme.readAndApplyTheme(self._theme_name)
+                    curses.doupdate()
+                    if save_theme:
+                        self.cnf.theme = self._theme_name
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('Setting default theme: {}'.format(self._theme_name))
+                return
+
         if char in (ord('#'), curses.KEY_RESIZE):
             self.setupAndDrawScreen()
             return
