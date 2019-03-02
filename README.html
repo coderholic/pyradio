@@ -219,13 +219,23 @@ volume=50</pre>
 volstep=1
 volume=28</pre>
 <h2 id="pyradio-themes">PyRadio Themes</h2>
-<p><strong>PyRadio</strong> comes with 4 preconfigured (hardcoded) themes:</p>
+<p><strong>PyRadio</strong> comes with 4 preconfigured (hard coded) themes:</p>
 <ol type="1">
 <li><strong>dark</strong> (8 color theme). This is the appearance <strong>PyRadio</strong> has always had. Enabled by default.</li>
-<li><strong>light</strong> (8 color thmem). A theme for light terminal background settings.</li>
+<li><strong>light</strong> (8 color theme). A theme for light terminal background settings.</li>
 <li><strong>white_on_black</strong> or <strong>wob</strong> (256 color b&amp;w theme). A theme for dark terminal background settings.</li>
 <li><strong>black_on_white</strong> or <strong>bow</strong> (256 color b&amp;w theme). A theme for light terminal background settings.</li>
 </ol>
+<p>The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)</p>
+<p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the terminal supports 8 colors only, 256 color themes will not be present in this window. Furthermore, if a 256 color theme is set as default (or requested using the “<strong>-t</strong>” command line option), <strong>PyRadio</strong> will silently revert to the “<strong>dark</strong>” theme.</p>
+<p>The <em>Theme selection window</em> will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
+<p>The use of custom themes and theme editing is not implemented yet; theses are features for future releases.</p>
+<h3 id="using-transparency">Using transparency</h3>
+<p><strong>PyRadio</strong> themes are able to be used with a transparent background.</p>
+<p>Pressing “<strong>T</strong>” will toggle the transparency setting and save this state in <strong>PyRadio</strong>’s configuration file (transparency is off by default).</p>
+<p>Setting transparency on, will actually force <strong>PyRadio</strong> to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
+<p>When the <em>Theme selection window</em> is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that transparency is <em>on</em>.</p>
 <h2 id="debug-mode">Debug mode</h2>
 <p>Adding the <strong><em>-d</em></strong> option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a href="https://github.com/coderholic/pyradio/issues">open in github</a>.</p>

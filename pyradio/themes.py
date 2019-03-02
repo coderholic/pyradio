@@ -26,16 +26,10 @@ class PyRadioTheme(object):
     transparent = False
     _transparent = False
 
-    def __init__(self):
-        self._colors['status_bar'] = [ -1, -1 ]
-        self._colors['stations'] = [ -1, -1 ]
-        self._colors['selection'] = [ -1, -1 ]
-        self._colors['active_selection'] = [ -1, -1 ]
-        self._colors['pop_up'] = [ -1, -1, -1, -1 ]
-        self._colors['title'] = [ -1, -1 ]
-        self._colors['url'] = [ -1, -1 ]
+    applied_theme_name = 'dark'
 
-        _colors_max = 7
+    def __init__(self):
+        _colors_max = 8
 
     def __del__(self):
         self._colors = None
@@ -92,6 +86,7 @@ class PyRadioTheme(object):
             self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], curses.COLOR_YELLOW ]
             self._colors['Messages Border'] = [ curses.COLOR_YELLOW, self._colors['Stations'][BACKGROUND] ]
             self._colors_max = 8
+            self.applied_theme_name = 'dark'
 
     def open_theme(self, a_theme = ''):
         if not a_theme.strip():
@@ -102,10 +97,10 @@ class PyRadioTheme(object):
 
         elif a_theme == 'light':
             self._colors['Stations'] = [ curses.COLOR_BLACK, curses.COLOR_WHITE ]
-            self._colors['Status Bar'] = [ curses.COLOR_YELLOW, curses.COLOR_BLUE ]
+            self._colors['Status Bar'] = [ curses.COLOR_WHITE, curses.COLOR_BLUE ]
             # selection
             self._colors['Normal Cursor'] = [ curses.COLOR_WHITE, curses.COLOR_MAGENTA ]
-            self._colors['Active Cursor'] = [ curses.COLOR_YELLOW, curses.COLOR_BLUE ]
+            self._colors['Active Cursor'] = [ curses.COLOR_WHITE, curses.COLOR_BLUE ]
             self._colors['Active Station']  = [ curses.COLOR_RED, self._colors['Stations'][BACKGROUND] ]
             # Titles
             self._colors['Titles'] = [ curses.COLOR_RED, self._colors['Stations'][BACKGROUND] ]
@@ -114,6 +109,7 @@ class PyRadioTheme(object):
             self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], curses.COLOR_RED ]
             self._colors['Messages Border'] = [ curses.COLOR_MAGENTA, self._colors['Stations'][BACKGROUND] ]
             self._colors_max = 8
+            self.applied_theme_name = 'light'
 
         elif a_theme == 'black_on_white' or a_theme == 'bow':
             self._colors['Stations'] = [ 245, 253 ]
@@ -129,6 +125,7 @@ class PyRadioTheme(object):
             self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], 245 ]
             self._colors['Messages Border'] = [ 245, self._colors['Stations'][BACKGROUND] ]
             self._colors_max = 255
+            self.applied_theme_name = 'black_on_white'
 
         elif a_theme == 'white_on_black' or a_theme == 'wob':
             self._colors['Stations'] = [ 247, 235 ]
@@ -144,6 +141,7 @@ class PyRadioTheme(object):
             self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], 235 ]
             self._colors['Messages Border'] = [ 247, self._colors['Stations'][BACKGROUND] ]
             self._colors_max = 255
+            self.applied_theme_name = 'white_on_black'
 
         else:
             # TODO: read a theme from disk
@@ -169,12 +167,10 @@ class PyRadioThemeSelector(object):
     _width = _height = X = Y = 0
     selection = _selection = _start_pos = _items = 0
 
-
     _themes = []
 
-
-    # display the 4 internal themes
-    _items = 4
+    # display the 2 internal 8 color themes
+    _items = 2
 
     # window background
     _bg_pair = 0
@@ -220,8 +216,10 @@ class PyRadioThemeSelector(object):
         self._themes = []
         self._themes = [ [ 'dark', 'dark' ] ]
         self._themes.append([ 'light', 'light' ])
-        self._themes.append([ 'black_on_white', 'black_on_white' ])
-        self._themes.append([ 'white_on_black', 'white_on_black' ])
+        if curses.COLORS > 8:
+            self._themes.append([ 'black_on_white', 'black_on_white' ])
+            self._themes.append([ 'white_on_black', 'white_on_black' ])
+            self._items = 4
         self._max_title_width = len(self.TITLE)
 
 
@@ -264,6 +262,11 @@ class PyRadioThemeSelector(object):
     def _get_config_and_applied_theme(self):
         self._config_theme_name = self._short_to_normal_theme_name(self._config_theme_name)
         self._applied_theme_name = self._short_to_normal_theme_name(self._applied_theme_name)
+        if curses.COLORS <= 8:
+            if self._config_theme_name != 'dark' and \
+                    self._config_theme_name != 'light':
+                self._config_theme_name = 'dark'
+                self._applied_theme_name = 'dark'
         if self.log:
             self.log('config theme name = "{0}", applied theme name = "{1}"\n'.format(self._config_theme_name, self._applied_theme_name))
         self._config_theme = -1
@@ -402,8 +405,7 @@ class PyRadioThemeSelector(object):
     def _go_up(self):
         self._selection -= 1
         if self._selection < 0:
-            self._selection = 0
-            self._start_pos = 0
+            self.selection = len(self._themes) - 1
         elif self._selection == self._start_pos -1:
             self._start_pos -= 1
         self.refresh()
@@ -411,7 +413,7 @@ class PyRadioThemeSelector(object):
     def _go_down(self):
         self._selection += 1
         if self._selection == len(self._themes):
-            self.selection = len(self._themes)
+            self.selection = 0
         elif self._selection == self._start_pos + self._items:
             self._start_pos += 1
         self.refresh()
@@ -467,13 +469,23 @@ class PyRadioThemeSelector(object):
                     self.jumpnr = ''
         elif char in (curses.KEY_NPAGE, ):
             self.jumpnr = ''
-            self.selection = self._selection + self._page_jump
+            sel = self._selection + self._page_jump
+            if self._selection == len(self._themes) - 1:
+                sel = 0
+            elif sel >= len(self._themes):
+                sel = len(self._themes) - 1
+            self.selection = sel
         elif char in (curses.KEY_PPAGE, ):
             self.jumpnr = ''
-            self.selection = self._selection - self._page_jump
+            sel = self._selection - self._page_jump
+            if self._selection == 0:
+                sel = len(self._themes) - 1
+            elif sel < 0:
+                sel = 0
+            self.selection = sel
         elif char in map(ord,map(str,range(0,10))):
             self.jumpnr += chr(char)
-        elif char in (curses.KEY_EXIT, 27, ord('q')):
+        elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):
             self.jumpnr = ''
             self._win.nodelay(True)
             char = self._win.getch()

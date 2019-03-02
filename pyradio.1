@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH PYRADIO 1 "February 2019"
+.TH PYRADIO 1 "March 2019"
 
 .SH NAME
 .PP
@@ -34,6 +34,8 @@ List of available playlists in config dir.
 List of available stations in a playlist.
 .IP \fB-scd\fR,\fB--show-config-dir\fR
 Print config directory location and exit.
+.IP \fB-t\fR\ \fITHEME\fR,\ \fB--theme\fR\ \fITHEME\fR
+Use specified \fITHEME\fR.
 .IP \fB-ocd\fR,\fB--open-config-dir\fR
 Open config directory with default file manager.
 .IP \fB-d\fR,\fB\ \--debug
@@ -340,6 +342,43 @@ volstep=1
 .br
 volume=28
 
+.SH PYRADIO THEMES
+.PP
+
+\fBpyradio\fR comes with 4 preconfigured (hard coded) themes:
+
+.IP \fBdark\fR\ (8\ color\ theme)
+This is the appearance \fBpyradio\fR has always had. Enabled by default.
+.IP \fBlight\fR\ (8\ color\ theme)
+A theme for light terminal background settings.
+.IP \fBwhite_on_black\fR\ or\ \fBwob\fR \(256\ color\ b&w\ theme)
+A theme for dark terminal background settings.
+.IP \fBblack_on_white\fR\ or\ \fBbow\fR\ (256\ color\ b&w\ theme)
+A theme for light terminal background settings.
+
+.PP
+The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)
+
+Pressing "\fBt\fR" will bring up the \fITheme selection window\fR, which can be used to activate a theme and set the default one.
+
+.IP \fBNote\fR
+If the terminal supports 8 colors only, 256 color themes will not be present in the \fITheme selection window\fR. Furthermore, if a 256 color theme is set as default (or requested using the "\fB-t\fR" command line option), \fBpyradio\fR will silently revert to the "\fBdark\fR" theme.
+
+.PP
+The \fITheme selection window\fR will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "\fBq\fR" or any other relevant key - pressing "\fB?\fR" will bring up its help).
+
+The use of custom themes and theme editing is not implemented yet; theses are features for future releases.
+
+\fBUSING TRANSPARENCY\fR
+
+\fBpyradio\fR themes are able to be used with a transparent background.
+
+Pressing "\fBT\fR"  will toggle the transparency setting (it is \fIoff\fR by default) and save this state in \fBpyradio\fR's configuration file. 
+
+Setting transparency on, will actually force \fBpyradio\fR to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.
+
+When the \fITheme selection window\fR is visible, a "\fI[T]\fR" string displayed at its bottom right corner will indicate that transparency is \fIon\fR.
+
 .SH DEBUG MODE
 .PP
 Adding the \fB-d\fR option to the command line will instruct \fBpyradio\fR to enter \fBDebug mode\fR, which means that it will print debug messages to a file. This file will always reside in the user's home directory and will be named \fIpyradio.log\fR.
@@ -363,5 +402,11 @@ On \fBMac OS\fR, these file may be installed in \fI/usr/local/share/doc/pyradio\
 
 .SH AUTHOR
 .PP
- \fBBen Dowling\fR\ \<\fIhttps://github.com/coderholic\fR\>
+\fBBen Dowling\fR\ \<\fIhttps://github.com/coderholic\fR\>,\ (Origianl\ author)
+.PP
+\fBKirill Klenov\fR\ \<\fIhttps://github.com/klen\fR\>,\ (2012)
+.PP
+\fBPeter Stevenson (2E0PGS)\fR\ \<\fIhttps://github.com/2E0PGS\fR\>,\ (2018)
+.PP
+\fBSpiros Georgaras\fR\ \<\fIhttps://github.com/s-n-g\fR\>,\ (2018-2019)
 

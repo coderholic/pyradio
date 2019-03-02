@@ -312,12 +312,32 @@ Example:
 
 ## PyRadio Themes
 
-**PyRadio** comes with 4 preconfigured (hardcoded) themes:
+**PyRadio** comes with 4 preconfigured (hard coded) themes:
 
 1. **dark** (8 color theme). This is the appearance **PyRadio** has always had. Enabled by default.
-2. **light** (8 color thmem). A theme for light terminal background settings.
+2. **light** (8 color theme). A theme for light terminal background settings.
 3. **white_on_black** or **wob** (256 color b&w theme). A theme for dark terminal background settings.
 4. **black_on_white** or **bow** (256 color b&w theme). A theme for light terminal background settings.
+
+The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)
+
+Pressing "**t**" will bring up the *Theme selection window*, which can be used to activate a theme and set the default one.
+
+**Note:** If the terminal supports 8 colors only, 256 color themes will not be present in this window. Furthermore, if a 256 color theme is set as default (or requested using the "**-t**" command line option), **PyRadio** will silently revert to the "**dark**" theme.
+
+The  *Theme selection window* will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "**q**" or any other relevant key - pressing "**?**" will bring up its help).
+
+The use of custom themes and theme editing is not implemented yet; theses are features for future releases.
+
+### Using transparency
+
+**PyRadio** themes are able to be used with a transparent background.
+
+Pressing "**T**"  will toggle the transparency setting and save this state in **PyRadio**'s configuration file (transparency is off by default). 
+
+Setting transparency on, will actually force **PyRadio** to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency).  The visual result depends on terminal settings and whether a compositor is running.
+
+When the *Theme selection window* is visible, a "**[T]**" string displayed  at  its  bottom right corner will indicate that transparency is *on*.
 
 ## Debug mode
 
