@@ -161,6 +161,8 @@ def shell():
     Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses"""
     environ.setdefault('ESCDELAY', '25')
     curses.wrapper(pyradio.setup)
+    if not pyradio.setup_return_status:
+        print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
 
 def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True):
     if exit_if_malformed:

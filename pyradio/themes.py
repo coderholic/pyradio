@@ -29,7 +29,7 @@ class PyRadioTheme(object):
     applied_theme_name = 'dark'
 
     def __init__(self):
-        _colors_max = 8
+        _applied_theme_max_colors = 8
 
     def __del__(self):
         self._colors = None
@@ -64,6 +64,10 @@ class PyRadioTheme(object):
 
     def readAndApplyTheme(self, a_theme):
         self.open_theme(a_theme)
+        if self._applied_theme_max_colors > curses.COLORS:
+            # TODO: return error
+            self._load_default_theme(self.applied_theme_name)
+
         self._active_colors = None
         self._active_colors = copy.deepcopy(self._colors)
         if self._transparent:
@@ -72,7 +76,19 @@ class PyRadioTheme(object):
         self._read_colors = copy.deepcopy(self._colors)
 
 
-    def _load_default_theme(self):
+    def _load_default_theme(self, a_theme):
+        self.applied_theme_name = 'dark'
+        self._applied_theme_max_colors = 8
+        try_theme = a_theme.replace('_16_colors', '')
+        if try_theme == 'light':
+            self.applied_theme_name = try_theme
+        self.open_theme(self.applied_theme_name)
+
+    def open_theme(self, a_theme = ''):
+        if not a_theme.strip():
+            a_theme = 'dark'
+
+        if a_theme == 'dark' or a_theme == 'default':
             self._colors['Stations'] = [ curses.COLOR_WHITE, curses.COLOR_BLACK ]
             self._colors['Status Bar'] = [ curses.COLOR_BLACK, curses.COLOR_GREEN ]
             # selection
@@ -85,15 +101,28 @@ class PyRadioTheme(object):
             # help window
             self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], curses.COLOR_YELLOW ]
             self._colors['Messages Border'] = [ curses.COLOR_YELLOW, self._colors['Stations'][BACKGROUND] ]
-            self._colors_max = 8
-            self.applied_theme_name = 'dark'
+            # info
+            self._colors['Colors'] = 8
+            self._colors['Name'] = 'dark'
+            self._colors['Path'] = 'dark'
 
-    def open_theme(self, a_theme = ''):
-        if not a_theme.strip():
-            a_theme = 'default'
-
-        if a_theme == 'dark' or a_theme == 'default':
-            self._load_default_theme()
+        elif a_theme == 'dark_16_colors':
+            self._colors['Stations'] = [ 15, 8 ]
+            self._colors['Status Bar'] = [ curses.COLOR_BLACK, 10 ]
+            # selection
+            self._colors['Normal Cursor'] = [ curses.COLOR_BLACK, 13 ]
+            self._colors['Active Cursor'] = [ curses.COLOR_BLACK, 10 ]
+            self._colors['Active Station']  = [ 10, self._colors['Stations'][BACKGROUND] ]
+            # Titles
+            self._colors['Titles'] = [ 10, self._colors['Stations'][BACKGROUND] ]
+            self._colors['PyRadio URL'] = [ 12, self._colors['Stations'][BACKGROUND] ]
+            # help window
+            self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], 11 ]
+            self._colors['Messages Border'] = [ 11, self._colors['Stations'][BACKGROUND] ]
+            # info
+            self._colors['Colors'] = 16
+            self._colors['Name'] = 'dark_16_colors'
+            self._colors['Path'] = 'dark_16_colors'
 
         elif a_theme == 'light':
             self._colors['Stations'] = [ curses.COLOR_BLACK, curses.COLOR_WHITE ]
@@ -108,24 +137,46 @@ class PyRadioTheme(object):
             # help window
             self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], curses.COLOR_RED ]
             self._colors['Messages Border'] = [ curses.COLOR_MAGENTA, self._colors['Stations'][BACKGROUND] ]
-            self._colors_max = 8
-            self.applied_theme_name = 'light'
+            # info
+            self._colors['Colors'] = 8
+            self._colors['Name'] = 'dark'
+            self._colors['Path'] = 'dark'
+
+        elif a_theme == 'light_16_colors':
+            self._colors['Stations'] = [ 8, 15 ]
+            self._colors['Status Bar'] = [ 15, 12 ]
+            # selection
+            self._colors['Normal Cursor'] = [ 15, 13 ]
+            self._colors['Active Cursor'] = [ 15, 12 ]
+            self._colors['Active Station']  = [ 9, self._colors['Stations'][BACKGROUND] ]
+            # Titles
+            self._colors['Titles'] = [ 9, self._colors['Stations'][BACKGROUND] ]
+            self._colors['PyRadio URL'] = [ 12, self._colors['Stations'][BACKGROUND] ]
+            # help window
+            self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], 9 ]
+            self._colors['Messages Border'] = [ 13, self._colors['Stations'][BACKGROUND] ]
+            # info
+            self._colors['Colors'] = 16
+            self._colors['Name'] = 'light_16_colors'
+            self._colors['Path'] = 'light_16_colors'
 
         elif a_theme == 'black_on_white' or a_theme == 'bow':
-            self._colors['Stations'] = [ 245, 253 ]
-            self._colors['Status Bar'] = [ 253, 245 ]
+            self._colors['Stations'] = [ 245, 15 ]
+            self._colors['Status Bar'] = [ 15, 245 ]
             # selection
-            self._colors['Normal Cursor'] = [ 253, 245 ]
-            self._colors['Active Cursor'] = [ 235, 245 ]
-            self._colors['Active Station']  = [ 235, self._colors['Stations'][BACKGROUND] ]
+            self._colors['Normal Cursor'] = [ 15, 245 ]
+            self._colors['Active Cursor'] = [ 0, 245 ]
+            self._colors['Active Station']  = [ 0, self._colors['Stations'][BACKGROUND] ]
             # Titles
-            self._colors['Titles'] = [ 235, self._colors['Stations'][BACKGROUND] ]
-            self._colors['PyRadio URL'] = [ 235, self._colors['Stations'][BACKGROUND] ]
+            self._colors['Titles'] = [ 0, self._colors['Stations'][BACKGROUND] ]
+            self._colors['PyRadio URL'] = [ 0, self._colors['Stations'][BACKGROUND] ]
             # help window
             self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], 245 ]
             self._colors['Messages Border'] = [ 245, self._colors['Stations'][BACKGROUND] ]
-            self._colors_max = 255
-            self.applied_theme_name = 'black_on_white'
+            # info
+            self._colors['Colors'] = 256
+            self._colors['Name'] = 'black_on_white'
+            self._colors['Path'] = 'black_on_white'
 
         elif a_theme == 'white_on_black' or a_theme == 'wob':
             self._colors['Stations'] = [ 247, 235 ]
@@ -140,16 +191,17 @@ class PyRadioTheme(object):
             # help window
             self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], 235 ]
             self._colors['Messages Border'] = [ 247, self._colors['Stations'][BACKGROUND] ]
-            self._colors_max = 255
-            self.applied_theme_name = 'white_on_black'
+            # info
+            self._colors['Colors'] = 256
+            self._colors['Name'] = 'white_on_black'
+            self._colors['Path'] = 'white_on_black'
 
         else:
             # TODO: read a theme from disk
-            self._load_default_theme()
+            self._load_default_theme(self.applied_theme_name)
 
-        if self._colors_max > curses.COLORS:
-            # TODO: return error
-            self._load_default_theme()
+        self._applied_theme_max_colors = self._colors['Colors']
+        self.applied_theme_name = self._colors['Name']
 
     def toggleTransparency(self):
         self._transparent = not self._transparent
@@ -191,13 +243,15 @@ class PyRadioThemeSelector(object):
     _transparent = False
 
     def __init__(self, parent,
-            applied_theme_name, config_theme_name,
+            applied_theme_name, applied_theme_max_colors,
+            config_theme_name,
             title_color_pair, box_color_pair,
             applied_color_pair, normal_color_pair,
             cursor_color_pair, applied_cursor_color_pair,
             is_transparent, log_file=''):
         self.parent = parent
         self._applied_theme_name = applied_theme_name
+        self._applied_theme_max_colors = applied_theme_max_colors
         self._config_theme_name = config_theme_name
         self._title_color_pair = title_color_pair
         self._box_color_pair = box_color_pair
@@ -215,11 +269,22 @@ class PyRadioThemeSelector(object):
     def show(self):
         self._themes = []
         self._themes = [ [ 'dark', 'dark' ] ]
+        if curses.COLORS >= 16:
+            self._themes.append([ 'dark_16_colors', 'dark_16_colors' ])
+            self._items += 1
         self._themes.append([ 'light', 'light' ])
-        if curses.COLORS > 8:
+        if curses.COLORS >= 16:
+            self._themes.append([ 'light_16_colors', 'light_16_colors' ])
+            self._items += 1
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('curses.COLORS = {}'.format(curses.COLORS))
+        if curses.COLORS == 256:
             self._themes.append([ 'black_on_white', 'black_on_white' ])
             self._themes.append([ 'white_on_black', 'white_on_black' ])
-            self._items = 4
+            self._items += 2
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('*** items = {}'.format(self._items))
         self._max_title_width = len(self.TITLE)
 
 
@@ -262,8 +327,14 @@ class PyRadioThemeSelector(object):
     def _get_config_and_applied_theme(self):
         self._config_theme_name = self._short_to_normal_theme_name(self._config_theme_name)
         self._applied_theme_name = self._short_to_normal_theme_name(self._applied_theme_name)
-        if curses.COLORS <= 8:
-            if self._config_theme_name != 'dark' and \
+        if curses.COLORS <= self._applied_theme_max_colors - 1:
+            if self._config_theme_name == 'dark_16_colors':
+                self._config_theme_name = 'dark'
+                self._applied_theme_name = 'dark'
+            elif self._config_theme_name == 'light_16_colors':
+                self._config_theme_name = 'light'
+                self._applied_theme_name = 'light'
+            elif self._config_theme_name != 'light' and \
                     self._config_theme_name != 'light':
                 self._config_theme_name = 'dark'
                 self._applied_theme_name = 'dark'

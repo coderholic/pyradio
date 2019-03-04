@@ -362,7 +362,7 @@ The visual result of an applied theme greatly depends on the terminal settings (
 Pressing "\fBt\fR" will bring up the \fITheme selection window\fR, which can be used to activate a theme and set the default one.
 
 .IP \fBNote\fR
-If the terminal supports 8 colors only, 256 color themes will not be present in the \fITheme selection window\fR. Furthermore, if a 256 color theme is set as default (or requested using the "\fB-t\fR" command line option), \fBpyradio\fR will silently revert to the "\fBdark\fR" theme.
+Themes that use more colors than those supported by the terminal in use, will not be present in the \fITheme selection window\fR. Furthermore, if a such a theme is set as default (or requested using the "\fB-t\fR" command line option), \fBpyradio\fR will silently fall-back to the "\fBdark\fR" theme. (or the "\fBlight\fR" theme, if the terminal supports 8 colors and default theme is set to "\fIlight_16_colors\fR").
 
 .PP
 The \fITheme selection window\fR will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "\fBq\fR" or any other relevant key - pressing "\fB?\fR" will bring up its help).

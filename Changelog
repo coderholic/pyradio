@@ -1,9 +1,22 @@
+2019-02-04  s-n-g
+
+	* Version 0.7.3
+    * Added "p" command to jump to playing station / loaded playlist.
+    * Added two more themes (dark_16_colors and light_16_colors)
+    * Improved black_on_white theme
+    * On a 8 color terminal, the fall-back theme will be "light",
+      if "light_16_colors" is default.
+	* Exiting if terminal cannot display colors.
+	* Fixed player selection error screen.
+    * Fixed a regression which might appear when loading a playlist
+
 2019-02-02  s-n-g
 
     * Version 0.7.2
     * Themes support added (4 hardcoded themes).
     * Command line option -t (--theme) THEME added.
     * Config option "theme" added.
+    * Key "t" will open the "Theme Selection Window".
     * Key "T" will toggle transparency / use terminal's background color.
     * Alt keyboard combinations will not be considered as ESCAPE char.
     * Help / message windows use multiple colors.

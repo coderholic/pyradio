@@ -323,7 +323,7 @@ The visual result of an applied theme greatly depends on the terminal settings (
 
 Pressing "**t**" will bring up the *Theme selection window*, which can be used to activate a theme and set the default one.
 
-**Note:** If the terminal supports 8 colors only, 256 color themes will not be present in this window. Furthermore, if a 256 color theme is set as default (or requested using the "**-t**" command line option), **PyRadio** will silently revert to the "**dark**" theme.
+**Note:** Themes that use more colors than those supported by the terminal in use, will not be present in the *Theme selection window*. Furthermore, if a such at theme is set as default (or requested using the "**-t**" command line option), **PyRadio** will silently fall-back to the "**dark**" theme (or the "**light**" theme, if the terminal supports 8 colors and default theme is set to "*light_16_colors*").
 
 The  *Theme selection window* will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "**q**" or any other relevant key - pressing "**?**" will bring up its help).
 
