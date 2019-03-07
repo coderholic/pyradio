@@ -74,20 +74,27 @@ The following options can also be set in **PyRadio**'s [configuration file](#con
 ## Controls
 
 ```
-Up/Down/j/k/PgUp/PgDown   Change station selection.
-g                         Jump to first station.
-<n>G                      Jump to n-th / last station.
-Enter/Right/l             Play selected station.
-r                         Select and play a random station.
-Space/Left/h              Stop/start playing selected station.
--/+ or ,/.                Change volume.
-m                         Mute.
-v                         Save volume (not applicable for vlc).
-o s R                     Open / Save / Reload playlist.
-DEL,x                     Delete selected station.
-t T                       Load theme / Toggle transparency.
-?                         Show keys help.
-Esc/q                     Quit.
+                  Main window                               Playlists window                   Themes window
+------------------------------------------------------------------------------------------------------------------------------
+Up/Down/j/k/
+PgUp/PgDown       Change station selection                  Change station playlist            Change station theme
+g                 Jump to first station                     Jump to first playlist             Jump to first theme
+<n>G              Jump to n-th / last station               Jump to n-th / last playlist       Jump to n-th / last theme
+p                 Jump to playing station                   Jump to playing playlist           -
+Enter/Right/l     Play selected station                     Open selected playlist             Apply selected theme
+r                 Select and play a random station          Re-read playlists from disk        -
+Space/Left/h      Stop/start playing selected station       -                                  -
+Space             -                                         -                                  Apply theme and make it default
+-/+ or ,/.        Change volume                             [Valid]                            [Valid]
+m                 Mute / unmute player                      [Valid]                            [Valid]
+v                 Save volume (not applicable for vlc)      [Valid]                            [Valid]
+o s R             Open / Save / Reload playlist             -                                  -
+DEL,x             Delete selected station                   -                                  -
+t T               Load theme / Toggle transparency          [Valid]                            [Valid]
+?                 Show keys help                            [Valid]                            [Valid]
+#                 Redraw window                             [Valid]                            [Valid]
+Esc/q             Quit                                      -                                  -
+Esc/q/Left/h      -                                         Cancel / close window              Cancel / close window
 ```
 
 ## Config file
@@ -219,7 +226,7 @@ Station1,Station1_URL,
 Station2,Station2_URL,iso-8859-7
 ```
 
-**Note:** 
+**Note:**
 Using the ***-a*** command line option will save you all this trouble, as it will automatically take care of creating a valid ***CSV*** file.
 
 ### Global encoding declaration
@@ -312,12 +319,14 @@ Example:
 
 ## PyRadio Themes
 
-**PyRadio** comes with 4 preconfigured (hard coded) themes:
+**PyRadio** comes with 6 preconfigured (hard coded) themes:
 
 1. **dark** (8 color theme). This is the appearance **PyRadio** has always had. Enabled by default.
 2. **light** (8 color theme). A theme for light terminal background settings.
-3. **white_on_black** or **wob** (256 color b&w theme). A theme for dark terminal background settings.
-4. **black_on_white** or **bow** (256 color b&w theme). A theme for light terminal background settings.
+3. **dark_16_colors** (16 color theme). "**dark**" theme alternative.
+4. **light_16_colors** (16 color theme). "**light**" them alternative.
+5. **white_on_black** or **wob** (256 color b&w theme). A theme for dark terminal background settings.
+6. **black_on_white** or **bow** (256 color b&w theme). A theme for light terminal background settings.
 
 The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)
 
@@ -333,7 +342,7 @@ The use of custom themes and theme editing is not implemented yet; theses are fe
 
 **PyRadio** themes are able to be used with a transparent background.
 
-Pressing "**T**"  will toggle the transparency setting and save this state in **PyRadio**'s configuration file (transparency is off by default). 
+Pressing "**T**"  will toggle the transparency setting and save this state in **PyRadio**'s configuration file (transparency is off by default).
 
 Setting transparency on, will actually force **PyRadio** to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency).  The visual result depends on terminal settings and whether a compositor is running.
 

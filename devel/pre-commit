@@ -21,7 +21,7 @@ do
     dl {margin: 2em;} \
     dd {margin: 1em;} \
     dt {font-weight: bold;} \
-    pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6;}' ${out}
+    pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6; overflow: auto;}' ${out}
     sed -i -e 's/<code>//g' \
         -e 's{</code>{{g' \
         -e 's{<a href="#pyradio">pyradio</a>{[pyradio]{' \

@@ -404,6 +404,14 @@ class PyRadioStations(object):
         for i, a_playlist in enumerate(self.playlists):
             print('  {0}. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
 
+    def current_playlist_index(self):
+        if logger.isEnabledFor(logging.ERROR):
+            if not self.playlists:
+                self.read_playlists()
+        for i, a_playlist in enumerate(self.playlists):
+            if a_playlist[0] == self.stations_filename_only_no_extension:
+                return i
+
 class PyRadioConfig(PyRadioStations):
 
     def __init__(self):

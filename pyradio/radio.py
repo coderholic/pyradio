@@ -99,8 +99,9 @@ class PyRadio(object):
         self.cnf = pyradio_config
         if theme:
             self._theme_name = theme
-        self.selections = [ (0, 0, -1, self.cnf.stations),
-                            (0, 0, -1, self.cnf.playlists)]
+        ind = self.cnf.current_playlist_index()
+        self.selections = [ [0, 0, -1, self.cnf.stations],
+                            [ind, 0, ind, self.cnf.playlists]]
         self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
         self.play = play
         self.stdscr = None
@@ -177,7 +178,14 @@ class PyRadio(object):
                 edit_color = curses.color_pair(8),
                 cursor_color = curses.color_pair(6))
         self.search = self._stations_search
-
+        # position playlist in window
+        self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
+        if self.selections[PLAYLIST_MODE][0] < self.bodyMaxY - 2:
+            self.selections[PLAYLIST_MODE][1] = 0
+        elif self.selections[PLAYLIST_MODE][0] > len(self.cnf.playlists) - self.bodyMaxY + 1:
+            self.selections[PLAYLIST_MODE][1] = len(self.cnf.playlists) - self.bodyMaxY + 2
+        else:
+            self.selections[PLAYLIST_MODE][1] = self.selections[PLAYLIST_MODE][0] - int(self.bodyMaxY/2)
         self.run()
 
     def setupAndDrawScreen(self):
@@ -266,6 +274,9 @@ class PyRadio(object):
                 self.helpWin = None
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('MODE: THEME_HELP_MODE =>  THEME_MODE')
+            max_lines = self.maxY - 4
+            if not self.startPos <= self.selection < self.startPos + max_lines:
+                self._put_selection_in_the_middle()
             self.refreshBody()
 
     def initFooter(self):
@@ -280,7 +291,7 @@ class PyRadio(object):
         maxDisplay = self.bodyMaxY - 1
         self._print_body_header()
         if self.number_of_items > 0:
-            pad = len(str(len(self.stations)))
+            pad = len(str(self.startPos + self.bodyMaxY - 2))
             for lineNum in range(maxDisplay - 1):
                 i = lineNum + self.startPos
                 if i < len(self.stations):
@@ -380,7 +391,9 @@ class PyRadio(object):
                 self.setStation(num)
                 if self.number_of_items > 0:
                     self.playSelection()
+                    self._goto_playing_station(changing_playlist=True)
                 self.refreshBody()
+                self.selections[NORMAL_MODE] = [self.selection, self.startPos, self.playing, self.stations]
 
             if self.cnf.foreign_file:
                 """ ask to copy this playlist in config dir """
@@ -414,17 +427,40 @@ class PyRadio(object):
         if self.player.isPlaying() and (self.selection != self.playing or changing_playlist):
             if changing_playlist:
                 self.startPos = 0
-            max_lines = self.maxY - 4
+            max_lines = self.bodyMaxY - 2
             if self.playing < self.startPos or \
                     self.playing > self.startPos + max_lines:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('=== _goto:adjusting startPos')
                 if self.playing < max_lines:
                     self.startPos = 0
+                    if self.playing - int(max_lines/2) > 0:
+                        self.startPos = self.playing - int(max_lines/2)
                 elif self.playing > self.number_of_items - max_lines:
                     self.startPos = self.number_of_items - max_lines
                 else:
                     self.startPos = int(self.playing+1/max_lines) - int(max_lines/2)
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('===== _goto:startPos = {0}, changing_playlist = {1}'.format(self.startPos, changing_playlist))
             self.selection = self.playing
             self.refreshBody()
+
+    def _put_selection_in_the_middle(self, force=False):
+        max_lines = self.bodyMaxY - 2
+        if force or self.selection < self.startPos or \
+                self.selection > self.startPos + max_lines:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('=== _put:adjusting startPos')
+            if self.selection < max_lines:
+                self.startPos = 0
+                if self.selection - int(max_lines/2) > 0:
+                    self.startPos = self.selection - int(max_lines/2)
+            elif self.selection > self.number_of_items - max_lines:
+                self.startPos = self.number_of_items - max_lines
+            else:
+                self.startPos = int(self.selection+1/max_lines) - int(max_lines/2)
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('===== _put:startPos = {0}, force = {1}'.format(self.startPos, force))
 
     def setStation(self, number):
         """ Select the given station number """
@@ -459,10 +495,14 @@ class PyRadio(object):
                            'Are you sure a supported player is installed?')
 
     def connectionFailed(self):
+        old_playing = self.playing
         self.stopPlayer(False)
+        self.selections[NORMAL_MODE][2] = -1
         if self.window_mode == NORMAL_MODE:
-            self.refreshBody()
+            if self.operation_mode == NORMAL_MODE:
+                self.refreshBody()
         else:
+            self.playing = old_playing
             self._redisplay_transient_window()
         if logger.isEnabledFor(logging.INFO):
             logger.info('Failed to connect to: "{}"'.format(self._last_played_station))
@@ -990,7 +1030,7 @@ class PyRadio(object):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('self.selection = {0}, self.playing = {1}, self.startPos = {2}'.format(self.selection, self.playing, self.startPos))
 
-        self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
+        self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self.cnf.stations]
         self.refreshBody()
 
     def _open_playlist(self):
@@ -999,7 +1039,7 @@ class PyRadio(object):
         txt = '''Reading playlists. Please wait...'''
         self._show_help(txt, NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
         self.jumpnr = ''
-        self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.stations)
+        self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self.cnf.stations]
         self.operation_mode = self.window_mode = PLAYLIST_MODE
         self.search = self._playlists_search
         self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
@@ -1106,6 +1146,7 @@ class PyRadio(object):
         if self.number_of_items > 0:
             self.setStation(random.randint(0, len(self.stations)))
             self.playSelection()
+            self._put_selection_in_the_middle(force=True)
             self.refreshBody()
 
     def _toggle_transparency(self):
@@ -1128,9 +1169,13 @@ class PyRadio(object):
             return
 
         if char in (ord('t'), ):
+            # only open it on main modes
             if self.window_mode != THEME_MODE and  \
                     self.operation_mode <= SEARCH_PLAYLIST_MODE:
-                # only open it on main modes
+                self.jumpnr = ''
+                self._random_requested = False
+                if self.operation_mode == NORMAL_MODE:
+                    self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self.stations]
                 self.previous_operation_mode = self.operation_mode
                 self.operation_mode = self.window_mode = THEME_MODE
 
@@ -1152,6 +1197,8 @@ class PyRadio(object):
                     """ cancel or hide """
                     self._theme_slector = None
                     self.operation_mode = self.window_mode = self.previous_operation_mode
+                    if self.operation_mode == NORMAL_MODE:
+                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
                     if logger.isEnabledFor(logging.DEBUG):
                         if self.operation_mode == NORMAL_MODE:
                             logger.debug('MODE: THEME_MODE => NORMAL_MODE')
@@ -1483,6 +1530,7 @@ class PyRadio(object):
 
             if char in (ord('?'), ):
                 self.jumpnr = ''
+                self._random_requested = False
                 self._print_help()
                 return
 
@@ -1501,9 +1549,14 @@ class PyRadio(object):
                     if self.jumpnr == "":
                         self.setStation(-1)
                     else:
+                        force_center = False
                         jumpto=min(int(self.jumpnr)-1,len(self.stations)-1)
                         jumpto=max(0,jumpto)
+                        if jumpto < self.startPos - 1 or \
+                                jumpto > self.startPos + self.bodyMaxY:
+                            force_center = True
                         self.setStation(jumpto)
+                        self._put_selection_in_the_middle(force=force_center)
                     self.jumpnr = ""
                     self.refreshBody()
                 return
@@ -1537,7 +1590,7 @@ class PyRadio(object):
                     if self.operation_mode == PLAYLIST_MODE:
                         """ return to stations view """
                         self.jumpnr = ''
-                        self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
+                        self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self.cnf.playlists]
                         self.operation_mode = self.window_mode = NORMAL_MODE
                         self.search = self._stations_search
                         self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
@@ -1692,11 +1745,14 @@ class PyRadio(object):
                         return
                     else:
                         self.number_of_items = ret
-                        self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
+                        self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self.cnf.playlists]
                         self.operation_mode = self.window_mode = NORMAL_MODE
                         self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
                         self._align_stations_and_refresh(PLAYLIST_MODE)
                         self.search = self._stations_search
+                        if self.playing < 0:
+                            self._put_selection_in_the_middle(force=True)
+                            self.refreshBody()
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('MODE: PLAYLIST_MODE -> NORMAL_MODE')
                     return
@@ -1708,13 +1764,11 @@ class PyRadio(object):
                     self._show_help(txt, PLAYLIST_MODE, caption=' ', prompt=' ', is_message=True)
                     old_playlist = self.cnf.playlists[self.selection][0]
                     self.number_of_items, self.playing = self.readPlaylists()
-                    if self.number_of_items == 0:
-                        return
-                    else:
+                    if self.number_of_items > 0:
                         """ refresh reference """
                         self.stations = self.cnf.playlists
                         if self.playing == -1:
-                            self.selections[self.operation_mode] = (0, 0, -1, self.cnf.playlists)
+                            self.selections[self.operation_mode] = [0, 0, -1, self.cnf.playlists]
                         else:
                             self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
                         self.refreshBody()

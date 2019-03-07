@@ -12,7 +12,7 @@
     dl {margin: 2em;} 
     dd {margin: 1em;} 
     dt {font-weight: bold;} 
-    pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6;}
+    pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6; overflow: auto;}
       code{white-space: pre-wrap;}
       span.smallcaps{font-variant: small-caps;}
       span.underline{text-decoration: underline;}
@@ -89,20 +89,27 @@ optional arguments:
 <li><strong>-t</strong> - parameter <strong>theme</strong> (default value: <strong>dark</strong>)</li>
 </ul>
 <h2 id="controls">Controls</h2>
-<pre>Up/Down/j/k/PgUp/PgDown   Change station selection.
-g                         Jump to first station.
-&lt;n&gt;G                      Jump to n-th / last station.
-Enter/Right/l             Play selected station.
-r                         Select and play a random station.
-Space/Left/h              Stop/start playing selected station.
--/+ or ,/.                Change volume.
-m                         Mute.
-v                         Save volume (not applicable for vlc).
-o s R                     Open / Save / Reload playlist.
-DEL,x                     Delete selected station.
-t T                       Load theme / Toggle transparency.
-?                         Show keys help.
-Esc/q                     Quit.</pre>
+<pre>                  Main window                               Playlists window                   Themes window
+------------------------------------------------------------------------------------------------------------------------------
+Up/Down/j/k/
+PgUp/PgDown       Change station selection                  Change station playlist            Change station theme
+g                 Jump to first station                     Jump to first playlist             Jump to first theme
+&lt;n&gt;G              Jump to n-th / last station               Jump to n-th / last playlist       Jump to n-th / last theme
+p                 Jump to playing station                   Jump to playing playlist           -
+Enter/Right/l     Play selected station                     Open selected playlist             Apply selected theme
+r                 Select and play a random station          Re-read playlists from disk        -
+Space/Left/h      Stop/start playing selected station       -                                  -
+Space             -                                         -                                  Apply theme and make it default
+-/+ or ,/.        Change volume                             [Valid]                            [Valid]
+m                 Mute / unmute player                      [Valid]                            [Valid]
+v                 Save volume (not applicable for vlc)      [Valid]                            [Valid]
+o s R             Open / Save / Reload playlist             -                                  -
+DEL,x             Delete selected station                   -                                  -
+t T               Load theme / Toggle transparency          [Valid]                            [Valid]
+?                 Show keys help                            [Valid]                            [Valid]
+#                 Redraw window                             [Valid]                            [Valid]
+Esc/q             Quit                                      -                                  -
+Esc/q/Left/h      -                                         Cancel / close window              Cancel / close window</pre>
 <h2 id="config-file">Config file</h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong><em>PyRadio</em></strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong><em>PyRadio</em></strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
@@ -219,10 +226,12 @@ volume=50</pre>
 volstep=1
 volume=28</pre>
 <h2 id="pyradio-themes">PyRadio Themes</h2>
-<p><strong>PyRadio</strong> comes with 4 preconfigured (hard coded) themes:</p>
+<p><strong>PyRadio</strong> comes with 6 preconfigured (hard coded) themes:</p>
 <ol type="1">
 <li><strong>dark</strong> (8 color theme). This is the appearance <strong>PyRadio</strong> has always had. Enabled by default.</li>
 <li><strong>light</strong> (8 color theme). A theme for light terminal background settings.</li>
+<li><strong>dark_16_colors</strong> (16 color theme). “<strong>dark</strong>” theme alternative.</li>
+<li><strong>light_16_colors</strong> (16 color theme). “<strong>light</strong>” them alternative.</li>
 <li><strong>white_on_black</strong> or <strong>wob</strong> (256 color b&amp;w theme). A theme for dark terminal background settings.</li>
 <li><strong>black_on_white</strong> or <strong>bow</strong> (256 color b&amp;w theme). A theme for light terminal background settings.</li>
 </ol>

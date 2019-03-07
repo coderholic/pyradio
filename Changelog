@@ -1,13 +1,21 @@
+2019-02-07  s-n-g
+
+    * Selected station / playlist will be visible when resizing the terminal.
+    * Calculating initial loaded playlist position in window.
+    * Implemented dynamic list padding.
+    * Correctly display failed station when returning to stations mode.
+    * Updating docs
+
 2019-02-04  s-n-g
 
-	* Version 0.7.3
+    * Version 0.7.3
     * Added "p" command to jump to playing station / loaded playlist.
     * Added two more themes (dark_16_colors and light_16_colors)
-    * Improved black_on_white theme
+    * Improved black_on_white theme.
     * On a 8 color terminal, the fall-back theme will be "light",
       if "light_16_colors" is default.
-	* Exiting if terminal cannot display colors.
-	* Fixed player selection error screen.
+    * Exiting if terminal cannot display colors.
+    * Fixed player selection error screen.
     * Fixed a regression which might appear when loading a playlist
 
 2019-02-02  s-n-g
