@@ -1,4 +1,7 @@
 #!/bin/bash
+# convert TABs to SPACEs in Changelog
+sed -i 's/\t/    /g' Changelog
+# Create HTML file from md files
 for afile in README.md build.md
 do
 #[ -z "$(git status | grep ${afile})" ] || {

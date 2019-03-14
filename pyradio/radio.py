@@ -259,23 +259,26 @@ class PyRadio(object):
                 installed as well."""
             self.refreshNoPlayerBody(txt)
         else:
-            if self.operation_mode == MAIN_HELP_MODE:
-                self.operation_mode = self.window_mode = NORMAL_MODE
-                self.helpWin = None
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: MAIN_HELP_MODE => NORMAL_MODE')
-            elif self.operation_mode == PLAYLIST_HELP_MODE:
-                self.operation_mode = self.window_mode = PLAYLIST_MODE
-                self.helpWin = None
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: PLAYLIST_HELP_MODE =>  PLAYLIST_MODE')
-            elif self.operation_mode == THEME_HELP_MODE:
-                self.operation_mode = self.window_mode = THEME_MODE
-                self.helpWin = None
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: THEME_HELP_MODE =>  THEME_MODE')
+            #if self.operation_mode == MAIN_HELP_MODE:
+            #    self.operation_mode = self.window_mode = NORMAL_MODE
+            #    self.helpWin = None
+            #    if logger.isEnabledFor(logging.DEBUG):
+            #        logger.debug('MODE: MAIN_HELP_MODE => NORMAL_MODE')
+            #elif self.operation_mode == PLAYLIST_HELP_MODE:
+            #    self.operation_mode = self.window_mode = PLAYLIST_MODE
+            #    self.helpWin = None
+            #    if logger.isEnabledFor(logging.DEBUG):
+            #        logger.debug('MODE: PLAYLIST_HELP_MODE =>  PLAYLIST_MODE')
+            #elif self.operation_mode == THEME_HELP_MODE:
+            #    self.operation_mode = self.window_mode = THEME_MODE
+            #    self.helpWin = None
+            #    if logger.isEnabledFor(logging.DEBUG):
+            #        logger.debug('MODE: THEME_HELP_MODE =>  THEME_MODE')
+            # make sure selected is visible
             max_lines = self.maxY - 4
-            if not self.startPos <= self.selection < self.startPos + max_lines:
+            if self.number_of_items < max_lines:
+                self.startPos = 0
+            elif not self.startPos <= self.selection < self.startPos + max_lines:
                 self._put_selection_in_the_middle()
             self.refreshBody()
 
@@ -321,7 +324,10 @@ class PyRadio(object):
         self.txtWin.refresh()
 
     def _print_body_header(self):
-        if self.operation_mode == NORMAL_MODE:
+        cur_mode = self.window_mode
+        if cur_mode == THEME_MODE:
+            cur_mode = self.previous_operation_mode
+        if cur_mode == NORMAL_MODE:
             align = 1
             w_header = self.cnf.stations_filename_only_no_extension
             if self.cnf.dirty_playlist:
@@ -335,7 +341,7 @@ class PyRadio(object):
             self.bodyWin.addstr(w_header,curses.color_pair(4))
             self.bodyWin.addstr(']',curses.color_pair(5))
 
-        elif self.operation_mode == PLAYLIST_MODE or \
+        elif cur_mode == PLAYLIST_MODE or \
                 self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
             """ display playlists header """
             w_header = ' Select playlist to open '
@@ -424,11 +430,14 @@ class PyRadio(object):
 
     def _goto_playing_station(self, changing_playlist=False):
         """ make sure playing station is visible """
-        if self.player.isPlaying() and (self.selection != self.playing or changing_playlist):
+        if (self.player.isPlaying() or self.operation_mode == PLAYLIST_MODE) and \
+            (self.selection != self.playing or changing_playlist):
             if changing_playlist:
                 self.startPos = 0
             max_lines = self.bodyMaxY - 2
-            if self.playing < self.startPos or \
+            if self.number_of_items < max_lines:
+                self.startPos = 0
+            elif self.playing < self.startPos or \
                     self.playing > self.startPos + max_lines:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('=== _goto:adjusting startPos')
@@ -447,7 +456,9 @@ class PyRadio(object):
 
     def _put_selection_in_the_middle(self, force=False):
         max_lines = self.bodyMaxY - 2
-        if force or self.selection < self.startPos or \
+        if self.number_of_items < max_lines:
+            self.startPos = 0
+        elif force or self.selection < self.startPos or \
                 self.selection > self.startPos + max_lines:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('=== _put:adjusting startPos')
@@ -740,7 +751,7 @@ class PyRadio(object):
         return line
 
     def _print_help(self):
-        if self.operation_mode == PLAYLIST_MODE:
+        if self.window_mode == PLAYLIST_MODE:
             txt = """Up|/|j|/|PgUp
                      Down|/|k|/|PgDown    |Change playlist selection.
                      g                |Jump to first playlist.
@@ -756,7 +767,7 @@ class PyRadio(object):
             self._show_help(txt, mode_to_set=PLAYLIST_HELP_MODE, caption=' Playlist Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = PLAYLIST_HELP_MODE')
-        elif self.operation_mode == THEME_MODE:
+        elif self.window_mode == THEME_MODE:
             txt = """Up|/|j|/|PgUp
                      Down|/|k|/|PgDown    |Change theme selection.
                      g                |Jump to first theme.
@@ -771,7 +782,7 @@ class PyRadio(object):
             self._show_help(txt, mode_to_set=THEME_HELP_MODE, caption=' Themes Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = THEME_HELP_MODE')
-        elif self.operation_mode == NORMAL_MODE:
+        elif self.window_mode == NORMAL_MODE:
             txt = """Up|/|j|/|PgUp
                      Down|/|k|/|PgDown    |Change station selection.
                      g                |Jump to first station.
@@ -1036,9 +1047,10 @@ class PyRadio(object):
     def _open_playlist(self):
         """ open playlist """
         self._get_active_stations()
+        self.jumpnr = ''
+        self._random_requested = False
         txt = '''Reading playlists. Please wait...'''
         self._show_help(txt, NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
-        self.jumpnr = ''
         self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self.cnf.stations]
         self.operation_mode = self.window_mode = PLAYLIST_MODE
         self.search = self._playlists_search
@@ -1108,38 +1120,38 @@ class PyRadio(object):
             return self.cnf.default_encoding
 
     def _redisplay_transient_window(self):
-            if self.operation_mode == MAIN_HELP_MODE or \
-                self.operation_mode == PLAYLIST_HELP_MODE or \
-                self.operation_mode == THEME_HELP_MODE:
-                    self._print_help()
-            elif self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
-                self._print_playlist_load_error()
-            elif self.operation_mode == ASK_TO_SAVE_PLAYLIST_MODE:
-                self._print_save_modified_playlist()
-            elif self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
-                self._print_playlist_reload_confirmation()
-            elif self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
-                self._print_playlist_dirty_reload_confirmation()
-            elif self.operation_mode == PLAYLIST_RELOAD_ERROR_MODE:
-                self._print_playlist_reload_error()
-            elif self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE:
-                self._print_save_playlist_error_1()
-            elif self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE:
-                self._print_save_playlist_error_2()
-            elif self.operation_mode == REMOVE_STATION_MODE:
-                self.removeStation()
-            elif self.operation_mode == FOREIGN_PLAYLIST_ASK_MODE:
-                self._print_handle_foreign_playlist()
-            elif self.operation_mode == FOREIGN_PLAYLIST_MESSAGE_MODE:
-                self._print_foreign_playlist_message()
-            elif self.operation_mode == FOREIGN_PLAYLIST_COPY_ERROR_MODE:
-                self._print_foreign_playlist_copy_error()
-            elif self.operation_mode == SEARCH_NORMAL_MODE or \
-                    self.operation_mode == SEARCH_PLAYLIST_MODE:
-                self.search.show(self.bodyWin, repaint=True)
-            elif self.operation_mode == THEME_MODE:
-                self._theme_slector.parent = self.bodyWin
-                self._show_theme_selector()
+        if self.operation_mode == MAIN_HELP_MODE or \
+            self.operation_mode == PLAYLIST_HELP_MODE or \
+            self.operation_mode == THEME_HELP_MODE:
+                self._print_help()
+        elif self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
+            self._print_playlist_load_error()
+        elif self.operation_mode == ASK_TO_SAVE_PLAYLIST_MODE:
+            self._print_save_modified_playlist()
+        elif self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
+            self._print_playlist_reload_confirmation()
+        elif self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
+            self._print_playlist_dirty_reload_confirmation()
+        elif self.operation_mode == PLAYLIST_RELOAD_ERROR_MODE:
+            self._print_playlist_reload_error()
+        elif self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE:
+            self._print_save_playlist_error_1()
+        elif self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE:
+            self._print_save_playlist_error_2()
+        elif self.operation_mode == REMOVE_STATION_MODE:
+            self.removeStation()
+        elif self.operation_mode == FOREIGN_PLAYLIST_ASK_MODE:
+            self._print_handle_foreign_playlist()
+        elif self.operation_mode == FOREIGN_PLAYLIST_MESSAGE_MODE:
+            self._print_foreign_playlist_message()
+        elif self.operation_mode == FOREIGN_PLAYLIST_COPY_ERROR_MODE:
+            self._print_foreign_playlist_copy_error()
+        elif self.operation_mode == SEARCH_NORMAL_MODE or \
+                self.operation_mode == SEARCH_PLAYLIST_MODE:
+            self.search.show(self.bodyWin, repaint=True)
+        elif self.operation_mode == THEME_MODE:
+            self._theme_slector.parent = self.bodyWin
+            self._show_theme_selector()
 
     def play_random(self):
         # Pick a random radio station
@@ -1220,6 +1232,11 @@ class PyRadio(object):
 
         if char in (ord('#'), curses.KEY_RESIZE):
             self.setupAndDrawScreen()
+            max_lines = self.bodyMaxY - 2
+            if self.selection > self.number_of_items - max_lines and \
+                    self.number_of_items > max_lines:
+                self.startPos = self.number_of_items - max_lines
+                self.refreshBody()
             return
 
         elif self.operation_mode == NO_PLAYER_ERROR_MODE:
@@ -1372,7 +1389,8 @@ class PyRadio(object):
             """ Main help in on, just update """
             self.helpWin = None
             self.operation_mode = self.window_mode = NORMAL_MODE
-            self.setupAndDrawScreen()
+            #self.setupAndDrawScreen()
+            self.refreshBody()
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE: MAIN_HELP_MODE -> NORMAL_MODE')
             return
@@ -1490,7 +1508,8 @@ class PyRadio(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('MODE: Cancel REMOVE_STATION_MODE -> NORMAL_MODE')
             self.operation_mode = self.window_mode = NORMAL_MODE
-            self.setupAndDrawScreen()
+            #self.setupAndDrawScreen()
+            self.refreshBody()
             return
 
         elif self.operation_mode == FOREIGN_PLAYLIST_ASK_MODE:
@@ -1673,7 +1692,7 @@ class PyRadio(object):
                     if self.number_of_items > 0:
                         self.playSelection()
                         self.refreshBody()
-                        self.setupAndDrawScreen()
+                        #self.setupAndDrawScreen()
                     return
 
                 elif char in (ord(' '), curses.KEY_LEFT, ord('h')):
