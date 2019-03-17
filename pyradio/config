@@ -55,7 +55,9 @@ connection_timeout = 10
 # Default theme
 # Hardcooded themes:
 #   dark (default) (8 colors)
-#   light (8 colors
+#   light (8 colors)
+#   dark_16_colors (16 colors dark theme alternative)
+#   light_16_colors (16 colors light theme alternative)
 #   black_on_white (bow) (256 colors)
 #   white_on_black (wob) (256 colors)
 # Default value = 'dark'

@@ -138,9 +138,9 @@ def shell():
         logging.lastResort = None
 
     if requested_player is '':
-        requested_player = pyradio_config.player_to_use
+        requested_player = pyradio_config.player
     #else:
-    #    pyradio_config.requested_player_to_use = requested_player
+    #    pyradio_config.requested_player = requested_player
 
     if args.play == 'False':
         if args.stations == '':

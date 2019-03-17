@@ -34,6 +34,7 @@ NORMAL_MODE = 0
 PLAYLIST_MODE = 1
 SEARCH_NORMAL_MODE = 2
 SEARCH_PLAYLIST_MODE = 3
+CONFIG_MODE = 4
 REMOVE_STATION_MODE = 50
 SAVE_PLAYLIST_MODE = 51
 ASK_TO_SAVE_PLAYLIST_MODE = 52
@@ -94,6 +95,10 @@ class PyRadio(object):
     _theme = PyRadioTheme()
     _theme_name = 'dark'
     _theme_slector = None
+
+    _config_win = None
+
+    _color_config_win = None
 
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
         self.cnf = pyradio_config
@@ -1170,6 +1175,24 @@ class PyRadio(object):
             self.footerWin.refresh()
             self.cnf.use_transparency = self._theme.getTransparency()
 
+    def _show_config_window(self):
+        if self._config_win is None:
+            self._config_win = PyRadioConfigWindow(self.bodyWin, [None,
+                self.cnf.player,
+                self.cnf.default_playlist,
+                self.cnf.default_station,
+                self.cnf.default_encoding,
+                self.cnf.connection_timeout,
+                None,
+                self.cnf.theme,
+                self.cnf.use_transparency,
+                None,
+                self.cnf.confirm_station_deletion,
+                self.cnf.confirm_playlist_reload,
+                self.cnf.auto_save_playlist ])
+        else:
+            self._config_win.refresh_config_win()
+
     def keypress(self, char):
 
         if self.operation_mode == NOT_IMPLEMENTED_YET_MODE:
@@ -1198,6 +1221,17 @@ class PyRadio(object):
 
         if self.operation_mode <= PLAYLIST_MODE and char == ord('p'):
             self._goto_playing_station()
+            return
+
+        if self.operation_mode == CONFIG_MODE:
+            ret, ret_list = self._config_win.keypress(char)
+            if ret >= 0:
+                self.operation_mode = self.window_mode = NORMAL_MODE
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('MODE: CONFIG_MODE => NORMAL_MODE')
+                self.bodyWin.box()
+                self._print_body_header()
+                self.refreshBody()
             return
 
         if self.operation_mode == THEME_MODE:
@@ -1233,7 +1267,7 @@ class PyRadio(object):
         if char in (ord('#'), curses.KEY_RESIZE):
             self.setupAndDrawScreen()
             max_lines = self.bodyMaxY - 2
-            if self.selection > self.number_of_items - max_lines and \
+            if self.selection >= self.number_of_items - max_lines and \
                     self.number_of_items > max_lines:
                 self.startPos = self.number_of_items - max_lines
                 self.refreshBody()
@@ -1668,7 +1702,15 @@ class PyRadio(object):
                 return
 
             if self.operation_mode == NORMAL_MODE:
-                if char in (ord('o'), ):
+                if char == ord('c'):
+                    # open config window
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: NORMAL_MODE => CONFIG_MODE')
+                    self.operation_mode = self.window_mode = CONFIG_MODE
+                    self._show_config_window()
+                    return
+
+                elif char in (ord('o'), ):
                     self.jumpnr = ''
                     self._random_requested = False
                     if self.cnf.dirty_playlist:
@@ -1791,5 +1833,156 @@ class PyRadio(object):
                         else:
                             self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self.cnf.playlists)
                         self.refreshBody()
+
+class PyRadioConfigWindow(object):
+
+    parent = None
+    _win = None
+
+    _title = ' PyRadio Configuration '
+
+    selection = __selection = 1
+
+    _headers = (0, 6, 9)
+
+    items = ( 'General Options',
+              'Player: ',
+              'Def. playlist: ',
+              'Def. station: ',
+              'Def. encoding: ',
+              'Connection timeout: ',
+              'Themes',
+              'Theme: ',
+              'Use transparency: ',
+              'Playlist Management',
+              'Confirm station deletion: ',
+              'Confirm playlist reload: ',
+              'Auto save playlist: ' )
+
+    def __init__(self, parent, config_options):
+        self.parent = parent
+        self._saved_config_options = config_options[:]
+        self._config_options = config_options[:]
+        self.init_config_win()
+        self.refresh_config_win()
+
+    @property
+    def parent(self):
+        return self.__parent
+
+    @parent.setter
+    def parent(self, val):
+        self.__parent = val
+        self.init_config_win()
+
+    @property
+    def selection(self):
+        return self.__selection
+
+    @selection.setter
+    def selection(self, val):
+        if val < 1:
+            val = len(self._headers) - 1
+        elif val >= len(self.items):
+            val = 1
+        if val in self._headers:
+            self.__selection = val + 1
+        else:
+            self.__selection = val
+        #self.refresh_config_win()
+
+    def init_config_win(self):
+        self._win = None
+        self.maxY, self.maxX = self.__parent.getmaxyx()
+        self._second_column = int(self.maxX / 2 )
+        #self._help_contents = self._headers + 4
+        self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
+
+    def refresh_config_win(self):
+        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.erase()
+        self._win.box()
+        self._win.addstr(0,
+            int((self.maxX - len(self._title)) / 2),
+            self._title,
+            curses.color_pair(4))
+        self._win.addstr(1, 1, 'General Options', curses.color_pair(4))
+        self._win.addstr(1, self._second_column, 'Option Help', curses.color_pair(4))
+        self.refresh_selection()
+
+    def refresh_selection(self):
+        for i, it in enumerate(self.items):
+            if i == self.__selection:
+                col = hcol = curses.color_pair(6)
+                #self._win.hline(i+1, 1, ' ', hline_width, col)
+            else:
+                col = curses.color_pair(5)
+                hcol = curses.color_pair(4)
+            hline_width = self._second_column - 1
+            self._win.hline(i+1, 1, ' ', hline_width, col)
+            if i in self._headers:
+                self._win.addstr(i+1, 1, it, curses.color_pair(4))
+            else:
+                self._win.addstr(i+1, 3, it, col)
+                self._win.addstr('{}'.format(self._config_options[i]), hcol)
+        self._win.refresh()
+
+    def _get_col_line(self, ind):
+        if ind < self._headers:
+            self._column = 3
+            self._line = ind + 2
+        else:
+            self._column = self._second_column + 2
+            self._line = ind - self._headers + 2
+
+    def _put_cursor(self, jump):
+        self.__selection += jump
+        if jump > 0:
+            if self.__selection in self._headers:
+                self.__selection += 1
+            if self.__selection >= len(self.items):
+                self.__selection = 1
+        else:
+            if self.__selection in self._headers:
+                self.__selection -= 1
+            if self.__selection < 1:
+                self.__selection = len(self.items) - 1
+
+    def keypress(self, char):
+        if char in (ord('k'), curses.KEY_UP):
+            self._put_cursor(-1)
+            self.refresh_selection()
+            return -1, []
+        elif char in (ord('j'), curses.KEY_DOWN):
+            self._put_cursor(1)
+            self.refresh_selection()
+            return -1, []
+        elif char in (ord('j'), curses.KEY_NPAGE):
+            if self.__selection + 4 >= len(self.items) and \
+                    self.__selection < len(self.items) - 1:
+                self.__selection = len(self.items) - 5
+            self._put_cursor(4)
+            self.refresh_selection()
+            return -1, []
+        elif char in (ord('j'), curses.KEY_PPAGE):
+            if self.__selection - 4 < 1 and self.__selection > 1:
+                self.__selection = 5
+            self._put_cursor(-4)
+            self.refresh_selection()
+            return -1, []
+        elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):
+            self._win.nodelay(True)
+            char = self._win.getch()
+            self._win.nodelay(False)
+            if char == -1:
+                """ ESCAPE """
+                return 1, []
+        elif char in (ord('s'), ):
+            # save and exit
+            return 0, [1]
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord(' ') ):
+            # alter option value
+            return -1, []
+        return -1, []
 
 # pymode:lint_ignore=W901

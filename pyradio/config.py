@@ -2,6 +2,8 @@ import csv
 import sys
 import logging
 import glob
+import curses
+import collections
 from os import path, getenv, makedirs, remove
 from time import ctime
 from datetime import datetime
@@ -414,9 +416,26 @@ class PyRadioStations(object):
 
 class PyRadioConfig(PyRadioStations):
 
+    opts = collections.OrderedDict()
+    opts[ 'general_title' ] = [ 'General Options', '' ]
+    opts[ 'player' ] = [ 'Player: ', '' ]
+    opts[ 'default_playlist' ] = [ 'Def. playlist ', 'stations' ]
+    opts[ 'default_station' ] = [ 'Def station: ', '-1' ]
+    opts[ 'default_encoding' ] = [ 'Def. encoding: ', 'utf-8' ]
+    opts[ 'connection_timeout' ] = [ 'Connection timeout: ', '10' ]
+    opts[ 'theme_title' ] = [ 'Themes', '' ]
+    opts[ 'theme' ] = [ 'Theme: ', 'dark' ]
+    opts[ 'use_transparency' ] = [ 'Use transparency: ', False ]
+    opts[ 'playlist_manngement_title' ] = [ 'Playlist Management', '' ]
+    opts[ 'confirm_station_deletion' ] = [ 'Confirm station deletion: ', True ]
+    opts[ 'confirm_playlist_reload' ] = [ 'Confirm playlist reload: ', True ]
+    opts[ 'auto_save_playlist' ] = [ 'Auto save playlist', False ]
+    opts[ 'requested_player' ] = [ '', '' ]
+    opts[ 'dirty_config' ] = [ '', False ]
+
     def __init__(self):
-        self.player_to_use = ''
-        self.requested_player_to_use = ''
+        self.player = ''
+        self.requested_player = ''
         self.confirm_station_deletion = True
         self.confirm_playlist_reload = True
         self.auto_save_playlist = False
@@ -435,23 +454,23 @@ class PyRadioConfig(PyRadioStations):
         self.config_file = path.join(self.stations_dir, 'config')
 
     @property
-    def requested_player_to_use(self):
-        return self.__requested_player_to_use
+    def requested_player(self):
+        return self.__requested_player
 
-    @requested_player_to_use.setter
-    def requested_player_to_use(self, val):
-        self.__requested_player_to_use = val.replace(' ', '')
-        if self.__player_to_use != self.__requested_player_to_use:
-            self.__player_to_use = self.requested_player_to_use
+    @requested_player.setter
+    def requested_player(self, val):
+        self.__requested_player = val.replace(' ', '')
+        if self.__player != self.__requested_player:
+            self.__player = self.requested_player
             self.__dirty_config = True
 
     @property
-    def player_to_use(self):
-        return self.__player_to_use
+    def player(self):
+        return self.__player
 
-    @player_to_use.setter
-    def player_to_use(self, val):
-        self.__player_to_use = val
+    @player.setter
+    def player(self, val):
+        self.__player = val
         self.__dirty_config = True
 
     @property
@@ -576,7 +595,7 @@ class PyRadioConfig(PyRadioStations):
             if sp[1] == '':
                 return -2
             if sp[0] == 'player':
-                self.__player_to_use = sp[1].lower().strip()
+                self.__player = sp[1].lower().strip()
             elif sp[0] == 'connection_timeout':
                 self.__connection_timeout = sp[1].strip()
             elif sp[0] == 'default_encoding':
@@ -681,7 +700,9 @@ connection_timeout = {4}
 # Default theme
 # Hardcooded themes:
 #   dark (default) (8 colors)
-#   light (8 colors
+#   light (8 colors)
+#   dark_16_colors (16 colors dark theme alternative)
+#   light_16_colors (16 colors light theme alternative)
 #   black_on_white (bow) (256 colors)
 #   white_on_black (wob) (256 colors)
 # Default value = 'dark'
@@ -724,7 +745,7 @@ auto_save_playlist = {9}
             self.__default_station = '-1'
         try:
             with open(self.config_file, 'w') as cfgfile:
-                cfgfile.write(txt.format(self.__player_to_use,
+                cfgfile.write(txt.format(self.__player,
                     self.__default_playlist,
                     self.__default_station,
                     self.__default_encoding,
@@ -751,3 +772,39 @@ auto_save_playlist = {9}
             stationFile = self.default_playlist
         return super(PyRadioConfig, self).read_playlist_file(stationFile)
 
+class PyRadioConfigWindow(object):
+
+    parent = None
+    _win = None
+
+    _title = ' PyRadio Configuration '
+
+    def __init__(self, parent):
+        self.parent = parent
+        self.init_config_win()
+        self.refresh_config_win()
+
+    @property
+    def parent(self):
+        return self.__parent
+
+    @parent.setter
+    def parent(self, val):
+        self.__parent = val
+        self.init_config_win()
+
+    def init_config_win(self):
+        self._win = None
+        self.maxY, self.maxX = self.__parent.getmaxyx()
+        self._win = curses.newwin(self.maxY, self.maxX, 0, 1)
+
+    def refresh_config_win(self):
+        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.erase()
+        self._win.box()
+        self.bodyWin.addstr(0,
+            int((self.bodyMaxX - len(self._title)) / 2),
+            curses.color_pair(5))
+
+    def keypress(self, char):
+        pass
