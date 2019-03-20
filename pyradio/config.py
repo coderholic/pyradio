@@ -695,7 +695,7 @@ default_encoding = {3}
 # unreachable, and display the "Failed to connect to: [station]"
 # message.
 #
-# Valid values: 1 - ..
+# Valid values: 5 - 60
 # Default value: 10
 connection_timeout = {4}
 

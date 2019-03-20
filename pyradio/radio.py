@@ -1918,8 +1918,8 @@ class PyRadioConfigWindow(object):
     _help_text.append(['This is the encoding used by default when reading data provided by a station such as song title, etc. If reading said data ends up in an error, "utf-8" will be used instead.',
     '|', 'Default value: utf-8'])
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
-    'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.',
-    '|', 'Valid values: 1 - 60', 'Default value: 10'])
+    'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
+    '|', 'Valid values: 5 - 60', 'Default value: 10'])
     _help_text.append(None)
     _help_text.append(['The theme to be used by default.', '|', 'Hardcoded themes:',
     '  * dark (8 colors)', '  * light (8 colors)',
@@ -2072,6 +2072,30 @@ class PyRadioConfigWindow(object):
     def keypress(self, char):
         if self._too_small:
             return 1, []
+        val = list(self._config_options.items())[self.selection]
+        if val[0] == 'connection_timeout':
+            if char in (curses.KEY_RIGHT, ord('l')):
+                t = int(val[1][1])
+                if t < 60:
+                    t += 1
+                    self._config_options[val[0]][1] = str(t)
+                    self._win.addstr(self.selection+1, 
+                        3 + len(val[1][0]),
+                        str(t) + ' ', curses.color_pair(6))
+                    self._win.refresh()
+                return -1, []
+
+            elif char in (curses.KEY_LEFT, ord('h')):
+                t = int(val[1][1])
+                if t > 5:
+                    t -= 1
+                    self._config_options[val[0]][1] = str(t)
+                    self._win.addstr(self.selection+1, 
+                        3 + len(val[1][0]),
+                        str(t) + ' ', curses.color_pair(6))
+                    self._win.refresh()
+                return -1, []
+
         if char in (ord('k'), curses.KEY_UP):
             self._put_cursor(-1)
             self.refresh_selection()
