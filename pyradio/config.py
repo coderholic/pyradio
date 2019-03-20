@@ -419,17 +419,17 @@ class PyRadioConfig(PyRadioStations):
     opts = collections.OrderedDict()
     opts[ 'general_title' ] = [ 'General Options', '' ]
     opts[ 'player' ] = [ 'Player: ', '' ]
-    opts[ 'default_playlist' ] = [ 'Def. playlist ', 'stations' ]
-    opts[ 'default_station' ] = [ 'Def station: ', '-1' ]
+    opts[ 'default_playlist' ] = [ 'Def. playlist: ', 'stations' ]
+    opts[ 'default_station' ] = [ 'Def station: ', 'False' ]
     opts[ 'default_encoding' ] = [ 'Def. encoding: ', 'utf-8' ]
     opts[ 'connection_timeout' ] = [ 'Connection timeout: ', '10' ]
-    opts[ 'theme_title' ] = [ 'Themes', '' ]
+    opts[ 'theme_title' ] = [ 'Theme Options', '' ]
     opts[ 'theme' ] = [ 'Theme: ', 'dark' ]
     opts[ 'use_transparency' ] = [ 'Use transparency: ', False ]
-    opts[ 'playlist_manngement_title' ] = [ 'Playlist Management', '' ]
+    opts[ 'playlist_manngement_title' ] = [ 'Playlist Management Options', '' ]
     opts[ 'confirm_station_deletion' ] = [ 'Confirm station deletion: ', True ]
     opts[ 'confirm_playlist_reload' ] = [ 'Confirm playlist reload: ', True ]
-    opts[ 'auto_save_playlist' ] = [ 'Auto save playlist', False ]
+    opts[ 'auto_save_playlist' ] = [ 'Auto save playlist: ', False ]
     opts[ 'requested_player' ] = [ '', '' ]
     opts[ 'dirty_config' ] = [ '', False ]
 
@@ -440,7 +440,7 @@ class PyRadioConfig(PyRadioStations):
         self.confirm_playlist_reload = True
         self.auto_save_playlist = False
         self.default_playlist = 'stations'
-        self.default_station = '-1'
+        self.default_station = 'False'
         self.default_encoding = 'utf-8'
         self.connection_timeout = '10'
         self.theme = 'dark'
@@ -455,112 +455,114 @@ class PyRadioConfig(PyRadioStations):
 
     @property
     def requested_player(self):
-        return self.__requested_player
+        return self.opts['requested_player'][1]
 
     @requested_player.setter
     def requested_player(self, val):
-        self.__requested_player = val.replace(' ', '')
-        if self.__player != self.__requested_player:
-            self.__player = self.requested_player
-            self.__dirty_config = True
+        self.opts['requested_player'][1] = val.replace(' ', '')
+        if self.opts['player'][1] != self.opts['requested_player'][1]:
+            self.opts['player'][1] = self.requested_player
+            self.opts['dirty_config'][1] = True
 
     @property
     def player(self):
-        return self.__player
+        return self.opts['player'][1]
 
     @player.setter
     def player(self, val):
-        self.__player = val
-        self.__dirty_config = True
+        self.opts['player'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def use_transparency(self):
-        return self.__use_transparency
+        return self.opts['use_transparency'][1]
 
     @use_transparency.setter
     def use_transparency(self, val):
-        self.__use_transparency = val
-        self.__dirty_config = True
+        self.opts['use_transparency'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def default_encoding(self):
-        return self.__default_encoding
+        return self.opts['default_encoding'][1]
 
     @default_encoding.setter
     def default_encoding(self, val):
-        self.__default_encoding = val
-        self.__dirty_config = True
+        self.opts['default_encoding'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def default_playlist(self):
-        return self.__default_playlist
+        return self.opts['default_playlist'][1]
 
     @default_playlist.setter
     def default_playlist(self, val):
-        self.__default_playlist = val
-        self.__dirty_config = True
+        self.opts['default_playlist'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def default_station(self):
-        return self.__default_station
+        return self.opts['default_station'][1]
 
     @default_station.setter
     def default_station(self, val):
-        self.__default_station = val
-        self.__dirty_config = True
+        self.opts['default_station'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def confirm_station_deletion(self):
-        return self.__confirm_station_deletion
+        return self.opts['confirm_station_deletion'][1]
 
     @confirm_station_deletion.setter
     def confirm_station_deletion(self, val):
-        self.__confirm_station_deletion = val
-        self.__dirty_config = True
+        self.opts['confirm_station_deletion'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def confirm_playlist_reload(self):
-        return self.__confirm_playlist_reload
+        return self.opts['confirm_playlist_reload'][1]
 
     @confirm_playlist_reload.setter
     def confirm_playlist_reload(self, val):
-        self.__confirm_playlist_reload = val
-        self.__dirty_config = True
+        self.opts['confirm_playlist_reload'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def auto_save_playlist(self):
-        return self.__auto_save_playlist
+        return self.opts['auto_save_playlist'][1]
 
     @auto_save_playlist.setter
     def auto_save_playlist(self, val):
-        self.__auto_save_playlist = val
-        self.__dirty_config = True
+        self.opts['auto_save_playlist'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def connection_timeout(self):
-        return self.__connection_timeout
+        return self.opts['connection_timeout'][1]
 
     @connection_timeout.setter
     def connection_timeout(self, val):
-        self.__connection_timeout = val
-        self.__dirty_config = True
+        self.opts['connection_timeout'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def theme(self):
-        return self.__theme
+        return self.opts['theme'][1]
 
     @theme.setter
     def theme(self, val):
-        self.__theme = val
-        self.__dirty_config = True
+        logger.info('{}, {}'.format(self.opts['theme'], self.opts['dirty_config']))
+        self.opts['theme'][1] = val
+        self.opts['dirty_config'][1] = True
+        logger.info('{}, {}'.format(self.opts['theme'], self.opts['dirty_config']))
 
     @property
     def dirty_config(self):
-        return self.__dirty_config
+        return self.opts['dirty_config'][1]
 
     @dirty_config.setter
     def dirty_config(self, val):
-        self.__dirty_config = val
+        self.opts['dirty_config'][1] = val
 
     def _check_config_file(self, usr):
         ''' Make sure a config file exists in the config dir '''
@@ -595,48 +597,48 @@ class PyRadioConfig(PyRadioStations):
             if sp[1] == '':
                 return -2
             if sp[0] == 'player':
-                self.__player = sp[1].lower().strip()
+                self.opts['player'][1] = sp[1].lower().strip()
             elif sp[0] == 'connection_timeout':
-                self.__connection_timeout = sp[1].strip()
+                self.opts['connection_timeout'][1] = sp[1].strip()
             elif sp[0] == 'default_encoding':
-                self.__default_encoding = sp[1].strip()
+                self.opts['default_encoding'][1] = sp[1].strip()
             elif sp[0] == 'theme':
-                self.__theme = sp[1].strip()
+                self.opts['theme'][1] = sp[1].strip()
             elif sp[0] == 'default_playlist':
-                self.__default_playlist = sp[1].strip()
+                self.opts['default_playlist'][1] = sp[1].strip()
             elif sp[0] == 'default_station':
                 st = sp[1].strip()
-                if st == '-1':
-                    self.__default_station = 'False'
+                if st == '-1' or st.lower() == 'false':
+                    self.opts['default_station'][1] = 'False'
                 elif st == 'random':
-                    self.__default_station = None
+                    self.opts['default_station'][1] = None
                 else:
-                    self.__default_station = st
+                    self.opts['default_station'][1] = st
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
-                    self.__confirm_station_deletion = False
+                    self.opts['confirm_station_deletion'][1] = False
                 else:
-                    self.__confirm_station_deletion = True
+                    self.opts['confirm_station_deletion'][1] = True
             elif sp[0] == 'confirm_playlist_reload':
                 if sp[1].lower() == 'false':
-                    self.__confirm_playlist_reload = False
+                    self.opts['confirm_playlist_reload'][1] = False
                 else:
-                    self.__confirm_playlist_reload = True
+                    self.opts['confirm_playlist_reload'][1] = True
             elif sp[0] == 'auto_save_playlist':
                 if sp[1].lower() == 'true':
-                    self.__auto_save_playlist = True
+                    self.opts['auto_save_playlist'][1] = True
                 else:
-                    self.__auto_save_playlist = False
+                    self.opts['auto_save_playlist'][1] = False
             elif sp[0] == 'use_transparency':
                 if sp[1].lower() == 'true':
-                    self.__use_transparency = True
+                    self.opts['use_transparency'][1] = True
                 else:
-                    self.__use_transparency = False
-        self.__dirty_config = False
+                    self.opts['use_transparency'][1] = False
+        self.opts['dirty_config'][1] = False
         return 0
 
     def _save_config(self):
-        if not self.__dirty_config:
+        if not self.opts['dirty_config'][1]:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (not modified)')
             return 0
@@ -679,7 +681,7 @@ default_station = {2}
 #   https://docs.python.org/2.5/lib/standard-encodings.html
 # Or use this URL
 #   https://docs.python.org/2.6/library/codecs.html#standard-encodings
-# replacing 2.6 with specific version: 
+# replacing 2.6 with specific version:
 #   2.7, 3.0 up to current python version.
 #
 # Default value: utf-8
@@ -711,7 +713,7 @@ theme = {5}
 # Transparency setting
 # If False, theme colors will be used.
 # If True and a compositor is running, the stations' window
-# background will be transparent. If True and a compositor is 
+# background will be transparent. If True and a compositor is
 # not running, the terminal's background color will be used.
 # Valid values: True, true, False, false
 # Default value: False
@@ -741,20 +743,20 @@ auto_save_playlist = {9}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
-        if self.__default_station is None:
-            self.__default_station = '-1'
+        if self.opts['default_station'][1] is None:
+            self.opts['default_station'][1] = '-1'
         try:
             with open(self.config_file, 'w') as cfgfile:
-                cfgfile.write(txt.format(self.__player,
-                    self.__default_playlist,
-                    self.__default_station,
-                    self.__default_encoding,
-                    self.__connection_timeout,
-                    self.__theme,
-                    self.__use_transparency,
-                    self.__confirm_station_deletion,
-                    self.__confirm_playlist_reload,
-                    self.__auto_save_playlist))
+                cfgfile.write(txt.format(self.opts['player'][1],
+                    self.opts['default_playlist'][1],
+                    self.opts['default_station'][1],
+                    self.opts['default_encoding'][1],
+                    self.opts['connection_timeout'][1],
+                    self.opts['theme'][1],
+                    self.opts['use_transparency'][1],
+                    self.opts['confirm_station_deletion'][1],
+                    self.opts['confirm_playlist_reload'][1],
+                    self.opts['auto_save_playlist'][1]))
         except:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Error saving config')
