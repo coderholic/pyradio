@@ -774,39 +774,3 @@ auto_save_playlist = {9}
             stationFile = self.default_playlist
         return super(PyRadioConfig, self).read_playlist_file(stationFile)
 
-class PyRadioConfigWindow(object):
-
-    parent = None
-    _win = None
-
-    _title = ' PyRadio Configuration '
-
-    def __init__(self, parent):
-        self.parent = parent
-        self.init_config_win()
-        self.refresh_config_win()
-
-    @property
-    def parent(self):
-        return self.__parent
-
-    @parent.setter
-    def parent(self, val):
-        self.__parent = val
-        self.init_config_win()
-
-    def init_config_win(self):
-        self._win = None
-        self.maxY, self.maxX = self.__parent.getmaxyx()
-        self._win = curses.newwin(self.maxY, self.maxX, 0, 1)
-
-    def refresh_config_win(self):
-        self._win.bkgdset(' ', curses.color_pair(3))
-        self._win.erase()
-        self._win.box()
-        self.bodyWin.addstr(0,
-            int((self.bodyMaxX - len(self._title)) / 2),
-            curses.color_pair(5))
-
-    def keypress(self, char):
-        pass

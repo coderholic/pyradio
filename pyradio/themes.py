@@ -1,11 +1,11 @@
 import curses
-import copy
 import sys
 import logging
 import glob
 from sys import version_info
 from os import path, getenv, makedirs, remove
 from shutil import copyfile, move
+from copy import deepcopy
 from .log import Log
 
 
@@ -57,7 +57,7 @@ class PyRadioTheme(object):
         curses.init_pair(9, self._active_colors['Active Cursor'][FOREGROUND], self._active_colors['Active Cursor'][BACKGROUND])
 
     def restoreActiveTheme(self):
-        self._active_colors = copy.deepcopy(self._read_colors)
+        self._active_colors = deepcopy(self._read_colors)
         if self._transparent:
             self._active_colors['Stations'][BACKGROUND] = -1
         self._do_init_pairs()
@@ -69,11 +69,11 @@ class PyRadioTheme(object):
             self._load_default_theme(self.applied_theme_name)
 
         self._active_colors = None
-        self._active_colors = copy.deepcopy(self._colors)
+        self._active_colors = deepcopy(self._colors)
         if self._transparent:
             self._active_colors['Stations'][BACKGROUND] = -1
         self._do_init_pairs()
-        self._read_colors = copy.deepcopy(self._colors)
+        self._read_colors = deepcopy(self._colors)
 
 
     def _load_default_theme(self, a_theme):
@@ -276,9 +276,6 @@ class PyRadioThemeSelector(object):
         if curses.COLORS >= 16:
             self._themes.append([ 'light_16_colors', 'light_16_colors' ])
             self._items += 1
-
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('curses.COLORS = {}'.format(curses.COLORS))
         if curses.COLORS == 256:
             self._themes.append([ 'black_on_white', 'black_on_white' ])
             self._themes.append([ 'white_on_black', 'white_on_black' ])
