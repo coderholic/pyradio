@@ -283,29 +283,16 @@ class PyRadio(object):
             self._config_win.refresh_config_win()
             if self.operation_mode == SELECT_PLAYER_MODE or \
                     self.operation_mode == SELECT_PLAYER_HELP_MODE:
-                self._player_select_win._parent_maxY = self.bodyMaxY
-                self._player_select_win._parent_maxX = self.bodyMaxX
-                self._player_select_win.init_window()
-                self._player_select_win.refresh_win()
+                self._player_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
             elif self.operation_mode == SELECT_ENCODING_MODE or \
                     self.operation_mode == SELECT_ENCODING_HELP_MODE:
-                self._encoding_select_win._parent_maxY = self.bodyMaxY
-                self._encoding_select_win._parent_maxX = self.bodyMaxX
-                #self._encoding_select_win.init_window()
-                self._encoding_select_win.refresh_win(set_encoding=False)
-                self._encoding_select_win.resize()
+                self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
             elif self.operation_mode == SELECT_PLAYLIST_MODE or \
                     self.operation_mode == SELECT_PLAYLIST_HELP_MODE:
-                self._playlist_select_win._parent_maxY, self._playlist_select_win._parent_maxX = self.bodyWin.getmaxyx()
-                self._playlist_select_win.init_window()
-                self._playlist_select_win.refresh_win(resizing=True)
-                self._playlist_select_win.resize()
+                self._playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
             elif self.operation_mode == SELECT_STATION_MODE or \
                     self.operation_mode == SELECT_STATION_HELP_MODE:
-                self._station_select_win._parent_maxY, self._station_select_win._parent_maxX = self.bodyWin.getmaxyx()
-                self._station_select_win.init_window()
-                self._station_select_win.refresh_win(resizing=True)
-                self._station_select_win.resize()
+                self._station_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
         else:
             self.bodyWin.erase()
             self.bodyWin.box()

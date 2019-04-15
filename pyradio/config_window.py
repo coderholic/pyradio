@@ -35,7 +35,7 @@ class PyRadioConfigWindow(object):
     'Default value: mpv,mplayer,vlc'])
     _help_text.append(['This is the playlist to open if none is specified.', '|',
     'This is the equivalent to the -s , --stations command line option.', '|',
-    'You can scecify full path to CSV file, or if the playlist is in the config directory, playlist name filename without extension or playlist number as reported by -ls command line option.', '|', 'Default value: stations'])
+    'Default value: stations'])
     _help_text.append(['The station number within the default playlist to play.', '|',
     'This is the equivalent to the -p , --play command line option.', '|',
     'Value is 0..number of stations, "False" means no auto play, "random" means play a random station.', '|', 'Default value: False'])
@@ -407,6 +407,12 @@ class PyRadioSelectPlayer(object):
 
         self._win.refresh()
 
+    def refresh_and_resize(self, maxY, maxX):
+        self._parent_maxY = maxY
+        self._parent_maxX = maxX
+        self.init_window()
+        self.refresh_win()
+
     def _populate_working_players(self, these_players=''):
         if these_players:
             self._working_players[0] = these_players.replace(' ', '').split(',')
@@ -553,8 +559,6 @@ class PyRadioSelectEncodings(object):
     def refresh_win(self, set_encoding=True):
         """ set_encoding is False when resizing """
         self._fix_geometry()
-        #self._win.resize(self.maxY, self.maxX)
-        #self._win.mvwin(int((self._parent_maxY - self.maxY) / 2) + 1, int((self._parent_maxX - self.maxX) / 2))
         self.init_window(set_encoding)
         self._win.bkgdset(' ', curses.color_pair(3))
         self._win.erase()
@@ -632,6 +636,12 @@ class PyRadioSelectEncodings(object):
 
         self._win.refresh()
 
+    def refresh_and_resize(self, maxY, maxX):
+        self._parent_maxY = maxY
+        self._parent_maxX = maxX
+        self.refresh_win(set_encoding=False)
+        self._resize()
+
     def _get_invalids(self):
         self._invalid = []
         col = self._num_of_columns - 1
@@ -651,7 +661,7 @@ class PyRadioSelectEncodings(object):
         except:
             pass
 
-    def resize(self, init=False):
+    def _resize(self, init=False):
         col, row = self._selection_to_col_row(self.selection)
         if not (self.startPos <= row <= self.startPos + self.list_maxY - 1):
             while row > self.startPos:
@@ -681,7 +691,7 @@ class PyRadioSelectEncodings(object):
             self.encoding = this_encoding
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('encoding "{0}" found at {1}'.format(this_encoding, ret))
-        self.resize(init)
+        self._resize(init)
         self.refresh_selection()
 
     def _is_encoding(self, a_string):
@@ -707,12 +717,12 @@ class PyRadioSelectEncodings(object):
                 if row == 0:
                     self.startPos = 0
                 else:
-                    self.resize()
+                    self._resize()
             elif direction < 0:
                 if row == self._num_of_rows - 2 or row == self._num_of_rows:
                     self.startPos = self._num_of_rows - self.list_maxY + 1
                 elif self.startPos < 0:
-                    self.resize(init=True)
+                    self._resize(init=True)
             if self.startPos < 0:
                 self.startPos = 0
 
@@ -863,6 +873,13 @@ class PyRadioSelectPlaylist(object):
         #if set_encoding:
         #    self.setEncoding(self.encoding, init=True)
 
+    def refresh_and_resize(self, parent_maxYX):
+        self._parent_maxY = parent_maxYX[0]
+        self._parent_maxX = parent_maxYX[1]
+        self.init_window()
+        self.refresh_win(resizing=True)
+        self._resize()
+
     def _calculate_width(self):
         self.maxX = self._max_len + 4 + len(str(self._max_len))
         if self.maxX > 64:
@@ -909,7 +926,7 @@ class PyRadioSelectPlaylist(object):
             if self._select_playlist_error > -2:
                 self.print_select_playlist_error()
 
-    def resize(self):
+    def _resize(self):
         if self.maxY - 2 == self._num_of_items:
             self.startPos = 0
         else:
