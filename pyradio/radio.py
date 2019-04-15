@@ -857,9 +857,7 @@ class PyRadio(object):
                      Esc|/|q|/|Left|/|h     |Close window.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / |S|ave volume (not in vlc).
-                     %_Other Keys_
-                     T                |Toggle transparency."""
+                     m v              ||M|ute player / |S|ave volume (not in vlc)."""
             self._show_help(txt, mode_to_set=THEME_HELP_MODE, caption=' Themes Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = THEME_HELP_MODE')
@@ -906,9 +904,7 @@ class PyRadio(object):
                      Esc|/|q|/|Left|/|h     |Canel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / |S|ave volume (not in vlc).
-                     %_Other Keys_
-                     T                |Toggle transparency."""
+                     m v              ||M|ute player / |S|ave volume (not in vlc)."""
             self._show_help(txt, mode_to_set=SELECT_PLAYLIST_HELP_MODE, caption=' Playlist Selection Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = SELECT_PLAYLIST_HELP_MODE')
@@ -924,9 +920,7 @@ class PyRadio(object):
                      Esc|/|q|/|Left|/|h     |Canel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / |S|ave volume (not in vlc).
-                     %_Other Keys_
-                     T                |Toggle transparency."""
+                     m v              ||M|ute player / |S|ave volume (not in vlc)."""
             self._show_help(txt, mode_to_set=SELECT_STATION_HELP_MODE, caption=' Station Selection Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = SELECT_STATION_HELP_MODE')
@@ -1308,17 +1302,19 @@ class PyRadio(object):
             self._put_selection_in_the_middle(force=True)
             self.refreshBody()
 
-    def _toggle_transparency(self):
-            self._theme.toggleTransparency()
-            if self.operation_mode == THEME_MODE:
-                self._theme_slector.transparent = self._theme.getTransparency()
-            self.headWin.refresh()
-            self.bodyWin.refresh()
-            self.footerWin.refresh()
-            self.cnf.use_transparency = self._theme.getTransparency()
-            if self._config_win:
-                self._config_win._config_options['use_transparency'][1] = self.cnf.use_transparency
-                self._config_win._saved_config_options['use_transparency'][1] = self.cnf.use_transparency
+    def _toggle_transparency(self, changed_from_config_window=False):
+        if self.window_mode == CONFIG_MODE and not changed_from_config_window:
+            return
+        self._theme.toggleTransparency()
+        if self.operation_mode == THEME_MODE:
+            self._theme_slector.transparent = self._theme.getTransparency()
+        self.headWin.refresh()
+        self.bodyWin.refresh()
+        self.footerWin.refresh()
+        self.cnf.use_transparency = self._theme.getTransparency()
+        if self._config_win:
+            self._config_win._config_options['use_transparency'][1] = self.cnf.use_transparency
+            self._config_win._saved_config_options['use_transparency'][1] = self.cnf.use_transparency
 
     def _show_theme_selector_from_config(self):
                 self.previous_mode = self.operation_mode

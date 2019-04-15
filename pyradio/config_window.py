@@ -321,7 +321,7 @@ class PyRadioConfigWindow(object):
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 self.refresh_selection()
             elif sel == 'use_transparency':
-                self._toggle_transparency_function()
+                self._toggle_transparency_function(changed_from_config_window=True)
                 self.refresh_selection()
         return -1, []
 
