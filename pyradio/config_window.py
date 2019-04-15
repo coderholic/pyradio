@@ -2,6 +2,9 @@
 import curses
 from copy import deepcopy
 from textwrap import wrap
+import glob
+import csv
+from os import path, sep
 
 from .common import *
 from .encodings import *
@@ -27,32 +30,28 @@ class PyRadioConfigWindow(object):
     _help_text = []
     _help_text.append(None)
     _help_text.append(['Specify the player to use with PyRadio, or the player detection order.', '|',
-    'This is the eqivelant to the -u , --use-player command line parameter.', '|',
+    'This is the eqivelant to the -u , --use-player command line option.', '|',
     'Example:', '  player = vlc', 'or', '  player = vlc,mpv, mplayer', '|',
     'Default value: mpv,mplayer,vlc'])
     _help_text.append(['This is the playlist to open if none is specified.', '|',
+    'This is the equivalent to the -s , --stations command line option.', '|',
     'You can scecify full path to CSV file, or if the playlist is in the config directory, playlist name filename without extension or playlist number as reported by -ls command line option.', '|', 'Default value: stations'])
-    _help_text.append(['This is the equivalent to the -p , --play command line parameter.', '|',
-    'The station number within the default playlist to play.', '|',
-    'Value is 0..number of stations, -1 (or False) means no auto play, "random" means play a random station.', '|', 'Default value: False'])
+    _help_text.append(['The station number within the default playlist to play.', '|',
+    'This is the equivalent to the -p , --play command line option.', '|',
+    'Value is 0..number of stations, "False" means no auto play, "random" means play a random station.', '|', 'Default value: False'])
     _help_text.append(['This is the encoding used by default when reading data provided by a station such as song title, etc. If reading said data ends up in an error, "utf-8" will be used instead.',
     '|', 'Default value: utf-8'])
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
     '|', 'Valid values: 5 - 60', 'Default value: 10'])
     _help_text.append(None)
-    _help_text.append(['The theme to be used by default.', '|', 'Hardcoded themes:',
-    '  * dark (8 colors)', '  * light (8 colors)',
-    '  * dark_16_colors (16 colors)',
-    '      dark theme alternative',
-    '  * light_16_colors (16 colors)',
-    '      light theme alternative',
-    '  * black_on_white (256 colors)',
-    '  * white_on_black (256 colors)',
+    _help_text.append(['The theme to be used by default.', '|',
+    'This is the equivalent to the -t , --theme command line option.', '|',
+    'If a theme uses more colors tha n those supported by the terminal in use, the "dark" theme will be used instead (but the "light" theme will be used, if the "light_16colors" theme was requested but not supported).',
     '|', 'The option is automatically applied and saved.',
     '|', 'Default value = dark'])
-    _help_text.append(['If False, theme colors will be used.',
-    "If True and a compositor is running, the stations' window background will be transparent. If True and a compositor is not running, the terminal's background color will be used.", '|', 'The option is automatically applied and saved.',
+    _help_text.append(['If False, theme colors will be used.', '|',
+    "If True and a compositor is running, the stations' window background will be transparent.", '|', "If True and a compositor is not running, the terminal's background color will be used.", '|', 'The option is automatically applied and saved.',
     '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.',
@@ -80,6 +79,9 @@ class PyRadioConfigWindow(object):
                 self._headers.append(i)
         self.init_config_win()
         self.refresh_config_win()
+
+    def __del__(self):
+        self._toggle_transparency_function = None
 
     @property
     def parent(self):
@@ -141,13 +143,15 @@ class PyRadioConfigWindow(object):
         self.refresh_selection()
 
     def _print_title(self):
-        self._win.box()
         if self._config_options == self._saved_config_options:
-            dirty_title = ' '
+            dirty_title = '─ '
         else:
             dirty_title = ' *'
-        X = int((self.maxX - len(self._title) - len(dirty_title) + 1) / 2)
-        self._win.addstr(0, X, dirty_title, curses.color_pair(5))
+        X = int((self.maxX - len(self._title) - 1) / 2)
+        try:
+            self._win.addstr(0, X, dirty_title, curses.color_pair(3))
+        except:
+            self._win.addstr(0, X, dirty_title.encode('utf-8'), curses.color_pair(3))
         self._win.addstr(self._title + ' ', curses.color_pair(4))
 
     def refresh_selection(self):
@@ -257,7 +261,6 @@ class PyRadioConfigWindow(object):
                     self._print_title()
                     self._win.refresh()
                 return -1, []
-
         if char in (ord('k'), curses.KEY_UP):
             self._put_cursor(-1)
             self.refresh_selection()
@@ -303,23 +306,14 @@ class PyRadioConfigWindow(object):
                 #self.opts['player'][1] = sp[1].lower().strip()
                 return SELECT_PLAYER_MODE, []
             elif sel == 'default_encoding':
-                pass
                 return SELECT_ENCODING_MODE, []
                 #self.opts['default_encoding'][1] = sp[1].strip()
             elif sel == 'theme':
                 self._show_theme_selector_function()
             elif sel == 'default_playlist':
-                pass
+                return SELECT_PLAYLIST_MODE, []
             elif sel == 'default_station':
-                pass
-                #st = sp[1].strip()
-                #if st == '-1' or st.lower() == 'false':
-                #    self.opts['default_station'][1] = 'False'
-                #elif st == 'random':
-                #    self.opts['default_station'][1] = None
-                #else:
-                #    pass
-                #    #self.opts['default_station'][1] = st
+                return SELECT_STATION_MODE, []
             elif sel == 'confirm_station_deletion' or \
                     sel == 'confirm_playlist_reload' or \
                     sel == 'auto_save_playlist':
@@ -371,7 +365,7 @@ class PyRadioSelectPlayer(object):
             int((self.maxX - len(self._title)) / 2),
             self._title,
             curses.color_pair(4))
-        self._win.addstr(1, 2, 'Available' , curses.color_pair(4))
+        self._win.addstr(1, 2, 'Supported' , curses.color_pair(4))
         self._win.addstr(1, int(self.maxX / 2 + 2), 'Active' , curses.color_pair(4))
         self.refresh_selection()
 
@@ -523,7 +517,7 @@ class PyRadioSelectEncodings(object):
 
     def init_window(self, set_encoding=True):
         self._win = None
-        self._win = curses.newwin(self.maxY, self.maxX, 
+        self._win = curses.newwin(self.maxY, self.maxX,
                 int((self._parent_maxY - self.maxY) / 2) + 1,
                 int((self._parent_maxX - self.maxX) / 2))
         if set_encoding:
@@ -617,7 +611,10 @@ class PyRadioSelectEncodings(object):
                     pos = self.startPos + i * self._num_of_rows + y
                     if i > 0: pos += i
                     if pos == self.selection:
-                        col = curses.color_pair(6)
+                        if self._encodings[self.selection][0] == self._orig_encoding:
+                            col = curses.color_pair(9)
+                        else:
+                            col = curses.color_pair(6)
                         self._win.addstr(self.maxY - 3, 1, ' ' * (self.maxX - 2), curses.color_pair(4))
                         self._win.addstr(self.maxY - 3, 2, '   Alias: ', curses.color_pair(4))
                         self._win.addstr(self._encodings[pos][1][:self.maxX - 14], curses.color_pair(5))
@@ -626,6 +623,9 @@ class PyRadioSelectEncodings(object):
                         self._win.addstr(self._encodings[pos][2][:self.maxX - 14], curses.color_pair(5))
                     else:
                         col = curses.color_pair(5)
+                        if pos < len(self._encodings):
+                            if self._encodings[pos][0] == self._orig_encoding:
+                                col = curses.color_pair(4)
                     self._win.addstr(yy, xx -1, ' ' * (self.max_enc_len + 2), col)
                     if pos < len(self._encodings):
                         self._win.addstr(yy, xx, self._encodings[pos][0], col)
@@ -636,11 +636,11 @@ class PyRadioSelectEncodings(object):
         self._invalid = []
         col = self._num_of_columns - 1
         row = self._num_of_rows
-        b = self._col_row_tp_selection(col, row)
+        b = self._col_row_to_selection(col, row)
         while b >= len(self._encodings):
             self._invalid.append((col, row))
             row -= 1
-            b = self._col_row_tp_selection(col, row)
+            b = self._col_row_to_selection(col, row)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('invalid = {}'.format(self._invalid))
 
@@ -721,7 +721,7 @@ class PyRadioSelectEncodings(object):
         y = sel % (self._num_of_rows +1)
         return x, y
 
-    def _col_row_tp_selection(self, a_column, a_row):
+    def _col_row_to_selection(self, a_column, a_row):
         return (self._num_of_rows + 1) * a_column + a_row
 
     def keypress(self, char):
@@ -756,7 +756,7 @@ class PyRadioSelectEncodings(object):
                 self._row += 1
                 if self._row > self._num_of_rows:
                     self._row = 0
-            self.selection = self._col_row_tp_selection(self._column, self._row)
+            self.selection = self._col_row_to_selection(self._column, self._row)
             self._fix_startPos(1)
             self.refresh_selection()
 
@@ -768,7 +768,7 @@ class PyRadioSelectEncodings(object):
                 self._row -= 1
             if (self._column, self._row) in self._invalid:
                 self._column -= 1
-            self.selection = self._col_row_tp_selection(self._column, self._row)
+            self.selection = self._col_row_to_selection(self._column, self._row)
             self._fix_startPos(-1)
             self.refresh_selection()
 
@@ -812,8 +812,442 @@ class PyRadioSelectEncodings(object):
 
         elif char in (curses.KEY_ENTER, ord('\n'),
                 ord('\r'), ord(' '), ord('s')):
-            return 0, self._encodings[self.selection][0] 
+            return 0, self._encodings[self.selection][0]
 
         return -1, ''
+
+class PyRadioSelectPlaylist(object):
+    _win = None
+
+    _title = ' Playlist Selection '
+
+    maxY = maxX = _parent_maxY = _parent_maxX = 0
+
+    _items = []
+
+    startPos = 0
+    selection = 0
+    _selected_playlist_id = 0
+
+    _select_playlist_error = -2
+
+    pageChange = 5
+    jumpnr = ''
+
+    def __init__(self, parent, config_path, default_playlist):
+        self._parent_maxY, self._parent_maxX = parent.getmaxyx()
+        self._config_path = config_path
+        self.playlist = default_playlist
+        self._orig_playlist = default_playlist
+        self._selected_playlist = default_playlist
+        self.init_window()
+
+    def __del__(self):
+        self._error_win = None
+        self._items = None
+
+    def init_window(self):
+        self._read_items()
+        self.maxY = self._num_of_items + 2
+        if self.maxY > self._parent_maxY - 2:
+            self.maxY = self._parent_maxY - 2
+        elif self.maxY < 12:
+            self.maxY = 12
+        if self.maxY < 7:
+            self.maxY = 7
+        self._calculate_width()
+        self._win = None
+        self._win = curses.newwin(self.maxY, self.maxX,
+                int((self._parent_maxY - self.maxY) / 2) + 1,
+                int((self._parent_maxX - self.maxX) / 2))
+        #if set_encoding:
+        #    self.setEncoding(self.encoding, init=True)
+
+    def _calculate_width(self):
+        self.maxX = self._max_len + 4 + len(str(self._max_len))
+        if self.maxX > 64:
+            self.maxX = 64
+        elif self.maxX < 44:
+            self.maxX = 44
+
+    def refresh_win(self, resizing=False):
+        """ set_encoding is False when resizing """
+        #self.init_window(set_encoding)
+        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.erase()
+        self._win.box()
+        self._win.addstr(0,
+            int((self.maxX - len(self._title)) / 2),
+            self._title,
+            curses.color_pair(4))
+        self.refresh_selection(resizing)
+
+    def refresh_selection(self, resizing=False):
+        if self._parent_maxX < len(self._title) + 2 or self.maxY < 7:
+            self._too_small = True
+        else:
+            self._too_small = False
+        if self._too_small:
+            msg = 'Window too small to display content!'
+            if self.maxX - 2 < len(msg):
+                msg = 'Window too small!'
+            self._win.hline(self.maxY - 4, 1, ' ', self.maxX - 2, curses.color_pair(5))
+
+        else:
+            #for i in range(self.startPos, self.startPos + self.maxY - 1):
+            pad = len(str(self.startPos + self.maxY - 2))
+            for i in range(0, self.maxY - 2):
+                if i + self.startPos < self._num_of_items:
+                    line, pad = self._format_line(i, pad)
+                    col = self._get_color(i)
+                    self._win.hline(i + 1, 1, ' ', self.maxX - 2, col)
+                    self._win.addstr(i + 1, 1, line[:self.maxX - 3], col)
+                else:
+                    break
+        if not resizing:
+            self._win.refresh()
+            if self._select_playlist_error > -2:
+                self.print_select_playlist_error()
+
+    def resize(self):
+        if self.maxY - 2 == self._num_of_items:
+            self.startPos = 0
+        else:
+            self._fix_startPos()
+        self.refresh_selection()
+
+    def _get_color(self, i):
+        col = curses.color_pair(5)
+        if self._items[i + self.startPos] == self._orig_playlist:
+            if i + self.startPos == self._selected_playlist_id:
+                col =curses.color_pair(9)
+            else:
+                col = curses.color_pair(4)
+        elif i + self.startPos == self._selected_playlist_id:
+            col = curses.color_pair(6)
+        return col
+
+    def _format_line(self, i, pad):
+        line = '{0}. {1}'.format(str(i + self.startPos + 1).rjust(pad),
+                self._items[i + self.startPos])
+        return line, pad
+
+    def _read_items(self):
+        self._items = []
+        self._items = glob.glob(path.join(self._config_path, '*.csv'))
+        if len(self._items) == 0:
+            return 0, -1
+        else:
+            self._items.sort()
+        for i, an_item in enumerate(self._items):
+            self._items[i] = an_item.replace(self._config_path + sep, '').replace('.csv', '')
+        logger.info('{}'.format(self._items))
+        logger.info('{}'.format(self._selected_playlist))
+        """ get already loaded playlist id """
+        for i, a_playlist in enumerate(self._items):
+            if a_playlist ==self._selected_playlist:
+                self._selected_playlist_id = i
+                break
+        self._max_len = len(max(self._items, key=len))
+        if self._max_len > 44:
+            self._max_len = 44
+        self._num_of_items = len(self._items)
+
+    def setPlaylist(self, a_playlist, adjust=True):
+        old_id = self._selected_playlist_id
+        self._selected_playlist = a_playlist
+        for i, a_playlist in enumerate(self._items):
+            if a_playlist == self._selected_playlist:
+                self._selected_playlist_id = i
+                break
+        else:
+            self.setPlaylistById(0, adjust)
+            self.startPos = 0
+            self._selected_playlist = self._items[self._selected_playlist_id]
+            return
+        if adjust:
+            self._fix_startPos()
+        self.refresh_selection()
+
+    def setPlaylistById(self, an_id, adjust=True):
+        old_id = self._selected_playlist_id
+        self._selected_playlist_id = an_id
+        if self._selected_playlist_id == self._num_of_items:
+            self._selected_playlist_id = 0
+        elif self._selected_playlist_id < 0:
+            self._selected_playlist_id = self._num_of_items - 1
+            self._selected_playlist = self._items[self._selected_playlist_id]
+        if adjust:
+            self._fix_startPos()
+        self._selected_playlist = self._items[self._selected_playlist_id]
+        self.refresh_selection()
+
+    def _get_result(self):
+        stationFile = path.join(self._config_path, self._items[self._selected_playlist_id] + '.csv')
+        self._select_playlist_error = 0
+        with open(stationFile, 'r') as cfgfile:
+            try:
+                for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
+                    if not row:
+                        continue
+                    try:
+                        name, url = [s.strip() for s in row]
+                        self._select_playlist_error += 1
+                    except:
+                        name, url, enc = [s.strip() for s in row]
+                        self._select_playlist_error += 1
+            except:
+                self._select_playlist_error = -1
+        if self._select_playlist_error == -1 or \
+                self._select_playlist_error == 0:
+            self.print_select_playlist_error()
+            return -1, ''
+        else:
+            return 0, self._items[self._selected_playlist_id]
+
+    def print_select_playlist_error(self):
+        if self._select_playlist_error == -1 or \
+                self._select_playlist_error == 0:
+            if self._select_playlist_error == 0:
+                msg = 'This playlist is empty!'
+            else:
+                msg = 'This playlist is corrupt!'
+            self._error_win = curses.newwin(5, 38,
+                    int((self._parent_maxY - 5)/ 2) + 1,
+                    int((self._parent_maxX - 38) / 2))
+            self._error_win.bkgdset(' ', curses.color_pair(3))
+            self._error_win.erase()
+            self._error_win.box()
+            self._error_win.addstr(0, 16, ' Error ', curses.color_pair(4))
+            self._error_win.addstr(1, 2, msg, curses.color_pair(5))
+            self._error_win.addstr(2, 2, 'Please select another playlist...', curses.color_pair(5))
+            self._error_win.addstr(4, 14, ' Press any key to hide ', curses.color_pair(3))
+            self._error_win.refresh()
+
+    def _fix_startPos(self):
+        if self._selected_playlist_id < self.maxY - 2:
+            if self._selected_playlist_id < 0:
+                self._selected_playlist_id = 0
+            self.startPos = 0
+        elif self._selected_playlist_id >= self._num_of_items:
+            self._selected_playlist_id = self._num_of_items - 1
+            self.startPos =self._num_of_items - self.maxY + 2
+        elif self._selected_playlist_id > self._num_of_items - self.maxY + 2:
+            self.startPos = self._num_of_items - self.maxY + 2
+        else:
+            self.startPos = self._selected_playlist_id - int((self.maxY - 2) / 2)
+
+    def keypress(self, char):
+        if self._select_playlist_error == -1 or \
+                self._select_playlist_error == 0:
+            self._error_win = None
+            self._select_playlist_error = -2
+            self.refresh_selection()
+
+        elif char in (ord('r'), ):
+            self.setPlaylist(self._orig_playlist)
+
+        elif char in (curses.KEY_EXIT, 27, ord('q'), curses.KEY_LEFT, ord('h')):
+            self._win.nodelay(True)
+            char = self._win.getch()
+            self._win.nodelay(False)
+            if char == -1:
+                """ ESCAPE """
+                self._select_playlist_error = -2
+                return 1, ''
+
+        elif char in (curses.KEY_ENTER, ord('\n'),
+                ord('\r'), ord(' '), ord('l'), curses.KEY_RIGHT):
+            return self._get_result()
+
+        elif char in (curses.KEY_DOWN, ord('j')):
+            self.jumpnr = ''
+            if self._num_of_items > 0:
+                self.setPlaylistById(self._selected_playlist_id + 1, adjust=False)
+                if self._selected_playlist_id == 0:
+                    self.startPos = 0
+                elif self.startPos + self.maxY - 2 == self._selected_playlist_id:
+                    self.startPos += 1
+                self.refresh_selection()
+
+        elif char in (curses.KEY_UP, ord('k')):
+            self.jumpnr = ''
+            if self._num_of_items > 0:
+                self.setPlaylistById(self._selected_playlist_id - 1, adjust=False)
+                if self._selected_playlist_id == self._num_of_items - 1:
+                    self.startPos = self._num_of_items - self.maxY + 2
+                elif self.startPos > self._selected_playlist_id:
+                    self.startPos = self._selected_playlist_id
+                self.refresh_selection()
+
+        elif char in (curses.KEY_PPAGE, ):
+            self.jumpnr = ''
+            if self._num_of_items > 0:
+                old_id = self._selected_playlist_id
+                self._selected_playlist_id -= self.pageChange
+                if old_id == 0:
+                    self._selected_playlist_id = self._num_of_items - 1
+                    self.startPos = self._num_of_items - self.maxY + 2
+                elif self._selected_playlist_id < 0:
+                    self._selected_playlist_id = 0
+                    self.startPos = 0
+                else:
+                    if not (self.startPos < self._selected_playlist_id < self.startPos + self.maxY - 2):
+                        self.startPos = old_id - self.pageChange
+                        if self.startPos > self._num_of_items - self.maxY + 2:
+                            self.startPos = self._num_of_items - self.maxY + 2
+                self.refresh_selection()
+
+        elif char in (curses.KEY_NPAGE, ):
+            self.jumpnr = ''
+            old_id = self._selected_playlist_id
+            self._selected_playlist_id += self.pageChange
+            if old_id == self._num_of_items - 1:
+                self._selected_playlist_id = 0
+                self.startPos = 0
+            elif self._selected_playlist_id >= self._num_of_items:
+                self._selected_playlist_id = self._num_of_items - 1
+                self.startPos = self._num_of_items - self.maxY + 2
+            else:
+                if not (self.startPos < self._selected_playlist_id < self.startPos + self.maxY - 2):
+                    self.startPos = old_id + self.pageChange
+                    if self.startPos > self._num_of_items - self.maxY + 2:
+                        self.startPos = self._num_of_items - self.maxY + 2
+            self.refresh_selection()
+
+        elif char in (curses.KEY_HOME, ord('g')):
+            self.jumpnr = ''
+            self._selected_playlist_id = 0
+            self.startPos = 0
+            self.refresh_selection()
+
+        elif char in (curses.KEY_END, ):
+            self.jumpnr = ''
+            self._selected_playlist_id = self._num_of_items - 1
+            self.startPos = self._num_of_items - self.maxY + 2
+            self.refresh_selection()
+
+        elif char in (ord('G'), ):
+            if self.jumpnr:
+                try:
+                    if type(self) is PyRadioSelectStation:
+                        jump = int(self.jumpnr) + 1
+                    else:
+                        jump = int(self.jumpnr) - 1
+                    self.setPlaylistById(jump)
+                    self.jumpnr = ''
+                    return -1, ''
+                except:
+                    pass
+            self._selected_playlist_id = self._num_of_items - 1
+            self.startPos = self._num_of_items - self.maxY + 2
+            self.refresh_selection()
+
+        elif char in map(ord,map(str,range(0,10))):
+            if self._num_of_items > 0:
+                self.jumpnr += chr(char)
+        else:
+            self.jumpnr = ""
+
+        return -1, ''
+
+class PyRadioSelectStation(PyRadioSelectPlaylist):
+
+    _default_playlist = ''
+
+    def __init__(self, parent, config_path, default_playlist, default_station):
+        self._default_playlist = default_playlist
+        self._orig_default_playlist = default_playlist
+        logger.info('default_playlist = ' + default_playlist)
+        logger.info('self._default_playlist = ' + self._default_playlist)
+        PyRadioSelectPlaylist.__init__(self, parent, config_path, default_station)
+        self._title = ' Station Selection '
+
+    def _calculate_width(self):
+        self.maxX = 64
+
+    def update_playlist_and_station(self, a_playlist, a_station):
+        logger.error('default_playlist = {0}\norig_playlist = {1}\nselected_playlist = {2}\nplaylist = {3}'.format(self._default_playlist, self._orig_playlist, self._selected_playlist, self.playlist))
+        self._default_playlist = a_playlist
+        self._orig_playlist = a_station
+        self._selected_playlist = a_station
+        self.playlist = a_station
+        self._read_items()
+
+    def setStation(self, a_station):
+        if a_station == 'False':
+            self._selected_playlist_id = 0
+            self.startPos = 0
+            self.refresh_selection()
+        elif a_station == 'random':
+            self._selected_playlist_id = 1
+            self.startPos = 0
+            self.refresh_selection()
+        else:
+            try:
+                pl = int(a_station) + 1
+                self.setPlaylistById(pl)
+                return
+            except:
+                self.setPlaylist(a_station)
+
+    def _get_result(self):
+        if self._selected_playlist_id == 0:
+            return 0, 'False'
+        elif self._selected_playlist_id == 1:
+            return 0, 'random'
+        else:
+            return 0, str(self._selected_playlist_id - 1)
+
+    def _read_items(self):
+        self._items = []
+        stationFile = path.join(self._config_path, self._default_playlist + '.csv')
+        with open(stationFile, 'r') as cfgfile:
+            try:
+                for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
+                    if not row:
+                        continue
+                    try:
+                        name, url = [s.strip() for s in row]
+                        self._items.append(name)
+                    except:
+                        name, url, enc = [s.strip() for s in row]
+                        self._items.append(name)
+            except:
+                pass
+        self._items.reverse()
+        self._items.append('Play a random station on startup')
+        self._items.append('Do not play a station on startup')
+        self._items.reverse()
+        self._num_of_items = len(self._items)
+        self._max_len = 56
+
+    def _get_color(self, i):
+        col = curses.color_pair(5)
+        if i + self.startPos == int(self._orig_playlist) + 1:
+            if i + self.startPos == self._selected_playlist_id:
+                col =curses.color_pair(9)
+            else:
+                col = curses.color_pair(4)
+        elif i + self.startPos == self._selected_playlist_id:
+            col = curses.color_pair(6)
+        return col
+
+    def _format_line(self, i, pad):
+        pad = pad - 2
+        if i + self.startPos < 2:
+            line = '{0}  {1}'.format(' '.rjust(pad),
+                self._items[i + self.startPos])
+        else:
+            line = '{0}. {1}'.format(str(i + self.startPos - 1).rjust(pad),
+                    self._items[i + self.startPos])
+        return line, pad
+
+    def keypress(self, char):
+        if char in (ord('r'), ):
+            self.setStation(self._orig_playlist)
+            return -1, ''
+
+        return PyRadioSelectPlaylist.keypress(self, char)
 
 # pymode:lint_ignore=W901

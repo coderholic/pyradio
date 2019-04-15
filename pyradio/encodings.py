@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from sys import version_info
 def get_encodings():
     encoding_list= [

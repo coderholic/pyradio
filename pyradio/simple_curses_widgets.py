@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import curses
 import curses.ascii
 from sys import version_info
