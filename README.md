@@ -91,6 +91,7 @@ v                 Save volume (not applicable for vlc)      [Valid]             
 o s R             Open / Save / Reload playlist             -                                  -
 DEL,x             Delete selected station                   -                                  -
 t T               Load theme / Toggle transparency          [Valid]                            [Valid]
+c                 Open Configuration window.                -                                  -
 ?                 Show keys help                            [Valid]                            [Valid]
 #                 Redraw window                             [Valid]                            [Valid]
 Esc/q             Quit                                      -                                  -
@@ -103,7 +104,9 @@ Esc/q/Left/h      -                                         Cancel / close windo
 
 The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see [here](pyradio/config)), so that manual editing is really easy. The best practice to manually edit this file is executing ***PyRadio*** with the **-ocd** command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.
 
-The file can also be altered while **PyRadio** is running. This process is transparent to the user; **PyRadio** will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).
+The file can also be altered while **PyRadio** is running by pressing "***c***", which will open the "***Configuration window***". This window presents all **PyRadio** options and provide the way to change them.
+
+In any case, **PyRadio** will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).
 
 ## About Playlist files
 

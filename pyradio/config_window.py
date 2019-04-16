@@ -295,6 +295,10 @@ class PyRadioConfigWindow(object):
                 """ ESCAPE """
                 return 1, []
         elif char in (ord('s'), ):
+            self._saved_config_options = deepcopy(self._config_options)
+            if self._cnf.opts != self._saved_config_options:
+                self._cnf.opts = deepcopy(self._config_options)
+                self._cnf.dirty_config = True
             # save and exit
             return 0, [1]
         elif char in (curses.KEY_ENTER, ord('\n'),

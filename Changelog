@@ -1,5 +1,6 @@
-2019-03-30  s-n-g
+2019-04-16  s-n-g
     * Minimum python version supported changed. Now it's 2.7+/3.5+
+    * Added configuration window (opens with "c").
 
 2019-02-14  s-n-g
 

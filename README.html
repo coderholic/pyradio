@@ -106,6 +106,7 @@ v                 Save volume (not applicable for vlc)      [Valid]             
 o s R             Open / Save / Reload playlist             -                                  -
 DEL,x             Delete selected station                   -                                  -
 t T               Load theme / Toggle transparency          [Valid]                            [Valid]
+c                 Open Configuration window.                -                                  -
 ?                 Show keys help                            [Valid]                            [Valid]
 #                 Redraw window                             [Valid]                            [Valid]
 Esc/q             Quit                                      -                                  -
@@ -113,7 +114,8 @@ Esc/q/Left/h      -                                         Cancel / close windo
 <h2 id="config-file">Config file</h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong><em>PyRadio</em></strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong><em>PyRadio</em></strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
-<p>The file can also be altered while <strong>PyRadio</strong> is running. This process is transparent to the user; <strong>PyRadio</strong> will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).</p>
+<p>The file can also be altered while <strong>PyRadio</strong> is running by pressing “<strong><em>c</em></strong>”, which will open the “<strong><em>Configuration window</em></strong>”. This window presents all <strong>PyRadio</strong> options and provide the way to change them.</p>
+<p>In any case, <strong>PyRadio</strong> will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).</p>
 <h2 id="about-playlist-files">About Playlist files</h2>
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
 <p>Optionally, a third column can be inserted, stating the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>

@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH PYRADIO 1 "March 2019"
+.TH PYRADIO 1 "April 2019"
 
 .SH NAME
 .PP
@@ -86,7 +86,9 @@ Quit
 
 The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented, so that manual editing is really easy. The best practice to manually edit this file is executing \fBpyradio\fR with the \fB-ocd\fR command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.
 
-The file can also be altered while \fBpyradio\fR is running. This process is transparent to the user; \fBpyradio\fR will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).
+The file can also be altered while \fBpyradio\fR is running, by pressing "\fIc\fR", which will open the "\fIConfiguration window\fR". This window presents all \fBpyradio\fR options and provide the way to change them.
+
+In any case, \fBpyradio\fR will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).
 
 .SH ABOUT PLAYLIST FILES
 .PP

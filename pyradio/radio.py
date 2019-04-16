@@ -828,7 +828,7 @@ class PyRadio(object):
                      o s R            ||O|pen / |S|ave / |R|eload playlist.
                      DEL|,|x            |Delete selected station.
                      t T              |Load |t|heme / |T|oggle transparency.
-                     c                |Configuration.
+                     c                |Open Configuration window.
                      Esc|/|q            |Quit. """
             self._show_help(txt)
             if logger.isEnabledFor(logging.DEBUG):
@@ -1414,6 +1414,7 @@ class PyRadio(object):
                     self.bodyWin.box()
                     self._print_body_header()
                     self.refreshBody()
+                    self.cnf._save_config()
                     # clean up
                     self._player_select_win = None
                     self._encoding_select_win = None
