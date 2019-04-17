@@ -67,12 +67,13 @@ class PyRadioConfigWindow(object):
         self._cnf = config
         self._toggle_transparency_function = toggle_transparency_function
         self._show_theme_selector_function = show_theme_selector_function
-        self._saved_config_options = config.opts
+        self._saved_config_options = deepcopy(config.opts)
         self._config_options = deepcopy(config.opts)
-        if self._saved_config_options == self._config_options:
-            logger.info('options are the same')
-        else:
-            logger.info('options are not the same')
+        if logger.isEnabledFor(logging.INFO):
+            if self._saved_config_options == self._config_options:
+                logger.info('Saved options loaded')
+            else:
+                logger.info('Altered options loaded')
         self.number_of_items = len(self._config_options) - 2
         for i, n in enumerate(list(self._config_options.values())):
             if n[1] == '':
@@ -174,7 +175,11 @@ class PyRadioConfigWindow(object):
                         if isinstance(it[1], bool):
                             self._win.addstr('{}'.format(it[1]), hcol)
                         else:
-                            self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6 ]), hcol)
+                            if it[1] is None:
+                                # random station
+                                self._win.addstr('{}'.format('random'), hcol)
+                            else:
+                                self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6 ]), hcol)
         self._win.refresh()
 
     def _get_col_line(self, ind):
@@ -554,11 +559,12 @@ class PyRadioSelectEncodings(object):
             self.maxY -= 1
         self.list_maxY = self.maxY - 5
         self.maxX = self._num_of_columns * (self.max_enc_len + 2) + 2
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('maxY,maxX = {0},{1}'.format(self.maxY, self.maxX))
-            logger.debug('Number of columns = {}'.format(self._num_of_columns))
-            logger.debug('Number of rows = {}'.format(self._num_of_rows))
-            logger.debug('Number of visible rows = {}'.format(self.list_maxY))
+        # Enable this to see geometry
+        #if logger.isEnabledFor(logging.DEBUG):
+        #    logger.debug('maxY,maxX = {0},{1}'.format(self.maxY, self.maxX))
+        #    logger.debug('Number of columns = {}'.format(self._num_of_columns))
+        #    logger.debug('Number of rows = {}'.format(self._num_of_rows))
+        #    logger.debug('Number of visible rows = {}'.format(self.list_maxY))
 
     def refresh_win(self, set_encoding=True):
         """ set_encoding is False when resizing """
@@ -655,8 +661,6 @@ class PyRadioSelectEncodings(object):
             self._invalid.append((col, row))
             row -= 1
             b = self._col_row_to_selection(col, row)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('invalid = {}'.format(self._invalid))
 
     def _set_startPos(self):
         try:
@@ -962,8 +966,6 @@ class PyRadioSelectPlaylist(object):
             self._items.sort()
         for i, an_item in enumerate(self._items):
             self._items[i] = an_item.replace(self._config_path + sep, '').replace('.csv', '')
-        logger.info('{}'.format(self._items))
-        logger.info('{}'.format(self._selected_playlist))
         """ get already loaded playlist id """
         for i, a_playlist in enumerate(self._items):
             if a_playlist ==self._selected_playlist:
@@ -977,6 +979,10 @@ class PyRadioSelectPlaylist(object):
     def setPlaylist(self, a_playlist, adjust=True):
         old_id = self._selected_playlist_id
         self._selected_playlist = a_playlist
+        if a_playlist == 'False':
+            self._selected_playlist_id = 0
+        elif a_playlist == 'random' or a_playlist is None:
+            self._selected_playlist_id = 1
         for i, a_playlist in enumerate(self._items):
             if a_playlist == self._selected_playlist:
                 self._selected_playlist_id = i
@@ -1179,8 +1185,8 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
     def __init__(self, parent, config_path, default_playlist, default_station):
         self._default_playlist = default_playlist
         self._orig_default_playlist = default_playlist
-        logger.info('default_playlist = ' + default_playlist)
-        logger.info('self._default_playlist = ' + self._default_playlist)
+        #logger.info('default_playlist = ' + default_playlist)
+        #logger.info('self._default_playlist = ' + self._default_playlist)
         PyRadioSelectPlaylist.__init__(self, parent, config_path, default_station)
         self._title = ' Station Selection '
 
@@ -1188,7 +1194,8 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         self.maxX = 64
 
     def update_playlist_and_station(self, a_playlist, a_station):
-        logger.error('default_playlist = {0}\norig_playlist = {1}\nselected_playlist = {2}\nplaylist = {3}'.format(self._default_playlist, self._orig_playlist, self._selected_playlist, self.playlist))
+        #if logger.isEnabledFor(logging.DEBUG):
+        #    logger.debug('default_playlist = {0}\norig_playlist = {1}\nselected_playlist = {2}\nplaylist = {3}'.format(self._default_playlist, self._orig_playlist, self._selected_playlist, self.playlist))
         self._default_playlist = a_playlist
         self._orig_playlist = a_station
         self._selected_playlist = a_station
@@ -1196,11 +1203,12 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         self._read_items()
 
     def setStation(self, a_station):
+        logger.error('a_station = {}'.format(a_station))
         if a_station == 'False':
             self._selected_playlist_id = 0
             self.startPos = 0
             self.refresh_selection()
-        elif a_station == 'random':
+        elif a_station == 'random' or a_station is None:
             self._selected_playlist_id = 1
             self.startPos = 0
             self.refresh_selection()
@@ -1244,10 +1252,15 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         self._max_len = 56
 
     def _get_color(self, i):
+        or_pl = self._orig_playlist
+        if self._orig_playlist == 'False':
+            or_pl = -1
+        elif self._orig_playlist == 'random' or self._orig_playlist is None:
+            or_pl = 0
         col = curses.color_pair(5)
-        if i + self.startPos == int(self._orig_playlist) + 1:
+        if i + self.startPos == int(or_pl) + 1:
             if i + self.startPos == self._selected_playlist_id:
-                col =curses.color_pair(9)
+                col = curses.color_pair(9)
             else:
                 col = curses.color_pair(4)
         elif i + self.startPos == self._selected_playlist_id:

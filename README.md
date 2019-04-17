@@ -98,6 +98,11 @@ Esc/q             Quit                                      -                   
 Esc/q/Left/h      -                                         Cancel / close window              Cancel / close window
 ```
 
+The same logic applies to all **PyRadio** windows.
+
+**Note:** All windows support changing the volume and muting / unmuting the player (provided that it is actually connected to a station).
+
+
 ## Config file
 
 **PyRadio** upon its execution tries to read its configuration file (i.e. *~/.config/pyradio/config*). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and ***PyRadio*** will terminate.

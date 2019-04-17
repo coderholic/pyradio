@@ -111,6 +111,8 @@ c                 Open Configuration window.                -                   
 #                 Redraw window                             [Valid]                            [Valid]
 Esc/q             Quit                                      -                                  -
 Esc/q/Left/h      -                                         Cancel / close window              Cancel / close window</pre>
+<p>The same logic applies to all <strong>PyRadio</strong> windows.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All windows support changing the volume and muting / unmuting the player (provided that it is actually connected to a station).</p>
 <h2 id="config-file">Config file</h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong><em>PyRadio</em></strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong><em>PyRadio</em></strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
