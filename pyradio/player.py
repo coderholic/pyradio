@@ -235,8 +235,8 @@ class Player(object):
         except:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error("Error in updateStatus thread.", exc_info=True)
-        if (logger.isEnabledFor(logging.DEBUG)):
-            logger.debug("updateStatus thread stopped.")
+        if (logger.isEnabledFor(logging.INFO)):
+            logger.info("updateStatus thread stopped.")
 
     def threadUpdateTitle(self, a_lock, delay=1):
         if self.oldUserInput['Title'] != '':
@@ -313,10 +313,10 @@ class Player(object):
             self.connection_timeout_thread.start()
         except:
             self.connection_timeout_thread = None
-            if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug("playback detection thread start failed")
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Player started")
+            if (logger.isEnabledFor(logging.ERROR)):
+                logger.error("playback detection thread start failed")
+        if logger.isEnabledFor(logging.INFO):
+            logger.info("Player started")
 
     def _sendCommand(self, command):
         """ send keystroke command to player """
@@ -764,8 +764,8 @@ def probePlayer(requested_player=''):
     """ Probes the multimedia players which are available on the host
     system."""
     ret_player = None
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug("Probing available multimedia players...")
+    if logger.isEnabledFor(logging.INFO):
+        logger.info("Probing available multimedia players...")
     implementedPlayers = Player.__subclasses__()
     if logger.isEnabledFor(logging.INFO):
         logger.info("Implemented players: " +
@@ -783,8 +783,8 @@ def probePlayer(requested_player=''):
                     if ret_player is not None:
                         return ret_player
             if ret_player is None:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Requested player "{}" not supported'.format(r_player))
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Requested player "{}" not supported'.format(r_player))
     else:
         for player in implementedPlayers:
             ret_player = check_player(player)
@@ -810,8 +810,8 @@ def check_player(a_player):
                                  shell=False)
             p.terminate()
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("{} supported.".format(str(a_player)))
+        if logger.isEnabledFor(logging.INFO):
+            logger.info("{} supported.".format(str(a_player)))
         return a_player
     except OSError:
         if logger.isEnabledFor(logging.DEBUG):

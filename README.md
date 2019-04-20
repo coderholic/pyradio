@@ -109,9 +109,11 @@ The same logic applies to all **PyRadio** windows.
 
 The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see [here](pyradio/config)), so that manual editing is really easy. The best practice to manually edit this file is executing ***PyRadio*** with the **-ocd** command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.
 
-The file can also be altered while **PyRadio** is running by pressing "***c***", which will open the "***Configuration window***". This window presents all **PyRadio** options and provide the way to change them.
+The file can also be altered while **PyRadio** is running by pressing "***c***", which will open the "***Configuration window***". This window presents all **PyRadio** options and provide the way to change them and finally save them by pressing "***s***".
 
 In any case, **PyRadio** will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).
+
+If saving the configuration file fails, **PyRadio** will create a back up file and terminate. When restarted, **PyRadio** will try to restore previously used settings from the said back up file.
 
 ## About Playlist files
 
@@ -247,19 +249,11 @@ This would be useful in the case where most of your stations do not use **utf-8*
 
 ### Finding the right encoding
 
-A valid encoding list can be found (depends on python version):
+A valid encoding list can be found at:
 
-* [https://docs.python.org/2.3/lib/node130.html](https://docs.python.org/2.3/lib/node130.html)
+[https://docs.python.org/2.7/library/codecs.html#standard-encodings](https://docs.python.org/2.7/library/codecs.html#standard-encodings)
 
-* [https://docs.python.org/2.4/lib/standard-encodings.html](https://docs.python.org/2.4/lib/standard-encodings.html)
-
-* [https://docs.python.org/2.5/lib/standard-encodings.html](https://docs.python.org/2.5/lib/standard-encodings.html)
-
-Or use this URL
-
-* [https://docs.python.org/2.6/library/codecs.html#standard-encodings](https://docs.python.org/2.6/library/codecs.html#standard-encodings)
-
-replacing **2.6** with specific version: **2.7**, **3.0** up to current python version.
+replacing **2.7** with specific version: **3.0** up to current python version.
 
 
 ## Player detection / selection

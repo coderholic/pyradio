@@ -19,23 +19,19 @@ default_playlist = stations
 # Default station
 # This is the equivalent to the -p , --play command line parameter
 # The station number within the default playlist to play
-# Value is 1..number of stations, -1 means no auto play
-# "0" or "random" means play a random station
-default_station = -1
+# Value is 1..number of stations, "-1" or "False" means no auto play,
+# "0" or "Random" means play a random station
+default_station = False
 
 # Default encoding
 # This is the encoding used by default when reading data provided by
 # a station (such as song title, etc.) If reading said data ends up
 # in an error, 'utf-8' will be used instead.
 #
-# A valid encoding list can be found (depends on python version):
-#   https://docs.python.org/2.3/lib/node130.html
-#   https://docs.python.org/2.4/lib/standard-encodings.html
-#   https://docs.python.org/2.5/lib/standard-encodings.html
-# Or use this URL
-#   https://docs.python.org/2.6/library/codecs.html#standard-encodings
-# replacing 2.6 with specific version:
-#   2.7, 3.0 up to current python version.
+# A valid encoding list can be found at:
+#   https://docs.python.org/2.7/library/codecs.html#standard-encodings
+# replacing 2.7 with specific version:
+#   3.0 up to current python version.
 #
 # Default value: utf-8
 default_encoding = utf-8

@@ -92,9 +92,11 @@ All windows support changing the volume and muting / unmuting the player (provid
 
 The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented, so that manual editing is really easy. The best practice to manually edit this file is executing \fBpyradio\fR with the \fB-ocd\fR command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.
 
-The file can also be altered while \fBpyradio\fR is running, by pressing "\fIc\fR", which will open the "\fIConfiguration window\fR". This window presents all \fBpyradio\fR options and provide the way to change them.
+The file can also be altered while \fBpyradio\fR is running, by pressing "\fIc\fR", which will open the "\fIConfiguration window\fR". This window presents all \fBpyradio\fR options and provide the way to change them and finally save them by pressing "\fIs\fR".
 
 In any case, \fBpyradio\fR will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).
+
+If saving the configuration file fails, \fBpyradio\fR will create a back up file and terminate. When restarted, \fBpyradio\fR will try to restore previously used settings from the said back up file.
 
 .SH ABOUT PLAYLIST FILES
 .PP
@@ -262,26 +264,11 @@ This would be useful in the case where most of your stations do not use \fIutf-8
 .B
 FINDING THE RIGHT ENCODING
 
-A valid encoding list can be found (depends on python version):
+A valid encoding list can be found at:
 
-.HP
+\fIhttps://docs.python.org/2.7/library/codecs.html#standard-encodings
 
-\fIhttps://docs.python.org/2.3/lib/node130.html
-
-https://docs.python.org/2.4/lib/standard-encodings.html
-
-https://docs.python.org/2.5/lib/standard-encodings.html
-
-.PP
-
-Or use this URL
-
-.HP
-
-\fIhttps://docs.python.org/2.6/library/codecs.html#standard-encodings
-
-.PP
-replacing \fI2.6\fR with specific version: \fI2.7\fR, \fI3.0\fR up to current python version.
+\fRreplacing \fI2.7\fR with specific version: \fI3.0\fR up to current python version.
 
 .SH PLAYER DETECTION / SELECTION
 .PP

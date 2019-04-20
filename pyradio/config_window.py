@@ -8,6 +8,7 @@ from os import path, sep
 
 from .common import *
 from .encodings import *
+from .themes import *
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,12 @@ class PyRadioConfigWindow(object):
 
     selection = __selection = 1
 
+    """ Keep a copy of saved values for theme and transparency
+        Work-around for 'T' auto save (trasnsparency), and
+        's'/Space them saving """
+    _old_use_transparency = False
+    _old_theme = ''
+
     _headers = []
 
     _num_of_help_lines = 0
@@ -33,13 +40,14 @@ class PyRadioConfigWindow(object):
     'This is the eqivelant to the -u , --use-player command line option.', '|',
     'Example:', '  player = vlc', 'or', '  player = vlc,mpv, mplayer', '|',
     'Default value: mpv,mplayer,vlc'])
-    _help_text.append(['This is the playlist to open if none is specified.', '|',
+    _help_text.append(['This is the playlist to open at start up, if none is specified.', '|',
     'This is the equivalent to the -s , --stations command line option.', '|',
     'Default value: stations'])
     _help_text.append(['The station number within the default playlist to play.', '|',
     'This is the equivalent to the -p , --play command line option.', '|',
-    'Value is 0..number of stations, "False" means no auto play, "random" means play a random station.', '|', 'Default value: False'])
-    _help_text.append(['This is the encoding used by default when reading data provided by a station such as song title, etc. If reading said data ends up in an error, "utf-8" will be used instead.',
+    'Value is 1..number of stations, "False" means no auto play, "Random" means play a random station.', '|', 'Default value: False'])
+    _help_text.append(['This is the encoding used by default when reading data provided by a station such as song title, etc. If reading said data ends up in an error, "utf-8" will be used instead.', '|',
+    'If changed, playback must be restarted so that changes take effect.',
     '|', 'Default value: utf-8'])
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
@@ -48,11 +56,9 @@ class PyRadioConfigWindow(object):
     _help_text.append(['The theme to be used by default.', '|',
     'This is the equivalent to the -t , --theme command line option.', '|',
     'If a theme uses more colors tha n those supported by the terminal in use, the "dark" theme will be used instead (but the "light" theme will be used, if the "light_16colors" theme was requested but not supported).',
-    '|', 'The option is automatically applied and saved.',
     '|', 'Default value = dark'])
     _help_text.append(['If False, theme colors will be used.', '|',
-    "If True and a compositor is running, the stations' window background will be transparent.", '|', "If True and a compositor is not running, the terminal's background color will be used.", '|', 'The option is automatically applied and saved.',
-    '|', 'Default value: False'])
+    "If True and a compositor is running, the stations' window background will be transparent.", '|', "If True and a compositor is not running, the terminal's background color will be used.", '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.',
     '|', 'Default value: True'])
@@ -80,6 +86,8 @@ class PyRadioConfigWindow(object):
                 self._headers.append(i)
         self.init_config_win()
         self.refresh_config_win()
+        self._old_use_transparency = self._config_options['use_transparency'][1]
+        self._old_theme = self._config_options['theme'][1]
 
     def __del__(self):
         self._toggle_transparency_function = None
@@ -144,7 +152,9 @@ class PyRadioConfigWindow(object):
         self.refresh_selection()
 
     def _print_title(self):
-        if self._config_options == self._saved_config_options:
+        if self._config_options == self._saved_config_options and \
+            self._old_theme == self._saved_config_options['theme'][1] and \
+            self._old_use_transparency == self._saved_config_options['use_transparency'][1]:
             dirty_title = '─ '
         else:
             dirty_title = ' *'
@@ -177,7 +187,7 @@ class PyRadioConfigWindow(object):
                         else:
                             if it[1] is None:
                                 # random station
-                                self._win.addstr('{}'.format('random'), hcol)
+                                self._win.addstr('{}'.format('Random'), hcol)
                             else:
                                 self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6 ]), hcol)
         self._win.refresh()
@@ -238,6 +248,42 @@ class PyRadioConfigWindow(object):
             logger.debug('self._num_of_help_lines = {}'.format(self._num_of_help_lines))
         """
 
+    def _load_default_values(self):
+        self._config_options[ 'general_title' ][1] = ''
+        self._config_options[ 'player' ][1] = 'mpv,mplayer,vlc'
+        self._config_options[ 'default_playlist' ][1] = 'stations'
+        self._config_options[ 'default_station' ][1] = 'False'
+        self._config_options[ 'default_encoding' ][1] = 'utf-8'
+        self._config_options[ 'connection_timeout' ][1] = '10'
+        self._config_options[ 'theme_title' ][1] = ''
+        # Transparency
+        #self._old_use_transparency = self._config_options['use_transparency'][1]
+        self._config_options[ 'use_transparency' ][1] = False
+        self._toggle_transparency_function(changed_from_config_window=True, force_value=False)
+        self._config_options[ 'playlist_manngement_title' ][1] = ''
+        self._config_options[ 'confirm_station_deletion' ][1] = True
+        self._config_options[ 'confirm_playlist_reload' ][1] = True
+        self._config_options[ 'auto_save_playlist' ][1] = False
+        self._config_options[ 'requested_player' ][1] = ''
+        # Theme
+        # Put this AFTER applying transparency, so that _do_init_pairs in
+        # _toggle_transparency does not overwrite pairs with applied theme values
+        self._config_options['theme'][1] = 'dark'
+        self._apply_a_theme('dark', False)
+        self._check_if_config_is_dirty()
+
+    def _check_if_config_is_dirty(self):
+        if self._config_options == self._saved_config_options:
+            self._config_options[ 'dirty_config' ] = [ '', False ]
+        else:
+            self._config_options[ 'dirty_config' ] = [ '', True ]
+
+    def _apply_a_theme(self, a_theme, use_transparency=None):
+        theme = PyRadioTheme()
+        theme.readAndApplyTheme(a_theme, use_transparency)
+        theme = None
+        curses.doupdate()
+
     def keypress(self, char):
         if self._too_small:
             return 1, []
@@ -289,21 +335,46 @@ class PyRadioConfigWindow(object):
         elif char in (ord('G'), curses.KEY_END):
             self.__selection = self.number_of_items - 1
             self.refresh_selection()
-        elif char in (ord('r'), ):
-            self._config_options = deepcopy(self._saved_config_options)
+        elif char in (ord('d'), ):
+            self._load_default_values()
             self.refresh_selection()
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Default options loaded')
+        elif char in (ord('r'), ):
+            old_theme = self._config_options[ 'theme' ][1]
+            old_transparency = self._config_options[ 'use_transparency' ][1]
+            self._config_options = deepcopy(self._saved_config_options)
+            # Transparency
+            self._config_options[ 'use_transparency' ][1] = self._old_use_transparency
+            self._toggle_transparency_function(changed_from_config_window=True, force_value=self._old_use_transparency)
+            # Theme
+            # Put it after applying transparency, so that saved color_pairs
+            # do not get loaded instead of active ones
+            self._config_options[ 'theme' ][1] = self._old_theme
+            self._saved_config_options[ 'theme' ][1] = self._old_theme
+            self._apply_a_theme(self._config_options[ 'theme' ][1], self._old_use_transparency)
+            self.refresh_selection()
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Saved options loaded')
         elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):
             self._win.nodelay(True)
             char = self._win.getch()
             self._win.nodelay(False)
             if char == -1:
                 """ ESCAPE """
+                #self._config_options['theme'][1] = self._old_theme
+                self._saved_config_options['theme'][1] = self._old_theme
+                self._cnf.opts['theme'][1] = self._old_theme
+                self._cnf.theme = self._old_theme
                 return 1, []
         elif char in (ord('s'), ):
+            self._old_theme = self._config_options['theme'][1]
             self._saved_config_options = deepcopy(self._config_options)
             if self._cnf.opts != self._saved_config_options:
-                self._cnf.opts = deepcopy(self._config_options)
+                self._cnf.opts = deepcopy(self._saved_config_options)
                 self._cnf.dirty_config = True
+            else:
+                self._cnf.dirty_config = False
             # save and exit
             return 0, [1]
         elif char in (curses.KEY_ENTER, ord('\n'),
@@ -312,12 +383,11 @@ class PyRadioConfigWindow(object):
             vals = list(self._config_options.items())
             sel = vals[self.selection][0]
             if sel == 'player':
-                #self.opts['player'][1] = sp[1].lower().strip()
                 return SELECT_PLAYER_MODE, []
             elif sel == 'default_encoding':
                 return SELECT_ENCODING_MODE, []
-                #self.opts['default_encoding'][1] = sp[1].strip()
             elif sel == 'theme':
+                self._cnf.theme = self._old_theme
                 self._show_theme_selector_function()
             elif sel == 'default_playlist':
                 return SELECT_PLAYLIST_MODE, []
@@ -326,11 +396,12 @@ class PyRadioConfigWindow(object):
             elif sel == 'confirm_station_deletion' or \
                     sel == 'confirm_playlist_reload' or \
                     sel == 'auto_save_playlist':
-                #self._cnf.auto_save_playlist = not self._config_options[sel][1]
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 self.refresh_selection()
             elif sel == 'use_transparency':
-                self._toggle_transparency_function(changed_from_config_window=True)
+                #self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]
+                self._toggle_transparency_function(changed_from_config_window=True,
+                        force_value=not self._config_options[ 'use_transparency' ][1])
                 self.refresh_selection()
         return -1, []
 
@@ -668,6 +739,8 @@ class PyRadioSelectEncodings(object):
                 self.startPos = 0
         except:
             pass
+        if self.startPos < 0:
+            self.startPos = 0
 
     def _resize(self, init=False):
         col, row = self._selection_to_col_row(self.selection)
@@ -687,7 +760,6 @@ class PyRadioSelectEncodings(object):
         self.refresh_selection()
 
     def setEncoding(self, this_encoding, init=False):
-        #this_encoding = 'iso8859-16'
         ret = self._is_encoding(this_encoding)
         if ret == -1:
             if logger.isEnabledFor(logging.ERROR):
@@ -697,10 +769,7 @@ class PyRadioSelectEncodings(object):
         else:
             self.selection = ret
             self.encoding = this_encoding
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('encoding "{0}" found at {1}'.format(this_encoding, ret))
         self._resize(init)
-        self.refresh_selection()
 
     def _is_encoding(self, a_string):
         def in_alias(a_list, a_string):
@@ -981,7 +1050,7 @@ class PyRadioSelectPlaylist(object):
         self._selected_playlist = a_playlist
         if a_playlist == 'False':
             self._selected_playlist_id = 0
-        elif a_playlist == 'random' or a_playlist is None:
+        elif a_playlist == 'random' or a_playlist == 'Random' or a_playlist is None:
             self._selected_playlist_id = 1
         for i, a_playlist in enumerate(self._items):
             if a_playlist == self._selected_playlist:
@@ -1203,12 +1272,11 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         self._read_items()
 
     def setStation(self, a_station):
-        logger.error('a_station = {}'.format(a_station))
         if a_station == 'False':
             self._selected_playlist_id = 0
             self.startPos = 0
             self.refresh_selection()
-        elif a_station == 'random' or a_station is None:
+        elif a_station == 'random' or a_station == 'Random' or a_station is None:
             self._selected_playlist_id = 1
             self.startPos = 0
             self.refresh_selection()
@@ -1224,7 +1292,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         if self._selected_playlist_id == 0:
             return 0, 'False'
         elif self._selected_playlist_id == 1:
-            return 0, 'random'
+            return 0, 'Random'
         else:
             return 0, str(self._selected_playlist_id - 1)
 
@@ -1245,7 +1313,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
             except:
                 pass
         self._items.reverse()
-        self._items.append('Play a random station on startup')
+        self._items.append('Play a Random station on startup')
         self._items.append('Do not play a station on startup')
         self._items.reverse()
         self._num_of_items = len(self._items)
@@ -1255,7 +1323,9 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         or_pl = self._orig_playlist
         if self._orig_playlist == 'False':
             or_pl = -1
-        elif self._orig_playlist == 'random' or self._orig_playlist is None:
+        elif self._orig_playlist == 'random' or \
+                self._orig_playlist == 'Random' or \
+                self._orig_playlist is None:
             or_pl = 0
         col = curses.color_pair(5)
         if i + self.startPos == int(or_pl) + 1:

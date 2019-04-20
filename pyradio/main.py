@@ -30,6 +30,16 @@ def __configureLogger():
     logger.addHandler(fh)
 
 def shell():
+    version_too_old = False
+    if sys.version_info[0] == 2:
+        if sys.version_info < (2, 7):
+            version_too_old = True
+        elif sys.version_info.major == 3 and sys.version_info < (3, 5):
+            version_too_old = True
+    if version_too_old:
+        print('Pyradio requires python 2.7 or 3.5+...')
+        sys.exit(1)
+
     # set window title
     try:
         sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player\x07")

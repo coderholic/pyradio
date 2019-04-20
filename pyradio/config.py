@@ -552,10 +552,8 @@ class PyRadioConfig(PyRadioStations):
 
     @theme.setter
     def theme(self, val):
-        logger.info('{}, {}'.format(self.opts['theme'], self.opts['dirty_config']))
         self.opts['theme'][1] = val
         self.opts['dirty_config'][1] = True
-        logger.info('{}, {}'.format(self.opts['theme'], self.opts['dirty_config']))
 
     @property
     def dirty_config(self):
@@ -611,7 +609,7 @@ class PyRadioConfig(PyRadioStations):
                 st = sp[1].strip()
                 if st == '-1' or st.lower() == 'false':
                     self.opts['default_station'][1] = 'False'
-                elif st == 'random':
+                elif st == "0" or st == 'random':
                     self.opts['default_station'][1] = None
                 else:
                     self.opts['default_station'][1] = st
@@ -638,11 +636,18 @@ class PyRadioConfig(PyRadioStations):
         self.opts['dirty_config'][1] = False
         return 0
 
-    def _save_config(self):
+    def save_config(self):
+        """ Save config file
+
+            Creates config.restore (back up file)
+            Returns:
+                -1: Error saving config
+                 0: Config saved successfully
+                 1: Config not saved (not modified"""
         if not self.opts['dirty_config'][1]:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (not modified)')
-            return 0
+            return 1
         txt ='''# PyRadio Configuration File
 
 # Player selection
@@ -666,9 +671,9 @@ default_playlist = {1}
 # Default station
 # This is the equivalent to the -p , --play command line parameter
 # The station number within the default playlist to play
-# Value is 0..number of stations, -1 means no auto play
-# "random" means play a random station
-# Default value: -1
+# Value is 1..number of stations, "-1" or "False" means no auto play
+# "0" or "Random" means play a random station
+# Default value: False
 default_station = {2}
 
 # Default encoding
@@ -676,14 +681,10 @@ default_station = {2}
 # a station (such as song title, etc.) If reading said data ends up
 # in an error, 'utf-8' will be used instead.
 #
-# A valid encoding list can be found (depends on python version):
-#   https://docs.python.org/2.3/lib/node130.html
-#   https://docs.python.org/2.4/lib/standard-encodings.html
-#   https://docs.python.org/2.5/lib/standard-encodings.html
-# Or use this URL
-#   https://docs.python.org/2.6/library/codecs.html#standard-encodings
-# replacing 2.6 with specific version:
-#   2.7, 3.0 up to current python version.
+# A valid encoding list can be found at:
+#   https://docs.python.org/2.7/library/codecs.html#standard-encodings
+# replacing 2.7 with specific version:
+#   3.0 up to current python version.
 #
 # Default value: utf-8
 default_encoding = {3}
@@ -768,6 +769,7 @@ auto_save_playlist = {9}
             pass
         if logger.isEnabledFor(logging.INFO):
             logger.info('Config saved')
+        self.opts['dirty_config'][1] = False
         return 0
 
     def read_playlist_file(self, stationFile=''):

@@ -63,19 +63,24 @@ class PyRadioTheme(object):
             self._active_colors['Stations'][BACKGROUND] = -1
         self._do_init_pairs()
 
-    def readAndApplyTheme(self, a_theme):
+    def readAndApplyTheme(self, a_theme, use_transparency=None):
         self.open_theme(a_theme)
         if self._applied_theme_max_colors > curses.COLORS:
             # TODO: return error
             self._load_default_theme(self.applied_theme_name)
+        else:
+            self.applied_theme_name = a_theme
 
         self._active_colors = None
         self._active_colors = deepcopy(self._colors)
-        if self._transparent:
-            self._active_colors['Stations'][BACKGROUND] = -1
+        if use_transparency is None:
+            if self._transparent:
+                self._active_colors['Stations'][BACKGROUND] = -1
+        else:
+            if use_transparency:
+                self._active_colors['Stations'][BACKGROUND] = -1
         self._do_init_pairs()
         self._read_colors = deepcopy(self._colors)
-
 
     def _load_default_theme(self, a_theme):
         self.applied_theme_name = 'dark'
@@ -204,16 +209,23 @@ class PyRadioTheme(object):
         self._applied_theme_max_colors = self._colors['Colors']
         self.applied_theme_name = self._colors['Name']
 
-    def toggleTransparency(self):
-        self._transparent = not self._transparent
+    def toggleTransparency(self, force_value=None):
+        """ Toggles theme trasparency.
+
+            force_value will set trasparency if True or False,
+            or toggle trasparency if None
+        """
+        if force_value is None:
+            self._transparent = not self._transparent
+        else:
+            self._transparent = force_value
         self.restoreActiveTheme()
 
     def getTransparency(self):
         return self._transparent
 
 class PyRadioThemeSelector(object):
-    """ aaa
-    """
+    """ Theme Selector Window """
     TITLE = ' Available Themes '
     parent = None
     _win = None
@@ -243,7 +255,9 @@ class PyRadioThemeSelector(object):
     transparent = False
     _transparent = False
 
-    def __init__(self, parent,
+    changed_from_config = False
+
+    def __init__(self, parent, theme,
             applied_theme_name, applied_theme_max_colors,
             config_theme_name,
             title_color_pair, box_color_pair,
@@ -251,6 +265,7 @@ class PyRadioThemeSelector(object):
             cursor_color_pair, applied_cursor_color_pair,
             is_transparent, log_file=''):
         self.parent = parent
+        self._theme = theme
         self._applied_theme_name = applied_theme_name
         self._applied_theme_max_colors = applied_theme_max_colors
         self._config_theme_name = config_theme_name
@@ -326,14 +341,10 @@ class PyRadioThemeSelector(object):
         self._config_theme_name = self._short_to_normal_theme_name(self._config_theme_name)
         self._applied_theme_name = self._short_to_normal_theme_name(self._applied_theme_name)
         if curses.COLORS <= self._applied_theme_max_colors - 1:
-            if self._config_theme_name == 'dark_16_colors':
-                self._config_theme_name = 'dark'
-                self._applied_theme_name = 'dark'
-            elif self._config_theme_name == 'light_16_colors':
+            if self._config_theme_name == 'light_16_colors':
                 self._config_theme_name = 'light'
                 self._applied_theme_name = 'light'
-            elif self._config_theme_name != 'light' and \
-                    self._config_theme_name != 'light':
+            else:
                 self._config_theme_name = 'dark'
                 self._applied_theme_name = 'dark'
         if self.log:
@@ -458,7 +469,7 @@ class PyRadioThemeSelector(object):
             self._win.move(sel, self._width - 2)
         except:
             pass
-        # display trasnparency
+        # display trasnparency indicator
         if self._transparent:
             self._win.addstr(self._height-1, self._width -4, '[T]', curses.color_pair(self._box_color_pair))
         else:
@@ -510,14 +521,22 @@ class PyRadioThemeSelector(object):
                 curses.KEY_RIGHT):
             self._applied_theme = self._selection
             self._applied_theme_name = self._themes[self._selection][0]
+            #if self.changed_from_config:
+            #    self._config_theme = self._selection
+            #    self._config_theme_name = self._themes[self._selection][0]
             self.refresh()
             return self._selection, False
-        elif char in (ord(' '), ):
+        elif char in (ord(' '), ord('s')):
             self._applied_theme = self._selection
             self._applied_theme_name = self._themes[self._selection][0]
-            self._config_theme = self._selection
-            self._config_theme_name = self._themes[self._selection][0]
-            self.refresh()
+            if not self.changed_from_config:
+                self._config_theme = self._selection
+                self._config_theme_name = self._themes[self._selection][0]
+            if char == ord('s'):
+                # close window
+                curses.ungetch('q')
+            else:
+                self.refresh()
             return self._selection, True
         elif char in (curses.KEY_UP, ord('k')):
             self.jumpnr = ''
@@ -561,7 +580,14 @@ class PyRadioThemeSelector(object):
             self._win.nodelay(False)
             if char == -1:
                 """ ESCAPE """
-                self._selection = -1
+                if not self.changed_from_config:
+                    if self._applied_theme_name != self._config_theme_name:
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('Restoring saved theme: {}'.format(self._config_theme_name))
+                        self._theme.readAndApplyTheme(self._config_theme_name)
+                        self._applied_theme = self._config_theme
+                        self._applied_theme_name = self._config_theme_name
+                self.selection = -1
                 return -1, False
         return -2, False
 

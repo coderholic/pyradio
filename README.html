@@ -116,8 +116,9 @@ Esc/q/Left/h      -                                         Cancel / close windo
 <h2 id="config-file">Config file</h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong><em>PyRadio</em></strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong><em>PyRadio</em></strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
-<p>The file can also be altered while <strong>PyRadio</strong> is running by pressing “<strong><em>c</em></strong>”, which will open the “<strong><em>Configuration window</em></strong>”. This window presents all <strong>PyRadio</strong> options and provide the way to change them.</p>
+<p>The file can also be altered while <strong>PyRadio</strong> is running by pressing “<strong><em>c</em></strong>”, which will open the “<strong><em>Configuration window</em></strong>”. This window presents all <strong>PyRadio</strong> options and provide the way to change them and finally save them by pressing “<strong><em>s</em></strong>”.</p>
 <p>In any case, <strong>PyRadio</strong> will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).</p>
+<p>If saving the configuration file fails, <strong>PyRadio</strong> will create a back up file and terminate. When restarted, <strong>PyRadio</strong> will try to restore previously used settings from the said back up file.</p>
 <h2 id="about-playlist-files">About Playlist files</h2>
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
 <p>Optionally, a third column can be inserted, stating the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
@@ -185,17 +186,9 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>Setting this parameter to a different encoding, will permit <strong>PyRadio</strong> to successfully decode such stations.</p>
 <p>This would be useful in the case where most of your stations do not use <strong>utf-8</strong>. Instead of editing the playlist and add the encoding to each and every affected station, you just set it globally.</p>
 <h3 id="finding-the-right-encoding">Finding the right encoding</h3>
-<p>A valid encoding list can be found (depends on python version):</p>
-<ul>
-<li><a href="https://docs.python.org/2.3/lib/node130.html">https://docs.python.org/2.3/lib/node130.html</a></p></li>
-<li><a href="https://docs.python.org/2.4/lib/standard-encodings.html">https://docs.python.org/2.4/lib/standard-encodings.html</a></p></li>
-<li><a href="https://docs.python.org/2.5/lib/standard-encodings.html">https://docs.python.org/2.5/lib/standard-encodings.html</a></p></li>
-</ul>
-<p>Or use this URL</p>
-<ul>
-<li><a href="https://docs.python.org/2.6/library/codecs.html#standard-encodings">https://docs.python.org/2.6/library/codecs.html#standard-encodings</a></li>
-</ul>
-<p>replacing <strong>2.6</strong> with specific version: <strong>2.7</strong>, <strong>3.0</strong> up to current python version.</p>
+<p>A valid encoding list can be found at:</p>
+<p><a href="https://docs.python.org/2.7/library/codecs.html#standard-encodings">https://docs.python.org/2.7/library/codecs.html#standard-encodings</a></p>
+<p>replacing <strong>2.7</strong> with specific version: <strong>3.0</strong> up to current python version.</p>
 <h2 id="player-detection-selection">Player detection / selection</h2>
 <p><strong>PyRadio</strong> is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.</p>
 <p>Currently, it supports MPV, MPlayer and VLC, and it will look for them in that order. If none of them is found, the program will terminate with an error.</p>
