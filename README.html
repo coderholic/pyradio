@@ -154,6 +154,7 @@ $ pyradio -s 5</pre>
 <p>Once <strong>PyRadio</strong> has been loaded, one can perform a series of actions on the current playlist and set of playlists saved in its configuration directory.</p>
 <p>Currently, the following actions are available:</p>
 <p>One thing you may want to do is remove a station from a playlist, e.g. when found that it not longer works. You can do that by pressing “<strong><em>DEL</em></strong>” or “<strong><em>x</em></strong>”.</p>
+<p>Pressing “<strong><em>e</em></strong>” will enable you to change the encoding of the selected station. If the station is currently playing, playback will be restarted so that the encoding’s change takes effect (hopefully correctly displaying the station/song title).</p>
 <p>Then, when this is done, you can either save the modified playlist, by pressing “<strong><em>s</em></strong>”, or reload the playlist from disk, by pressing “<strong><em>R</em></strong>”. A modified playlist will automatically be saved when <strong>PyRadio</strong> exits (or Ctrl-C is pressed).</p>
 <p>Finally, opening another playlist is also possible. Just press “<strong><em>o</em></strong>” and you will be presented with a list of saved playlists to choose from. These playlists must be saved beforehand in <strong>PyRadio</strong>’s configuration directory.</p>
 <p>While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in <strong>PyRadio</strong>’s configuration file for future reference.</p>
@@ -180,7 +181,7 @@ $ pyradio -s 5</pre>
 <p>Finally, we insert the new station to the playlist:</p>
 <pre>Station1,Station1_URL,
 Station2,Station2_URL,iso-8859-7</pre>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Using the <strong><em>-a</em></strong> command line option will save you all this trouble, as it will automatically take care of creating a valid <strong><em>CSV</em></strong> file.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Using the <strong><em>-a</em></strong> command line option will save you all this trouble, as it will automatically take care of creating a valid <strong><em>CSV</em></strong> file. Alternatively, you can change the selected station’s encoding by pressing “<strong><em>e</em></strong>” while in <strong>PyRadio</strong>.</p>
 <h3 id="global-encoding-declaration">Global encoding declaration</h3>
 <p><strong>PyRadio</strong>’s configuration file contains the parameter <strong><em>default_encoding</em></strong>, which by default is set to <strong>utf-8</strong>.</p>
 <p>Setting this parameter to a different encoding, will permit <strong>PyRadio</strong> to successfully decode such stations.</p>

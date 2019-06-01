@@ -1,3 +1,10 @@
+2019-05-27  s-n-g
+    * Version 0.7.6
+    * Added "e" option to change station's encoding.
+    * Implemented playlist backup and recovery, to address saving errors.
+    * Inform user when playlist not found and of playlist recovery result.
+    * Parameter -s - Check if file is supported (ends with .csv)
+
 2019-04-18  s-n-g
     * Version 0.7.5
     * Minimum python version supported changed. Now it's 2.7+/3.5+

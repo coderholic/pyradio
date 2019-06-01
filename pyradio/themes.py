@@ -110,7 +110,7 @@ class PyRadioTheme(object):
             # info
             self._colors['Colors'] = 8
             self._colors['Name'] = 'dark'
-            self._colors['Path'] = 'dark'
+            self._colors['Path'] = ''
 
         elif a_theme == 'dark_16_colors':
             self._colors['Stations'] = [ 15, 8 ]
@@ -128,7 +128,7 @@ class PyRadioTheme(object):
             # info
             self._colors['Colors'] = 16
             self._colors['Name'] = 'dark_16_colors'
-            self._colors['Path'] = 'dark_16_colors'
+            self._colors['Path'] = ''
 
         elif a_theme == 'light':
             self._colors['Stations'] = [ curses.COLOR_BLACK, curses.COLOR_WHITE ]
@@ -146,7 +146,7 @@ class PyRadioTheme(object):
             # info
             self._colors['Colors'] = 8
             self._colors['Name'] = 'dark'
-            self._colors['Path'] = 'dark'
+            self._colors['Path'] = ''
 
         elif a_theme == 'light_16_colors':
             self._colors['Stations'] = [ 8, 15 ]
@@ -164,7 +164,7 @@ class PyRadioTheme(object):
             # info
             self._colors['Colors'] = 16
             self._colors['Name'] = 'light_16_colors'
-            self._colors['Path'] = 'light_16_colors'
+            self._colors['Path'] = ''
 
         elif a_theme == 'black_on_white' or a_theme == 'bow':
             self._colors['Stations'] = [ 245, 15 ]
@@ -182,7 +182,7 @@ class PyRadioTheme(object):
             # info
             self._colors['Colors'] = 256
             self._colors['Name'] = 'black_on_white'
-            self._colors['Path'] = 'black_on_white'
+            self._colors['Path'] = ''
 
         elif a_theme == 'white_on_black' or a_theme == 'wob':
             self._colors['Stations'] = [ 247, 235 ]
@@ -200,7 +200,7 @@ class PyRadioTheme(object):
             # info
             self._colors['Colors'] = 256
             self._colors['Name'] = 'white_on_black'
-            self._colors['Path'] = 'white_on_black'
+            self._colors['Path'] = ''
 
         else:
             # TODO: read a theme from disk

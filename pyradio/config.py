@@ -5,7 +5,7 @@ import logging
 import glob
 import curses
 import collections
-from os import path, getenv, makedirs, remove
+from os import path, getenv, makedirs, remove, rename
 from time import ctime
 from datetime import datetime
 from shutil import copyfile, move
@@ -42,6 +42,8 @@ class PyRadioStations(object):
     new_format = False
 
     dirty_playlist = False
+
+    playlist_recovery_result = 0
 
     def __init__(self, stationFile=''):
 
@@ -149,6 +151,7 @@ class PyRadioStations(object):
                -2  -  playlist not found
                -3  -  negative number specified
                -4  -  number not found
+               -8  -  file type not supported
                """
         ret = -1
         orig_input = stationFile
@@ -158,6 +161,8 @@ class PyRadioStations(object):
                 stationFile = path.abspath(stationFile)
             else:
                 """ try to find it in config dir """
+                if path.exists(stationFile):
+                    return '', -8
                 stationFile += '.csv'
                 stationFile = path.join(self.stations_dir, stationFile)
             if path.exists(stationFile) and path.isfile(stationFile):
@@ -196,16 +201,24 @@ class PyRadioStations(object):
                 x  -  number of stations or
                -1  -  playlist is malformed
                -2  -  playlist not found
+               -7  -  playlist recovery failed
+               -8  -  file not supported
                """
-        prev_file = self.stations_file
-        prev_format = self.new_format
-        self.new_format = False
 
         ret = 0
         stationFile, ret = self._get_playlist_abspath_from_data(stationFile)
         if ret < 0:
+            # returns -2, -3, -4 or -8
             return ret
 
+        self.playlist_recovery_result = self._recover_backed_up_playlist(stationFile)
+        if self.playlist_recovery_result > 0:
+            # playlist recovery failed
+            # reason in cnf.playlist_recovery_result
+            return -7
+        prev_file = self.stations_file
+        prev_format = self.new_format
+        self.new_format = False
         self._reading_stations = []
         with open(stationFile, 'r') as cfgfile:
             try:
@@ -214,10 +227,10 @@ class PyRadioStations(object):
                         continue
                     try:
                         name, url = [s.strip() for s in row]
-                        self._reading_stations.append((name, url, ''))
+                        self._reading_stations.append([name, url, ''])
                     except:
                         name, url, enc = [s.strip() for s in row]
-                        self._reading_stations.append((name, url, enc))
+                        self._reading_stations.append([name, url, enc])
                         self.new_format = True
             except:
                 self._reading_stations = []
@@ -237,6 +250,46 @@ class PyRadioStations(object):
             else:
                 logger.debug('Playlist is in old format')
         return self.number_of_stations
+
+    def _recover_backed_up_playlist(self, stationFile):
+        """ If a playlist backup file exists (.txt file), try to
+            recover it (rename it to .csv)
+
+            Return:
+                -1: playlist recovered
+                 0: no back up file found
+                 1: remove (empty) csv file failed
+                 2: rename txt to csv failed """
+        backup_stationFile = stationFile.replace('.csv', '.txt')
+        if path.isfile(backup_stationFile):
+            if logging:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Trying to recover backed up playlist: "{}"'.format(backup_stationFile))
+                else:
+                    print('Trying to recover backed up playlist:\n  "{}"'.format(backup_stationFile))
+
+
+            if path.isfile(stationFile):
+                try:
+                    remove(stationFile)
+                except:
+                    # remove failed
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Playlist recovery failed: Cannot remove CSV file')
+                    return 1
+            try:
+                rename(backup_stationFile, stationFile)
+            except:
+                # rename failed
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Playlist recovery failed: Cannot rename TXT file to CSV')
+                return 2
+            # playlist recovered
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Playlist recovery successful!!!')
+            return -1
+        # no playlist back up found
+        return 0
 
     def _playlist_format_changed(self):
         """ Check if we have new or old format

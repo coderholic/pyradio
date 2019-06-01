@@ -198,6 +198,26 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
     elif ret == -6:
         print('Error: Failed to rename playlist')
         sys.exit(1)
+    elif ret == -7:
+        print('Error: Playlist recovery failed!\n')
+        if cnf.playlist_recovery_result == 1:
+            msg = """Both a playlist file (CSV) and a playlist backup file (TXT)
+exist for the selected playlist. In this case, PyRadio would
+try to delete the CSV file, and then rename the TXT file to CSV.\n
+Unfortunately, deleting the CSV file has failed, so you have to
+manually address the issue."""
+        else:
+            msg = """A playlist backup file (TXT) has been found for the selected 
+playlist. In this case, PyRadio would try to rename this file
+to CSV.\n
+Unfortunately, renaming this file has failed, so you have to
+manually address the issue."""
+        print(msg)
+        #open_conf_dir(cnf)
+        sys.exit(1)
+    elif ret == -8:
+        print('File type not supported')
+        sys.exit(1)
 
 def open_conf_dir(cnf):
     import subprocess
