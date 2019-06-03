@@ -2012,9 +2012,11 @@ you have to manually address the issue.
                     # do not exit
                     return
                 # exit program
+                self.ctrl_c_handler(0,0)
                 return -1
             elif char in (ord('n'), ):
                 # exit program
+                self._cnf.save_config()
                 return -1
             elif char in (curses.KEY_EXIT, ord('q'), 27):
                 self.bodyWin.nodelay(True)
@@ -2022,6 +2024,7 @@ you have to manually address the issue.
                 self.bodyWin.nodelay(False)
                 if char == -1:
                     """ ESCAPE """
+                    self._cnf.save_config()
                     return -1
             return
 
@@ -2259,7 +2262,7 @@ you have to manually address the issue.
                                 return
                         #else:
                         #    self._open_playlist()
-                        #    self.ctrl_c_handler(0,0)
+                        self.ctrl_c_handler(0,0)
                         return -1
                 else:
                     return
