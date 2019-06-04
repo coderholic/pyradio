@@ -510,7 +510,13 @@ class PyRadioThemeSelector(object):
               True  : theme is to be saved in config
               False : theme is not to be saved in config
         """
-        if char in (curses.KEY_ENTER, ord('\n'),
+        if char in (ord('e'), ):
+            # edit theme
+            pass
+        elif char in (ord('n'), ):
+            # new theme
+            pass
+        elif char in (curses.KEY_ENTER, ord('\n'),
                 ord('\r'), ord('l'),
                 curses.KEY_RIGHT):
             self._applied_theme = self._selection

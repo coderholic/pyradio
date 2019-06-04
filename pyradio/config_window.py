@@ -75,6 +75,7 @@ class PyRadioConfigWindow(object):
         self._show_theme_selector_function = show_theme_selector_function
         self._saved_config_options = deepcopy(config.opts)
         self._config_options = deepcopy(config.opts)
+        self._old_theme = self._config_options['theme'][1]
         if logger.isEnabledFor(logging.INFO):
             if self._saved_config_options == self._config_options:
                 logger.info('Saved options loaded')
@@ -87,7 +88,6 @@ class PyRadioConfigWindow(object):
         self.init_config_win()
         self.refresh_config_win()
         self._old_use_transparency = self._config_options['use_transparency'][1]
-        self._old_theme = self._config_options['theme'][1]
 
     def __del__(self):
         self._toggle_transparency_function = None
@@ -372,6 +372,8 @@ class PyRadioConfigWindow(object):
             self._saved_config_options = deepcopy(self._config_options)
             if self._cnf.opts != self._saved_config_options:
                 self._cnf.opts = deepcopy(self._saved_config_options)
+                self._old_theme == self._saved_config_options['theme'][1]
+                self._config_options = deepcopy(self._cnf.opts)
                 self._cnf.dirty_config = True
             else:
                 self._cnf.dirty_config = False
