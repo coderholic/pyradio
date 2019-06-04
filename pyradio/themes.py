@@ -8,15 +8,9 @@ from os import path, getenv, makedirs, remove
 from shutil import copyfile, move
 from copy import deepcopy
 from .log import Log
-
+from .common import *
 
 logger = logging.getLogger(__name__)
-
-FOREGROUND = 0
-BACKGROUND = 1
-# for pop up window
-CAPTION = 2
-BORDER = 3
 
 
 class PyRadioTheme(object):
@@ -39,28 +33,28 @@ class PyRadioTheme(object):
 
     def _do_init_pairs(self):
         # not used
-        curses.init_pair(1, curses.COLOR_CYAN, self._active_colors['Stations'][BACKGROUND])
+        curses.init_pair(1, curses.COLOR_CYAN, self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()])
         # PyRadio URL
-        curses.init_pair(2, self._active_colors['PyRadio URL'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
+        curses.init_pair(2, self._active_colors[THEME_ITEMS[0][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()])
         # help border
-        curses.init_pair(3, self._active_colors['Messages Border'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
+        curses.init_pair(3, self._active_colors[THEME_ITEMS[1][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()])
         # station playing no cursor
-        curses.init_pair(4, self._active_colors['Active Station'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
+        curses.init_pair(4, self._active_colors[THEME_ITEMS[4][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()])
         # body win
-        curses.init_pair(5, self._active_colors['Stations'][FOREGROUND], self._active_colors['Stations'][BACKGROUND])
+        curses.init_pair(5, self._active_colors[THEME_ITEMS[3][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()])
         # cursor
-        curses.init_pair(6, self._active_colors['Normal Cursor'][FOREGROUND], self._active_colors['Normal Cursor'][BACKGROUND])
+        curses.init_pair(6, self._active_colors[THEME_ITEMS[5][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[5][0]][BACKGROUND()])
         # status bar
-        curses.init_pair(7, self._active_colors['Status Bar'][FOREGROUND], self._active_colors['Status Bar'][BACKGROUND])
+        curses.init_pair(7, self._active_colors[THEME_ITEMS[2][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[2][0]][BACKGROUND()])
         # search cursor
-        curses.init_pair(8, self._active_colors['Normal Cursor'][BACKGROUND], self._active_colors['Stations'][BACKGROUND])
+        curses.init_pair(8, self._active_colors[THEME_ITEMS[5][0]][BACKGROUND()], self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()])
         # cursor when playing
-        curses.init_pair(9, self._active_colors['Active Cursor'][FOREGROUND], self._active_colors['Active Cursor'][BACKGROUND])
+        curses.init_pair(9, self._active_colors[THEME_ITEMS[6][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[6][0]][BACKGROUND()])
 
     def restoreActiveTheme(self):
         self._active_colors = deepcopy(self._read_colors)
         if self._transparent:
-            self._active_colors['Stations'][BACKGROUND] = -1
+            self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()] = -1
         self._do_init_pairs()
 
     def readAndApplyTheme(self, a_theme, use_transparency=None):
@@ -75,10 +69,10 @@ class PyRadioTheme(object):
         self._active_colors = deepcopy(self._colors)
         if use_transparency is None:
             if self._transparent:
-                self._active_colors['Stations'][BACKGROUND] = -1
+                self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()] = -1
         else:
             if use_transparency:
-                self._active_colors['Stations'][BACKGROUND] = -1
+                self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()] = -1
         self._do_init_pairs()
         self._read_colors = deepcopy(self._colors)
 
@@ -95,108 +89,108 @@ class PyRadioTheme(object):
             a_theme = 'dark'
 
         if a_theme == 'dark' or a_theme == 'default':
-            self._colors['Stations'] = [ curses.COLOR_WHITE, curses.COLOR_BLACK ]
-            self._colors['Status Bar'] = [ curses.COLOR_BLACK, curses.COLOR_GREEN ]
+            self._colors[THEME_ITEMS[3][0]] = [ curses.COLOR_WHITE, curses.COLOR_BLACK ]
+            self._colors[THEME_ITEMS[2][0]] = [ curses.COLOR_BLACK, curses.COLOR_GREEN ]
             # selection
-            self._colors['Normal Cursor'] = [ curses.COLOR_BLACK, curses.COLOR_MAGENTA ]
-            self._colors['Active Cursor'] = [ curses.COLOR_BLACK, curses.COLOR_GREEN ]
-            self._colors['Active Station']  = [ curses.COLOR_GREEN, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[5][0]] = [ curses.COLOR_BLACK, curses.COLOR_MAGENTA ]
+            self._colors[THEME_ITEMS[6][0]] = [ curses.COLOR_BLACK, curses.COLOR_GREEN ]
+            self._colors[THEME_ITEMS[4][0]]  = [ curses.COLOR_GREEN, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # Titles
-            self._colors['Titles'] = [ curses.COLOR_GREEN, self._colors['Stations'][BACKGROUND] ]
-            self._colors['PyRadio URL'] = [ curses.COLOR_BLUE, self._colors['Stations'][BACKGROUND] ]
+            # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
+            self._colors[THEME_ITEMS[0][0]] = [ curses.COLOR_BLUE, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # help window
-            self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], curses.COLOR_YELLOW ]
-            self._colors['Messages Border'] = [ curses.COLOR_YELLOW, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[1][0]] = [ curses.COLOR_YELLOW, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # info
             self._colors['Colors'] = 8
             self._colors['Name'] = 'dark'
             self._colors['Path'] = ''
 
         elif a_theme == 'dark_16_colors':
-            self._colors['Stations'] = [ 15, 8 ]
-            self._colors['Status Bar'] = [ curses.COLOR_BLACK, 10 ]
+            self._colors[THEME_ITEMS[3][0]] = [ 15, 8 ]
+            self._colors[THEME_ITEMS[2][0]] = [ curses.COLOR_BLACK, 10 ]
             # selection
-            self._colors['Normal Cursor'] = [ curses.COLOR_BLACK, 13 ]
-            self._colors['Active Cursor'] = [ curses.COLOR_BLACK, 10 ]
-            self._colors['Active Station']  = [ 10, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[5][0]] = [ curses.COLOR_BLACK, 13 ]
+            self._colors[THEME_ITEMS[6][0]] = [ curses.COLOR_BLACK, 10 ]
+            self._colors[THEME_ITEMS[4][0]]  = [ 10, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # Titles
-            self._colors['Titles'] = [ 10, self._colors['Stations'][BACKGROUND] ]
-            self._colors['PyRadio URL'] = [ 12, self._colors['Stations'][BACKGROUND] ]
+            # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
+            self._colors[THEME_ITEMS[0][0]] = [ 12, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # help window
-            self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], 11 ]
-            self._colors['Messages Border'] = [ 11, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[1][0]] = [ 11, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # info
             self._colors['Colors'] = 16
             self._colors['Name'] = 'dark_16_colors'
             self._colors['Path'] = ''
 
         elif a_theme == 'light':
-            self._colors['Stations'] = [ curses.COLOR_BLACK, curses.COLOR_WHITE ]
-            self._colors['Status Bar'] = [ curses.COLOR_WHITE, curses.COLOR_BLUE ]
+            self._colors[THEME_ITEMS[3][0]] = [ curses.COLOR_BLACK, curses.COLOR_WHITE ]
+            self._colors[THEME_ITEMS[2][0]] = [ curses.COLOR_WHITE, curses.COLOR_BLUE ]
             # selection
-            self._colors['Normal Cursor'] = [ curses.COLOR_WHITE, curses.COLOR_MAGENTA ]
-            self._colors['Active Cursor'] = [ curses.COLOR_WHITE, curses.COLOR_BLUE ]
-            self._colors['Active Station']  = [ curses.COLOR_RED, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[5][0]] = [ curses.COLOR_WHITE, curses.COLOR_MAGENTA ]
+            self._colors[THEME_ITEMS[6][0]] = [ curses.COLOR_WHITE, curses.COLOR_BLUE ]
+            self._colors[THEME_ITEMS[4][0]]  = [ curses.COLOR_RED, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # Titles
-            self._colors['Titles'] = [ curses.COLOR_RED, self._colors['Stations'][BACKGROUND] ]
-            self._colors['PyRadio URL'] = [ curses.COLOR_BLUE, self._colors['Stations'][BACKGROUND] ]
+            # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
+            self._colors[THEME_ITEMS[0][0]] = [ curses.COLOR_BLUE, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # help window
-            self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], curses.COLOR_RED ]
-            self._colors['Messages Border'] = [ curses.COLOR_MAGENTA, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[1][0]] = [ curses.COLOR_MAGENTA, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # info
             self._colors['Colors'] = 8
             self._colors['Name'] = 'dark'
             self._colors['Path'] = ''
 
         elif a_theme == 'light_16_colors':
-            self._colors['Stations'] = [ 8, 15 ]
-            self._colors['Status Bar'] = [ 15, 12 ]
+            self._colors[THEME_ITEMS[3][0]] = [ 8, 15 ]
+            self._colors[THEME_ITEMS[2][0]] = [ 15, 12 ]
             # selection
-            self._colors['Normal Cursor'] = [ 15, 13 ]
-            self._colors['Active Cursor'] = [ 15, 12 ]
-            self._colors['Active Station']  = [ 9, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[5][0]] = [ 15, 13 ]
+            self._colors[THEME_ITEMS[6][0]] = [ 15, 12 ]
+            self._colors[THEME_ITEMS[4][0]]  = [ 9, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # Titles
-            self._colors['Titles'] = [ 9, self._colors['Stations'][BACKGROUND] ]
-            self._colors['PyRadio URL'] = [ 12, self._colors['Stations'][BACKGROUND] ]
+            # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
+            self._colors[THEME_ITEMS[0][0]] = [ 12, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # help window
-            self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], 9 ]
-            self._colors['Messages Border'] = [ 13, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[1][0]] = [ 13, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # info
             self._colors['Colors'] = 16
             self._colors['Name'] = 'light_16_colors'
             self._colors['Path'] = ''
 
         elif a_theme == 'black_on_white' or a_theme == 'bow':
-            self._colors['Stations'] = [ 245, 15 ]
-            self._colors['Status Bar'] = [ 15, 245 ]
+            self._colors[THEME_ITEMS[3][0]] = [ 245, 15 ]
+            self._colors[THEME_ITEMS[2][0]] = [ 15, 245 ]
             # selection
-            self._colors['Normal Cursor'] = [ 15, 245 ]
-            self._colors['Active Cursor'] = [ 0, 245 ]
-            self._colors['Active Station']  = [ 0, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[5][0]] = [ 15, 245 ]
+            self._colors[THEME_ITEMS[6][0]] = [ 0, 245 ]
+            self._colors[THEME_ITEMS[4][0]]  = [ 0, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # Titles
-            self._colors['Titles'] = [ 0, self._colors['Stations'][BACKGROUND] ]
-            self._colors['PyRadio URL'] = [ 0, self._colors['Stations'][BACKGROUND] ]
+            # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
+            self._colors[THEME_ITEMS[0][0]] = [ 0, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # help window
-            self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], 245 ]
-            self._colors['Messages Border'] = [ 245, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[1][0]] = [ 245, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # info
             self._colors['Colors'] = 256
             self._colors['Name'] = 'black_on_white'
             self._colors['Path'] = ''
 
         elif a_theme == 'white_on_black' or a_theme == 'wob':
-            self._colors['Stations'] = [ 247, 235 ]
-            self._colors['Status Bar'] = [ 234, 253 ]
+            self._colors[THEME_ITEMS[3][0]] = [ 247, 235 ]
+            self._colors[THEME_ITEMS[2][0]] = [ 234, 253 ]
             # selection
-            self._colors['Normal Cursor'] = [ 235, 247, ]
-            self._colors['Active Cursor'] = [ 235, 253 ]
-            self._colors['Active Station']  = [ 255, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[5][0]] = [ 235, 247, ]
+            self._colors[THEME_ITEMS[6][0]] = [ 235, 253 ]
+            self._colors[THEME_ITEMS[4][0]]  = [ 255, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # Titles
-            self._colors['Titles'] = [ 255, self._colors['Stations'][BACKGROUND] ]
-            self._colors['PyRadio URL'] = [ 253, self._colors['Stations'][BACKGROUND] ]
+            # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
+            self._colors[THEME_ITEMS[0][0]] = [ 253, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # help window
-            self._colors['Messages'] = [ self._colors['Titles'][FOREGROUND], 235 ]
-            self._colors['Messages Border'] = [ 247, self._colors['Stations'][BACKGROUND] ]
+            self._colors[THEME_ITEMS[1][0]] = [ 247, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # info
             self._colors['Colors'] = 256
             self._colors['Name'] = 'white_on_black'
