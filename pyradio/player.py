@@ -285,6 +285,8 @@ class Player(object):
     def play(self, name, streamUrl, encoding = ''):
         """ use a multimedia player to play a stream """
         self.close()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('mpv socket is "{}"'.format(self.mpvsocket))
         self.name = name
         self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
         self.muted = False
@@ -446,8 +448,9 @@ class MpvPlayer(Player):
         # linux, freebsd, etc.
         config_files.append("/etc/mpv/mpv.conf")
 
-    if os.path.exists('/tmp/mpvsocket'):
-        os.system("rm /tmp/mpvsocket");
+    mpvsocket = '/tmp/mpvsocket.{}'.format(os.getpid())
+    if os.path.exists(mpvsocket):
+        os.system("rm " + mpvsocket + " 2>/dev/null");
 
     def save_volume(self):
         return self._do_save_volume("[pyradio]\nvolume={}\n")
@@ -488,14 +491,14 @@ class MpvPlayer(Player):
 
         if playList:
             if newerMpv:
-                opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
+                opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-ipc-server=" + self.mpvsocket]
             else:
-                opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-unix-socket=/tmp/mpvsocket"]
+                opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-unix-socket=" + self.mpvsocket]
         else:
             if newerMpv:
-                opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-ipc-server=/tmp/mpvsocket"]
+                opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-ipc-server=" + self.mpvsocket]
             else:
-                opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-unix-socket=/tmp/mpvsocket"]
+                opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-unix-socket=" + self.mpvsocket]
         if self.USE_PROFILE == -1:
             self.USE_PROFILE = self._configHasProfile()
 
@@ -507,24 +510,24 @@ class MpvPlayer(Player):
 
     def _mute(self):
         """ mute mpv """
-        os.system("echo 'cycle mute' | socat - /tmp/mpvsocket 2>/dev/null");
+        os.system("echo 'cycle mute' | socat - " + self.mpvsocket + " 2>/dev/null");
 
     def pause(self):
         """ pause streaming (if possible) """
-        os.system("echo 'cycle pause' | socat - /tmp/mpvsocket 2>/dev/null");
+        os.system("echo 'cycle pause' | socat - " + self.mpvsocket + " 2>/dev/null");
 
     def _stop(self):
         """ exit pyradio (and kill mpv instance) """
-        os.system("echo 'quit' | socat - /tmp/mpvsocket 2>/dev/null");
-        os.system("rm /tmp/mpvsocket");
+        os.system("echo 'quit' | socat - " + self.mpvsocket + " 2>/dev/null");
+        os.system("rm " + self.mpvsocket + " 2>/dev/null");
 
     def _volume_up(self):
         """ increase mpv's volume """
-        os.system("echo 'cycle volume' | socat - /tmp/mpvsocket 2>/dev/null");
+        os.system("echo 'cycle volume' | socat - " + self.mpvsocket + " 2>/dev/null");
 
     def _volume_down(self):
         """ decrease mpv's volume """
-        os.system("echo 'cycle volume down' | socat - /tmp/mpvsocket 2>/dev/null");
+        os.system("echo 'cycle volume down' | socat - " + self.mpvsocket + " 2>/dev/null");
 
     def _format_title_string(self, title_string):
         """ format mpv's title """
