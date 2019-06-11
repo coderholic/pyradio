@@ -158,6 +158,7 @@ class Player(object):
         return False
 
     def updateStatus(self, *args):
+        has_error = False
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug("updateStatus thread started.")
         try:
@@ -233,8 +234,10 @@ class Player(object):
                                 logger.info('Connecting to: "{}"'.format(self.name))
                             self.outputStream.write(self.oldUserInput['Title'])
         except:
+            has_error = True
             if logger.isEnabledFor(logging.ERROR):
                 logger.error("Error in updateStatus thread.", exc_info=True)
+            return
         if (logger.isEnabledFor(logging.INFO)):
             logger.info("updateStatus thread stopped.")
 
@@ -285,8 +288,6 @@ class Player(object):
     def play(self, name, streamUrl, encoding = ''):
         """ use a multimedia player to play a stream """
         self.close()
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('mpv socket is "{}"'.format(self.mpvsocket))
         self.name = name
         self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
         self.muted = False
@@ -449,6 +450,8 @@ class MpvPlayer(Player):
         config_files.append("/etc/mpv/mpv.conf")
 
     mpvsocket = '/tmp/mpvsocket.{}'.format(os.getpid())
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('mpv socket is "{}"'.format(self.mpvsocket))
     if os.path.exists(mpvsocket):
         os.system("rm " + mpvsocket + " 2>/dev/null");
 

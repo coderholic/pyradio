@@ -4,7 +4,7 @@ import sys
 import logging
 import glob
 from sys import version_info
-from os import path, getenv, makedirs, remove
+from os import path, getenv, makedirs, remove, sep as dir_sep, access, R_OK
 from shutil import copyfile, move
 from copy import deepcopy
 from .log import Log
@@ -17,19 +17,25 @@ class PyRadioTheme(object):
     _colors = {}
     _active_colors = {}
     _read_colors = {}
+    _temp_colors = {}
 
     transparent = False
     _transparent = False
 
     applied_theme_name = 'dark'
 
-    def __init__(self):
+    config_dir = ''
+
+    def __init__(self, cnf_dir=''):
         _applied_theme_max_colors = 8
+        if cnf_dir:
+            self.config_dir = cnf_dir
 
     def __del__(self):
         self._colors = None
         self._active_colors = None
         self._read_colors = None
+        self._temp_colors = None
 
     def _do_init_pairs(self):
         # not used
@@ -57,8 +63,16 @@ class PyRadioTheme(object):
             self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()] = -1
         self._do_init_pairs()
 
-    def readAndApplyTheme(self, a_theme, use_transparency=None):
-        self.open_theme(a_theme)
+    def readAndApplyTheme(self, a_theme, **kwargs):
+        use_transparency = None
+        theme_path = ''
+        for name, value in kwargs.items():
+            if name == 'use_transparency':
+                use_transparency = value
+            elif name == 'theme_path':
+                theme_path = value
+                logger.info('DE theme path passed to readAndApplyTheme: {}'.format(theme_path))
+        self.open_theme(a_theme, theme_path)
         if self._applied_theme_max_colors > curses.COLORS:
             # TODO: return error
             self._load_default_theme(self.applied_theme_name)
@@ -84,7 +98,10 @@ class PyRadioTheme(object):
             self.applied_theme_name = try_theme
         self.open_theme(self.applied_theme_name)
 
-    def open_theme(self, a_theme = ''):
+    def open_theme(self, a_theme = '', a_path=''):
+        """ Read a theme and place it in _colors
+            a_theme: theme name
+            a_path:  theme path (enpty if internal theme)"""
         if not a_theme.strip():
             a_theme = 'dark'
 
@@ -198,10 +215,37 @@ class PyRadioTheme(object):
 
         else:
             # TODO: read a theme from disk
-            self._load_default_theme(self.applied_theme_name)
+            logger.debug('DE path = {}'.format(a_path))
+            if a_path == '':
+                a_path = self._get_theme_path(a_theme)
+            if a_path == '':
+                self._load_default_theme(self.applied_theme_name)
+            else:
+                # read theme from disk
+                att = PyRadioThemeReadWrite()
+                ret, self._temp_colors = att.read_theme(a_theme, a_path)
+                if ret == 0:
+                    self._colors = deepcopy(self._temp_colors)
+
 
         self._applied_theme_max_colors = self._colors['Colors']
         self.applied_theme_name = self._colors['Name']
+
+    def _get_theme_path(self, a_theme):
+        out_themes = []
+        #self.root_path = path.join(path.dirname(__file__), 'stations.csv')
+        theme_dirs = [ path.join(self.config_dir, 'themes') ,
+            path.join(path.dirname(__file__), 'themes') ]
+        for theme_dir in theme_dirs:
+            logger.error('DE theme_dir = "{}"'.format(theme_dir))
+            files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
+            logger.error('DE {}'.format(files))
+            if files:
+                for a_file in files:
+                     a_theme_name = a_file.split(dir_sep)[-1].replace('.pyradio-theme', '')
+                     if a_theme_name == a_theme:
+                         return a_file
+        return ''
 
     def toggleTransparency(self, force_value=None):
         """ Toggles theme trasparency.
@@ -217,6 +261,87 @@ class PyRadioTheme(object):
 
     def getTransparency(self):
         return self._transparent
+
+class PyRadioThemeReadWrite(object):
+
+    _tmeme_name = ''
+    _theme_path = ''
+
+    def __init__(self):
+        pass
+
+    def read_theme(self, theme_name, theme_path):
+        """ Opens a theme file and return its contents in self._temp_colors
+
+        Returns:
+            0: success
+            1: file not found
+            2: file not readable
+            3: read error
+            4: file corrupt
+            5: file incomplete
+        """
+        self._temp_colors = None
+        if not path.isfile(theme_path):
+            return 1, None
+        if not access(theme_path, R_OK):
+            return 2, None
+
+        try:
+            with open(theme_path, 'r') as thmfile:
+                lines = [line.strip() for line in thmfile if line.strip() and not line.startswith('#') ]
+
+        except:
+            return 3, None
+        max_colors = 0
+        self._temp_colors = {}
+        for line in lines:
+            sp = line.split('=')
+            sp[0] = sp[0].strip()
+            vsp = sp[1].strip().split(',')
+            if len(vsp) < 2:
+                self._temp_colors = None
+                return 4, None
+            try:
+                this_color = ( int(vsp[0]), int(vsp[1]) )
+                for x in this_color:
+                    if x > max_colors:
+                        max_colors = x
+            except:
+                self._temp_colors = None
+                return 4, None
+            for it in THEME_ITEMS:
+                if sp[0] == it[0]:
+                    self._temp_colors[str(sp[0])] = [ this_color[0], this_color[1] ]
+                    break
+
+        self._theme_name = theme_name
+        self._theme_path = theme_path
+        self._temp_colors['Name'] = theme_name
+        self._temp_colors['Path'] = theme_path
+        self._temp_colors['Colors'] = self._get_max_color(theme_name, max_colors)
+        logger.info('DE self._temp_colors =\n{}'.format(self._temp_colors))
+        return 0, self._temp_colors
+
+    def _get_max_color(self, a_theme_name, max_color):
+        checks = ('_8', '_16', '_256')
+        logger.error('DE a_theme_name = "{}"'.format(a_theme_name))
+        num_of_colors = 0
+        for a_check in checks:
+            if a_theme_name.endswith(a_check):
+                try:
+                    num_of_colors = int(a_check[1:])
+                except:
+                    pass
+                break
+        checks = (8, 16, 256)
+        if num_of_colors == 0 or num_of_colors not in checks:
+            num_of_colors = max_color
+            for check in checks:
+                if num_of_colors <= check:
+                    return check
+        return num_of_colors
+
 
 class PyRadioThemeSelector(object):
     """ Theme Selector Window """
@@ -251,7 +376,7 @@ class PyRadioThemeSelector(object):
 
     changed_from_config = False
 
-    def __init__(self, parent, theme,
+    def __init__(self, parent, config, theme,
             applied_theme_name, applied_theme_max_colors,
             config_theme_name,
             title_color_pair, box_color_pair,
@@ -259,6 +384,7 @@ class PyRadioThemeSelector(object):
             cursor_color_pair, applied_cursor_color_pair,
             is_transparent, log_file=''):
         self.parent = parent
+        self._cnf = config
         self._theme = theme
         self._applied_theme_name = applied_theme_name
         self._applied_theme_max_colors = applied_theme_max_colors
@@ -280,30 +406,22 @@ class PyRadioThemeSelector(object):
         self._themes = []
         self._themes = [ [ 'dark', 'dark' ] ]
         if curses.COLORS >= 16:
-            self._themes.append([ 'dark_16_colors', 'dark_16_colors' ])
+            self._themes.append([ 'dark_16_colors', '' ])
             self._items += 1
-        self._themes.append([ 'light', 'light' ])
+        self._themes.append([ 'light', '' ])
         if curses.COLORS >= 16:
-            self._themes.append([ 'light_16_colors', 'light_16_colors' ])
+            self._themes.append([ 'light_16_colors', '' ])
             self._items += 1
         if curses.COLORS == 256:
-            self._themes.append([ 'black_on_white', 'black_on_white' ])
-            self._themes.append([ 'white_on_black', 'white_on_black' ])
+            self._themes.append([ 'black_on_white', '' ])
+            self._themes.append([ 'white_on_black', '' ])
             self._items += 2
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('*** items = {}'.format(self._items))
-        self._max_title_width = len(self.TITLE)
-
-
-        ###################################################################
-        #self._themes.append([ 'p light', 'p light' ])
-        #self._themes.append([ 'p black_on_white', 'p black_on_white' ])
-        #self._themes.append([ 'p white_on_black', 'p white_on_black' ])
-        ###################################################################
-        #self._themes.append([ 'my light', 'my light' ])
-        #self._themes.append([ 'my black_on_white', 'my black_on_white' ])
-        #self._themes.append([ 'my white_on_black', 'my white_on_black' ])
-        ###################################################################
+        # scan for package and user themes
+        themes_to_add = self._scan_for_theme_files(self._cnf.stations_dir)
+        #themes_to_add = self._scan_for_theme_files(self._cnf.stations_dir)
+        if themes_to_add:
+            self._themes.extend(themes_to_add)
+            self._items = len(self._themes)
 
         for a_theme in self._themes:
             if len(a_theme[0]) > self._max_title_width:
@@ -313,6 +431,46 @@ class PyRadioThemeSelector(object):
             self.log('max_title_width = {}\n'.format(self._max_title_width))
         self._get_config_and_applied_theme()
         self._get_metrics()
+
+    def _scan_for_theme_files(self, cnf_path, user_themes_first=False):
+        out_themes = []
+        logger.error('DE cnf_path = "{}"'.format(cnf_path))
+        #self.root_path = path.join(path.dirname(__file__), 'stations.csv')
+        theme_dirs = [ path.join(path.dirname(__file__), 'themes'),
+                path.join(cnf_path, 'themes') ]
+        if user_themes_first:
+            theme_dirs.reverse()
+        for theme_dir in theme_dirs:
+            logger.error('DE theme_dir = "{}"'.format(theme_dir))
+            files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
+            logger.error('DE {}'.format(files))
+            if files:
+                for a_file in files:
+                     theme_name, ret = self._can_use_theme(a_file)
+                     if ret:
+                         out_themes.append([ theme_name, a_file ])
+        logger.error('DE {}'.format(out_themes))
+        return out_themes
+
+    def _can_use_theme(self, a_theme):
+        """ Check if theme name contains number of colors.
+            If so, check if the theme can be used on this terminal
+            If not, return True"""
+        a_theme_name = a_theme.split(dir_sep)[-1].replace('.pyradio-theme', '')
+        checks = ('_8', '_16', '_256')
+        logger.error('DE a_theme_name = "{}"'.format(a_theme_name))
+        for a_check in checks:
+            if a_theme_name.endswith(a_check):
+                try:
+                    num_of_colors = int(a_check[1:])
+                    if num_of_colors <= curses.COLORS:
+                        return a_theme_name, True
+                        #return a_theme_name.replace(a_check, ''), True
+                    else:
+                        return '', False
+                except:
+                    return a_theme_name, True
+        return a_theme_name, True
 
     def theme_name(self, val):
         if val < len(self._themes):

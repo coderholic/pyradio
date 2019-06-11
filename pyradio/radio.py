@@ -75,7 +75,7 @@ class PyRadio(object):
 
     _theme = PyRadioTheme()
     _theme_name = 'dark'
-    _theme_slector = None
+    _theme_selector = None
 
     _config_win = None
 
@@ -139,6 +139,7 @@ class PyRadio(object):
 
         curses.use_default_colors()
         self._theme._transparent = self._cnf.use_transparency
+        self._theme.config_dir = self._cnf.stations_dir
         self._theme.readAndApplyTheme(self._theme_name)
         self._theme_name = self._theme.applied_theme_name
 
@@ -640,13 +641,13 @@ class PyRadio(object):
     def _show_theme_selector(self, changed_from_config=False):
         self.jumpnr = ''
         self._random_requested = False
-        self._theme_slector = None
-        self._theme_slector = PyRadioThemeSelector(self.bodyWin, self._theme,
+        self._theme_selector = None
+        self._theme_selector = PyRadioThemeSelector(self.bodyWin, self._cnf, self._theme,
                 self._theme_name, self._theme._applied_theme_max_colors, self._cnf.theme,
                 4, 3, 4, 5, 6, 9, self._theme.getTransparency())
                 #'/home/spiros/edit.log')
-        self._theme_slector.changed_from_config = changed_from_config
-        self._theme_slector.show()
+        self._theme_selector.changed_from_config = changed_from_config
+        self._theme_selector.show()
 
         if logger.isEnabledFor(logging.DEBUG):
             if self.window_mode == CONFIG_MODE:
@@ -1391,7 +1392,7 @@ you have to manually address the issue.
                 self.operation_mode == SEARCH_PLAYLIST_MODE:
             self.search.show(self.bodyWin, repaint=True)
         elif self.operation_mode == THEME_MODE:
-            self._theme_slector.parent = self.bodyWin
+            self._theme_selector.parent = self.bodyWin
             self._show_theme_selector()
         elif self.operation_mode == PLAYLIST_RECOVERY_ERROR_MODE:
             self._print_playlist_recovery_error()
@@ -1418,7 +1419,7 @@ you have to manually address the issue.
         self._theme.toggleTransparency(force_value)
         self._cnf.use_transparency = self._theme.getTransparency()
         if self.operation_mode == THEME_MODE:
-            self._theme_slector.transparent = self._cnf.use_transparency
+            self._theme_selector.transparent = self._cnf.use_transparency
         self.headWin.refresh()
         self.bodyWin.refresh()
         self.footerWin.refresh()
@@ -1711,14 +1712,14 @@ you have to manually address the issue.
             if char not in (ord('m'), ord('v'), ord('.'),
                     ord(','), ord('+'), ord('-'), ord('T'),
                     ord('?'), ord('#'), curses.KEY_RESIZE):
-                theme_id, save_theme = self._theme_slector.keypress(char)
+                theme_id, save_theme = self._theme_selector.keypress(char)
 
                 if theme_id == -1:
                     """ cancel or hide """
-                    self._theme_name = self._theme_slector._applied_theme_name
+                    self._theme_name = self._theme_selector._applied_theme_name
                     if self._config_win:
-                        self._config_win._config_options['theme'][1] = self._theme_slector._applied_theme_name
-                    self._theme_slector = None
+                        self._config_win._config_options['theme'][1] = self._theme_selector._applied_theme_name
+                    self._theme_selector = None
                     self.operation_mode = self.window_mode = self.previous_mode
                     if self.operation_mode == NORMAL_MODE:
                         self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
@@ -1733,13 +1734,14 @@ you have to manually address the issue.
 
                 elif theme_id >= 0:
                     """ valid theme selection """
-                    self._theme_name = self._theme_slector.theme_name(theme_id)
+                    self._theme_name = self._theme_selector.theme_name(theme_id)
                     if self._config_win:
                         self._config_win._config_options['theme'][1] = self._theme_name
                         self._config_win._saved_config_options['theme'][1] = self._theme_name
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Activating theme: {}'.format(self._theme_name))
-                    self._theme.readAndApplyTheme(self._theme_name)
+                    self._theme.readAndApplyTheme(self._theme_name,
+                            theme_path=self._theme_selector._themes[theme_id][1])
                     curses.doupdate()
                     # update config window
                     if self._config_win:

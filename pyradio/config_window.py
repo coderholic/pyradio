@@ -279,8 +279,8 @@ class PyRadioConfigWindow(object):
             self._config_options[ 'dirty_config' ] = [ '', True ]
 
     def _apply_a_theme(self, a_theme, use_transparency=None):
-        theme = PyRadioTheme()
-        theme.readAndApplyTheme(a_theme, use_transparency)
+        theme = PyRadioTheme(self._cnf.stations_dir)
+        theme.readAndApplyTheme(a_theme, use_transparency=use_transparency)
         theme = None
         curses.doupdate()
 
