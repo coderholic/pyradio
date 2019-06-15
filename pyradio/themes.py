@@ -214,11 +214,11 @@ class PyRadioTheme(object):
             self._colors['Path'] = ''
 
         else:
-            # TODO: read a theme from disk
             logger.debug('DE path = {}'.format(a_path))
             if a_path == '':
                 a_path = self._get_theme_path(a_theme)
             if a_path == '':
+                #load default theme
                 self._load_default_theme(self.applied_theme_name)
             else:
                 # read theme from disk
@@ -341,7 +341,6 @@ class PyRadioThemeReadWrite(object):
                 if num_of_colors <= check:
                     return check
         return num_of_colors
-
 
 class PyRadioThemeSelector(object):
     """ Theme Selector Window """
@@ -595,6 +594,14 @@ class PyRadioThemeSelector(object):
                     self._start_pos = 0
         self.refresh()
 
+    def set_theme(self, a_theme):
+        for i, ex_theme in enumerate(self._themes):
+            if ex_theme == a_theme:
+                if self._selection != i:
+                    logger.info('DE ==== setting theme "{}" ===='.format(a_theme))
+                    self.selection = i
+                break
+
     def refresh(self):
         if self.log:
             self.log('======================\n')
@@ -658,19 +665,41 @@ class PyRadioThemeSelector(object):
     def _go_end(self):
         self.selection = len(self._themes)
 
+    def _is_theme_read_only(self, theme_path):
+        if theme_path:
+            themes_path = path.join(path.dirname(__file__), 'themes')
+            logger.info('DE themes_path = {}'.format(themes_path))
+            logger.info('DE theme_path = {}'.format(path.dirname(theme_path)))
+            if themes_path == path.dirname(theme_path):
+                return True
+            else:
+                if access(theme_path, R_OK):
+                    return False
+                else:
+                    return True
+        else:
+            return True
+
     def keypress(self, char):
         """ returns theme_id, save_theme
             return_id
               0-..  : id in self._theme
               -1    : end or canel
-              -2    : go no
+              -2    : ask to create a new theme
+              -3    : go no
             save_them
               True  : theme is to be saved in config
               False : theme is not to be saved in config
         """
         if char in (ord('e'), ):
             # edit theme
-            pass
+            logger.info('DE theme_path = {}'.format(self._themes[self._selection][1]))
+            if self._themes[self._selection][1] == '' or \
+                    self._is_theme_read_only(self._themes[self._selection][1]):
+                # display question to create theme instead
+                return -2, False
+            else:
+                pass
         elif char in (ord('n'), ):
             # new theme
             pass
@@ -747,9 +776,26 @@ class PyRadioThemeSelector(object):
                         self._applied_theme_name = self._config_theme_name
                 self.selection = -1
                 return -1, False
-        return -2, False
+        return -3, False
 
     def _log(self, msg):
         with open(self._log_file, 'a') as log_file:
             log_file.write(msg)
 
+class PyRadioThemeEditor(object):
+
+    theme_name = theme_path = ''
+    editing = False
+    _cnf = None
+    maxX = maxY = 0
+
+    def __init__(self, theme_name, theme_path, editing, config, maxX, maxY):
+        self.theme_name = theme_name
+        self.theme_path = theme_path
+        self.editing = editing
+        self._cnf = config
+        self.maxY = maxX
+        self.maxY = maxY
+
+    def keypress(self, char):
+        pass

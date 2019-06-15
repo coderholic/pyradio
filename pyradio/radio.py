@@ -76,6 +76,7 @@ class PyRadio(object):
     _theme = PyRadioTheme()
     _theme_name = 'dark'
     _theme_selector = None
+    theme_forced_selection = []
 
     _config_win = None
 
@@ -450,7 +451,7 @@ class PyRadio(object):
                 self.startPos = 0
             max_lines = self.bodyMaxY - 2
             if logger.isEnabledFor(logging.INFO):
-                logger.info('max_lines = {0}, self.playing = {1}'.format(max_lines, self.playing))
+                logger.info('max_lines = {0}, items = {1}, self.playing = {2}'.format(max_lines, self.number_of_items, self.playing))
             if self.number_of_items < max_lines:
                 self.startPos = 0
             elif self.playing < self.startPos or \
@@ -638,6 +639,11 @@ class PyRadio(object):
             return 'vlc'
         return self.player.PLAYER_CMD
 
+    def _show_theme_selector_from_config(self):
+        self.previous_mode = self.operation_mode
+        self.operation_mode = THEME_MODE
+        self._show_theme_selector(changed_from_config=True)
+
     def _show_theme_selector(self, changed_from_config=False):
         self.jumpnr = ''
         self._random_requested = False
@@ -691,10 +697,11 @@ class PyRadio(object):
         inner_width = self._get_message_width_from_list(lines) + 4
         outer_height = inner_height + 2
         outer_width = inner_width + 2
-        if (self.window_mode == CONFIG_MODE and \
+        if ((self.window_mode == CONFIG_MODE and \
                 self.operation_mode > CONFIG_HELP_MODE) or \
                 (self.window_mode == NORMAL_MODE and \
-                self.operation_mode == SELECT_ENCODING_HELP_MODE):
+                self.operation_mode == SELECT_ENCODING_HELP_MODE)) and \
+                self.operation_mode != ASK_TO_CREATE_NEW_THEME_MODE:
             use_empty_win = True
             height_to_use = outer_height
             width_to_use = outer_width
@@ -1157,6 +1164,18 @@ you have to manually address the issue.
                 prompt = ' Press any key ',
                 is_message=True)
 
+    def _print_ask_to_create_theme(self):
+        txt ='''You have requested to edit a |read-only| theme,
+            which is not possible.
+
+            Do you want to create a new theme instead?
+
+            Press "|y|" to accept or "|n|" to reject'''
+        self._show_help(txt, ASK_TO_CREATE_NEW_THEME_MODE,
+                caption = ' Read-only theme ',
+                prompt = ' ',
+                is_message=True)
+
     def _print_config_save_error(self):
         txt = '''An error occured while saving the configuration file!
 
@@ -1346,6 +1365,8 @@ you have to manually address the issue.
             return self._cnf.default_encoding
 
     def _redisplay_transient_window(self):
+        if self._theme_selector:
+            self.theme_forced_selection = self._theme_selector._themes[self._theme_selector.selection]
         if self._cnf.playlist_recovery_result == -1:
             self._show_playlist_recovered()
             return
@@ -1394,8 +1415,21 @@ you have to manually address the issue.
         elif self.operation_mode == THEME_MODE:
             self._theme_selector.parent = self.bodyWin
             self._show_theme_selector()
+            if self.theme_forced_selection:
+                self._theme_selector.set_theme(self.theme_forced_selection)
         elif self.operation_mode == PLAYLIST_RECOVERY_ERROR_MODE:
             self._print_playlist_recovery_error()
+        elif self.operation_mode == ASK_TO_CREATE_NEW_THEME_MODE:
+            logger.error('DE previous_mode = {}'.format(self.previous_mode))
+            logger.error('DE previous_operation_mode = {}'.format(self.previous_operation_mode))
+            self._theme_selector.parent = self.bodyWin
+            if self.previous_operation_mode == CONFIG_MODE:
+                self._show_theme_selector_from_config()
+            else:
+                self._show_theme_selector()
+            self._print_ask_to_create_theme()
+            if self.theme_forced_selection:
+                self._theme_selector.set_theme(self.theme_forced_selection)
 
     def play_random(self):
         # Pick a random radio station
@@ -1429,11 +1463,6 @@ you have to manually address the issue.
                 self._config_win._saved_config_options['use_transparency'][1] = self._cnf.use_transparency
                 self._config_win._old_use_transparency = self._cnf.use_transparency
 
-    def _show_theme_selector_from_config(self):
-                self.previous_mode = self.operation_mode
-                self.operation_mode = THEME_MODE
-                self._show_theme_selector(changed_from_config=True)
-
     def _show_config_window(self):
         if self._config_win is None:
             self._config_win = PyRadioConfigWindow(self.bodyWin,
@@ -1466,6 +1495,7 @@ you have to manually address the issue.
                 self.jumpnr = ''
                 self._random_requested = False
                 self._config_win = None
+                self.theme_forced_selection = None
                 if self.operation_mode == NORMAL_MODE:
                     self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self.stations]
                 self.previous_mode = self.operation_mode
@@ -1708,6 +1738,31 @@ you have to manually address the issue.
                     self._config_win.refresh_config_win()
                 return
 
+        elif self.operation_mode == ASK_TO_CREATE_NEW_THEME_MODE:
+            if self.theme_forced_selection:
+                self._theme_selector.set_theme(self.theme_forced_selection)
+            if char in (ord('y'), ):
+                pass
+                #ret = self._cnf.copy_playlist_to_config_dir()
+                #if ret == 0:
+                #    self.operation_mode = self.window_mode = NORMAL_MODE
+                #    self.refreshBody()
+                #    if logger.isEnabledFor(logging.DEBUG):
+                #        logger.debug('MODE: ASK_TO_CREATE_NEW_THEME_MODE -> THEME_MODE')
+                #elif ret == 1:
+                #    self._print_foreign_playlist_message()
+                #else:
+                #    """ error """
+                #    self._print_foreign_playlist_copy_error()
+            elif char in (ord('n'), ):
+                self.operation_mode = THEME_MODE
+                self.refreshBody()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('MODE: Cancel ASK_TO_CREATE_NEW_THEME_MODE -> THEME_MODE')
+            elif not char in (ord('#'), curses.KEY_RESIZE):
+                # Do this here to properly resize
+                return
+
         elif self.operation_mode == THEME_MODE:
             if char not in (ord('m'), ord('v'), ord('.'),
                     ord(','), ord('+'), ord('-'), ord('T'),
@@ -1731,6 +1786,11 @@ you have to manually address the issue.
                         else:
                             logger.debug('MODE: THEME_MODE => PLAYLIST_MODE')
                     self.refreshBody()
+
+                elif theme_id == -2:
+                    self.theme_forced_selection = self._theme_selector._themes[self._theme_selector.selection]
+                    # ask to create new theme
+                    self._print_ask_to_create_theme()
 
                 elif theme_id >= 0:
                     """ valid theme selection """
