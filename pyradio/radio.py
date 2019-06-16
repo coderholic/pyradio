@@ -640,6 +640,8 @@ class PyRadio(object):
         return self.player.PLAYER_CMD
 
     def _show_theme_selector_from_config(self):
+        self._theme_name = self._config_win._config_options['theme'][1]
+        logger.error('DE\n\nreseting self._theme_name = {}\n\n'.format(self._theme_name))
         self.previous_mode = self.operation_mode
         self.operation_mode = THEME_MODE
         self._show_theme_selector(changed_from_config=True)
@@ -648,6 +650,7 @@ class PyRadio(object):
         self.jumpnr = ''
         self._random_requested = False
         self._theme_selector = None
+        logger.error('DE\n\nself._theme = {0}\nself._theme_name = {1}\nself._cnf.theme = {2}\n\n'.format(self._theme, self._theme_name, self._cnf.theme))
         self._theme_selector = PyRadioThemeSelector(self.bodyWin, self._cnf, self._theme,
                 self._theme_name, self._theme._applied_theme_max_colors, self._cnf.theme,
                 4, 3, 4, 5, 6, 9, self._theme.getTransparency())
@@ -827,7 +830,7 @@ class PyRadio(object):
                      Esc|/|q|/|Left|/|h     |Cancel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / |S|ave volume (not in vlc).
+                     m v              ||M|ute player / Save |v|olume (not in vlc).
                      %_Other Keys_
                      T                |Toggle transparency."""
             self._show_help(txt, mode_to_set=PLAYLIST_HELP_MODE, caption=' Playlist Help ')
@@ -869,7 +872,7 @@ class PyRadio(object):
                      r                |Select and play a random station.
                      Space|/|Left|/|h     |Stop/start playing selected station.
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / |S|ave volume (not in vlc).
+                     m v              ||M|ute player / Save |v|olume (not in vlc).
                      o s R            ||O|pen / |S|ave / |R|eload playlist.
                      e                |Change station's encoding.
                      DEL|,|x            |Delete selected station.
@@ -904,7 +907,7 @@ class PyRadio(object):
                      Esc|/|q|/|Left|/|h     |Close window.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / |S|ave volume (not in vlc)."""
+                     m v              ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=THEME_HELP_MODE, caption=' Themes Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = THEME_HELP_MODE')
@@ -920,7 +923,7 @@ class PyRadio(object):
                      Esc|/|q|/|Left|/|h           |Cancel.
                      %_Player Keys_
                      -|/|+| or |,|/|.             |Change volume.
-                     m v                    ||M|ute player / |S|ave volume (not in vlc)."""
+                     m v                    ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=CONFIG_HELP_MODE, caption=' Configuration Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = CONFIG_HELP_MODE')
@@ -935,7 +938,7 @@ class PyRadio(object):
                      Esc|/|q|/|Left|/|h     |Cancel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / |S|ave volume (not in vlc)."""
+                     m v              ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=SELECT_PLAYER_HELP_MODE, caption=' Player Selection Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = SELECT_PLAYER_HELP_MODE')
@@ -950,7 +953,7 @@ class PyRadio(object):
                      Esc|/|q|/|Left|/|h     |Canel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / |S|ave volume (not in vlc)."""
+                     m v              ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=SELECT_PLAYLIST_HELP_MODE, caption=' Playlist Selection Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = SELECT_PLAYLIST_HELP_MODE')
@@ -965,7 +968,7 @@ class PyRadio(object):
                      Esc|/|q|/|Left|/|h     |Canel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / |S|ave volume (not in vlc)."""
+                     m v              ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=SELECT_STATION_HELP_MODE, caption=' Station Selection Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = SELECT_STATION_HELP_MODE')
@@ -978,7 +981,7 @@ class PyRadio(object):
                      Esc|/|q            |Cancel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / |S|ave volume (not in vlc)."""
+                     m v              ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=SELECT_ENCODING_HELP_MODE, caption=' Encoding Selection Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = SELECT_ENCODING_HELP_MODE')

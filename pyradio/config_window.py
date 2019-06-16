@@ -390,6 +390,7 @@ class PyRadioConfigWindow(object):
                 return SELECT_ENCODING_MODE, []
             elif sel == 'theme':
                 self._cnf.theme = self._old_theme
+                logger.error('DE\n\nshowing theme self._cnf.theme = {}\n\n'.format(self._cnf.theme))
                 self._show_theme_selector_function()
             elif sel == 'default_playlist':
                 return SELECT_PLAYLIST_MODE, []
