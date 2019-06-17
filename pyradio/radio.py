@@ -1169,11 +1169,10 @@ you have to manually address the issue.
 
     def _print_ask_to_create_theme(self):
         txt ='''You have requested to edit a |read-only| theme,
-            which is not possible.
+            which is not possible. Do you want to create a
+            new theme instead?
 
-            Do you want to create a new theme instead?
-
-            Press "|y|" to accept or "|n|" to reject'''
+            Press "|y|" to accept or any other key to cancel.'''
         self._show_help(txt, ASK_TO_CREATE_NEW_THEME_MODE,
                 caption = ' Read-only theme ',
                 prompt = ' ',
@@ -1430,9 +1429,9 @@ you have to manually address the issue.
                 self._show_theme_selector_from_config()
             else:
                 self._show_theme_selector()
-            self._print_ask_to_create_theme()
             if self.theme_forced_selection:
                 self._theme_selector.set_theme(self.theme_forced_selection)
+            self._print_ask_to_create_theme()
 
     def play_random(self):
         # Pick a random radio station
@@ -1757,14 +1756,13 @@ you have to manually address the issue.
                 #else:
                 #    """ error """
                 #    self._print_foreign_playlist_copy_error()
-            elif char in (ord('n'), ):
-                self.operation_mode = THEME_MODE
-                self.refreshBody()
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: Cancel ASK_TO_CREATE_NEW_THEME_MODE -> THEME_MODE')
             elif not char in (ord('#'), curses.KEY_RESIZE):
-                # Do this here to properly resize
-                return
+                    self.operation_mode = THEME_MODE
+                    self.refreshBody()
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('MODE: Cancel ASK_TO_CREATE_NEW_THEME_MODE -> THEME_MODE')
+                    # Do this here to properly resize
+                    return
 
         elif self.operation_mode == THEME_MODE:
             if char not in (ord('m'), ord('v'), ord('.'),

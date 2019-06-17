@@ -332,6 +332,8 @@ Example:
 5. **white_on_black** or **wob** (256 color b&w theme). A theme for dark terminal background settings.
 6. **black_on_white** or **bow** (256 color b&w theme). A theme for light terminal background settings.
 
+and three 256-color system themes (these are actual files saved in the **themes** installation directory): 1. **brown_by_sng**, **pink_by_sng** and **purple_by_sng**.
+
 The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)
 
 Pressing "**t**" will bring up the *Theme selection window*, which can be used to activate a theme and set the default one.

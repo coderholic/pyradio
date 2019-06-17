@@ -351,6 +351,7 @@ class PyRadioThemeSelector(object):
     selection = _selection = _start_pos = _items = 0
 
     _themes = []
+    _title_ids = []
 
     # display the 2 internal 8 color themes
     _items = 2
@@ -421,6 +422,7 @@ class PyRadioThemeSelector(object):
         if themes_to_add:
             self._themes.extend(themes_to_add)
             self._items = len(self._themes)
+            self._get_titles_ids()
 
         for a_theme in self._themes:
             if len(a_theme[0]) > self._max_title_width:
@@ -439,17 +441,33 @@ class PyRadioThemeSelector(object):
                 path.join(cnf_path, 'themes') ]
         if user_themes_first:
             theme_dirs.reverse()
-        for theme_dir in theme_dirs:
+        for i, theme_dir in enumerate(theme_dirs):
             logger.error('DE theme_dir = "{}"'.format(theme_dir))
             files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
             logger.error('DE {}'.format(files))
             if files:
+                tmp_themes = []
                 for a_file in files:
                      theme_name, ret = self._can_use_theme(a_file)
                      if ret:
-                         out_themes.append([ theme_name, a_file ])
+                         tmp_themes.append([ theme_name, a_file ])
+                if tmp_themes:
+                    tmp_themes.sort()
+                    tmp_themes.reverse()
+                    if i == 0:
+                        tmp_themes.append(['System Themes', '-'])
+                    else:
+                        tmp_themes.append(['User Themes', '-'])
+                    tmp_themes.reverse()
+                    out_themes.extend(tmp_themes)
         logger.error('DE {}'.format(out_themes))
         return out_themes
+
+    def _get_titles_ids(self):
+        for i, a_theme in enumerate(self._themes):
+            if a_theme[1] == '-':
+                self._title_ids.append(i)
+        logger.info('DE self._title_ids = {}'.format(self._title_ids))
 
     def _can_use_theme(self, a_theme):
         """ Check if theme name contains number of colors.
@@ -545,7 +563,7 @@ class PyRadioThemeSelector(object):
 
         self._page_jump = int(self._items / 2)
         self._win = None
-        self._win=curses.newwin(self._height, self._width, self.Y, self.X)
+        self._win = curses.newwin(self._height, self._width, self.Y, self.X)
         self._win.bkgdset(' ', curses.color_pair(self._box_color_pair))
         #self._win.erase()
         self._draw_box()
@@ -608,7 +626,9 @@ class PyRadioThemeSelector(object):
             self.log('{}\n'.format(self._themes))
         for i in range(self._start_pos, self._start_pos + self._items):
             token = ' '
-            if self._start_pos + i == self.selection:
+            if i in self._title_ids:
+                col = curses.color_pair(self._title_color_pair)
+            elif self._start_pos + i == self.selection:
                 # on selection, display cursor
                 if self._selection == self._applied_theme:
                     col = curses.color_pair(self._applied_cursor_color_pair)
@@ -622,7 +642,27 @@ class PyRadioThemeSelector(object):
             self._win.hline(i + 1, 1, ' ', self._max_title_width + 2, col)
             if self._start_pos + i == self._config_theme:
                 token = '*'
-            self._win.addstr(i+1, 1, token + self._themes[i][0], col)
+            if i in self._title_ids:
+                self._win.move(i + 1, 0)
+                try:
+                    self._win.addstr('├', curses.color_pair(3))
+                    self._win.move(i + 1, len(self._themes[i][0]) + 3)
+                    self._win.addstr('─' * (self._width - 2 - len(self._themes[i][0]) - 2), curses.color_pair(3))
+                    try:
+                        self._win.addstr('┤', curses.color_pair(3))
+                    except:
+                        pass
+                except:
+                    self._win.addstr('├'.encode('utf-8'), curses.color_pair(3))
+                    self._win.move(i + 1, len(self._themes[i][0]) + 2)
+                    self._win.addstr('─'.encode('utf-8') * (self._width - 2 - len(self._themes[i][0]) - 2), curses.color_pair(3))
+                    try:
+                        self._win.addstr('┤'.encode('utf-8'), curses.color_pair(3))
+                    except:
+                        pass
+                self._win.addstr(i+1, 1, token + self._themes[i][0], col)
+            else:
+                self._win.addstr(i+1, 1, token + self._themes[i][0], col)
 
         try:
             self._win.move(sel, self._width - 2)
@@ -632,7 +672,8 @@ class PyRadioThemeSelector(object):
         if self._transparent:
             self._win.addstr(self._height-1, self._width -4, '[T]', curses.color_pair(self._box_color_pair))
         else:
-            self._draw_box()
+            pass
+            #self._draw_box()
         self._win.refresh()
         curses.doupdate()
 
@@ -643,6 +684,8 @@ class PyRadioThemeSelector(object):
 
     def _go_up(self):
         self._selection -= 1
+        if self._selection in self._title_ids:
+            self._selection -= 1
         if self._selection < 0:
             self.selection = len(self._themes) - 1
         elif self._selection == self._start_pos -1:
@@ -651,6 +694,8 @@ class PyRadioThemeSelector(object):
 
     def _go_down(self):
         self._selection += 1
+        if self._selection in self._title_ids:
+            self._selection += 1
         if self._selection == len(self._themes):
             self.selection = 0
         elif self._selection == self._start_pos + self._items:
@@ -739,12 +784,16 @@ class PyRadioThemeSelector(object):
                 self._go_end()
             else:
                 num = int(self.jumpnr) - 1
+                if num in self._title_ids:
+                    num += 1
                 if num >= 0:
                     self.selection = num
                     self.jumpnr = ''
         elif char in (curses.KEY_NPAGE, ):
             self.jumpnr = ''
             sel = self._selection + self._page_jump
+            if sel in self._title_ids:
+                sel += 1
             if self._selection == len(self._themes) - 1:
                 sel = 0
             elif sel >= len(self._themes):
@@ -753,6 +802,8 @@ class PyRadioThemeSelector(object):
         elif char in (curses.KEY_PPAGE, ):
             self.jumpnr = ''
             sel = self._selection - self._page_jump
+            if sel in self._title_ids:
+                sel -= 1
             if self._selection == 0:
                 sel = len(self._themes) - 1
             elif sel < 0:
