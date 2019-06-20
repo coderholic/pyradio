@@ -28,6 +28,15 @@ from .themes import *
 from . import player
 import logging
 
+CAN_CHECK_FOR_UPDATES = True
+try:
+    from urllib.request import urlopen
+except ImportError:
+    try:
+        from urllib2 import urlopen
+    except ImportError:
+        CAN_CHECK_FOR_UPDATES = False
+
 logger = logging.getLogger(__name__)
 
 import locale
@@ -89,7 +98,10 @@ class PyRadio(object):
 
     _old_config_encoding = ''
 
-    #_recovery_lock = threading.Lock()
+
+    _update_version = '0.8'
+    _update_notify_lock = threading.Lock()
+    _update_version_do_display = ''
 
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
         self._cnf = pyradio_config
@@ -399,6 +411,10 @@ class PyRadio(object):
             except KeyboardInterrupt:
                 pass
         else:
+            # start update thread
+            if CAN_CHECK_FOR_UPDATES:
+                pass
+
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write('Selected player: {}'.format(self._format_player_string()), help_msg=True)
             #self.log.write_right('Press ? for help')
@@ -1191,6 +1207,23 @@ you have to manually address the issue.
                 prompt = ' Press any key to exit ',
                 is_message=True)
 
+    def _print_update_notification(self):
+        txt = '''A new |PyRadio| release (|{0}|) is available!
+
+                 You are strongly encouraged to update now, so that
+                 you enjoy new features and bug fixes.
+
+                 You can get more info at:
+                 |https://github.com/coderholic/pyradio#installation|
+            '''
+        self._show_help(txt.format(self._update_version_do_display),
+                mode_to_set = UPDATE_NOTIFICATION_MODE,
+                caption = ' New Release Available ',
+                prompt = ' Press any key to hide ',
+                is_message=True)
+        self._update_version = ''
+
+
     def _align_stations_and_refresh(self, cur_mode):
         need_to_scan_playlist = False
         """ refresh reference """
@@ -1380,6 +1413,8 @@ you have to manually address the issue.
             self.operation_mode == SELECT_PLAYLIST_HELP_MODE or \
             self.operation_mode == SELECT_STATION_HELP_MODE:
                 self._print_help()
+        elif self.operation_mode == UPDATE_NOTIFICATION_MODE:
+            self._print_update_notification()
         elif self.operation_mode == SELECT_ENCODING_HELP_MODE:
             if self.window_mode == NORMAL_MODE:
                 self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
@@ -1827,6 +1862,18 @@ you have to manually address the issue.
                 self.refreshBody()
             return
 
+        elif self.operation_mode == UPDATE_NOTIFICATION_MODE:
+            self.helpWinContainer = None
+            self.helpWin = None
+            self.operation_mode = NORMAL_MODE
+            self._update_notify_lock.acquire()
+            self._update_version = ''
+            self._update_notify_lock.release()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('MODE: UPDATE_NOTIFICATION_MODE => NORMAL_MODE')
+            self.refreshBody()
+            return
+
         elif self.operation_mode == NO_PLAYER_ERROR_MODE:
             """ if no player, don't serve keyboard """
             return
@@ -1972,6 +2019,16 @@ you have to manually address the issue.
             """ exit due to scan error """
             self.stopPlayer()
             return -1
+
+        elif self.operation_mode == UPDATE_NOTIFICATION_MODE:
+            self.helpWinContainer = None
+            self.helpWin = None
+            self.operation_mode = self.window_mode = NORMAL_MODE
+            #self.setupAndDrawScreen()
+            self.refreshBody()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('MODE: UPDATE_NOTIFICATION_MODE -> NORMAL_MODE')
+            return
 
         elif self.operation_mode == PLAYLIST_RECOVERY_ERROR_MODE:
             self._cnf.playlist_recovery_result = 0
@@ -2420,7 +2477,11 @@ you have to manually address the issue.
                     if self.number_of_items > 0:
                         self.playSelection()
                         self.refreshBody()
-                        #self.setupAndDrawScreen()
+                        self._update_notify_lock.acquire()
+                        if self._update_version:
+                            self._update_version_do_display = self._update_version
+                            self._print_update_notification()
+                        self._update_notify_lock.release()
                     return
 
                 elif char in (ord(' '), curses.KEY_LEFT, ord('h')):
@@ -2432,6 +2493,11 @@ you have to manually address the issue.
                         else:
                             self.playSelection()
                         self.refreshBody()
+                        self._update_notify_lock.acquire()
+                        if self._update_version:
+                            self._update_version_do_display = self._update_version
+                            self._print_update_notification()
+                        self._update_notify_lock.release()
                     return
 
                 elif char in(ord('x'), curses.KEY_DC):
@@ -2529,4 +2595,13 @@ you have to manually address the issue.
                             self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self._cnf.playlists)
                         self.refreshBody()
 
+    def detectUpdateThread(self, *args):
+        """ a thread to check if an update is available
+
+        arg[0]: config dir
+        arg[1]: lock
+        """
+        while True:
+
+            pass
 # pymode:lint_ignore=W901
