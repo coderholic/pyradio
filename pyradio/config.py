@@ -45,6 +45,8 @@ class PyRadioStations(object):
 
     playlist_recovery_result = 0
 
+    locked = False
+
     def __init__(self, stationFile=''):
 
         if sys.platform.startswith('win'):
@@ -60,15 +62,25 @@ class PyRadioStations(object):
                 sys.exit(1)
         self.root_path = path.join(path.dirname(__file__), 'stations.csv')
 
-        """ If a station.csv file exitst, which is wrong,
-            we rename it to stations.csv """
-        if path.exists(path.join(self.stations_dir, 'station.csv')):
-                copyfile(path.join(self.stations_dir, 'station.csv'),
-                        path.join(self.stations_dir, 'stations.csv'))
-                remove(path.join(self.stations_dir, 'station.csv'))
+        if path.exists(path.join(self.stations_dir, '.lock')):
+                self.locked = True
+        else:
+            try:
+                with open(path.join(self.stations_dir, '.lock'), 'w') as f:
+                    pass
+            except:
+                pass
 
-        self._move_old_csv(self.stations_dir)
-        self._check_stations_csv(self.stations_dir, self.root_path)
+        if not self.locked:
+            """ If a station.csv file exitst, which is wrong,
+                we rename it to stations.csv """
+            if path.exists(path.join(self.stations_dir, 'station.csv')):
+                    copyfile(path.join(self.stations_dir, 'station.csv'),
+                            path.join(self.stations_dir, 'stations.csv'))
+                    remove(path.join(self.stations_dir, 'station.csv'))
+
+            self._move_old_csv(self.stations_dir)
+            self._check_stations_csv(self.stations_dir, self.root_path)
 
     def _move_old_csv(self, usr):
         """ if a ~/.pyradio files exists, relocate it in user
@@ -696,7 +708,12 @@ class PyRadioConfig(PyRadioStations):
             Returns:
                 -1: Error saving config
                  0: Config saved successfully
-                 1: Config not saved (not modified"""
+                 1: Config not saved (not modified)
+                 TODO: 2: Config not saved (session locked) """
+        if self.locked:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Config not saved (session locked)')
+            return 1
         if not self.opts['dirty_config'][1]:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (not modified)')

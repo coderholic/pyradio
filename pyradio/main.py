@@ -40,11 +40,6 @@ def shell():
         print('Pyradio requires python 2.7 or 3.5+...')
         sys.exit(1)
 
-    # set window title
-    try:
-        sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player\x07")
-    except:
-        pass
     requested_player = ''
     parser = ArgumentParser(description="Curses based Internet radio player")
     parser.add_argument("-s", "--stations", default='',
@@ -67,12 +62,23 @@ def shell():
                         help="Print config directory location and exit.")
     parser.add_argument("-ocd", "--open-config-dir", action='store_true',
                         help="Open config directory with default file manager.")
+    parser.add_argument('--unlock', action='store_true',
+                        help="Remove sessions' lock file.")
     parser.add_argument("-d", "--debug", action='store_true',
                         help="Start pyradio in debug mode.")
     args = parser.parse_args()
 
     sys.stdout.flush()
     pyradio_config = PyRadioConfig()
+
+    # set window title
+    try:
+        if pyradio_config.locked:
+            sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player (session locked)\x07")
+        else:
+            sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player\x07")
+    except:
+        pass
 
     if args.show_config_dir:
         print('PyRadio config dir: "{}"'.format(pyradio_config.stations_dir))
@@ -84,6 +90,19 @@ def shell():
 
     if args.list_playlists:
         pyradio_config.list_playlists()
+        sys.exit()
+
+    if args.unlock:
+        lock_file = path.join(pyradio_config.stations_dir, '.lock')
+        if path.exists(lock_file):
+            from os import remove
+            try:
+                remove(lock_file)
+                print('Lock file removed...')
+            except:
+                print('Failed to remove Lock file...')
+        else:
+            print('Lock file not found...')
         sys.exit()
 
     if args.list is False and args.add is False:

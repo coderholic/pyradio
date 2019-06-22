@@ -17,8 +17,7 @@ from sys import version as python_version, version_info
 from os.path import join, basename, getmtime, getsize
 from platform import system
 from time import ctime, sleep
-#from copy import deepcopy
-#from textwrap import wrap
+from datetime import datetime
 
 from .common import *
 from .config_window import *
@@ -98,10 +97,14 @@ class PyRadio(object):
 
     _old_config_encoding = ''
 
-
-    _update_version = '0.8'
-    _update_notify_lock = threading.Lock()
+    # update notification
+    _update_version = ''
     _update_version_do_display = ''
+    _update_notification_thread = None
+    stop_update_notification_thread = False
+    _update_notify_lock = threading.Lock()
+
+    _locked = False
 
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
         self._cnf = pyradio_config
@@ -413,7 +416,14 @@ class PyRadio(object):
         else:
             # start update thread
             if CAN_CHECK_FOR_UPDATES:
-                pass
+                if self._cnf.locked:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('(detectUpdateThread): session locked. Not starting!!!')
+                else:
+                    self._update_notification_thread = threading.Thread(target=self.detectUpdateThread,
+                            args=(self._cnf.stations_dir, self._update_notify_lock,
+                                lambda: self.stop_update_notification_thread))
+                    self._update_notification_thread.start()
 
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write('Selected player: {}'.format(self._format_player_string()), help_msg=True)
@@ -458,6 +468,24 @@ class PyRadio(object):
         """ Try to auto save config on exit
             Do not check result!!! """
         self._cnf.save_config()
+        if not self._cnf.locked:
+            lock_file = path.join(self._cnf.stations_dir, '.lock')
+            if path.exists(lock_file):
+                try:
+                    os.remove(lock_file)
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Lock file removed...')
+                except:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Failed to remove Lock file...')
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Lock file not found...')
+
+        if self._update_notification_thread:
+            if self._update_notification_thread.is_alive():
+                self.stop_update_notification_thread = True
+                self._update_notification_thread.join()
 
     def _goto_playing_station(self, changing_playlist=False):
         """ make sure playing station is visible """
@@ -1509,6 +1537,169 @@ you have to manually address the issue.
         else:
             self._config_win.parent = self.bodyWin
             self._config_win.refresh_config_win()
+
+
+    def detectUpdateThread(self, a_path, a_lock, stop):
+        """ a thread to check if an update is available """
+
+        def delay(secs, stop):
+            for i in range(0, 2 * secs):
+                sleep(.5)
+                if stop():
+                    return
+
+        def to_ver(this_version):
+            a_v = this_version.replace('-r', '.')
+            a_l = a_v.split('.')
+            a_n_l = []
+            for n in a_l:
+                a_n_l.append(int(n))
+            return a_n_l
+
+        def clean_date_files(files, start=0):
+            files_to_delete = files[start+1:]
+            for a_file in files_to_delete:
+                try:
+                    remove(a_file)
+                except:
+                    pass
+
+        def create_tadays_date_file(a_path):
+            d1 = datetime.now()
+            now_str = d1.strftime('%Y-%m-%d')
+            try:
+                with open(path.join(a_path, '.' + now_str + '.date'), 'w') as f:
+                    pass
+            except:
+                pass
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('detectUpdateThread: starting...')
+        ##################
+        #delay(5, stop)
+        from pyradio import version as this_version
+        connection_fail_count = 0
+        delay(random.randint(25, 45), stop)
+        if stop():
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('detectUpdateThread: Asked to stop. Stoping...')
+            return
+        files = glob.glob(path.join(a_path, '.*.date'))
+        if files:
+            files.sort(reverse=True)
+            if len(files) > 1:
+                clean_date_files(files)
+            a_date = path.split(path.splitext(files[0])[0])[1][1:]
+
+
+            d1 = datetime.now()
+            d2 = datetime.strptime(a_date, '%Y-%m-%d')
+            delta = (d1 - d2).days
+
+            if delta > 3:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('detectUpdateThread: checking for updates')
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    if 3 - delta == 1:
+                        logger.debug('detectUpdateThread: Will check tomorrow...')
+                    else:
+                        logger.debug('detectUpdateThread: Will check in {} days...'.format(3 - delta))
+                return
+
+        url = 'https://api.github.com/repos/coderholic/pyradio/tags'
+        while True:
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('detectUpdateThread: Asked to stop. Stoping...')
+                break
+            if version_info < (3, 0):
+                try:
+                    last_tag = urlopen(url).read(300)
+                except:
+                    last_tag = None
+            else:
+                try:
+                    with urlopen(url) as https_response:
+                        last_tag = https_response.read(300)
+                except:
+                    last_tag = None
+
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('detectUpdateThread: Asked to stop. Stoping...')
+                break
+            if last_tag:
+                connection_fail_count = 0
+                x = str(last_tag).split('"name":"')
+                last_tag = x[1].split('"')[0]
+                #last_tag = '0.9.9'
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('detectUpdateThread: Upstream version found: {}'.format(last_tag))
+                if this_version == last_tag:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('detectUpdateThread: No update found. Exiting...')
+                    break
+                else:
+                    existing_version = to_ver(this_version)
+                    new_version = to_ver(last_tag)
+                    if existing_version < new_version:
+                        if stop():
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('detectUpdateThread: Asked to stop. Stoping...')
+                            break
+                        # remove all existing date files
+                        clean_date_files(files, -1)
+                        ############
+                        #delay(5 , stop)
+                        delay(random.randint(120, 300), stop)
+                        if stop():
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('detectUpdateThread: Asked to stop. Stoping...')
+                            break
+                        # set new verion
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('detectUpdateThread: Update available: {}'.format(last_tag))
+                        a_lock.acquire()
+                        self._update_version = last_tag
+                        a_lock.release()
+                        while True:
+                            """ Wait until self._update_version becomes ''
+                                which means that notification window has been
+                                displayed. Then create date file and exit.
+                                If asked to terminate, do not write date file """
+                            ########################33
+                            #delay(5, stop)
+                            delay(60, stop)
+                            if stop():
+                                if logger.isEnabledFor(logging.DEBUG):
+                                    logger.debug('detectUpdateThread: Asked to stop. Stoping but not writing date file...')
+                                return
+                            a_lock.acquire()
+                            if self._update_version == '':
+                                a_lock.release()
+                                # create today's date file
+                                create_tadays_date_file(a_path)
+                                if logger.isEnabledFor(logging.INFO):
+                                    logger.info('detectUpdateThread: Terminating after notification... I will check again in 3 days')
+                                return
+                            a_lock.release()
+                    else:
+                        if logger.isEnabledFor(logging.ERROR):
+                            logger.error('detectUpdateThread: Ahead of upstream? (current version: {0}, upstream version: {1})'.format(this_version, last_tag))
+                        break
+
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('detectUpdateThread: Error: Cannot get upstream version!!!')
+                connection_fail_count += 1
+                if connection_fail_count > 4:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('detectUpdateThread: Error: Too many connection failures. Exiting')
+                    break
+                delay(60, stop)
+
+
 
     def keypress(self, char):
 
@@ -2595,13 +2786,4 @@ you have to manually address the issue.
                             self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self._cnf.playlists)
                         self.refreshBody()
 
-    def detectUpdateThread(self, *args):
-        """ a thread to check if an update is available
-
-        arg[0]: config dir
-        arg[1]: lock
-        """
-        while True:
-
-            pass
 # pymode:lint_ignore=W901
