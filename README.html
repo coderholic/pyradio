@@ -40,6 +40,8 @@
 <li><a href="#player-detection-selection">Player detection / selection</a></li>
 <li><a href="#player-default-volume-level">Player default volume level</a></li>
 <li><a href="#pyradio-themes">PyRadio Themes</a></li>
+<li><a href="#session-locking">Session Locking</a></li>
+<li><a href="#update-notification">Update notification</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
 </ul>
 <h2 id="requirements">Requirements</h2>
@@ -112,7 +114,7 @@ c                 Open Configuration window.                -                   
 Esc/q             Quit                                      -                                  -
 Esc/q/Left/h      -                                         Cancel / close window              Cancel / close window</pre>
 <p>The same logic applies to all <strong>PyRadio</strong> windows.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All windows support changing the volume and muting / unmuting the player (provided that it is actually connected to a station).</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All windows support changing the volume and muting / unmuting the player (provided that <strong>PyRadio</strong> is actually connected to a station).</p>
 <h2 id="config-file">Config file</h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong><em>PyRadio</em></strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong><em>PyRadio</em></strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
@@ -244,6 +246,14 @@ volume=28</pre>
 <p>Pressing “<strong>T</strong>” will toggle the transparency setting and save this state in <strong>PyRadio</strong>’s configuration file (transparency is off by default).</p>
 <p>Setting transparency on, will actually force <strong>PyRadio</strong> to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
 <p>When the <em>Theme selection window</em> is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that transparency is <em>on</em>.</p>
+<h2 id="session-locking">Session Locking</h2>
+<p><strong>PyRadio</strong> uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.</p>
+<p>Subsequent instances will be “<em>locked</em>”. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will <strong>not</strong> be recorded in the configuration file.</p>
+<h3 id="seeeion-unlocking">Seeeion unlocking</h3>
+<p>If for any reason <strong>PyRadio</strong> always starts in <em>locked mode</em>, one can <strong>unclock</strong> the session, using the “<em>–unlock</em>” command line paremater.</p>
+<h2 id="update-notification">Update notification</h2>
+<p><strong>PyRadio</strong> will periodically (once every 10 days) check whether a new version has been released.</p>
+<p>If so, a notification message will be displayed, informing the user about it.</p>
 <h2 id="debug-mode">Debug mode</h2>
 <p>Adding the <strong><em>-d</em></strong> option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a href="https://github.com/coderholic/pyradio/issues">open in github</a>.</p>

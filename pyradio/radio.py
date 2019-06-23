@@ -107,6 +107,13 @@ class PyRadio(object):
     _locked = False
 
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
+        #print('{}'.format(MODE_NAMES))
+        #print('\n\n{0}\n{1}'.format(PASSIVE_WINDOWS, len(PASSIVE_WINDOWS)))
+
+        #for n in PASSIVE_WINDOWS.items():
+        #    print('{0} {1}: {2} {3}'.format(n[0], MODE_NAMES[n[0]], n[1], MODE_NAMES[n[1]]))
+
+        #sys.exit()
         self._cnf = pyradio_config
         if theme:
             self._theme_name = theme
@@ -868,6 +875,7 @@ class PyRadio(object):
             txt = """Up|/|j|/|PgUp
                      Down|/|k|/|PgDown    |Change playlist selection.
                      g <n>G           |Jump to first or n-th / last playlist.
+                     M                |Jump to the middle of the list.
                      p                |Jump to loaded playlist.
                      Enter|/|Right|/|l    |Open selected playlist.
                      r                |Re-read playlists from disk.
@@ -911,6 +919,7 @@ class PyRadio(object):
             txt = """Up|/|j|/|PgUp
                      Down|/|k|/|PgDown    |Change station selection.
                      g <n>G           |Jump to first or n-th / last station.
+                     M                |Jump to the middle of the playlist.
                      p                |Jump to playing station.
                      Enter|/|Right|/|l    |Play selected station.
                      r                |Select and play a random station.
@@ -1029,6 +1038,25 @@ class PyRadio(object):
             self._show_help(txt, mode_to_set=SELECT_ENCODING_HELP_MODE, caption=' Encoding Selection Help ')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE = SELECT_ENCODING_HELP_MODE')
+
+    def _print_session_locked(self):
+        txt = '''This session is |locked| by another |PyRadio instance|.
+
+                 You can still play stations, load and edit playlists,
+                 load and test themes, but any changes will |not| be
+                 recorded in the configuration file.
+
+                 If you are sure this is the |only| active |PyRadio|
+                 instance, exit |PyRadio| now and execute the following
+                 command: |pyradio --unlock|
+                 '''
+        self._show_help(txt, SESSION_LOCKED_MODE,
+                caption = ' Session Locked ',
+                prompt = ' Press any key... ',
+                is_message=True)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('MODE: NORMAL_MODE => SESSION_LOCKED_MODE')
+
 
     def _print_not_implemented_yet(self):
         self.previous_mode = self.operation_mode
@@ -1441,6 +1469,8 @@ you have to manually address the issue.
             self.operation_mode == SELECT_PLAYLIST_HELP_MODE or \
             self.operation_mode == SELECT_STATION_HELP_MODE:
                 self._print_help()
+        elif self.operation_mode == SESSION_LOCKED_MODE:
+            self._print_session_locked()
         elif self.operation_mode == UPDATE_NOTIFICATION_MODE:
             self._print_update_notification()
         elif self.operation_mode == SELECT_ENCODING_HELP_MODE:
@@ -1573,6 +1603,7 @@ you have to manually address the issue.
             except:
                 pass
 
+        check_days = 10
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('detectUpdateThread: starting...')
         ##################
@@ -1596,15 +1627,15 @@ you have to manually address the issue.
             d2 = datetime.strptime(a_date, '%Y-%m-%d')
             delta = (d1 - d2).days
 
-            if delta > 3:
+            if delta > check_days:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: checking for updates')
             else:
                 if logger.isEnabledFor(logging.DEBUG):
-                    if 3 - delta == 1:
-                        logger.debug('detectUpdateThread: Will check tomorrow...')
+                    if check_days - delta == 1:
+                        logger.debug('detectUpdateThread: Will check again tomorrow...')
                     else:
-                        logger.debug('detectUpdateThread: Will check in {} days...'.format(3 - delta))
+                        logger.debug('detectUpdateThread: Will check again in {} days...'.format(check_days - delta))
                 return
 
         url = 'https://api.github.com/repos/coderholic/pyradio/tags'
@@ -1637,8 +1668,9 @@ you have to manually address the issue.
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: Upstream version found: {}'.format(last_tag))
                 if this_version == last_tag:
+                    create_tadays_date_file(a_path)
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('detectUpdateThread: No update found. Exiting...')
+                        logger.debug('detectUpdateThread: No update found. Will check again in {} days. Exiting...'.format(check_days))
                     break
                 else:
                     existing_version = to_ver(this_version)
@@ -1668,7 +1700,7 @@ you have to manually address the issue.
                                 which means that notification window has been
                                 displayed. Then create date file and exit.
                                 If asked to terminate, do not write date file """
-                            ########################33
+                            ########################
                             #delay(5, stop)
                             delay(60, stop)
                             if stop():
@@ -1681,7 +1713,7 @@ you have to manually address the issue.
                                 # create today's date file
                                 create_tadays_date_file(a_path)
                                 if logger.isEnabledFor(logging.INFO):
-                                    logger.info('detectUpdateThread: Terminating after notification... I will check again in 3 days')
+                                    logger.info('detectUpdateThread: Terminating after notification issued... I will check again in {} days'.format(check_days))
                                 return
                             a_lock.release()
                     else:
@@ -1695,7 +1727,7 @@ you have to manually address the issue.
                 connection_fail_count += 1
                 if connection_fail_count > 4:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('detectUpdateThread: Error: Too many connection failures. Exiting')
+                        logger.debug('detectUpdateThread: Error: Too many connection failures. Exiting...')
                     break
                 delay(60, stop)
 
@@ -1715,6 +1747,17 @@ you have to manually address the issue.
                 logger.debug('MODE: Exiting NOT_IMPLEMENTED_YET_MODE')
             self.refreshBody()
             return
+
+        if char == ord('M'):
+            if (self.operation_mode == NORMAL_MODE or \
+                    self.operation_mode == PLAYLIST_MODE):
+                self.jumpnr = ''
+                self._random_requested = False
+                if self.number_of_items > 0:
+                    self.setStation(int(self.number_of_items / 2) - 1)
+                    self._put_selection_in_the_middle(force=True)
+                    self.refreshBody()
+                return
 
         if char in (ord('t'), ):
             # only open it on main modes
@@ -2053,18 +2096,6 @@ you have to manually address the issue.
                 self.refreshBody()
             return
 
-        elif self.operation_mode == UPDATE_NOTIFICATION_MODE:
-            self.helpWinContainer = None
-            self.helpWin = None
-            self.operation_mode = NORMAL_MODE
-            self._update_notify_lock.acquire()
-            self._update_version = ''
-            self._update_notify_lock.release()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: UPDATE_NOTIFICATION_MODE => NORMAL_MODE')
-            self.refreshBody()
-            return
-
         elif self.operation_mode == NO_PLAYER_ERROR_MODE:
             """ if no player, don't serve keyboard """
             return
@@ -2211,16 +2242,6 @@ you have to manually address the issue.
             self.stopPlayer()
             return -1
 
-        elif self.operation_mode == UPDATE_NOTIFICATION_MODE:
-            self.helpWinContainer = None
-            self.helpWin = None
-            self.operation_mode = self.window_mode = NORMAL_MODE
-            #self.setupAndDrawScreen()
-            self.refreshBody()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: UPDATE_NOTIFICATION_MODE -> NORMAL_MODE')
-            return
-
         elif self.operation_mode == PLAYLIST_RECOVERY_ERROR_MODE:
             self._cnf.playlist_recovery_result = 0
             self.operation_mode = PLAYLIST_MODE
@@ -2229,16 +2250,18 @@ you have to manually address the issue.
             self.refreshBody()
             return
 
-        elif self.operation_mode == MAIN_HELP_MODE:
-            """ Main help in on, just update """
+        elif self.operation_mode == UPDATE_NOTIFICATION_MODE:
             self.helpWinContainer = None
             self.helpWin = None
-            self.operation_mode = self.window_mode = NORMAL_MODE
-            #self.setupAndDrawScreen()
-            self.refreshBody()
+            self.operation_mode = NORMAL_MODE
+            self._update_notify_lock.acquire()
+            self._update_version = ''
+            self._update_notify_lock.release()
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: MAIN_HELP_MODE -> NORMAL_MODE')
+                logger.debug('MODE: UPDATE_NOTIFICATION_MODE => NORMAL_MODE')
+            self.refreshBody()
             return
+
 
         elif self.operation_mode == THEME_HELP_MODE:
             """ Theme help in on, hide it """
@@ -2248,32 +2271,9 @@ you have to manually address the issue.
                 self.operation_mode = THEME_MODE
             else:
                 self.operation_mode = self.window_mode = THEME_MODE
-            #self.setupAndDrawScreen()
             self.refreshBody()
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('MODE: THEME_HELP_MODE -> THEME_MODE')
-            return
-
-        elif self.operation_mode == CONFIG_HELP_MODE:
-            """ Main help in on, just update """
-            self.helpWinContainer = None
-            self.helpWin = None
-            self.operation_mode = self.window_mode = CONFIG_MODE
-            #self.setupAndDrawScreen()
-            self.refreshBody()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: CONFIG_HELP_MODE -> CONFIG_MODE')
-            return
-
-        elif self.operation_mode == SELECT_PLAYER_HELP_MODE:
-            """ Main help in on, just update """
-            self.helpWinContainer = None
-            self.helpWin = None
-            self.operation_mode = SELECT_PLAYER_MODE
-            #self.setupAndDrawScreen()
-            self.refreshBody()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: SELECT_PLAYER_HELP_MODE -> SELECT_PLAYER_MODE')
             return
 
         elif self.operation_mode == SELECT_ENCODING_HELP_MODE:
@@ -2290,28 +2290,6 @@ you have to manually address the issue.
                     logger.debug('MODE: SELECT_ENCODING_HELP_MODE -> SELECT_ENCODING_MODE')
             #self.setupAndDrawScreen()
             self.refreshBody()
-            return
-
-        elif self.operation_mode == SELECT_PLAYLIST_HELP_MODE:
-            """ Main help in on, just update """
-            self.helpWinContainer = None
-            self.helpWin = None
-            self.operation_mode = SELECT_PLAYLIST_MODE
-            #self.setupAndDrawScreen()
-            self.refreshBody()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: SELECT_PLAYLIST_HELP_MODE -> SELECT_PLAYLIST_MODE')
-            return
-
-        elif self.operation_mode == SELECT_STATION_HELP_MODE:
-            """ Main help in on, just update """
-            self.helpWinContainer = None
-            self.helpWin = None
-            self.operation_mode = SELECT_STATION_MODE
-            #self.setupAndDrawScreen()
-            self.refreshBody()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: SELECT_STATION_HELP_MODE -> SELECT_STATION_MODE')
             return
 
         elif self.operation_mode == ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
@@ -2393,41 +2371,20 @@ you have to manually address the issue.
                 self.refreshBody()
             return
 
-        elif self.operation_mode == PLAYLIST_RELOAD_ERROR_MODE:
-            """ close error message """
-            self.stations = self._cnf.stations
-            self.operation_mode = self.window_mode = NORMAL_MODE
-            self.refreshBody()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: PLAYLIST_RELOAD_ERROR_MODE -> NORMAL_MODE')
-            return
-
-        elif self.operation_mode == PLAYLIST_HELP_MODE or \
-                self.operation_mode == PLAYLIST_LOAD_ERROR_MODE or \
-                    self.operation_mode == PLAYLIST_NOT_FOUND_ERROR_MODE:
-            """ close playlist help """
-            self.operation_mode = self.window_mode = PLAYLIST_MODE
-            self.refreshBody()
-            if logger.isEnabledFor(logging.DEBUG):
-                if self.operation_mode == PLAYLIST_HELP_MODE:
-                    logger.debug('MODE: PLAYLIST_HELP_MODE -> PLAYLIST_MODE')
-                elif self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
-                    logger.debug('MODE: PLAYLIST_LOAD_ERROR_MODE -> PLAYLIST_MODE')
-                else:
-                    logger.debug('MODE: PLAYLIST_NOT_FOUND_ERROR_MODE -> PLAYLIST_MODE')
-            return
-
-        elif self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE or \
-                self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE:
-            """ close error message """
-            if logger.isEnabledFor(logging.DEBUG):
-                if self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE:
-                    logger.debug('MODE: SAVE_PLAYLIST_ERROR_1_MODE -> NORMAL_MODE')
-                else:
-                    logger.debug('MODE: SAVE_PLAYLIST_ERROR_2_MODE -> NORMAL_MODE')
-            self.operation_mode = self.window_mode = NORMAL_MODE
-            self.refreshBody()
-            return
+        #elif self.operation_mode == PLAYLIST_HELP_MODE or \
+        #        self.operation_mode == PLAYLIST_LOAD_ERROR_MODE or \
+        #            self.operation_mode == PLAYLIST_NOT_FOUND_ERROR_MODE:
+        #    """ close playlist help """
+        #    self.operation_mode = self.window_mode = PLAYLIST_MODE
+        #    self.refreshBody()
+        #    if logger.isEnabledFor(logging.DEBUG):
+        #        if self.operation_mode == PLAYLIST_HELP_MODE:
+        #            logger.debug('MODE: PLAYLIST_HELP_MODE -> PLAYLIST_MODE')
+        #        elif self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
+        #            logger.debug('MODE: PLAYLIST_LOAD_ERROR_MODE -> PLAYLIST_MODE')
+        #        else:
+        #            logger.debug('MODE: PLAYLIST_NOT_FOUND_ERROR_MODE -> PLAYLIST_MODE')
+        #    return
 
         elif self.operation_mode == REMOVE_STATION_MODE:
             if char in (ord('y'), ord('Y')):
@@ -2469,18 +2426,16 @@ you have to manually address the issue.
                     logger.debug('MODE: Cancel FOREIGN_PLAYLIST_ASK_MODE -> NORMAL_MODE')
             return
 
-        elif self.operation_mode == FOREIGN_PLAYLIST_MESSAGE_MODE or \
-                self.operation_mode == FOREIGN_PLAYLIST_COPY_ERROR_MODE:
-            """ Just update """
+        elif self.operation_mode in PASSIVE_WINDOWS.keys():
             self.helpWinContainer = None
             self.helpWin = None
-            self.operation_mode = self.window_mode = NORMAL_MODE
-            self.refreshBody()
             if logger.isEnabledFor(logging.DEBUG):
-                if self.operation_mode == FOREIGN_PLAYLIST_MESSAGE_MODE:
-                    logger.debug('MODE: FOREIGN_PLAYLIST_MESSAGE_MODE -> NORMAL_MODE')
-                else:
-                    logger.debug('MODE: FOREIGN_PLAYLIST_COPY_ERROR_MODE -> NORMAL_MODE')
+                logger.debug('MODE: {0} *-> {1}'.format(MODE_NAMES[self.operation_mode], MODE_NAMES[PASSIVE_WINDOWS[self.operation_mode]]))
+            if PASSIVE_WINDOWS[self.operation_mode] in MAIN_MODES:
+                self.operation_mode = self.window_mode = PASSIVE_WINDOWS[self.operation_mode]
+            else:
+                self.operation_mode = PASSIVE_WINDOWS[self.operation_mode]
+            self.refreshBody()
             return
 
         else:
@@ -2552,6 +2507,7 @@ you have to manually address the issue.
                         self.search = self._stations_search
                         self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
                         self.stations = self._cnf.stations
+                        self.number_of_items = len(self.stations)
                         self.refreshBody()
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('MODE: Cancel PLAYLIST_MODE -> NORMAL_MODE')
@@ -2620,6 +2576,11 @@ you have to manually address the issue.
 
             if self.operation_mode == NORMAL_MODE:
                 if char == ord('c'):
+                    self.jumpnr = ''
+                    self._random_requested = False
+                    if self._cnf.locked:
+                        self._print_session_locked()
+                        return
                     self._old_config_encoding = self._cnf.opts['default_encoding'][1]
                     # open config window
                     if logger.isEnabledFor(logging.DEBUG):
@@ -2631,6 +2592,8 @@ you have to manually address the issue.
                     return
 
                 elif char in (ord('e'), ):
+                    self.jumpnr = ''
+                    self._random_requested = False
                     self._old_station_encoding = self.stations[self.selection][2]
                     if self._old_station_encoding == '':
                         self._old_station_encoding = 'utf-8'

@@ -1,8 +1,9 @@
-2019-06-21
+2019-06-23 s-n-g
     * mpv now uses a dedicated socket file. This way multiple instances of
       PyRadio can be executed.
-	* Introducing session locking.
+    * Introducing session locking.
     * Added the "--unlock" command line parameter, to force sessions' unlock.
+    * Added "M" command, which will jump to the middle of the list.
     * PyRadio can load external theme files.
     * Three more themes added. These are system themes (actual files).
     * Theme selection window reworked - themes are separated by location,
@@ -10,15 +11,15 @@
       saved theme (in config window).
     * PyRadio will check and report when a new release is available.
     * Added good bye message.
-	* Theme editor implementation started (disabled for this release).
+    * Theme editor implementation started (disabled for this release).
     * Minor other fixes.
 
-2019-06-06
+2019-06-06 s-n-g
     * Verion 0.7.6.2
       This is a BUG FIX release, fixing config status (indicating whether 
       config is modified or not)
 
-2019-06-02
+2019-06-02 s-n-g
     * Version 0.7.6.1
       This is a BUG FIX release, fixing regression: config not saved when
       changing themes

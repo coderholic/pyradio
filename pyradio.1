@@ -384,6 +384,22 @@ Setting transparency on, will actually force \fBpyradio\fR to not use its own ba
 
 When the \fITheme selection window\fR is visible, a "\fI[T]\fR" string displayed at its bottom right corner will indicate that transparency is \fIon\fR.
 
+.SH SESSION LOCKING
+
+\fBpyradio\fR uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.
+
+Subsequent instances will be "\fIlocked\fR. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will \fBnot\fR be recorded in the configuration file.  
+
+\fBSeeeion unlocking\fR
+
+If for any reason \fBpyradio\fR always starts in \fIlocked mode\fR, one can \fBunclock\fR the session, using the "\fB--unlock\fR" command line paremater.
+
+.SH UPDATE NOTIFICATION
+.PP
+\fBpyradio\fR will periodically (once every 10 days) check whether a new version has been released.
+
+If so, a notification message will be displayed, informing the user about it.
+
 .SH DEBUG MODE
 .PP
 Adding the \fB-d\fR option to the command line will instruct \fBpyradio\fR to enter \fBDebug mode\fR, which means that it will print debug messages to a file. This file will always reside in the user's home directory and will be named \fIpyradio.log\fR.

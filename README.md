@@ -16,6 +16,8 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Player detection / selection](#player-detection-selection)
 * [Player default volume level](#player-default-volume-level)
 * [PyRadio Themes](#pyradio-themes)
+* [Session Locking](#session-locking)
+* [Update notification](#update-notification)
 * [Debug mode](#debug-mode)
 
 ## Requirements
@@ -100,7 +102,7 @@ Esc/q/Left/h      -                                         Cancel / close windo
 
 The same logic applies to all **PyRadio** windows.
 
-**Note:** All windows support changing the volume and muting / unmuting the player (provided that it is actually connected to a station).
+**Note:** All windows support changing the volume and muting / unmuting the player (provided that **PyRadio** is actually connected to a station).
 
 
 ## Config file
@@ -353,6 +355,22 @@ Pressing "**T**"  will toggle the transparency setting and save this state in **
 Setting transparency on, will actually force **PyRadio** to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency).  The visual result depends on terminal settings and whether a compositor is running.
 
 When the *Theme selection window* is visible, a "**[T]**" string displayed  at  its  bottom right corner will indicate that transparency is *on*.
+
+## Session Locking
+
+**PyRadio** uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.
+
+Subsequent instances will be "*locked*". This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will **not** be recorded in the configuration file.  
+
+### Seeeion unlocking
+
+If for any reason **PyRadio** always starts in *locked mode*, one can **unclock** the session, using the "*--unlock*" command line paremater.
+
+## Update notification
+
+**PyRadio** will periodically (once every 10 days) check whether a new version has been released.
+
+If so, a notification message will be displayed, informing the user about it.
 
 ## Debug mode
 
