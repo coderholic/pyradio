@@ -82,6 +82,7 @@ Up/Down/j/k/
 PgUp/PgDown       Change station selection                  Change station playlist            Change station theme
 g                 Jump to first station                     Jump to first playlist             Jump to first theme
 <n>G              Jump to n-th / last station               Jump to n-th / last playlist       Jump to n-th / last theme
+M                 Jump to the middle of the playlist        Jump to the middle of the list     -
 p                 Jump to playing station                   Jump to playing playlist           -
 Enter/Right/l     Play selected station                     Open selected playlist             Apply selected theme
 r                 Select and play a random station          Re-read playlists from disk        -
@@ -91,6 +92,7 @@ Space             -                                         -                   
 m                 Mute / unmute player                      [Valid]                            [Valid]
 v                 Save volume (not applicable for vlc)      [Valid]                            [Valid]
 o s R             Open / Save / Reload playlist             -                                  -
+e                 Change station's encoding
 DEL,x             Delete selected station                   -                                  -
 t T               Load theme / Toggle transparency          [Valid]                            [Valid]
 c                 Open Configuration window.                -                                  -
@@ -364,7 +366,7 @@ Subsequent instances will be "*locked*". This means that the user can still play
 
 ### Seeeion unlocking
 
-If for any reason **PyRadio** always starts in *locked mode*, one can **unclock** the session, using the "*--unlock*" command line paremater.
+If for any reason **PyRadio** always starts in "*locked mode*", one can **unclock** the session, using the "*--unlock*" command line paremater.
 
 ## Update notification
 

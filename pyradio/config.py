@@ -482,6 +482,9 @@ class PyRadioStations(object):
 
 class PyRadioConfig(PyRadioStations):
 
+    theme_not_supported = False
+    theme_not_supported_notification_shown = False
+
     opts = collections.OrderedDict()
     opts[ 'general_title' ] = [ 'General Options', '' ]
     opts[ 'player' ] = [ 'Player: ', '' ]

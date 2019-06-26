@@ -1,7 +1,7 @@
-PyRadio URL = 191,94
-Messages Border = 191,94
-Status Bar = 94,191
+PyRadio URL = 184,94
+Messages Border = 112,94
+Status Bar = 94,184
 Stations = 120,94
-Active Station = 191,94
-Active Cursor = 94,191
-Normal Cursor = 130,118
+Active Station = 184,94
+Active Cursor = 94,184
+Normal Cursor = 130,112

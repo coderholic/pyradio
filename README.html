@@ -97,6 +97,7 @@ Up/Down/j/k/
 PgUp/PgDown       Change station selection                  Change station playlist            Change station theme
 g                 Jump to first station                     Jump to first playlist             Jump to first theme
 &lt;n&gt;G              Jump to n-th / last station               Jump to n-th / last playlist       Jump to n-th / last theme
+M                 Jump to the middle of the playlist        Jump to the middle of the list     -
 p                 Jump to playing station                   Jump to playing playlist           -
 Enter/Right/l     Play selected station                     Open selected playlist             Apply selected theme
 r                 Select and play a random station          Re-read playlists from disk        -
@@ -106,6 +107,7 @@ Space             -                                         -                   
 m                 Mute / unmute player                      [Valid]                            [Valid]
 v                 Save volume (not applicable for vlc)      [Valid]                            [Valid]
 o s R             Open / Save / Reload playlist             -                                  -
+e                 Change station&#39;s encoding
 DEL,x             Delete selected station                   -                                  -
 t T               Load theme / Toggle transparency          [Valid]                            [Valid]
 c                 Open Configuration window.                -                                  -
@@ -250,7 +252,7 @@ volume=28</pre>
 <p><strong>PyRadio</strong> uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.</p>
 <p>Subsequent instances will be “<em>locked</em>”. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will <strong>not</strong> be recorded in the configuration file.</p>
 <h3 id="seeeion-unlocking">Seeeion unlocking</h3>
-<p>If for any reason <strong>PyRadio</strong> always starts in <em>locked mode</em>, one can <strong>unclock</strong> the session, using the “<em>–unlock</em>” command line paremater.</p>
+<p>If for any reason <strong>PyRadio</strong> always starts in “<em>locked mode</em>”, one can <strong>unclock</strong> the session, using the “<em>–unlock</em>” command line paremater.</p>
 <h2 id="update-notification">Update notification</h2>
 <p><strong>PyRadio</strong> will periodically (once every 10 days) check whether a new version has been released.</p>
 <p>If so, a notification message will be displayed, informing the user about it.</p>

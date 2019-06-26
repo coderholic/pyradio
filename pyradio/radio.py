@@ -84,6 +84,8 @@ class PyRadio(object):
     _theme = PyRadioTheme()
     _theme_name = 'dark'
     _theme_selector = None
+    _theme_not_supported_thread = None
+    _theme_not_supported_notification_duration = 1.75
     theme_forced_selection = []
 
     _config_win = None
@@ -163,8 +165,12 @@ class PyRadio(object):
         curses.use_default_colors()
         self._theme._transparent = self._cnf.use_transparency
         self._theme.config_dir = self._cnf.stations_dir
-        self._theme.readAndApplyTheme(self._theme_name)
-        self._theme_name = self._theme.applied_theme_name
+        ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name)
+        if ret == 0:
+            self._theme_name = self._theme.applied_theme_name
+        else:
+            self._theme_name = ret_theme_name
+            self._cnf.theme_not_supported = True
 
         self.log = Log()
         # For the time being, supported players are mpv, mplayer and vlc.
@@ -701,7 +707,7 @@ class PyRadio(object):
         self.jumpnr = ''
         self._random_requested = False
         self._theme_selector = None
-        logger.error('DE\n\nself._theme = {0}\nself._theme_name = {1}\nself._cnf.theme = {2}\n\n'.format(self._theme, self._theme_name, self._cnf.theme))
+        #logger.error('DE\n\nself._theme = {0}\nself._theme_name = {1}\nself._cnf.theme = {2}\n\n'.format(self._theme, self._theme_name, self._cnf.theme))
         self._theme_selector = PyRadioThemeSelector(self.bodyWin, self._cnf, self._theme,
                 self._theme_name, self._theme._applied_theme_max_colors, self._cnf.theme,
                 4, 3, 4, 5, 6, 9, self._theme.getTransparency())
@@ -947,6 +953,29 @@ class PyRadio(object):
     def closeRecoveryNotification(self, *arg, **karg):
         #arg[1].acquire()
         self._cnf.playlist_recovery_result = 0
+        #arg[1].release()
+        self.refreshBody()
+
+    def _show_theme_not_supported(self):
+        if self._cnf.theme_not_supported_notification_shown:
+            return
+        txt = 'Error loading selected theme!\n____Using default theme.'
+        self._show_help(txt, mode_to_set=self.operation_mode, caption='',
+                prompt='', is_message=True)
+        # start 1750 ms counter
+        if self._theme_not_supported_thread:
+            if self._theme_not_supported_thread.is_alive:
+                self._theme_not_supported_thread.cancel()
+            self._theme_not_supported_thread = None
+        self._theme_not_supported_thread = threading.Timer(self._theme_not_supported_notification_duration, self.closeThemeNotSupportedNotification)
+        self._theme_not_supported_thread.start()
+        curses.doupdate()
+
+    def closeThemeNotSupportedNotification(self, *arg, **karg):
+        #arg[1].acquire()
+        self._cnf.theme_not_supported = False
+        self._cnf.theme_not_supported_notification_shown = True
+        self._theme_not_supported_notification_duration = 0.75
         #arg[1].release()
         self.refreshBody()
 
@@ -1526,6 +1555,9 @@ you have to manually address the issue.
                 self._theme_selector.set_theme(self.theme_forced_selection)
             self._print_ask_to_create_theme()
 
+        if self._cnf.theme_not_supported:
+            self._show_theme_not_supported()
+
     def play_random(self):
         # Pick a random radio station
         if self.number_of_items > 0:
@@ -1896,8 +1928,12 @@ you have to manually address the issue.
                         # restore theme, if necessary
                         if self._cnf.opts['theme'][1] != self._config_win._config_options['theme'][1]:
                             #self._config_win._apply_a_theme(self._cnf.opts['theme'][1])
-                            self._theme.readAndApplyTheme(self._cnf.opts['theme'][1])
-                            self._theme_name = self._cnf.theme
+                            ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.opts['theme'][1])
+                            if ret == 0:
+                                self._theme_name = self._cnf.theme
+                            else:
+                                self._theme_name = ret_theme_name
+                                self._cnf.theme_not_supported = True
                             curses.doupdate()
                         # make sure config is not saved
                         self._config_win._saved_config_options['dirty_config'][1] = False
@@ -2039,6 +2075,8 @@ you have to manually address the issue.
                     ord('?'), ord('#'), curses.KEY_RESIZE):
                 theme_id, save_theme = self._theme_selector.keypress(char)
 
+                #if self._cnf.theme_not_supported:
+                #    self._show_theme_not_supported()
                 if theme_id == -1:
                     """ cancel or hide """
                     self._theme_name = self._theme_selector._applied_theme_name
@@ -2070,8 +2108,16 @@ you have to manually address the issue.
                         self._config_win._saved_config_options['theme'][1] = self._theme_name
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Activating theme: {}'.format(self._theme_name))
-                    self._theme.readAndApplyTheme(self._theme_name,
+                    ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name,
                             theme_path=self._theme_selector._themes[theme_id][1])
+                    if isinstance(ret, tuple):
+                        ret = ret[0]
+                    if ret == -1:
+                        self._theme_name = ret_theme_name
+                        self._cnf.theme_not_supported = True
+                        self._cnf.theme_not_supported_notification_shown = False
+                        self._show_theme_not_supported()
+                    #self.refreshBody()
                     curses.doupdate()
                     # update config window
                     if self._config_win:

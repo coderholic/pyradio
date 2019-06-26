@@ -1,4 +1,5 @@
-2019-06-23 s-n-g
+2019-06-26 s-n-g
+    * Version 0.7.7
     * mpv now uses a dedicated socket file. This way multiple instances of
       PyRadio can be executed.
     * Introducing session locking.
@@ -9,6 +10,7 @@
     * Theme selection window reworked - themes are separated by location,
       theme selection is remembered when resizing, and loading default or
       saved theme (in config window).
+    * PyRadio will report reverting to default theme.
     * PyRadio will check and report when a new release is available.
     * Added good bye message.
     * Theme editor implementation started (disabled for this release).
