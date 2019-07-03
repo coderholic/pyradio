@@ -1,3 +1,8 @@
+2019-07-01 s-n-g
+
+    * fixed foreign playlist management
+    * fixed exiting when playlist is modified
+
 2019-06-26 s-n-g
     * Version 0.7.7
     * mpv now uses a dedicated socket file. This way multiple instances of

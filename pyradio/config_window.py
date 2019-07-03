@@ -7,6 +7,7 @@ import csv
 from os import path, sep
 
 from .common import *
+from .window_stack import Window_Stack_Constants
 from .encodings import *
 from .themes import *
 import logging
@@ -17,6 +18,7 @@ import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 class PyRadioConfigWindow(object):
+    n_u = Window_Stack_Constants
 
     parent = None
     _win = None
@@ -385,17 +387,18 @@ class PyRadioConfigWindow(object):
             vals = list(self._config_options.items())
             sel = vals[self.selection][0]
             if sel == 'player':
-                return SELECT_PLAYER_MODE, []
+                return self.n_u.SELECT_PLAYER_MODE, []
             elif sel == 'default_encoding':
-                return SELECT_ENCODING_MODE, []
+                return self.n_u.SELECT_ENCODING_MODE, []
             elif sel == 'theme':
                 self._cnf.theme = self._old_theme
-                logger.error('DE\n\nshowing theme self._cnf.theme = {}\n\n'.format(self._cnf.theme))
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('DE\n\nshowing theme self._cnf.theme = {}\n\n'.format(self._cnf.theme))
                 self._show_theme_selector_function()
             elif sel == 'default_playlist':
-                return SELECT_PLAYLIST_MODE, []
+                return self.n_u.SELECT_PLAYLIST_MODE, []
             elif sel == 'default_station':
-                return SELECT_STATION_MODE, []
+                return self.n_u.SELECT_STATION_MODE, []
             elif sel == 'confirm_station_deletion' or \
                     sel == 'confirm_playlist_reload' or \
                     sel == 'auto_save_playlist':
@@ -1142,6 +1145,12 @@ class PyRadioSelectPlaylist(object):
             self._error_win = None
             self._select_playlist_error = -2
             self.refresh_selection()
+
+        elif char == ord('M'):
+            if self._num_of_items > 0:
+                self.setPlaylistById(int(self._num_of_items / 2) - 1)
+                #self._put_selection_in_the_middle(force=True)
+                self.refresh_selection()
 
         elif char in (ord('r'), ):
             self.setPlaylist(self._orig_playlist)

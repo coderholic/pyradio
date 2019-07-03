@@ -122,17 +122,18 @@ class PyRadioStations(object):
             ret = 1
             st = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_")
             st = path.join(self.stations_dir, st + self.stations_filename_only)
-            try:
-                copyfile(self.stations_file, st)
-            except:
-                if logger.isEnabledFor(logging.ERROR):
-                    logger.error('Cannot copy playlist: "{}"'.format(self.stations_file))
-                ret = -1
-                return
-            self._get_playlist_elements(st)
-            self.foreign_file = False
+        try:
+            copyfile(self.stations_file, st)
+        except:
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('Cannot copy playlist: "{}"'.format(self.stations_file))
+            ret = -1
+            return
+        self._get_playlist_elements(st)
+        self.read_playlists()
+        self.foreign_file = False
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Playlist copied to: "{}"'.format(self.stations_filename_only_no_extension))
+            logger.debug('Playlist copied to: "{}"'.format(st))
         return ret
 
     def is_same_playlist(self, a_playlist):
@@ -473,12 +474,13 @@ class PyRadioStations(object):
             print('  {0}. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
 
     def current_playlist_index(self):
-        if logger.isEnabledFor(logging.ERROR):
-            if not self.playlists:
-                self.read_playlists()
+        if not self.playlists:
+            self.read_playlists()
         for i, a_playlist in enumerate(self.playlists):
-            if a_playlist[0] == self.stations_filename_only_no_extension:
+            #if a_playlist[0] == self.stations_filename_only_no_extension:
+            if a_playlist[3] == self.stations_file:
                 return i
+        return -1
 
 class PyRadioConfig(PyRadioStations):
 

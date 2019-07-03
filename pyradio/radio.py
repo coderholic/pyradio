@@ -20,6 +20,7 @@ from time import ctime, sleep
 from datetime import datetime
 
 from .common import *
+from .window_stack import Window_Stack
 from .config_window import *
 from .log import Log
 from .edit import PyRadioSearch
@@ -45,9 +46,7 @@ def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
 
 class PyRadio(object):
-    operation_mode = NORMAL_MODE
-    window_mode = NORMAL_MODE
-    previous_operation_mode = NORMAL_MODE
+    ws = Window_Stack()
 
     """ number of items (stations or playlists) in current view """
     number_of_items = 0
@@ -109,20 +108,13 @@ class PyRadio(object):
     _locked = False
 
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
-        #print('{}'.format(MODE_NAMES))
-        #print('\n\n{0}\n{1}'.format(PASSIVE_WINDOWS, len(PASSIVE_WINDOWS)))
-
-        #for n in PASSIVE_WINDOWS.items():
-        #    print('{0} {1}: {2} {3}'.format(n[0], MODE_NAMES[n[0]], n[1], MODE_NAMES[n[1]]))
-
-        #sys.exit()
         self._cnf = pyradio_config
         if theme:
             self._theme_name = theme
         ind = self._cnf.current_playlist_index()
         self.selections = [ [0, 0, -1, self._cnf.stations],
                             [ind, 0, ind, self._cnf.playlists]]
-        self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
+        self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
         self.play = play
         self.stdscr = None
         self.requested_player = req_player
@@ -178,9 +170,9 @@ class PyRadio(object):
             self.player = player.probePlayer(requested_player=self.requested_player)(self.log, self._cnf.connection_timeout, self.connectionFailed)
         except:
             # no player
-            self.operation_mode = NO_PLAYER_ERROR_MODE
+            self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = NO_PLAYER_ERROR_MODE')
+                logger.debug('MODE = self.ws.NO_PLAYER_ERROR_MODE')
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()
@@ -206,12 +198,12 @@ class PyRadio(object):
         self.search = self._stations_search
         # position playlist in window
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
-        if self.selections[PLAYLIST_MODE][0] < self.bodyMaxY - 2:
-            self.selections[PLAYLIST_MODE][1] = 0
-        elif self.selections[PLAYLIST_MODE][0] > len(self._cnf.playlists) - self.bodyMaxY + 1:
-            self.selections[PLAYLIST_MODE][1] = len(self._cnf.playlists) - self.bodyMaxY + 2
+        if self.selections[self.ws.PLAYLIST_MODE][0] < self.bodyMaxY - 2:
+            self.selections[self.ws.PLAYLIST_MODE][1] = 0
+        elif self.selections[self.ws.PLAYLIST_MODE][0] > len(self._cnf.playlists) - self.bodyMaxY + 1:
+            self.selections[self.ws.PLAYLIST_MODE][1] = len(self._cnf.playlists) - self.bodyMaxY + 2
         else:
-            self.selections[PLAYLIST_MODE][1] = self.selections[PLAYLIST_MODE][0] - int(self.bodyMaxY/2)
+            self.selections[self.ws.PLAYLIST_MODE][1] = self.selections[self.ws.PLAYLIST_MODE][0] - int(self.bodyMaxY/2)
         self.run()
 
     def setupAndDrawScreen(self):
@@ -264,7 +256,7 @@ class PyRadio(object):
         #self.bodyWin.keypad(1)
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
         self.bodyWin.noutrefresh()
-        if self.operation_mode == NO_PLAYER_ERROR_MODE:
+        if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
             if self.requested_player:
                 txt = """Rypadio is not able to use the player you specified.
 
@@ -285,21 +277,21 @@ class PyRadio(object):
                 installed as well."""
             self.refreshNoPlayerBody(txt)
         else:
-            #if self.operation_mode == MAIN_HELP_MODE:
-            #    self.operation_mode = self.window_mode = NORMAL_MODE
+            #if self.ws.operation_mode == self.ws.MAIN_HELP_MODE:
+            #    self.ws.operation_mode = self.ws.window_mode = self.ws.NORMAL_MODE
             #    self.helpWin = None
             #    if logger.isEnabledFor(logging.DEBUG):
-            #        logger.debug('MODE: MAIN_HELP_MODE => NORMAL_MODE')
-            #elif self.operation_mode == PLAYLIST_HELP_MODE:
-            #    self.operation_mode = self.window_mode = PLAYLIST_MODE
+            #        logger.debug('MODE: self.ws.MAIN_HELP_MODE => self.ws.NORMAL_MODE')
+            #elif self.ws.operation_mode == self.ws.PLAYLIST_HELP_MODE:
+            #    self.ws.operation_mode = self.ws.window_mode = self.ws.PLAYLIST_MODE
             #    self.helpWin = None
             #    if logger.isEnabledFor(logging.DEBUG):
-            #        logger.debug('MODE: PLAYLIST_HELP_MODE =>  PLAYLIST_MODE')
-            #elif self.operation_mode == THEME_HELP_MODE:
-            #    self.operation_mode = self.window_mode = THEME_MODE
+            #        logger.debug('MODE: self.ws.PLAYLIST_HELP_MODE =>  self.ws.PLAYLIST_MODE')
+            #elif self.ws.operation_mode == self.ws.THEME_HELP_MODE:
+            #    self.ws.operation_mode = self.ws.window_mode = self.ws.THEME_MODE
             #    self.helpWin = None
             #    if logger.isEnabledFor(logging.DEBUG):
-            #        logger.debug('MODE: THEME_HELP_MODE =>  THEME_MODE')
+            #        logger.debug('MODE: self.ws.THEME_HELP_MODE =>  self.ws.THEME_MODE')
             # make sure selected is visible
             self._put_selection_in_the_middle()
             self.refreshBody()
@@ -310,22 +302,24 @@ class PyRadio(object):
         self.footerWin.noutrefresh()
 
     def refreshBody(self):
-        if self.window_mode == CONFIG_MODE:
+        #if logger.isEnabledFor(logging.ERROR):
+        #    logger.error('DE {}'.format(self.ws._dq))
+        if self.ws.window_mode == self.ws.CONFIG_MODE:
             self._config_win.parent = self.bodyWin
             self._config_win.init_config_win()
             self._config_win.refresh_config_win()
-            if self.operation_mode == SELECT_PLAYER_MODE or \
-                    self.operation_mode == SELECT_PLAYER_HELP_MODE:
+            if self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE or \
+                    self.ws.operation_mode == self.ws.SELECT_PLAYER_HELP_MODE:
                 self._player_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
-            elif self.operation_mode == SELECT_ENCODING_MODE or \
-                    self.operation_mode == SELECT_STATION_ENCODING_MODE or \
-                    self.operation_mode == SELECT_ENCODING_HELP_MODE:
+            elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE or \
+                    self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE or \
+                    self.ws.operation_mode == self.ws.SELECT_ENCODING_HELP_MODE:
                 self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
-            elif self.operation_mode == SELECT_PLAYLIST_MODE or \
-                    self.operation_mode == SELECT_PLAYLIST_HELP_MODE:
+            elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE or \
+                    self.ws.operation_mode == self.ws.SELECT_PLAYLIST_HELP_MODE:
                 self._playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
-            elif self.operation_mode == SELECT_STATION_MODE or \
-                    self.operation_mode == SELECT_STATION_HELP_MODE:
+            elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE or \
+                    self.ws.operation_mode == self.ws.SELECT_STATION_HELP_MODE:
                 self._station_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
         else:
             self.bodyWin.erase()
@@ -364,10 +358,10 @@ class PyRadio(object):
         self.txtWin.refresh()
 
     def _print_body_header(self):
-        cur_mode = self.window_mode
-        if cur_mode == THEME_MODE:
-            cur_mode = self.previous_mode
-        if cur_mode == NORMAL_MODE:
+        cur_mode = self.ws.window_mode
+        if cur_mode == self.ws.THEME_MODE:
+            cur_mode = self.ws.previous_operation_mode
+        if cur_mode == self.ws.NORMAL_MODE:
             align = 1
             w_header = self._cnf.stations_filename_only_no_extension
             if self._cnf.dirty_playlist:
@@ -381,9 +375,9 @@ class PyRadio(object):
             self.bodyWin.addstr(w_header,curses.color_pair(4))
             self.bodyWin.addstr(']',curses.color_pair(5))
 
-        elif cur_mode == PLAYLIST_MODE or \
-                self.operation_mode == PLAYLIST_LOAD_ERROR_MODE or \
-                self.operation_mode == PLAYLIST_NOT_FOUND_ERROR_MODE:
+        elif cur_mode == self.ws.PLAYLIST_MODE or \
+                self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
+                self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
             """ display playlists header """
             w_header = ' Select playlist to open '
             self.bodyWin.addstr(0,
@@ -405,16 +399,16 @@ class PyRadio(object):
             col = curses.color_pair(4)
             self.bodyWin.hline(lineNum + 1, 1, ' ', body_width, col)
 
-        if self.operation_mode == PLAYLIST_MODE or \
-                self.operation_mode == PLAYLIST_LOAD_ERROR_MODE or \
-                    self.operation_mode == PLAYLIST_NOT_FOUND_ERROR_MODE:
+        if self.ws.operation_mode == self.ws.PLAYLIST_MODE or \
+                self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
+                    self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
             line = self._format_playlist_line(lineNum, pad, station)
         else:
             line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
         self.bodyWin.addstr(lineNum + 1, 1, line[:body_width], col)
 
     def run(self):
-        if self.operation_mode == NO_PLAYER_ERROR_MODE:
+        if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
             if self.requested_player:
                 if ',' in self.requested_player:
                     self.log.write('None of "{}" players is available. Press any key to exit....'.format(self.requested_player))
@@ -453,7 +447,7 @@ class PyRadio(object):
                     self.playSelection()
                     self._goto_playing_station(changing_playlist=True)
                 self.refreshBody()
-                self.selections[NORMAL_MODE] = [self.selection, self.startPos, self.playing, self.stations]
+                self.selections[self.ws.NORMAL_MODE] = [self.selection, self.startPos, self.playing, self.stations]
 
             if self._cnf.foreign_file:
                 """ ask to copy this playlist in config dir """
@@ -481,6 +475,17 @@ class PyRadio(object):
         """ Try to auto save config on exit
             Do not check result!!! """
         self._cnf.save_config()
+        self._wait_for_threads()
+        self._remove_lock_file()
+
+    def _wait_for_threads(self):
+        if self._update_notification_thread:
+            if self._update_notification_thread.is_alive():
+                self.stop_update_notification_thread = True
+                if self._update_notification_thread:
+                    self._update_notification_thread.join()
+
+    def _remove_lock_file(self):
         if not self._cnf.locked:
             lock_file = path.join(self._cnf.stations_dir, '.lock')
             if path.exists(lock_file):
@@ -495,26 +500,21 @@ class PyRadio(object):
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Lock file not found...')
 
-        if self._update_notification_thread:
-            if self._update_notification_thread.is_alive():
-                self.stop_update_notification_thread = True
-                self._update_notification_thread.join()
-
     def _goto_playing_station(self, changing_playlist=False):
         """ make sure playing station is visible """
-        if (self.player.isPlaying() or self.operation_mode == PLAYLIST_MODE) and \
+        if (self.player.isPlaying() or self.ws.operation_mode == self.ws.PLAYLIST_MODE) and \
             (self.selection != self.playing or changing_playlist):
             if changing_playlist:
                 self.startPos = 0
             max_lines = self.bodyMaxY - 2
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('max_lines = {0}, items = {1}, self.playing = {2}'.format(max_lines, self.number_of_items, self.playing))
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('max_lines = {0}, items = {1}, self.playing = {2}'.format(max_lines, self.number_of_items, self.playing))
             if self.number_of_items < max_lines:
                 self.startPos = 0
             elif self.playing < self.startPos or \
                     self.playing >= self.startPos + max_lines:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('=== _goto:adjusting startPos')
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('DE ==== _goto:adjusting startPos')
                 if self.playing < max_lines:
                     self.startPos = 0
                     if self.playing - int(max_lines/2) > 0:
@@ -523,8 +523,8 @@ class PyRadio(object):
                     self.startPos = self.number_of_items - max_lines
                 else:
                     self.startPos = int(self.playing+1/max_lines) - int(max_lines/2)
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('===== _goto:startPos = {0}, changing_playlist = {1}'.format(self.startPos, changing_playlist))
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('DE ===== _goto:startPos = {0}, changing_playlist = {1}'.format(self.startPos, changing_playlist))
             self.selection = self.playing
             self.refreshBody()
 
@@ -534,8 +534,8 @@ class PyRadio(object):
             self.startPos = 0
         elif force or self.selection < self.startPos or \
                 self.selection >= self.startPos + max_lines:
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('=== _put:adjusting startPos')
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('DE ===== _put:adjusting startPos')
             if self.selection < max_lines:
                 self.startPos = 0
                 if self.selection - int(max_lines/2) > 0:
@@ -544,8 +544,8 @@ class PyRadio(object):
                 self.startPos = self.number_of_items - max_lines
             else:
                 self.startPos = int(self.selection+1/max_lines) - int(max_lines/2)
-        if logger.isEnabledFor(logging.INFO):
-            logger.info('===== _put:startPos -> {0}, force = {1}'.format(self.startPos, force))
+        if logger.isEnabledFor(logging.ERROR):
+            logger.error('DE ===== _put:startPos -> {0}, force = {1}'.format(self.startPos, force))
 
     def setStation(self, number):
         """ Select the given station number """
@@ -583,9 +583,9 @@ class PyRadio(object):
     def connectionFailed(self):
         old_playing = self.playing
         self.stopPlayer(False)
-        self.selections[NORMAL_MODE][2] = -1
-        if self.window_mode == NORMAL_MODE:
-            if self.operation_mode == NORMAL_MODE:
+        self.selections[self.ws.NORMAL_MODE][2] = -1
+        if self.ws.window_mode == self.ws.NORMAL_MODE:
+            if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 self.refreshBody()
         else:
             self.playing = old_playing
@@ -594,7 +594,7 @@ class PyRadio(object):
             logger.info('Failed to connect to: "{}"'.format(self._last_played_station))
         self.log.write('Failed to connect to: "{}"'.format(self._last_played_station))
         if self._random_requested and \
-                self.operation_mode == NORMAL_MODE:
+                self.ws.operation_mode == self.ws.NORMAL_MODE:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Looking for a working station (random is on)')
             self.play_random()
@@ -627,15 +627,15 @@ class PyRadio(object):
                 msg = msg[:mwidth-6] + '...'
 
             self._show_help(txt.format(msg),
-                    REMOVE_STATION_MODE, caption = ' Station Deletion ',
+                    self.ws.REMOVE_STATION_MODE, caption = ' Station Deletion ',
                     prompt = '', is_message=True)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = REMOVE_STATION_MODE')
+                logger.debug('MODE = self.ws.REMOVE_STATION_MODE')
         else:
-            self.operation_mode = REMOVE_STATION_MODE
+            self.ws.operation_mode = self.ws.REMOVE_STATION_MODE
             curses.ungetch('y')
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = Auto REMOVE_STATION_MODE')
+                logger.debug('MODE = Auto self.ws.REMOVE_STATION_MODE')
 
     def saveCurrentPlaylist(self, stationFile =''):
         ret = self._cnf.save_playlist_file(stationFile)
@@ -652,25 +652,22 @@ class PyRadio(object):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Reloading current playlist')
         self._get_active_stations()
-        txt = '''Reloading playlist. Please wait...'''
-        self._show_help(txt, NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+        #txt = '''Reloading playlist. Please wait...'''
+        #self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
         self.jumpnr = ''
         ret = self._cnf.read_playlist_file(self._cnf.stations_file)
         if ret == -1:
             self.stations = self._cnf.playlists
+            self.ws.close_window()
+            self.refreshBody()
             self._print_playlist_reload_error()
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Error reloading playlist: "{}"'.format(self._cnf.stations_file))
         else:
             self.number_of_items = ret
-            cur_mode = self.operation_mode
-            self.operation_mode = self.window_mode = NORMAL_MODE
-            self._align_stations_and_refresh(NORMAL_MODE)
-            if logger.isEnabledFor(logging.DEBUG):
-                if cur_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
-                    logger.debug('MODE: PLAYLIST_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
-                else:
-                    logger.debug('MODE: PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
+            self._align_stations_and_refresh(self.ws.NORMAL_MODE)
+            self.ws.close_window()
+            self.refreshBody()
         return
 
     def readPlaylists(self):
@@ -683,7 +680,7 @@ class PyRadio(object):
             It will re-create it the next time it is lounched.
             '''
             self._show_help(txt.format(self._cnf.stations_filename_only),
-                    mode_to_set = PLAYLIST_SCAN_ERROR_MODE,
+                    mode_to_set = self.ws.PLAYLIST_SCAN_ERROR_MODE,
                     caption = ' Error ',
                     prompt = ' Press any key to exit ',
                     is_message=True)
@@ -698,30 +695,24 @@ class PyRadio(object):
 
     def _show_theme_selector_from_config(self):
         self._theme_name = self._config_win._config_options['theme'][1]
-        logger.error('DE\n\nreseting self._theme_name = {}\n\n'.format(self._theme_name))
-        self.previous_mode = self.operation_mode
-        self.operation_mode = THEME_MODE
+        if logger.isEnabledFor(logging.ERROR):
+            logger.error('DE\n\nreseting self._theme_name = {}\n\n'.format(self._theme_name))
+        #self.ws.previous_operation_mode = self.ws.operation_mode
+        self.ws.operation_mode = self.ws.THEME_MODE
         self._show_theme_selector(changed_from_config=True)
 
     def _show_theme_selector(self, changed_from_config=False):
         self.jumpnr = ''
         self._random_requested = False
         self._theme_selector = None
-        #logger.error('DE\n\nself._theme = {0}\nself._theme_name = {1}\nself._cnf.theme = {2}\n\n'.format(self._theme, self._theme_name, self._cnf.theme))
+        #if logger.isEnabledFor(logging.ERROR):
+        #    logger.error('DE\n\nself._theme = {0}\nself._theme_name = {1}\nself._cnf.theme = {2}\n\n'.format(self._theme, self._theme_name, self._cnf.theme))
         self._theme_selector = PyRadioThemeSelector(self.bodyWin, self._cnf, self._theme,
                 self._theme_name, self._theme._applied_theme_max_colors, self._cnf.theme,
                 4, 3, 4, 5, 6, 9, self._theme.getTransparency())
                 #'/home/spiros/edit.log')
         self._theme_selector.changed_from_config = changed_from_config
         self._theme_selector.show()
-
-        if logger.isEnabledFor(logging.DEBUG):
-            if self.window_mode == CONFIG_MODE:
-                logger.debug('MODE: CONFIG_MODE => THEME_MODE')
-            elif self.previous_mode == NORMAL_MODE:
-                logger.debug('MODE: NORMAL_MODE => THEME_MODE')
-            else:
-                logger.debug('MODE: PLAYLIST_MODE => THEME_MODE')
 
     def _get_message_width_from_list(self, lines):
         mwidth = 0
@@ -738,7 +729,7 @@ class PyRadio(object):
         return self._get_message_width_from_list(lines)
 
     def _show_help(self, txt,
-                mode_to_set=MAIN_HELP_MODE,
+                mode_to_set=0,
                 caption=' Help ',
                 prompt=' Press any key to hide ',
                 too_small_msg='Window too small to show message',
@@ -746,7 +737,7 @@ class PyRadio(object):
         """ Display a help, info or question window.  """
         self.helpWinContainer = None
         self.helpWin = None
-        self.operation_mode = mode_to_set
+        self.ws.operation_mode = mode_to_set
         txt_col = curses.color_pair(5)
         box_col = curses.color_pair(3)
         caption_col = curses.color_pair(4)
@@ -757,11 +748,11 @@ class PyRadio(object):
         inner_width = self._get_message_width_from_list(lines) + 4
         outer_height = inner_height + 2
         outer_width = inner_width + 2
-        if ((self.window_mode == CONFIG_MODE and \
-                self.operation_mode > CONFIG_HELP_MODE) or \
-                (self.window_mode == NORMAL_MODE and \
-                self.operation_mode == SELECT_ENCODING_HELP_MODE)) and \
-                self.operation_mode != ASK_TO_CREATE_NEW_THEME_MODE:
+        if ((self.ws.window_mode == self.ws.CONFIG_MODE and \
+                self.ws.operation_mode > self.ws.CONFIG_HELP_MODE) or \
+                (self.ws.window_mode == self.ws.NORMAL_MODE and \
+                self.ws.operation_mode == self.ws.SELECT_ENCODING_HELP_MODE)) and \
+                self.ws.operation_mode != self.ws.ASK_TO_CREATE_NEW_THEME_MODE:
             use_empty_win = True
             height_to_use = outer_height
             width_to_use = outer_width
@@ -782,7 +773,8 @@ class PyRadio(object):
             if self.maxX < width_to_use:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('  ***  Window too small even to show help warning  ***')
-                self.operation_mode = self.window_mode = NORMAL_MODE
+                self.ws.close_window()
+                self.refreshBody()
                 return
             lines = [ txt , ]
         if use_empty_win:
@@ -877,7 +869,7 @@ class PyRadio(object):
         return line
 
     def _print_help(self):
-        if self.window_mode == PLAYLIST_MODE:
+        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
             txt = """Up|/|j|/|PgUp
                      Down|/|k|/|PgDown    |Change playlist selection.
                      g <n>G           |Jump to first or n-th / last playlist.
@@ -890,38 +882,38 @@ class PyRadio(object):
                      -|/|+| or |,|/|.       |Change volume.
                      m v              ||M|ute player / Save |v|olume (not in vlc).
                      %_Other Keys_
-                     T                |Toggle transparency."""
-            self._show_help(txt, mode_to_set=PLAYLIST_HELP_MODE, caption=' Playlist Help ')
+                     t T              |Load |t|heme / |T|oggle transparency."""
+            self._show_help(txt, mode_to_set=self.ws.PLAYLIST_HELP_MODE, caption=' Playlist Help ')
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = PLAYLIST_HELP_MODE')
+                logger.debug('MODE = self.ws.PLAYLIST_HELP_MODE')
 
-        elif self.window_mode == THEME_MODE:
+        elif self.ws.window_mode == self.ws.THEME_MODE:
             self._show_theme_help()
 
-        elif self.window_mode == CONFIG_MODE:
-            if self.operation_mode == THEME_MODE or \
-                    self.operation_mode == THEME_HELP_MODE:
+        elif self.ws.window_mode == self.ws.CONFIG_MODE:
+            if self.ws.operation_mode == self.ws.THEME_MODE or \
+                    self.ws.operation_mode == self.ws.THEME_HELP_MODE:
                 self._show_theme_help()
-            elif self.operation_mode == SELECT_PLAYER_MODE or \
-                    self.operation_mode == SELECT_PLAYER_HELP_MODE:
+            elif self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE or \
+                    self.ws.operation_mode == self.ws.SELECT_PLAYER_HELP_MODE:
                 self._show_config_player_help()
-            elif self.operation_mode == SELECT_ENCODING_MODE or \
-                    self.operation_mode == SELECT_ENCODING_HELP_MODE:
+            elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE or \
+                    self.ws.operation_mode == self.ws.SELECT_ENCODING_HELP_MODE:
                 self._show_config_encoding_help()
-            elif self.operation_mode == SELECT_PLAYLIST_MODE or \
-                    self.operation_mode == SELECT_PLAYLIST_HELP_MODE:
+            elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE or \
+                    self.ws.operation_mode == self.ws.SELECT_PLAYLIST_HELP_MODE:
                 self._show_config_playlist_help()
-            elif self.operation_mode == SELECT_STATION_MODE or \
-                    self.operation_mode == SELECT_STATION_HELP_MODE:
+            elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE or \
+                    self.ws.operation_mode == self.ws.SELECT_STATION_HELP_MODE:
                 self._show_config_station_help()
             else:
                 self._show_config_help()
 
-        elif self.operation_mode == SELECT_STATION_ENCODING_MODE or \
-                self.operation_mode == SELECT_ENCODING_HELP_MODE:
+        elif self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE or \
+                self.ws.operation_mode == self.ws.SELECT_ENCODING_HELP_MODE:
             self._show_config_encoding_help()
 
-        elif self.window_mode == NORMAL_MODE:
+        elif self.ws.window_mode == self.ws.NORMAL_MODE:
             txt = """Up|/|j|/|PgUp
                      Down|/|k|/|PgDown    |Change station selection.
                      g <n>G           |Jump to first or n-th / last station.
@@ -938,16 +930,14 @@ class PyRadio(object):
                      t T              |Load |t|heme / |T|oggle transparency.
                      c                |Open Configuration window.
                      Esc|/|q            |Quit. """
-            self._show_help(txt)
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = MAIN_HELP_MODE')
+            self._show_help(txt, mode_to_set=self.ws.MAIN_HELP_MODE)
 
     def _show_playlist_recovered(self):
         txt = 'Playlist recoverd!'
-        self._show_help(txt, mode_to_set=self.operation_mode, caption='',
+        self._show_help(txt, mode_to_set=self.ws.operation_mode, caption='',
                 prompt='', is_message=True)
-        # start 750 ms counter
-        th = threading.Timer(0.75, self.closeRecoveryNotification)
+        # start 1250 ms counter
+        th = threading.Timer(1.25, self.closeRecoveryNotification)
         th.start()
 
     def closeRecoveryNotification(self, *arg, **karg):
@@ -960,7 +950,7 @@ class PyRadio(object):
         if self._cnf.theme_not_supported_notification_shown:
             return
         txt = 'Error loading selected theme!\n____Using default theme.'
-        self._show_help(txt, mode_to_set=self.operation_mode, caption='',
+        self._show_help(txt, mode_to_set=self.ws.operation_mode, caption='',
                 prompt='', is_message=True)
         # start 1750 ms counter
         if self._theme_not_supported_thread:
@@ -990,9 +980,9 @@ class PyRadio(object):
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
                      m v              ||M|ute player / Save |v|olume (not in vlc)."""
-            self._show_help(txt, mode_to_set=THEME_HELP_MODE, caption=' Themes Help ')
+            self._show_help(txt, mode_to_set=self.ws.THEME_HELP_MODE, caption=' Themes Help ')
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = THEME_HELP_MODE')
+                logger.debug('MODE = self.ws.THEME_HELP_MODE')
 
     def _show_config_help(self):
             txt = """Up|/|j|/|PgUp
@@ -1006,9 +996,7 @@ class PyRadio(object):
                      %_Player Keys_
                      -|/|+| or |,|/|.             |Change volume.
                      m v                    ||M|ute player / Save |v|olume (not in vlc)."""
-            self._show_help(txt, mode_to_set=CONFIG_HELP_MODE, caption=' Configuration Help ')
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = CONFIG_HELP_MODE')
+            self._show_help(txt, mode_to_set=self.ws.CONFIG_HELP_MODE, caption=' Configuration Help ')
 
     def _show_config_player_help(self):
             txt = """Up|/|j|/|Down|/|k      |Change player selection.
@@ -1021,9 +1009,7 @@ class PyRadio(object):
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
                      m v              ||M|ute player / Save |v|olume (not in vlc)."""
-            self._show_help(txt, mode_to_set=SELECT_PLAYER_HELP_MODE, caption=' Player Selection Help ')
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = SELECT_PLAYER_HELP_MODE')
+            self._show_help(txt, mode_to_set=self.ws.SELECT_PLAYER_HELP_MODE, caption=' Player Selection Help ')
 
     def _show_config_playlist_help(self):
             txt = """Up|/|j|/|PgUp
@@ -1036,14 +1022,13 @@ class PyRadio(object):
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
                      m v              ||M|ute player / Save |v|olume (not in vlc)."""
-            self._show_help(txt, mode_to_set=SELECT_PLAYLIST_HELP_MODE, caption=' Playlist Selection Help ')
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = SELECT_PLAYLIST_HELP_MODE')
+            self._show_help(txt, mode_to_set=self.ws.SELECT_PLAYLIST_HELP_MODE, caption=' Playlist Selection Help ')
 
     def _show_config_station_help(self):
             txt = """Up|/|j|/|PgUp
                      Down|/|k|/|PgDown    |Change station selection.
                      g <n>G           |Jump to first or n-th / last station.
+                     M                |Jump to the middle of the list.
                      Enter|/|Space
                      Right|/|l          |Select default station.
                      r                |Revert to saved value.
@@ -1051,9 +1036,7 @@ class PyRadio(object):
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
                      m v              ||M|ute player / Save |v|olume (not in vlc)."""
-            self._show_help(txt, mode_to_set=SELECT_STATION_HELP_MODE, caption=' Station Selection Help ')
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = SELECT_STATION_HELP_MODE')
+            self._show_help(txt, mode_to_set=self.ws.SELECT_STATION_HELP_MODE, caption=' Station Selection Help ')
 
     def _show_config_encoding_help(self):
             txt = """Arrows|/|h|/|j|/|k|/|l|/|PgUp|/|/PgDn
@@ -1064,9 +1047,7 @@ class PyRadio(object):
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
                      m v              ||M|ute player / Save |v|olume (not in vlc)."""
-            self._show_help(txt, mode_to_set=SELECT_ENCODING_HELP_MODE, caption=' Encoding Selection Help ')
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = SELECT_ENCODING_HELP_MODE')
+            self._show_help(txt, mode_to_set=self.ws.SELECT_ENCODING_HELP_MODE, caption=' Encoding Selection Help ')
 
     def _print_session_locked(self):
         txt = '''This session is |locked| by another |PyRadio instance|.
@@ -1079,19 +1060,16 @@ class PyRadio(object):
                  instance, exit |PyRadio| now and execute the following
                  command: |pyradio --unlock|
                  '''
-        self._show_help(txt, SESSION_LOCKED_MODE,
+        self._show_help(txt, self.ws.SESSION_LOCKED_MODE,
                 caption = ' Session Locked ',
                 prompt = ' Press any key... ',
                 is_message=True)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('MODE: NORMAL_MODE => SESSION_LOCKED_MODE')
-
 
     def _print_not_implemented_yet(self):
-        self.previous_mode = self.operation_mode
+        self.ws.previous_operation_mode = self.ws.operation_mode
         txt = '''This feature has not been implemented yet...
         '''
-        self._show_help(txt, NOT_IMPLEMENTED_YET_MODE,
+        self._show_help(txt, self.ws.NOT_IMPLEMENTED_YET_MODE,
                 caption = ' PyRadio ',
                 prompt = ' Press any key... ',
                 is_message=True)
@@ -1105,14 +1083,14 @@ class PyRadio(object):
             Do you want to copy it in the config directory?
 
             Press "|y|" to confirm or "|n|" to reject'''
-        self._show_help(txt, FOREIGN_PLAYLIST_ASK_MODE,
+        self._show_help(txt, self.ws.FOREIGN_PLAYLIST_ASK_MODE,
                 caption = ' Foreign playlist ',
                 prompt = ' ',
                 is_message=True)
 
     def _print_foreign_playlist_message(self):
         """ reset previous message """
-        self.operation_mode = self.window_mode = NORMAL_MODE
+        self.ws.close_window()
         self.refreshBody()
         """ display new message """
         txt='''A playlist by this name:
@@ -1123,21 +1101,21 @@ class PyRadio(object):
             __"|{1}|"
             '''.format(self._cnf.foreign_filename_only_no_extension,
                     self._cnf.stations_filename_only_no_extension)
-        self._show_help(txt, FOREIGN_PLAYLIST_MESSAGE_MODE,
+        self._show_help(txt, self.ws.FOREIGN_PLAYLIST_MESSAGE_MODE,
                 caption = ' Foreign playlist ',
                 prompt = ' Press any key ',
                 is_message=True)
 
     def _print_foreign_playlist_copy_error(self):
         """ reset previous message """
-        self.operation_mode = self.window_mode = NORMAL_MODE
+        self.ws.close_window()
         self.refreshBody()
         txt ='''Foreign playlist copying |failed|!
 
             Make sure the file is not open with another
             application and try to load it again
             '''
-        self._show_help(txt, FOREIGN_PLAYLIST_COPY_ERROR_MODE,
+        self._show_help(txt, self.ws.FOREIGN_PLAYLIST_COPY_ERROR_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ',
                 is_message=True)
@@ -1158,7 +1136,7 @@ try to rename this file to CSV.\n
 Unfortunately, renaming this file has failed, so
 you have to manually address the issue.
 """
-        self._show_help(txt, PLAYLIST_RECOVERY_ERROR_MODE,
+        self._show_help(txt, self.ws.PLAYLIST_RECOVERY_ERROR_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ',
                 is_message=True)
@@ -1170,7 +1148,7 @@ you have to manually address the issue.
             (or renamed) some time after you opened the
             Playlist Selection window.
             """
-        self._show_help(txt, PLAYLIST_NOT_FOUND_ERROR_MODE,
+        self._show_help(txt, self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ',
                 is_message=True)
@@ -1181,7 +1159,7 @@ you have to manually address the issue.
             This means that either the file is corrupt,
             or you are not permitted to access it.
             """
-        self._show_help(txt, PLAYLIST_LOAD_ERROR_MODE,
+        self._show_help(txt, self.ws.PLAYLIST_LOAD_ERROR_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ',
                 is_message=True)
@@ -1193,7 +1171,7 @@ you have to manually address the issue.
             external program. Please re-edit it and make
             sure that only one "," exists in each line.
             '''
-        self._show_help(txt, PLAYLIST_RELOAD_ERROR_MODE,
+        self._show_help(txt, self.ws.PLAYLIST_RELOAD_ERROR_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ',
                 is_message=True)
@@ -1204,7 +1182,7 @@ you have to manually address the issue.
 
             Press "|y|" to confirm, "|Y|" to confirm and not
             be asked again, or any other key to cancel'''
-        self._show_help(txt, PLAYLIST_RELOAD_CONFIRM_MODE,
+        self._show_help(txt, self.ws.PLAYLIST_RELOAD_CONFIRM_MODE,
                 caption = ' Playlist Reload ',
                 prompt = ' ',
                 is_message=True)
@@ -1216,7 +1194,7 @@ you have to manually address the issue.
 
             Press "|y|" to confirm, "|Y|" to confirm and not be
             asked again, or "|n|" to cancel'''
-        self._show_help(txt, PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE,
+        self._show_help(txt, self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE,
                 caption = ' Playlist Reload ',
                 prompt = ' ',
                 is_message=True)
@@ -1235,11 +1213,6 @@ you have to manually address the issue.
                 caption = ' Playlist Modified ',
                 prompt = ' ',
                 is_message=True)
-        if logger.isEnabledFor(logging.DEBUG):
-            if mode == ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE:
-                logger.debug('MODE = ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE')
-            else:
-                logger.debug('MODE = ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE')
 
     def _print_save_playlist_error_1(self):
         txt = '''Saving current playlist |failed|!
@@ -1248,7 +1221,7 @@ you have to manually address the issue.
             "|{}|"
             '''
         self._show_help(txt.format(self._cnf.stations_file.replace('.csv', '.txt')),
-                mode_to_set = SAVE_PLAYLIST_ERROR_1_MODE,
+                mode_to_set = self.ws.SAVE_PLAYLIST_ERROR_1_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ',
                 is_message=True)
@@ -1263,7 +1236,7 @@ you have to manually address the issue.
             is opened in the future.
             '''
         self._show_help(txt.format(self._cnf.stations_file.replace('.csv', '.txt')),
-                mode_to_set = SAVE_PLAYLIST_ERROR_2_MODE,
+                mode_to_set = self.ws.SAVE_PLAYLIST_ERROR_2_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ',
                 is_message=True)
@@ -1274,7 +1247,7 @@ you have to manually address the issue.
             new theme instead?
 
             Press "|y|" to accept or any other key to cancel.'''
-        self._show_help(txt, ASK_TO_CREATE_NEW_THEME_MODE,
+        self._show_help(txt, self.ws.ASK_TO_CREATE_NEW_THEME_MODE,
                 caption = ' Read-only theme ',
                 prompt = ' ',
                 is_message=True)
@@ -1287,7 +1260,7 @@ you have to manually address the issue.
 
             '''
         self._show_help(txt,
-                mode_to_set = CONFIG_SAVE_ERROR_MODE,
+                mode_to_set = self.ws.CONFIG_SAVE_ERROR_MODE,
                 caption = ' Error Saving Config ',
                 prompt = ' Press any key to exit ',
                 is_message=True)
@@ -1302,7 +1275,7 @@ you have to manually address the issue.
                  |https://github.com/coderholic/pyradio#installation|
             '''
         self._show_help(txt.format(self._update_version_do_display),
-                mode_to_set = UPDATE_NOTIFICATION_MODE,
+                mode_to_set = self.ws.UPDATE_NOTIFICATION_MODE,
                 caption = ' New Release Available ',
                 prompt = ' Press any key to hide ',
                 is_message=True)
@@ -1321,13 +1294,14 @@ you have to manually address the issue.
                 self.stopPlayer()
             self.playing,self.selection, self.stations, \
                 self.number_of_items = (-1, 0, 0, 0)
-            self.operation_mode = self.window_mode = NORMAL_MODE
-            self.refreshBody()
+            ##self.ws.operation_mode = self.ws.window_mode = self.ws.NORMAL_MODE
+            #self.ws.close_window()
+            #self.refreshBody()
             return
         else:
             #if logger.isEnabledFor(logging.DEBUG):
             #    logger.debug('self.playing = {}'.format(self.playing))
-            if cur_mode == REMOVE_STATION_MODE:
+            if cur_mode == self.ws.REMOVE_STATION_MODE:
                 """ Remove selected station """
                 if self.player.isPlaying():
                     if self.selection == self.playing:
@@ -1405,8 +1379,7 @@ you have to manually address the issue.
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('self.selection = {0}, self.playing = {1}, self.startPos = {2}'.format(self.selection, self.playing, self.startPos))
-
-        self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.stations]
+        self.selections[self.ws.NORMAL_MODE] = [self.selection, self.startPos, self.playing, self._cnf.stations]
         self.refreshBody()
 
     def _open_playlist(self):
@@ -1415,19 +1388,17 @@ you have to manually address the issue.
         self.jumpnr = ''
         self._random_requested = False
         txt = '''Reading playlists. Please wait...'''
-        self._show_help(txt, NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
-        self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.stations]
-        self.operation_mode = self.window_mode = PLAYLIST_MODE
+        self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+        self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.stations]
+        self.ws.window_mode = self.ws.PLAYLIST_MODE
         self.search = self._playlists_search
-        self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
+        self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
         self.number_of_items, self.playing = self.readPlaylists()
         self.stations = self._cnf.playlists
         if self.number_of_items == 0:
             return
         else:
             self.refreshBody()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: NORMAL_MODE -> PLAYLIST_MODE')
             return
 
     def _get_station_id(self, find):
@@ -1490,64 +1461,64 @@ you have to manually address the issue.
         if self._cnf.playlist_recovery_result == -1:
             self._show_playlist_recovered()
             return
-        if self.operation_mode == MAIN_HELP_MODE or \
-            self.operation_mode == PLAYLIST_HELP_MODE or \
-            self.operation_mode == THEME_HELP_MODE or \
-            self.operation_mode == CONFIG_HELP_MODE or \
-            self.operation_mode == SELECT_PLAYER_HELP_MODE or \
-            self.operation_mode == SELECT_PLAYLIST_HELP_MODE or \
-            self.operation_mode == SELECT_STATION_HELP_MODE:
+        if self.ws.operation_mode == self.ws.MAIN_HELP_MODE or \
+            self.ws.operation_mode == self.ws.PLAYLIST_HELP_MODE or \
+            self.ws.operation_mode == self.ws.THEME_HELP_MODE or \
+            self.ws.operation_mode == self.ws.CONFIG_HELP_MODE or \
+            self.ws.operation_mode == self.ws.SELECT_PLAYER_HELP_MODE or \
+            self.ws.operation_mode == self.ws.SELECT_PLAYLIST_HELP_MODE or \
+            self.ws.operation_mode == self.ws.SELECT_STATION_HELP_MODE:
                 self._print_help()
-        elif self.operation_mode == SESSION_LOCKED_MODE:
+        elif self.ws.operation_mode == self.ws.SESSION_LOCKED_MODE:
             self._print_session_locked()
-        elif self.operation_mode == UPDATE_NOTIFICATION_MODE:
+        elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_MODE:
             self._print_update_notification()
-        elif self.operation_mode == SELECT_ENCODING_HELP_MODE:
-            if self.window_mode == NORMAL_MODE:
+        elif self.ws.operation_mode == self.ws.SELECT_ENCODING_HELP_MODE:
+            if self.ws.window_mode == self.ws.NORMAL_MODE:
                 self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
             self._print_help()
-        if self.operation_mode == SELECT_STATION_ENCODING_MODE:
+        if self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE:
             self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
-        elif self.operation_mode == PLAYLIST_NOT_FOUND_ERROR_MODE:
+        elif self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
             self._print_playlist_not_found_error()
-        elif self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
+        elif self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE:
             self._print_playlist_load_error()
-        elif self.operation_mode == ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE or \
-                self.operation_mode == ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
-            self._print_save_modified_playlist(self.operation_mode)
-        elif self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
+        elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE or \
+                self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
+            self._print_save_modified_playlist(self.ws.operation_mode)
+        elif self.ws.operation_mode == self.ws.PLAYLIST_RELOAD_CONFIRM_MODE:
             self._print_playlist_reload_confirmation()
-        elif self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
+        elif self.ws.operation_mode == self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
             self._print_playlist_dirty_reload_confirmation()
-        elif self.operation_mode == PLAYLIST_RELOAD_ERROR_MODE:
+        elif self.ws.operation_mode == self.ws.PLAYLIST_RELOAD_ERROR_MODE:
             self._print_playlist_reload_error()
-        elif self.operation_mode == SAVE_PLAYLIST_ERROR_1_MODE:
+        elif self.ws.operation_mode == self.ws.SAVE_PLAYLIST_ERROR_1_MODE:
             self._print_save_playlist_error_1()
-        elif self.operation_mode == SAVE_PLAYLIST_ERROR_2_MODE:
+        elif self.ws.operation_mode == self.ws.SAVE_PLAYLIST_ERROR_2_MODE:
             self._print_save_playlist_error_2()
-        elif self.operation_mode == REMOVE_STATION_MODE:
+        elif self.ws.operation_mode == self.ws.REMOVE_STATION_MODE:
             self.removeStation()
-        elif self.operation_mode == FOREIGN_PLAYLIST_ASK_MODE:
+        elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_ASK_MODE:
             self._print_handle_foreign_playlist()
-        elif self.operation_mode == FOREIGN_PLAYLIST_MESSAGE_MODE:
+        elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_MESSAGE_MODE:
             self._print_foreign_playlist_message()
-        elif self.operation_mode == FOREIGN_PLAYLIST_COPY_ERROR_MODE:
+        elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_COPY_ERROR_MODE:
             self._print_foreign_playlist_copy_error()
-        elif self.operation_mode == SEARCH_NORMAL_MODE or \
-                self.operation_mode == SEARCH_PLAYLIST_MODE:
+        elif self.ws.operation_mode == self.ws.SEARCH_NORMAL_MODE or \
+                self.ws.operation_mode == self.ws.SEARCH_PLAYLIST_MODE:
             self.search.show(self.bodyWin, repaint=True)
-        elif self.operation_mode == THEME_MODE:
+        elif self.ws.operation_mode == self.ws.THEME_MODE:
             self._theme_selector.parent = self.bodyWin
             self._show_theme_selector()
             if self.theme_forced_selection:
                 self._theme_selector.set_theme(self.theme_forced_selection)
-        elif self.operation_mode == PLAYLIST_RECOVERY_ERROR_MODE:
+        elif self.ws.operation_mode == self.ws.PLAYLIST_RECOVERY_ERROR_MODE:
             self._print_playlist_recovery_error()
-        elif self.operation_mode == ASK_TO_CREATE_NEW_THEME_MODE:
-            logger.error('DE previous_mode = {}'.format(self.previous_mode))
-            logger.error('DE previous_operation_mode = {}'.format(self.previous_operation_mode))
+        elif self.ws.operation_mode == self.ws.ASK_TO_CREATE_NEW_THEME_MODE:
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('DE self.ws.previous_operation_mode = {}'.format(self.ws.previous_operation_mode))
             self._theme_selector.parent = self.bodyWin
-            if self.previous_operation_mode == CONFIG_MODE:
+            if self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
                 self._show_theme_selector_from_config()
             else:
                 self._show_theme_selector()
@@ -1575,11 +1546,11 @@ you have to manually address the issue.
             force_value will set trasparency if True or False,
             or toggle trasparency if None
         """
-        if self.window_mode == CONFIG_MODE and not changed_from_config_window:
+        if self.ws.window_mode == self.ws.CONFIG_MODE and not changed_from_config_window:
             return
         self._theme.toggleTransparency(force_value)
         self._cnf.use_transparency = self._theme.getTransparency()
-        if self.operation_mode == THEME_MODE:
+        if self.ws.operation_mode == self.ws.THEME_MODE:
             self._theme_selector.transparent = self._cnf.use_transparency
         self.headWin.refresh()
         self.bodyWin.refresh()
@@ -1659,10 +1630,11 @@ you have to manually address the issue.
             d2 = datetime.strptime(a_date, '%Y-%m-%d')
             delta = (d1 - d2).days
 
-            if delta > check_days:
+            if delta >= check_days:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: checking for updates')
             else:
+                clean_date_files(files)
                 if logger.isEnabledFor(logging.DEBUG):
                     if check_days - delta == 1:
                         logger.debug('detectUpdateThread: Will check again tomorrow...')
@@ -1700,6 +1672,7 @@ you have to manually address the issue.
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: Upstream version found: {}'.format(last_tag))
                 if this_version == last_tag:
+                    clean_date_files(files, -1)
                     create_tadays_date_file(a_path)
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('detectUpdateThread: No update found. Will check again in {} days. Exiting...'.format(check_days))
@@ -1766,23 +1739,16 @@ you have to manually address the issue.
 
 
     def keypress(self, char):
+        #if logger.isEnabledFor(logging.ERROR):
+        #    logger.error('DE {}'.format(self.ws._dq))
 
-        if self.operation_mode == CONFIG_SAVE_ERROR_MODE:
+        if self.ws.operation_mode == self.ws.CONFIG_SAVE_ERROR_MODE:
             # exit
             return -1
 
-        if self.operation_mode == NOT_IMPLEMENTED_YET_MODE:
-            self.helpWinContainer = None
-            self.helpWin = None
-            self.operation_mode = self.previous_mode
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: Exiting NOT_IMPLEMENTED_YET_MODE')
-            self.refreshBody()
-            return
-
         if char == ord('M'):
-            if (self.operation_mode == NORMAL_MODE or \
-                    self.operation_mode == PLAYLIST_MODE):
+            if (self.ws.operation_mode == self.ws.NORMAL_MODE or \
+                    self.ws.operation_mode == self.ws.PLAYLIST_MODE):
                 self.jumpnr = ''
                 self._random_requested = False
                 if self.number_of_items > 0:
@@ -1793,24 +1759,25 @@ you have to manually address the issue.
 
         if char in (ord('t'), ):
             # only open it on main modes
-            if self.window_mode != THEME_MODE and  \
-                    self.operation_mode <= SEARCH_PLAYLIST_MODE:
+            if self.ws.window_mode != self.ws.THEME_MODE and  \
+                    self.ws.operation_mode <= self.ws.SEARCH_PLAYLIST_MODE:
                 self.jumpnr = ''
                 self._random_requested = False
                 self._config_win = None
                 self.theme_forced_selection = None
-                if self.operation_mode == NORMAL_MODE:
-                    self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self.stations]
-                self.previous_mode = self.operation_mode
-                self.operation_mode = self.window_mode = THEME_MODE
+                if self.ws.operation_mode == self.ws.NORMAL_MODE:
+                    self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self.stations]
+                #self.ws.previous_operation_mode = self.ws.operation_mode
+                #self.ws.operation_mode = self.ws.window_mode = self.ws.THEME_MODE
+                self.ws.window_mode = self.ws.THEME_MODE
                 self._show_theme_selector()
                 return
 
-        if self.operation_mode <= PLAYLIST_MODE and char == ord('p'):
+        if self.ws.operation_mode <= self.ws.PLAYLIST_MODE and char == ord('p'):
             self._goto_playing_station()
             return
 
-        if self.operation_mode == CONFIG_MODE:
+        if self.ws.operation_mode == self.ws.CONFIG_MODE:
             if char not in (ord('m'), ord('v'), ord('.'),
                     ord(','), ord('+'), ord('-'),
                     ord('?'), ord('#'), curses.KEY_RESIZE):
@@ -1820,11 +1787,9 @@ you have to manually address the issue.
                     self._playlist_select_win = None
                     self._station_select_win = None
                 ret, ret_list = self._config_win.keypress(char)
-                if ret == SELECT_PLAYER_MODE:
+                if ret == self.ws.SELECT_PLAYER_MODE:
                     """ Config > Select Player """
-                    self.operation_mode = SELECT_PLAYER_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: CONFIG_MODE => SELECT_PLAYER_MODE')
+                    self.ws.operation_mode = self.ws.SELECT_PLAYER_MODE
                     if self._player_select_win is None:
                         self._player_select_win = PyRadioSelectPlayer(self.bodyMaxY,
                                 self.bodyMaxX, self._config_win._config_options['player'][1])
@@ -1835,11 +1800,9 @@ you have to manually address the issue.
                     self._player_select_win.setPlayers(self._config_win._config_options['player'][1])
                     self._player_select_win.refresh_selection()
 
-                elif ret == SELECT_ENCODING_MODE:
+                elif ret == self.ws.SELECT_ENCODING_MODE:
                     """ Config > Select Default Encoding """
-                    self.operation_mode = SELECT_ENCODING_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: CONFIG_MODE => SELECT_ENCODING_MODE')
+                    self.ws.operation_mode = self.ws.SELECT_ENCODING_MODE
                     if self._encoding_select_win is None:
                         self._encoding_select_win = PyRadioSelectEncodings(self.bodyMaxY,
                                 self.bodyMaxX, self._cnf.default_encoding)
@@ -1849,11 +1812,9 @@ you have to manually address the issue.
                     self._encoding_select_win.refresh_win()
                     self._encoding_select_win.setEncoding(self._config_win._config_options['default_encoding'][1])
 
-                elif ret == SELECT_PLAYLIST_MODE:
+                elif ret == self.ws.SELECT_PLAYLIST_MODE:
                     """ Config > Select Default Playlist """
-                    self.operation_mode = SELECT_PLAYLIST_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: CONFIG_MODE => SELECT_PLAYLIST_MODE')
+                    self.ws.operation_mode = self.ws.SELECT_PLAYLIST_MODE
                     if self._playlist_select_win is None:
                         self._playlist_select_win = PyRadioSelectPlaylist(self.bodyWin,
                                 self._cnf.stations_dir,
@@ -1864,11 +1825,9 @@ you have to manually address the issue.
                     self._playlist_select_win.refresh_win()
                     self._playlist_select_win.setPlaylist(self._config_win._config_options['default_playlist'][1])
 
-                elif ret == SELECT_STATION_MODE:
+                elif ret == self.ws.SELECT_STATION_MODE:
                     """ Config > Select Default Station """
-                    self.operation_mode = SELECT_STATION_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: CONFIG_MODE => SELECT_STATION_MODE')
+                    self.ws.operation_mode = self.ws.SELECT_STATION_MODE
                     if self._station_select_win is None:
                         self._station_select_win = PyRadioSelectStation(self.bodyWin,
                                 self._cnf.stations_dir,
@@ -1885,9 +1844,7 @@ you have to manually address the issue.
                     msg = ( 'Error saving config. Press any key to exit...',
                             'Config saved successfully!',
                             'Config saved - Restarting playback (encoding changed)')
-                    self.operation_mode = self.window_mode = NORMAL_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: CONFIG_MODE => NORMAL_MODE')
+                    self.ws.close_window()
                     self.bodyWin.box()
                     self._print_body_header()
                     self.refreshBody()
@@ -1900,8 +1857,6 @@ you have to manually address the issue.
                                 self.refreshBody()
                             self.log.display_help_message = False
                             self.log.write(msg[0], thread_lock=None, help_msg=False)
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('MODE: NORMAL_MODE => CONFIG_SAVE_ERROR_MODE')
                             self._print_config_save_error()
                         elif ret == 0:
                             # Config saved successfully
@@ -1946,7 +1901,7 @@ you have to manually address the issue.
                     self._config_win = None
                 return
 
-        elif self.operation_mode == SELECT_PLAYER_MODE:
+        elif self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE:
             if char not in (ord('m'), ord('v'), ord('.'),
                     ord(','), ord('+'), ord('-'),
                     ord('?'), ord('#'), curses.KEY_RESIZE):
@@ -1957,13 +1912,11 @@ you have to manually address the issue.
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('new_players = {}'.format(new_players))
                         self._config_win._config_options['player'][1] = new_players
-                    self.operation_mode = self.window_mode = CONFIG_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: SELECT_PLAYER_MODE => CONFIG_MODE')
+                    self.ws.close_window()
                     self._config_win.refresh_config_win()
                 return
 
-        elif self.operation_mode == SELECT_STATION_ENCODING_MODE:
+        elif self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE:
             """ select station's encoding from main window """
             if char not in (ord('m'), ord('v'), ord('.'),
                     ord(','), ord('+'), ord('-'),
@@ -1985,14 +1938,12 @@ you have to manually address the issue.
                             if self.player.isPlaying():
                                 curses.ungetch('l')
                         #self._config_win._config_options['default_encoding'][1] = ret_encoding
-                    self.operation_mode = self.window_mode = NORMAL_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: SELECT_STATION_ENCODING_MODE => NORMAL_MODE')
+                    self.ws.close_window()
                     self.refreshBody()
                     self._encoding_select_win = None
                 return
 
-        elif self.operation_mode == SELECT_ENCODING_MODE:
+        elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE:
             """ select global encoding from config window """
             if char not in (ord('m'), ord('v'), ord('.'),
                     ord(','), ord('+'), ord('-'),
@@ -2003,13 +1954,11 @@ you have to manually address the issue.
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('new encoding = {}'.format(ret_encoding))
                         self._config_win._config_options['default_encoding'][1] = ret_encoding
-                    self.operation_mode = self.window_mode = CONFIG_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: SELECT_ENCODING_MODE => CONFIG_MODE')
+                    self.ws.close_window()
                     self._config_win.refresh_config_win()
                 return
 
-        elif self.operation_mode == SELECT_PLAYLIST_MODE:
+        elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE:
             if char not in (ord('m'), ord('v'), ord('.'),
                     ord(','), ord('+'), ord('-'),
                     ord('?'), ord('#'), curses.KEY_RESIZE):
@@ -2023,13 +1972,11 @@ you have to manually address the issue.
                             self._config_win._config_options['default_station'][1] = 'False'
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('New default_playlist = "{0}", New default station = "{1}"'.format(ret_playlist, self._config_win._config_options['default_station'][1]))
-                    self.operation_mode = self.window_mode = CONFIG_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: SELECT_PLAYLIST_MODE => CONFIG_MODE')
+                    self.ws.close_window()
                     self._config_win.refresh_config_win()
                 return
 
-        elif self.operation_mode == SELECT_STATION_MODE:
+        elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
             if char not in (ord('m'), ord('v'), ord('.'),
                     ord(','), ord('+'), ord('-'),
                     ord('?'), ord('#'), curses.KEY_RESIZE):
@@ -2039,37 +1986,33 @@ you have to manually address the issue.
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('New default station = "{}"'.format(ret_station))
                         self._config_win._config_options['default_station'][1] = ret_station
-                    self.operation_mode = self.window_mode = CONFIG_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: SELECT_STATION_MODE => CONFIG_MODE')
+                    self.ws.close_window()
                     self._config_win.refresh_config_win()
                 return
 
-        elif self.operation_mode == ASK_TO_CREATE_NEW_THEME_MODE:
+        elif self.ws.operation_mode == self.ws.ASK_TO_CREATE_NEW_THEME_MODE:
             if self.theme_forced_selection:
                 self._theme_selector.set_theme(self.theme_forced_selection)
             if char in (ord('y'), ):
                 pass
                 #ret = self._cnf.copy_playlist_to_config_dir()
                 #if ret == 0:
-                #    self.operation_mode = self.window_mode = NORMAL_MODE
+                #    self.ws.close_window()
                 #    self.refreshBody()
                 #    if logger.isEnabledFor(logging.DEBUG):
-                #        logger.debug('MODE: ASK_TO_CREATE_NEW_THEME_MODE -> THEME_MODE')
+                #        logger.debug('MODE: self.ws.ASK_TO_CREATE_NEW_THEME_MODE -> self.ws.THEME_MODE')
                 #elif ret == 1:
                 #    self._print_foreign_playlist_message()
                 #else:
                 #    """ error """
                 #    self._print_foreign_playlist_copy_error()
             elif not char in (ord('#'), curses.KEY_RESIZE):
-                    self.operation_mode = THEME_MODE
+                    self.ws.close_window()
                     self.refreshBody()
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: Cancel ASK_TO_CREATE_NEW_THEME_MODE -> THEME_MODE')
                     # Do this here to properly resize
                     return
 
-        elif self.operation_mode == THEME_MODE:
+        elif self.ws.operation_mode == self.ws.THEME_MODE:
             if char not in (ord('m'), ord('v'), ord('.'),
                     ord(','), ord('+'), ord('-'), ord('T'),
                     ord('?'), ord('#'), curses.KEY_RESIZE):
@@ -2083,16 +2026,9 @@ you have to manually address the issue.
                     if self._config_win:
                         self._config_win._config_options['theme'][1] = self._theme_selector._applied_theme_name
                     self._theme_selector = None
-                    self.operation_mode = self.window_mode = self.previous_mode
-                    if self.operation_mode == NORMAL_MODE:
-                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
-                    if logger.isEnabledFor(logging.DEBUG):
-                        if self.window_mode == CONFIG_MODE:
-                            logger.debug('MODE: THEME_MODE => CONFIG_MODE')
-                        elif self.operation_mode == NORMAL_MODE:
-                            logger.debug('MODE: THEME_MODE => NORMAL_MODE')
-                        else:
-                            logger.debug('MODE: THEME_MODE => PLAYLIST_MODE')
+                    self.ws.close_window()
+                    if self.ws.operation_mode == self.ws.NORMAL_MODE:
+                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
                     self.refreshBody()
 
                 elif theme_id == -2:
@@ -2122,7 +2058,7 @@ you have to manually address the issue.
                     # update config window
                     if self._config_win:
                         self._config_win._config_options['theme'][1] = self._theme_name
-                    if self.window_mode == CONFIG_MODE:
+                    if self.ws.window_mode == self.ws.CONFIG_MODE:
                         save_theme = True
                     # make default
                     if save_theme:
@@ -2142,24 +2078,17 @@ you have to manually address the issue.
                 self.refreshBody()
             return
 
-        elif self.operation_mode == NO_PLAYER_ERROR_MODE:
+        elif self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
             """ if no player, don't serve keyboard """
             return
 
-        elif self.operation_mode == SEARCH_NORMAL_MODE or \
-                self.operation_mode == SEARCH_PLAYLIST_MODE:
+        elif self.ws.operation_mode == self.ws.SEARCH_NORMAL_MODE or \
+                self.ws.operation_mode == self.ws.SEARCH_PLAYLIST_MODE:
             self._random_requested = False
             ret = self.search.keypress(self.search._edit_win, char)
             if ret == 0:
                 # perform search
-                if self.operation_mode == SEARCH_NORMAL_MODE:
-                    self.operation_mode = self.window_mode = NORMAL_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: SEARCH_NORMAL_MODE -> NORMAL_MODE')
-                else:
-                    self.operation_mode = self.window_mode = PLAYLIST_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: SEARCH_PLAYLIST_MODE -> PLAYLIST_MODE')
+                self.ws.close_window()
                 self.refreshBody()
                 sel = self.selection + 1
                 if sel == len(self.stations):
@@ -2172,37 +2101,30 @@ you have to manually address the issue.
                     self.refreshBody()
             elif ret == -1:
                 # cancel search
-                if self.operation_mode == SEARCH_NORMAL_MODE:
-                    self.operation_mode = self.window_mode = NORMAL_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: Cancel SEARCH_NORMAL_MODE -> NORMAL_MODE')
-                else:
-                    self.operation_mode = self.window_mode = PLAYLIST_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: Cancel SEARCH_PLAYLIST_MODE -> PLAYLIST_MODE')
+                self.ws.close_window()
                 self.refreshBody()
                 return
 
         #elif char in (ord('/'), ):
         #    self.jumpnr = ''
         #    self._random_requested = False
-        #    if self.operation_mode == NORMAL_MODE or \
-        #            self.operation_mode == PLAYLIST_MODE:
+        #    if self.ws.operation_mode == self.ws.NORMAL_MODE or \
+        #            self.ws.operation_mode == self.ws.PLAYLIST_MODE:
         #        #self.search.string = '부'
         #        self.search.show(self.bodyWin)
-        #        if self.operation_mode == NORMAL_MODE:
-        #            self.operation_mode = SEARCH_NORMAL_MODE
+        #        if self.ws.operation_mode == self.ws.NORMAL_MODE:
+        #            self.ws.operation_mode = self.ws.SEARCH_NORMAL_MODE
         #            if logger.isEnabledFor(logging.DEBUG):
-        #                logger.debug('MODE: NORMAL_MODE -> SEARCH_NORMAL_MODE')
+        #                logger.debug('MODE: self.ws.NORMAL_MODE -> SEARCH_NORMAL_MODE')
         #        else:
-        #            self.operation_mode = SEARCH_PLAYLIST_MODE
+        #            self.ws.operation_mode = self.ws.SEARCH_PLAYLIST_MODE
         #            if logger.isEnabledFor(logging.DEBUG):
-        #                logger.debug('MODE: PLAYLIST_MODE -> SEARCH_PLAYLIST_MODE')
+        #                logger.debug('MODE: self.ws.PLAYLIST_MODE -> SEARCH_PLAYLIST_MODE')
         #    return
 
         #elif char in (ord('n'), ) and \
-        #        (self.operation_mode == NORMAL_MODE or \
-        #        self.operation_mode == PLAYLIST_MODE):
+        #        (self.ws.operation_mode == self.ws.NORMAL_MODE or \
+        #        self.ws.operation_mode == self.ws.PLAYLIST_MODE):
         #    self.jumpnr = ''
         #    self._random_requested = False
         #    """ search forward """
@@ -2219,8 +2141,8 @@ you have to manually address the issue.
         #    return
 
         #elif char in (ord('N'), ) and \
-        #        (self.operation_mode == NORMAL_MODE or \
-        #        self.operation_mode == PLAYLIST_MODE):
+        #        (self.ws.operation_mode == self.ws.NORMAL_MODE or \
+        #        self.ws.operation_mode == self.ws.PLAYLIST_MODE):
         #    self.jumpnr = ''
         #    self._random_requested = False
         #    """ search backwards """
@@ -2283,75 +2205,47 @@ you have to manually address the issue.
                         logger.info('Volume save inhibited because playback is off')
             return
 
-        elif self.operation_mode == PLAYLIST_SCAN_ERROR_MODE:
+        elif self.ws.operation_mode == self.ws.PLAYLIST_SCAN_ERROR_MODE:
             """ exit due to scan error """
             self.stopPlayer()
             return -1
 
-        elif self.operation_mode == PLAYLIST_RECOVERY_ERROR_MODE:
+        elif self.ws.operation_mode == self.ws.PLAYLIST_RECOVERY_ERROR_MODE:
             self._cnf.playlist_recovery_result = 0
-            self.operation_mode = PLAYLIST_MODE
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: PLAYLIST_RECOVERY_ERROR_MODE -> PLAYLIST_MODE')
+            self.ws.close_window()
             self.refreshBody()
             return
 
-        elif self.operation_mode == UPDATE_NOTIFICATION_MODE:
+        elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_MODE:
             self.helpWinContainer = None
             self.helpWin = None
-            self.operation_mode = NORMAL_MODE
+            self.ws.close_window()
             self._update_notify_lock.acquire()
             self._update_version = ''
             self._update_notify_lock.release()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: UPDATE_NOTIFICATION_MODE => NORMAL_MODE')
             self.refreshBody()
             return
 
-
-        elif self.operation_mode == THEME_HELP_MODE:
-            """ Theme help in on, hide it """
-            self.helpWinContainer = None
-            self.helpWin = None
-            if self.window_mode == CONFIG_MODE:
-                self.operation_mode = THEME_MODE
-            else:
-                self.operation_mode = self.window_mode = THEME_MODE
-            self.refreshBody()
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: THEME_HELP_MODE -> THEME_MODE')
-            return
-
-        elif self.operation_mode == SELECT_ENCODING_HELP_MODE:
-            """ Main help in on, just update """
-            self.helpWinContainer = None
-            self.helpWin = None
-            if self.window_mode == NORMAL_MODE:
-                self.operation_mode = SELECT_STATION_ENCODING_MODE
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: SELECT_ENCODING_HELP_MODE -> SELECT_STATION_ENCODING_MODE')
-            else:
-                self.operation_mode = SELECT_ENCODING_MODE
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: SELECT_ENCODING_HELP_MODE -> SELECT_ENCODING_MODE')
-            #self.setupAndDrawScreen()
-            self.refreshBody()
-            return
-
-        elif self.operation_mode == ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
+        elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
             if char in (ord('y'), ord('Y')):
                 if char == ord('Y'):
                     self._cnf.auto_save_playlist = True
                 ret = self.saveCurrentPlaylist()
-                if ret == -1:
-                    # do not exit
-                    return
+                #if ret == -1:
+                #    # do not exit
+                #    return
                 # exit program
+                if self.player:
+                    self.stopPlayer()
                 self.ctrl_c_handler(0,0)
                 return -1
             elif char in (ord('n'), ):
                 # exit program
+                if self.player:
+                    self.stopPlayer()
                 self._cnf.save_config()
+                self._wait_for_threads()
+                self._remove_lock_file()
                 return -1
             elif char in (curses.KEY_EXIT, ord('q'), 27):
                 self.bodyWin.nodelay(True)
@@ -2360,10 +2254,13 @@ you have to manually address the issue.
                 if char == -1:
                     """ ESCAPE """
                     self._cnf.save_config()
-                    return -1
+                    self.ws.close_window()
+                    self.refreshBody()
+                    #return -1
+                    return
             return
 
-        elif self.operation_mode == ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE:
+        elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE:
             if char in (ord('y'), ord('Y')):
                 if char == ord('Y'):
                     self._cnf.auto_save_playlist = True
@@ -2378,109 +2275,98 @@ you have to manually address the issue.
                 self.bodyWin.nodelay(False)
                 if char == -1:
                     """ ESCAPE """
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: Cancel ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE -> NORMAL_MODE')
-                    self.operation_mode = self.window_mode = NORMAL_MODE
+                    self.ws.close_window()
                     self.refreshBody()
             return
 
-        elif self.operation_mode == PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
+        elif self.ws.operation_mode == self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
             if char in (ord('y'), ord('Y')):
                 if char == ord('Y'):
                     self._cnf.confirm_playlist_reload = False
-                self.reloadCurrentPlaylist(PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
+                self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
             elif char in (ord('n'), ):
                 """ close confirmation message """
                 self.stations = self._cnf.stations
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: Cancel PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
-                self.operation_mode = self.window_mode = NORMAL_MODE
-                self.operation_mode = NORMAL_MODE
-                logger.info('*** mode = {}'.format(self.operation_mode))
+                self.ws.close_window()
                 self.refreshBody()
             else:
                 pass
             return
 
-        elif self.operation_mode == PLAYLIST_RELOAD_CONFIRM_MODE:
+        elif self.ws.operation_mode == self.ws.PLAYLIST_RELOAD_CONFIRM_MODE:
             if char in (ord('y'), ord('Y')):
                 if char == ord('Y'):
                     self._cnf.confirm_playlist_reload = False
-                self.reloadCurrentPlaylist(PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
+                self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
+                self.ws.close_window()
+                self.refreshBody()
             else:
                 """ close confirmation message """
                 self.stations = self._cnf.stations
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: Cancel PLAYLIST_RELOAD_CONFIRM_MODE -> NORMAL_MODE')
-                self.operation_mode = self.window_mode = NORMAL_MODE
-                self.operation_mode = NORMAL_MODE
+                    logger.debug('Canceling Playlist Reload')
+                self.ws.close_window()
                 self.refreshBody()
             return
 
-        #elif self.operation_mode == PLAYLIST_HELP_MODE or \
-        #        self.operation_mode == PLAYLIST_LOAD_ERROR_MODE or \
-        #            self.operation_mode == PLAYLIST_NOT_FOUND_ERROR_MODE:
+        #elif self.ws.operation_mode == self.ws.PLAYLIST_HELP_MODE or \
+        #        self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
+        #            self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
         #    """ close playlist help """
-        #    self.operation_mode = self.window_mode = PLAYLIST_MODE
+        #    self.ws.operation_mode = self.ws.window_mode = self.ws.PLAYLIST_MODE
         #    self.refreshBody()
         #    if logger.isEnabledFor(logging.DEBUG):
-        #        if self.operation_mode == PLAYLIST_HELP_MODE:
-        #            logger.debug('MODE: PLAYLIST_HELP_MODE -> PLAYLIST_MODE')
-        #        elif self.operation_mode == PLAYLIST_LOAD_ERROR_MODE:
-        #            logger.debug('MODE: PLAYLIST_LOAD_ERROR_MODE -> PLAYLIST_MODE')
+        #        if self.ws.operation_mode == self.ws.PLAYLIST_HELP_MODE:
+        #            logger.debug('MODE: self.ws.PLAYLIST_HELP_MODE -> self.ws.PLAYLIST_MODE')
+        #        elif self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE:
+        #            logger.debug('MODE: self.ws.PLAYLIST_LOAD_ERROR_MODE -> self.ws.PLAYLIST_MODE')
         #        else:
-        #            logger.debug('MODE: PLAYLIST_NOT_FOUND_ERROR_MODE -> PLAYLIST_MODE')
+        #            logger.debug('MODE: self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE -> self.ws.PLAYLIST_MODE')
         #    return
 
-        elif self.operation_mode == REMOVE_STATION_MODE:
+        elif self.ws.operation_mode == self.ws.REMOVE_STATION_MODE:
             if char in (ord('y'), ord('Y')):
                 self._get_active_stations()
                 deleted_station, self.number_of_items = self._cnf.remove_station(self.selection)
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Deleted station: "{}"'.format(deleted_station[0]))
-                self.operation_mode = self.window_mode = NORMAL_MODE
-                self._align_stations_and_refresh(REMOVE_STATION_MODE)
+                self.ws.close_window()
+                self._align_stations_and_refresh(self.ws.REMOVE_STATION_MODE)
                 if char == ord('Y'):
                     self._cnf.confirm_station_deletion = False
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: REMOVE_STATION_MODE -> NORMAL_MODE')
             else:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: Cancel REMOVE_STATION_MODE -> NORMAL_MODE')
-            self.operation_mode = self.window_mode = NORMAL_MODE
-            #self.setupAndDrawScreen()
+                    logger.debug('Canceling: Remove station')
+            self.ws.close_window()
             self.refreshBody()
             return
 
-        elif self.operation_mode == FOREIGN_PLAYLIST_ASK_MODE:
+        elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_ASK_MODE:
             if char in (ord('y'), ):
                 ret = self._cnf.copy_playlist_to_config_dir()
                 if ret == 0:
-                    self.operation_mode = self.window_mode = NORMAL_MODE
+                    ind = self._cnf.current_playlist_index()
+                    self.selections[self.ws.PLAYLIST_MODE][0] = self.selections[self.ws.PLAYLIST_MODE][2] = ind
+                    self.ws.close_window()
                     self.refreshBody()
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: FOREIGN_PLAYLIST_ASK_MODE -> NORMAL_MODE')
                 elif ret == 1:
                     self._print_foreign_playlist_message()
                 else:
                     """ error """
                     self._print_foreign_playlist_copy_error()
             elif char in (ord('n'), ):
-                self.operation_mode = self.window_mode = NORMAL_MODE
+                self.ws.close_window()
                 self.refreshBody()
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('MODE: Cancel FOREIGN_PLAYLIST_ASK_MODE -> NORMAL_MODE')
+                    logger.debug('Canceling: Move foreign playlist...')
             return
 
-        elif self.operation_mode in PASSIVE_WINDOWS.keys():
+        elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Part of PASSIVE_WINDOWS')
             self.helpWinContainer = None
             self.helpWin = None
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE: {0} *-> {1}'.format(MODE_NAMES[self.operation_mode], MODE_NAMES[PASSIVE_WINDOWS[self.operation_mode]]))
-            if PASSIVE_WINDOWS[self.operation_mode] in MAIN_MODES:
-                self.operation_mode = self.window_mode = PASSIVE_WINDOWS[self.operation_mode]
-            else:
-                self.operation_mode = PASSIVE_WINDOWS[self.operation_mode]
+            self.ws.close_window()
             self.refreshBody()
             return
 
@@ -2536,7 +2422,7 @@ you have to manually address the issue.
                 return
 
             if char in (curses.KEY_EXIT, ord('q'), 27) or \
-                    (self.operation_mode == PLAYLIST_MODE and \
+                    (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
                     char in (ord('h'), curses.KEY_LEFT)):
                 self.bodyWin.nodelay(True)
                 char = self.bodyWin.getch()
@@ -2545,23 +2431,19 @@ you have to manually address the issue.
                     """ ESCAPE """
                     self.jumpnr = ''
                     self._random_requested = False
-                    if self.operation_mode == PLAYLIST_MODE:
+                    if self.ws.operation_mode == self.ws.PLAYLIST_MODE:
                         """ return to stations view """
                         self.jumpnr = ''
-                        self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
-                        self.operation_mode = self.window_mode = NORMAL_MODE
+                        self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+                        self.ws.close_window()
                         self.search = self._stations_search
-                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
+                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
                         self.stations = self._cnf.stations
                         self.number_of_items = len(self.stations)
                         self.refreshBody()
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('MODE: Cancel PLAYLIST_MODE -> NORMAL_MODE')
                         return
                     else:
                         """ exit """
-                        if self.player:
-                            self.stopPlayer()
                         if self._cnf.dirty_playlist:
                             if self._cnf.auto_save_playlist:
                                 # save playlist and exit
@@ -2571,10 +2453,12 @@ you have to manually address the issue.
                                 #    return
                             else:
                                 # ask to save playlist
-                                self._print_save_modified_playlist(ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE)
+                                self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE)
                                 return
                         #else:
                         #    self._open_playlist()
+                        if self.player:
+                            self.stopPlayer()
                         self.ctrl_c_handler(0,0)
                         return -1
                 else:
@@ -2620,7 +2504,7 @@ you have to manually address the issue.
                     self.refreshBody()
                 return
 
-            if self.operation_mode == NORMAL_MODE:
+            if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == ord('c'):
                     self.jumpnr = ''
                     self._random_requested = False
@@ -2629,9 +2513,8 @@ you have to manually address the issue.
                         return
                     self._old_config_encoding = self._cnf.opts['default_encoding'][1]
                     # open config window
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: NORMAL_MODE => CONFIG_MODE')
-                    self.operation_mode = self.window_mode = CONFIG_MODE
+                    #self.ws.operation_mode = self.ws.window_mode = self.ws.CONFIG_MODE
+                    self.ws.window_mode = self.ws.CONFIG_MODE
                     if not self.player.isPlaying():
                         self.log.write('Selected player: {}'.format(self._format_player_string()), help_msg=True)
                     self._show_config_window()
@@ -2644,9 +2527,7 @@ you have to manually address the issue.
                     if self._old_station_encoding == '':
                         self._old_station_encoding = 'utf-8'
                     logger.info('encoding = {}'.format(self._old_station_encoding))
-                    self.operation_mode = SELECT_STATION_ENCODING_MODE
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('MODE: NORMAL_MODE => SELECT_STATION_ENCODING_MODE')
+                    self.ws.operation_mode = self.ws.SELECT_STATION_ENCODING_MODE
                     self._encoding_select_win = PyRadioSelectEncodings(self.bodyMaxY,
                             self.bodyMaxX, self._old_station_encoding)
                     self._encoding_select_win.init_window()
@@ -2665,7 +2546,7 @@ you have to manually address the issue.
                                 self._open_playlist()
                         else:
                             # ask to save playlist
-                            self._print_save_modified_playlist(ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE)
+                            self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE)
                     else:
                         self._open_playlist()
                     return
@@ -2730,17 +2611,17 @@ you have to manually address the issue.
                         if self._cnf.confirm_playlist_reload:
                             self._print_playlist_dirty_reload_confirmation()
                         else:
-                            self.operation_mode = PLAYLIST_RELOAD_CONFIRM_MODE
+                            self.ws.operation_mode = self.ws.PLAYLIST_RELOAD_CONFIRM_MODE
                             curses.ungetch('y')
                     else:
                         if self._cnf.confirm_playlist_reload:
                             self._print_playlist_reload_confirmation()
                         else:
-                            self.operation_mode = PLAYLIST_RELOAD_CONFIRM_MODE
+                            self.ws.operation_mode = self.ws.PLAYLIST_RELOAD_CONFIRM_MODE
                             curses.ungetch('y')
                     return
 
-            elif self.operation_mode == PLAYLIST_MODE:
+            elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
                 self._random_requested = False
 
                 if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
@@ -2767,32 +2648,30 @@ you have to manually address the issue.
                         return
                     else:
                         self.number_of_items = ret
-                        self.selections[self.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
-                        self.operation_mode = self.window_mode = NORMAL_MODE
-                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.operation_mode]
-                        self._align_stations_and_refresh(PLAYLIST_MODE)
+                        self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+                        self.ws.close_window()
+                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+                        self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
                         self.search = self._stations_search
                         if self.playing < 0:
                             self._put_selection_in_the_middle(force=True)
                             self.refreshBody()
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('MODE: PLAYLIST_MODE -> NORMAL_MODE')
                     return
 
                 elif char in (ord('r'), ):
                     self.jumpnr = ''
                     """ read playlists from disk """
                     txt = '''Reading playlists. Please wait...'''
-                    self._show_help(txt, PLAYLIST_MODE, caption=' ', prompt=' ', is_message=True)
+                    self._show_help(txt, self.ws.PLAYLIST_MODE, caption=' ', prompt=' ', is_message=True)
                     old_playlist = self._cnf.playlists[self.selection][0]
                     self.number_of_items, self.playing = self.readPlaylists()
                     if self.number_of_items > 0:
                         """ refresh reference """
                         self.stations = self._cnf.playlists
                         if self.playing == -1:
-                            self.selections[self.operation_mode] = [0, 0, -1, self._cnf.playlists]
+                            self.selections[self.ws.operation_mode] = [0, 0, -1, self._cnf.playlists]
                         else:
-                            self.selections[self.operation_mode] = (self.selection, self.startPos, self.playing, self._cnf.playlists)
+                            self.selections[self.ws.operation_mode] = (self.selection, self.startPos, self.playing, self._cnf.playlists)
                         self.refreshBody()
 
 # pymode:lint_ignore=W901
