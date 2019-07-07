@@ -82,7 +82,7 @@ class PyRadio(object):
 
     _random_requested = False
 
-    _theme = PyRadioTheme()
+    _theme = None
     _theme_name = 'dark'
     _theme_selector = None
     _theme_not_supported_thread = None
@@ -111,6 +111,7 @@ class PyRadio(object):
 
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
         self._cnf = pyradio_config
+        self._theme = PyRadioTheme(self._cnf)
         if theme:
             self._theme_name = theme
         ind = self._cnf.current_playlist_index()

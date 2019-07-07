@@ -13,6 +13,7 @@ from .common import *
 logger = logging.getLogger(__name__)
 
 
+
 class PyRadioTheme(object):
     _colors = {}
     _active_colors = {}
@@ -26,10 +27,9 @@ class PyRadioTheme(object):
 
     config_dir = ''
 
-    def __init__(self, cnf_dir=''):
+    def __init__(self, cnf):
+        self._cnf = cnf
         _applied_theme_max_colors = 8
-        if cnf_dir:
-            self.config_dir = cnf_dir
 
     def __del__(self):
         self._colors = None
@@ -99,11 +99,14 @@ class PyRadioTheme(object):
         return result, self.applied_theme_name
 
     def _load_default_theme(self, a_theme):
+        logger.error('DE a_theme = {}'.format(a_theme))
         self.applied_theme_name = 'dark'
         self._applied_theme_max_colors = 8
         try_theme = a_theme.replace('_16_colors', '')
         if try_theme == 'light':
             self.applied_theme_name = try_theme
+        elif self._cnf.theme.replace('_16_colors', '') == 'light':
+                self.applied_theme_name = 'light'
         if logger.isEnabledFor(logging.INFO):
             logger.info('Applying default theme: {}'.format(self.applied_theme_name))
         self.open_theme(self.applied_theme_name)
@@ -258,7 +261,7 @@ class PyRadioTheme(object):
     def _get_theme_path(self, a_theme):
         out_themes = []
         #self.root_path = path.join(path.dirname(__file__), 'stations.csv')
-        theme_dirs = [ path.join(self.config_dir, 'themes') ,
+        theme_dirs = [ path.join(self._cnf.stations_dir, 'themes') ,
             path.join(path.dirname(__file__), 'themes') ]
         for theme_dir in theme_dirs:
             files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
