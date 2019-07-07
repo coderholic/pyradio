@@ -48,6 +48,8 @@ def rel(path):
 class PyRadio(object):
     ws = Window_Stack()
 
+    _redisplay_list = []
+
     """ number of items (stations or playlists) in current view """
     number_of_items = 0
 
@@ -119,6 +121,45 @@ class PyRadio(object):
         self.stdscr = None
         self.requested_player = req_player
         self.number_of_items = len(self._cnf.stations)
+        self._redisplay = {
+                self.ws.NORMAL_MODE: self._redisplay_stations_and_playlists,
+                self.ws.PLAYLIST_MODE: self._redisplay_stations_and_playlists,
+                self.ws.CONFIG_MODE: self._redisplay_config,
+                self.ws.SELECT_PLAYER_MODE: self._redisplay_player_select_win_refresh_and_resize,
+                self.ws.SELECT_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
+                self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
+                self.ws.SELECT_PLAYLIST_MODE: self._playlist_select_win_refresh_and_resize,
+                self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
+                self.ws.MAIN_HELP_MODE: self._print_help,
+                self.ws.PLAYLIST_HELP_MODE: self._print_help,
+                self.ws.THEME_HELP_MODE: self._print_help,
+                self.ws.CONFIG_HELP_MODE: self._print_help,
+                self.ws.SELECT_PLAYER_HELP_MODE: self._print_help,
+                self.ws.SELECT_PLAYLIST_HELP_MODE: self._print_help,
+                self.ws.SELECT_STATION_HELP_MODE: self._print_help,
+                self.ws.SESSION_LOCKED_MODE: self._print_session_locked,
+                self.ws.UPDATE_NOTIFICATION_MODE: self._print_update_notification,
+                self.ws.SELECT_ENCODING_HELP_MODE: self._print_help,
+                self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
+                self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE: self._print_playlist_not_found_error,
+                self.ws.PLAYLIST_LOAD_ERROR_MODE: self._print_playlist_load_error,
+                self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE: self._redisplay_print_save_modified_playlist,
+                self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE: self._redisplay_print_save_modified_playlist,
+                self.ws.PLAYLIST_RELOAD_CONFIRM_MODE: self._print_playlist_reload_confirmation,
+                self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE: self._print_playlist_dirty_reload_confirmation,
+                self.ws.PLAYLIST_RELOAD_ERROR_MODE: self._print_playlist_reload_error,
+                self.ws.SAVE_PLAYLIST_ERROR_1_MODE: self._print_save_playlist_error_1,
+                self.ws.SAVE_PLAYLIST_ERROR_2_MODE: self._print_save_playlist_error_2,
+                self.ws.REMOVE_STATION_MODE: self.removeStation,
+                self.ws.FOREIGN_PLAYLIST_ASK_MODE: self._print_handle_foreign_playlist,
+                self.ws.FOREIGN_PLAYLIST_MESSAGE_MODE: self._print_foreign_playlist_message,
+                self.ws.FOREIGN_PLAYLIST_COPY_ERROR_MODE: self._print_foreign_playlist_copy_error,
+                self.ws.SEARCH_NORMAL_MODE: self._redisplay_search_show,
+                self.ws.SEARCH_PLAYLIST_MODE: self._redisplay_search_show,
+                self.ws.THEME_MODE: self._redisplay_theme_mode,
+                self.ws.PLAYLIST_RECOVERY_ERROR_MODE: self._print_playlist_recovery_error,
+                self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
+                }
 
     def __del__(self):
         self.transientWin = None
@@ -301,42 +342,36 @@ class PyRadio(object):
         self.footerWin.bkgd(' ', curses.color_pair(7))
         self.footerWin.noutrefresh()
 
-    def refreshBody(self):
+    def _update_redisplay_list(self):
+        def _get_redisplay_index():
+            for n in range(-1, - len(self.ws._dq) - 1, -1):
+                if self.ws._dq[n][0] == self.ws._dq[n][1]:
+                    return n
+            return 0
+        self._redisplay_list = list(self.ws._dq)[_get_redisplay_index():]
+        if not self._redisplay_list:
+            self._redisplay_list = [ 0, 0 ]
+
+    def refreshBody(self, start=0):
+        self._update_redisplay_list()
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE {}'.format(self.ws._dq))
-        if self.ws.window_mode == self.ws.CONFIG_MODE:
-            self._config_win.parent = self.bodyWin
-            self._config_win.init_config_win()
-            self._config_win.refresh_config_win()
-            if self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE or \
-                    self.ws.operation_mode == self.ws.SELECT_PLAYER_HELP_MODE:
-                self._player_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
-            elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE or \
-                    self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE or \
-                    self.ws.operation_mode == self.ws.SELECT_ENCODING_HELP_MODE:
-                self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
-            elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE or \
-                    self.ws.operation_mode == self.ws.SELECT_PLAYLIST_HELP_MODE:
-                self._playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
-            elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE or \
-                    self.ws.operation_mode == self.ws.SELECT_STATION_HELP_MODE:
-                self._station_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
-        else:
-            self.bodyWin.erase()
-            self.bodyWin.box()
-            self.bodyWin.move(1, 1)
-            maxDisplay = self.bodyMaxY - 1
-            self._print_body_header()
-            if self.number_of_items > 0:
-                pad = len(str(self.startPos + self.bodyMaxY - 2))
-                for lineNum in range(maxDisplay - 1):
-                    i = lineNum + self.startPos
-                    if i < len(self.stations):
-                        self.__displayBodyLine(lineNum, pad, self.stations[i])
-                    else:
-                        break
-            self.bodyWin.refresh()
-        self._redisplay_transient_window()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('refreshBody: redisplay windows: {}'.format(self._redisplay_list))
+        end = len(self._redisplay_list)
+        if end == 0: end = 1
+        for n in range(start, end):
+            if n == 1:
+                if self._theme_selector:
+                    self.theme_forced_selection = self._theme_selector._themes[self._theme_selector.selection]
+            self._redisplay[self._redisplay_list[n][0]]()
+            # display playlist recovered
+            if self._cnf.playlist_recovery_result == -1:
+                self._show_playlist_recovered()
+                return
+            # display theme not supported
+            if self._cnf.theme_not_supported:
+                self._show_theme_not_supported()
 
     def refreshNoPlayerBody(self, a_string):
         col = curses.color_pair(5)
@@ -589,7 +624,9 @@ class PyRadio(object):
                 self.refreshBody()
         else:
             self.playing = old_playing
-            self._redisplay_transient_window()
+            #self._update_redisplay_list()
+            #self._redisplay_transient_window()
+            self.refreshBody(start=1)
         if logger.isEnabledFor(logging.INFO):
             logger.info('Failed to connect to: "{}"'.format(self._last_played_station))
         self.log.write('Failed to connect to: "{}"'.format(self._last_played_station))
@@ -1455,80 +1492,6 @@ you have to manually address the issue.
         else:
             return self._cnf.default_encoding
 
-    def _redisplay_transient_window(self):
-        if self._theme_selector:
-            self.theme_forced_selection = self._theme_selector._themes[self._theme_selector.selection]
-        if self._cnf.playlist_recovery_result == -1:
-            self._show_playlist_recovered()
-            return
-        if self.ws.operation_mode == self.ws.MAIN_HELP_MODE or \
-            self.ws.operation_mode == self.ws.PLAYLIST_HELP_MODE or \
-            self.ws.operation_mode == self.ws.THEME_HELP_MODE or \
-            self.ws.operation_mode == self.ws.CONFIG_HELP_MODE or \
-            self.ws.operation_mode == self.ws.SELECT_PLAYER_HELP_MODE or \
-            self.ws.operation_mode == self.ws.SELECT_PLAYLIST_HELP_MODE or \
-            self.ws.operation_mode == self.ws.SELECT_STATION_HELP_MODE:
-                self._print_help()
-        elif self.ws.operation_mode == self.ws.SESSION_LOCKED_MODE:
-            self._print_session_locked()
-        elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_MODE:
-            self._print_update_notification()
-        elif self.ws.operation_mode == self.ws.SELECT_ENCODING_HELP_MODE:
-            if self.ws.window_mode == self.ws.NORMAL_MODE:
-                self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
-            self._print_help()
-        if self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE:
-            self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
-        elif self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
-            self._print_playlist_not_found_error()
-        elif self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE:
-            self._print_playlist_load_error()
-        elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE or \
-                self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
-            self._print_save_modified_playlist(self.ws.operation_mode)
-        elif self.ws.operation_mode == self.ws.PLAYLIST_RELOAD_CONFIRM_MODE:
-            self._print_playlist_reload_confirmation()
-        elif self.ws.operation_mode == self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
-            self._print_playlist_dirty_reload_confirmation()
-        elif self.ws.operation_mode == self.ws.PLAYLIST_RELOAD_ERROR_MODE:
-            self._print_playlist_reload_error()
-        elif self.ws.operation_mode == self.ws.SAVE_PLAYLIST_ERROR_1_MODE:
-            self._print_save_playlist_error_1()
-        elif self.ws.operation_mode == self.ws.SAVE_PLAYLIST_ERROR_2_MODE:
-            self._print_save_playlist_error_2()
-        elif self.ws.operation_mode == self.ws.REMOVE_STATION_MODE:
-            self.removeStation()
-        elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_ASK_MODE:
-            self._print_handle_foreign_playlist()
-        elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_MESSAGE_MODE:
-            self._print_foreign_playlist_message()
-        elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_COPY_ERROR_MODE:
-            self._print_foreign_playlist_copy_error()
-        elif self.ws.operation_mode == self.ws.SEARCH_NORMAL_MODE or \
-                self.ws.operation_mode == self.ws.SEARCH_PLAYLIST_MODE:
-            self.search.show(self.bodyWin, repaint=True)
-        elif self.ws.operation_mode == self.ws.THEME_MODE:
-            self._theme_selector.parent = self.bodyWin
-            self._show_theme_selector()
-            if self.theme_forced_selection:
-                self._theme_selector.set_theme(self.theme_forced_selection)
-        elif self.ws.operation_mode == self.ws.PLAYLIST_RECOVERY_ERROR_MODE:
-            self._print_playlist_recovery_error()
-        elif self.ws.operation_mode == self.ws.ASK_TO_CREATE_NEW_THEME_MODE:
-            if logger.isEnabledFor(logging.ERROR):
-                logger.error('DE self.ws.previous_operation_mode = {}'.format(self.ws.previous_operation_mode))
-            self._theme_selector.parent = self.bodyWin
-            if self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
-                self._show_theme_selector_from_config()
-            else:
-                self._show_theme_selector()
-            if self.theme_forced_selection:
-                self._theme_selector.set_theme(self.theme_forced_selection)
-            self._print_ask_to_create_theme()
-
-        if self._cnf.theme_not_supported:
-            self._show_theme_not_supported()
-
     def play_random(self):
         # Pick a random radio station
         if self.number_of_items > 0:
@@ -1570,7 +1533,6 @@ you have to manually address the issue.
         else:
             self._config_win.parent = self.bodyWin
             self._config_win.refresh_config_win()
-
 
     def detectUpdateThread(self, a_path, a_lock, stop):
         """ a thread to check if an update is available """
@@ -1736,8 +1698,6 @@ you have to manually address the issue.
                     break
                 delay(60, stop)
 
-
-
     def keypress(self, char):
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE {}'.format(self.ws._dq))
@@ -1769,7 +1729,7 @@ you have to manually address the issue.
                     self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self.stations]
                 #self.ws.previous_operation_mode = self.ws.operation_mode
                 #self.ws.operation_mode = self.ws.window_mode = self.ws.THEME_MODE
-                self.ws.window_mode = self.ws.THEME_MODE
+                self.ws.operation_mode = self.ws.THEME_MODE
                 self._show_theme_selector()
                 return
 
@@ -2673,5 +2633,65 @@ you have to manually address the issue.
                         else:
                             self.selections[self.ws.operation_mode] = (self.selection, self.startPos, self.playing, self._cnf.playlists)
                         self.refreshBody()
+
+    def _redisplay_stations_and_playlists(self):
+        self.bodyWin.erase()
+        self.bodyWin.box()
+        self.bodyWin.move(1, 1)
+        maxDisplay = self.bodyMaxY - 1
+        self._print_body_header()
+        if self.number_of_items > 0:
+            pad = len(str(self.startPos + self.bodyMaxY - 2))
+            for lineNum in range(maxDisplay - 1):
+                i = lineNum + self.startPos
+                if i < len(self.stations):
+                    self.__displayBodyLine(lineNum, pad, self.stations[i])
+                else:
+                    break
+        self.bodyWin.refresh()
+
+    def _redisplay_config(self):
+        self._config_win.parent = self.bodyWin
+        self._config_win.init_config_win()
+        self._config_win.refresh_config_win()
+
+    def _redisplay_player_select_win_refresh_and_resize(self):
+        self._player_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
+
+    def _redisplay_encoding_select_win_refresh_and_resize(self):
+        self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
+
+    def _playlist_select_win_refresh_and_resize(self):
+        self._playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
+
+    def _redisplay_encoding_select_win_refresh_and_resize(self):
+        self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
+
+    def _redisplay_station_select_win_refresh_and_resize(self):
+        self._station_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
+
+    def _redisplay_print_save_modified_playlist(self):
+        self._print_save_modified_playlist(self.ws.operation_mode)
+
+    def _redisplay_search_show(self):
+        self.search.show(self.bodyWin, repaint=True)
+
+    def _redisplay_theme_mode(self):
+        self._theme_selector.parent = self.bodyWin
+        self._show_theme_selector()
+        if self.theme_forced_selection:
+            self._theme_selector.set_theme(self.theme_forced_selection)
+
+    def _redisplay_ask_to_create_new_theme(self):
+        if logger.isEnabledFor(logging.ERROR):
+            logger.error('DE self.ws.previous_operation_mode = {}'.format(self.ws.previous_operation_mode))
+        self._theme_selector.parent = self.bodyWin
+        if self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
+            self._show_theme_selector_from_config()
+        else:
+            self._show_theme_selector()
+        if self.theme_forced_selection:
+            self._theme_selector.set_theme(self.theme_forced_selection)
+        self._print_ask_to_create_theme()
 
 # pymode:lint_ignore=W901
