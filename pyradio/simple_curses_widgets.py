@@ -367,7 +367,6 @@ class SimpleCursesLineEdit(object):
             bytes.append(get_check_next_byte())
             bytes.append(get_check_next_byte())
             bytes.append(get_check_next_byte())
-        #print('bytes = {}'.format(bytes))
         """ no zero byte allowed """
         while 0 in bytes:
             bytes.remove(0)

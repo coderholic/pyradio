@@ -1114,9 +1114,9 @@ class PyRadio(object):
 
     def _print_handle_foreign_playlist(self):
         txt ='''This is a "|foreign|" playlist (i.e. it does not
-            reside in PyRadio's config directory).
-            If you want to be able to easily load it again
-            in the future, it should be copied there.
+            reside in PyRadio's config directory). If you
+            want to be able to easily load it again in the
+            future, it should be copied there.
 
             Do you want to copy it in the config directory?
 

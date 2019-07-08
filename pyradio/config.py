@@ -275,11 +275,12 @@ class PyRadioStations(object):
                  2: rename txt to csv failed """
         backup_stationFile = stationFile.replace('.csv', '.txt')
         if path.isfile(backup_stationFile):
-            if logging:
+            try:
+                tmp = curses.COLORS
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Trying to recover backed up playlist: "{}"'.format(backup_stationFile))
-                else:
-                    print('Trying to recover backed up playlist:\n  "{}"'.format(backup_stationFile))
+            except:
+                print('Trying to recover backed up playlist:\n  "{}"'.format(backup_stationFile))
 
 
             if path.isfile(stationFile):
