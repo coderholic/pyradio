@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH PYRADIO 1 "June 2019"
+.TH PYRADIO 1 "July 2019"
 
 .SH NAME
 .PP
@@ -38,6 +38,8 @@ Print config directory location and exit.
 Use specified \fITHEME\fR.
 .IP \fB-ocd\fR,\fB--open-config-dir\fR
 Open config directory with default file manager.
+.IP \fB--unlock
+Remove sessions' lock file.
 .IP \fB-d\fR,\fB\ \--debug
 Enable \fBDEBUG MODE\fR.
 .IP \fB-h\fR,\fB\ \--help
@@ -420,6 +422,44 @@ In case of a bug or a glitch, please include this file to the issue you will ope
 
 .IP \fBNote:
 On \fBMac OS\fR, these file may be installed in \fI/usr/local/share/doc/pyradio\fR, depending on whether or not \fBSIP\fR is enabled.
+
+.SH CLEANING UP
+.PP
+As \fBpyradio\fR versions accumulate, when building from source, one may have to \fIclean up\fR old installation files.
+
+To do that, one has to observe the installation process in order to find out where the package is installed. The installation would complete printing the following messages (on \fIpython 3.7\fR):
+
+.HP
+
+\fIInstalled \fB/usr/lib/python3.7/site-packages\fI/pyradio-\fB0.7.8\fI-py3.7.egg
+.br
+Processing dependencies for pyradio==\fB0.7.8\fI
+.br
+Finished processing dependencies for pyradio==\fB0.7.8\fR
+
+.PP
+From this we get that the installation directory is \fB/usr/lib/python3.7/site-packages\fR. This may be different though, depending on the distribution and python version used.
+
+Let's see what \fBpyradio\fR files exist there:
+
+.HP
+
+\fI$ \fBls -d /usr/lib/python3.7/site-packages
+
+\fI/usr/lib/python3.7/site-packages/pyradio-\fB0.7.6.2\fI-py3.7.egg
+.br
+/usr/lib/python3.7/site-packages/pyradio-\fB0.7.7\fI-py3.7.egg
+.br
+/usr/lib/python3.7/site-packages/pyradio-\fB0.7.8\fI-py3.7.egg
+
+.PP
+As we see, previous versions still exist in this system: \fB0.7.6.2\fR and \fB0.7.7\fR. These files (actually directories) can safely be removed:
+
+.HP
+
+\fI$ \fBsudo rm -rf /usr/lib/python3.7/site-packages/pyradio-\fI0.7.6.2\fB-py3.7.egg
+.br
+\fI$ \fBsudo rm -rf /usr/lib/python3.7/site-packages/pyradio-\fI0.7.7\fB-py3.7.egg
 
 .SH AUTHORS
 .PP

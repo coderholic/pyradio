@@ -1,6 +1,6 @@
 " pyradio -- Console radio player. "
 
-version_info = (0, 7, 7)
+version_info = (0, 7, 8)
 
 __version__ = version = '.'.join(map(str, version_info))
 __project__ = __name__

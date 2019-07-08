@@ -82,6 +82,7 @@ optional arguments:
                         Print config directory location and exit.
   -ocd, --open-config-dir
                         Open config directory with default file manager.
+  --unlock              Remove sessions&#39; lock file.
   -d, --debug           Start pyradio in debug mode.</pre>
 <p>The following options can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>:</p>
 <ul>
@@ -256,6 +257,22 @@ volume=28</pre>
 <h2 id="update-notification">Update notification</h2>
 <p><strong>PyRadio</strong> will periodically (once every 10 days) check whether a new version has been released.</p>
 <p>If so, a notification message will be displayed, informing the user about it.</p>
+<h2 id="cleaning-up">Cleaning up</h2>
+<p>As <strong>PyRadio</strong> versions accumulate, when building from source, one may have to <em>clean up</em> old installation files.</p>
+<p>To do that, one has to observe the installation process in order to find out where the package is installed. The installation would complete printing the following messages (on <em>python 3.7</em>):</p>
+<pre>Installed /usr/lib/python3.7/site-packages/pyradio-0.7.8-py3.7.egg
+Processing dependencies for pyradio==0.7.8
+Finished processing dependencies for pyradio==0.7.8</pre>
+<p>From this we get that the installation directory is <strong>/usr/lib/python3.7/site-packages</strong>. This may be different though, depending on the distribution and python version used.</p>
+<p>Let’s see what <strong>PyRadio</strong> files exist there:</p>
+<pre>$ ls -d /usr/lib/python3.7/site-packages
+
+/usr/lib/python3.7/site-packages/pyradio-0.7.6.2-py3.7.egg
+/usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg
+/usr/lib/python3.7/site-packages/pyradio-0.7.8-py3.7.egg</pre>
+<p>As we see, previous versions still exist in this system: <strong>0.7.6.2</strong> and <strong>0.7.7</strong>. These files (actually directories) can safely be removed:</p>
+<pre>$ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-.7.6.2-py3.7.egg
+$ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg</pre>
 <h2 id="debug-mode">Debug mode</h2>
 <p>Adding the <strong><em>-d</em></strong> option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a href="https://github.com/coderholic/pyradio/issues">open in github</a>.</p>

@@ -63,6 +63,7 @@ optional arguments:
                         Print config directory location and exit.
   -ocd, --open-config-dir
                         Open config directory with default file manager.
+  --unlock              Remove sessions' lock file.
   -d, --debug           Start pyradio in debug mode.
 ```
 
@@ -373,6 +374,34 @@ If for any reason **PyRadio** always starts in "*locked mode*", one can **uncloc
 **PyRadio** will periodically (once every 10 days) check whether a new version has been released.
 
 If so, a notification message will be displayed, informing the user about it.
+
+## Cleaning up
+
+As **PyRadio** versions accumulate, when building from source, one may have to *clean up* old installation files.
+
+To do that, one has to observe the installation process in order to find out where the package is installed. The installation would complete printing the following messages (on *python 3.7*):
+
+    Installed /usr/lib/python3.7/site-packages/pyradio-0.7.8-py3.7.egg
+    Processing dependencies for pyradio==0.7.8
+    Finished processing dependencies for pyradio==0.7.8
+
+From this we get that the installation directory is **/usr/lib/python3.7/site-packages**. This may be different though, depending on the distribution and python version used.
+
+Let's see what **PyRadio** files exist there:
+
+
+    $ ls -d /usr/lib/python3.7/site-packages
+
+    /usr/lib/python3.7/site-packages/pyradio-0.7.6.2-py3.7.egg
+    /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg
+    /usr/lib/python3.7/site-packages/pyradio-0.7.8-py3.7.egg
+
+As we see, previous versions still exist in this system: **0.7.6.2** and **0.7.7**. These files (actually directories) can safely be removed:
+
+    $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-.7.6.2-py3.7.egg
+    $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg
+
+
 
 ## Debug mode
 
