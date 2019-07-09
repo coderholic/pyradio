@@ -33,7 +33,8 @@ do
         -e 's/<li><p>/<li>/g' \
         -e 's{</</p></li>{</li>{g' \
         -e 's/\.md">/.html">/g' \
-        -e '/h1 class="title"/d' ${out}
+        -e '/h1 class="title"/d' \
+        -e 's{</h2>{ <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style>&{' ${out}
     rm tmp.md
     git add ${out}
 done

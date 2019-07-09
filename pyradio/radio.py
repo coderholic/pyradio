@@ -107,8 +107,6 @@ class PyRadio(object):
     stop_update_notification_thread = False
     _update_notify_lock = threading.Lock()
 
-    _locked = False
-
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
         self._cnf = pyradio_config
         self._theme = PyRadioTheme(self._cnf)
@@ -277,9 +275,16 @@ class PyRadio(object):
         curses.doupdate()
 
     def initHead(self, info):
-        d_info = info + (self.maxX - len(info)) * ' '
         try:
-            self.headWin.addstr(0, 0, d_info, curses.color_pair(4))
+            self.headWin.addstr(0, 0, info, curses.color_pair(4))
+            if self._cnf.locked:
+                d_info = (self.maxX - len(info) - 16) * ' '
+                self.headWin.addstr('[', curses.color_pair(5))
+                self.headWin.addstr('Session Locked', curses.color_pair(4))
+                self.headWin.addstr(']', curses.color_pair(5))
+            else:
+                d_info = (self.maxX - len(info)) * ' '
+            self.headWin.addstr(d_info, curses.color_pair(4))
         except:
             pass
         rightStr = " www.coderholic.com/pyradio"

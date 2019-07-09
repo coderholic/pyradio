@@ -18,6 +18,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [PyRadio Themes](#pyradio-themes)
 * [Session Locking](#session-locking)
 * [Update notification](#update-notification)
+* [Cleaning up](#cleaning-up)
 * [Debug mode](#debug-mode)
 
 ## Requirements

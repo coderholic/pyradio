@@ -1,3 +1,7 @@
+2019-07-09 s-n-g
+    * A locked session is indicated next to PyRadio version
+    * Adding "Top" link to html files
+
 2019-07-08 s-n-g
 
     * Version 0.7.8
@@ -6,7 +10,7 @@
     * fixed exiting when playlist is modified
     * when applying a them which is not supported, using "light"
       if "light" or "light_16_colors" is default
-    * fixing update notification message "Will check gain in 0 days"
+    * fixing update notification message "Will check again in 0 days"
     * update notification will clean files in all cases
     * adding "M" to config station selection
     * updating help for playlist and config station selection

@@ -74,7 +74,7 @@ def shell():
     # set window title
     try:
         if pyradio_config.locked:
-            sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player (session locked)\x07")
+            sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07")
         else:
             sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player\x07")
     except:

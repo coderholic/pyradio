@@ -28,7 +28,7 @@
 <h1 id="pyradio">PyRadio</h1>
 <p>Command line internet radio player.</p>
 <p>Ben Dowling - <a href="https://github.com/coderholic">https://github.com/coderholic</a></p>
-<h2 id="table-of-contents">Table of contents</h2>
+<h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
 <li><a href="#requirements">Requirements</a></li>
 <li><a href="#installation">Installation</a></li>
@@ -42,18 +42,19 @@
 <li><a href="#pyradio-themes">PyRadio Themes</a></li>
 <li><a href="#session-locking">Session Locking</a></li>
 <li><a href="#update-notification">Update notification</a></li>
+<li><a href="#cleaning-up">Cleaning up</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
 </ul>
-<h2 id="requirements">Requirements</h2>
+<h2 id="requirements">Requirements <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
 <li>python 2.7+/3.5+</li>
 <li>MPV, MPlayer or VLC installed and in your path.</li>
 <li><a href="http://www.dest-unreach.org/socat/">socat</a> (if you wish to use MPV)</li>
 </ul>
-<h2 id="installation">Installation</h2>
+<h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (e.g. <em>Arch Linux</em> and derivatives can install <a href="https://aur.archlinux.org/packages/pyradio-git/">pyradio-git</a> from AUR).</p>
 <p>In any other case, and since <strong>PyRadio</strong> is currently not available via pip, you will have to <a href="build.html">build it from source</a>.</p>
-<h2 id="command-line-options">Command line options</h2>
+<h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre>$ pyradio -h
 
 usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
@@ -91,7 +92,7 @@ optional arguments:
 <li><strong>-u</strong> - parameter <strong>player</strong> (default value: <strong>mpv, mplayer, vlc</strong>)</li>
 <li><strong>-t</strong> - parameter <strong>theme</strong> (default value: <strong>dark</strong>)</li>
 </ul>
-<h2 id="controls">Controls</h2>
+<h2 id="controls">Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre>                  Main window                               Playlists window                   Themes window
 ------------------------------------------------------------------------------------------------------------------------------
 Up/Down/j/k/
@@ -118,13 +119,13 @@ Esc/q             Quit                                      -                   
 Esc/q/Left/h      -                                         Cancel / close window              Cancel / close window</pre>
 <p>The same logic applies to all <strong>PyRadio</strong> windows.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All windows support changing the volume and muting / unmuting the player (provided that <strong>PyRadio</strong> is actually connected to a station).</p>
-<h2 id="config-file">Config file</h2>
+<h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong><em>PyRadio</em></strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong><em>PyRadio</em></strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
 <p>The file can also be altered while <strong>PyRadio</strong> is running by pressing “<strong><em>c</em></strong>”, which will open the “<strong><em>Configuration window</em></strong>”. This window presents all <strong>PyRadio</strong> options and provide the way to change them and finally save them by pressing “<strong><em>s</em></strong>”.</p>
 <p>In any case, <strong>PyRadio</strong> will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).</p>
 <p>If saving the configuration file fails, <strong>PyRadio</strong> will create a back up file and terminate. When restarted, <strong>PyRadio</strong> will try to restore previously used settings from the said back up file.</p>
-<h2 id="about-playlist-files">About Playlist files</h2>
+<h2 id="about-playlist-files">About Playlist files <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
 <p>Optionally, a third column can be inserted, stating the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
 <p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
@@ -167,7 +168,7 @@ $ pyradio -s 5</pre>
 <p>A playlist that does not reside within the program’s configuration directory is considered a “<strong><em>foreign</em></strong>” playlist. This playlist can only be opened by the <strong>-s</strong> command line option.</p>
 <p>When this happens, <strong>PyRadio</strong> will offer you the choice to copy the playlist in its configuration directory, thus making it available for manipulation within the program.</p>
 <p>If a playlist of the same name already exists in the configuration directory, the “<strong><em>foreign</em></strong>” playlist will be time-stamped. For example, if a “<strong><em>foreign</em></strong>” playlist is named “<em>stations.csv</em>”, it will be named “<em>2019-01-11_13-35-47_stations.csv</em>” (provided that the action was taken on January 11, 2019 at 13:35:47).</p>
-<h2 id="specifying-stations-encoding">Specifying stations’ encoding</h2>
+<h2 id="specifying-stations-encoding">Specifying stations’ encoding <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Normally, stations provide information about their status (including the title of the song playing, which <strong>PyRadio</strong> displays) in Unicode (<strong>utf-8</strong> encoded). Therefore, <strong>PyRadio</strong> will use <strong>utf-8</strong> to decode such data, by default.</p>
 <p>In an ideal world that would be the case for all stations and everything would be ok and as far as <strong>PyRadio</strong> is concerned, songs’ titles would be correctly displayed. Unfortunately, this is not the case.</p>
 <p>A lot of stations encode and transmit data in a different encoding (typically the encoding used at the region the come from). The result in <strong>PyRadio</strong> would be that a song title would be incorrectly displayed, not displayed at all, or trying to displaying it might even break <strong>PyRadio</strong>’s layout.</p>
@@ -195,7 +196,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>A valid encoding list can be found at:</p>
 <p><a href="https://docs.python.org/2.7/library/codecs.html#standard-encodings">https://docs.python.org/2.7/library/codecs.html#standard-encodings</a></p>
 <p>replacing <strong>2.7</strong> with specific version: <strong>3.0</strong> up to current python version.</p>
-<h2 id="player-detection-selection">Player detection / selection</h2>
+<h2 id="player-detection-selection">Player detection / selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.</p>
 <p>Currently, it supports MPV, MPlayer and VLC, and it will look for them in that order. If none of them is found, the program will terminate with an error.</p>
 <p>MPV will be used only when the <a href="http://www.dest-unreach.org/socat/">socat</a> multipurpose relay is also installed.</p>
@@ -206,7 +207,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <pre>pyradio -u vlc,mplayer,mpv</pre>
 <p>will instruct <strong>PyRadio</strong> to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The default player to use can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>, parameter <strong>player</strong> (default value is <strong><em>mpv, mplayer, vlc</em></strong>).</p>
-<h2 id="player-default-volume-level">Player default volume level</h2>
+<h2 id="player-default-volume-level">Player default volume level <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>MPV and MPlayer, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with VLC.</p>
 <p>This introduces a problem to <strong>PyRadio</strong>: every time a user plays a station (i.e restarts playback), even though he may have already set the volume to a desired level, the playback starts at the player’s default level.</p>
 <p>The way to come around it, is to save the desired volume level in a way that it will be used by the player whenever it is restarted.</p>
@@ -228,7 +229,7 @@ volume=50</pre>
 [pyradio]
 volstep=1
 volume=28</pre>
-<h2 id="pyradio-themes">PyRadio Themes</h2>
+<h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> comes with 6 preconfigured (hard coded) themes:</p>
 <ol type="1">
 <li><strong>dark</strong> (8 color theme). This is the appearance <strong>PyRadio</strong> has always had. Enabled by default.</li>
@@ -249,15 +250,15 @@ volume=28</pre>
 <p>Pressing “<strong>T</strong>” will toggle the transparency setting and save this state in <strong>PyRadio</strong>’s configuration file (transparency is off by default).</p>
 <p>Setting transparency on, will actually force <strong>PyRadio</strong> to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
 <p>When the <em>Theme selection window</em> is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that transparency is <em>on</em>.</p>
-<h2 id="session-locking">Session Locking</h2>
+<h2 id="session-locking">Session Locking <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.</p>
 <p>Subsequent instances will be “<em>locked</em>”. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will <strong>not</strong> be recorded in the configuration file.</p>
 <h3 id="seeeion-unlocking">Seeeion unlocking</h3>
 <p>If for any reason <strong>PyRadio</strong> always starts in “<em>locked mode</em>”, one can <strong>unclock</strong> the session, using the “<em>–unlock</em>” command line paremater.</p>
-<h2 id="update-notification">Update notification</h2>
+<h2 id="update-notification">Update notification <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> will periodically (once every 10 days) check whether a new version has been released.</p>
 <p>If so, a notification message will be displayed, informing the user about it.</p>
-<h2 id="cleaning-up">Cleaning up</h2>
+<h2 id="cleaning-up">Cleaning up <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>As <strong>PyRadio</strong> versions accumulate, when building from source, one may have to <em>clean up</em> old installation files.</p>
 <p>To do that, one has to observe the installation process in order to find out where the package is installed. The installation would complete printing the following messages (on <em>python 3.7</em>):</p>
 <pre>Installed /usr/lib/python3.7/site-packages/pyradio-0.7.8-py3.7.egg
@@ -273,7 +274,7 @@ Finished processing dependencies for pyradio==0.7.8</pre>
 <p>As we see, previous versions still exist in this system: <strong>0.7.6.2</strong> and <strong>0.7.7</strong>. These files (actually directories) can safely be removed:</p>
 <pre>$ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-.7.6.2-py3.7.egg
 $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg</pre>
-<h2 id="debug-mode">Debug mode</h2>
+<h2 id="debug-mode">Debug mode <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Adding the <strong><em>-d</em></strong> option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a href="https://github.com/coderholic/pyradio/issues">open in github</a>.</p>
 </body>
