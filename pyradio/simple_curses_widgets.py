@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import curses
 import curses.ascii
+import logging
 from sys import version_info
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
+
+logger = logging.getLogger(__name__)
 
 class SimpleCursesLineEdit(object):
     """ Class to insert one line of text
@@ -196,6 +199,8 @@ class SimpleCursesLineEdit(object):
             if self.log is not None:
                 self.log('self.x = {}\n'.format(self.x))
         self._prepare_to_show()
+        self._caption_win.bkgdset(' ', self.box_color)
+        self._edit_win.bkgdset(' ', self.box_color)
         if self._boxed:
             self._caption_win.box()
         self._caption_win.refresh()
@@ -204,6 +209,7 @@ class SimpleCursesLineEdit(object):
     def keypress(self, win, char):
         """
          returns:
+            2: display help
             1: get next char
             0: exit edit mode, string isvalid
            -1: cancel
@@ -212,7 +218,10 @@ class SimpleCursesLineEdit(object):
             return 1
         if self.log is not None:
             self.log('char = {}\n'.format(char))
-        if char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+        if char in (ord('?'), ):
+            # display help
+            return 2
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             """ ENTER """
             if self._has_history:
                 self._input_history.add_to_history(self._string)
@@ -229,9 +238,29 @@ class SimpleCursesLineEdit(object):
                 self._curs_pos = 0
                 return -1
             else:
-                return 1
-        elif char in (curses.KEY_RIGHT, curses.ascii.ACK):
-            """ KEY_RIGHT, Alt-F """
+                if char in (ord('d'), ):
+                    """ A-D, clear to end of line """
+                    self.string = self._string[:self._curs_pos]
+                elif char in (ord('f'), ):
+                    """ A-F, move to next word """
+                    pos = len(self._string)
+                    for n in range(self._curs_pos + 1, len(self._string)):
+                        if self._string[n] == ' ':
+                            pos = n
+                            break
+                    self._curs_pos = pos
+                elif char in (ord('b'), ):
+                    """ A-B, move to previous word """
+                    pos = 0
+                    for n in range(self._curs_pos - 1, 0, -1):
+                        if self._string[n] == ' ':
+                            pos = n
+                            break
+                    self._curs_pos = pos
+                else:
+                    return 1
+        elif char in (curses.KEY_RIGHT, ):
+            """ KEY_RIGHT """
             self._curs_pos += 1
             if len(self._string) < self._curs_pos:
                 self._curs_pos = len(self._string)
@@ -246,6 +275,13 @@ class SimpleCursesLineEdit(object):
         elif char in (curses.KEY_END, curses.ascii.ENQ):
             """ KEY_END, ^E """
             self._curs_pos = len(self._string)
+        elif char in (curses.ascii.ETB, ):
+            """ ^W, clear to start of line """
+            self.string = self._string[self._curs_pos:]
+            self._curs_pos = 0
+        elif char in (curses.ascii.NAK, ):
+            """ ^U, clear line """
+            self.string = ''
         elif char in (curses.KEY_DC, curses.ascii.EOT):
             """ DEL key, ^D """
             if self._curs_pos < len(self._string):

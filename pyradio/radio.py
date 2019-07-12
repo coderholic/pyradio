@@ -120,6 +120,8 @@ class PyRadio(object):
         self.stdscr = None
         self.requested_player = req_player
         self.number_of_items = len(self._cnf.stations)
+        """ list of functions to open for entering
+            or redisplaying a mode """
         self._redisplay = {
                 self.ws.NORMAL_MODE: self._redisplay_stations_and_playlists,
                 self.ws.PLAYLIST_MODE: self._redisplay_stations_and_playlists,
@@ -129,16 +131,16 @@ class PyRadio(object):
                 self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
                 self.ws.SELECT_PLAYLIST_MODE: self._playlist_select_win_refresh_and_resize,
                 self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
-                self.ws.MAIN_HELP_MODE: self._print_help,
-                self.ws.PLAYLIST_HELP_MODE: self._print_help,
-                self.ws.THEME_HELP_MODE: self._print_help,
-                self.ws.CONFIG_HELP_MODE: self._print_help,
-                self.ws.SELECT_PLAYER_HELP_MODE: self._print_help,
-                self.ws.SELECT_PLAYLIST_HELP_MODE: self._print_help,
-                self.ws.SELECT_STATION_HELP_MODE: self._print_help,
+                self.ws.MAIN_HELP_MODE: self._show_main_help,
+                self.ws.PLAYLIST_HELP_MODE: self._show_playlist_help,
+                self.ws.THEME_HELP_MODE: self._show_theme_help,
+                self.ws.CONFIG_HELP_MODE: self._show_config_help,
+                self.ws.SELECT_PLAYER_HELP_MODE: self._show_config_player_help,
+                self.ws.SELECT_PLAYLIST_HELP_MODE: self._show_config_playlist_help,
+                self.ws.SELECT_STATION_HELP_MODE: self._show_config_station_help,
                 self.ws.SESSION_LOCKED_MODE: self._print_session_locked,
                 self.ws.UPDATE_NOTIFICATION_MODE: self._print_update_notification,
-                self.ws.SELECT_ENCODING_HELP_MODE: self._print_help,
+                self.ws.SELECT_ENCODING_HELP_MODE: self._show_config_encoding_help,
                 self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
                 self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE: self._print_playlist_not_found_error,
                 self.ws.PLAYLIST_LOAD_ERROR_MODE: self._print_playlist_load_error,
@@ -158,7 +160,33 @@ class PyRadio(object):
                 self.ws.THEME_MODE: self._redisplay_theme_mode,
                 self.ws.PLAYLIST_RECOVERY_ERROR_MODE: self._print_playlist_recovery_error,
                 self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
+                self.ws.SEARCH_HELP_MODE: self._show_search_help,
                 }
+        """ list of help functions """
+        self._display_help = {
+                self.ws.NORMAL_MODE: self._show_main_help,
+                self.ws.PLAYLIST_MODE: self._show_playlist_help,
+                self.ws.THEME_MODE: self._show_theme_help,
+                self.ws.SEARCH_NORMAL_MODE: self._show_search_help,
+                self.ws.SEARCH_PLAYLIST_MODE: self._show_search_help,
+                self.ws.CONFIG_MODE: self._show_config_help,
+                self.ws.SELECT_PLAYER_MODE: self._show_config_player_help,
+                self.ws.SELECT_PLAYLIST_MODE: self._show_config_playlist_help,
+                self.ws.SELECT_STATION_MODE: self._show_config_station_help,
+                self.ws.SELECT_STATION_ENCODING_MODE: self._show_config_encoding_help,
+                self.ws.SELECT_ENCODING_MODE: self._show_config_encoding_help,
+                }
+
+        # which search mode opens from each allowed mode
+        self.search_modes = {
+                self.ws.NORMAL_MODE: self.ws.SEARCH_NORMAL_MODE,
+                self.ws.PLAYLIST_MODE: self.ws.SEARCH_PLAYLIST_MODE,
+                }
+        # search modes opened from main windows
+        self.search_main_window_modes = (
+                self.ws.SEARCH_NORMAL_MODE,
+                self.ws.SEARCH_PLAYLIST_MODE,
+                )
 
     def __del__(self):
         self.transientWin = None
@@ -223,8 +251,8 @@ class PyRadio(object):
                 boxed = True,
                 has_history = True,
                 box_color = curses.color_pair(5),
-                caption_color = curses.color_pair(5),
-                edit_color = curses.color_pair(8),
+                caption_color = curses.color_pair(4),
+                edit_color = curses.color_pair(5),
                 cursor_color = curses.color_pair(6))
         if self._playlists_search is None:
             self._playlists_search = PyRadioSearch(parent = self.bodyWin,
@@ -232,8 +260,8 @@ class PyRadio(object):
                 boxed = True,
                 has_history = True,
                 box_color = curses.color_pair(5),
-                caption_color = curses.color_pair(5),
-                edit_color = curses.color_pair(8),
+                caption_color = curses.color_pair(4),
+                edit_color = curses.color_pair(5),
                 cursor_color = curses.color_pair(6))
         self.search = self._stations_search
         # position playlist in window
@@ -912,68 +940,14 @@ class PyRadio(object):
         return line
 
     def _print_help(self):
-        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            txt = """Up|/|j|/|PgUp
-                     Down|/|k|/|PgDown    |Change playlist selection.
-                     g <n>G           |Jump to first or n-th / last playlist.
-                     M                |Jump to the middle of the list.
-                     p                |Jump to loaded playlist.
-                     Enter|/|Right|/|l    |Open selected playlist.
-                     r                |Re-read playlists from disk.
-                     Esc|/|q|/|Left|/|h     |Cancel.
-                     %_Player Keys_
-                     -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / Save |v|olume (not in vlc).
-                     %_Other Keys_
-                     t T              |Load |t|heme / |T|oggle transparency."""
-            self._show_help(txt, mode_to_set=self.ws.PLAYLIST_HELP_MODE, caption=' Playlist Help ')
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = self.ws.PLAYLIST_HELP_MODE')
-
-        elif self.ws.window_mode == self.ws.THEME_MODE:
-            self._show_theme_help()
-
-        elif self.ws.window_mode == self.ws.CONFIG_MODE:
-            if self.ws.operation_mode == self.ws.THEME_MODE or \
-                    self.ws.operation_mode == self.ws.THEME_HELP_MODE:
-                self._show_theme_help()
-            elif self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE or \
-                    self.ws.operation_mode == self.ws.SELECT_PLAYER_HELP_MODE:
-                self._show_config_player_help()
-            elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE or \
-                    self.ws.operation_mode == self.ws.SELECT_ENCODING_HELP_MODE:
-                self._show_config_encoding_help()
-            elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE or \
-                    self.ws.operation_mode == self.ws.SELECT_PLAYLIST_HELP_MODE:
-                self._show_config_playlist_help()
-            elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE or \
-                    self.ws.operation_mode == self.ws.SELECT_STATION_HELP_MODE:
-                self._show_config_station_help()
-            else:
-                self._show_config_help()
-
-        elif self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE or \
-                self.ws.operation_mode == self.ws.SELECT_ENCODING_HELP_MODE:
-            self._show_config_encoding_help()
-
-        elif self.ws.window_mode == self.ws.NORMAL_MODE:
-            txt = """Up|/|j|/|PgUp
-                     Down|/|k|/|PgDown    |Change station selection.
-                     g <n>G           |Jump to first or n-th / last station.
-                     M                |Jump to the middle of the playlist.
-                     p                |Jump to playing station.
-                     Enter|/|Right|/|l    |Play selected station.
-                     r                |Select and play a random station.
-                     Space|/|Left|/|h     |Stop/start playing selected station.
-                     -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / Save |v|olume (not in vlc).
-                     o s R            ||O|pen / |S|ave / |R|eload playlist.
-                     e                |Change station's encoding.
-                     DEL|,|x            |Delete selected station.
-                     t T              |Load |t|heme / |T|oggle transparency.
-                     c                |Open Configuration window.
-                     Esc|/|q            |Quit. """
-            self._show_help(txt, mode_to_set=self.ws.MAIN_HELP_MODE)
+        #logger.error('DE \n\nself.ws.operation_mode = {}'.format(self.ws.operation_mode))
+        if self.ws.operation_mode in self._display_help.keys():
+            #logger.error('DE in display help')
+            self._display_help[self.ws.operation_mode]()
+        else:
+            #logger.error('DE in redisplay')
+            self._redisplay[self.ws.operation_mode]()
+        #logger.error('DE end _print_help')
 
     def _show_playlist_recovered(self):
         txt = 'Playlist recoverd!'
@@ -1012,84 +986,132 @@ class PyRadio(object):
         #arg[1].release()
         self.refreshBody()
 
+    def _show_main_help(self):
+        txt = """Up|,|j|,|PgUp|,
+                 Down|,|k|,|PgDown    |Change station selection.
+                 g| / |<n>G         |Jump to first or n-th / last station.
+                 M| / |p            |Jump to |M|iddle / |p|laying station.
+                 Enter|,|Right|,|l    |Play selected station.
+                 r                |Select and play a random station.
+                 Space|,|Left|,|h     |Stop , start playing selected station.
+                 -|/|+| or |,|/|.       |Change volume.
+                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                 o| / |s| / |R        ||O|pen / |S|ave / |R|eload playlist.
+                 e                |Change station's encoding.
+                 DEL|,|x            |Delete selected station.
+                 t| / |T            |Load |t|heme / |T|oggle transparency.
+                 c                |Open Configuration window.
+                 /| / |n| / |N        |Search, go to next / previous result.
+                 Esc|,|q            |Quit. """
+        self._show_help(txt, mode_to_set=self.ws.MAIN_HELP_MODE)
+
+    def _show_playlist_help(self):
+        txt = """Up|,|j|,|PgUp|,
+                 Down|,|k|,|PgDown    |Change playlist selection.
+                 g| / |<n>G         |Jump to first or n-th / last playlist.
+                 M| / |p            |Jump to |M|iddle / loaded |p|laylist.
+                 Enter|,|Right|,|l    |Open selected playlist.
+                 r                |Re-read playlists from disk.
+                 /| / |n| / |N        |Search, go to next / previous result.
+                 Esc|,|q|,|Left|,|h     |Cancel.
+                 %_Player Keys_
+                 -|/|+| or |,|/|.       |Change volume.
+                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                 %_Other Keys_
+                 t| / |T            |Load |t|heme / |T|oggle transparency."""
+        self._show_help(txt, mode_to_set=self.ws.PLAYLIST_HELP_MODE, caption=' Playlist Help ')
+
     def _show_theme_help(self):
-            txt = """Up|/|j|/|PgUp
-                     Down|/|k|/|PgDown    |Change theme selection.
-                     g <n>G           |Jump to first or n-th / last theme.
-                     Enter|/|Right|/|l    |Apply selected theme.
+            txt = """Up|,|j|,|PgUp|,
+                     Down|,|k|,|PgDown    |Change theme selection.
+                     g| / |<n>G         |Jump to first or n-th / last theme.
+                     Enter|,|Right|,|l    |Apply selected theme.
                      Space            |Apply theme and make it default.
                      s                |Make theme default and close window.
-                     Esc|/|q|/|Left|/|h     |Close window.
+                     Esc|,|q|,|Left|,|h     |Close window.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / Save |v|olume (not in vlc)."""
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=self.ws.THEME_HELP_MODE, caption=' Themes Help ')
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = self.ws.THEME_HELP_MODE')
+
+    def _show_search_help(self):
+            txt = """M-F| / |M-B           |Move to next / previous word.
+            Left| / |Right        |Move to next / previous character.
+            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+            ^W| / |M-D|,|^K         |Clear to start / end of line.
+            ^U                  |Clear line.
+            DEL|,|^D              |Delete character.
+            Backspace|,|^H        |Backspace (delete previous character).
+            Up|,|^N| / |Down|,|^P     |Get previous / next history item.
+            Enter| / |Esc         |Perform / cancel search.
+
+            |Managing player volume does not work in search mode.
+            """
+            self._show_help(txt, mode_to_set=self.ws.SEARCH_HELP_MODE, caption=' Search Help ')
 
     def _show_config_help(self):
-            txt = """Up|/|j|/|PgUp
-                     Down|/|k|/|PgDown          |Change option selection.
-                     g|/|Home G|/|End           |Jump to first / last option.
-                     Enter|/|Space|/|Right|/|l    |Change option value.
+            txt = """Up|,|j|,|PgUp|,
+                     Down|,|k|,|PgDown          |Change option selection.
+                     g|,|Home| / |G|,|End         |Jump to first / last option.
+                     Enter|,|Space|,|Right|,|l    |Change option value.
                      r                      |Revert to saved values.
                      d                      |Load default values.
                      s                      |Save config.
-                     Esc|/|q|/|Left|/|h           |Cancel.
+                     Esc|,|q|,|Left|,|h           |Cancel.
                      %_Player Keys_
                      -|/|+| or |,|/|.             |Change volume.
-                     m v                    ||M|ute player / Save |v|olume (not in vlc)."""
+                     m| / |v                  ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=self.ws.CONFIG_HELP_MODE, caption=' Configuration Help ')
 
     def _show_config_player_help(self):
-            txt = """Up|/|j|/|Down|/|k      |Change player selection.
+            txt = """Up|,|j|,|Down|,|k      |Change player selection.
                      TAB              |Move selection to other column.
-                     Enter|/|Space      |Move player to other column.
-                     Right|/|l          |Move player to the end of the list.
+                     Enter|,|Space      |Move player to other column.
+                     Right|,|l          |Move player to the end of the list.
                      r                |Revert to saved values.
                      s                |Save players.
-                     Esc|/|q|/|Left|/|h     |Cancel.
+                     Esc|,|q|,|Left|,|h     |Cancel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / Save |v|olume (not in vlc)."""
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=self.ws.SELECT_PLAYER_HELP_MODE, caption=' Player Selection Help ')
 
     def _show_config_playlist_help(self):
-            txt = """Up|/|j|/|PgUp
-                     Down|/|k|/|PgDown    |Change playlist selection.
-                     g <n>G           |Jump to first or n-th / last playlist.
-                     Enter|/|Space
-                     Right|/|l          |Select default playlist.
+            txt = """Up|,|j|,|PgUp|,
+                     Down|,|k|,|PgDown    |Change playlist selection.
+                     g| / |<n>G         |Jump to first or n-th / last playlist.
+                     Enter|,|Space|,
+                     Right|,|l          |Select default playlist.
                      r                |Revert to saved value.
-                     Esc|/|q|/|Left|/|h     |Canel.
+                     Esc|,|q|,|Left|,|h     |Canel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / Save |v|olume (not in vlc)."""
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=self.ws.SELECT_PLAYLIST_HELP_MODE, caption=' Playlist Selection Help ')
 
     def _show_config_station_help(self):
-            txt = """Up|/|j|/|PgUp
-                     Down|/|k|/|PgDown    |Change station selection.
-                     g <n>G           |Jump to first or n-th / last station.
+            txt = """Up|,|j|,|PgUp|,
+                     Down|,|k|,|PgDown    |Change station selection.
+                     g| / |<n>G         |Jump to first or n-th / last station.
                      M                |Jump to the middle of the list.
-                     Enter|/|Space
-                     Right|/|l          |Select default station.
+                     Enter|,|Space|,
+                     Right|,|l          |Select default station.
                      r                |Revert to saved value.
-                     Esc|/|q|/|Left|/|h     |Canel.
+                     Esc|,|q|,|Left|,|h     |Canel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / Save |v|olume (not in vlc)."""
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=self.ws.SELECT_STATION_HELP_MODE, caption=' Station Selection Help ')
 
     def _show_config_encoding_help(self):
-            txt = """Arrows|/|h|/|j|/|k|/|l|/|PgUp|/|/PgDn
-                     g|/|Home|/|G|/|End     |Change encoding selection.
-                     Enter|/|Space|/|s    |Save encoding.
+            txt = """Arrows|,|h|,|j|,|k|,|l|,|PgUp|,|,PgDn
+                     g|,|Home|,|G|,|End     |Change encoding selection.
+                     Enter|,|Space|,|s    |Save encoding.
                      r                |Revert to saved value.
-                     Esc|/|q            |Cancel.
+                     Esc|,|q            |Cancel.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
-                     m v              ||M|ute player / Save |v|olume (not in vlc)."""
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc)."""
             self._show_help(txt, mode_to_set=self.ws.SELECT_ENCODING_HELP_MODE, caption=' Encoding Selection Help ')
 
     def _print_session_locked(self):
@@ -1704,6 +1726,12 @@ you have to manually address the issue.
                     break
                 delay(60, stop)
 
+    def is_search_mode(self, a_mode):
+        for it in self.search_modes.items():
+            if it[1] == a_mode:
+                return True
+        return False
+
     def keypress(self, char):
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE {}'.format(self.ws._dq))
@@ -1726,7 +1754,8 @@ you have to manually address the issue.
         if char in (ord('t'), ):
             # only open it on main modes
             if self.ws.window_mode != self.ws.THEME_MODE and  \
-                    self.ws.operation_mode <= self.ws.SEARCH_PLAYLIST_MODE:
+                    self.ws.operation_mode <= self.ws.SEARCH_PLAYLIST_MODE and \
+                    not self.is_search_mode(self.ws.operation_mode):
                 self.jumpnr = ''
                 self._random_requested = False
                 self._config_win = None
@@ -2048,81 +2077,86 @@ you have to manually address the issue.
             """ if no player, don't serve keyboard """
             return
 
-        elif self.ws.operation_mode == self.ws.SEARCH_NORMAL_MODE or \
-                self.ws.operation_mode == self.ws.SEARCH_PLAYLIST_MODE:
+        elif char in (ord('/'), ) and \
+                self.ws.operation_mode in self.search_modes.keys():
+            self.jumpnr = ''
+            self._random_requested = False
+            if self.ws.operation_mode in self.search_modes.keys():
+                #self.search.string = '부'
+                if self.search.string:
+                    tmp_string = self.search.string
+                    logger.error('DE tmp_string = ' + tmp_string)
+                else:
+                    tmp_string = ''
+                self.search.show(self.bodyWin)
+                if tmp_string:
+                    self.search.string = tmp_string
+                self.ws.operation_mode = self.search_modes[self.ws.operation_mode]
+            return
+
+        elif char in (ord('n'), ) and \
+                self.ws.operation_mode in self.search_modes.keys():
+            self.jumpnr = ''
+            self._random_requested = False
+            """ search forward """
+            if self.search.string:
+                sel = self.selection + 1
+                if sel == len(self.stations):
+                    sel = 0
+                ret = self.search.get_next(self.stations, sel)
+                if ret is not None:
+                    self.setStation(ret)
+                    self._put_selection_in_the_middle(force=True)
+                    self.refreshBody()
+            else:
+                    curses.ungetch('/')
+            return
+
+        elif char in (ord('N'), ) and \
+                self.ws.operation_mode in self.search_modes.keys():
+            self.jumpnr = ''
+            self._random_requested = False
+            """ search backwards """
+            if self.search.string:
+                sel = self.selection - 1
+                if sel < 0:
+                    sel = len(self.stations) - 1
+                ret = self.search.get_previous(self.stations, sel)
+                if ret is not None:
+                    self.setStation(ret)
+                    self._put_selection_in_the_middle(force=True)
+                    self.refreshBody()
+            else:
+                curses.ungetch('/')
+            return
+
+        elif self.ws.operation_mode in self.search_main_window_modes:
             self._random_requested = False
             ret = self.search.keypress(self.search._edit_win, char)
             if ret == 0:
                 # perform search
-                self.ws.close_window()
-                self.refreshBody()
+                #self.ws.close_window()
+                #self.refreshBody()
                 sel = self.selection + 1
                 if sel == len(self.stations):
                     sel = 0
                 ret = self.search.get_next(self.stations, sel)
                 if ret is None:
-                    self.search.string = ''
+                    if self.search.string:
+                        self.search.print_not_found()
                 else:
                     self.setStation(ret)
+                    self._put_selection_in_the_middle(force=True)
+                    self.ws.close_window()
                     self.refreshBody()
+            elif ret == 2:
+                # display help
+                self._show_search_help()
             elif ret == -1:
                 # cancel search
                 self.ws.close_window()
                 self.refreshBody()
                 return
-
-        #elif char in (ord('/'), ):
-        #    self.jumpnr = ''
-        #    self._random_requested = False
-        #    if self.ws.operation_mode == self.ws.NORMAL_MODE or \
-        #            self.ws.operation_mode == self.ws.PLAYLIST_MODE:
-        #        #self.search.string = '부'
-        #        self.search.show(self.bodyWin)
-        #        if self.ws.operation_mode == self.ws.NORMAL_MODE:
-        #            self.ws.operation_mode = self.ws.SEARCH_NORMAL_MODE
-        #            if logger.isEnabledFor(logging.DEBUG):
-        #                logger.debug('MODE: self.ws.NORMAL_MODE -> SEARCH_NORMAL_MODE')
-        #        else:
-        #            self.ws.operation_mode = self.ws.SEARCH_PLAYLIST_MODE
-        #            if logger.isEnabledFor(logging.DEBUG):
-        #                logger.debug('MODE: self.ws.PLAYLIST_MODE -> SEARCH_PLAYLIST_MODE')
-        #    return
-
-        #elif char in (ord('n'), ) and \
-        #        (self.ws.operation_mode == self.ws.NORMAL_MODE or \
-        #        self.ws.operation_mode == self.ws.PLAYLIST_MODE):
-        #    self.jumpnr = ''
-        #    self._random_requested = False
-        #    """ search forward """
-        #    if self.search.string:
-        #        sel = self.selection + 1
-        #        if sel == len(self.stations):
-        #            sel = 0
-        #        ret = self.search.get_next(self.stations, sel)
-        #        if ret is not None:
-        #            self.setStation(ret)
-        #            self.refreshBody()
-        #    else:
-        #            curses.ungetch('/')
-        #    return
-
-        #elif char in (ord('N'), ) and \
-        #        (self.ws.operation_mode == self.ws.NORMAL_MODE or \
-        #        self.ws.operation_mode == self.ws.PLAYLIST_MODE):
-        #    self.jumpnr = ''
-        #    self._random_requested = False
-        #    """ search backwards """
-        #    if self.search.string:
-        #        sel = self.selection - 1
-        #        if sel < 0:
-        #            sel = len(self.stations) - 1
-        #        ret = self.search.get_previous(self.stations, sel)
-        #        if ret is not None:
-        #            self.setStation(ret)
-        #            self.refreshBody()
-        #    else:
-        #        curses.ungetch('/')
-        #    return
 
         elif char in (ord('T'), ):
             self._toggle_transparency()

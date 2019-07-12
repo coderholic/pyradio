@@ -57,7 +57,7 @@ class PyRadioConfigWindow(object):
     _help_text.append(None)
     _help_text.append(['The theme to be used by default.', '|',
     'This is the equivalent to the -t , --theme command line option.', '|',
-    'If a theme uses more colors tha n those supported by the terminal in use, the "dark" theme will be used instead (but the "light" theme will be used, if the "light_16colors" theme was requested but not supported).',
+    'If a theme uses more colors than those supported by the terminal in use, the "dark" theme will be used instead (but the "light" theme will be used, if the "light_16colors" theme was requested but not supported).',
     '|', 'Default value = dark'])
     _help_text.append(['If False, theme colors will be used.', '|',
     "If True and a compositor is running, the stations' window background will be transparent.", '|', "If True and a compositor is not running, the terminal's background color will be used.", '|', 'Default value: False'])

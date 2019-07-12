@@ -706,8 +706,10 @@ class PyRadioThemeSelector(object):
         if self._transparent:
             self._win.addstr(self._height-1, self._width -4, '[T]', curses.color_pair(self._box_color_pair))
         else:
-            pass
-            #self._draw_box()
+            try:
+                self._win.addstr(self._height-1, self._width -4, '───', curses.color_pair(self._box_color_pair))
+            except:
+                self._win.addstr(self._height-1, self._width -4, '───'.encode('utf-8'), curses.color_pair(self._box_color_pair))
         self._win.refresh()
         curses.doupdate()
 

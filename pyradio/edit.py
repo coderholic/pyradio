@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import curses
 import curses.ascii
+from time import sleep
 import logging
 from sys import version_info
 from .simple_curses_widgets import SimpleCursesLineEdit
@@ -100,3 +101,9 @@ class PyRadioSearch(SimpleCursesLineEdit):
         else:
             return None
 
+    def print_not_found(self):
+        self._edit_win.addstr(0,0,'Term not found!'.ljust(self._max_width), self.edit_color)
+        self._edit_win.refresh()
+        sleep(.3)
+        self.refreshEditWindow()
+        

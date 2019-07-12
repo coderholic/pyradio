@@ -244,7 +244,7 @@ volume=28</pre>
 <p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Themes that use more colors than those supported by the terminal in use, will not be present in the <em>Theme selection window</em>. Furthermore, if a such at theme is set as default (or requested using the “<strong>-t</strong>” command line option), <strong>PyRadio</strong> will silently fall-back to the “<strong>dark</strong>” theme (or the “<strong>light</strong>” theme, if the terminal supports 8 colors and default theme is set to “<em>light_16_colors</em>”).</p>
 <p>The <em>Theme selection window</em> will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
-<p>The use of custom themes and theme editing is not implemented yet; theses are features for future releases.</p>
+<p>The use of custom themes and theme editing is not implemented yet; these are features for future releases.</p>
 <h3 id="using-transparency">Using transparency</h3>
 <p><strong>PyRadio</strong> themes are able to be used with a transparent background.</p>
 <p>Pressing “<strong>T</strong>” will toggle the transparency setting and save this state in <strong>PyRadio</strong>’s configuration file (transparency is off by default).</p>
@@ -253,8 +253,8 @@ volume=28</pre>
 <h2 id="session-locking">Session Locking <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.</p>
 <p>Subsequent instances will be “<em>locked</em>”. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will <strong>not</strong> be recorded in the configuration file.</p>
-<h3 id="seeeion-unlocking">Seeeion unlocking</h3>
-<p>If for any reason <strong>PyRadio</strong> always starts in “<em>locked mode</em>”, one can <strong>unclock</strong> the session, using the “<em>–unlock</em>” command line paremater.</p>
+<h3 id="session-unlocking">Session unlocking</h3>
+<p>If for any reason <strong>PyRadio</strong> always starts in “<em>locked mode</em>”, one can <strong>unlock</strong> the session, using the “<em>–unlock</em>” command line parameter.</p>
 <h2 id="update-notification">Update notification <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> will periodically (once every 10 days) check whether a new version has been released.</p>
 <p>If so, a notification message will be displayed, informing the user about it.</p>

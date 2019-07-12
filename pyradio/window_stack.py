@@ -36,6 +36,7 @@ class Window_Stack_Constants(object):
     NEW_THEME_HELP_MODE = 108
     EDIT_THEME_HELP_MODE = 109
     ASK_TO_CREATE_NEW_THEME_MODE = 110
+    SEARCH_HELP_MODE = 111
     # TODO: return values from opening theme
     PLAYLIST_RECOVERY_ERROR_MODE = 200
     PLAYLIST_NOT_FOUND_ERROR_MODE = 201
@@ -84,6 +85,7 @@ class Window_Stack_Constants(object):
             NEW_THEME_HELP_MODE: 'NEW_THEME_HELP_MODE',
             EDIT_THEME_HELP_MODE: 'EDIT_THEME_HELP_MODE',
             ASK_TO_CREATE_NEW_THEME_MODE: 'ASK_TO_CREATE_NEW_THEME_MODE',
+            SEARCH_HELP_MODE: 'SEARCH_HELP_MODE',
             PLAYLIST_RECOVERY_ERROR_MODE: 'PLAYLIST_RECOVERY_ERROR_MODE',
             PLAYLIST_NOT_FOUND_ERROR_MODE: 'PLAYLIST_NOT_FOUND_ERROR_MODE',
             PLAYLIST_LOAD_ERROR_MODE: 'PLAYLIST_LOAD_ERROR_MODE',
@@ -125,6 +127,7 @@ class Window_Stack_Constants(object):
             PLAYLIST_NOT_FOUND_ERROR_MODE,
             SELECT_ENCODING_HELP_MODE,
             THEME_HELP_MODE,
+            SEARCH_HELP_MODE,
             )
 
     def __init__(self):
