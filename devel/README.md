@@ -12,7 +12,7 @@ devel/build_install_pyradio -h
 ```
 for options.
 
-# Develpment files for PyRadio
+# Development files for PyRadio
 
 These files are not meant to be used by a normal user.
 

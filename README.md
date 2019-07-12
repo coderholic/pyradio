@@ -348,7 +348,7 @@ Pressing "**t**" will bring up the *Theme selection window*, which can be used t
 
 The  *Theme selection window* will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "**q**" or any other relevant key - pressing "**?**" will bring up its help).
 
-The use of custom themes and theme editing is not implemented yet; theses are features for future releases.
+The use of custom themes and theme editing is not implemented yet; these are features for future releases.
 
 ### Using transparency
 
@@ -366,9 +366,9 @@ When the *Theme selection window* is visible, a "**[T]**" string displayed  at  
 
 Subsequent instances will be "*locked*". This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will **not** be recorded in the configuration file.  
 
-### Seeeion unlocking
+### Session unlocking
 
-If for any reason **PyRadio** always starts in "*locked mode*", one can **unclock** the session, using the "*--unlock*" command line paremater.
+If for any reason **PyRadio** always starts in "*locked mode*", one can **unlock** the session, using the "*--unlock*" command line parameter.
 
 ## Update notification
 
