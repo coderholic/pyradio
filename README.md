@@ -15,11 +15,13 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Specifying stations' encoding](#specifying-stations-encoding)
 * [Player detection / selection](#player-detection-selection)
 * [Player default volume level](#player-default-volume-level)
+* [Search function](#search-function)
 * [PyRadio Themes](#pyradio-themes)
 * [Session Locking](#session-locking)
 * [Update notification](#update-notification)
 * [Cleaning up](#cleaning-up)
 * [Debug mode](#debug-mode)
+* [Reporting bugs](#reporting-bugs)
 
 ## Requirements
 
@@ -327,6 +329,18 @@ Example:
     volstep=1
     volume=28
 
+## Search function
+
+On any window presenting a list of items (stations, playlists, themes) a **search function** is available by pressing "**/**".
+
+The *Search Window* supports normal and extend editing and in session history.
+
+After a search term has been successfully found, next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
+
+**Note:** **Python 2** users are confined in typing ASCII characters only.
+
+**Note:** Currently, the **search function** is available on the stations' and playlists' window only.
+
 ## PyRadio Themes
 
 **PyRadio** comes with 6 preconfigured (hard coded) themes:
@@ -338,7 +352,11 @@ Example:
 5. **white_on_black** or **wob** (256 color b&w theme). A theme for dark terminal background settings.
 6. **black_on_white** or **bow** (256 color b&w theme). A theme for light terminal background settings.
 
-and three 256-color system themes (these are actual files saved in the **themes** installation directory): 1. **brown_by_sng**, **pink_by_sng** and **purple_by_sng**.
+Furthermore, three 256-color system themes (these are actual files saved in the **themes** installation directory) are also available:
+
+1. **brown_by_sng**
+2. **pink_by_sng**
+3. **purple_by_sng**
 
 The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)
 
@@ -408,4 +426,21 @@ As we see, previous versions still exist in this system: **0.7.6.2** and **0.7.7
 
 Adding the ***-d*** option to the command line will instruct **PyRadio** to enter *Debug mode*, which means that it will print debug messages to a file. This file will always reside in the user's home directory and will be named *pyradio.log*.
 
-In case of a bug or a glitch, please include this file to the issue you will [open in github](https://github.com/coderholic/pyradio/issues).
+In case of a bug or a glitch, please include this file to the issue you will [open at github](https://github.com/coderholic/pyradio/issues).
+
+## Reporting bugs
+
+When a bug is found, please do report it by [opening an issue at github](https://github.com/coderholic/pyradio/issues), as already stated above.
+
+In you report you should, at the very least, state your **pyradio version**, **python version** and **method** of installation (built from source, AUR, snap, whatever).
+
+It would be really useful to include **~/pyradio.log** in your report.
+
+To create it, enter the following commands in a terminal:
+
+    $ rm ~/pyradio.log
+    $ pyradio -d
+
+Then try to reproduce the bug and exit **pyradio**.
+
+Finally, include the file produced in your report.

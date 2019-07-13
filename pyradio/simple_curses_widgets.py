@@ -50,6 +50,7 @@ class SimpleCursesLineEdit(object):
     focused = True
     _focused = True
 
+
     log = None
     _log_file = ''
 
@@ -214,6 +215,8 @@ class SimpleCursesLineEdit(object):
             0: exit edit mode, string isvalid
            -1: cancel
         """
+        #self._log_file='/home/spiros/edit.log'
+        #self.log = self._log
         if not self._focused:
             return 1
         if self.log is not None:
@@ -229,8 +232,8 @@ class SimpleCursesLineEdit(object):
         elif char in (curses.KEY_EXIT, 27):
             self._edit_win.nodelay(True)
             char = self._edit_win.getch()
-            self._log_file='/home/spiros/edit.log'
-            self._log('   *** char = {}\n'.format(char))
+            if self.log is not None:
+                self.log('   *** char = {}\n'.format(char))
             self._edit_win.nodelay(False)
             if char == -1:
                 """ ESCAPE """
@@ -238,6 +241,8 @@ class SimpleCursesLineEdit(object):
                 self._curs_pos = 0
                 return -1
             else:
+                if self.log is not None:
+                    self.log('   *** char = {}\n'.format(char))
                 if char in (ord('d'), ):
                     """ A-D, clear to end of line """
                     self.string = self._string[:self._curs_pos]
@@ -354,6 +359,8 @@ class SimpleCursesLineEdit(object):
         elif 0<= char <=31:
             pass
         else:
+            if self.log is not None:
+                self.log('====================\n')
             if len(self._string) + 1 == self._max_width:
                 return 1
             if version_info < (3, 0):
@@ -361,16 +368,16 @@ class SimpleCursesLineEdit(object):
                     # accept only ascii characters
                     if len(self._string) == self._curs_pos:
                         self._string += chr(char)
-                        self._curs_pos += 1
                     else:
                         self._string = self._string[:self._curs_pos] + chr(char) + self._string[self._curs_pos:]
+                    self._curs_pos += 1
             else:
                 char = self._get_char(win, char)
                 if len(self._string) == self._curs_pos:
                     self._string += char
-                    self._curs_pos += 1
                 else:
                     self._string = self._string[:self._curs_pos] + char + self._string[self._curs_pos:]
+                self._curs_pos += 1
 
         self.refreshEditWindow()
         return 1

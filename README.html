@@ -27,7 +27,7 @@
 </header>
 <h1 id="pyradio">PyRadio</h1>
 <p>Command line internet radio player.</p>
-<p>Ben Dowling - <a href="https://github.com/coderholic">https://github.com/coderholic</a></p>
+<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
 <li><a href="#requirements">Requirements</a></li>
@@ -39,20 +39,22 @@
 <li><a href="#specifying-stations-encoding">Specifying stations’ encoding</a></li>
 <li><a href="#player-detection-selection">Player detection / selection</a></li>
 <li><a href="#player-default-volume-level">Player default volume level</a></li>
+<li><a href="#search-function">Search function</a></li>
 <li><a href="#pyradio-themes">PyRadio Themes</a></li>
 <li><a href="#session-locking">Session Locking</a></li>
 <li><a href="#update-notification">Update notification</a></li>
 <li><a href="#cleaning-up">Cleaning up</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
+<li><a href="#reporting-bugs">Reporting bugs</a></li>
 </ul>
 <h2 id="requirements">Requirements <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
 <li>python 2.7+/3.5+</li>
 <li>MPV, MPlayer or VLC installed and in your path.</li>
-<li><a href="http://www.dest-unreach.org/socat/">socat</a> (if you wish to use MPV)</li>
+<li><a target="_blank" href="http://www.dest-unreach.org/socat/">socat</a> (if you wish to use MPV)</li>
 </ul>
 <h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (e.g. <em>Arch Linux</em> and derivatives can install <a href="https://aur.archlinux.org/packages/pyradio-git/">pyradio-git</a> from AUR).</p>
+<p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (e.g. <em>Arch Linux</em> and derivatives can install <a target="_blank" href="https://aur.archlinux.org/packages/pyradio-git/">pyradio-git</a> from AUR).</p>
 <p>In any other case, and since <strong>PyRadio</strong> is currently not available via pip, you will have to <a href="build.html">build it from source</a>.</p>
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre>$ pyradio -h
@@ -194,12 +196,12 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>This would be useful in the case where most of your stations do not use <strong>utf-8</strong>. Instead of editing the playlist and add the encoding to each and every affected station, you just set it globally.</p>
 <h3 id="finding-the-right-encoding">Finding the right encoding</h3>
 <p>A valid encoding list can be found at:</p>
-<p><a href="https://docs.python.org/2.7/library/codecs.html#standard-encodings">https://docs.python.org/2.7/library/codecs.html#standard-encodings</a></p>
+<p><a target="_blank" href="https://docs.python.org/2.7/library/codecs.html#standard-encodings">https://docs.python.org/2.7/library/codecs.html#standard-encodings</a></p>
 <p>replacing <strong>2.7</strong> with specific version: <strong>3.0</strong> up to current python version.</p>
 <h2 id="player-detection-selection">Player detection / selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.</p>
 <p>Currently, it supports MPV, MPlayer and VLC, and it will look for them in that order. If none of them is found, the program will terminate with an error.</p>
-<p>MPV will be used only when the <a href="http://www.dest-unreach.org/socat/">socat</a> multipurpose relay is also installed.</p>
+<p>MPV will be used only when the <a target="_blank" href="http://www.dest-unreach.org/socat/">socat</a> multipurpose relay is also installed.</p>
 <p>Users can alter this default behavior by using the <strong><em>-u</em></strong> command line option. This option will permit the user either to specify the player to use, or change the detection order.</p>
 <p>Example:</p>
 <pre>pyradio -u vlc</pre>
@@ -229,6 +231,12 @@ volume=50</pre>
 [pyradio]
 volstep=1
 volume=28</pre>
+<h2 id="search-function">Search function <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>On any window presenting a list of items (stations, playlists, themes) a <strong>search function</strong> is available by pressing “<strong>/</strong>”.</p>
+<p>The <em>Search Window</em> supports normal and extend editing and in session history.</p>
+<p>After a search term has been successfully found, next occurrence can be obtained using the “<strong>n</strong>” key and previous occurrence can be obtained using the “<strong>N</strong>” key.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> <strong>Python 2</strong> users are confined in typing ASCII characters only.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Currently, the <strong>search function</strong> is available on the stations’ and playlists’ window only.</p>
 <h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> comes with 6 preconfigured (hard coded) themes:</p>
 <ol type="1">
@@ -239,7 +247,12 @@ volume=28</pre>
 <li><strong>white_on_black</strong> or <strong>wob</strong> (256 color b&amp;w theme). A theme for dark terminal background settings.</li>
 <li><strong>black_on_white</strong> or <strong>bow</strong> (256 color b&amp;w theme). A theme for light terminal background settings.</li>
 </ol>
-<p>and three 256-color system themes (these are actual files saved in the <strong>themes</strong> installation directory): 1. <strong>brown_by_sng</strong>, <strong>pink_by_sng</strong> and <strong>purple_by_sng</strong>.</p>
+<p>Furthermore, three 256-color system themes (these are actual files saved in the <strong>themes</strong> installation directory) are also available:</p>
+<ol type="1">
+<li><strong>brown_by_sng</strong></li>
+<li><strong>pink_by_sng</strong></li>
+<li><strong>purple_by_sng</strong></li>
+</ol>
 <p>The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)</p>
 <p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Themes that use more colors than those supported by the terminal in use, will not be present in the <em>Theme selection window</em>. Furthermore, if a such at theme is set as default (or requested using the “<strong>-t</strong>” command line option), <strong>PyRadio</strong> will silently fall-back to the “<strong>dark</strong>” theme (or the “<strong>light</strong>” theme, if the terminal supports 8 colors and default theme is set to “<em>light_16_colors</em>”).</p>
@@ -276,6 +289,15 @@ Finished processing dependencies for pyradio==0.7.8</pre>
 $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg</pre>
 <h2 id="debug-mode">Debug mode <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Adding the <strong><em>-d</em></strong> option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
-<p>In case of a bug or a glitch, please include this file to the issue you will <a href="https://github.com/coderholic/pyradio/issues">open in github</a>.</p>
+<p>In case of a bug or a glitch, please include this file to the issue you will <a target="_blank" href="https://github.com/coderholic/pyradio/issues">open at github</a>.</p>
+<h2 id="reporting-bugs">Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>When a bug is found, please do report it by <a target="_blank" href="https://github.com/coderholic/pyradio/issues">opening an issue at github</a>, as already stated above.</p>
+<p>In you report you should, at the very least, state your <strong>pyradio version</strong>, <strong>python version</strong> and <strong>method</strong> of installation (built from source, AUR, snap, whatever).</p>
+<p>It would be really useful to include <strong>~/pyradio.log</strong> in your report.</p>
+<p>To create it, enter the following commands in a terminal:</p>
+<pre>$ rm ~/pyradio.log
+$ pyradio -d</pre>
+<p>Then try to reproduce the bug and exit <strong>pyradio</strong>.</p>
+<p>Finally, include the file produced in your report.</p>
 </body>
 </html>

@@ -342,6 +342,20 @@ volstep=1
 .br
 volume=28
 
+.SH SEARCH FUNCTION
+
+On any window presenting a list of items (stations, playlists, themes) a \fBsearch function\fR is available by pressing "\fI/\fR".
+
+The \fISearch Window\fR supports normal and extend editing and in session history.
+
+After a search term has been successfully found, next occurrence can be obtained using the "\fIn\fR" key and previous occurrence can be obtained using the "\fIN\fR" key.
+
+.IP \fBNote\fR
+\fBPython 2\fR users are confined in typing ASCII characters only.
+
+.IP \fBNote\fR
+Currently, the \fBsearch function\fR is available on the stations' and playlists' window only.
+
 .SH PYRADIO THEMES
 .PP
 
@@ -361,7 +375,7 @@ A theme for dark terminal background settings.
 A theme for light terminal background settings.
 
 .PP
-and three 256-color system themes (these are actual files saved in the \fIthemes\fR installation directory): \fBbrown_by_sng\fR, \fBpink_by_sng\fR and \fBpurple_by_sng\fR.
+Furthermore, three 256-color system themes (these are actual files saved in the \fIthemes\fR installation directory) are also available: \fBbrown_by_sng\fR, \fBpink_by_sng\fR and \fBpurple_by_sng\fR.
 
 .PP
 The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)
@@ -402,27 +416,6 @@ If for any reason \fBpyradio\fR always starts in \fIlocked mode\fR, one can \fBu
 
 If so, a notification message will be displayed, informing the user about it.
 
-.SH DEBUG MODE
-.PP
-Adding the \fB-d\fR option to the command line will instruct \fBpyradio\fR to enter \fBDebug mode\fR, which means that it will print debug messages to a file. This file will always reside in the user's home directory and will be named \fIpyradio.log\fR.
-.PP
-In case of a bug or a glitch, please include this file to the issue you will open in github  at \<\fIhttps://github.com/coderholic/pyradio/issues\fR\>
-
-.SH FILES
-.PP
-.I /usr/share/doc/pyradio/README.md
-
-.I /usr/share/doc/pyradio/README.html
-
-.I /usr/share/doc/pyradio/build.md
-
-.I /usr/share/doc/pyradio/build.html
-
-.I /usr/share/licenses/pyradio/LICENSE
-
-.IP \fBNote:
-On \fBMac OS\fR, these file may be installed in \fI/usr/local/share/doc/pyradio\fR, depending on whether or not \fBSIP\fR is enabled.
-
 .SH CLEANING UP
 .PP
 As \fBpyradio\fR versions accumulate, when building from source, one may have to \fIclean up\fR old installation files.
@@ -460,6 +453,49 @@ As we see, previous versions still exist in this system: \fB0.7.6.2\fR and \fB0.
 \fI$ \fBsudo rm -rf /usr/lib/python3.7/site-packages/pyradio-\fI0.7.6.2\fB-py3.7.egg
 .br
 \fI$ \fBsudo rm -rf /usr/lib/python3.7/site-packages/pyradio-\fI0.7.7\fB-py3.7.egg
+
+.SH DEBUG MODE
+.PP
+Adding the \fB-d\fR option to the command line will instruct \fBpyradio\fR to enter \fBDebug mode\fR, which means that it will print debug messages to a file. This file will always reside in the user's home directory and will be named \fIpyradio.log\fR.
+.PP
+In case of a bug or a glitch, please include this file to the issue you will open in github  at \<\fIhttps://github.com/coderholic/pyradio/issues\fR\>
+
+.SH REPORTING BUGS
+.PP
+When a bug is found, please do report it by opening an issue at github at \<\fIhttps://github.com/coderholic/pyradio/issues\fR\>, as already stated above.
+
+In you report you should, at the very least, state your \fIpyradio version\fR, \fIpython version\fR and \fImethod of installation\fR (built from source, AUR, snap, whatever).
+
+It would be really useful to include \fB~/pyradio.log\fR in your report.
+
+To create it, enter the following commands in a terminal:
+
+.HP
+
+\fI$\fR \fBrm ~/pyradio.log\fR
+.br
+\fI$\fR \fBpyradio -d\fR
+
+.PP
+Then try to reproduce the bug and exit pyradio.
+
+Finally, include the file produced in your report.
+
+.SH FILES
+.PP
+.I /usr/share/doc/pyradio/README.md
+
+.I /usr/share/doc/pyradio/README.html
+
+.I /usr/share/doc/pyradio/build.md
+
+.I /usr/share/doc/pyradio/build.html
+
+.I /usr/share/licenses/pyradio/LICENSE
+
+.IP \fBNote:
+On \fBMac OS\fR, these file may be installed in \fI/usr/local/share/doc/pyradio\fR, depending on whether or not \fBSIP\fR is enabled.
+
 
 .SH AUTHORS
 .PP

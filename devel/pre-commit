@@ -34,6 +34,7 @@ do
         -e 's{</</p></li>{</li>{g' \
         -e 's/\.md">/.html">/g' \
         -e '/h1 class="title"/d' \
+        -e 's/<a href="http/<a target="_blank" href="http/g' \
         -e 's{</h2>{ <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style>&{' ${out}
     rm tmp.md
     git add ${out}
