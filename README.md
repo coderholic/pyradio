@@ -100,6 +100,7 @@ e                 Change station's encoding
 DEL,x             Delete selected station                   -                                  -
 t T               Load theme / Toggle transparency          [Valid]                            [Valid]
 c                 Open Configuration window.                -                                  -
+/ n N             Search, go to next / previous result      [Valid]                            [Valid]
 ?                 Show keys help                            [Valid]                            [Valid]
 #                 Redraw window                             [Valid]                            [Valid]
 Esc/q             Quit                                      -                                  -
@@ -108,7 +109,7 @@ Esc/q/Left/h      -                                         Cancel / close windo
 
 The same logic applies to all **PyRadio** windows.
 
-**Note:** All windows support changing the volume and muting / unmuting the player (provided that **PyRadio** is actually connected to a station).
+**Note:** All windows - except the *Search window* - support changing the volume and muting / unmuting the player (provided that **PyRadio** is actually connected to a station).
 
 
 ## Config file
@@ -335,11 +336,15 @@ On any window presenting a list of items (stations, playlists, themes) a **searc
 
 The *Search Window* supports normal and extend editing and in session history.
 
+One can always get help by pressing the "**?**" key.
+
+The search will be case insensitive under **python 3**; it will be case sensitive under **python 2**.
+
 After a search term has been successfully found, next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
 
 **Note:** **Python 2** users are confined in typing ASCII characters only.
 
-**Note:** Currently, the **search function** is available on the stations' and playlists' window only.
+**Note:** Currently, the **search function** is available on the stations' and playlists' and themes' window only.
 
 ## PyRadio Themes
 

@@ -71,12 +71,16 @@ class PyRadio(object):
         we continue playing, otherwise, we stop playback """
     active_stations = [ [ '', 0 ], [ '', -1 ] ]
 
+    """ Characters to be "ignored" by windows, so that certain
+        functions still work (like changing volume) """
+    _chars_to_bypass = (ord('m'), ord('v'), ord('.'),
+            ord(','), ord('+'), ord('-'),
+            ord('?'), ord('#'), curses.KEY_RESIZE)
+
     # Number of stations to change with the page up/down keys
     pageChange = 5
 
     search = None
-    _stations_search = None
-    _playlists_search = None
 
     _last_played_station = ''
 
@@ -120,6 +124,7 @@ class PyRadio(object):
         self.stdscr = None
         self.requested_player = req_player
         self.number_of_items = len(self._cnf.stations)
+
         """ list of functions to open for entering
             or redisplaying a mode """
         self._redisplay = {
@@ -157,11 +162,13 @@ class PyRadio(object):
                 self.ws.FOREIGN_PLAYLIST_COPY_ERROR_MODE: self._print_foreign_playlist_copy_error,
                 self.ws.SEARCH_NORMAL_MODE: self._redisplay_search_show,
                 self.ws.SEARCH_PLAYLIST_MODE: self._redisplay_search_show,
+                self.ws.SEARCH_THEME_MODE: self._redisplay_search_show,
                 self.ws.THEME_MODE: self._redisplay_theme_mode,
                 self.ws.PLAYLIST_RECOVERY_ERROR_MODE: self._print_playlist_recovery_error,
                 self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
                 self.ws.SEARCH_HELP_MODE: self._show_search_help,
                 }
+
         """ list of help functions """
         self._display_help = {
                 self.ws.NORMAL_MODE: self._show_main_help,
@@ -177,10 +184,30 @@ class PyRadio(object):
                 self.ws.SELECT_ENCODING_MODE: self._show_config_encoding_help,
                 }
 
+        """ search classes
+            0 - station search
+            1 - playlist search
+            2 - theme search
+        """
+        self._search_classes = [ None, None, None ]
+
+        """ points to list in which the search will be performed """
+        self._search_list = []
+
+        """ points to _search_classes for each supported mode """
+        self._mode_to_search = {
+                self.ws.NORMAL_MODE: 0,
+                self.ws.SELECT_STATION_MODE: 0,
+                self.ws.PLAYLIST_MODE: 1,
+                self.ws.SELECT_PLAYLIST_MODE: 1,
+                self.ws.THEME_MODE: 2,
+                }
+
         # which search mode opens from each allowed mode
-        self.search_modes = {
+        self._search_modes = {
                 self.ws.NORMAL_MODE: self.ws.SEARCH_NORMAL_MODE,
                 self.ws.PLAYLIST_MODE: self.ws.SEARCH_PLAYLIST_MODE,
+                self.ws.THEME_MODE: self.ws.SEARCH_THEME_MODE,
                 }
         # search modes opened from main windows
         self.search_main_window_modes = (
@@ -239,31 +266,10 @@ class PyRadio(object):
         except:
             # no player
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = self.ws.NO_PLAYER_ERROR_MODE')
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen()
 
-        if self._stations_search is None:
-            self._stations_search = PyRadioSearch(parent = self.bodyWin,
-                begin_y = 0, begin_x = 0,
-                boxed = True,
-                has_history = True,
-                box_color = curses.color_pair(5),
-                caption_color = curses.color_pair(4),
-                edit_color = curses.color_pair(5),
-                cursor_color = curses.color_pair(6))
-        if self._playlists_search is None:
-            self._playlists_search = PyRadioSearch(parent = self.bodyWin,
-                begin_y = 0, begin_x = 0,
-                boxed = True,
-                has_history = True,
-                box_color = curses.color_pair(5),
-                caption_color = curses.color_pair(4),
-                edit_color = curses.color_pair(5),
-                cursor_color = curses.color_pair(6))
-        self.search = self._stations_search
         # position playlist in window
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
         if self.selections[self.ws.PLAYLIST_MODE][0] < self.bodyMaxY - 2:
@@ -501,6 +507,9 @@ class PyRadio(object):
                                 lambda: self.stop_update_notification_thread))
                     self._update_notification_thread.start()
 
+            """ set up stations search """
+            self._give_me_a_search_class(self.ws.operation_mode)
+
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write('Selected player: {}'.format(self._format_player_string()), help_msg=True)
             #self.log.write_right('Press ? for help')
@@ -534,6 +543,21 @@ class PyRadio(object):
                     self.player.ctrl_c_pressed = True
                     self.ctrl_c_handler(0, 0)
                     break
+
+    def _give_me_a_search_class(self, operation_mode):
+        """ get a search class for a givven operation mode
+            the class is returned in self.search
+        """
+        if self._search_classes[self._mode_to_search[operation_mode]] is None:
+            self._search_classes[self._mode_to_search[operation_mode]] = PyRadioSearch(parent = self.bodyWin,
+                begin_y = 0, begin_x = 0,
+                boxed = True,
+                has_history = True,
+                box_color = curses.color_pair(5),
+                caption_color = curses.color_pair(4),
+                edit_color = curses.color_pair(5),
+                cursor_color = curses.color_pair(6))
+        self.search = self._search_classes[self._mode_to_search[operation_mode]]
 
     def ctrl_c_handler(self, signum, frame):
         self.ctrl_c_pressed = True
@@ -776,6 +800,7 @@ class PyRadio(object):
         self.jumpnr = ''
         self._random_requested = False
         self._theme_selector = None
+        self._give_me_a_search_class(self.ws.THEME_MODE)
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE\n\nself._theme = {0}\nself._theme_name = {1}\nself._cnf.theme = {2}\n\n'.format(self._theme, self._theme_name, self._cnf.theme))
         self._theme_selector = PyRadioThemeSelector(self.bodyWin, self._cnf, self._theme,
@@ -1028,6 +1053,7 @@ class PyRadio(object):
                      Enter|,|Right|,|l    |Apply selected theme.
                      Space            |Apply theme and make it default.
                      s                |Make theme default and close window.
+                     /| / |n| / |N        |Search, go to next / previous result.
                      Esc|,|q|,|Left|,|h     |Close window.
                      %_Player Keys_
                      -|/|+| or |,|/|.       |Change volume.
@@ -1456,7 +1482,7 @@ you have to manually address the issue.
         self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
         self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.stations]
         self.ws.window_mode = self.ws.PLAYLIST_MODE
-        self.search = self._playlists_search
+        self._give_me_a_search_class(self.ws.PLAYLIST_MODE)
         self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
         self.number_of_items, self.playing = self.readPlaylists()
         self.stations = self._cnf.playlists
@@ -1727,10 +1753,30 @@ you have to manually address the issue.
                 delay(60, stop)
 
     def is_search_mode(self, a_mode):
-        for it in self.search_modes.items():
+        for it in self._search_modes.items():
             if it[1] == a_mode:
                 return True
         return False
+
+    def _apply_search_result(self, ret, reapply=False):
+        def _apply_main_windows(ret):
+            self.setStation(ret)
+            self._put_selection_in_the_middle(force=True)
+        if reapply:
+            if self.ws.operation_mode in \
+                    [ self._mode_to_search[x] for x in self._mode_to_search.keys() ]:
+                _apply_main_windows(ret)
+            elif self.ws.operation_mode == self.ws.THEME_MODE:
+                self._theme_selector.set_theme(self._theme_selector._themes[ret])
+            self.refreshBody()
+
+        else:
+            if self.ws.operation_mode in self.search_main_window_modes:
+                _apply_main_windows(ret)
+            elif self.ws.previous_operation_mode == self.ws.THEME_MODE:
+                self._theme_selector.set_theme(self._theme_selector._themes[ret])
+            self.ws.close_window()
+            self.refreshBody()
 
     def keypress(self, char):
         #if logger.isEnabledFor(logging.ERROR):
@@ -1773,9 +1819,7 @@ you have to manually address the issue.
             return
 
         if self.ws.operation_mode == self.ws.CONFIG_MODE:
-            if char not in (ord('m'), ord('v'), ord('.'),
-                    ord(','), ord('+'), ord('-'),
-                    ord('?'), ord('#'), curses.KEY_RESIZE):
+            if char not in self._chars_to_bypass:
                 if char in (ord('r'), ord('d')):
                     self._player_select_win = None
                     self._encoding_select_win = None
@@ -1897,9 +1941,7 @@ you have to manually address the issue.
                 return
 
         elif self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE:
-            if char not in (ord('m'), ord('v'), ord('.'),
-                    ord(','), ord('+'), ord('-'),
-                    ord('?'), ord('#'), curses.KEY_RESIZE):
+            if char not in self._chars_to_bypass:
                 ret, ret_list = self._player_select_win.keypress(char)
                 if ret >= 0:
                     if ret == 0:
@@ -1913,9 +1955,7 @@ you have to manually address the issue.
 
         elif self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE:
             """ select station's encoding from main window """
-            if char not in (ord('m'), ord('v'), ord('.'),
-                    ord(','), ord('+'), ord('-'),
-                    ord('?'), ord('#'), curses.KEY_RESIZE):
+            if char not in self._chars_to_bypass:
                 ret, ret_encoding = self._encoding_select_win.keypress(char)
                 if ret >= 0:
                     if ret == 0:
@@ -1940,9 +1980,7 @@ you have to manually address the issue.
 
         elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE:
             """ select global encoding from config window """
-            if char not in (ord('m'), ord('v'), ord('.'),
-                    ord(','), ord('+'), ord('-'),
-                    ord('?'), ord('#'), curses.KEY_RESIZE):
+            if char not in self._chars_to_bypass:
                 ret, ret_encoding = self._encoding_select_win.keypress(char)
                 if ret >= 0:
                     if ret == 0:
@@ -1954,9 +1992,7 @@ you have to manually address the issue.
                 return
 
         elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE:
-            if char not in (ord('m'), ord('v'), ord('.'),
-                    ord(','), ord('+'), ord('-'),
-                    ord('?'), ord('#'), curses.KEY_RESIZE):
+            if char not in self._chars_to_bypass:
                 ret, ret_playlist = self._playlist_select_win.keypress(char)
                 if ret >= 0:
                     if ret == 0:
@@ -1972,9 +2008,7 @@ you have to manually address the issue.
                 return
 
         elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
-            if char not in (ord('m'), ord('v'), ord('.'),
-                    ord(','), ord('+'), ord('-'),
-                    ord('?'), ord('#'), curses.KEY_RESIZE):
+            if char not in self._chars_to_bypass:
                 ret, ret_station = self._station_select_win.keypress(char)
                 if ret >= 0:
                     if ret == 0:
@@ -2008,9 +2042,8 @@ you have to manually address the issue.
                     return
 
         elif self.ws.operation_mode == self.ws.THEME_MODE:
-            if char not in (ord('m'), ord('v'), ord('.'),
-                    ord(','), ord('+'), ord('-'), ord('T'),
-                    ord('?'), ord('#'), curses.KEY_RESIZE):
+            if char not in self._chars_to_bypass and \
+                    char not in (ord('T'), ord('/'), ord('n'), ord('N'), ):
                 theme_id, save_theme = self._theme_selector.keypress(char)
 
                 #if self._cnf.theme_not_supported:
@@ -2077,78 +2110,85 @@ you have to manually address the issue.
             """ if no player, don't serve keyboard """
             return
 
-        elif char in (ord('/'), ) and \
-                self.ws.operation_mode in self.search_modes.keys():
+        elif char in (ord('/'), ) and self.ws.operation_mode in self._search_modes.keys():
             self.jumpnr = ''
             self._random_requested = False
-            if self.ws.operation_mode in self.search_modes.keys():
-                #self.search.string = '부'
-                if self.search.string:
-                    tmp_string = self.search.string
-                    logger.error('DE tmp_string = ' + tmp_string)
-                else:
-                    tmp_string = ''
-                self.search.show(self.bodyWin)
-                if tmp_string:
-                    self.search.string = tmp_string
-                self.ws.operation_mode = self.search_modes[self.ws.operation_mode]
+            #self.search.string = '부'
+            self.search.show(self.bodyWin)
+            self.ws.operation_mode = self._search_modes[self.ws.operation_mode]
             return
 
         elif char in (ord('n'), ) and \
-                self.ws.operation_mode in self.search_modes.keys():
-            self.jumpnr = ''
-            self._random_requested = False
+                self.ws.operation_mode in self._search_modes.keys():
+            logger.error('DE n operation_mode = {}'.format(self.ws.operation_mode))
+            self._give_me_a_search_class(self.ws.operation_mode)
+            if self.ws.operation_mode == self.ws.NORMAL_MODE:
+                self.jumpnr = ''
+                self._random_requested = False
             """ search forward """
-            if self.search.string:
+            if self.ws.operation_mode in \
+                    ( self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE ):
+                self._search_list = self.stations
                 sel = self.selection + 1
-                if sel == len(self.stations):
+            elif self.ws.operation_mode == self.ws.THEME_MODE:
+                self._search_list = self._theme_selector._themes
+                sel = self._theme_selector.selection + 1
+            if self.search.string:
+                if sel == len(self._search_list):
                     sel = 0
-                ret = self.search.get_next(self.stations, sel)
+                ret = self.search.get_next(self._search_list, sel)
                 if ret is not None:
-                    self.setStation(ret)
-                    self._put_selection_in_the_middle(force=True)
-                    self.refreshBody()
+                    self._apply_search_result(ret, reapply=True)
             else:
                     curses.ungetch('/')
             return
 
         elif char in (ord('N'), ) and \
-                self.ws.operation_mode in self.search_modes.keys():
-            self.jumpnr = ''
-            self._random_requested = False
+                self.ws.operation_mode in self._search_modes.keys():
+            self._give_me_a_search_class(self.ws.operation_mode)
+            if self.ws.operation_mode == self.ws.NORMAL_MODE:
+                self.jumpnr = ''
+                self._random_requested = False
             """ search backwards """
-            if self.search.string:
+            if self.ws.operation_mode in \
+                    ( self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE ):
+                self._search_list = self.stations
                 sel = self.selection - 1
+            elif self.ws.operation_mode == self.ws.THEME_MODE:
+                self._search_list = self._theme_selector._themes
+                sel = self._theme_selector.selection - 1
+            if self.search.string:
                 if sel < 0:
-                    sel = len(self.stations) - 1
-                ret = self.search.get_previous(self.stations, sel)
+                    sel = len(self._search_list) - 1
+                ret = self.search.get_previous(self._search_list, sel)
                 if ret is not None:
-                    self.setStation(ret)
-                    self._put_selection_in_the_middle(force=True)
-                    self.refreshBody()
+                    self._apply_search_result(ret, reapply=True)
             else:
                 curses.ungetch('/')
             return
 
-        elif self.ws.operation_mode in self.search_main_window_modes:
-            self._random_requested = False
+        elif self.ws.operation_mode in \
+                [ self._search_modes[x] for x in self._search_modes.keys()]:
+            # serve search results
             ret = self.search.keypress(self.search._edit_win, char)
             if ret == 0:
+                if self.ws.operation_mode in self.search_main_window_modes:
+                    self._search_list = self.stations
+                    sel = self.selection + 1
+                elif self.ws.previous_operation_mode == self.ws.THEME_MODE:
+                    self._search_list = self._theme_selector._themes
+                    sel = self._theme_selector.selection + 1
+
                 # perform search
-                #self.ws.close_window()
-                #self.refreshBody()
-                sel = self.selection + 1
-                if sel == len(self.stations):
+                if sel == len(self._search_list):
                     sel = 0
-                ret = self.search.get_next(self.stations, sel)
+                ret = self.search.get_next(self._search_list, sel)
+                logger.error('DE ret = {}'.format(ret))
                 if ret is None:
                     if self.search.string:
                         self.search.print_not_found()
                 else:
-                    self.setStation(ret)
-                    self._put_selection_in_the_middle(force=True)
-                    self.ws.close_window()
-                    self.refreshBody()
+                    self._apply_search_result(ret)
             elif ret == 2:
                 # display help
                 self._show_search_help()
@@ -2436,7 +2476,7 @@ you have to manually address the issue.
                         self.jumpnr = ''
                         self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
                         self.ws.close_window()
-                        self.search = self._stations_search
+                        self._give_me_a_search_class(self.ws.operation_mode)
                         self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
                         self.stations = self._cnf.stations
                         self.number_of_items = len(self.stations)
@@ -2652,7 +2692,7 @@ you have to manually address the issue.
                         self.ws.close_window()
                         self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
                         self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
-                        self.search = self._stations_search
+                        self._give_me_a_search_class(self.ws.operation_mode)
                         if self.playing < 0:
                             self._put_selection_in_the_middle(force=True)
                             self.refreshBody()

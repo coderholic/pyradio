@@ -13,14 +13,15 @@ class Window_Stack_Constants(object):
     PLAYLIST_MODE = 1
     SEARCH_NORMAL_MODE = 2
     SEARCH_PLAYLIST_MODE = 3
-    CONFIG_MODE = 4
-    SELECT_PLAYER_MODE = 5
-    SELECT_ENCODING_MODE = 6
-    SELECT_PLAYLIST_MODE = 7
-    SELECT_STATION_MODE = 8
-    SELECT_STATION_ENCODING_MODE = 9
-    NEW_THEME_MODE = 10
-    EDIT_THEME_MODE = 11
+    SEARCH_THEME_MODE = 4
+    CONFIG_MODE = 5
+    SELECT_PLAYER_MODE = 6
+    SELECT_ENCODING_MODE = 7
+    SELECT_PLAYLIST_MODE = 8
+    SELECT_STATION_MODE = 9
+    SELECT_STATION_ENCODING_MODE = 10
+    NEW_THEME_MODE = 11
+    EDIT_THEME_MODE = 12
     REMOVE_STATION_MODE = 50
     SAVE_PLAYLIST_MODE = 51
     ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE = 52
@@ -62,6 +63,7 @@ class Window_Stack_Constants(object):
             PLAYLIST_MODE: 'PLAYLIST_MODE',
             SEARCH_NORMAL_MODE: 'SEARCH_NORMAL_MODE',
             SEARCH_PLAYLIST_MODE: 'SEARCH_PLAYLIST_MODE',
+            SEARCH_THEME_MODE: 'SEARCH_THEME_MODE',
             CONFIG_MODE: 'CONFIG_MODE',
             SELECT_PLAYER_MODE: 'SELECT_PLAYER_MODE',
             SELECT_ENCODING_MODE: 'SELECT_ENCODING_MODE',
@@ -179,7 +181,10 @@ class Window_Stack(Window_Stack_Constants):
 
     @property
     def previous_operation_mode(self):
-        return self._dq[-2][0]
+        try:
+            return self._dq[-2][0]
+        except:
+            return -2
 
     @previous_operation_mode.setter
     def previous_open_window(self, a_mode):

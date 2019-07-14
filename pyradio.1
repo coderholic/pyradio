@@ -87,7 +87,7 @@ Quit
 The same logic applies to all \fBpyradio\fR windows.
 
 .IP \fBNote:
-All windows support changing the volume and muting / unmuting the player (provided that it is actually connected to a station).
+All windows - except the \fISearch window\fR - support changing the volume and muting / unmuting the player (provided that \fBpyradio\fR is actually connected to a station).
 
 .SH CONFIG FILE
 \fBpyradio\fR upon its execution tries to read its configuration file (i.e. \fI~/.config/pyradio/config\fR). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and \fBpyradio\fR will terminate.
@@ -348,13 +348,17 @@ On any window presenting a list of items (stations, playlists, themes) a \fBsear
 
 The \fISearch Window\fR supports normal and extend editing and in session history.
 
+One can always get help by pressing the "\fI?\fR" key.
+
+The search will be case insensitive under \fBpython 3\fR; it will be case sensitive under \fBpython 2\fR.
+
 After a search term has been successfully found, next occurrence can be obtained using the "\fIn\fR" key and previous occurrence can be obtained using the "\fIN\fR" key.
 
 .IP \fBNote\fR
 \fBPython 2\fR users are confined in typing ASCII characters only.
 
 .IP \fBNote\fR
-Currently, the \fBsearch function\fR is available on the stations' and playlists' window only.
+Currently, the \fBsearch function\fR is available on the stations', playlists' and themes' window only.
 
 .SH PYRADIO THEMES
 .PP

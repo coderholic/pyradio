@@ -167,7 +167,7 @@ class SimpleCursesLineEdit(object):
         else:
             self._max_width = maxX
 
-    def refreshEditWindow(self):
+    def refreshEditWindow(self, opening=False):
         if self.focused:
             active_edit_color = self.edit_color
             active_cursor_color = self.cursor_color
@@ -176,10 +176,13 @@ class SimpleCursesLineEdit(object):
             active_cursor_color = self.caption_color
         self._edit_win.erase()
         #self._edit_win.bkgd('-', curses.A_REVERSE)
-        if self._string:
-            self._edit_win.addstr(0, 0, self._string, active_edit_color)
-        else:
+        if opening:
             self._curs_pos = 0
+        else:
+            if self._string:
+                self._edit_win.addstr(0, 0, self._string, active_edit_color)
+            else:
+                self._curs_pos = 0
         if self.log is not None:
             self.log(' - curs_pos = {}\n'.format(self._curs_pos))
         self._edit_win.chgat(0, self._curs_pos, 1, active_cursor_color)
@@ -205,7 +208,7 @@ class SimpleCursesLineEdit(object):
         if self._boxed:
             self._caption_win.box()
         self._caption_win.refresh()
-        self.refreshEditWindow()
+        self.refreshEditWindow(opening=True)
 
     def keypress(self, win, char):
         """

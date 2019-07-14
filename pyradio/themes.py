@@ -778,7 +778,7 @@ class PyRadioThemeSelector(object):
                 return -2, False
             else:
                 pass
-        elif char in (ord('n'), ):
+        elif char in (ord('a'), ):
             # new theme
             pass
         elif char in (curses.KEY_ENTER, ord('\n'),
