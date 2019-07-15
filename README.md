@@ -338,13 +338,9 @@ The *Search Window* supports normal and extend editing and in session history.
 
 One can always get help by pressing the "**?**" key.
 
-The search will be case insensitive under **python 3**; it will be case sensitive under **python 2**.
-
-After a search term has been successfully found, next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
+After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
 
 **Note:** **Python 2** users are confined in typing ASCII characters only.
-
-**Note:** Currently, the **search function** is available on the stations' and playlists' and themes' window only.
 
 ## PyRadio Themes
 

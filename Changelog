@@ -1,6 +1,9 @@
-2019-07-09 s-n-g
+2019-07-15 s-n-g
+    * Searching is now available on any window presenting a list of items
+    * Transparency indication presentation always reflects setting
     * A locked session is indicated next to PyRadio version
     * Adding "Top" link to html files
+    * Docs updated
 
 2019-07-08 s-n-g
 

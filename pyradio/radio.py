@@ -5,7 +5,7 @@
 # Ben Dowling - 2009 - 2010
 # Kirill Klenov - 2012
 # Peter Stevenson (2E0PGS) - 2018
-# Spiros Georgaras - 2018
+# Spiros Georgaras - 2018, 2019
 
 import curses
 import threading
@@ -76,6 +76,9 @@ class PyRadio(object):
     _chars_to_bypass = (ord('m'), ord('v'), ord('.'),
             ord(','), ord('+'), ord('-'),
             ord('?'), ord('#'), curses.KEY_RESIZE)
+
+    """ Characters to be "ignored" by windows that support search"""
+    _chars_to_bypass_for_search = (ord('/'), ord('n'), ord('N'))
 
     # Number of stations to change with the page up/down keys
     pageChange = 5
@@ -208,6 +211,8 @@ class PyRadio(object):
                 self.ws.NORMAL_MODE: self.ws.SEARCH_NORMAL_MODE,
                 self.ws.PLAYLIST_MODE: self.ws.SEARCH_PLAYLIST_MODE,
                 self.ws.THEME_MODE: self.ws.SEARCH_THEME_MODE,
+                self.ws.SELECT_PLAYLIST_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
+                self.ws.SELECT_STATION_MODE: self.ws.SEARCH_SELECT_STATION_MODE,
                 }
         # search modes opened from main windows
         self.search_main_window_modes = (
@@ -507,9 +512,6 @@ class PyRadio(object):
                                 lambda: self.stop_update_notification_thread))
                     self._update_notification_thread.start()
 
-            """ set up stations search """
-            self._give_me_a_search_class(self.ws.operation_mode)
-
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write('Selected player: {}'.format(self._format_player_string()), help_msg=True)
             #self.log.write_right('Press ? for help')
@@ -558,6 +560,10 @@ class PyRadio(object):
                 edit_color = curses.color_pair(5),
                 cursor_color = curses.color_pair(6))
         self.search = self._search_classes[self._mode_to_search[operation_mode]]
+        if self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
+            self.search.box_color = curses.color_pair(3)
+        else:
+            self.search.box_color = curses.color_pair(5)
 
     def ctrl_c_handler(self, signum, frame):
         self.ctrl_c_pressed = True
@@ -800,7 +806,6 @@ class PyRadio(object):
         self.jumpnr = ''
         self._random_requested = False
         self._theme_selector = None
-        self._give_me_a_search_class(self.ws.THEME_MODE)
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE\n\nself._theme = {0}\nself._theme_name = {1}\nself._cnf.theme = {2}\n\n'.format(self._theme, self._theme_name, self._cnf.theme))
         self._theme_selector = PyRadioThemeSelector(self.bodyWin, self._cnf, self._theme,
@@ -1068,7 +1073,7 @@ class PyRadio(object):
             ^U                  |Clear line.
             DEL|,|^D              |Delete character.
             Backspace|,|^H        |Backspace (delete previous character).
-            Up|,|^N| / |Down|,|^P     |Get previous / next history item.
+            Up|,|^P| / |Down|,|^N     |Get previous / next history item.
             Enter| / |Esc         |Perform / cancel search.
 
             |Managing player volume does not work in search mode.
@@ -1108,6 +1113,7 @@ class PyRadio(object):
                      g| / |<n>G         |Jump to first or n-th / last playlist.
                      Enter|,|Space|,
                      Right|,|l          |Select default playlist.
+                     /| / |n| / |N        |Search, go to next / previous result.
                      r                |Revert to saved value.
                      Esc|,|q|,|Left|,|h     |Canel.
                      %_Player Keys_
@@ -1122,6 +1128,7 @@ class PyRadio(object):
                      M                |Jump to the middle of the list.
                      Enter|,|Space|,
                      Right|,|l          |Select default station.
+                     /| / |n| / |N        |Search, go to next / previous result.
                      r                |Revert to saved value.
                      Esc|,|q|,|Left|,|h     |Canel.
                      %_Player Keys_
@@ -1372,7 +1379,6 @@ you have to manually address the issue.
                 is_message=True)
         self._update_version = ''
 
-
     def _align_stations_and_refresh(self, cur_mode):
         need_to_scan_playlist = False
         """ refresh reference """
@@ -1482,7 +1488,6 @@ you have to manually address the issue.
         self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
         self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.stations]
         self.ws.window_mode = self.ws.PLAYLIST_MODE
-        self._give_me_a_search_class(self.ws.PLAYLIST_MODE)
         self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
         self.number_of_items, self.playing = self.readPlaylists()
         self.stations = self._cnf.playlists
@@ -1768,6 +1773,10 @@ you have to manually address the issue.
                 _apply_main_windows(ret)
             elif self.ws.operation_mode == self.ws.THEME_MODE:
                 self._theme_selector.set_theme(self._theme_selector._themes[ret])
+            elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE:
+                self._playlist_select_win.setPlaylistById(ret, adjust=True)
+            elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
+                self._station_select_win.setPlaylistById(ret, adjust=True)
             self.refreshBody()
 
         else:
@@ -1775,6 +1784,10 @@ you have to manually address the issue.
                 _apply_main_windows(ret)
             elif self.ws.previous_operation_mode == self.ws.THEME_MODE:
                 self._theme_selector.set_theme(self._theme_selector._themes[ret])
+            elif self.ws.previous_operation_mode == self.ws.SELECT_PLAYLIST_MODE:
+                self._playlist_select_win.setPlaylistById(ret, adjust=True)
+            elif self.ws.previous_operation_mode == self.ws.SELECT_STATION_MODE:
+                self._station_select_win.setPlaylistById(ret, adjust=True)
             self.ws.close_window()
             self.refreshBody()
 
@@ -1992,7 +2005,8 @@ you have to manually address the issue.
                 return
 
         elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE:
-            if char not in self._chars_to_bypass:
+            if char not in self._chars_to_bypass and \
+                   char not in self._chars_to_bypass_for_search:
                 ret, ret_playlist = self._playlist_select_win.keypress(char)
                 if ret >= 0:
                     if ret == 0:
@@ -2008,7 +2022,8 @@ you have to manually address the issue.
                 return
 
         elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
-            if char not in self._chars_to_bypass:
+            if char not in self._chars_to_bypass and \
+                   char not in self._chars_to_bypass_for_search:
                 ret, ret_station = self._station_select_win.keypress(char)
                 if ret >= 0:
                     if ret == 0:
@@ -2043,7 +2058,8 @@ you have to manually address the issue.
 
         elif self.ws.operation_mode == self.ws.THEME_MODE:
             if char not in self._chars_to_bypass and \
-                    char not in (ord('T'), ord('/'), ord('n'), ord('N'), ):
+                    char not in self._chars_to_bypass_for_search and \
+                    char not in (ord('T'),):
                 theme_id, save_theme = self._theme_selector.keypress(char)
 
                 #if self._cnf.theme_not_supported:
@@ -2114,6 +2130,7 @@ you have to manually address the issue.
             self.jumpnr = ''
             self._random_requested = False
             #self.search.string = '부'
+            self._give_me_a_search_class(self.ws.operation_mode)
             self.search.show(self.bodyWin)
             self.ws.operation_mode = self._search_modes[self.ws.operation_mode]
             return
@@ -2133,6 +2150,13 @@ you have to manually address the issue.
             elif self.ws.operation_mode == self.ws.THEME_MODE:
                 self._search_list = self._theme_selector._themes
                 sel = self._theme_selector.selection + 1
+            elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE:
+                self._search_list = self._playlist_select_win._items
+                sel = self._playlist_select_win._selected_playlist_id + 1
+            elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
+                self._search_list = self._station_select_win._items
+                sel = self._station_select_win._selected_playlist_id + 1
+
             if self.search.string:
                 if sel == len(self._search_list):
                     sel = 0
@@ -2157,6 +2181,13 @@ you have to manually address the issue.
             elif self.ws.operation_mode == self.ws.THEME_MODE:
                 self._search_list = self._theme_selector._themes
                 sel = self._theme_selector.selection - 1
+            elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE:
+                self._search_list = self._playlist_select_win._items
+                sel = self._playlist_select_win._selected_playlist_id - 1
+            elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
+                self._search_list = self._station_select_win._items
+                sel = self._station_select_win._selected_playlist_id - 1
+
             if self.search.string:
                 if sel < 0:
                     sel = len(self._search_list) - 1
@@ -2178,12 +2209,17 @@ you have to manually address the issue.
                 elif self.ws.previous_operation_mode == self.ws.THEME_MODE:
                     self._search_list = self._theme_selector._themes
                     sel = self._theme_selector.selection + 1
+                elif self.ws.previous_operation_mode == self.ws.SELECT_PLAYLIST_MODE:
+                    self._search_list = self._playlist_select_win._items
+                    sel = self._playlist_select_win._selected_playlist_id + 1
+                elif self.ws.previous_operation_mode == self.ws.SELECT_STATION_MODE:
+                    self._search_list = self._station_select_win._items
+                    sel = self._station_select_win._selected_playlist_id + 1
 
                 # perform search
                 if sel == len(self._search_list):
                     sel = 0
                 ret = self.search.get_next(self._search_list, sel)
-                logger.error('DE ret = {}'.format(ret))
                 if ret is None:
                     if self.search.string:
                         self.search.print_not_found()

@@ -50,6 +50,7 @@ class SimpleCursesLineEdit(object):
     focused = True
     _focused = True
 
+    _max_width = 0
 
     log = None
     _log_file = ''
@@ -242,6 +243,7 @@ class SimpleCursesLineEdit(object):
                 """ ESCAPE """
                 self._string = ''
                 self._curs_pos = 0
+                self._input_history.reset_index()
                 return -1
             else:
                 if self.log is not None:
@@ -491,11 +493,9 @@ class SimpleCursesLineEditHistory(object):
         if self._history:
             self._active_history_index += direction
             if self._active_history_index <= -1:
-                self._active_history_index = -1
-                return ''
+                self._active_history_index = len(self._history) - 1
             elif self._active_history_index >= len(self._history):
-                self._active_history_index = len(self._history)
-                return ''
+                self._active_history_index = 0
             ret =  self._history[self._active_history_index]
             return ret
         return ''

@@ -18,8 +18,8 @@ class PyRadioSearch(SimpleCursesLineEdit):
 
     def __init__(self, parent, begin_y, begin_x, **kwargs):
         SimpleCursesLineEdit.__init__(self, parent, begin_y, begin_x,
-            key_up_function_handler=self._get_history_next,
-            key_down_function_handler=self._get_history_previous,
+            key_up_function_handler=self._get_history_previous,
+            key_down_function_handler=self._get_history_next,
             **kwargs)
         if version_info < (3, 0):
             self._range_command='xrange'
@@ -64,13 +64,13 @@ class PyRadioSearch(SimpleCursesLineEdit):
     def get_next(self, a_list, start=0, stop=None):
         if self.string:
             for n in eval(self._range_command)(start, len(a_list)):
-                if self.string.lower() in a_list[n][0].lower():
+                if self.string.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('forward search term "{0}" found at {1}'.format(self.string, n))
                     return n
             """ if not found start from list top """
             for n in eval(self._range_command)(0, start):
-                if self.string.lower() in a_list[n][0].lower():
+                if self.string.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('forward search term "{0}" found at {1}'.format(self.string, n))
                     return n
@@ -84,13 +84,13 @@ class PyRadioSearch(SimpleCursesLineEdit):
     def get_previous(self, a_list, start=0, stop=None):
         if self.string:
             for n in eval(self._range_command)(start, -1, -1):
-                if self.string.lower() in a_list[n][0].lower():
+                if self.string.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('backward search term "{0}" found at {1}'.format(self.string, n))
                     return n
             """ if not found start from list end """
             for n in eval(self._range_command)(len(a_list) - 1, start, -1):
-                if self.string.lower() in a_list[n][0].lower():
+                if self.string.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('backward search term "{0}" found at {1}'.format(self.string, n))
                     return n
@@ -106,4 +106,10 @@ class PyRadioSearch(SimpleCursesLineEdit):
         self._edit_win.refresh()
         sleep(.3)
         self.refreshEditWindow()
-        
+
+    def _get_string(self, item):
+        if isinstance(item, str):
+            return item.lower()
+        else:
+            return item[0].lower()
+
