@@ -536,6 +536,7 @@ class PyRadio(object):
             while True:
                 try:
                     c = self.bodyWin.getch()
+                    #logger.error('DE pressed "{0} - {1}"'.format(c, chr(c)))
                     ret = self.keypress(c)
                     if (ret == -1):
                         return
@@ -1066,19 +1067,20 @@ class PyRadio(object):
             self._show_help(txt, mode_to_set=self.ws.THEME_HELP_MODE, caption=' Themes Help ')
 
     def _show_search_help(self):
-            txt = """M-F| / |M-B           |Move to next / previous word.
-            Left| / |Right        |Move to next / previous character.
-            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-            ^W| / |M-D|,|^K         |Clear to start / end of line.
-            ^U                  |Clear line.
-            DEL|,|^D              |Delete character.
-            Backspace|,|^H        |Backspace (delete previous character).
-            Up|,|^P| / |Down|,|^N     |Get previous / next history item.
-            Enter| / |Esc         |Perform / cancel search.
+        self.search.restore_data = [ self.search.string, self.search._curs_pos ]
+        txt = """M-F| / |M-B           |Move to next / previous word.
+        Left| / |Right        |Move to next / previous character.
+        HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+        ^W| / |M-D|,|^K         |Clear to start / end of line.
+        ^U                  |Clear line.
+        DEL|,|^D              |Delete character.
+        Backspace|,|^H        |Backspace (delete previous character).
+        Up|,|^P| / |Down|,|^N     |Get previous / next history item.
+        Enter| / |Esc         |Perform / cancel search.
 
-            |Managing player volume does not work in search mode.
-            """
-            self._show_help(txt, mode_to_set=self.ws.SEARCH_HELP_MODE, caption=' Search Help ')
+        |Managing player volume does not work in search mode.
+        """
+        self._show_help(txt, mode_to_set=self.ws.SEARCH_HELP_MODE, caption=' Search Help ')
 
     def _show_config_help(self):
             txt = """Up|,|j|,|PgUp|,
@@ -1827,7 +1829,8 @@ you have to manually address the issue.
                 self._show_theme_selector()
                 return
 
-        if self.ws.operation_mode <= self.ws.PLAYLIST_MODE and char == ord('p'):
+        if char == ord('p') and self.ws.operation_mode in \
+                (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._goto_playing_station()
             return
 
@@ -2596,7 +2599,7 @@ you have to manually address the issue.
                     self._show_config_window()
                     return
 
-                elif char in (ord('e'), ):
+                elif char in (ord('E'), ):
                     self.jumpnr = ''
                     self._random_requested = False
                     self._old_station_encoding = self.stations[self.selection][2]

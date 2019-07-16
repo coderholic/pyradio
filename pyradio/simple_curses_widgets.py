@@ -52,6 +52,9 @@ class SimpleCursesLineEdit(object):
 
     _max_width = 0
 
+    """ string to redisplay after exiting help """
+    restore_data = []
+
     log = None
     _log_file = ''
 
@@ -178,7 +181,13 @@ class SimpleCursesLineEdit(object):
         self._edit_win.erase()
         #self._edit_win.bkgd('-', curses.A_REVERSE)
         if opening:
-            self._curs_pos = 0
+            if self.restore_data:
+                self._string = self.restore_data[0]
+                self._curs_pos = self.restore_data[1]
+                self._edit_win.addstr(0, 0, self._string, active_edit_color)
+                self.restore_data = []
+            else:
+                self._curs_pos = 0
         else:
             if self._string:
                 self._edit_win.addstr(0, 0, self._string, active_edit_color)
