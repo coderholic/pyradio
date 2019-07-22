@@ -35,6 +35,7 @@ class SimpleCursesLineEdit(object):
     title = ''
     _disp_title = ''
     _boxed = False
+    bracket = False
     box_color = 0
     caption_color = 0
     title_color = 0
@@ -53,6 +54,9 @@ class SimpleCursesLineEdit(object):
     focused = True
     _focused = True
 
+    """ if width < 0, auto_width gets this value,
+        so that width gets parent.width - auto_width """
+    _auto_width = 0
     _max_width = 0
 
     """ string to redisplay after exiting help """
@@ -61,15 +65,26 @@ class SimpleCursesLineEdit(object):
     log = None
     _log_file = ''
 
-    def __init__(self, parent, begin_y, begin_x, **kwargs):
+    def __init__(self, parent, width, begin_y, begin_x, **kwargs):
 
         self.parent_win = parent
+        if width == -1:
+            h , self.width = self.parent_win.getmaxyx()
+            self._auto_width = width
+        else:
+            self.width = width
+            self._auto_width = 0
+        self.height = 3
         self.y = begin_y
         self.x = begin_x
 
         for key, value in kwargs.items():
             if key == 'boxed':
                 self._boxed = value
+                if not self._boxed:
+                    self.height = 1
+            elif key == 'bracket':
+                self.bracket = True
             elif key == 'string':
                 self._string = value
             elif key == 'string_len':
@@ -118,7 +133,7 @@ class SimpleCursesLineEdit(object):
 
         if self._has_history:
             self._input_history = SimpleCursesLineEditHistory()
-        self.height, self.width = self._calculate_window_metrics()
+        self._calculate_window_metrics()
 
     @property
     def focused(self):
@@ -145,33 +160,42 @@ class SimpleCursesLineEdit(object):
     def _calculate_window_metrics(self):
         if self.caption:
             if self._boxed:
+                self.bracket = False
                 self._disp_caption = ' ' + self.caption + ': '
                 if self.title:
                     self._disp_title = ' ' + self._disp_title + ' '
                 else:
                     self._disp_title = ''
             else:
-                self._disp_caption = self.caption + ': ['
+                if self.bracket:
+                    self._disp_caption = self.caption + ': ['
+                else:
+                    self._disp_caption = self.caption + ': '
                 if self.title:
                     self._disp_title = self._disp_title
                 else:
                     self._disp_title = ''
         else:
-            self._disp_caption = '['
+            if self._boxed:
+                if self.bracket:
+                    self._disp_caption = '['
+                else:
+                    self._disp_caption = ''
         width = len(self._disp_caption) + self._string_len + 4
+        self._string_len = self.width - len(self._disp_caption) - 4
         if self._boxed:
-            height = 3
+            self.height = 3
         else:
-            height = 1
-            width -= 2
+            self.height = 1
+            self._string_len -= 2
         if self.log is not None:
-            self.log('height = {0}, width = {1}\n'.format(height, width))
-        return height, width
+            self.log('string_len = {}'.format(self._string_len))
+        return
 
     def _prepare_to_show(self):
         caption_col = self.caption_color
-        height, width = self._calculate_window_metrics()
-        self._caption_win = curses.newwin(height, width, self.y, self.x)
+        self._calculate_window_metrics()
+        self._caption_win = curses.newwin(self.height, self.width, self.y, self.x)
         maxY, maxX = self._caption_win.getmaxyx()
         if self._boxed:
             self._edit_win = curses.newwin(1, maxX - len(self._disp_caption) - 2, self.y + 1, self.x + len(self._disp_caption) + 1)

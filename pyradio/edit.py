@@ -16,8 +16,8 @@ class PyRadioSearch(SimpleCursesLineEdit):
 
     caption = 'Search'
 
-    def __init__(self, parent, begin_y, begin_x, **kwargs):
-        SimpleCursesLineEdit.__init__(self, parent, begin_y, begin_x,
+    def __init__(self, parent, width, begin_y, begin_x, **kwargs):
+        SimpleCursesLineEdit.__init__(self, parent, width, begin_y, begin_x,
             key_up_function_handler=self._get_history_previous,
             key_down_function_handler=self._get_history_next,
             **kwargs)

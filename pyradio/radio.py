@@ -558,7 +558,7 @@ class PyRadio(object):
         """
         if self._search_classes[self._mode_to_search[operation_mode]] is None:
             self._search_classes[self._mode_to_search[operation_mode]] = PyRadioSearch(parent = self.bodyWin,
-                begin_y = 0, begin_x = 0,
+                width = 33, begin_y = 0, begin_x = 0,
                 boxed = True,
                 has_history = True,
                 box_color = curses.color_pair(5),
