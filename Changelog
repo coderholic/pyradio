@@ -1,5 +1,7 @@
 2019-07-16 s-n-g
     * Search string will not be lost after displaying help
+    * Changing "e" to "E" to change a station's encoding
+    * Changing "e" to "P" to jump to playing station / loaded playlist
 
 2019-07-15 s-n-g
     * Searching is now available on any window presenting a list of items

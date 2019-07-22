@@ -113,3 +113,85 @@ class PyRadioSearch(SimpleCursesLineEdit):
         else:
             return item[0].lower()
 
+class PyRadioEditor(object):
+    """ PyRadio stations editor """
+
+    _stations = []
+    _selection = _pos_to_insert = maxY = maxX = 0
+
+    _win = None
+    _parent_win = None
+
+    """ Adding a new station or editing an existing one """
+    adding = True
+
+    """ Indicates that we append to the stations' list
+        Only valid when adding = True """
+    _append = False
+
+    def __init__(self, stations, selection, parent, adding=True):
+        self._stations = stations
+        self._selection = selection
+        self._pos_to_insert = selection + 1
+        self._parent_win = parent
+        self.adding = adding
+
+    @property
+    def append(self):
+        return self._append
+
+    @append.setter
+    def append(self, val):
+        if self.adding:
+            self._append = val
+            self._pos_to_insert = len(self._stations)
+
+    def set_parent(self, val, refresh=True):
+        self._parent_win = val
+        if refresh:
+            self.show()
+
+    def show(self):
+        self._win = None
+        self.maxY, self.maxX = self._parent_win.getmaxyx()
+        self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
+        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.erase()
+        self._win.box()
+
+        title = ' Station Editor '
+        self._win.addstr(0,
+                int((self.maxX - len(title)) / 2),
+                title,
+                curses.color_pair(4))
+
+        self._win.addstr(1, 2, 'Name', curses.color_pair(4))
+        self._win.addstr(4, 2, 'URL', curses.color_pair(4))
+        self._win.addstr(7, 2, 'Encoding: ', curses.color_pair(4))
+        self._win.addstr(9, int((self.maxX - 18) /2), '[ OK ]  [ Cancel ]', curses.color_pair(4))
+        try:
+            self._win.addstr(11, 3, '─' * (self.maxX - 6), curses.color_pair(3))
+        except:
+            self._win.addstr(11, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+        self._win.addstr(11, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
+        self._win.addstr(12, 5, 'TAB', curses.color_pair(4))
+        self._win.addstr('      Go to next field.', curses.color_pair(5))
+        self._win.addstr(13, 5, 'S-TAB', curses.color_pair(4))
+        self._win.addstr('    Go to previous field.', curses.color_pair(5))
+        self._win.addstr(14, 5, 'ENTER', curses.color_pair(4))
+        self._win.addstr('    When in line editor, go to next field.', curses.color_pair(5))
+        self._win.addstr(15, 14, 'When in Encoding field, open Encoding selection window.', curses.color_pair(5))
+        self._win.addstr(16, 14, 'Otherwise, save station data or cancel operation.', curses.color_pair(5))
+
+        self._win.refresh()
+
+
+    def keypress(self, char):
+        """ Returns:
+                -1: Cancel
+                 0: go on
+                 1: Ok
+        """
+        if char in (ord('q'), ):
+            return -1
+        return 0

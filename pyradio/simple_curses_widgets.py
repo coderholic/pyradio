@@ -32,9 +32,12 @@ class SimpleCursesLineEdit(object):
     y = x = 0
     caption = 'Insert string'
     _disp_caption =  ' Insert string: '
+    title = ''
+    _disp_title = ''
     _boxed = False
     box_color = 0
     caption_color = 0
+    title_color = 0
     edit_color = 0
     cursor_color = curses.A_REVERSE
     _has_history = False
@@ -72,11 +75,17 @@ class SimpleCursesLineEdit(object):
             elif key == 'string_len':
                 self._string_len = value
             elif key == 'caption':
+                """ string on editing line """
                 self.caption = value
+            elif key == 'title':
+                """ string on box """
+                self.title = value
             elif key == 'box_color':
                 self.box_color = value
             elif key == 'caption_color':
                 self.caption_color = value
+            elif key == 'title_color':
+                self.title_color = value
             elif key == 'edit_color':
                 self.edit_color = value
             elif key == 'cursor_color':
@@ -119,7 +128,7 @@ class SimpleCursesLineEdit(object):
     def focused(self, val):
         if val != self._focused:
             self._focused = val
-            self.refreshEditWindow()
+            #self.show(self.parent_win)
 
     @property
     def string(self):
@@ -134,10 +143,21 @@ class SimpleCursesLineEdit(object):
         return self._caption_win.getmaxyx()
 
     def _calculate_window_metrics(self):
-        if self._boxed:
-            self._disp_caption = ' ' + self.caption + ': '
+        if self.caption:
+            if self._boxed:
+                self._disp_caption = ' ' + self.caption + ': '
+                if self.title:
+                    self._disp_title = ' ' + self._disp_title + ' '
+                else:
+                    self._disp_title = ''
+            else:
+                self._disp_caption = self.caption + ': ['
+                if self.title:
+                    self._disp_title = self._disp_title
+                else:
+                    self._disp_title = ''
         else:
-            self._disp_caption = self.caption + ': ['
+            self._disp_caption = '['
         width = len(self._disp_caption) + self._string_len + 4
         if self._boxed:
             height = 3
@@ -174,10 +194,8 @@ class SimpleCursesLineEdit(object):
     def refreshEditWindow(self, opening=False):
         if self.focused:
             active_edit_color = self.edit_color
-            active_cursor_color = self.cursor_color
         else:
             active_edit_color = self.caption_color
-            active_cursor_color = self.caption_color
         self._edit_win.erase()
         #self._edit_win.bkgd('-', curses.A_REVERSE)
         if opening:
@@ -195,7 +213,8 @@ class SimpleCursesLineEdit(object):
                 self._curs_pos = 0
         if self.log is not None:
             self.log(' - curs_pos = {}\n'.format(self._curs_pos))
-        self._edit_win.chgat(0, self._curs_pos, 1, active_cursor_color)
+        if self.focused:
+            self._edit_win.chgat(0, self._curs_pos, 1, self.cursor_color)
 
         self._edit_win.refresh()
 
@@ -217,6 +236,8 @@ class SimpleCursesLineEdit(object):
         self._edit_win.bkgdset(' ', self.box_color)
         if self._boxed:
             self._caption_win.box()
+            if self._disp_title:
+                self._title_win.addstr(0, 1, self._disp_title, self.title_color)
         self._caption_win.refresh()
         self.refreshEditWindow(opening=True)
 

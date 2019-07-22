@@ -28,6 +28,8 @@ class Window_Stack_Constants(object):
     SAVE_PLAYLIST_MODE = 51
     ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE = 52
     ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE = 53
+    ADD_STATION_MODE = 54
+    EDIT_STATION_MODE = 55
     MAIN_HELP_MODE = 100
     PLAYLIST_HELP_MODE = 101
     CONFIG_HELP_MODE = 102
@@ -109,11 +111,18 @@ class Window_Stack_Constants(object):
             UPDATE_NOTIFICATION_MODE: 'UPDATE_NOTIFICATION_MODE',
             SESSION_LOCKED_MODE: 'SESSION_LOCKED_MODE',
             NOT_IMPLEMENTED_YET_MODE: 'NOT_IMPLEMENTED_YET_MODE',
+            ADD_STATION_MODE: 'ADD_STATION_MODE',
+            EDIT_STATION_MODE: 'EDIT_THEME_MODE',
             }
 
     ''' When PASSIVE_WINDOWS target is one of them,
         also set window_mode '''
-    MAIN_MODES = ( NORMAL_MODE, PLAYLIST_MODE, CONFIG_MODE )
+    MAIN_MODES = ( NORMAL_MODE,
+            PLAYLIST_MODE,
+            CONFIG_MODE,
+            ADD_STATION_MODE,
+            EDIT_STATION_MODE,
+            )
 
     PASSIVE_WINDOWS = (
             SESSION_LOCKED_MODE,

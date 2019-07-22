@@ -13,7 +13,7 @@ import logging
 import os
 import random
 #import signal
-from sys import version as python_version, version_info
+from sys import version as python_version, version_info, platform
 from os.path import join, basename, getmtime, getsize
 from platform import system
 from time import ctime, sleep
@@ -23,7 +23,7 @@ from .common import *
 from .window_stack import Window_Stack
 from .config_window import *
 from .log import Log
-from .edit import PyRadioSearch
+from .edit import PyRadioSearch, PyRadioEditor
 from .themes import *
 from . import player
 import logging
@@ -114,6 +114,9 @@ class PyRadio(object):
     stop_update_notification_thread = False
     _update_notify_lock = threading.Lock()
 
+    """ editor class """
+    _station_edit = None
+
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
         self._cnf = pyradio_config
         self._theme = PyRadioTheme(self._cnf)
@@ -170,6 +173,8 @@ class PyRadio(object):
                 self.ws.PLAYLIST_RECOVERY_ERROR_MODE: self._print_playlist_recovery_error,
                 self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
                 self.ws.SEARCH_HELP_MODE: self._show_search_help,
+                self.ws.ADD_STATION_MODE: self._show_station_editor,
+                self.ws.EDIT_STATION_MODE: self._show_station_editor,
                 }
 
         """ list of help functions """
@@ -1021,15 +1026,15 @@ class PyRadio(object):
         txt = """Up|,|j|,|PgUp|,
                  Down|,|k|,|PgDown    |Change station selection.
                  g| / |<n>G         |Jump to first or n-th / last station.
-                 M| / |p            |Jump to |M|iddle / |p|laying station.
+                 M| / |P            |Jump to |M|iddle / |P|laying station.
                  Enter|,|Right|,|l    |Play selected station.
                  r                |Select and play a random station.
-                 Space|,|Left|,|h     |Stop , start playing selected station.
+                 Space|,|Left|,|h     |Stop / start playing selected station.
                  -|/|+| or |,|/|.       |Change volume.
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 o| / |s| / |R        ||O|pen / |S|ave / |R|eload playlist.
-                 e                |Change station's encoding.
+                 E                |Change station's encoding.
                  DEL|,|x            |Delete selected station.
+                 o| / |s| / |R        ||O|pen / |S|ave / |R|eload playlist.
                  t| / |T            |Load |t|heme / |T|oggle transparency.
                  c                |Open Configuration window.
                  /| / |n| / |N        |Search, go to next / previous result.
@@ -1040,7 +1045,7 @@ class PyRadio(object):
         txt = """Up|,|j|,|PgUp|,
                  Down|,|k|,|PgDown    |Change playlist selection.
                  g| / |<n>G         |Jump to first or n-th / last playlist.
-                 M| / |p            |Jump to |M|iddle / loaded |p|laylist.
+                 M| / |P            |Jump to |M|iddle / loaded |P|laylist.
                  Enter|,|Right|,|l    |Open selected playlist.
                  r                |Re-read playlists from disk.
                  /| / |n| / |N        |Search, go to next / previous result.
@@ -1068,18 +1073,32 @@ class PyRadio(object):
 
     def _show_search_help(self):
         self.search.restore_data = [ self.search.string, self.search._curs_pos ]
-        txt = """M-F| / |M-B           |Move to next / previous word.
-        Left| / |Right        |Move to next / previous character.
-        HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-        ^W| / |M-D|,|^K         |Clear to start / end of line.
-        ^U                  |Clear line.
-        DEL|,|^D              |Delete character.
-        Backspace|,|^H        |Backspace (delete previous character).
-        Up|,|^P| / |Down|,|^N     |Get previous / next history item.
-        Enter| / |Esc         |Perform / cancel search.
+        if platform.lower().startswith('darwin'):
+            txt = """M-Right| / |M-Left    |Move to next / previous word.
+            Left| / |Right        |Move to next / previous character.
+            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+            ^W| / |^K             |Clear to start / end of line.
+            ^U                  |Clear line.
+            DEL|,|^D              |Delete character.
+            Backspace|,|^H        |Backspace (delete previous character).
+            Up|,|^P| / |Down|,|^N     |Get previous / next history item.
+            Enter| / |Esc         |Perform / cancel search.
 
-        |Managing player volume does not work in search mode.
-        """
+            |Managing player volume does not work in search mode.
+            """
+        else:
+            txt = """M-F| / |M-B           |Move to next / previous word.
+            Left| / |Right        |Move to next / previous character.
+            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+            ^W| / |M-D|,|^K         |Clear to start / end of line.
+            ^U                  |Clear line.
+            DEL|,|^D              |Delete character.
+            Backspace|,|^H        |Backspace (delete previous character).
+            Up|,|^P| / |Down|,|^N     |Get previous / next history item.
+            Enter| / |Esc         |Perform / cancel search.
+
+            |Managing player volume does not work in search mode.
+            """
         self._show_help(txt, mode_to_set=self.ws.SEARCH_HELP_MODE, caption=' Search Help ')
 
     def _show_config_help(self):
@@ -1793,6 +1812,9 @@ you have to manually address the issue.
             self.ws.close_window()
             self.refreshBody()
 
+    def _show_station_editor(self):
+        self._station_edit.set_parent(self.bodyWin)
+
     def keypress(self, char):
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE {}'.format(self.ws._dq))
@@ -1829,7 +1851,7 @@ you have to manually address the issue.
                 self._show_theme_selector()
                 return
 
-        if char == ord('p') and self.ws.operation_mode in \
+        if char == ord('P') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._goto_playing_station()
             return
@@ -2449,6 +2471,15 @@ you have to manually address the issue.
             self.refreshBody()
             return
 
+        elif self.ws.operation_mode in \
+                (self.ws.ADD_STATION_MODE, self.ws.EDIT_STATION_MODE):
+            ret = self._station_edit.keypress(char)
+            if ret == -1:
+                # Cancel
+                self.ws.close_window()
+                self._station_edit = None
+                self.refreshBody()
+
         else:
 
             if char in (ord('?'), ):
@@ -2584,7 +2615,19 @@ you have to manually address the issue.
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char == ord('c'):
+                if char in ( ord('a'), ord('A') ):
+                    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin)
+                    if char == ord('A'):
+                        self._station_edit.apend = True
+                    self._station_edit.show()
+                    self.ws.operation_mode = self.ws.ADD_STATION_MODE
+
+                elif char == ord('e'):
+                    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin, adding=False)
+                    self._station_edit.show()
+                    self.ws.operation_mode = self.ws.EDIT_STATION_MODE
+
+                elif char == ord('c'):
                     self.jumpnr = ''
                     self._random_requested = False
                     if self._cnf.locked:
