@@ -4,6 +4,7 @@ import curses
 import logging
 from argparse import ArgumentParser
 from os import path, getenv, environ
+from sys import platform
 
 from .radio import PyRadio
 from .config import PyRadioConfig
@@ -72,13 +73,23 @@ def shell():
     pyradio_config = PyRadioConfig()
 
     # set window title
-    try:
-        if pyradio_config.locked:
-            sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07")
-        else:
-            sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player\x07")
-    except:
-        pass
+    if platform.startswith('win'):
+        import ctypes
+        try:
+            if pyradio_config.locked:
+                ctypes.windll.kernel32.SetConsoleTitleW("PyRadio: The Internet Radio player (Session Locked)")
+            else:
+                ctypes.windll.kernel32.SetConsoleTitleW("PyRadio: The Internet Radio player")
+        except:
+            pass
+    else:
+        try:
+            if pyradio_config.locked:
+                sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07")
+            else:
+                sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player\x07")
+        except:
+            pass
 
     if args.show_config_dir:
         print('PyRadio config dir: "{}"'.format(pyradio_config.stations_dir))
@@ -116,7 +127,8 @@ def shell():
             sys.exit(1)
 
     if args.use_player != '':
-        requested_player = args.use_player
+        if not platform.startswith('win'):
+            requested_player = args.use_player
 
     if args.list is False and args.add is False:
         print('Reading playlist...')

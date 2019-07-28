@@ -1,3 +1,7 @@
+2019-08-01 s-n-g
+    * PyRadio runs on Windows (finally). Added an installation BAT file,
+      icons, program shortcut and help (windows.md - windows.html)
+
 2019-07-16 s-n-g
     * Search string will not be lost after displaying help
     * Changing "e" to "E" to change a station's encoding

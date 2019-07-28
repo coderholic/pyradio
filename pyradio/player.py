@@ -60,6 +60,10 @@ class Player(object):
         pass
 
     def _do_save_volume(self, config_string):
+        if not self.config_files:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Volume not daved!!! (config file not found!!!)')
+            return 'Volume not saved!!!'
         ret_strings = ('Volume: already saved...',
                     'Volume: {}% saved',
                     'Volume: {}% NOT saved (Error writing file)')
@@ -79,76 +83,98 @@ class Player(object):
             config_file = self.config_files[0]
             ret_string = ret_strings[1].format(str(self.volume))
             if os.path.exists(config_file):
-                if self.PROFILE_FROM_USER:
+                if platform.startswith('win'):
                     with open(config_file, 'r') as c_file:
                         config_string = c_file.read()
-
-                    if "[pyradio]" in config_string:
-                        profile_found = True
-
-                        """ split on [pyradio]
-                        last item has our options """
-                        sections = config_string.split("[pyradio]")
-
-                        """ split at [ - i.e. isolate consecutive profiles
-                        first item has pyradio options """
-                        py_section = sections[-1].split("[")
-
-                        """ split to lines in order to get '^volume=' """
-                        py_options = py_section[0].split("\n")
-
-                        """ replace volume line """
-                        vol_set = False
-                        for i, opt in enumerate(py_options):
-                            if opt.startswith("volume="):
-                                py_options[i]="volume=" + str(self.volume)
-                                vol_set = True
+                    if "volume=" in config_string:
+                        vol = config_string.splitlines()
+                        for i, v_string in enumerate(vol):
+                            if v_string.startswith('volume'):
+                                vol[i] = 'volume={}'.format(self.volume)
                                 break
-                        """ or add it if it does not exist """
-                        if not vol_set:
-                            py_options.append("volume=" + str(self.volume))
-
-                        """ join lines together in py_section's first item """
-                        py_section[0] = "\n".join(py_options)
-
-                        """ join consecutive profiles (if exist)
-                        in last item of sections """
-                        if len(py_section) > 1:
-                            sections[-1] = "[".join(py_section)
-                        else:
-                            sections[-1] = py_section[0]
-
-                        """ finally get the string back together """
-                        config_string = "[pyradio]".join(sections)
-
+                        config_string = '\n'.join(vol)
+                    else:
+                        out = config_string + 'volume={}'.format(self.volume)
+                        config_string = out
                     try:
                         with open(config_file, "w") as c_file:
                             c_file.write(config_string)
-                    except EnvironmentError:
+                    except:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug(log_strings[2].format(config_file))
                         return ret_strings[2].format(str(self.volume))
-                    self.volume = -1
+                        self.volume = -1
+                else:
+                    if self.PROFILE_FROM_USER:
+                        with open(config_file, 'r') as c_file:
+                            config_string = c_file.read()
 
-            """ no user profile or user config file does not exist """
-            if not profile_found:
-                if not os.path.isdir(os.path.dirname(config_file)):
-                    try:
-                        os.mkdir(os.path.dirname(config_file))
-                    except OSError:
-                        if (logger.isEnabledFor(logging.DEBUG)):
-                            logger.debug(log_strings[2].format(config_file))
-                        return ret_strings[2].format(str(self.volume))
-                new_profile_string = "volume=100\n\n" + config_string
-                try:
-                    with open(config_file, "a") as c_file:
-                        c_file.write(new_profile_string.format(str(self.volume)))
-                except EnvironmentError:
-                    if (logger.isEnabledFor(logging.DEBUG)):
-                        logger.debug(log_strings[2].format(config_file))
-                    return ret_strings[2].format(str(self.volume))
-                self.volume = -1
-                self.PROFILE_FROM_USER = True
+                        if "[pyradio]" in config_string:
+                            profile_found = True
+
+                            """ split on [pyradio]
+                            last item has our options """
+                            sections = config_string.split("[pyradio]")
+
+                            """ split at [ - i.e. isolate consecutive profiles
+                            first item has pyradio options """
+                            py_section = sections[-1].split("[")
+
+                            """ split to lines in order to get '^volume=' """
+                            py_options = py_section[0].split("\n")
+
+                            """ replace volume line """
+                            vol_set = False
+                            for i, opt in enumerate(py_options):
+                                if opt.startswith("volume="):
+                                    py_options[i]="volume=" + str(self.volume)
+                                    vol_set = True
+                                    break
+                            """ or add it if it does not exist """
+                            if not vol_set:
+                                py_options.append("volume=" + str(self.volume))
+
+                            """ join lines together in py_section's first item """
+                            py_section[0] = "\n".join(py_options)
+
+                            """ join consecutive profiles (if exist)
+                            in last item of sections """
+                            if len(py_section) > 1:
+                                sections[-1] = "[".join(py_section)
+                            else:
+                                sections[-1] = py_section[0]
+
+                            """ finally get the string back together """
+                            config_string = "[pyradio]".join(sections)
+
+                        try:
+                            with open(config_file, "w") as c_file:
+                                c_file.write(config_string)
+                        except EnvironmentError:
+                            if (logger.isEnabledFor(logging.DEBUG)):
+                                logger.debug(log_strings[2].format(config_file))
+                            return ret_strings[2].format(str(self.volume))
+                        self.volume = -1
+
+                    """ no user profile or user config file does not exist """
+                    if not profile_found:
+                        if not os.path.isdir(os.path.dirname(config_file)):
+                            try:
+                                os.mkdir(os.path.dirname(config_file))
+                            except OSError:
+                                if (logger.isEnabledFor(logging.DEBUG)):
+                                    logger.debug(log_strings[2].format(config_file))
+                                return ret_strings[2].format(str(self.volume))
+                        new_profile_string = "volume=100\n\n" + config_string
+                        try:
+                            with open(config_file, "a") as c_file:
+                                c_file.write(new_profile_string.format(str(self.volume)))
+                        except EnvironmentError:
+                            if (logger.isEnabledFor(logging.DEBUG)):
+                                logger.debug(log_strings[2].format(config_file))
+                            return ret_strings[2].format(str(self.volume))
+                        self.volume = -1
+                        self.PROFILE_FROM_USER = True
             return ret_string
 
     def _is_in_playback_token(self, a_string):
@@ -349,9 +375,17 @@ class Player(object):
         if self.delay_thread is not None:
             self.delay_thread.cancel()
         if self.process is not None:
-            os.kill(self.process.pid, 15)
-            self.process.wait()
-        self.process = None
+            if platform.startswith('win'):
+                try:
+                    #subprocess.check_output("Taskkill /PID %d /F" % self.process.pid)
+                    #subprocess.Popen(["Taskkill", "/PID", "{}".format(self.process.pid), "/F"])
+                    subprocess.Call(['Taskkill', '/PID', '{}'.format(self.process.pid), '/F'])
+                except:
+                    pass
+            else:
+                os.kill(self.process.pid, 15)
+                self.process.wait()
+            self.process = None
 
     def _buildStartOpts(self, streamUrl, playList):
         pass
@@ -456,6 +490,8 @@ class MpvPlayer(Player):
         os.system("rm " + mpvsocket + " 2>/dev/null");
 
     def save_volume(self):
+        """ Saving Volume in Windows does not work;
+            Profiles not supported... """
         return self._do_save_volume("[pyradio]\nvolume={}\n")
 
     def _configHasProfile(self):
@@ -565,12 +601,20 @@ class MpPlayer(Player):
     if platform.startswith('darwin'):
         config_files.append("/usr/local/etc/mplayer/mplayer.conf")
     elif platform.startswith('win'):
-        config_files[0] = os.path.join(os.getenv('APPDATA'), "mplayer", "config")
+        if os.path.exists('C:\\mplayer\\mplayer.exe'):
+            config_files[0] = 'C:\\mplayer\mplayer\\config'
+        elif os.path.exists(os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
+            config_files[0] = os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer", "config")
+        else:
+            config_files = []
     else:
         # linux, freebsd, etc.
         config_files.append("/etc/mplayer/mplayer.conf")
 
     def save_volume(self):
+        if platform.startswith('win'):
+            return self._do_save_volume("volume={}\r\n")
+            return 0
         return self._do_save_volume("[pyradio]\nvolstep=1\nvolume={}\n")
 
     def _configHasProfile(self):
@@ -582,6 +626,9 @@ class MpPlayer(Player):
         volstep=2
         volume=28"""
 
+        """ Existing mplayer Windows implementations do not support profiles """
+        if platform.startswith('win'):
+            return 0
         for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
                 with open(config_file) as f:

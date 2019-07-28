@@ -2,7 +2,7 @@
 import curses
 import curses.ascii
 import logging
-from sys import version_info
+from sys import version_info, platform
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -19,14 +19,15 @@ class SimpleCursesLineEdit(object):
     _string = ''
 
     """ windows """
-    parent_win = None
+    _parent_win = None
     _caption_win = None     # contains box and caption
     _edit_win = None        # contains the "input box"
 
     """ Default value for string length """
-    _string_len = 20
+    _max_chars_to_display = 0
 
     _curs_pos = 0
+    #_max_width = 0
 
     """ init values """
     y = x = 0
@@ -51,13 +52,11 @@ class SimpleCursesLineEdit(object):
     _key_stab_function_handler = None
     _ungetch_unbound_keys = False
 
-    focused = True
     _focused = True
 
-    """ if width < 0, auto_width gets this value,
+    """ if width < 1, auto_width gets this value,
         so that width gets parent.width - auto_width """
-    _auto_width = 0
-    _max_width = 0
+    _auto_width = 1
 
     """ string to redisplay after exiting help """
     restore_data = []
@@ -67,14 +66,9 @@ class SimpleCursesLineEdit(object):
 
     def __init__(self, parent, width, begin_y, begin_x, **kwargs):
 
-        self.parent_win = parent
-        if width == -1:
-            h , self.width = self.parent_win.getmaxyx()
-            self._auto_width = width
-        else:
-            self.width = width
-            self._auto_width = 0
-        self.height = 3
+        self._parent_win = parent
+        self.width = width
+        self._height = 3
         self.y = begin_y
         self.x = begin_x
 
@@ -87,8 +81,6 @@ class SimpleCursesLineEdit(object):
                 self.bracket = True
             elif key == 'string':
                 self._string = value
-            elif key == 'string_len':
-                self._string_len = value
             elif key == 'caption':
                 """ string on editing line """
                 self.caption = value
@@ -136,6 +128,23 @@ class SimpleCursesLineEdit(object):
         self._calculate_window_metrics()
 
     @property
+    def width(self):
+        if self._auto_width < 1:
+            h , self._width = self._parent_win.getmaxyx()
+            self._width -= val
+        return self._width
+
+    @width.setter
+    def width(self, val):
+        if val < 1:
+            h , self._width = self._parent_win.getmaxyx()
+            self._width -= val
+            self._auto_width = val
+        else:
+            self._width = val
+            self._auto_width = val
+
+    @property
     def focused(self):
         return self._focused
 
@@ -181,21 +190,21 @@ class SimpleCursesLineEdit(object):
                     self._disp_caption = '['
                 else:
                     self._disp_caption = ''
-        width = len(self._disp_caption) + self._string_len + 4
-        self._string_len = self.width - len(self._disp_caption) - 4
+        width = len(self._disp_caption) + self._max_chars_to_display + 4
+        self._max_chars_to_display = self.width - len(self._disp_caption) - 4
         if self._boxed:
-            self.height = 3
+            self._height = 3
         else:
-            self.height = 1
-            self._string_len -= 2
+            self._height = 1
+            self._max_chars_to_display -= 2
         if self.log is not None:
-            self.log('string_len = {}'.format(self._string_len))
+            self.log('string_len = {}'.format(self._max_chars_to_display))
         return
 
     def _prepare_to_show(self):
         caption_col = self.caption_color
         self._calculate_window_metrics()
-        self._caption_win = curses.newwin(self.height, self.width, self.y, self.x)
+        self._caption_win = curses.newwin(self._height, self.width, self.y, self.x)
         maxY, maxX = self._caption_win.getmaxyx()
         if self._boxed:
             self._edit_win = curses.newwin(1, maxX - len(self._disp_caption) - 2, self.y + 1, self.x + len(self._disp_caption) + 1)
@@ -210,10 +219,10 @@ class SimpleCursesLineEdit(object):
                 pass
         maxY, maxX = self._edit_win.getmaxyx()
         #self._caption_win.bkgd('*', curses.A_REVERSE)
-        if self._boxed:
-            self._max_width = maxX - 1
-        else:
-            self._max_width = maxX
+        #if self._boxed:
+        #    self._max_width = maxX - 1
+        #else:
+        #    self._max_width = maxX
 
     def refreshEditWindow(self, opening=False):
         if self.focused:
@@ -246,7 +255,7 @@ class SimpleCursesLineEdit(object):
         self._caption_win = None
         self._edit_win = None
         if parent_win is not None:
-            self.parent_win = parent_win
+            self._parent_win = parent_win
         if new_y >= 0:
             self.y = new_y
             if self.log is not None:
@@ -273,12 +282,46 @@ class SimpleCursesLineEdit(object):
             0: exit edit mode, string isvalid
            -1: cancel
         """
+        word_delim = (' ', '-', '_', '+', '=',
+                    '~', '~', '!', '@', '#',
+                    '$', '%', '^', '&', '*', '(', ')',
+                    '[', ']', '{', '}', '|', '\\', '/',
+                    )
         #self._log_file='/home/spiros/edit.log'
+        #self._log_file='C:\\Users\\spiros\\edit.log'
         #self.log = self._log
         if not self._focused:
             return 1
         if self.log is not None:
             self.log('char = {}\n'.format(char))
+
+        if platform.startswith('win'):
+            if char == 420:
+                """ A-D, clear to end of line """
+                self.string = self._string[:self._curs_pos]
+                self.refreshEditWindow()
+                return 1
+            elif char == 422:
+                """ A-F, move to next word """
+                pos = len(self._string)
+                for n in range(self._curs_pos + 1, len(self._string)):
+                    if self._string[n] in word_delim:
+                        pos = n
+                        break
+                self._curs_pos = pos
+                self.refreshEditWindow()
+                return 1
+            elif char == 418:
+                """ A-B, move to previous word """
+                pos = 0
+                for n in range(self._curs_pos - 1, 0, -1):
+                    if self._string[n] in word_delim:
+                        pos = n
+                        break
+                self._curs_pos = pos
+                self.refreshEditWindow()
+                return 1
+
         if char in (ord('?'), ):
             # display help
             return 2
@@ -309,7 +352,7 @@ class SimpleCursesLineEdit(object):
                     """ A-F, move to next word """
                     pos = len(self._string)
                     for n in range(self._curs_pos + 1, len(self._string)):
-                        if self._string[n] == ' ':
+                        if self._string[n] in word_delim:
                             pos = n
                             break
                     self._curs_pos = pos
@@ -317,7 +360,7 @@ class SimpleCursesLineEdit(object):
                     """ A-B, move to previous word """
                     pos = 0
                     for n in range(self._curs_pos - 1, 0, -1):
-                        if self._string[n] == ' ':
+                        if self._string[n] in word_delim:
                             pos = n
                             break
                     self._curs_pos = pos
@@ -420,7 +463,8 @@ class SimpleCursesLineEdit(object):
         else:
             if self.log is not None:
                 self.log('====================\n')
-            if len(self._string) + 1 == self._max_width:
+            #if len(self._string) + 1 == self._max_width:
+            if len(self._string) == self._max_chars_to_display:
                 return 1
             if version_info < (3, 0):
                 if 32 <= char < 127:
@@ -431,7 +475,10 @@ class SimpleCursesLineEdit(object):
                         self._string = self._string[:self._curs_pos] + chr(char) + self._string[self._curs_pos:]
                     self._curs_pos += 1
             else:
-                char = self._get_char(win, char)
+                if platform.startswith('win'):
+                    char = chr(char)
+                else:
+                    char = self._get_char(win, char)
                 if len(self._string) == self._curs_pos:
                     self._string += char
                 else:
@@ -531,17 +578,18 @@ class SimpleCursesLineEditHistory(object):
         self._active_history_index = -1
 
     def add_to_history(self, a_string):
-        if self._history:
-            if len(self._history) > 1:
-                for i, a_history_item in enumerate(self._history):
-                    if a_history_item.lower() == a_string.lower():
-                        self._history.pop(i)
-                        break
-            if self._history[-1].lower() != a_string.lower():
+        if a_string:
+            if self._history:
+                if len(self._history) > 1:
+                    for i, a_history_item in enumerate(self._history):
+                        if a_history_item.lower() == a_string.lower():
+                            self._history.pop(i)
+                            break
+                if self._history[-1].lower() != a_string.lower():
+                    self._history.append(a_string)
+            else:
                 self._history.append(a_string)
-        else:
-            self._history.append(a_string)
-        self._active_history_index = len(self._history)
+            self._active_history_index = len(self._history)
 
     def return_history(self, direction):
         if self._history:

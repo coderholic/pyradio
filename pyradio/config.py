@@ -6,6 +6,7 @@ import glob
 import curses
 import collections
 from os import path, getenv, makedirs, remove, rename
+from sys import platform
 from time import ctime
 from datetime import datetime
 from shutil import copyfile, move
@@ -47,7 +48,12 @@ class PyRadioStations(object):
 
     locked = False
 
+    _open_string = [ "open(stationFile, 'r')", "open(stationFile, 'r', encoding='utf-8')" ]
+    _open_string_id = 0
+
     def __init__(self, stationFile=''):
+        if platform.startswith('win'):
+            self._open_string_id = 1
 
         if sys.platform.startswith('win'):
             self.stations_dir = path.join(getenv('APPDATA'), 'pyradio')
@@ -233,7 +239,7 @@ class PyRadioStations(object):
         prev_format = self.new_format
         self.new_format = False
         self._reading_stations = []
-        with open(stationFile, 'r') as cfgfile:
+        with eval(self._open_string[self._open_string_id]) as cfgfile:
             try:
                 for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                     if not row:
@@ -355,7 +361,10 @@ class PyRadioStations(object):
             tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '' ])
         tmp_stations.reverse()
         try:
-            with open(st_new_file, 'w') as cfgfile:
+            #with open(st_new_file, 'w') as cfgfile:
+            """ Convert self._open_string to
+                open(st_new_file, 'w') """
+            with eval(self._open_string[self._open_string_id].replace("'r'", "'w'").replace('stationFile','st_new_file')) as cfgfile:
                 writter = csv.writer(cfgfile)
                 for a_station in tmp_stations:
                     writter.writerow(self._format_playlist_row(a_station))
@@ -424,7 +433,10 @@ class PyRadioStations(object):
             if ret < -1:
                 return ret
             try:
-                with open(st_file, 'a') as cfgfile:
+                #with open(st_file, 'a') as cfgfile:
+                """ Convert self._open_string to
+                    with open(st_file, 'a') """
+                with eval(self._open_string[self._open_string_id].replace("'r'", "'a'").replace('stationFile','st_file')) as cfgfile:
                     writter = csv.writer(cfgfile)
                     writter.writerow(params)
                 return 0
@@ -667,7 +679,10 @@ class PyRadioConfig(PyRadioStations):
             if sp[1] == '':
                 return -2
             if sp[0] == 'player':
-                self.opts['player'][1] = sp[1].lower().strip()
+                if platform.startswith('win'):
+                    self.opts['player'][1] = 'mplayer'
+                else:
+                    self.opts['player'][1] = sp[1].lower().strip()
             elif sp[0] == 'connection_timeout':
                 self.opts['connection_timeout'][1] = sp[1].strip()
             elif sp[0] == 'default_encoding':

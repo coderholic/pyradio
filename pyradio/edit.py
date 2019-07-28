@@ -31,15 +31,20 @@ class PyRadioSearch(SimpleCursesLineEdit):
             self.parent_win = parent_win
 
         y, x = self.parent_win.getmaxyx()
-        new_y = y - self.height + 1
-        new_x = x - self.width
+        new_y = y - self._height + 1
+        new_x = x - self._width
         super(PyRadioSearch, self).show(self.parent_win, new_y, new_x)
-        self._caption_win.addstr(2, 0, u'\u2534'.encode('utf-8'), self.box_color)
         y, x = self._caption_win.getmaxyx()
         try:
-            self._caption_win.addstr(0, x-1, u'\u2524'.encode('utf-8'), self.box_color)
-        except:
+            self._caption_win.addstr(2, 0, '┴', self.box_color)
+            self._caption_win.addstr(0, x-1, '┤', self.box_color)
             pass
+        except:
+            self._caption_win.addstr(2, 0, '┴'.encode('utf-8'), self.box_color)
+            try:
+                self._caption_win.addstr(0, x-1, '┤'.encode('utf-8'), self.box_color)
+            except:
+                pass
         if not repaint:
             self.string = ''
             self._curs_pos = 0
@@ -102,7 +107,7 @@ class PyRadioSearch(SimpleCursesLineEdit):
             return None
 
     def print_not_found(self):
-        self._edit_win.addstr(0,0,'Term not found!'.ljust(self._max_width), self.edit_color)
+        self._edit_win.addstr(0,0,'Term not found!'.ljust(self._max_chars_to_display), self.edit_color)
         self._edit_win.refresh()
         sleep(.3)
         self.refreshEditWindow()
@@ -123,18 +128,20 @@ class PyRadioEditor(object):
     _parent_win = None
 
     """ Adding a new station or editing an existing one """
-    adding = True
+    _adding = True
 
     """ Indicates that we append to the stations' list
         Only valid when adding = True """
     _append = False
+
+    _focus = 0
 
     def __init__(self, stations, selection, parent, adding=True):
         self._stations = stations
         self._selection = selection
         self._pos_to_insert = selection + 1
         self._parent_win = parent
-        self.adding = adding
+        self._adding = adding
 
     @property
     def append(self):
@@ -142,9 +149,18 @@ class PyRadioEditor(object):
 
     @append.setter
     def append(self, val):
-        if self.adding:
+        if self._adding:
             self._append = val
             self._pos_to_insert = len(self._stations)
+
+    @property
+    def focus(self):
+        return self._focus
+
+    @focus.setter
+    def focus(self, val):
+        if val in range(0,5):
+            self._focus = val
 
     def set_parent(self, val, refresh=True):
         self._parent_win = val
@@ -154,6 +170,7 @@ class PyRadioEditor(object):
     def show(self):
         self._win = None
         self.maxY, self.maxX = self._parent_win.getmaxyx()
+
         self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
         self._win.bkgdset(' ', curses.color_pair(3))
         self._win.erase()
@@ -165,15 +182,31 @@ class PyRadioEditor(object):
                 title,
                 curses.color_pair(4))
 
+        if self.maxY < 19 or self.maxX < 72:
+            txt = ' Window too small to display content '
+            error_win = curses.newwin(3, len(txt) + 2, int(self.maxY / 2) - 1, int((self.maxX - len(txt)) / 2))
+            error_win.bkgdset(' ', curses.color_pair(3))
+            error_win.erase()
+            error_win.box()
+            error_win.addstr(1, 1, txt, curses.color_pair(4))
+            self._win.refresh()
+            error_win.refresh()
+            return
+
         self._win.addstr(1, 2, 'Name', curses.color_pair(4))
         self._win.addstr(4, 2, 'URL', curses.color_pair(4))
         self._win.addstr(7, 2, 'Encoding: ', curses.color_pair(4))
+        self._win.addstr(' ' * (self.maxX - 13), curses.color_pair(4))
+        self._win.addstr(7, 12, '[', curses.color_pair(4))
+        self._win.addstr(' ' + 'utf-8' + ' ', curses.color_pair(4))
+        self._win.addstr(']', curses.color_pair(4))
         self._win.addstr(9, int((self.maxX - 18) /2), '[ OK ]  [ Cancel ]', curses.color_pair(4))
         try:
             self._win.addstr(11, 3, '─' * (self.maxX - 6), curses.color_pair(3))
         except:
             self._win.addstr(11, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
         self._win.addstr(11, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
+        #self._win.addstr(11, 4, ' Help ', curses.color_pair(4))
         self._win.addstr(12, 5, 'TAB', curses.color_pair(4))
         self._win.addstr('      Go to next field.', curses.color_pair(5))
         self._win.addstr(13, 5, 'S-TAB', curses.color_pair(4))
@@ -182,6 +215,8 @@ class PyRadioEditor(object):
         self._win.addstr('    When in line editor, go to next field.', curses.color_pair(5))
         self._win.addstr(15, 14, 'When in Encoding field, open Encoding selection window.', curses.color_pair(5))
         self._win.addstr(16, 14, 'Otherwise, save station data or cancel operation.', curses.color_pair(5))
+        self._win.addstr(17, 5, '?', curses.color_pair(4))
+        self._win.addstr(17, 14, 'Line editor help.', curses.color_pair(5))
 
         self._win.refresh()
 

@@ -116,6 +116,8 @@ class PyRadio(object):
 
     """ editor class """
     _station_edit = None
+    
+    _force_exit = False
 
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
         self._cnf = pyradio_config
@@ -348,24 +350,35 @@ class PyRadio(object):
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
         self.bodyWin.noutrefresh()
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
-            if self.requested_player:
-                txt = """Rypadio is not able to use the player you specified.
+            if platform.startswith('win'):
+                txt = '''PyRadio cannot find mplayer.
 
-                This means that either this particular player is not supported
-                by PyRadio, or that you have simply misspelled its name.
+                    This means that either mplayer is not installed in this system,
+                    or its directory is not in the PATH.
 
-                PyRadio currently supports three players: mpv, mplayer and vlc,
-                automatically detected in this order."""
+                    Please refer to windows.html help file to fix this problem.
+
+                    To get to this file, execute "pyradio -ocd" and navigate to
+                    the "help" directory.'''
             else:
-                txt = """PyRadio is not able to detect any players.
+                if self.requested_player:
+                    txt = """Rypadio is not able to use the player you specified.
 
-                PyRadio currently supports three players: mpv, mplayer and vlc,
-                automatically detected in this order.
+                    This means that either this particular player is not supported
+                    by PyRadio, or that you have simply misspelled its name.
 
-                Please install any one of them and try again.
+                    PyRadio currently supports three players: mpv, mplayer and vlc,
+                    automatically detected in this order."""
+                else:
+                    txt = """PyRadio is not able to detect any players.
 
-                Please keep in mind that if mpv is installed, socat must be
-                installed as well."""
+                    PyRadio currently supports three players: mpv, mplayer and vlc,
+                    automatically detected in this order.
+
+                    Please install any one of them and try again.
+
+                    Please keep in mind that if mpv is installed, socat must be
+                    installed as well."""
             self.refreshNoPlayerBody(txt)
         else:
             #if self.ws.operation_mode == self.ws.MAIN_HELP_MODE:
@@ -494,18 +507,23 @@ class PyRadio(object):
 
     def run(self):
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
-            if self.requested_player:
-                if ',' in self.requested_player:
-                    self.log.write('None of "{}" players is available. Press any key to exit....'.format(self.requested_player))
-                else:
-                    self.log.write('Player "{}" not available. Press any key to exit....'.format(self.requested_player))
+            if platform.startswith('win'):
+                self.log.write('mplayer not found. Press any key to exit....')
             else:
-                self.log.write("No player available. Press any key to exit....")
+                if self.requested_player:
+                    if ',' in self.requested_player:
+                        self.log.write('None of "{}" players is available. Press any key to exit....'.format(self.requested_player))
+                    else:
+                        self.log.write('Player "{}" not available. Press any key to exit....'.format(self.requested_player))
+                else:
+                    self.log.write("No player available. Press any key to exit....")
             try:
                 self.bodyWin.getch()
             except KeyboardInterrupt:
                 pass
         else:
+            self._register_windows_handlers()
+
             # start update thread
             if CAN_CHECK_FOR_UPDATES:
                 if self._cnf.locked:
@@ -573,6 +591,7 @@ class PyRadio(object):
 
     def ctrl_c_handler(self, signum, frame):
         self.ctrl_c_pressed = True
+        self._remove_lock_file()
         if self._cnf.dirty_playlist:
             """ Try to auto save playlist on exit
                 Do not check result!!! """
@@ -581,7 +600,6 @@ class PyRadio(object):
             Do not check result!!! """
         self._cnf.save_config()
         self._wait_for_threads()
-        self._remove_lock_file()
 
     def _wait_for_threads(self):
         if self._update_notification_thread:
@@ -1074,8 +1092,8 @@ class PyRadio(object):
     def _show_search_help(self):
         self.search.restore_data = [ self.search.string, self.search._curs_pos ]
         if platform.lower().startswith('darwin'):
-            txt = """M-Right| / |M-Left    |Move to next / previous word.
-            Left| / |Right        |Move to next / previous character.
+            txt = """Left| / |Right        |Move to next / previous character.
+            M-Right| / |M-Left    |Move to next / previous word.
             HOME|,|^A| / |END|,|^E    |Move to start / end of line.
             ^W| / |^K             |Clear to start / end of line.
             ^U                  |Clear line.
@@ -1087,8 +1105,8 @@ class PyRadio(object):
             |Managing player volume does not work in search mode.
             """
         else:
-            txt = """M-F| / |M-B           |Move to next / previous word.
-            Left| / |Right        |Move to next / previous character.
+            txt = """Left| / |Right        |Move to next / previous character.
+            M-F| / |M-B           |Move to next / previous word.
             HOME|,|^A| / |END|,|^E    |Move to start / end of line.
             ^W| / |M-D|,|^K         |Clear to start / end of line.
             ^U                  |Clear line.
@@ -1099,6 +1117,8 @@ class PyRadio(object):
 
             |Managing player volume does not work in search mode.
             """
+            if platform.startswith('win'):
+                txt = txt.replace('M-', 'A-')
         self._show_help(txt, mode_to_set=self.ws.SEARCH_HELP_MODE, caption=' Search Help ')
 
     def _show_config_help(self):
@@ -1816,6 +1836,8 @@ you have to manually address the issue.
         self._station_edit.set_parent(self.bodyWin)
 
     def keypress(self, char):
+        if self._force_exit:
+            return -1
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE {}'.format(self.ws._dq))
 
@@ -2137,6 +2159,12 @@ you have to manually address the issue.
                 return
 
         if char in (ord('#'), curses.KEY_RESIZE):
+            if platform.startswith('win'):
+                curses.resize_term(0, 0)
+                try:
+                    curses.curs_set(0)
+                except:
+                    pass
             if self.player.isPlaying():
                 self.log.display_help_message = False
             self.setupAndDrawScreen()
@@ -2615,19 +2643,20 @@ you have to manually address the issue.
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char in ( ord('a'), ord('A') ):
-                    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin)
-                    if char == ord('A'):
-                        self._station_edit.apend = True
-                    self._station_edit.show()
-                    self.ws.operation_mode = self.ws.ADD_STATION_MODE
+                #if char in ( ord('a'), ord('A') ):
+                #    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin)
+                #    if char == ord('A'):
+                #        self._station_edit.apend = True
+                #    self._station_edit.show()
+                #    self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
-                elif char == ord('e'):
-                    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin, adding=False)
-                    self._station_edit.show()
-                    self.ws.operation_mode = self.ws.EDIT_STATION_MODE
+                #elif char == ord('e'):
+                #    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin, adding=False)
+                #    self._station_edit.show()
+                #    self.ws.operation_mode = self.ws.EDIT_STATION_MODE
 
-                elif char == ord('c'):
+                #elif char == ord('c'):
+                if char == ord('c'):
                     self.jumpnr = ''
                     self._random_requested = False
                     if self._cnf.locked:
@@ -2855,5 +2884,69 @@ you have to manually address the issue.
         if self.theme_forced_selection:
             self._theme_selector.set_theme(self.theme_forced_selection)
         self._print_ask_to_create_theme()
+
+
+    """''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+        Windows only section
+    ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''"""
+    def _register_windows_handlers(self):
+        if platform.startswith('win'):
+            """ disable close button """
+            import win32console, win32gui, win32con, win32api
+            hwnd = win32console.GetConsoleWindow()
+            if hwnd:
+               hMenu = win32gui.GetSystemMenu(hwnd, 0)
+               if hMenu:
+                   try:
+                       win32gui.DeleteMenu(hMenu, win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
+                   except:
+                       pass
+            """ install handlers for exit / close signals"""
+            try:
+                result = win32api.SetConsoleCtrlHandler(self._windows_signal_handler, True)
+                if logger.isEnabledFor(logging.DEBUG):
+                    if result == 0:
+                        logger.debug('SetConsoleCtrlHandler: Failed to register!!!')
+                    else:
+                        logger.debug('SetConsoleCtrlHandler: Registered!!!')
+            except:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('SetConsoleCtrlHandler: Failed to register (with Exception)!!!')
+            # Trying to catch Windows log-ogg, reboot, halt
+            # No luck....
+            #import signal
+            #try:
+            #    signal.signal(signal.SIGINT, self._windows_signal_handler)
+            #except:
+            #    if logger.isEnabledFor(logging.DEBUG):
+            #        logger.debug('SetConsoleCtrlHandler: Signal SIGINT failed to register (with Exception)!!!')
+
+            #try:
+            #    signal.signal(signal.SIGINT, self._windows_signal_handler)
+            #except:
+            #    if logger.isEnabledFor(logging.DEBUG):
+            #        logger.debug('SetConsoleCtrlHandler: Signal SIGINT failed to register (with Exception)!!!')
+
+    def _windows_signal_handler(self, event):
+        """ windows signal handler
+            https://danielkaes.wordpress.com/2009/06/04/how-to-catch-kill-events-with-python/
+        """
+        import win32con, win32api, signal
+        if event in (win32con.CTRL_C_EVENT,
+                            win32con.CTRL_LOGOFF_EVENT,
+                             win32con.CTRL_BREAK_EVENT,
+                             win32con.CTRL_SHUTDOWN_EVENT,
+                             win32con.CTRL_CLOSE_EVENT,
+                             signal.SIGINT,
+                             signal.SIGBREAK):
+            self._force_exit = True
+            self.ctrl_c_handler(0,0)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Windows asked me to terminate!!')
+            try:
+                result = win32api.SetConsoleCtrlHandler(self._windows_signal_handler, False)
+            except:
+                pass
+        return False
 
 # pymode:lint_ignore=W901
