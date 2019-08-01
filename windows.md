@@ -19,7 +19,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [4.1 Using Git](#using-git)
         * [4.2 Not using Git](#not-using-git)
         * [4.3 Final steps](#final-steps)
-    * [%. Updating PyRadio](#updating-pyradio)
+    * [5. Updating PyRadio](#updating-pyradio)
         * [5.1 Updating with Git](#updating-with-git)
         * [5.2 Updating without Git](#updating-without-git)
 * [Back](build.md)
@@ -276,7 +276,7 @@ Open a console (press the **Win** key, type **cmd** and press **ENTER**) and exe
 ```
 cd pyradio
 git pull
-devel\\build_install_pyradio
+devel\build_install_pyradio
 ```
 
 
