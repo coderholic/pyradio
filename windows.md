@@ -6,7 +6,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 ## Table of contents
 
-* [Runing PyRadio on Windows](#runing-pyRadio-on-windows)
+* [Running PyRadio on Windows](#running-pyradio-on-windows)
 * [How it all works](#how-it-all-works)
 * [Installation](#installation)
     * [1. Python installation](#python-installation)
@@ -25,7 +25,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Back](build.md)
 * [Back to README](README.md)
 
-## Runing PyRadio on Windows
+## Running PyRadio on Windows
 
 What? A linux console application on Windows?
 
