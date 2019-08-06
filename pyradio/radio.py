@@ -1869,23 +1869,23 @@ you have to manually address the issue.
         self._station_edit.set_parent(self.bodyWin)
 
     def _move_station(self, direction):
-        if self.number_of_items > 1:
-            logger.error('DE direction = {}'.format(direction))
-            if direction == 1:
-                if self.selection == self.number_of_items -1:
-                    return
-            else:
-                if self.selection == 0:
-                    return
-            it = self.stations[self.selection  + direction]
-            self.stations[self.selection  + direction] = self.stations[self.selection]
-            self.stations[self.selection] = it
-            if self.player.isPlaying():
-                if self.playing == self.selection:
-                    self.playing += direction
-            self.selection += direction
+        if self.jumpnr:
+            try:
+                target = int(self.jumpnr) - 1
+            except:
+                return False
+            ret = self._cnf.move_station(self.selection, target)
+            if ret:
+                self.selection = target
+        else:
+            ret = self._cnf.move_station(self.selection, self.selection + direction)
+            if ret:
+                self.selection += direction
+        if ret:
             self._cnf.dirty_playlist = True
             self.setStation(self.selection)
+            """ refresh reference """
+            self.stations = self._cnf.stations
             self.refreshBody()
 
     def keypress(self, char):
@@ -2444,12 +2444,14 @@ you have to manually address the issue.
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE:
             if char in (ord('y'), ord('Y')):
+                self.ws.close_window()
                 if char == ord('Y'):
                     self._cnf.auto_save_playlist = True
                 ret = self.saveCurrentPlaylist()
                 if ret == 0:
                     self._open_playlist()
             elif char in (ord('n'), ):
+                    self.ws.close_window()
                     self._open_playlist()
             elif char in (curses.KEY_EXIT, ord('q'), 27):
                 self.bodyWin.nodelay(True)
@@ -2465,6 +2467,7 @@ you have to manually address the issue.
             if char in (ord('y'), ord('Y')):
                 if char == ord('Y'):
                     self._cnf.confirm_playlist_reload = False
+                self.ws.close_window()
                 self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
             elif char in (ord('n'), ):
                 """ close confirmation message """
@@ -2577,7 +2580,6 @@ you have to manually address the issue.
                 self._random_requested = False
                 if self.number_of_items > 0:
                     self.setStation(-1)
-                    self.jumpnr = ""
                     self.refreshBody()
                 return
 
@@ -2605,8 +2607,10 @@ you have to manually address the issue.
                     self.jumpnr += chr(char)
                     return
             else:
-                self._random_requested = False
-                self.jumpnr = ""
+                if char != curses.ascii.EOT and \
+                        char != curses.ascii.NAK:
+                    self._random_requested = False
+                    self.jumpnr = ""
 
             if char in (ord('g'), curses.KEY_HOME):
                 self.jumpnr = ''

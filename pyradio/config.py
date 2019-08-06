@@ -455,9 +455,62 @@ class PyRadioStations(object):
 
     def remove_station(self, a_station):
         self.dirty_playlist = True
-        ret = self.stations.pop(a_station)
+        d = collections.deque(self.stations)
+        d.rotate(-a_station)
+        ret = d.popleft()
+        d.rotate(a_station)
+        self.stations = list(d)
+        #ret = self.stations.pop(a_station)
         self.number_of_stations = len(self.stations)
         return ret, self.number_of_stations
+
+    def move_station(self, source, target):
+        logger.error('DE source = {0}, target = {1}'.format(source, target))
+        if source == target or \
+                source < 0 or \
+                target < 0 or \
+                source >= self.number_of_stations or \
+                target >= self.number_of_stations or \
+                self.number_of_stations == 0:
+            return False
+        if source < target:
+            step = 1
+        else:
+            step = 0
+        d = collections.deque(self.stations)
+        d.rotate(-source)
+        source_item = d.popleft()
+        logger.error('DE source_item = "{}"'.format(source_item))
+        d.rotate(source)
+        d.rotate(-target)
+        d.appendleft(source_item)
+        d.rotate(target)
+        self.stations = list(d)
+        self.number_of_stations = len(self.stations)
+        return True
+
+    def switch_stations(self, source, target):
+        if source == target or \
+                source < 0 or \
+                target < 0 or \
+                source >= self.number_of_stations or \
+                target >= self.number_of_stations or \
+                self.number_of_stations == 0:
+            return False
+        target_item = self.stations[target]
+        d = collections.deque(self.stations)
+        self.stations.clear()
+        d.rotate(-source)
+        source_item = d.popleft()
+        d.appendleft(target_item)
+        d.rotate(source)
+        d.rotate(-target)
+        d.popleft()
+        d.appendleft(source_item)
+        d.rotate(target)
+        self.stations = list(d)
+        self.number_of_stations = len(self.stations)
+        return True
 
     def read_playlists(self):
         self.playlists = []
