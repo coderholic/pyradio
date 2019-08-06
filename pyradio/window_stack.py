@@ -42,6 +42,7 @@ class Window_Stack_Constants(object):
     EDIT_THEME_HELP_MODE = 109
     ASK_TO_CREATE_NEW_THEME_MODE = 110
     SEARCH_HELP_MODE = 111
+    LINE_EDITOR_HELP = 112
     # TODO: return values from opening theme
     PLAYLIST_RECOVERY_ERROR_MODE = 200
     PLAYLIST_NOT_FOUND_ERROR_MODE = 201
@@ -113,6 +114,7 @@ class Window_Stack_Constants(object):
             NOT_IMPLEMENTED_YET_MODE: 'NOT_IMPLEMENTED_YET_MODE',
             ADD_STATION_MODE: 'ADD_STATION_MODE',
             EDIT_STATION_MODE: 'EDIT_THEME_MODE',
+            LINE_EDITOR_HELP: 'LINE_EDITOR_HELP',
             }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -143,6 +145,7 @@ class Window_Stack_Constants(object):
             SELECT_ENCODING_HELP_MODE,
             THEME_HELP_MODE,
             SEARCH_HELP_MODE,
+            LINE_EDITOR_HELP,
             )
 
     def __init__(self):

@@ -31,7 +31,7 @@ class SimpleCursesLineEdit(object):
 
     """ init values """
     y = x = 0
-    caption = 'Insert string'
+    _caption = 'Insert string'
     _disp_caption =  ' Insert string: '
     title = ''
     _disp_title = ''
@@ -41,6 +41,7 @@ class SimpleCursesLineEdit(object):
     caption_color = 0
     title_color = 0
     edit_color = 0
+    unfocused_color = -1
     cursor_color = curses.A_REVERSE
     _has_history = False
     _input_history = None
@@ -72,56 +73,59 @@ class SimpleCursesLineEdit(object):
         self.y = begin_y
         self.x = begin_x
 
-        for key, value in kwargs.items():
-            if key == 'boxed':
-                self._boxed = value
-                if not self._boxed:
-                    self.height = 1
-            elif key == 'bracket':
-                self.bracket = True
-            elif key == 'string':
-                self._string = value
-            elif key == 'caption':
-                """ string on editing line """
-                self.caption = value
-            elif key == 'title':
-                """ string on box """
-                self.title = value
-            elif key == 'box_color':
-                self.box_color = value
-            elif key == 'caption_color':
-                self.caption_color = value
-            elif key == 'title_color':
-                self.title_color = value
-            elif key == 'edit_color':
-                self.edit_color = value
-            elif key == 'cursor_color':
-                self.cursor_color = value
-            elif key == 'has_history':
-                self._has_history = value
-            elif key == 'ungetch_unbound_keys':
-                self._ungetch_unbound_keys =  value
-            elif key == 'log_file':
-                self._log_file = value
-                self.log = self._log
-            elif key == 'key_up_function_handler':
-                # callback function for KEY_UP
-                self._key_up_function_handler = value
-            elif key == 'key_down_function_handler':
-                # callback function for KEY_DOWN
-                self._key_down_function_handler = value
-            elif key == 'key_pgup_function_handler':
-                # callback function for KEY_PPAGE
-                self._key_pgup_function_handler = value
-            elif key == 'key_pgdown_function_handler':
-                # callback function for KEY_NPAGE
-                self._key_pgdown_function_handler = value
-            elif key == 'key_tab_function_handler':
-                # callback function for TAB
-                self._key_tab_function_handler = value
-            elif key == 'key_stab_function_handler':
-                # callback function for KEY_STAB
-                self._key_stab_function_handler = value
+        if kwargs:
+            for key, value in kwargs.items():
+                if key == 'boxed':
+                    self._boxed = value
+                    if not self._boxed:
+                        self.height = 1
+                elif key == 'bracket':
+                    self.bracket = True
+                elif key == 'string':
+                    self._string = value
+                elif key == 'caption':
+                    """ string on editing line """
+                    self._caption = value
+                elif key == 'title':
+                    """ string on box """
+                    self.title = value
+                elif key == 'box_color':
+                    self.box_color = value
+                elif key == 'caption_color':
+                    self.caption_color = value
+                elif key == 'title_color':
+                    self.title_color = value
+                elif key == 'edit_color':
+                    self.edit_color = value
+                elif key == 'cursor_color':
+                    self.cursor_color = value
+                elif key == 'unfocused_color':
+                    self.unfocused_color = value
+                elif key == 'has_history':
+                    self._has_history = value
+                elif key == 'ungetch_unbound_keys':
+                    self._ungetch_unbound_keys =  value
+                elif key == 'log_file':
+                    self._log_file = value
+                    self.log = self._log
+                elif key == 'key_up_function_handler':
+                    # callback function for KEY_UP
+                    self._key_up_function_handler = value
+                elif key == 'key_down_function_handler':
+                    # callback function for KEY_DOWN
+                    self._key_down_function_handler = value
+                elif key == 'key_pgup_function_handler':
+                    # callback function for KEY_PPAGE
+                    self._key_pgup_function_handler = value
+                elif key == 'key_pgdown_function_handler':
+                    # callback function for KEY_NPAGE
+                    self._key_pgdown_function_handler = value
+                elif key == 'key_tab_function_handler':
+                    # callback function for TAB
+                    self._key_tab_function_handler = value
+                elif key == 'key_stab_function_handler':
+                    # callback function for KEY_STAB
+                    self._key_stab_function_handler = value
 
         if self._has_history:
             self._input_history = SimpleCursesLineEditHistory()
@@ -131,7 +135,8 @@ class SimpleCursesLineEdit(object):
     def width(self):
         if self._auto_width < 1:
             h , self._width = self._parent_win.getmaxyx()
-            self._width -= val
+            self._width += self._auto_width
+            self._width -= self.x
         return self._width
 
     @width.setter
@@ -167,29 +172,28 @@ class SimpleCursesLineEdit(object):
         return self._caption_win.getmaxyx()
 
     def _calculate_window_metrics(self):
-        if self.caption:
+        if self._caption:
             if self._boxed:
                 self.bracket = False
-                self._disp_caption = ' ' + self.caption + ': '
+                self._disp_caption = ' ' + self._caption + ': '
                 if self.title:
                     self._disp_title = ' ' + self._disp_title + ' '
                 else:
                     self._disp_title = ''
             else:
                 if self.bracket:
-                    self._disp_caption = self.caption + ': ['
+                    self._disp_caption = self._caption + ': ['
                 else:
-                    self._disp_caption = self.caption + ': '
+                    self._disp_caption = self._caption + ': '
                 if self.title:
                     self._disp_title = self._disp_title
                 else:
                     self._disp_title = ''
         else:
-            if self._boxed:
-                if self.bracket:
-                    self._disp_caption = '['
-                else:
-                    self._disp_caption = ''
+            if self.bracket:
+                self._disp_caption = '['
+            else:
+                self._disp_caption = ''
         width = len(self._disp_caption) + self._max_chars_to_display + 4
         self._max_chars_to_display = self.width - len(self._disp_caption) - 4
         if self._boxed:
@@ -210,13 +214,17 @@ class SimpleCursesLineEdit(object):
             self._edit_win = curses.newwin(1, maxX - len(self._disp_caption) - 2, self.y + 1, self.x + len(self._disp_caption) + 1)
             self._caption_win.addstr(1, 1, self._disp_caption, self.caption_color)
         else:
-            self._edit_win = curses.newwin(1, maxX - len(self._disp_caption) - 1, self.y, self.x + len(self._disp_caption))
             self._caption_win.addstr(0, 0, self._disp_caption, self.caption_color)
-            try:
-                # printing at the end of the window, do not break...
-                self._caption_win.addstr(0, maxX - 1, ']', self.caption_color)
-            except:
-                pass
+            if self.bracket:
+                self._edit_win = curses.newwin(1, maxX - len(self._disp_caption) - 1, self.y, self.x + len(self._disp_caption))
+                try:
+                    # printing at the end of the window, do not break...
+                    self._caption_win.addstr(0, maxX - 1, ']', self.caption_color)
+                except:
+                    pass
+            else:
+                self._edit_win = curses.newwin(1, maxX - len(self._disp_caption), self.y, self.x + len(self._disp_caption))
+
         maxY, maxX = self._edit_win.getmaxyx()
         #self._caption_win.bkgd('*', curses.A_REVERSE)
         #if self._boxed:
@@ -225,12 +233,15 @@ class SimpleCursesLineEdit(object):
         #    self._max_width = maxX
 
     def refreshEditWindow(self, opening=False):
-        if self.focused:
+        if self._focused:
             active_edit_color = self.edit_color
         else:
-            active_edit_color = self.caption_color
+            if self.unfocused_color >= 0:
+                active_edit_color = self.unfocused_color
+            else:
+                active_edit_color = self.caption_color
         self._edit_win.erase()
-        #self._edit_win.bkgd('-', curses.A_REVERSE)
+        #self._edit_win.bkgd('-', self.edit_color)
         if opening:
             if self.restore_data:
                 self._string = self.restore_data[0]
@@ -251,28 +262,42 @@ class SimpleCursesLineEdit(object):
 
         self._edit_win.refresh()
 
-    def show(self, parent_win, new_y=-1, new_x=-1):
+    #def show(self, parent_win, new_y=-1, new_x=-1):
+    def show(self, parent_win, **kwargs):
+        opening = True
         self._caption_win = None
         self._edit_win = None
         if parent_win is not None:
             self._parent_win = parent_win
-        if new_y >= 0:
-            self.y = new_y
-            if self.log is not None:
-                self.log('self.y = {}\n'.format(self.y))
-        if new_x >= 0:
-            self.x = new_x
-            if self.log is not None:
-                self.log('self.x = {}\n'.format(self.x))
+        if kwargs:
+            for key, value in kwargs.items():
+                if key == 'new_y':
+                    self.y = value
+                    if self.log is not None:
+                        self.log('self.y = {}\n'.format(self.y))
+                elif key == 'new_x':
+                    self.x = value
+                    if self.log is not None:
+                        self.log('self.x = {}\n'.format(self.x))
+                elif key == 'opening':
+                    opening = value
         self._prepare_to_show()
-        self._caption_win.bkgdset(' ', self.box_color)
-        self._edit_win.bkgdset(' ', self.box_color)
+        if self._focused:
+            self._caption_win.bkgdset(' ', self.box_color)
+            self._edit_win.bkgdset(' ', self.box_color)
+        else:
+            if self.unfocused_color >= 0:
+                self._caption_win.bkgdset(' ', self.unfocused_color)
+                self._edit_win.bkgdset(' ', self.unfocused_color)
+            else:
+                self._caption_win.bkgdset(' ', self.box_color)
+                self._edit_win.bkgdset(' ', self.box_color)
         if self._boxed:
             self._caption_win.box()
             if self._disp_title:
                 self._title_win.addstr(0, 1, self._disp_title, self.title_color)
         self._caption_win.refresh()
-        self.refreshEditWindow(opening=True)
+        self.refreshEditWindow(opening)
 
     def keypress(self, win, char):
         """

@@ -8,6 +8,7 @@
 # Spiros Georgaras - 2018, 2019
 
 import curses
+import curses.ascii
 import threading
 import logging
 import os
@@ -177,6 +178,7 @@ class PyRadio(object):
                 self.ws.SEARCH_HELP_MODE: self._show_search_help,
                 self.ws.ADD_STATION_MODE: self._show_station_editor,
                 self.ws.EDIT_STATION_MODE: self._show_station_editor,
+                self.ws.LINE_EDITOR_HELP: self._show_line_editor_help,
                 }
 
         """ list of help functions """
@@ -192,6 +194,7 @@ class PyRadio(object):
                 self.ws.SELECT_STATION_MODE: self._show_config_station_help,
                 self.ws.SELECT_STATION_ENCODING_MODE: self._show_config_encoding_help,
                 self.ws.SELECT_ENCODING_MODE: self._show_config_encoding_help,
+                self.ws.LINE_EDITOR_HELP: self._show_line_editor_help,
                 }
 
         """ search classes
@@ -1093,7 +1096,6 @@ class PyRadio(object):
         self.search.restore_data = [ self.search.string, self.search._curs_pos ]
         if platform.lower().startswith('darwin'):
             txt = """Left| / |Right        |Move to next / previous character.
-            M-Right| / |M-Left    |Move to next / previous word.
             HOME|,|^A| / |END|,|^E    |Move to start / end of line.
             ^W| / |^K             |Clear to start / end of line.
             ^U                  |Clear line.
@@ -1120,6 +1122,37 @@ class PyRadio(object):
             if platform.startswith('win'):
                 txt = txt.replace('M-', 'A-')
         self._show_help(txt, mode_to_set=self.ws.SEARCH_HELP_MODE, caption=' Search Help ')
+
+    def _show_line_editor_help(self):
+        #self.search.restore_data = [ self.search.string, self.search._curs_pos ]
+        if platform.lower().startswith('darwin'):
+            txt = """Left| / |Right        |Move to next / previous character.
+            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+            ^W| / |^K             |Clear to start / end of line.
+            ^U                  |Clear line.
+            DEL|,|^D              |Delete character.
+            Backspace|,|^H        |Backspace (delete previous character).
+            Up| / |Down           |Go to previous / next field.
+            Esc                 |Cancel operation.
+
+            |Managing player volume does not work in editing mode.
+            """
+        else:
+            txt = """Left| / |Right        |Move to next / previous character.
+            M-F| / |M-B           |Move to next / previous word.
+            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+            ^W| / |M-D|,|^K         |Clear to start / end of line.
+            ^U                  |Clear line.
+            DEL|,|^D              |Delete character.
+            Backspace|,|^H        |Backspace (delete previous character).
+            Up| / |Down           |Go to previous / next field.
+            Esc                 |Cancel operation.
+
+            |Managing player volume does not work in editing mode.
+            """
+            if platform.startswith('win'):
+                txt = txt.replace('M-', 'A-')
+        self._show_help(txt, mode_to_set=self.ws.LINE_EDITOR_HELP, caption=' Line Editor Help ')
 
     def _show_config_help(self):
             txt = """Up|,|j|,|PgUp|,
@@ -1835,6 +1868,26 @@ you have to manually address the issue.
     def _show_station_editor(self):
         self._station_edit.set_parent(self.bodyWin)
 
+    def _move_station(self, direction):
+        if self.number_of_items > 1:
+            logger.error('DE direction = {}'.format(direction))
+            if direction == 1:
+                if self.selection == self.number_of_items -1:
+                    return
+            else:
+                if self.selection == 0:
+                    return
+            it = self.stations[self.selection  + direction]
+            self.stations[self.selection  + direction] = self.stations[self.selection]
+            self.stations[self.selection] = it
+            if self.player.isPlaying():
+                if self.playing == self.selection:
+                    self.playing += direction
+            self.selection += direction
+            self._cnf.dirty_playlist = True
+            self.setStation(self.selection)
+            self.refreshBody()
+
     def keypress(self, char):
         if self._force_exit:
             return -1
@@ -2507,7 +2560,10 @@ you have to manually address the issue.
                 self.ws.close_window()
                 self._station_edit = None
                 self.refreshBody()
-
+            elif ret == 2:
+                # display line editor help
+                self._show_line_editor_help()
+                return
         else:
 
             if char in (ord('?'), ):
@@ -2643,20 +2699,20 @@ you have to manually address the issue.
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                #if char in ( ord('a'), ord('A') ):
-                #    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin)
-                #    if char == ord('A'):
-                #        self._station_edit.apend = True
-                #    self._station_edit.show()
-                #    self.ws.operation_mode = self.ws.ADD_STATION_MODE
+                if char in ( ord('a'), ord('A') ):
+                    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin)
+                    if char == ord('A'):
+                        self._station_edit.apend = True
+                    self._station_edit.show()
+                    self._station_edit.item = [ '', '', '' ]
+                    self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
-                #elif char == ord('e'):
-                #    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin, adding=False)
-                #    self._station_edit.show()
-                #    self.ws.operation_mode = self.ws.EDIT_STATION_MODE
+                elif char == ord('e'):
+                    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin, adding=False)
+                    self._station_edit.show(self.stations[self.selection])
+                    self.ws.operation_mode = self.ws.EDIT_STATION_MODE
 
-                #elif char == ord('c'):
-                if char == ord('c'):
+                elif char == ord('c'):
                     self.jumpnr = ''
                     self._random_requested = False
                     if self._cnf.locked:
@@ -2770,6 +2826,20 @@ you have to manually address the issue.
                         else:
                             self.ws.operation_mode = self.ws.PLAYLIST_RELOAD_CONFIRM_MODE
                             curses.ungetch('y')
+                    return
+
+                elif char == curses.ascii.NAK:
+                    # ^U, move station Up
+                    self._random_requested = False
+                    self._move_station(-1)
+                    self.jumpnr = ''
+                    return
+
+                elif char == curses.ascii.EOT:
+                    # ^D, move station Down
+                    self._random_requested = False
+                    self._move_station(1)
+                    self.jumpnr = ''
                     return
 
             elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
