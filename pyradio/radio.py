@@ -1894,6 +1894,9 @@ you have to manually address the issue.
         self._station_edit.set_parent(self.bodyWin)
 
     def _move_station(self, direction):
+        if self._cnf.jump_tag >= 0 and self.jumpnr = '':
+            self.jumpnr = str(self._cnf.jump_tag + 1)
+            self._cnf.jump_tag = -1
         if self.jumpnr:
             try:
                 target = int(self.jumpnr) - 1
@@ -2856,6 +2859,11 @@ you have to manually address the issue.
                         else:
                             self.ws.operation_mode = self.ws.PLAYLIST_RELOAD_CONFIRM_MODE
                             curses.ungetch('y')
+                    return
+
+                elif char == ord('J'):
+                    # tag for jump
+                    self._cnf.jump_tag = self.selection
                     return
 
                 elif char == curses.ascii.NAK:

@@ -51,6 +51,8 @@ class PyRadioStations(object):
     _open_string = [ "open(stationFile, 'r')", "open(stationFile, 'r', encoding='utf-8')" ]
     _open_string_id = 0
 
+    jump_tag = -1
+
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -268,6 +270,7 @@ class PyRadioStations(object):
                 logger.debug('Playlist is in new format')
             else:
                 logger.debug('Playlist is in old format')
+        self.jump_tag = -1
         return self.number_of_stations
 
     def _recover_backed_up_playlist(self, stationFile):
