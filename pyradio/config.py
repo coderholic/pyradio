@@ -456,18 +456,40 @@ class PyRadioStations(object):
                 ret -= 4
             return ret
 
-    def remove_station(self, a_station):
+    def remove_station(self, target):
         self.dirty_playlist = True
         d = collections.deque(self.stations)
-        d.rotate(-a_station)
+        d.rotate(-target)
         ret = d.popleft()
-        d.rotate(a_station)
+        d.rotate(target)
         self.stations = list(d)
-        #ret = self.stations.pop(a_station)
+        #ret = self.stations.pop(target)
         self.number_of_stations = len(self.stations)
         return ret, self.number_of_stations
 
+    def insert_station(self, station, target):
+        """ Insert a station in the list at index target
+        It is inserted ABOVE old target (old target becomes old target + 1)"""
+        if target < 0 or \
+                target > self.number_of_stations or \
+                self.number_of_stations == 0:
+            return False, self.number_of_stations
+        if station[2] == 'utf-8':
+            station[2] = ''
+        if target == self.number_of_stations:
+            self.stations.append(station)
+            self.number_of_stations += 1
+        else:
+            d = collections.deque(self.stations)
+            d.rotate(-target)
+            d.appendleft(station)
+            d.rotate(target)
+            self.stations = list(d)
+        return True, self.number_of_stations
+
     def move_station(self, source, target):
+        """ Moves a station in the list from index source to index target
+        It is moved ABOVE old target (old target becomes old target + 1)"""
         logger.error('DE source = {0}, target = {1}'.format(source, target))
         if source == target or \
                 source < 0 or \
@@ -499,7 +521,7 @@ class PyRadioStations(object):
                 source >= self.number_of_stations or \
                 target >= self.number_of_stations or \
                 self.number_of_stations == 0:
-            return False
+            return False, self.number_of_stations
         target_item = self.stations[target]
         d = collections.deque(self.stations)
         self.stations.clear()
@@ -513,7 +535,7 @@ class PyRadioStations(object):
         d.rotate(target)
         self.stations = list(d)
         self.number_of_stations = len(self.stations)
-        return True
+        return True, self.number_of_stations
 
     def read_playlists(self):
         self.playlists = []

@@ -144,6 +144,8 @@ class PyRadioEditor(object):
     _item = []
     _orig_item = []
     _encoding ='utf-8'
+    _old_encoding = 'utf-8'
+    _orig_encoding ='utf-8'
 
     _dirty = False
 
@@ -205,6 +207,8 @@ class PyRadioEditor(object):
             self._encoding = item[2]
         else:
             self._encoding = 'utf-8'
+        self._orig_encoding = self._encoding
+        self._old_encoding  = self._encoding
         self._item = item
         self._orig_item = item
 
@@ -294,6 +298,7 @@ class PyRadioEditor(object):
             self._line_editor[ed].show(self._win, opening=False)
 
     def _show_encoding(self):
+        logger.error('DE self._encoding = "{}"'.format(self._encoding))
         sid = 2
         if self._focus == sid:
             col = 9
@@ -360,12 +365,18 @@ class PyRadioEditor(object):
         elif self._focus == 1:
             self._line_editor[1].focused = True
 
+    def _return_station(self):
+        if self._encoding == 'utf-8':
+            self._encoding = ''
+        self.new_station = [ self._line_editor[0].string, self._line_editor[1].string, self._encoding ]
+
     def keypress(self, char):
         """ Returns:
-                -1: Cancel
+                -1: Cancel (new_station = None)
                  0: go on
-                 1: Ok
+                 1: Ok     (new_station holds data)
                  2: display line editor help
+                 3: open encoding selection window
         """
         ret = 0
         if char in ( ord('\t'), 9, curses.KEY_DOWN):
@@ -381,24 +392,34 @@ class PyRadioEditor(object):
                 self.focus +=1
             elif self._focus == 2:
                 # encoding
-                pass
+                return 3
             elif self._focus == 3:
                 # ok
+                self._return_station()
                 ret = -1
             elif self._focus == 4:
                 # cancel
+                self.new_station = None
                 ret = -1
         elif char in (curses.KEY_EXIT, 27):
+            self.new_station = None
             ret = -1
         elif char == ord('s') and self._focus > 1:
+            self._return_station
             ret = -1
         elif char == ord('q') and self._focus > 1:
+            self.new_station = None
             ret = -1
         elif char == ord('?'):
             ret = 2
         elif char == curses.ascii.DC2 and not self._adding:
             # ^R, revert to saved
             self.item = self._orig_item
+            if self.item[2]:
+                self._encoding = self.item[2]
+            else:
+                self._encoding = 'utf-8'
+            self._orig_encoding = self._encoding
         elif self._focus <= 1:
             """
              Returns:
@@ -416,9 +437,12 @@ class PyRadioEditor(object):
                 ret = 0
             elif ret == 0:
                 # exit, string is valid
+                self._return_station()
                 ret = -1
             elif ret == -1:
                 # cancel
+                self.new_station = None
                 ret = -1
         self._show_title()
         return ret
+

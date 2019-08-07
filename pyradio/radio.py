@@ -116,7 +116,7 @@ class PyRadio(object):
     _update_notify_lock = threading.Lock()
 
     """ editor class """
-    _station_edit = None
+    _station_editor = None
     
     _force_exit = False
 
@@ -156,6 +156,7 @@ class PyRadio(object):
                 self.ws.UPDATE_NOTIFICATION_MODE: self._print_update_notification,
                 self.ws.SELECT_ENCODING_HELP_MODE: self._show_config_encoding_help,
                 self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
+                self.ws.EDIT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
                 self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE: self._print_playlist_not_found_error,
                 self.ws.PLAYLIST_LOAD_ERROR_MODE: self._print_playlist_load_error,
                 self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE: self._redisplay_print_save_modified_playlist,
@@ -194,6 +195,7 @@ class PyRadio(object):
                 self.ws.SELECT_STATION_MODE: self._show_config_station_help,
                 self.ws.SELECT_STATION_ENCODING_MODE: self._show_config_encoding_help,
                 self.ws.SELECT_ENCODING_MODE: self._show_config_encoding_help,
+                self.ws.EDIT_STATION_ENCODING_MODE: self._show_config_encoding_help,
                 self.ws.LINE_EDITOR_HELP: self._show_line_editor_help,
                 }
 
@@ -1891,10 +1893,10 @@ you have to manually address the issue.
             self.refreshBody()
 
     def _show_station_editor(self):
-        self._station_edit.set_parent(self.bodyWin)
+        self._station_editor.set_parent(self.bodyWin)
 
     def _move_station(self, direction):
-        if self._cnf.jump_tag >= 0 and self.jumpnr = '':
+        if self._cnf.jump_tag >= 0 and self.jumpnr == '':
             self.jumpnr = str(self._cnf.jump_tag + 1)
             self._cnf.jump_tag = -1
         if self.jumpnr:
@@ -2119,6 +2121,26 @@ you have to manually address the issue.
                     self._encoding_select_win = None
                 return
 
+        elif self.ws.operation_mode == self.ws.EDIT_STATION_ENCODING_MODE:
+            """ select global encoding from config window """
+            if char not in self._chars_to_bypass:
+                ret, ret_encoding = self._encoding_select_win.keypress(char)
+                logger.error('DE ret = {}'.format(ret))
+                if ret >= 0:
+                    #if ret == 0:
+                    #    if logger.isEnabledFor(logging.DEBUG):
+                    #        logger.debug('new encoding = {}'.format(ret_encoding))
+                    #    self._config_win._config_options['default_encoding'][1] = ret_encoding
+                    if ret_encoding:
+                        self._station_editor._encoding = ret_encoding
+                        self._station_editor._old_encoding = ret_encoding
+                    else:
+                        self._station_editor._encoding = self._station_editor._old_encoding
+                    self.ws.close_window()
+                    self._station_editor.show()
+                    self._encoding_select_win = None
+                return
+
         elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE:
             """ select global encoding from config window """
             if char not in self._chars_to_bypass:
@@ -2130,6 +2152,7 @@ you have to manually address the issue.
                         self._config_win._config_options['default_encoding'][1] = ret_encoding
                     self.ws.close_window()
                     self._config_win.refresh_config_win()
+                    self._encoding_select_win = None
                 return
 
         elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE:
@@ -2585,15 +2608,28 @@ you have to manually address the issue.
 
         elif self.ws.operation_mode in \
                 (self.ws.ADD_STATION_MODE, self.ws.EDIT_STATION_MODE):
-            ret = self._station_edit.keypress(char)
+            ret = self._station_editor.keypress(char)
             if ret == -1:
                 # Cancel
                 self.ws.close_window()
-                self._station_edit = None
+                self._station_editor = None
                 self.refreshBody()
+                return
             elif ret == 2:
                 # display line editor help
                 self._show_line_editor_help()
+                return
+            elif ret == 3:
+                # show encoding
+                if self._station_editor._encoding == '':
+                    self._station_editor._encoding = 'utf-8'
+                logger.info('encoding = {}'.format(self._station_editor._encoding))
+                self.ws.operation_mode = self.ws.EDIT_STATION_ENCODING_MODE
+                self._encoding_select_win = PyRadioSelectEncodings(self.bodyMaxY,
+                        self.bodyMaxX, self._station_editor._encoding)
+                self._encoding_select_win.init_window()
+                self._encoding_select_win.refresh_win()
+                self._encoding_select_win.setEncoding(self._station_editor._encoding)
                 return
         else:
 
@@ -2635,8 +2671,7 @@ you have to manually address the issue.
                     self.jumpnr += chr(char)
                     return
             else:
-                if char != curses.ascii.EOT and \
-                        char != curses.ascii.NAK:
+                if char not in (curses.ascii.EOT, curses.ascii.NAK, 4, 21):
                     self._random_requested = False
                     self.jumpnr = ""
 
@@ -2732,16 +2767,16 @@ you have to manually address the issue.
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char in ( ord('a'), ord('A') ):
-                    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin)
+                    self._station_editor = PyRadioEditor(self.stations, self.selection, self.bodyWin)
                     if char == ord('A'):
-                        self._station_edit.apend = True
-                    self._station_edit.show()
-                    self._station_edit.item = [ '', '', '' ]
+                        self._station_editor.apend = True
+                    self._station_editor.show()
+                    self._station_editor.item = [ '', '', '' ]
                     self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
                 elif char == ord('e'):
-                    self._station_edit = PyRadioEditor(self.stations, self.selection, self.bodyWin, adding=False)
-                    self._station_edit.show(self.stations[self.selection])
+                    self._station_editor = PyRadioEditor(self.stations, self.selection, self.bodyWin, adding=False)
+                    self._station_editor.show(self.stations[self.selection])
                     self.ws.operation_mode = self.ws.EDIT_STATION_MODE
 
                 elif char == ord('c'):
@@ -2866,14 +2901,14 @@ you have to manually address the issue.
                     self._cnf.jump_tag = self.selection
                     return
 
-                elif char == curses.ascii.NAK:
+                elif char in (curses.ascii.NAK, 21):
                     # ^U, move station Up
                     self._random_requested = False
                     self._move_station(-1)
                     self.jumpnr = ''
                     return
 
-                elif char == curses.ascii.EOT:
+                elif char in (curses.ascii.EOT, 4):
                     # ^D, move station Down
                     self._random_requested = False
                     self._move_station(1)
