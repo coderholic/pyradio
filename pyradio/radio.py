@@ -742,11 +742,17 @@ class PyRadio(object):
 
     def removeStation(self):
         if self._cnf.confirm_station_deletion:
-            txt = '''Are you sure you want to delete station:
-            "|{}|"?
+            if self._cnf.locked:
+                txt = '''Are you sure you want to delete station:
+                "|{}|"?
 
-            Press "|y|" to confirm, "|Y|" to confirm and not
-            be asked again, or any other key to cancel'''
+                Press "|y|" to confirm, or any other key to cancel'''
+            else:
+                txt = '''Are you sure you want to delete station:
+                "|{}|"?
+
+                Press "|y|" to confirm, "|Y|" to confirm and not
+                be asked again, or any other key to cancel'''
 
             # truncate parameter to text width
             mwidth = self._get_message_width_from_string(txt)
@@ -757,13 +763,9 @@ class PyRadio(object):
             self._show_help(txt.format(msg),
                     self.ws.REMOVE_STATION_MODE, caption = ' Station Deletion ',
                     prompt = '', is_message=True)
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = self.ws.REMOVE_STATION_MODE')
         else:
             self.ws.operation_mode = self.ws.REMOVE_STATION_MODE
             curses.ungetch('y')
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('MODE = Auto self.ws.REMOVE_STATION_MODE')
 
     def saveCurrentPlaylist(self, stationFile =''):
         ret = self._cnf.save_playlist_file(stationFile)
@@ -1349,38 +1351,61 @@ you have to manually address the issue.
                 is_message=True)
 
     def _print_playlist_reload_confirmation(self):
-        txt ='''This playlist has not been modified within
-            PyRadio. Do you still want to reload it?
+        if self._cnf.locked:
+            txt ='''This playlist has not been modified within
+                PyRadio. Do you still want to reload it?
 
-            Press "|y|" to confirm, "|Y|" to confirm and not
-            be asked again, or any other key to cancel'''
+                Press "|y|" to confirm, or any other key to cancel'''
+        else:
+            txt ='''This playlist has not been modified within
+                PyRadio. Do you still want to reload it?
+
+                Press "|y|" to confirm, "|Y|" to confirm and not
+                be asked again, or any other key to cancel'''
         self._show_help(txt, self.ws.PLAYLIST_RELOAD_CONFIRM_MODE,
                 caption = ' Playlist Reload ',
                 prompt = ' ',
                 is_message=True)
 
     def _print_playlist_dirty_reload_confirmation(self):
-        txt ='''This playlist has been modified within PyRadio.
-            If you reload it now, all modifications will be
-            lost. Do you still want to reload it?
+        if self._cnf.locked:
+            txt ='''This playlist has been modified within PyRadio.
+                If you reload it now, all modifications will be
+                lost. Do you still want to reload it?
 
-            Press "|y|" to confirm, "|Y|" to confirm and not be
-            asked again, or "|n|" to cancel'''
+                Press "|y|" to confirm, or "|n|" to cancel'''
+        else:
+            txt ='''This playlist has been modified within PyRadio.
+                If you reload it now, all modifications will be
+                lost. Do you still want to reload it?
+
+                Press "|y|" to confirm, "|Y|" to confirm and not be
+                asked again, or "|n|" to cancel'''
         self._show_help(txt, self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE,
                 caption = ' Playlist Reload ',
                 prompt = ' ',
                 is_message=True)
 
     def _print_save_modified_playlist(self, mode):
-        txt ='''This playlist has been modified within
-            PyRadio. Do you want to save it?
+        if self._cnf.locked:
+            txt ='''This playlist has been modified within
+                PyRadio. Do you want to save it?
 
-            If you choose not to save it now, all
-            modifications will be lost.
+                If you choose not to save it now, all
+                modifications will be lost.
 
-            Press "|y|" to confirm, "|Y|" to confirm and not
-            be asked again, "|n|" to reject, or "|q|" or
-            "|ESCAPE|" to cancel'''
+                Press "|y|" to confirm, "|n|" to reject,
+                or "|q|" or "|ESCAPE|" to cancel'''
+        else:
+            txt ='''This playlist has been modified within
+                PyRadio. Do you want to save it?
+
+                If you choose not to save it now, all
+                modifications will be lost.
+
+                Press "|y|" to confirm, "|Y|" to confirm and not
+                be asked again, "|n|" to reject, or "|q|" or
+                "|ESCAPE|" to cancel'''
         self._show_help(txt, mode,
                 caption = ' Playlist Modified ',
                 prompt = ' ',
@@ -2410,7 +2435,7 @@ you have to manually address the issue.
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
             if char in (ord('y'), ord('Y')):
-                if char == ord('Y'):
+                if not self._cnf.locked and char == ord('Y'):
                     self._cnf.auto_save_playlist = True
                 ret = self.saveCurrentPlaylist()
                 #if ret == -1:
@@ -2445,7 +2470,7 @@ you have to manually address the issue.
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE:
             if char in (ord('y'), ord('Y')):
                 self.ws.close_window()
-                if char == ord('Y'):
+                if not self._cnf.locked and char == ord('Y'):
                     self._cnf.auto_save_playlist = True
                 ret = self.saveCurrentPlaylist()
                 if ret == 0:
@@ -2465,7 +2490,7 @@ you have to manually address the issue.
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
             if char in (ord('y'), ord('Y')):
-                if char == ord('Y'):
+                if not self._cnf.locked and char == ord('Y'):
                     self._cnf.confirm_playlist_reload = False
                 self.ws.close_window()
                 self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
@@ -2480,7 +2505,7 @@ you have to manually address the issue.
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_RELOAD_CONFIRM_MODE:
             if char in (ord('y'), ord('Y')):
-                if char == ord('Y'):
+                if not self._cnf.locked and char == ord('Y'):
                     self._cnf.confirm_playlist_reload = False
                 self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
                 self.ws.close_window()
@@ -2517,7 +2542,7 @@ you have to manually address the issue.
                     logger.debug('Deleted station: "{}"'.format(deleted_station[0]))
                 self.ws.close_window()
                 self._align_stations_and_refresh(self.ws.REMOVE_STATION_MODE)
-                if char == ord('Y'):
+                if not self._cnf.locked and char == ord('Y'):
                     self._cnf.confirm_station_deletion = False
             else:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -2793,6 +2818,7 @@ you have to manually address the issue.
                     return
 
                 elif char in(ord('x'), curses.KEY_DC):
+                    # TODO: make it impossible when session locked?
                     self.jumpnr = ''
                     self._random_requested = False
                     if self.number_of_items > 0:
