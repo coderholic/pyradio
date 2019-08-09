@@ -1912,27 +1912,32 @@ you have to manually address the issue.
         self._station_editor.set_parent(self.bodyWin)
 
     def _move_station(self, direction):
-        if self._cnf.jump_tag >= 0 and self.jumpnr == '':
-            self.jumpnr = str(self._cnf.jump_tag + 1)
-            self._cnf.jump_tag = -1
         if self.jumpnr:
             try:
                 target = int(self.jumpnr) - 1
             except:
                 return False
-            ret = self._cnf.move_station(self.selection, target)
-            if ret:
-                self.selection = target
+            source = self.selection
+        elif self._cnf.jump_tag >= 0:
+            source = self.selection
+            target = self._cnf.jump_tag
+            self._cnf.jump_tag = -1
         else:
-            ret = self._cnf.move_station(self.selection, self.selection + direction)
-            if ret:
-                self.selection += direction
+            source = self.selection
+            target = self.selection + direction
+        ret = self._cnf.move_station(source, target)
         if ret:
-            self._cnf.dirty_playlist = True
-            self.setStation(self.selection)
             """ refresh reference """
             self.stations = self._cnf.stations
+            self._cnf.dirty_playlist = True
+            if self.playing == source:
+                self.playing = target
+            elif self.playing == target:
+                self.playing = source - 1
+            self.selection = target
+            self.setStation(self.selection)
             self.refreshBody()
+        return ret
 
     def keypress(self, char):
         if self._force_exit or \

@@ -12,6 +12,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Controls](#controls)
 * [Config file](#config-file)
 * [About Playlist files](#about-playlist-files)
+* [Moving stations around](#moving-stations-around)
 * [Specifying stations' encoding](#specifying-stations-encoding)
 * [Player detection / selection](#player-detection-selection)
 * [Player default volume level](#player-default-volume-level)
@@ -201,6 +202,18 @@ A playlist that does not reside within the program's configuration directory is 
 When this happens, **PyRadio** will offer you the choice to copy the playlist in its configuration directory, thus making it available for manipulation within the program.
 
 If a playlist of the same name already exists in the configuration directory, the "***foreign***" playlist will be time-stamped. For example, if a "***foreign***" playlist is named "*stations.csv*", it will be named "*2019-01-11_13-35-47_stations.csv*" (provided that the action was taken on January 11, 2019 at 13:35:47).
+
+## Moving stations around
+
+Rearranging the order of the stations in the playlist is another feature **PyRadio** offers.
+
+All you have to do is specify the *source* station (the station to be moved) and the position it will be moved to (*target*).
+
+There are three way to do that:
+
+1. Press **Ctrl-U** or **Ctrl-D** to move the current station up or down.
+2. Type a station number and press **Ctrl-U** or **Ctrl-D** to move the current station there.
+3. Go to the position you want to move a station to, and press "**J**". This will *tag* this position (making it the *target* of the move). Then go to the station you want to move and press **Ctrl-U** or **Ctrl-D** to move it there.
 
 ## Specifying stations' encoding
 

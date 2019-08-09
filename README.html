@@ -36,6 +36,7 @@
 <li><a href="#controls">Controls</a></li>
 <li><a href="#config-file">Config file</a></li>
 <li><a href="#about-playlist-files">About Playlist files</a></li>
+<li><a href="#moving-stations-around">Moving stations around</a></li>
 <li><a href="#specifying-stations-encoding">Specifying stations’ encoding</a></li>
 <li><a href="#player-detection-selection">Player detection / selection</a></li>
 <li><a href="#player-default-volume-level">Player default volume level</a></li>
@@ -171,6 +172,15 @@ $ pyradio -s 5</pre>
 <p>A playlist that does not reside within the program’s configuration directory is considered a “<strong><em>foreign</em></strong>” playlist. This playlist can only be opened by the <strong>-s</strong> command line option.</p>
 <p>When this happens, <strong>PyRadio</strong> will offer you the choice to copy the playlist in its configuration directory, thus making it available for manipulation within the program.</p>
 <p>If a playlist of the same name already exists in the configuration directory, the “<strong><em>foreign</em></strong>” playlist will be time-stamped. For example, if a “<strong><em>foreign</em></strong>” playlist is named “<em>stations.csv</em>”, it will be named “<em>2019-01-11_13-35-47_stations.csv</em>” (provided that the action was taken on January 11, 2019 at 13:35:47).</p>
+<h2 id="moving-stations-around">Moving stations around <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>Rearranging the order of the stations in the playlist is another feature <strong>PyRadio</strong> offers.</p>
+<p>All you have to do is specify the <em>source</em> station (the station to be moved) and the position it will be moved to (<em>target</em>).</p>
+<p>There are three way to do that:</p>
+<ol type="1">
+<li>Press <strong>Ctrl-U</strong> or <strong>Ctrl-D</strong> to move the current station up or down.</li>
+<li>Type a station number and press <strong>Ctrl-U</strong> or <strong>Ctrl-D</strong> to move the current station there.</li>
+<li>Go to the position you want to move a station to, and press “<strong>J</strong>”. This will <em>tag</em> this position (making it the <em>target</em> of the move). Then go to the station you want to move and press <strong>Ctrl-U</strong> or <strong>Ctrl-D</strong> to move it there.</li>
+</ol>
 <h2 id="specifying-stations-encoding">Specifying stations’ encoding <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Normally, stations provide information about their status (including the title of the song playing, which <strong>PyRadio</strong> displays) in Unicode (<strong>utf-8</strong> encoded). Therefore, <strong>PyRadio</strong> will use <strong>utf-8</strong> to decode such data, by default.</p>
 <p>In an ideal world that would be the case for all stations and everything would be ok and as far as <strong>PyRadio</strong> is concerned, songs’ titles would be correctly displayed. Unfortunately, this is not the case.</p>
