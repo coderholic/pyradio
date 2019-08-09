@@ -81,6 +81,11 @@ class PyRadio(object):
     """ Characters to be "ignored" by windows that support search"""
     _chars_to_bypass_for_search = (ord('/'), ord('n'), ord('N'))
 
+    """ Characters to "ignore" when station editor window
+        is onen and focus is not in line editor """
+    _chars_to_bypass_on_editor = (ord('m'), ord('v'), ord('.'),
+            ord(','), ord('+'), ord('-'))
+
     # Number of stations to change with the page up/down keys
     pageChange = 5
 
@@ -231,6 +236,17 @@ class PyRadio(object):
                 self.ws.SEARCH_NORMAL_MODE,
                 self.ws.SEARCH_PLAYLIST_MODE,
                 )
+
+        # volume functions
+        self.volume_functions = {
+                '+': self._volume_up,
+                '=': self._volume_up,
+                '.': self._volume_up,
+                '-': self._volume_down,
+                ',': self._volume_down,
+                'm': self._volume_mute,
+                'v': self._volume_save
+        }
 
     def __del__(self):
         self.transientWin = None
@@ -1919,16 +1935,35 @@ you have to manually address the issue.
             self.refreshBody()
 
     def keypress(self, char):
-        if self._force_exit:
+        if self._force_exit or \
+                self.ws.operation_mode == self.ws.CONFIG_SAVE_ERROR_MODE:
             return -1
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE {}'.format(self.ws._dq))
 
-        if self.ws.operation_mode == self.ws.CONFIG_SAVE_ERROR_MODE:
-            # exit
-            return -1
+        elif char in (ord('#'), curses.KEY_RESIZE):
+            if platform.startswith('win'):
+                curses.resize_term(0, 0)
+                try:
+                    curses.curs_set(0)
+                except:
+                    pass
+            if self.player.isPlaying():
+                self.log.display_help_message = False
+            self.setupAndDrawScreen()
+            max_lines = self.bodyMaxY - 2
+            if self.selection >= self.number_of_items - max_lines and \
+                    self.number_of_items > max_lines:
+                self.startPos = self.number_of_items - max_lines
+                self.refreshBody()
+            return
 
-        if char == ord('M'):
+        elif self.ws.operation_mode in (self.ws.NO_PLAYER_ERROR_MODE, \
+                self.ws.CONFIG_SAVE_ERROR_MODE):
+            """ if no player, don't serve keyboard """
+            return
+
+        elif char == ord('M'):
             if (self.ws.operation_mode == self.ws.NORMAL_MODE or \
                     self.ws.operation_mode == self.ws.PLAYLIST_MODE):
                 self.jumpnr = ''
@@ -1939,7 +1974,7 @@ you have to manually address the issue.
                     self.refreshBody()
                 return
 
-        if char in (ord('t'), ):
+        elif char in (ord('t'), ):
             # only open it on main modes
             if self.ws.window_mode != self.ws.THEME_MODE and  \
                     self.ws.operation_mode <= self.ws.SEARCH_PLAYLIST_MODE and \
@@ -1956,12 +1991,13 @@ you have to manually address the issue.
                 self._show_theme_selector()
                 return
 
-        if char == ord('P') and self.ws.operation_mode in \
+        elif char == ord('P') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._goto_playing_station()
             return
 
-        if self.ws.operation_mode == self.ws.CONFIG_MODE:
+        elif self.ws.operation_mode == self.ws.CONFIG_MODE and \
+                char not in self._chars_to_bypass:
             if char not in self._chars_to_bypass:
                 if char in (ord('r'), ord('d')):
                     self._player_select_win = None
@@ -2083,7 +2119,8 @@ you have to manually address the issue.
                     self._config_win = None
                 return
 
-        elif self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE:
+        elif self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE and \
+                char not in self._chars_to_bypass:
             if char not in self._chars_to_bypass:
                 ret, ret_list = self._player_select_win.keypress(char)
                 if ret >= 0:
@@ -2096,7 +2133,8 @@ you have to manually address the issue.
                     self._config_win.refresh_config_win()
                 return
 
-        elif self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE:
+        elif self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE and \
+                char not in self._chars_to_bypass:
             """ select station's encoding from main window """
             if char not in self._chars_to_bypass:
                 ret, ret_encoding = self._encoding_select_win.keypress(char)
@@ -2121,69 +2159,95 @@ you have to manually address the issue.
                     self._encoding_select_win = None
                 return
 
-        elif self.ws.operation_mode == self.ws.EDIT_STATION_ENCODING_MODE:
-            """ select global encoding from config window """
-            if char not in self._chars_to_bypass:
-                ret, ret_encoding = self._encoding_select_win.keypress(char)
-                logger.error('DE ret = {}'.format(ret))
-                if ret >= 0:
-                    #if ret == 0:
-                    #    if logger.isEnabledFor(logging.DEBUG):
-                    #        logger.debug('new encoding = {}'.format(ret_encoding))
-                    #    self._config_win._config_options['default_encoding'][1] = ret_encoding
-                    if ret_encoding:
-                        self._station_editor._encoding = ret_encoding
-                        self._station_editor._old_encoding = ret_encoding
+        elif self.ws.operation_mode in \
+                (self.ws.ADD_STATION_MODE, self.ws.EDIT_STATION_MODE):
+            """ In station editor """
+            #logger.error('DE char = {0} - {1}'.format(char, chr(char)))
+            if char in self._chars_to_bypass_on_editor and \
+                    self._station_editor.focus > 1:
+                self.volume_functions[chr(char)]()
+                return
+            ret = self._station_editor.keypress(char)
+            if ret == -1:
+                # Cancel
+                self.ws.close_window()
+                self._station_editor = None
+                self.refreshBody()
+            elif ret == 2:
+                # display line editor help
+                self._show_line_editor_help()
+            elif ret == 3:
+                # show encoding
+                if self._station_editor._encoding == '':
+                    self._station_editor._encoding = 'utf-8'
+                self.ws.operation_mode = self.ws.EDIT_STATION_ENCODING_MODE
+                self._encoding_select_win = PyRadioSelectEncodings(self.bodyMaxY,
+                        self.bodyMaxX, self._station_editor._encoding)
+                self._encoding_select_win.init_window()
+                self._encoding_select_win.refresh_win()
+                self._encoding_select_win.setEncoding(self._station_editor._encoding)
+            return
+
+        elif self.ws.operation_mode == self.ws.EDIT_STATION_ENCODING_MODE and \
+                char not in self._chars_to_bypass:
+            """ In station editor; select encoding for station """
+            ret, ret_encoding = self._encoding_select_win.keypress(char)
+            if ret >= 0:
+                if ret_encoding:
+                    self._station_editor._encoding = ret_encoding
+                    self._station_editor._old_encoding = ret_encoding
+                else:
+                    self._station_editor._encoding = self._station_editor._old_encoding
+                self.ws.close_window()
+                self._station_editor.show()
+                self._encoding_select_win = None
+            return
+
+        elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE and \
+                char not in self._chars_to_bypass:
+            """ In Config window; select global encoding """
+            ret, ret_encoding = self._encoding_select_win.keypress(char)
+            if ret >= 0:
+                if ret == 0:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('new encoding = {}'.format(ret_encoding))
+                    self._config_win._config_options['default_encoding'][1] = ret_encoding
+                self.ws.close_window()
+                self._config_win.refresh_config_win()
+                self._encoding_select_win = None
+            return
+
+        elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE and \
+                char not in self._chars_to_bypass and \
+                char not in self._chars_to_bypass_for_search:
+            """ In Config window; select playlist """
+            ret, ret_playlist = self._playlist_select_win.keypress(char)
+            if ret >= 0:
+                if ret == 0:
+                    self._config_win._config_options['default_playlist'][1] = ret_playlist
+                    if ret_playlist == self._config_win._saved_config_options['default_playlist'][1]:
+                        self._config_win._config_options['default_station'][1] = self._config_win._saved_config_options['default_station'][1]
                     else:
-                        self._station_editor._encoding = self._station_editor._old_encoding
-                    self.ws.close_window()
-                    self._station_editor.show()
-                    self._encoding_select_win = None
-                return
+                        self._config_win._config_options['default_station'][1] = 'False'
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('New default_playlist = "{0}", New default station = "{1}"'.format(ret_playlist, self._config_win._config_options['default_station'][1]))
+                self.ws.close_window()
+                self._config_win.refresh_config_win()
+            return
 
-        elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE:
-            """ select global encoding from config window """
-            if char not in self._chars_to_bypass:
-                ret, ret_encoding = self._encoding_select_win.keypress(char)
-                if ret >= 0:
-                    if ret == 0:
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('new encoding = {}'.format(ret_encoding))
-                        self._config_win._config_options['default_encoding'][1] = ret_encoding
-                    self.ws.close_window()
-                    self._config_win.refresh_config_win()
-                    self._encoding_select_win = None
-                return
-
-        elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE:
-            if char not in self._chars_to_bypass and \
-                   char not in self._chars_to_bypass_for_search:
-                ret, ret_playlist = self._playlist_select_win.keypress(char)
-                if ret >= 0:
-                    if ret == 0:
-                        self._config_win._config_options['default_playlist'][1] = ret_playlist
-                        if ret_playlist == self._config_win._saved_config_options['default_playlist'][1]:
-                            self._config_win._config_options['default_station'][1] = self._config_win._saved_config_options['default_station'][1]
-                        else:
-                            self._config_win._config_options['default_station'][1] = 'False'
-                        if logger.isEnabledFor(logging.INFO):
-                            logger.info('New default_playlist = "{0}", New default station = "{1}"'.format(ret_playlist, self._config_win._config_options['default_station'][1]))
-                    self.ws.close_window()
-                    self._config_win.refresh_config_win()
-                return
-
-        elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
-            if char not in self._chars_to_bypass and \
-                   char not in self._chars_to_bypass_for_search:
-                ret, ret_station = self._station_select_win.keypress(char)
-                if ret >= 0:
-                    if ret == 0:
-                        if logger.isEnabledFor(logging.INFO):
-                            logger.info('New default station = "{}"'.format(ret_station))
-                        self._config_win._config_options['default_station'][1] = ret_station
-                    self.ws.close_window()
-                    self._config_win.refresh_config_win()
-                return
+        elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE and \
+                char not in self._chars_to_bypass and \
+                char not in self._chars_to_bypass_for_search:
+            """ In Config window; select station """
+            ret, ret_station = self._station_select_win.keypress(char)
+            if ret >= 0:
+                if ret == 0:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('New default station = "{}"'.format(ret_station))
+                    self._config_win._config_options['default_station'][1] = ret_station
+                self.ws.close_window()
+                self._config_win.refresh_config_win()
+            return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_CREATE_NEW_THEME_MODE:
             if self.theme_forced_selection:
@@ -2261,27 +2325,6 @@ you have to manually address the issue.
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('Setting default theme: {}'.format(self._theme_name))
                 return
-
-        if char in (ord('#'), curses.KEY_RESIZE):
-            if platform.startswith('win'):
-                curses.resize_term(0, 0)
-                try:
-                    curses.curs_set(0)
-                except:
-                    pass
-            if self.player.isPlaying():
-                self.log.display_help_message = False
-            self.setupAndDrawScreen()
-            max_lines = self.bodyMaxY - 2
-            if self.selection >= self.number_of_items - max_lines and \
-                    self.number_of_items > max_lines:
-                self.startPos = self.number_of_items - max_lines
-                self.refreshBody()
-            return
-
-        elif self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
-            """ if no player, don't serve keyboard """
-            return
 
         elif char in (ord('/'), ) and self.ws.operation_mode in self._search_modes.keys():
             self.jumpnr = ''
@@ -2396,46 +2439,19 @@ you have to manually address the issue.
             return
 
         elif char in (ord('+'), ord('='), ord('.')):
-            self.jumpnr = ''
-            if self.player.isPlaying():
-                if self.player.playback_is_on:
-                    self.player.volumeUp()
-                else:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('Volume adjustment inhibited because playback is off')
+            self._volume_up()
             return
 
         elif char in (ord('-'), ord(',')):
-            self.jumpnr = ''
-            if self.player.isPlaying():
-                if self.player.playback_is_on:
-                    self.player.volumeDown()
-                else:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('Volume adjustment inhibited because playback is off')
+            self._volume_down()
             return
 
         elif char in (ord('m'), ):
-            self.jumpnr = ''
-            if self.player.isPlaying():
-                if self.player.playback_is_on:
-                    self.player.toggleMute()
-                else:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('Muting inhibited because playback is off')
+            self._volume_mute()
             return
 
         elif char in (ord('v'), ):
-            self.jumpnr = ''
-            if self.player.isPlaying():
-                if self.player.playback_is_on:
-                    ret_string = self.player.save_volume()
-                    if ret_string:
-                        self.log.write(ret_string)
-                        self.player.threadUpdateTitle(self.player.status_update_lock)
-                else:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('Volume save inhibited because playback is off')
+            self._volume_save()
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_SCAN_ERROR_MODE:
@@ -2606,31 +2622,6 @@ you have to manually address the issue.
             self.refreshBody()
             return
 
-        elif self.ws.operation_mode in \
-                (self.ws.ADD_STATION_MODE, self.ws.EDIT_STATION_MODE):
-            ret = self._station_editor.keypress(char)
-            if ret == -1:
-                # Cancel
-                self.ws.close_window()
-                self._station_editor = None
-                self.refreshBody()
-                return
-            elif ret == 2:
-                # display line editor help
-                self._show_line_editor_help()
-                return
-            elif ret == 3:
-                # show encoding
-                if self._station_editor._encoding == '':
-                    self._station_editor._encoding = 'utf-8'
-                logger.info('encoding = {}'.format(self._station_editor._encoding))
-                self.ws.operation_mode = self.ws.EDIT_STATION_ENCODING_MODE
-                self._encoding_select_win = PyRadioSelectEncodings(self.bodyMaxY,
-                        self.bodyMaxX, self._station_editor._encoding)
-                self._encoding_select_win.init_window()
-                self._encoding_select_win.refresh_win()
-                self._encoding_select_win.setEncoding(self._station_editor._encoding)
-                return
         else:
 
             if char in (ord('?'), ):
@@ -2967,6 +2958,46 @@ you have to manually address the issue.
                         else:
                             self.selections[self.ws.operation_mode] = (self.selection, self.startPos, self.playing, self._cnf.playlists)
                         self.refreshBody()
+
+    def _volume_up(self):
+        self.jumpnr = ''
+        if self.player.isPlaying():
+            if self.player.playback_is_on:
+                self.player.volumeUp()
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Volume adjustment inhibited because playback is off')
+
+
+    def _volume_down(self):
+        self.jumpnr = ''
+        if self.player.isPlaying():
+            if self.player.playback_is_on:
+                self.player.volumeDown()
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Volume adjustment inhibited because playback is off')
+
+    def _volume_mute(self):
+        self.jumpnr = ''
+        if self.player.isPlaying():
+            if self.player.playback_is_on:
+                self.player.toggleMute()
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Muting inhibited because playback is off')
+
+    def _volume_save(self):
+        self.jumpnr = ''
+        if self.player.isPlaying():
+            if self.player.playback_is_on:
+                ret_string = self.player.save_volume()
+                if ret_string:
+                    self.log.write(ret_string)
+                    self.player.threadUpdateTitle(self.player.status_update_lock)
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Volume save inhibited because playback is off')
 
     def _redisplay_stations_and_playlists(self):
         self.bodyWin.erase()

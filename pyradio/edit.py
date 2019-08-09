@@ -149,6 +149,8 @@ class PyRadioEditor(object):
 
     _dirty = False
 
+    _too_small = False
+
     def __init__(self, stations, selection, parent, adding=True):
         self._stations = stations
         self._selection = selection
@@ -203,9 +205,12 @@ class PyRadioEditor(object):
         else:
             self._line_editor[0].string = ''
             self._line_editor[1].string = ''
-        if item[2]:
-            self._encoding = item[2]
-        else:
+        try:
+            if item[2]:
+                self._encoding = item[2]
+            else:
+                self._encoding = 'utf-8'
+        except:
             self._encoding = 'utf-8'
         self._orig_encoding = self._encoding
         self._old_encoding  = self._encoding
@@ -251,54 +256,86 @@ class PyRadioEditor(object):
             error_win.addstr(1, 1, txt, curses.color_pair(4))
             self._win.refresh()
             error_win.refresh()
+            self._too_small = True
+            if item:
+                self._orig_item = item
             return 0
+        else:
+            if self._too_small and self._orig_item:
+                self._set_item(self._orig_item)
+            self._too_small = False
 
         self._win.addstr(1, 2, 'Name', curses.color_pair(4))
         self._win.addstr(4, 2, 'URL', curses.color_pair(4))
         self._show_encoding()
         self._show_buttons()
         try:
-            self._win.addstr(11, 3, '─' * (self.maxX - 6), curses.color_pair(3))
+            self._win.addstr(10, 3, '─' * (self.maxX - 6), curses.color_pair(3))
         except:
-            self._win.addstr(11, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
-        self._win.addstr(11, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
-        self._win.addstr(12, 5, 'TAB', curses.color_pair(4))
+            self._win.addstr(10, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+        self._win.addstr(10, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
+        self._win.addstr(11, 5, 'TAB', curses.color_pair(4))
         self._win.addstr(', ', curses.color_pair(5))
         self._win.addstr('Up', curses.color_pair(4))
-        self._win.addstr('    Go to next field.', curses.color_pair(5))
-        self._win.addstr(13, 5, 'Down', curses.color_pair(4))
-        self._win.addstr('       Go to previous field.', curses.color_pair(5))
-        self._win.addstr(14, 5, 'ENTER', curses.color_pair(4))
-        self._win.addstr('      When in line editor, go to next field.', curses.color_pair(5))
-        self._win.addstr(15, 16, 'When in Encoding field, open Encoding selection window.', curses.color_pair(5))
-        self._win.addstr(16, 16, 'Otherwise, save station data or cancel operation.', curses.color_pair(5))
+        self._win.addstr(' / ', curses.color_pair(5))
+        self._win.addstr('Down', curses.color_pair(4))
+        self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
+        self._win.addstr(12, 5, 'ENTER', curses.color_pair(4))
+        self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
+        self._win.addstr(13, 23, 'Otherwise, execute selected function.', curses.color_pair(5))
         step = 0
         if not self._adding:
-            self._win.addstr(17, 5, '^R', curses.color_pair(4))
-            self._win.addstr(17, 16, 'Revert to original data (start over).', curses.color_pair(5))
+            self._win.addstr(14, 5, 'r', curses.color_pair(4))
+            self._win.addstr(', ', curses.color_pair(5))
+            self._win.addstr('^R', curses.color_pair(4))
+            self._win.addstr(14, 23, 'Revert to saved values (', curses.color_pair(5))
+            self._win.addstr('^R', curses.color_pair(4))
+            self._win.addstr(' when in Line Editor).', curses.color_pair(5))
             step = 1
-        self._win.addstr(17 + step, 5, 'Esc', curses.color_pair(4))
-        self._win.addstr(17 + step, 16, 'Cancel operation.', curses.color_pair(5))
+        self._win.addstr(14 + step, 5, 'Esc', curses.color_pair(4))
+        self._win.addstr(14 + step, 23, 'Cancel operation.', curses.color_pair(5))
 
 
-        self._win.addstr(18 + step, 5, 's', curses.color_pair(4))
+        self._win.addstr(15 + step, 5, 's', curses.color_pair(4))
         self._win.addstr(' / ', curses.color_pair(5))
         self._win.addstr('q', curses.color_pair(4))
-        self._win.addstr('      Save data / Cancel operation (not in line editor).', curses.color_pair(5))
+        self._win.addstr(15 + step , 23, 'Save data / Cancel operation (not in Line Editor).', curses.color_pair(5))
 
-        self._win.addstr(19 + step, 5, '?', curses.color_pair(4))
-        self._win.addstr(19 + step, 16, 'Line editor help.', curses.color_pair(5))
+        self._win.addstr(16 + step, 5, '?', curses.color_pair(4))
+        self._win.addstr(16 + step, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
+
+        try:
+            self._win.addstr(17 + step, 5, '─' * (self.maxX - 10), curses.color_pair(3))
+        except:
+            self._win.addstr(17 + step, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(3))
+        self._win.addstr(17 + step, int((self.maxX - 33) / 2), ' Player Keys (Not in Line Editor) ', curses.color_pair(4))
+
+        self._win.addstr(18 + step, 5, '-', curses.color_pair(4))
+        self._win.addstr('/', curses.color_pair(5))
+        self._win.addstr('+', curses.color_pair(4))
+        self._win.addstr(' or ', curses.color_pair(5))
+        self._win.addstr(',', curses.color_pair(4))
+        self._win.addstr('/', curses.color_pair(5))
+        self._win.addstr('.', curses.color_pair(4))
+        self._win.addstr(18 + step, 23, 'Change volume', curses.color_pair(5))
+        self._win.addstr(19 + step, 5, 'm', curses.color_pair(4))
+        self._win.addstr(' / ', curses.color_pair(5))
+        self._win.addstr('v', curses.color_pair(4))
+        self._win.addstr(19 + step, 23, 'M', curses.color_pair(4))
+        self._win.addstr('ute player / Save ', curses.color_pair(5))
+        self._win.addstr('v', curses.color_pair(4))
+        self._win.addstr('olume (not in vlc).', curses.color_pair(5))
 
         if item:
             self._set_item(item)
             self._show_encoding()
         self._win.refresh()
         self._update_focus()
-        for ed in range(0,2):
-            self._line_editor[ed].show(self._win, opening=False)
+        if not self._too_small:
+            for ed in range(0,2):
+                self._line_editor[ed].show(self._win, opening=False)
 
     def _show_encoding(self):
-        logger.error('DE self._encoding = "{}"'.format(self._encoding))
         sid = 2
         if self._focus == sid:
             col = 9
@@ -345,7 +382,7 @@ class PyRadioEditor(object):
             col = 9
         else:
             col = 5
-        self._win.addstr(9, int((self.maxX - 18) /2), '[', curses.color_pair(4))
+        self._win.addstr(8, int((self.maxX - 18) /2), '[', curses.color_pair(4))
         self._win.addstr(' OK ', curses.color_pair(col))
         self._win.addstr(']  [', curses.color_pair(4))
 
@@ -377,72 +414,79 @@ class PyRadioEditor(object):
                  1: Ok     (new_station holds data)
                  2: display line editor help
                  3: open encoding selection window
+                 4: window too small
         """
         ret = 0
-        if char in ( ord('\t'), 9, curses.KEY_DOWN):
-            self.focus +=1
-        elif char == curses.KEY_UP:
-            self.focus -=1
-        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
-            if self._focus == 0:
-                # Name
-                self.focus +=1
-            elif self._focus == 1:
-                # URL
-                self.focus +=1
-            elif self._focus == 2:
-                # encoding
-                return 3
-            elif self._focus == 3:
-                # ok
-                self._return_station()
-                ret = -1
-            elif self._focus == 4:
-                # cancel
+        if self._too_small:
+            if char in (curses.KEY_EXIT, 27, ord('q')):
                 self.new_station = None
                 ret = -1
-        elif char in (curses.KEY_EXIT, 27):
-            self.new_station = None
-            ret = -1
-        elif char == ord('s') and self._focus > 1:
-            self._return_station
-            ret = -1
-        elif char == ord('q') and self._focus > 1:
-            self.new_station = None
-            ret = -1
-        elif char == ord('?'):
-            ret = 2
-        elif char == curses.ascii.DC2 and not self._adding:
-            # ^R, revert to saved
-            self.item = self._orig_item
-            if self.item[2]:
-                self._encoding = self.item[2]
-            else:
-                self._encoding = 'utf-8'
-            self._orig_encoding = self._encoding
-        elif self._focus <= 1:
-            """
-             Returns:
-                2: display help
-                1: get next char
-                0: exit edit mode, string isvalid
-               -1: cancel
-            """
-            ret = self._line_editor[self._focus].keypress(self._win, char)
-            if ret == 2:
-                # display help
+        else:
+            if char in ( ord('\t'), 9, curses.KEY_DOWN):
+                self.focus +=1
+            elif char == curses.KEY_UP:
+                self.focus -=1
+            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+                if self._focus == 0:
+                    # Name
+                    self.focus +=1
+                elif self._focus == 1:
+                    # URL
+                    self.focus +=1
+                elif self._focus == 2:
+                    # encoding
+                    return 3
+                elif self._focus == 3:
+                    # ok
+                    self._return_station()
+                    ret = -1
+                elif self._focus == 4:
+                    # cancel
+                    self.new_station = None
+                    ret = -1
+            elif char in (curses.KEY_EXIT, 27):
+                self.new_station = None
+                ret = -1
+            elif char == ord('s') and self._focus > 1:
+                self._return_station
+                ret = -1
+            elif char == ord('q') and self._focus > 1:
+                self.new_station = None
+                ret = -1
+            elif char == ord('?') and self.focus <= 1:
                 ret = 2
-            elif ret == 1:
-                # get next char
-                ret = 0
-            elif ret == 0:
-                # exit, string is valid
-                self._return_station()
-                ret = -1
-            elif ret == -1:
-                # cancel
-                self.new_station = None
-                ret = -1
+            elif (char in (curses.ascii.DC2, 18) and not self._adding) or \
+                    (char == ord('r') and not self._adding and self.focus >1):
+                # ^R, revert to saved
+                self.item = self._orig_item
+                if self.item[2]:
+                    self._encoding = self.item[2]
+                else:
+                    self._encoding = 'utf-8'
+                self._orig_encoding = self._encoding
+            elif self._focus <= 1:
+                """
+                 Returns:
+                    2: display help
+                    1: get next char
+                    0: exit edit mode, string isvalid
+                   -1: cancel
+                """
+                ret = self._line_editor[self._focus].keypress(self._win, char)
+                if ret == 2:
+                    # display help
+                    ret = 2
+                elif ret == 1:
+                    # get next char
+                    ret = 0
+                elif ret == 0:
+                    # exit, string is valid
+                    self._return_station()
+                    ret = -1
+                elif ret == -1:
+                    # cancel
+                    self.new_station = None
+                    ret = -1
         self._show_title()
         return ret
 
