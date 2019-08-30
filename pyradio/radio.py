@@ -125,6 +125,8 @@ class PyRadio(object):
     
     _force_exit = False
 
+    _help_metrics = {}
+
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
         self._cnf = pyradio_config
         self._theme = PyRadioTheme(self._cnf)
@@ -151,6 +153,7 @@ class PyRadio(object):
                 self.ws.SELECT_PLAYLIST_MODE: self._playlist_select_win_refresh_and_resize,
                 self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
                 self.ws.MAIN_HELP_MODE: self._show_main_help,
+                self.ws.MAIN_HELP_MODE_PAGE_2: self._show_main_help_page_2,
                 self.ws.PLAYLIST_HELP_MODE: self._show_playlist_help,
                 self.ws.THEME_HELP_MODE: self._show_theme_help,
                 self.ws.CONFIG_HELP_MODE: self._show_config_help,
@@ -883,6 +886,12 @@ class PyRadio(object):
                 too_small_msg='Window too small to show message',
                 is_message=False):
         """ Display a help, info or question window.  """
+        if mode_to_set == self.ws.MAIN_HELP_MODE:
+            caption = ' Help (1/2) '
+            prompt=' Press n/p or any other key to hide '
+        elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_2:
+            caption = ' Help (2/2) '
+            prompt=' Press n/p or any other key to hide '
         self.helpWinContainer = None
         self.helpWin = None
         self.ws.operation_mode = mode_to_set
@@ -892,10 +901,18 @@ class PyRadio(object):
         lines = txt.split('\n')
         st_lines = [item.replace('\r','') for item in lines]
         lines = [item.strip() for item in st_lines]
-        inner_height = len(lines) + 2
-        inner_width = self._get_message_width_from_list(lines) + 4
-        outer_height = inner_height + 2
-        outer_width = inner_width + 2
+
+        if mode_to_set in self._help_metrics.keys():
+            inner_height, inner_width, outer_height, outer_width = self._help_metrics[mode_to_set]
+        else:
+            inner_height = len(lines) + 2
+            inner_width = self._get_message_width_from_list(lines) + 4
+            outer_height = inner_height + 2
+            outer_width = inner_width + 2
+            self._help_metrics[mode_to_set] = [inner_height, inner_width, outer_height, outer_width]
+            if mode_to_set == self.ws.MAIN_HELP_MODE:
+                self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_2] = self._help_metrics[mode_to_set]
+
         if ((self.ws.window_mode == self.ws.CONFIG_MODE and \
                 self.ws.operation_mode > self.ws.CONFIG_HELP_MODE) or \
                 (self.ws.window_mode == self.ws.NORMAL_MODE and \
@@ -962,9 +979,9 @@ class PyRadio(object):
                 for part, part_string in enumerate(splited):
                     if part_string.strip():
                         if part == 0 or part % 2 == 0:
-                            self.helpWin.addstr(splited[part], start_with)
+                            self.helpWin.addstr(splited[part].replace('_', ' '), start_with)
                         else:
-                            self.helpWin.addstr(splited[part], follow)
+                            self.helpWin.addstr(splited[part].replace('_', ' '), follow)
         if prompt.strip():
             self.helpWin.addstr(inner_height - 1, int(inner_width-len(prompt)-1), prompt)
         if use_empty_win:
@@ -1073,14 +1090,24 @@ class PyRadio(object):
                  Space|,|Left|,|h     |Stop / start playing selected station.
                  -|/|+| or |,|/|.       |Change volume.
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 E                |Change station's encoding.
-                 DEL|,|x            |Delete selected station.
                  o| / |s| / |R        ||O|pen / |S|ave / |R|eload playlist.
                  t| / |T            |Load |t|heme / |T|oggle transparency.
                  c                |Open Configuration window.
                  /| / |n| / |N        |Search, go to next / previous result.
                  Esc|,|q            |Quit. """
         self._show_help(txt, mode_to_set=self.ws.MAIN_HELP_MODE)
+
+    def _show_main_help_page_2(self):
+        logger.error('DE I am here: _show_main_help_page_2')
+        txt = """a| / |A            |Add / append new station.
+                 e                |Edit station.
+                 E                |Change station's encoding.
+                 DEL|,|x            |Delete selected station.
+                 J                |Create a |J|ump tag
+                 <n>^U|,|<n>^D      |Move station |U|p / |D|own.
+                 ||_________________|If a |jump tag| exists,
+                 ||_________________|move the station there."""
+        self._show_help(txt, mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_2)
 
     def _show_playlist_help(self):
         txt = """Up|,|j|,|PgUp|,
@@ -1998,6 +2025,8 @@ you have to manually address the issue.
 
         elif char == ord('P') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
+            self.jumpnr = ''
+            self._random_requested = False
             self._goto_playing_station()
             return
 
@@ -2334,7 +2363,6 @@ you have to manually address the issue.
         elif char in (ord('/'), ) and self.ws.operation_mode in self._search_modes.keys():
             self.jumpnr = ''
             self._random_requested = False
-            #self.search.string = '부'
             self._give_me_a_search_class(self.ws.operation_mode)
             self.search.show(self.bodyWin)
             self.ws.operation_mode = self._search_modes[self.ws.operation_mode]
@@ -2440,6 +2468,8 @@ you have to manually address the issue.
                 return
 
         elif char in (ord('T'), ):
+            self.jumpnr = ''
+            self._random_requested = False
             self._toggle_transparency()
             return
 
@@ -2619,6 +2649,20 @@ you have to manually address the issue.
             return
 
         elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
+            if self.ws.operation_mode in (self.ws.MAIN_HELP_MODE,
+                        self.ws.MAIN_HELP_MODE_PAGE_2):
+                if char in ( ord('n'), ord('p'), ):
+                    self.helpWinContainer = None
+                    self.helpWin = None
+                    if self.ws.operation_mode == self.ws.MAIN_HELP_MODE:
+                        self.ws.close_window()
+                        self.refreshBody()
+                        self._show_main_help_page_2()
+                    else:
+                        self.ws.close_window()
+                        self.refreshBody()
+                        self._show_main_help()
+                    return
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Part of PASSIVE_WINDOWS')
             self.helpWinContainer = None
@@ -2966,43 +3010,59 @@ you have to manually address the issue.
 
     def _volume_up(self):
         self.jumpnr = ''
+        self._random_requested = False
         if self.player.isPlaying():
             if self.player.playback_is_on:
                 self.player.volumeUp()
-            else:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('Volume adjustment inhibited because playback is off')
+        else:
+            if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
+                self.ws.close_window()
+                self.refreshBody()
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Volume adjustment inhibited because playback is off')
 
 
     def _volume_down(self):
         self.jumpnr = ''
+        self._random_requested = False
         if self.player.isPlaying():
             if self.player.playback_is_on:
                 self.player.volumeDown()
-            else:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('Volume adjustment inhibited because playback is off')
+        else:
+            if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
+                self.ws.close_window()
+                self.refreshBody()
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Volume adjustment inhibited because playback is off')
 
     def _volume_mute(self):
         self.jumpnr = ''
+        self._random_requested = False
         if self.player.isPlaying():
             if self.player.playback_is_on:
                 self.player.toggleMute()
-            else:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('Muting inhibited because playback is off')
+        else:
+            if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
+                self.ws.close_window()
+                self.refreshBody()
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Muting inhibited because playback is off')
 
     def _volume_save(self):
         self.jumpnr = ''
+        self._random_requested = False
         if self.player.isPlaying():
             if self.player.playback_is_on:
                 ret_string = self.player.save_volume()
                 if ret_string:
                     self.log.write(ret_string)
                     self.player.threadUpdateTitle(self.player.status_update_lock)
-            else:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('Volume save inhibited because playback is off')
+        else:
+            if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
+                self.ws.close_window()
+                self.refreshBody()
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Volume save inhibited because playback is off')
 
     def _redisplay_stations_and_playlists(self):
         self.bodyWin.erase()

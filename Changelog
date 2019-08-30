@@ -1,14 +1,15 @@
-2019-08-05
-    * Adding ^U, ^D to move station up, down
-
-2019-08-01 s-n-g
-    * PyRadio runs on Windows (finally). Added an installation BAT file,
-      icons, program shortcut and help (windows.md - windows.html)
-
-2019-07-16 s-n-g
-    * Search string will not be lost after displaying help
+2019-08-30 s-n-g
     * Changing "e" to "E" to change a station's encoding
     * Changing "p" to "P" to jump to playing station / loaded playlist
+    * Changing volume, saving volume and muting is now available on most
+      windows (pop up and questions)
+    * Manipulating volume (keys m,v) on a help window, will close it
+      if player not playing.
+    * Adding ^U, ^D to move station up, down
+    * Search string will not be lost after displaying help
+    * PyRadio runs on Windows (finally). Added an installation BAT file,
+      icons, program shortcut and help (windows.md - windows.html)
+    * Minor bug fixes
 
 2019-07-15 s-n-g
     * Searching is now available on any window presenting a list of items
