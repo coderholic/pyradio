@@ -304,7 +304,7 @@ class SimpleCursesLineEdit(object):
          returns:
             2: display help
             1: get next char
-            0: exit edit mode, string isvalid
+            0: exit edit mode, string is valid
            -1: cancel
         """
         word_delim = (' ', '-', '_', '+', '=',

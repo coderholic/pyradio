@@ -1036,12 +1036,9 @@ class PyRadio(object):
     def _print_help(self):
         #logger.error('DE \n\nself.ws.operation_mode = {}'.format(self.ws.operation_mode))
         if self.ws.operation_mode in self._display_help.keys():
-            #logger.error('DE in display help')
             self._display_help[self.ws.operation_mode]()
         else:
-            #logger.error('DE in redisplay')
             self._redisplay[self.ws.operation_mode]()
-        #logger.error('DE end _print_help')
 
     def _show_playlist_recovered(self):
         txt = 'Playlist recoverd!'
@@ -1098,7 +1095,6 @@ class PyRadio(object):
         self._show_help(txt, mode_to_set=self.ws.MAIN_HELP_MODE)
 
     def _show_main_help_page_2(self):
-        logger.error('DE I am here: _show_main_help_page_2')
         txt = """a| / |A            |Add / append new station.
                  e                |Edit station.
                  E                |Change station's encoding.
@@ -2207,6 +2203,28 @@ you have to manually address the issue.
                 self.ws.close_window()
                 self._station_editor = None
                 self.refreshBody()
+            elif ret == 1:
+                # ok
+                if self.ws.operation_mode == self.ws.EDIT_STATION_MODE:
+                    if self.stations[self.selection] != self._station_editor.new_station:
+                        self._cnf.dirty_playlist = True
+                    self.stations[self.selection] = self._station_editor.new_station
+                else:
+                    if self._station_editor.append:
+                        self.stations.append(self._station_editor.new_station)
+                        self.number_of_items = len(self.stations)
+                        self.selection = self.number_of_items - 1
+                        self.startPos = self.number_of_items - self.bodyMaxY + 2
+                    else:
+                        pass
+                        ret, self.number_of_items = self._cnf.insert_station(self._station_editor.new_station, self.selection + 1)
+                        self.stations = self._cnf.stations
+                        self.selection += 1
+                        if self.selection >= self.startPos + self.bodyMaxY - 2:
+                            self.startPos += 1
+
+                self.ws.close_window()
+                self.refreshBody()
             elif ret == 2:
                 # display line editor help
                 self._show_line_editor_help()
@@ -2809,7 +2827,7 @@ you have to manually address the issue.
                 if char in ( ord('a'), ord('A') ):
                     self._station_editor = PyRadioEditor(self.stations, self.selection, self.bodyWin)
                     if char == ord('A'):
-                        self._station_editor.apend = True
+                        self._station_editor.append = True
                     self._station_editor.show()
                     self._station_editor.item = [ '', '', '' ]
                     self.ws.operation_mode = self.ws.ADD_STATION_MODE

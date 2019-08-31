@@ -439,7 +439,7 @@ class PyRadioEditor(object):
                 elif self._focus == 3:
                     # ok
                     self._return_station()
-                    ret = -1
+                    ret = 1
                 elif self._focus == 4:
                     # cancel
                     self.new_station = None

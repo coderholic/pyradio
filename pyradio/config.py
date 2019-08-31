@@ -485,6 +485,7 @@ class PyRadioStations(object):
             d.appendleft(station)
             d.rotate(target)
             self.stations = list(d)
+        self.dirty_playlist = True
         return True, self.number_of_stations
 
     def move_station(self, source, target):
@@ -512,6 +513,7 @@ class PyRadioStations(object):
         d.rotate(target)
         self.stations = list(d)
         self.number_of_stations = len(self.stations)
+        self.dirty_playlist = True
         return True
 
     def switch_stations(self, source, target):
