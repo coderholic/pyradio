@@ -975,6 +975,18 @@ class PyRadio(object):
                     self.helpWin.addstr('┤'.encode('utf-8'), curses.color_pair(3))
                 self.helpWin.addstr(i + 1, inner_width-len(a_line[1:]) - 1, a_line[1:].replace('_', ' '), caption_col)
                 #self.helpWin.addstr(i + 1, int((inner_width-len(a_line[1:]))/2), a_line[1:].replace('_', ' '), caption_col)
+            elif a_line.startswith('!'):
+                self.helpWin.move(i + 1, 2)
+                lin = ' ' + a_line[1:] + ' '
+                llin = len(lin)
+
+                wsp = inner_width - 4
+                try:
+                    self.helpWin.addstr('─' * wsp , curses.color_pair(3))
+                except:
+                    self.helpWin.addstr('─'.encode('utf-8') * wsp, curses.color_pair(3))
+                self.helpWin.addstr(i + 1, 5, lin, caption_col)
+
             else:
                 splited = a_line.split('|')
                 self.helpWin.move(i + 1, 2)
@@ -1083,28 +1095,33 @@ class PyRadio(object):
         txt = """Up|,|j|,|PgUp|,
                  Down|,|k|,|PgDown    |Change station selection.
                  g| / |<n>G         |Jump to first or n-th / last station.
-                 M| / |P            |Jump to |M|iddle / |P|laying station.
+                 H M L            |Go to top / middle / bottom of screen.
+                 P                |Go to |P|laying station.
                  Enter|,|Right|,|l    |Play selected station.
                  r                |Select and play a random station.
                  Space|,|Left|,|h     |Stop / start playing selected station.
+                 Esc|,|q            |Quit.
+                 !Volume management
                  -|/|+| or |,|/|.       |Change volume.
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                 !Misc
                  o| / |s| / |R        ||O|pen / |S|ave / |R|eload playlist.
                  t| / |T            |Load |t|heme / |T|oggle transparency.
-                 c                |Open Configuration window.
-                 /| / |n| / |N        |Search, go to next / previous result.
-                 Esc|,|q            |Quit. """
+                 c                |Open Configuration window."""
         self._show_help(txt, mode_to_set=self.ws.MAIN_HELP_MODE)
 
     def _show_main_help_page_2(self):
-        txt = """a| / |A            |Add / append new station.
-                 e                |Edit station.
+        txt = """!Playlist editing
+                 a| / |A            |Add / append new station.
+                 e                |Edit current station.
                  E                |Change station's encoding.
                  DEL|,|x            |Delete selected station.
-                 J                |Create a |J|ump tag
+                 !Moving stations
+                 J                |Create a |J|ump tag.
                  <n>^U|,|<n>^D      |Move station |U|p / |D|own.
-                 ||_________________|If a |jump tag| exists,
-                 ||_________________|move the station there."""
+                 ||_________________|If a |jump tag| exists, move it there.
+                 !Searching
+                 /| / |n| / |N        |Search, go to next / previous result."""
         self._show_help(txt, mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_2)
 
     def _show_playlist_help(self):
@@ -1482,9 +1499,11 @@ you have to manually address the issue.
                 is_message=True)
 
     def _print_editor_name_error(self):
-        txt = '''Station Name is empty!
+        txt = '''
+            ___Incomplete Station Data provided!___
 
-            Please provide a Station Name.
+            ___Please provide a Station Name.___
+
             '''
         self._show_help(txt,
                 mode_to_set = self.ws.EDIT_STATION_NAME_ERROR,
@@ -1493,10 +1512,22 @@ you have to manually address the issue.
                 is_message=True)
 
     def _print_editor_url_error(self):
-        txt = '''Station URL is invalid!
+        if self._station_editor._line_editor[1].string.strip():
+            txt = '''
+                ___Errorenous Station Data provided!___
 
-            Please provide a valid Station URL.
-            '''
+                ___Station URL is invalid!___
+                ___Please provide a valid Station URL.___
+
+                '''
+        else:
+            txt = '''
+                ___Errorenous Station Data provided!___
+
+                ___Station URL is empty!___
+                ___Please provide a valid Station URL.___
+
+                '''
         self._show_help(txt,
                 mode_to_set = self.ws.EDIT_STATION_URL_ERROR,
                 caption = ' Error ',
@@ -2015,15 +2046,31 @@ you have to manually address the issue.
             """ if no player, don't serve keyboard """
             return
 
-        elif char == ord('M'):
-            if (self.ws.operation_mode == self.ws.NORMAL_MODE or \
-                    self.ws.operation_mode == self.ws.PLAYLIST_MODE):
+        elif char == ord('H'):
+            if self.ws.operation_mode in \
+                    (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
                 self.jumpnr = ''
                 self._random_requested = False
-                if self.number_of_items > 0:
-                    self.setStation(int(self.number_of_items / 2) - 1)
-                    self._put_selection_in_the_middle(force=True)
-                    self.refreshBody()
+                self.selection = self.startPos
+                self.refreshBody()
+                return
+
+        elif char == ord('M'):
+            if self.ws.operation_mode in \
+                    (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
+                self.jumpnr = ''
+                self._random_requested = False
+                self.selection = self.startPos + int((self.bodyMaxY - 3) / 2)
+                self.refreshBody()
+                return
+
+        elif char == ord('L'):
+            if self.ws.operation_mode in \
+                    (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
+                self.jumpnr = ''
+                self._random_requested = False
+                self.selection = self.startPos + self.bodyMaxY - 3
+                self.refreshBody()
                 return
 
         elif char in (ord('t'), ) and \
