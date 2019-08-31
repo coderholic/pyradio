@@ -59,6 +59,8 @@ class Window_Stack_Constants(object):
     FOREIGN_PLAYLIST_MESSAGE_MODE = 301
     FOREIGN_PLAYLIST_COPY_ERROR_MODE = 302
     CONFIG_SAVE_ERROR_MODE = 303
+    EDIT_STATION_NAME_ERROR = 304
+    EDIT_STATION_URL_ERROR = 305
     THEME_MODE = 400
     UPDATE_NOTIFICATION_MODE = 1000
     SESSION_LOCKED_MODE = 1001
@@ -119,6 +121,8 @@ class Window_Stack_Constants(object):
             ADD_STATION_MODE: 'ADD_STATION_MODE',
             EDIT_STATION_MODE: 'EDIT_STATION_MODE',
             LINE_EDITOR_HELP: 'LINE_EDITOR_HELP',
+            EDIT_STATION_NAME_ERROR: 'EDIT_STATION_NAME_ERROR',
+            EDIT_STATION_URL_ERROR: 'EDIT_STATION_URL_ERROR',
             }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -151,6 +155,8 @@ class Window_Stack_Constants(object):
             THEME_HELP_MODE,
             SEARCH_HELP_MODE,
             LINE_EDITOR_HELP,
+            EDIT_STATION_NAME_ERROR,
+            EDIT_STATION_URL_ERROR,
             )
 
     def __init__(self):

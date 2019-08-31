@@ -188,6 +188,8 @@ class PyRadio(object):
                 self.ws.ADD_STATION_MODE: self._show_station_editor,
                 self.ws.EDIT_STATION_MODE: self._show_station_editor,
                 self.ws.LINE_EDITOR_HELP: self._show_line_editor_help,
+                self.ws.EDIT_STATION_NAME_ERROR: self._print_editor_name_error,
+                self.ws.EDIT_STATION_URL_ERROR: self._print_editor_url_error,
                 }
 
         """ list of help functions """
@@ -1479,6 +1481,28 @@ you have to manually address the issue.
                 prompt = ' Press any key ',
                 is_message=True)
 
+    def _print_editor_name_error(self):
+        txt = '''Station Name is empty!
+
+            Please provide a Station Name.
+            '''
+        self._show_help(txt,
+                mode_to_set = self.ws.EDIT_STATION_NAME_ERROR,
+                caption = ' Error ',
+                prompt = ' Press any key ',
+                is_message=True)
+
+    def _print_editor_url_error(self):
+        txt = '''Station URL is invalid!
+
+            Please provide a valid Station URL.
+            '''
+        self._show_help(txt,
+                mode_to_set = self.ws.EDIT_STATION_URL_ERROR,
+                caption = ' Error ',
+                prompt = ' Press any key ',
+                is_message=True)
+
     def _print_ask_to_create_theme(self):
         txt ='''You have requested to edit a |read-only| theme,
             which is not possible. Do you want to create a
@@ -2002,7 +2026,8 @@ you have to manually address the issue.
                     self.refreshBody()
                 return
 
-        elif char in (ord('t'), ):
+        elif char in (ord('t'), ) and \
+                self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE, self.ws.ADD_STATION_MODE):
             # only open it on main modes
             if self.ws.window_mode != self.ws.THEME_MODE and  \
                     self.ws.operation_mode <= self.ws.SEARCH_PLAYLIST_MODE and \
@@ -2198,7 +2223,11 @@ you have to manually address the issue.
                 self.volume_functions[chr(char)]()
                 return
             ret = self._station_editor.keypress(char)
-            if ret == -1:
+            if ret == -3:
+                self._print_editor_url_error()
+            elif ret == -2:
+                self._print_editor_name_error()
+            elif ret == -1:
                 # Cancel
                 self.ws.close_window()
                 self._station_editor = None
@@ -2674,11 +2703,11 @@ you have to manually address the issue.
                     self.helpWin = None
                     if self.ws.operation_mode == self.ws.MAIN_HELP_MODE:
                         self.ws.close_window()
-                        self.refreshBody()
+                        #self.refreshBody()
                         self._show_main_help_page_2()
                     else:
                         self.ws.close_window()
-                        self.refreshBody()
+                        #self.refreshBody()
                         self._show_main_help()
                     return
             if logger.isEnabledFor(logging.DEBUG):
@@ -2824,6 +2853,7 @@ you have to manually address the issue.
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
+                logger.error('DE here')
                 if char in ( ord('a'), ord('A') ):
                     self._station_editor = PyRadioEditor(self.stations, self.selection, self.bodyWin)
                     if char == ord('A'):

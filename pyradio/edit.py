@@ -4,6 +4,11 @@ import curses.ascii
 from time import sleep
 import logging
 from sys import version_info
+try:
+    # python 3
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 from .simple_curses_widgets import SimpleCursesLineEdit
 from .log import Log
 
@@ -403,12 +408,33 @@ class PyRadioEditor(object):
             self._line_editor[1].focused = True
 
     def _return_station(self):
-        if self._encoding == 'utf-8':
-            self._encoding = ''
-        self.new_station = [ self._line_editor[0].string, self._line_editor[1].string, self._encoding ]
+        ret = self._validate()
+        if ret == 1:
+            if self._encoding == 'utf-8':
+                self._encoding = ''
+            self.new_station = [ self._line_editor[0].string.strip(), self._line_editor[1].string.strip(), self._encoding ]
+        return ret
+
+    def _validate(self):
+        if not self._line_editor[0].string.strip():
+            return -2
+        url = urlparse(self._line_editor[1].string.strip())
+        if not (url.scheme and url.netloc):
+            return -3
+        if url.scheme not in ('http', 'https'):
+            return -3
+        if url.netloc != 'localhost':
+            dot = url.netloc.find('.')
+            if dot == -1:
+                return -3
+            elif dot > len(url.netloc) - 3:
+                return -3
+        return 1
 
     def keypress(self, char):
         """ Returns:
+                -3: url is invalid
+                -2: Station name is empty
                 -1: Cancel (new_station = None)
                  0: go on
                  1: Ok     (new_station holds data)
@@ -438,8 +464,7 @@ class PyRadioEditor(object):
                     return 3
                 elif self._focus == 3:
                     # ok
-                    self._return_station()
-                    ret = 1
+                    return self._return_station()
                 elif self._focus == 4:
                     # cancel
                     self.new_station = None
@@ -448,8 +473,7 @@ class PyRadioEditor(object):
                 self.new_station = None
                 ret = -1
             elif char == ord('s') and self._focus > 1:
-                self._return_station
-                ret = -1
+                return self._return_station()
             elif char == ord('q') and self._focus > 1:
                 self.new_station = None
                 ret = -1
