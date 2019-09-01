@@ -96,31 +96,35 @@ optional arguments:
 <li><strong>-t</strong> - parameter <strong>theme</strong> (default value: <strong>dark</strong>)</li>
 </ul>
 <h2 id="controls">Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<pre>                  Main window                               Playlists window                   Themes window
-------------------------------------------------------------------------------------------------------------------------------
+<pre>                  Main window                                      Playlists window                   Themes window
+-------------------------------------------------------------------------------------------------------------------------------------
 Up/Down/j/k/
-PgUp/PgDown       Change station selection                  Change station playlist            Change station theme
-g                 Jump to first station                     Jump to first playlist             Jump to first theme
-&lt;n&gt;G              Jump to n-th / last station               Jump to n-th / last playlist       Jump to n-th / last theme
-M                 Jump to the middle of the playlist        Jump to the middle of the list     -
-P                 Jump to playing station                   Jump to playing playlist           -
-Enter/Right/l     Play selected station                     Open selected playlist             Apply selected theme
-r                 Select and play a random station          Re-read playlists from disk        -
-Space/Left/h      Stop/start playing selected station       -                                  -
-Space             -                                         -                                  Apply theme and make it default
--/+ or ,/.        Change volume                             [Valid]                            [Valid]
-m                 Mute / unmute player                      [Valid]                            [Valid]
-v                 Save volume (not applicable for vlc)      [Valid]                            [Valid]
-o s R             Open / Save / Reload playlist             -                                  -
-E                 Change station&#39;s encoding
-DEL,x             Delete selected station                   -                                  -
-t T               Load theme / Toggle transparency          [Valid]                            [Valid]
-c                 Open Configuration window.                -                                  -
-/ n N             Search, go to next / previous result      [Valid]                            [Valid]
-?                 Show keys help                            [Valid]                            [Valid]
-#                 Redraw window                             [Valid]                            [Valid]
-Esc/q             Quit                                      -                                  -
-Esc/q/Left/h      -                                         Cancel / close window              Cancel / close window</pre>
+PgUp/PgDown       Change station selection                         Change station playlist            Change station theme
+g                 Jump to first station                            Jump to first playlist             Jump to first theme
+&lt;n&gt;G              Jump to n-th / last station                      Jump to n-th / last playlist       Jump to n-th / last theme
+H M L             Jump to the top / middle bottom of the list      [Valid]                            -
+P                 Jump to playing station                          Jump to playing playlist           -
+Enter/Right/l     Play selected station                            Open selected playlist             Apply selected theme
+r                 Select and play a random station                 Re-read playlists from disk        -
+Space/Left/h      Stop/start playing selected station              -                                  -
+Space             -                                                -                                  Apply theme and make it default
+-/+ or ,/.        Change volume                                    [Valid]                            [Valid]
+m                 Mute / unmute player                             [Valid]                            [Valid]
+v                 Save volume (not applicable for vlc)             [Valid]                            [Valid]
+o s R             Open / Save / Reload playlist                    -                                  -
+a A               Add / append a new station                       -                                  -
+e                 Edit current station                             -                                  -
+E                 Change station&#39;s encoding                        -                                  -
+DEL,x             Delete selected station                          -                                  -
+t T               Load theme / Toggle transparency                 [Valid]                            [Valid]
+c                 Open Configuration window.                       -                                  -
+/ n N             Search, go to next / previous result             [Valid]                            [Valid]
+J                 Create a jump tag
+&lt;n&gt;^U &lt;n&gt;^D       Move station up / down.                          -                                  -
+?                 Show keys help                                   [Valid]                            [Valid]
+#                 Redraw window                                    [Valid]                            [Valid]
+Esc/q             Quit                                             -                                  -
+Esc/q/Left/h      -                                                Cancel / close window              Cancel / close window</pre>
 <p>The same logic applies to all <strong>PyRadio</strong> windows.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All windows - except the <em>Search window</em> - support changing the volume and muting / unmuting the player (provided that <strong>PyRadio</strong> is actually connected to a station).</p>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
@@ -163,9 +167,10 @@ $ pyradio -s 5</pre>
 <h3 id="managing-playlists-within-pyradio">Managing playlists (within PyRadio)</h3>
 <p>Once <strong>PyRadio</strong> has been loaded, one can perform a series of actions on the current playlist and set of playlists saved in its configuration directory.</p>
 <p>Currently, the following actions are available:</p>
-<p>One thing you may want to do is remove a station from a playlist, e.g. when found that it not longer works. You can do that by pressing “<strong><em>DEL</em></strong>” or “<strong><em>x</em></strong>”.</p>
-<p>Pressing “<strong><em>e</em></strong>” will enable you to change the encoding of the selected station. If the station is currently playing, playback will be restarted so that the encoding’s change takes effect (hopefully correctly displaying the station/song title).</p>
+<p>Pressing “<strong>a</strong>” or “<strong>A</strong>” will enable you to add a new station (either below the currently selected station or at the end of the list), while “<strong>e</strong>” will edit the currently selected station. All of these actions will open the “<em>Station Editor</em>”.</p>
+<p>If you just want to change the encoding of the selected station, just press “<strong><em>E</em></strong>”. If the station is currently playing, playback will be restarted so that the encoding’s change takes effect (hopefully correctly displaying the station/song title).</p>
 <p>Then, when this is done, you can either save the modified playlist, by pressing “<strong><em>s</em></strong>”, or reload the playlist from disk, by pressing “<strong><em>R</em></strong>”. A modified playlist will automatically be saved when <strong>PyRadio</strong> exits (or Ctrl-C is pressed).</p>
+<p>One thing you may also want to do is remove a station from a playlist, e.g. when found that it not longer works. You can do that by pressing “<strong><em>DEL</em></strong>” or “<strong><em>x</em></strong>”.</p>
 <p>Finally, opening another playlist is also possible. Just press “<strong><em>o</em></strong>” and you will be presented with a list of saved playlists to choose from. These playlists must be saved beforehand in <strong>PyRadio</strong>’s configuration directory.</p>
 <p>While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in <strong>PyRadio</strong>’s configuration file for future reference.</p>
 <h3 id="managing-foreign-playlists">Managing “foreign” playlists</h3>
@@ -290,7 +295,7 @@ Processing dependencies for pyradio==0.7.8
 Finished processing dependencies for pyradio==0.7.8</pre>
 <p>From this we get that the installation directory is <strong>/usr/lib/python3.7/site-packages</strong>. This may be different though, depending on the distribution and python version used.</p>
 <p>Let’s see what <strong>PyRadio</strong> files exist there:</p>
-<pre>$ ls -d /usr/lib/python3.7/site-packages
+<pre>$ ls -d /usr/lib/python3.7/site-packages/pyradio*
 
 /usr/lib/python3.7/site-packages/pyradio-0.7.6.2-py3.7.egg
 /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg

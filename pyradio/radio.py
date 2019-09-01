@@ -1522,7 +1522,7 @@ you have to manually address the issue.
                 '''
         else:
             txt = '''
-                ___Errorenous Station Data provided!___
+                ___Incomplete Station Data provided!___
 
                 ___Station URL is empty!___
                 ___Please provide a valid Station URL.___
@@ -2074,7 +2074,9 @@ you have to manually address the issue.
                 return
 
         elif char in (ord('t'), ) and \
-                self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE, self.ws.ADD_STATION_MODE):
+                self.ws.operation_mode not in \
+                (self.ws.EDIT_STATION_MODE, self.ws.ADD_STATION_MODE) and \
+                self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS:
             # only open it on main modes
             if self.ws.window_mode != self.ws.THEME_MODE and  \
                     self.ws.operation_mode <= self.ws.SEARCH_PLAYLIST_MODE and \

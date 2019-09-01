@@ -464,7 +464,8 @@ class PyRadioEditor(object):
                     return 3
                 elif self._focus == 3:
                     # ok
-                    return self._return_station()
+                    ret = self._return_station()
+                    self.focus = abs(ret + 2)
                 elif self._focus == 4:
                     # cancel
                     self.new_station = None
@@ -473,7 +474,8 @@ class PyRadioEditor(object):
                 self.new_station = None
                 ret = -1
             elif char == ord('s') and self._focus > 1:
-                return self._return_station()
+                ret = self._return_station()
+                self.focus = abs(ret + 2)
             elif char == ord('q') and self._focus > 1:
                 self.new_station = None
                 ret = -1

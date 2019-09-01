@@ -1,4 +1,6 @@
-2019-08-30 s-n-g
+2019-00-01 s-n-g
+    * Adding station editor ("a" and "A" to add a station, "e" to edit)
+    * Main help window separated to two pages (navigation with "n" / "p")
     * Changing "e" to "E" to change a station's encoding
     * Changing "p" to "P" to jump to playing station / loaded playlist
     * Changing volume, saving volume and muting is now available on most
