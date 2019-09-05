@@ -2051,8 +2051,9 @@ you have to manually address the issue.
                     (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
                 self.jumpnr = ''
                 self._random_requested = False
-                self.selection = self.startPos
-                self.refreshBody()
+                if self.number_of_items > 0:
+                    self.selection = self.startPos
+                    self.refreshBody()
                 return
 
         elif char == ord('M'):
@@ -2060,8 +2061,12 @@ you have to manually address the issue.
                     (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
                 self.jumpnr = ''
                 self._random_requested = False
-                self.selection = self.startPos + int((self.bodyMaxY - 3) / 2)
-                self.refreshBody()
+                if self.number_of_items > 0:
+                    if self.number_of_items < self.bodyMaxY - 2:
+                        self.selection = int(self.number_of_items / 2)
+                    else:
+                        self.selection = self.startPos + int((self.bodyMaxY - 3) / 2)
+                    self.refreshBody()
                 return
 
         elif char == ord('L'):
@@ -2069,8 +2074,12 @@ you have to manually address the issue.
                     (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
                 self.jumpnr = ''
                 self._random_requested = False
-                self.selection = self.startPos + self.bodyMaxY - 3
-                self.refreshBody()
+                if self.number_of_items > 0:
+                    if self.number_of_items < self.bodyMaxY - 2:
+                        self.setStation(-1)
+                    else:
+                        self.selection = self.startPos + self.bodyMaxY - 3
+                    self.refreshBody()
                 return
 
         elif char in (ord('t'), ) and \

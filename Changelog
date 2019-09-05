@@ -3,6 +3,8 @@
     * Main help window separated to two pages (navigation with "n" / "p")
     * Changing "e" to "E" to change a station's encoding
     * Changing "p" to "P" to jump to playing station / loaded playlist
+    * Adding H, L to jump to top / bottom of screen
+    * Canging M to jump to middle of screen
     * Changing volume, saving volume and muting is now available on most
       windows (pop up and questions)
     * Manipulating volume (keys m,v) on a help window, will close it

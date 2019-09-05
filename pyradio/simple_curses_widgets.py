@@ -26,8 +26,10 @@ class SimpleCursesLineEdit(object):
     """ Default value for string length """
     _max_chars_to_display = 0
 
+    """ Cursor position within _max_chars_to_display """
     _curs_pos = 0
-    #_max_width = 0
+    """ First char of sting to display """
+    _first = 0
 
     """ init values """
     y = x = 0
@@ -195,14 +197,19 @@ class SimpleCursesLineEdit(object):
             else:
                 self._disp_caption = ''
         width = len(self._disp_caption) + self._max_chars_to_display + 4
+        logger.error('DE 0 width = {0}, max_chars_to_display = {1}'.format(width, self._max_chars_to_display))
         self._max_chars_to_display = self.width - len(self._disp_caption) - 4
+        logger.error('DE 1 width = {0}, max_chars_to_display = {1}'.format(width, self._max_chars_to_display))
         if self._boxed:
             self._height = 3
         else:
             self._height = 1
-            self._max_chars_to_display -= 2
+            self._max_chars_to_display += 2
+            if not self.bracket:
+                self._max_chars_to_display += 1
         if self.log is not None:
             self.log('string_len = {}'.format(self._max_chars_to_display))
+        logger.error('DE 2 width = {0}, max_chars_to_display = {1}'.format(width, self._max_chars_to_display))
         return
 
     def _prepare_to_show(self):
@@ -252,13 +259,14 @@ class SimpleCursesLineEdit(object):
                 self._curs_pos = 0
         else:
             if self._string:
-                self._edit_win.addstr(0, 0, self._string, active_edit_color)
+                self._edit_win.addstr(0, 0, self._string[self._first:self._first+self._max_chars_to_display], active_edit_color)
             else:
                 self._curs_pos = 0
         if self.log is not None:
             self.log(' - curs_pos = {}\n'.format(self._curs_pos))
         if self.focused:
             self._edit_win.chgat(0, self._curs_pos, 1, self.cursor_color)
+        logger.error('DE string length = {}'.format(len(self.string)))
 
         self._edit_win.refresh()
 
@@ -404,9 +412,13 @@ class SimpleCursesLineEdit(object):
         elif char in (curses.KEY_HOME, curses.ascii.SOH):
             """ KEY_HOME, ^A """
             self._curs_pos = 0
+            self._first = 0
         elif char in (curses.KEY_END, curses.ascii.ENQ):
             """ KEY_END, ^E """
             self._curs_pos = len(self._string)
+            self._first = len(self.string) - self._max_chars_to_display
+            if self._first < 0:
+                self._first = 0
         elif char in (curses.ascii.ETB, ):
             """ ^W, clear to start of line """
             self.string = self._string[self._curs_pos:]
@@ -490,6 +502,8 @@ class SimpleCursesLineEdit(object):
                 self.log('====================\n')
             #if len(self._string) + 1 == self._max_width:
             if len(self._string) == self._max_chars_to_display:
+                logger.error('DE max width reached {0} - {1}'.format(len(self._string), self._max_chars_to_display))
+                #self._first += 1
                 return 1
             if version_info < (3, 0):
                 if 32 <= char < 127:

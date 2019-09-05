@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH PYRADIO 1 "July 2019"
+.TH PYRADIO 1 "September 2019"
 
 .SH NAME
 .PP
@@ -68,6 +68,16 @@ Play selected station
 Select and play a random station
 .IP \fBSpace\fR/\fBLeft\fR/\fBh
 Stop/start playing selected station
+.IP \fBP\fR
+Jump to playing station
+.IP \fBH\ M\ L
+Jump to top / middle / bottom of screen
+.IP \fBg
+Jump to the start of the playlist
+.IP \fI<n>\fBG
+Jump to the end of the playlist
+.br
+If \fI<n>\fR (line number) was entered, jump to it
 .IP \fB-\fR/\fB+\fR\ or\ \fB,\fR/\fB.
 Change volume
 .IP \fBm
@@ -76,8 +86,26 @@ Mute
 Save volume (\fIMPV\fR and \fIMPlayer\fR only)
 .IP \fBo\ s\ R
 \fBO\fIpen\fR / \fBS\fIave\fR / \fBR\fIeload\fR playlist
+.IP \fBa\ A\fR
+Add / append a new station
+.IP \fBe\fR
+Edit current station
+.IP \fBE\fR
+Change current station's encoding
 .IP \fBDEL\fR,\fBx
 Delete selected station
+.IP \fBJ
+Create a \fIJump tag
+.IP \fI<n>\fB^U\fR,\fI<n>\fB^D
+Move current station up / down
+.br
+If \fI<n>\fR (line number) was entered, or a \fIJump tag\fR has been defined, move the station there
+.IP \fBt
+Open the \fITheme Selection\fR window
+.IP \fBT
+Toggle background transparency
+.IP \fBc
+Open the \fIConfiguration window
 .IP \fB?
 Show keys help
 .IP \fBEsc\fR/\fBq
@@ -178,11 +206,13 @@ Once \fBpyradio\fR has been loaded, one can perform a series of actions on the c
 
 Currently, the following actions are available:
 
-One thing you may want to do is remove a station from a playlist, e.g. when found that it not longer works. You can do that by pressing "\fIDEL\fR" or "\fIx\fR".
+Pressing "\fIa\fR" or "\fIA\fR" will enable you to add a new station (either below the currently selected station or at the end of the list), while "\fIe\fR" will edit the currently selected station. All of these actions will open the "\fIStation Editor\fR".
 
-Pressing "\fIe\fR" will enable you to change the encoding of the selected station. If the station is currently playing, playback will be restarted so that the encoding's change takes effect (hopefully correctly displaying the station/song title).
+If you just want to change the encoding of the selected station, just press "\fIE\fR". If the station is currently playing, playback will be restarted so that the encoding's change takes effect (hopefully correctly displaying the station/song title).
 
 Then, when this is done, you can either save the modified playlist, by pressing "\fIs\fR", or reload the playlist from disk, by pressing "\fIR\fR". A modified playlist will \fIautomatically\fR be saved when \fBpyradio\fR exits (or Ctrl-C is pressed).
+
+One thing you may also want to do is remove a station from a playlist, e.g. when found that it not longer works. You can do that by pressing "\fIDEL\fR" or "\fIx\fR".
 
 Finally, opening another playlist is also possible. Just press "\fIo\fR" and you will be presented with a list of saved playists to choose from. These playlists must be saved beforehand in \fBpyradio\fR's configuration directory.
 
@@ -403,7 +433,7 @@ When the \fITheme selection window\fR is visible, a "\fI[T]\fR" string displayed
 
 \fBpyradio\fR uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.
 
-Subsequent instances will be "\fIlocked\fR. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will \fBnot\fR be recorded in the configuration file.  
+Subsequent instances will be "\fIlocked\fR. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will \fBnot\fR be recorded in the configuration file.
 
 \fBSeeeion unlocking\fR
 
@@ -436,7 +466,7 @@ Let's see what \fBpyradio\fR files exist there:
 
 .HP
 
-\fI$ \fBls -d /usr/lib/python3.7/site-packages
+\fI$ \fBls -d /usr/lib/python3.7/site-packages/pyradio*
 
 \fI/usr/lib/python3.7/site-packages/pyradio-\fB0.7.6.2\fI-py3.7.egg
 .br
