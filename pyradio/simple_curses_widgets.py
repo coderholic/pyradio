@@ -62,7 +62,7 @@ class SimpleCursesLineEdit(object):
     _auto_width = 1
 
     """ string to redisplay after exiting help """
-    restore_data = []
+    _restore_data = []
 
     log = None
     _log_file = ''
@@ -233,11 +233,6 @@ class SimpleCursesLineEdit(object):
                 self._edit_win = curses.newwin(1, maxX - len(self._disp_caption), self.y, self.x + len(self._disp_caption))
 
         maxY, maxX = self._edit_win.getmaxyx()
-        #self._caption_win.bkgd('*', curses.A_REVERSE)
-        #if self._boxed:
-        #    self._max_width = maxX - 1
-        #else:
-        #    self._max_width = maxX
 
     def refreshEditWindow(self, opening=False):
         if self._focused:
@@ -248,13 +243,13 @@ class SimpleCursesLineEdit(object):
             else:
                 active_edit_color = self.caption_color
         self._edit_win.erase()
-        #self._edit_win.bkgd('-', self.edit_color)
         if opening:
-            if self.restore_data:
-                self._string = self.restore_data[0]
-                self._curs_pos = self.restore_data[1]
-                self._edit_win.addstr(0, 0, self._string, active_edit_color)
-                self.restore_data = []
+            if self._restore_data:
+                self._string = self._restore_data[0]
+                self._curs_pos = self._restore_data[1]
+                self._first = self._restore_data[2]
+                self._edit_win.addstr(0, 0, self._string[self._first:self._first+self._max_chars_to_display], active_edit_color)
+                self._restore_data = []
             else:
                 self._curs_pos = 0
         else:
@@ -266,6 +261,7 @@ class SimpleCursesLineEdit(object):
             self.log(' - curs_pos = {}\n'.format(self._curs_pos))
         if self.focused:
             self._edit_win.chgat(0, self._curs_pos, 1, self.cursor_color)
+            logger.error('curs = {}'.format(self._curs_pos))
         logger.error('DE string length = {}'.format(len(self.string)))
 
         self._edit_win.refresh()
@@ -307,6 +303,26 @@ class SimpleCursesLineEdit(object):
         self._caption_win.refresh()
         self.refreshEditWindow(opening)
 
+    def _delete_char(self):
+            if self._first + self._curs_pos < len(self._string):
+                self._string = self._string[:self._first + self._curs_pos] + self._string[self._first + self._curs_pos+1:]
+                if self._first + self._max_chars_to_display > len(self.string):
+                    if self._first > 0:
+                        self._first -= 1
+
+    def _backspace_char(self):
+        if self._first + self._curs_pos > 0:
+            self._string = self._string[:self._first + self._curs_pos-1] + self._string[self._first + self._curs_pos:]
+            if len(self.string) < self._max_chars_to_display:
+                self._first = 0
+                if self._curs_pos > 0:
+                    self._curs_pos -= 1
+            elif self._first + self._max_chars_to_display >= len(self.string):
+                self._first -= 1
+            else:
+                if self._curs_pos > 0:
+                    self._curs_pos -= 1
+
     def keypress(self, win, char):
         """
          returns:
@@ -331,7 +347,7 @@ class SimpleCursesLineEdit(object):
         if platform.startswith('win'):
             if char == 420:
                 """ A-D, clear to end of line """
-                self.string = self._string[:self._curs_pos]
+                self.string = self._string[:self._first + self._curs_pos]
                 self.refreshEditWindow()
                 return 1
             elif char == 422:
@@ -357,6 +373,7 @@ class SimpleCursesLineEdit(object):
 
         if char in (ord('?'), ):
             # display help
+            self._restore_data = [ self.string, self._curs_pos, self._first ]
             return 2
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             """ ENTER """
@@ -380,61 +397,119 @@ class SimpleCursesLineEdit(object):
                     self.log('   *** char = {}\n'.format(char))
                 if char in (ord('d'), ):
                     """ A-D, clear to end of line """
-                    self.string = self._string[:self._curs_pos]
+                    if self.string:
+                        self.string = self._string[:self._first + self._curs_pos]
                 elif char in (ord('f'), ):
                     """ A-F, move to next word """
                     pos = len(self._string)
-                    for n in range(self._curs_pos + 1, len(self._string)):
+                    for n in range(self._first + self._curs_pos + 1, len(self._string)):
                         if self._string[n] in word_delim:
                             pos = n
                             break
-                    self._curs_pos = pos
+                    if pos == len(self._string):
+                        # word delimiter not found
+                        self._curs_pos = pos - self._first
+                        self._first = len(self.string) - self._max_chars_to_display
+                        if self._first < 0:
+                            self._first = 0
+                    else:
+                        # word delimiter found
+                        if len(self.string) < self._max_chars_to_display or \
+                                pos < self._first + self._max_chars_to_display:
+                            # pos is on screen
+                            self._curs_pos = pos - self._first + 1
+                        else:
+                            # pos is not on screen
+                            logger.error('DE 1 pos = {0}, len = {1}, max = {2}'.format(pos, len(self.string), self._max_chars_to_display))
+                            self._first = pos
+                            self._curs_pos = 1
+                            pos = 0
+                            while len(self.string) - (self._first + pos + 1) < self._max_chars_to_display:
+                                pos -= 1
+                            self._first = self._first + pos + 1
+                            self._curs_pos = self._curs_pos + abs(pos) - 1
+                            logger.error('DE 2 pos = {0}, len = {1}, max = {2}'.format(pos, len(self.string), self._max_chars_to_display))
+
                 elif char in (ord('b'), ):
                     """ A-B, move to previous word """
                     pos = 0
-                    for n in range(self._curs_pos - 1, 0, -1):
+                    for n in range(self._first + self._curs_pos - 1, 0, -1):
                         if self._string[n] in word_delim:
                             pos = n
                             break
-                    self._curs_pos = pos
+                    if pos == 0:
+                        self._curs_pos = pos
+                        self._first = 0
+                    else:
+                        pass
                 else:
                     return 1
         elif char in (curses.KEY_RIGHT, ):
             """ KEY_RIGHT """
-            self._curs_pos += 1
-            if len(self._string) < self._curs_pos:
-                self._curs_pos = len(self._string)
+            if self.string:
+                logger.error('DE max = {0}, curs = {1}, first = {2}'.format(self._max_chars_to_display, self._curs_pos, self._first))
+                if len(self.string) < self._max_chars_to_display:
+                    self._curs_pos += 1
+                    logger.error('DE 1 curs increased = {}'.format(self._curs_pos))
+                    if self._curs_pos > len(self.string):
+                            self._curs_pos = len(self.string)
+                    else:
+                        if len(self._string) < self._first + self._curs_pos:
+                            self._curs_pos = len(self._string) - self._max_chars_to_display
+                            logger.error('DE 2 curs modified = {}'.format(self._curs_pos))
+                else:
+                    if self._curs_pos == self._max_chars_to_display:
+                        if len(self._string) > self._first + self._curs_pos:
+                            self._first += 1
+                            logger.error('DE 3 first increased = {}'.format(self._first))
+                    else:
+                        self._curs_pos += 1
+                        logger.error('DE 4 curs increased = {}'.format(self._curs_pos))
         elif char in (curses.KEY_LEFT, ):
             """ KEY_LEFT """
-            self._curs_pos -= 1
-            if self._curs_pos < 0:
-                self._curs_pos = 0
+            if self.string:
+                if len(self.string) < self._max_chars_to_display:
+                    self._curs_pos -= 1
+                    if self._curs_pos < 0:
+                        self._curs_pos = 0
+                else:
+                    if self._curs_pos == 0:
+                        self._first -= 1
+                        if self._first < 0:
+                            self._first = 0
+                    else:
+                        self._curs_pos -= 1
         elif char in (curses.KEY_HOME, curses.ascii.SOH):
             """ KEY_HOME, ^A """
             self._curs_pos = 0
             self._first = 0
         elif char in (curses.KEY_END, curses.ascii.ENQ):
             """ KEY_END, ^E """
-            self._curs_pos = len(self._string)
-            self._first = len(self.string) - self._max_chars_to_display
-            if self._first < 0:
-                self._first = 0
+            if self.string:
+                self._curs_pos = len(self._string)
+                if self._curs_pos > self._max_chars_to_display:
+                    self._curs_pos = self._max_chars_to_display
+                self._first = len(self.string) - self._max_chars_to_display
+                if self._first < 0:
+                    self._first = 0
         elif char in (curses.ascii.ETB, ):
             """ ^W, clear to start of line """
-            self.string = self._string[self._curs_pos:]
-            self._curs_pos = 0
+            if self.string:
+                self.string = self._string[self._first + self._curs_pos:]
+                self._curs_pos = 0
+                self._first = 0
         elif char in (curses.ascii.NAK, ):
             """ ^U, clear line """
             self.string = ''
+            self._curs_pos = self._first = 0
         elif char in (curses.KEY_DC, curses.ascii.EOT):
             """ DEL key, ^D """
-            if self._curs_pos < len(self._string):
-                self._string = self._string[:self._curs_pos] + self._string[self._curs_pos+1:]
+            if self.string:
+                self._delete_char()
         elif char in (curses.KEY_BACKSPACE, curses.ascii.BS,127):
             """ KEY_BACKSPACE """
-            if self._curs_pos > 0:
-                self._string = self._string[:self._curs_pos-1] + self._string[self._curs_pos:]
-                self._curs_pos -= 1
+            if self.string:
+                self._backspace_char()
         elif char in (curses.KEY_UP, curses.ascii.DLE):
             """ KEY_UP, ^N """
             if self._key_up_function_handler is not None:
@@ -494,7 +569,8 @@ class SimpleCursesLineEdit(object):
                     curses.ungetch(char)
         elif char in (curses.ascii.VT, ):
             """ Ctrl-K - delete to end of line """
-            self._string = self._string[:self._curs_pos]
+            if self.string:
+                self._string = self._string[:self._first + self._curs_pos]
         elif 0<= char <=31:
             pass
         else:
@@ -504,24 +580,26 @@ class SimpleCursesLineEdit(object):
             if len(self._string) == self._max_chars_to_display:
                 logger.error('DE max width reached {0} - {1}'.format(len(self._string), self._max_chars_to_display))
                 #self._first += 1
-                return 1
+                # return 1
             if version_info < (3, 0):
                 if 32 <= char < 127:
                     # accept only ascii characters
-                    if len(self._string) == self._curs_pos:
+                    if len(self._string) == self._first + self._curs_pos:
                         self._string += chr(char)
                     else:
-                        self._string = self._string[:self._curs_pos] + chr(char) + self._string[self._curs_pos:]
-                    self._curs_pos += 1
+                        self._string = self._string[:self._first + self._curs_pos] + chr(char) + self._string[self._first + self._curs_pos:]
             else:
                 if platform.startswith('win'):
                     char = chr(char)
                 else:
                     char = self._get_char(win, char)
-                if len(self._string) == self._curs_pos:
+                if len(self._string) == self._first + self._curs_pos:
                     self._string += char
                 else:
-                    self._string = self._string[:self._curs_pos] + char + self._string[self._curs_pos:]
+                    self._string = self._string[:self._first + self._curs_pos] + char + self._string[self._first + self._curs_pos:]
+            if self._curs_pos == self._max_chars_to_display:
+                self._first += 1
+            else:
                 self._curs_pos += 1
 
         self.refreshEditWindow()
@@ -563,6 +641,7 @@ class SimpleCursesLineEdit(object):
         else:
             buf = bytearray(bytes)
             out = self._decode_string(buf)
+            logger.error('de out = "{0}", len = {1}'.format(out, len(out)))
             #out = buf.decode('utf-8')
         return out
 

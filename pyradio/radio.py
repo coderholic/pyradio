@@ -1155,7 +1155,6 @@ class PyRadio(object):
             self._show_help(txt, mode_to_set=self.ws.THEME_HELP_MODE, caption=' Themes Help ')
 
     def _show_search_help(self):
-        self.search.restore_data = [ self.search.string, self.search._curs_pos ]
         if platform.lower().startswith('darwin'):
             txt = """Left| / |Right        |Move to next / previous character.
             HOME|,|^A| / |END|,|^E    |Move to start / end of line.
@@ -1186,7 +1185,6 @@ class PyRadio(object):
         self._show_help(txt, mode_to_set=self.ws.SEARCH_HELP_MODE, caption=' Search Help ')
 
     def _show_line_editor_help(self):
-        #self.search.restore_data = [ self.search.string, self.search._curs_pos ]
         if platform.lower().startswith('darwin'):
             txt = """Left| / |Right        |Move to next / previous character.
             HOME|,|^A| / |END|,|^E    |Move to start / end of line.
@@ -2083,24 +2081,21 @@ you have to manually address the issue.
                 return
 
         elif char in (ord('t'), ) and \
-                self.ws.operation_mode not in \
-                (self.ws.EDIT_STATION_MODE, self.ws.ADD_STATION_MODE) and \
-                self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS:
-            # only open it on main modes
-            if self.ws.window_mode != self.ws.THEME_MODE and  \
-                    self.ws.operation_mode <= self.ws.SEARCH_PLAYLIST_MODE and \
-                    not self.is_search_mode(self.ws.operation_mode):
-                self.jumpnr = ''
-                self._random_requested = False
-                self._config_win = None
-                self.theme_forced_selection = None
-                if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                    self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self.stations]
-                #self.ws.previous_operation_mode = self.ws.operation_mode
-                #self.ws.operation_mode = self.ws.window_mode = self.ws.THEME_MODE
-                self.ws.operation_mode = self.ws.THEME_MODE
-                self._show_theme_selector()
-                return
+                self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE,
+                    self.ws.ADD_STATION_MODE, self.ws.THEME_MODE) and \
+                self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
+                not self.is_search_mode(self.ws.operation_mode):
+            self.jumpnr = ''
+            self._random_requested = False
+            self._config_win = None
+            self.theme_forced_selection = None
+            if self.ws.operation_mode == self.ws.NORMAL_MODE:
+                self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self.stations]
+            #self.ws.previous_operation_mode = self.ws.operation_mode
+            #self.ws.operation_mode = self.ws.window_mode = self.ws.THEME_MODE
+            self.ws.operation_mode = self.ws.THEME_MODE
+            self._show_theme_selector()
+            return
 
         elif char == ord('P') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
