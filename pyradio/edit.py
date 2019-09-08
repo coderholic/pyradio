@@ -251,7 +251,6 @@ class PyRadioEditor(object):
 
         self._show_title()
 
-        logger.error('DE maxY = {}'.format(self.maxY))
         if self.maxY < 22 or self.maxX < 72:
             txt = ' Window too small to display content '
             error_win = curses.newwin(3, len(txt) + 2, int(self.maxY / 2) - 1, int((self.maxX - len(txt)) / 2))
@@ -448,7 +447,11 @@ class PyRadioEditor(object):
                 self.new_station = None
                 ret = -1
         else:
-            if char in ( ord('\t'), 9, curses.KEY_DOWN):
+            if char in (curses.KEY_EXIT, 27, ord('q')) and \
+                    self.focus > 1:
+                self.new_station = None
+                ret = -1
+            elif char in ( ord('\t'), 9, curses.KEY_DOWN):
                 self.focus +=1
             elif char == curses.KEY_UP:
                 self.focus -=1
@@ -470,15 +473,9 @@ class PyRadioEditor(object):
                     # cancel
                     self.new_station = None
                     ret = -1
-            elif char in (curses.KEY_EXIT, 27):
-                self.new_station = None
-                ret = -1
             elif char == ord('s') and self._focus > 1:
                 ret = self._return_station()
                 self.focus = abs(ret + 2)
-            elif char == ord('q') and self._focus > 1:
-                self.new_station = None
-                ret = -1
             elif char == ord('?') and self.focus <= 1:
                 ret = 2
             elif (char in (curses.ascii.DC2, 18) and not self._adding) or \
@@ -490,6 +487,8 @@ class PyRadioEditor(object):
                 else:
                     self._encoding = 'utf-8'
                 self._orig_encoding = self._encoding
+                for i in range(0,2):
+                    self._line_editor[i]._reset_position = True
             elif self._focus <= 1:
                 """
                  Returns:

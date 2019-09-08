@@ -228,6 +228,45 @@ When this happens, \fBpyradio\fR will offer you the choise to copy the playlist 
 
 If a playlist of the same name already exists in the configuration directory, the "\fIforeign\fR" playlist will be time-stamped. For example, if a "\fIforeign\fR" playlist is named "\fIstations.csv\fR", it will be named "\fI2019-01-11_13-35-47_stations.csv\fR" (provided that the action was taked on January 11, 2019 at 13:35:47).
 
+
+.SH SEARCH FUNCTION
+
+On any window presenting a list of items (stations, playlists, themes) a \fBsearch function\fR is available by pressing "\fI/\fR".
+
+The \fISearch Window\fR supports normal and extend editing and in session history.
+
+One can always get help by pressing the "\fI?\fR" key.
+
+After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "\fIn\fR" key and previous occurrence can be obtained using the "\fIN\fR" key.
+
+.IP \fBNote\fR
+\fBPython 2\fR users are confined in typing ASCII characters only.
+
+
+
+
+
+.SH MOVING STATIONS AROUND
+
+Rearranging the order of the stations in the playlist is another feature PyRadio offers.
+
+All you have to do is specify the \fIsource\fR station (the station to be moved) and the position it will be moved to (\fItarget\fR).
+
+There are three way to do that:
+
+.RS 5
+
+.IP 1.
+Press \fICtrl-U\fR or \fICtrl-D\fR to move the current station up or down.
+.IP 2.
+Type a station number and press \fICtrl-U\fR or \fICtrl-D\fR to move the current station there.
+.IP 3.
+Go to the position you want to move a station to, and press "\fIJ\fR". This will tag this position (making it the target of the move). Then go to the station you want to move and press \fICtrl-U\fR or \fICtrl-D\fR to move it there.
+
+
+
+
+
 .SH SPECIFYING STATIONS' ENCODING
 
 Normally, stations provide information about their status (including the title of the song playing, which \fBpyradio\fR displays) in Unicode (\fIutf-8\fR encoded). Therefore, \fBpyradio\fR will use \fIutf-8\fR to decode such data, by default.
@@ -371,19 +410,6 @@ Example:
 volstep=1
 .br
 volume=28
-
-.SH SEARCH FUNCTION
-
-On any window presenting a list of items (stations, playlists, themes) a \fBsearch function\fR is available by pressing "\fI/\fR".
-
-The \fISearch Window\fR supports normal and extend editing and in session history.
-
-One can always get help by pressing the "\fI?\fR" key.
-
-After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "\fIn\fR" key and previous occurrence can be obtained using the "\fIN\fR" key.
-
-.IP \fBNote\fR
-\fBPython 2\fR users are confined in typing ASCII characters only.
 
 .SH PYRADIO THEMES
 .PP

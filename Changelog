@@ -1,14 +1,15 @@
-2019-00-01 s-n-g
+2019-09-08 s-n-g
     * Adding station editor ("a" and "A" to add a station, "e" to edit)
+    * Line editor supports unlimited string length
     * Main help window separated to two pages (navigation with "n" / "p")
     * Changing "e" to "E" to change a station's encoding
     * Changing "p" to "P" to jump to playing station / loaded playlist
     * Adding H, L to jump to top / bottom of screen
-    * Canging M to jump to middle of screen
+    * Changing M to jump to middle of screen
     * Changing volume, saving volume and muting is now available on most
       windows (pop up and questions)
     * Manipulating volume (keys m,v) on a help window, will close it
-      if player not playing.
+      if player not playing
     * Adding ^U, ^D to move station up, down
     * Search string will not be lost after displaying help
     * PyRadio runs on Windows (finally). Added an installation BAT file,

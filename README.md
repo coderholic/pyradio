@@ -12,11 +12,11 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Controls](#controls)
 * [Config file](#config-file)
 * [About Playlist files](#about-playlist-files)
+* [Search function](#search-function)
 * [Moving stations around](#moving-stations-around)
 * [Specifying stations' encoding](#specifying-stations-encoding)
 * [Player detection / selection](#player-detection-selection)
 * [Player default volume level](#player-default-volume-level)
-* [Search function](#search-function)
 * [PyRadio Themes](#pyradio-themes)
 * [Session Locking](#session-locking)
 * [Update notification](#update-notification)
@@ -209,6 +209,19 @@ When this happens, **PyRadio** will offer you the choice to copy the playlist in
 
 If a playlist of the same name already exists in the configuration directory, the "***foreign***" playlist will be time-stamped. For example, if a "***foreign***" playlist is named "*stations.csv*", it will be named "*2019-01-11_13-35-47_stations.csv*" (provided that the action was taken on January 11, 2019 at 13:35:47).
 
+
+## Search function
+
+On any window presenting a list of items (stations, playlists, themes) a **search function** is available by pressing "**/**".
+
+The *Search Window* supports normal and extend editing and in session history.
+
+One can always get help by pressing the "**?**" key.
+
+After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
+
+**Note:** **Python 2** users are confined in typing ASCII characters only.
+
 ## Moving stations around
 
 Rearranging the order of the stations in the playlist is another feature **PyRadio** offers.
@@ -349,18 +362,6 @@ Example:
     volstep=1
     volume=28
 
-## Search function
-
-On any window presenting a list of items (stations, playlists, themes) a **search function** is available by pressing "**/**".
-
-The *Search Window* supports normal and extend editing and in session history.
-
-One can always get help by pressing the "**?**" key.
-
-After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
-
-**Note:** **Python 2** users are confined in typing ASCII characters only.
-
 ## PyRadio Themes
 
 **PyRadio** comes with 6 preconfigured (hard coded) themes:
@@ -402,7 +403,7 @@ When the *Theme selection window* is visible, a "**[T]**" string displayed  at  
 
 **PyRadio** uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.
 
-Subsequent instances will be "*locked*". This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will **not** be recorded in the configuration file.  
+Subsequent instances will be "*locked*". This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will **not** be recorded in the configuration file.
 
 ### Session unlocking
 

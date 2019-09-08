@@ -122,7 +122,7 @@ class PyRadio(object):
 
     """ editor class """
     _station_editor = None
-    
+
     _force_exit = False
 
     _help_metrics = {}
@@ -443,10 +443,6 @@ class PyRadio(object):
 
     def refreshBody(self, start=0):
         self._update_redisplay_list()
-        #if logger.isEnabledFor(logging.ERROR):
-        #    logger.error('DE {}'.format(self.ws._dq))
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('refreshBody: redisplay windows: {}'.format(self._redisplay_list))
         end = len(self._redisplay_list)
         if end == 0: end = 1
         for n in range(start, end):
@@ -2306,6 +2302,7 @@ you have to manually address the issue.
                             self.startPos += 1
 
                 self.ws.close_window()
+                self._station_editor = None
                 self.refreshBody()
             elif ret == 2:
                 # display line editor help
@@ -2906,7 +2903,6 @@ you have to manually address the issue.
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                logger.error('DE here')
                 if char in ( ord('a'), ord('A') ):
                     self._station_editor = PyRadioEditor(self.stations, self.selection, self.bodyWin)
                     if char == ord('A'):
