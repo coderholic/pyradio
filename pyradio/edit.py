@@ -52,8 +52,10 @@ class PyRadioSearch(SimpleCursesLineEdit):
                 except:
                     pass
         if not repaint:
-            self.string = ''
-            self._curs_pos = 0
+            self.string = self._displayed_string = ''
+            self._curs_pos = self._disp_curs_pos = 0
+            self._edit_win.erase()
+            self._edit_win.chgat(0, 0, 1, self.cursor_color)
             if self._has_history:
                 self._input_history.reset_index()
         self._caption_win.refresh()
@@ -62,16 +64,12 @@ class PyRadioSearch(SimpleCursesLineEdit):
     def _get_history_next(self):
         """ callback function for key down """
         if self._has_history:
-            ret = self._input_history.return_history(1)
-            self.string = ret
-            self._curs_pos = len(ret)
+            self.string = self._input_history.return_history(1)
 
     def _get_history_previous(self):
         """ callback function for key up """
         if self._has_history:
-            ret = self._input_history.return_history(-1)
-            self.string = ret
-            self._curs_pos = len(ret)
+            self.string = self._input_history.return_history(-1)
 
     def get_next(self, a_list, start=0, stop=None):
         if self.string:
@@ -378,7 +376,6 @@ class PyRadioEditor(object):
         else:
             self._win.chgat(0, x, 2, curses.color_pair(3))
         self._win.refresh()
-
 
     def _show_buttons(self):
         sid = 3

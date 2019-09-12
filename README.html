@@ -47,6 +47,7 @@
 <li><a href="#cleaning-up">Cleaning up</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
 <li><a href="#reporting-bugs">Reporting bugs</a></li>
+<li><a href="#acknowlegement">Acknowlegement</a></li>
 </ul>
 <h2 id="requirements">Requirements <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
@@ -211,7 +212,7 @@ $ pyradio -s 5</pre>
 <p>Finally, we insert the new station to the playlist:</p>
 <pre>Station1,Station1_URL,
 Station2,Station2_URL,iso-8859-7</pre>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Using the <strong><em>-a</em></strong> command line option will save you all this trouble, as it will automatically take care of creating a valid <strong><em>CSV</em></strong> file. Alternatively, you can change the selected station’s encoding by pressing “<strong><em>e</em></strong>” while in <strong>PyRadio</strong>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Using the <strong><em>-a</em></strong> command line option will save you all this trouble, as it will automatically take care of creating a valid <strong><em>CSV</em></strong> file. Alternatively, you can change the selected station’s encoding by pressing “<strong><em>E</em></strong>” while in <strong>PyRadio</strong>.</p>
 <h3 id="global-encoding-declaration">Global encoding declaration</h3>
 <p><strong>PyRadio</strong>’s configuration file contains the parameter <strong><em>default_encoding</em></strong>, which by default is set to <strong>utf-8</strong>.</p>
 <p>Setting this parameter to a different encoding, will permit <strong>PyRadio</strong> to successfully decode such stations.</p>
@@ -315,5 +316,10 @@ $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg</pre>
 $ pyradio -d</pre>
 <p>Then try to reproduce the bug and exit <strong>pyradio</strong>.</p>
 <p>Finally, include the file produced in your report.</p>
+<h2 id="acknowlegement">Acknowlegement <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p><strong>PyRadio</strong> uses code frorm the following projects:</p>
+<ol type="1">
+<li><a target="_blank" href="https://gitlab.com/fgallaire/cjkwrap">CJKwrap</a> by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.</li>
+</ol>
 </body>
 </html>

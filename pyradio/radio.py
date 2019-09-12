@@ -46,6 +46,10 @@ locale.setlocale(locale.LC_ALL, "")
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
 
+
+def is_ascii(s):
+    return all(ord(c) < 128 for c in s)
+
 class PyRadio(object):
     ws = Window_Stack()
 
@@ -190,6 +194,7 @@ class PyRadio(object):
                 self.ws.LINE_EDITOR_HELP: self._show_line_editor_help,
                 self.ws.EDIT_STATION_NAME_ERROR: self._print_editor_name_error,
                 self.ws.EDIT_STATION_URL_ERROR: self._print_editor_url_error,
+                self.ws.PY2_EDITOR_ERROR: self._print_py2_editor_error,
                 }
 
         """ list of help functions """
@@ -1400,6 +1405,23 @@ you have to manually address the issue.
             sure that only one "," exists in each line.
             '''
         self._show_help(txt, self.ws.PLAYLIST_RELOAD_ERROR_MODE,
+                caption = ' Error ',
+                prompt = ' Press any key ',
+                is_message=True)
+
+    def _print_py2_editor_error(self):
+        txt ='''Non-ASCII characters editing is |not supported!|
+
+            You running |PyRadio| on |Python 2|. As a result, the
+            station editor only supports |ASCII characters|, but
+            the station name you are trying to edit contains
+            |non-ASCII| characters.
+
+            To edit this station, either run |PyRadio| on |Python 3|,
+            or edit the playlist with an external editor and then
+            reload the playlist.
+            '''
+        self._show_help(txt, self.ws.PY2_EDITOR_ERROR,
                 caption = ' Error ',
                 prompt = ' Press any key ',
                 is_message=True)
@@ -2912,6 +2934,10 @@ you have to manually address the issue.
                     self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
                 elif char == ord('e'):
+                    if python_version[0] == '2':
+                        if not is_ascii(self.stations[self.selection][0]):
+                            self._print_py2_editor_error()
+                            return
                     self._station_editor = PyRadioEditor(self.stations, self.selection, self.bodyWin, adding=False)
                     self._station_editor.show(self.stations[self.selection])
                     self.ws.operation_mode = self.ws.EDIT_STATION_MODE

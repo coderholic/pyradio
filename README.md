@@ -23,6 +23,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Cleaning up](#cleaning-up)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
+* [Acknowlegement](#acknowlegement)
 
 ## Requirements
 
@@ -280,7 +281,7 @@ Station2,Station2_URL,iso-8859-7
 ```
 
 **Note:**
-Using the ***-a*** command line option will save you all this trouble, as it will automatically take care of creating a valid ***CSV*** file. Alternatively, you can change the selected station's encoding by pressing "***e***" while in **PyRadio**.
+Using the ***-a*** command line option will save you all this trouble, as it will automatically take care of creating a valid ***CSV*** file. Alternatively, you can change the selected station's encoding by pressing "***E***" while in **PyRadio**.
 
 ### Global encoding declaration
 
@@ -464,3 +465,9 @@ To create it, enter the following commands in a terminal:
 Then try to reproduce the bug and exit **pyradio**.
 
 Finally, include the file produced in your report.
+
+## Acknowlegement
+
+**PyRadio** uses code frorm the following projects:
+
+1. [CJKwrap](https://gitlab.com/fgallaire/cjkwrap) by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.

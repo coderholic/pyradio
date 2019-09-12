@@ -61,6 +61,7 @@ class Window_Stack_Constants(object):
     CONFIG_SAVE_ERROR_MODE = 303
     EDIT_STATION_NAME_ERROR = 304
     EDIT_STATION_URL_ERROR = 305
+    PY2_EDITOR_ERROR = 306
     THEME_MODE = 400
     UPDATE_NOTIFICATION_MODE = 1000
     SESSION_LOCKED_MODE = 1001
@@ -123,6 +124,7 @@ class Window_Stack_Constants(object):
             LINE_EDITOR_HELP: 'LINE_EDITOR_HELP',
             EDIT_STATION_NAME_ERROR: 'EDIT_STATION_NAME_ERROR',
             EDIT_STATION_URL_ERROR: 'EDIT_STATION_URL_ERROR',
+            PY2_EDITOR_ERROR: 'PY2_EDITOR_ERROR',
             }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -157,6 +159,7 @@ class Window_Stack_Constants(object):
             LINE_EDITOR_HELP,
             EDIT_STATION_NAME_ERROR,
             EDIT_STATION_URL_ERROR,
+            PY2_EDITOR_ERROR,
             )
 
     def __init__(self):
