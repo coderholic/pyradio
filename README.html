@@ -37,6 +37,7 @@
 <li><a href="#config-file">Config file</a></li>
 <li><a href="#about-playlist-files">About Playlist files</a></li>
 <li><a href="#search-function">Search function</a></li>
+<li><a href="#line-editor">Line editor</a></li>
 <li><a href="#moving-stations-around">Moving stations around</a></li>
 <li><a href="#specifying-stations-encoding">Specifying stations’ encoding</a></li>
 <li><a href="#player-detection-selection">Player detection / selection</a></li>
@@ -184,6 +185,16 @@ $ pyradio -s 5</pre>
 <p>One can always get help by pressing the “<strong>?</strong>” key.</p>
 <p>After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the “<strong>n</strong>” key and previous occurrence can be obtained using the “<strong>N</strong>” key.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> <strong>Python 2</strong> users are confined in typing ASCII characters only.</p>
+<h2 id="line-editor">Line editor <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p><strong>PyRadio</strong> “<em>Search function</em>” and “<em>Station edior</em>” use a <em>line editor</em> to permit typing and editing stations’ data.</p>
+<p>The <em>line editor</em> works both on <strong>Python 2</strong> and <strong>Python 3</strong>, but does not provide the same functionality for both versions:</p>
+<ul>
+<li>In <strong>Python 2</strong>, only ASCII characters can be inserted.</li>
+<li>In <strong>Python 3</strong>, no such restriction exists. Furthermore, using CJK characters is also supported.</li>
+</ul>
+<h3 id="cjk-characters-support">CJK characters support</h3>
+<p>The <em>line editor</em> supports the insertion of <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs">CJK Unified Ideographs</a>, as described on <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)">CJK Unified Ideographs (Unicode block)</a> also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-point (character), actually take up a 2-character space, when rendered on the terminal.</p>
+<p>A depiction of the editor’s behavior can be seen at this image: <a target="_blank" href="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg">pyradio-editor.jpg</a>.</p>
 <h2 id="moving-stations-around">Moving stations around <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Rearranging the order of the stations in the playlist is another feature <strong>PyRadio</strong> offers.</p>
 <p>All you have to do is specify the <em>source</em> station (the station to be moved) and the position it will be moved to (<em>target</em>).</p>

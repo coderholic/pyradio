@@ -1,3 +1,11 @@
+2019-10-18 s-n-g
+    * CJK Unified Ideographs supported by the line edittor
+    * On python 2, trying to edit a station whose name contains
+      non-ASCII characters is prohibited and will end up in
+      displaying a relevant message
+    * Search term will not be lost when resizing the window
+    * Fixing issues with presenting search history
+
 2019-09-08 s-n-g
     * Adding station editor ("a" and "A" to add a station, "e" to edit)
     * Line editor supports unlimited string length

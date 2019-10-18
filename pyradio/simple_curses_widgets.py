@@ -212,13 +212,22 @@ class SimpleCursesLineEdit(object):
         self._go_to_end()
 
     def _is_cjk(self):
+        """ Check if string contains CJK characters.
+            If string is empty reset history index """
         old_cjk = self._cjk
         if len(self.string) == cjklen(self.string):
             self._cjk = False
         else:
             self._cjk = True
+        if self.string == '' and self._has_history:
+            self._input_history.reset_index()
         if logger.isEnabledFor(logging.DEBUG) and self._cjk != old_cjk:
-                logger.debug('CJK editing is {}'.format('ON' if self._cjk else 'OFF'))
+                logger.debug('=== CJK editing is {} ==='.format('ON' if self._cjk else 'OFF'))
+
+    def keep_restore_data(self):
+        """ Keep a copy of current editor state
+            so that it can be restored later. """
+        self._restore_data = [ self.string, self._displayed_string, self._curs_pos, self._disp_curs_pos, self._first ]
 
     def getmaxyx(self):
         return self._caption_win.getmaxyx()
@@ -320,9 +329,7 @@ class SimpleCursesLineEdit(object):
 
         if self.focused:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('refreshEditWindow: first={0}, curs={1}, dcurs={2}, max={3}'.format(self._first, self._curs_pos, self._disp_curs_pos, self._max_chars_to_display))
-                logger.debug('refreshEditWindow:      full string: "{}"'.format(self.string))
-                logger.debug('refreshEditWindow: displayed string: "{}"'.format(self._displayed_string))
+                logger.debug('refreshEditWindow:\n  first={0}, curs={1}, dcurs={2}, max={3}\n  len={4}, cjklen={5}\n  string="{6}"\n  len={7}, cjklen={8}\n  disstr="{9}"'.format(self._first, self._curs_pos, self._disp_curs_pos, self._max_chars_to_display, len(self.string), cjklen(self.string), self.string, len(self._displayed_string), cjklen(self._displayed_string), self._displayed_string))
             self._edit_win.chgat(0, self._disp_curs_pos, 1, self.cursor_color)
 
         self._edit_win.refresh()
@@ -498,52 +505,60 @@ class SimpleCursesLineEdit(object):
                         break
             if pos == 0:
                 # word_delimiter not found:
-                self._curs_pos = 0
-                self._first =0
+                self._go_to_start()
+                return
             else:
                 # word delimiter found
                 if str_len < self._max_chars_to_display or \
                         pos >= self._first:
                     # pos is on screen
-                    #logger.error('DE 1 pos = {0}, first = {1}, curs = {2}, len = {3}, max = {4}'.format(pos, self._first, self._curs_pos, str_len, self._max_chars_to_display))
                     self._curs_pos = pos - self._first + 1
-                    #logger.error('DE 2 pos = {0}, first = {1}, curs = {2}, len = {3}, max = {4}'.format(pos, self._first, self._curs_pos, str_len, self._max_chars_to_display))
                 else:
-                    #logger.error('DE 3 pos = {0}, first = {1}, curs = {2}, len = {3}, max = {4}'.format(pos, self._first, self._curs_pos, str_len, self._max_chars_to_display))
                     self._first = n + 1
                     self._curs_pos = 0
+                    self._displayed_string = self.string[self._first:self._first+self._max_chars_to_display]
+                self._disp_curs_pos = cjklen(self._displayed_string[:self._curs_pos])
+                while cjklen(self._displayed_string) > self._max_chars_to_display:
+                    self._displayed_string = self._displayed_string[:-1]
 
     def _next_word(self):
-        pos = cjklen(self._string)
-        str_len = pos
+        if self._at_end_of_sting():
+            return
+        if self._first + self._curs_pos + 1 >= len(self.string):
+            self._go_to_end()
+            return
+        pos = 0
         for n in range(self._first + self._curs_pos + 1, len(self.string)):
             if self._string[n] in self._word_delim:
                 pos = n
                 break
-        if pos == str_len:
-            # word delimiter not found
-            self._first = str_len - self._max_chars_to_display
-            if self._first < 0:
-                self._first = 0
-            self._curs_pos = pos - self._first
-            #logger.error('DE x pos = {0}, first = {1}, curs = {2}, len = {3}, max = {4}'.format(pos, self._first, self._curs_pos, str_len, self._max_chars_to_display))
-        else:
-            # word delimiter found
-            if str_len < self._max_chars_to_display or \
-                    pos < self._first + self._max_chars_to_display:
+        if pos >= len(self.string):
+            pos = 0
+        if pos > 0:
+            if pos < len(self._displayed_string):
                 # pos is on screen
-                self._curs_pos = pos - self._first + 1
+                self._curs_pos = pos + 1 - self._first
+                self._disp_curs_pos = cjklen(self._displayed_string[:self._curs_pos])
             else:
-                # pos is not on screen
-                #logger.error('DE 1 pos = {0}, len = {1}, max = {2}'.format(pos, str_len, self._max_chars_to_display))
-                self._first = pos
-                self._curs_pos = 1
-                pos = 0
-                while str_len - (self._first + pos + 1) < self._max_chars_to_display:
-                    pos -= 1
-                self._first = self._first + pos + 1
-                self._curs_pos = self._curs_pos + abs(pos) - 1
-                #logger.error('DE 2 pos = {0}, len = {1}, max = {2}'.format(pos, str_len, self._max_chars_to_display))
+                if pos < self._first + len(self._displayed_string):
+                    # pos is on middle and on screen
+                    self._curs_pos = pos - self._first + 1
+                    self._disp_curs_pos = cjklen(self._displayed_string[:self._curs_pos])
+                else:
+                    # pos is off screen
+                    self._first = 0
+                    self._curs_pos = pos + 2
+                    self._displayed_string = tmp = self.string[:self._curs_pos]
+                    while cjklen(tmp) > self._max_chars_to_display:
+                        self._first += 1
+                        tmp = self._displayed_string[self._first:]
+                    self._displayed_string = tmp
+                    self._curs_pos = len(self._displayed_string) - 1
+                    self._disp_curs_pos = cjklen(self._displayed_string[:-1])
+
+        else:
+            # word delimiter not found
+            self._go_to_end()
 
     def _go_right(self):
         if self.string and not self._at_end_of_sting():
@@ -606,13 +621,14 @@ class SimpleCursesLineEdit(object):
                     while cjklen(self._displayed_string) > self._max_chars_to_display:
                         self._displayed_string = self._displayed_string[:-1]
             else:
+                logger.error('simple')
                 self._go_left_simple()
 
     def _go_left_simple(self):
         if len(self.string) < self._max_chars_to_display:
-                self._curs_pos -= 1
-                if self._curs_pos < 0:
-                    self._curs_pos = 0
+            self._curs_pos -= 1
+            if self._curs_pos < 0:
+                self._curs_pos = 0
         else:
             if self._curs_pos == 0:
                 self._first -= 1
@@ -680,9 +696,8 @@ class SimpleCursesLineEdit(object):
             # display help
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('action: help')
-            self._restore_data = [ self.string, self._displayed_string, self._curs_pos, self._disp_curs_pos, self._first ]
+            self.keep_restore_data()
             return 2
-
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             """ ENTER """
@@ -745,7 +760,7 @@ class SimpleCursesLineEdit(object):
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: LEFT')
-            self._go_left()
+                self._go_left()
 
         elif char in (curses.KEY_HOME, curses.ascii.SOH):
             """ KEY_HOME, ^A """
@@ -880,6 +895,8 @@ class SimpleCursesLineEdit(object):
                     else:
                         self._string = self._string[:self._first + self._curs_pos] + chr(char) + self._string[self._first + self._curs_pos:]
                         self._add_to_end = False
+                        self._curs_pos+=1
+                        self._disp_curs_pos = self._curs_pos
                         self._displayed_string=self.string[self._first:self._first+self._max_chars_to_display]
             else:
                 if platform.startswith('win'):
@@ -894,6 +911,7 @@ class SimpleCursesLineEdit(object):
                     self._displayed_string=self._string[self._first:self._first+self._curs_pos]
                 else:
                     self._string = self._string[:self._first + self._curs_pos] + char + self._string[self._first + self._curs_pos:]
+                    self._curs_pos+=1
                     self._add_to_end = False
                     self._displayed_string=self.string[self._first:self._first+self._max_chars_to_display]
             if self._add_to_end:
@@ -910,6 +928,10 @@ class SimpleCursesLineEdit(object):
                 # adding to middle of string
                 while cjklen(self._displayed_string) > self._max_chars_to_display:
                     self._displayed_string=self._displayed_string[:-1]
+                if self._cjk:
+                    self._disp_curs_pos = cjklen(self._displayed_string[:self._curs_pos])
+                else:
+                    self._disp_curs_pos=self._curs_pos
 
         self.refreshEditWindow()
         return 1
@@ -954,7 +976,7 @@ class SimpleCursesLineEdit(object):
                 if is_wide(out) and not self._cjk:
                     self._cjk = True
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('CJK editing is ON')
+                        logger.debug('=== CJK editing is ON ===')
         return out
 
     def _encode_string(self, data):
@@ -1004,8 +1026,8 @@ class SimpleCursesLineEdit(object):
 class SimpleCursesLineEditHistory(object):
 
     def __init__(self):
-        self._history = []
-        self._active_history_index = -1
+        self._history = [ '' ]
+        self._active_history_index = 0
 
     def add_to_history(self, a_string):
         if a_string:
@@ -1021,7 +1043,7 @@ class SimpleCursesLineEditHistory(object):
                 self._history.append(a_string)
             self._active_history_index = len(self._history)
 
-    def return_history(self, direction):
+    def return_history(self, direction, current_string):
         if self._history:
             self._active_history_index += direction
             if self._active_history_index <= -1:
@@ -1029,9 +1051,11 @@ class SimpleCursesLineEditHistory(object):
             elif self._active_history_index >= len(self._history):
                 self._active_history_index = 0
             ret =  self._history[self._active_history_index]
+            if ret.lower() == current_string.lower():
+                return self.return_history(direction, current_string)
             return ret
         return ''
 
     def reset_index(self):
-        self._active_history_index = -1
+        self._active_history_index = 0
 

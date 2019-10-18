@@ -32,6 +32,8 @@ class PyRadioSearch(SimpleCursesLineEdit):
             self._range_command='range'
 
     def show(self, parent_win, repaint=False):
+        if repaint:
+            tmp = self.string
         if parent_win is not None:
             self.parent_win = parent_win
 
@@ -51,25 +53,30 @@ class PyRadioSearch(SimpleCursesLineEdit):
                     self._caption_win.addstr(0, x-1, '┤'.encode('utf-8'), self.box_color)
                 except:
                     pass
-        if not repaint:
+        if repaint:
+            self.string = tmp
+            self.keep_restore_data()
+            self._caption_win.refresh()
+            self.refreshEditWindow(opening=True)
+        else:
             self.string = self._displayed_string = ''
-            self._curs_pos = self._disp_curs_pos = 0
+            self._first = self._curs_pos = self._disp_curs_pos = 0
             self._edit_win.erase()
             self._edit_win.chgat(0, 0, 1, self.cursor_color)
             if self._has_history:
                 self._input_history.reset_index()
-        self._caption_win.refresh()
-        self._edit_win.refresh()
+            self._caption_win.refresh()
+            self._edit_win.refresh()
 
     def _get_history_next(self):
         """ callback function for key down """
         if self._has_history:
-            self.string = self._input_history.return_history(1)
+            self.string = self._input_history.return_history(1, self.string)
 
     def _get_history_previous(self):
         """ callback function for key up """
         if self._has_history:
-            self.string = self._input_history.return_history(-1)
+            self.string = self._input_history.return_history(-1, self.string)
 
     def get_next(self, a_list, start=0, stop=None):
         if self.string:
@@ -485,7 +492,7 @@ class PyRadioEditor(object):
                     self._encoding = 'utf-8'
                 self._orig_encoding = self._encoding
                 for i in range(0,2):
-                    self._line_editor[i]._reset_position = True
+                    self._line_editor[i]._go_to_end()
             elif self._focus <= 1:
                 """
                  Returns:

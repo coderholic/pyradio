@@ -13,6 +13,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Config file](#config-file)
 * [About Playlist files](#about-playlist-files)
 * [Search function](#search-function)
+* [Line editor](#line-editor)
 * [Moving stations around](#moving-stations-around)
 * [Specifying stations' encoding](#specifying-stations-encoding)
 * [Player detection / selection](#player-detection-selection)
@@ -222,6 +223,22 @@ One can always get help by pressing the "**?**" key.
 After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
 
 **Note:** **Python 2** users are confined in typing ASCII characters only.
+
+## Line editor
+
+**PyRadio** "*Search function*" and "*Station edior*" use a *line editor* to permit typing and editing stations' data. 
+
+The *line editor* works both on **Python 2** and **Python 3**, but does not provide the same functionality for both versions:
+
+
+* In **Python 2**, only ASCII characters can be inserted.
+* In **Python 3**, no such restriction exists. Furthermore, using CJK characters is also supported.
+
+### CJK characters support
+
+The *line editor* supports the insertion of [CJK Unified Ideographs](https://en.wikipedia.org/wiki/CJK_Unified_Ideographs), as described on [CJK Unified Ideographs (Unicode block)](https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)) also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-point (character), actually take up a 2-character space, when rendered on the terminal.
+
+A depiction of the editor's behavior can be seen at this image: [pyradio-editor.jpg](https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg).
 
 ## Moving stations around
 
