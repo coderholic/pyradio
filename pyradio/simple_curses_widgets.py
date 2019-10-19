@@ -107,6 +107,14 @@ class SimpleCursesLineEdit(object):
                    '[', ']', '{', '}', '|', '\\', '/',
                    )
 
+    """ True if backlash has been pressed """
+    _backslash = False
+
+    """ Behaviour of ? key regarding \
+        If True, display ? (\? to display help)
+        If False, display help """
+    _show_help_with_backslash = False
+
     def __init__(self, parent, width, begin_y, begin_x, **kwargs):
 
         self._parent_win = parent
@@ -210,6 +218,14 @@ class SimpleCursesLineEdit(object):
         self._string = val
         self._is_cjk()
         self._go_to_end()
+
+    @property
+    def show_help_with_backslash(self):
+        return self._show_help_with_backslash
+
+    @show_help_with_backslash.setter
+    def show_help_with_backslash(self, val):
+        self._show_help_with_backslash = val
 
     def _is_cjk(self):
         """ Check if string contains CJK characters.
@@ -652,6 +668,12 @@ class SimpleCursesLineEdit(object):
             self._go_to_end()
             self._is_cjk()
 
+    def _can_show_help(self):
+        """ return not xor of two values
+            self._backslash , self._show_help_with_backslash """
+        return not ( (self._backslash and not self._show_help_with_backslash) or \
+                (not self._backslash and self._show_help_with_backslash) )
+
     def keypress(self, win, char):
         """
          returns:
@@ -692,15 +714,21 @@ class SimpleCursesLineEdit(object):
                     self._previous_word()
                 return 1
 
-        if char in (ord('?'), ):
+        if char == 92 and not self._backslash:
+            self._backslash = True
+            return 1
+
+        elif char in (ord('?'), ) and self._can_show_help():
             # display help
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('action: help')
             self.keep_restore_data()
+            self._backslash = False
             return 2
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             """ ENTER """
+            self._backslash = False
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('action: enter')
             if self._has_history:
@@ -708,6 +736,7 @@ class SimpleCursesLineEdit(object):
             return 0
 
         elif char in (curses.KEY_EXIT, 27):
+            self._backslash = False
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('action: ESCAPE')
             self._edit_win.nodelay(True)
@@ -750,6 +779,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_RIGHT, ):
             """ KEY_RIGHT """
+            self._backslash = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: RIGHT')
@@ -757,6 +787,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_LEFT, ):
             """ KEY_LEFT """
+            self._backslash = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: LEFT')
@@ -764,6 +795,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_HOME, curses.ascii.SOH):
             """ KEY_HOME, ^A """
+            self._backslash = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: HOME')
@@ -771,6 +803,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_END, curses.ascii.ENQ):
             """ KEY_END, ^E """
+            self._backslash = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: END')
@@ -778,6 +811,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.ascii.ETB, ):
             """ ^W, clear to start of line """
+            self._backslash = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: clear-to-end')
@@ -785,6 +819,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.ascii.VT, ):
             """ Ctrl-K - clear to end of line """
+            self._backslash = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: clear-to-end')
@@ -792,6 +827,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.ascii.NAK, ):
             """ ^U, clear line """
+            self._backslash = False
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('action: clear')
             self.string = self._displayed_string = ''
@@ -800,6 +836,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_DC, curses.ascii.EOT):
             """ DEL key, ^D """
+            self._backslash = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: delete')
@@ -807,6 +844,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_BACKSPACE, curses.ascii.BS,127):
             """ KEY_BACKSPACE """
+            self._backslash = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: backspace')
@@ -814,6 +852,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_UP, curses.ascii.DLE):
             """ KEY_UP, ^N """
+            self._backslash = False
             if self._key_up_function_handler is not None:
                 try:
                     self._key_up_function_handler()
@@ -825,6 +864,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_DOWN, curses.ascii.SO):
             """ KEY_DOWN, ^P """
+            self._backslash = False
             if self._key_down_function_handler is not None:
                 try:
                     self._key_down_function_handler()
@@ -836,6 +876,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_NPAGE, ):
             """ PgDn """
+            self._backslash = False
             if self._key_pgdown_function_handler is not None:
                 try:
                     self._key_pgdown_function_handler()
@@ -847,6 +888,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_PPAGE, ):
             """ PgUp """
+            self._backslash = False
             if self._key_pgup_function_handler is not None:
                 try:
                     self._key_pgup_function_handler()
@@ -855,6 +897,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (9, ):
             """ TAB """
+            self._backslash = False
             if self._key_tab_function_handler is not None:
                 try:
                     self._key_tab_function_handler()
@@ -866,6 +909,7 @@ class SimpleCursesLineEdit(object):
 
         elif char in (curses.KEY_BTAB, ):
             """ Shift-TAB """
+            self._backslash = False
             if self._key_stab_function_handler is not None:
                 try:
                     self._key_stab_function_handler()
@@ -877,9 +921,11 @@ class SimpleCursesLineEdit(object):
 
         elif 0<= char <=31:
             """ do not accept any other control characters """
+            self._backslash = False
             pass
 
         else:
+            self._backslash = False
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('action: add-character')
             if self.log is not None:

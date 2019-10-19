@@ -1164,6 +1164,7 @@ class PyRadio(object):
             DEL|,|^D              |Delete character.
             Backspace|,|^H        |Backspace (delete previous character).
             Up|,|^P| / |Down|,|^N     |Get previous / next history item.
+            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
             Enter| / |Esc         |Perform / cancel search.
 
             |Managing player volume does not work in search mode.
@@ -1177,6 +1178,7 @@ class PyRadio(object):
             DEL|,|^D              |Delete character.
             Backspace|,|^H        |Backspace (delete previous character).
             Up|,|^P| / |Down|,|^N     |Get previous / next history item.
+            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
             Enter| / |Esc         |Perform / cancel search.
 
             |Managing player volume does not work in search mode.

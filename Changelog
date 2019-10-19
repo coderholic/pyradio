@@ -1,12 +1,16 @@
-2019-10-18 s-n-g
+2019-10-19 s-n-g
+    * Version 0.8.1
     * CJK Unified Ideographs supported by the line edittor
     * On python 2, trying to edit a station whose name contains
       non-ASCII characters is prohibited and will end up in
       displaying a relevant message
+    * Line editor: using backslash to insert "?" and "\"
     * Search term will not be lost when resizing the window
     * Fixing issues with presenting search history
+    * Themes now have a "Edit Cursor" field
 
 2019-09-08 s-n-g
+    * Version 0.8.0
     * Adding station editor ("a" and "A" to add a station, "e" to edit)
     * Line editor supports unlimited string length
     * Main help window separated to two pages (navigation with "n" / "p")

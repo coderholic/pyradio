@@ -239,13 +239,38 @@ One can always get help by pressing the "\fI?\fR" key.
 
 After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "\fIn\fR" key and previous occurrence can be obtained using the "\fIN\fR" key.
 
-.IP \fBNote\fR
-\fBPython 2\fR users are confined in typing ASCII characters only.
+.SH LINE EDITOR
 
+\fBpyradio\fR "\fISearch function\fR" and "\fIStation edior\fR" use a \fIline editor\fR to permit typing and editing stations' data. 
 
-.SH CJK CHARACTERS SUPPORT
+The \fIline editor\fR works both on \fBPython 2\fR and \fBPython 3\fR, but does not provide the same functionality for both versions:
 
-The \fIline editor\fR supports the insertion of \fICJK Unified Ideographs [1]\fR, as described on \fICJK Unified Ideographs (Unicode block) [2]\fR, also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-point (character), actually take up a 2-character space, when rendered on the terminal.
+.RS 5
+.IP \fI*\fR 2
+In \fBPython 2\fR, only ASCII characters can be inserted.
+.IP \fI*\fR 2
+In \fBPython 3\fR, no such restriction exists.  Furthermore, using CJK characters is also supported.
+
+.RE
+
+.PP
+One can always display help by pressing "\fI?\fR", but that pauses a drawback; one cannot actually have a "\fI?\fR" withing the string.
+
+To do that, one would have to use the backslash key "\fI\\\fR" and then press "\fI?\fR".
+
+To sum it all up:
+
+.IP
+1. Press "\fI?\fR" to get help.
+.IP
+2. Press "\fI\\?\fR" to get a "\fI?\fR".
+.IP
+3. Press "\fI\\\\\fR" to get a "\fI\\\fR".
+
+.PP
+\fBCJK CHARACTERS SUPPORT\fR
+
+The \fIline editor\fR supports the insertion of \fICJK Unified Ideographs [1]\fR, as described on \fICJK Unified Ideographs (Unicode block) [2]\fR, also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-poin (character), actually take up a 2-character space, when rendered on the terminal.
 
 A depiction of the editor's behavior can be seen at this image:
 
@@ -266,15 +291,12 @@ There are three way to do that:
 
 .RS 5
 
-.IP 1.
+.IP 1. 3
 Press \fICtrl-U\fR or \fICtrl-D\fR to move the current station up or down.
-.IP 2.
+.IP 2. 3
 Type a station number and press \fICtrl-U\fR or \fICtrl-D\fR to move the current station there.
-.IP 3.
+.IP 3. 3
 Go to the position you want to move a station to, and press "\fIJ\fR". This will tag this position (making it the target of the move). Then go to the station you want to move and press \fICtrl-U\fR or \fICtrl-D\fR to move it there.
-
-
-
 
 
 .SH SPECIFYING STATIONS' ENCODING
@@ -553,7 +575,7 @@ Finally, include the file produced in your report.
 
 .RS 5
 
-.IP 1.
+.IP 1. 3
 \fBCJKwrap\fR (\fIhttps://gitlab.com/fgallaire/cjkwrap\fR) by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.
 
 .SH FILES

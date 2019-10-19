@@ -222,8 +222,6 @@ One can always get help by pressing the "**?**" key.
 
 After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
 
-**Note:** **Python 2** users are confined in typing ASCII characters only.
-
 ## Line editor
 
 **PyRadio** "*Search function*" and "*Station edior*" use a *line editor* to permit typing and editing stations' data. 
@@ -233,6 +231,16 @@ The *line editor* works both on **Python 2** and **Python 3**, but does not prov
 
 * In **Python 2**, only ASCII characters can be inserted.
 * In **Python 3**, no such restriction exists. Furthermore, using CJK characters is also supported.
+
+One can always display help by pressing "**?**", but that pauses a drawback; one cannot actually have a "**?**" withing the string.
+
+To do that, one would have to use the backslash key "**\\**" and then press "**?**".
+
+To sum it all up:
+
+1. Press "**?**" to get help.
+2. Press "**\\?**" to get a "**?**".
+3. Press "**\\\\**" to get a "**\\**".
 
 ### CJK characters support
 
