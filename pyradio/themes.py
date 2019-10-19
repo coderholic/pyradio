@@ -52,10 +52,11 @@ class PyRadioTheme(object):
         curses.init_pair(6, self._active_colors[THEME_ITEMS[5][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[5][0]][BACKGROUND()])
         # status bar
         curses.init_pair(7, self._active_colors[THEME_ITEMS[2][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[2][0]][BACKGROUND()])
-        # search cursor
-        curses.init_pair(8, self._active_colors[THEME_ITEMS[5][0]][BACKGROUND()], self._active_colors[THEME_ITEMS[3][0]][BACKGROUND()])
+        # edit cursor
+        curses.init_pair(8, self._active_colors[THEME_ITEMS[7][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[7][0]][BACKGROUND()])
         # cursor when playing
         curses.init_pair(9, self._active_colors[THEME_ITEMS[6][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[6][0]][BACKGROUND()])
+        logger.error('DE _do_init_pairs:\n{}'.format(self._active_colors))
 
     def restoreActiveTheme(self):
         self._active_colors = deepcopy(self._read_colors)
@@ -136,6 +137,8 @@ class PyRadioTheme(object):
             # help window
             self._colors[THEME_ITEMS[1][0]] = [ curses.COLOR_YELLOW, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
+            # Edit Cursor
+            self._colors[THEME_ITEMS[7][0]] = [ curses.COLOR_WHITE, curses.COLOR_MAGENTA ]
             # info
             self._colors['Colors'] = 8
             self._colors['Name'] = 'dark'
@@ -155,6 +158,8 @@ class PyRadioTheme(object):
             # help window
             self._colors[THEME_ITEMS[1][0]] = [ 11, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
+            # Edit Cursor
+            self._colors[THEME_ITEMS[7][0]] = [ 15, curses.COLOR_MAGENTA ]
             # info
             self._colors['Colors'] = 16
             self._colors['Name'] = 'dark_16_colors'
@@ -174,6 +179,8 @@ class PyRadioTheme(object):
             # help window
             self._colors[THEME_ITEMS[1][0]] = [ curses.COLOR_MAGENTA, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
+            # Edit Cursor
+            self._colors[THEME_ITEMS[7][0]] = [ curses.COLOR_WHITE, curses.COLOR_MAGENTA ]
             # info
             self._colors['Colors'] = 8
             self._colors['Name'] = 'light'
@@ -193,6 +200,8 @@ class PyRadioTheme(object):
             # help window
             self._colors[THEME_ITEMS[1][0]] = [ 13, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
+            # Edit Cursor
+            self._colors[THEME_ITEMS[7][0]] = [ 15, 13 ]
             # info
             self._colors['Colors'] = 16
             self._colors['Name'] = 'light_16_colors'
@@ -212,6 +221,8 @@ class PyRadioTheme(object):
             # help window
             self._colors[THEME_ITEMS[1][0]] = [ 245, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
+            # Edit Cursor
+            self._colors[THEME_ITEMS[7][0]] = [ 15, 238 ]
             # info
             self._colors['Colors'] = 256
             self._colors['Name'] = 'black_on_white'
@@ -231,6 +242,8 @@ class PyRadioTheme(object):
             # help window
             self._colors[THEME_ITEMS[1][0]] = [ 247, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
+            # Edit Cursor
+            self._colors[THEME_ITEMS[7][0]] = [ 15, 247 ]
             # info
             self._colors['Colors'] = 256
             self._colors['Name'] = 'white_on_black'

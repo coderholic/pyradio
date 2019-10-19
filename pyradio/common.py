@@ -20,4 +20,5 @@ THEME_ITEMS = ( ('PyRadio URL', 2, 0, 3),
         ('Stations', 5, 0 ,0),
         ('Active Station', 4, 0, 3),
         ('Normal Cursor', 6, 0, 0),
-        ('Active Cursor', 9, 0, 0) )
+        ('Active Cursor', 9, 0, 0),
+        ('Edit Cursor', 8, 0, 0 ) )

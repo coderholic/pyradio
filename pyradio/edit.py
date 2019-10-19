@@ -240,7 +240,7 @@ class PyRadioEditor(object):
                     box_color = curses.color_pair(9),
                     caption_color = curses.color_pair(4),
                     edit_color = curses.color_pair(9),
-                    cursor_color = curses.color_pair(6),
+                    cursor_color = curses.color_pair(8),
                     unfocused_color = curses.color_pair(5))
                 self._line_editor[ed].bracket = False
 

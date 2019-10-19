@@ -5,3 +5,4 @@ Stations = 127,219
 Active Station = 199,219
 Active Cursor = 231,201
 Normal Cursor = 123,213
+Edit Cursor = 123,213
