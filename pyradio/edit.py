@@ -480,8 +480,6 @@ class PyRadioEditor(object):
             elif char == ord('s') and self._focus > 1:
                 ret = self._return_station()
                 self.focus = abs(ret + 2)
-            elif char == ord('?') and self.focus <= 1:
-                ret = 2
             elif (char in (curses.ascii.DC2, 18) and not self._adding) or \
                     (char == ord('r') and not self._adding and self.focus >1):
                 # ^R, revert to saved
@@ -502,10 +500,7 @@ class PyRadioEditor(object):
                    -1: cancel
                 """
                 ret = self._line_editor[self._focus].keypress(self._win, char)
-                if ret == 2:
-                    # display help
-                    ret = 2
-                elif ret == 1:
+                if ret == 1:
                     # get next char
                     ret = 0
                 elif ret == 0:

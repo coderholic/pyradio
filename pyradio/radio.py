@@ -1196,6 +1196,7 @@ class PyRadio(object):
             DEL|,|^D              |Delete character.
             Backspace|,|^H        |Backspace (delete previous character).
             Up| / |Down           |Go to previous / next field.
+            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
             Esc                 |Cancel operation.
 
             |Managing player volume does not work in editing mode.
@@ -1209,6 +1210,7 @@ class PyRadio(object):
             DEL|,|^D              |Delete character.
             Backspace|,|^H        |Backspace (delete previous character).
             Up| / |Down           |Go to previous / next field.
+            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
             Esc                 |Cancel operation.
 
             |Managing player volume does not work in editing mode.
@@ -2064,41 +2066,38 @@ you have to manually address the issue.
             """ if no player, don't serve keyboard """
             return
 
-        elif char == ord('H'):
-            if self.ws.operation_mode in \
-                    (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
-                self.jumpnr = ''
-                self._random_requested = False
-                if self.number_of_items > 0:
-                    self.selection = self.startPos
-                    self.refreshBody()
-                return
+        elif char == ord('H') and self.ws.operation_mode in \
+                (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
+            self.jumpnr = ''
+            self._random_requested = False
+            if self.number_of_items > 0:
+                self.selection = self.startPos
+                self.refreshBody()
+            return
 
-        elif char == ord('M'):
-            if self.ws.operation_mode in \
-                    (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
-                self.jumpnr = ''
-                self._random_requested = False
-                if self.number_of_items > 0:
-                    if self.number_of_items < self.bodyMaxY - 2:
-                        self.selection = int(self.number_of_items / 2)
-                    else:
-                        self.selection = self.startPos + int((self.bodyMaxY - 3) / 2)
-                    self.refreshBody()
-                return
+        elif char == ord('M') and self.ws.operation_mode in \
+                (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
+            self.jumpnr = ''
+            self._random_requested = False
+            if self.number_of_items > 0:
+                if self.number_of_items < self.bodyMaxY - 2:
+                    self.selection = int(self.number_of_items / 2)
+                else:
+                    self.selection = self.startPos + int((self.bodyMaxY - 3) / 2)
+                self.refreshBody()
+            return
 
-        elif char == ord('L'):
-            if self.ws.operation_mode in \
-                    (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
-                self.jumpnr = ''
-                self._random_requested = False
-                if self.number_of_items > 0:
-                    if self.number_of_items < self.bodyMaxY - 2:
-                        self.setStation(-1)
-                    else:
-                        self.selection = self.startPos + self.bodyMaxY - 3
-                    self.refreshBody()
-                return
+        elif char == ord('L') and self.ws.operation_mode in \
+                (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
+            self.jumpnr = ''
+            self._random_requested = False
+            if self.number_of_items > 0:
+                if self.number_of_items < self.bodyMaxY - 2:
+                    self.setStation(-1)
+                else:
+                    self.selection = self.startPos + self.bodyMaxY - 3
+                self.refreshBody()
+            return
 
         elif char in (ord('t'), ) and \
                 self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE,

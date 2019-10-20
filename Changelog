@@ -1,6 +1,12 @@
+2019-10-20 s-n-g
+    * Version 0.8.2
+    * Fixing chars H,L,M rejected by line editor
+    * Fixing station editor rejecting "\?"
+    * Updating station's editor help messages
+
 2019-10-19 s-n-g
     * Version 0.8.1
-    * CJK Unified Ideographs supported by the line edittor
+    * CJK Unified Ideographs supported by the line editor
     * On python 2, trying to edit a station whose name contains
       non-ASCII characters is prohibited and will end up in
       displaying a relevant message
