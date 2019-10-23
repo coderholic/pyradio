@@ -26,6 +26,7 @@ from .config_window import *
 from .log import Log
 from .edit import PyRadioSearch, PyRadioEditor
 from .themes import *
+from .simple_curses_widgets import cjklen
 from . import player
 import logging
 
@@ -528,9 +529,10 @@ class PyRadio(object):
                 self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
                     self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
             line = self._format_playlist_line(lineNum, pad, station)
+            self.bodyWin.addstr(lineNum + 1, 1, line, col)
         else:
-            line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
-        self.bodyWin.addstr(lineNum + 1, 1, line[:body_width], col)
+            line = self._format_station_line("{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0]))
+            self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
     def run(self):
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
@@ -1018,35 +1020,53 @@ class PyRadio(object):
         line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
         f_data = ' [{0}, {1}]'.format(station[2], station[1])
         if version_info < (3, 0):
-            if len(line.decode('utf-8', 'replace')) + len(f_data.decode('utf-8', 'replace')) > self.bodyMaxX -2:
+            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX -2:
                 """ this is too long, try to shorten it
                     by removing file size """
                 f_data = ' [{0}]'.format(station[1])
-            if len(line.decode('utf-8', 'replace')) + len(f_data.decode('utf-8', 'replace')) > self.bodyMaxX - 2:
+            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX - 2:
                 """ still too long. start removing chars """
-                while len(line.decode('utf-8', 'replace')) + len(f_data.decode('utf-8', 'replace')) > self.bodyMaxX - 3:
+                while cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX - 3:
                     f_data = f_data[:-1]
                 f_data += ']'
             """ if too short, pad f_data to the right """
-            if len(line.decode('utf-8', 'replace')) + len(f_data.decode('utf-8', 'replace')) < self.maxX - 2:
-                while len(line.decode('utf-8', 'replace')) + len(f_data.decode('utf-8', 'replace')) < self.maxX - 2:
+            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) < self.maxX - 2:
+                while cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) < self.maxX - 2:
                     line += ' '
         else:
-            if len(line) + len(f_data) > self.bodyMaxX -2:
+            if cjklen(line) + cjklen(f_data) > self.bodyMaxX -2:
                 """ this is too long, try to shorten it
                     by removing file size """
                 f_data = ' [{0}]'.format(station[1])
-            if len(line) + len(f_data) > self.bodyMaxX - 2:
+            if cjklen(line) + cjklen(f_data) > self.bodyMaxX - 2:
                 """ still too long. start removing chars """
-                while len(line) + len(f_data) > self.bodyMaxX - 3:
+                while cjklen(line) + cjklen(f_data) > self.bodyMaxX - 3:
                     f_data = f_data[:-1]
                 f_data += ']'
             """ if too short, pad f_data to the right """
-            if len(line) + len(f_data) < self.maxX - 2:
-                while len(line) + len(f_data) < self.maxX - 2:
+            if cjklen(line) + cjklen(f_data) < self.maxX - 2:
+                while cjklen(line) + cjklen(f_data) < self.maxX - 2:
                     line += ' '
         line += f_data
         return line
+
+    def _format_station_line(self, line):
+        if version_info < (3, 0):
+            if len(line.decode('utf-8', 'replace')) != cjklen(line.decode('utf-8', 'replace')):
+                while cjklen(line.decode('utf-8', 'replace')) > self.bodyMaxX - 2:
+                    line = line[:-1]
+                return line
+            else:
+                return line[:self.bodyMaxX - 2]
+        
+            pass
+        else:
+            if len(line) != cjklen(line):
+                while cjklen(line) > self.bodyMaxX - 2:
+                    line = line[:-1]
+                return line
+            else:
+                return line[:self.bodyMaxX - 2]
 
     def _print_help(self):
         #logger.error('DE \n\nself.ws.operation_mode = {}'.format(self.ws.operation_mode))
