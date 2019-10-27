@@ -107,6 +107,9 @@ class SimpleCursesLineEdit(object):
                    '[', ']', '{', '}', '|', '\\', '/',
                    )
 
+    """ Set to True to restringt accepted characters to ASCII only """
+    _pure_ascii = False
+
     """ True if backlash has been pressed """
     _backslash = False
 
@@ -226,6 +229,14 @@ class SimpleCursesLineEdit(object):
     @show_help_with_backslash.setter
     def show_help_with_backslash(self, val):
         self._show_help_with_backslash = val
+
+    @property
+    def pure_ascii(self):
+        return self.pure_ascii
+
+    @pure_ascii.setter
+    def pure_ascii(self, val):
+        self._pure_ascii = val
 
     def _is_cjk(self):
         """ Check if string contains CJK characters.
@@ -930,7 +941,7 @@ class SimpleCursesLineEdit(object):
                 logger.debug('action: add-character')
             if self.log is not None:
                 self.log('====================\n')
-            if version_info < (3, 0):
+            if version_info < (3, 0) or (self._pure_ascii and not platform.startswith('win')):
                 if 32 <= char < 127:
                     # accept only ascii characters
                     if len(self._string) == self._first + self._curs_pos:
@@ -949,6 +960,9 @@ class SimpleCursesLineEdit(object):
                     char = chr(char)
                 else:
                     char = self._get_char(win, char)
+                if self._pure_ascii:
+                    if ord(char) > 127:
+                        return 1
                 #if len(self._string) == self._first + self._curs_pos:
                 if self._at_end_of_sting():
                     self._string += char

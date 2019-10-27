@@ -1,3 +1,6 @@
+2019-10-23 s-n-g
+    * Handling CJK presentation on station and playlist window
+
 2019-10-20 s-n-g
     * Version 0.8.2
     * Fixing chars H,L,M rejected by line editor

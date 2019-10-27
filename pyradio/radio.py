@@ -613,6 +613,7 @@ class PyRadio(object):
                 edit_color = curses.color_pair(5),
                 cursor_color = curses.color_pair(8))
         self.search = self._search_classes[self._mode_to_search[operation_mode]]
+        #self.search.pure_ascii = True
         if self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
             self.search.box_color = curses.color_pair(3)
         else:
