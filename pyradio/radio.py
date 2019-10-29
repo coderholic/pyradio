@@ -1727,11 +1727,9 @@ you have to manually address the issue.
         self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
         self.number_of_items, self.playing = self.readPlaylists()
         self.stations = self._cnf.playlists
-        if self.number_of_items == 0:
-            return
-        else:
+        if self.number_of_items > 0:
             self.refreshBody()
-            return
+        return
 
     def _get_station_id(self, find):
         for i, a_station in enumerate(self.stations):
@@ -2332,13 +2330,13 @@ you have to manually address the issue.
                         self._cnf.dirty_playlist = True
                     self.stations[self.selection] = self._station_editor.new_station
                 else:
+                    self._cnf.dirty_playlist = True
                     if self._station_editor.append:
                         self.stations.append(self._station_editor.new_station)
                         self.number_of_items = len(self.stations)
                         self.selection = self.number_of_items - 1
                         self.startPos = self.number_of_items - self.bodyMaxY + 2
                     else:
-                        pass
                         ret, self.number_of_items = self._cnf.insert_station(self._station_editor.new_station, self.selection + 1)
                         self.stations = self._cnf.stations
                         self.selection += 1
@@ -2999,7 +2997,6 @@ you have to manually address the issue.
                     if self._cnf.dirty_playlist:
                         if self._cnf.auto_save_playlist:
                             # save playlist and open playlist
-                            pass
                             ret = self.saveCurrentPlaylist()
                             if ret == 0:
                                 self._open_playlist()

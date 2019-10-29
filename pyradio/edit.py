@@ -415,7 +415,7 @@ class PyRadioEditor(object):
         if ret == 1:
             if self._encoding == 'utf-8':
                 self._encoding = ''
-            self.new_station = [ self._line_editor[0].string.strip(), self._line_editor[1].string.strip(), self._encoding ]
+            self.new_station = [ self._line_editor[0].string.strip(), self._line_editor[1].string.strip(), self._encoding, '']
         return ret
 
     def _validate(self):

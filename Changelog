@@ -1,3 +1,8 @@
+2019-10-29 s-n-g
+    * FIX: Playlists flagged as changed when adding a station
+    * Handling CJK presentation on station and playlist view
+    * Preparing for online stations browser
+
 2019-10-23 s-n-g
     * Handling CJK presentation on station and playlist window
 

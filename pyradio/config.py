@@ -38,9 +38,16 @@ class PyRadioStations(object):
     selected_playlist = -1
     number_of_stations = -1
 
-    """ new_format: True:  3 columns (name,URL,encoding)
-        new_format: False: 2 columns (name,URL) """
-    new_format = False
+    """ playlist_version:
+            2: 4 columns (name,URL,encoding,online browser)
+            1: 3 columns (name,URL,encoding)
+            0: 2 columns (name,URL)
+    """
+    BASIC_PLAYLIST = 0
+    ENCODING_PLAYLIST = 1
+    ONLINE_PLAYLIST = 2
+    _playlist_version = BASIC_PLAYLIST
+    _read_playlist_version = BASIC_PLAYLIST
 
     dirty_playlist = False
 
@@ -89,6 +96,14 @@ class PyRadioStations(object):
 
             self._move_old_csv(self.stations_dir)
             self._check_stations_csv(self.stations_dir, self.root_path)
+
+    @property
+    def playlist_version(self):
+        return self._playlist_version
+
+    @playlist_version.setter
+    def playlist_version(self, value):
+        raise ValueError('parameter is read only')
 
     def _move_old_csv(self, usr):
         """ if a ~/.pyradio files exists, relocate it in user
@@ -238,8 +253,8 @@ class PyRadioStations(object):
             # reason in cnf.playlist_recovery_result
             return -7
         prev_file = self.stations_file
-        prev_format = self.new_format
-        self.new_format = False
+        prev_format = self._playlist_version
+        self._read_playlist_version = self._playlist_version = self.BASIC_PLAYLIST
         self._reading_stations = []
         with eval(self._open_string[self._open_string_id]) as cfgfile:
             try:
@@ -248,14 +263,19 @@ class PyRadioStations(object):
                         continue
                     try:
                         name, url = [s.strip() for s in row]
-                        self._reading_stations.append([name, url, ''])
+                        self._reading_stations.append([name, url, '', ''])
                     except:
-                        name, url, enc = [s.strip() for s in row]
-                        self._reading_stations.append([name, url, enc])
-                        self.new_format = True
+                        try:
+                            name, url, enc = [s.strip() for s in row]
+                            self._reading_stations.append([name, url, enc, ''])
+                            self._read_playlist_version = self._playlist_version = self.ENCODING_PLAYLIST
+                        except:
+                            name, url, enc, onl = [s.strip() for s in row]
+                            self._reading_stations.append([name, url, enc, onl])
+                            self._read_playlist_version = self._playlist_version = self.ONLINE_PLAYLIST
             except:
                 self._reading_stations = []
-                self.new_format = prev_format
+                self._playlist_version = prev_format
                 return -1
 
         self.stations = list(self._reading_stations)
@@ -266,10 +286,7 @@ class PyRadioStations(object):
         self.number_of_stations = len(self.stations)
         self.dirty_playlist = False
         if logger.isEnabledFor(logging.DEBUG):
-            if self.new_format:
-                logger.debug('Playlist is in new format')
-            else:
-                logger.debug('Playlist is in old format')
+            logger.debug('read_playlist_file: Playlist version: {}'.format(self._playlist_version))
         self.jump_tag = -1
         return self.number_of_stations
 
@@ -321,15 +338,24 @@ class PyRadioStations(object):
             Format type can change by editing encoding,
             deleting a non-utf-8 station etc.
         """
-        new_format = False
+        playlist_version = self.BASIC_PLAYLIST
         for n in self.stations:
-            if n[2] != '':
-                new_format = True
+            if n[3] != '':
+                playlist_version = self.ONLINE_PLAYLIST
                 break
-        if self.new_format == new_format:
-            return False
+        if playlist_version == self.BASIC_PLAYLIST:
+            for n in self.stations:
+                if n[2] != '':
+                    playlist_version = self.ENCODING_PLAYLIST
+                    break
+        if self._playlist_version == playlist_version:
+            ret = False
         else:
-            return True
+            self._playlist_version = playlist_version
+            ret = True
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('_playlist_format_changed: Playlist version: {}'.format(self._playlist_version))
+        return ret
 
     def save_playlist_file(self, stationFile=''):
         """ Save a playlist
@@ -342,12 +368,13 @@ class PyRadioStations(object):
         """
         if self._playlist_format_changed():
             self.dirty_playlist = True
-            self.new_format = not self.new_format
 
         if stationFile:
             st_file = stationFile
         else:
             st_file = self.stations_file
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Saving playlist: "{}"'.format(st_file))
 
         if not self.dirty_playlist:
             if logger.isEnabledFor(logging.DEBUG):
@@ -358,10 +385,12 @@ class PyRadioStations(object):
 
         tmp_stations = self.stations[:]
         tmp_stations.reverse()
-        if self.new_format:
+        if self._playlist_version == self.BASIC_PLAYLIST:
+            tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '' ])
+        elif self._playlist_version == self.ENCODING_PLAYLIST:
             tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '', '' ])
         else:
-            tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '' ])
+            tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '', '', '' ])
         tmp_stations.reverse()
         try:
             #with open(st_new_file, 'w') as cfgfile:
@@ -385,12 +414,15 @@ class PyRadioStations(object):
         return 0
 
     def _format_playlist_row(self, a_row):
-        """ Return a 2-column if in old format, or
-            a 3-column row if in new format """
-        if self.new_format:
+        """ Return a 2-column if in old format,
+            a 3-column row if has encoding, or
+            a 4 column row if has online browser flag too """
+        if self._playlist_version == self.ONLINE_PLAYLIST:
             return a_row
-        else:
+        elif self._playlist_version == self.ENCODING_PLAYLIST:
             return a_row[:-1]
+        else:
+            return a_row[:-2]
 
     def _get_playlist_elements(self, a_playlist):
         self.stations_file = path.abspath(a_playlist)
@@ -426,15 +458,19 @@ class PyRadioStations(object):
                  -5: Error writing file
                  -6: Error renaming file
         """
-        if self.new_format:
-            if stationFile:
-                st_file = stationFile
-            else:
-                st_file = self.stations_file
+        if stationFile:
+            st_file = stationFile
+        else:
+            st_file = self.stations_file
 
-            st_file, ret = self._get_playlist_abspath_from_data(st_file)
-            if ret < -1:
-                return ret
+        st_file, ret = self._get_playlist_abspath_from_data(st_file)
+        if ret < -1:
+            return ret
+        param_len = len(params) - 2
+        self._playlist_format_changed()
+        if param_len == self._playlist_version:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Appending station to playlist: "{}"'.format(stationFile))
             try:
                 #with open(st_file, 'a') as cfgfile:
                 """ Convert self._open_string to
@@ -446,11 +482,9 @@ class PyRadioStations(object):
             except:
                 return -5
         else:
-            self.stations.append([ params[0], params[1], params[2] ])
+            #self.stations.append([ params[0], params[1], params[2] ])
+            self.stations.append(params[:])
             self.dirty_playlist = True
-            st_file, ret = self._get_playlist_abspath_from_data(stationFile)
-            if ret < -1:
-                return ret
             ret = self.save_playlist_file(st_file)
             if ret < 0:
                 ret -= 4
@@ -491,7 +525,7 @@ class PyRadioStations(object):
     def move_station(self, source, target):
         """ Moves a station in the list from index source to index target
         It is moved ABOVE old target (old target becomes old target + 1)"""
-        logger.error('DE source = {0}, target = {1}'.format(source, target))
+        #logger.error('DE source = {0}, target = {1}'.format(source, target))
         if source == target or \
                 source < 0 or \
                 target < 0 or \
@@ -506,7 +540,7 @@ class PyRadioStations(object):
         d = collections.deque(self.stations)
         d.rotate(-source)
         source_item = d.popleft()
-        logger.error('DE source_item = "{}"'.format(source_item))
+        #logger.error('DE source_item = "{}"'.format(source_item))
         d.rotate(source)
         d.rotate(-target)
         d.appendleft(source_item)
