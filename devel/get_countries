@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# Run this to update countries
+#
+echo -n '# -*- coding: utf-8 -*-
+# This is from https://github.com/umpirsky/country-list
+countries = ' > countries-new.py
+
+curl -L https://github.com/umpirsky/country-list/raw/master/data/en_US/country.json\ >> countries-new.py && {
+    echo >> countries-new.py
+    sed -e 's/,/,\n/g' \
+        -e 's/{"/{\n"/' \
+        -e 's/}/\n}/' countries-new.py | \
+        sed -e 's/^"/    "/' > pyradio/countries.py
+    git add pyradio/countries.py
+} || {
+echo "
+
+ERROR: Cannot update Countries list
+
+"
+rm countries-new.py
+
+}
