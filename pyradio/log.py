@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 from sys import version_info
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class Log(object):
     """ Log class that outputs text to a curses screen """
@@ -29,12 +33,12 @@ class Log(object):
             self.cursesScreen.erase()
             try:
                 self.msg = msg.strip()
-                self.cursesScreen.addstr(0, 1, self.msg[0: self.width]
-                                         .replace("\r", "").replace("\n", ""))
+                self.cursesScreen.addstr(0, 1, self.msg[0: self.width].replace("\r", "").replace("\n", ""))
             except:
                 self.msg = msg.encode('utf-8', 'replace').strip()
-                self.cursesScreen.addstr(0, 1, self.msg[0: self.width]
-                                         .replace("\r", "").replace("\n", ""))
+                self.cursesScreen.addstr(0, 1, self.msg[0: self.width].replace("\r", "").replace("\n", ""))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Status: "{}"'.format(self.msg))
             self.cursesScreen.refresh()
             if thread_lock is not None:
                 thread_lock.release()
@@ -54,6 +58,8 @@ class Log(object):
             except:
                 a_msg = msg.encode('utf-8', 'replace').strip()
                 self.cursesScreen.addstr(0, self.width + 5 - len(a_msg) - 1, a_msg.replace("\r", "").replace("\n", ""))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Status right: "{}"'.format(a_msg))
             self.cursesScreen.refresh()
             if thread_lock is not None:
                 thread_lock.release()

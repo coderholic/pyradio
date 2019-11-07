@@ -1,15 +1,14 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # http://www.radio-browser.info/webservice#Advanced_station_search
 import json
 import requests
-import pprint
 import threading
 import logging
-from .widechar import is_wide, cjklen, PY3
-from os import get_terminal_size
+from .widechar import cjklen, PY3
+#from os import get_terminal_size
 
 logger = logging.getLogger(__name__)
+
 
 class PyRadioStationsBrowser(object):
     """A base class to get results from online radio directory services.
@@ -20,7 +19,7 @@ class PyRadioStationsBrowser(object):
     def __init__(self, search=None):
         """Initialize the station's browser.
 
-        It should return a valid search result (for example, 
+        It should return a valid search result (for example,
         www.radio-browser.info implementation, returns 100 stations
         sorted by number of votes).
 
@@ -31,7 +30,10 @@ class PyRadioStationsBrowser(object):
         """
 
         self._raw_stations = []
+        self._last_search = None
         self._have_to_retrieve_url = False
+        self._url_timeout = 3
+        self._search_timeout = 3
 
     @property
     def have_to_retrieve_url(self):
@@ -41,7 +43,7 @@ class PyRadioStationsBrowser(object):
     def have_to_retrieve_url(self, value):
         raise ValueError('property is read only')
 
-    def stations(self, playlist_format = 1):
+    def stations(self, playlist_format=1):
         return []
 
     def url(self, id_in_list):
@@ -78,6 +80,19 @@ class PyRadioStationsBrowser(object):
 
         return ''
 
+    def set_played(self, id_in_list, played):
+        """Note that a player has been played.
+
+        Parameters
+        ----------
+        id_in_list
+            id in list of stations (0..len-1)
+        played
+            True or False
+
+        """
+        pass
+
     def search(self, data=None):
         return []
 
@@ -106,6 +121,9 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
 
     _have_to_retrieve_url = True
 
+    _url_timeout = 3
+    _search_timeout = 3
+
     def __init__(self, search=None):
         self._raw_stations = []
         if search:
@@ -113,7 +131,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         else:
             self.search({'order': 'votes', 'reverse': 'true'})
 
-    def stations(self, playlist_format = 1):
+    def stations(self, playlist_format=1):
         """ Return stations' list (in PyRadio playlist format)
 
         Parameters
@@ -126,7 +144,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
 
         ret = []
         for n in self._raw_stations:
-            if playlist_format == 0:                
+            if playlist_format == 0:
                 ret.append([n['name'], n['url']])
             elif playlist_format == 1:
                 enc = '' if n['encoding'] == 'utf-8' else n['encoding']
@@ -163,6 +181,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                             logger.debug('URL retrieved: "{0}" <- "{1}'.format(url, self._raw_stations[id_in_list]['url']))
                         self._raw_stations[id_in_list]['url'] = url
                         self._raw_stations[id_in_list]['real_url'] = True
+                        self._raw_stations[id_in_list]['played'] = True
                     else:
                         if logger.isEnabledFor(logging.ERROR):
                             logger.error('Failed to retrieve URL for station "{0}", using "{1}"'.format(self._raw_stations[id_in_list]['name'], self._raw_stations[id_in_list]['url']))
@@ -187,7 +206,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             'http://www.radio-browser.info/webservice/v2/json/url/' + \
             str(stationid)
         try:
-            r = requests.get(url=url, headers=self._open_headers)
+            r = requests.get(url=url, headers=self._open_headers, timeout=self._url_timeout)
             r.raise_for_status()
             rep = json.loads(r.text)
             if rep['ok'] == 'true':
@@ -224,6 +243,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                 votes       : station votes
                 clickcount  : station clicks
                 country     : station country
+                language    : station language
                 encoding    : station encoding ('' means utf-8)
         """
 
@@ -249,9 +269,10 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             post_data['limit'] = 100
         if not 'hidebroken' not in post_data.keys():
             post_data['hidebroken'] = 'true'
+        self._last_search = post_data
         url = 'http://www.radio-browser.info/webservice/json/stations/search'
         try:
-            r = requests.get(url=url, headers=self._open_headers, json=post_data)
+            r = requests.get(url=url, headers=self._open_headers, json=post_data, timeout=self._search_timeout)
             r.raise_for_status()
             self._raw_stations = self._extract_data(json.loads(r.text))
         except requests.exceptions.RequestException as e:
@@ -289,67 +310,67 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                     empty string
         """
 
-        info = (' [Votes: {0}, Clicks: {1}, Bitrate: {2}kb, Country: {3}]',
-                ' [Votes: {0}, Clicks: {1}, Bitrate: {2}kb]',
-                ' [{0} v, {1} cl, {2}kb]',
-                ' [Bitrate: {}kb]')
-        now_width = get_terminal_size().columns - 2
+        info = ('',
+                ' {0} {1}kb',
+                ' {0}{1} v|{2} cl|{3}kb',
+                ' {0} {1}| {2}| {3}kb',
+                ' {0} {1}| {2}| {3}kb|{4}',
+                ' {0} {1}| {2}| {3}kb|{4}|{5}',
+        )
+        # now_width = get_terminal_size().columns - 2
         now_width = width
-        if now_width <=45:
-            self._output_format = 4
-        elif now_width <=60:
-            self._output_format = 3
-        elif now_width <=78:
-            self._output_format = 2
-        elif now_width <=105:
-            self._output_format = 1
-        else:
+        if now_width <= 45:
             self._output_format = 0
-
-        #logger.error('DE width = {0}, now_width = {1}'.format(width, now_width))
-        #if self._output_format == -1:
-        #    self._info_len = []
-        #    self._info_len.append(len(info[0].format(' ' * self._max_len[3],
-        #                     ' ' * self._max_len[4],
-        #                     ' ' * self._max_len[2],
-        #                     ' ' * self._max_len[1])))
-        #    self._info_len.append(len(info[1].format(' ' * self._max_len[3],
-        #                     ' ' * self._max_len[4],
-        #                     ' ' * self._max_len[2],
-        #                     ' ' * self._max_len[1])))
-        #    self._info_len.append(len(info[2].format(' ' * self._max_len[3],
-        #                     ' ' * self._max_len[4],
-        #                     ' ' * self._max_len[2])))
-        #    self._info_len.append(len(info[3].format(' ' * self._max_len[2])))
-        #    self._info_name_len = len(' ' * pad + '. ' + ' ' * self._max_len[0])
-
-        #    self._output_format = 4
-        #    if width > 50:
-        #        for i, n in enumerate(self._info_len):
-        #            if n + self._info_name_len < width:
-        #                self._output_format = i
-        #                break
-        #logger.error('DE output format = {}'.format(self._output_format))
+        elif now_width <= 55:
+            self._output_format = 1
+        elif now_width <= 78:
+            self._output_format = 2
+        elif now_width <= 100:
+            self._output_format = 3
+        elif now_width <= 125:
+            self._output_format = 4
+        else:
+            self._output_format = 5
 
         out = ['{0}. '.format(str(id_in_list + 1).rjust(pad)), '', '']
 
         # format info field
-        if self._output_format == 0:
+        pl = '-' if self._raw_stations[id_in_list]['played'] else '|'
+        if self._output_format == 5:
+            # full with state
+            out[2] = ' ' + info[self._output_format].format(
+                pl,
+                self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
+                self._raw_stations[id_in_list]['clickcount'].rjust(self._max_len[1]),
+                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['country'].ljust(14)[:14],
+                self._raw_stations[id_in_list]['language'].ljust(15)[:15]
+            )
+        if self._output_format == 4:
             # full or condensed info
-            out[2] = ' ' + info[self._output_format].format(self._raw_stations[id_in_list]['votes'].rjust(self._max_len[3]),
-                    self._raw_stations[id_in_list]['clickcount'].rjust(self._max_len[4]),
-                    self._raw_stations[id_in_list]['bitrate'].rjust(self._max_len[2]),
-                    self._raw_stations[id_in_list]['country'].ljust(self._max_len[1])[:14])
-        elif self._output_format in (1, 2):
-            out[2] = ' ' + info[self._output_format].format(self._raw_stations[id_in_list]['votes'].rjust(self._max_len[3]),
-                    self._raw_stations[id_in_list]['clickcount'].rjust(self._max_len[4]),
-                    self._raw_stations[id_in_list]['bitrate'].rjust(self._max_len[2]))
-        elif self._output_format == 3:
+            out[2] = ' ' + info[self._output_format].format(
+                pl,
+                self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
+                self._raw_stations[id_in_list]['clickcount'].rjust(self._max_len[1]),
+                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['country'].ljust(14)[:14],
+            )
+        elif self._output_format in (2, 3):
+            out[2] = ' ' + info[self._output_format].format(
+                pl,
+                self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
+                self._raw_stations[id_in_list]['clickcount'].rjust(self._max_len[1]),
+                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7],
+            )
+        elif self._output_format == 1:
             # Bitrate only
-            out[2] = info[self._output_format].format(self._raw_stations[id_in_list]['bitrate'].rjust(self._max_len[2]))
+            out[2] = info[self._output_format].format(
+                pl,
+                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7]
+            )
 
         name_width = width-len(out[0])-len(out[2])
-        out[1] =  self._fix_cjk_string_width(self._raw_stations[id_in_list]['name'].ljust(name_width)[:name_width], name_width)
+        out[1] = self._fix_cjk_string_width(self._raw_stations[id_in_list]['name'].ljust(name_width)[:name_width], name_width)
         if PY3:
             return '{0}{1}{2}'.format(*out)
         else:
@@ -372,7 +393,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
 
     def _extract_data(self, a_search_result):
         ret = []
-        self._max_len = [0, 0, 0, 0, 0]
+        self._max_len = [0, 0]
         if a_search_result:
             for n in a_search_result:
                 ret.append({'name': n['name'].replace(',', ' ')})
@@ -380,19 +401,18 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                 ret[-1]['votes'] = n['votes']
                 ret[-1]['url'] = n['url']
                 ret[-1]['real_url'] = False
+                ret[-1]['played'] = False
                 ret[-1]['hls'] = n['hls']
                 ret[-1]['id'] = n['id']
                 ret[-1]['country'] = n['country']
+                ret[-1]['language'] = n['language']
                 ret[-1]['clickcount'] = n['clickcount']
                 ret[-1]['encoding'] = ''
-                self._get_max_len(string_data = (ret[-1]['name'],
-                                  ret[-1]['country']),
-                                  numeric_data = (ret[-1]['bitrate'],
-                                  ret[-1]['votes'],
-                                  ret[-1]['clickcount']))
+                self._get_max_len(ret[-1]['votes'],
+                                  ret[-1]['clickcount'])
         return ret
 
-    def _get_max_len(self, string_data, numeric_data):
+    def _get_max_len(self, votes, clicks):
         """ Calculate the maximum length of numeric_data / country
 
         Parameters
@@ -414,16 +434,11 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                     max clickcount length]
         """
 
-        for i, n in enumerate(string_data):
-            l = cjklen(n)
-            if l > self._max_len[i]:
-                self._max_len[i] = l
-        if self._max_len[0] > 50: self._max_len[0] = 50 
-        if self._max_len[0] > 14: self._max_len[1] = 14 
-        add = len(string_data)
+        numeric_data = (votes, clicks)
+        min_data = (6, 7)
         for i, n in enumerate(numeric_data):
-            if len(n) > self._max_len[i+add]:
-                self._max_len[i+add] = len(n)
+            if len(n) > self._max_len[i]:
+                self._max_len[i] = len(n) if len(n) > min_data[i] else min_data[i]
 
 
 class PyRadioBrowserInfoData(object):
@@ -436,10 +451,11 @@ class PyRadioBrowserInfoData(object):
     _connection_error = False
     _lock = threading.Lock()
     _stop_thread = False
+    _timeout = 3
     data_thread = None
 
-    def __init__(self):
-        pass
+    def __init__(self, timeout=3):
+        self._timeout = timeout
 
     def start(self, force_update=False):
         """ Start data acquisition thread """
@@ -583,7 +599,7 @@ class PyRadioBrowserInfoData(object):
             headers = {'user-agent': 'PyRadio/dev',
                        'encoding': 'application/json'}
             try:
-                r = requests.get(url, headers=headers, json=jdata)
+                r = requests.get(url, headers=headers, json=jdata, timeout=self._timeout)
                 r.raise_for_status()
                 return False, json.loads(r.text)
                 # if r.status_code == 200:
@@ -612,6 +628,7 @@ class PyRadioBrowserInfoData(object):
         # print('I am here too')
         callback(my_data, ret)
         lock.release()
+
 
 def probeBrowsers(a_browser_url):
     base_url = a_browser_url.split('/')[2]
