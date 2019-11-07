@@ -20,6 +20,7 @@ from platform import system
 from time import ctime, sleep
 from datetime import datetime
 
+from .config import HAS_REQUESTS
 from .common import *
 from .window_stack import Window_Stack
 from .config_window import *
@@ -46,7 +47,6 @@ locale.setlocale(locale.LC_ALL, "")
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
-
 
 def is_ascii(s):
     return all(ord(c) < 128 for c in s)
@@ -196,6 +196,9 @@ class PyRadio(object):
                 self.ws.EDIT_STATION_NAME_ERROR: self._print_editor_name_error,
                 self.ws.EDIT_STATION_URL_ERROR: self._print_editor_url_error,
                 self.ws.PY2_EDITOR_ERROR: self._print_py2_editor_error,
+                self.ws.REQUESTS_MODULE_NOT_INSTALLED_ERROR: self._print_requests_not_installed_error,
+                self.ws.UNKNOWN_BROWSER_SERVICE_ERROR: self._print_unknown_browser_service,
+                self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
                 }
 
         """ list of help functions """
@@ -525,13 +528,17 @@ class PyRadio(object):
             col = curses.color_pair(4)
             self.bodyWin.hline(lineNum + 1, 1, ' ', body_width, col)
 
+        # self.maxY, self.maxX = self.stdscr.getmaxyx()
         if self.ws.operation_mode == self.ws.PLAYLIST_MODE or \
                 self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
                     self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
             line = self._format_playlist_line(lineNum, pad, station)
             self.bodyWin.addstr(lineNum + 1, 1, line, col)
         else:
-            line = self._format_station_line("{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0]))
+            if self._cnf.browsing_station_service:
+                line = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.maxX - 2)
+            else:
+                line = self._format_station_line("{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0]))
             self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
     def run(self):
@@ -718,20 +725,31 @@ class PyRadio(object):
             self.startPos = self.selection
 
     def playSelection(self):
-        self.playing = self.selection
-        self._last_played_station = self.stations[self.selection][0]
-        stream_url = self.stations[self.selection][1].strip()
-        try:
-            enc = self.stations[self.selection][2].strip()
-        except:
-            enc = ''
-        self.log.display_help_message = False
-        self.log.write('Playing ' + self._last_played_station)
-        try:
-            self.player.play(self._last_played_station, stream_url, self.get_active_encoding(enc))
-        except OSError:
-            self.log.write('Error starting player.'
-                           'Are you sure a supported player is installed?')
+        if self.stations[self.selection][3]:
+            self._cnf.browsing_station_service = True
+            self._check_to_open_playlist()
+        else:
+            self.playing = self.selection
+            self._last_played_station = self.stations[self.selection][0]
+            stream_url = ''
+            if self._cnf.browsing_station_service:
+                if self._cnf.online_browser.have_to_retrieve_url:
+                    self.log.display_help_message = False
+                    self.log.write('Station: "' + self._last_played_station + '" - Retrieving URL...')
+                    stream_url = self._cnf.online_browser.url(self.selection)
+            if not stream_url:
+                stream_url = self.stations[self.selection][1]
+            try:
+                enc = self.stations[self.selection][2].strip()
+            except:
+                enc = ''
+            self.log.display_help_message = False
+            self.log.write('Playing ' + self._last_played_station)
+            try:
+                self.player.play(self._last_played_station, stream_url, self.get_active_encoding(enc))
+            except OSError:
+                self.log.write('Error starting player.'
+                               'Are you sure a supported player is installed?')
 
     def connectionFailed(self):
         old_playing = self.playing
@@ -1059,8 +1077,6 @@ class PyRadio(object):
                 return line
             else:
                 return line[:self.bodyMaxX - 2]
-        
-            pass
         else:
             if len(line) != cjklen(line):
                 while cjklen(line) > self.bodyMaxX - 2:
@@ -1451,6 +1467,52 @@ you have to manually address the issue.
                 prompt = ' Press any key ',
                 is_message=True)
 
+    def _print_requests_not_installed_error(self):
+        txt = '''Module "|requests|" not found!
+
+        In order to use an online stations directory
+        service, the "|requests|" module must be installed.
+
+        Exit |PyRadio| now, install the module (named
+        |python-requests| or |python{}-reuqests|) and try
+        executing |PyRadio| again.
+        '''
+        self._show_help(txt.format(python_version[0]), self.ws.REQUESTS_MODULE_NOT_INSTALLED_ERROR,
+                caption = ' Module Error ',
+                prompt = ' Press any key ',
+                is_message=True)
+
+    def _print_unknown_browser_service(self):
+        txt = '''The service you are trying to use is not supported.
+
+        The service "|{0}|"
+        (url: "|{1}|")
+        is not implemented (yet?)
+
+        If you want to help implementing it, please open an
+        issue at "|https://github.com/coderholic/pyradio/issues|".
+        '''
+        self._show_help(txt.format(self.stations[self.selection][0],
+                self.stations[self.selection][1]),
+                self.ws.UNKNOWN_BROWSER_SERVICE_ERROR,
+                caption = ' Unknown Service ',
+                prompt = ' Press any key ',
+                is_message=True)
+
+    def _print_service_connection_error(self):
+        txt = '''Service temporarily unavailable.
+
+        This may mean that your internet connection has
+        failed, or that the service has failed, in which
+        case you should try again later.
+        '''
+        self._show_help(txt.format(self.stations[self.selection][0],
+                self.stations[self.selection][1]),
+                self.ws.SERVICE_CONNECTION_ERROR,
+                caption = ' Service Unavailable ',
+                prompt = ' Press any key ',
+                is_message=True)
+
     def _print_playlist_reload_confirmation(self):
         if self._cnf.locked:
             txt ='''This playlist has not been modified within
@@ -1720,15 +1782,45 @@ you have to manually address the issue.
         self._get_active_stations()
         self.jumpnr = ''
         self._random_requested = False
-        txt = '''Reading playlists. Please wait...'''
-        self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
-        self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.stations]
-        self.ws.window_mode = self.ws.PLAYLIST_MODE
-        self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
-        self.number_of_items, self.playing = self.readPlaylists()
-        self.stations = self._cnf.playlists
-        if self.number_of_items > 0:
-            self.refreshBody()
+        if self._cnf.browsing_station_service:
+            # TODO
+            if HAS_REQUESTS:
+                txt = '''Connecting to service. Please wait...'''
+                self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+                try:
+                    self._cnf.open_browser(self.stations[self.selection][1])
+                except TypeError:
+                    pass
+                if self._cnf.online_browser:
+                    tmp_stations = self._cnf.stations
+                    if tmp_stations:
+                        self.stations = tmp_stations[:]
+                        self.stations = self._cnf.stations
+                        if self.player.isPlaying():
+                            self.stopPlayer()
+                        self.selection = 0
+                        self.startPos = 0
+                        self.number_of_items = len(self.stations)
+                        #self.refreshBody()
+                    else:
+                        self._print_service_connection_error()
+                        self._cnf.browsing_station_service = False
+                else:
+                    self._print_unknown_browser_service()
+                    self._cnf.browsing_station_service = False
+            else:
+                self._print_requests_not_installed_error()
+                self._cnf.browsing_station_service = False
+        else:
+            txt = '''Reading playlists. Please wait...'''
+            self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+            self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.stations]
+            self.ws.window_mode = self.ws.PLAYLIST_MODE
+            self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+            self.number_of_items, self.playing = self.readPlaylists()
+            self.stations = self._cnf.playlists
+            if self.number_of_items > 0:
+                self.refreshBody()
         return
 
     def _get_station_id(self, find):
@@ -2056,6 +2148,26 @@ you have to manually address the issue.
             self.refreshBody()
         return ret
 
+    def _do_display_notify(self):
+        self._update_notify_lock.acquire()
+        if self._update_version:
+            self._update_version_do_display = self._update_version
+            self._print_update_notification()
+        self._update_notify_lock.release()
+
+    def _check_to_open_playlist(self):
+        if self._cnf.dirty_playlist:
+            if self._cnf.auto_save_playlist:
+                # save playlist and open playlist
+                ret = self.saveCurrentPlaylist()
+                if ret == 0:
+                    self._open_playlist()
+            else:
+                # ask to save playlist
+                self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE)
+        else:
+            self._open_playlist()
+
     def keypress(self, char):
         if self._force_exit or \
                 self.ws.operation_mode == self.ws.CONFIG_SAVE_ERROR_MODE:
@@ -2077,6 +2189,7 @@ you have to manually address the issue.
             if self.selection >= self.number_of_items - max_lines and \
                     self.number_of_items > max_lines:
                 self.startPos = self.number_of_items - max_lines
+                logger.error('DE *** refreshing body')
                 self.refreshBody()
             return
 
@@ -2297,8 +2410,12 @@ you have to manually address the issue.
                             self._cnf.dirty_playlist = True
                             logger.info('self.stations[self.selection] = {}'.format(self.stations[self.selection]))
                             self.stations[self.selection][2] = ret_encoding
+                            if self._cnf.browsing_station_service:
+                                self._cnf.dirty_playlist = False
+                                self._cnf.online_browser.set_encoding(self.selection, ret_encoding)
                             if self.player.isPlaying():
-                                curses.ungetch('l')
+                                self.stopPlayer()
+                                self.playSelection
                         #self._config_win._config_options['default_encoding'][1] = ret_encoding
                     self.ws.close_window()
                     self.refreshBody()
@@ -2691,7 +2808,10 @@ you have to manually address the issue.
                 ret = self.saveCurrentPlaylist()
                 if ret == 0:
                     self._open_playlist()
+                else:
+                    self._cnf.browsing_station_service = False
             elif char in (ord('n'), ):
+                    self._cnf.browsing_station_service = False
                     self.ws.close_window()
                     self._open_playlist()
             elif char in (curses.KEY_EXIT, ord('q'), 27):
@@ -2700,6 +2820,7 @@ you have to manually address the issue.
                 self.bodyWin.nodelay(False)
                 if char == -1:
                     """ ESCAPE """
+                    self._cnf.browsing_station_service = False
                     self.ws.close_window()
                     self.refreshBody()
             return
@@ -2946,6 +3067,9 @@ you have to manually address the issue.
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char in ( ord('a'), ord('A') ):
+                    self.jumpnr = ''
+                    self._random_requested = False
+                    if self._cnf.browsing_station_service: return
                     self._station_editor = PyRadioEditor(self.stations, self.selection, self.bodyWin)
                     if char == ord('A'):
                         self._station_editor.append = True
@@ -2954,6 +3078,9 @@ you have to manually address the issue.
                     self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
                 elif char == ord('e'):
+                    self.jumpnr = ''
+                    self._random_requested = False
+                    if self._cnf.browsing_station_service: return
                     if python_version[0] == '2':
                         if not is_ascii(self.stations[self.selection][0]):
                             self._print_py2_editor_error()
@@ -2983,7 +3110,8 @@ you have to manually address the issue.
                     self._old_station_encoding = self.stations[self.selection][2]
                     if self._old_station_encoding == '':
                         self._old_station_encoding = 'utf-8'
-                    logger.info('encoding = {}'.format(self._old_station_encoding))
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.info('encoding = {}'.format(self._old_station_encoding))
                     self.ws.operation_mode = self.ws.SELECT_STATION_ENCODING_MODE
                     self._encoding_select_win = PyRadioSelectEncodings(self.bodyMaxY,
                             self.bodyMaxX, self._old_station_encoding)
@@ -2994,17 +3122,8 @@ you have to manually address the issue.
                 elif char in (ord('o'), ):
                     self.jumpnr = ''
                     self._random_requested = False
-                    if self._cnf.dirty_playlist:
-                        if self._cnf.auto_save_playlist:
-                            # save playlist and open playlist
-                            ret = self.saveCurrentPlaylist()
-                            if ret == 0:
-                                self._open_playlist()
-                        else:
-                            # ask to save playlist
-                            self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE)
-                    else:
-                        self._open_playlist()
+                    if self._cnf.browsing_station_service: return
+                    self._check_to_open_playlist()
                     return
 
                 elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
@@ -3014,11 +3133,7 @@ you have to manually address the issue.
                     if self.number_of_items > 0:
                         self.playSelection()
                         self.refreshBody()
-                        self._update_notify_lock.acquire()
-                        if self._update_version:
-                            self._update_version_do_display = self._update_version
-                            self._print_update_notification()
-                        self._update_notify_lock.release()
+                    self._do_display_notify()
                     return
 
                 elif char in (ord(' '), curses.KEY_LEFT, ord('h')):
@@ -3030,17 +3145,14 @@ you have to manually address the issue.
                         else:
                             self.playSelection()
                         self.refreshBody()
-                        self._update_notify_lock.acquire()
-                        if self._update_version:
-                            self._update_version_do_display = self._update_version
-                            self._print_update_notification()
-                        self._update_notify_lock.release()
+                    self._do_display_notify()
                     return
 
                 elif char in(ord('x'), curses.KEY_DC):
                     # TODO: make it impossible when session locked?
                     self.jumpnr = ''
                     self._random_requested = False
+                    if self._cnf.browsing_station_service: return
                     if self.number_of_items > 0:
                         self.removeStation()
                     return
@@ -3048,6 +3160,7 @@ you have to manually address the issue.
                 elif char in(ord('s'), ):
                     self.jumpnr = ''
                     self._random_requested = False
+                    if self._cnf.browsing_station_service: return
                     if self.number_of_items > 0 and \
                             self._cnf.dirty_playlist:
                         self.saveCurrentPlaylist()
@@ -3063,6 +3176,7 @@ you have to manually address the issue.
                 elif char in (ord('R'), ):
                     self.jumpnr = ''
                     self._random_requested = False
+                    if self._cnf.browsing_station_service: return
                     # Reload current playlist
                     if self._cnf.dirty_playlist:
                         if self._cnf.confirm_playlist_reload:

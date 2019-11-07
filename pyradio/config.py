@@ -10,6 +10,12 @@ from sys import platform
 from time import ctime
 from datetime import datetime
 from shutil import copyfile, move
+from .browser import PyRadioStationsBrowser, probeBrowsers
+HAS_REQUESTS = True
+try:
+    import requests
+except ImportError:
+    HAS_REQUESTS = False
 from .log import Log
 
 
@@ -18,7 +24,6 @@ logger = logging.getLogger(__name__)
 
 class PyRadioStations(object):
     """ PyRadio stations file management """
-
     stations_file = ''
     stations_filename_only = ''
     stations_filename_only_no_extension = ''
@@ -60,6 +65,11 @@ class PyRadioStations(object):
 
     jump_tag = -1
 
+    _browsing_station_service = False
+
+    # station directory service object
+    _online_browser = None
+
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -98,12 +108,35 @@ class PyRadioStations(object):
             self._check_stations_csv(self.stations_dir, self.root_path)
 
     @property
+    def online_browser(self):
+        return self._online_browser
+
+    @online_browser.setter
+    def online_browser(self, value):
+        self._online_browser = value
+
+    @property
     def playlist_version(self):
         return self._playlist_version
 
     @playlist_version.setter
     def playlist_version(self, value):
-        raise ValueError('parameter is read only')
+        raise ValueError('property is read only')
+
+    @property
+    def browsing_station_service(self):
+        return self._browsing_station_service
+
+    @browsing_station_service.setter
+    def browsing_station_service(self, value):
+        self._browsing_station_service = value
+
+    def url(self, id_in_list):
+        if self._browsing_station_service:
+            # TODO get browser url
+            return self._online_browser.url(id_in_list)
+            #return self.stations[id_in_list][1].strip()
+        return self.stations[id_in_list][1].strip()
 
     def _move_old_csv(self, usr):
         """ if a ~/.pyradio files exists, relocate it in user
@@ -608,6 +641,18 @@ class PyRadioStations(object):
             if a_playlist[3] == self.stations_file:
                 return i
         return -1
+
+    def open_browser(self, url):
+        self._online_browser = probeBrowsers(url)()
+        if self._online_browser:
+            self.stations = self._online_browser.stations(2)
+            self._reading_stations = []
+            #self._get_playlist_elements(stationFile)
+            #self.previous_stations_file = prev_file
+            #self._is_playlist_in_config_dir()
+            self.number_of_stations = len(self.stations)
+            self.dirty_playlist = False
+
 
 class PyRadioConfig(PyRadioStations):
 

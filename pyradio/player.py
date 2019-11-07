@@ -320,7 +320,7 @@ class Player(object):
         self.show_volume = True
         self.title_prefix = ''
         self.playback_is_on = False
-        self.outputStream.write('Station: "{}"'.format(name), self.status_update_lock)
+        self.outputStream.write('Station: "{}" - Opening connection...'.format(name), self.status_update_lock)
         if logger.isEnabledFor(logging.INFO):
             logger.info('Selected Station: "{}"'.format(name))
         if encoding:
@@ -383,8 +383,12 @@ class Player(object):
                 except:
                     pass
             else:
-                os.kill(self.process.pid, 15)
-                self.process.wait()
+                try:
+                    os.kill(self.process.pid, 15)
+                    self.process.wait()
+                except ProcessLookupError:
+                    # except:
+                    pass
             self.process = None
 
     def _buildStartOpts(self, streamUrl, playList):
