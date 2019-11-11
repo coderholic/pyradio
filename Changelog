@@ -1,3 +1,6 @@
+2019-11-10
+    * Fixing vlc returned volume parsing (due to locales decimal separator)
+
 2019-10-29 s-n-g
     * FIX: Playlists flagged as changed when adding a station
     * Handling CJK presentation on station and playlist view

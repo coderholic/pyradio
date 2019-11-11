@@ -762,7 +762,8 @@ class VlcPlayer(Player):
 
     def _format_volume_string(self, volume_string):
         """ format vlc's volume """
-        self.actual_volume = int(volume_string.split(self.volume_string)[1].split(',')[0].split()[0])
+        dec_sep = '.' if '.' in volume_string else ','
+        self.actual_volume = int(volume_string.split(self.volume_string)[1].split(dec_sep)[0].split()[0])
         return '[Vol: {}%] '.format(int(100 * self.actual_volume / self.max_volume))
 
     def _format_title_string(self, title_string):
