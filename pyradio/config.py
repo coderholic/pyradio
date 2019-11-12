@@ -690,6 +690,10 @@ class PyRadioConfig(PyRadioStations):
         self.use_transparency = False
 
         self.dirty_config = False
+        # True if player changed by config window
+        self.player_changed = False
+        # [ old player, new player ]
+        self.player_values = []
 
         PyRadioStations.__init__(self)
 

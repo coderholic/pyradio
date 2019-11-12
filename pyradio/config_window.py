@@ -378,6 +378,10 @@ class PyRadioConfigWindow(object):
             self._old_theme = self._config_options['theme'][1]
             self._saved_config_options = deepcopy(self._config_options)
             if self._cnf.opts != self._saved_config_options:
+                # check if player has changed
+                if self._cnf.opts[ 'player' ][1] != self._saved_config_options[ 'player' ][1]:
+                    self._cnf.player_changed = True
+                    self._cnf.player_values = [ self._cnf.opts[ 'player' ][1], self._saved_config_options[ 'player' ][1] ]
                 self._cnf.opts = deepcopy(self._saved_config_options)
                 self._old_theme == self._saved_config_options['theme'][1]
                 self._config_options = deepcopy(self._cnf.opts)
@@ -1274,8 +1278,8 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
     def __init__(self, parent, config_path, default_playlist, default_station):
         self._default_playlist = default_playlist
         self._orig_default_playlist = default_playlist
-        #logger.info('default_playlist = ' + default_playlist)
-        #logger.info('self._default_playlist = ' + self._default_playlist)
+        logger.info('default_playlist = ' + default_playlist)
+        logger.info('self._default_playlist = ' + self._default_playlist)
         PyRadioSelectPlaylist.__init__(self, parent, config_path, default_station)
         self._title = ' Station Selection '
 

@@ -32,8 +32,17 @@ class PyRadioStationsBrowser(object):
         self._raw_stations = []
         self._last_search = None
         self._have_to_retrieve_url = False
+        self._uses_internal_header = False
         self._url_timeout = 3
         self._search_timeout = 3
+
+    @property
+    def uses_internal_header(self):
+        return self._uses_internal_header
+
+    @uses_internal_header.setter
+    def uses_internal_header(self, value):
+        raise ValueError('property is read only')
 
     @property
     def have_to_retrieve_url(self):
@@ -120,6 +129,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
     _info_name_len = 0
 
     _have_to_retrieve_url = True
+    _uses_internal_header = True
 
     _url_timeout = 3
     _search_timeout = 3
@@ -310,13 +320,22 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                     empty string
         """
 
-        info = ('',
-                ' {0} {1}kb',
-                ' {0}{1} v|{2} cl|{3}kb',
-                ' {0} {1}| {2}| {3}kb',
-                ' {0} {1}| {2}| {3}kb|{4}',
-                ' {0} {1}| {2}| {3}kb|{4}|{5}',
-        )
+        if PY3:
+            info = ('',
+                    ' {0} {1}kb',
+                    ' {0}{1} v│{2} cl│{3}kb',
+                    ' {0} {1}│ {2}│ {3}kb',
+                    ' {0} {1}│ {2}│ {3}kb│{4}',
+                    ' {0} {1}│ {2}│ {3}kb│{4}│{5}',
+            )
+        else:
+            info = ('',
+                    ' {0} {1}kb',
+                    ' {0}{1} v|{2} cl|{3}kb',
+                    ' {0} {1}| {2}| {3}kb',
+                    ' {0} {1}| {2}| {3}kb|{4}',
+                    ' {0} {1}| {2}| {3}kb|{4}|{5}',
+            )
         # now_width = get_terminal_size().columns - 2
         now_width = width
         if now_width <= 45:
@@ -335,7 +354,10 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         out = ['{0}. '.format(str(id_in_list + 1).rjust(pad)), '', '']
 
         # format info field
-        pl = '-' if self._raw_stations[id_in_list]['played'] else '|'
+        if PY3:
+            pl = u'┼' if self._raw_stations[id_in_list]['played'] else u'│'
+        else:
+            pl = '+' if self._raw_stations[id_in_list]['played'] else '|'
         if self._output_format == 5:
             # full with state
             out[2] = ' ' + info[self._output_format].format(
@@ -353,14 +375,14 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                 self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
                 self._raw_stations[id_in_list]['clickcount'].rjust(self._max_len[1]),
                 self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7],
-                self._raw_stations[id_in_list]['country'].ljust(14)[:14],
+                self._raw_stations[id_in_list]['country'].ljust(14)[:14]
             )
         elif self._output_format in (2, 3):
             out[2] = ' ' + info[self._output_format].format(
                 pl,
                 self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
                 self._raw_stations[id_in_list]['clickcount'].rjust(self._max_len[1]),
-                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7]
             )
         elif self._output_format == 1:
             # Bitrate only

@@ -199,6 +199,7 @@ class PyRadio(object):
                 self.ws.REQUESTS_MODULE_NOT_INSTALLED_ERROR: self._print_requests_not_installed_error,
                 self.ws.UNKNOWN_BROWSER_SERVICE_ERROR: self._print_unknown_browser_service,
                 self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
+                self.ws.PLAYER_CHANGED_INFO_MODE: self._show_player_changed_in_config,
                 }
 
         """ list of help functions """
@@ -764,7 +765,7 @@ class PyRadio(object):
             #self._redisplay_transient_window()
             self.refreshBody(start=1)
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Failed to connect to: "{}"'.format(self._last_played_station))
+            logger.info('start of playback NOT detected for: "{}"'.format(self._last_played_station))
         self.log.write('Failed to connect to: "{}"'.format(self._last_played_station))
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -984,7 +985,8 @@ class PyRadio(object):
             self.helpWin.addstr(0, int((inner_width-len(caption))/2), caption, caption_col)
         splited = []
         for i, n in enumerate(lines):
-            a_line = self._replace_starting_undesscore(n)
+            #a_line = self._replace_starting_undesscore(n)
+            a_line = n
             if a_line.startswith('%'):
                 self.helpWin.move(i + 1, 0)
                 try:
@@ -1510,6 +1512,21 @@ you have to manually address the issue.
                 self.stations[self.selection][1]),
                 self.ws.SERVICE_CONNECTION_ERROR,
                 caption = ' Service Unavailable ',
+                prompt = ' Press any key ',
+                is_message=True)
+
+    def _show_player_changed_in_config(self):
+        txt = '''|PyRadio| default player has changed from
+        __"|{0}|"
+        to
+        __"|{1}|".
+
+        This change may lead to changing the player used, 
+        and will take effect next time you open |PyRadio|.
+        '''
+        self._show_help(txt.format(*self._cnf.player_values),
+                self.ws.PLAYER_CHANGED_INFO_MODE,
+                caption = ' Default Player Changed ',
                 prompt = ' Press any key ',
                 is_message=True)
 
@@ -2352,6 +2369,9 @@ you have to manually address the issue.
                             self._old_config_encoding = self._cnf.opts['default_encoding'][1]
                             if self._config_win:
                                 self._config_win._old_use_transparency = self._cnf.use_transparency
+                            if self._cnf.player_changed:
+                                self._show_player_changed_in_config()
+                                self._cnf.player_changed = False
                     else:
                         # restore transparency, if necessary
                         if self._config_win._config_options['use_transparency'][1] != self._config_win._saved_config_options['use_transparency'][1]:
