@@ -1,6 +1,7 @@
 2019-11-12
     * When default played is changed in the config, a message to restart
       the application is presented to the user
+    * Config / Default station: pading fixed
 
 2019-11-10
     * Fixing vlc returned volume parsing (due to locales decimal separator)

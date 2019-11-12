@@ -1006,7 +1006,6 @@ class PyRadioSelectPlaylist(object):
             self._win.hline(self.maxY - 4, 1, ' ', self.maxX - 2, curses.color_pair(5))
 
         else:
-            #for i in range(self.startPos, self.startPos + self.maxY - 1):
             pad = len(str(self.startPos + self.maxY - 2))
             for i in range(0, self.maxY - 2):
                 if i + self.startPos < self._num_of_items:
@@ -1040,6 +1039,7 @@ class PyRadioSelectPlaylist(object):
         return col
 
     def _format_line(self, i, pad):
+        """ PyRadioSelectPlaylist format line """
         line = '{0}. {1}'.format(str(i + self.startPos + 1).rjust(pad),
                 self._items[i + self.startPos])
         return line, pad
@@ -1106,10 +1106,18 @@ class PyRadioSelectPlaylist(object):
                         continue
                     try:
                         name, url = [s.strip() for s in row]
-                        self._select_playlist_error += 1
-                    except:
-                        name, url, enc = [s.strip() for s in row]
-                        self._select_playlist_error += 1
+                        self._select_playlist_error = 1
+                    except ValueError:
+                        try:
+                            name, url, enc = [s.strip() for s in row]
+                            self._select_playlist_error = 1
+                        except ValueError:
+                            try:
+                                name, url, enc, br = [s.strip() for s in row]
+                                self._select_playlist_error = 1
+                            except ValueError:
+                                self._select_playlist_error = -1
+                                break
             except:
                 self._select_playlist_error = -1
         if self._select_playlist_error == -1 or \
@@ -1329,11 +1337,13 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                     if not row:
                         continue
                     try:
-                        name, url = [s.strip() for s in row]
-                        self._items.append(name)
-                    except:
-                        name, url, enc = [s.strip() for s in row]
-                        self._items.append(name)
+                        name, _ = [s.strip() for s in row]
+                    except ValueError:
+                        try:
+                            name, _, _ = [s.strip() for s in row]
+                        except ValueError:
+                            name, _, _, _ = [s.strip() for s in row]
+                    self._items.append(name)
             except:
                 pass
         self._items.reverse()
@@ -1362,12 +1372,13 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         return col
 
     def _format_line(self, i, pad):
-        pad = pad - 2
+        """ PyRadioSelectStation format line """
+        fixed_pad = pad - 2
         if i + self.startPos < 2:
-            line = '{0}  {1}'.format(' '.rjust(pad),
+            line = '{0}  {1}'.format(' '.rjust(fixed_pad),
                 self._items[i + self.startPos])
         else:
-            line = '{0}. {1}'.format(str(i + self.startPos - 1).rjust(pad),
+            line = '{0}. {1}'.format(str(i + self.startPos - 1).rjust(fixed_pad),
                     self._items[i + self.startPos])
         return line, pad
 

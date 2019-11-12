@@ -48,11 +48,17 @@ class PyRadioStations(object):
             1: 3 columns (name,URL,encoding)
             0: 2 columns (name,URL)
     """
-    BASIC_PLAYLIST = 0
-    ENCODING_PLAYLIST = 1
-    ONLINE_PLAYLIST = 2
-    _playlist_version = BASIC_PLAYLIST
-    _read_playlist_version = BASIC_PLAYLIST
+    PLAYLIST_HAS_NAME_URL = 0
+    PLAYLIST_HAS_NAME_URL_ENCODING = 1
+    PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER = 2
+    _playlist_version = PLAYLIST_HAS_NAME_URL
+    _read_playlist_version = PLAYLIST_HAS_NAME_URL
+
+    _playlist_version_to_string = {
+            PLAYLIST_HAS_NAME_URL: 'PLAYLIST_HAS_NAME_URL',
+            PLAYLIST_HAS_NAME_URL_ENCODING: 'PLAYLIST_HAS_NAME_URL_ENCODING',
+            PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER: 'PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER'
+        }
 
     dirty_playlist = False
 
@@ -287,7 +293,7 @@ class PyRadioStations(object):
             return -7
         prev_file = self.stations_file
         prev_format = self._playlist_version
-        self._read_playlist_version = self._playlist_version = self.BASIC_PLAYLIST
+        self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL
         self._reading_stations = []
         with eval(self._open_string[self._open_string_id]) as cfgfile:
             try:
@@ -301,11 +307,11 @@ class PyRadioStations(object):
                         try:
                             name, url, enc = [s.strip() for s in row]
                             self._reading_stations.append([name, url, enc, ''])
-                            self._read_playlist_version = self._playlist_version = self.ENCODING_PLAYLIST
+                            self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING
                         except:
                             name, url, enc, onl = [s.strip() for s in row]
                             self._reading_stations.append([name, url, enc, onl])
-                            self._read_playlist_version = self._playlist_version = self.ONLINE_PLAYLIST
+                            self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER
             except:
                 self._reading_stations = []
                 self._playlist_version = prev_format
@@ -319,7 +325,7 @@ class PyRadioStations(object):
         self.number_of_stations = len(self.stations)
         self.dirty_playlist = False
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('read_playlist_file: Playlist version: {}'.format(self._playlist_version))
+            logger.debug('read_playlist_file: Playlist version: {}'.format(self._playlist_version_to_string[self._playlist_version]))
         self.jump_tag = -1
         return self.number_of_stations
 
@@ -371,15 +377,15 @@ class PyRadioStations(object):
             Format type can change by editing encoding,
             deleting a non-utf-8 station etc.
         """
-        playlist_version = self.BASIC_PLAYLIST
+        playlist_version = self.PLAYLIST_HAS_NAME_URL
         for n in self.stations:
             if n[3] != '':
-                playlist_version = self.ONLINE_PLAYLIST
+                playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER
                 break
-        if playlist_version == self.BASIC_PLAYLIST:
+        if playlist_version == self.PLAYLIST_HAS_NAME_URL:
             for n in self.stations:
                 if n[2] != '':
-                    playlist_version = self.ENCODING_PLAYLIST
+                    playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING
                     break
         if self._playlist_version == playlist_version:
             ret = False
@@ -418,9 +424,9 @@ class PyRadioStations(object):
 
         tmp_stations = self.stations[:]
         tmp_stations.reverse()
-        if self._playlist_version == self.BASIC_PLAYLIST:
+        if self._playlist_version == self.PLAYLIST_HAS_NAME_URL:
             tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '' ])
-        elif self._playlist_version == self.ENCODING_PLAYLIST:
+        elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
             tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '', '' ])
         else:
             tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '', '', '' ])
@@ -450,9 +456,9 @@ class PyRadioStations(object):
         """ Return a 2-column if in old format,
             a 3-column row if has encoding, or
             a 4 column row if has online browser flag too """
-        if self._playlist_version == self.ONLINE_PLAYLIST:
+        if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER:
             return a_row
-        elif self._playlist_version == self.ENCODING_PLAYLIST:
+        elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
             return a_row[:-1]
         else:
             return a_row[:-2]
