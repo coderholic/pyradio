@@ -197,6 +197,7 @@ class Player(object):
                     subsystemOut = subsystemOutRaw.decode("utf-8", "replace")
                 if subsystemOut == '':
                     break
+                logger.error('DE subsystemOut = "{}"'.format(subsystemOut))
                 if not self._is_accepted_input(subsystemOut):
                     continue
                 subsystemOut = subsystemOut.strip()
@@ -346,9 +347,13 @@ class Player(object):
                 logger.error("playback detection thread start failed")
         if logger.isEnabledFor(logging.INFO):
             logger.info("Player started")
+        if self.process and self.PLAYER_CMD == 'mpv':
+            self._sendCommand('{ "command": ["observe_property", 1, "volume"] }')
 
     def _sendCommand(self, command):
         """ send keystroke command to player """
+
+        logger.error('DE command to execute: "{}"'.format(command))
 
         if(self.process is not None):
             try:
@@ -428,6 +433,7 @@ class Player(object):
     def volumeUp(self):
         """ increase volume """
         if self.muted is not True:
+            logger.error('DE self._volumeUp')
             self._volume_up()
 
     def _volume_up(self):
@@ -566,7 +572,9 @@ class MpvPlayer(Player):
 
     def _volume_up(self):
         """ increase mpv's volume """
+        logger.error('DE mpv volume up')
         os.system("echo 'cycle volume' | socat - " + self.mpvsocket + " 2>/dev/null");
+        os.system("echo '{ \"command\": [\"get_property\", \"volume\"] }' | socat - " + self.mpvsocket + " 2>/dev/null");
 
     def _volume_down(self):
         """ decrease mpv's volume """

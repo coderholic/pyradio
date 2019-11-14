@@ -492,6 +492,17 @@ class PyRadio(object):
         if cur_mode == self.ws.THEME_MODE:
             cur_mode = self.ws.previous_operation_mode
         if cur_mode == self.ws.NORMAL_MODE:
+            if self._cnf.browsing_station_service:
+                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX - 2, force_py2=True)
+                if ticks:
+                    for n in ticks:
+                        if version_info < (3, 0):
+                            self.bodyWin.addstr(0, n, u'┬'.encode('utf-8', 'replace'), curses.color_pair(5))
+                            self.bodyWin.addstr(self.bodyMaxY - 1, n, u'┴'.encode('utf-8', 'replace'), curses.color_pair(5))
+                        else:
+                            self.bodyWin.addstr(0, n, '┬', curses.color_pair(5))
+                            self.bodyWin.addstr(self.bodyMaxY - 1, n, '┴', curses.color_pair(5))
+
             align = 1
             w_header = self._cnf.stations_filename_only_no_extension
             if self._cnf.dirty_playlist:
@@ -517,19 +528,23 @@ class PyRadio(object):
 
     def __displayBodyLine(self, lineNum, pad, station):
         col = curses.color_pair(5)
+        sep_col = None
         body_width = self.bodyMaxX - 2
         if lineNum + self.startPos == self.selection and \
                 self.selection == self.playing:
             col = curses.color_pair(9)
+            # sep_col = curses.color_pair(5)
             self.bodyWin.hline(lineNum + 1, 1, ' ', body_width, col)
         elif lineNum + self.startPos == self.selection:
             col = curses.color_pair(6)
             self.bodyWin.hline(lineNum + 1, 1, ' ', body_width, col)
         elif lineNum + self.startPos == self.playing:
             col = curses.color_pair(4)
+            sep_col = curses.color_pair(5)
             self.bodyWin.hline(lineNum + 1, 1, ' ', body_width, col)
 
         # self.maxY, self.maxX = self.stdscr.getmaxyx()
+        #logger.error('DE ==== width = {}'.format(self.maxX - 2))
         if self.ws.operation_mode == self.ws.PLAYLIST_MODE or \
                 self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
                     self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
@@ -537,10 +552,15 @@ class PyRadio(object):
             self.bodyWin.addstr(lineNum + 1, 1, line, col)
         else:
             if self._cnf.browsing_station_service:
-                line = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.maxX - 2)
+                played, line = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.maxX - 2)
             else:
                 line = self._format_station_line("{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0]))
             self.bodyWin.addstr(lineNum + 1, 1, line, col)
+
+            if self._cnf.browsing_station_service and sep_col:
+                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX - 2, force_py2=True)
+                for n in ticks:
+                    self.bodyWin.chgat(lineNum + 1, n, 1, sep_col)
 
     def run(self):
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
@@ -3285,11 +3305,14 @@ you have to manually address the issue.
                         self.refreshBody()
 
     def _volume_up(self):
+        logger.error('DE entering radio._volume_up')
         self.jumpnr = ''
         self._random_requested = False
         if self.player.isPlaying():
+            logger.error('DE isPlaying radio._volume_up')
             if self.player.playback_is_on:
                 self.player.volumeUp()
+                logger.error('DE playback_is_on radio._volume_up')
         else:
             if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
                 self.ws.close_window()

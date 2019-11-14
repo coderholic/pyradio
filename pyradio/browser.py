@@ -7,6 +7,9 @@ import logging
 from .widechar import cjklen, PY3
 #from os import get_terminal_size
 
+import locale
+locale.setlocale(locale.LC_ALL, '')    # set your locale
+
 logger = logging.getLogger(__name__)
 
 
@@ -320,44 +323,19 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                     empty string
         """
 
-        if PY3:
-            info = ('',
-                    ' {0} {1}kb',
-                    ' {0}{1} v│{2} cl│{3}kb',
-                    ' {0} {1}│ {2}│ {3}kb',
-                    ' {0} {1}│ {2}│ {3}kb│{4}',
-                    ' {0} {1}│ {2}│ {3}kb│{4}│{5}',
-            )
-        else:
-            info = ('',
-                    ' {0} {1}kb',
-                    ' {0}{1} v|{2} cl|{3}kb',
-                    ' {0} {1}| {2}| {3}kb',
-                    ' {0} {1}| {2}| {3}kb|{4}',
-                    ' {0} {1}| {2}| {3}kb|{4}|{5}',
-            )
-        # now_width = get_terminal_size().columns - 2
-        now_width = width
-        if now_width <= 45:
-            self._output_format = 0
-        elif now_width <= 55:
-            self._output_format = 1
-        elif now_width <= 78:
-            self._output_format = 2
-        elif now_width <= 100:
-            self._output_format = 3
-        elif now_width <= 125:
-            self._output_format = 4
-        else:
-            self._output_format = 5
-
+        info = (u'',
+                u' {0} {1}kb',
+                u' {0} {1}│ {2}kb',
+                u' {0} {1}│ {2}│ {3}kb',
+                u' {0} {1}│ {2}│ {3}kb│{4}',
+                u' {0} {1}│ {2}│ {3}kb│{4}│{5}',
+        )
+        self._get_output_format(width)
+        #logger.error('DE self._output_format = {}'.format(self._output_format))
         out = ['{0}. '.format(str(id_in_list + 1).rjust(pad)), '', '']
 
         # format info field
-        if PY3:
-            pl = u'┼' if self._raw_stations[id_in_list]['played'] else u'│'
-        else:
-            pl = '+' if self._raw_stations[id_in_list]['played'] else '|'
+        pl = u'├' if self._raw_stations[id_in_list]['played'] else u'│'
         if self._output_format == 5:
             # full with state
             out[2] = ' ' + info[self._output_format].format(
@@ -377,7 +355,13 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                 self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7],
                 self._raw_stations[id_in_list]['country'].ljust(14)[:14]
             )
-        elif self._output_format in (2, 3):
+        elif self._output_format == 2:
+            out[2] = ' ' + info[self._output_format].format(
+                pl,
+                self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
+                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7]
+            )
+        elif self._output_format == 3:
             out[2] = ' ' + info[self._output_format].format(
                 pl,
                 self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
@@ -394,13 +378,17 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         name_width = width-len(out[0])-len(out[2])
         out[1] = self._fix_cjk_string_width(self._raw_stations[id_in_list]['name'].ljust(name_width)[:name_width], name_width)
         if PY3:
-            return '{0}{1}{2}'.format(*out)
+            # if pl == '╞':
+            #    out[2] += '╡'
+            return (self._raw_stations[id_in_list]['played'],
+                    '{0}{1}{2}'.format(*out))
         else:
             # on python 2, strings are already in utf-8
-            return '{0}{1}{2}'.format(
+            return (self._raw_stations[id_in_list]['played'],
+                    '{0}{1}{2}'.format(
                     out[0].encode('utf-8', 'replace'),
                     out[1].encode('utf-8', 'replace'),
-                    out[2].encode('utf-8', 'replace'))
+                    out[2].encode('utf-8', 'replace')))
 
     def set_encoding(self, id_in_list, new_encoding):
         if id_in_list < len(self._raw_stations):
@@ -439,20 +427,16 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
 
         Parameters
         ----------
-        string_data
-            A tuple (name, country) - (uses cjklen)
-        country
-            A string (uses cjklen)
+        votes
+            Number of station's vote
+        clicks 
+            Number of station's clicks
         numeric_data
-            A tuple (bitrate, votes, clickcount)
 
         Returns
         -------
         self._max_len
-            A list [max name length (max is 50),
-                    max country length (max is 14),
-                    max bitrate length,
-                    max votes length,
+            A list [max votes length,
                     max clickcount length]
         """
 
@@ -461,6 +445,65 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         for i, n in enumerate(numeric_data):
             if len(n) > self._max_len[i]:
                 self._max_len[i] = len(n) if len(n) > min_data[i] else min_data[i]
+
+    def _get_output_format(self, width):
+        """ Return output format based on window width
+
+        Paramaters
+        ----------
+        width
+            Window width
+
+        Returns
+        -------
+        self._output_format
+            A number 0..5
+        """
+
+        # now_width = get_terminal_size().columns - 2
+        if width <= 50:
+            self._output_format = 0
+        elif width < 57:
+            self._output_format = 1
+        elif width < 65:
+            self._output_format = 2
+        elif width < 80:
+            self._output_format = 3
+        elif width < 95:
+            self._output_format = 4
+        else:
+            self._output_format = 5
+
+    def get_columns_separators(self, width, force_py2=False):
+        if not force_py2 and not PY3:
+            return []
+        self._get_output_format(width)
+        if self._output_format == 0:
+            return []
+        elif self._output_format == 1:
+            return [ width - 10 ]
+        elif self._output_format == 2:
+            return [width -18,
+                    width -10
+                    ]
+        elif self._output_format == 3:
+            return [width -27,
+                    width -19,
+                    width -10
+                    ]
+        elif self._output_format == 4:
+            return [width -42,
+                    width -34,
+                    width -25,
+                    width -14
+                    ]
+        elif self._output_format == 5:
+            return [width -58,
+                    width -50,
+                    width -41,
+                    width -30,
+                    width -15
+                    ]
 
 
 class PyRadioBrowserInfoData(object):

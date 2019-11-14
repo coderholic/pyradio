@@ -32,11 +32,16 @@ class Log(object):
                 thread_lock.acquire()
             self.cursesScreen.erase()
             try:
-                self.msg = msg.strip()
-                self.cursesScreen.addstr(0, 1, self.msg[0: self.width].replace("\r", "").replace("\n", ""))
+                self.msg = msg.strip()[0: self.width].replace("\r", "").replace("\n", "")
+                self.cursesScreen.addstr(0, 1, self.msg)
             except:
-                self.msg = msg.encode('utf-8', 'replace').strip()
-                self.cursesScreen.addstr(0, 1, self.msg[0: self.width].replace("\r", "").replace("\n", ""))
+                logger.error('DE **** status update python 2 ****')
+                try:
+                    self.msg = msg.encode('utf-8', 'replace').strip()[0: self.width].replace("\r", "").replace("\n", "")
+                    self.cursesScreen.addstr(0, 1, self.msg)
+                except:
+                    logger.error('DE **** status update ERROR ****')
+                    pass
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Status: "{}"'.format(self.msg))
             self.cursesScreen.refresh()
