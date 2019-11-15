@@ -3305,14 +3305,11 @@ you have to manually address the issue.
                         self.refreshBody()
 
     def _volume_up(self):
-        logger.error('DE entering radio._volume_up')
         self.jumpnr = ''
         self._random_requested = False
         if self.player.isPlaying():
-            logger.error('DE isPlaying radio._volume_up')
             if self.player.playback_is_on:
                 self.player.volumeUp()
-                logger.error('DE playback_is_on radio._volume_up')
         else:
             if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
                 self.ws.close_window()

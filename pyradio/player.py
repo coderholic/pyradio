@@ -66,15 +66,21 @@ class Player(object):
             return 'Volume not saved!!!'
         ret_strings = ('Volume: already saved...',
                     'Volume: {}% saved',
-                    'Volume: {}% NOT saved (Error writing file)')
+                    'Volume: {}% NOT saved (Error writing file)',
+                    'Volume: NOT saved!')
         log_strings = ('Volume is -1. Aborting...',
                     'Volume is {}%. Saving...',
-                    'Error saving profile "{}"')
+                    'Error saving profile "{}"',
+                    'Error saving volume...')
         if self.volume == -1:
             """ inform no change """
             if (logger.isEnabledFor(logging.DEBUG)):
                 logger.debug(log_strings[0])
             return ret_strings[0]
+        elif self.volume == -2:
+            if (logger.isEnabledFor(logging.DEBUG)):
+                logger.debug(log_strings[3])
+            return ret_strings[3]
         else:
             """ change volume """
             if (logger.isEnabledFor(logging.DEBUG)):
@@ -197,7 +203,6 @@ class Player(object):
                     subsystemOut = subsystemOutRaw.decode("utf-8", "replace")
                 if subsystemOut == '':
                     break
-                logger.error('DE subsystemOut = "{}"'.format(subsystemOut))
                 if not self._is_accepted_input(subsystemOut):
                     continue
                 subsystemOut = subsystemOut.strip()
@@ -347,13 +352,9 @@ class Player(object):
                 logger.error("playback detection thread start failed")
         if logger.isEnabledFor(logging.INFO):
             logger.info("Player started")
-        if self.process and self.PLAYER_CMD == 'mpv':
-            self._sendCommand('{ "command": ["observe_property", 1, "volume"] }')
 
     def _sendCommand(self, command):
         """ send keystroke command to player """
-
-        logger.error('DE command to execute: "{}"'.format(command))
 
         if(self.process is not None):
             try:
@@ -433,7 +434,6 @@ class Player(object):
     def volumeUp(self):
         """ increase volume """
         if self.muted is not True:
-            logger.error('DE self._volumeUp')
             self._volume_up()
 
     def _volume_up(self):
@@ -502,6 +502,8 @@ class MpvPlayer(Player):
     def save_volume(self):
         """ Saving Volume in Windows does not work;
             Profiles not supported... """
+        if int(self.volume) > 999:
+            self.volume = -2
         return self._do_save_volume("[pyradio]\nvolume={}\n")
 
     def _configHasProfile(self):
@@ -572,9 +574,7 @@ class MpvPlayer(Player):
 
     def _volume_up(self):
         """ increase mpv's volume """
-        logger.error('DE mpv volume up')
         os.system("echo 'cycle volume' | socat - " + self.mpvsocket + " 2>/dev/null");
-        os.system("echo '{ \"command\": [\"get_property\", \"volume\"] }' | socat - " + self.mpvsocket + " 2>/dev/null");
 
     def _volume_down(self):
         """ decrease mpv's volume """

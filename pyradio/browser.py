@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 # http://www.radio-browser.info/webservice#Advanced_station_search
 import json
-import requests
+try:
+    import requests
+except ImportError:
+    pass
 import threading
 import logging
 from .widechar import cjklen, PY3
