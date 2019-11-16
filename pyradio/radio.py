@@ -493,7 +493,7 @@ class PyRadio(object):
             cur_mode = self.ws.previous_operation_mode
         if cur_mode == self.ws.NORMAL_MODE:
             if self._cnf.browsing_station_service:
-                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX - 2, force_py2=True)
+                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX - 2)
                 if ticks:
                     for n in ticks:
                         if version_info < (3, 0):
@@ -558,7 +558,7 @@ class PyRadio(object):
             self.bodyWin.addstr(lineNum + 1, 1, line, col)
 
             if self._cnf.browsing_station_service and sep_col:
-                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX - 2, force_py2=True)
+                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX - 2)
                 for n in ticks:
                     self.bodyWin.chgat(lineNum + 1, n, 1, sep_col)
 

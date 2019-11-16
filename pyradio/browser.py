@@ -477,36 +477,45 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         else:
             self._output_format = 5
 
-    def get_columns_separators(self, width, force_py2=False):
-        if not force_py2 and not PY3:
-            return []
+    def get_columns_separators(self, width):
         self._get_output_format(width)
         if self._output_format == 0:
-            return []
+            return ()
         elif self._output_format == 1:
-            return [ width - 10 ]
+            return ( width - 10 )
         elif self._output_format == 2:
-            return [width -18,
+            return (width -18,
                     width -10
-                    ]
+                    )
         elif self._output_format == 3:
-            return [width -27,
+            return (width -27,
                     width -19,
                     width -10
-                    ]
+                    )
         elif self._output_format == 4:
-            return [width -42,
+            return (width -42,
                     width -34,
                     width -25,
                     width -14
-                    ]
+                    )
         elif self._output_format == 5:
-            return [width -58,
+            return (width -58,
                     width -50,
                     width -41,
                     width -30,
                     width -15
-                    ]
+                    )
+
+    def get_internal_header(self, width):
+        title = ((),
+                ('Bitrate'),
+                ('Votes', 'Bitrate'),
+                ('Votes', 'Clicks', 'Bitrate'),
+                ('Votes', 'Clicks', 'Bitrate', 'Country'),
+                ('Votes', 'Clicks', 'Bitrate', 'Country', 'Language')
+        )
+        col_sep = self.get_columns_separators(width)
+        return col_sep, title[self._output_format]
 
 
 class PyRadioBrowserInfoData(object):
