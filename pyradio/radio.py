@@ -416,7 +416,7 @@ class PyRadio(object):
                     the "help" directory.'''
             else:
                 if self.requested_player:
-                    txt = """Rypadio is not able to use the player you specified.
+                    txt = """RyRadio is not able to use the player you specified.
 
                     This means that either this particular player is not supported
                     by PyRadio, or that you have simply misspelled its name.
@@ -608,7 +608,7 @@ class PyRadio(object):
         else:
             self._register_windows_handlers()
 
-            # start update thread
+            # start update detection and notification thread
             if CAN_CHECK_FOR_UPDATES:
                 if self._cnf.locked:
                     if logger.isEnabledFor(logging.INFO):
@@ -3076,6 +3076,8 @@ you have to manually address the issue.
                         return
                     else:
                         """ exit """
+                        # stop updating the status bar
+                        self.log.asked_to_stop = True
                         if self._cnf.dirty_playlist:
                             if self._cnf.auto_save_playlist:
                                 # save playlist and exit

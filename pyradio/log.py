@@ -14,6 +14,8 @@ class Log(object):
     last_written_string = ''
     display_help_message = False
 
+    asked_to_stop = False
+
     def __init__(self):
         self.width = None
 
@@ -26,6 +28,8 @@ class Log(object):
             self.write(self.msg)
 
     def write(self, msg, thread_lock=None, help_msg=False):
+        if self.asked_to_stop:
+            return
         """ msg may or may not be encoded """
         if self.cursesScreen:
             if thread_lock is not None:
@@ -55,6 +59,8 @@ class Log(object):
                 self.display_help_message = True
 
     def write_right(self, msg, thread_lock=None):
+        if self.asked_to_stop:
+            return
         """ msg may or may not be encoded """
         if self.cursesScreen:
             if thread_lock is not None:
