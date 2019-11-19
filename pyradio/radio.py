@@ -398,7 +398,7 @@ class PyRadio(object):
                     the "help" directory.'''
             else:
                 if self.requested_player:
-                    txt = """Rypadio is not able to use the player you specified.
+                    txt = """PyRadio is not able to use the player you specified.
 
                     This means that either this particular player is not supported
                     by PyRadio, or that you have simply misspelled its name.
