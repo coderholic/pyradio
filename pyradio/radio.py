@@ -319,13 +319,22 @@ class PyRadio(object):
         self.setupAndDrawScreen()
 
         # position playlist in window
+        self.outerBodyMaxY, self.outerBodyMaxX = self.outerBodyWin.getmaxyx()
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
-        if self.selections[self.ws.PLAYLIST_MODE][0] < self.bodyMaxY - 2:
+        # logger.error('\n\nDE self.selections before')
+        # for n in self.selections:
+        #     logger.error('{}\n'.format(n))
+        if self.selections[self.ws.PLAYLIST_MODE][0] < self.bodyMaxY:
             self.selections[self.ws.PLAYLIST_MODE][1] = 0
         elif self.selections[self.ws.PLAYLIST_MODE][0] > len(self._cnf.playlists) - self.bodyMaxY + 1:
-            self.selections[self.ws.PLAYLIST_MODE][1] = len(self._cnf.playlists) - self.bodyMaxY + 2
+            # TODO make sure this is ok
+            self.selections[self.ws.PLAYLIST_MODE][1] = len(self._cnf.playlists) - self.bodyMaxY
         else:
             self.selections[self.ws.PLAYLIST_MODE][1] = self.selections[self.ws.PLAYLIST_MODE][0] - int(self.bodyMaxY/2)
+        # logger.error('\nDE self.selections after')
+        # for n in self.selections:
+        #     logger.error('{}\n'.format(n))
+        # logger.error('DE\n')
         self.run()
 
     def setupAndDrawScreen(self):
@@ -333,9 +342,15 @@ class PyRadio(object):
 
         self.headWin = None
         self.bodyWin = None
+        self.outerBodyWin = None
         self.footerWin = None
         self.headWin = curses.newwin(1, self.maxX, 0, 0)
-        self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
+        self.outerBodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
+        #self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
+        self.bodyWin = curses.newwin(self.maxY - 4 - self._cnf.internal_header_height(),
+                self.maxX - 2,
+                2 + self._cnf.internal_header_height(),
+                1)
         self.footerWin = curses.newwin(1, self.maxX, self.maxY - 1, 0)
         # txtWin used mainly for error reports
         self.txtWin = None
@@ -343,6 +358,7 @@ class PyRadio(object):
         self.initHead(self.info)
         # for light color scheme
          # TODO
+        self.outerBodyWin.bkgdset(' ', curses.color_pair(5))
         self.bodyWin.bkgdset(' ', curses.color_pair(5))
         self.initBody()
         self.initFooter()
@@ -384,7 +400,9 @@ class PyRadio(object):
         #self.bodyWin.timeout(100)
         #self.bodyWin.keypad(1)
         self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
+        self.outerBodyMaxY, self.outerBodyMaxX = self.outerBodyWin.getmaxyx()
         self.bodyWin.noutrefresh()
+        self.outerBodyWin.noutrefresh()
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
             if platform.startswith('win'):
                 txt = '''PyRadio cannot find mplayer.
@@ -470,13 +488,15 @@ class PyRadio(object):
 
     def refreshNoPlayerBody(self, a_string):
         col = curses.color_pair(5)
+        self.outerBodyWin.bkgdset(' ', col)
         self.bodyWin.bkgdset(' ', col)
+        self.outerBodyWin.erase()
         self.bodyWin.erase()
-        self.bodyWin.box()
+        #self.bodyWin.box()
+        self.outerBodyWin.box()
         lines = a_string.split('\n')
         lineNum = 0
         self.txtWin.bkgdset(' ', col)
-        self.txtWin.erase()
         self.txtWin.erase()
         for line in lines:
             try:
@@ -484,6 +504,7 @@ class PyRadio(object):
             except:
                 break
             lineNum += 1
+        self.outerBodyWin.refresh()
         self.bodyWin.refresh()
         self.txtWin.refresh()
 
@@ -493,15 +514,15 @@ class PyRadio(object):
             cur_mode = self.ws.previous_operation_mode
         if cur_mode == self.ws.NORMAL_MODE:
             if self._cnf.browsing_station_service:
-                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX - 2)
+                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust=2)
                 if ticks:
                     for n in ticks:
                         if version_info < (3, 0):
-                            self.bodyWin.addstr(0, n, u'┬'.encode('utf-8', 'replace'), curses.color_pair(5))
-                            self.bodyWin.addstr(self.bodyMaxY - 1, n, u'┴'.encode('utf-8', 'replace'), curses.color_pair(5))
+                            self.outerBodyWin.addstr(0, n + 2, u'┬'.encode('utf-8', 'replace'), curses.color_pair(5))
+                            self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, u'┴'.encode('utf-8', 'replace'), curses.color_pair(5))
                         else:
-                            self.bodyWin.addstr(0, n, '┬', curses.color_pair(5))
-                            self.bodyWin.addstr(self.bodyMaxY - 1, n, '┴', curses.color_pair(5))
+                            self.outerBodyWin.addstr(0, n + 2, '┬', curses.color_pair(5))
+                            self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, '┴', curses.color_pair(5))
 
             align = 1
             w_header = self._cnf.stations_filename_only_no_extension
@@ -510,18 +531,18 @@ class PyRadio(object):
                 w_header = '*' + self._cnf.stations_filename_only_no_extension
             while len(w_header)> self.bodyMaxX - 14:
                 w_header = w_header[:-1]
-            self.bodyWin.addstr(0,
+            self.outerBodyWin.addstr(0,
                     int((self.bodyMaxX - len(w_header)) / 2) - align, '[',
                     curses.color_pair(5))
-            self.bodyWin.addstr(w_header,curses.color_pair(4))
-            self.bodyWin.addstr(']',curses.color_pair(5))
+            self.outerBodyWin.addstr(w_header,curses.color_pair(4))
+            self.outerBodyWin.addstr(']',curses.color_pair(5))
 
         elif cur_mode == self.ws.PLAYLIST_MODE or \
                 self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
                 self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
             """ display playlists header """
             w_header = ' Select playlist to open '
-            self.bodyWin.addstr(0,
+            self.outerBodyWin.addstr(0,
                     int((self.bodyMaxX - len(w_header)) / 2),
                     w_header,
                     curses.color_pair(4))
@@ -529,19 +550,18 @@ class PyRadio(object):
     def __displayBodyLine(self, lineNum, pad, station):
         col = curses.color_pair(5)
         sep_col = None
-        body_width = self.bodyMaxX - 2
         if lineNum + self.startPos == self.selection and \
                 self.selection == self.playing:
             col = curses.color_pair(9)
             # sep_col = curses.color_pair(5)
-            self.bodyWin.hline(lineNum + 1, 1, ' ', body_width, col)
+            self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
         elif lineNum + self.startPos == self.selection:
             col = curses.color_pair(6)
-            self.bodyWin.hline(lineNum + 1, 1, ' ', body_width, col)
+            self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
         elif lineNum + self.startPos == self.playing:
             col = curses.color_pair(4)
             sep_col = curses.color_pair(5)
-            self.bodyWin.hline(lineNum + 1, 1, ' ', body_width, col)
+            self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
 
         # self.maxY, self.maxX = self.stdscr.getmaxyx()
         #logger.error('DE ==== width = {}'.format(self.maxX - 2))
@@ -549,16 +569,19 @@ class PyRadio(object):
                 self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
                     self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
             line = self._format_playlist_line(lineNum, pad, station)
-            self.bodyWin.addstr(lineNum + 1, 1, line, col)
+            self.bodyWin.addstr(lineNum, 0, line, col)
         else:
             if self._cnf.browsing_station_service:
-                played, line = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.maxX - 2)
+                played, line = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.bodyMaxX)
             else:
                 line = self._format_station_line("{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0]))
-            self.bodyWin.addstr(lineNum + 1, 1, line, col)
+            try:
+                self.bodyWin.addstr(lineNum, 0, line, col)
+            except:
+                pass
 
             if self._cnf.browsing_station_service and sep_col:
-                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX - 2)
+                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX)
                 for n in ticks:
                     self.bodyWin.chgat(lineNum + 1, n, 1, sep_col)
 
@@ -632,7 +655,7 @@ class PyRadio(object):
             the class is returned in self.search
         """
         if self._search_classes[self._mode_to_search[operation_mode]] is None:
-            self._search_classes[self._mode_to_search[operation_mode]] = PyRadioSearch(parent = self.bodyWin,
+            self._search_classes[self._mode_to_search[operation_mode]] = PyRadioSearch(parent = self.outerBodyWin,
                 width = 33, begin_y = 0, begin_x = 0,
                 boxed = True,
                 has_history = True,
@@ -687,44 +710,42 @@ class PyRadio(object):
             (self.selection != self.playing or changing_playlist):
             if changing_playlist:
                 self.startPos = 0
-            max_lines = self.bodyMaxY - 2
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('max_lines = {0}, items = {1}, self.playing = {2}'.format(max_lines, self.number_of_items, self.playing))
-            if self.number_of_items < max_lines:
+                logger.error('self.bodyMaxY = {0}, items = {1}, self.playing = {2}'.format(self.bodyMaxY, self.number_of_items, self.playing))
+            if self.number_of_items < self.bodyMaxY:
                 self.startPos = 0
             elif self.playing < self.startPos or \
-                    self.playing >= self.startPos + max_lines:
+                    self.playing >= self.startPos + self.bodyMaxY:
                 if logger.isEnabledFor(logging.ERROR):
                     logger.error('DE ==== _goto:adjusting startPos')
-                if self.playing < max_lines:
+                if self.playing < self.bodyMaxY:
                     self.startPos = 0
-                    if self.playing - int(max_lines/2) > 0:
-                        self.startPos = self.playing - int(max_lines/2)
-                elif self.playing > self.number_of_items - max_lines:
-                    self.startPos = self.number_of_items - max_lines
+                    if self.playing - int(self.bodyMaxY/2) > 0:
+                        self.startPos = self.playing - int(self.bodyMaxY/2)
+                elif self.playing > self.number_of_items - self.bodyMaxY:
+                    self.startPos = self.number_of_items - self.bodyMaxY
                 else:
-                    self.startPos = int(self.playing+1/max_lines) - int(max_lines/2)
+                    self.startPos = int(self.playing+1/self.bodyMaxY) - int(self.bodyMaxY/2)
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('DE ===== _goto:startPos = {0}, changing_playlist = {1}'.format(self.startPos, changing_playlist))
             self.selection = self.playing
             self.refreshBody()
 
     def _put_selection_in_the_middle(self, force=False):
-        max_lines = self.bodyMaxY - 2
-        if self.number_of_items < max_lines or self.selection < max_lines:
+        if self.number_of_items < self.bodyMaxY or self.selection < self.bodyMaxY:
             self.startPos = 0
         elif force or self.selection < self.startPos or \
-                self.selection >= self.startPos + max_lines:
+                self.selection >= self.startPos + self.bodyMaxY:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('DE ===== _put:adjusting startPos')
-            if self.selection < max_lines:
+            if self.selection < self.bodyMaxY:
                 self.startPos = 0
-                if self.selection - int(max_lines/2) > 0:
-                    self.startPos = self.selection - int(max_lines/2)
-            elif self.selection > self.number_of_items - max_lines:
-                self.startPos = self.number_of_items - max_lines
+                if self.selection - int(self.bodyMaxY/2) > 0:
+                    self.startPos = self.selection - int(self.bodyMaxY/2)
+            elif self.selection > self.number_of_items - self.bodyMaxY:
+                self.startPos = self.number_of_items - self.bodyMaxY
             else:
-                self.startPos = int(self.selection+1/max_lines) - int(max_lines/2)
+                self.startPos = int(self.selection+1/self.bodyMaxY) - int(self.bodyMaxY/2)
         if logger.isEnabledFor(logging.ERROR):
             logger.error('DE ===== _put:startPos -> {0}, force = {1}'.format(self.startPos, force))
 
@@ -739,9 +760,8 @@ class PyRadio(object):
 
         self.selection = number
 
-        maxDisplayedItems = self.bodyMaxY - 2
-        if self.selection - self.startPos >= maxDisplayedItems:
-            self.startPos = self.selection - maxDisplayedItems + 1
+        if self.selection - self.startPos >= self.bodyMaxY:
+            self.startPos = self.selection - self.bodyMaxY + 1
         elif self.selection < self.startPos:
             self.startPos = self.selection
 
@@ -891,8 +911,8 @@ class PyRadio(object):
 
     def _show_theme_selector_from_config(self):
         self._theme_name = self._config_win._config_options['theme'][1]
-        if logger.isEnabledFor(logging.ERROR):
-            logger.error('DE\n\nreseting self._theme_name = {}\n\n'.format(self._theme_name))
+        # if logger.isEnabledFor(logging.ERROR):
+        #     logger.error('DE\n\nreseting self._theme_name = {}\n\n'.format(self._theme_name))
         #self.ws.previous_operation_mode = self.ws.operation_mode
         self.ws.operation_mode = self.ws.THEME_MODE
         self._show_theme_selector(changed_from_config=True)
@@ -903,8 +923,9 @@ class PyRadio(object):
         self._theme_selector = None
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE\n\nself._theme = {0}\nself._theme_name = {1}\nself._cnf.theme = {2}\n\n'.format(self._theme, self._theme_name, self._cnf.theme))
-        self._theme_selector = PyRadioThemeSelector(self.bodyWin, self._cnf, self._theme,
-                self._theme_name, self._theme._applied_theme_max_colors, self._cnf.theme,
+        self._theme_selector = PyRadioThemeSelector(self.outerBodyWin,
+                self._cnf, self._theme, self._theme_name,
+                self._theme._applied_theme_max_colors, self._cnf.theme,
                 4, 3, 4, 5, 6, 9, self._theme.getTransparency())
                 #'/home/spiros/edit.log')
         self._theme_selector.changed_from_config = changed_from_config
@@ -972,6 +993,8 @@ class PyRadio(object):
             width_to_use = inner_width
         if self.maxY - 2 < outer_height or self.maxX < outer_width:
             txt = too_small_msg
+            prompt = ''
+            caption = ''
             inner_height = 3
             inner_width = len(txt) + 4
             if use_empty_win:
@@ -1061,32 +1084,32 @@ class PyRadio(object):
         line = "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0])
         f_data = ' [{0}, {1}]'.format(station[2], station[1])
         if version_info < (3, 0):
-            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX -2:
+            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX:
                 """ this is too long, try to shorten it
                     by removing file size """
                 f_data = ' [{0}]'.format(station[1])
-            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX - 2:
+            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX:
                 """ still too long. start removing chars """
-                while cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX - 3:
+                while cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) > self.bodyMaxX - 1:
                     f_data = f_data[:-1]
                 f_data += ']'
             """ if too short, pad f_data to the right """
-            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) < self.maxX - 2:
-                while cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) < self.maxX - 2:
+            if cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) < self.bodyMaxX:
+                while cjklen(line.decode('utf-8', 'replace')) + cjklen(f_data.decode('utf-8', 'replace')) < self.maxX:
                     line += ' '
         else:
-            if cjklen(line) + cjklen(f_data) > self.bodyMaxX -2:
+            if cjklen(line) + cjklen(f_data) > self.bodyMaxX:
                 """ this is too long, try to shorten it
                     by removing file size """
                 f_data = ' [{0}]'.format(station[1])
-            if cjklen(line) + cjklen(f_data) > self.bodyMaxX - 2:
+            if cjklen(line) + cjklen(f_data) > self.bodyMaxX:
                 """ still too long. start removing chars """
-                while cjklen(line) + cjklen(f_data) > self.bodyMaxX - 3:
+                while cjklen(line) + cjklen(f_data) > self.bodyMaxX - 1:
                     f_data = f_data[:-1]
                 f_data += ']'
             """ if too short, pad f_data to the right """
-            if cjklen(line) + cjklen(f_data) < self.maxX - 2:
-                while cjklen(line) + cjklen(f_data) < self.maxX - 2:
+            if cjklen(line) + cjklen(f_data) < self.maxX:
+                while cjklen(line) + cjklen(f_data) < self.bodyMaxX:
                     line += ' '
         line += f_data
         return line
@@ -1094,18 +1117,18 @@ class PyRadio(object):
     def _format_station_line(self, line):
         if version_info < (3, 0):
             if len(line.decode('utf-8', 'replace')) != cjklen(line.decode('utf-8', 'replace')):
-                while cjklen(line.decode('utf-8', 'replace')) > self.bodyMaxX - 2:
+                while cjklen(line.decode('utf-8', 'replace')) > self.bodyMaxX:
                     line = line[:-1]
                 return line
             else:
-                return line[:self.bodyMaxX - 2]
+                return line[:self.bodyMaxX]
         else:
             if len(line) != cjklen(line):
-                while cjklen(line) > self.bodyMaxX - 2:
+                while cjklen(line) > self.bodyMaxX:
                     line = line[:-1]
                 return line
             else:
-                return line[:self.bodyMaxX - 2]
+                return line[:self.bodyMaxX]
 
     def _print_help(self):
         #logger.error('DE \n\nself.ws.operation_mode = {}'.format(self.ws.operation_mode))
@@ -1541,7 +1564,7 @@ you have to manually address the issue.
         to
         __"|{1}|".
 
-        This change may lead to changing the player used, 
+        This change may lead to changing the player used,
         and will take effect next time you open |PyRadio|.
         '''
         self._show_help(txt.format(*self._cnf.player_values),
@@ -1838,6 +1861,7 @@ you have to manually address the issue.
                         self.selection = 0
                         self.startPos = 0
                         self.number_of_items = len(self.stations)
+                        self.setupAndDrawScreen()
                         #self.refreshBody()
                     else:
                         self._print_service_connection_error()
@@ -1948,12 +1972,12 @@ you have to manually address the issue.
 
     def _show_config_window(self):
         if self._config_win is None:
-            self._config_win = PyRadioConfigWindow(self.bodyWin,
+            self._config_win = PyRadioConfigWindow(self.outerBodyWin,
                 self._cnf,
                 self._toggle_transparency,
                 self._show_theme_selector_from_config)
         else:
-            self._config_win.parent = self.bodyWin
+            self._config_win.parent = self.outerBodyWin
             self._config_win.refresh_config_win()
 
     def detectUpdateThread(self, a_path, a_lock, stop):
@@ -2222,10 +2246,9 @@ you have to manually address the issue.
             if self.player.isPlaying():
                 self.log.display_help_message = False
             self.setupAndDrawScreen()
-            max_lines = self.bodyMaxY - 2
-            if self.selection >= self.number_of_items - max_lines and \
-                    self.number_of_items > max_lines:
-                self.startPos = self.number_of_items - max_lines
+            if self.selection >= self.number_of_items - self.bodyMaxY and \
+                    self.number_of_items > self.bodyMaxY:
+                self.startPos = self.number_of_items - self.bodyMaxY
                 logger.error('DE *** refreshing body')
                 self.refreshBody()
             return
@@ -2249,10 +2272,10 @@ you have to manually address the issue.
             self.jumpnr = ''
             self._random_requested = False
             if self.number_of_items > 0:
-                if self.number_of_items < self.bodyMaxY - 2:
+                if self.number_of_items < self.bodyMaxY:
                     self.selection = int(self.number_of_items / 2)
                 else:
-                    self.selection = self.startPos + int((self.bodyMaxY - 3) / 2)
+                    self.selection = self.startPos + int((self.bodyMaxY - 1) / 2)
                 self.refreshBody()
             return
 
@@ -2261,10 +2284,10 @@ you have to manually address the issue.
             self.jumpnr = ''
             self._random_requested = False
             if self.number_of_items > 0:
-                if self.number_of_items < self.bodyMaxY - 2:
+                if self.number_of_items < self.bodyMaxY:
                     self.setStation(-1)
                 else:
-                    self.selection = self.startPos + self.bodyMaxY - 3
+                    self.selection = self.startPos + self.bodyMaxY - 1
                 self.refreshBody()
             return
 
@@ -2305,10 +2328,12 @@ you have to manually address the issue.
                     """ Config > Select Player """
                     self.ws.operation_mode = self.ws.SELECT_PLAYER_MODE
                     if self._player_select_win is None:
-                        self._player_select_win = PyRadioSelectPlayer(self.bodyMaxY,
-                                self.bodyMaxX, self._config_win._config_options['player'][1])
+                        self._player_select_win = PyRadioSelectPlayer(
+                                self.outerBodyMaxY,
+                                self.outerBodyMaxX,
+                                self._config_win._config_options['player'][1])
                     else:
-                        self._player_select_win._parent_maxY, self._player_select_win._parent_maxX = self.bodyWin.getmaxyx()
+                        self._player_select_win._parent_maxY, self._player_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
                     self._player_select_win.init_window()
                     self._player_select_win.refresh_win()
                     self._player_select_win.setPlayers(self._config_win._config_options['player'][1])
@@ -2318,10 +2343,12 @@ you have to manually address the issue.
                     """ Config > Select Default Encoding """
                     self.ws.operation_mode = self.ws.SELECT_ENCODING_MODE
                     if self._encoding_select_win is None:
-                        self._encoding_select_win = PyRadioSelectEncodings(self.bodyMaxY,
-                                self.bodyMaxX, self._cnf.default_encoding)
+                        self._encoding_select_win = PyRadioSelectEncodings(
+                                self.outerBodyMaxY,
+                                self.outerBodyMaxX,
+                                self._cnf.default_encoding)
                     else:
-                        self._encoding_select_win._parent_maxY, self._encoding_select_win._parent_maxX = self.bodyWin.getmaxyx()
+                        self._encoding_select_win._parent_maxY, self._encoding_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
                     self._encoding_select_win.init_window()
                     self._encoding_select_win.refresh_win()
                     self._encoding_select_win.setEncoding(self._config_win._config_options['default_encoding'][1])
@@ -2343,12 +2370,12 @@ you have to manually address the issue.
                     """ Config > Select Default Station """
                     self.ws.operation_mode = self.ws.SELECT_STATION_MODE
                     if self._station_select_win is None:
-                        self._station_select_win = PyRadioSelectStation(self.bodyWin,
+                        self._station_select_win = PyRadioSelectStation(self.outerBodyWin,
                                 self._cnf.stations_dir,
                                 self._config_win._config_options['default_playlist'][1],
                                 self._config_win._config_options['default_station'][1])
                     else:
-                        self._station_select_win._parent_maxY, self._station_select_win._parent_maxX = self.bodyWin.getmaxyx()
+                        self._station_select_win._parent_maxY, self._station_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
                         self._station_select_win.update_playlist_and_station(self._config_win._config_options['default_playlist'][1], self._config_win._config_options['default_station'][1])
                     self._station_select_win.init_window()
                     self._station_select_win.refresh_win()
@@ -2492,12 +2519,12 @@ you have to manually address the issue.
                         self.stations.append(self._station_editor.new_station)
                         self.number_of_items = len(self.stations)
                         self.selection = self.number_of_items - 1
-                        self.startPos = self.number_of_items - self.bodyMaxY + 2
+                        self.startPos = self.number_of_items - self.bodyMaxY2
                     else:
                         ret, self.number_of_items = self._cnf.insert_station(self._station_editor.new_station, self.selection + 1)
                         self.stations = self._cnf.stations
                         self.selection += 1
-                        if self.selection >= self.startPos + self.bodyMaxY - 2:
+                        if self.selection >= self.startPos + self.bodyMaxY:
                             self.startPos += 1
 
                 self.ws.close_window()
@@ -2511,8 +2538,8 @@ you have to manually address the issue.
                 if self._station_editor._encoding == '':
                     self._station_editor._encoding = 'utf-8'
                 self.ws.operation_mode = self.ws.EDIT_STATION_ENCODING_MODE
-                self._encoding_select_win = PyRadioSelectEncodings(self.bodyMaxY,
-                        self.bodyMaxX, self._station_editor._encoding)
+                self._encoding_select_win = PyRadioSelectEncodings(self.outerBodyMaxY,
+                        self.outerBodyMaxX, self._station_editor._encoding)
                 self._encoding_select_win.init_window()
                 self._encoding_select_win.refresh_win()
                 self._encoding_select_win.setEncoding(self._station_editor._encoding)
@@ -2660,7 +2687,7 @@ you have to manually address the issue.
             self.jumpnr = ''
             self._random_requested = False
             self._give_me_a_search_class(self.ws.operation_mode)
-            self.search.show(self.bodyWin)
+            self.search.show(self.outerBodyWin)
             self.ws.operation_mode = self._search_modes[self.ws.operation_mode]
             return
 
@@ -3153,8 +3180,8 @@ you have to manually address the issue.
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.info('encoding = {}'.format(self._old_station_encoding))
                     self.ws.operation_mode = self.ws.SELECT_STATION_ENCODING_MODE
-                    self._encoding_select_win = PyRadioSelectEncodings(self.bodyMaxY,
-                            self.bodyMaxX, self._old_station_encoding)
+                    self._encoding_select_win = PyRadioSelectEncodings(self.outerBodyMaxY,
+                            self.outerBodyMaxX, self._old_station_encoding)
                     self._encoding_select_win.init_window()
                     self._encoding_select_win.refresh_win()
                     self._encoding_select_win.setEncoding(self._old_station_encoding)
@@ -3362,48 +3389,69 @@ you have to manually address the issue.
 
     def _redisplay_stations_and_playlists(self):
         self.bodyWin.erase()
-        self.bodyWin.box()
+        self.outerBodyWin.erase()
+        self.outerBodyWin.box()
         self.bodyWin.move(1, 1)
-        maxDisplay = self.bodyMaxY - 1
+        self.bodyWin.move(0, 0)
         self._print_body_header()
+        pad = len(str(self.startPos + self.bodyMaxY))
         if self.number_of_items > 0:
-            pad = len(str(self.startPos + self.bodyMaxY - 2))
-            for lineNum in range(maxDisplay - 1):
+            for lineNum in range(self.bodyMaxY):
                 i = lineNum + self.startPos
                 if i < len(self.stations):
                     self.__displayBodyLine(lineNum, pad, self.stations[i])
                 else:
                     break
+        if self._cnf.browsing_station_service:
+            if self._cnf.online_browser.internal_header_height > 0:
+                headers = self._cnf.online_browser.get_internal_header(pad, self.bodyMaxX)
+                # logger.error('DE {}'.format(headers))
+                for i, a_header in enumerate(headers):
+                    self.outerBodyWin.addstr(i + 1, 1, a_header[0], curses.color_pair(2))
+                    column_separator = a_header[1]
+                    column_name = a_header[2]
+                    #logger.error('DE {}'.format(column_separator))
+                    #logger.error('DE {}'.format(column_name))
+                    for j, col in enumerate(column_separator):
+                        if version_info < (3, 0):
+                            self.outerBodyWin.addstr(i + 1, col + 2, u'│'.encode('utf-8', 'replace'), curses.color_pair(5))
+                        else:
+                            self.outerBodyWin.addstr(i + 1, col + 2, '│', curses.color_pair(5))
+                        try:
+                            self.outerBodyWin.addstr(column_name[j], curses.color_pair(2))
+                        except:
+                            pass
+        self.outerBodyWin.refresh()
         self.bodyWin.refresh()
 
     def _redisplay_config(self):
-        self._config_win.parent = self.bodyWin
+        self._config_win.parent = self.outerBodyWin
         self._config_win.init_config_win()
         self._config_win.refresh_config_win()
 
     def _redisplay_player_select_win_refresh_and_resize(self):
-        self._player_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
+        self._player_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):
-        self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
+        self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
 
     def _playlist_select_win_refresh_and_resize(self):
         self._playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):
-        self._encoding_select_win.refresh_and_resize(self.bodyMaxY, self.bodyMaxX)
+        self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
 
     def _redisplay_station_select_win_refresh_and_resize(self):
-        self._station_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
+        self._station_select_win.refresh_and_resize(self.outerBodyWin.getmaxyx())
 
     def _redisplay_print_save_modified_playlist(self):
         self._print_save_modified_playlist(self.ws.operation_mode)
 
     def _redisplay_search_show(self):
-        self.search.show(self.bodyWin, repaint=True)
+        self.search.show(self.outerBodyWin, repaint=True)
 
     def _redisplay_theme_mode(self):
-        self._theme_selector.parent = self.bodyWin
+        self._theme_selector.parent = self.outerBodyWin
         self._show_theme_selector()
         if self.theme_forced_selection:
             self._theme_selector.set_theme(self.theme_forced_selection)
@@ -3411,7 +3459,7 @@ you have to manually address the issue.
     def _redisplay_ask_to_create_new_theme(self):
         if logger.isEnabledFor(logging.ERROR):
             logger.error('DE self.ws.previous_operation_mode = {}'.format(self.ws.previous_operation_mode))
-        self._theme_selector.parent = self.bodyWin
+        self._theme_selector.parent = self.outerBodyWin
         if self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
             self._show_theme_selector_from_config()
         else:

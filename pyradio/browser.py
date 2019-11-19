@@ -38,16 +38,16 @@ class PyRadioStationsBrowser(object):
         self._raw_stations = []
         self._last_search = None
         self._have_to_retrieve_url = False
-        self._uses_internal_header = False
+        self._internal_header_height = 0
         self._url_timeout = 3
         self._search_timeout = 3
 
     @property
-    def uses_internal_header(self):
-        return self._uses_internal_header
+    def internal_header_height(self):
+        return self._internal_header_height
 
-    @uses_internal_header.setter
-    def uses_internal_header(self, value):
+    @internal_header_height.setter
+    def internal_header_height(self, value):
         raise ValueError('property is read only')
 
     @property
@@ -135,7 +135,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
     _info_name_len = 0
 
     _have_to_retrieve_url = True
-    _uses_internal_header = True
+    _internal_header_height = 1
 
     _url_timeout = 3
     _search_timeout = 3
@@ -230,7 +230,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             else:
                 return ''
         except requests.exceptions.RequestException as e:
-            if logger.isEnabledFor(logger.ERROR):
+            if logger.isEnabledFor(logging.ERROR):
                 logger.error(e)
             return ''
 
@@ -327,11 +327,11 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         """
 
         info = (u'',
-                u' {0} {1}kb',
-                u' {0} {1}│ {2}kb',
-                u' {0} {1}│ {2}│ {3}kb',
-                u' {0} {1}│ {2}│ {3}kb│{4}',
-                u' {0} {1}│ {2}│ {3}kb│{4}│{5}',
+                u' {0}{1}kb',
+                u' {0}{1}│{2}kb',
+                u' {0}{1}│{2}│{3}kb',
+                u' {0}{1}│{2}│{3}kb│{4}',
+                u' {0}{1}│{2}│{3}kb│{4}│{5}',
         )
         self._get_output_format(width)
         #logger.error('DE self._output_format = {}'.format(self._output_format))
@@ -343,39 +343,40 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             # full with state
             out[2] = ' ' + info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
-                self._raw_stations[id_in_list]['clickcount'].rjust(self._max_len[1]),
-                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['votes'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['clickcount'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['bitrate'].rjust(5)[:5],
                 self._raw_stations[id_in_list]['country'].ljust(14)[:14],
                 self._raw_stations[id_in_list]['language'].ljust(15)[:15]
             )
         if self._output_format == 4:
             # full or condensed info
+            aa = self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7]
             out[2] = ' ' + info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
-                self._raw_stations[id_in_list]['clickcount'].rjust(self._max_len[1]),
-                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['votes'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['clickcount'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['bitrate'].rjust(5)[:5],
                 self._raw_stations[id_in_list]['country'].ljust(14)[:14]
             )
         elif self._output_format == 2:
             out[2] = ' ' + info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
-                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7]
+                self._raw_stations[id_in_list]['votes'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['bitrate'].rjust(5)[:5]
             )
         elif self._output_format == 3:
             out[2] = ' ' + info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['votes'].rjust(self._max_len[0]),
-                self._raw_stations[id_in_list]['clickcount'].rjust(self._max_len[1]),
-                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7]
+                self._raw_stations[id_in_list]['votes'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['clickcount'].rjust(7)[:7],
+                self._raw_stations[id_in_list]['bitrate'].rjust(5)[:5]
             )
         elif self._output_format == 1:
             # Bitrate only
             out[2] = info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['bitrate'].rjust(7)[:7]
+                self._raw_stations[id_in_list]['bitrate'].rjust(5)[:5]
             )
 
         name_width = width-len(out[0])-len(out[2])
@@ -477,45 +478,53 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         else:
             self._output_format = 5
 
-    def get_columns_separators(self, width):
-        self._get_output_format(width)
+    def get_columns_separators(self, width, use_old_output_format=False, adjust=0):
+        actual_width = width - 2
+        actual_width = width
+        if not use_old_output_format:
+            self._get_output_format(actual_width)
         if self._output_format == 0:
-            return ()
+            columns_separotors = []
         elif self._output_format == 1:
-            return ( width - 10 )
+            columns_separotors = [ actual_width - 7 ]
         elif self._output_format == 2:
-            return (width -18,
-                    width -10
-                    )
+            columns_separotors = [actual_width -15,
+                    actual_width -7
+                    ]
         elif self._output_format == 3:
-            return (width -27,
-                    width -19,
-                    width -10
-                    )
+            columns_separotors = [actual_width -23,
+                    actual_width -15,
+                    actual_width -7
+                    ]
         elif self._output_format == 4:
-            return (width -42,
-                    width -34,
-                    width -25,
-                    width -14
-                    )
+            columns_separotors = [actual_width -38,
+                    actual_width -30,
+                    actual_width -22,
+                    actual_width -14
+                    ]
         elif self._output_format == 5:
-            return (width -58,
-                    width -50,
-                    width -41,
-                    width -30,
-                    width -15
-                    )
+            columns_separotors = [actual_width -54,
+                    actual_width -46,
+                    actual_width -38,
+                    actual_width -30,
+                    actual_width -15
+                    ]
+        if adjust > 0:
+            for n in range(0, len(columns_separotors)):
+                columns_separotors[n] -= 2
+        return columns_separotors
 
-    def get_internal_header(self, width):
-        title = ((),
-                ('Bitrate'),
-                ('Votes', 'Bitrate'),
-                ('Votes', 'Clicks', 'Bitrate'),
-                ('Votes', 'Clicks', 'Bitrate', 'Country'),
-                ('Votes', 'Clicks', 'Bitrate', 'Country', 'Language')
-        )
-        col_sep = self.get_columns_separators(width)
-        return col_sep, title[self._output_format]
+    def get_internal_header(self, pad, width):
+        columns = ((),
+                   ('Bitrate', ),
+                   ('  Votes', 'Bitrate'),
+                   ('  Votes', ' Clicks', 'Bitrate'),
+                   ('  Votes', ' Clicks', 'Bitrate', 'Country'),
+                   ('  Votes', ' Clicks', 'Bitrate', 'Country', 'Language')
+                   )
+        columns_separotors = self.get_columns_separators(width, use_old_output_format=True, adjust=2)
+        title = '#'.rjust(pad) + '  Name'
+        return ((title, columns_separotors, columns[self._output_format]), )
 
 
 class PyRadioBrowserInfoData(object):

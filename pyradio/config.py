@@ -832,6 +832,11 @@ class PyRadioConfig(PyRadioStations):
         if not path.exists(user_config_file):
             copyfile(package_config_file, user_config_file)
 
+    def internal_header_height(self):
+        if self._browsing_station_service:
+            return self.online_browser.internal_header_height
+        else:
+            return 0
     def read_config(self):
         lines = []
         try:
