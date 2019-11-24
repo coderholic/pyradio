@@ -61,6 +61,7 @@ class PyRadio(object):
 
     playing = -1
     jumpnr = ""
+    _backslash = False
     """ Help window
         also used for displaying messages,
         asking for confirmation etc. """
@@ -875,6 +876,7 @@ class PyRadio(object):
         #txt = '''Reloading playlist. Please wait...'''
         #self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
         self.jumpnr = ''
+        self._backslash = False
         ret = self._cnf.read_playlist_file(self._cnf.stations_file)
         if ret == -1:
             self.stations = self._cnf.playlists
@@ -923,6 +925,7 @@ class PyRadio(object):
 
     def _show_theme_selector(self, changed_from_config=False):
         self.jumpnr = ''
+        self._backslash = False
         self._random_requested = False
         self._theme_selector = None
         #if logger.isEnabledFor(logging.ERROR):
@@ -1845,6 +1848,7 @@ you have to manually address the issue.
         """ open playlist """
         self._get_active_stations()
         self.jumpnr = ''
+        self._backslash = False
         self._random_requested = False
         if self._cnf.browsing_station_service:
             # TODO
@@ -2240,6 +2244,22 @@ you have to manually address the issue.
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE {}'.format(self.ws._dq))
 
+        elif not self._backslash and char == ord('\\') and \
+                self.ws.operation_mode == self.ws.NORMAL_MODE:
+            self._backslash = True
+            logger.error('DE **** backslash pressed SET ****')
+            return
+        elif self._backslash and char == ord('\\') and \
+                self.ws.operation_mode == self.ws.NORMAL_MODE:
+            logger.error('DE **** Go Up ****')
+            self._backslash = False
+            return
+        elif self._backslash and char == ord(']') and \
+                self.ws.operation_mode == self.ws.NORMAL_MODE:
+            logger.error('DE **** Go Up To Top ****')
+            self._backslash = False
+            return
+
         elif char in (ord('#'), curses.KEY_RESIZE):
             if platform.startswith('win'):
                 curses.resize_term(0, 0)
@@ -2265,6 +2285,7 @@ you have to manually address the issue.
         elif char == ord('H') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self.jumpnr = ''
+            self._backslash = False
             self._random_requested = False
             if self.number_of_items > 0:
                 self.selection = self.startPos
@@ -2274,6 +2295,7 @@ you have to manually address the issue.
         elif char == ord('M') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self.jumpnr = ''
+            self._backslash = False
             self._random_requested = False
             if self.number_of_items > 0:
                 if self.number_of_items < self.bodyMaxY:
@@ -2286,6 +2308,7 @@ you have to manually address the issue.
         elif char == ord('L') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self.jumpnr = ''
+            self._backslash = False
             self._random_requested = False
             if self.number_of_items > 0:
                 if self.number_of_items < self.bodyMaxY:
@@ -2301,6 +2324,7 @@ you have to manually address the issue.
                 self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
                 not self.is_search_mode(self.ws.operation_mode):
             self.jumpnr = ''
+            self._backslash = False
             self._random_requested = False
             self._config_win = None
             self.theme_forced_selection = None
@@ -2315,6 +2339,7 @@ you have to manually address the issue.
         elif char == ord('P') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self.jumpnr = ''
+            self._backslash = False
             self._random_requested = False
             self._goto_playing_station()
             return
@@ -2689,6 +2714,7 @@ you have to manually address the issue.
 
         elif char in (ord('/'), ) and self.ws.operation_mode in self._search_modes.keys():
             self.jumpnr = ''
+            self._backslash = False
             self._random_requested = False
             self._give_me_a_search_class(self.ws.operation_mode)
             self.search.show(self.outerBodyWin)
@@ -2701,6 +2727,7 @@ you have to manually address the issue.
             self._give_me_a_search_class(self.ws.operation_mode)
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 self.jumpnr = ''
+                self._backslash = False
                 self._random_requested = False
             """ search forward """
             if self.ws.operation_mode in \
@@ -2732,6 +2759,7 @@ you have to manually address the issue.
             self._give_me_a_search_class(self.ws.operation_mode)
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 self.jumpnr = ''
+                self._backslash = False
                 self._random_requested = False
             """ search backwards """
             if self.ws.operation_mode in \
@@ -2796,6 +2824,7 @@ you have to manually address the issue.
 
         elif char in (ord('T'), ):
             self.jumpnr = ''
+            self._backslash = False
             self._random_requested = False
             self._toggle_transparency()
             return
@@ -3006,12 +3035,14 @@ you have to manually address the issue.
 
             if char in (ord('?'), ):
                 self.jumpnr = ''
+                self._backslash = False
                 self._random_requested = False
                 self._print_help()
                 return
 
             if char in (curses.KEY_END, ):
                 self.jumpnr = ''
+                self._backslash = False
                 self._random_requested = False
                 if self.number_of_items > 0:
                     self.setStation(-1)
@@ -3048,6 +3079,7 @@ you have to manually address the issue.
 
             if char in (ord('g'), curses.KEY_HOME):
                 self.jumpnr = ''
+                self._backslash = False
                 self._random_requested = False
                 self.setStation(0)
                 self.refreshBody()
@@ -3062,10 +3094,12 @@ you have to manually address the issue.
                 if char == -1:
                     """ ESCAPE """
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     if self.ws.operation_mode == self.ws.PLAYLIST_MODE:
                         """ return to stations view """
                         self.jumpnr = ''
+                        self._backslash = False
                         self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
                         self.ws.close_window()
                         self._give_me_a_search_class(self.ws.operation_mode)
@@ -3100,6 +3134,7 @@ you have to manually address the issue.
 
             if char in (curses.KEY_DOWN, ord('j')):
                 self.jumpnr = ''
+                self._backslash = False
                 self._random_requested = False
                 if self.number_of_items > 0:
                     self.setStation(self.selection + 1)
@@ -3108,6 +3143,7 @@ you have to manually address the issue.
 
             if char in (curses.KEY_UP, ord('k')):
                 self.jumpnr = ''
+                self._backslash = False
                 self._random_requested = False
                 if self.number_of_items > 0:
                     self.setStation(self.selection - 1)
@@ -3116,6 +3152,7 @@ you have to manually address the issue.
 
             if char in (curses.KEY_PPAGE, ):
                 self.jumpnr = ''
+                self._backslash = False
                 self._random_requested = False
                 if self.number_of_items > 0:
                     sel = self.selection - self.pageChange
@@ -3127,6 +3164,7 @@ you have to manually address the issue.
 
             if char in (curses.KEY_NPAGE, ):
                 self.jumpnr = ''
+                self._backslash = False
                 self._random_requested = False
                 if self.number_of_items > 0:
                     sel = self.selection + self.pageChange
@@ -3141,6 +3179,7 @@ you have to manually address the issue.
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char in ( ord('a'), ord('A') ):
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     if self._cnf.browsing_station_service: return
                     self._station_editor = PyRadioEditor(self.stations, self.selection, self.bodyWin)
@@ -3152,6 +3191,7 @@ you have to manually address the issue.
 
                 elif char == ord('e'):
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     if self._cnf.browsing_station_service: return
                     if python_version[0] == '2':
@@ -3164,6 +3204,7 @@ you have to manually address the issue.
 
                 elif char == ord('c'):
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     if self._cnf.locked:
                         self._print_session_locked()
@@ -3179,6 +3220,7 @@ you have to manually address the issue.
 
                 elif char in (ord('E'), ):
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     self._old_station_encoding = self.stations[self.selection][2]
                     if self._old_station_encoding == '':
@@ -3194,6 +3236,7 @@ you have to manually address the issue.
 
                 elif char in (ord('o'), ):
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     if self._cnf.browsing_station_service: return
                     self._check_to_open_playlist()
@@ -3202,6 +3245,7 @@ you have to manually address the issue.
                 elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                         curses.KEY_RIGHT, ord('l')):
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     if self.number_of_items > 0:
                         self.playSelection()
@@ -3211,6 +3255,7 @@ you have to manually address the issue.
 
                 elif char in (ord(' '), curses.KEY_LEFT, ord('h')):
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     if self.number_of_items > 0:
                         if self.player.isPlaying():
@@ -3224,6 +3269,7 @@ you have to manually address the issue.
                 elif char in(ord('x'), curses.KEY_DC):
                     # TODO: make it impossible when session locked?
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     if self._cnf.browsing_station_service: return
                     if self.number_of_items > 0:
@@ -3232,6 +3278,7 @@ you have to manually address the issue.
 
                 elif char in(ord('s'), ):
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     if self._cnf.browsing_station_service: return
                     if self.number_of_items > 0 and \
@@ -3241,6 +3288,7 @@ you have to manually address the issue.
 
                 elif char in (ord('r'), ):
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = True
                     # Pick a random radio station
                     self.play_random()
@@ -3248,6 +3296,7 @@ you have to manually address the issue.
 
                 elif char in (ord('R'), ):
                     self.jumpnr = ''
+                    self._backslash = False
                     self._random_requested = False
                     if self._cnf.browsing_station_service: return
                     # Reload current playlist
@@ -3275,6 +3324,7 @@ you have to manually address the issue.
                     self._random_requested = False
                     self._move_station(-1)
                     self.jumpnr = ''
+                    self._backslash = False
                     return
 
                 elif char in (curses.ascii.EOT, 4):
@@ -3282,6 +3332,7 @@ you have to manually address the issue.
                     self._random_requested = False
                     self._move_station(1)
                     self.jumpnr = ''
+                    self._backslash = False
                     return
 
             elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
@@ -3290,6 +3341,7 @@ you have to manually address the issue.
                 if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                         curses.KEY_RIGHT, ord('l')):
                     self.jumpnr = ''
+                    self._backslash = False
                     """ return to stations view """
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Loading playlist: "{}"'.format(self.stations[self.selection][-1]))
@@ -3323,6 +3375,7 @@ you have to manually address the issue.
 
                 elif char in (ord('r'), ):
                     self.jumpnr = ''
+                    self._backslash = False
                     """ read playlists from disk """
                     txt = '''Reading playlists. Please wait...'''
                     self._show_help(txt, self.ws.PLAYLIST_MODE, caption=' ', prompt=' ', is_message=True)
@@ -3339,6 +3392,7 @@ you have to manually address the issue.
 
     def _volume_up(self):
         self.jumpnr = ''
+        self._backslash = False
         self._random_requested = False
         if self.player.isPlaying():
             if self.player.playback_is_on:
@@ -3353,6 +3407,7 @@ you have to manually address the issue.
 
     def _volume_down(self):
         self.jumpnr = ''
+        self._backslash = False
         self._random_requested = False
         if self.player.isPlaying():
             if self.player.playback_is_on:
@@ -3366,6 +3421,7 @@ you have to manually address the issue.
 
     def _volume_mute(self):
         self.jumpnr = ''
+        self._backslash = False
         self._random_requested = False
         if self.player.isPlaying():
             if self.player.playback_is_on:
@@ -3379,6 +3435,7 @@ you have to manually address the issue.
 
     def _volume_save(self):
         self.jumpnr = ''
+        self._backslash = False
         self._random_requested = False
         if self.player.isPlaying():
             if self.player.playback_is_on:

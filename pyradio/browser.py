@@ -22,6 +22,21 @@ class PyRadioStationsBrowser(object):
     Actual implementations should be subclasses of this one.
     """
 
+    BASE_URL = ''
+    _raw_stations = []
+    _last_search = None
+    _have_to_retrieve_url = False
+    _internal_header_height = 0
+    _url_timeout = 3
+    _search_timeout = 3
+
+    # Normally outer boddy (holding box, header, internal header) is
+    # 2 chars wider that the internal body (holding the stations)
+    # This property value is half the difference (normally 2 / 2 = 1)
+    # Used to chgat the columns' separators in internal body
+    # Check if the cursor is divided as required and adjust
+    _outer_internal_body_diff = 1
+
     def __init__(self, search=None):
         """Initialize the station's browser.
 
@@ -35,19 +50,7 @@ class PyRadioStationsBrowser(object):
             Search parameters to be used instead of the default.
         """
 
-        self._raw_stations = []
-        self._last_search = None
-        self._have_to_retrieve_url = False
-        self._internal_header_height = 0
-        self._url_timeout = 3
-        self._search_timeout = 3
-
-        # Normally outer boddy (holding box, header, internal header) is
-        # 2 chars wider that the internal body (holding the stations)
-        # This property value is half the difference (normally 2 / 2 = 1)
-        # Used to chgat the columns' separators in internal body
-        # Check if the cursor is divided as required and adjust
-        self._outer_internal_body_diff = 1
+        pass
 
     @property
     def outer_internal_body_diff(self):
@@ -134,31 +137,28 @@ class PyRadioStationsBrowser(object):
 
 
 class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
+
     BASE_URL = 'www.radio-browser.info'
+
     _open_url = \
-        'http://www.radio-browser.info/webservice/json/stations/topvote/100'
+             'http://www.radio-browser.info/webservice/json/stations/topvote/100'
     _open_headers = {'user-agent': 'PyRadio/dev'}
 
     _raw_stations = []
 
     # the output format to use based on window width
     # Default value: -1
-    # Possible values: 0..4
+    # Possible values: 0..5
     # Look at format_station_line() for info
     _output_format = -1
     _info_len = []
     _info_name_len = 0
 
+    _raw_stations = []
     _have_to_retrieve_url = True
     _internal_header_height = 1
 
-
     def __init__(self, search=None):
-        if PY3:
-            super().__init__()
-        else:
-            super(PyRadioBrowserInfoBrowser, self).__init__()
-        self._raw_stations = []
         if search:
             self.search(search)
         else:
