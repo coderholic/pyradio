@@ -272,7 +272,7 @@ class PyRadio(object):
             self.setup_return_status = False
             return
         if logger.isEnabledFor(logging.INFO):
-            logger.info("GUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), system()))
+            logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), system()))
             logger.info('Terminal supports {} colors'.format(curses.COLORS))
         self.stdscr = stdscr
         from pyradio import version
@@ -553,10 +553,13 @@ class PyRadio(object):
         if lineNum + self.startPos == self.selection and \
                 self.selection == self.playing:
             col = curses.color_pair(9)
-            # sep_col = curses.color_pair(5)
+            # initialize col_sep here to have separated cursor
+            sep_col = curses.color_pair(5)
             self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
         elif lineNum + self.startPos == self.selection:
             col = curses.color_pair(6)
+            # initialize col_sep here to have separated cursor
+            sep_col = curses.color_pair(5)
             self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
         elif lineNum + self.startPos == self.playing:
             col = curses.color_pair(4)
@@ -582,8 +585,9 @@ class PyRadio(object):
 
             if self._cnf.browsing_station_service and sep_col:
                 ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX)
-                for n in ticks:
-                    self.bodyWin.chgat(lineNum + 1, n, 1, sep_col)
+                if ticks:
+                    for n in ticks:
+                        self.bodyWin.chgat(lineNum, n - self._cnf.online_browser.outer_internal_body_diff , 1, sep_col)
 
     def run(self):
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
@@ -2519,7 +2523,7 @@ you have to manually address the issue.
                         self.stations.append(self._station_editor.new_station)
                         self.number_of_items = len(self.stations)
                         self.selection = self.number_of_items - 1
-                        self.startPos = self.number_of_items - self.bodyMaxY2
+                        self.startPos = self.number_of_items - self.bodyMaxY
                     else:
                         ret, self.number_of_items = self._cnf.insert_station(self._station_editor.new_station, self.selection + 1)
                         self.stations = self._cnf.stations

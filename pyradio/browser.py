@@ -42,6 +42,21 @@ class PyRadioStationsBrowser(object):
         self._url_timeout = 3
         self._search_timeout = 3
 
+        # Normally outer boddy (holding box, header, internal header) is
+        # 2 chars wider that the internal body (holding the stations)
+        # This property value is half the difference (normally 2 / 2 = 1)
+        # Used to chgat the columns' separators in internal body
+        # Check if the cursor is divided as required and adjust
+        self._outer_internal_body_diff = 1
+
+    @property
+    def outer_internal_body_diff(self):
+        return self._outer_internal_body_diff
+
+    @outer_internal_body_diff.setter
+    def outer_internal_body_diff(self, value):
+        raise ValueError('property is read only')
+
     @property
     def internal_header_height(self):
         return self._internal_header_height
@@ -137,10 +152,12 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
     _have_to_retrieve_url = True
     _internal_header_height = 1
 
-    _url_timeout = 3
-    _search_timeout = 3
 
     def __init__(self, search=None):
+        if PY3:
+            super().__init__()
+        else:
+            super(PyRadioBrowserInfoBrowser, self).__init__()
         self._raw_stations = []
         if search:
             self.search(search)
