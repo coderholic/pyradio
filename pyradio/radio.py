@@ -247,10 +247,16 @@ class PyRadio(object):
                 self.ws.SELECT_PLAYLIST_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
                 self.ws.SELECT_STATION_MODE: self.ws.SEARCH_SELECT_STATION_MODE,
                 }
+
         # search modes opened from main windows
         self.search_main_window_modes = (
                 self.ws.SEARCH_NORMAL_MODE,
                 self.ws.SEARCH_PLAYLIST_MODE,
+                )
+
+        # keyboard will be dead in theses modes
+        self._no_keyboard = (
+                self.ws.HISTORY_EMPTY_NOTIFICATION,
                 )
 
         # volume functions
@@ -1158,6 +1164,18 @@ class PyRadio(object):
         #arg[1].release()
         self.refreshBody()
 
+    def _show_no_more_playlist_history(self):
+        txt = 'Top of history reached!!!'
+        self._show_help(txt, mode_to_set=self.ws.HISTORY_EMPTY_NOTIFICATION, caption='',
+                prompt='', is_message=True)
+        # start 1250 ms counter
+        th = threading.Timer(.5, self.closeHistoryEmptyNotification)
+        th.start()
+
+    def closeHistoryEmptyNotification(self):
+        self.ws.close_window()
+        self.refreshBody()
+
     def _show_theme_not_supported(self):
         if self._cnf.theme_not_supported_notification_shown:
             return
@@ -1206,6 +1224,9 @@ class PyRadio(object):
                  e                |Edit current station.
                  E                |Change station's encoding.
                  DEL|,|x            |Delete selected station.
+                 !Playlist history
+                 \\\\               |Open previous playlist.
+                 \\]               |Open first opened playlist.
                  !Moving stations
                  J                |Create a |J|ump tag.
                  <n>^U|,|<n>^D      |Move station |U|p / |D|own.
@@ -1447,44 +1468,53 @@ class PyRadio(object):
                 is_message=True)
 
     def _print_playlist_recovery_error(self):
-        if self._cnf.playlist_recovery_result == 1:
-            txt = """Both a playlist file (CSV) and a playlist backup
-file (TXT) exist for the selected playlist. In
-this case, PyRadio would try to delete the CSV
-file, and then rename the TXT file to CSV.\n
-Unfortunately, deleting the CSV file has failed,
-so you have to manually address the issue.
-"""
+        if self._playlist_error_message:
+            txt = self._playlist_error_message
         else:
-            txt = """A playlist backup file (TXT) has been found for
-the selected playlist. In this case, PyRadio would
-try to rename this file to CSV.\n
-Unfortunately, renaming this file has failed, so
-you have to manually address the issue.
-"""
+            if self._cnf.playlist_recovery_result == 1:
+                txt = """Both a playlist file (CSV) and a playlist backup
+    file (TXT) exist for the selected playlist. In
+    this case, PyRadio would try to delete the CSV
+    file, and then rename the TXT file to CSV.\n
+    Unfortunately, deleting the CSV file has failed,
+    so you have to manually address the issue.
+    """
+            else:
+                txt = """A playlist backup file (TXT) has been found for
+    the selected playlist. In this case, PyRadio would
+    try to rename this file to CSV.\n
+    Unfortunately, renaming this file has failed, so
+    you have to manually address the issue.
+    """
         self._show_help(txt, self.ws.PLAYLIST_RECOVERY_ERROR_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ',
                 is_message=True)
 
     def _print_playlist_not_found_error(self):
-        txt = """Playlist |not| found!
+        if self._playlist_error_message:
+            txt = self._playlist_error_message
+        else:
+            txt = """Playlist |not| found!
 
-            This means that the playlist file was deleted
-            (or renamed) some time after you opened the
-            Playlist Selection window.
-            """
+                This means that the playlist file was deleted
+                (or renamed) some time after you opened the
+                Playlist Selection window.
+                """
         self._show_help(txt, self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ',
                 is_message=True)
 
     def _print_playlist_load_error(self):
-        txt = """Playlist loading |failed|!
+        if self._playlist_error_message:
+            txt = self._playlist_error_message
+        else:
+            txt = """Playlist loading |failed|!
 
-            This means that either the file is corrupt,
-            or you are not permitted to access it.
-            """
+                This means that either the file is corrupt,
+                or you are not permitted to access it.
+                """
         self._show_help(txt, self.ws.PLAYLIST_LOAD_ERROR_MODE,
                 caption = ' Error ',
                 prompt = ' Press any key ',
@@ -1744,7 +1774,7 @@ you have to manually address the issue.
                 is_message=True)
         self._update_version = ''
 
-    def _align_stations_and_refresh(self, cur_mode):
+    def _align_stations_and_refresh(self, cur_mode, a_startPos=-1, a_selection=-1):
         need_to_scan_playlist = False
         """ refresh reference """
         self.stations = self._cnf.stations
@@ -1827,7 +1857,11 @@ you have to manually address the issue.
                     self.setStation(self.playing)
                 else:
                     if self.selection == -1:
-                        self.selection = 0
+                        if a_selection > -1:
+                            self.selection = a_selection
+                            self.startPos = a_startPos
+                        else:
+                            self.selection = 0
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Setting selection station at {}'.format(self.selection))
                     self.setStation(self.selection)
@@ -1846,7 +1880,7 @@ you have to manually address the issue.
 
     def _open_playlist(self):
         """ open playlist """
-        self._cnf.save_station_position(self.startPos, self.selection)
+        self._cnf.save_station_position(self.startPos, self.selection, self.playing)
         self._get_active_stations()
         self.jumpnr = ''
         self._backslash = False
@@ -2238,7 +2272,96 @@ you have to manually address the issue.
         else:
             self._open_playlist()
 
+    def _open_playlist_from_history(self, reset=False):
+        if not self._cnf.can_go_back_in_time:
+            self._show_no_more_playlist_history()
+            return
+        playlist_history = self._cnf.copy_playlist_history()
+        self._get_active_stations()
+        if reset:
+            self._cnf.reset_playlist_history()
+        removed_playlist_history_item = self._cnf.remove_from_playlist_history()
+        err_string = '"|{}|"'.format(self._cnf.stations_filename_only_no_extension)
+
+        ret = self._cnf.read_playlist_file(self._cnf.stations_file)
+
+        if ret == -1:
+            #self.stations = self._cnf.playlists
+            self._cnf.add_to_playlist_history(*removed_playlist_history_item)
+            self._playlist_error_message = ''
+            self._playlist_error_message = """Cannot restore playlist
+                {}
+
+                The playlist file has been edited (and corrupted)
+                time after you opened subsequent playlist(s), or
+                its access rights have been changed since then.
+                """.format(err_string.center(48, '_'))
+            self._print_playlist_load_error()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Error loading playlist: "{}"'.format(self.stations[self.selection][-1]))
+            return
+        elif ret == -2:
+            #self.stations = self._cnf.playlists
+            self._cnf.add_to_playlist_history(*removed_playlist_history_item)
+            self._playlist_error_message = """Cannot restore playlist
+                {}
+
+                The playlist file was deleted (or renamed) some
+                time after you opened subsequent playlist(s).
+                """.format(err_string.center(48, '_'))
+            self._print_playlist_not_found_error()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Playlist not found: "{}"'.format(self.stations[self.selection][-1]))
+            return
+        elif ret == -7:
+            self._cnf.add_to_playlist_history(*removed_playlist_history_item)
+            if self._cnf.playlist_recovery_result == 1:
+                self._playlist_error_message = """Cannot restore playlist
+                    {}
+
+                    Both a playlist file (CSV) and a playlist backup
+                    file (TXT) exist for the selected playlist. In
+                    this case, PyRadio would try to delete the CSV
+                    file, and then rename the TXT file to CSV.\n
+                    Unfortunately, deleting the CSV file has failed,
+                    so you have to manually address the issue.
+                    """.format(err_string.center(48, '_'))
+            else:
+                self._playlist_error_message = """Cannot restore playlist
+                    {}
+
+                    A playlist backup file (TXT) has been found for
+                    the selected playlist. In this case, PyRadio would
+                    try to rename this file to CSV.\n
+                    Unfortunately, renaming this file has failed, so
+                    you have to manually address the issue.
+                    """.format(err_string.center(50, '_'))
+            self._print_playlist_recovery_error()
+            return
+        else:
+            self._playlist_error_message = ''
+            self.number_of_items = ret
+            #self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+            #self.ws.close_window()
+            #self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+            self.playing = removed_playlist_history_item[-1]
+            self.selection = removed_playlist_history_item[-2]
+            self.startPos = removed_playlist_history_item[-3]
+            self.stations = self._cnf.stations
+            self._align_stations_and_refresh(self.ws.PLAYLIST_MODE, 
+                    a_startPos=self._cnf.history_startPos, 
+                    a_selection=self._cnf.history_selection)
+            #self._give_me_a_search_class(self.ws.operation_mode)
+            if self.playing < 0:
+                self._put_selection_in_the_middle(force=True)
+                self.refreshBody()
+
     def keypress(self, char):
+        if self.ws.operation_mode in self._no_keyboard:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Rejecting keyboard input...')
+            return
+
         if self._force_exit or \
                 self.ws.operation_mode == self.ws.CONFIG_SAVE_ERROR_MODE:
             return -1
@@ -2248,22 +2371,26 @@ you have to manually address the issue.
         elif not self._backslash and char == ord('\\') and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             self._backslash = True
-            logger.error('DE **** backslash pressed SET ****')
             return
         elif self._backslash and char == ord('\\') and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
-            logger.error('DE **** Go Up ****')
-            logger.error('DE can_go_back_in_time = {}'.format(self._cnf.can_go_back_in_time))
             if self._cnf.can_go_back_in_time:
-                pass
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('opening previous playlist')
+                self._open_playlist_from_history()
+            else:
+                self._show_no_more_playlist_history()
             self._backslash = False
             return
         elif self._backslash and char == ord(']') and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
-            logger.error('DE **** Go Up To Top ****')
-            logger.error('DE can_go_back_in_time = {}'.format(self._cnf.can_go_back_in_time))
             if self._cnf.can_go_back_in_time:
-                pass
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('opening first playlist')
+                self._open_playlist_from_history(reset=True)
+            else:
+                self._show_no_more_playlist_history()
+
             self._backslash = False
             return
 
@@ -3369,6 +3496,7 @@ you have to manually address the issue.
                         self._print_playlist_recovery_error()
                         return
                     else:
+                        self._playlist_error_message = ''
                         self.number_of_items = ret
                         self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
                         self.ws.close_window()

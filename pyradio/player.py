@@ -62,7 +62,7 @@ class Player(object):
     def _do_save_volume(self, config_string):
         if not self.config_files:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Volume not daved!!! (config file not found!!!)')
+                logger.debug('Volume not saved!!! (config file not found!!!)')
             return 'Volume not saved!!!'
         ret_strings = ('Volume: already saved...',
                     'Volume: {}% saved',
@@ -617,6 +617,8 @@ class MpPlayer(Player):
             config_files[0] = 'C:\\mplayer\mplayer\\config'
         elif os.path.exists(os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
             config_files[0] = os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer", "config")
+        elif os.path.exists(os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer.exe")):
+            config_files[0] = os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer", "config")
         else:
             config_files = []
     else:
