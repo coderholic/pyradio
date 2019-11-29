@@ -515,7 +515,7 @@ class PyRadio(object):
             cur_mode = self.ws.previous_operation_mode
         if cur_mode == self.ws.NORMAL_MODE:
             if self._cnf.browsing_station_service:
-                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust=2)
+                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_header=True)
                 if ticks:
                     for n in ticks:
                         if version_info < (3, 0):
@@ -585,10 +585,10 @@ class PyRadio(object):
                 pass
 
             if self._cnf.browsing_station_service and sep_col:
-                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX)
+                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
                 if ticks:
                     for n in ticks:
-                        self.bodyWin.chgat(lineNum, n - self._cnf.online_browser.outer_internal_body_diff , 1, sep_col)
+                        self.bodyWin.chgat(lineNum, n, 1, sep_col)
 
     def run(self):
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
@@ -1846,6 +1846,7 @@ you have to manually address the issue.
 
     def _open_playlist(self):
         """ open playlist """
+        self._cnf.save_station_position(self.startPos, self.selection)
         self._get_active_stations()
         self.jumpnr = ''
         self._backslash = False
@@ -2187,7 +2188,7 @@ you have to manually address the issue.
             self.refreshBody()
 
     def _show_station_editor(self):
-        self._station_editor.set_parent(self.bodyWin)
+        self._station_editor.set_parent(self.outerBodyWin)
 
     def _move_station(self, direction):
         if self.jumpnr:
@@ -2252,11 +2253,17 @@ you have to manually address the issue.
         elif self._backslash and char == ord('\\') and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             logger.error('DE **** Go Up ****')
+            logger.error('DE can_go_back_in_time = {}'.format(self._cnf.can_go_back_in_time))
+            if self._cnf.can_go_back_in_time:
+                pass
             self._backslash = False
             return
         elif self._backslash and char == ord(']') and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             logger.error('DE **** Go Up To Top ****')
+            logger.error('DE can_go_back_in_time = {}'.format(self._cnf.can_go_back_in_time))
+            if self._cnf.can_go_back_in_time:
+                pass
             self._backslash = False
             return
 
@@ -3182,7 +3189,7 @@ you have to manually address the issue.
                     self._backslash = False
                     self._random_requested = False
                     if self._cnf.browsing_station_service: return
-                    self._station_editor = PyRadioEditor(self.stations, self.selection, self.bodyWin)
+                    self._station_editor = PyRadioEditor(self.stations, self.selection, self.outerBodyWin)
                     if char == ord('A'):
                         self._station_editor.append = True
                     self._station_editor.show()
@@ -3198,7 +3205,7 @@ you have to manually address the issue.
                         if not is_ascii(self.stations[self.selection][0]):
                             self._print_py2_editor_error()
                             return
-                    self._station_editor = PyRadioEditor(self.stations, self.selection, self.bodyWin, adding=False)
+                    self._station_editor = PyRadioEditor(self.stations, self.selection, self.outerBodyWin, adding=False)
                     self._station_editor.show(self.stations[self.selection])
                     self.ws.operation_mode = self.ws.EDIT_STATION_MODE
 

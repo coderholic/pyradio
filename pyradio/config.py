@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 
 class PyRadioStations(object):
     """ PyRadio stations file management """
-    stations_file = ''
-    stations_filename_only = ''
-    stations_filename_only_no_extension = ''
+    #stations_file = ''
+    #stations_filename_only = ''
+    #stations_filename_only_no_extension = ''
     foreign_filename_only_no_extension = ''
     previous_stations_file = ''
 
@@ -102,6 +102,8 @@ class PyRadioStations(object):
             except:
                 pass
 
+        self._ps = PyRadioPlaylistStack()
+
         if not self.locked:
             """ If a station.csv file exitst, which is wrong,
                 we rename it to stations.csv """
@@ -136,6 +138,38 @@ class PyRadioStations(object):
     @browsing_station_service.setter
     def browsing_station_service(self, value):
         self._browsing_station_service = value
+
+    @property
+    def stations_file(self):
+        return self._ps.stations_file
+
+    @stations_file.setter
+    def stations_file(self, value):
+        self._ps.stations_file = value
+
+    @property
+    def stations_filename_only(self):
+        return self._ps.stations_filename_only
+
+    @stations_filename_only.setter
+    def stations_filename_only(self, value):
+        self._ps.stations_filename_only = value
+
+    @property
+    def stations_filename_only_no_extension(self):
+        return self._ps.stations_filename_only
+
+    @stations_filename_only_no_extension.setter
+    def stations_filename_only_no_extension(self, value):
+        self._ps.stations_filename_only_no_extension = value
+
+    @property
+    def can_go_back_in_time(self):
+        return True if len(self._ps._p) > 1 else False
+
+    @can_go_back_in_time.setter
+    def can_go_back_in_time(self, value):
+        raise ValueError('property is read only')
 
     def url(self, id_in_list):
         if self._browsing_station_service:
@@ -191,7 +225,7 @@ class PyRadioStations(object):
                 logger.error('Cannot copy playlist: "{}"'.format(self.stations_file))
             ret = -1
             return
-        self._get_playlist_elements(st)
+        self._set_playlist_elements(st)
         self.read_playlists()
         self.foreign_file = False
         if logger.isEnabledFor(logging.DEBUG):
@@ -319,7 +353,8 @@ class PyRadioStations(object):
 
         self.stations = list(self._reading_stations)
         self._reading_stations = []
-        self._get_playlist_elements(stationFile)
+        self._ps.add()
+        self._set_playlist_elements(stationFile)
         self.previous_stations_file = prev_file
         self._is_playlist_in_config_dir()
         self.number_of_stations = len(self.stations)
@@ -463,10 +498,29 @@ class PyRadioStations(object):
         else:
             return a_row[:-2]
 
-    def _get_playlist_elements(self, a_playlist):
+    def _set_playlist_elements(self, a_playlist, a_title=''):
         self.stations_file = path.abspath(a_playlist)
         self.stations_filename_only = path.basename(self.stations_file)
-        self.stations_filename_only_no_extension = ''.join(self.stations_filename_only.split('.')[:-1])
+        if a_title:
+            self.stations_filename_only_no_extension = a_title
+        else:
+            self.stations_filename_only_no_extension = ''.join(self.stations_filename_only.split('.')[:-1])
+        self._ps.remove_duplicates()
+        for n in self._ps._p:
+            logger.error('DE ------ {}'.format(n))
+
+    def add_to_playlist_history(self, stations_file='',
+            stations_filename_only='',
+            stations_filename_only_no_extension=''):
+        self._ps.add(stations_file,
+                stations_filename_only,
+                stations_filename_only_no_extension)
+
+    def reset_playlist_history(self):
+        self._ps.reset()
+
+    def remove_from_playlist_history(self):
+        return self._ps.pop()
 
     def _bytes_to_human(self, B):
         ''' Return the given bytes as a human friendly KB, MB, GB, or TB string '''
@@ -653,12 +707,17 @@ class PyRadioStations(object):
         if self._online_browser:
             self.stations = self._online_browser.stations(2)
             self._reading_stations = []
-            #self._get_playlist_elements(stationFile)
+            #self._set_playlist_elements(stationFile)
             #self.previous_stations_file = prev_file
             #self._is_playlist_in_config_dir()
             self.number_of_stations = len(self.stations)
             self.dirty_playlist = False
 
+    def save_station_position(self, startPos, selection):
+        logger.error('DE startPos = {0}, selection = {1}'.format(startPos, selection))
+        self._ps.startPos = startPos
+        self._ps.selection = selection
+        logger.error('\n\nDE {}\n\n'.format(self._ps._p))
 
 class PyRadioConfig(PyRadioStations):
 
@@ -1042,3 +1101,120 @@ auto_save_playlist = {9}
             stationFile = self.default_playlist
         return super(PyRadioConfig, self).read_playlist_file(stationFile)
 
+
+class PyRadioPlaylistStack(object):
+
+    _p = []
+
+    _id = {'stations_file': 0,
+           'stations_filename_only': 1,
+           'stations_filename_only_no_extension': 2,
+           'startPos': 3,
+           'selection': 4,
+           }
+
+    def __init__(self):
+        pass
+
+    @property
+    def stations_file(self):
+        if self._p:
+            return self._p[-1][self._id['stations_file']]
+        else:
+            return ''
+
+    @stations_file.setter
+    def stations_file(self, value):
+        if self._p:
+            self._p[-1][self._id['stations_file']] = value
+
+    @property
+    def stations_filename_only(self):
+        if self._p:
+            return self._p[-1][self._id['stations_filename_only']]
+        else:
+            return ''
+
+    @stations_filename_only.setter
+    def stations_filename_only(self, value):
+        if self._p:
+            self._p[-1][self._id['stations_filename_only']] = value
+
+    @property
+    def stations_filename_only_no_extension(self):
+        if self._p:
+            return self._p[-1][self._id['stations_filename_only_no_extension']]
+        else:
+            return ''
+
+    @stations_filename_only_no_extension.setter
+    def stations_filename_only_no_extension(self, value):
+        if self._p:
+            self._p[-1][self._id['stations_filename_only_no_extension']] = value
+
+    @property
+    def selection(self):
+        if self._p:
+            return self._p[-1][self._id['selection']]
+        else:
+            return ''
+
+    @selection.setter
+    def selection(self, value):
+        if self._p:
+            self._p[-1][self._id['selection']] = value
+
+    @property
+    def startPos(self):
+        if self._p:
+            return self._p[-1][self._id['startPos']]
+        else:
+            return ''
+
+    @startPos.setter
+    def startPos(self, value):
+        if self._p:
+            self._p[-1][self._id['startPos']] = value
+
+    def remove_duplicates(self):
+        if len(self._p) > 1:
+            val1 = self._p[-1][self._id['stations_filename_only']]
+            val2 = self._p[-2][self._id['stations_filename_only']]
+            if val1 == val2:
+                self._p.pop()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('PyRadioPlaylistStack: Removing duplicate entry...')
+                return True
+        return False
+
+    def add(self, stations_file='',
+            stations_filename_only='',
+            stations_filename_only_no_extension=''):
+        if len(self._p) > 1 and stations_file:
+            if self._p[-2][self._id['stations_file']] == stations_file:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('PyRadioPlaylistStack.add(): Refusing to add duplicate entry: "{}"'.format(stations_file))
+                return
+        self._p.append([stations_file,
+            stations_filename_only,
+            stations_filename_only_no_extension,
+            0, 0])
+
+    def get_member(self, member):
+        if member in self._id.keys():
+            return self._p[-1][self._id[member]]
+        else:
+            raise ValueError('member "{}" does not exist'.format(member))
+
+    def pop(self):
+        if len(self._p) > 1:
+            self._p.pop()
+            return True
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Refusing to remove first entry')
+            return False
+
+    def reset(self):
+        if self._p:
+            iself._p = self._p[:1]

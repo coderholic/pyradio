@@ -35,7 +35,8 @@ class PyRadioStationsBrowser(object):
     # This property value is half the difference (normally 2 / 2 = 1)
     # Used to chgat the columns' separators in internal body
     # Check if the cursor is divided as required and adjust
-    _outer_internal_body_diff = 1
+    _outer_internal_body_diff = 2
+    _outer_internal_body_half_diff = 1
 
     def __init__(self, search=None):
         """Initialize the station's browser.
@@ -53,11 +54,11 @@ class PyRadioStationsBrowser(object):
         pass
 
     @property
-    def outer_internal_body_diff(self):
-        return self._outer_internal_body_diff
+    def outer_internal_body_half_diff(self):
+        return self._outer_internal_body_half_diff
 
-    @outer_internal_body_diff.setter
-    def outer_internal_body_diff(self, value):
+    @outer_internal_body_half_diff.setter
+    def outer_internal_body_half_diff(self, value):
         raise ValueError('property is read only')
 
     @property
@@ -157,6 +158,14 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
     _raw_stations = []
     _have_to_retrieve_url = True
     _internal_header_height = 1
+
+    _columns_width = {
+            'votes': 7,
+            'clickcount': 7,
+            'bitrate': 7,
+            'country': 14,
+            'language': 15
+            }
 
     def __init__(self, search=None):
         if search:
@@ -495,40 +504,88 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         else:
             self._output_format = 5
 
-    def get_columns_separators(self, width, use_old_output_format=False, adjust=0):
-        actual_width = width - 2
-        actual_width = width
+    def _populate_columns_separators(self, a_tuple, width):
+        ret = []
+        for i, n in enumerate(a_tuple):
+            if i == 0:
+                ret.append(width - self._columns_width[n])
+            else:
+                ret.append(ret[-1] - 1 - self._columns_width[n])
+        ret.reverse()
+        return ret
+
+    def get_columns_separators(self,
+            width,
+            use_old_output_format=False,
+            adjust=0,
+            adjust_for_body=False,
+            adjust_for_header=False,
+            ):
+        """Calculates columns separators for a given width
+        based on self._output_format.
+
+        Parameters
+        ----------
+        width
+            Window width to use for the calculation.
+        use_old_output_format
+            If True, do not calculate self._output_format
+            (use what's already calculated).
+        adjust
+            Delete adjust from the output
+            Example:
+                if the output was [55, 67]
+                and adjust was 2
+                the output would become [53, 65]
+        adjust_for_header
+            Delete self._outer_internal_body_diff from output
+            This is to be used for displaying the internal header
+        adjust_for_body
+            Delete self._outer_internal_body_half_diff from output
+            This is to be used for changing columns' separators
+            color, when displaying body lines (stations' lines).
+
+        IMPORTANT
+        ---------
+        The adjust* parameters are mutually exclusive, which means
+        that ONLY ONE of them can be used at any given call to the
+        function. If you fail to comply, the result will be wrong.
+
+        Returns
+        -------
+        A list containing columns_separotors (e.g. [55, 65]).
+        """
+
+        columns_separotors = []
         if not use_old_output_format:
-            self._get_output_format(actual_width)
+            self._get_output_format(width)
         if self._output_format == 0:
             columns_separotors = []
         elif self._output_format == 1:
-            columns_separotors = [ actual_width - 7 ]
+            columns_separotors = [width - col_width['bitrate']]
         elif self._output_format == 2:
-            columns_separotors = [actual_width -15,
-                    actual_width -7
-                    ]
+            columns_separotors = self._populate_columns_separators(('bitrate', 'votes'), width)
+
         elif self._output_format == 3:
-            columns_separotors = [actual_width -23,
-                    actual_width -15,
-                    actual_width -7
-                    ]
+            columns_separotors = self._populate_columns_separators(('bitrate', 'clickcount', 'votes'), width)
+
         elif self._output_format == 4:
-            columns_separotors = [actual_width -38,
-                    actual_width -30,
-                    actual_width -22,
-                    actual_width -14
-                    ]
+            columns_separotors = self._populate_columns_separators(('country', 'bitrate', 'clickcount', 'votes'), width)
+
         elif self._output_format == 5:
-            columns_separotors = [actual_width -54,
-                    actual_width -46,
-                    actual_width -38,
-                    actual_width -30,
-                    actual_width -15
-                    ]
+            columns_separotors = self._populate_columns_separators(('language', 'country', 'bitrate', 'clickcount', 'votes'), width)
+
+        if adjust_for_header:
+            for n in range(0, len(columns_separotors)):
+                columns_separotors[n] -= self._outer_internal_body_diff
+
+        if adjust_for_body:
+            for n in range(0, len(columns_separotors)):
+                columns_separotors[n] -= self._outer_internal_body_half_diff
+
         if adjust > 0:
             for n in range(0, len(columns_separotors)):
-                columns_separotors[n] -= 2
+                columns_separotors[n] -= adjust
         return columns_separotors
 
     def get_internal_header(self, pad, width):
@@ -539,7 +596,9 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                    ('  Votes', ' Clicks', 'Bitrate', 'Country'),
                    ('  Votes', ' Clicks', 'Bitrate', 'Country', 'Language')
                    )
-        columns_separotors = self.get_columns_separators(width, use_old_output_format=True, adjust=2)
+        columns_separotors = self.get_columns_separators(width, use_old_output_format=True)
+        for i in range(0, len(columns_separotors)):
+            columns_separotors[i] -= 2
         title = '#'.rjust(pad) + '  Name'
         return ((title, columns_separotors, columns[self._output_format]), )
 
