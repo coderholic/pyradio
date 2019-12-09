@@ -211,6 +211,13 @@ When this happens, **PyRadio** will offer you the choice to copy the playlist in
 
 If a playlist of the same name already exists in the configuration directory, the "***foreign***" playlist will be time-stamped. For example, if a "***foreign***" playlist is named "*stations.csv*", it will be named "*2019-01-11_13-35-47_stations.csv*" (provided that the action was taken on January 11, 2019 at 13:35:47).
 
+### Playlist history
+
+**PyRadio** will keep a history of all the playlists opened (within a given session), so that navigating between them is made easy.
+
+In order to go back to the previous playlist, the user just has to press "***\\\\***" (double backslash). To get to the first playlist "***\\]***" (backslash - closing square bracket) can be used.
+
+Going forward in history is not supported.
 
 ## Search function
 

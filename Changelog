@@ -1,6 +1,7 @@
-2019-12-02 s-n-g
+2019-12-08 s-n-g
     * Adding playlist history (for local playlists)
     * WINDOWS: Volume will be saved when mplayer is installed in %APPDATA%\pyradio
+    * Fixing station moving when appending station
 
 2019-11-15 s-n-g
     * PyRadio will not crush with mpv 0.30.0

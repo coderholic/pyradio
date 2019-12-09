@@ -23,6 +23,7 @@ class PyRadioStationsBrowser(object):
     """
 
     BASE_URL = ''
+    TITLE = ''
     _raw_stations = []
     _last_search = None
     _have_to_retrieve_url = False
@@ -76,6 +77,14 @@ class PyRadioStationsBrowser(object):
     @have_to_retrieve_url.setter
     def have_to_retrieve_url(self, value):
         raise ValueError('property is read only')
+
+    @property
+    def title(self):
+        return self.TITLE
+
+    @title.setter
+    def title(self, value):
+        self.TITLE = value
 
     def stations(self, playlist_format=1):
         return []
@@ -140,6 +149,7 @@ class PyRadioStationsBrowser(object):
 class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
 
     BASE_URL = 'www.radio-browser.info'
+    TITLE = 'Radio Browser'
 
     _open_url = \
              'http://www.radio-browser.info/webservice/json/stations/topvote/100'
