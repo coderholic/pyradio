@@ -1,7 +1,10 @@
-2019-12-08 s-n-g
+2019-12-14 s-n-g
+    * Version 0.8.6
     * Adding playlist history (for local playlists)
-    * WINDOWS: Volume will be saved when mplayer is installed in %APPDATA%\pyradio
+    * https URLs will be converted to http before connecting
     * Fixing station moving when appending station
+    * Config / Default station: pading fixed
+    * WINDOWS: Volume will be saved when mplayer is installed in %APPDATA%\pyradio
 
 2019-11-15 s-n-g
     * PyRadio will not crush with mpv 0.30.0

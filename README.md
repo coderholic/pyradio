@@ -380,6 +380,8 @@ Example:
     [pyradio]
     volume=50
 
+**Note:** If **MPV 0.30.0** is installed, there will be no visual notification when changing the volume. Furthermore, saving the volume value will ***not be possible***. This is a **pyradio** bug and will be addressed in the future.
+
 ### MPlayer
 
 MPlayer uses profiles to customize its behavior as well.

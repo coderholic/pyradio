@@ -152,7 +152,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
     TITLE = 'Radio Browser'
 
     _open_url = \
-             'http://www.radio-browser.info/webservice/json/stations/topvote/100'
+            'http://www.radio-browser.info/webservice/json/stations/topvote/100'
     _open_headers = {'user-agent': 'PyRadio/dev'}
 
     _raw_stations = []
@@ -324,6 +324,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         self._last_search = post_data
         url = 'http://www.radio-browser.info/webservice/json/stations/search'
         try:
+            #r = requests.get(url=url)
             r = requests.get(url=url, headers=self._open_headers, json=post_data, timeout=self._search_timeout)
             r.raise_for_status()
             self._raw_stations = self._extract_data(json.loads(r.text))
@@ -447,16 +448,23 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         if a_search_result:
             for n in a_search_result:
                 ret.append({'name': n['name'].replace(',', ' ')})
-                ret[-1]['bitrate'] = n['bitrate']
-                ret[-1]['votes'] = n['votes']
                 ret[-1]['url'] = n['url']
                 ret[-1]['real_url'] = False
                 ret[-1]['played'] = False
                 ret[-1]['hls'] = n['hls']
                 ret[-1]['id'] = n['id']
                 ret[-1]['country'] = n['country']
+                if isinstance(n['clickcount'], int):
+                    # old API
+                    ret[-1]['votes'] = str(n['votes'])
+                    ret[-1]['clickcount'] = str(n['clickcount'])
+                    ret[-1]['bitrate'] = str(n['bitrate'])
+                else:
+                    # new API
+                    ret[-1]['votes'] = n['votes']
+                    ret[-1]['clickcount'] = n['clickcount']
+                    ret[-1]['bitrate'] = n['bitrate']
                 ret[-1]['language'] = n['language']
-                ret[-1]['clickcount'] = n['clickcount']
                 ret[-1]['encoding'] = ''
                 self._get_max_len(ret[-1]['votes'],
                                   ret[-1]['clickcount'])
@@ -468,9 +476,9 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         Parameters
         ----------
         votes
-            Number of station's vote
+            Number of station's vote (string)
         clicks 
-            Number of station's clicks
+            Number of station's clicks (string)
         numeric_data
 
         Returns
@@ -481,6 +489,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         """
 
         numeric_data = (votes, clicks)
+        logger.error('DE numeric_data = {}'.format(numeric_data))
         min_data = (6, 7)
         for i, n in enumerate(numeric_data):
             if len(n) > self._max_len[i]:
@@ -804,6 +813,7 @@ class PyRadioBrowserInfoData(object):
 
 def probeBrowsers(a_browser_url):
     base_url = a_browser_url.split('/')[2]
+    logger.error('DE base_url = ' + base_url)
     if not base_url:
         base_url = a_browser_url
     implementedBrowsers = PyRadioStationsBrowser.__subclasses__()

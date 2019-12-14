@@ -1987,7 +1987,7 @@ class PyRadio(object):
                 self.active_stations = [
                         [ '', self.selection ],
                         [ '', -1 ] ]
-        logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
+        #logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
 
     def get_active_encoding(self, an_encoding):
         if an_encoding:
@@ -2319,7 +2319,7 @@ class PyRadio(object):
         removed_playlist_history_item = self._cnf.remove_from_playlist_history()
         err_string = '"|{}|"'.format(self._cnf.station_title)
 
-        logger.error('DE\n\n Opening: "{}"\n\n'.format(self._cnf.station_path))
+        #logger.error('DE\n\n Opening: "{}"\n\n'.format(self._cnf.station_path))
         ret = self._cnf.read_playlist_file(self._cnf.station_path)
 
         if ret == -1:
