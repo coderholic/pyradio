@@ -939,6 +939,9 @@ class PyRadioSelectPlaylist(object):
     pageChange = 5
     jumpnr = ''
 
+    # offset to current item for padding calculation
+    pad_adjustment = 0
+
     def __init__(self, parent, config_path, default_playlist):
         self._parent_maxY, self._parent_maxX = parent.getmaxyx()
         self._config_path = config_path
@@ -1006,7 +1009,8 @@ class PyRadioSelectPlaylist(object):
             self._win.hline(self.maxY - 4, 1, ' ', self.maxX - 2, curses.color_pair(5))
 
         else:
-            pad = len(str(self.startPos + self.maxY - 2))
+            pad = len(str(self.startPos + self.maxY - 2 - self.pad_adjustment))
+            #logger.error('DE \n\npos = {0}, pad = {1}\n\n'.format(self.startPos + self.maxY - 2 - self.pad_adjustment, pad))
             for i in range(0, self.maxY - 2):
                 if i + self.startPos < self._num_of_items:
                     line, pad = self._format_line(i, pad)
@@ -1290,6 +1294,8 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         logger.info('self._default_playlist = ' + self._default_playlist)
         PyRadioSelectPlaylist.__init__(self, parent, config_path, default_station)
         self._title = ' Station Selection '
+        # adding 2 to padding calculation (i.e. no selection and random selection
+        self.pad_adjustment = 2
 
     def _calculate_width(self):
         self.maxX = 64
@@ -1373,7 +1379,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
 
     def _format_line(self, i, pad):
         """ PyRadioSelectStation format line """
-        fixed_pad = pad - 2
+        fixed_pad = pad
         if i + self.startPos < 2:
             line = '{0}  {1}'.format(' '.rjust(fixed_pad),
                 self._items[i + self.startPos])

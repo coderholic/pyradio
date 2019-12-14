@@ -1,16 +1,24 @@
-2019-11-15
+2019-12-14 s-n-g
+    * Version 0.8.6
+    * Adding playlist history (for local playlists)
+    * https URLs will be converted to http before connecting
+    * Fixing station moving when appending station
+    * Config / Default station: pading fixed
+    * WINDOWS: Volume will be saved when mplayer is installed in %APPDATA%\pyradio
+
+2019-11-15 s-n-g
     * PyRadio will not crush with mpv 0.30.0
       Changing mpv's volume is still possible, but no info will be
       presented on the Status Bar.
       Furthermore, saving mpv's volume will not be possible
       ( mpv issue #7153: https://github.com/mpv-player/mpv/issues/7153 )
 
-2019-11-12
+2019-11-12 s-n-g
     * When default played is changed in the config, a message to restart
       the application is presented to the user
     * Config / Default station: pading fixed
 
-2019-11-10
+2019-11-10 s-n-g
     * Fixing vlc returned volume parsing (due to locales decimal separator)
 
 2019-10-29 s-n-g

@@ -62,7 +62,7 @@ class Player(object):
     def _do_save_volume(self, config_string):
         if not self.config_files:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Volume not daved!!! (config file not found!!!)')
+                logger.debug('Volume not saved!!! (config file not found!!!)')
             return 'Volume not saved!!!'
         ret_strings = ('Volume: already saved...',
                     'Volume: {}% saved',
@@ -540,16 +540,17 @@ class MpvPlayer(Player):
                 logger.debug("--input-ipc-server is not supported.")
             newerMpv = 0;
 
+        http_url = streamUrl.replace('https://', 'http://')
         if playList:
             if newerMpv:
-                opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-ipc-server=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--quiet", "--playlist", http_url, "--input-ipc-server=" + self.mpvsocket]
             else:
-                opts = [self.PLAYER_CMD, "--quiet", "--playlist", streamUrl, "--input-unix-socket=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--quiet", "--playlist", http_url, "--input-unix-socket=" + self.mpvsocket]
         else:
             if newerMpv:
-                opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-ipc-server=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--quiet", http_url, "--input-ipc-server=" + self.mpvsocket]
             else:
-                opts = [self.PLAYER_CMD, "--quiet", streamUrl, "--input-unix-socket=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--quiet", http_url, "--input-unix-socket=" + self.mpvsocket]
         if self.USE_PROFILE == -1:
             self.USE_PROFILE = self._configHasProfile()
 
@@ -617,6 +618,8 @@ class MpPlayer(Player):
             config_files[0] = 'C:\\mplayer\mplayer\\config'
         elif os.path.exists(os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
             config_files[0] = os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer", "config")
+        elif os.path.exists(os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer.exe")):
+            config_files[0] = os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer", "config")
         else:
             config_files = []
     else:
@@ -653,10 +656,11 @@ class MpPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
+        http_url = streamUrl.replace('https://', 'http://')
         if playList:
-            opts = [self.PLAYER_CMD, "-quiet", "-playlist", streamUrl]
+            opts = [self.PLAYER_CMD, "-quiet", "-playlist", http_url]
         else:
-            opts = [self.PLAYER_CMD, "-quiet", streamUrl]
+            opts = [self.PLAYER_CMD, "-quiet", http_url]
         if self.USE_PROFILE == -1:
             self.USE_PROFILE = self._configHasProfile()
 
@@ -733,7 +737,7 @@ class VlcPlayer(Player):
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
         #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
-        opts = [self.PLAYER_CMD, "-Irc", "-vv", streamUrl]
+        opts = [self.PLAYER_CMD, "-Irc", "-vv", streamUrl.replace('https://', 'http://')]
         return opts
 
     def _mute(self):

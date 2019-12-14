@@ -179,7 +179,7 @@ def shell():
         logging.raiseExceptions = False
         logging.lastResort = None
 
-    if requested_player is '':
+    if requested_player == '':
         requested_player = pyradio_config.player
     #else:
     #    pyradio_config.requested_player = requested_player
