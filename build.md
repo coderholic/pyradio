@@ -71,7 +71,7 @@ Now it's time to install a media player. You are free to install any one of them
 1\. ***MPV***
 
 ```
-brew install mpv socat
+brew install mpv
 ```
 
 2\. ***MPlayer***

@@ -109,6 +109,7 @@ class Player(object):
                         with open(config_file, "w") as c_file:
                             c_file.write(config_string)
                         self.volume = -1
+                        self.PROFILE_FROM_USER = True
                     except:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug(log_strings[2].format(config_file))
@@ -504,6 +505,14 @@ class MpvPlayer(Player):
     if os.path.exists(mpvsocket):
         os.system("rm " + mpvsocket + " 2>/dev/null");
 
+    commands = {
+            'volume_up':   b'{ "command": ["cycle", "volume", "up"] }\n',
+            'volume_down': b'{ "command": ["cycle", "volume", "down"] }\n',
+            'mute':        b'{ "command": ["cycle", "mute"] }\n',
+            'pause':       b'{ "command": ["pause"] }\n',
+            'quit':        b'{ "command": ["quit"]}\n',
+            }
+
     def save_volume(self):
         """ Saving Volume in Windows does not work;
             Profiles not supported... """
@@ -567,26 +576,28 @@ class MpvPlayer(Player):
 
     def _mute(self):
         """ mute mpv """
-        os.system("echo 'cycle mute' | socat - " + self.mpvsocket + " 2>/dev/null");
+        ret = self._send_mpv_command('mute')
+        while not ret:
+            ret = self._send_mpv_command('mute')
 
     def pause(self):
         """ pause streaming (if possible) """
-        os.system("echo 'cycle pause' | socat - " + self.mpvsocket + " 2>/dev/null");
+        self._send_mpv_command('pause')
 
     def _stop(self):
         """ exit pyradio (and kill mpv instance) """
-        os.system("echo 'quit' | socat - " + self.mpvsocket + " 2>/dev/null");
+        self._send_mpv_command('quit')
         os.system("rm " + self.mpvsocket + " 2>/dev/null");
 
     def _volume_up(self):
         """ increase mpv's volume """
-        os.system("echo 'cycle volume' | socat - " + self.mpvsocket + " 2>/dev/null");
-        self._diaplay_mpv_volume_value()
+        self._send_mpv_command('volume_up')
+        self._display_mpv_volume_value()
 
     def _volume_down(self):
         """ decrease mpv's volume """
-        os.system("echo 'cycle volume down' | socat - " + self.mpvsocket + " 2>/dev/null");
-        self._diaplay_mpv_volume_value()
+        self._send_mpv_command('volume_down')
+        self._display_mpv_volume_value()
 
     def _format_title_string(self, title_string):
         """ format mpv's title """
@@ -605,7 +616,33 @@ class MpvPlayer(Player):
             sock.close()
             return None
 
-    def _diaplay_mpv_volume_value(self):
+    def _send_mpv_command(self, a_command):
+        """ Send a command to MPV
+
+        """
+
+        if a_command in self.commands.keys():
+            #while True:
+            #    sock = self._connect_to_socket(self.mpvsocket)
+            #    if sock:
+            #        break
+            #    sleep(.25)
+            sock = self._connect_to_socket(self.mpvsocket)
+            if sock is None:
+                return False
+
+            # Send data
+            sock.sendall(self.commands[a_command])
+            # read the responce
+            if version_info < (3, 0):
+                data = sock.recv(4096)
+            else:
+                data = sock.recvmsg(4096)
+            #logger.error('DE data = "{}"'.format(data))
+            sock.close()
+            return True
+
+    def _display_mpv_volume_value(self):
         """ Display volume for MPV
 
         Currently working with python 2 and 3
@@ -954,16 +991,6 @@ def check_player(a_player):
                              stdin=subprocess.PIPE,
                              shell=False)
         p.terminate()
-
-        # for mpv to work, socat is required...
-        if a_player.PLAYER_CMD == 'mpv':
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("mpv found... Checking for socat...")
-            p = subprocess.Popen(['socat', "-h"],
-                                 stdout=subprocess.PIPE,
-                                 stdin=subprocess.PIPE,
-                                 shell=False)
-            p.terminate()
 
         if logger.isEnabledFor(logging.INFO):
             logger.info("{} supported.".format(str(a_player)))

@@ -436,10 +436,7 @@ class PyRadio(object):
                     PyRadio currently supports three players: mpv, mplayer and vlc,
                     automatically detected in this order.
 
-                    Please install any one of them and try again.
-
-                    Please keep in mind that if mpv is installed, socat must be
-                    installed as well."""
+                    Please install any one of them and try again."""
             self.refreshNoPlayerBody(txt)
         else:
             #if self.ws.operation_mode == self.ws.MAIN_HELP_MODE:

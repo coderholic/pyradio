@@ -1,5 +1,6 @@
 2019-12-22 s-n-g
     * Fixing volume issue with mpv
+    * socat is no longer needed to use mpv
 
 2019-12-14 s-n-g
     * Version 0.8.6

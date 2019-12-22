@@ -30,7 +30,6 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 * python 2.7+/3.5+
 * MPV, MPlayer or VLC installed and in your path.
-* [socat](http://www.dest-unreach.org/socat/) (if you wish to use MPV)
 
 ## Installation
 
@@ -337,8 +336,6 @@ replacing **2.7** with specific version: **3.0** up to current python version.
 **PyRadio** is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.
 
 Currently, it supports MPV, MPlayer and VLC, and it will look for them in that order. If none of them is found, the program will terminate with an error.
-
-MPV will be used only when the [socat](http://www.dest-unreach.org/socat/) multipurpose relay is also installed.
 
 Users can alter this default behavior by using the ***-u*** command line option. This option will permit the user either to specify the player to use, or change the detection order.
 
