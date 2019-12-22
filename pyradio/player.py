@@ -108,11 +108,11 @@ class Player(object):
                     try:
                         with open(config_file, "w") as c_file:
                             c_file.write(config_string)
+                        self.volume = -1
                     except:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug(log_strings[2].format(config_file))
                         return ret_strings[2].format(str(self.volume))
-                        self.volume = -1
                 else:
                     if self.PROFILE_FROM_USER:
                         with open(config_file, 'r') as c_file:
@@ -159,31 +159,31 @@ class Player(object):
                         try:
                             with open(config_file, "w") as c_file:
                                 c_file.write(config_string)
+                            self.volume = -1
                         except EnvironmentError:
                             if (logger.isEnabledFor(logging.DEBUG)):
                                 logger.debug(log_strings[2].format(config_file))
                             return ret_strings[2].format(str(self.volume))
-                        self.volume = -1
 
-                    """ no user profile or user config file does not exist """
-                    if not profile_found:
-                        if not os.path.isdir(os.path.dirname(config_file)):
-                            try:
-                                os.mkdir(os.path.dirname(config_file))
-                            except OSError:
-                                if (logger.isEnabledFor(logging.DEBUG)):
-                                    logger.debug(log_strings[2].format(config_file))
-                                return ret_strings[2].format(str(self.volume))
-                        new_profile_string = "volume=100\n\n" + config_string
-                        try:
-                            with open(config_file, "a") as c_file:
-                                c_file.write(new_profile_string.format(str(self.volume)))
-                        except EnvironmentError:
-                            if (logger.isEnabledFor(logging.DEBUG)):
-                                logger.debug(log_strings[2].format(config_file))
-                            return ret_strings[2].format(str(self.volume))
-                        self.volume = -1
-                        self.PROFILE_FROM_USER = True
+            """ no user profile or user config file does not exist """
+            if not profile_found:
+                if not os.path.isdir(os.path.dirname(config_file)):
+                    try:
+                        os.mkdir(os.path.dirname(config_file))
+                    except OSError:
+                        if (logger.isEnabledFor(logging.DEBUG)):
+                            logger.debug(log_strings[2].format(config_file))
+                        return ret_strings[2].format(str(self.volume))
+                new_profile_string = "volume=100\n\n" + config_string
+                try:
+                    with open(config_file, "a") as c_file:
+                        c_file.write(new_profile_string.format(str(self.volume)))
+                except EnvironmentError:
+                    if (logger.isEnabledFor(logging.DEBUG)):
+                        logger.debug(log_strings[2].format(config_file))
+                    return ret_strings[2].format(str(self.volume))
+                self.volume = -1
+                self.PROFILE_FROM_USER = True
             return ret_string
 
     def _is_in_playback_token(self, a_string):
@@ -671,7 +671,7 @@ class MpvPlayer(Player):
         string_to_show = self._format_volume_string('Volume: ' + str(vol) + '%') + info_string
         self.outputStream.write(string_to_show)
         self.threadUpdateTitle(self.status_update_lock)
-        self.volume = str(vol)
+        self.volume = vol
 
 
 class MpPlayer(Player):
