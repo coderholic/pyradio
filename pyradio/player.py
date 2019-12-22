@@ -6,6 +6,9 @@ import logging
 from os.path import expanduser
 from sys import platform, version_info
 from sys import exit
+from time import sleep
+import json
+import socket
 
 logger = logging.getLogger(__name__)
 
@@ -216,18 +219,20 @@ class Player(object):
                             logger.debug("User input: {}".format(subsystemOut))
                     self.oldUserInput['Input'] = subsystemOut
                     if self.volume_string in subsystemOut:
-                        #logger.error("***** volume")
-                        if self.oldUserInput['Volume'] != subsystemOut:
-                            self.oldUserInput['Volume'] = subsystemOut
-                            self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                        # disable volume for mpv
+                        if self.PLAYER_CMD != "mpv":
+                            logger.error("***** volume")
+                            if self.oldUserInput['Volume'] != subsystemOut:
+                                self.oldUserInput['Volume'] = subsystemOut
+                                self.volume = ''.join(c for c in subsystemOut if c.isdigit())
 
-                            # IMPORTANT: do this here, so that cvlc actual_volume
-                            # gets updated in _format_volume_string
-                            string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
+                                # IMPORTANT: do this here, so that cvlc actual_volume
+                                # gets updated in _format_volume_string
+                                string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
-                            if self.show_volume and self.oldUserInput['Title']:
-                                self.outputStream.write(string_to_show, args[0])
-                                self.threadUpdateTitle(args[0])
+                                if self.show_volume and self.oldUserInput['Title']:
+                                    self.outputStream.write(string_to_show, args[0])
+                                    self.threadUpdateTitle(args[0])
                     elif self._is_in_playback_token(subsystemOut):
                         if self.connection_timeout_thread is not None:
                             self.connection_timeout_thread.cancel()
@@ -576,18 +581,98 @@ class MpvPlayer(Player):
     def _volume_up(self):
         """ increase mpv's volume """
         os.system("echo 'cycle volume' | socat - " + self.mpvsocket + " 2>/dev/null");
+        self._diaplay_mpv_volume_value()
 
     def _volume_down(self):
         """ decrease mpv's volume """
         os.system("echo 'cycle volume down' | socat - " + self.mpvsocket + " 2>/dev/null");
+        self._diaplay_mpv_volume_value()
 
     def _format_title_string(self, title_string):
         """ format mpv's title """
         return self._title_string_format_text_tag(title_string.replace(self.icy_tokkens[0], self.icy_title_prefix))
 
     def _format_volume_string(self, volume_string):
-        """ format mplayer's volume """
+        """ format mpv's volume """
         return '[' + volume_string[volume_string.find(self.volume_string):].replace('ume', '')+'] '
+
+    def _connect_to_socket(self, server_address):
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            sock.connect(server_address)
+            return sock
+        except socket.error as err:
+            sock.close()
+            return None
+
+    def _diaplay_mpv_volume_value(self):
+        """ Display volume for MPV
+
+        Currently working with python 2 and 3
+        Eventually will be used for python 2 only
+
+        Python 2 cannot correctly read icy-title from
+        the socket (unidoce issue), so it has to read
+        it from stdout.
+        """
+
+        #if version_info > (3, 0):
+        #    return
+        vol = 0
+        while True:
+            sock = self._connect_to_socket(self.mpvsocket)
+            if sock:
+                break
+            sleep(.25)
+
+        # Send data
+        message = b'{ "command": ["get_property", "volume"] }\n'
+        sock.sendall(message)
+
+        # wait for response
+        got_it = True
+        while got_it:
+            try:
+                if version_info < (3, 0):
+                    data = sock.recv(4096)
+                else:
+                    data = sock.recvmsg(4096)
+                if isinstance(data, tuple):
+                    a_data = data[0]
+                else:
+                    a_data = data
+                #logger.error('DE Received: "{!r}"'.format(a_data))
+
+                if a_data == b'':
+                    break
+
+                if data:
+
+                    all_data = a_data.split(b'\n')
+                    for n in all_data:
+                        try:
+                            d = json.loads(n)
+                            if d['error'] == 'success':
+                                try:
+                                    vol = int(d['data'])
+                                    got_it = False
+                                    break
+                                except:
+                                    pass
+                        except:
+                            pass
+            finally:
+                pass
+        sock.close()
+        if self.oldUserInput['Title']:
+            info_string = self._format_title_string(self.oldUserInput['Title'])
+        else:
+            info_string = self._format_title_string(self.oldUserInput['Input'])
+        string_to_show = self._format_volume_string('Volume: ' + str(vol) + '%') + info_string
+        self.outputStream.write(string_to_show)
+        self.threadUpdateTitle(self.status_update_lock)
+        self.volume = str(vol)
+
 
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
