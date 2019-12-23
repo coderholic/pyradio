@@ -48,6 +48,9 @@ class Player(object):
 
     _station_encoding = 'utf-8'
 
+    # used to stop mpv update thread on python3
+    stop_mpv_status_update_thread = False
+
     def __init__(self, outputStream, playback_timeout, playback_timeout_handler):
         self.outputStream = outputStream
         try:
@@ -222,7 +225,7 @@ class Player(object):
                     if self.volume_string in subsystemOut:
                         # disable volume for mpv
                         if self.PLAYER_CMD != "mpv":
-                            logger.error("***** volume")
+                            #logger.error("***** volume")
                             if self.oldUserInput['Volume'] != subsystemOut:
                                 self.oldUserInput['Volume'] = subsystemOut
                                 self.volume = ''.join(c for c in subsystemOut if c.isdigit())
@@ -268,8 +271,6 @@ class Player(object):
                     else:
                         if self.oldUserInput['Title'] == '':
                             self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
-                            if (logger.isEnabledFor(logging.INFO)):
-                                logger.info('Connecting to: "{}"'.format(self.name))
                             self.outputStream.write(self.oldUserInput['Title'])
         except:
             has_error = True
@@ -278,6 +279,89 @@ class Player(object):
             return
         if (logger.isEnabledFor(logging.INFO)):
             logger.info("updateStatus thread stopped.")
+
+    def updateMPVStatus(self, *args):
+        if (logger.isEnabledFor(logging.INFO)):
+            logger.info("MPV updateStatus thread started.")
+
+        while True:
+            try:
+                sock = self._connect_to_socket(self.mpvsocket)
+            finally:
+                if sock:
+                    break
+                if args[1]():
+                    if (logger.isEnabledFor(logging.INFO)):
+                        logger.info("MPV updateStatus thread stopped (no connection to socket).")
+                    return
+                sleep(.25)
+        #if (logger.isEnabledFor(logging.INFO)):
+        #    logger.info("MPV updateStatus thread connected to socket.")
+        self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
+        self.outputStream.write(self.oldUserInput['Title'], args[0])
+        # Send data
+        message = b'{ "command": ["observe_property", 1, "filtered_metadata"] }\n'
+        sock.sendall(message)
+
+        GET_TITLE = b'{ "command": ["get_property", "filtered-metadata"] }\n'
+
+        while True:
+            if args[1]():
+                break
+            try:
+                data = sock.recvmsg(4096)
+                if isinstance(data, tuple):
+                    a_data = data[0]
+                else:
+                    a_data = data
+                #logger.error('DE Received: "{!r}"'.format(a_data))
+
+                if a_data == b'' or args[1]():
+                    break
+
+                if a_data:
+                    if b'"icy-title":"' in a_data:
+                        title = a_data.split(b'"icy-title":"')[1].split(b'"}')[0]
+                        if title:
+                            try:
+                                self.oldUserInput['Title'] = 'Title: ' + title.decode(self._station_encoding, "replace")
+                            except:
+                                self.oldUserInput['Title'] = 'Title: ' + title.decode("utf-8", "replace")
+                            string_to_show = self.title_prefix + self.oldUserInput['Title']
+                            if args[1]():
+                                break
+                            self.outputStream.write(string_to_show, args[0])
+                        else:
+                            if (logger.isEnabledFor(logging.INFO)):
+                                logger.info('Icy-Title is NOT valid')
+                    else:
+                        all_data = a_data.split(b'\n')
+                        for n in all_data:
+                            try:
+                                d = json.loads(n)
+                                if 'event' in d.keys():
+                                    if d['event'] == 'metadata-update':
+                                        sock.sendall(GET_TITLE)
+                                    elif d['event'] == 'playback-restart':
+                                        if self.connection_timeout_thread is not None:
+                                            self.connection_timeout_thread.cancel()
+                                        if (logger.isEnabledFor(logging.INFO)):
+                                            logger.info('start of playback detected')
+                                        if self.outputStream.last_written_string.startswith('Connecting '):
+                                            new_input = self.outputStream.last_written_string.replace('Connecting to', 'Playing')
+                                            self.outputStream.write(new_input, args[0])
+                                            if self.oldUserInput['Title'] == '':
+                                                self.oldUserInput['Input'] = new_input
+                                            else:
+                                                self.oldUserInput['Title'] = new_input
+                                        self.playback_is_on = True
+                            except:
+                                pass
+            finally:
+                pass
+        sock.close()
+        if (logger.isEnabledFor(logging.INFO)):
+            logger.info("MPV updateStatus thread stopped.")
 
     def threadUpdateTitle(self, a_lock, delay=1):
         if self.oldUserInput['Title'] != '':
@@ -342,11 +426,19 @@ class Player(object):
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)
-        self.process = subprocess.Popen(opts, shell=False,
-                                        stdout=subprocess.PIPE,
-                                        stdin=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT)
-        t = threading.Thread(target=self.updateStatus, args=(self.status_update_lock, ))
+        self.stop_mpv_status_update_thread = False
+        if self.PLAYER_CMD == "mpv" and version_info > (3, 0):
+            self.process = subprocess.Popen(opts, shell=False,
+                                            stdout=subprocess.DEVNULL,
+                                            stdin=subprocess.DEVNULL,
+                                            stderr=subprocess.DEVNULL)
+            t = threading.Thread(target=self.updateMPVStatus, args=(self.status_update_lock, lambda: self.stop_mpv_status_update_thread ))
+        else:
+            self.process = subprocess.Popen(opts, shell=False,
+                                            stdout=subprocess.PIPE,
+                                            stdin=subprocess.PIPE,
+                                            stderr=subprocess.STDOUT)
+            t = threading.Thread(target=self.updateStatus, args=(self.status_update_lock, ))
         t.start()
         # start playback check timer thread
         try:
@@ -409,17 +501,18 @@ class Player(object):
     def toggleMute(self):
         """ mute / unmute player """
 
-        if not self.muted:
+        if self.PLAYER_CMD == 'mpv':
+            self.muted = self._mute()
+        else:
+            self.muted = not self.muted
             self._mute()
+        if self.muted:
             if self.delay_thread is not None:
                 self.delay_thread.cancel()
             self.title_prefix = '[Muted] '
-            self.muted = True
             self.show_volume = False
         else:
-            self._mute()
             self.title_prefix = ''
-            self.muted = False
             self.show_volume = True
         if self.oldUserInput['Title'] == '':
             self.outputStream.write(self.title_prefix + self._format_title_string(self.oldUserInput['Input']))
@@ -579,6 +672,38 @@ class MpvPlayer(Player):
         ret = self._send_mpv_command('mute')
         while not ret:
             ret = self._send_mpv_command('mute')
+        return self._get_mute_status()
+
+    def _get_mute_status(self):
+        got_it = True
+        while True:
+            sock = self._connect_to_socket(self.mpvsocket)
+            sock.sendall(b'{ "command": ["get_property", "mute"] }\n')
+            # wait for response
+            try:
+                if version_info < (3, 0):
+                    data = sock.recv(4096)
+                else:
+                    data = sock.recvmsg(4096)
+                if isinstance(data, tuple):
+                    a_data = data[0]
+                else:
+                    a_data = data
+                #logger.error('DE Received: "{!r}"'.format(a_data))
+
+                if a_data:
+                    all_data = a_data.split(b'\n')
+                    for n in all_data:
+                        try:
+                            d = json.loads(n)
+                            if d['error'] == 'success':
+                                if isinstance(d['data'], bool):
+                                    sock.close()
+                                    return d['data']
+                        except:
+                            pass
+            finally:
+                pass
 
     def pause(self):
         """ pause streaming (if possible) """
@@ -586,6 +711,7 @@ class MpvPlayer(Player):
 
     def _stop(self):
         """ exit pyradio (and kill mpv instance) """
+        self.stop_mpv_status_update_thread = True
         self._send_mpv_command('quit')
         os.system("rm " + self.mpvsocket + " 2>/dev/null");
 

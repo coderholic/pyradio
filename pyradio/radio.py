@@ -820,7 +820,8 @@ class PyRadio(object):
             #self._redisplay_transient_window()
             self.refreshBody(start=1)
         if logger.isEnabledFor(logging.INFO):
-            logger.info('start of playback NOT detected for: "{}"'.format(self._last_played_station))
+            logger.info('start of playback NOT detected!!!')
+        self.player.stop_mpv_status_update_thread = True
         self.log.write('Failed to connect to: "{}"'.format(self._last_played_station))
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
