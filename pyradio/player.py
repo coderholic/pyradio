@@ -650,9 +650,9 @@ class MpvPlayer(Player):
         http_url = streamUrl.replace('https://', 'http://')
         if playList:
             if newerMpv:
-                opts = [self.PLAYER_CMD, "--quiet", "--playlist", http_url, "--input-ipc-server=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--quiet", "--playlist=" + http_url, "--input-ipc-server=" + self.mpvsocket]
             else:
-                opts = [self.PLAYER_CMD, "--quiet", "--playlist", http_url, "--input-unix-socket=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--quiet", "--playlist=" + http_url, "--input-unix-socket=" + self.mpvsocket]
         else:
             if newerMpv:
                 opts = [self.PLAYER_CMD, "--quiet", http_url, "--input-ipc-server=" + self.mpvsocket]
