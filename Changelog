@@ -1,3 +1,7 @@
+2020-03-16 s-n-g
+    * Version 0.8.7.2
+    * Fixing macOS Catalina installation
+
 2020-01-31 s-n-g
     * Version 0.8.7.1
     * Fixing mpv playlist option (for mpv 0.32.0)
