@@ -29,7 +29,7 @@ uninstall(){
     else
         sudo rm -rf /usr/local/share/doc/pyradio 2>/dev/null
     fi
-    sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null
+    sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio.1.gz 2>/dev/null
     echo "PyRadio successfully uninstalled"
 }
 
@@ -98,7 +98,7 @@ descr=$(git describe --long --tags 2>/dev/null || echo not_from_git)
     echo -n "s/git_description = ''/git_description = '" > sed.$$
     echo -n "${descr}" >> sed.$$
     echo "'/" >> sed.$$
-    sed -f sed.$$ pyradio/radio.py > tmp-radio.py && mv tmp-radio.py pyradio/radio.py || {
+    sed -f sed.$$ pyradio/radio.py > tmp-radio.py && mv -f tmp-radio.py pyradio/radio.py || {
         # failed... restore radio.py
         # and build without revision info
         git checkout pyradio/radio.py
@@ -112,7 +112,7 @@ python"${TO_PYTHON}" setup.py build && {
     echo "***** installing..."
     sudo python"${TO_PYTHON}" setup.py install && {
         gzip -k pyradio.1
-        sudo mv pyradio.1.gz /usr/share/man/man1
+        sudo mv -f pyradio.1.gz /usr/share/man/man1 2>/dev/null || sudo mv -f pyradio.1.gz /usr/local/share/man/man1
         DOC=/usr/share/doc/pyradio
         sudo mkdir "$DOC" 2>/dev/null
         if [ ! -d "$DOC" ];then
@@ -138,7 +138,7 @@ python"${TO_PYTHON}" setup.py build && {
 [ -z "$descr" ] || {
     echo "s/git_description = '[^']*'/git_description = ''/" > sed.$$
     sed -f  sed.$$ pyradio/radio.py > tmp-radio.py
-    mv tmp-radio.py pyradio/radio.py
+    mv -f tmp-radio.py pyradio/radio.py
     #git checkout pyradio/radio.py
 }
 rm sed.$$ 2>/dev/null
