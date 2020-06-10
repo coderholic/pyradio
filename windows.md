@@ -58,7 +58,7 @@ The installation consists of three (optionally four) steps:
 
 #### 1.1 Installing Python
 
-If you don't already have **Pyhton**, just get to its [Windows Downloads](https://www.python.org/downloads/windows/) page and download the latest **3.x** release.
+If you don't already have **Python**, just get to its [Windows Downloads](https://www.python.org/downloads/windows/) page and download the latest **3.x** release.
 
 When the download is done, run its setup and select "*Custom Installation*" so that you can "*Add Python to environment varaibles*". You can refer to the following image to see the relevant setting.
 
