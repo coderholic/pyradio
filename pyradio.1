@@ -32,12 +32,12 @@ Add station to list.
 List of available playlists in config dir.
 .IP \fB-l\fR,\fB\ \--list
 List of available stations in a playlist.
-.IP \fB-scd\fR,\fB--show-config-dir\fR
-Print config directory location and exit.
 .IP \fB-t\fR\ \fITHEME\fR,\ \fB--theme\fR\ \fITHEME\fR
 Use specified \fITHEME\fR.
+.IP \fB-scd\fR,\fB--show-config-dir\fR
+Print config directory (\fI[CONFIG DIR]\fR) location and exit.
 .IP \fB-ocd\fR,\fB--open-config-dir\fR
-Open config directory with default file manager.
+Open config directory (\fI[CONFIG DIR]\fR) with default file manager.
 .IP \fB--unlock
 Remove sessions' lock file.
 .IP \fB-d\fR,\fB\ \--debug
@@ -116,6 +116,41 @@ The same logic applies to all \fBpyradio\fR windows.
 
 .IP \fBNote:
 All windows - except the \fISearch window\fR - support changing the volume and muting / unmuting the player (provided that \fBpyradio\fR is actually connected to a station).
+
+.SH PYRADIO'S MODES
+
+\fBpyradio\fR has the following primary modes:
+
+.RS 5
+.IP 1. 3
+The \fBMain\fR mode, which is the one you get when you open the program, showing you a list of stations (a playlist), that you can play and edit; this is why it is also called the \fBediting mode\fR. All other modes derive from this one, and it's the mode you have to get to in order to terminate the program.
+
+.IP 2. 3
+The \fBPlaylist\fR mode, which you can open by pressing "\fBo\fR". Then you can open, create, paste a station, etc.
+
+.IP 3. 3
+The \fBRegisters\fR mode. This is identical to the "\fIPlaylist\fR" mode, but instead of displaying playlists, it displays register. You can enter this mode by pressing "\fB''\fR" (two single quotes) and exit from it by pressing "\fBEsc\fR" or "\fBq\fR".
+
+.IP 4. 3
+The \fBRegister Main\fR mode, which is identical to the "\fIMain\fR" mode, except it displays the content of a \fBnamed\fR register.
+
+.RE
+
+A set of \fBsecondary modes\fR is also available (a secondary mode works within a primary one):
+
+.RS 5
+.IP 1. 3
+The \fBExtra Commands\fR mode, which gives you access to extra commands. You can enter this mode by pressing "\fB\\\fR" (backslash). Then a backslash is displayed at the bottom right corner of the window.
+
+.IP 2. 3
+The \fBYank (Copy)\fR mode, which is used to copy stations to \fBregisters\fR. You can enter this mode by pressing "\fBy\fR". Then a "\fIy\fR" is displayed at the bottom right corner of the window.
+
+.IP 3. 3
+The \fBOpen Register\fR mode, which is used to open a register or get into the \fIRegisters\fR mode. You can enter this mode by pressing "\fB'\fR" (single quote). Then a single quote is displayed at the bottom right corner of the window.
+
+.RE
+
+The functions availabe through the \fIsecondary modes\fR are content dependant, so you can see what command is available by pressing "\fB?\fR" while within such a mode. Pressing any other key will exit the secondary mode.
 
 .SH CONFIG FILE
 \fBpyradio\fR upon its execution tries to read its configuration file (i.e. \fI~/.config/pyradio/config\fR). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and \fBpyradio\fR will terminate.
@@ -251,7 +286,7 @@ After a search term has been successfully found (search is case insensitive), ne
 
 .SH LINE EDITOR
 
-\fBpyradio\fR "\fISearch function\fR" and "\fIStation edior\fR" use a \fIline editor\fR to permit typing and editing stations' data. 
+\fBpyradio\fR "\fISearch function\fR" and "\fIStation edior\fR" use a \fIline editor\fR to permit typing and editing stations' data.
 
 The \fIline editor\fR works both on \fBPython 2\fR and \fBPython 3\fR, but does not provide the same functionality for both versions:
 
@@ -454,6 +489,78 @@ volstep=1
 .br
 volume=28
 
+.SH DISPLAYING STATION INFO
+
+When a connection to a radio station has been established, the station starts sending audio data for the user to listen to.
+
+Well, that's obvious, right?
+
+Yes, but this is just half of the story.
+
+The station actually also sends identification data, audio format data, notifications, etc. Part of this non-audio data transmitted by a station is the title of the song currently playing; this is why we can have this data displayed at the bottom of the screen.
+
+Now, not all stations send the whole set of data; most send their name, website, genre and bitrate, for example, but some may ommit the website or the genre.
+
+\fBpyradio\fR can receive, decode and display this data, and even help the user to identify an unknown station. This is the way to do it:
+
+After a connection to a station has been established (after playback has started), just press "\fIi\fR" to display the station's info.
+
+The window that appears includes the "\fIPlaylist Name\fR" (the station name we have in the playlist) and the "\fIReported Name\fR" (the name the station transmitted to us) among other fields (an example can be seen here: \fIhttps://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg\fR . If these two names are not identical, the user can press "\fIr\fR" to rename the station in the playlist using the "\fIReported Name\fR". This way an unknown station (when only the URL is known) can be correctly identified (after being inserted in a playlist with a dummy station name).
+
+
+.SH COPYING AND PASTING - REGISTERS
+
+\fBpyradio\fR takes the concept of \fBregisters\fR from i\fIvim\fR (\fIhttps://www.vim.org\fR), and adapts their function to its own needs. So this is how it all works.
+
+There are 36 named registers (name is \fBa-z\fR, \fB0-9\fR) and one unnamed register.
+
+.IP \fBNamed\ registers\fR
+are actually files that contain stations and can be opened and edited as regular playlist files. There are some differences in handling them: they are accessible either individually or using a special window, they are automatically saved, and writing errors are ignored. The later means that registers should not be regarded as normal playlist files that can be safely saved and used forever; this is true as long as there's no problem with writing to them; if a writing error occurs they may get overwritten or emptied. To permanently save a register, on would \fBrename\fR it to a normal playlist file.
+
+.IP The\ \fBunnamed\ register\fR
+holds just one station (the one that has been copied or added to a register or deleted from a playlist), and it is the one used when pasting to a register or a playlist.
+
+.P
+To \fBcopy\fR a station to a register one would press "\fBy\fR" and:
+
+.RS 5
+.IP \fI*\fR 2
+one of "\fBa-z\fR", "\fB0-9\fR" to add it to the corresponding \fInamed\fR register. The \fIunnamed\fR register is also populated.
+
+.IP \fI*\fR 2
+\fBENTER\fR to add it to the \fIunnamed\fR register.
+
+.RE
+To \fBopen\fR a \fInamed\fR register, one would press "\fB'\fR" (single quote) and:
+
+.RS 5
+.IP \fI*\fR 2
+one of "\fBa-z\fR", "\fB0-9\fR" to open the corresponding register.
+
+.IP \fI*\fR 2
+"\fB'\fR" (single quote) to open the "\fIRegisters window\fR", so that a register can be selected.
+
+.RE
+To \fBrename\fR a \fInamed\fR register, one would press "\fB\\r\fR" either in the "\fIRegisters window\fR" or while editing the register.
+
+To \fBclear a named register\fR, one would press "\fB\\c\fR" either in the "\fIRegisters window\fR" or while editing the register.
+
+To \fBclear all registers\fR, one would press "\fB\\C\fR" either in the "\fIRegisters window\fR" or while editing a playlist or a register.
+
+To \fBpaste\fR the \fIunnamed\fR register to a playlist or register, one would press:
+
+.RS 5
+.IP \fI*\fR 2
+"\fBp\fR" while editing a playlist or register.
+
+.IP \fI*\fR 2
+"\fB\\p\fR" while editing a playlist or register. This would open the "\fIPaste selection\fR" window.
+
+.IP \fI*\fR 2
+"\fB\\p\fR" in the "\fIPlaylist Selection\fR or the "\fIRegisters\fR" window.
+
+.RE
+
 .SH PYRADIO THEMES
 .PP
 
@@ -615,5 +722,5 @@ On \fBMac OS\fR, these file may be installed in \fI/usr/local/share/doc/pyradio\
 .PP
 \fBPeter Stevenson (2E0PGS)\fR\ \<\fIhttps://github.com/2E0PGS\fR\>,\ (2018)
 .PP
-\fBSpiros Georgaras\fR\ \<\fIhttps://github.com/s-n-g\fR\>,\ (2018-2019)
+\fBSpiros Georgaras\fR\ \<\fIhttps://github.com/s-n-g\fR\>,\ (2018-2020)
 

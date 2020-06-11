@@ -7,7 +7,7 @@ except ImportError:
     pass
 import threading
 import logging
-from .widechar import cjklen, PY3
+from .cjkwrap import cjklen, PY3
 #from os import get_terminal_size
 
 import locale
@@ -177,7 +177,8 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             'language': 15
             }
 
-    def __init__(self, search=None):
+    def __init__(self, config_encoding, search=None):
+        self._config_encoding = config_encoding
         if search:
             self.search(search)
         else:
@@ -199,10 +200,10 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             if playlist_format == 0:
                 ret.append([n['name'], n['url']])
             elif playlist_format == 1:
-                enc = '' if n['encoding'] == 'utf-8' else n['encoding']
+                enc = '' if n['encoding'] == self._config_encoding else n['encoding']
                 ret.append([n['name'], n['url'], enc])
             else:
-                enc = '' if n['encoding'] == 'utf-8' else n['encoding']
+                enc = '' if n['encoding'] == self._config_encoding else n['encoding']
                 ret.append([n['name'], n['url'], enc, ''])
         return ret
 

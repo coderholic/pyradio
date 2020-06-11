@@ -13,10 +13,12 @@
     dd {margin: 1em;} 
     dt {font-weight: bold;} 
     pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6; overflow: auto;}
-      code{white-space: pre-wrap;}
-      span.smallcaps{font-variant: small-caps;}
-      span.underline{text-decoration: underline;}
-      div.column{display: inline-block; vertical-align: top; width: 50%;}
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
   </style>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
@@ -34,6 +36,7 @@
 <li><a href="#installation">Installation</a></li>
 <li><a href="#command-line-options">Command line options</a></li>
 <li><a href="#controls">Controls</a></li>
+<li><a href="#pyradios-modes">PyRadio’s Modes</a></li>
 <li><a href="#config-file">Config file</a></li>
 <li><a href="#about-playlist-files">About Playlist files</a></li>
 <li><a href="#search-function">Search function</a></li>
@@ -42,6 +45,8 @@
 <li><a href="#specifying-stations-encoding">Specifying stations’ encoding</a></li>
 <li><a href="#player-detection-selection">Player detection / selection</a></li>
 <li><a href="#player-default-volume-level">Player default volume level</a></li>
+<li><a href="#displaying-station-info">Displaying Station Info</a></li>
+<li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
 <li><a href="#pyradio-themes">PyRadio Themes</a></li>
 <li><a href="#session-locking">Session Locking</a></li>
 <li><a href="#update-notification">Update notification</a></li>
@@ -79,14 +84,14 @@ optional arguments:
                         mpv, mplayer, vlc.
   -a, --add             Add station to list.
   -ls, --list-playlists
-                        List of available playlists in config dir.
+                        List of available playlists in config dir ([CONFIG DIR]).
   -l, --list            List of available stations in a playlist.
   -t THEME, --theme THEME
                         Use specified theme.
   -scd, --show-config-dir
-                        Print config directory location and exit.
+                        Print config directory  ([CONFIG DIR]) location and exit.
   -ocd, --open-config-dir
-                        Open config directory with default file manager.
+                        Open config directory ([CONFIG DIR]) with default file manager.
   --unlock              Remove sessions&#39; lock file.
   -d, --debug           Start pyradio in debug mode.</pre>
 <p>The following options can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>:</p>
@@ -128,6 +133,21 @@ Esc/q             Quit                                             -            
 Esc/q/Left/h      -                                                Cancel / close window              Cancel / close window</pre>
 <p>The same logic applies to all <strong>PyRadio</strong> windows.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All windows - except the <em>Search window</em> - support changing the volume and muting / unmuting the player (provided that <strong>PyRadio</strong> is actually connected to a station).</p>
+<h2 id="pyradios-modes">PyRadio’s Modes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p><strong>PyRadio</strong> has the following primary modes:</p>
+<ol type="1">
+<li>The <strong>Main</strong> mode, which is the one you get when you open the program, showing you a list of stations (a playlist), that you can play and edit; this is why it is also called the <strong>editing mode</strong>. All other modes derive from this one, and it’s the mode you have to get to in order to terminate the program.</p></li>
+<li>The <strong>Playlist</strong> mode, which you can open by pressing “<strong><em>o</em></strong>”. Then you can open, create, paste a station, etc.</p></li>
+<li>The <strong>Registers</strong> mode. This is identical to the “<em>Playlist</em>” mode, but instead of displaying playlists, it displays register. You can enter this mode by pressing “<strong><em>’’</em></strong>” (two single quotes) and exit from it by pressing “<strong><em>Esc</em></strong>” or “<strong><em>q</em></strong>”.</p></li>
+<li>The <strong>Register Main</strong> mode, which is identical to the “<em>Main</em>” mode, except it displays the content of a <strong>named</strong> register.</p></li>
+</ol>
+<p>A set of <strong>secondary modes</strong> is also available (a secondary mode works within a primary one):</p>
+<ol type="1">
+<li>The <strong>Extra Commands</strong> mode, which gives you access to extra commands. You can enter this mode by pressing “<strong><em>\</em></strong>” (backslash). Then a backslash is displayed at the bottom right corner of the window.</p></li>
+<li>The <strong>Yank (Copy)</strong> mode, which is used to copy stations to <strong>registers</strong>. You can enter this mode by pressing “<strong><em>y</em></strong>”. Then a “<em>y</em>” is displayed at the bottom right corner of the window.</p></li>
+<li>The <strong>Open Register</strong> mode, which is used to open a register or get into the <em>Registers</em> mode. You can enter this mode by pressing “<strong><em>’</em></strong>” (single quote). Then a single quote is displayed at the bottom right corner of the window.</p></li>
+</ol>
+<p>The functions availabe through the <em>secondary modes</em> are content dependant, so you can see what command is available by pressing “<strong><em>?</em></strong>” while within a secondary mode. Pressing any other key will exit the secondary mode.</p>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong><em>PyRadio</em></strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong><em>PyRadio</em></strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
@@ -168,14 +188,14 @@ $ pyradio -s 5</pre>
 <h3 id="managing-playlists-within-pyradio">Managing playlists (within PyRadio)</h3>
 <p>Once <strong>PyRadio</strong> has been loaded, one can perform a series of actions on the current playlist and set of playlists saved in its configuration directory.</p>
 <p>Currently, the following actions are available:</p>
-<p>Pressing “<strong>a</strong>” or “<strong>A</strong>” will enable you to add a new station (either below the currently selected station or at the end of the list), while “<strong>e</strong>” will edit the currently selected station. All of these actions will open the “<em>Station Editor</em>”.</p>
+<p>Pressing “<strong><em>a</em></strong>” or “<strong><em>A</em></strong>” will enable you to add a new station (either below the currently selected station or at the end of the list), while “<strong><em>e</em></strong>” will edit the currently selected station. All of these actions will open the “<em>Station Editor</em>”.</p>
 <p>If you just want to change the encoding of the selected station, just press “<strong><em>E</em></strong>”. If the station is currently playing, playback will be restarted so that the encoding’s change takes effect (hopefully correctly displaying the station/song title).</p>
 <p>Then, when this is done, you can either save the modified playlist, by pressing “<strong><em>s</em></strong>”, or reload the playlist from disk, by pressing “<strong><em>R</em></strong>”. A modified playlist will automatically be saved when <strong>PyRadio</strong> exits (or Ctrl-C is pressed).</p>
-<p>One thing you may also want to do is remove a station from a playlist, e.g. when found that it not longer works. You can do that by pressing “<strong><em>DEL</em></strong>” or “<strong><em>x</em></strong>”.</p>
+<p>One thing you may also want to do is remove a station from a playlist, e.g. when found that it not longer works. You can do that by pressing “<strong><em>DEL</em></strong>” or “<strong><em>x</em></strong>”. The deleted station is copied to the <strong>unnamed register</strong> (refer to section <a href="#copying-and-pasting---registers">Copying and pasting - Registers</a> for more information).</p>
 <p>Finally, opening another playlist is also possible. Just press “<strong><em>o</em></strong>” and you will be presented with a list of saved playlists to choose from. These playlists must be saved beforehand in <strong>PyRadio</strong>’s configuration directory.</p>
 <p>While executing any of the previous actions, you may get confirmation messages (when opening a playlist while the current one is modified but not saved, for example) or error messages (when an action fails). Just follow the on screen information, keeping in mind that a capital letter as an answer will save this answer in <strong>PyRadio</strong>’s configuration file for future reference.</p>
 <h3 id="managing-foreign-playlists">Managing “foreign” playlists</h3>
-<p>A playlist that does not reside within the program’s configuration directory is considered a “<strong><em>foreign</em></strong>” playlist. This playlist can only be opened by the <strong>-s</strong> command line option.</p>
+<p>A playlist that does not reside within the program’s configuration directory is considered a “<strong><em>foreign</em></strong>” playlist. This playlist can only be opened by the “<strong><em>-s</em></strong>” command line option.</p>
 <p>When this happens, <strong>PyRadio</strong> will offer you the choice to copy the playlist in its configuration directory, thus making it available for manipulation within the program.</p>
 <p>If a playlist of the same name already exists in the configuration directory, the “<strong><em>foreign</em></strong>” playlist will be time-stamped. For example, if a “<strong><em>foreign</em></strong>” playlist is named “<em>stations.csv</em>”, it will be named “<em>2019-01-11_13-35-47_stations.csv</em>” (provided that the action was taken on January 11, 2019 at 13:35:47).</p>
 <h3 id="playlist-history">Playlist history</h3>
@@ -183,10 +203,10 @@ $ pyradio -s 5</pre>
 <p>In order to go back to the previous playlist, the user just has to press “<strong><em>\\</em></strong>” (double backslash). To get to the first playlist “<strong><em>\]</em></strong>” (backslash - closing square bracket) can be used.</p>
 <p>Going forward in history is not supported.</p>
 <h2 id="search-function">Search function <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>On any window presenting a list of items (stations, playlists, themes) a <strong>search function</strong> is available by pressing “<strong>/</strong>”.</p>
+<p>On any window presenting a list of items (stations, playlists, themes) a <strong>search function</strong> is available by pressing “<strong><em>/</em></strong>”.</p>
 <p>The <em>Search Window</em> supports normal and extend editing and in session history.</p>
-<p>One can always get help by pressing the “<strong>?</strong>” key.</p>
-<p>After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the “<strong>n</strong>” key and previous occurrence can be obtained using the “<strong>N</strong>” key.</p>
+<p>One can always get help by pressing the “<strong><em>?</em></strong>” key.</p>
+<p>After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the “<strong><em>n</em></strong>” key and previous occurrence can be obtained using the “<strong><em>N</em></strong>” key.</p>
 <h2 id="line-editor">Line editor <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> “<em>Search function</em>” and “<em>Station edior</em>” use a <em>line editor</em> to permit typing and editing stations’ data.</p>
 <p>The <em>line editor</em> works both on <strong>Python 2</strong> and <strong>Python 3</strong>, but does not provide the same functionality for both versions:</p>
@@ -194,13 +214,13 @@ $ pyradio -s 5</pre>
 <li>In <strong>Python 2</strong>, only ASCII characters can be inserted.</li>
 <li>In <strong>Python 3</strong>, no such restriction exists. Furthermore, using CJK characters is also supported.</li>
 </ul>
-<p>One can always display help by pressing “<strong>?</strong>”, but that pauses a drawback; one cannot actually have a “<strong>?</strong>” withing the string.</p>
+<p>One can always display help by pressing “<strong><em>?</em></strong>”, but that pauses a drawback; one cannot actually have a “<strong>?</strong>” withing the string.</p>
 <p>To do that, one would have to use the backslash key “<strong>\</strong>” and then press “<strong>?</strong>”.</p>
 <p>To sum it all up:</p>
 <ol type="1">
-<li>Press “<strong>?</strong>” to get help.</li>
-<li>Press “<strong>\?</strong>” to get a “<strong>?</strong>”.</li>
-<li>Press “<strong>\\</strong>” to get a “<strong>\</strong>”.</li>
+<li>Press “<strong><em>?</em></strong>” to get help.</li>
+<li>Press “<strong><em>\?</em></strong>” to get a “<strong>?</strong>”.</li>
+<li>Press “<strong><em>\\</em></strong>” to get a “<strong>\</strong>”.</li>
 </ol>
 <h3 id="cjk-characters-support">CJK characters support</h3>
 <p>The <em>line editor</em> supports the insertion of <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs">CJK Unified Ideographs</a>, as described on <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)">CJK Unified Ideographs (Unicode block)</a> also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-point (character), actually take up a 2-character space, when rendered on the terminal.</p>
@@ -275,6 +295,41 @@ volume=50</pre>
 [pyradio]
 volstep=1
 volume=28</pre>
+<h2 id="displaying-station-info">Displaying Station Info <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>When a connection to a radio station has been established, the station starts sending audio data for the user to listen to.</p>
+<p>Well, that’s obvious, right?</p>
+<p>Yes, but this is just half of the story.</p>
+<p>The station actually also sends identification data, audio format data, notifications, etc. Part of this non-audio data transmitted by a station is the title of the song currently playing; this is why we can have this data displayed at the bottom of the screen.</p>
+<p>Now, not all stations send the whole set of data; most send their name, website, genre and bitrate, for example, but some may ommit the website or the genre.</p>
+<p><strong>PyRadio</strong> can receive, decode and display this data, and even help the user to identify an unknown station. This is the way to do it:</p>
+<p>After a connection to a station has been established (after playback has started), just press “<strong><em>i</em></strong>” to display the station’s info.</p>
+<p>The window that appears includes the “<em>Playlist Name</em>” (the station name we have in the playlist) and the “<em>Reported Name</em>” (the name the station transmitted to us) among other fields (an example can bee seen here: <a target="_blank" href="https://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg">pyradio-station-info.jpg</a>). If these two names are not identical, the user can press “<strong><em>r</em></strong>” to rename the station in the playlist using the “<em>Reported Name</em>”. This way an unknown station (when only the URL is known) can be correctly identified (after being inserted in a playlist with a dummy station name).</p>
+<h2 id="copying-and-pasting---registers">Copying and pasting - Registers <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p><strong>PyRadio</strong> takes the concept of <strong>registers</strong> from <a target="_blank" href="https://www.vim.org">vim</a>, and adapts their function to its own needs. So this is how it all works.</p>
+<p>There are 36 named registers (name is <strong>a-z</strong>, <strong>0-9</strong>) and one unnamed register.</p>
+<ul>
+<li><strong>Named registers</strong> are actually files that contain stations and can be opened and edited as regular playlist files. There are some differences in handling them: they are accessible either individually or using a special window, they are automatically saved, and writing errors are ignored. The later means that registers should not be regarded as normal playlist files that can be safely saved and used forever; this is true as long as there’s no problem with writing to them; if a writing error occurs they may get overwritten or emptied. To permanently save a register, on would <strong>rename</strong> it to a normal playlist file.</p></li>
+<li>The <strong>unnamed register</strong> holds just one station (the one that has been copied or added to a register or deleted from a playlist), and it is the one used when pasting to a register or a playlist.</p></li>
+</ul>
+<p>To <strong>copy</strong> a station to a register one would press “<strong><em>y</em></strong>” and:</p>
+<ul>
+<li>one of “<strong><em>a-z</em></strong>”, “<strong><em>0-9</em></strong>” to add it to the corresponding <em>named</em> register. The <em>unnamed</em> register is also populated.</p></li>
+<li><strong><em>ENTER</em></strong> to add it to the <em>unnamed</em> register.</p></li>
+</ul>
+<p>To <strong>open</strong> a <em>named</em> register, one would press “<strong>’</strong>” (single quote) and:</p>
+<ul>
+<li>one of “<strong><em>a-z</em></strong>”, “<strong><em>0-9</em></strong>” to open the corresponding register.</p></li>
+<li>“<strong><em>’</em></strong>” (single quote) to open the “<em>Registers window</em>”, so that a register can be selected.</p></li>
+</ul>
+<p>To <strong>rename</strong> a <em>named</em> register, one would press “<strong><em>\r</em></strong>” either in the “<em>Registers window</em>” or while editing the register.</p>
+<p>To <strong>clear a named register</strong>, one would press “<strong><em>\c</em></strong>” either in the “<em>Registers window</em>” or while editing the register.</p>
+<p>To <strong>clear all registers</strong>, one would press “<strong><em>\C</em></strong>” either in the “<em>Registers window</em>” or while editing a playlist or a register.</p>
+<p>To <strong>paste</strong> the <em>unnamed</em> register to a playlist or register, one would press:</p>
+<ul>
+<li>“<strong><em>p</em></strong>” while editing a playlist or register.</p></li>
+<li>“<strong><em>\p</em></strong>” while editing a playlist or register. This would open the “<em>Paste selection</em>” window.</p></li>
+<li>“<strong><em>\p</em></strong>” in the “<em>Playlist Selection</em> or the”<em>Registers</em>" window.</p></li>
+</ul>
 <h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> comes with 6 preconfigured (hard coded) themes:</p>
 <ol type="1">
@@ -292,13 +347,13 @@ volume=28</pre>
 <li><strong>purple_by_sng</strong></li>
 </ol>
 <p>The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)</p>
-<p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Themes that use more colors than those supported by the terminal in use, will not be present in the <em>Theme selection window</em>. Furthermore, if a such at theme is set as default (or requested using the “<strong>-t</strong>” command line option), <strong>PyRadio</strong> will silently fall-back to the “<strong>dark</strong>” theme (or the “<strong>light</strong>” theme, if the terminal supports 8 colors and default theme is set to “<em>light_16_colors</em>”).</p>
-<p>The <em>Theme selection window</em> will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
+<p>Pressing “<strong><em>t</em></strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Themes that use more colors than those supported by the terminal in use, will not be present in the <em>Theme selection window</em>. Furthermore, if a such at theme is set as default (or requested using the “<strong><em>-t</em></strong>” command line option), <strong>PyRadio</strong> will silently fall-back to the “<strong>dark</strong>” theme (or the “<strong>light</strong>” theme, if the terminal supports 8 colors and default theme is set to “<em>light_16_colors</em>”).</p>
+<p>The <em>Theme selection window</em> will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong><em>q</em></strong>” or any other relevant key - pressing “<strong><em>?</em></strong>” will bring up its help).</p>
 <p>The use of custom themes and theme editing is not implemented yet; these are features for future releases.</p>
 <h3 id="using-transparency">Using transparency</h3>
 <p><strong>PyRadio</strong> themes are able to be used with a transparent background.</p>
-<p>Pressing “<strong>T</strong>” will toggle the transparency setting and save this state in <strong>PyRadio</strong>’s configuration file (transparency is off by default).</p>
+<p>Pressing “<strong><em>T</em></strong>” will toggle the transparency setting and save this state in <strong>PyRadio</strong>’s configuration file (transparency is off by default).</p>
 <p>Setting transparency on, will actually force <strong>PyRadio</strong> to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
 <p>When the <em>Theme selection window</em> is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that transparency is <em>on</em>.</p>
 <h2 id="session-locking">Session Locking <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
@@ -326,7 +381,7 @@ Finished processing dependencies for pyradio==0.7.8</pre>
 <pre>$ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-.7.6.2-py3.7.egg
 $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg</pre>
 <h2 id="debug-mode">Debug mode <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>Adding the <strong><em>-d</em></strong> option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
+<p>Adding the “<strong><em>-d</em></strong>” option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a target="_blank" href="https://github.com/coderholic/pyradio/issues">open at github</a>.</p>
 <h2 id="reporting-bugs">Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>When a bug is found, please do report it by <a target="_blank" href="https://github.com/coderholic/pyradio/issues">opening an issue at github</a>, as already stated above.</p>

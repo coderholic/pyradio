@@ -1,0 +1,16 @@
+#!/bin/bash
+cd devel
+git clone https://gitlab.com/fgallaire/cjkwrap && {
+    cd cjkwrap
+    cp cjkwrap.py ../../pyradio/cjkwrap.py
+    # back to devel
+    cd ..
+    rm -rf cjkwrap
+    # back to pyradio
+    cd ..
+    pwd
+    git add pyradio/cjkwrap.py
+    cd ..
+    git st
+}
+
