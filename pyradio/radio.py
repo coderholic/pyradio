@@ -380,7 +380,7 @@ class PyRadio(object):
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
 
         self.stdscr.nodelay(0)
-        self.setupAndDrawScreen()
+        self.setupAndDrawScreen(init_from_setup=True)
 
         # position playlist in window
         self.outerBodyMaxY, self.outerBodyMaxX = self.outerBodyWin.getmaxyx()
@@ -402,7 +402,7 @@ class PyRadio(object):
         # logger.error('DE\n')
         self.run()
 
-    def setupAndDrawScreen(self):
+    def setupAndDrawScreen(self, init_from_setup=False):
         self.maxY, self.maxX = self.stdscr.getmaxyx()
 
         self.headWin = None
@@ -421,14 +421,16 @@ class PyRadio(object):
         self.txtWin = None
         self.txtWin = curses.newwin(self.maxY - 4, self.maxX - 4, 2, 2)
         self.initHead(self.info)
+        self.initFooter()
+        self.log.setScreen(self.footerWin)
+        if init_from_setup:
+            self.log.write(msg='Selected player: {}'.format(self._format_player_string()), help_msg=True)
         # for light color scheme
          # TODO
         self.outerBodyWin.bkgdset(' ', curses.color_pair(5))
         self.bodyWin.bkgdset(' ', curses.color_pair(5))
         self.initBody()
-        self.initFooter()
 
-        self.log.setScreen(self.footerWin)
 
         #self.stdscr.timeout(100)
         self.bodyWin.keypad(1)
@@ -856,7 +858,7 @@ class PyRadio(object):
             except:
                 enc = ''
             self.log.display_help_message = False
-            self.log.write(msg='Playing ' + self._last_played_station[0])
+            self.log.write(msg='Initialization: "' + self._last_played_station[0] + '"')
             try:
                 self.player.play(self._last_played_station[0], stream_url, self.get_active_encoding(enc))
             except OSError:
@@ -1293,7 +1295,7 @@ class PyRadio(object):
     def _show_theme_not_supported(self):
         if self._cnf.theme_not_supported_notification_shown:
             return
-        txt = 'Error loading selected theme!\n____Using default theme.'
+        txt = 'Error loading selected theme!\n____Using fallback theme.'
         self._show_help(txt, mode_to_set=self.ws.operation_mode, caption='',
                 prompt='', is_message=True)
         # start 1750 ms counter
@@ -1399,6 +1401,7 @@ class PyRadio(object):
                      Enter|,|Right|,|l    |Apply selected theme.
                      Space            |Apply theme and make it default.
                      s                |Make theme default and close window.
+                     T                |Toggle theme trasparency.
                      /| / |n| / |N        |Search, go to next / previous result.
                      Esc|,|q|,|Left|,|h     |Close window.
                      %_Player Keys_
@@ -1448,6 +1451,7 @@ class PyRadio(object):
             Backspace|,|^H        |Backspace (delete previous character).
             Up| / |Down           |Go to previous / next field.
             \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+            \p                  |Enable |p|aste mode.
             Esc                 |Cancel operation.
 
             |Managing player volume does not work in editing mode.
@@ -1462,6 +1466,7 @@ class PyRadio(object):
             Backspace|,|^H        |Backspace (delete previous character).
             Up| / |Down           |Go to previous / next field.
             \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+            \p                  |Enable |p|aste mode.
             Esc                 |Cancel operation.
 
             |Managing player volume does not work in editing mode.
@@ -3704,60 +3709,60 @@ class PyRadio(object):
                     # Do this here to properly resize
                     return
 
-        elif self.ws.operation_mode == self.ws.THEME_MODE:
-            if char not in self._chars_to_bypass and \
-                    char not in self._chars_to_bypass_for_search and \
-                    char not in (ord('T'),):
-                theme_id, save_theme = self._theme_selector.keypress(char)
+        elif self.ws.operation_mode == self.ws.THEME_MODE and (
+                char not in self._chars_to_bypass and \
+                char not in self._chars_to_bypass_for_search and \
+                char not in (ord('T'),)):
+            theme_id, save_theme = self._theme_selector.keypress(char)
 
-                #if self._cnf.theme_not_supported:
-                #    self._show_theme_not_supported()
-                if theme_id == -1:
-                    """ cancel or hide """
-                    self._theme_name = self._theme_selector._applied_theme_name
-                    if self._config_win:
-                        self._config_win._config_options['theme'][1] = self._theme_selector._applied_theme_name
-                    self._theme_selector = None
-                    self.ws.close_window()
-                    if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
-                    self.refreshBody()
+            #if self._cnf.theme_not_supported:
+            #    self._show_theme_not_supported()
+            if theme_id == -1:
+                """ cancel or hide """
+                self._theme_name = self._theme_selector._applied_theme_name
+                if self._config_win:
+                    self._config_win._config_options['theme'][1] = self._theme_selector._applied_theme_name
+                self._theme_selector = None
+                self.ws.close_window()
+                if self.ws.operation_mode == self.ws.NORMAL_MODE:
+                    self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+                self.refreshBody()
 
-                elif theme_id == -2:
-                    self.theme_forced_selection = self._theme_selector._themes[self._theme_selector.selection]
-                    # ask to create new theme
-                    self._print_ask_to_create_theme()
+            elif theme_id == -2:
+                self.theme_forced_selection = self._theme_selector._themes[self._theme_selector.selection]
+                # ask to create new theme
+                self._print_ask_to_create_theme()
 
-                elif theme_id >= 0:
-                    """ valid theme selection """
-                    self._theme_name = self._theme_selector.theme_name(theme_id)
-                    if self._config_win:
-                        self._config_win._config_options['theme'][1] = self._theme_name
-                        self._config_win._saved_config_options['theme'][1] = self._theme_name
+            elif theme_id >= 0:
+                """ valid theme selection """
+                self._theme_name = self._theme_selector.theme_name(theme_id)
+                if self._config_win:
+                    self._config_win._config_options['theme'][1] = self._theme_name
+                    self._config_win._saved_config_options['theme'][1] = self._theme_name
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Activating theme: {}'.format(self._theme_name))
+                ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name,
+                        theme_path=self._theme_selector._themes[theme_id][1])
+                if isinstance(ret, tuple):
+                    ret = ret[0]
+                if ret == -1:
+                    self._theme_name = ret_theme_name
+                    self._cnf.theme_not_supported = True
+                    self._cnf.theme_not_supported_notification_shown = False
+                    self._show_theme_not_supported()
+                #self.refreshBody()
+                curses.doupdate()
+                # update config window
+                if self._config_win:
+                    self._config_win._config_options['theme'][1] = self._theme_name
+                if self.ws.window_mode == self.ws.CONFIG_MODE:
+                    save_theme = True
+                # make default
+                if save_theme:
+                    self._cnf.theme = self._theme_name
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('Activating theme: {}'.format(self._theme_name))
-                    ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name,
-                            theme_path=self._theme_selector._themes[theme_id][1])
-                    if isinstance(ret, tuple):
-                        ret = ret[0]
-                    if ret == -1:
-                        self._theme_name = ret_theme_name
-                        self._cnf.theme_not_supported = True
-                        self._cnf.theme_not_supported_notification_shown = False
-                        self._show_theme_not_supported()
-                    #self.refreshBody()
-                    curses.doupdate()
-                    # update config window
-                    if self._config_win:
-                        self._config_win._config_options['theme'][1] = self._theme_name
-                    if self.ws.window_mode == self.ws.CONFIG_MODE:
-                        save_theme = True
-                    # make default
-                    if save_theme:
-                        self._cnf.theme = self._theme_name
-                        if logger.isEnabledFor(logging.INFO):
-                            logger.info('Setting default theme: {}'.format(self._theme_name))
-                return
+                        logger.info('Setting default theme: {}'.format(self._theme_name))
+            return
 
         elif self.ws.operation_mode == self.ws.CLEAR_REGISTER_MODE:
             if char in ( ord('y'), ord('n')):
@@ -3880,6 +3885,8 @@ class PyRadio(object):
                 return
 
         elif char in (ord('T'), ):
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('=== Coming into themes')
             self._update_status_bar_right()
             self._toggle_transparency()
             return

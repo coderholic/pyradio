@@ -651,6 +651,8 @@ class SimpleCursesLineEdit(object):
     _caption_win = None     # contains box and caption
     _edit_win = None        # contains the "input box"
     _enabled = True
+    _use_paste_mode = False # paste mode is off by default
+    _paste_mode = False     # enables direct insersion of ? and \
 
     """ Default value for string length """
     _max_chars_to_display = 0
@@ -720,6 +722,8 @@ class SimpleCursesLineEdit(object):
         If True, display ? (\? to display help)
         If False, display help """
     _show_help_with_backslash_pressed = False
+
+    _mode_changed = None
 
     def __init__(self, parent, width, begin_y, begin_x, **kwargs):
 
@@ -798,6 +802,30 @@ class SimpleCursesLineEdit(object):
     @enabled.setter
     def enabled(self, val):
         self._enabled = val
+
+    @property
+    def backslash_pressed(self):
+        return self._backslash_pressed
+
+    @backslash_pressed.setter
+    def backslash_pressed(self, val):
+        self._backslash_pressed = val
+
+    @property
+    def paste_mode(self):
+        return self._paste_mode
+
+    @paste_mode.setter
+    def paste_mode(self, val):
+        self._paste_mode = val
+
+    @property
+    def use_paste_mode(self):
+        return self._use_paste_mode
+
+    @use_paste_mode.setter
+    def use_paste_mode(self, val):
+        self._use_paste_mode = val
 
     @property
     def width(self):
@@ -1298,6 +1326,8 @@ class SimpleCursesLineEdit(object):
     def _can_show_help(self):
         """ return not xor of two values
             self._backslash_pressed , self._show_help_with_backslash_pressed """
+        if self._paste_mode:
+            return False
         return not ( (self._backslash_pressed and not self._show_help_with_backslash_pressed) or \
                 (not self._backslash_pressed and self._show_help_with_backslash_pressed) )
 
@@ -1343,8 +1373,10 @@ class SimpleCursesLineEdit(object):
                     self._previous_word()
                 return 1
 
-        if char == 92 and not self._backslash_pressed:
+        if char == 92 and not self._backslash_pressed and not self._paste_mode:
             self._backslash_pressed = True
+            if self._mode_changed:
+                self._mode_changed()
             return 1
 
         elif char in (ord('?'), ) and self._can_show_help():
@@ -1353,6 +1385,8 @@ class SimpleCursesLineEdit(object):
                 logger.debug('action: help')
             self.keep_restore_data()
             self._backslash_pressed = False
+            if self._mode_changed:
+                self._mode_changed()
             return 2
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
@@ -1563,7 +1597,14 @@ class SimpleCursesLineEdit(object):
         elif 0<= char <=31:
             """ do not accept any other control characters """
             self._backslash_pressed = False
-            pass
+
+        elif char == ord('p') and self._backslash_pressed \
+                and self._use_paste_mode:
+            """ toggle paste mode """
+            self._backslash_pressed = False
+            self._paste_mode = not self._paste_mode
+            if self._mode_changed:
+                self._mode_changed()
 
         else:
             self._backslash_pressed = False
@@ -1625,6 +1666,8 @@ class SimpleCursesLineEdit(object):
             if self._string_changed_handler:
                 self._string_changed_handler()
         self.refreshEditWindow()
+        if self._mode_changed:
+            self._mode_changed()
         return 1
 
     def _get_char(self, win, char):

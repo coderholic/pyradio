@@ -141,7 +141,7 @@ A set of **secondary modes** is also available (a secondary mode works within a 
 
 3. The **Open Register** mode, which is used to open a register or get into the *Registers* mode. You can enter this mode by pressing "***'***" (single quote). Then a single quote is displayed at the bottom right corner of the window.
 
-The functions availabe through the *secondary modes* are content dependant, so you can see what command is available by pressing "***?***" while within a secondary mode. Pressing any other key will exit the secondary mode.
+The functions available through the *secondary modes* are content dependent, so you can see what command is available by pressing "***?***" while within a secondary mode. Pressing any other key will exit the secondary mode.
 
 ## Config file
 
@@ -255,7 +255,7 @@ After a search term has been successfully found (search is case insensitive), ne
 
 ## Line editor
 
-**PyRadio** "*Search function*" and "*Station edior*" use a *line editor* to permit typing and editing stations' data.
+**PyRadio** "*Search function*" and "*Station editor*" use a *line editor* to permit typing and editing stations' data.
 
 The *line editor* works both on **Python 2** and **Python 3**, but does not provide the same functionality for both versions:
 
@@ -272,6 +272,12 @@ To sum it all up:
 1. Press "***?***" to get help.
 2. Press "***\\?***" to get a "**?**".
 3. Press "***\\\\***" to get a "**\\**".
+
+When in *Station editor*, the **Line editor** recognizes an extra mode: **Paste mode**.
+
+This mode is enabled by pressing "**\\p**" and gets automatically disabled when the focus moves off the line editors.
+
+This mode is designed to directly accept the "*?*" and "*\\*" characters (which are normally used as commands indicators). This makes it possible to easily paste a station's name and URL, especially when the "*?*" and "*\\*" characters exist in them; it is very common to have them in URLs.
 
 ### CJK characters support
 
@@ -429,7 +435,7 @@ Yes, but this is just half of the story.
 
 The station actually also sends identification data, audio format data, notifications, etc. Part of this non-audio data transmitted by a station is the title of the song currently playing; this is why we can have this data displayed at the bottom of the screen.
 
-Now, not all stations send the whole set of data; most send their name, website, genre and bitrate, for example, but some may ommit the website or the genre.
+Now, not all stations send the whole set of data; most send their name, website, genre and bit rate, for example, but some may omit the website or the genre.
 
 **PyRadio** can receive, decode and display this data, and even help the user to identify an unknown station. This is the way to do it:
 
@@ -576,8 +582,8 @@ Then try to reproduce the bug and exit **pyradio**.
 
 Finally, include the file produced in your report.
 
-## Acknowlegement
+## Acknowledgment
 
-**PyRadio** uses code frorm the following projects:
+**PyRadio** uses code from the following projects:
 
 1. [CJKwrap](https://gitlab.com/fgallaire/cjkwrap) by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.

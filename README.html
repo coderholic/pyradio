@@ -19,6 +19,7 @@
     div.column{display: inline-block; vertical-align: top; width: 50%;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
@@ -147,7 +148,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 <li>The <strong>Yank (Copy)</strong> mode, which is used to copy stations to <strong>registers</strong>. You can enter this mode by pressing “<strong><em>y</em></strong>”. Then a “<em>y</em>” is displayed at the bottom right corner of the window.</p></li>
 <li>The <strong>Open Register</strong> mode, which is used to open a register or get into the <em>Registers</em> mode. You can enter this mode by pressing “<strong><em>’</em></strong>” (single quote). Then a single quote is displayed at the bottom right corner of the window.</p></li>
 </ol>
-<p>The functions availabe through the <em>secondary modes</em> are content dependant, so you can see what command is available by pressing “<strong><em>?</em></strong>” while within a secondary mode. Pressing any other key will exit the secondary mode.</p>
+<p>The functions available through the <em>secondary modes</em> are content dependent, so you can see what command is available by pressing “<strong><em>?</em></strong>” while within a secondary mode. Pressing any other key will exit the secondary mode.</p>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong><em>PyRadio</em></strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong><em>PyRadio</em></strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
@@ -208,7 +209,7 @@ $ pyradio -s 5</pre>
 <p>One can always get help by pressing the “<strong><em>?</em></strong>” key.</p>
 <p>After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the “<strong><em>n</em></strong>” key and previous occurrence can be obtained using the “<strong><em>N</em></strong>” key.</p>
 <h2 id="line-editor">Line editor <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p><strong>PyRadio</strong> “<em>Search function</em>” and “<em>Station edior</em>” use a <em>line editor</em> to permit typing and editing stations’ data.</p>
+<p><strong>PyRadio</strong> “<em>Search function</em>” and “<em>Station editor</em>” use a <em>line editor</em> to permit typing and editing stations’ data.</p>
 <p>The <em>line editor</em> works both on <strong>Python 2</strong> and <strong>Python 3</strong>, but does not provide the same functionality for both versions:</p>
 <ul>
 <li>In <strong>Python 2</strong>, only ASCII characters can be inserted.</li>
@@ -222,6 +223,9 @@ $ pyradio -s 5</pre>
 <li>Press “<strong><em>\?</em></strong>” to get a “<strong>?</strong>”.</li>
 <li>Press “<strong><em>\\</em></strong>” to get a “<strong>\</strong>”.</li>
 </ol>
+<p>When in <em>Station editor</em>, the <strong>Line editor</strong> recognizes an extra mode: <strong>Paste mode</strong>.</p>
+<p>This mode is enabled by pressing “<strong>\p</strong>” and gets automatically disabled when the focus moves off the line editors.</p>
+<p>This mode is designed to directly accept the “<em>?</em>” and “<em>\</em>” characters (which are normally used as commands indicators). This makes it possible to easily paste a station’s name and URL, especially when the “<em>?</em>” and “<em>\</em>” characters exist in them; it is very common to have them in URLs.</p>
 <h3 id="cjk-characters-support">CJK characters support</h3>
 <p>The <em>line editor</em> supports the insertion of <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs">CJK Unified Ideographs</a>, as described on <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)">CJK Unified Ideographs (Unicode block)</a> also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-point (character), actually take up a 2-character space, when rendered on the terminal.</p>
 <p>A depiction of the editor’s behavior can be seen at this image: <a target="_blank" href="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg">pyradio-editor.jpg</a>.</p>
@@ -300,7 +304,7 @@ volume=28</pre>
 <p>Well, that’s obvious, right?</p>
 <p>Yes, but this is just half of the story.</p>
 <p>The station actually also sends identification data, audio format data, notifications, etc. Part of this non-audio data transmitted by a station is the title of the song currently playing; this is why we can have this data displayed at the bottom of the screen.</p>
-<p>Now, not all stations send the whole set of data; most send their name, website, genre and bitrate, for example, but some may ommit the website or the genre.</p>
+<p>Now, not all stations send the whole set of data; most send their name, website, genre and bit rate, for example, but some may omit the website or the genre.</p>
 <p><strong>PyRadio</strong> can receive, decode and display this data, and even help the user to identify an unknown station. This is the way to do it:</p>
 <p>After a connection to a station has been established (after playback has started), just press “<strong><em>i</em></strong>” to display the station’s info.</p>
 <p>The window that appears includes the “<em>Playlist Name</em>” (the station name we have in the playlist) and the “<em>Reported Name</em>” (the name the station transmitted to us) among other fields (an example can bee seen here: <a target="_blank" href="https://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg">pyradio-station-info.jpg</a>). If these two names are not identical, the user can press “<strong><em>r</em></strong>” to rename the station in the playlist using the “<em>Reported Name</em>”. This way an unknown station (when only the URL is known) can be correctly identified (after being inserted in a playlist with a dummy station name).</p>
@@ -392,8 +396,8 @@ $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg</pre>
 $ pyradio -d</pre>
 <p>Then try to reproduce the bug and exit <strong>pyradio</strong>.</p>
 <p>Finally, include the file produced in your report.</p>
-<h2 id="acknowlegement">Acknowlegement <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p><strong>PyRadio</strong> uses code frorm the following projects:</p>
+<h2 id="acknowledgment">Acknowledgment <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p><strong>PyRadio</strong> uses code from the following projects:</p>
 <ol type="1">
 <li><a target="_blank" href="https://gitlab.com/fgallaire/cjkwrap">CJKwrap</a> by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.</li>
 </ol>

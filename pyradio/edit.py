@@ -250,6 +250,8 @@ class PyRadioEditor(object):
                     cursor_color = curses.color_pair(8),
                     unfocused_color = curses.color_pair(5))
                 self._line_editor[ed].bracket = False
+                self._line_editor[ed]._mode_changed = self._show_alternative_modes
+                self._line_editor[ed].use_paste_mode = True
 
     def show(self, item=None):
         self._win = None
@@ -283,6 +285,7 @@ class PyRadioEditor(object):
 
         self._win.addstr(1, 2, 'Name', curses.color_pair(4))
         self._win.addstr(4, 2, 'URL', curses.color_pair(4))
+        self._show_alternative_modes()
         self._show_encoding()
         self._show_buttons()
         try:
@@ -350,6 +353,33 @@ class PyRadioEditor(object):
         if not self._too_small:
             for ed in range(0,2):
                 self._line_editor[ed].show(self._win, opening=False)
+
+    def _show_alternative_modes(self):
+        lin = ( (1, 8), (4,7))
+        disp = 0
+        for n in self._line_editor:
+            if n.paste_mode:
+                disp = 100
+                break
+        if disp == 100:
+            """ print paste mode is on on all editors """
+            """ set all editors' paste mode """
+            for i,n in enumerate(self._line_editor):
+                n.paste_mode = True
+                self._win.addstr(*lin[i], '[', curses.color_pair(5))
+                self._win.addstr('Paste mode', curses.color_pair(4))
+                self._win.addstr(']    ', curses.color_pair(5))
+        else:
+            for i, n in enumerate(self._line_editor):
+                if n.backslash_pressed:
+                    """ print editor's flag """
+                    self._win.addstr(*lin[i], '[', curses.color_pair(5))
+                    self._win.addstr('Escape mode', curses.color_pair(4))
+                    self._win.addstr(']', curses.color_pair(5))
+                else:
+                    """ print cleared editor's flag """
+                    self._win.addstr(*lin[i], 15 * ' ', curses.color_pair(5))
+        self._win.refresh()
 
     def _show_encoding(self):
         sid = 2
@@ -458,16 +488,20 @@ class PyRadioEditor(object):
         if self._too_small:
             if char in (curses.KEY_EXIT, 27, ord('q')):
                 self.new_station = None
+                self._reset_editors_modes()
                 ret = -1
         else:
             if char in (curses.KEY_EXIT, 27, ord('q')) and \
                     self.focus > 1:
                 self.new_station = None
+                self._reset_editors_modes()
                 ret = -1
             elif char in ( ord('\t'), 9, curses.KEY_DOWN):
                 self.focus +=1
+                self._reset_editors_escape_mode()
             elif char == curses.KEY_UP:
                 self.focus -=1
+                self._reset_editors_escape_mode()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
                 if self._focus == 0:
                     # Name
@@ -486,9 +520,11 @@ class PyRadioEditor(object):
                     # cancel
                     self.new_station = None
                     ret = -1
+                self._reset_editors_escape_mode()
             elif char == ord('s') and self._focus > 1:
                 ret = self._return_station()
                 self.focus = abs(ret + 2)
+                self._reset_editors_modes()
             elif (char in (curses.ascii.DC2, 18) and not self._adding) or \
                     (char == ord('r') and not self._adding and self.focus >1):
                 # ^R, revert to saved
@@ -515,13 +551,30 @@ class PyRadioEditor(object):
                 elif ret == 0:
                     # exit, string is valid
                     self._return_station()
+                    self._reset_editors_modes()
                     ret = -1
                 elif ret == -1:
                     # cancel
                     self.new_station = None
+                    self._reset_editors_modes()
                     ret = -1
+
+        if self._focus > 1:
+            self._reset_editors_modes()
         self._show_title()
+        self._show_alternative_modes()
         return ret
+
+    def _reset_editors_modes(self):
+        for n in self._line_editor:
+            if n:
+                n.paste_mode = False
+                n.backslash_pressed = False
+
+    def _reset_editors_escape_mode(self):
+        for n in self._line_editor:
+            if n:
+                n.backslash_pressed = False
 
 
 class PyRadioRenameFile(object):
