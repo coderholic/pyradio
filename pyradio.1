@@ -313,6 +313,13 @@ To sum it all up:
 3. Press "\fI\\\\\fR" to get a "\fI\\\fR".
 
 .PP
+When in \fIStation editor\fR, the \fBLine editor\fR recognizes an extra mode: \fBPaste mode\fR.
+
+This mode is enabled by pressing "\fB\\p\fR" and gets automatically disabled when the focus moves off the line editors.
+
+This mode is designed to directly accept the "\fI?\fR" and "\fI\\\fR" characters (which are normally used as commands indicators). This makes it possible to easily paste a station's name and URL, especially when the "\fI?\fR" and "\fI\\\fR" characters exist in them; it is very common to have them in URLs.
+
+.PP
 \fBCJK CHARACTERS SUPPORT\fR
 
 The \fIline editor\fR supports the insertion of \fICJK Unified Ideographs [1]\fR, as described on \fICJK Unified Ideographs (Unicode block) [2]\fR, also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-poin (character), actually take up a 2-character space, when rendered on the terminal.
@@ -466,9 +473,6 @@ Example:
 [pyradio]
 .br
 volume=50
-
-.IP \fBNote\fR
-If \fBMPV 0.30.0\fR is installed, there will be no visual notification when changing the volume. Furthermore, saving the volume value will \fInot be possible\fR. This is a \fBpyradio\fR bug and will be addressed in the future.
 
 .PP
 \fBMPlayer\fR

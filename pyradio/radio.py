@@ -1451,7 +1451,8 @@ class PyRadio(object):
             Backspace|,|^H        |Backspace (delete previous character).
             Up| / |Down           |Go to previous / next field.
             \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
-            \p                  |Enable |p|aste mode.
+            \p                  |Enable |p|aste mode to correctly paste
+            ____________________|URLs (and stations' names).
             Esc                 |Cancel operation.
 
             |Managing player volume does not work in editing mode.
@@ -1466,7 +1467,8 @@ class PyRadio(object):
             Backspace|,|^H        |Backspace (delete previous character).
             Up| / |Down           |Go to previous / next field.
             \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
-            \p                  |Enable |p|aste mode.
+            \p                  |Enable |p|aste mode to correctly paste
+            ____________________|URLs (and stations' names).
             Esc                 |Cancel operation.
 
             |Managing player volume does not work in editing mode.

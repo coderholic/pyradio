@@ -240,7 +240,7 @@ class Player(object):
                         vol = config_string.splitlines()
                         for i, v_string in enumerate(vol):
                             if v_string.startswith('volume'):
-                                vol[i] = 'volume={}'.format(self.volume)
+                                vol[i] = '\n#Volume set from pyradio\nvolume={}'.format(self.volume)
                                 break
                         config_string = '\n'.join(vol)
                     else:
@@ -249,8 +249,10 @@ class Player(object):
                     try:
                         with open(config_file, "w") as c_file:
                             c_file.write(config_string)
+                        volume = self.volume
                         self.volume = -1
                         self.PROFILE_FROM_USER = True
+                        return ret_strings[1].format(str(volume))
                     except:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug(log_strings[2].format(config_file))
