@@ -104,13 +104,13 @@ def shell():
         sys.exit()
 
     if args.unlock:
-        ret = pyradio_config.remove_session_lock_file()
+        ret, lfile = pyradio_config.remove_session_lock_file()
         if ret == 0:
-            print('Lock file removed...')
+            print('Lock file removed: "{}"'.format(lfile))
         elif ret == 1:
-            print('Failed to remove Lock file...')
+            print('Failed to remove Lock file: "{}"'.format(lfile))
         else:
-            print('Lock file not found...')
+            print('Lock file not found: "{}"'.format(lfile))
         sys.exit()
 
     if args.list is False and args.add is False:

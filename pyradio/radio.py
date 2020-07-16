@@ -1442,37 +1442,67 @@ class PyRadio(object):
         self._show_help(txt, mode_to_set=self.ws.SEARCH_HELP_MODE, caption=' Search Help ')
 
     def _show_line_editor_help(self):
-        if platform.lower().startswith('darwin'):
-            txt = """Left| / |Right        |Move to next / previous character.
-            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-            ^W| / |^K             |Clear to start / end of line.
-            ^U                  |Clear line.
-            DEL|,|^D              |Delete character.
-            Backspace|,|^H        |Backspace (delete previous character).
-            Up| / |Down           |Go to previous / next field.
-            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
-            \p                  |Enable |p|aste mode to correctly paste
-            ____________________|URLs (and stations' names).
-            Esc                 |Cancel operation.
+        if self.ws.operation_mode == self.ws.RENAME_PLAYLIST_MODE \
+                or  self.ws.previous_operation_mode == self.ws.RENAME_PLAYLIST_MODE:
+            if platform.lower().startswith('darwin'):
+                txt = """Left| / |Right        |Move to next / previous character.
+                HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+                ^W| / |^K             |Clear to start / end of line.
+                ^U                  |Clear line.
+                DEL|,|^D              |Delete character.
+                Backspace|,|^H        |Backspace (delete previous character).
+                Up| / |Down           |Go to previous / next field.
+                \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+                Esc                 |Cancel operation.
 
-            |Managing player volume does not work in editing mode.
-            """
+                |Managing player volume does not work in editing mode.
+                """
+            else:
+                txt = """Left| / |Right        |Move to next / previous character.
+                M-F| / |M-B           |Move to next / previous word.
+                HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+                ^W| / |M-D|,|^K         |Clear to start / end of line.
+                ^U                  |Clear line.
+                DEL|,|^D              |Delete character.
+                Backspace|,|^H        |Backspace (delete previous character).
+                Up| / |Down           |Go to previous / next field.
+                \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+                Esc                 |Cancel operation.
+
+                |Managing player volume does not work in editing mode.
+                """
         else:
-            txt = """Left| / |Right        |Move to next / previous character.
-            M-F| / |M-B           |Move to next / previous word.
-            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-            ^W| / |M-D|,|^K         |Clear to start / end of line.
-            ^U                  |Clear line.
-            DEL|,|^D              |Delete character.
-            Backspace|,|^H        |Backspace (delete previous character).
-            Up| / |Down           |Go to previous / next field.
-            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
-            \p                  |Enable |p|aste mode to correctly paste
-            ____________________|URLs (and stations' names).
-            Esc                 |Cancel operation.
+            if platform.lower().startswith('darwin'):
+                txt = """Left| / |Right        |Move to next / previous character.
+                HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+                ^W| / |^K             |Clear to start / end of line.
+                ^U                  |Clear line.
+                DEL|,|^D              |Delete character.
+                Backspace|,|^H        |Backspace (delete previous character).
+                Up| / |Down           |Go to previous / next field.
+                \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+                \p                  |Enable |p|aste mode to correctly paste
+                ____________________|URLs (and stations' names).
+                Esc                 |Cancel operation.
 
-            |Managing player volume does not work in editing mode.
-            """
+                |Managing player volume does not work in editing mode.
+                """
+            else:
+                txt = """Left| / |Right        |Move to next / previous character.
+                M-F| / |M-B           |Move to next / previous word.
+                HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+                ^W| / |M-D|,|^K         |Clear to start / end of line.
+                ^U                  |Clear line.
+                DEL|,|^D              |Delete character.
+                Backspace|,|^H        |Backspace (delete previous character).
+                Up| / |Down           |Go to previous / next field.
+                \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+                \p                  |Enable |p|aste mode to correctly paste
+                ____________________|URLs (and stations' names).
+                Esc                 |Cancel operation.
+
+                |Managing player volume does not work in editing mode.
+                """
             if platform.startswith('win'):
                 txt = txt.replace('M-', 'A-')
         self._show_help(txt, mode_to_set=self.ws.LINE_EDITOR_HELP_MODE, caption=' Line Editor Help ')

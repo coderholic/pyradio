@@ -1067,21 +1067,21 @@ class PyRadioConfig(PyRadioStations):
             self._session_lock_file =  path.join(self.stations_dir, 'pyradio.lock')
 
     def remove_session_lock_file(self):
-        print(self._session_lock_file)
+        #print(self._session_lock_file)
         if path.exists(self._session_lock_file):
             try:
                 remove(self._session_lock_file)
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Lock file removed...')
-                return 0
+                return 0, self._session_lock_file
             except:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Failed to remove Lock file...')
-                return 1
+                return 1, self._session_lock_file
         else:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Lock file not found...')
-            return -1
+            return -1, self._session_lock_file
 
     def _check_config_file(self, usr):
         ''' Make sure a config file exists in the config dir '''

@@ -7,8 +7,7 @@
     * Display message when fallback theme is used
     * Fixing info window highlight and encoding issues
     * Fixing -a command line parameter functionality
-    * build script accepts --user (for user only installation)
-      on linux
+    * build script accepts --user (for user only installation) on linux
     * Fixing volume saving on Windows
 
 2020-03-16 s-n-g

@@ -183,7 +183,10 @@ class PyRadioEditor(object):
     def append(self, val):
         if self._adding:
             self._append = val
-            self._pos_to_insert = len(self._stations)
+            if self._stations:
+                self._pos_to_insert = len(self._stations)
+            else:
+                self._pos_to_insert = 0
 
     @property
     def focus(self):
@@ -585,7 +588,7 @@ class PyRadioRenameFile(object):
         self._win = self._parent_win = self._line_editor = None
         self._focus = 0
         self._line_editor_yx = (4, 2)
-        self._create = self._too_small = _need_to_create_win = False
+        self._create = self._too_small = False
         self._error_string = ''
         self._widgets = [None, None, None, None, None]
         self.initial_enabled = [True, True, False, False, True]
@@ -681,21 +684,15 @@ class PyRadioRenameFile(object):
         self.show()
 
     def show(self):
-        self._need_to_create_win = False
         parent_maxY, parent_maxX = self._parent_win.getmaxyx()
 
-        if self._win is None:
-            self._need_to_create_win = True
-        else:
-            if self.maxY != parent_maxY or self.maxX != parent_maxX:
-                self._win = None
-                self._need_to_create_win = True
-        if self._need_to_create_win:
+        if self.maxY != parent_maxY or self.maxX != parent_maxX:
+            self._win = None
             self._win = curses.newwin(parent_maxY, parent_maxX, 1, 0)
             self.maxY, self.maxX = (parent_maxY, parent_maxX)
-            self._win.bkgdset(' ', curses.color_pair(3))
-            self._win.erase()
-            self._win.box()
+        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.erase()
+        self._win.box()
 
         # add editor
         if self._widgets[0] is None:
@@ -779,7 +776,7 @@ class PyRadioRenameFile(object):
                 self._too_small = True
                 return 0
             else:
-                self._need_to_create_win = self._too_small = False
+                self._too_small = False
         else:
             self._too_small = False
 
@@ -802,7 +799,7 @@ class PyRadioRenameFile(object):
                 )
             self._win.addstr(2, 2, 'To:', curses.color_pair(4))
 
-        if self._need_to_create_win:
+        if self.maxY > 18:
             try:
                 self._win.addstr(10 + adjust_line_Y, 3, '─' * (self.maxX - 6), curses.color_pair(3))
             except:
@@ -839,6 +836,7 @@ class PyRadioRenameFile(object):
             self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
             self._win.addstr(17 + adjust_line_Y, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
 
+        if self.maxY > 21:
             try:
                 self._win.addstr(18 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(3))
             except:

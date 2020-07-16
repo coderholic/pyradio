@@ -213,7 +213,11 @@ Extract this file to your "*Home*" directory ("**C:\\Users\\[Your User Name]**" 
 
 I will use this name for the following examples; you will have to use the actual name of directory you got from the extraction.
 
-Then open a console (press the **Win** key, type **cmd** and press **ENTER**) and type:
+Finally, open a console (press the **Win** key, type **cmd** and press **ENTER** or if you are on Windows 10, use **Run it as Administrator** as you can see in the following image)
+
+[Run as Administrator](https://members.hellug.gr/sng/pyradio/run-as-admin.jpg)
+
+Then type:
 
 ```
 cd pyradio-0.7.9
