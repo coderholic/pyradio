@@ -2309,6 +2309,7 @@ class PyRadio(object):
                 self.refreshBody()
             self._cnf.register_to_open = None
         else:
+            """ Open list of playlists or registers """
             if self._cnf._open_register_list:
                 txt = '''Reading registers. Please wait...'''
             else:
@@ -2331,10 +2332,11 @@ class PyRadio(object):
                     if self._cnf.is_register:
                         self.reloadCurrentPlaylist(0)
                     return
-                if self.selections[self.ws.REGISTER_MODE][0] > self.number_of_items:
-                    self.selections[self.ws.REGISTER_MODE][0] = 0
-                    self.selection = 0
-                    #self.ss('_open_playlist - fixed')
+                else:
+                    if self.playing == -1:
+                        self.selection = 0
+                    else:
+                        self.selection = self.playing
             else:
                 self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
                 self.number_of_items, self.playing = self.readPlaylists()
