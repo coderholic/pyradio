@@ -120,7 +120,7 @@ echo      3 -  use python3 to build and install
 echo     -h
 echo --help -  display help
 echo.
-
+goto :endofscript
 
 :toend
 echo.

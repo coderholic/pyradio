@@ -1381,6 +1381,7 @@ class PyRadio(object):
                  M| / |P            |Jump to |M|iddle / loaded register.
                  Enter|,|Right|,|l    |Open selected register.
                  r                |Re-read registers from disk.
+                 '                |Toggle between playlists / registers.
                  /| / |n| / |N        |Search, go to next / previous result.
                  \\                |Enter |Extra Commands| mode.
                  Esc|,|q|,|Left|,|h     |Cancel.
@@ -4507,6 +4508,12 @@ class PyRadio(object):
                     self._show_help(txt, self.ws.PLAYLIST_MODE, caption=' ', prompt=' ', is_message=True)
                     self._reload_playlists()
 
+                elif char in (ord('\''), ):
+                    self._cnf.open_register_list = not self._cnf.open_register_list 
+                    self._open_playlist()
+                    return
+
+
     def _reload_playlists(self, refresh=True):
         old_playlist = self._cnf.playlists[self.selection][0]
         self.number_of_items, self.playing = self.readPlaylists()
@@ -4656,6 +4663,50 @@ class PyRadio(object):
             self._theme_selector.set_theme(self.theme_forced_selection)
         self._print_ask_to_create_theme()
 
+    def _load_renamed_playlist(self, a_file, old_file, is_copy):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Opening renamed playlist: "{}"'.format(a_file))
+        ret = self._cnf.read_playlist_file(stationFile=a_file)
+        if ret == -1:
+            self._print_playlist_load_error()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Error loading playlist: "{}"'.format(self.stations[self.selection][-1]))
+            return
+        elif ret == -2:
+            self._print_playlist_not_found_error()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Playlist not found: "{}"'.format(self.stations[self.selection][-1]))
+            return
+        elif ret == -7:
+            self._print_playlist_recovery_error()
+            return
+        else:
+            self._playlist_error_message = ''
+            self.number_of_items = ret
+            #self.ss('ENTER')
+            self.ws.close_window()
+            while self.ws.operation_mode != self.ws.NORMAL_MODE:
+                self.ws.close_window()
+            self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+            self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
+            self._give_me_a_search_class(self.ws.operation_mode)
+            if self.playing < 0:
+                self._put_selection_in_the_middle(force=True)
+                self.refreshBody()
+            logger.error('path = {}'.format(self._cnf.station_path))
+            logger.error('station = {}'.format(self._cnf.station_file_name))
+            logger.error('title = {}\n'.format(self._cnf.station_title))
+            self._cnf.set_playlist_elements(a_file)
+            if is_copy:
+                self._cnf.add_to_playlist_history(
+                        station_path=a_file,
+                        station_title=self._cnf.station_title,
+                        startPos=startPos,
+                        selection=self.selection,
+                        playing=self.playing)
+            logger.error('path = {}'.format(self._cnf.station_path))
+            logger.error('station = {}'.format(self._cnf.station_file_name))
+            logger.error('title = {}\n'.format(self._cnf.station_title))
 
     """''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
         Windows only section

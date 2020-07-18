@@ -268,7 +268,7 @@ class PyRadioEditor(object):
 
         self._show_title()
 
-        if self.maxY < 22 or self.maxX < 72:
+        if self.maxY < 11 or self.maxX < 44:
             txt = ' Window too small to display content '
             error_win = curses.newwin(3, len(txt) + 2, int(self.maxY / 2) - 1, int((self.maxX - len(txt)) / 2))
             error_win.bkgdset(' ', curses.color_pair(3))
@@ -291,62 +291,65 @@ class PyRadioEditor(object):
         self._show_alternative_modes()
         self._show_encoding()
         self._show_buttons()
-        try:
-            self._win.addstr(10, 3, '─' * (self.maxX - 6), curses.color_pair(3))
-        except:
-            self._win.addstr(10, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
-        self._win.addstr(10, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
-        self._win.addstr(11, 5, 'TAB', curses.color_pair(4))
-        self._win.addstr(', ', curses.color_pair(5))
-        self._win.addstr('Down', curses.color_pair(4))
-        self._win.addstr(' / ', curses.color_pair(5))
-        self._win.addstr('Up', curses.color_pair(4))
-        self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
-        self._win.addstr(12, 5, 'ENTER', curses.color_pair(4))
-        self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
-        self._win.addstr(13, 23, 'Otherwise, execute selected function.', curses.color_pair(5))
-        step = 0
-        if not self._adding:
-            self._win.addstr(14, 5, 'r', curses.color_pair(4))
+
+        if self.maxY > 18 and self.maxX > 76:
+            try:
+                self._win.addstr(10, 3, '─' * (self.maxX - 6), curses.color_pair(3))
+            except:
+                self._win.addstr(10, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+            self._win.addstr(10, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
+            self._win.addstr(11, 5, 'TAB', curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
-            self._win.addstr('^R', curses.color_pair(4))
-            self._win.addstr(14, 23, 'Revert to saved values (', curses.color_pair(5))
-            self._win.addstr('^R', curses.color_pair(4))
-            self._win.addstr(' when in Line Editor).', curses.color_pair(5))
-            step = 1
-        self._win.addstr(14 + step, 5, 'Esc', curses.color_pair(4))
-        self._win.addstr(14 + step, 23, 'Cancel operation.', curses.color_pair(5))
+            self._win.addstr('Down', curses.color_pair(4))
+            self._win.addstr(' / ', curses.color_pair(5))
+            self._win.addstr('Up', curses.color_pair(4))
+            self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
+            self._win.addstr(12, 5, 'ENTER', curses.color_pair(4))
+            self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
+            self._win.addstr(13, 23, 'Otherwise, execute selected function.', curses.color_pair(5))
+            step = 0
+            if not self._adding:
+                self._win.addstr(14, 5, 'r', curses.color_pair(4))
+                self._win.addstr(', ', curses.color_pair(5))
+                self._win.addstr('^R', curses.color_pair(4))
+                self._win.addstr(14, 23, 'Revert to saved values (', curses.color_pair(5))
+                self._win.addstr('^R', curses.color_pair(4))
+                self._win.addstr(' when in Line Editor).', curses.color_pair(5))
+                step = 1
+            self._win.addstr(14 + step, 5, 'Esc', curses.color_pair(4))
+            self._win.addstr(14 + step, 23, 'Cancel operation.', curses.color_pair(5))
 
 
-        self._win.addstr(15 + step, 5, 's', curses.color_pair(4))
-        self._win.addstr(' / ', curses.color_pair(5))
-        self._win.addstr('q', curses.color_pair(4))
-        self._win.addstr(15 + step , 23, 'Save data / Cancel operation (not in Line Editor).', curses.color_pair(5))
+            self._win.addstr(15 + step, 5, 's', curses.color_pair(4))
+            self._win.addstr(' / ', curses.color_pair(5))
+            self._win.addstr('q', curses.color_pair(4))
+            self._win.addstr(15 + step , 23, 'Save data / Cancel operation (not in Line Editor).', curses.color_pair(5))
 
-        self._win.addstr(16 + step, 5, '?', curses.color_pair(4))
-        self._win.addstr(16 + step, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
+            self._win.addstr(16 + step, 5, '?', curses.color_pair(4))
+            self._win.addstr(16 + step, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
 
-        try:
-            self._win.addstr(17 + step, 5, '─' * (self.maxX - 10), curses.color_pair(3))
-        except:
-            self._win.addstr(17 + step, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(3))
-        self._win.addstr(17 + step, int((self.maxX - 33) / 2), ' Player Keys (Not in Line Editor) ', curses.color_pair(4))
+        if self.maxY > 21 and self.maxX > 76:
+            try:
+                self._win.addstr(17 + step, 5, '─' * (self.maxX - 10), curses.color_pair(3))
+            except:
+                self._win.addstr(17 + step, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(3))
+            self._win.addstr(17 + step, int((self.maxX - 33) / 2), ' Player Keys (Not in Line Editor) ', curses.color_pair(4))
 
-        self._win.addstr(18 + step, 5, '-', curses.color_pair(4))
-        self._win.addstr('/', curses.color_pair(5))
-        self._win.addstr('+', curses.color_pair(4))
-        self._win.addstr(' or ', curses.color_pair(5))
-        self._win.addstr(',', curses.color_pair(4))
-        self._win.addstr('/', curses.color_pair(5))
-        self._win.addstr('.', curses.color_pair(4))
-        self._win.addstr(18 + step, 23, 'Change volume', curses.color_pair(5))
-        self._win.addstr(19 + step, 5, 'm', curses.color_pair(4))
-        self._win.addstr(' / ', curses.color_pair(5))
-        self._win.addstr('v', curses.color_pair(4))
-        self._win.addstr(19 + step, 23, 'M', curses.color_pair(4))
-        self._win.addstr('ute player / Save ', curses.color_pair(5))
-        self._win.addstr('v', curses.color_pair(4))
-        self._win.addstr('olume (not in vlc).', curses.color_pair(5))
+            self._win.addstr(18 + step, 5, '-', curses.color_pair(4))
+            self._win.addstr('/', curses.color_pair(5))
+            self._win.addstr('+', curses.color_pair(4))
+            self._win.addstr(' or ', curses.color_pair(5))
+            self._win.addstr(',', curses.color_pair(4))
+            self._win.addstr('/', curses.color_pair(5))
+            self._win.addstr('.', curses.color_pair(4))
+            self._win.addstr(18 + step, 23, 'Change volume', curses.color_pair(5))
+            self._win.addstr(19 + step, 5, 'm', curses.color_pair(4))
+            self._win.addstr(' / ', curses.color_pair(5))
+            self._win.addstr('v', curses.color_pair(4))
+            self._win.addstr(19 + step, 23, 'M', curses.color_pair(4))
+            self._win.addstr('ute player / Save ', curses.color_pair(5))
+            self._win.addstr('v', curses.color_pair(4))
+            self._win.addstr('olume (not in vlc).', curses.color_pair(5))
 
         if item:
             self._set_item(item)
@@ -377,7 +380,7 @@ class PyRadioEditor(object):
                 if n.backslash_pressed:
                     """ print editor's flag """
                     self._win.addstr(*lin[i], '[', curses.color_pair(5))
-                    self._win.addstr('Escape mode', curses.color_pair(4))
+                    self._win.addstr('Extra mode', curses.color_pair(4))
                     self._win.addstr(']', curses.color_pair(5))
                 else:
                     """ print cleared editor's flag """
@@ -799,7 +802,7 @@ class PyRadioRenameFile(object):
                 )
             self._win.addstr(2, 2, 'To:', curses.color_pair(4))
 
-        if self.maxY > 18:
+        if self.maxY > 18 and self.maxX > 76:
             try:
                 self._win.addstr(10 + adjust_line_Y, 3, '─' * (self.maxX - 6), curses.color_pair(3))
             except:
@@ -836,7 +839,7 @@ class PyRadioRenameFile(object):
             self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
             self._win.addstr(17 + adjust_line_Y, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
 
-        if self.maxY > 21:
+        if self.maxY > 21 and self.maxX > 76:
             try:
                 self._win.addstr(18 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(3))
             except:
@@ -925,8 +928,9 @@ class PyRadioRenameFile(object):
         """
 
         from shutil import copy2
+        self.new_file_name = path.join(self._to_path, self._widgets[0].string + '.csv')
         try:
-            copy2(self.filename, path.join(self._to_path, self._widgets[0].string + '.csv'))
+            copy2(self.filename, self.new_file_name)
         except:
             return -2
         if not self._widgets[1].checked:

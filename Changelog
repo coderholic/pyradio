@@ -6,8 +6,10 @@
     * Info window gets updated as data are read
     * Display message when fallback theme is used
     * Fixing info window highlight and encoding issues
+    * Making Station editor window size aware
     * Fixing -a command line parameter functionality
-    * build script accepts --user (for user only installation) on linux
+    * Build script accepts --user (for user only installation) on linux
+    * Build script will clean up previous installation files (not on Windows)
     * Fixing volume saving on Windows
 
 2020-03-16 s-n-g
