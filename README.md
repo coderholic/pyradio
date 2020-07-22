@@ -129,7 +129,7 @@ The same logic applies to all **PyRadio** windows.
 
 2. The **Playlist** mode, which you can open by pressing "**o**". Then you can open, create, paste a station, etc.
 
-3. The **Registers** mode. This is identical to the "*Playlist*" mode, but instead of displaying playlists, it displays register. You can enter this mode by pressing "**''**" (two single quotes) and exit from it by pressing "**Esc**" or "**q**".
+3. The **Registers** mode. This is identical to the "*Playlist*" mode, but instead of displaying playlists, it displays register. You can enter this mode by pressing "**''**" (two single quotes) and exit from it by pressing "**Esc**" or "**q**". You can also press "**'**" (single quote) to get to the **Playlist** mode and back.
 
 4. The **Register Main** mode, which is identical to the "*Main*" mode, except it displays the content of a **named** register.
 

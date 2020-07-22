@@ -608,6 +608,9 @@ class PyRadioStations(object):
         #for n in self._ps._p:
         #    logger.error('DE ------ {}'.format(n))
 
+    def give_me_a_new_playlist_history_item(self):
+        return ['', '', '', -1, -1, -1, False,False]
+
     def playlist_history_len(self):
         return len(self._ps)
 
@@ -650,8 +653,10 @@ class PyRadioStations(object):
     def copy_playlist_history(self):
         return self._ps.copy()
 
-    def replace_playlist_history_item(self, a_path, an_item):
-        return self._ps.replace(a_path, an_item)
+    def replace_playlist_history_items(self, a_search_path, new_item):
+        """ Find a_search_path in history and replace
+            the item found with new_item """
+        return self._ps.replace(a_search_path, new_item)
 
     def _bytes_to_human(self, B):
         ''' Return the given bytes as a human friendly KB, MB, GB, or TB string '''
@@ -801,6 +806,11 @@ class PyRadioStations(object):
         self.number_of_stations = len(self.stations)
         return True, self.number_of_stations
 
+    def registers_exist(self):
+        if glob.glob(path.join(self.registers_dir, '*.csv')):
+            return True
+        return False
+
     def read_playlists(self):
         self.playlists = []
         self.selected_playlist = -1
@@ -883,9 +893,12 @@ class PyRadioStations(object):
     def pop_to_first_real_playlist(self):
         self._ps.pop_to_first_real_playlist()
 
-    def history_item(self, an_item):
+    def remove_playlist_history_duplicates(self):
+        self._ps.remove_duplicates()
+
+    def history_item(self, an_item=-1):
         logger.error('DE /// history_item = {}'.format(self._ps._p[an_item]))
-        return self._ps._p[an_item]
+        return self._ps._p[an_item][:]
 
 class PyRadioConfig(PyRadioStations):
 
@@ -1497,16 +1510,18 @@ class PyRadioPlaylistStack(object):
         while self.get_item_member('is_register'):
             self.pop()
 
-    def replace(self, a_path, an_item):
-        if not isinstance(an_item, list) and \
-                not isinstance(an_item, tuple):
+    def replace(self, a_search_path, new_item):
+        """ Find a_search_path in history and replace
+            the item found with new_item """
+        if not isinstance(new_item, list) and \
+                not isinstance(new_item, tuple):
             return -2
         else:
-            if len(an_item) != 8:
+            if len(new_item) != 8:
                 return -1
         ret = 0
         for i,n in enumerate(self._p):
-            if n[0] == a_path:
-                self._p[i] = list(an_item[:])
+            if n[0] == a_search_path:
+                self._p[i] = list(new_item[:])
                 ret += 1
         return ret
