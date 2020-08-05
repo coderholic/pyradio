@@ -395,10 +395,8 @@ class Player(object):
                             self.connection_timeout_thread.join()
                         except:
                             pass
-                        if (logger.isEnabledFor(logging.DEBUG)):
-                            logger.debug('*** updateStatus: ***')
-                        if (logger.isEnabledFor(logging.INFO)):
-                            logger.info('*** Start of playback detected ***')
+                        if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
+                                logger.info('*** updateStatus(): Start of playback detected ***')
                         #if self.outputStream.last_written_string.startswith('Connecting to'):
                         if self.oldUserInput['Title'] == '':
                             #new_input = self.outputStream.last_written_string.replace('Connecting to', 'Playing').split(' ... ')[0]
@@ -724,10 +722,8 @@ class Player(object):
             self.connection_timeout_thread.join()
         except:
             pass
-        if (logger.isEnabledFor(logging.DEBUG)):
-            logger.debug('*** _set_mpv_playback_is_on: ***')
-        if (logger.isEnabledFor(logging.INFO)):
-            logger.info('*** Start of playback detected ***')
+        if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
+                    logger.info('*** _set_mpv_playback_is_on(): Start of playback detected ***')
         #if self.outputStream.last_written_string.startswith('Connecting '):
         #    new_input = self.outputStream.last_written_string.replace('Connecting to', 'Playing').split(' ... ')[0]
         #    self.outputStream.write(msg=new_input, thread_lock=lock)

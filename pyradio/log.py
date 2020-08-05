@@ -102,8 +102,8 @@ class Log(object):
             except:
                 a_msg = msg.encode('utf-8', 'replace')
                 self.cursesScreen.addstr(0, self.width + 5 - len(a_msg) - 1, a_msg.replace("\r", "").replace("\n", ""))
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Status right: "{}"'.format(a_msg))
+            #if logger.isEnabledFor(logging.DEBUG):
+            #    logger.debug('Status right: "{}"'.format(a_msg))
             if self._color_change:
                 self.cursesScreen.chgat(0, self.width + 2 - self._highlight_len, self._highlight_len + 2, curses.color_pair(1))
             self.cursesScreen.refresh()

@@ -478,7 +478,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         ----------
         votes
             Number of station's vote (string)
-        clicks 
+        clicks
             Number of station's clicks (string)
         numeric_data
 

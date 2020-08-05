@@ -372,19 +372,25 @@ class PyRadioEditor(object):
             """ set all editors' paste mode """
             for i,n in enumerate(self._line_editor):
                 n.paste_mode = True
-                self._win.addstr(*lin[i], '[', curses.color_pair(5))
+                # fix for python 2
+                #self._win.addstr(*lin[i], '[', curses.color_pair(5))
+                self._win.addstr(lin[i][0], lin[i][1], '[', curses.color_pair(5))
                 self._win.addstr('Paste mode', curses.color_pair(4))
                 self._win.addstr(']    ', curses.color_pair(5))
         else:
             for i, n in enumerate(self._line_editor):
                 if n.backslash_pressed:
                     """ print editor's flag """
-                    self._win.addstr(*lin[i], '[', curses.color_pair(5))
+                    # fix for python 2
+                    #self._win.addstr(*lin[i], '[', curses.color_pair(5))
+                    self._win.addstr(lin[i][0], lin[i][1], '[', curses.color_pair(5))
                     self._win.addstr('Extra mode', curses.color_pair(4))
                     self._win.addstr(']', curses.color_pair(5))
                 else:
                     """ print cleared editor's flag """
-                    self._win.addstr(*lin[i], 15 * ' ', curses.color_pair(5))
+                    # fix for python 2
+                    #self._win.addstr(*lin[i], 15 * ' ', curses.color_pair(5))
+                    self._win.addstr(lin[i][0], lin[i][1], 15 * ' ', curses.color_pair(5))
         self._win.refresh()
 
     def _show_encoding(self):
@@ -966,7 +972,7 @@ class PyRadioRenameFile(object):
             if char in (curses.KEY_EXIT, 27, ord('q')) and \
                     self.focus > 0:
                 return -1, '', '', False, False
-            elif char in (ord(' '), ord('l'), curses.KEY_RIGHT) and self._focus in (1, 2):
+            elif char in (ord(' '), ord('l'), curses.KEY_RIGHT, curses.KEY_ENTER, ord('\n'), ord('\r')) and self._focus in (1, 2):
                 # check boxes
                 self._widgets[self._focus].toggle_checked()
                 if self._focus == 1 and self._opened_from_editor:
