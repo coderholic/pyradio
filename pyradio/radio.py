@@ -2671,11 +2671,10 @@ class PyRadio(object):
             this_version=my_version
         else:
             this_version=my_version+'-'+my_app_state
-        logger.error('DE *** this_version = ' + this_version)
         connection_fail_count = 0
         ran=random.randint(25, 45)
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('detectUpdateThread: will check in {} seconds'.format(ran))
+            logger.debug('detectUpdateThread: Will check in {} seconds'.format(ran))
         delay(ran, stop)
         if stop():
             if logger.isEnabledFor(logging.DEBUG):
@@ -2694,7 +2693,7 @@ class PyRadio(object):
             delta = (d1 - d2).days
 
             # PROGRAM DEBUG: Uncomment this to force check
-            delta=check_days
+            #delta=check_days
             if delta < check_days:
                 clean_date_files(files)
                 if logger.isEnabledFor(logging.DEBUG):
@@ -2734,7 +2733,7 @@ class PyRadio(object):
                 last_tag = x[1].split('"')[0]
                 # PROGRAM DEBUG: set last github tag's version
                 # to check display functionality
-                last_tag = '0.8.8-RC1'
+                #last_tag = '0.8.8-RC1'
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: Upstream version found: {}'.format(last_tag))
                 if this_version == last_tag:
@@ -2749,7 +2748,6 @@ class PyRadio(object):
                     #this_version='0.8.8-RC1'
                     existing_version = to_ver(this_version)
                     new_version = to_ver(last_tag)
-                    logger.error('DE exist = {0}, new = {1}'.format(existing_version, new_version))
                     if existing_version < new_version:
                         if stop():
                             if logger.isEnabledFor(logging.DEBUG):
@@ -2760,7 +2758,7 @@ class PyRadio(object):
                         ############
                         ran=random.randint(120, 300)
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('detectUpdateThread: will send notification in {} minutes'.format(to_time(ran)))
+                            logger.debug('detectUpdateThread: Will send notification in {} minutes'.format(to_time(ran)))
                         #delay(5 , stop)
                         delay(ran, stop)
                         if stop():
@@ -3088,6 +3086,7 @@ class PyRadio(object):
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             # ' pressed - get into open register mode
             self._update_status_bar_right(reg_open_pressed=True, status_suffix='\'')
+            self._do_display_notify()
             return
         elif (self._register_open_pressed \
                 and self.ws.operation_mode == self.ws.NORMAL_MODE):
@@ -3122,6 +3121,7 @@ class PyRadio(object):
                     self.ws.PLAYLIST_MODE):
             # \ pressed
             self._update_status_bar_right(backslash=True, status_suffix='\\')
+            self._do_display_notify()
             return
         elif self._backslash_pressed and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
@@ -4034,9 +4034,8 @@ class PyRadio(object):
             self.helpWinContainer = None
             self.helpWin = None
             self.ws.close_window()
-            self._update_notify_lock.acquire()
-            self._update_version = ''
-            self._update_notify_lock.release()
+            with self._update_notify_lock:
+                self._update_version = ''
             self.refreshBody()
             return
 
@@ -4442,6 +4441,7 @@ class PyRadio(object):
                     if self._cnf.browsing_station_service:
                         return
                     self._check_to_open_playlist()
+                    self._do_display_notify()
                     return
 
                 elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
@@ -4583,6 +4583,7 @@ class PyRadio(object):
                             if self.playing < 0:
                                 self._put_selection_in_the_middle(force=True)
                                 self.refreshBody()
+                            self._do_display_notify()
                     return
 
                 elif char in (ord('r'), ):
@@ -4602,6 +4603,7 @@ class PyRadio(object):
                         self.selections[self.ws.REGISTER_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
                         self._cnf.open_register_list = not self._cnf.open_register_list
                         self._open_playlist()
+                        self._do_display_notify()
                     else:
                         """ opening registers list """
                         if self._cnf.registers_exist():
@@ -4610,6 +4612,7 @@ class PyRadio(object):
                             self.selections[self.ws.PLAYLIST_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
                             self._cnf.open_register_list = not self._cnf.open_register_list
                             self._open_playlist()
+                            self._do_display_notify()
                         else:
                             self._show_notification_with_delay(
                                     txt='____All registers are empty!!!____',
