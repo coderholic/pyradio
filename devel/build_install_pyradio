@@ -27,6 +27,22 @@ Checking python availability:"
             echo
 }
 
+function find_paths(){
+python -c 'import site
+for n in site.getsitepackages():
+    print(n)' 2>/dev/null
+python2 -c 'import site
+for n in site.getsitepackages():
+    print(n)' 2>/dev/null
+python3 -c 'import site
+for n in site.getsitepackages():
+    print(n)' 2>/dev/null
+APATH=$(python -m site --user-site 2>/dev/null) && echo "$APATH"
+APATH=$(python2 -m site --user-site 2>/dev/null) && echo "$APATH"
+APATH=$(python3 -m site --user-site 2>/dev/null) && echo "$APATH"
+}
+# find_paths | sort -u > /tmp/pyradio-uninstall.$$
+
 uninstall(){
     local user
     user=$(which pyradio 2>/dev/null) || {

@@ -31,7 +31,7 @@ class Log(object):
         if self.msg:
             self.write(self.msg)
 
-    def write(self, msg=None, suffix=None, thread_lock=None, help_msg=False):
+    def write(self, msg=None, suffix=None, thread_lock=None, help_msg=False, notify_function=None):
         if self.asked_to_stop:
             return
         """ msg may or may not be encoded """
@@ -88,6 +88,9 @@ class Log(object):
 
             if suffix_string:
                 self._write_right(suffix_string, thread_lock=thread_lock)
+
+            if notify_function:
+                notify_function()
 
     def _write_right(self, msg, thread_lock=None):
         if self.asked_to_stop:

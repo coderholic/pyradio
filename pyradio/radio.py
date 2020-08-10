@@ -344,7 +344,7 @@ class PyRadio(object):
             # git_description can be set at build time
             # if so, revision will be shown along with the version
             # if revision is not 0
-            git_description = ''
+            git_description = '0.8.7.2-10-g04922a0'
             if git_description:
                 if git_description == 'not_from_git':
                     if logger.isEnabledFor(logging.INFO):
@@ -681,7 +681,7 @@ class PyRadio(object):
             self._register_windows_handlers()
 
             # start update detection and notification thread
-            if CAN_CHECK_FOR_UPDATES and app_state == '':
+            if CAN_CHECK_FOR_UPDATES:
                 if self._cnf.locked:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('(detectUpdateThread): session locked. Not starting!!!')
@@ -2621,11 +2621,20 @@ class PyRadio(object):
                     return
 
         def to_ver(this_version):
-            a_v = this_version.replace('-r', '.')
+            a_v = this_version.replace('-', '.').lower()
             a_l = a_v.split('.')
             a_n_l = []
             for n in a_l:
-                a_n_l.append(int(n))
+                if 'beta' in n:
+                    a_n_l.append(-20-int(a_l[-1].replace('beta', '')))
+                elif 'rc' in n:
+                    a_n_l.append(-10-int(a_l[-1].replace('rc', '')))
+                elif 'r' in n:
+                    a_n_l.append(-30-int(a_l[-1].replace('r', '')))
+                else:
+                    a_n_l.append(int(n))
+            if len(a_n_l) != 4:
+                a_n_l.append(0)
             return a_n_l
 
         def clean_date_files(files, start=0):
@@ -2645,14 +2654,29 @@ class PyRadio(object):
             except:
                 pass
 
+        def to_time(secs):
+            if secs < 60:
+                return secs
+            hour = int(secs/60)
+            min =  secs%60
+            return str(hour) + ':' + str(min)
+
         check_days = 10
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('detectUpdateThread: starting...')
         ##################
         #delay(5, stop)
-        from pyradio import version as this_version
+        from pyradio import version as my_version, app_state as my_app_state
+        if my_app_state=='':
+            this_version=my_version
+        else:
+            this_version=my_version+'-'+my_app_state
+        logger.error('DE *** this_version = ' + this_version)
         connection_fail_count = 0
-        delay(random.randint(25, 45), stop)
+        ran=random.randint(25, 45)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('detectUpdateThread: will check in {} seconds'.format(ran))
+        delay(ran, stop)
         if stop():
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('detectUpdateThread: Asked to stop. Stoping...')
@@ -2669,10 +2693,9 @@ class PyRadio(object):
             d2 = datetime.strptime(a_date, '%Y-%m-%d')
             delta = (d1 - d2).days
 
-            if delta >= check_days:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('detectUpdateThread: checking for updates')
-            else:
+            # PROGRAM DEBUG: Uncomment this to force check
+            delta=check_days
+            if delta < check_days:
                 clean_date_files(files)
                 if logger.isEnabledFor(logging.DEBUG):
                     if check_days - delta == 1:
@@ -2681,6 +2704,8 @@ class PyRadio(object):
                         logger.debug('detectUpdateThread: Will check again in {} days...'.format(check_days - delta))
                 return
 
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('detectUpdateThread: checking for updates')
         url = 'https://api.github.com/repos/coderholic/pyradio/tags'
         while True:
             if stop():
@@ -2707,7 +2732,9 @@ class PyRadio(object):
                 connection_fail_count = 0
                 x = str(last_tag).split('"name":"')
                 last_tag = x[1].split('"')[0]
-                #last_tag = '0.9.9'
+                # PROGRAM DEBUG: set last github tag's version
+                # to check display functionality
+                last_tag = '0.8.8-RC1'
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: Upstream version found: {}'.format(last_tag))
                 if this_version == last_tag:
@@ -2717,8 +2744,12 @@ class PyRadio(object):
                         logger.debug('detectUpdateThread: No update found. Will check again in {} days. Exiting...'.format(check_days))
                     break
                 else:
+                    # PROGRAM DEBUG: set program's version
+                    # to check display functionality
+                    #this_version='0.8.8-RC1'
                     existing_version = to_ver(this_version)
                     new_version = to_ver(last_tag)
+                    logger.error('DE exist = {0}, new = {1}'.format(existing_version, new_version))
                     if existing_version < new_version:
                         if stop():
                             if logger.isEnabledFor(logging.DEBUG):
@@ -2727,8 +2758,11 @@ class PyRadio(object):
                         # remove all existing date files
                         clean_date_files(files, -1)
                         ############
+                        ran=random.randint(120, 300)
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('detectUpdateThread: will send notification in {} minutes'.format(to_time(ran)))
                         #delay(5 , stop)
-                        delay(random.randint(120, 300), stop)
+                        delay(ran, stop)
                         if stop():
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('detectUpdateThread: Asked to stop. Stoping...')
@@ -2737,6 +2771,8 @@ class PyRadio(object):
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('detectUpdateThread: Update available: {}'.format(last_tag))
                         a_lock.acquire()
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('notification sent!!!')
                         self._update_version = last_tag
                         a_lock.release()
                         while True:
