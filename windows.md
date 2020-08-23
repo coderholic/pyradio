@@ -92,23 +92,15 @@ Go to [MPlayer's home](http://www.mplayerhq.hu/) and open the [download](http://
 
 **Note:** I am stating here all the links, although all one has to do is get to the last one and download the **MPlayer setup**. This is done so that in case any of the links change in the future, the way to go will be known, having [MPlayer's home page](http://www.mplayerhq.hu/) as a starting point.
 
-You will end up downloading a **7z archive**, which contains a directory whose name is similar to **MPlayer-corei7-r38135+gb272d5b9b6**.
+You will end up downloading a [7z archive](https://www.7-zip.org/), which contains a directory whose name is similar to **MPlayer-corei7-r38135+gb272d5b9b6**.
+
+**Note:** *MPlayer* provides CPU type dependent builds. In case you select the wrong *mplayer* build, you will end up connecting to stations but having no sound. If this is the case, please do go back to the download page and get the right build for your system / CPU.
 
 Extract this directory to whatever place you like and **rename** it to **mplayer**.
 
 Here comes the tricky part...
 
-In case you:
-
-a. are the Administrator of the PC, or
-
-b. have administrative rights
-
-move (cut) the **mplayer** directory to **C:\\** (paste).
-
-Make a note that you will add "**C:\\mplayer**" to PATH.
-
-In any other case, move the **mplayer** directory to either on of the following locations:
+Move the **mplayer** directory to either on of the following locations:
 
 a. **%USERPROFILE%**
 
@@ -135,11 +127,11 @@ If you are unsure on how to do that, please refer to the following image (you ca
 
 The final step is to add MPlayer to the PATH System Variable.
 
-Now, you already know the string that has to be added (you have made a note of it in the previous step).
+Now, you already know the **path string** that has to be added (you have made a note of it in the previous step).
 
 There's just one thing to say here: Windows provide a "*User variable for User*" and a "*System variables*" section in the "*Environment Variables*" window.
 
-If the string to add is "**C:\\mplayer**", you add it to the "*System variables*" section, otherwise to the "*User variables for User*" section.
+Add the **path string** to the "*User variables for User*" section.
 
 In order to make the actual addition, please refer to the following image.
 
@@ -159,7 +151,6 @@ Usage:   mplayer [options] [url|path/]filename
 ```
 
 If **mplayer** was not found, you just have to go through the PATH modification procedure again.
-
 
 ### 3. Git installation (optional)
 

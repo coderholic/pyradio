@@ -344,7 +344,7 @@ class PyRadio(object):
             # git_description can be set at build time
             # if so, revision will be shown along with the version
             # if revision is not 0
-            git_description = '0.8.7.2-10-g04922a0'
+            git_description = ''
             if git_description:
                 if git_description == 'not_from_git':
                     if logger.isEnabledFor(logging.INFO):
@@ -3701,7 +3701,7 @@ class PyRadio(object):
 
                 #logger.error('DE is_register = {}'.format(self._cnf.is_register))
                 #logger.error('DE open_playlist = {}'.format(self._cnf._open_register_list))
-                logger.error('DE selections = {}'.format(self.selections[1]))
+                logger.error('DE \ncommon\n\nselections = {}'.format(self.selections[1]))
                 #logger.error('DE selection = {}'.format(self.selection))
                 #logger.error('DE history = {}'.format(self._cnf._ps._p))
                 if open_file:
@@ -4696,6 +4696,7 @@ class PyRadio(object):
         base_old_file = os.path.basename(old_file)
         if base_old_file.startswith('register_'):
             # work on registers
+            self.selections[self.ws.REGISTER_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
             if not copy:
                 self._find_renamed_selection(self.ws.REGISTER_MODE,
                                              self._cnf.registers_dir,

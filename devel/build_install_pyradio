@@ -1,5 +1,5 @@
 #!/bin/bash
-help(){
+function help(){
 if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
     echo "Usage: $0 [2/3/-u]"
 else
@@ -28,59 +28,67 @@ Checking python availability:"
 }
 
 function find_paths(){
-python -c 'import site
-for n in site.getsitepackages():
-    print(n)' 2>/dev/null
-python2 -c 'import site
-for n in site.getsitepackages():
-    print(n)' 2>/dev/null
-python3 -c 'import site
-for n in site.getsitepackages():
-    print(n)' 2>/dev/null
+local APATH
+python devel/site.py 2>/dev/null
+python2 devel/site.py 2>/dev/null
+python3 devel/site.py 2>/dev/null
 APATH=$(python -m site --user-site 2>/dev/null) && echo "$APATH"
 APATH=$(python2 -m site --user-site 2>/dev/null) && echo "$APATH"
 APATH=$(python3 -m site --user-site 2>/dev/null) && echo "$APATH"
 }
-# find_paths | sort -u > /tmp/pyradio-uninstall.$$
 
-uninstall(){
+function remove_paths(){
+find_paths | sort -u > /tmp/pyradio-uninstall.$$
+while read line;do
+    [ -d "$line" ] && {
+    sudo find "$line" -type d -name "pyradio*egg" >> /tmp/pyradio-delete.$$
+    }
+done < /tmp/pyradio-uninstall.$$
+while read line;do
+    [ -d "$line" ] && {
+        echo -n "** Removing \"$(basename $line)\" ... "
+        sudo rm -rf "$line"
+        echo done
+    }
+done < /tmp/pyradio-delete.$$
+rm -f /tmp/pyradio-uninstall.$$ /tmp/pyradio-delete.$$ 2>/dev/null
+}
+
+function uninstall(){
     local user
     user=$(which pyradio 2>/dev/null) || {
         echo "PyRadio is not installed..."
         exit
     }
+    echo 'Uninstalling PyRadio'
     user=$(which pyradio | grep '\.local')
     [ -z "$user" ] && {
+        echo -n '** Removing executable ... '
         sudo rm -f `which pyradio` 2>/dev/null
         if [ -d /usr/share/doc/pyradio ];then
             sudo rm -rf /usr/share/doc/pyradio 2>/dev/null
         else
             sudo rm -rf /usr/local/share/doc/pyradio 2>/dev/null
         fi
+        echo done
+        echo -n '** Removing help files ... '
         sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio.1.gz 2>/dev/null
+        echo done
     } || {
+        echo -n '** Removing executable ... '
         rm -f `which pyradio` 2>/dev/null
+        echo done
+        echo -n '** Removing help files ... '
         if [ -d ~/.local/share/doc/pyradio ];then
             rm -rf ~/.local/share/doc/pyradio 2>/dev/null
         else
             rm -rf ~/.local/local/share/doc/pyradio 2>/dev/null
         fi
         rm -f ~/.local/share/man/man1/pyradio.1.gz 2>/dev/null
+        echo done
     }
 #set -x
-    [ -e ~/.config/pyradio/installed ] && . ~/.config/pyradio/installed && rm -f ~/.config/pyradio/installed 2>/dev/null
-    if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
-        for n in /Library/Python
-        do
-            sudo rm -rf ${n}/*/site-packages/pyradio-*egg 2>/dev/null
-        done
-        echo
-    else
-        for n in /usr/lib/python /usr/local/lib/python ~/.local/lib/python
-        do
-            sudo rm -rf ${n}*/site-packages/pyradio-*egg 2>/dev/null
-        done
-    fi
+    remove_paths
     echo "PyRadio successfully uninstalled"
 }
 
@@ -235,10 +243,3 @@ python"${TO_PYTHON}" setup.py build && {
 }
 rm sed.$$ 2>/dev/null
 
-grep Installed installed | sed \
-    -e 's/Installed/sudo rm -rf/' \
-    -e 's{pyradio.*egg{pyradio* 2>/dev/null{' > filtered_installed
-mkdir -p ~/.config/pyradio
-mv filtered_installed ~/.config/pyradio/installed
-rm installed
-    
