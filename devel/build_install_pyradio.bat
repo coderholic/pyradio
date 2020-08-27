@@ -2,6 +2,17 @@
 set arg1=%1
 set PROGRAM=python
 if "%1"=="-h" goto :displayhelp
+
+REM Check if we have admin rights
+net session >nul 2>&1
+if NOT %errorLevel% == 0 (
+    echo.
+    echo Error: You must have Administrative permissions to run this script.
+    echo        Please start cmd "As Administrator"
+    echo.
+    goto :endofscript
+)
+
 if "%1"=="--help" goto :displayhelp
 if "%1"=="-u" goto :uninstall
 if "%1"=="" goto :noparam
@@ -133,10 +144,11 @@ goto :endofscript
 
 
 :uninstall
+echo === Gathering information...
 DEL pyremove.bat 2>nul
-echo ** Removing executable...
+echo echo === Removing executable... >>pyremove.bat
 python devel\site.py exe 2>nul >>pyremove.bat
-echo ** Removing Python files...
+echo echo === Removing Python files... >>pyremove.bat
 python devel\site.py 2>nul >dirs
 python2 devel\site.py 2>nul >>dirs
 python3 devel\site.py 2>nul >>dirs
@@ -145,11 +157,24 @@ python2 -m site --user-site 2>nul >>dirs
 python3 -m site --user-site 2>nul >>dirs
 python devel\windirs.py
 echo DEL dirs >>pyremove.bat
+echo echo === Removing Desktop shortcut... >>pyremove.bat
+echo IF EXIST "%DESKTOP%\PyRadio.lnk" DEL "%DESKTOP%\PyRadio.lnk" 2>nul >>pyremove.bat
 
+echo echo. >>pyremove.bat
+echo echo ********************************************************** >>pyremove.bat
+echo echo * >>pyremove.bat
+echo echo * Pyradio successfully uninstalled! >>pyremove.bat
+echo echo * >>pyremove.bat
+echo echo * PyRadio has not uninstalled MPlayer, Python and/or Git. >>pyremove.bat
+echo echo * You will have to manually uninstall them. >>pyremove.bat
+echo echo * >>pyremove.bat
+echo echo * PyRadio user files are left instact. You can find them >>pyremove.bat
+echo echo * at %APPDATA%\pyradio >>pyremove.bat
+echo echo * >>pyremove.bat
+echo echo ********************************************************** >>pyremove.bat
+echo echo. >>pyremove.bat
 REM copy pyremove.bat con
 REM pause
-echo ** Removing Desktop shortcut...
-DEL %DESKTOP%\PyRadio.lnk 2>nul
 
 REM IF EXIST %APPDATA%\pyradio\mplayer (
 REM echo **********************************************************
@@ -163,23 +188,7 @@ REM ) ELSE (
 REM echo ** Removing user files...
 REM RD /S /Q %APPDATA%\pyradio
 REM )
-echo.
-echo **********************************************************
-echo *
-echo * Pyradio successfully uninstalled!
-echo *
-echo * PyRadio has not uninstalled MPlayer, Python and/or
-echo * Git. You will have to manually uninstall them.
-echo *
-echo * PyRadio user files are left instact. You can find
-echo * them at %APPDATA%\pyradio
-echo *
-echo * You can now safely delete this directory as well
-echo *
-echo **********************************************************
-echo.
 pyremove.bat
-goto :endofscript
 
 :endofscript
 

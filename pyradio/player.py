@@ -4,7 +4,7 @@ import threading
 import os
 import logging
 from os.path import expanduser
-from sys import platform, version_info
+from sys import platform, version_info, platform
 from sys import exit
 from time import sleep
 import collections
@@ -19,6 +19,83 @@ from .cjkwrap import wrap
 from .encodings import get_encodings
 
 logger = logging.getLogger(__name__)
+
+try:  # Forced testing
+    from shutil import which
+    def pywhich (cmd):
+        pr = which(cmd)
+        if pr:
+            return pr
+        else:
+            return None
+except ImportError:  # Forced testing
+    # Versions prior to Python 3.3 don't have shutil.which
+
+    def pywhich (cmd, mode=os.F_OK | os.X_OK, path=None):
+        """Given a command, mode, and a PATH string, return the path which
+        conforms to the given mode on the PATH, or None if there is no such
+        file.
+        `mode` defaults to os.F_OK | os.X_OK. `path` defaults to the result
+        of os.environ.get("PATH"), or can be overridden with a custom search
+        path.
+        Note: This function was backported from the Python 3 source code.
+        """
+        # Check that a given file can be accessed with the correct mode.
+        # Additionally check that `file` is not a directory, as on Windows
+        # directories pass the os.access check.
+
+        def _access_check(fn, mode):
+            return os.path.exists(fn) and os.access(fn, mode) and not os.path.isdir(fn)
+
+        # If we're given a path with a directory part, look it up directly
+        # rather than referring to PATH directories. This includes checking
+        # relative to the current directory, e.g. ./script
+        if os.path.dirname(cmd):
+            if _access_check(cmd, mode):
+                return cmd
+
+            return None
+
+        if path is None:
+            path = os.environ.get("PATH", os.defpath)
+        if not path:
+            return None
+
+        path = path.split(os.pathsep)
+
+        if platform == "win32":
+            # The current directory takes precedence on Windows.
+            if os.curdir not in path:
+                path.insert(0, os.curdir)
+
+            # PATHEXT is necessary to check on Windows.
+            pathext = os.environ.get("PATHEXT", "").split(os.pathsep)
+            # See if the given file matches any of the expected path
+            # extensions. This will allow us to short circuit when given
+            # "python.exe". If it does match, only test that one, otherwise we
+            # have to try others.
+            if any(cmd.lower().endswith(ext.lower()) for ext in pathext):
+                files = [cmd]
+            else:
+                files = [cmd + ext for ext in pathext]
+        else:
+            # On other platforms you don't have things like PATHEXT to tell you
+            # what file suffixes are executable, so just pass on cmd as-is.
+            files = [cmd]
+
+        seen = set()
+        for dir in path:
+            normdir = os.path.normcase(dir)
+            if normdir not in seen:
+                seen.add(normdir)
+                for thefile in files:
+                    name = os.path.join(dir, thefile)
+                    if _access_check(name, mode):
+                        return name
+
+        return None
+
+
 
 class Player(object):
     """ Media player class. Playing is handled by player sub classes """
@@ -955,47 +1032,52 @@ class MpvPlayer(Player):
     """Implementation of Player object for MPV"""
 
     PLAYER_CMD = "mpv"
-
-    """ items of this tupple are considered icy-title
-        and get displayed after first icy-title is received """
-    icy_tokens = ('icy-title: ', )
-
-    icy_audio_tokens = {}
-
-    """ USE_PROFILE
-    -1 : not checked yet
-     0 : do not use
-     1 : use profile"""
-    USE_PROFILE = -1
-
-    """ True if profile comes from ~/.config/mpv/mpv.conf """
-    PROFILE_FROM_USER = False
-
-    """ String to denote volume change """
-    volume_string = 'Volume: '
-    config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
-
-    if platform.startswith('darwin'):
-        config_files.append("/usr/local/etc/mpv/mpv.conf")
-    elif platform.startswith('win'):
-        config_files[0] = os.path.join(os.getenv('APPDATA'), "mpv", "mpv.conf")
+    if pywhich(PLAYER_CMD):
+        executable_found = True
     else:
-        # linux, freebsd, etc.
-        config_files.append("/etc/mpv/mpv.conf")
+        executable_found = False
 
-    mpvsocket = '/tmp/mpvsocket.{}'.format(os.getpid())
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug('mpv socket is "{}"'.format(self.mpvsocket))
-    if os.path.exists(mpvsocket):
-        os.system("rm " + mpvsocket + " 2>/dev/null");
+    if executable_found:
+        """ items of this tupple are considered icy-title
+            and get displayed after first icy-title is received """
+        icy_tokens = ('icy-title: ', )
 
-    commands = {
-            'volume_up':   b'{ "command": ["cycle", "volume", "up"], "request_id": 1000 }\n',
-            'volume_down': b'{ "command": ["cycle", "volume", "down"], "request_id": 1001 }\n',
-            'mute':        b'{ "command": ["cycle", "mute"], "request_id": 1002 }\n',
-            'pause':       b'{ "command": ["pause"], "request_id": 1003 }\n',
-            'quit':        b'{ "command": ["quit"], "request_id": 1004}\n',
-            }
+        icy_audio_tokens = {}
+
+        """ USE_PROFILE
+        -1 : not checked yet
+         0 : do not use
+         1 : use profile"""
+        USE_PROFILE = -1
+
+        """ True if profile comes from ~/.config/mpv/mpv.conf """
+        PROFILE_FROM_USER = False
+
+        """ String to denote volume change """
+        volume_string = 'Volume: '
+        config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
+
+        if platform.startswith('darwin'):
+            config_files.append("/usr/local/etc/mpv/mpv.conf")
+        elif platform.startswith('win'):
+            config_files[0] = os.path.join(os.getenv('APPDATA'), "mpv", "mpv.conf")
+        else:
+            # linux, freebsd, etc.
+            config_files.append("/etc/mpv/mpv.conf")
+
+        mpvsocket = '/tmp/mpvsocket.{}'.format(os.getpid())
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('mpv socket is "{}"'.format(self.mpvsocket))
+        if os.path.exists(mpvsocket):
+            os.system("rm " + mpvsocket + " 2>/dev/null");
+
+        commands = {
+                'volume_up':   b'{ "command": ["cycle", "volume", "up"], "request_id": 1000 }\n',
+                'volume_down': b'{ "command": ["cycle", "volume", "down"], "request_id": 1001 }\n',
+                'mute':        b'{ "command": ["cycle", "mute"], "request_id": 1002 }\n',
+                'pause':       b'{ "command": ["pause"], "request_id": 1003 }\n',
+                'quit':        b'{ "command": ["quit"], "request_id": 1004}\n',
+                }
 
     def save_volume(self):
         """ Saving Volume in Windows does not work;
@@ -1277,48 +1359,53 @@ class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
 
     PLAYER_CMD = "mplayer"
-
-    """ items of this tupple are considered icy-title
-        and get displayed after first icy-title is received """
-    icy_tokens = ('ICY Info:', )
-
-    # 'audio-data' comes from playback start
-    icy_audio_tokens = {
-            'Name   : ': 'icy-name',
-            'Genre  : ': 'icy-genre',
-            'Website: ': 'icy-url',
-            'Bitrate: ': 'icy-br',
-            'Opening audio decoder: ': 'codec',
-            }
-
-
-    """ USE_PROFILE
-    -1 : not checked yet
-     0 : do not use
-     1 : use profile"""
-    USE_PROFILE = -1
-
-    """ True if profile comes from ~/.mplayer/config """
-    PROFILE_FROM_USER = False
-
-    """ String to denote volume change """
-    volume_string = 'Volume: '
-
-    config_files = [expanduser("~") + "/.mplayer/config"]
-    if platform.startswith('darwin'):
-        config_files.append("/usr/local/etc/mplayer/mplayer.conf")
-    elif platform.startswith('win'):
-        if os.path.exists('C:\\mplayer\\mplayer.exe'):
-            config_files[0] = 'C:\\mplayer\mplayer\\config'
-        elif os.path.exists(os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
-            config_files[0] = os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer", "config")
-        elif os.path.exists(os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer.exe")):
-            config_files[0] = os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer", "config")
-        else:
-            config_files = []
+    if pywhich(PLAYER_CMD):
+        executable_found = True
     else:
-        # linux, freebsd, etc.
-        config_files.append("/etc/mplayer/mplayer.conf")
+        executable_found = False
+
+    if executable_found:
+        """ items of this tupple are considered icy-title
+            and get displayed after first icy-title is received """
+        icy_tokens = ('ICY Info:', )
+
+        # 'audio-data' comes from playback start
+        icy_audio_tokens = {
+                'Name   : ': 'icy-name',
+                'Genre  : ': 'icy-genre',
+                'Website: ': 'icy-url',
+                'Bitrate: ': 'icy-br',
+                'Opening audio decoder: ': 'codec',
+                }
+
+
+        """ USE_PROFILE
+        -1 : not checked yet
+         0 : do not use
+         1 : use profile"""
+        USE_PROFILE = -1
+
+        """ True if profile comes from ~/.mplayer/config """
+        PROFILE_FROM_USER = False
+
+        """ String to denote volume change """
+        volume_string = 'Volume: '
+
+        config_files = [expanduser("~") + "/.mplayer/config"]
+        if platform.startswith('darwin'):
+            config_files.append("/usr/local/etc/mplayer/mplayer.conf")
+        elif platform.startswith('win'):
+            if os.path.exists('C:\\mplayer\\mplayer.exe'):
+                config_files[0] = 'C:\\mplayer\mplayer\\config'
+            elif os.path.exists(os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
+                config_files[0] = os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer", "config")
+            elif os.path.exists(os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer.exe")):
+                config_files[0] = os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer", "config")
+            else:
+                config_files = []
+        else:
+            # linux, freebsd, etc.
+            config_files.append("/etc/mplayer/mplayer.conf")
 
     def save_volume(self):
         if platform.startswith('win'):
@@ -1409,31 +1496,36 @@ class VlcPlayer(Player):
     """Implementation of Player for VLC"""
 
     PLAYER_CMD = "cvlc"
+    if pywhich(PLAYER_CMD):
+        executable_found = True
+    else:
+        executable_found = False
 
-    """ items of this tupple are considered icy-title
-        and get displayed after first icy-title is received """
-    icy_tokens = ('New Icy-Title=', )
+    if executable_found:
+        """ items of this tupple are considered icy-title
+            and get displayed after first icy-title is received """
+        icy_tokens = ('New Icy-Title=', )
 
-    icy_audio_tokens = {
-            'Icy-Name: ': 'icy-name',
-            'Icy-Genre: ': 'icy-genre',
-            'icy-url: ': 'icy-url',
-            'icy-br: ': 'icy-br',
-            'format: ': 'audio_format',
-            'using audio decoder module ': 'codec-name',
-            }
+        icy_audio_tokens = {
+                'Icy-Name: ': 'icy-name',
+                'Icy-Genre: ': 'icy-genre',
+                'icy-url: ': 'icy-url',
+                'icy-br: ': 'icy-br',
+                'format: ': 'audio_format',
+                'using audio decoder module ': 'codec-name',
+                }
 
-    muted = False
+        muted = False
 
-    """ String to denote volume change """
-    volume_string = '( audio volume: '
+        """ String to denote volume change """
+        volume_string = '( audio volume: '
 
-    """ vlc reports volume in values 0..512 """
-    actual_volume = -1
-    max_volume = 512
+        """ vlc reports volume in values 0..512 """
+        actual_volume = -1
+        max_volume = 512
 
-    """ When found in station transmission, playback is on """
-    _playback_token_tuple = ('Content-Type: audio', )
+        """ When found in station transmission, playback is on """
+        _playback_token_tuple = ('Content-Type: audio', )
 
     def save_volume(self):
         pass

@@ -29,6 +29,10 @@ Checking python availability:"
 
 function find_paths(){
 local APATH
+# Fix for MacOs Catalina python 3
+if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
+    echo /usr/local/lib
+fi
 python devel/site.py 2>/dev/null
 python2 devel/site.py 2>/dev/null
 python3 devel/site.py 2>/dev/null

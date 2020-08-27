@@ -61,6 +61,7 @@ def is_ascii(s):
     return all(ord(c) < 128 for c in s)
 
 class PyRadio(object):
+    player = None
     ws = Window_Stack()
 
     _redisplay_list = []
@@ -481,13 +482,24 @@ class PyRadio(object):
                     the "help" directory.'''
             else:
                 if self.requested_player:
-                    txt = """PyRadio is not able to use the player you specified.
+                    if self.requested_player in ('mpv', 'mplayer', 'vlc', 'cvlc'):
+                        atxt = """PyRadio is not able to use the player you specified.
 
-                    This means that either this particular player is not supported
-                    by PyRadio, or that you have simply misspelled its name.
+                        This player ({}) is supported by PyRadio, but it probably
+                        is not installed in your system.
 
-                    PyRadio currently supports three players: mpv, mplayer and vlc,
-                    automatically detected in this order."""
+                        Keep in mind that you can choose a player to use by specifying
+                        the "-u" command line parameter."""
+                        txt = atxt.format(self.requested_player)
+
+                    else:
+                        txt = """PyRadio is not able to use the player you specified.
+
+                        This means that either this particular player is not supported
+                        by PyRadio, or that you have simply misspelled its name.
+
+                        PyRadio currently supports three players: mpv, mplayer and vlc,
+                        automatically detected in this order."""
                 else:
                     txt = """PyRadio is not able to detect any players.
 
@@ -1017,9 +1029,10 @@ class PyRadio(object):
         return num_of_playlists, playing
 
     def _format_player_string(self):
-        if self.player.PLAYER_CMD == 'cvlc':
-            return 'vlc'
-        return self.player.PLAYER_CMD
+        if self.player:
+            if self.player.PLAYER_CMD == 'cvlc':
+                return 'vlc'
+            return self.player.PLAYER_CMD
 
     def _show_theme_selector_from_config(self):
         self._theme_name = self._config_win._config_options['theme'][1]
