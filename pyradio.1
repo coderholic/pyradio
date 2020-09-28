@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH PYRADIO 1 "January 2020"
+.TH PYRADIO 1 "September 2020"
 
 .SH NAME
 .PP
@@ -595,13 +595,14 @@ The visual result of an applied theme greatly depends on the terminal settings (
 Pressing "\fBt\fR" will bring up the \fITheme selection window\fR, which can be used to activate a theme and set the default one.
 
 .IP \fBNote\fR
-Themes that use more colors than those supported by the terminal in use, will not be present in the \fITheme selection window\fR. Furthermore, if a such a theme is set as default (or requested using the "\fB-t\fR" command line option), \fBpyradio\fR will silently fall-back to the "\fBdark\fR" theme. (or the "\fBlight\fR" theme, if the terminal supports 8 colors and default theme is set to "\fIlight_16_colors\fR").
+Themes that use more colors than those supported by the terminal in use, will not be present in the \fITheme selection window\fR. Furthermore, if a such a theme is set as default (or requested using the "\fB-t\fR" command line option), \fBpyradio\fR will fall-back to the "\fBdark\fR" theme, (or the "\fBlight\fR" theme, if the terminal supports 8 colors and default theme is set to "\fIlight_16_colors\fR"), and will display a relevant messages at program startup.
 
 .PP
 The \fITheme selection window\fR will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "\fBq\fR" or any other relevant key - pressing "\fB?\fR" will bring up its help).
 
 The use of custom themes and theme editing is not implemented yet; theses are features for future releases.
 
+.PP
 \fBUSING TRANSPARENCY\fR
 
 \fBpyradio\fR themes are able to be used with a transparent background.
@@ -665,6 +666,24 @@ As we see, previous versions still exist in this system: \fB0.7.6.2\fR and \fB0.
 \fI$ \fBsudo rm -rf /usr/lib/python3.7/site-packages/pyradio-\fI0.7.6.2\fB-py3.7.egg
 .br
 \fI$ \fBsudo rm -rf /usr/lib/python3.7/site-packages/pyradio-\fI0.7.7\fB-py3.7.egg
+
+
+.IP \fBNote:
+Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; \fBpyradio\fR will search and remove any previously installed files when the "\fB-u\fR" (uninstall) parameter is used.
+
+Example:
+
+    \fI$ \fBdevel/build_install_pyradio -u\fI
+    Uninstalling PyRadio
+    ** Removing executable ... done
+    ** Removing help files ... done
+    Looking for python installed files
+    ** Removing "pyradio-\fB0.8.8-py3.8\fI.egg" ... done
+    ** Removing "pyradio-\fB0.8.6-py2.7\fI.egg" ... done
+    ** Removing "pyradio-\fB0.8.8-py3.8\fI.egg" ... done
+    PyRadio successfully uninstalled\fR
+
+In this example, running \fIdevel/build_install_pyradio -u\fR has removed \fBpyradio\fR python 3.8 system wide installation files, \fBpyradio\fR python 2.7 system wide installation files,  and \fBpyradio\fR python 3.8 user installation files, found in the system.
 
 .SH DEBUG MODE
 .PP

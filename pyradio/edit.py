@@ -5,6 +5,7 @@ from time import sleep
 import logging
 from sys import version_info
 from os import path, remove
+from string import punctuation as string_punctuation
 try:
     # python 3
     from urllib.parse import urlparse
@@ -593,6 +594,7 @@ class PyRadioRenameFile(object):
     """ PyRadio copy file dialog """
 
     def __init__(self, filename, parent, create=False, open_afterwards=True, title='', opened_from_editor = False):
+        self._invalid_chars = '<>|:"\\/?*'
         self.maxY = self.maxX = 0
         self._win = self._parent_win = self._line_editor = None
         self._focus = 0
@@ -677,16 +679,32 @@ class PyRadioRenameFile(object):
             self.show()
 
     def _string_changed(self):
-        stripped_string = self._widgets[0].string.strip()
         self._error_string = ''
-        if stripped_string:
-            check_file = path.join(self._to_path, stripped_string + '.csv')
-            if check_file == self.filename:
-                self._error_string = 'You must be joking!!!'
-            elif path.exists(check_file):
-                self._error_string = 'File already exists!!!'
-            elif check_file.startswith('register_'):
+        first_char = ''
+        if self._widgets[0].string != '':
+            first_char = self._widgets[0].string[0]
+            if first_char in string_punctuation + ' ':
                 self._error_string = 'Invalid filename!!!'
+        stripped_string = self._widgets[0].string.strip()
+        if self._error_string == '':
+            if stripped_string:
+                check_file = path.join(self._to_path, stripped_string + '.csv')
+                if check_file == self.filename:
+                    self._error_string = 'You must be joking!!!'
+                elif path.exists(check_file):
+                    self._error_string = 'File already exists!!!'
+                elif stripped_string.startswith('register_'):
+                    self._error_string = 'Register token inserted!!!'
+                else:
+                    for inv in self._invalid_chars:
+                        if inv in stripped_string:
+                            self._error_string = 'Invalid filename!!!'
+                            logger.error('DE inv = ' + inv)
+                            break
+                    #if self._error_string == '':
+                    #    for inv in range(1, 32):
+                    #        if str(inv) in stripped_string:
+                    #            self._error_string = 'Invalid filename!!!'
         self._widgets[-2].enabled = False
         if stripped_string and self._error_string == '':
             self._widgets[-2].enabled = True
@@ -807,6 +825,11 @@ class PyRadioRenameFile(object):
                 curses.color_pair(5)
                 )
             self._win.addstr(2, 2, 'To:', curses.color_pair(4))
+            inv_tit = 'Invalid chars: '
+            inv_chars = self._invalid_chars
+            invX = self.maxX - len(inv_tit) - len(inv_chars) - 2
+            self._win.addstr(4, invX, inv_tit, curses.color_pair(4))
+            self._win.addstr(inv_chars, curses.color_pair(5))
 
         if self.maxY > 18 and self.maxX > 76:
             try:

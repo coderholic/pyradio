@@ -807,9 +807,10 @@ class PyRadioStations(object):
         return True, self.number_of_stations
 
     def registers_exist(self):
-        if glob.glob(path.join(self.registers_dir, '*.csv')):
-            return True
-        return False
+        return True if glob.glob(path.join(self.registers_dir, '*.csv')) else False
+
+    def just_read_playlists(self):
+        self.playlists = glob.glob(path.join(self.stations_dir, '*.csv'))
 
     def read_playlists(self):
         self.playlists = []
@@ -899,6 +900,18 @@ class PyRadioStations(object):
     def history_item(self, an_item=-1):
         logger.error('DE /// history_item = {}'.format(self._ps._p[an_item]))
         return self._ps._p[an_item][:]
+
+    def find_history_by_station_path(self, a_path):
+        return self._ps._find_history_by_id(a_path, 'path')
+
+    def find_history_by_station_name(self, a_name):
+        return self._ps._find_history_by_id(a_name, 'file_name')
+
+    def find_history_by_station_title(self, a_title):
+        ret, ret_index, rev_ret_index = self._ps._find_history_by_id(a_title, 'title')
+        if not ret:
+            ret, ret_index, rev_ret_index = self._ps._find_history_by_id(a_title.replace('_', ' '), 'title')
+        return ret, ret_index, rev_ret_index
 
 class PyRadioConfig(PyRadioStations):
 
@@ -1326,6 +1339,7 @@ class PyRadioPlaylistStack(object):
     _id = {'station_path': 0,
            'path': 0,
            'station_file_name': 1,
+           'file_name': 1,
            'filename': 1,
            'station_title': 2,
            'title': 2,
@@ -1462,9 +1476,11 @@ class PyRadioPlaylistStack(object):
             is_register=False,
             browsing_station_service=False):
         if len(self._p) > 1 and station_path:
-            if self._p[-2][self._id['station_path']] == station_path:
+            if self._p[-1][self._id['station_path']] == station_path:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('PyRadioPlaylistStack.add(): Refusing to add duplicate entry: "{}"'.format(station_path))
+                    logger.debug('PyRadioPlaylistStack.add(): Refusing to add duplicate entry: "{}"\nUpdating selections instead'.format(station_path))
+                    logger.debug('                            Updating selections instead')
+                self._p[-1][3:6] = [startPos, selection, playing]
                 return
         if is_register:
             while self._p[-1][self._id['is_register']]:
@@ -1482,6 +1498,27 @@ class PyRadioPlaylistStack(object):
             return self._p[item_id][self._id[member]]
         else:
             raise ValueError('member "{}" does not exist'.format(member))
+
+    def _find_history_by_id(self, a_search, it_id, start=0):
+        """ Find a history item
+
+            Parameters
+            ==========
+            a_search search term
+            it_id    one of the _id strings
+            start    return id if >0 start
+
+            Returns
+            =======
+            history item,
+            index,
+            reversed index (len - id - 1)
+        """
+        logger.error('DE looking for: ' + a_search + ' with id: ' + it_id)
+        for i, n in enumerate(self._p):
+            if (n[self._id[it_id]] == a_search) and (i >= start):
+                return n, i, len(self._p) - i - 1
+        return None, -1, -1
 
     def pop(self):
         if len(self._p) > 1:

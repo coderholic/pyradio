@@ -352,7 +352,7 @@ volume=28</pre>
 </ol>
 <p>The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)</p>
 <p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Themes that use more colors than those supported by the terminal in use, will not be present in the <em>Theme selection window</em>. Furthermore, if a such at theme is set as default (or requested using the “<strong>-t</strong>” command line option), <strong>PyRadio</strong> will silently fall-back to the “<strong>dark</strong>” theme (or the “<strong>light</strong>” theme, if the terminal supports 8 colors and default theme is set to “<em>light_16_colors</em>”).</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Themes that use more colors than those supported by the terminal in use, will not be present in the <em>Theme selection window</em>. Furthermore, if a such at theme is set as default (or requested using the “<strong>-t</strong>” command line option), <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme (or the “<strong>light</strong>” theme, if the terminal supports 8 colors and default theme is set to “<em>light_16_colors</em>”), and will display a relevant message at program startup.</p>
 <p>The <em>Theme selection window</em> will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
 <p>The use of custom themes and theme editing is not implemented yet; these are features for future releases.</p>
 <h3 id="using-transparency">Using transparency</h3>
@@ -384,6 +384,18 @@ Finished processing dependencies for pyradio==0.7.8</pre>
 <p>As we see, previous versions still exist in this system: <strong>0.7.6.2</strong> and <strong>0.7.7</strong>. These files (actually directories) can safely be removed:</p>
 <pre>$ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-.7.6.2-py3.7.egg
 $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; <strong>PyRadio</strong> will search and remove any previously installed files when the “<strong>-u</strong>” (uninstall) parameter is used.</p>
+<p>Example:</p>
+<pre>$ devel/build_install_pyradio -u
+Uninstalling PyRadio
+** Removing executable ... done
+** Removing help files ... done
+Looking for python installed files
+** Removing &quot;pyradio-0.8.8-py3.8.egg&quot; ... done
+** Removing &quot;pyradio-0.8.6-py2.7.egg&quot; ... done
+** Removing &quot;pyradio-0.8.8-py3.8.egg&quot; ... done
+PyRadio successfully uninstalled</pre>
+<p>In this example, running <em>devel/build_install_pyradio -u</em> has removed <strong>PyRadio</strong> python 3.8 system wide installation files, <strong>PyRadio</strong> python 2.7 system wide installation files, and <strong>PyRadio</strong> python 3.8 user installation files, found in the system.</p>
 <h2 id="debug-mode">Debug mode <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Adding the “<strong>-d</strong>” option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a target="_blank" href="https://github.com/coderholic/pyradio/issues">open at github</a>.</p>

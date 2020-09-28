@@ -86,9 +86,16 @@ class PyRadio(object):
     """ Used when loading new playlist.
         If the first station (selection) exists in the new playlist,
         we mark it as selected
-        If the seconf station (playing) exists in the new playlist,
+        If the second station (playing) exists in the new playlist,
         we continue playing, otherwise, we stop playback """
     active_stations = [ [ '', 0 ], [ '', -1 ] ]
+
+    """ Used when opening a station after rename.
+        If the first station (selection) exists in the new playlist,
+        we mark it as selected
+        If the second station (playing) exists in the new playlist,
+        we continue playing, otherwise, we stop playback """
+    rename_stations = [ [ '', 0 ], [ '', -1 ] ]
 
     """ Characters to be "ignored" by windows, so that certain
         functions still work (like changing volume) """
@@ -192,6 +199,7 @@ class PyRadio(object):
         self.stdscr = None
         self.requested_player = req_player
         self.number_of_items = len(self._cnf.stations)
+        self._playlist_in_editor = self._cnf.station_path
 
         """ list of functions to open for entering
             or redisplaying a mode """
@@ -2156,7 +2164,11 @@ class PyRadio(object):
                 is_message=True)
 
 
-    def _align_stations_and_refresh(self, cur_mode, a_startPos=-1, a_selection=-1):
+    def _align_stations_and_refresh(self,
+                                    cur_mode,
+                                    a_startPos=-1,
+                                    a_selection=-1,
+                                    force_scan_playlist=False):
         need_to_scan_playlist = False
         """ refresh reference """
         self.stations = self._cnf.stations
@@ -2193,7 +2205,7 @@ class PyRadio(object):
                 if self.startPos < 0:
                     self.startPos = 0
             else:
-                if self.player.isPlaying():
+                if not force_scan_playlist and self.player.isPlaying():
                     """ The playlist is not empty """
                     if self.playing > self.number_of_items - 1 or self._cnf.is_register:
                         """ Previous playing station is now invalid
@@ -2307,6 +2319,7 @@ class PyRadio(object):
                 self._cnf.browsing_station_service = False
         elif self._cnf.register_to_open:
             # open a register
+            self._playlist_in_editor = self._cnf.register_to_open
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('opening register: ' + self._cnf.register_to_open)
             self._playlist_error_message = ''
@@ -2364,7 +2377,10 @@ class PyRadio(object):
                 self.refreshBody()
         self.ll('_open_playlist(): returning')
 
-    def _open_playlist_from_history(self, reset=False, list_of_registers=False):
+    def _open_playlist_from_history(self,
+                                    reset=False,
+                                    list_of_registers=False,
+                                    from_rename_action=False):
         """Loads a playlist from history
 
         Parameters
@@ -2377,6 +2393,8 @@ class PyRadio(object):
                 If False, a playlist is loaded and displayed.
                 If True, the list of registers is opened.
                 Default is False.
+            from_rename_action
+                If True, do not update self.active_stations
 
         Returns
         -------
@@ -2387,6 +2405,8 @@ class PyRadio(object):
             False: We do not need resize
         """
 
+        logger.error('\n\n\n')
+        logger.error('\n\nDE =1= ps.p {}\n\n'.format(self._cnf._ps._p))
         result = True
         if not self._cnf.can_go_back_in_time and not list_of_registers:
             self._show_no_more_playlist_history()
@@ -2394,20 +2414,28 @@ class PyRadio(object):
         if result:
             playlist_history = self._cnf.copy_playlist_history()
             #logger.error('DE playlist_history\n\n{}\n\n'.format(playlist_history))
-            self._set_active_stations()
+            if not from_rename_action:
+                self._set_active_stations()
             if reset:
                 self._cnf.reset_playlist_history()
             if list_of_registers:
                 self._cnf.pop_to_first_real_playlist()
                 removed_playlist_history_item = self._cnf.history_item(-1)
             else:
-                removed_playlist_history_item = self._cnf.remove_from_playlist_history()
+                if from_rename_action:
+                    removed_playlist_history_item = self._cnf.history_item(-1)
+                else:
+                    removed_playlist_history_item = self._cnf.remove_from_playlist_history()
             err_string = '"|{}|"'.format(self._cnf.station_title)
 
             #logger.error('DE {}'.format(self._cnf._ps._p))
 
+            logger.error('\n\nDE =2= ps.p {}\n\n'.format(self._cnf._ps._p))
 
+            logger.error('DE \nself._cnf.station_path = {}\n'.format(self._cnf.station_path))
             ret = self._cnf.read_playlist_file(stationFile=self._cnf.station_path)
+            logger.error('DE \nret = {}\n'.format(ret))
+            logger.error('\n\n\n')
 
             if ret == -1:
                 #self.stations = self._cnf.playlists
@@ -2462,6 +2490,7 @@ class PyRadio(object):
                 self._print_playlist_recovery_error()
                 result = False
             else:
+                self._playlist_in_editor = self._cnf.station_path
                 self._playlist_error_message = ''
                 self.number_of_items = ret
                 if removed_playlist_history_item[-1]:
@@ -2481,7 +2510,8 @@ class PyRadio(object):
                 self.stations = self._cnf.stations
                 self._align_stations_and_refresh(self.ws.PLAYLIST_MODE,
                         a_startPos=self.startPos,
-                        a_selection=self.selection)
+                        a_selection=self.selection,
+                        force_scan_playlist=from_rename_action)
                 if self.playing < 0:
                     self._put_selection_in_the_middle(force=True)
                     self.refreshBody()
@@ -2549,6 +2579,24 @@ class PyRadio(object):
                             [ '', self.selection ],
                             [ '', -1 ] ]
         #logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
+
+    def _set_rename_stations(self):
+        if self.stations:
+            if self.player.isPlaying():
+                self.rename_stations = [
+                        [ self.stations[self.selection][0], self.selection ],
+                        [ self.stations[self.playing][0], self.playing ]
+                        ]
+            else:
+                if self.number_of_items > 0:
+                    self.rename_stations = [
+                            [ self.stations[self.selection][0], self.selection ],
+                            [ '', -1 ] ]
+                else:
+                    self.rename_stations = [
+                            [ '', self.selection ],
+                            [ '', -1 ] ]
+        #logger.error('DE rename_stations = \n\n{}\n\n'.format(self.rename_stations))
 
     def get_active_encoding(self, an_encoding):
         if an_encoding:
@@ -3118,6 +3166,7 @@ class PyRadio(object):
                 self._cnf.register_to_open = chr(char).lower()
             else:
                 return
+            self._set_rename_stations()
             self._check_to_open_playlist()
             return
         #
@@ -3141,6 +3190,8 @@ class PyRadio(object):
                 self.ws.PLAYLIST_MODE):
             if char == ord('r'):
                 # rename playlist
+                if self.ws.operation_mode == self.ws.NORMAL_MODE:
+                    self._set_rename_stations()
                 self._update_status_bar_right()
                 if self.ws.operation_mode == self.ws.NORMAL_MODE and \
                         self._cnf.dirty_playlist:
@@ -3638,114 +3689,65 @@ class PyRadio(object):
                 return
             ret, self.old_filename, self.new_filename, copy, open_file = self._rename_playlist_dialog.keypress(char)
             logger.error('{}, "{}", "{}", {}, {}'.format(ret, self.old_filename, self.new_filename, copy, open_file))
+            logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
+            if ret not in (0, 2):
+                logger.error('DE **** None ****')
+                self._rename_playlist_dialog = None
             if ret == -3:
                 # playlist delete error
                 self.ws.close_window()
-                self._rename_playlist_dialog = None
                 self.refreshBody()
                 self._print_playlist_rename_error()
             elif ret == -2:
                 # playlist copy error
                 self.ws.close_window()
-                self._rename_playlist_dialog = None
                 self.refreshBody()
                 self._print_playlist_copy_error()
             elif ret == -1:
                 # Cancel
                 self.ws.close_window()
-                self._rename_playlist_dialog = None
                 self.refreshBody()
             elif ret == 1:
                 # ok rename the playlist
-                logger.error('DE \n\nwindow_mode = {}'.format(self.ws.window_mode))
-
-                logger.error('title = {}'.format(self._cnf.station_title))
                 self.ws.close_window()
+                last_history = self._cnf.history_item()
+                last_history[0] = self.new_filename
+                last_history[1] = path.basename(self.new_filename)
+                last_history[2] = path.basename(self.new_filename).replace('.csv', '')
+                # not a register, no online browser
+                last_history[-2:] = False, False
+                logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
+                logger.error('DE last_history = {}'.format(last_history))
+                logger.error('last_history = {}'.format(last_history))
                 if self.ws.window_mode == self.ws.NORMAL_MODE:
                     """ rename the playlist on editor """
-                    #logger.error('\n\nDE **** {}'.format(self._cnf._ps._p))
-
-                    last = self._cnf.history_item()
-                    last[0] = self.new_filename
-                    last[1] = path.basename(self.new_filename)
-                    last[2] = path.basename(self.new_filename).replace('.csv', '')
-                    # no online browser
-                    last[-1] = False
-                    # not a register
-                    last[-2] = False
-                    logger.error('last = {}'.format(last))
-                    logger.error('title = {}'.format(self._cnf.station_title))
-                    if copy:
-                        logger.error('copy file')
-                        if open_file:
-                            logger.error('open file and copy')
-                            self._cnf.add_to_playlist_history(*last)
-                    else:
-                        logger.error('not a copy')
-                        self._cnf.replace_playlist_history_items(
-                                self.old_filename,
-                                last)
-                    logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
-
-                    logger.error('title = {}'.format(self._cnf.station_title))
-                    self.refreshBody()
-                    self._cnf.remove_playlist_history_duplicates()
-                    self.ll('before')
-                    self._find_playlists_after_rename(self.old_filename, self.new_filename, copy, open_file)
-                    self.ll('after')
-                    return
+                    self._rename_playlist_from_normal_mode(
+                        copy,
+                        open_file,
+                        last_history
+                    )
                 else:
-                    self._cnf._open_playlist = self._open_register_list = False
+                    self.ll('playlist before')
+                    #self._playlist_in_editor = self._cnf.playlists[self.selections[self.ws.PLAYLIST_MODE][2]][-1]
                     self._reload_playlists(refresh=False)
-                    #if not copy:
-                    #    self._cnf._ps._p[-1][0] = self.new_filename
-                    #    self._cnf._ps._p[-1][1] = path.basename(self.new_filename)
-                    #    self._cnf._ps._p[-1][2] = self._cnf._ps._p[-1][1][:-4]
-                    if open_file:
-                        self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
-                        self.ws.close_window()
-                        self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
-                        self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
-                        self._give_me_a_search_class(self.ws.operation_mode)
-                        if self.playing < 0:
-                            self._put_selection_in_the_middle(force=True)
-                            #self.refreshBody()
-
-
-                #logger.error('DE is_register = {}'.format(self._cnf.is_register))
-                #logger.error('DE open_playlist = {}'.format(self._cnf._open_register_list))
-                logger.error('DE \ncommon\n\nselections = {}'.format(self.selections[1]))
-                #logger.error('DE selection = {}'.format(self.selection))
-                #logger.error('DE history = {}'.format(self._cnf._ps._p))
-                if open_file:
-                    if copy and not self._cnf.is_register:
-                        self._cnf._ps._p.append(self._cnf._ps._p[-1][:])
-                    self._cnf._ps._p[-1][0] = self.new_filename
-                    self._cnf._ps._p[-1][1] = path.basename(self.new_filename)
-                    self._cnf._ps._p[-1][2] = self._cnf._ps._p[-1][1][:-4]
-                    self._cnf._ps._p[-1][-1] = self._cnf._ps._p[-1][-2] = False
-                    logger.error('DE history = {}'.format(self._cnf._ps._p))
-                    self.ws.close_window()
-
-                if self._fix_playlist_highlight_after_rename(self.old_filename,
-                        self.new_filename, copy, open_file):
-                    if self.ws.operation_mode == self.ws.PLAYLIST_MODE:
-                        self.selection = self.selections[self.ws.PLAYLIST_MODE][0]
-                        self.playing = self.selections[self.ws.PLAYLIST_MODE][1]
-                    self._put_selection_in_the_middle(force=True)
-                logger.error('DE selections = {}'.format(self.selections[1]))
-                # replcace all previous occurances
-                # of the renamed playlist in history
-                if not copy:
-                    self._cnf.replace_playlist_history_items(self.old_filename,
-                           self._cnf.get_playlist_history_item())
-                    logger.error('DE history = {}'.format(self._cnf._ps._p))
-                self._rename_playlist_dialog = None
-                self.refreshBody()
+                    if self._cnf.open_register_list:
+                        self._rename_playlist_from_register_mode(
+                            copy,
+                            open_file,
+                            last_history
+                        )
+                    else:
+                        # fix playlist selection
+                        self._rename_playlist_from_playlist_mode(
+                            copy,
+                            open_file,
+                            last_history
+                        )
+                return
             elif ret == 2:
                 # display line editor help
                 self._show_line_editor_help()
-            return
+                return
 
         elif self.ws.operation_mode == self.ws.EDIT_STATION_ENCODING_MODE and \
                 char not in self._chars_to_bypass:
@@ -3759,7 +3761,6 @@ class PyRadio(object):
                     self._station_editor._encoding = self._station_editor._old_encoding
                 self.ws.close_window()
                 self._station_editor.show()
-                self._encoding_select_win = None
             return
 
         elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE and \
@@ -3773,7 +3774,6 @@ class PyRadio(object):
                     self._config_win._config_options['default_encoding'][1] = ret_encoding
                 self.ws.close_window()
                 self._config_win.refresh_config_win()
-                self._encoding_select_win = None
             return
 
         elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE and \
@@ -4396,10 +4396,6 @@ class PyRadio(object):
 
                 elif char == ord('i'):
                     self._update_status_bar_right()
-                    #self._print_not_implemented_yet()
-                    #if self.player.icy_data_available():
-                    #    #if self.player.PLAYER_CMD == 'cvlv':
-                    #    #    self._sendCommand('info\n')
                     if self.player.isPlaying():
                         self._show_station_info()
                     else:
@@ -4449,6 +4445,7 @@ class PyRadio(object):
                     self._encoding_select_win.setEncoding(self._old_station_encoding)
 
                 elif char in (ord('o'), ):
+                    self._set_rename_stations()
                     self._cnf.open_register_list = False
                     self._update_status_bar_right()
                     if self._cnf.browsing_station_service:
@@ -4563,8 +4560,9 @@ class PyRadio(object):
                         """ return to stations view """
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Loading playlist: "{}"'.format(self.stations[self.selection][-1]))
-                        ret = self._cnf.read_playlist_file(stationFile=self.stations[self.selection][-1])
-                        logger.error('DE playlist_selections = {}'.format(self.playlist_selections))
+                        playlist_to_try_to_open = self.stations[self.selection][-1]
+                        ret = self._cnf.read_playlist_file(stationFile = playlist_to_try_to_open)
+                        logger.error('DE playlist_selections = {}'.format(playlist_to_try_to_open))
 
                         if ret == -1:
                             self.stations = self._cnf.playlists
@@ -4582,12 +4580,15 @@ class PyRadio(object):
                             self._print_playlist_recovery_error()
                             return
                         else:
+                            self._playlist_in_editor = playlist_to_try_to_open
                             self._playlist_error_message = ''
                             self.number_of_items = ret
                             if self._cnf.open_register_list:
                                 self.selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+                                self.playlist_selections[self.ws.REGISTER_MODE] = self.selections[self.ws.REGISTER_MODE][:-1][:]
                             else:
                                 self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
+                                self.playlist_selections[self.ws.operation_mode] = self.selections[self.ws.operation_mode][:-1][:]
                             #self.ll('ENTER')
                             self.ws.close_window()
                             self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
@@ -4633,6 +4634,202 @@ class PyRadio(object):
                                     callback_function=self.refreshBody)
                     return
 
+    def _rename_playlist_from_playlist_mode(self, copy, open_file, last_history):
+        it = self._search_sublist_last_item(self._cnf.playlists, self.new_filename)
+        logger.error('DE it = {}'.format(it))
+        if it > -1:
+            self.selection = it
+            self.selections[self.ws.PLAYLIST_MODE][0] = it
+            self.playlist_selections[self.ws.PLAYLIST_MODE][0] = it
+        else:
+            if self.selections[self.ws.PLAYLIST_MODE][0] >0:
+                self.selections[self.ws.PLAYLIST_MODE][0] -= 1
+                self.selection = self.selections[self.ws.PLAYLIST_MODE][0]
+            self.playlist_selections[self.ws.PLAYLIST_MODE][0] = self.selections[self.ws.PLAYLIST_MODE][0]
+        self.ll('before')
+        self._put_selection_in_the_middle(force=True)
+        self.selections[self.ws.PLAYLIST_MODE][1] = self.startPos
+        self.playlist_selections[self.ws.PLAYLIST_MODE][1] = self.startPos
+        # fix playlist playing
+        replace_playlist_in_history = ''
+        if self.old_filename == self._playlist_in_editor:
+            if copy:
+                # copy opened playlist
+                it = self._search_sublist_last_item(self._cnf.playlists, self.old_filename)
+                logger.error('DE *** Looking for old_filename')
+            else:
+                # rename opened playlist
+                it = self._search_sublist_last_item(self._cnf.playlists, self._playlist_in_editor)
+                logger.error('DE *** Looking for self._playlist_in_editor')
+                # replace playlist in history
+                replace_playlist_in_history = self._playlist_in_editor
+        else:
+            # copy or raname random playlist
+            it = self._search_sublist_last_item(self._cnf.playlists, self._playlist_in_editor)
+            logger.error('DE *** Looking for self._playlist_in_editor')
+            if not copy:
+                # replace playlist in history
+                replace_playlist_in_history = self.old_filename
+        self.selections[self.ws.PLAYLIST_MODE][2] = it
+        self.playlist_selections[self.ws.PLAYLIST_MODE][2] = it
+        self.playing = it
+        if not open_file:
+            self.refreshBody()
+        logger.error('DE replace_playlist_in_history = {}'.format(replace_playlist_in_history))
+        if replace_playlist_in_history:
+            self._cnf.replace_playlist_history_items(
+                    replace_playlist_in_history,
+                    last_history)
+        self.ll('after')
+        logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
+        logger.error('DE self._playlist_in_editor = {}'.format(self._playlist_in_editor))
+        if open_file:
+            ret_it, ret_id, rev_ret_id = self._cnf.find_history_by_station_path(self.new_filename)
+            logger.error('DE ret_it = {0}, ret_id = {1}, rev_ret_id = {2}'.format(ret_it, ret_id, rev_ret_id))
+            self.ws.close_window()
+            if rev_ret_id == 0:
+                # return to opened playlist
+                self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+                self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
+                self._give_me_a_search_class(self.ws.operation_mode)
+                if self.playing < 0:
+                    self._put_selection_in_the_middle(force=True)
+                    self.refreshBody()
+                self._do_display_notify()
+            else:
+                # load new playlist
+                if ret_id >= 0:
+                    item = self._cnf.get_playlist_history_item(ret_id)
+                    self._cnf.add_to_playlist_history(*item)
+                    logger.error('\n\nDE **** after addig playlist to history ps.p {}\n\n'.format(self._cnf._ps._p))
+                    self._open_playlist_from_history(from_rename_action=True)
+                    if self.playing > -1:
+                        self.selection = self.playing
+                        self._put_selection_in_the_middle()
+                    logger.error('DE playlist found: {0} at {1}'.format(item, ret_id))
+                    self.refreshBody()
+                    #self.active_stations = self.rename_stations
+                    self._set_active_stations()
+                    self._set_rename_stations()
+                    logger.error('\n\nDE **** after open playlist from history ps.p {}\n\n'.format(self._cnf._ps._p))
+                else:
+                    self._cnf.add_to_playlist_history(*last_history)
+                    logger.error('\n\nDE **** after addig playlist to history ps.p {}\n\n'.format(self._cnf._ps._p))
+                    self._open_playlist_from_history(from_rename_action=True)
+                    if self.playing > -1:
+                        self.selection = self.playing
+                        self._put_selection_in_the_middle()
+                    if self.selection >= self.number_of_items:
+                        self.selection = self.number_of_items -1
+                        if self.selection < 0:
+                            self.selection = 0
+                        self._put_selection_in_the_middle()
+
+                self.refreshBody()
+                self.playlist_selections[self.ws.NORMAL_MODE] = [self.selection, self.startPos, self.playing]
+                self.selections[self.ws.NORMAL_MODE][:-1] = self.playlist_selections[self.ws.NORMAL_MODE][:]
+                self.selections[self.ws.NORMAL_MODE][-1] = self.stations
+                last_history[3:6] = self.playlist_selections[self.ws.NORMAL_MODE][:]
+                # remove new playlist and re-add it with
+                # correct values (selection, startPos, playing)
+                self._cnf.remove_from_playlist_history()
+                self._cnf.add_to_playlist_history(*last_history)
+
+    def _rename_playlist_from_register_mode(self, copy, open_file, last_history):
+        if self._cnf.playlists: # holds registers
+            no_more_registers = False
+            if self.selection >= len(self._cnf.playlists):
+                self.selection -= 1
+                self.selections[self.ws.PLAYLIST_MODE][0] = self.selection
+                self.playlist_selections[self.ws.PLAYLIST_MODE][0] = self.selection
+                if self.selection < self.startPos:
+                    self.startPos = self.selection
+        else:
+            no_more_registers = True
+            logger.error('DE no more playlists....')
+            """ if no more register files exist,
+            go back to playlist view """
+            self._cnf._open_register_list = False
+            """ make first register selected
+            for when a register is created """
+            self.playlist_selections[self.ws.REGISTER_MODE] = [0, 0, -1]
+            self.selections[self.ws.REGISTER_MODE][:-1] = [0, 0, -1]
+            self._cnf.just_read_playlists()
+            self.selections[self.ws.PLAYLIST_MODE][-1] = self._cnf.playlists
+            self._reload_playlists(refresh=False)
+        it = self._search_sublist_last_item(self._cnf.playlists, self.new_filename)
+        logger.error('DE it = {}'.format(it))
+        if it > -1:
+            self.selections[self.ws.PLAYLIST_MODE][0] = it
+            self.playlist_selections[self.ws.PLAYLIST_MODE][0] = it
+        else:
+            if self.selections[self.ws.PLAYLIST_MODE][0] >0:
+                self.selections[self.ws.PLAYLIST_MODE][0] -= 1
+            self.playlist_selections[self.ws.PLAYLIST_MODE][0] = self.selections[self.ws.PLAYLIST_MODE][0]
+        if no_more_registers:
+            self.selection, startPos, _ = self.playlist_selections[self.ws.PLAYLIST_MODE]
+            self._put_selection_in_the_middle(force=True)
+            self.selections[self.ws.PLAYLIST_MODE][1] = startPos
+            self.playlist_selections[self.ws.PLAYLIST_MODE][1] = startPos
+            #logger.error('DE selections = {}'.format(self.selections))
+        self.ll('final')
+        self._reload_playlists()
+        if open_file:
+            self._cnf.add_to_playlist_history(*last_history)
+
+            self.ws.close_window()
+            self.active_stations = self.rename_stations
+            logger.error('\n\nDE **** before open playlist from history ps.p {}\n\n'.format(self._cnf._ps._p))
+            self._open_playlist_from_history(from_rename_action=True)
+            if self.playing > -1:
+                self.selection = self.playing
+                self._put_selection_in_the_middle()
+            if self.selection >= self.number_of_items:
+                self.selection = self.number_of_items -1
+                if self.selection < 0:
+                    self.selection = 0
+                self._put_selection_in_the_middle()
+
+        self.refreshBody()
+        if open_file:
+            self.playlist_selections[self.ws.NORMAL_MODE] = [self.selection, self.startPos, self.playing]
+            self.selections[self.ws.NORMAL_MODE][:-1] = self.playlist_selections[self.ws.NORMAL_MODE][:]
+            self.selections[self.ws.NORMAL_MODE][-1] = self.stations
+            last_history[3:6] = self.playlist_selections[self.ws.NORMAL_MODE][:]
+            # remove new playlist and re-add it with
+            # correct values (selection, startPos, playing)
+            self._cnf.remove_from_playlist_history()
+            self._cnf.add_to_playlist_history(*last_history)
+        self.ll('before return')
+        logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
+        #self.refreshBody()
+
+    def _rename_playlist_from_normal_mode(self, copy, open_file, last_history):
+        old_file_is_reg = True if os.path.basename(self.old_filename).startswith('register_') else False
+        #logger.error('\n\nDE **** {}'.format(self._cnf._ps._p))
+
+        logger.error('title = {}'.format(self._cnf.station_title))
+        if copy:
+            logger.error('rename playlist NORMAL_MODE: copy file')
+            if open_file:
+                logger.error('rename playlist NORMAL_MODE: open file and copy')
+                self._cnf.add_to_playlist_history(*last_history)
+        else:
+            logger.error('rename playlist NORMAL_MODE: not a copy')
+            self._cnf.replace_playlist_history_items(
+                    self.old_filename,
+                    last_history)
+        logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
+
+        self.refreshBody()
+        self._cnf.remove_playlist_history_duplicates()
+        self.ll('before')
+        self._find_playlists_after_rename(self.old_filename, self.new_filename, copy, open_file, old_file_is_reg)
+        if not copy:
+            self._cnf.replace_playlist_history_items(
+                    self.old_filename,
+                    last_history)
+        self.ll('after')
 
     def _reload_playlists(self, refresh=True):
         old_playlist = self._cnf.playlists[self.selection][0]
@@ -4640,9 +4837,9 @@ class PyRadio(object):
         if self._cnf.open_register_list:
             oper_mode = self.ws.REGISTER_MODE
             """ refresh reference """
-            self.stations = self._cnf.playlists
         else:
             oper_mode = self.ws.PLAYLIST_MODE
+        self.stations = self._cnf.playlists
         if self.playing == -1 or self.number_of_items == 0:
             self.selections[oper_mode] = [0, 0, -1, self._cnf.playlists]
         else:
@@ -4702,36 +4899,18 @@ class PyRadio(object):
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Volume save inhibited because playback is off')
 
-    def _find_playlists_after_rename(self, old_file, new_file, copy, open_file):
+    def _find_playlists_after_rename(self, old_file, new_file, copy, open_file, old_file_is_reg):
         """ Find new selection, startPos, playing after a rename action
 
         """
         base_old_file = os.path.basename(old_file)
-        if base_old_file.startswith('register_'):
+        if old_file_is_reg:
             # work on registers
             self.selections[self.ws.REGISTER_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
             if not copy:
                 self._find_renamed_selection(self.ws.REGISTER_MODE,
                                              self._cnf.registers_dir,
                                              old_file)
-                ## fix register selections
-                #files = glob.glob(path.join(self._cnf.registers_dir, '*.csv'))
-                #if files:
-                #    if self.selections[self.ws.REGISTER_MODE][0] >= len(files):
-                #        self.selections[self.ws.REGISTER_MODE][0] = len(files) -1
-                #    self.selections[self.ws.REGISTER_MODE][2] = -1
-                #    if not open_file and self._cnf.is_register:
-                #        try:
-                #            sel = files.index(
-                #                self.selections
-                #                [self.selections[self.ws.PLAYLIST_MODE]][3]
-                #                [self.selections[self.ws.PLAYLIST_MODE][2]]
-                #            )
-                #            self.selections[self.ws.REGISTER_MODE][2] = sel
-                #        except:
-                #            pass
-                #else:
-                #    self.selections[self.ws.REGISTER_MODE][:-1] = [0, 0, -1]
             search_path = self._cnf.stations_dir
             search_file = new_file
         else:
@@ -4743,7 +4922,7 @@ class PyRadio(object):
             #else:
             #    search_file = new_file
 
-        self.ll('common')
+        self.ll('_find_playlists_after_rename(): common')
         logger.error('DE playlist_selection = {}'.format(self.playlist_selections))
         """ set playlist selections for ' action """
         self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
@@ -4771,6 +4950,7 @@ class PyRadio(object):
         ----
             self.selections[mode]
         """
+        logger.error('DE search_file = ' + search_file)
         self.ll('_find_renamed_selection(): before')
         files = glob.glob(path.join(search_path, '*.csv'))
         if files:
@@ -4782,10 +4962,11 @@ class PyRadio(object):
                 self.selections[mode][1:-1] = [0, -1]
                 if self.selections[mode][0] >= len(files):
                     self.selections[mode][0] = len(files) - 1
+                self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
                 self.ll('_find_renamed_selection(): after not found')
                 return
+            logger.error('DE sel = {}'.format(sel))
             self.selections[mode][0] = self.selections[mode][2] = sel
-            logger.error('DE files = {}'.format(files))
 
             """ Set startPos """
             if len(files) -1 < self.bodyMaxY:
@@ -4804,6 +4985,7 @@ class PyRadio(object):
         else:
             self.selections[mode][:-1] = [0, 0, -1]
             self.ll('_find_renamed_selection(): reset parameters')
+        self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
 
 
     def _redisplay_stations_and_playlists(self):
@@ -4907,6 +5089,7 @@ class PyRadio(object):
             self._print_playlist_recovery_error()
             return
         else:
+            self._playlist_in_editor = a_file
             self._playlist_error_message = ''
             self.number_of_items = ret
             #self.ll('ENTER')
@@ -4933,6 +5116,19 @@ class PyRadio(object):
             logger.error('path = {}'.format(self._cnf.station_path))
             logger.error('station = {}'.format(self._cnf.station_file_name))
             logger.error('title = {}\n'.format(self._cnf.station_title))
+
+    def _search_sublist__stem(self, a_list, a_search):
+        return self._search_sublist(a_list, 0, a_search)
+
+    def _search_sublist_last_item(self, a_list, a_search):
+        return self._search_sublist(a_list, -1, a_search)
+
+    def _search_sublist(self, a_list, ind, a_search):
+        k = [r[ind] for r in a_list]
+        try:
+            return k.index(a_search)
+        except ValueError as e:
+            return -1
 
     """''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
         Windows only section

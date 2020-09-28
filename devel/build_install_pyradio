@@ -42,6 +42,7 @@ APATH=$(python3 -m site --user-site 2>/dev/null) && echo "$APATH"
 }
 
 function remove_paths(){
+echo "Looking for python installed files..."
 find_paths | sort -u > /tmp/pyradio-uninstall.$$
 while read line;do
     [ -d "$line" ] && {
@@ -64,7 +65,7 @@ function uninstall(){
         echo "PyRadio is not installed..."
         exit
     }
-    echo 'Uninstalling PyRadio'
+    sudo echo 'Uninstalling PyRadio'
     user=$(which pyradio | grep '\.local')
     [ -z "$user" ] && {
         echo -n '** Removing executable ... '

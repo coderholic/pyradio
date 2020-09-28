@@ -500,7 +500,7 @@ The visual result of an applied theme greatly depends on the terminal settings (
 
 Pressing "**t**" will bring up the *Theme selection window*, which can be used to activate a theme and set the default one.
 
-**Note:** Themes that use more colors than those supported by the terminal in use, will not be present in the *Theme selection window*. Furthermore, if a such at theme is set as default (or requested using the "**-t**" command line option), **PyRadio** will silently fall-back to the "**dark**" theme (or the "**light**" theme, if the terminal supports 8 colors and default theme is set to "*light_16_colors*").
+**Note:** Themes that use more colors than those supported by the terminal in use, will not be present in the *Theme selection window*. Furthermore, if a such at theme is set as default (or requested using the "**-t**" command line option), **PyRadio** will fall-back to the "**dark**" theme (or the "**light**" theme, if the terminal supports 8 colors and default theme is set to "*light_16_colors*"), and will display a relevant message at program startup.
 
 The  *Theme selection window* will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "**q**" or any other relevant key - pressing "**?**" will bring up its help).
 
@@ -558,6 +558,21 @@ As we see, previous versions still exist in this system: **0.7.6.2** and **0.7.7
     $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-.7.6.2-py3.7.egg
     $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg
 
+**Note:** Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; **PyRadio** will search and remove any previously installed files when the "**-u**" (uninstall) parameter is used.
+
+Example:
+
+    $ devel/build_install_pyradio -u
+    Uninstalling PyRadio
+    ** Removing executable ... done
+    ** Removing help files ... done
+    Looking for python installed files
+    ** Removing "pyradio-0.8.8-py3.8.egg" ... done
+    ** Removing "pyradio-0.8.6-py2.7.egg" ... done
+    ** Removing "pyradio-0.8.8-py3.8.egg" ... done
+    PyRadio successfully uninstalled
+
+In this example, running *devel/build_install_pyradio -u* has removed **PyRadio** python 3.8 system wide installation files, **PyRadio** python 2.7 system wide installation files,  and **PyRadio** python 3.8 user installation files, found in the system.
 
 ## Debug mode
 
