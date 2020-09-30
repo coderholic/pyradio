@@ -11,7 +11,7 @@ do
     elif [ "$afile" = "build.md" ];then
         echo '% PyRadio Build Instructions' > tmp.md
     elif [ "$afile" = "windows.md" ];then
-        echo '% Running PyRadio on Windows' > tmp.md
+        echo '% PyRadio on Windows' > tmp.md
     fi
     cat ${afile} >> tmp.md
     pandoc -s -t html tmp.md -o ${out} || {

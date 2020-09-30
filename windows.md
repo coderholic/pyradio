@@ -1,6 +1,6 @@
-# PyRadio
+# PyRadio on Windows
 
-Command line internet radio player.
+**PyRadio**: Command line internet radio player.
 
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
@@ -288,7 +288,7 @@ The procedure is the same as installing, so please follow the [relevant instruct
 
 To uninstall **PyRadio** you will have to use the "**-u**" (uninstall) parameter.
 
-This procedure will remove any **Pyradio** files installed in your system, but will leave instact **PyRadio** configuration files or uninstall python, mplayer, or git from your system.
+This procedure will remove any **Pyradio** files installed in your system, but will leave instact **PyRadio** configuration files and python, mplayer and git (if installed).
 
 To uninstall **PyRadio** open a console (press the **Win** key, type **cmd** and press **ENTER** or if you are on Windows 10, use **Run it as Administrator** as you can see in the following image).
 
@@ -301,12 +301,12 @@ Example:
     C:\Users\spiros\pyradio>devel\build_install_pyradio -u
     Uninstalling PyRadio
     ** Gathering information...
-    ** Removing executable...
-    ** Removing Desktop shortcut...
+    ** Removing executable ... done
+    ** Removing Desktop shortcut ... done
     Looking for python installed files...
-	** "pyradio-0.8.8-py3.7.egg"
-	** "pyradio-0.7.9-py3.7.egg"
-	** "pyradio-0.6.3-py3.7.egg"
+	** Removing "pyradio-0.8.8-py3.7.egg" ... done
+	** Removing "pyradio-0.7.9-py3.7.egg" ... done
+	** Removing "pyradio-0.6.3-py3.7.egg" ... done
     Pyradio successfully uninstalled!
 
     *********************************************************
@@ -321,6 +321,6 @@ Example:
 
 In this example, running *devel\\build_install_pyradio -u* has removed **PyRadio** python 3.7 installation files.
 
-The script has detected (and removed) version *8.8* (probably the current or previous version), along with verisons *7.9* and *6.3* (older versions previously installed).
+The script has detected (and removed) version *0.8.8* (probably the current or previous version), along with verisons *0.7.9* and *0.6.3* (older versions previously installed).
 
 I would recommend to execute *devel\\build_install_pyradio -u* from time to time, and reinstall **PyRadio** right after its completion.

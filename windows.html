@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Running PyRadio on Windows</title>
+  <title>PyRadio on Windows</title>
   <style>
     html {margin: 2em;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} 
@@ -28,8 +28,8 @@
 <body>
 <header id="title-block-header">
 </header>
-<h1 id="pyradio">PyRadio</h1>
-<p>Command line internet radio player.</p>
+<h1 id="pyradio-on-windows">PyRadio on Windows</h1>
+<p><strong>PyRadio</strong>: Command line internet radio player.</p>
 <p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
@@ -203,7 +203,7 @@ devel\build_install_pyradio</pre>
 <p>The procedure is the same as installing, so please follow the <a href="#not-using-git">relevant instructions</a>.</p>
 <h3 id="uninstalling-pyradio-or-cleaning-up">6. Uninstalling Pyradio (or Cleaning up) <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>To uninstall <strong>PyRadio</strong> you will have to use the “<strong>-u</strong>” (uninstall) parameter.</p>
-<p>This procedure will remove any <strong>Pyradio</strong> files installed in your system, but will leave instact <strong>PyRadio</strong> configuration files or uninstall python, mplayer, or git from your system.</p>
+<p>This procedure will remove any <strong>Pyradio</strong> files installed in your system, but will leave instact <strong>PyRadio</strong> configuration files and python, mplayer and git (if installed).</p>
 <p>To uninstall <strong>PyRadio</strong> open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong> or if you are on Windows 10, use <strong>Run it as Administrator</strong> as you can see in the following image).</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/run-as-admin.jpg">Run as Administrator</a></p>
 <p>Then navigate to the previously downloaded <strong>Pyradio</strong> setup folder, and execute <em>devel\build_install_pyradio -u</em>.</p>
@@ -211,12 +211,12 @@ devel\build_install_pyradio</pre>
 <pre>C:\Users\spiros\pyradio&gt;devel\build_install_pyradio -u
 Uninstalling PyRadio
 ** Gathering information...
-** Removing executable...
-** Removing Desktop shortcut...
+** Removing executable ... done
+** Removing Desktop shortcut ... done
 Looking for python installed files...
-** &quot;pyradio-0.8.8-py3.7.egg&quot;
-** &quot;pyradio-0.7.9-py3.7.egg&quot;
-** &quot;pyradio-0.6.3-py3.7.egg&quot;
+** Removing &quot;pyradio-0.8.8-py3.7.egg&quot; ... done
+** Removing &quot;pyradio-0.7.9-py3.7.egg&quot; ... done
+** Removing &quot;pyradio-0.6.3-py3.7.egg&quot; ... done
 Pyradio successfully uninstalled!
 
 *********************************************************
@@ -229,7 +229,7 @@ C:\Users\spiros\AppData\Roaming\pyradio
 
 **********************************************************</pre>
 <p>In this example, running <em>devel\build_install_pyradio -u</em> has removed <strong>PyRadio</strong> python 3.7 installation files.</p>
-<p>The script has detected (and removed) version <em>8.8</em> (probably the current or previous version), along with verisons <em>7.9</em> and <em>6.3</em> (older versions previously installed).</p>
+<p>The script has detected (and removed) version <em>0.8.8</em> (probably the current or previous version), along with verisons <em>0.7.9</em> and <em>0.6.3</em> (older versions previously installed).</p>
 <p>I would recommend to execute <em>devel\build_install_pyradio -u</em> from time to time, and reinstall <strong>PyRadio</strong> right after its completion.</p>
 </body>
 </html>

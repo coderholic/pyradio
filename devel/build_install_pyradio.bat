@@ -147,11 +147,11 @@ goto :endofscript
 echo Uninstalling PyRadio
 echo ** Gathering information...
 DEL pyremove.bat 2>nul
-echo echo ** Removing executable... >>pyremove.bat
-echo echo ** Removing Desktop shortcut... >>pyremove.bat
+echo echo ** Removing executable ... done>>pyremove.bat
+echo echo ** Removing Desktop shortcut ... done >>pyremove.bat
 echo IF EXIST "%DESKTOP%\PyRadio.lnk" DEL "%DESKTOP%\PyRadio.lnk" 2>nul >>pyremove.bat
 python devel\site.py exe 2>nul >>pyremove.bat
-REM echo echo ** Removing Python files... >>pyremove.bat
+REM echo echo ** Removing Python files ... done >>pyremove.bat
 python devel\site.py 2>nul >dirs
 python2 devel\site.py 2>nul >>dirs
 python3 devel\site.py 2>nul >>dirs

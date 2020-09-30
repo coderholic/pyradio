@@ -35,5 +35,5 @@ if dirs:
                 with open("pyremove.bat", "a") as f:
                     f.write('echo Looking for python installed files...\n')
                     for a_dir in pydirs:
-                        f.write('echo ** "{}"\n'.format(basename(a_dir)))
+                        f.write('echo ** Removing "{}" ... done \n'.format(basename(a_dir)))
                         f.write('RD /S /Q "{}"\n'.format(a_dir))
