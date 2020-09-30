@@ -59,6 +59,7 @@
 <li><a href="#updating-without-git">5.2 Updating without Git</a></li>
 </ul></li>
 <li><a href="#uninstalling-pyradio-or-cleaning-up">6. Uninstalling Pyradio (or Cleaning up)</a></li>
+<li><a href="#reporting-bugs">7. Reporing bugs</a></li>
 </ul></li>
 <li><a href="build.html">Back</a></li>
 <li><a href="README.html">Back to README</a></li>
@@ -231,5 +232,14 @@ C:\Users\spiros\AppData\Roaming\pyradio
 <p>In this example, running <em>devel\build_install_pyradio -u</em> has removed <strong>PyRadio</strong> python 3.7 installation files.</p>
 <p>The script has detected (and removed) version <em>0.8.8</em> (probably the current or previous version), along with verisons <em>0.7.9</em> and <em>0.6.3</em> (older versions previously installed).</p>
 <p>I would recommend to execute <em>devel\build_install_pyradio -u</em> from time to time, and reinstall <strong>PyRadio</strong> right after its completion.</p>
+<h3 id="reporting-bugs">7. Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<p>When a bug is found, please do report it by <a target="_blank" href="https://github.com/coderholic/pyradio/issues">opening an issue at github</a>.</p>
+<p>In you report you should, at the very least, state your <strong>pyradio version</strong> and <strong>python version</strong>.</p>
+<p>It would be really useful to include <strong>%USERPROFILE%/pyradio.log</strong> in your report.</p>
+<p>To create it, enter the following commands in a terminal:</p>
+<pre>C:\Users\spiros&gt;del %USERPROFILE%\pyradio.log
+C:\Users\spiros&gt;pyradio -d</pre>
+<p>Then try to reproduce the bug and exit <strong>pyradio</strong>.</p>
+<p>Finally, include the file produced in your report.</p>
 </body>
 </html>

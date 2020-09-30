@@ -22,7 +22,8 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
     * [5. Updating PyRadio](#updating-pyradio)
         * [5.1 Updating with Git](#updating-with-git)
         * [5.2 Updating without Git](#updating-without-git)
-    * [6. Uninstalling Pyradio (or Cleaning up)]
+    * [6. Uninstalling Pyradio (or Cleaning up)](#uninstalling-pyradio-or-cleaning-up)
+    * [7. Reporing bugs](#reporting-bugs)
 * [Back](build.md)
 * [Back to README](README.md)
 
@@ -324,3 +325,22 @@ In this example, running *devel\\build_install_pyradio -u* has removed **PyRadio
 The script has detected (and removed) version *0.8.8* (probably the current or previous version), along with verisons *0.7.9* and *0.6.3* (older versions previously installed).
 
 I would recommend to execute *devel\\build_install_pyradio -u* from time to time, and reinstall **PyRadio** right after its completion.
+
+### 7. Reporting bugs
+
+When a bug is found, please do report it by [opening an issue at github](https://github.com/coderholic/pyradio/issues).
+
+In you report you should, at the very least, state your **pyradio version** and **python version**.
+
+It would be really useful to include **%USERPROFILE%/pyradio.log** in your report.
+
+To create it, enter the following commands in a terminal:
+
+    C:\Users\spiros>del %USERPROFILE%\pyradio.log
+    C:\Users\spiros>pyradio -d
+
+Then try to reproduce the bug and exit **pyradio**.
+
+Finally, include the file produced in your report.
+
+
