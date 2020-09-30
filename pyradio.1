@@ -630,7 +630,33 @@ If for any reason \fBpyradio\fR always starts in \fIlocked mode\fR, one can \fBu
 If so, a notification message will be displayed, informing the user about it.
 
 .SH CLEANING UP
+
 .PP
+Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; \fBpyradio\fR will search and remove any previously installed files when the "\fB-u\fR" (uninstall) parameter is used.
+
+This procedure will remove any \fBpyradio\fR files installed in your system, but will leave instact \fBpyradio\fR configuration files. 
+
+Windows users notice: This procedure \fBwill not\fR uninstall python, mplayer, or git from your system.
+
+Example:
+
+    \fI$ \fBdevel/build_install_pyradio -u\fI
+    Uninstalling PyRadio
+    ** Removing executable ... done
+    ** Removing help files ... done
+    Looking for python installed files
+    ** Removing "pyradio-\fB0.8.8-py3.8\fI.egg" ... done
+    ** Removing "pyradio-\fB0.8.6-py2.7\fI.egg" ... done
+    ** Removing "pyradio-\fB0.8.8-py3.8\fI.egg" ... done
+    PyRadio successfully uninstalled\fR
+
+In this example, running \fIdevel/build_install_pyradio -u\fR has removed \fBpyradio\fR python 3.8 system wide installation files, \fBpyradio\fR python 2.7 system wide installation files,  and \fBpyradio\fR python 3.8 user installation files, found in the system.
+
+I would recommend to execute \fBdevel/build_install_pyradio -u\fR from time to time, and reinstall \fBpyradio\fR right after its completion.
+
+.PP
+\fBPREVIOUS CLEANING UP PROCEDURE\fR
+
 As \fBpyradio\fR versions accumulate, when building from source, one may have to \fIclean up\fR old installation files.
 
 To do that, one has to observe the installation process in order to find out where the package is installed. The installation would complete printing the following messages (on \fIpython 3.7\fR):
@@ -667,23 +693,6 @@ As we see, previous versions still exist in this system: \fB0.7.6.2\fR and \fB0.
 .br
 \fI$ \fBsudo rm -rf /usr/lib/python3.7/site-packages/pyradio-\fI0.7.7\fB-py3.7.egg
 
-
-.IP \fBNote:
-Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; \fBpyradio\fR will search and remove any previously installed files when the "\fB-u\fR" (uninstall) parameter is used.
-
-Example:
-
-    \fI$ \fBdevel/build_install_pyradio -u\fI
-    Uninstalling PyRadio
-    ** Removing executable ... done
-    ** Removing help files ... done
-    Looking for python installed files
-    ** Removing "pyradio-\fB0.8.8-py3.8\fI.egg" ... done
-    ** Removing "pyradio-\fB0.8.6-py2.7\fI.egg" ... done
-    ** Removing "pyradio-\fB0.8.8-py3.8\fI.egg" ... done
-    PyRadio successfully uninstalled\fR
-
-In this example, running \fIdevel/build_install_pyradio -u\fR has removed \fBpyradio\fR python 3.8 system wide installation files, \fBpyradio\fR python 2.7 system wide installation files,  and \fBpyradio\fR python 3.8 user installation files, found in the system.
 
 .SH DEBUG MODE
 .PP

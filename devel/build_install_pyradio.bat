@@ -144,11 +144,14 @@ goto :endofscript
 
 
 :uninstall
-echo === Gathering information...
+echo Uninstalling PyRadio
+echo ** Gathering information...
 DEL pyremove.bat 2>nul
-echo echo === Removing executable... >>pyremove.bat
+echo echo ** Removing executable... >>pyremove.bat
+echo echo ** Removing Desktop shortcut... >>pyremove.bat
+echo IF EXIST "%DESKTOP%\PyRadio.lnk" DEL "%DESKTOP%\PyRadio.lnk" 2>nul >>pyremove.bat
 python devel\site.py exe 2>nul >>pyremove.bat
-echo echo === Removing Python files... >>pyremove.bat
+REM echo echo ** Removing Python files... >>pyremove.bat
 python devel\site.py 2>nul >dirs
 python2 devel\site.py 2>nul >>dirs
 python3 devel\site.py 2>nul >>dirs
@@ -157,20 +160,17 @@ python2 -m site --user-site 2>nul >>dirs
 python3 -m site --user-site 2>nul >>dirs
 python devel\windirs.py
 echo DEL dirs >>pyremove.bat
-echo echo === Removing Desktop shortcut... >>pyremove.bat
-echo IF EXIST "%DESKTOP%\PyRadio.lnk" DEL "%DESKTOP%\PyRadio.lnk" 2>nul >>pyremove.bat
+echo echo Pyradio successfully uninstalled! >>pyremove.bat
 
 echo echo. >>pyremove.bat
-echo echo ********************************************************** >>pyremove.bat
-echo echo * >>pyremove.bat
-echo echo * Pyradio successfully uninstalled! >>pyremove.bat
-echo echo * >>pyremove.bat
-echo echo * PyRadio has not uninstalled MPlayer, Python and/or Git. >>pyremove.bat
-echo echo * You will have to manually uninstall them. >>pyremove.bat
-echo echo * >>pyremove.bat
-echo echo * PyRadio user files are left instact. You can find them >>pyremove.bat
-echo echo * at %APPDATA%\pyradio >>pyremove.bat
-echo echo * >>pyremove.bat
+echo echo ********************************************************* >>pyremove.bat
+echo echo. >>pyremove.bat
+echo echo PyRadio has not uninstalled MPlayer, Python and/or Git. >>pyremove.bat
+echo echo You will have to manually uninstall them. >>pyremove.bat
+echo echo. >>pyremove.bat
+echo echo PyRadio user files are left instact. You can find them at >>pyremove.bat
+echo echo %APPDATA%\pyradio >>pyremove.bat
+echo echo. >>pyremove.bat
 echo echo ********************************************************** >>pyremove.bat
 echo echo. >>pyremove.bat
 REM copy pyremove.bat con

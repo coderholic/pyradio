@@ -3373,7 +3373,8 @@ class PyRadio(object):
                     self.ws.ADD_STATION_MODE, self.ws.THEME_MODE,
                     self.ws.RENAME_PLAYLIST_MODE, self.ws.NEW_PLAYLIST_MODE) and \
                 self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
-                not self.is_search_mode(self.ws.operation_mode):
+                not self.is_search_mode(self.ws.operation_mode) and \
+                self.ws.window_mode not in (self.ws.CONFIG_MODE, ):
             self._update_status_bar_right()
             self._config_win = None
             self.theme_forced_selection = None

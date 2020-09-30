@@ -369,6 +369,22 @@ volume=28</pre>
 <p><strong>PyRadio</strong> will periodically (once every 10 days) check whether a new version has been released.</p>
 <p>If so, a notification message will be displayed, informing the user about it.</p>
 <h2 id="cleaning-up">Cleaning up <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; <strong>PyRadio</strong> will search and remove any previously installed files when the “<strong>-u</strong>” (uninstall) parameter is used.</p>
+<p>This procedure will remove any <strong>Pyradio</strong> files installed in your system, but will leave instact <strong>PyRadio</strong> configuration files.</p>
+<p>Windows users notice: This procedure <strong>will not</strong> uninstall python, mplayer, or git from your system.</p>
+<p>Example:</p>
+<pre>$ devel/build_install_pyradio -u
+Uninstalling PyRadio
+** Removing executable ... done
+** Removing help files ... done
+Looking for python installed files
+** Removing &quot;pyradio-0.8.8-py3.8.egg&quot; ... done
+** Removing &quot;pyradio-0.8.6-py2.7.egg&quot; ... done
+** Removing &quot;pyradio-0.8.8-py3.8.egg&quot; ... done
+PyRadio successfully uninstalled</pre>
+<p>In this example, running <em>devel/build_install_pyradio -u</em> has removed <strong>PyRadio</strong> python 3.8 system wide installation files, <strong>PyRadio</strong> python 2.7 system wide installation files, and <strong>PyRadio</strong> python 3.8 user installation files, found in the system.</p>
+<p>I would recommend to execute <em>devel/build_install_pyradio -u</em> from time to time, and reinstall <strong>Pyradio</strong> right after its completion.</p>
+<h3 id="previous-cleaning-up-procedure">Previous cleaning up procedure</h3>
 <p>As <strong>PyRadio</strong> versions accumulate, when building from source, one may have to <em>clean up</em> old installation files.</p>
 <p>To do that, one has to observe the installation process in order to find out where the package is installed. The installation would complete printing the following messages (on <em>python 3.7</em>):</p>
 <pre>Installed /usr/lib/python3.7/site-packages/pyradio-0.7.8-py3.7.egg
@@ -384,18 +400,6 @@ Finished processing dependencies for pyradio==0.7.8</pre>
 <p>As we see, previous versions still exist in this system: <strong>0.7.6.2</strong> and <strong>0.7.7</strong>. These files (actually directories) can safely be removed:</p>
 <pre>$ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-.7.6.2-py3.7.egg
 $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg</pre>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; <strong>PyRadio</strong> will search and remove any previously installed files when the “<strong>-u</strong>” (uninstall) parameter is used.</p>
-<p>Example:</p>
-<pre>$ devel/build_install_pyradio -u
-Uninstalling PyRadio
-** Removing executable ... done
-** Removing help files ... done
-Looking for python installed files
-** Removing &quot;pyradio-0.8.8-py3.8.egg&quot; ... done
-** Removing &quot;pyradio-0.8.6-py2.7.egg&quot; ... done
-** Removing &quot;pyradio-0.8.8-py3.8.egg&quot; ... done
-PyRadio successfully uninstalled</pre>
-<p>In this example, running <em>devel/build_install_pyradio -u</em> has removed <strong>PyRadio</strong> python 3.8 system wide installation files, <strong>PyRadio</strong> python 2.7 system wide installation files, and <strong>PyRadio</strong> python 3.8 user installation files, found in the system.</p>
 <h2 id="debug-mode">Debug mode <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Adding the “<strong>-d</strong>” option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a target="_blank" href="https://github.com/coderholic/pyradio/issues">open at github</a>.</p>

@@ -534,6 +534,30 @@ If so, a notification message will be displayed, informing the user about it.
 
 ## Cleaning up
 
+Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; **PyRadio** will search and remove any previously installed files when the "**-u**" (uninstall) parameter is used.
+
+This procedure will remove any **Pyradio** files installed in your system, but will leave instact **PyRadio** configuration files. 
+
+Windows users notice: This procedure **will not** uninstall python, mplayer, or git from your system.
+
+Example:
+
+    $ devel/build_install_pyradio -u
+    Uninstalling PyRadio
+    ** Removing executable ... done
+    ** Removing help files ... done
+    Looking for python installed files
+    ** Removing "pyradio-0.8.8-py3.8.egg" ... done
+    ** Removing "pyradio-0.8.6-py2.7.egg" ... done
+    ** Removing "pyradio-0.8.8-py3.8.egg" ... done
+    PyRadio successfully uninstalled
+
+In this example, running *devel/build_install_pyradio -u* has removed **PyRadio** python 3.8 system wide installation files, **PyRadio** python 2.7 system wide installation files,  and **PyRadio** python 3.8 user installation files, found in the system.
+
+I would recommend to execute *devel/build_install_pyradio -u* from time to time, and reinstall **Pyradio** right after its completion.
+
+### Previous cleaning up procedure
+
 As **PyRadio** versions accumulate, when building from source, one may have to *clean up* old installation files.
 
 To do that, one has to observe the installation process in order to find out where the package is installed. The installation would complete printing the following messages (on *python 3.7*):
@@ -557,22 +581,6 @@ As we see, previous versions still exist in this system: **0.7.6.2** and **0.7.7
 
     $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-.7.6.2-py3.7.egg
     $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg
-
-**Note:** Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; **PyRadio** will search and remove any previously installed files when the "**-u**" (uninstall) parameter is used.
-
-Example:
-
-    $ devel/build_install_pyradio -u
-    Uninstalling PyRadio
-    ** Removing executable ... done
-    ** Removing help files ... done
-    Looking for python installed files
-    ** Removing "pyradio-0.8.8-py3.8.egg" ... done
-    ** Removing "pyradio-0.8.6-py2.7.egg" ... done
-    ** Removing "pyradio-0.8.8-py3.8.egg" ... done
-    PyRadio successfully uninstalled
-
-In this example, running *devel/build_install_pyradio -u* has removed **PyRadio** python 3.8 system wide installation files, **PyRadio** python 2.7 system wide installation files,  and **PyRadio** python 3.8 user installation files, found in the system.
 
 ## Debug mode
 

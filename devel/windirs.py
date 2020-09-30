@@ -1,6 +1,6 @@
 import sys
 import glob
-from os.path import sep
+from os.path import sep, basename
 
 def show_python_dirs():
     import site
@@ -33,5 +33,7 @@ if dirs:
             pydirs = glob.glob(a_dir + sep + 'pyradio*egg')
             if pydirs:
                 with open("pyremove.bat", "a") as f:
+                    f.write('echo Looking for python installed files...\n')
                     for a_dir in pydirs:
+                        f.write('echo ** "{}"\n'.format(basename(a_dir)))
                         f.write('RD /S /Q "{}"\n'.format(a_dir))

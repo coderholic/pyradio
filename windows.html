@@ -58,6 +58,7 @@
 <li><a href="#updating-with-git">5.1 Updating with Git</a></li>
 <li><a href="#updating-without-git">5.2 Updating without Git</a></li>
 </ul></li>
+<li><a href="#uninstalling-pyradio-or-cleaning-up">6. Uninstalling Pyradio (or Cleaning up)</a></li>
 </ul></li>
 <li><a href="build.html">Back</a></li>
 <li><a href="README.html">Back to README</a></li>
@@ -149,7 +150,9 @@ git config --global user.email &quot;my@email.com&quot;</pre>
 <p>You are ready to install <strong>PyRadio</strong>!</p>
 <p>So here’s how you do it:</p>
 <h4 id="using-git">4.1 Using Git</h4>
-<p>If you have Git installed, you open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>) and type:</p>
+<p>If you have Git installed, you open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong> or if you are on Windows 10, use <strong>Run it as Administrator</strong> as you can see in the following image).</p>
+<p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/run-as-admin.jpg">Run as Administrator</a></p>
+<p>Then type:</p>
 <pre>git clone https://github.com/coderholic/pyradio.git
 cd pyradio
 devel\build_install_pyradio</pre>
@@ -157,11 +160,10 @@ devel\build_install_pyradio</pre>
 <p>Go to <a target="_blank" href="https://github.com/coderholic/pyradio/releases">PyRadio’s Releases page</a> and download the latest release (either a zip or a tar.gz file).</p>
 <p>Extract this file to your “<em>Home</em>” directory (“<strong>C:\Users\[Your User Name]</strong>” or “<strong>%USERPROFILE%</strong>) - you will get a directory whose name is similar to”<strong>pyradio-0.7.9</strong>".</p>
 <p>I will use this name for the following examples; you will have to use the actual name of directory you got from the extraction.</p>
-<p>Finally, open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong> or if you are on Windows 10, use <strong>Run it as Administrator</strong> as you can see in the following image)</p>
+<p>Finally, open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong> or if you are on Windows 10, use <strong>Run it as Administrator</strong> as you can see in the following image).</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/run-as-admin.jpg">Run as Administrator</a></p>
 <p>Then type:</p>
 <pre>cd pyradio-0.7.9
-cd pyradio
 devel\build_install_pyradio</pre>
 <h4 id="final-steps">4.3 Final steps</h4>
 <p>If the installation is successful, you will get something similar to the following snippet:</p>
@@ -199,5 +201,35 @@ git pull
 devel\build_install_pyradio</pre>
 <h4 id="updating-without-git">5.2 Updating without Git</h4>
 <p>The procedure is the same as installing, so please follow the <a href="#not-using-git">relevant instructions</a>.</p>
+<h3 id="uninstalling-pyradio-or-cleaning-up">6. Uninstalling Pyradio (or Cleaning up) <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<p>To uninstall <strong>PyRadio</strong> you will have to use the “<strong>-u</strong>” (uninstall) parameter.</p>
+<p>This procedure will remove any <strong>Pyradio</strong> files installed in your system, but will leave instact <strong>PyRadio</strong> configuration files or uninstall python, mplayer, or git from your system.</p>
+<p>To uninstall <strong>PyRadio</strong> open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong> or if you are on Windows 10, use <strong>Run it as Administrator</strong> as you can see in the following image).</p>
+<p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/run-as-admin.jpg">Run as Administrator</a></p>
+<p>Then navigate to the previously downloaded <strong>Pyradio</strong> setup folder, and execute <em>devel\build_install_pyradio -u</em>.</p>
+<p>Example:</p>
+<pre>C:\Users\spiros\pyradio&gt;devel\build_install_pyradio -u
+Uninstalling PyRadio
+** Gathering information...
+** Removing executable...
+** Removing Desktop shortcut...
+Looking for python installed files...
+** &quot;pyradio-0.8.8-py3.7.egg&quot;
+** &quot;pyradio-0.7.9-py3.7.egg&quot;
+** &quot;pyradio-0.6.3-py3.7.egg&quot;
+Pyradio successfully uninstalled!
+
+*********************************************************
+
+PyRadio has not uninstalled MPlayer, Python and/or Git.
+You will have to manually uninstall them.
+
+PyRadio user files are left instact. You can find them at
+C:\Users\spiros\AppData\Roaming\pyradio
+
+**********************************************************</pre>
+<p>In this example, running <em>devel\build_install_pyradio -u</em> has removed <strong>PyRadio</strong> python 3.7 installation files.</p>
+<p>The script has detected (and removed) version <em>8.8</em> (probably the current or previous version), along with verisons <em>7.9</em> and <em>6.3</em> (older versions previously installed).</p>
+<p>I would recommend to execute <em>devel\build_install_pyradio -u</em> from time to time, and reinstall <strong>PyRadio</strong> right after its completion.</p>
 </body>
 </html>
