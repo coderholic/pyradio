@@ -1,6 +1,6 @@
-# Building PyRadio from source
+# PyRadio Build Instructions
 
-Command line internet radio player.
+**PyRadio**: Command line internet radio player.
 
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 

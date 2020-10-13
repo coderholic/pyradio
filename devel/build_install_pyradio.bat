@@ -1,12 +1,24 @@
 @echo off
-cls
 set arg1=%1
 set PROGRAM=python
 if "%1"=="-h" goto :displayhelp
+
+REM Check if we have admin rights
+net session >nul 2>&1
+if NOT %errorLevel% == 0 (
+    echo.
+    echo Error: You must have Administrative permissions to run this script.
+    echo        Please start cmd "As Administrator"
+    echo.
+    goto :endofscript
+)
+
 if "%1"=="--help" goto :displayhelp
+if "%1"=="-u" goto :uninstall
 if "%1"=="" goto :noparam
 set "PROGRAM=python%arg1%"
 :noparam
+cls
 
 for /R .\... %%f in (*.pyc) do del /q "%%~ff"
 
@@ -117,10 +129,11 @@ echo.
 echo Parameters are optional:
 echo      2 -  use python2 to build and install
 echo      3 -  use python3 to build and install
+echo     -u -  uninstall PyRadio
 echo     -h
 echo --help -  display help
 echo.
-
+goto :endofscript
 
 :toend
 echo.
@@ -128,20 +141,54 @@ echo.
 echo Installation successful!
 goto :endofscript
 
+
+
+:uninstall
+echo Uninstalling PyRadio
+echo ** Gathering information...
+DEL pyremove.bat 2>nul
+echo echo ** Removing executable ... done>>pyremove.bat
+echo echo ** Removing Desktop shortcut ... done >>pyremove.bat
+echo IF EXIST "%DESKTOP%\PyRadio.lnk" DEL "%DESKTOP%\PyRadio.lnk" 2>nul >>pyremove.bat
+python devel\site.py exe 2>nul >>pyremove.bat
+REM echo echo ** Removing Python files ... done >>pyremove.bat
+python devel\site.py 2>nul >dirs
+python2 devel\site.py 2>nul >>dirs
+python3 devel\site.py 2>nul >>dirs
+python -m site --user-site 2>nul >>dirs
+python2 -m site --user-site 2>nul >>dirs
+python3 -m site --user-site 2>nul >>dirs
+python devel\windirs.py
+echo DEL dirs >>pyremove.bat
+echo echo PyRadio successfully uninstalled! >>pyremove.bat
+
+echo echo. >>pyremove.bat
+echo echo ********************************************************* >>pyremove.bat
+echo echo. >>pyremove.bat
+echo echo PyRadio has not uninstalled MPlayer, Python and/or Git. >>pyremove.bat
+echo echo You will have to manually uninstall them. >>pyremove.bat
+echo echo. >>pyremove.bat
+echo echo PyRadio user files are left instact. You can find them at >>pyremove.bat
+echo echo %APPDATA%\pyradio >>pyremove.bat
+echo echo. >>pyremove.bat
+echo echo ********************************************************** >>pyremove.bat
+echo echo. >>pyremove.bat
+REM copy pyremove.bat con
+REM pause
+
+REM IF EXIST %APPDATA%\pyradio\mplayer (
+REM echo **********************************************************
+REM echo *
+REM echo * Directory "%APPDATA%\pyradio"
+REM echo * NOT deleted since it contains the MPlayer installation
+REM echo *
+REM echo **********************************************************
+REM echo.
+REM ) ELSE (
+REM echo ** Removing user files...
+REM RD /S /Q %APPDATA%\pyradio
+REM )
+pyremove.bat
+
 :endofscript
 
-
-
-
-REM *** HTML files copyed to "C:\Users\spiros\AppData\Roaming\pyradio\help"
-REM === Player "mplayer" found in "C:\Users\spiros\mplayer"
-REM === Player "mplayer" found in PATH
-REM === Dekstop Shortcut already exists
-
-
-
-REM *** HTML files copyed to "C:\Users\spiros\AppData\Roaming\pyradio\help"
-REM === Player "mplayer" found in "C:\Users\spiros\mplayer"
-REM !!! Player "mplayer" not found in PATH
-REM     Add "C:\Users\spiros\mplayer" to user PATH and log off or restart
-REM === Dekstop Shortcut already exists

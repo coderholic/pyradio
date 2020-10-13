@@ -608,12 +608,12 @@ class PyRadioSelectEncodings(object):
 
     _invalid = []
 
-    def __init__(self, maxY, maxX, encoding):
+    def __init__(self, maxY, maxX, encoding, config_encoding):
         self._parent_maxY = maxY
         self._parent_maxX = maxX
         self.encoding = encoding
         self._orig_encoding = encoding
-
+        self._config_encoding = config_encoding
         self._orig_encoding = encoding
         self._encodings = get_encodings()
         self._num_of_rows = int(len(self._encodings) / self._num_of_columns)
@@ -830,11 +830,15 @@ class PyRadioSelectEncodings(object):
         return (self._num_of_rows + 1) * a_column + a_row
 
     def keypress(self, char):
-        if char in (ord('r'), ):
+        if char in (ord('c'), ):
+            self.encoding = self._config_encoding
+            self.setEncoding(self.encoding, init=True)
+
+        elif char in (ord('r'), ):
             self.encoding = self._orig_encoding
             self.setEncoding(self.encoding, init=True)
 
-        if char in (curses.KEY_UP, ord('k')):
+        elif char in (curses.KEY_UP, ord('k')):
             self.selection -= 1
             if self.selection < 0:
                 self.selection = len(self._encodings) - 1

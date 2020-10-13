@@ -60,9 +60,9 @@ def shell():
                         help="List of available stations in a playlist.")
     parser.add_argument("-t", "--theme", default='', help="Use specified theme. ")
     parser.add_argument("-scd", "--show-config-dir", action='store_true',
-                        help="Print config directory location and exit.")
+                        help="Print config directory [CONFIG DIR] location and exit.")
     parser.add_argument("-ocd", "--open-config-dir", action='store_true',
-                        help="Open config directory with default file manager.")
+                        help="Open config directory [CONFIG DIR] with default file manager.")
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
     parser.add_argument("-d", "--debug", action='store_true',
@@ -104,27 +104,24 @@ def shell():
         sys.exit()
 
     if args.unlock:
-        lock_file = path.join(pyradio_config.stations_dir, '.lock')
-        if path.exists(lock_file):
-            from os import remove
-            try:
-                remove(lock_file)
-                print('Lock file removed...')
-            except:
-                print('Failed to remove Lock file...')
+        ret, lfile = pyradio_config.remove_session_lock_file()
+        if ret == 0:
+            print('Lock file removed: "{}"'.format(lfile))
+        elif ret == 1:
+            print('Failed to remove Lock file: "{}"'.format(lfile))
         else:
-            print('Lock file not found...')
+            print('Lock file not found: "{}"'.format(lfile))
         sys.exit()
 
     if args.list is False and args.add is False:
         print('Reading config...')
-        ret = pyradio_config.read_config()
-        if ret == -1:
-            print('Error opening config: "{}"'.format(pyradio_config.config_file))
-            sys.exit(1)
-        elif ret == -2:
-            print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
-            sys.exit(1)
+    ret = pyradio_config.read_config()
+    if ret == -1:
+        print('Error opening config: "{}"'.format(pyradio_config.config_file))
+        sys.exit(1)
+    elif ret == -2:
+        print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
+        sys.exit(1)
 
     if args.use_player != '':
         if not platform.startswith('win'):
@@ -133,7 +130,7 @@ def shell():
     if args.list is False and args.add is False:
         print('Reading playlist...')
     sys.stdout.flush()
-    ret = pyradio_config.read_playlist_file(args.stations)
+    ret = pyradio_config.read_playlist_file(stationFile=args.stations)
     if ret < 0:
         print_playlist_selection_error(args.stations, pyradio_config, ret)
 
@@ -142,9 +139,9 @@ def shell():
     # handle 2-column vs. 3-column playlists
     if args.add:
         if sys.version_info < (3, 0):
-            params = raw_input("Enter the name: "), raw_input("Enter the url: "), raw_input("Enter the encoding (leave empty for 'utf-8'): ")
+            params = raw_input("Enter the name: "), raw_input("Enter the url: "), raw_input("Enter the encoding (leave empty for '" + pyradio_config.default_encoding + "'): ")
         else:
-            params = input("Enter the name: "), input("Enter the url: "), input("Enter the encoding (leave empty for 'utf-8'): ")
+            params = input("Enter the name: "), input("Enter the url: "), input("Enter the encoding (leave empty for '" + pyradio_config.default_encoding + "'): ")
         msg = ('name', 'url')
         for i, a_param in enumerate(params):
             if i < 2:
@@ -195,8 +192,8 @@ def shell():
         theme_to_use = pyradio_config.theme
 
     # Starts the radio gui.
-    pyradio = PyRadio(pyradio_config, 
-            play=args.play, 
+    pyradio = PyRadio(pyradio_config,
+            play=args.play,
             req_player=requested_player,
             theme=theme_to_use)
     """ Setting ESCAPE key delay to 25ms
@@ -235,16 +232,16 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
         print('Error: Playlist recovery failed!\n')
         if cnf.playlist_recovery_result == 1:
             msg = """Both a playlist file (CSV) and a playlist backup file (TXT)
-exist for the selected playlist. In this case, PyRadio would
-try to delete the CSV file, and then rename the TXT file to CSV.\n
-Unfortunately, deleting the CSV file has failed, so you have to
-manually address the issue."""
+            exist for the selected playlist. In this case, PyRadio would
+            try to delete the CSV file, and then rename the TXT file to CSV.\n
+            Unfortunately, deleting the CSV file has failed, so you have to
+            manually address the issue."""
         else:
-            msg = """A playlist backup file (TXT) has been found for the selected 
-playlist. In this case, PyRadio would try to rename this file
-to CSV.\n
-Unfortunately, renaming this file has failed, so you have to
-manually address the issue."""
+            msg = """A playlist backup file (TXT) has been found for the selected
+            playlist. In this case, PyRadio would try to rename this file
+            to CSV.\n
+            Unfortunately, renaming this file has failed, so you have to
+            manually address the issue."""
         print(msg)
         #open_conf_dir(cnf)
         sys.exit(1)

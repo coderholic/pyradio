@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Running PyRadio on Windows</title>
+  <title>PyRadio on Windows</title>
   <style>
     html {margin: 2em;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} 
@@ -13,10 +13,13 @@
     dd {margin: 1em;} 
     dt {font-weight: bold;} 
     pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6; overflow: auto;}
-      code{white-space: pre-wrap;}
-      span.smallcaps{font-variant: small-caps;}
-      span.underline{text-decoration: underline;}
-      div.column{display: inline-block; vertical-align: top; width: 50%;}
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
@@ -25,8 +28,8 @@
 <body>
 <header id="title-block-header">
 </header>
-<h1 id="pyradio">PyRadio</h1>
-<p>Command line internet radio player.</p>
+<h1 id="pyradio-on-windows">PyRadio on Windows</h1>
+<p><strong>PyRadio</strong>: Command line internet radio player.</p>
 <p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
@@ -50,15 +53,16 @@
 <li><a href="#not-using-git">4.2 Not using Git</a></li>
 <li><a href="#final-steps">4.3 Final steps</a></li>
 </ul></li>
-<li><a href="#updating-pyradio">5. Updating PyRadio</a>
+</ul></li>
+<li><a href="#updating-pyradio">Updating PyRadio</a>
 <ul>
-<li><a href="#updating-with-git">5.1 Updating with Git</a></li>
-<li><a href="#updating-without-git">5.2 Updating without Git</a></li>
+<li><a href="#updating-with-git">Updating with Git</a></li>
+<li><a href="#updating-without-git">Updating without Git</a></li>
 </ul></li>
-</ul></li>
-<li><a href="build.html">Back</a></li>
-<li><a href="README.html">Back to README</a></li>
+<li><a href="#uninstalling-pyradio-or-cleaning-up">Uninstalling PyRadio (or Cleaning up)</a></li>
+<li><a href="#reporting-bugs">Reporing bugs</a></li>
 </ul>
+<p><a href="build.html">[Back to Build Instructions]</a> | <a href="README.html">[Back to README]</a></p>
 <h2 id="running-pyradio-on-windows">Running PyRadio on Windows <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>What? A linux console application on Windows?</p>
 <p>Yes, sure. Why not?</p>
@@ -79,7 +83,7 @@
 </ol>
 <h3 id="python-installation">1. Python installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <h4 id="installing-python">1.1 Installing Python</h4>
-<p>If you don’t already have <strong>Pyhton</strong>, just get to its <a target="_blank" href="https://www.python.org/downloads/windows/">Windows Downloads</a> page and download the latest <strong>3.x</strong> release.</p>
+<p>If you don’t already have <strong>Python</strong>, just get to its <a target="_blank" href="https://www.python.org/downloads/windows/">Windows Downloads</a> page and download the latest <strong>3.x</strong> release.</p>
 <p>When the download is done, run its setup and select “<em>Custom Installation</em>” so that you can “<em>Add Python to environment varaibles</em>”. You can refer to the following image to see the relevant setting.</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/python1.jpg">Python Installation</a></p>
 <h4 id="verifying-the-installation">1.2 Verifying the installation</h4>
@@ -95,17 +99,11 @@ Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;licen
 <h3 id="mplayer-installation">2. MPlayer installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>Go to <a target="_blank" href="http://www.mplayerhq.hu/">MPlayer’s home</a> and open the <a target="_blank" href="http://www.mplayerhq.hu/design7/dload.html">download</a> page. Then scroll down to the <strong>Binaries</strong> section and get to the <a target="_blank" href="http://oss.netfarm.it/mplayer/">MPlayer Windows builds</a> page. Then scroll down again until you get to the <strong>Build selection table</strong> to select an installation bundle.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> I am stating here all the links, although all one has to do is get to the last one and download the <strong>MPlayer setup</strong>. This is done so that in case any of the links change in the future, the way to go will be known, having <a target="_blank" href="http://www.mplayerhq.hu/">MPlayer’s home page</a> as a starting point.</p>
-<p>You will end up downloading a <strong>7z archive</strong>, which contains a directory whose name is similar to <strong>MPlayer-corei7-r38135+gb272d5b9b6</strong>.</p>
+<p>You will end up downloading a <a target="_blank" href="https://www.7-zip.org/">7z archive</a>, which contains a directory whose name is similar to <strong>MPlayer-corei7-r38135+gb272d5b9b6</strong>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> <em>MPlayer</em> provides CPU type dependent builds. In case you select the wrong <em>mplayer</em> build, you will end up connecting to stations but having no sound. If this is the case, please do go back to the download page and get the right build for your system / CPU.</p>
 <p>Extract this directory to whatever place you like and <strong>rename</strong> it to <strong>mplayer</strong>.</p>
 <p>Here comes the tricky part…</p>
-<p>In case you:</p>
-<ol type="a">
-<li>are the Administrator of the PC, or</p></li>
-<li>have administrative rights</p></li>
-</ol>
-<p>move (cut) the <strong>mplayer</strong> directory to <strong>C:\</strong> (paste).</p>
-<p>Make a note that you will add “<strong>C:\mplayer</strong>” to PATH.</p>
-<p>In any other case, move the <strong>mplayer</strong> directory to either on of the following locations:</p>
+<p>Move the <strong>mplayer</strong> directory to either on of the following locations:</p>
 <ol type="a">
 <li><strong>%USERPROFILE%</strong></p>
 <p>This is actually your “<em>Home</em>” directory.</p>
@@ -120,9 +118,9 @@ Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;licen
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/appdata.jpg">Navigating to %APPDATA%</a></p>
 <h4 id="adding-mplayer-to-the-path">2.1 Adding MPlayer to the PATH</h4>
 <p>The final step is to add MPlayer to the PATH System Variable.</p>
-<p>Now, you already know the string that has to be added (you have made a note of it in the previous step).</p>
+<p>Now, you already know the <strong>path string</strong> that has to be added (you have made a note of it in the previous step).</p>
 <p>There’s just one thing to say here: Windows provide a “<em>User variable for User</em>” and a “<em>System variables</em>” section in the “<em>Environment Variables</em>” window.</p>
-<p>If the string to add is “<strong>C:\mplayer</strong>”, you add it to the “<em>System variables</em>” section, otherwise to the “<em>User variables for User</em>” section.</p>
+<p>Add the <strong>path string</strong> to the “<em>User variables for User</em>” section.</p>
 <p>In order to make the actual addition, please refer to the following image.</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/path.jpg">Adding MPlayer to the PATH</a></p>
 <p>After applying the changes you should <strong>log off and back on</strong> or <strong>restart the system</strong>, because changes done to the PATH variable will take effect the next time you log into the system.</p>
@@ -152,7 +150,9 @@ git config --global user.email &quot;my@email.com&quot;</pre>
 <p>You are ready to install <strong>PyRadio</strong>!</p>
 <p>So here’s how you do it:</p>
 <h4 id="using-git">4.1 Using Git</h4>
-<p>If you have Git installed, you open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>) and type:</p>
+<p>If you have Git installed, you open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong> or if you are on Windows 10, use <strong>Run it as Administrator</strong> as you can see in the following image).</p>
+<p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/run-as-admin.jpg">Run as Administrator</a></p>
+<p>Then type:</p>
 <pre>git clone https://github.com/coderholic/pyradio.git
 cd pyradio
 devel\build_install_pyradio</pre>
@@ -160,9 +160,10 @@ devel\build_install_pyradio</pre>
 <p>Go to <a target="_blank" href="https://github.com/coderholic/pyradio/releases">PyRadio’s Releases page</a> and download the latest release (either a zip or a tar.gz file).</p>
 <p>Extract this file to your “<em>Home</em>” directory (“<strong>C:\Users\[Your User Name]</strong>” or “<strong>%USERPROFILE%</strong>) - you will get a directory whose name is similar to”<strong>pyradio-0.7.9</strong>".</p>
 <p>I will use this name for the following examples; you will have to use the actual name of directory you got from the extraction.</p>
-<p>Then open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>) and type:</p>
+<p>Finally, open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong> or if you are on Windows 10, use <strong>Run it as Administrator</strong> as you can see in the following image).</p>
+<p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/run-as-admin.jpg">Run as Administrator</a></p>
+<p>Then type:</p>
 <pre>cd pyradio-0.7.9
-cd pyradio
 devel\build_install_pyradio</pre>
 <h4 id="final-steps">4.3 Final steps</h4>
 <p>If the installation is successful, you will get something similar to the following snippet:</p>
@@ -189,16 +190,56 @@ pip install pywin32</pre>
 <p>If you are not using Git, you can safely delete the <strong>pyradio-0.7.9</strong> directory.</p>
 <p>Finally, you can type <strong>pyradio</strong> and enjoy!</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch <strong>PyRadio</strong> and optionally modify it (change font size, window dimensions, etc). If it’s not there, you can just copy it from the “<em>help</em>” directory of the <strong>Explorer File Manager</strong> which will open after executing <strong>pyradio -ocd</strong>.</p>
-<h3 id="updating-pyradio">5. Updating PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h2 id="updating-pyradio">Updating PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> will inform you when a new release is available.</p>
-<p>To start the update procedure, close <strong>Pyradio</strong> if it’s still running.</p>
+<p>To start the update procedure, close <strong>PyRadio</strong> if it’s still running.</p>
 <p>Then do one of the following depending on whether you have <strong>Git</strong> installed or not:</p>
-<h4 id="updating-with-git">5.1 Updating with Git</h4>
+<h3 id="updating-with-git">Updating with Git <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>Open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>) and execute the commands:</p>
 <pre>cd pyradio
 git pull
 devel\build_install_pyradio</pre>
-<h4 id="updating-without-git">5.2 Updating without Git</h4>
+<h3 id="updating-without-git">Updating without Git <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>The procedure is the same as installing, so please follow the <a href="#not-using-git">relevant instructions</a>.</p>
+<h2 id="uninstalling-pyradio-or-cleaning-up">Uninstalling PyRadio (or Cleaning up) <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>To uninstall <strong>PyRadio</strong> you will have to use the “<strong>-u</strong>” (uninstall) parameter.</p>
+<p>This procedure will remove any <strong>PyRadio</strong> files installed in your system, but will leave instact <strong>PyRadio</strong> configuration files and python, mplayer and git (if installed).</p>
+<p>To uninstall <strong>PyRadio</strong> open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong> or if you are on Windows 10, use <strong>Run it as Administrator</strong> as you can see in the following image).</p>
+<p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/run-as-admin.jpg">Run as Administrator</a></p>
+<p>Then navigate to the previously downloaded <strong>PyRadio</strong> setup folder, and execute <em>devel\build_install_pyradio -u</em>.</p>
+<p>Example:</p>
+<pre>C:\Users\spiros\pyradio&gt;devel\build_install_pyradio -u
+Uninstalling PyRadio
+** Gathering information...
+** Removing executable ... done
+** Removing Desktop shortcut ... done
+Looking for python installed files...
+** Removing &quot;pyradio-0.8.8-py3.7.egg&quot; ... done
+** Removing &quot;pyradio-0.7.9-py3.7.egg&quot; ... done
+** Removing &quot;pyradio-0.6.3-py3.7.egg&quot; ... done
+PyRadio successfully uninstalled!
+
+*********************************************************
+
+PyRadio has not uninstalled MPlayer, Python and/or Git.
+You will have to manually uninstall them.
+
+PyRadio user files are left instact. You can find them at
+C:\Users\spiros\AppData\Roaming\pyradio
+
+**********************************************************</pre>
+<p>In this example, running <em>devel\build_install_pyradio -u</em> has removed <strong>PyRadio</strong> python 3.7 installation files.</p>
+<p>The script has detected (and removed) version <em>0.8.8</em> (probably the current or previous version), along with verisons <em>0.7.9</em> and <em>0.6.3</em> (older versions previously installed).</p>
+<p>I would recommend to execute <em>devel\build_install_pyradio -u</em> from time to time, and reinstall <strong>PyRadio</strong> right after its completion.</p>
+<h3 id="reporting-bugs">Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<p>When a bug is found, please do report it by <a target="_blank" href="https://github.com/coderholic/pyradio/issues">opening an issue at github</a>.</p>
+<p>In you report you should, at the very least, state your <strong>pyradio version</strong> and <strong>python version</strong>.</p>
+<p>It would be really useful to include <strong>%USERPROFILE%/pyradio.log</strong> in your report.</p>
+<p>To create it, enter the following commands in a terminal:</p>
+<pre>cd %USERPROFILE%
+del pyradio.log
+pyradio -d</pre>
+<p>Then try to reproduce the bug and exit <strong>PyRadio</strong>.</p>
+<p>Finally, include the file produced in your report.</p>
 </body>
 </html>

@@ -1,11 +1,16 @@
 #!/bin/bash
-help(){
-echo "Usage: $0 [2/3/-u]
-
+function help(){
+if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
+    echo "Usage: $0 [2/3/-u]"
+else
+    echo "Usage: $0 [2/3/-u/--user]"
+fi
+echo "
 Available options:
-  2   build using python v. 2.x
-  3   build using python v. 3.x
-  -u  uninstall pyradio
+  2       build using python v. 2.x
+  3       build using python v. 3.x
+  -u      uninstall pyradio
+  --user  user install (in ~/.local)
 
 If no option is used, will build using system default
 
@@ -22,14 +27,73 @@ Checking python availability:"
             echo
 }
 
-uninstall(){
-    sudo rm -f `which pyradio` 2>/dev/null
-    if [ -d /usr/share/doc/pyradio ];then
-        sudo rm -rf /usr/share/doc/pyradio 2>/dev/null
-    else
-        sudo rm -rf /usr/local/share/doc/pyradio 2>/dev/null
-    fi
-    sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio.1.gz 2>/dev/null
+function find_paths(){
+local APATH
+# Fix for MacOs Catalina python 3
+if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
+    echo /usr/local/lib
+fi
+python devel/site.py 2>/dev/null
+python2 devel/site.py 2>/dev/null
+python3 devel/site.py 2>/dev/null
+APATH=$(python -m site --user-site 2>/dev/null) && echo "$APATH"
+APATH=$(python2 -m site --user-site 2>/dev/null) && echo "$APATH"
+APATH=$(python3 -m site --user-site 2>/dev/null) && echo "$APATH"
+}
+
+function remove_paths(){
+echo "Looking for python installed files..."
+find_paths | sort -u > /tmp/pyradio-uninstall.$$
+while read line;do
+    [ -d "$line" ] && {
+    sudo find "$line" -type d -name "pyradio*egg" >> /tmp/pyradio-delete.$$
+    }
+done < /tmp/pyradio-uninstall.$$
+while read line;do
+    [ -d "$line" ] && {
+        echo -n "** Removing \"$(basename $line)\" ... "
+        sudo rm -rf "$line"
+        echo done
+    }
+done < /tmp/pyradio-delete.$$
+rm -f /tmp/pyradio-uninstall.$$ /tmp/pyradio-delete.$$ 2>/dev/null
+}
+
+function uninstall(){
+    local user
+    user=$(which pyradio 2>/dev/null) || {
+        echo "PyRadio is not installed..."
+        exit
+    }
+    sudo echo 'Uninstalling PyRadio'
+    user=$(which pyradio | grep '\.local')
+    [ -z "$user" ] && {
+        echo -n '** Removing executable ... '
+        sudo rm -f `which pyradio` 2>/dev/null
+        if [ -d /usr/share/doc/pyradio ];then
+            sudo rm -rf /usr/share/doc/pyradio 2>/dev/null
+        else
+            sudo rm -rf /usr/local/share/doc/pyradio 2>/dev/null
+        fi
+        echo done
+        echo -n '** Removing help files ... '
+        sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio.1.gz 2>/dev/null
+        echo done
+    } || {
+        echo -n '** Removing executable ... '
+        rm -f `which pyradio` 2>/dev/null
+        echo done
+        echo -n '** Removing help files ... '
+        if [ -d ~/.local/share/doc/pyradio ];then
+            rm -rf ~/.local/share/doc/pyradio 2>/dev/null
+        else
+            rm -rf ~/.local/local/share/doc/pyradio 2>/dev/null
+        fi
+        rm -f ~/.local/share/man/man1/pyradio.1.gz 2>/dev/null
+        echo done
+    }
+#set -x
+    remove_paths
     echo "PyRadio successfully uninstalled"
 }
 
@@ -44,6 +108,14 @@ do
         -u)
             uninstall
             exit
+            ;;
+        --user)
+            TO_USER=1
+            if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
+                echo "Parameter --user not supported on this OS"
+                exit 1
+            fi
+            shift
             ;;
         2)
             TO_PYTHON=2
@@ -88,8 +160,13 @@ for prog in git sed ;do
 done
 
 # delete any files that were left from previous attempt
-sudo find . -iname "*.pyc" -delete 2>/dev/null
-sudo find . -iname "*.egg" -delete 2>/dev/null
+[ -z "$TO_USER" ] && {
+    sudo find . -iname "*.pyc" -delete 2>/dev/null
+    sudo find . -iname "*.egg" -delete 2>/dev/null
+} || {
+    find . -iname "*.pyc" -delete 2>/dev/null
+    find . -iname "*.egg" -delete 2>/dev/null
+}
 
 # add git repo info to project
 descr=$(git describe --long --tags 2>/dev/null || echo not_from_git)
@@ -109,28 +186,56 @@ rm sed.$$ 2>/dev/null
 
 # build and install project
 python"${TO_PYTHON}" setup.py build && {
-    echo "***** installing..."
-    sudo python"${TO_PYTHON}" setup.py install && {
-        gzip -k pyradio.1
-        sudo mv -f pyradio.1.gz /usr/share/man/man1 2>/dev/null || sudo mv -f pyradio.1.gz /usr/local/share/man/man1
-        DOC=/usr/share/doc/pyradio
-        sudo mkdir "$DOC" 2>/dev/null
-        if [ ! -d "$DOC" ];then
-            # Mac OS SIP protects /usr
-            DOC=/usr/local/share/doc/pyradio
-            mkdir "$DOC"
-        fi
-        for n in README.* build.*
-        do
-            sudo cp "$n" "$DOC"
-        done
-        # copy LICENCE
-        if [ "$DOC" = "/usr/share/doc/pyradio" ];then
-            sudo mkdir -p /usr/share/licenses/pyradio 2>/dev/null
-            sudo cp LICENCE /usr/share/licenses/pyradio
-        else
-            sudo cp LICENCE "$DOC"
-        fi
+    [ -z "$TO_USER" ] && {
+        echo "***** installing..."
+        sudo python"${TO_PYTHON}" setup.py install | tee installed && {
+            gzip -k pyradio.1
+            sudo mv -f pyradio.1.gz /usr/share/man/man1 2>/dev/null || sudo mv -f pyradio.1.gz /usr/local/share/man/man1
+            DOC=/usr/share/doc/pyradio
+            sudo mkdir "$DOC" 2>/dev/null
+            if [ ! -d "$DOC" ];then
+                # Mac OS SIP protects /usr
+                DOC=/usr/local/share/doc/pyradio
+                mkdir "$DOC"
+            fi
+            for n in README.* build.*
+            do
+                sudo cp "$n" "$DOC"
+            done
+            # copy LICENCE
+            if [ "$DOC" = "/usr/share/doc/pyradio" ];then
+                sudo mkdir -p /usr/share/licenses/pyradio 2>/dev/null
+                sudo cp LICENCE /usr/share/licenses/pyradio
+            else
+                sudo cp LICENCE "$DOC"
+            fi
+        }
+    } || {
+        echo "***** installing for user..."
+        python"${TO_PYTHON}" setup.py install --user | tee installed && {
+            gzip -k pyradio.1
+            mkdir -p ~/.local/share/man/man1 2>/dev/null
+            mv -f pyradio.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio.1.gz ~/.local/local/share/man/man1
+            DOC=~/.local/share/doc/pyradio
+            mkdir -p "$DOC" 2>/dev/null
+            if [ ! -d "$DOC" ];then
+                # Mac OS SIP protects /usr
+                DOC=~/.local/local/share/doc/pyradio
+                mkdir "$DOC"
+            fi
+            for n in README.* build.*
+            do
+                cp "$n" "$DOC"
+            done
+            # copy LICENCE
+            mkdir -p ~/.local/share/licenses 2>/dev/null
+            if [ "$DOC" = "~/.local/share/doc/pyradio" ];then
+                mkdir -p ~/.local/share/licenses/pyradio 2>/dev/null
+                cp LICENCE ~/.local/share/licenses/pyradio
+            else
+                cp LICENCE "$DOC"
+            fi
+        }
     }
 }
 
@@ -142,3 +247,4 @@ python"${TO_PYTHON}" setup.py build && {
     #git checkout pyradio/radio.py
 }
 rm sed.$$ 2>/dev/null
+

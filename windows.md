@@ -1,6 +1,6 @@
-# PyRadio
+# PyRadio on Windows
 
-Command line internet radio player.
+**PyRadio**: Command line internet radio player.
 
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
@@ -19,11 +19,13 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [4.1 Using Git](#using-git)
         * [4.2 Not using Git](#not-using-git)
         * [4.3 Final steps](#final-steps)
-    * [5. Updating PyRadio](#updating-pyradio)
-        * [5.1 Updating with Git](#updating-with-git)
-        * [5.2 Updating without Git](#updating-without-git)
-* [Back](build.md)
-* [Back to README](README.md)
+* [Updating PyRadio](#updating-pyradio)
+    * [Updating with Git](#updating-with-git)
+    * [Updating without Git](#updating-without-git)
+* [Uninstalling PyRadio (or Cleaning up)](#uninstalling-pyradio-or-cleaning-up)
+* [Reporing bugs](#reporting-bugs)
+
+[[Back to Build Instructions]](build.md) | [[Back to README]](README.md)
 
 ## Running PyRadio on Windows
 
@@ -92,23 +94,15 @@ Go to [MPlayer's home](http://www.mplayerhq.hu/) and open the [download](http://
 
 **Note:** I am stating here all the links, although all one has to do is get to the last one and download the **MPlayer setup**. This is done so that in case any of the links change in the future, the way to go will be known, having [MPlayer's home page](http://www.mplayerhq.hu/) as a starting point.
 
-You will end up downloading a **7z archive**, which contains a directory whose name is similar to **MPlayer-corei7-r38135+gb272d5b9b6**.
+You will end up downloading a [7z archive](https://www.7-zip.org/), which contains a directory whose name is similar to **MPlayer-corei7-r38135+gb272d5b9b6**.
+
+**Note:** *MPlayer* provides CPU type dependent builds. In case you select the wrong *mplayer* build, you will end up connecting to stations but having no sound. If this is the case, please do go back to the download page and get the right build for your system / CPU.
 
 Extract this directory to whatever place you like and **rename** it to **mplayer**.
 
 Here comes the tricky part...
 
-In case you:
-
-a. are the Administrator of the PC, or
-
-b. have administrative rights
-
-move (cut) the **mplayer** directory to **C:\\** (paste).
-
-Make a note that you will add "**C:\\mplayer**" to PATH.
-
-In any other case, move the **mplayer** directory to either on of the following locations:
+Move the **mplayer** directory to either on of the following locations:
 
 a. **%USERPROFILE%**
 
@@ -135,11 +129,11 @@ If you are unsure on how to do that, please refer to the following image (you ca
 
 The final step is to add MPlayer to the PATH System Variable.
 
-Now, you already know the string that has to be added (you have made a note of it in the previous step).
+Now, you already know the **path string** that has to be added (you have made a note of it in the previous step).
 
 There's just one thing to say here: Windows provide a "*User variable for User*" and a "*System variables*" section in the "*Environment Variables*" window.
 
-If the string to add is "**C:\\mplayer**", you add it to the "*System variables*" section, otherwise to the "*User variables for User*" section.
+Add the **path string** to the "*User variables for User*" section.
 
 In order to make the actual addition, please refer to the following image.
 
@@ -159,7 +153,6 @@ Usage:   mplayer [options] [url|path/]filename
 ```
 
 If **mplayer** was not found, you just have to go through the PATH modification procedure again.
-
 
 ### 3. Git installation (optional)
 
@@ -197,7 +190,11 @@ So here's how you do it:
 
 #### 4.1 Using Git
 
-If you have Git installed, you open a console (press the **Win** key, type **cmd** and press **ENTER**) and type:
+If you have Git installed, you open a console (press the **Win** key, type **cmd** and press **ENTER** or if you are on Windows 10, use **Run it as Administrator** as you can see in the following image).
+
+[Run as Administrator](https://members.hellug.gr/sng/pyradio/run-as-admin.jpg)
+
+Then type:
 
 ```
 git clone https://github.com/coderholic/pyradio.git
@@ -213,11 +210,14 @@ Extract this file to your "*Home*" directory ("**C:\\Users\\[Your User Name]**" 
 
 I will use this name for the following examples; you will have to use the actual name of directory you got from the extraction.
 
-Then open a console (press the **Win** key, type **cmd** and press **ENTER**) and type:
+Finally, open a console (press the **Win** key, type **cmd** and press **ENTER** or if you are on Windows 10, use **Run it as Administrator** as you can see in the following image).
+
+[Run as Administrator](https://members.hellug.gr/sng/pyradio/run-as-admin.jpg)
+
+Then type:
 
 ```
 cd pyradio-0.7.9
-cd pyradio
 devel\build_install_pyradio
 ```
 
@@ -260,15 +260,15 @@ Finally, you can type **pyradio** and enjoy!
 **Note:** For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch **PyRadio** and optionally modify it (change font size, window dimensions, etc). If it's not there, you can just copy it from the "*help*" directory of the **Explorer File Manager** which will open after executing **pyradio -ocd**.
 
 
-### 5. Updating PyRadio
+## Updating PyRadio
 
 **PyRadio** will inform you when a new release is available. 
 
-To start the update procedure, close **Pyradio** if it's still running.
+To start the update procedure, close **PyRadio** if it's still running.
 
 Then do one of the following depending on whether you have **Git** installed or not:
 
-#### 5.1 Updating with Git
+### Updating with Git
 
 
 Open a console (press the **Win** key, type **cmd** and press **ENTER**) and execute the commands:
@@ -280,6 +280,68 @@ devel\build_install_pyradio
 ```
 
 
-#### 5.2 Updating without Git
+### Updating without Git
 
 The procedure is the same as installing, so please follow the [relevant instructions](#not-using-git).
+
+
+## Uninstalling PyRadio (or Cleaning up)
+
+To uninstall **PyRadio** you will have to use the "**-u**" (uninstall) parameter.
+
+This procedure will remove any **PyRadio** files installed in your system, but will leave instact **PyRadio** configuration files and python, mplayer and git (if installed).
+
+To uninstall **PyRadio** open a console (press the **Win** key, type **cmd** and press **ENTER** or if you are on Windows 10, use **Run it as Administrator** as you can see in the following image).
+
+[Run as Administrator](https://members.hellug.gr/sng/pyradio/run-as-admin.jpg)
+
+Then navigate to the previously downloaded **PyRadio** setup folder, and execute *devel\\build_install_pyradio -u*.
+
+Example:
+
+    C:\Users\spiros\pyradio>devel\build_install_pyradio -u
+    Uninstalling PyRadio
+    ** Gathering information...
+    ** Removing executable ... done
+    ** Removing Desktop shortcut ... done
+    Looking for python installed files...
+	** Removing "pyradio-0.8.8-py3.7.egg" ... done
+	** Removing "pyradio-0.7.9-py3.7.egg" ... done
+	** Removing "pyradio-0.6.3-py3.7.egg" ... done
+    PyRadio successfully uninstalled!
+
+    *********************************************************
+
+    PyRadio has not uninstalled MPlayer, Python and/or Git.
+    You will have to manually uninstall them.
+
+    PyRadio user files are left instact. You can find them at
+    C:\Users\spiros\AppData\Roaming\pyradio
+
+    **********************************************************
+
+In this example, running *devel\\build_install_pyradio -u* has removed **PyRadio** python 3.7 installation files.
+
+The script has detected (and removed) version *0.8.8* (probably the current or previous version), along with verisons *0.7.9* and *0.6.3* (older versions previously installed).
+
+I would recommend to execute *devel\\build_install_pyradio -u* from time to time, and reinstall **PyRadio** right after its completion.
+
+### Reporting bugs
+
+When a bug is found, please do report it by [opening an issue at github](https://github.com/coderholic/pyradio/issues).
+
+In you report you should, at the very least, state your **pyradio version** and **python version**.
+
+It would be really useful to include **%USERPROFILE%/pyradio.log** in your report.
+
+To create it, enter the following commands in a terminal:
+
+    cd %USERPROFILE%
+    del pyradio.log
+    pyradio -d
+
+Then try to reproduce the bug and exit **PyRadio**.
+
+Finally, include the file produced in your report.
+
+
