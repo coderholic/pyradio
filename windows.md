@@ -19,13 +19,13 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [4.1 Using Git](#using-git)
         * [4.2 Not using Git](#not-using-git)
         * [4.3 Final steps](#final-steps)
-    * [5. Updating PyRadio](#updating-pyradio)
-        * [5.1 Updating with Git](#updating-with-git)
-        * [5.2 Updating without Git](#updating-without-git)
-    * [6. Uninstalling Pyradio (or Cleaning up)](#uninstalling-pyradio-or-cleaning-up)
-    * [7. Reporing bugs](#reporting-bugs)
-* [Back](build.md)
-* [Back to README](README.md)
+* [Updating PyRadio](#updating-pyradio)
+    * [Updating with Git](#updating-with-git)
+    * [Updating without Git](#updating-without-git)
+* [Uninstalling PyRadio (or Cleaning up)](#uninstalling-pyradio-or-cleaning-up)
+* [Reporing bugs](#reporting-bugs)
+
+[[Back to Build Instructions]](build.md) | [[Back to README]](README.md)
 
 ## Running PyRadio on Windows
 
@@ -260,15 +260,15 @@ Finally, you can type **pyradio** and enjoy!
 **Note:** For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch **PyRadio** and optionally modify it (change font size, window dimensions, etc). If it's not there, you can just copy it from the "*help*" directory of the **Explorer File Manager** which will open after executing **pyradio -ocd**.
 
 
-### 5. Updating PyRadio
+## Updating PyRadio
 
 **PyRadio** will inform you when a new release is available. 
 
-To start the update procedure, close **Pyradio** if it's still running.
+To start the update procedure, close **PyRadio** if it's still running.
 
 Then do one of the following depending on whether you have **Git** installed or not:
 
-#### 5.1 Updating with Git
+### Updating with Git
 
 
 Open a console (press the **Win** key, type **cmd** and press **ENTER**) and execute the commands:
@@ -280,22 +280,22 @@ devel\build_install_pyradio
 ```
 
 
-#### 5.2 Updating without Git
+### Updating without Git
 
 The procedure is the same as installing, so please follow the [relevant instructions](#not-using-git).
 
 
-### 6. Uninstalling Pyradio (or Cleaning up)
+## Uninstalling PyRadio (or Cleaning up)
 
 To uninstall **PyRadio** you will have to use the "**-u**" (uninstall) parameter.
 
-This procedure will remove any **Pyradio** files installed in your system, but will leave instact **PyRadio** configuration files and python, mplayer and git (if installed).
+This procedure will remove any **PyRadio** files installed in your system, but will leave instact **PyRadio** configuration files and python, mplayer and git (if installed).
 
 To uninstall **PyRadio** open a console (press the **Win** key, type **cmd** and press **ENTER** or if you are on Windows 10, use **Run it as Administrator** as you can see in the following image).
 
 [Run as Administrator](https://members.hellug.gr/sng/pyradio/run-as-admin.jpg)
 
-Then navigate to the previously downloaded **Pyradio** setup folder, and execute *devel\\build_install_pyradio -u*.
+Then navigate to the previously downloaded **PyRadio** setup folder, and execute *devel\\build_install_pyradio -u*.
 
 Example:
 
@@ -308,7 +308,7 @@ Example:
 	** Removing "pyradio-0.8.8-py3.7.egg" ... done
 	** Removing "pyradio-0.7.9-py3.7.egg" ... done
 	** Removing "pyradio-0.6.3-py3.7.egg" ... done
-    Pyradio successfully uninstalled!
+    PyRadio successfully uninstalled!
 
     *********************************************************
 
@@ -326,7 +326,7 @@ The script has detected (and removed) version *0.8.8* (probably the current or p
 
 I would recommend to execute *devel\\build_install_pyradio -u* from time to time, and reinstall **PyRadio** right after its completion.
 
-### 7. Reporting bugs
+### Reporting bugs
 
 When a bug is found, please do report it by [opening an issue at github](https://github.com/coderholic/pyradio/issues).
 
@@ -336,10 +336,11 @@ It would be really useful to include **%USERPROFILE%/pyradio.log** in your repor
 
 To create it, enter the following commands in a terminal:
 
-    C:\Users\spiros>del %USERPROFILE%\pyradio.log
-    C:\Users\spiros>pyradio -d
+    cd %USERPROFILE%
+    del pyradio.log
+    pyradio -d
 
-Then try to reproduce the bug and exit **pyradio**.
+Then try to reproduce the bug and exit **PyRadio**.
 
 Finally, include the file produced in your report.
 

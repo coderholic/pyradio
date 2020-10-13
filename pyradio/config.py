@@ -915,7 +915,10 @@ class PyRadioStations(object):
 
 class PyRadioConfig(PyRadioStations):
 
+    fallback_theme = ''
+
     theme_not_supported = False
+    theme_has_error = False
     theme_not_supported_notification_shown = False
 
     opts = collections.OrderedDict()

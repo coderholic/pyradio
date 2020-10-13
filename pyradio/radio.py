@@ -379,6 +379,7 @@ class PyRadio(object):
         else:
             self._theme_name = ret_theme_name
             self._cnf.theme_not_supported = True
+            self._cnf.theme_has_error = True if ret == -1 else False
 
         self.log = Log()
         # For the time being, supported players are mpv, mplayer and vlc.
@@ -1315,7 +1316,18 @@ class PyRadio(object):
     def _show_theme_not_supported(self):
         if self._cnf.theme_not_supported_notification_shown:
             return
-        txt = 'Error loading selected theme!\n____Using fallback theme.'
+        if self._cnf.theme_has_error:
+            txt = '|Error loading selected theme!|\n____Using |fallback| theme.'
+        else:
+            tmp = ['', '', '']
+            tmp[0] = '|Theme not supported!|'
+            tmp[1] = 'This terminal supports up to |{}| colors...'.format(curses.COLORS)
+            tmp[2] = 'Using |fallback| theme.'
+            while len(tmp[0]) < len(tmp[1]) -2:
+                tmp[0] = '_' + tmp[0] + '_'
+            while len(tmp[2]) < len(tmp[1]):
+                tmp[2] = '_' + tmp[2] + '_'
+            txt = '\n'.join(tmp)
         self._show_help(txt, mode_to_set=self.ws.operation_mode, caption='',
                 prompt='', is_message=True)
         # start 1750 ms counter
@@ -2723,8 +2735,8 @@ class PyRadio(object):
             return str(hour) + ':' + str(min)
 
         check_days = 10
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('detectUpdateThread: starting...')
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('detectUpdateThread: Starting...')
         ##################
         #delay(5, stop)
         from pyradio import version as my_version, app_state as my_app_state
@@ -2734,8 +2746,8 @@ class PyRadio(object):
             this_version=my_version+'-'+my_app_state
         connection_fail_count = 0
         ran=random.randint(25, 45)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('detectUpdateThread: Will check in {} seconds'.format(ran))
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('detectUpdateThread: Will check in {} seconds'.format(ran))
         delay(ran, stop)
         if stop():
             if logger.isEnabledFor(logging.DEBUG):
@@ -2757,15 +2769,15 @@ class PyRadio(object):
             #delta=check_days
             if delta < check_days:
                 clean_date_files(files)
-                if logger.isEnabledFor(logging.DEBUG):
+                if logger.isEnabledFor(logging.INFO):
                     if check_days - delta == 1:
-                        logger.debug('detectUpdateThread: Will check again tomorrow...')
+                        logger.info('detectUpdateThread: Will check again tomorrow...')
                     else:
-                        logger.debug('detectUpdateThread: Will check again in {} days...'.format(check_days - delta))
+                        logger.info('detectUpdateThread: Will check again in {} days...'.format(check_days - delta))
                 return
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('detectUpdateThread: checking for updates')
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('detectUpdateThread: Checking for updates')
         url = 'https://api.github.com/repos/coderholic/pyradio/tags'
         while True:
             if stop():
@@ -2795,13 +2807,13 @@ class PyRadio(object):
                 # PROGRAM DEBUG: set last github tag's version
                 # to check display functionality
                 #last_tag = '0.8.8-RC1'
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('detectUpdateThread: Upstream version found: {}'.format(last_tag))
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('detectUpdateThread: Upstream version found: {}'.format(last_tag))
                 if this_version == last_tag:
                     clean_date_files(files, -1)
                     create_tadays_date_file(a_path)
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('detectUpdateThread: No update found. Will check again in {} days. Exiting...'.format(check_days))
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('detectUpdateThread: No update found. Will check again in {} days. Exiting...'.format(check_days))
                     break
                 else:
                     # PROGRAM DEBUG: set program's version
@@ -2831,7 +2843,7 @@ class PyRadio(object):
                             logger.info('detectUpdateThread: Update available: {}'.format(last_tag))
                         a_lock.acquire()
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('notification sent!!!')
+                            logger.debug('detectUpdateThread: Update notification sent!!!')
                         self._update_version = last_tag
                         a_lock.release()
                         while True:
@@ -2861,12 +2873,12 @@ class PyRadio(object):
                         break
 
             else:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('detectUpdateThread: Error: Cannot get upstream version!!!')
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('detectUpdateThread: Error: Cannot get upstream version!!!')
                 connection_fail_count += 1
                 if connection_fail_count > 4:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('detectUpdateThread: Error: Too many connection failures. Exiting...')
+                    if logger.isEnabledFor(logging.ERROR):
+                        logger.error('detectUpdateThread: Error: Too many connection failures. Exiting...')
                     break
                 delay(60, stop)
 
@@ -3521,6 +3533,7 @@ class PyRadio(object):
                                 self._theme_name = self._cnf.theme
                             else:
                                 self._theme_name = ret_theme_name
+                                self._cnf.theme_has_error = True if ret == -1 else False
                                 self._cnf.theme_not_supported = True
                             curses.doupdate()
                         # make sure config is not saved
@@ -3835,6 +3848,7 @@ class PyRadio(object):
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search and \
                 char not in (ord('T'),)):
+            logger.error('DE \n\nExiting theme selector?\n\n')
             theme_id, save_theme = self._theme_selector.keypress(char)
 
             #if self._cnf.theme_not_supported:
@@ -3867,9 +3881,10 @@ class PyRadio(object):
                         theme_path=self._theme_selector._themes[theme_id][1])
                 if isinstance(ret, tuple):
                     ret = ret[0]
-                if ret == -1:
+                if ret < 0:
                     self._theme_name = ret_theme_name
                     self._cnf.theme_not_supported = True
+                    self._cnf.theme_has_error = True if ret == -1 else False
                     self._cnf.theme_not_supported_notification_shown = False
                     self._show_theme_not_supported()
                 #self.refreshBody()

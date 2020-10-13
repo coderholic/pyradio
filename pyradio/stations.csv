@@ -10,6 +10,7 @@ Downtempo (Secret Agent - SomaFM),http://somafm.com/secretagent.pls
 Dub Step (Dub Step Beyond - SomaFM),http://somafm.com/dubstep.pls
 Electronic/Dance (Electronic Culture),http://www.shouted.fm/tunein/electro-dsl.m3u
 Folk (Folk Forward - SomaFM),http://somafm.com/folkfwd.pls
+Hip Hop (Hot 97 NYC),http://playerservices.streamtheworld.com/pls/WQHTAAC.pls
 Hip Hop (Power 1051 NYC),http://c11.prod.playlists.ihrhls.com/1481/playlist.m3u8
 House (Beat Blender - SomaFM),http://somafm.com/startstream=beatblender.pls
 Indie Pop (Indie Pop Rocks! - SomaFM),http://somafm.com/indiepop130.pls
@@ -22,7 +23,10 @@ Progressive (Tags Trance Trip - SomaFM),http://somafm.com/tagstrance.pls
 Public Radio (WNYC - Public Radio from New York to the World),http://wnyc-iheart.streamguys.com/wnycfm-iheart.aac
 Reggae Dancehall (Ragga Kings),http://www.raggakings.net/listen.m3u
 Rock (Digitalis - SomaFM),http://somafm.com/digitalis.pls
+Vox Noctem: Rock-Goth, http://r2d2.voxnoctem.de:8000/voxnoctem.mp3
 Beyond Metal (Progressive - Symphonic),http://streamingV2.shoutcast.com/BeyondMetal
+DanceUK,https://www.internet-radio.com/servers/tools/playlistgenerator/?u=http://uk2.internet-radio.com:8024/listen.pls&t=.pls
+JazzGroove,https://www.internet-radio.com/servers/tools/playlistgenerator/?u=http://199.180.72.2:8015/listen.pls?sid=1&t=.pls
 Radio Paradise - Main Mix,http://stream.radioparadise.com/aac-128
 Radio Paradise - Mellow Mix,http://stream.radioparadise.com/mellow-128
 Radio Paradise - Rock Mix,http://stream.radioparadise.com/rock-128

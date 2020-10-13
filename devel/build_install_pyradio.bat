@@ -160,7 +160,7 @@ python2 -m site --user-site 2>nul >>dirs
 python3 -m site --user-site 2>nul >>dirs
 python devel\windirs.py
 echo DEL dirs >>pyremove.bat
-echo echo Pyradio successfully uninstalled! >>pyremove.bat
+echo echo PyRadio successfully uninstalled! >>pyremove.bat
 
 echo echo. >>pyremove.bat
 echo echo ********************************************************* >>pyremove.bat

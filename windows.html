@@ -53,17 +53,16 @@
 <li><a href="#not-using-git">4.2 Not using Git</a></li>
 <li><a href="#final-steps">4.3 Final steps</a></li>
 </ul></li>
-<li><a href="#updating-pyradio">5. Updating PyRadio</a>
+</ul></li>
+<li><a href="#updating-pyradio">Updating PyRadio</a>
 <ul>
-<li><a href="#updating-with-git">5.1 Updating with Git</a></li>
-<li><a href="#updating-without-git">5.2 Updating without Git</a></li>
+<li><a href="#updating-with-git">Updating with Git</a></li>
+<li><a href="#updating-without-git">Updating without Git</a></li>
 </ul></li>
-<li><a href="#uninstalling-pyradio-or-cleaning-up">6. Uninstalling Pyradio (or Cleaning up)</a></li>
-<li><a href="#reporting-bugs">7. Reporing bugs</a></li>
-</ul></li>
-<li><a href="build.html">Back</a></li>
-<li><a href="README.html">Back to README</a></li>
+<li><a href="#uninstalling-pyradio-or-cleaning-up">Uninstalling PyRadio (or Cleaning up)</a></li>
+<li><a href="#reporting-bugs">Reporing bugs</a></li>
 </ul>
+<p><a href="build.html">[Back to Build Instructions]</a> | <a href="README.html">[Back to README]</a></p>
 <h2 id="running-pyradio-on-windows">Running PyRadio on Windows <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>What? A linux console application on Windows?</p>
 <p>Yes, sure. Why not?</p>
@@ -191,23 +190,23 @@ pip install pywin32</pre>
 <p>If you are not using Git, you can safely delete the <strong>pyradio-0.7.9</strong> directory.</p>
 <p>Finally, you can type <strong>pyradio</strong> and enjoy!</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch <strong>PyRadio</strong> and optionally modify it (change font size, window dimensions, etc). If it’s not there, you can just copy it from the “<em>help</em>” directory of the <strong>Explorer File Manager</strong> which will open after executing <strong>pyradio -ocd</strong>.</p>
-<h3 id="updating-pyradio">5. Updating PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h2 id="updating-pyradio">Updating PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> will inform you when a new release is available.</p>
-<p>To start the update procedure, close <strong>Pyradio</strong> if it’s still running.</p>
+<p>To start the update procedure, close <strong>PyRadio</strong> if it’s still running.</p>
 <p>Then do one of the following depending on whether you have <strong>Git</strong> installed or not:</p>
-<h4 id="updating-with-git">5.1 Updating with Git</h4>
+<h3 id="updating-with-git">Updating with Git <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>Open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>) and execute the commands:</p>
 <pre>cd pyradio
 git pull
 devel\build_install_pyradio</pre>
-<h4 id="updating-without-git">5.2 Updating without Git</h4>
+<h3 id="updating-without-git">Updating without Git <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>The procedure is the same as installing, so please follow the <a href="#not-using-git">relevant instructions</a>.</p>
-<h3 id="uninstalling-pyradio-or-cleaning-up">6. Uninstalling Pyradio (or Cleaning up) <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h2 id="uninstalling-pyradio-or-cleaning-up">Uninstalling PyRadio (or Cleaning up) <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>To uninstall <strong>PyRadio</strong> you will have to use the “<strong>-u</strong>” (uninstall) parameter.</p>
-<p>This procedure will remove any <strong>Pyradio</strong> files installed in your system, but will leave instact <strong>PyRadio</strong> configuration files and python, mplayer and git (if installed).</p>
+<p>This procedure will remove any <strong>PyRadio</strong> files installed in your system, but will leave instact <strong>PyRadio</strong> configuration files and python, mplayer and git (if installed).</p>
 <p>To uninstall <strong>PyRadio</strong> open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong> or if you are on Windows 10, use <strong>Run it as Administrator</strong> as you can see in the following image).</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/run-as-admin.jpg">Run as Administrator</a></p>
-<p>Then navigate to the previously downloaded <strong>Pyradio</strong> setup folder, and execute <em>devel\build_install_pyradio -u</em>.</p>
+<p>Then navigate to the previously downloaded <strong>PyRadio</strong> setup folder, and execute <em>devel\build_install_pyradio -u</em>.</p>
 <p>Example:</p>
 <pre>C:\Users\spiros\pyradio&gt;devel\build_install_pyradio -u
 Uninstalling PyRadio
@@ -218,7 +217,7 @@ Looking for python installed files...
 ** Removing &quot;pyradio-0.8.8-py3.7.egg&quot; ... done
 ** Removing &quot;pyradio-0.7.9-py3.7.egg&quot; ... done
 ** Removing &quot;pyradio-0.6.3-py3.7.egg&quot; ... done
-Pyradio successfully uninstalled!
+PyRadio successfully uninstalled!
 
 *********************************************************
 
@@ -232,14 +231,15 @@ C:\Users\spiros\AppData\Roaming\pyradio
 <p>In this example, running <em>devel\build_install_pyradio -u</em> has removed <strong>PyRadio</strong> python 3.7 installation files.</p>
 <p>The script has detected (and removed) version <em>0.8.8</em> (probably the current or previous version), along with verisons <em>0.7.9</em> and <em>0.6.3</em> (older versions previously installed).</p>
 <p>I would recommend to execute <em>devel\build_install_pyradio -u</em> from time to time, and reinstall <strong>PyRadio</strong> right after its completion.</p>
-<h3 id="reporting-bugs">7. Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h3 id="reporting-bugs">Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>When a bug is found, please do report it by <a target="_blank" href="https://github.com/coderholic/pyradio/issues">opening an issue at github</a>.</p>
 <p>In you report you should, at the very least, state your <strong>pyradio version</strong> and <strong>python version</strong>.</p>
 <p>It would be really useful to include <strong>%USERPROFILE%/pyradio.log</strong> in your report.</p>
 <p>To create it, enter the following commands in a terminal:</p>
-<pre>C:\Users\spiros&gt;del %USERPROFILE%\pyradio.log
-C:\Users\spiros&gt;pyradio -d</pre>
-<p>Then try to reproduce the bug and exit <strong>pyradio</strong>.</p>
+<pre>cd %USERPROFILE%
+del pyradio.log
+pyradio -d</pre>
+<p>Then try to reproduce the bug and exit <strong>PyRadio</strong>.</p>
 <p>Finally, include the file produced in your report.</p>
 </body>
 </html>

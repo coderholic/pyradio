@@ -1,4 +1,8 @@
-2020-09-29 s-n-g
+2020-10-13 s-n-g
+    This is a long-overdue update!
+    This is a called a beta release in the sense that some
+    of the intended features have not been implemented yet.
+
     * Version 0.8.7.3 (0.8.8-beta2)
     * Adding PASTE MODE in editing windows
     * Finalizing alternative modes (registers, register mode,
@@ -7,13 +11,13 @@
     * Toggling transparency enabled in theme selection window
     * Pyradio respects global encoding
     * Info window gets updated as data are read
-    * Display message when fallback theme is used
+    * Display message when fallback theme is used (#99)
     * Fixing info window highlight and encoding issues
     * Making Station editor window size aware
     * Fixing -a command line parameter functionality
     * Build script accepts --user (for user only installation) on linux
-    * Build script will clean up previous installation files (not on Windows)
-    * Fixing volume saving on Windows
+    * Build script will clean up previous installation files
+    * Fixing volume saving on Windows (mplayer)
 
     Implemented in 0.8.8-beta1
     * Connection timeout counter
@@ -22,8 +26,8 @@
     * Fixing playback restart when encoding changed
 
     Not implemented yet
-    * /p - Select playlist/register to paste station
-    * /n - Create new playlist
+    * \p - Select playlist/register to paste station
+    * \n - Create new playlist
 
 2020-03-16 s-n-g
     * Version 0.8.7.2

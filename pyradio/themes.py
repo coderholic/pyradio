@@ -56,7 +56,8 @@ class PyRadioTheme(object):
         curses.init_pair(8, self._active_colors[THEME_ITEMS[7][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[7][0]][BACKGROUND()])
         # cursor when playing
         curses.init_pair(9, self._active_colors[THEME_ITEMS[6][0]][FOREGROUND()], self._active_colors[THEME_ITEMS[6][0]][BACKGROUND()])
-        logger.error('DE _do_init_pairs:\n{}'.format(self._active_colors))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('_do_init_pairs: {}'.format(self._active_colors))
 
     def restoreActiveTheme(self):
         self._active_colors = deepcopy(self._read_colors)
@@ -68,9 +69,13 @@ class PyRadioTheme(object):
         """ Read a theme and apply it
 
             Returns:
-              -1: theme not supported (default theme loaded)
+              -2: theme not supported (default theme loaded)
+              -1: theme has error (default theme loaded)
                0: all ok
         """
+        self._cnf.theme_has_error = False
+        self._cnf.theme_not_supported = False
+        self._cnf.theme_not_supported_notification_shown = False
         result = 0
         use_transparency = None
         theme_path = ''
@@ -80,10 +85,12 @@ class PyRadioTheme(object):
             elif name == 'theme_path':
                 theme_path = value
         ret = self.open_theme(a_theme, theme_path)
-        if ret < 0 or self._applied_theme_max_colors > curses.COLORS:
-            # TODO: return error
+        if ret < 0:
             self._load_default_theme(self.applied_theme_name)
             result = -1, self.applied_theme_name
+        elif self._applied_theme_max_colors > curses.COLORS:
+            self._load_default_theme(self.applied_theme_name)
+            result = -2, self.applied_theme_name
         else:
             self.applied_theme_name = a_theme
 
@@ -100,16 +107,16 @@ class PyRadioTheme(object):
         return result, self.applied_theme_name
 
     def _load_default_theme(self, a_theme):
-        logger.error('DE a_theme = {}'.format(a_theme))
-        self.applied_theme_name = 'dark'
-        self._applied_theme_max_colors = 8
-        try_theme = a_theme.replace('_16_colors', '')
-        if try_theme == 'light':
-            self.applied_theme_name = try_theme
-        elif self._cnf.theme.replace('_16_colors', '') == 'light':
-                self.applied_theme_name = 'light'
+        if self._cnf.fallback_theme :
+            self.applied_theme_name = self._cnf.fallback_theme
+        else:
+            self.applied_theme_name = 'dark'
+            self._applied_theme_max_colors = 8
+            if a_theme.startswith('light'):
+                    self.applied_theme_name = 'light'
+            self._cnf.fallback_theme = self.applied_theme_name
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Applying default theme: {}'.format(self.applied_theme_name))
+            logger.info('Applying fallback theme: "{0}" instead of: "{1}"'.format(self.applied_theme_name, a_theme))
         self.open_theme(self.applied_theme_name)
 
     def open_theme(self, a_theme = '', a_path=''):
@@ -454,19 +461,27 @@ class PyRadioThemeSelector(object):
         self._themes = []
 
     def show(self):
-        self._themes = []
         self._themes = [ [ 'dark', 'dark' ] ]
-        if curses.COLORS >= 16:
-            self._themes.append([ 'dark_16_colors', '' ])
-            self._items += 1
+        #if curses.COLORS >= 16:
+        #    self._themes.append([ 'dark_16_colors', '' ])
+        #    self._items += 1
+        #self._themes.append([ 'light', '' ])
+        #if curses.COLORS >= 16:
+        #    self._themes.append([ 'light_16_colors', '' ])
+        #    self._items += 1
+        #if curses.COLORS == 256:
+        #    self._themes.append([ 'black_on_white', '' ])
+        #    self._themes.append([ 'white_on_black', '' ])
+        #    self._items += 2
+
+        self._themes.append([ 'dark_16_colors', '' ])
+        self._items += 1
         self._themes.append([ 'light', '' ])
-        if curses.COLORS >= 16:
-            self._themes.append([ 'light_16_colors', '' ])
-            self._items += 1
-        if curses.COLORS == 256:
-            self._themes.append([ 'black_on_white', '' ])
-            self._themes.append([ 'white_on_black', '' ])
-            self._items += 2
+        self._themes.append([ 'light_16_colors', '' ])
+        self._items += 1
+        self._themes.append([ 'black_on_white', '' ])
+        self._themes.append([ 'white_on_black', '' ])
+        self._items += 2
         # scan for package and user themes
         themes_to_add = self._scan_for_theme_files(self._cnf.stations_dir)
         #themes_to_add = self._scan_for_theme_files(self._cnf.stations_dir)
@@ -875,6 +890,9 @@ class PyRadioThemeSelector(object):
                         else:
                             self._applied_theme_name = ret_theme_name
                             self._cnf.theme_not_supported = True
+                            self._cnf.theme_has_error = True if ret == -1 else False
+                            # avoid showing extra notification when exiting theme selector
+                            self._cnf.theme_not_supported_notification_shown = True
                 self.selection = -1
                 return -1, False
         return -3, False
