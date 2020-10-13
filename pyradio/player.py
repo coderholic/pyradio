@@ -1525,7 +1525,7 @@ class VlcPlayer(Player):
         max_volume = 512
 
         """ When found in station transmission, playback is on """
-        _playback_token_tuple = ('Content-Type: audio', )
+        _playback_token_tuple = ('main audio ', 'Content-Type: audio' )
 
     def save_volume(self):
         pass
