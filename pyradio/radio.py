@@ -906,7 +906,9 @@ class PyRadio(object):
             if n <= 7:
                 if stop():
                     return
-                self.log.write(msg='Connecting to: "{0}" ... ({1})'.format(station_name, n), thread_lock=lock)
+                #self.log.write(msg='Connecting to: "{0}" ... ({1})'.format(station_name, n), thread_lock=lock)
+                self.log.write(msg='Connecting to: "{}"'.format(station_name), thread_lock=lock)
+                self.log._write_right(msg=' ... ({})'.format(n), thread_lock=lock)
             else:
                 if stop():
                     return
