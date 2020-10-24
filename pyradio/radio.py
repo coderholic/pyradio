@@ -390,6 +390,7 @@ class PyRadio(object):
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
                     self._show_station_info_from_thread)
+            self.log.lock = self.player.status_update_lock
         except:
             # no player
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
@@ -889,31 +890,32 @@ class PyRadio(object):
             self.selections[0][2] = self.playing
 
     def playbackTimeoutCounter(self, *args):
-        lock = args[0]
-        timeout = args[1]
-        station_name = args[2]
-        stop = args[3]
+        timeout = args[0]
+        station_name = args[1]
+        stop = args[2]
         if stop():
             return
         not_showed = True
+        lim=int((7 * timeout) / 10)
+        logger.error('DE lim = {}'.format(lim))
+        logger.error('DE lim is {}'.format(type(lim)))
         for n in range(timeout, -1, -1):
             # 8 * .12 =~ 1 sec
             for k in range(0, 8):
                 sleep(.12)
                 if stop():
                     return
-            #if n <= int((7 * timeout) / 10):
-            if n <= 7:
+            #if n <= 7:"
+            if n <= lim:
                 if stop():
                     return
-                #self.log.write(msg='Connecting to: "{0}" ... ({1})'.format(station_name, n), thread_lock=lock)
-                self.log.write(msg='Connecting to: "{}"'.format(station_name), thread_lock=lock)
-                self.log._write_right(msg=' ... ({})'.format(n), thread_lock=lock)
+                self.log.write(msg='Connecting to: "{}"'.format(station_name))
+                self.log.write(counter='{}'.format(n))
             else:
                 if stop():
                     return
                 if not_showed:
-                    self.log.write(msg='Connecting to: "{}"'.format(station_name), thread_lock=lock)
+                    self.log.write(msg='Connecting to: "{}"'.format(station_name))
                     not_showed = False
         self.connectionFailed()
 
@@ -954,7 +956,7 @@ class PyRadio(object):
                 self._show_player_is_stopped()
 
     def _show_player_is_stopped(self):
-        self.log.write(msg='{}: Playback stopped'.format(self._format_player_string()), thread_lock=None, help_msg=True, suffix=self._status_suffix)
+        self.log.write(msg='{}: Playback stopped'.format(self._format_player_string()),  help_msg=True, suffix=self._status_suffix)
 
     def removeStation(self):
         if self._cnf.confirm_station_deletion and not self._cnf.is_register:
@@ -1069,7 +1071,7 @@ class PyRadio(object):
     def _get_message_width_from_list(self, lines):
         mwidth = 0
         for n in lines:
-            llen = len(n.replace('|', ''))
+            llen = cjklen(n.replace('|', ''))
             if llen > mwidth:
                 mwidth = llen
         return mwidth
@@ -1145,7 +1147,7 @@ class PyRadio(object):
             prompt = ''
             caption = ''
             inner_height = 3
-            inner_width = len(txt) + 4
+            inner_width = cjklen(txt) + 4
             if use_empty_win:
                 height_to_use = inner_height +2
                 width_to_use = inner_width + 2
@@ -1176,7 +1178,7 @@ class PyRadio(object):
             start_with = caption_col
             follow = txt_col
         if caption.strip():
-            self.helpWin.addstr(0, int((inner_width-len(caption))/2), caption, caption_col)
+            self.helpWin.addstr(0, int((inner_width-cjklen(caption))/2), caption, caption_col)
         splited = []
         for i, n in enumerate(lines):
             #a_line = self._replace_starting_undesscore(n)
@@ -1191,12 +1193,12 @@ class PyRadio(object):
                     self.helpWin.addstr('├'.encode('utf-8'), curses.color_pair(3))
                     self.helpWin.addstr('─'.encode('utf-8') * (inner_width - 2), curses.color_pair(3))
                     self.helpWin.addstr('┤'.encode('utf-8'), curses.color_pair(3))
-                self.helpWin.addstr(i + 1, inner_width-len(a_line[1:]) - 1, a_line[1:].replace('_', ' ').replace('¸', '_'), caption_col)
+                self.helpWin.addstr(i + 1, inner_width-cjklen(a_line[1:]) - 1, a_line[1:].replace('_', ' ').replace('¸', '_'), caption_col)
                 #self.helpWin.addstr(i + 1, int((inner_width-len(a_line[1:]))/2), a_line[1:].replace('_', ' '), caption_col)
             elif a_line.startswith('!'):
                 self.helpWin.move(i + 1, 2)
                 lin = ' ' + a_line[1:] + ' '
-                llin = len(lin)
+                llin = cjklen(lin)
 
                 wsp = inner_width - 4
                 try:
@@ -1215,7 +1217,7 @@ class PyRadio(object):
                         else:
                             self.helpWin.addstr(splited[part].replace('_', ' ').replace('¸', '_'), follow)
         if prompt.strip():
-            self.helpWin.addstr(inner_height - 1, int(inner_width-len(prompt)-1), prompt)
+            self.helpWin.addstr(inner_height - 1, int(inner_width-cjklen(prompt)-1), prompt)
         if use_empty_win:
             self.helpWinContainer.refresh()
         self.helpWin.refresh()
@@ -3000,8 +3002,7 @@ class PyRadio(object):
         self._backslash_pressed = backslash
         self._register_assign_pressed = reg_y_pressed
         self._register_open_pressed = reg_open_pressed
-        a_lock = self.player.status_update_lock if self.player else None
-        self.log.write(suffix=self._status_suffix, thread_lock=a_lock)
+        self.log.write(suffix=self._status_suffix)
 
     def _clear_register_file(self):
         """Clear the contents of a register
@@ -3495,27 +3496,28 @@ class PyRadio(object):
                                 self.stopPlayer()
                                 self.refreshBody()
                             self.log.display_help_message = False
-                            self.log.write(msg=msg[0], thread_lock=None, help_msg=False, suffix=self._status_suffix)
+                            self.log.write(msg=msg[0], help_msg=False, suffix=self._status_suffix)
                             self._print_config_save_error()
                         elif ret == 0:
                             # Config saved successfully
                             if self.player.isPlaying():
                                 if self._cnf.opts['default_encoding'][1] == self._old_config_encoding:
                                     self.log.write(msg=msg[1])
-                                    self.player.threadUpdateTitle(self.player.status_update_lock)
+                                    self.player.threadUpdateTitle()
                                 else:
                                     self.log.write(msg=msg[2])
-                                    self.player.threadUpdateTitle(self.player.status_update_lock)
+                                    self.player.threadUpdateTitle()
                                     sleep(1.5)
                                     self.playSelection()
                             else:
-                                self.log.write(msg=msg[1], thread_lock=None, help_msg=True, suffix=self._status_suffix)
+                                self.log.write(msg=msg[1], help_msg=True, suffix=self._status_suffix)
                             self._old_config_encoding = self._cnf.opts['default_encoding'][1]
                             if self._config_win:
                                 self._config_win._old_use_transparency = self._cnf.use_transparency
                             if self._cnf.player_changed:
                                 self._show_player_changed_in_config()
                                 self._cnf.player_changed = False
+                            self.player.playback_timeout = int(self._cnf.connection_timeout)
                         elif ret == 1:
                             # config not modified
                             self._show_notification_with_delay(
@@ -4909,7 +4911,7 @@ class PyRadio(object):
                 ret_string = self.player.save_volume()
                 if ret_string:
                     self.log.write(msg=ret_string)
-                    self.player.threadUpdateTitle(self.player.status_update_lock)
+                    self.player.threadUpdateTitle()
         else:
             if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
                 self.ws.close_window()
