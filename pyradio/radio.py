@@ -897,8 +897,6 @@ class PyRadio(object):
             return
         not_showed = True
         lim=int((7 * timeout) / 10)
-        logger.error('DE lim = {}'.format(lim))
-        logger.error('DE lim is {}'.format(type(lim)))
         for n in range(timeout, -1, -1):
             # 8 * .12 =~ 1 sec
             for k in range(0, 8):
@@ -2150,7 +2148,7 @@ class PyRadio(object):
             '''
         self._show_help(txt.format(self._update_version_do_display),
                 mode_to_set = self.ws.UPDATE_NOTIFICATION_MODE,
-                caption = ' New Release Available ',
+                caption = ' Update Notifiaction ',
                 prompt = ' Press any key to hide ',
                 is_message=True)
         self._update_version = ''
@@ -2703,11 +2701,11 @@ class PyRadio(object):
             a_n_l = []
             for n in a_l:
                 if 'beta' in n:
-                    a_n_l.append(-20-int(a_l[-1].replace('beta', '')))
+                    a_n_l.append(100+int(a_l[-1].replace('beta', '')))
                 elif 'rc' in n:
-                    a_n_l.append(-10-int(a_l[-1].replace('rc', '')))
+                    a_n_l.append(200+int(a_l[-1].replace('rc', '')))
                 elif 'r' in n:
-                    a_n_l.append(-30-int(a_l[-1].replace('r', '')))
+                    a_n_l.append(int(a_l[-1].replace('r', '')))
                 else:
                     a_n_l.append(int(n))
             if len(a_n_l) != 4:
@@ -2804,6 +2802,9 @@ class PyRadio(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: Asked to stop. Stoping...')
                 break
+            # PROGRAM DEBUG: set program's version
+            # to check display functionality
+            #last_tag='"name":"0.8.8-beta4"'
             if last_tag:
                 connection_fail_count = 0
                 x = str(last_tag).split('"name":"')
@@ -2822,6 +2823,7 @@ class PyRadio(object):
                 else:
                     # PROGRAM DEBUG: set program's version
                     # to check display functionality
+                    #this_version='0.8.8-RC1'
                     #this_version='0.8.8-RC1'
                     existing_version = to_ver(this_version)
                     new_version = to_ver(last_tag)
@@ -2993,12 +2995,13 @@ class PyRadio(object):
             self.refreshBody()
 
     def _update_status_bar_right(self, jumpnr='',
-            status_suffix='', backslash=False,
+            status_suffix=None, backslash=False,
             reg_y_pressed=False, reg_open_pressed=False,
             random_requested=False):
         self._random_requested = random_requested
         self.jumpnr = jumpnr
-        self._status_suffix = status_suffix
+        if status_suffix is not None:
+            self._status_suffix = status_suffix
         self._backslash_pressed = backslash
         self._register_assign_pressed = reg_y_pressed
         self._register_open_pressed = reg_open_pressed
@@ -3134,6 +3137,7 @@ class PyRadio(object):
     def keypress(self, char):
         if char in (ord('#'), curses.KEY_RESIZE):
             self._normal_mode_resize()
+            self._do_display_notify()
             return
 
         elif self.ws.operation_mode in (self.ws.NO_PLAYER_ERROR_MODE, \
@@ -3147,7 +3151,8 @@ class PyRadio(object):
         #
         elif self.jumpnr and char in (curses.KEY_EXIT, ord('q'), 27) and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
-            self._update_status_bar_right()
+            self._update_status_bar_right(status_suffix='')
+            self._do_display_notify()
             return
         #
         # End of Reset jumpnr
@@ -3171,15 +3176,17 @@ class PyRadio(object):
                 return
             # get station to register
             # accept a-z, 0-9 and -
-            self._update_status_bar_right()
             if char == ord('\''):
-                self._update_status_bar_right()
+                self._status_suffix = self.log.suffix = "'"
+                self._update_status_bar_right(status_suffix="'")
                 self._cnf.open_register_list = True
                 """ set selections 0,1,2 to saved values """
                 self.selections[self.ws.REGISTER_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
             elif char in range(48, 58) or char in range(97, 123):
                 self._cnf.register_to_open = chr(char).lower()
+                self._update_status_bar_right()
             else:
+                self._update_status_bar_right(status_suffix='')
                 return
             self._set_rename_stations()
             self._check_to_open_playlist()
@@ -3207,7 +3214,7 @@ class PyRadio(object):
                 # rename playlist
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     self._set_rename_stations()
-                self._update_status_bar_right()
+                self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE and \
                         self._cnf.dirty_playlist:
                     self._print_playlist_not_saved_error()
@@ -3226,11 +3233,11 @@ class PyRadio(object):
                     self.ws.operation_mode = self.ws.RENAME_PLAYLIST_MODE
             elif char == ord('n'):
                 # create new playlist
-                self._update_status_bar_right()
+                self._update_status_bar_right(status_suffix='')
                 self._print_not_implemented_yet()
             elif char == ord('p'):
                 # paste
-                self._update_status_bar_right()
+                self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     self._print_not_implemented_yet()
                 else:
@@ -3240,7 +3247,7 @@ class PyRadio(object):
                 return
             elif char == ord('\\'):
                 # \\ pressed - go back in history
-                self._update_status_bar_right()
+                self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     if self._cnf.can_go_back_in_time:
                         if logger.isEnabledFor(logging.DEBUG):
@@ -3248,10 +3255,9 @@ class PyRadio(object):
                         self._open_playlist_from_history()
                     else:
                         self._show_no_more_playlist_history()
-                return
             elif char == ord(']'):
                 # ] pressed - go to first playlist ing history
-                self._update_status_bar_right()
+                self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     if self._cnf.can_go_back_in_time:
                         if logger.isEnabledFor(logging.DEBUG):
@@ -3259,9 +3265,8 @@ class PyRadio(object):
                         self._open_playlist_from_history(reset=True)
                     else:
                         self._show_no_more_playlist_history()
-                return
             elif char == ord('c'):
-                self._update_status_bar_right()
+                self._update_status_bar_right(status_suffix='')
                 if ((self._cnf.is_register and \
                     self.ws.operation_mode == self.ws.NORMAL_MODE) or \
                     (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
@@ -3274,9 +3279,8 @@ class PyRadio(object):
                                     txt='___Register is already empty!!!___',
                                     mode_to_set=self.ws.NORMAL_MODE,
                                     callback_function=self.refreshBody)
-                return
             elif char == ord('C'):
-                self._update_status_bar_right()
+                self._update_status_bar_right(status_suffix='')
                 if (self.ws.operation_mode == self.ws.NORMAL_MODE or \
                         (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
                         self._cnf.open_register_list)):
@@ -3288,11 +3292,10 @@ class PyRadio(object):
                                 txt='____All registers are empty!!!____',
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
-                return
             else:
                 # ESC or invalid char pressed - leave \ mode
-                self._update_status_bar_right()
-                return
+                self._update_status_bar_right(status_suffix='')
+            return
 
         #
         # End of Playlist history - char = \
@@ -3307,13 +3310,14 @@ class PyRadio(object):
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             # y pressed
             if self.number_of_items == 0:
-                self._update_status_bar_right()
+                self._update_status_bar_right(status_suffix='')
                 self._show_notification_with_delay(
                         txt='___Nothing to put in register!!!___',
                         mode_to_set=self.ws.NORMAL_MODE,
                         callback_function=self.refreshBody)
             else:
                 self._update_status_bar_right(reg_y_pressed=True, status_suffix='y')
+                self._do_display_notify()
             return
         elif (self._register_assign_pressed and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE):
@@ -3322,7 +3326,7 @@ class PyRadio(object):
             if char == ord('?'):
                 self._show_yank_help()
                 return
-            self._update_status_bar_right()
+            self._update_status_bar_right(status_suffix='')
             ch = chr(char).lower()
             if char in (ord('\n'), ord('\r'), curses.KEY_ENTER):
                 self._unnamed_register = self.stations[self.selection]
@@ -3359,6 +3363,7 @@ class PyRadio(object):
             if self.number_of_items > 0:
                 self.selection = self.startPos
                 self.refreshBody()
+            self._do_display_notify()
             return
 
         elif char == ord('M') and self.ws.operation_mode in \
@@ -3370,6 +3375,7 @@ class PyRadio(object):
                 else:
                     self.selection = self.startPos + int((self.bodyMaxY - 1) / 2)
                 self.refreshBody()
+            self._do_display_notify()
             return
 
         elif char == ord('L') and self.ws.operation_mode in \
@@ -3381,6 +3387,7 @@ class PyRadio(object):
                 else:
                     self.selection = self.startPos + self.bodyMaxY - 1
                 self.refreshBody()
+            self._do_display_notify()
             return
 
         elif char in (ord('t'), ) and \
@@ -4288,7 +4295,8 @@ class PyRadio(object):
                         self.setStation(jumpto)
                         self._put_selection_in_the_middle(force=force_center)
                     self.refreshBody()
-                self._update_status_bar_right()
+                self._update_status_bar_right(status_suffix='')
+                self._do_display_notify()
                 return
 
             if char in map(ord,map(str,range(0,10))):
@@ -4315,7 +4323,7 @@ class PyRadio(object):
                 self.bodyWin.nodelay(False)
                 if char == -1:
                     """ ESCAPE """
-                    self._update_status_bar_right()
+                    self._update_status_bar_right(status_suffix='')
                     if self.ws.operation_mode == self.ws.PLAYLIST_MODE:
                         """ return to stations view """
                         #logger.error('DE \n    self._cnf.open_register_list = {}\n'.format(self._cnf.open_register_list))
@@ -4476,6 +4484,7 @@ class PyRadio(object):
 
                 elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                         curses.KEY_RIGHT, ord('l')):
+                    self.log.counter = None
                     self._update_status_bar_right()
                     if self.number_of_items > 0:
                         self.playSelection()
@@ -4484,6 +4493,7 @@ class PyRadio(object):
                     return
 
                 elif char in (ord(' '), curses.KEY_LEFT, ord('h')):
+                    self.log.counter = None
                     self._update_status_bar_right()
                     if self.number_of_items > 0:
                         if self.player.isPlaying():
@@ -4517,6 +4527,7 @@ class PyRadio(object):
                     return
 
                 elif char in (ord('r'), ):
+                    self.log.counter = None
                     self._update_status_bar_right(random_requested = True)
                     # Pick a random radio station
                     self.play_random()
@@ -4636,8 +4647,9 @@ class PyRadio(object):
                         self.selections[self.ws.PLAYLIST_MODE][:-1] = self.playlist_selections[self.ws.PLAYLIST_MODE][:]
                         self.selections[self.ws.REGISTER_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
                         self._cnf.open_register_list = not self._cnf.open_register_list
+                        self._status_suffix = '\''
+                        self._register_open_pressed = True
                         self._open_playlist()
-                        self._do_display_notify()
                     else:
                         """ opening registers list """
                         if self._cnf.registers_exist():
@@ -4645,13 +4657,18 @@ class PyRadio(object):
                             """ set selections 0,1,2 to saved values """
                             self.selections[self.ws.PLAYLIST_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
                             self._cnf.open_register_list = not self._cnf.open_register_list
+                            self._status_suffix = '\''
+                            self._register_open_pressed = True
                             self._open_playlist()
-                            self._do_display_notify()
                         else:
+                            self._status_suffix = ''
+                            self._register_open_pressed = False
                             self._show_notification_with_delay(
                                     txt='____All registers are empty!!!____',
                                     mode_to_set=self.ws.PLAYLIST_MODE,
                                     callback_function=self.refreshBody)
+                    self._update_status_bar_right(reg_open_pressed=self._register_open_pressed, status_suffix=self._status_suffix)
+                    self._do_display_notify()
                     return
 
     def _rename_playlist_from_playlist_mode(self, copy, open_file, last_history):
