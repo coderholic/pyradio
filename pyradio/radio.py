@@ -390,7 +390,6 @@ class PyRadio(object):
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
                     self._show_station_info_from_thread)
-            self.log.lock = self.player.status_update_lock
         except:
             # no player
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
@@ -686,15 +685,15 @@ class PyRadio(object):
     def run(self):
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
             if platform.startswith('win'):
-                self.log.write(msg='mplayer not found. Press any key to exit....')
+                self.log.write(msg='mplayer not found. Press any key to exit....', error_msg=True)
             else:
                 if self.requested_player:
                     if ',' in self.requested_player:
-                        self.log.write(msg='None of "{}" players is available. Press any key to exit....'.format(self.requested_player))
+                        self.log.write(msg='None of "{}" players is available. Press any key to exit....'.format(self.requested_player), error_msg=True)
                     else:
-                        self.log.write(msg='Player "{}" not available. Press any key to exit....'.format(self.requested_player))
+                        self.log.write(msg='Player "{}" not available. Press any key to exit....'.format(self.requested_player), error_msg=True)
                 else:
-                    self.log.write(msg="No player available. Press any key to exit....")
+                    self.log.write(msg="No player available. Press any key to exit....", error_msg=True)
             try:
                 self.bodyWin.getch()
             except KeyboardInterrupt:
@@ -954,7 +953,7 @@ class PyRadio(object):
                 self._show_player_is_stopped()
 
     def _show_player_is_stopped(self):
-        self.log.write(msg='{}: Playback stopped'.format(self._format_player_string()),  help_msg=True, suffix=self._status_suffix)
+        self.log.write(msg='{}: Playback stopped'.format(self._format_player_string()),  help_msg=True, suffix=self._status_suffix, counter='')
 
     def removeStation(self):
         if self._cnf.confirm_station_deletion and not self._cnf.is_register:
@@ -3177,7 +3176,7 @@ class PyRadio(object):
             # get station to register
             # accept a-z, 0-9 and -
             if char == ord('\''):
-                self._status_suffix = self.log.suffix = "'"
+                self._status_suffix = "'"
                 self._update_status_bar_right(status_suffix="'")
                 self._cnf.open_register_list = True
                 """ set selections 0,1,2 to saved values """

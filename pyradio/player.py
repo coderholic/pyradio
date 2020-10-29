@@ -122,8 +122,6 @@ class Player(object):
 
     muted = False
 
-    status_update_lock = threading.Lock()
-
     ctrl_c_pressed = False
 
     """ When found in station transmission, playback is on """
@@ -162,6 +160,7 @@ class Player(object):
         self.playback_timeout_counter = playback_timeout_counter
         self.playback_timeout_handler = playback_timeout_handler
         self.info_display_handler = info_display_handler
+        self.status_update_lock = outputStream.lock
 
     def __del__(self):
         self.close()
@@ -455,7 +454,7 @@ class Player(object):
                                 string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
                                 if self.show_volume and self.oldUserInput['Title']:
-                                    self.outputStream.write(msg=string_to_show)
+                                    self.outputStream.write(msg=string_to_show, counter='')
                                     self.threadUpdateTitle()
                     elif self._is_in_playback_token(subsystemOut):
                         self.stop_timeout_counter_thread = True
@@ -470,7 +469,7 @@ class Player(object):
                             new_input = 'Playing: "{}"'.format(self.name)
                         else:
                             new_input = self.oldUserInput['Title']
-                        self.outputStream.write(msg=new_input)
+                        self.outputStream.write(msg=new_input, counter='')
                         self.playback_is_on = True
                         if 'AO: [' in subsystemOut:
                             with self.status_update_lock:
@@ -506,7 +505,7 @@ class Player(object):
                                     ok_to_display = True
                             if ok_to_display and self.playback_is_on:
                                 string_to_show = self.title_prefix + title
-                                self.outputStream.write(msg=string_to_show)
+                                self.outputStream.write(msg=string_to_show, counter='')
                         else:
                             ok_to_display = True
                             if (logger.isEnabledFor(logging.INFO)):
@@ -515,11 +514,11 @@ class Player(object):
                                 title = 'Playing: "{}"'.format(self.name)
                                 self.oldUserInput['Title'] = title
                                 string_to_show = self.title_prefix + title
-                                self.outputStream.write(msg=string_to_show)
+                                self.outputStream.write(msg=string_to_show, counter='')
                     #else:
                     #    if self.oldUserInput['Title'] == '':
                     #        self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
-                    #        self.outputStream.write(msg=self.oldUserInput['Title'])
+                    #        self.outputStream.write(msg=self.oldUserInput['Title'], counter='')
 
                     else:
                         for a_token in self.icy_audio_tokens.keys():
@@ -688,7 +687,7 @@ class Player(object):
                     string_to_show = self.title_prefix + self.oldUserInput['Title']
                     if stop():
                         return False
-                    self.outputStream.write(msg=string_to_show)
+                    self.outputStream.write(msg=string_to_show, counter='')
                     if not self.playback_is_on:
                         return self._set_mpv_playback_is_on(stop)
                 else:
@@ -698,7 +697,7 @@ class Player(object):
                     string_to_show = self.title_prefix + title
                     if stop():
                         return False
-                    self.outputStream.write(msg=string_to_show)
+                    self.outputStream.write(msg=string_to_show, counter='')
                     self.oldUserInput['Title'] = title
 
         #logger.info('DE a_data {}'.format(a_data))
@@ -781,7 +780,7 @@ class Player(object):
         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
                     logger.info('*** _set_mpv_playback_is_on(): Start of playback detected ***')
         new_input = 'Playing: "{}"'.format(self.name)
-        self.outputStream.write(msg=new_input)
+        self.outputStream.write(msg=new_input, counter='')
         if self.oldUserInput['Title'] == '':
             self.oldUserInput['Input'] = new_input
         else:
@@ -848,7 +847,7 @@ class Player(object):
         self.show_volume = True
         self.title_prefix = ''
         self.playback_is_on = False
-        self.outputStream.write(msg='Station: "{}" - Opening connection...'.format(name))
+        self.outputStream.write(msg='Station: "{}" - Opening connection...'.format(name), counter='')
         if logger.isEnabledFor(logging.INFO):
             logger.info('Selected Station: "{}"'.format(name))
         if encoding:
@@ -956,9 +955,9 @@ class Player(object):
             self.title_prefix = ''
             self.show_volume = True
         if self.oldUserInput['Title'] == '':
-            self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']))
+            self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']), counter='')
         else:
-            self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']))
+            self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']), counter='')
 
     def _mute(self):
         """ to be implemented on subclasses """
@@ -1326,7 +1325,7 @@ class MpvPlayer(Player):
         else:
             info_string = self._format_title_string(self.oldUserInput['Input'])
         string_to_show = self._format_volume_string('Volume: ' + str(vol) + '%') + info_string
-        self.outputStream.write(msg=string_to_show)
+        self.outputStream.write(msg=string_to_show, counter='')
         self.threadUpdateTitle()
         self.volume = vol
 
