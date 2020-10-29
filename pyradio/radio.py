@@ -4347,7 +4347,8 @@ class PyRadio(object):
                             return
                         """ exit """
                         # stop updating the status bar
-                        self.log.asked_to_stop = True
+                        with self.log.lock:
+                            self.log.asked_to_stop = True
                         if self._cnf.dirty_playlist:
                             if self._cnf.auto_save_playlist:
                                 # save playlist and exit

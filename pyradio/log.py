@@ -43,11 +43,12 @@ class Log(object):
         return first_print
 
     def write(self, msg=None, suffix=None, counter=None, help_msg=False, error_msg=False, notify_function=None):
-        if self.asked_to_stop:
-            self.counter = None
-            return
         if self.cursesScreen:
             with self.lock:
+                if self.asked_to_stop:
+                    self.asked_to_stop = False
+                    self.counter = None
+                    return
                 #if logger.isEnabledFor(logging.DEBUG):
                 #    logger.debug('before ----------------------------')
                 #    logger.debug('msg = "{}"'.format(msg))
@@ -73,6 +74,7 @@ class Log(object):
                 #    logger.debug('self.counter = "{}"'.format(self.counter))
 
                 if self.asked_to_stop:
+                    self.asked_to_stop = False
                     self.counter = None
                     return
                 """ update main message """
@@ -97,6 +99,7 @@ class Log(object):
                 self._active_width = self.width
 
                 if self.asked_to_stop:
+                    self.asked_to_stop = False
                     self.counter = None
                     return
                 """ display suffix """
@@ -127,6 +130,7 @@ class Log(object):
                         logger.debug('Counter: {}'.format(self.counter))
 
                 if self.asked_to_stop:
+                    self.asked_to_stop = False
                     self.counter = None
                     return
                 """ display press ? """
@@ -144,6 +148,7 @@ class Log(object):
                         logger.debug('Press ? for help: no')
 
                 if self.asked_to_stop:
+                    self.asked_to_stop = False
                     self.counter = None
                     return
                 self.cursesScreen.refresh()
