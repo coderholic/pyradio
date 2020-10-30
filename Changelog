@@ -1,3 +1,14 @@
+2020-10-30 s-n-g
+    * Version 0.8.8-beta3
+    * Re-implementing status bar output function
+    * Connection timeout counter will be visible at 70% of timeout value
+    * Player will be aware of mid-session connection timeout changes
+    * Changing numbers presentation (adding "G" and "J" suffixes)
+    * Adding a program termination speed up
+    * Changing new version detection function
+      No update notification will be displayed due to this change
+    * Fixing TUI breaks due to multi-threading
+
 2020-10-13 s-n-g
     This is a long-overdue update!
     This is a called a beta release in the sense that some

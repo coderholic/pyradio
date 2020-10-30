@@ -2707,7 +2707,7 @@ class PyRadio(object):
                     a_n_l.append(int(a_l[-1].replace('r', '')))
                 else:
                     a_n_l.append(int(n))
-            if len(a_n_l) != 4:
+            if len(a_n_l) < 4:
                 a_n_l.append(0)
             return a_n_l
 
@@ -2930,9 +2930,11 @@ class PyRadio(object):
     def _move_station(self, direction):
         if self.jumpnr:
             try:
-                target = int(self.jumpnr) - 1
+                target = self.number_of_items - 1 if self.number_of_items < int(self.jumpnr) else int(self.jumpnr) - 1
             except:
                 return False
+            self.jumpnr = ''
+            self._cnf.jump_tag = -1
             source = self.selection
         elif self._cnf.jump_tag >= 0:
             source = self.selection
@@ -2993,12 +2995,11 @@ class PyRadio(object):
             self.startPos = self.number_of_items - self.bodyMaxY
             self.refreshBody()
 
-    def _update_status_bar_right(self, jumpnr='',
+    def _update_status_bar_right(self,
             status_suffix=None, backslash=False,
             reg_y_pressed=False, reg_open_pressed=False,
             random_requested=False):
         self._random_requested = random_requested
-        self.jumpnr = jumpnr
         if status_suffix is not None:
             self._status_suffix = status_suffix
         self._backslash_pressed = backslash
@@ -3148,10 +3149,12 @@ class PyRadio(object):
         #
         # Reset jumpnr
         #
-        elif self.jumpnr and char in (curses.KEY_EXIT, ord('q'), 27) and \
+        elif (self.jumpnr or self._cnf.jump_tag > -1) and char in (curses.KEY_EXIT, ord('q'), 27) and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             self._update_status_bar_right(status_suffix='')
             self._do_display_notify()
+            self.jumpnr = ''
+            self._cnf.jump_tag = -1
             return
         #
         # End of Reset jumpnr
@@ -3167,6 +3170,8 @@ class PyRadio(object):
             # ' pressed - get into open register mode
             self._update_status_bar_right(reg_open_pressed=True, status_suffix='\'')
             self._do_display_notify()
+            self.jumpnr = ''
+            self._cnf.jump_tag = -1
             return
         elif (self._register_open_pressed \
                 and self.ws.operation_mode == self.ws.NORMAL_MODE):
@@ -3205,6 +3210,8 @@ class PyRadio(object):
             # \ pressed
             self._update_status_bar_right(backslash=True, status_suffix='\\')
             self._do_display_notify()
+            self.jumpnr = ''
+            self._cnf.jump_tag = -1
             return
         elif self._backslash_pressed and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
@@ -4279,7 +4286,7 @@ class PyRadio(object):
             if char in (ord('G'), ord('g') ):
                 self._random_requested = False
                 if self.number_of_items > 0:
-                    if self.jumpnr == "":
+                    if self.jumpnr == '':
                         if char == ord('G'):
                             self.setStation(-1)
                         else:
@@ -4293,7 +4300,9 @@ class PyRadio(object):
                             force_center = True
                         self.setStation(jumpto)
                         self._put_selection_in_the_middle(force=force_center)
+                        self.jumpnr = ''
                     self.refreshBody()
+                self._cnf.jump_tag = -1
                 self._update_status_bar_right(status_suffix='')
                 self._do_display_notify()
                 return
@@ -4302,7 +4311,8 @@ class PyRadio(object):
                 self._random_requested = False
                 if self.number_of_items > 0:
                     self.jumpnr += chr(char)
-                    self._update_status_bar_right(jumpnr=self.jumpnr, status_suffix=self.jumpnr)
+                    self._update_status_bar_right(status_suffix=self.jumpnr + 'G')
+                    self._cnf.jump_tag = -1
                     return
             else:
                 if char not in (curses.ascii.EOT, curses.ascii.NAK, 4, 21):
@@ -4347,8 +4357,9 @@ class PyRadio(object):
                             return
                         """ exit """
                         # stop updating the status bar
-                        with self.log.lock:
-                            self.log.asked_to_stop = True
+                        #with self.log.lock:
+                        #    self.log.asked_to_stop = True
+                        self.log.asked_to_stop = True
                         if self._cnf.dirty_playlist:
                             if self._cnf.auto_save_playlist:
                                 # save playlist and exit
@@ -4407,7 +4418,9 @@ class PyRadio(object):
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char in ( ord('a'), ord('A') ):
-                    self._update_status_bar_right()
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
                     if self._cnf.browsing_station_service: return
                     self._station_editor = PyRadioEditor(self.stations,
                             self.selection,
@@ -4420,17 +4433,23 @@ class PyRadio(object):
                     self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
                 elif char == ord('p'):
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
                     self._paste()
 
                 elif char == ord('i'):
-                    self._update_status_bar_right()
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
                     if self.player.isPlaying():
                         self._show_station_info()
                     else:
                         self._print_station_info_error()
 
                 elif char == ord('e'):
-                    self._update_status_bar_right()
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
                     if self._cnf.browsing_station_service: return
                     if python_version[0] == '2':
                         if not is_ascii(self.stations[self.selection][0]):
@@ -4445,7 +4464,9 @@ class PyRadio(object):
                     self.ws.operation_mode = self.ws.EDIT_STATION_MODE
 
                 elif char == ord('c'):
-                    self._update_status_bar_right()
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
                     if self._cnf.locked:
                         self._print_session_locked()
                         return
@@ -4459,7 +4480,9 @@ class PyRadio(object):
                     return
 
                 elif char in (ord('E'), ):
-                    self._update_status_bar_right()
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
                     self._old_station_encoding = self.stations[self.selection][2]
                     if self._old_station_encoding == '':
                         self._old_station_encoding = self._cnf.default_encoding
@@ -4473,9 +4496,11 @@ class PyRadio(object):
                     self._encoding_select_win.setEncoding(self._old_station_encoding)
 
                 elif char in (ord('o'), ):
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
                     self._set_rename_stations()
                     self._cnf.open_register_list = False
-                    self._update_status_bar_right()
+                    self._update_status_bar_right(status_suffix='')
                     if self._cnf.browsing_station_service:
                         return
                     self._check_to_open_playlist()
@@ -4506,7 +4531,9 @@ class PyRadio(object):
 
                 elif char in(ord('x'), curses.KEY_DC):
                     # TODO: make it impossible when session locked?
-                    self._update_status_bar_right()
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
                     if self._cnf.browsing_station_service: return
                     if self.number_of_items > 0:
                         self.removeStation()
@@ -4527,14 +4554,18 @@ class PyRadio(object):
                     return
 
                 elif char in (ord('r'), ):
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
                     self.log.counter = None
-                    self._update_status_bar_right(random_requested = True)
+                    self._update_status_bar_right(random_requested = True, status_suffix='')
                     # Pick a random radio station
                     self.play_random()
                     return
 
                 elif char in (ord('R'), ):
-                    self._update_status_bar_right()
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
                     if self._cnf.browsing_station_service: return
                     # Reload current playlist
                     if self._cnf.dirty_playlist:
@@ -4552,26 +4583,30 @@ class PyRadio(object):
                     return
 
                 elif char == ord('J'):
+                    self.jumpnr = ''
                     # tag for jump
                     self._cnf.jump_tag = self.selection
+                    self._update_status_bar_right(status_suffix=str(self._cnf.jump_tag + 1) + 'J')
                     return
 
                 elif char in (curses.ascii.NAK, 21):
                     # ^U, move station Up
                     if self.jumpnr:
                         self._cnf.jump_tag = int(self.jumpnr) - 1
-                    self._update_status_bar_right()
                     self._move_station(-1)
+                    self.jumpnr = ''
                     self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
                     return
 
                 elif char in (curses.ascii.EOT, 4):
                     # ^D, move station Down
                     if self.jumpnr:
                         self._cnf.jump_tag = int(self.jumpnr) - 1
-                    self._update_status_bar_right()
                     self._move_station(1)
+                    self.jumpnr = ''
                     self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
                     return
 
             elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:

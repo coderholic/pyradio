@@ -20,18 +20,27 @@ of the repository and type
 "
 exit 1
 }
+
+a_state=$(sed -n '/^app_state/p' pyradio/__init__.py 2>/dev/null | sed -e 's/.*= //' -e "s/'//g")
+
+if [ -z "$a_state" ];then
+    final_version="$a_tag"
+else
+    final_version="$a_tag"-"$a_state"
+fi
+
 echo -e "${cGreen}done${cReset}
-Current version: ${cGreen}$a_tag${cReset}
+Current version: ${cGreen}$final_version${cReset}
 
 To create a local tag for this version, type:
-    ${cGreen}git tag $a_tag${cReset}
+    ${cGreen}git tag $final_version${cReset}
 When ready to push, type
     ${cGreen}git push origin master${cReset}
     ${cGreen}git push origin --tags${cReset}
 
 To delete a this tag, type
-    (local)    ${cRed}git tag --delete $a_tag${cReset}
-    (remote)   ${cRed}git push --delete origin $a_tag${cReset}
+    (local)    ${cRed}git tag --delete $final_version${cReset}
+    (remote)   ${cRed}git push --delete origin $final_version${cReset}
 "
 
 

@@ -105,7 +105,10 @@ class Log(object):
                 """ display suffix """
                 if self.suffix:
                     d_msg = ' [' + self.suffix + ']'
-                    self.cursesScreen.addstr(0, self._active_width - len(d_msg), d_msg)
+                    try:
+                        self.cursesScreen.addstr(0, self._active_width - len(d_msg), d_msg + ' ')
+                    except:
+                        pass
                     self.cursesScreen.chgat(0, self._active_width - len(d_msg) +1, len(d_msg) -1, curses.color_pair(1))
                     first_print = self._do_i_print_last_char(first_print)
                     self.cursesScreen.refresh()

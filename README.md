@@ -110,6 +110,8 @@ c                 Open Configuration window.                       -            
 / n N             Search, go to next / previous result             [Valid]                            [Valid]
 J                 Create a jump tag
 <n>^U <n>^D       Move station up / down.                          -                                  -
+' \ y             Get into Registers, Extra Commands               y (yank) is not applicable         -
+                  and Yank modes, respectively
 ?                 Show keys help                                   [Valid]                            [Valid]
 #                 Redraw window                                    [Valid]                            [Valid]
 Esc/q             Quit                                             -                                  -
@@ -119,6 +121,10 @@ Esc/q/Left/h      -                                                Cancel / clos
 The same logic applies to all **PyRadio** windows.
 
 **Note:** All windows - except the *Search window* - support changing the volume and muting / unmuting the player (provided that **PyRadio** is actually connected to a station).
+
+**Note:** When inserting numbers (either to jump to a station or to move a station), the number will be displayed at the right bottom corner of the window, suffixed by a "*G*", i.e. pressing *35* will display *[35G]*.
+
+**Note:** When tagging a station position for a move action (by pressing "**J**"), the position will be displayed at the right bottom corner of the window, suffixed by a "*J*", i.e. pressing "*J*" on position *35* will display *[35J]*.
 
 
 ## PyRadio's Modes

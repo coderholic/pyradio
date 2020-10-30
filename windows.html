@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>PyRadio on Windows</title>
-  <style>
+  <style type="text/css">
     html {margin: 2em;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} 
     h3 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} 
@@ -13,130 +13,18 @@
     dd {margin: 1em;} 
     dt {font-weight: bold;} 
     pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6; overflow: auto;}
-    html {
-      line-height: 1.7;
-      font-family: Georgia, serif;
-      font-size: 20px;
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 40em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      word-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 1em;
-      }
-    }
-    @media print {
-      body {
-        background-color: transparent;
-        color: black;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin-top: 1.7em;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.7em;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1.7em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1.7em 0 1.7em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      font-style: italic;
-    }
-    code {
-      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
-      background-color: #f0f0f0;
-      font-size: 85%;
-      margin: 0;
-      padding: .2em .4em;
-    }
-    pre {
-      line-height: 1.5em;
-      padding: 1em;
-      background-color: #f0f0f0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-    }
-    hr {
-      background-color: #1a1a1a;
-      border: none;
-      height: 1px;
-      margin-top: 1.7em;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-    }
-    th, td {
-      border-bottom: 1px solid lightgray;
-      padding: 1em 3em 1em 0;
-    }
-    header {
-      margin-bottom: 6em;
-      text-align: center;
-    }
-    nav a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    ul.task-list{list-style: none;}
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
-<header id="title-block-header">
+<header>
 </header>
 <h1 id="pyradio-on-windows">PyRadio on Windows</h1>
 <p><strong>PyRadio</strong>: Command line internet radio player.</p>
-<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
+<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic" class="uri">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
 <li><a href="#running-pyradio-on-windows">Running PyRadio on Windows</a></li>
@@ -193,7 +81,7 @@
 <p>When the download is done, run its setup and select “<em>Custom Installation</em>” so that you can “<em>Add Python to environment varaibles</em>”. You can refer to the following image to see the relevant setting.</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/python1.jpg">Python Installation</a></p>
 <h4 id="verifying-the-installation">1.2 Verifying the installation</h4>
-<p>Either if you have just installed <strong>Python</strong> or you already have it installed, you need to verify that its executable is in the <strong>PATH</strong> (i.e. <strong>Python</strong> can be executed from a console by typing“<em>python</em>”).</p>
+<p>Either if you have just installed <strong>Python</strong> or you already have it installed, you need to verify that its executable is in the <strong>PATH</strong> (i.e. <strong>Python</strong> can be executed from a console by typing“<em>python</em>”).</p>
 <p>So, go ahead and open a console (the command is <strong>cmd</strong>) and type <strong>python</strong>.</p>
 <p>If you get something similar to the following snippet, you are good to go.</p>
 <pre>Python 3.6.4 (v3.6.4:d48eceb, Dec 19 2017, 06:54:40) [MSC v.1900 64 bit (AMD64)] on win
@@ -213,11 +101,11 @@ Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;licen
 <ol type="a">
 <li><strong>%USERPROFILE%</strong></p>
 <p>This is actually your “<em>Home</em>” directory.</p>
-<p>Please make a note that you will add "<strong>%USERPROFILE%\mplayer</strong> to PATH.</p></li>
+<p>Please make a note that you will add &quot;<strong>%USERPROFILE%\mplayer</strong> to PATH.</p></li>
 <li><strong>%APPDATA%\pyradio</strong></p>
 <p>This is (or will be) “<em>PyRadio’s configuration directory</em>”.</p>
 <p>In case the <strong>pyradio</strong> directory does not exit, you just go ahead and create it.</p>
-<p>(Make a note that you will add "<strong>%APPDATA%\pyradio\mplayer</strong> to PATH)</p></li>
+<p>(Make a note that you will add &quot;<strong>%APPDATA%\pyradio\mplayer</strong> to PATH)</p></li>
 </ol>
 <p>In either case, in order to do that, open an <strong>Explorer File Manager</strong> window, and enter at its location field <strong>%USERPROFILE%</strong> or <strong>%APPDATA%</strong>.</p>
 <p>If you are unsure on how to do that, please refer to the following image (you can ENTER <strong>%USERPROFILE%</strong> or <strong>%APPDATA%</strong> or any other Windows System Variable this way).</p>
@@ -264,7 +152,7 @@ cd pyradio
 devel\build_install_pyradio</pre>
 <h4 id="not-using-git">4.2 Not using Git</h4>
 <p>Go to <a target="_blank" href="https://github.com/coderholic/pyradio/releases">PyRadio’s Releases page</a> and download the latest release (either a zip or a tar.gz file).</p>
-<p>Extract this file to your “<em>Home</em>” directory (“<strong>C:\Users\[Your User Name]</strong>” or “<strong>%USERPROFILE%</strong>) - you will get a directory whose name is similar to”<strong>pyradio-0.7.9</strong>".</p>
+<p>Extract this file to your “<em>Home</em>” directory (“<strong>C:\Users\[Your User Name]</strong>” or “<strong>%USERPROFILE%</strong>) - you will get a directory whose name is similar to”<strong>pyradio-0.7.9</strong>&quot;.</p>
 <p>I will use this name for the following examples; you will have to use the actual name of directory you got from the extraction.</p>
 <p>Finally, open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong> or if you are on Windows 10, use <strong>Run it as Administrator</strong> as you can see in the following image).</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/run-as-admin.jpg">Run as Administrator</a></p>

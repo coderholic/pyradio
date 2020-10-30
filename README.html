@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>PyRadio README</title>
-  <style>
+  <style type="text/css">
     html {margin: 2em;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} 
     h3 {margin-top: 2em;} 
@@ -13,130 +13,18 @@
     dd {margin: 1em;} 
     dt {font-weight: bold;} 
     pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6; overflow: auto;}
-    html {
-      line-height: 1.7;
-      font-family: Georgia, serif;
-      font-size: 20px;
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 40em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      word-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 1em;
-      }
-    }
-    @media print {
-      body {
-        background-color: transparent;
-        color: black;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin-top: 1.7em;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.7em;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1.7em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1.7em 0 1.7em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      font-style: italic;
-    }
-    code {
-      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
-      background-color: #f0f0f0;
-      font-size: 85%;
-      margin: 0;
-      padding: .2em .4em;
-    }
-    pre {
-      line-height: 1.5em;
-      padding: 1em;
-      background-color: #f0f0f0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-    }
-    hr {
-      background-color: #1a1a1a;
-      border: none;
-      height: 1px;
-      margin-top: 1.7em;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-    }
-    th, td {
-      border-bottom: 1px solid lightgray;
-      padding: 1em 3em 1em 0;
-    }
-    header {
-      margin-bottom: 6em;
-      text-align: center;
-    }
-    nav a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    ul.task-list{list-style: none;}
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
-<header id="title-block-header">
+<header>
 </header>
 <h1 id="pyradio">PyRadio</h1>
 <p>Command line internet radio player.</p>
-<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
+<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic" class="uri">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
 <li><a href="#requirements">Requirements</a></li>
@@ -168,7 +56,7 @@
 <li>MPV, MPlayer or VLC installed and in your path.</li>
 </ul>
 <h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (e.g. <em>Arch Linux</em> and derivatives can install <a target="_blank" href="https://aur.archlinux.org/packages/pyradio-git/">pyradio-git</a> from AUR).</p>
+<p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (e.g. <em>Arch Linux</em> and derivatives can install <a target="_blank" href="https://aur.archlinux.org/packages/pyradio-git/">pyradio-git</a> from AUR).</p>
 <p>In any other case, and since <strong>PyRadio</strong> is currently not available via pip, you will have to <a href="build.html">build it from source</a>.</p>
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre>$ pyradio -h
@@ -234,12 +122,16 @@ c                 Open Configuration window.                       -            
 / n N             Search, go to next / previous result             [Valid]                            [Valid]
 J                 Create a jump tag
 &lt;n&gt;^U &lt;n&gt;^D       Move station up / down.                          -                                  -
+&#39; \ y             Get into Registers, Extra Commands               y (yank) is not applicable         -
+                  and Yank modes, respectively
 ?                 Show keys help                                   [Valid]                            [Valid]
 #                 Redraw window                                    [Valid]                            [Valid]
 Esc/q             Quit                                             -                                  -
 Esc/q/Left/h      -                                                Cancel / close window              Cancel / close window</pre>
 <p>The same logic applies to all <strong>PyRadio</strong> windows.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All windows - except the <em>Search window</em> - support changing the volume and muting / unmuting the player (provided that <strong>PyRadio</strong> is actually connected to a station).</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When inserting numbers (either to jump to a station or to move a station), the number will be displayed at the right bottom corner of the window, suffixed by a “<em>G</em>”, i.e. pressing <em>35</em> will display <em>[35G]</em>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When tagging a station position for a move action (by pressing “<strong>J</strong>”), the position will be displayed at the right bottom corner of the window, suffixed by a “<em>J</em>”, i.e. pressing “<em>J</em>” on position <em>35</em> will display <em>[35J]</em>.</p>
 <h2 id="pyradios-modes">PyRadio’s Modes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> has the following primary modes:</p>
 <ol type="1">
@@ -257,7 +149,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 </ol>
 <p>The functions available through the <em>secondary modes</em> are content dependent, so you can see what command is available by pressing “<strong>?</strong>” while within a secondary mode. Pressing any other key will exit the secondary mode.</p>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong>PyRadio</strong> will terminate.</p>
+<p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong>PyRadio</strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong>PyRadio</strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
 <p>The file can also be altered while <strong>PyRadio</strong> is running by pressing “<strong>c</strong>”, which will open the “<strong>Configuration window</strong>”. This window presents all <strong>PyRadio</strong> options and provide the way to change them and finally save them by pressing “<strong>s</strong>”.</p>
 <p>In any case, <strong>PyRadio</strong> will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).</p>
@@ -265,9 +157,9 @@ Esc/q/Left/h      -                                                Cancel / clos
 <h2 id="about-playlist-files">About Playlist files <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
 <p>Optionally, a third column can be inserted, stating the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
-<p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
+<p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2em;"><strong>Tip:</strong> If you already have a custom <em>stations.csv</em> file, but want to update it with <strong>PyRadio</strong>’s default one, you just rename it, run <strong>PyRadio</strong> (so that the default one get created) and then merge the two files.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong>~/.pyradio</strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong>~/.config/pyradio</strong>) and renamed to <strong>stations.csv</strong> or if this file exists, to <strong>pyradio.csv</strong>. In this case, this file will be the default one.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong>~/.pyradio</strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong>~/.config/pyradio</strong>) and renamed to <strong>stations.csv</strong> or if this file exists, to <strong>pyradio.csv</strong>. In this case, this file will be the default one.</p>
 <h3 id="specifying-a-playlist-to-load-command-line">Specifying a playlist to load (command line)</h3>
 <p><strong>PyRadio</strong> will normally load its default playlist file, as described above, upon its execution. A different file can be loaded when the <strong>-s</strong> command line option is used.</p>
 <p>The <strong>-s</strong> option will accept:</p>
@@ -371,7 +263,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>This would be useful in the case where most of your stations do not use <strong>utf-8</strong>. Instead of editing the playlist and add the encoding to each and every affected station, you just set it globally.</p>
 <h3 id="finding-the-right-encoding">Finding the right encoding</h3>
 <p>A valid encoding list can be found at:</p>
-<p><a target="_blank" href="https://docs.python.org/2.7/library/codecs.html#standard-encodings">https://docs.python.org/2.7/library/codecs.html#standard-encodings</a></p>
+<p><a target="_blank" href="https://docs.python.org/2.7/library/codecs.html#standard-encodings" class="uri">https://docs.python.org/2.7/library/codecs.html#standard-encodings</a></p>
 <p>replacing <strong>2.7</strong> with specific version: <strong>3.0</strong> up to current python version.</p>
 <h2 id="player-detection-selection">Player detection / selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.</p>
@@ -390,7 +282,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>This is done by typing “<strong>v</strong>” right after setting a desired volume level.</p>
 <h3 id="mpv">MPV</h3>
 <p>MPV uses profiles to customize its behavior.</p>
-<p><strong>PyRadio</strong> defines a profile called “<strong>[pyradio]</strong>” in MPV’s configuration file (e.g. <em>~/.config/mpv/mpv.conf</em>). This profile will be used every time playback is started.</p>
+<p><strong>PyRadio</strong> defines a profile called “<strong>[pyradio]</strong>” in MPV’s configuration file (e.g. <em>~/.config/mpv/mpv.conf</em>). This profile will be used every time playback is started.</p>
 <p>Example:</p>
 <pre>volume=100
 
@@ -398,7 +290,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 volume=50</pre>
 <h3 id="mplayer">MPlayer</h3>
 <p>MPlayer uses profiles to customize its behavior as well.</p>
-<p><strong>PyRadio</strong> defines a profile called “<strong>[pyradio]</strong>” in MPV’s configuration file (e.g. <em>~/.mplayer/config</em>). This profile will be used every time playback is started.</p>
+<p><strong>PyRadio</strong> defines a profile called “<strong>[pyradio]</strong>” in MPV’s configuration file (e.g. <em>~/.mplayer/config</em>). This profile will be used every time playback is started.</p>
 <p>Example:</p>
 <pre>volume=100
 
@@ -438,7 +330,7 @@ volume=28</pre>
 <ul>
 <li>“<strong>p</strong>” while editing a playlist or register.</p></li>
 <li>“<strong>\p</strong>” while editing a playlist or register. This would open the “<em>Paste selection</em>” window.</p></li>
-<li>“<strong>\p</strong>” in the “<em>Playlist Selection</em> or the”<em>Registers</em>" window.</p></li>
+<li>“<strong>\p</strong>” in the “<em>Playlist Selection</em> or the”<em>Registers</em>&quot; window.</p></li>
 </ul>
 <h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> comes with 6 preconfigured (hard coded) themes:</p>
