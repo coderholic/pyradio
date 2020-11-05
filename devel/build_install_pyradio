@@ -1,22 +1,21 @@
 #!/bin/bash
 function help(){
 if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
-    echo "Usage: $0 [2/3/-u]"
+    echo "Usage: $0 [2/-u]"
 else
-    echo "Usage: $0 [2/3/-u/--user]"
+    echo "Usage: $0 [2/-u/--user]"
 fi
 echo "
 Available options:
-  2       build using python v. 2.x
-  3       build using python v. 3.x
-  -u      uninstall pyradio
-  --user  user install (in ~/.local)
+       2   build using python v. 2.x
+      -u   uninstall pyradio
+  --user   user install (in ~/.local)
 
-If no option is used, will build using system default
+If no option is used, will build using Python 3
 
 Checking python availability:"
 
-            for n in "" 2 3;do
+            for n in 2 3 "";do
                 echo -n "  python${n}"
                 [ -z "$n" ] && echo -n " "
                 echo -n "   ...   "
@@ -97,12 +96,79 @@ function uninstall(){
     echo "PyRadio successfully uninstalled"
 }
 
+function create_bdist(){
+    rm -rf build pyradio.egg-info dist debian 2>/dev/null
+    python3 setup.py bdist || {
+        echo "Error creating bdist"
+        exit 1
+    }
+
+}
+
+function get_cur_version(){
+    cur_version=$(grep 'version_info = ' pyradio/__init__.py | sed 's/version_info = (//;s/, /./g;s/)//')
+    cur_state=$(grep 'app_state = ' pyradio/__init__.py | sed "s/app_state = //;s/'//g")
+    [[ -z "$cur_state" ]] || cur_version="$cur_version"-"$cur_state"
+    #echo "$cur_version"
+}
+
+function do_debian(){
+get_cur_version
+outfile=pyradio-${cur_version}_all.deb
+create_bdist
+mkdir -p debian/DEBIAN
+cat <<END >debian/DEBIAN/control
+Source: pyradio
+Version: |version|
+Priority: optional
+Build-Depends: debhelper-compat (= 9) python3-setuptools
+Maintainer: Spiros Georgaras <sng@hellug.gr>
+Package: pyradio
+Section: Multimedia
+Architecture: all
+Description: Command line internet radio player
+
+END
+
+
+cd debian
+tar xzf ../dist/*z
+mkdir -p usr/local/share/doc
+cp ../*md usr/local/share/doc
+cp ../*html usr/local/share/doc
+cp ../LICENCE usr/local/share/doc/copyright
+mkdir -p usr/local/share/man/man1
+cp ../pyradio.1 usr/local/share/man/man1/
+gzip usr/local/share/man/man1/pyradio.1
+sed -i "s/|version|/$cur_version/" DEBIAN/control
+cd ..
+
+dpkg-deb -b debian $outfile
+# clean up
+rm -rf build pyradio.egg-info dist debian 2>/dev/null
+echo
+echo "=============================================================================="
+echo "File created: $outfile
+You can install it by executing
+    sudo dpkg -i ./$outfile
+or
+    sudo apt install ./$outfile
+"
+echo "=============================================================================="
+
+}
+
+TO_PYTHON=3
 while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
         -h|--help)
             help
+            exit
+            ;;
+        -d)
+            do_debian
             exit
             ;;
         -u)
@@ -119,10 +185,6 @@ do
             ;;
         2)
             TO_PYTHON=2
-            shift
-            ;;
-        3)
-            TO_PYTHON=3
             shift
             ;;
         *)    # unknown option

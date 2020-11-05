@@ -3,13 +3,25 @@ SPHINXBUILD=sphinx-build
 ALLSPHINXOPTS= -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 BUILDDIR=_build
 
+.PHONY: build
+build:
+	python3 setup.py build
+
+.PHONY: install
+install:
+	devel/build_install_pyradio 3
+
+.PHONY: uninstall
+uninstall:
+	devel/build_install_pyradio -u
 
 .PHONY: clean
 clean:
-	rm -rf build dist docs/_build
-	find . -name "*.pyc" -delete
-	find . -name "*.orig" -delete
-	find . -name "*.log" -delete
+	sudo rm -rf build dist docs/_build
+	sudo find . -name "*.pyc" -delete
+	sudo find . -name "*.orig" -delete
+	sudo find . -name "*.log" -delete
+	sudo find . -name "*.1.gz" -delete
 
 .PHONY: register
 register:

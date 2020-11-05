@@ -41,6 +41,13 @@ When ready to push, type
 To delete a this tag, type
     (local)    ${cRed}git tag --delete $final_version${cReset}
     (remote)   ${cRed}git push --delete origin $final_version${cReset}
+
+To update ${cYellow}coderholic${cReset}, type:
+    ${cGreen}git push upstream master${cReset}
+
+Finally, got to ${cRed}~/projects/my-gits/aur/pyragio-git${cReset}
+and execute ${cRed}./add-pkgver${cReset} to get AUR package
+ready for update.
 "
 
 

@@ -1,3 +1,6 @@
+2020-11-05
+    * Installation script will use Python 3 by default
+
 2020-10-30 s-n-g
     * Version 0.8.8-beta3
     * Re-implementing status bar output function

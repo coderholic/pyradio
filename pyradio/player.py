@@ -500,9 +500,6 @@ class Player(object):
                             # make sure title will not pop-up while Volume value is on
                             if self.delay_thread is None:
                                 ok_to_display = True
-                            else:
-                                if (not self.delay_thread.isAlive()):
-                                    ok_to_display = True
                             if ok_to_display and self.playback_is_on:
                                 string_to_show = self.title_prefix + title
                                 self.outputStream.write(msg=string_to_show, counter='')
@@ -792,9 +789,10 @@ class Player(object):
 
     def threadUpdateTitle(self, delay=1):
         if self.oldUserInput['Title'] != '':
-            if self.delay_thread is not None:
-                if self.delay_thread.isAlive():
-                    self.delay_thread.cancel()
+            try:
+                self.delay_thread.cancel()
+            except:
+                pass
             try:
                self.delay_thread = threading.Timer(delay,
                                                    self.updateTitle,
@@ -917,7 +915,10 @@ class Player(object):
         except:
             pass
         if self.delay_thread is not None:
-            self.delay_thread.cancel()
+            try:
+                self.delay_thread.cancel()
+            except:
+                pass
         if self.process is not None:
             if platform.startswith('win'):
                 try:

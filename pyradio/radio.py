@@ -343,6 +343,7 @@ class PyRadio(object):
             self.setup_return_status = False
             return
         if logger.isEnabledFor(logging.INFO):
+            logger.info('<<<===---  Program start  ---===>>>')
             logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), system()))
             logger.info('Terminal supports {} colors'.format(curses.COLORS))
         self.stdscr = stdscr
@@ -769,8 +770,6 @@ class PyRadio(object):
 
     def ctrl_c_handler(self, signum, frame):
         self.ctrl_c_pressed = True
-        if not self._cnf.locked:
-            self._cnf.remove_session_lock_file()
         if self._cnf.dirty_playlist:
             """ Try to auto save playlist on exit
                 Do not check result!!! """
@@ -4104,8 +4103,6 @@ class PyRadio(object):
                     self.stopPlayer()
                 self._cnf.save_config()
                 self._wait_for_threads()
-                if not self._cnf.locked:
-                    self._cnf.remove_session_lock_file()
                 return -1
             elif char in (curses.KEY_EXIT, ord('q'), 27):
                 self.bodyWin.nodelay(True)

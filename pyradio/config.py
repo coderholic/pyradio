@@ -66,8 +66,6 @@ class PyRadioStations(object):
 
     playlist_recovery_result = 0
 
-    locked = False
-
     _open_string = [ "open(stationFile, 'r')", "open(stationFile, 'r', encoding='utf-8')" ]
     _open_string_id = 0
 
@@ -100,15 +98,6 @@ class PyRadioStations(object):
                     print('Error: Cannot create config directory: "{}"'.format(a_dir))
                     sys.exit(1)
         self.root_path = path.join(path.dirname(__file__), 'stations.csv')
-
-        if path.exists(self._session_lock_file):
-                self.locked = True
-        else:
-            try:
-                with open(self._session_lock_file, 'w') as f:
-                    pass
-            except:
-                pass
 
         self._ps = PyRadioPlaylistStack()
 
@@ -371,7 +360,7 @@ class PyRadioStations(object):
                 else:
                     n, f = self.read_playlists()
                     if sel <= n-1:
-                        stationFile=self.playlists[sel][-1]
+                        stationFile = self.playlists[sel][-1]
                         return stationFile, 0
                     else:
                         """ playlist number sel does not exit """
@@ -921,6 +910,9 @@ class PyRadioConfig(PyRadioStations):
     theme_has_error = False
     theme_not_supported_notification_shown = False
 
+    # True if lock file exists
+    locked = False
+
     opts = collections.OrderedDict()
     opts[ 'general_title' ] = [ 'General Options', '' ]
     opts[ 'player' ] = [ 'Player: ', '' ]
@@ -964,6 +956,7 @@ class PyRadioConfig(PyRadioStations):
 
         self._check_config_file(self.stations_dir)
         self.config_file = path.join(self.stations_dir, 'config')
+        self.force_to_remove_lock_file = False
 
     @property
     def requested_player(self):
@@ -1083,9 +1076,13 @@ class PyRadioConfig(PyRadioStations):
         return
 
     def _get_lock_file(self):
+        ''' Populate self._session_lock_file
+            If it exists, locked becomes True
+            Otherwise, the file is created
+        '''
         if path.exists('/run/user'):
             from os import geteuid
-            self._session_lock_file =  path.join('/run/user', str(geteuid()), 'pyradio.lock')
+            self._session_lock_file = path.join('/run/user', str(geteuid()), 'pyradio.lock')
             # remove old style session lock file (if it exists)
             if path.exists(path.join(self.stations_dir, '.lock')):
                 try:
@@ -1095,22 +1092,35 @@ class PyRadioConfig(PyRadioStations):
         else:
             self._session_lock_file =  path.join(self.stations_dir, 'pyradio.lock')
 
-    def remove_session_lock_file(self):
-        #print(self._session_lock_file)
         if path.exists(self._session_lock_file):
-            try:
-                remove(self._session_lock_file)
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('Lock file removed...')
-                return 0, self._session_lock_file
-            except:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('Failed to remove Lock file...')
-                return 1, self._session_lock_file
+                self.locked = True
         else:
+            try:
+                with open(self._session_lock_file, 'w') as f:
+                    pass
+            except:
+                pass
+
+    def remove_session_lock_file(self):
+        ''' remove session lock file, if session is not locked '''
+        if self.locked:
             if logger.isEnabledFor(logging.INFO):
-                logger.info('Lock file not found...')
-            return -1, self._session_lock_file
+                logger.info('Not removing lock file; session is locked...')
+        else:
+            if path.exists(self._session_lock_file):
+                try:
+                    remove(self._session_lock_file)
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Lock file removed...')
+                    return 0, self._session_lock_file
+                except:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Failed to remove Lock file...')
+                    return 1, self._session_lock_file
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Lock file not found...')
+                return -1, self._session_lock_file
 
     def _check_config_file(self, usr):
         ''' Make sure a config file exists in the config dir '''
