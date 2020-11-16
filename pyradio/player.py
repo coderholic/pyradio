@@ -148,15 +148,14 @@ class Player(object):
     def __init__(self, outputStream,
             config_encoding,
             playback_timeout,
+            force_http,
             playback_timeout_counter,
             playback_timeout_handler,
             info_display_handler):
         self.outputStream = outputStream
         self.config_encoding = config_encoding
-        try:
-            self.playback_timeout = int(playback_timeout)
-        except:
-            self.playback_timeout = 10
+        self.playback_timeout = playback_timeout
+        self.force_http = force_http
         self.playback_timeout_counter = playback_timeout_counter
         self.playback_timeout_handler = playback_timeout_handler
         self.info_display_handler = info_display_handler
@@ -164,6 +163,12 @@ class Player(object):
 
     def __del__(self):
         self.close()
+
+    def _url_to_use(self, streamUrl):
+        if self.force_http:
+            return streamUrl.replace('https://', 'http://')
+        else:
+            return streamUrl
 
     def save_volume(self):
         pass
@@ -872,6 +877,11 @@ class Player(object):
         t.start()
         # start playback check timer thread
         self.stop_timeout_counter_thread = False
+        logger.error('=========================')
+        logger.error('function self.playback_timeout_counter = {}'.format(self.playback_timeout_counter))
+        logger.error('int self.playback_timeout = {}'.format(self.playback_timeout))
+        logger.error('str self.name = {}'.format(self.name))
+        logger.error('=========================')
         try:
             self.connection_timeout_thread = threading.Thread(
                     target=self.playback_timeout_counter,
@@ -879,6 +889,8 @@ class Player(object):
                         self.name,
                         lambda: self.stop_timeout_counter_thread))
             self.connection_timeout_thread.start()
+            if (logger.isEnabledFor(logging.ERROR)):
+                logger.error("playback detection thread started")
         except:
             self.connection_timeout_thread = None
             if (logger.isEnabledFor(logging.ERROR)):
@@ -949,7 +961,10 @@ class Player(object):
             self._mute()
         if self.muted:
             if self.delay_thread is not None:
-                self.delay_thread.cancel()
+                try:
+                    self.delay_thread.cancel()
+                except:
+                    pass
             self.title_prefix = '[Muted] '
             self.show_volume = False
         else:
@@ -1084,7 +1099,7 @@ class MpvPlayer(Player):
         """ Builds the options to pass to subprocess."""
 
         """ Test for newer MPV versions as it supports different IPC flags. """
-        p = subprocess.Popen([self.PLAYER_CMD, "--input-ipc-server"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
+        p = subprocess.Popen([self.PLAYER_CMD, "--no-video",  "--input-ipc-server"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
         out = p.communicate()
         if "not found" not in str(out[0]):
             if logger.isEnabledFor(logging.DEBUG):
@@ -1095,17 +1110,16 @@ class MpvPlayer(Player):
                 logger.debug("--input-ipc-server is not supported.")
             newerMpv = 0;
 
-        http_url = streamUrl.replace('https://', 'http://')
         if playList:
             if newerMpv:
-                opts = [self.PLAYER_CMD, "--quiet", "--playlist=" + http_url, "--input-ipc-server=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--no-video", "--quiet", "--playlist=" + self._url_to_use(streamUrl), "--input-ipc-server=" + self.mpvsocket]
             else:
-                opts = [self.PLAYER_CMD, "--quiet", "--playlist=" + http_url, "--input-unix-socket=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--no-video", "--quiet", "--playlist=" + self._url_to_use(streamUrl), "--input-unix-socket=" + self.mpvsocket]
         else:
             if newerMpv:
-                opts = [self.PLAYER_CMD, "--quiet", http_url, "--input-ipc-server=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--no-video", "--quiet", self._url_to_use(streamUrl), "--input-ipc-server=" + self.mpvsocket]
             else:
-                opts = [self.PLAYER_CMD, "--quiet", http_url, "--input-unix-socket=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--no-video", "--quiet", self._url_to_use(streamUrl), "--input-unix-socket=" + self.mpvsocket]
         if self.USE_PROFILE == -1:
             self.USE_PROFILE = self._configHasProfile()
 
@@ -1412,11 +1426,10 @@ class MpPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
-        http_url = streamUrl.replace('https://', 'http://')
         if playList:
-            opts = [self.PLAYER_CMD, "-quiet", "-playlist", http_url]
+            opts = [self.PLAYER_CMD, "-vo", "null", "-quiet", "-playlist", self._url_to_use(streamUrl)]
         else:
-            opts = [self.PLAYER_CMD, "-quiet", http_url]
+            opts = [self.PLAYER_CMD, "-vo", "-quiet", self._url_to_use(streamUrl)]
         if self.USE_PROFILE == -1:
             self.USE_PROFILE = self._configHasProfile()
 
@@ -1507,8 +1520,7 @@ class VlcPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to subprocess."""
-        #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
-        opts = [self.PLAYER_CMD, "-Irc", "-vv", streamUrl.replace('https://', 'http://')]
+        opts = [self.PLAYER_CMD, "--no-video", "-Irc", "-vv", self._url_to_use(streamUrl)]
         return opts
 
     def _mute(self):

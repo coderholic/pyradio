@@ -387,7 +387,8 @@ class PyRadio(object):
         try:
             self.player = player.probePlayer(requested_player=self.requested_player)(self.log,
                     self._cnf.default_encoding,
-                    self._cnf.connection_timeout,
+                    self._cnf.connection_timeout_int,
+                    self._cnf.force_http,
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
                     self._show_station_info_from_thread)
@@ -889,6 +890,7 @@ class PyRadio(object):
 
     def playbackTimeoutCounter(self, *args):
         timeout = args[0]
+        logger.info('DE \n\ntimeout = {}\n\n'.format(timeout))
         station_name = args[1]
         stop = args[2]
         if stop():

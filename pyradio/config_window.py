@@ -56,9 +56,12 @@ class PyRadioConfigWindow(object):
     _help_text.append(['This is the encoding used by default when reading data provided by a station such as song title, etc. If reading said data ends up in an error, "utf-8" will be used instead.', '|',
     'If changed, playback must be restarted so that changes take effect.',
     '|', 'Default value: utf-8'])
+    _help_text.append(None)
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
     '|', 'Valid values: 5 - 60', 'Default value: 10'])
+    _help_text.append(['Most radio stations use plain old http protocol to broadcast, but some of them use https.', '|', 'If this is enabled, all connections will use http; results depend on the combination of station/player.', '|', 'This value is read at program startup, use Ctrl-S to change its effect while mid-session.',
+    '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['The theme to be used by default.', '|',
     'This is the equivalent to the -t , --theme command line option.', '|',
@@ -266,6 +269,7 @@ class PyRadioConfigWindow(object):
         # Transparency
         #self._old_use_transparency = self._config_options['use_transparency'][1]
         self._config_options[ 'use_transparency' ][1] = False
+        self._config_options[ 'force_http' ][1] = False
         self._toggle_transparency_function(changed_from_config_window=True, force_value=False)
         self._config_options[ 'playlist_manngement_title' ][1] = ''
         self._config_options[ 'confirm_station_deletion' ][1] = True
@@ -413,7 +417,8 @@ class PyRadioConfigWindow(object):
                 return self.n_u.SELECT_STATION_MODE, []
             elif sel == 'confirm_station_deletion' or \
                     sel == 'confirm_playlist_reload' or \
-                    sel == 'auto_save_playlist':
+                    sel == 'auto_save_playlist' or \
+                    sel == 'force_http':
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 self.refresh_selection()
             elif sel == 'use_transparency':

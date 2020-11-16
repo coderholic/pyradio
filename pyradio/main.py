@@ -15,7 +15,7 @@ PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 IMPLEMENTED_PLAYERS =('mpv', 'mplayer', 'cvlc')
 
 @contextmanager
-def pyradio_config_manager():
+def pyradio_config_file():
     cf = PyRadioConfig()
     try:
         yield cf
@@ -89,7 +89,7 @@ def shell():
     args = parser.parse_args()
     sys.stdout.flush()
 
-    with pyradio_config_manager() as pyradio_config:
+    with pyradio_config_file() as pyradio_config:
 
         if args.unlock:
             pyradio_config.locked = False

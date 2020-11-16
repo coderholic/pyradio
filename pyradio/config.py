@@ -919,7 +919,9 @@ class PyRadioConfig(PyRadioStations):
     opts[ 'default_playlist' ] = [ 'Def. playlist: ', 'stations' ]
     opts[ 'default_station' ] = [ 'Def station: ', 'False' ]
     opts[ 'default_encoding' ] = [ 'Def. encoding: ', 'utf-8' ]
+    opts[ 'conn_title' ] = [ 'Connection Options: ', '' ]
     opts[ 'connection_timeout' ] = [ 'Connection timeout: ', '10' ]
+    opts[ 'force_http' ] = [ 'Force http connections: ', False ]
     opts[ 'theme_title' ] = [ 'Theme Options', '' ]
     opts[ 'theme' ] = [ 'Theme: ', 'dark' ]
     opts[ 'use_transparency' ] = [ 'Use transparency: ', False ]
@@ -938,6 +940,7 @@ class PyRadioConfig(PyRadioStations):
         self.auto_save_playlist = False
         self.default_playlist = 'stations'
         self.default_station = 'False'
+        self.force_http = False
         self.default_encoding = 'utf-8'
         self.connection_timeout = '10'
         self.theme = 'dark'
@@ -976,6 +979,15 @@ class PyRadioConfig(PyRadioStations):
     @player.setter
     def player(self, val):
         self.opts['player'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def force_http(self):
+        return self.opts['force_http'][1]
+
+    @force_http.setter
+    def force_http(self, val):
+        self.opts['force_http'][1] = val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -1043,12 +1055,33 @@ class PyRadioConfig(PyRadioStations):
 
     @property
     def connection_timeout(self):
+        """ connection timeout as string """
         return self.opts['connection_timeout'][1]
 
     @connection_timeout.setter
     def connection_timeout(self, val):
         self.opts['connection_timeout'][1] = val
         self.opts['dirty_config'][1] = True
+
+    @property
+    def connection_timeout_int(self):
+        """ connection timeout as integer
+            if < 5 or > 60, set to 10
+            On error set to 10
+            Read only
+        """
+        try:
+            ret = int(self.opts['connection_timeout'][1])
+            if not 5 <= ret <= 60:
+                ret = 10
+        except:
+            ret = 10
+        self.opts['connection_timeout'][1] = str(ret)
+        return ret
+
+    @connection_timeout_int.setter
+    def connection_timeout_int(self, val):
+        return
 
     @property
     def theme(self):
@@ -1161,6 +1194,8 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['player'][1] = sp[1].lower().strip()
             elif sp[0] == 'connection_timeout':
                 self.opts['connection_timeout'][1] = sp[1].strip()
+                # check integer number and set to 10 if error
+                x = self.connection_timeout_int
             elif sp[0] == 'default_encoding':
                 self.opts['default_encoding'][1] = sp[1].strip()
             elif sp[0] == 'theme':
@@ -1195,6 +1230,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['use_transparency'][1] = True
                 else:
                     self.opts['use_transparency'][1] = False
+            elif sp[0] == 'force_http':
+                if sp[1].lower() == 'true':
+                    self.opts['force_http'][1] = True
+                else:
+                    self.opts['force_http'][1] = False
         self.opts['dirty_config'][1] = False
         return 0
 
@@ -1268,6 +1308,15 @@ default_encoding = {3}
 # Default value: 10
 connection_timeout = {4}
 
+# Force http connections
+# Most radio stations use plain old http protocol to broadcast, but
+# some of them use https. If this is enabled,  all connections will
+# use http; results depend on the combination of station/player.
+#
+# Valid values: True, true, False, false
+# Default value: False
+force_http = {5}
+
 # Default theme
 # Hardcooded themes:
 #   dark (default) (8 colors)
@@ -1277,7 +1326,7 @@ connection_timeout = {4}
 #   black_on_white (bow) (256 colors)
 #   white_on_black (wob) (256 colors)
 # Default value = 'dark'
-theme = {5}
+theme = {6}
 
 # Transparency setting
 # If False, theme colors will be used.
@@ -1286,7 +1335,7 @@ theme = {5}
 # not running, the terminal's background color will be used.
 # Valid values: True, true, False, false
 # Default value: False
-use_transparency = {6}
+use_transparency = {7}
 
 
 # Playlist management
@@ -1295,20 +1344,20 @@ use_transparency = {6}
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {7}
+confirm_station_deletion = {8}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within Pyradio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {8}
+confirm_playlist_reload = {9}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {9}
+auto_save_playlist = {10}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
@@ -1321,6 +1370,7 @@ auto_save_playlist = {9}
                     self.opts['default_station'][1],
                     self.opts['default_encoding'][1],
                     self.opts['connection_timeout'][1],
+                    self.opts['force_http'][1],
                     self.opts['theme'][1],
                     self.opts['use_transparency'][1],
                     self.opts['confirm_station_deletion'][1],
