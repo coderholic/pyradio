@@ -37,6 +37,7 @@ class Window_Stack_Constants(object):
     STATION_INFO_MODE = 58
     NEW_PLAYLIST_MODE = 59
     RENAME_PLAYLIST_MODE = 60
+    CONNECTION_MODE = 61
     MAIN_HELP_MODE = 100
     MAIN_HELP_MODE_PAGE_2 = 101
     MAIN_HELP_MODE_PAGE_3 = 102
@@ -164,6 +165,7 @@ class Window_Stack_Constants(object):
             PLAYLIST_COPY_ERROR: 'PLAYLIST_COPY_ERROR',
             PLAYLIST_RENAME_ERROR: 'PLAYLIST_RENAME_ERROR',
             PLAYLIST_NOT_SAVED_ERROR_MODE: 'PLAYLIST_NOT_SAVED_ERROR_MODE',
+            CONNECTION_MODE: 'CONNECTION_MODE',
             }
 
     ''' When PASSIVE_WINDOWS target is one of them,

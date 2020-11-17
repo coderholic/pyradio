@@ -1,4 +1,8 @@
-2020-11-05
+2020-11-17
+    * Versio 0.8.8-beta4
+    * Adding the "Force http connections" configuration
+      option (#113)
+    * Fixed a couple of bugs
     * Installation script will use Python 3 by default
 
 2020-10-30 s-n-g

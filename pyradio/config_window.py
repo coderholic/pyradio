@@ -60,7 +60,7 @@ class PyRadioConfigWindow(object):
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
     '|', 'Valid values: 5 - 60', 'Default value: 10'])
-    _help_text.append(['Most radio stations use plain old http protocol to broadcast, but some of them use https.', '|', 'If this is enabled, all connections will use http; results depend on the combination of station/player.', '|', 'This value is read at program startup, use Ctrl-S to change its effect while mid-session.',
+    _help_text.append(['Most radio stations use plain old http protocol to broadcast, but some of them use https.', '|', 'If this parameter is enabled, all connections will use http; results depend on the combination of station/player.', '|', 'This value is read at program startup, use "z" to change its effect while mid-session.',
     '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['The theme to be used by default.', '|',

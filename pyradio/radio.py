@@ -29,7 +29,7 @@ from .common import *
 from .window_stack import Window_Stack
 from .config_window import *
 from .log import Log
-from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile
+from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType
 from .themes import *
 from .cjkwrap import cjklen
 from . import player
@@ -269,6 +269,7 @@ class PyRadio(object):
                 self.ws.PLAYLIST_COPY_ERROR: self._print_playlist_copy_error,
                 self.ws.PLAYLIST_RENAME_ERROR: self._print_playlist_rename_error,
                 self.ws.PLAYLIST_NOT_SAVED_ERROR_MODE: self._print_playlist_not_saved_error,
+                self.ws.CONNECTION_MODE: self._show_http_connection,
                 }
 
         """ list of help functions """
@@ -286,6 +287,9 @@ class PyRadio(object):
                 self.ws.SELECT_ENCODING_MODE: self._show_config_encoding_help,
                 self.ws.EDIT_STATION_ENCODING_MODE: self._show_config_encoding_help,
                 self.ws.LINE_EDITOR_HELP_MODE: self._show_line_editor_help,
+                self.ws.REGISTER_HELP_MODE: self._show_register_help,
+                self.ws.EXTRA_COMMANDS_HELP_MODE: self._show_extra_commands_help,
+                self.ws.YANK_HELP_MODE: self._show_yank_help,
                 }
 
         """ search classes
@@ -1405,7 +1409,9 @@ class PyRadio(object):
                  a-z| / |0-9        |Copy station to named register.
                  !Registe mode (')
                  '                |Open registers list.
-                 a-z| / |0-9        |Open named register."""
+                 a-z| / |0-9        |Open named register.
+                 !Connection type
+                 z                |Toggle "Force http connections" """
         self._show_help(txt, mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_3, reset_metrics=False)
 
     def _show_playlist_help(self):
@@ -1654,7 +1660,6 @@ class PyRadio(object):
         self._show_help(txt, mode_to_set=self.ws.EXTRA_COMMANDS_HELP_MODE, caption=' Extra Commands Help ')
 
     def _show_yank_help(self):
-        pass
         txt = """ENTER        |Copy station to unnamed register.
                  a-z| / |0-9    |Copy station to named register.
 
@@ -4088,6 +4093,7 @@ class PyRadio(object):
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
             if char in (ord('y'), ord('Y')):
+                self.ws.close_window()
                 if not self._cnf.locked and char == ord('Y'):
                     self._cnf.auto_save_playlist = True
                 ret = self.saveCurrentPlaylist()
@@ -4235,6 +4241,21 @@ class PyRadio(object):
                 self._show_station_info()
             else:
                 self.ws.close_window()
+            self.refreshBody()
+            return
+
+        elif self.ws.operation_mode == self.ws.CONNECTION_MODE:
+            ret = self._connection_type_edit.keypress(char)
+            if ret == -1:
+                # Cancel
+                self.ws.close_window()
+                self._connection_type_edit = None
+                pass
+            elif ret == 1:
+                # changed
+                self.ws.close_window()
+                self.player.force_http = self._connection_type_edit.connection_type
+                self._connection_type_edit = None
             self.refreshBody()
             return
 
@@ -4581,7 +4602,19 @@ class PyRadio(object):
                             curses.ungetch('y')
                     return
 
+                elif char in (ord('z'), ):
+                    # change force http
+                    self._random_requested = False
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
+                    self.ws.operation_mode = self.ws.CONNECTION_MODE
+                    self._connection_type_edit = PyRadioConnectionType(parent=self.bodyWin,connection_type=self.player.force_http)
+                    self._connection_type_edit.show()
+                    return
+
                 elif char == ord('J'):
+                    self._random_requested = False
                     self.jumpnr = ''
                     # tag for jump
                     self._cnf.jump_tag = self.selection
@@ -4590,6 +4623,7 @@ class PyRadio(object):
 
                 elif char in (curses.ascii.NAK, 21):
                     # ^U, move station Up
+                    self._random_requested = False
                     if self.jumpnr:
                         self._cnf.jump_tag = int(self.jumpnr) - 1
                     self._move_station(-1)
@@ -4600,6 +4634,7 @@ class PyRadio(object):
 
                 elif char in (curses.ascii.EOT, 4):
                     # ^D, move station Down
+                    self._random_requested = False
                     if self.jumpnr:
                         self._cnf.jump_tag = int(self.jumpnr) - 1
                     self._move_station(1)
@@ -5200,6 +5235,9 @@ class PyRadio(object):
             return k.index(a_search)
         except ValueError as e:
             return -1
+
+    def _show_http_connection(self):
+        self._connection_type_edit.show(parent=self.bodyWin)
 
     """''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
         Windows only section

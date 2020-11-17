@@ -18,6 +18,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Moving stations around](#moving-stations-around)
 * [Specifying stations' encoding](#specifying-stations-encoding)
 * [Player detection / selection](#player-detection-selection)
+* [Player connection protocol](#player-connection-protocol)
 * [Player default volume level](#player-default-volume-level)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
@@ -112,6 +113,7 @@ J                 Create a jump tag
 <n>^U <n>^D       Move station up / down.                          -                                  -
 ' \ y             Get into Registers, Extra Commands               y (yank) is not applicable         -
                   and Yank modes, respectively
+z                 Toggle "Force http connections"                  -                                  -
 ?                 Show keys help                                   [Valid]                            [Valid]
 #                 Redraw window                                    [Valid]                            [Valid]
 Esc/q             Quit                                             -                                  -
@@ -392,6 +394,22 @@ will instruct **PyRadio** to look for VLC, then MPlayer and finaly for MPV and u
 
 **Note:** The default player to use can also be set in **PyRadio**'s [configuration file](#config-file), parameter **player** (default value is **mpv, mplayer, vlc**).
 
+
+## Player connection protocol
+
+Most radio stations use plain old http protocol to broadcast, but some of them use https.
+
+Experience has shown that playing a **https** radio station depends on the combination of the station's configuration and the player used.
+
+If such a station fails to play, one might as well try to use **http** protocol to connect to it.
+
+**PyRadio** provides a way to instruct the player used to do so; the "*Force http connections*" configuration parameter. If it is *False* (the default), the player will use whatever protocol the station proposes (either **http** or **https**). When changed to **True**, all connections will use the **http** protocol.
+
+When the selected player is initialized (at program startup), it reads this configuration parameter and acts accordingly.
+
+If the parameter has to be changed mid-session (without restarting the program), one would press "*z*" to display the "*Connection Type*" window, where the parameter's value can be set as desired.
+
+**Note:** Changes made using the "*Connection Type*" window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds.
 
 ## Player default volume level
 

@@ -1049,4 +1049,73 @@ class PyRadioRenameFile(object):
         #self.show()
         return self._get_result(ret)
 
+class PyRadioConnectionType(object):
+
+    _title = ' Connection Type '
+    _text = 'Force http connections: '
+    _help_text = ' Help '
+
+    def __init__(self, parent, connection_type):
+        self._parent = parent
+        self.connection_type = connection_type
+
+    def show(self, parent=None):
+        if parent:
+            self._parent = parent
+        y, x = self._parent.getmaxyx()
+        new_y = int(y/2) - 2
+        new_x = int( (x - len(self._text) - 9 - 4) /2 )
+        self.MaxX = len(self._text) + 9 + 4
+        self._win = None
+        self._win = curses.newwin(10, self.MaxX, new_y, new_x)
+        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.erase()
+        self._win.box()
+
+        # show title
+        x = int((self.MaxX - len(self._title)) / 2)
+        self._win.addstr(0, x, self._title, curses.color_pair(4))
+
+        # show content
+        self._win.addstr(2, 4, self._text, curses.color_pair(5))
+        self._win.addstr('{}'.format(self.connection_type), curses.color_pair(4))
+
+        # show help
+        try:
+            self._win.addstr(4, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
+        except:
+            self._win.addstr(4, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+        self._win.addstr(4, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
+        self._win.addstr(5, 2, 'j k l SPACE', curses.color_pair(4))
+        self._win.addstr(6, 2, 'RIGHT UP DOWN', curses.color_pair(4))
+        self._win.addstr('    Toggle parameter', curses.color_pair(5))
+        self._win.addstr(7, 2, 'ENTER s', curses.color_pair(4))
+        self._win.addstr('          Accept parameter', curses.color_pair(5))
+        self._win.addstr(8, 2, 'Esc q h RIGHT', curses.color_pair(4))
+        self._win.addstr('    Cancel operation', curses.color_pair(5))
+
+
+        self._win.refresh()
+
+    def keypress(self, char):
+        """ Returns:
+                -1: Cancel
+                 0: go on
+                 1: Ok
+        """
+        if char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord('s')):
+            return 1
+
+        elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):
+            return -1
+
+        elif char in (ord('j'), ord('k'), ord('l'), ord(' '),
+                      curses.KEY_RIGHT, curses.KEY_UP, curses.KEY_DOWN):
+            self.connection_type = not self.connection_type
+            self._win.addstr(2, len(self._text) + 3, '{}'.format(self.connection_type), curses.color_pair(3))
+            self._win.refresh()
+
+        return  0
+
+
 

@@ -39,6 +39,7 @@
 <li><a href="#moving-stations-around">Moving stations around</a></li>
 <li><a href="#specifying-stations-encoding">Specifying stations’ encoding</a></li>
 <li><a href="#player-detection-selection">Player detection / selection</a></li>
+<li><a href="#player-connection-protocol">Player connection protocol</a></li>
 <li><a href="#player-default-volume-level">Player default volume level</a></li>
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
@@ -124,6 +125,7 @@ J                 Create a jump tag
 &lt;n&gt;^U &lt;n&gt;^D       Move station up / down.                          -                                  -
 &#39; \ y             Get into Registers, Extra Commands               y (yank) is not applicable         -
                   and Yank modes, respectively
+z                 Toggle &quot;Force http connections&quot;                  -                                  -
 ?                 Show keys help                                   [Valid]                            [Valid]
 #                 Redraw window                                    [Valid]                            [Valid]
 Esc/q             Quit                                             -                                  -
@@ -275,6 +277,14 @@ Station2,Station2_URL,iso-8859-7</pre>
 <pre>pyradio -u vlc,mplayer,mpv</pre>
 <p>will instruct <strong>PyRadio</strong> to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The default player to use can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>, parameter <strong>player</strong> (default value is <strong>mpv, mplayer, vlc</strong>).</p>
+<h2 id="player-connection-protocol">Player connection protocol <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>Most radio stations use plain old http protocol to broadcast, but some of them use https.</p>
+<p>Experience has shown that playing a <strong>https</strong> radio station depends on the combination of the station’s configuration and the player used.</p>
+<p>If such a station fails to play, one might as well try to use <strong>http</strong> protocol to connect to it.</p>
+<p><strong>PyRadio</strong> provides a way to instruct the player used to do so; the “<em>Force http connections</em>” configuration parameter. If it is <em>False</em> (the default), the player will use whatever protocol the station proposes (either <strong>http</strong> or <strong>https</strong>). When changed to <strong>True</strong>, all connections will use the <strong>http</strong> protocol.</p>
+<p>When the selected player is initialized (at program startup), it reads this configuration parameter and acts accordingly.</p>
+<p>If the parameter has to be changed mid-session (without restarting the program), one would press “<em>z</em>” to display the “<em>Connection Type</em>” window, where the parameter’s value can be set as desired.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Changes made using the “<em>Connection Type</em>” window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds.</p>
 <h2 id="player-default-volume-level">Player default volume level <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>MPV and MPlayer, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with VLC.</p>
 <p>This introduces a problem to <strong>PyRadio</strong>: every time a user plays a station (i.e restarts playback), even though he may have already set the volume to a desired level, the playback starts at the player’s default level.</p>

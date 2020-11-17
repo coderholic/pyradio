@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH PYRADIO 1 "October 2020"
+.TH PYRADIO 1 "November 2020"
 
 .SH NAME
 .PP
@@ -459,6 +459,24 @@ will instruct \fBpyradio\fR to look for VLC, then MPlayer and finaly for MPV and
 .IP \fBNote\fR
 The default player to use can also be set in \fBpyradio\fR’s configuration file, parameter \fIplayer\fR (default value is \fImpv, mplayer, vlc\fR).
 
+
+.SH PLAYER CONNECTION PROTOCOL
+
+Most radio stations use plain old http protocol to broadcast, but some of them use https.
+
+Experience has shown that playing a \fBhttps\fR radio station depends on the combination of the station's configuration and the player used.
+
+If such a station fails to play, one might as well try to use \fBhttp\fR protocol to connect to it.
+
+\fBpyradio\fR provides a way to instruct the player used to do so; the "\fIForce http connections\fR" configuration parameter. If it is \fIFalse\fR (the default), the player will use whatever protocol the station proposes (either \fBhttp\fR or \fBhttps\fR). When changed to \fBTrue\fR, all connections will use the \fBhttp\fR protocol.
+
+When the selected player is initialized (at program startup), it reads this configuration parameter and acts accordingly.
+
+If the parameter has to be changed mid-session (without restarting the program), one would press "\fIz\fR" to display the "\fIConnection Type\fR" window, where the parameter's value can be set as desired.
+
+.IP \fBNote\fR
+Changes made using the "\fIConnection Type\fR" window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds.
+
 .SH PLAYER DEFAULT VOLUME LEVEL
 .PP
 \fIMPV\fR and \fIMPlayer\fR, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with \fIVLC\fR.
@@ -766,4 +784,7 @@ On \fBMac OS\fR, these file may be installed in \fI/usr/local/share/doc/pyradio\
 \fBPeter Stevenson (2E0PGS)\fR\ \<\fIhttps://github.com/2E0PGS\fR\>,\ (2018)
 .PP
 \fBSpiros Georgaras\fR\ \<\fIhttps://github.com/s-n-g\fR\>,\ (2018-2020)
+.PP
+You can see a complete list of contributors at
+  https://github.com/coderholic/pyradio/graphs/contributors
 
