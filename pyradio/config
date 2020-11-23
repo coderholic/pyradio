@@ -48,6 +48,15 @@ default_encoding = utf-8
 # Default value: 10
 connection_timeout = 10
 
+# Force http connections
+# Most radio stations use plain old http protocol to broadcast, but
+# some of them use https. If this is enabled,  all connections will
+# use http; results depend on the combination of station/player.
+#
+# Valid values: True, true, False, false
+# Default value: False
+force_http = False
+
 # Default theme
 # Hardcooded themes:
 #   dark (default) (8 colors)

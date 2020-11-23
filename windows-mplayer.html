@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MPlayer Installation on Windows</title>
+  <style type="text/css">
+    html {margin: 2em;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2.5em; color: SaddleBrown; border-bottom:1px solid SaddleBrown;} 
+    h4 {margin-top: 2em; color: SaddleBrown;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown;} 
+    TH {text-align: left; color: SaddleBrown;border: 1px solid SaddleBrown;} 
+    TD {text-align: left; padding-right: 8px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(139, 69, 19, 0.80); color: #fff; padding: 1.5em; border: 1px solid #A87207; border-radius: 15px; overflow: auto;}
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+</head>
+<body>
+<header>
+</header>
+<h1 style="color: SaddleBrown"id="mplayer-installation-on-windows">MPlayer Installation on Windows</h1>
+<p><strong>PyRadio</strong>: Command line internet radio player.</p>
+<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic" class="uri">https://github.com/coderholic</a></p>
+<h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<ul>
+<li><a href="#mplayer-installation">MPlayer installation</a>
+<ul>
+<li><a href="#adding-mplayer-to-the-path">Adding MPlayer to the PATH</a></li>
+</ul></li>
+</ul>
+<p><a href="windows.html">[Back to Build Instructions]</a> <a href="README.html">[Back to README]</a></p>
+<h2 id="mplayer-installation">MPlayer installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>Go to <a target="_blank" href="http://www.mplayerhq.hu/">MPlayer’s home</a> and open the <a target="_blank" href="http://www.mplayerhq.hu/design7/dload.html">download</a> page. Then scroll down to the <strong>Binaries</strong> section and get to the <a target="_blank" href="http://oss.netfarm.it/mplayer/">MPlayer Windows builds</a> page. Then scroll down again until you get to the <strong>Build selection table</strong> to select an installation bundle.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> I am stating here all the links, although all one has to do is get to the last one and download the <strong>MPlayer setup</strong>. This is done so that in case any of the links change in the future, the way to go will be known, having <a target="_blank" href="http://www.mplayerhq.hu/">MPlayer’s home page</a> as a starting point.</p>
+<p>You will end up downloading a <a target="_blank" href="https://www.7-zip.org/">7z archive</a>, which contains a directory whose name is similar to <strong>MPlayer-corei7-r38135+gb272d5b9b6</strong>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> <em>MPlayer</em> provides CPU type dependent builds. In case you select the wrong <em>mplayer</em> build, you will end up connecting to stations but having no sound. If this is the case, please do go back to the download page and get the right build for your system / CPU.</p>
+<p>Extract this directory to whatever place you like and <strong>rename</strong> it to <strong>mplayer</strong>.</p>
+<p>Here comes the tricky part…</p>
+<p>Move the <strong>mplayer</strong> directory to either on of the following locations:</p>
+<ol type="a">
+<li><strong>%USERPROFILE%</strong></p>
+<p>This is actually your “<em>Home</em>” directory.</p>
+<p>Please make a note that you will add &quot;<strong>%USERPROFILE%\mplayer</strong> to PATH.</p></li>
+<li><strong>%APPDATA%\pyradio</strong></p>
+<p>This is (or will be) “<em>PyRadio’s configuration directory</em>”.</p>
+<p>In case the <strong>pyradio</strong> directory does not exit, you just go ahead and create it.</p>
+<p>(Make a note that you will add &quot;<strong>%APPDATA%\pyradio\mplayer</strong> to PATH)</p></li>
+</ol>
+<p>In either case, in order to do that, open an <strong>Explorer File Manager</strong> window, and enter at its location field <strong>%USERPROFILE%</strong> or <strong>%APPDATA%</strong>.</p>
+<p>If you are unsure on how to do that, please refer to the following image (you can ENTER <strong>%USERPROFILE%</strong> or <strong>%APPDATA%</strong> or any other Windows System Variable this way).</p>
+<p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/appdata.jpg">Navigating to %APPDATA%</a></p>
+<h3 id="adding-mplayer-to-the-path">Adding MPlayer to the PATH <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<p>The final step is to add MPlayer to the PATH System Variable.</p>
+<p>Now, you already know the <strong>path string</strong> that has to be added (you have made a note of it in the previous step).</p>
+<p>There’s just one thing to say here: Windows provide a “<em>User variable for User</em>” and a “<em>System variables</em>” section in the “<em>Environment Variables</em>” window.</p>
+<p>Add the <strong>path string</strong> to the “<em>User variables for User</em>” section.</p>
+<p>In order to make the actual addition, please refer to the following image.</p>
+<p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/path.jpg">Adding MPlayer to the PATH</a></p>
+<p>After applying the changes you should <strong>log off and back on</strong> or <strong>restart the system</strong>, because changes done to the PATH variable will take effect the next time you log into the system.</p>
+<p>When you are back on, verify that you can run <strong>MPlayer</strong>; open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>) and type “<strong>mplayer</strong>”.</p>
+<p>If you get something similar to the following snippet, you are all good.</p>
+<pre>MPlayer Redxii-SVN-r38119-6.2.0 (x86_64) (C) 2000-2018 MPlayer Team
+Using FFmpeg N-92801-g7efe84aebd (2018-12-25 00:44:17 +0100)
+Compiled on 2018-12-25 13:55:17 EST (rev. 1)
+Usage:   mplayer [options] [url|path/]filename</pre>
+<p>If <strong>mplayer</strong> was not found, you just have to go through the PATH modification procedure again.</p>
+</body>
+</html>

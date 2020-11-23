@@ -1188,10 +1188,9 @@ class PyRadioConfig(PyRadioStations):
             if sp[1] == '':
                 return -2
             if sp[0] == 'player':
-                if platform.startswith('win'):
-                    self.opts['player'][1] = 'mplayer'
-                else:
-                    self.opts['player'][1] = sp[1].lower().strip()
+                self.opts['player'][1] = sp[1].lower().strip()
+                if sys.platform.startswith('win'):
+                    self.opts['player'][1] = self.opts['player'][1].replace('mpv,', '')
             elif sp[0] == 'connection_timeout':
                 self.opts['connection_timeout'][1] = sp[1].strip()
                 # check integer number and set to 10 if error

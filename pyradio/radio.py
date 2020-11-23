@@ -389,8 +389,10 @@ class PyRadio(object):
         self.log = Log()
         # For the time being, supported players are mpv, mplayer and vlc.
         try:
-            self.player = player.probePlayer(requested_player=self.requested_player)(self.log,
+            self.player = player.probePlayer(requested_player=self.requested_player)(
+                    self.log,
                     self._cnf.default_encoding,
+                    self._cnf.stations_dir,
                     self._cnf.connection_timeout_int,
                     self._cnf.force_http,
                     self.playbackTimeoutCounter,
@@ -894,7 +896,6 @@ class PyRadio(object):
 
     def playbackTimeoutCounter(self, *args):
         timeout = args[0]
-        logger.info('DE \n\ntimeout = {}\n\n'.format(timeout))
         station_name = args[1]
         stop = args[2]
         if stop():
@@ -949,6 +950,7 @@ class PyRadio(object):
     def stopPlayer(self, show_message=True):
         """ stop player """
         try:
+            logger.error('DE ---- self.player.close()')
             self.player.close()
         except:
             pass
@@ -4371,8 +4373,8 @@ class PyRadio(object):
                         self.refreshBody()
                         return
                     else:
-                        """ go back to playlist history """
                         if self._cnf.is_register:
+                            """ go back to playlist history """
                             self._open_playlist_from_history()
                             return
                         """ exit """
@@ -4541,6 +4543,7 @@ class PyRadio(object):
                     self.log.counter = None
                     self._update_status_bar_right()
                     if self.number_of_items > 0:
+                        logger.error('DE ====---- isPlaying = {} ----===='.format(self.player.isPlaying))
                         if self.player.isPlaying():
                             self.stopPlayer(show_message=True)
                         else:

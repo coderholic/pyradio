@@ -39,14 +39,10 @@ class PyRadioConfigWindow(object):
     _num_of_help_lines = 0
     _help_text = []
     _help_text.append(None)
-    if platform.startswith('win'):
-        _help_text.append(['When running on Windows, PyRadio can only use mplayer as its player.', '|',
-        'Thus, this option is disabled.'])
-    else:
-        _help_text.append(['Specify the player to use with PyRadio, or the player detection order.', '|',
-        'This is the eqivelant to the -u , --use-player command line option.', '|',
-        'Example:', '  player = vlc', 'or', '  player = vlc,mpv, mplayer', '|',
-        'Default value: mpv,mplayer,vlc'])
+    _help_text.append(['Specify the player to use with PyRadio, or the player detection order.', '|',
+    'This is the eqivelant to the -u , --use-player command line option.', '|',
+    'Example:', '  player = vlc', 'or', '  player = vlc,mpv, mplayer', '|',
+    'Default value: mpv,mplayer,vlc'])
     _help_text.append(['This is the playlist to open at start up, if none is specified.', '|',
     'This is the equivalent to the -s , --stations command line option.', '|',
     'Default value: stations'])
@@ -400,10 +396,7 @@ class PyRadioConfigWindow(object):
             vals = list(self._config_options.items())
             sel = vals[self.selection][0]
             if sel == 'player':
-                if platform.startswith('win'):
-                    return -1, []
-                else:
-                    return self.n_u.SELECT_PLAYER_MODE, []
+                return self.n_u.SELECT_PLAYER_MODE, []
             elif sel == 'default_encoding':
                 return self.n_u.SELECT_ENCODING_MODE, []
             elif sel == 'theme':
@@ -438,7 +431,10 @@ class PyRadioSelectPlayer(object):
 
     _win = None
 
-    _players =  ( 'mpv', 'mplayer', 'vlc' )
+    if platform == 'win32':
+        _players =  ( 'mplayer', 'vlc' )
+    else:
+        _players =  ( 'mpv', 'mplayer', 'vlc' )
     _working_players = [ [], [] ]
 
     # REMINDER: column 1 is     acive players - displayed right

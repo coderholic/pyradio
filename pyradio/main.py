@@ -12,7 +12,10 @@ from .config import PyRadioConfig
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
-IMPLEMENTED_PLAYERS =('mpv', 'mplayer', 'cvlc')
+if platform.startswith('win'):
+	IMPLEMENTED_PLAYERS =('mplayer', 'cvlc')
+else:
+	IMPLEMENTED_PLAYERS =('mpv', 'mplayer', 'cvlc')
 
 @contextmanager
 def pyradio_config_file():
@@ -182,7 +185,10 @@ def shell():
 
         if args.debug:
             __configureLogger()
-            print('Debug mode activated; printing messages to file: "~/pyradio.log"')
+            if platform.startswith('win'):
+                print('Debug mode activated\n  printing messages to file: "{}\pyradio.log"'.format(getenv('USERPROFILE')))
+            else:
+                print('Debug mode activated; printing messages to file: "~/pyradio.log"')
         else:
             ''' Refer to https://docs.python.org/3.7/howto/logging.html
                 section "What happens if no configuration is provided"

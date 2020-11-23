@@ -7,22 +7,29 @@
   <title>PyRadio on Windows</title>
   <style type="text/css">
     html {margin: 2em;} 
-    h2 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} 
-    h3 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2.5em; color: SaddleBrown; border-bottom:1px solid SaddleBrown;} 
+    h4 {margin-top: 2em; color: SaddleBrown;} 
+    STRONG {color: SaddleBrown;} 
     dl {margin: 2em;} 
     dd {margin: 1em;} 
     dt {font-weight: bold;} 
-    pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6; overflow: auto;}
+    TABLE {border: 1px solid SaddleBrown;} 
+    TH {text-align: left; color: SaddleBrown;border: 1px solid SaddleBrown;} 
+    TD {text-align: left; padding-right: 8px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(139, 69, 19, 0.80); color: #fff; padding: 1.5em; border: 1px solid #A87207; border-radius: 15px; overflow: auto;}
       code{white-space: pre-wrap;}
       span.smallcaps{font-variant: small-caps;}
       span.underline{text-decoration: underline;}
       div.column{display: inline-block; vertical-align: top; width: 50%;}
-  </style>
+  a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
 </head>
 <body>
 <header>
 </header>
-<h1 id="pyradio-on-windows">PyRadio on Windows</h1>
+<h1 style="color: SaddleBrown"id="pyradio-on-windows">PyRadio on Windows</h1>
 <p><strong>PyRadio</strong>: Command line internet radio player.</p>
 <p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic" class="uri">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
@@ -36,9 +43,10 @@
 <li><a href="#installing-python">1.1 Installing Python</a></li>
 <li><a href="#verifying-the-installation">1.2 Verifying the installation</a></li>
 </ul></li>
-<li><a href="#mplayer-installation">2. MPlayer installation</a>
+<li><a href="#player-installation">2. Player installation</a>
 <ul>
-<li><a href="#adding-mplayer-to-the-path">2.1 Adding MPlayer to the PATH</a></li>
+<li><a href="#mplayer-installation">2.1 MPlayer installation</a></li>
+<li><a href="#vlc-installation">2.2 VLC installation</a></li>
 </ul></li>
 <li><a href="#git-installation-optional">3. Git installation (optional)</a></li>
 <li><a href="#pyradio-installation">4. PyRadio installation</a>
@@ -64,14 +72,16 @@
 <p>This page will guide you through the process of installing, updating and running <strong>PyRadio</strong> on Windows.</p>
 <h2 id="how-it-all-works">How it all works <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>First of all, let me tell you that if you are still running Windows XP, you can just stop reading right now; it won’t happen…</p>
-<p>Then, due to reasons that are of no importance right now, <a target="_blank" href="http://www.mplayerhq.hu/design7/news.html">MPlayer</a> is the only player that can be used. Furthermore, special care has to be taken in order to be able to save the volume of the player.</p>
+<p>Then, due to reasons that are of no importance right now, <a target="_blank" href="https://mpv.io/">mpv</a> is not (yet?) supported. That leaves us with <a target="_blank" href="http://www.mplayerhq.hu/design7/news.html">MPlayer</a> and <a target="_blank" href="https://www.videolan.org/vlc/">VLC</a>.</p>
+<p>Installing <a target="_blank" href="http://www.mplayerhq.hu/">MPlayer</a> takes a couple of extra steps, and you may find that some streams (e.g. m3u8) may not be playable. Furthermore, special care has to be taken in order to be able to save the volume of the player.</p>
+<p><a target="_blank" href="https://www.videolan.org/vlc/">VLC</a> is much easier to install, but song titles’ updating may not be 100% consistaent. If this is not a deal breaker for you, then just go on and use <a target="_blank" href="https://www.videolan.org/vlc/">VLC</a> as <strong>PyRadio</strong>’s player.</p>
 <p>Other than that, you will have a fully functional <strong>PyRadio</strong> installation.</p>
 <p>Having said that, let us proceed with the installation.</p>
 <h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>The installation consists of three (optionally four) steps:</p>
 <ol type="1">
 <li><strong>Python</strong> installation</li>
-<li><strong>MPlayer</strong> installation</li>
+<li><strong>Player</strong> installation</li>
 <li><strong>Git</strong> installation (optional)</li>
 <li><strong>PyRadio</strong> installation</li>
 </ol>
@@ -87,44 +97,43 @@
 <pre>Python 3.6.4 (v3.6.4:d48eceb, Dec 19 2017, 06:54:40) [MSC v.1900 64 bit (AMD64)] on win
 Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.
 &gt;&gt;&gt;</pre>
-<p>If the command could not be found, you have to run the installation again, select “<em>Modify</em>” and set the “<em>Add Python to environment varaibles</em>” option. You can refer to the following image to see the relevant setting.</p>
+<p>If the command could not be found, you have to run the installation again, select “<em>Modify</em>” and set the “<em>Add Python to environment variables</em>” option. You can refer to the following image to see the relevant setting.</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/python2.jpg">Python Installation Modification</a></p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If you don’t have the setup file of the original <strong>Python</strong> installation, you will have to <strong>download</strong> it from <a target="_blank" href="https://www.python.org/downloads/windows/">Python’s Windows Downloads</a>. In case you want to upgrade to the latest version, you <strong>must uninstall</strong> the one currently installed, beforehand.</p>
-<h3 id="mplayer-installation">2. MPlayer installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
-<p>Go to <a target="_blank" href="http://www.mplayerhq.hu/">MPlayer’s home</a> and open the <a target="_blank" href="http://www.mplayerhq.hu/design7/dload.html">download</a> page. Then scroll down to the <strong>Binaries</strong> section and get to the <a target="_blank" href="http://oss.netfarm.it/mplayer/">MPlayer Windows builds</a> page. Then scroll down again until you get to the <strong>Build selection table</strong> to select an installation bundle.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> I am stating here all the links, although all one has to do is get to the last one and download the <strong>MPlayer setup</strong>. This is done so that in case any of the links change in the future, the way to go will be known, having <a target="_blank" href="http://www.mplayerhq.hu/">MPlayer’s home page</a> as a starting point.</p>
-<p>You will end up downloading a <a target="_blank" href="https://www.7-zip.org/">7z archive</a>, which contains a directory whose name is similar to <strong>MPlayer-corei7-r38135+gb272d5b9b6</strong>.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> <em>MPlayer</em> provides CPU type dependent builds. In case you select the wrong <em>mplayer</em> build, you will end up connecting to stations but having no sound. If this is the case, please do go back to the download page and get the right build for your system / CPU.</p>
-<p>Extract this directory to whatever place you like and <strong>rename</strong> it to <strong>mplayer</strong>.</p>
-<p>Here comes the tricky part…</p>
-<p>Move the <strong>mplayer</strong> directory to either on of the following locations:</p>
-<ol type="a">
-<li><strong>%USERPROFILE%</strong></p>
-<p>This is actually your “<em>Home</em>” directory.</p>
-<p>Please make a note that you will add &quot;<strong>%USERPROFILE%\mplayer</strong> to PATH.</p></li>
-<li><strong>%APPDATA%\pyradio</strong></p>
-<p>This is (or will be) “<em>PyRadio’s configuration directory</em>”.</p>
-<p>In case the <strong>pyradio</strong> directory does not exit, you just go ahead and create it.</p>
-<p>(Make a note that you will add &quot;<strong>%APPDATA%\pyradio\mplayer</strong> to PATH)</p></li>
-</ol>
-<p>In either case, in order to do that, open an <strong>Explorer File Manager</strong> window, and enter at its location field <strong>%USERPROFILE%</strong> or <strong>%APPDATA%</strong>.</p>
-<p>If you are unsure on how to do that, please refer to the following image (you can ENTER <strong>%USERPROFILE%</strong> or <strong>%APPDATA%</strong> or any other Windows System Variable this way).</p>
-<p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/appdata.jpg">Navigating to %APPDATA%</a></p>
-<h4 id="adding-mplayer-to-the-path">2.1 Adding MPlayer to the PATH</h4>
-<p>The final step is to add MPlayer to the PATH System Variable.</p>
-<p>Now, you already know the <strong>path string</strong> that has to be added (you have made a note of it in the previous step).</p>
-<p>There’s just one thing to say here: Windows provide a “<em>User variable for User</em>” and a “<em>System variables</em>” section in the “<em>Environment Variables</em>” window.</p>
-<p>Add the <strong>path string</strong> to the “<em>User variables for User</em>” section.</p>
-<p>In order to make the actual addition, please refer to the following image.</p>
-<p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/path.jpg">Adding MPlayer to the PATH</a></p>
-<p>After applying the changes you should <strong>log off and back on</strong> or <strong>restart the system</strong>, because changes done to the PATH variable will take effect the next time you log into the system.</p>
-<p>When you are back on, verify that you can run <strong>MPlayer</strong>; open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>) and type “<strong>mplayer</strong>”.</p>
-<p>If you get something similar to the following snippet, you are all good.</p>
-<pre>MPlayer Redxii-SVN-r38119-6.2.0 (x86_64) (C) 2000-2018 MPlayer Team
-Using FFmpeg N-92801-g7efe84aebd (2018-12-25 00:44:17 +0100)
-Compiled on 2018-12-25 13:55:17 EST (rev. 1)
-Usage:   mplayer [options] [url|path/]filename</pre>
-<p>If <strong>mplayer</strong> was not found, you just have to go through the PATH modification procedure again.</p>
+<h3 id="player-installation">2. Player installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<p>It’s time to decide which player you want to use, either <a target="_blank" href="http://www.mplayerhq.hu/design7/news.html">MPlayer</a> or <a target="_blank" href="https://www.videolan.org/vlc/">VLC</a>, or even both of them.</p>
+<p>This is what you should know before making your decision:</p>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 52%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>MPlayer</th>
+<th>VLC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Pros</strong></td>
+<td>Fully functional</td>
+<td>Easy installation<br>Plays almost all streams</td>
+</tr>
+<tr class="even">
+<td><strong>Cons</strong></td>
+<td>Extra steps to install<br>May not play all streams (e.g. m3u8)</td>
+<td>Titles update is not consistent</td>
+</tr>
+</tbody>
+</table>
+<h4 id="mplayer-installation">2.1 MPlayer installation</h4>
+<p>If <a target="_blank" href="http://www.mplayerhq.hu/">MPlayer</a> is your selection, please refer to the <a href="windows-mplayer.html">relevant instructions</a>.</p>
+<h4 id="vlc-installation">2.2 VLC installation</h4>
+<p>If <a target="_blank" href="https://www.videolan.org/vlc/">VLC</a> is your selection, just go and get it and install it as any other Windows program.</p>
+<p>As long as you install it to its default location (e.g “<em>C:\Program Files\VideoLAN\VLC</em>” or “<em>C:\Program Files (x86)\VideoLAN\VLC</em>”) <strong>Pyradio</strong> will be able to detect and use it.</p>
 <h3 id="git-installation-optional">3. Git installation (optional) <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>This is an optional step, so if you do not want to install yet another program to your PC, you are free to skip it.</p>
 <p>Having said that, why would you install <strong>Git</strong>?</p>
