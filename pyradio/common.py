@@ -22,3 +22,9 @@ THEME_ITEMS = ( ('PyRadio URL', 2, 0, 3),
         ('Normal Cursor', 6, 0, 0),
         ('Active Cursor', 9, 0, 0),
         ('Edit Cursor', 8, 0, 0 ) )
+
+""" Messages to display when player starts / stops
+    Used in log to stop runaway threads from printing
+    messages after playback is stopped """
+player_start_stop_token = ('Initialization: "', ': Playback stopped')
+

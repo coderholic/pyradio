@@ -487,61 +487,37 @@ class PyRadio(object):
         self.bodyWin.noutrefresh()
         self.outerBodyWin.noutrefresh()
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
-            if platform.startswith('win'):
-                txt = '''PyRadio cannot find mplayer.
+            if self.requested_player:
+                if self.requested_player in ('mpv', 'mplayer', 'vlc', 'cvlc'):
+                    atxt = """PyRadio is not able to use the player you specified.
 
-                    This means that either mplayer is not installed in this system,
-                    or its directory is not in the PATH.
+                    This player ({}) is supported by PyRadio, but it probably
+                    is not installed in your system.
 
-                    Please refer to windows.html help file to fix this problem.
+                    Keep in mind that you can choose a player to use by specifying
+                    the "-u" command line parameter."""
+                    txt = atxt.format(self.requested_player)
 
-                    To get to this file, execute "pyradio -ocd" and navigate to
-                    the "help" directory.'''
-            else:
-                if self.requested_player:
-                    if self.requested_player in ('mpv', 'mplayer', 'vlc', 'cvlc'):
-                        atxt = """PyRadio is not able to use the player you specified.
-
-                        This player ({}) is supported by PyRadio, but it probably
-                        is not installed in your system.
-
-                        Keep in mind that you can choose a player to use by specifying
-                        the "-u" command line parameter."""
-                        txt = atxt.format(self.requested_player)
-
-                    else:
-                        txt = """PyRadio is not able to use the player you specified.
-
-                        This means that either this particular player is not supported
-                        by PyRadio, or that you have simply misspelled its name.
-
-                        PyRadio currently supports three players: mpv, mplayer and vlc,
-                        automatically detected in this order."""
                 else:
-                    txt = """PyRadio is not able to detect any players.
+                    txt = """PyRadio is not able to use the player you specified.
+
+                    This means that either this particular player is not supported
+                    by PyRadio, or that you have simply misspelled its name.
 
                     PyRadio currently supports three players: mpv, mplayer and vlc,
-                    automatically detected in this order.
+                    automatically detected in this order."""
+            else:
+                txt = """PyRadio is not able to detect any players.
 
-                    Please install any one of them and try again."""
+                PyRadio currently supports three players: mpv, mplayer and vlc,
+                automatically detected in this order.
+
+                Please install any one of them and try again."""
+            if platform.startswith('win'):
+                txt = txt.replace('mpv, ', '')
+                txt = txt.replace('three', 'two')
             self.refreshNoPlayerBody(txt)
         else:
-            #if self.ws.operation_mode == self.ws.MAIN_HELP_MODE:
-            #    self.ws.operation_mode = self.ws.window_mode = self.ws.NORMAL_MODE
-            #    self.helpWin = None
-            #    if logger.isEnabledFor(logging.DEBUG):
-            #        logger.debug('MODE: self.ws.MAIN_HELP_MODE => self.ws.NORMAL_MODE')
-            #elif self.ws.operation_mode == self.ws.PLAYLIST_HELP_MODE:
-            #    self.ws.operation_mode = self.ws.window_mode = self.ws.PLAYLIST_MODE
-            #    self.helpWin = None
-            #    if logger.isEnabledFor(logging.DEBUG):
-            #        logger.debug('MODE: self.ws.PLAYLIST_HELP_MODE =>  self.ws.PLAYLIST_MODE')
-            #elif self.ws.operation_mode == self.ws.THEME_HELP_MODE:
-            #    self.ws.operation_mode = self.ws.window_mode = self.ws.THEME_MODE
-            #    self.helpWin = None
-            #    if logger.isEnabledFor(logging.DEBUG):
-            #        logger.debug('MODE: self.ws.THEME_HELP_MODE =>  self.ws.THEME_MODE')
-            # make sure selected is visible
             self._put_selection_in_the_middle()
             self.refreshBody()
 
@@ -692,16 +668,13 @@ class PyRadio(object):
 
     def run(self):
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
-            if platform.startswith('win'):
-                self.log.write(msg='mplayer not found. Press any key to exit....', error_msg=True)
-            else:
-                if self.requested_player:
-                    if ',' in self.requested_player:
-                        self.log.write(msg='None of "{}" players is available. Press any key to exit....'.format(self.requested_player), error_msg=True)
-                    else:
-                        self.log.write(msg='Player "{}" not available. Press any key to exit....'.format(self.requested_player), error_msg=True)
+            if self.requested_player:
+                if ',' in self.requested_player:
+                    self.log.write(msg='None of "{}" players is available. Press any key to exit....'.format(self.requested_player), error_msg=True)
                 else:
-                    self.log.write(msg="No player available. Press any key to exit....", error_msg=True)
+                    self.log.write(msg='Player "{}" not available. Press any key to exit....'.format(self.requested_player), error_msg=True)
+            else:
+                self.log.write(msg="No player available. Press any key to exit....", error_msg=True)
             try:
                 self.bodyWin.getch()
             except KeyboardInterrupt:
@@ -855,6 +828,8 @@ class PyRadio(object):
             self.startPos = self.selection
 
     def playSelectionBrowser(self):
+            self.log.display_help_message = False
+            self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0] + '"')
             #### self._cnf.browsing_station_service = True
             # Add a history item to preserve browsing_station_service
             # Need to add TITLE, if service found
@@ -872,6 +847,8 @@ class PyRadio(object):
             self.playing = self.selection
             self._last_played_station = self.stations[self.selection]
             stream_url = ''
+            self.log.display_help_message = False
+            self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0] + '"')
             if self._cnf.browsing_station_service:
                 if self._cnf.online_browser.have_to_retrieve_url:
                     self.log.display_help_message = False
@@ -883,8 +860,6 @@ class PyRadio(object):
                 enc = self.stations[self.selection][2].strip()
             except:
                 enc = ''
-            self.log.display_help_message = False
-            self.log.write(msg='Initialization: "' + self._last_played_station[0] + '"')
             try:
                 self.player.play(self._last_played_station[0], stream_url, self.get_active_encoding(enc))
             except OSError:
@@ -960,7 +935,7 @@ class PyRadio(object):
                 self._show_player_is_stopped()
 
     def _show_player_is_stopped(self):
-        self.log.write(msg='{}: Playback stopped'.format(self._format_player_string()),  help_msg=True, suffix=self._status_suffix, counter='')
+        self.log.write(msg='{}'.format(self._format_player_string()) + player_start_stop_token[1],  help_msg=True, suffix=self._status_suffix, counter='')
 
     def removeStation(self):
         if self._cnf.confirm_station_deletion and not self._cnf.is_register:

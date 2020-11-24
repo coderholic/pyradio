@@ -141,8 +141,7 @@ def shell():
             sys.exit(1)
 
         if args.use_player != '':
-            if not platform.startswith('win'):
-                requested_player = args.use_player
+            requested_player = args.use_player
 
         if args.list is False and args.add is False:
             print('Reading playlist...')
@@ -229,7 +228,6 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
     if exit_if_malformed:
         if ret == -1:
             print('Error: playlist is malformed: "{}"'.format(a_selection))
-            #print('Error: playlist is malformed: "{}"'.format(args.stations))
             sys.exit(1)
 
     if ret == -2:

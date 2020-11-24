@@ -3,6 +3,7 @@ import curses
 from sys import version_info
 import logging
 import threading
+from .common import player_start_stop_token
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,8 @@ class Log(object):
     _color_change = False
 
     lock = threading.Lock()
+
+    _player_stopped = 0
 
     def __init__(self):
         self.width = None
@@ -45,9 +48,24 @@ class Log(object):
     def write(self, msg=None, suffix=None, counter=None, help_msg=False, error_msg=False, notify_function=None):
         if self.cursesScreen:
             with self.lock:
+                if msg:
+                    if player_start_stop_token[1] in msg:
+                        self._player_stopped += 1
+                    elif msg.startswith(player_start_stop_token[0]):
+                        self._player_stopped = 0
+                if msg and self._player_stopped > 1:
+                    """ Refuse to print anything if "Playback stopped"
+                        was the last message printed
+                    """
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Refusing to show message; player is stopped: "{}"'.format(msg))
+                    #return
+                elif self._player_stopped == 1:
+                    self._player_stopped = 2
                 if self.asked_to_stop:
                     self.asked_to_stop = False
                     self.counter = None
+                    self._player_stopped = 0
                     return
                 #if logger.isEnabledFor(logging.DEBUG):
                 #    logger.debug('before ----------------------------')
@@ -76,6 +94,7 @@ class Log(object):
                 if self.asked_to_stop:
                     self.asked_to_stop = False
                     self.counter = None
+                    self._player_stopped = 0
                     return
                 """ update main message """
                 if self.msg:
@@ -101,6 +120,7 @@ class Log(object):
                 if self.asked_to_stop:
                     self.asked_to_stop = False
                     self.counter = None
+                    self._player_stopped = 0
                     return
                 """ display suffix """
                 if self.suffix:
@@ -153,8 +173,10 @@ class Log(object):
                 if self.asked_to_stop:
                     self.asked_to_stop = False
                     self.counter = None
+                    self._player_stopped = 0
                     return
                 self.cursesScreen.refresh()
+                #logger.error('DE _player_stopped = {}'.format(self._player_stopped))
 
     def readline(self):
         pass

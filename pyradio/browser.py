@@ -805,9 +805,7 @@ class PyRadioBrowserInfoData(object):
                     logger.info('Asked to stop after working on "{}"...'.format(an_item))
                 self._terminated = True
                 return
-        # print('I am here')
         lock.acquire()
-        # print('I am here too')
         callback(my_data, ret)
         lock.release()
 

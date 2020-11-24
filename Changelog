@@ -1,5 +1,17 @@
-2020-11-17
-    * Versio 0.8.8-beta4
+2020-11-23 s-n-g
+    * Version 0.8.8-beta6
+    * Fixing playback for m3u8 (vlc)
+    * Fixing "-u" functionality on Windows
+    * Fixing "no player" messages
+    * Stopping runaway threads from displaying messages
+      after the player is stopped
+
+2020-11-23 s-n-g
+    * Version 0.8.8-beta5
+    * Adding VLC support on Windows
+
+2020-11-17 s-n-g
+    * Version 0.8.8-beta4
     * Adding the "Force http connections" configuration
       option (#113)
     * Fixed a couple of bugs
