@@ -1,3 +1,8 @@
+2020-11-30 s-n-g
+    * Starting 0.8.8-beta7
+    * Implementing "Create Playlist" (\n)
+    * "Title: (null)" will not appear any more (vlc)
+
 2020-11-23 s-n-g
     * Version 0.8.8-beta6
     * Fixing playback for m3u8 (vlc)

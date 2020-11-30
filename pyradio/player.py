@@ -541,35 +541,36 @@ class Player(object):
                                         logger.info('no response!!!')
                         #logger.error('DE 3 {}'.format(self._icy_data))
                     elif self._is_icy_entry(subsystemOut):
-                        #logger.error("***** icy_entry")
-                        title = self._format_title_string(subsystemOut)
-                        ok_to_display = False
-                        if not self.playback_is_on:
-                            if logger.isEnabledFor(logging.INFO):
-                                logger.info('*** updateStatus(): Start of playback detected (Icy-Title received) ***')
-                        self.playback_is_on = True
-                        if title[len(self.icy_title_prefix):].strip():
-                            #self._stop_delay_thread()
-                            #logger.error("***** updating title")
-                            self.oldUserInput['Title'] = title
-                            # make sure title will not pop-up while Volume value is on
-                            if self.delay_thread is None:
-                                ok_to_display = True
-                            if ok_to_display and self.playback_is_on:
-                                string_to_show = self.title_prefix + title
-                                self.outputStream.write(msg=string_to_show, counter='')
-                            else:
-                                if logger.isEnabledFor(logging.debug):
-                                    logger.debug('***** Title change inhibited: ok_to_display = {0}, playbabk_is_on = {1}'.format(ok_to_display, self.playback_is_on))
-                        else:
-                            ok_to_display = True
-                            if (logger.isEnabledFor(logging.INFO)):
-                                logger.info('Icy-Title is NOT valid')
-                            if ok_to_display and self.playback_is_on:
-                                title = 'Playing: "{}"'.format(self.name)
+                        if not subsystemOut.endswith('Icy-Title=(null)'):
+                            #logger.error('***** icy_entry: "{}"'.format(subsystemOut))
+                            title = self._format_title_string(subsystemOut)
+                            ok_to_display = False
+                            if not self.playback_is_on:
+                                if logger.isEnabledFor(logging.INFO):
+                                    logger.info('*** updateStatus(): Start of playback detected (Icy-Title received) ***')
+                            self.playback_is_on = True
+                            if title[len(self.icy_title_prefix):].strip():
+                                #self._stop_delay_thread()
+                                #logger.error("***** updating title")
                                 self.oldUserInput['Title'] = title
-                                string_to_show = self.title_prefix + title
-                                self.outputStream.write(msg=string_to_show, counter='')
+                                # make sure title will not pop-up while Volume value is on
+                                if self.delay_thread is None:
+                                    ok_to_display = True
+                                if ok_to_display and self.playback_is_on:
+                                    string_to_show = self.title_prefix + title
+                                    self.outputStream.write(msg=string_to_show, counter='')
+                                else:
+                                    if logger.isEnabledFor(logging.debug):
+                                        logger.debug('***** Title change inhibited: ok_to_display = {0}, playbabk_is_on = {1}'.format(ok_to_display, self.playback_is_on))
+                            else:
+                                ok_to_display = True
+                                if (logger.isEnabledFor(logging.INFO)):
+                                    logger.info('Icy-Title is NOT valid')
+                                if ok_to_display and self.playback_is_on:
+                                    title = 'Playing: "{}"'.format(self.name)
+                                    self.oldUserInput['Title'] = title
+                                    string_to_show = self.title_prefix + title
+                                    self.outputStream.write(msg=string_to_show, counter='')
                     #else:
                     #    if self.oldUserInput['Title'] == '':
                     #        self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
@@ -788,26 +789,27 @@ class Player(object):
                                 logger.info('*** updateWinVLCStatus(): Start of playback detected (Icy-Title received) ***')
                         self.playback_is_on = True
 
-                        #logger.error("***** icy_entry")
-                        title = self._format_title_string(subsystemOut)
-                        ok_to_display = False
-                        if title[len(self.icy_title_prefix):].strip():
-                            self.oldUserInput['Title'] = title
-                            # make sure title will not pop-up while Volume value is on
-                            if self.delay_thread is None:
-                                ok_to_display = True
-                            if ok_to_display and self.playback_is_on:
-                                string_to_show = self.title_prefix + title
-                                self.outputStream.write(msg=string_to_show, counter='')
-                        else:
-                            ok_to_display = True
-                            if (logger.isEnabledFor(logging.INFO)):
-                                logger.info('Icy-Title is NOT valid')
-                            if ok_to_display and self.playback_is_on:
-                                title = 'Playing: "{}"'.format(self.name)
+                        if not subsystemOut.endswith('Icy-Title=(null)'):
+                            #logger.error("***** icy_entry")
+                            title = self._format_title_string(subsystemOut)
+                            ok_to_display = False
+                            if title[len(self.icy_title_prefix):].strip():
                                 self.oldUserInput['Title'] = title
-                                string_to_show = self.title_prefix + title
-                                self.outputStream.write(msg=string_to_show, counter='')
+                                # make sure title will not pop-up while Volume value is on
+                                if self.delay_thread is None:
+                                    ok_to_display = True
+                                if ok_to_display and self.playback_is_on:
+                                    string_to_show = self.title_prefix + title
+                                    self.outputStream.write(msg=string_to_show, counter='')
+                            else:
+                                ok_to_display = True
+                                if (logger.isEnabledFor(logging.INFO)):
+                                    logger.info('Icy-Title is NOT valid')
+                                if ok_to_display and self.playback_is_on:
+                                    title = 'Playing: "{}"'.format(self.name)
+                                    self.oldUserInput['Title'] = title
+                                    string_to_show = self.title_prefix + title
+                                    self.outputStream.write(msg=string_to_show, counter='')
                     #else:
                     #    if self.oldUserInput['Title'] == '':
                     #        self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
@@ -1796,14 +1798,14 @@ class VlcPlayer(Player):
                 "127.0.0.1:" + str(self._port),
                 "--file-logging", "--logmode", "text", "--log-verbose", "4",
                 "--logfile", self._vlc_stdout_log_file, "-vv",
-                streamUrl.replace('https://', 'http://')]
+                self._url_to_use(streamUrl)]
 
             if logger.isEnabledFor(logging.INFO):
                 logger.info('vlc listening on 127.0.0.1:{}'.format(self._port))
                 logger.info('vlc log file: "{}"'.format(self._vlc_stdout_log_file))
 
         else:
-            opts = [self.REAL_PLAYER_CMD, "-Irc", "-vv", streamUrl.replace('https://', 'http://')]
+            opts = [self.REAL_PLAYER_CMD, "-Irc", "-vv", self._url_to_use(streamUrl)]
         return opts
 
     def _mute(self):

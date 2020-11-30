@@ -147,7 +147,6 @@ class PyRadio(object):
 
     """ editor class """
     _station_editor = None
-    _new_playlist_dialog = None
     _rename_playlist_dialog = None
 
     _force_exit = False
@@ -266,8 +265,10 @@ class PyRadio(object):
                 self.ws.STATION_INFO_ERROR_MODE: self._print_station_info_error,
                 self.ws.STATION_INFO_MODE: self._show_station_info,
                 self.ws.RENAME_PLAYLIST_MODE: self._show_rename_dialog,
+                self.ws.CREATE_PLAYLIST_MODE: self._show_rename_dialog,
                 self.ws.PLAYLIST_COPY_ERROR: self._print_playlist_copy_error,
                 self.ws.PLAYLIST_RENAME_ERROR: self._print_playlist_rename_error,
+                self.ws.PLAYLIST_CREATE_ERROR: self._print_playlist_create_error,
                 self.ws.PLAYLIST_NOT_SAVED_ERROR_MODE: self._print_playlist_not_saved_error,
                 self.ws.CONNECTION_MODE: self._show_http_connection,
                 }
@@ -958,8 +959,8 @@ class PyRadio(object):
                 msg = msg[:mwidth-6] + '...'
 
             self._show_help(txt.format(msg),
-                    self.ws.REMOVE_STATION_MODE, caption = ' Station Deletion ',
-                    prompt = '', is_message=True)
+                    self.ws.REMOVE_STATION_MODE, caption=' Station Deletion ',
+                    prompt='', is_message=True)
         else:
             self.ws.operation_mode = self.ws.REMOVE_STATION_MODE
             curses.ungetch('y')
@@ -1012,9 +1013,9 @@ class PyRadio(object):
             It will re-create it the next time it is lounched.
             '''
             self._show_help(txt.format(self._cnf.station_file_name),
-                    mode_to_set = self.ws.PLAYLIST_SCAN_ERROR_MODE,
-                    caption = ' Error ',
-                    prompt = ' Press any key to exit ',
+                    mode_to_set=self.ws.PLAYLIST_SCAN_ERROR_MODE,
+                    caption=' Error ',
+                    prompt=' Press any key to exit ',
                     is_message=True)
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('No playlists found!!!')
@@ -1460,8 +1461,8 @@ class PyRadio(object):
         self._show_help(txt, mode_to_set=self.ws.SEARCH_HELP_MODE, caption=' Search Help ')
 
     def _show_line_editor_help(self):
-        if self.ws.operation_mode == self.ws.RENAME_PLAYLIST_MODE \
-                or  self.ws.previous_operation_mode == self.ws.RENAME_PLAYLIST_MODE:
+        if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE) \
+                or  self.ws.previous_operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE):
             if platform.lower().startswith('darwin'):
                 txt = """Left| / |Right        |Move to next / previous character.
                 HOME|,|^A| / |END|,|^E    |Move to start / end of line.
@@ -1656,8 +1657,8 @@ class PyRadio(object):
                  command: |pyradio --unlock|
                  '''
         self._show_help(txt, self.ws.SESSION_LOCKED_MODE,
-                caption = ' Session Locked ',
-                prompt = ' Press any key... ',
+                caption=' Session Locked ',
+                prompt=' Press any key... ',
                 is_message=True)
 
     def _print_not_implemented_yet(self):
@@ -1665,8 +1666,8 @@ class PyRadio(object):
             This feature has not been implemented yet...
         '''
         self._show_help(txt, self.ws.NOT_IMPLEMENTED_YET_MODE,
-                caption = ' PyRadio ',
-                prompt = ' Press any key... ',
+                caption=' PyRadio ',
+                prompt=' Press any key... ',
                 is_message=True)
 
     def _print_handle_foreign_playlist(self):
@@ -1679,8 +1680,8 @@ class PyRadio(object):
 
             Press "|y|" to confirm or "|n|" to reject'''
         self._show_help(txt, self.ws.FOREIGN_PLAYLIST_ASK_MODE,
-                caption = ' Foreign playlist ',
-                prompt = ' ',
+                caption=' Foreign playlist ',
+                prompt=' ',
                 is_message=True)
 
     def _print_foreign_playlist_message(self):
@@ -1697,8 +1698,8 @@ class PyRadio(object):
             '''.format(self._cnf.foreign_title,
                     self._cnf.station_title)
         self._show_help(txt, self.ws.FOREIGN_PLAYLIST_MESSAGE_MODE,
-                caption = ' Foreign playlist ',
-                prompt = ' Press any key ',
+                caption=' Foreign playlist ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_foreign_playlist_copy_error(self):
@@ -1711,8 +1712,8 @@ class PyRadio(object):
             application and try to load it again
             '''
         self._show_help(txt, self.ws.FOREIGN_PLAYLIST_COPY_ERROR_MODE,
-                caption = ' Error ',
-                prompt = ' Press any key ',
+                caption=' Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_playlist_recovery_error(self):
@@ -1735,8 +1736,8 @@ class PyRadio(object):
     you have to manually address the issue.
     """
         self._show_help(txt, self.ws.PLAYLIST_RECOVERY_ERROR_MODE,
-                caption = ' Error ',
-                prompt = ' Press any key ',
+                caption=' Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_playlist_not_found_error(self):
@@ -1750,8 +1751,8 @@ class PyRadio(object):
                 Playlist Selection window.
                 """
         self._show_help(txt, self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE,
-                caption = ' Error ',
-                prompt = ' Press any key ',
+                caption=' Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_playlist_load_error(self):
@@ -1764,8 +1765,8 @@ class PyRadio(object):
                 or you are not permitted to access it.
                 """
         self._show_help(txt, self.ws.PLAYLIST_LOAD_ERROR_MODE,
-                caption = ' Error ',
-                prompt = ' Press any key ',
+                caption=' Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_playlist_reload_error(self):
@@ -1776,8 +1777,8 @@ class PyRadio(object):
             sure that only one "," exists in each line.
             '''
         self._show_help(txt, self.ws.PLAYLIST_RELOAD_ERROR_MODE,
-                caption = ' Error ',
-                prompt = ' Press any key ',
+                caption=' Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_py2_editor_error(self):
@@ -1793,8 +1794,8 @@ class PyRadio(object):
             reload the playlist.
             '''
         self._show_help(txt, self.ws.PY2_EDITOR_ERROR,
-                caption = ' Error ',
-                prompt = ' Press any key ',
+                caption=' Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_requests_not_installed_error(self):
@@ -1808,8 +1809,8 @@ class PyRadio(object):
         executing |PyRadio| again.
         '''
         self._show_help(txt.format(python_version[0]), self.ws.REQUESTS_MODULE_NOT_INSTALLED_ERROR,
-                caption = ' Module Error ',
-                prompt = ' Press any key ',
+                caption=' Module Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_playlist_not_saved_error(self):
@@ -1820,7 +1821,7 @@ class PyRadio(object):
         self._show_help(txt,
                 self.ws.PLAYLIST_NOT_SAVED_ERROR_MODE,
                 caption= ' Playlist Modified ',
-                prompt = ' Press any key to hide ',
+                prompt=' Press any key to hide ',
                 is_message = True)
 
     def _print_register_save_error(self):
@@ -1834,7 +1835,7 @@ class PyRadio(object):
         self._show_help(txt.format(string_to_display),
                 self.ws.REGISTER_SAVE_ERROR_MODE,
                 caption= ' Error ',
-                prompt = ' Press any key to hide ',
+                prompt=' Press any key to hide ',
                 is_message = True)
 
     def _print_station_info_error(self):
@@ -1846,8 +1847,8 @@ class PyRadio(object):
         wait until one actually starts playing).
         '''
         self._show_help(txt, self.ws.STATION_INFO_ERROR_MODE,
-                caption = ' Station Info Error ',
-                prompt = ' Press any key ',
+                caption=' Station Info Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_playlist_copy_error(self):
@@ -1885,8 +1886,12 @@ class PyRadio(object):
         self._show_help(txt.format(*tmp),
                 self.ws.PLAYLIST_COPY_ERROR,
                 caption,
-                prompt = ' Press any key ',
+                prompt=' Press any key ',
                 is_message=True)
+
+    def _print_playlist_create_error(self):
+        # TODO: write it!!!
+        pass
 
     def _print_playlist_rename_error(self):
         txt = '''Succesfully copied playlist
@@ -1922,7 +1927,7 @@ class PyRadio(object):
         self._show_help(txt.format(*tmp),
                 self.ws.PLAYLIST_RENAME_ERROR,
                 caption,
-                prompt = ' Press any key ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_unknown_browser_service(self):
@@ -1938,8 +1943,8 @@ class PyRadio(object):
         self._show_help(txt.format(self.stations[self.selection][0],
                 self.stations[self.selection][1]),
                 self.ws.UNKNOWN_BROWSER_SERVICE_ERROR,
-                caption = ' Unknown Service ',
-                prompt = ' Press any key ',
+                caption=' Unknown Service ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_service_connection_error(self):
@@ -1952,8 +1957,8 @@ class PyRadio(object):
         self._show_help(txt.format(self.stations[self.selection][0],
                 self.stations[self.selection][1]),
                 self.ws.SERVICE_CONNECTION_ERROR,
-                caption = ' Service Unavailable ',
-                prompt = ' Press any key ',
+                caption=' Service Unavailable ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _show_player_changed_in_config(self):
@@ -1967,8 +1972,8 @@ class PyRadio(object):
         '''
         self._show_help(txt.format(*self._cnf.player_values),
                 self.ws.PLAYER_CHANGED_INFO_MODE,
-                caption = ' Default Player Changed ',
-                prompt = ' Press any key ',
+                caption=' Default Player Changed ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_playlist_reload_confirmation(self):
@@ -1984,8 +1989,8 @@ class PyRadio(object):
                 Press "|y|" to confirm, "|Y|" to confirm and not
                 be asked again, or any other key to cancel'''
         self._show_help(txt, self.ws.PLAYLIST_RELOAD_CONFIRM_MODE,
-                caption = ' Playlist Reload ',
-                prompt = ' ',
+                caption=' Playlist Reload ',
+                prompt=' ',
                 is_message=True)
 
     def _print_playlist_dirty_reload_confirmation(self):
@@ -2003,8 +2008,8 @@ class PyRadio(object):
                 Press "|y|" to confirm, "|Y|" to confirm and not be
                 asked again, or "|n|" to cancel'''
         self._show_help(txt, self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE,
-                caption = ' Playlist Reload ',
-                prompt = ' ',
+                caption=' Playlist Reload ',
+                prompt=' ',
                 is_message=True)
 
     def _print_save_modified_playlist(self, mode):
@@ -2028,8 +2033,8 @@ class PyRadio(object):
                 be asked again, "|n|" to reject, or "|q|" or
                 "|ESCAPE|" to cancel'''
         self._show_help(txt, mode,
-                caption = ' Playlist Modified ',
-                prompt = ' ',
+                caption=' Playlist Modified ',
+                prompt=' ',
                 is_message=True)
 
     def _print_save_playlist_error_1(self):
@@ -2039,9 +2044,9 @@ class PyRadio(object):
             "|{}|"
             '''
         self._show_help(txt.format(self._cnf.station_path.replace('.csv', '.txt')),
-                mode_to_set = self.ws.SAVE_PLAYLIST_ERROR_1_MODE,
-                caption = ' Error ',
-                prompt = ' Press any key ',
+                mode_to_set=self.ws.SAVE_PLAYLIST_ERROR_1_MODE,
+                caption=' Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_save_playlist_error_2(self):
@@ -2054,9 +2059,9 @@ class PyRadio(object):
             is opened in the future.
             '''
         self._show_help(txt.format(self._cnf.station_path.replace('.csv', '.txt')),
-                mode_to_set = self.ws.SAVE_PLAYLIST_ERROR_2_MODE,
-                caption = ' Error ',
-                prompt = ' Press any key ',
+                mode_to_set=self.ws.SAVE_PLAYLIST_ERROR_2_MODE,
+                caption=' Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_editor_name_error(self):
@@ -2067,9 +2072,9 @@ class PyRadio(object):
 
             '''
         self._show_help(txt,
-                mode_to_set = self.ws.EDIT_STATION_NAME_ERROR,
-                caption = ' Error ',
-                prompt = ' Press any key ',
+                mode_to_set=self.ws.EDIT_STATION_NAME_ERROR,
+                caption=' Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_editor_url_error(self):
@@ -2090,9 +2095,9 @@ class PyRadio(object):
 
                 '''
         self._show_help(txt,
-                mode_to_set = self.ws.EDIT_STATION_URL_ERROR,
-                caption = ' Error ',
-                prompt = ' Press any key ',
+                mode_to_set=self.ws.EDIT_STATION_URL_ERROR,
+                caption=' Error ',
+                prompt=' Press any key ',
                 is_message=True)
 
     def _print_ask_to_create_theme(self):
@@ -2102,8 +2107,8 @@ class PyRadio(object):
 
             Press "|y|" to accept or any other key to cancel.'''
         self._show_help(txt, self.ws.ASK_TO_CREATE_NEW_THEME_MODE,
-                caption = ' Read-only theme ',
-                prompt = ' ',
+                caption=' Read-only theme ',
+                prompt=' ',
                 is_message=True)
 
     def _print_config_save_error(self):
@@ -2114,9 +2119,9 @@ class PyRadio(object):
 
             '''
         self._show_help(txt,
-                mode_to_set = self.ws.CONFIG_SAVE_ERROR_MODE,
-                caption = ' Error Saving Config ',
-                prompt = ' Press any key to exit ',
+                mode_to_set=self.ws.CONFIG_SAVE_ERROR_MODE,
+                caption=' Error Saving Config ',
+                prompt=' Press any key to exit ',
                 is_message=True)
 
     def _print_update_notification(self):
@@ -2129,9 +2134,9 @@ class PyRadio(object):
                  |https://github.com/coderholic/pyradio#installation|
             '''
         self._show_help(txt.format(self._update_version_do_display),
-                mode_to_set = self.ws.UPDATE_NOTIFICATION_MODE,
-                caption = ' Update Notifiaction ',
-                prompt = ' Press any key to hide ',
+                mode_to_set=self.ws.UPDATE_NOTIFICATION_MODE,
+                caption=' Update Notifiaction ',
+                prompt=' Press any key to hide ',
                 is_message=True)
         self._update_version = ''
 
@@ -2143,8 +2148,8 @@ class PyRadio(object):
 
             Press "|y|" to confirm, or "|n|" to cancel'''
         self._show_help(txt, self.ws.CLEAR_REGISTER_MODE,
-                caption = ' Clear register ',
-                prompt = ' ',
+                caption=' Clear register ',
+                prompt=' ',
                 is_message=True)
 
     def _print_clear_all_registers(self):
@@ -2155,8 +2160,8 @@ class PyRadio(object):
 
             Press "|y|" to confirm, or "|n|" to cancel'''
         self._show_help(txt, self.ws.CLEAR_ALL_REGISTERS_MODE,
-                caption = ' Clear all registers ',
-                prompt = ' ',
+                caption=' Clear all registers ',
+                prompt=' ',
                 is_message=True)
 
 
@@ -3199,6 +3204,7 @@ class PyRadio(object):
         elif self._backslash_pressed and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
+
             if char == ord('r'):
                 # rename playlist
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -3211,7 +3217,7 @@ class PyRadio(object):
                     self._rename_playlist_dialog = PyRadioRenameFile(
                             self._cnf.station_path if self.ws.operation_mode == self.ws.NORMAL_MODE else self.stations[self.selection][3],
                             self.outerBodyWin,
-                            opened_from_editor = True if self.ws.operation_mode == self.ws.NORMAL_MODE else False)
+                            opened_from_editor=True if self.ws.operation_mode == self.ws.NORMAL_MODE else False)
                     if self.ws.operation_mode == self.ws.NORMAL_MODE:
                         #self._rename_playlist_dialog.checked_checkbox = (False, False)
                         if self._cnf.is_register:
@@ -3220,10 +3226,23 @@ class PyRadio(object):
                             self._rename_playlist_dialog.title = ' Rename Register '
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.RENAME_PLAYLIST_MODE
+
             elif char == ord('n'):
                 # create new playlist
                 self._update_status_bar_right(status_suffix='')
-                self._print_not_implemented_yet()
+                if not (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
+                        self._cnf.open_register_list):
+                    # do not create playlist from registers list
+                    self._update_status_bar_right(status_suffix='')
+                    self._rename_playlist_dialog = PyRadioRenameFile(
+                            self._cnf.station_path,
+                            self.outerBodyWin,
+                            opened_from_editor=False,
+                            create=True)
+                    self._rename_playlist_dialog.title = ' Create Playlist '
+                    self._rename_playlist_dialog.show()
+                    self.ws.operation_mode = self.ws.CREATE_PLAYLIST_MODE
+
             elif char == ord('p'):
                 # paste
                 self._update_status_bar_right(status_suffix='')
@@ -3231,9 +3250,11 @@ class PyRadio(object):
                     self._print_not_implemented_yet()
                 else:
                     self._paste(playlist=self.stations[self.selection][-1])
+
             elif char == ord('?'):
                 self._show_extra_commands_help()
                 return
+
             elif char == ord('\\'):
                 # \\ pressed - go back in history
                 self._update_status_bar_right(status_suffix='')
@@ -3244,6 +3265,7 @@ class PyRadio(object):
                         self._open_playlist_from_history()
                     else:
                         self._show_no_more_playlist_history()
+
             elif char == ord(']'):
                 # ] pressed - go to first playlist ing history
                 self._update_status_bar_right(status_suffix='')
@@ -3254,6 +3276,7 @@ class PyRadio(object):
                         self._open_playlist_from_history(reset=True)
                     else:
                         self._show_no_more_playlist_history()
+
             elif char == ord('c'):
                 self._update_status_bar_right(status_suffix='')
                 if ((self._cnf.is_register and \
@@ -3268,6 +3291,7 @@ class PyRadio(object):
                                     txt='___Register is already empty!!!___',
                                     mode_to_set=self.ws.NORMAL_MODE,
                                     callback_function=self.refreshBody)
+
             elif char == ord('C'):
                 self._update_status_bar_right(status_suffix='')
                 if (self.ws.operation_mode == self.ws.NORMAL_MODE or \
@@ -3281,6 +3305,7 @@ class PyRadio(object):
                                 txt='____All registers are empty!!!____',
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
+
             else:
                 # ESC or invalid char pressed - leave \ mode
                 self._update_status_bar_right(status_suffix='')
@@ -3382,7 +3407,7 @@ class PyRadio(object):
         elif char in (ord('t'), ) and \
                 self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE,
                     self.ws.ADD_STATION_MODE, self.ws.THEME_MODE,
-                    self.ws.RENAME_PLAYLIST_MODE, self.ws.NEW_PLAYLIST_MODE) and \
+                    self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE) and \
                 self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
                 not self.is_search_mode(self.ws.operation_mode) and \
                 self.ws.window_mode not in (self.ws.CONFIG_MODE, ):
@@ -3687,21 +3712,13 @@ class PyRadio(object):
                 self._encoding_select_win.setEncoding(self._station_editor._encoding)
             return
 
-        elif self.ws.operation_mode == self.ws.NEW_PLAYLIST_MODE:
-            # Create new playlist
-            if char in self._chars_to_bypass_on_editor and \
-                    self._new_playlist_dialog.focus > 0:
-                self.volume_functions[chr(char)]()
-                return
-            return
-
-        elif self.ws.operation_mode == self.ws.RENAME_PLAYLIST_MODE:
+        elif self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE):
             # Rename playlist
             if char in self._chars_to_bypass_on_editor and \
                     self._rename_playlist_dialog.focus > 0:
                 self.volume_functions[chr(char)]()
                 return
-            ret, self.old_filename, self.new_filename, copy, open_file = self._rename_playlist_dialog.keypress(char)
+            ret, self.old_filename, self.new_filename, copy, open_file, pl_create = self._rename_playlist_dialog.keypress(char)
             logger.error('{}, "{}", "{}", {}, {}'.format(ret, self.old_filename, self.new_filename, copy, open_file))
             logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
             if ret not in (0, 2):
@@ -3734,12 +3751,13 @@ class PyRadio(object):
                 logger.error('DE last_history = {}'.format(last_history))
                 logger.error('last_history = {}'.format(last_history))
                 if self.ws.window_mode == self.ws.NORMAL_MODE:
-                    """ rename the playlist on editor """
-                    self._rename_playlist_from_normal_mode(
-                        copy,
-                        open_file,
-                        last_history
-                    )
+                        """ rename the playlist on editor """
+                        self._rename_playlist_from_normal_mode(
+                            copy,
+                            open_file,
+                            pl_create,
+                            last_history
+                        )
                 else:
                     self.ll('playlist before')
                     #self._playlist_in_editor = self._cnf.playlists[self.selections[self.ws.PLAYLIST_MODE][2]][-1]
@@ -4888,7 +4906,7 @@ class PyRadio(object):
         logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
         #self.refreshBody()
 
-    def _rename_playlist_from_normal_mode(self, copy, open_file, last_history):
+    def _rename_playlist_from_normal_mode(self, copy, open_file, create, last_history):
         old_file_is_reg = True if os.path.basename(self.old_filename).startswith('register_') else False
         #logger.error('\n\nDE **** {}'.format(self._cnf._ps._p))
 
@@ -4900,6 +4918,10 @@ class PyRadio(object):
                 self._cnf.add_to_playlist_history(*last_history)
         else:
             logger.error('rename playlist NORMAL_MODE: not a copy')
+            if create and open_file:
+                self.stations = []
+                self.number_of_items = 0
+                self._cnf.add_to_playlist_history(*last_history)
             self._cnf.replace_playlist_history_items(
                     self.old_filename,
                     last_history)

@@ -250,7 +250,7 @@ rm sed.$$ 2>/dev/null
 python"${TO_PYTHON}" setup.py build && {
     [ -z "$TO_USER" ] && {
         echo "***** installing..."
-        sudo python"${TO_PYTHON}" setup.py install | tee installed && {
+        sudo python"${TO_PYTHON}" setup.py install && {
             gzip -k pyradio.1
             sudo mv -f pyradio.1.gz /usr/share/man/man1 2>/dev/null || sudo mv -f pyradio.1.gz /usr/local/share/man/man1
             DOC=/usr/share/doc/pyradio

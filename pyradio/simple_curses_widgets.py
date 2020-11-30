@@ -17,6 +17,7 @@ class DisabledWidget(object):
     """
     enabled = False
     focus = False
+    checked = False
 
     def __init(self):
         pass

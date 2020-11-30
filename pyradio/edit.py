@@ -241,18 +241,18 @@ class PyRadioEditor(object):
     def _add_editors(self):
         for ed in range(0,2):
             if self._line_editor[ed] is None:
-                self._line_editor[ed] = SimpleCursesLineEdit(parent = self._win,
-                    width = -2,
-                    begin_y = self._line_editor_yx[ed][0],
-                    begin_x = self._line_editor_yx[ed][1],
-                    boxed = False,
-                    has_history = False,
+                self._line_editor[ed] = SimpleCursesLineEdit(parent=self._win,
+                    width=-2,
+                    begin_y=self._line_editor_yx[ed][0],
+                    begin_x=self._line_editor_yx[ed][1],
+                    boxed=False,
+                    has_history=False,
                     caption='',
-                    box_color = curses.color_pair(9),
-                    caption_color = curses.color_pair(4),
-                    edit_color = curses.color_pair(9),
-                    cursor_color = curses.color_pair(8),
-                    unfocused_color = curses.color_pair(5))
+                    box_color=curses.color_pair(9),
+                    caption_color=curses.color_pair(4),
+                    edit_color=curses.color_pair(9),
+                    cursor_color=curses.color_pair(8),
+                    unfocused_color=curses.color_pair(5))
                 self._line_editor[ed].bracket = False
                 self._line_editor[ed]._mode_changed = self._show_alternative_modes
                 self._line_editor[ed].use_paste_mode = True
@@ -602,7 +602,6 @@ class PyRadioRenameFile(object):
         self._create = self._too_small = False
         self._error_string = ''
         self._widgets = [None, None, None, None, None]
-        self.initial_enabled = [True, True, False, False, True]
         self.checked_checkbox = None
         self.filename = filename
         self._from_path = path.dirname(filename)
@@ -624,6 +623,9 @@ class PyRadioRenameFile(object):
         self._create = create
         if self._create:
             self._line_editor_yx = (3, 2)
+            self.initial_enabled = [True, False, True, False, True]
+        else:
+            self.initial_enabled = [True, True, False, False, True]
         self._open_afterwards = open_afterwards
         self._title = title if title else ' Rename Playlist '
         self._opened_from_editor = opened_from_editor
@@ -644,7 +646,7 @@ class PyRadioRenameFile(object):
 
     @property
     def create(self):
-        return self.create
+        return self._create
 
     @create.setter
     def create(self, val):
@@ -690,7 +692,10 @@ class PyRadioRenameFile(object):
             if stripped_string:
                 check_file = path.join(self._to_path, stripped_string + '.csv')
                 if check_file == self.filename:
-                    self._error_string = 'You must be joking!!!'
+                    if self._create:
+                        self._error_string = 'File already exists!!!'
+                    else:
+                        self._error_string = 'You must be joking!!!'
                 elif path.exists(check_file):
                     self._error_string = 'File already exists!!!'
                 elif stripped_string.startswith('register_'):
@@ -723,34 +728,38 @@ class PyRadioRenameFile(object):
 
         # add editor
         if self._widgets[0] is None:
-            self._widgets[0] = SimpleCursesLineEdit(parent = self._win,
-                width = -2,
-                begin_y = self._line_editor_yx[0],
-                begin_x = self._line_editor_yx[1],
-                boxed = False,
-                has_history = False,
+            self._widgets[0] = SimpleCursesLineEdit(parent=self._win,
+                width=-2,
+                begin_y=self._line_editor_yx[0],
+                begin_x=self._line_editor_yx[1],
+                boxed=False,
+                has_history=False,
                 caption='',
-                box_color = curses.color_pair(9),
-                caption_color = curses.color_pair(4),
-                edit_color = curses.color_pair(9),
-                cursor_color = curses.color_pair(8),
-                unfocused_color = curses.color_pair(5),
+                box_color=curses.color_pair(9),
+                caption_color=curses.color_pair(4),
+                edit_color=curses.color_pair(9),
+                cursor_color=curses.color_pair(8),
+                unfocused_color=curses.color_pair(5),
                 string_changed_handler=self._string_changed)
             self._widgets[0].bracket = False
         self._line_editor = self._widgets[0]
         # add copy checkbox
         if self._widgets[1] is None:
-            self._widgets[1] = SimpleCursesCheckBox(
-                    self._line_editor_yx[0] + 2, 2,
-                    'Copy playlist instead of renaming it',
-                    curses.color_pair(9), curses.color_pair(4), curses.color_pair(5))
+            if self._create:
+                self._widgets[1] = DisabledWidget()
+            else:
+                self._widgets[1] = SimpleCursesCheckBox(
+                        self._line_editor_yx[0] + 2, 2,
+                        'Copy playlist instead of renaming it',
+                        curses.color_pair(9), curses.color_pair(4), curses.color_pair(5))
         # add open afterwards checkbox
         adjust_line_Y = -1
         if self._open_afterwards:
             adjust_line_Y = 0
             if self._widgets[2] is None:
+                y = 2 if self._create else 3
                 self._widgets[2] = SimpleCursesCheckBox(
-                        self._line_editor_yx[0] + 3, 2,
+                        self._line_editor_yx[0] + y, 2,
                         'Open playlist for editing afterwards',
                         curses.color_pair(9), curses.color_pair(4), curses.color_pair(5))
                 if self._opened_from_editor:
@@ -759,21 +768,27 @@ class PyRadioRenameFile(object):
                     self.initial_enabled[2] = True
         else:
             self._widgets[2] = DisabledWidget()
+        if self._create:
+            adjust_line_Y = -1
         # add buttons
         if self._widgets[3] is None:
             self._h_buttons = SimpleCursesHorizontalPushButtons(
-                    Y=self._line_editor_yx[0] + 5 if self._open_afterwards else self._line_editor_yx[0] + 4,
+                    Y=self._line_editor_yx[0] + 5 + adjust_line_Y if self._open_afterwards else self._line_editor_yx[0] + 4 + adjust_line_Y,
                     captions=('OK', 'Cancel'),
                     color_focused=curses.color_pair(9),
                     color=curses.color_pair(4),
                     bracket_color=curses.color_pair(5),
-                    parent = self._win)
+                    parent=self._win)
             self._h_buttons.calculate_buttons_position()
             self._widgets[3], self._widgets[4] = self._h_buttons.buttons
             self._widgets[3]._focused = self._widgets[4].focused = False
         else:
             self._h_buttons.calculate_buttons_position(parent=self._win)
 
+        if self._create:
+            adjust_line_Y = -2
+        else:
+            adjust_line_Y = 0
         if self.initial_enabled:
             # set startup enable status
             zipped = zip(self._widgets, self.initial_enabled)
@@ -790,7 +805,7 @@ class PyRadioRenameFile(object):
 
 
         #logger.error('DE \n\nmaxY = {}, maxX = {}\n\n'.format(self.maxY, self.maxX))
-        if self.maxY < 22 or self.maxX < 74:
+        if self.maxY < 22 + adjust_line_Y or self.maxX < 74:
             if self.maxY < 11 or self.maxX < 44:
                 txt = ' Window too small to display content '
                 error_win = curses.newwin(3, len(txt) + 2, int(self.maxY / 2) - 1, int((self.maxX - len(txt)) / 2))
@@ -808,16 +823,17 @@ class PyRadioRenameFile(object):
             self._too_small = False
 
         if self._error_string:
-            self._win.addstr(2, self.maxX - 2 - len(self._error_string),
+            y = 2 if adjust_line_Y == 0 else 1
+            self._win.addstr(y, self.maxX - 2 - len(self._error_string),
                     self._error_string,
                     curses.color_pair(5))
         else:
-            self._win.addstr(2, self.maxX - 26, 25 * ' ' , curses.color_pair(5))
+            self._win.addstr(2, self.maxX - 26, 25 * ' ', curses.color_pair(5))
         self._win.touchline(2, 1)
 
         self._show_title()
         if self._create:
-            self._win.addstr(1, 2, 'Name of Playlist to create', curses.color_pair(4))
+            self._win.addstr(1, 2, 'Name of Playlist to create:', curses.color_pair(4))
         else:
             self._win.addstr(1, 2, 'Rename: ', curses.color_pair(4))
             self._win.addstr(
@@ -825,13 +841,14 @@ class PyRadioRenameFile(object):
                 curses.color_pair(5)
                 )
             self._win.addstr(2, 2, 'To:', curses.color_pair(4))
-            inv_tit = 'Invalid chars: '
-            inv_chars = self._invalid_chars
-            invX = self.maxX - len(inv_tit) - len(inv_chars) - 2
-            self._win.addstr(4, invX, inv_tit, curses.color_pair(4))
-            self._win.addstr(inv_chars, curses.color_pair(5))
+        inv_tit = 'Invalid chars: '
+        inv_chars = self._invalid_chars
+        invX = self.maxX - len(inv_tit) - len(inv_chars) - 2
+        y = 4 if adjust_line_Y == 0 else 3
+        self._win.addstr(y, invX, inv_tit, curses.color_pair(4))
+        self._win.addstr(inv_chars, curses.color_pair(5))
 
-        if self.maxY > 18 and self.maxX > 76:
+        if self.maxY > 18 + adjust_line_Y and self.maxX > 76:
             try:
                 self._win.addstr(10 + adjust_line_Y, 3, '─' * (self.maxX - 6), curses.color_pair(3))
             except:
@@ -868,7 +885,7 @@ class PyRadioRenameFile(object):
             self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
             self._win.addstr(17 + adjust_line_Y, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
 
-        if self.maxY > 21 and self.maxX > 76:
+        if self.maxY > 21 + adjust_line_Y and self.maxX > 76:
             try:
                 self._win.addstr(18 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(3))
             except:
@@ -895,7 +912,8 @@ class PyRadioRenameFile(object):
         self._update_focus()
         if not self._too_small:
             self._line_editor.show(self._win, opening=False)
-            self._widgets[1].show()
+            if not isinstance(self._widgets[1], DisabledWidget):
+                self._widgets[1].show()
             if not isinstance(self._widgets[2], DisabledWidget):
                 self._widgets[2].show()
             self._widgets[3].show()
@@ -942,41 +960,59 @@ class PyRadioRenameFile(object):
                 focus -= 1
             self.focus = focus
 
-    def _rename_file(self):
-        """Rename the playlist
+    def _act_on_file(self):
+        """Rename the playlist (if self._create is False)
+        or Create a playlist (if self._create is True)
 
-        First copies the old file to new file
-        and then removes the old file (if it
+        If renaming, it first copies the old file to
+        new file and then removes the old file (if it
         is supposed to do so).
 
         Returns
         =======
              1: All ok
-            -2: Copy file failed
+            -2: Copy / Create file failed
             -3: Delete file failed
         """
 
-        from shutil import copy2
         self.new_file_name = path.join(self._to_path, self._widgets[0].string + '.csv')
-        try:
-            copy2(self.filename, self.new_file_name)
-        except:
-            return -2
-        if not self._widgets[1].checked:
+        if self._create:
             try:
-                remove(self.filename)
+                with open(self.new_file_name, 'wt'):
+                    pass
             except:
-                return -3
+                return -2
+        else:
+            from shutil import copy2
+            try:
+                copy2(self.filename, self.new_file_name)
+            except:
+                return -2
+            if not self._widgets[1].checked:
+                try:
+                    remove(self.filename)
+                except:
+                    return -3
         return 1
 
     def _get_result(self, ret):
-        result = (
-                ret,
-                self.filename,
-                path.join(self._to_path, self._widgets[0].string.strip() + '.csv') if self._widgets[0].string else '',
-                self._widgets[1].checked,
-                False if isinstance(self._widgets[2], DisabledWidget) else self._widgets[2].checked
-                )
+        ofile = path.join(self._to_path, self._widgets[0].string.strip() + '.csv') if self._widgets[0].string else ''
+        if self._create:
+            result = (
+                    ret,
+                    ofile, ofile,
+                    False if isinstance(self._widgets[1], DisabledWidget) else self._widgets[1].checked,
+                    False if isinstance(self._widgets[2], DisabledWidget) else self._widgets[2].checked,
+                    self._create
+                    )
+        else:
+            result = (
+                    ret,
+                    self.filename, ofile,
+                    False if isinstance(self._widgets[1], DisabledWidget) else self._widgets[1].checked,
+                    False if isinstance(self._widgets[2], DisabledWidget) else self._widgets[2].checked,
+                    self._create
+                    )
         return result
 
     def keypress(self, char):
@@ -989,18 +1025,18 @@ class PyRadioRenameFile(object):
         ret = 0
         if self._too_small:
             if char in (curses.KEY_EXIT, 27, ord('q')):
-                return -1, '', '', False, False
-            return 0, '', '', False, False
+                return -1, '', '', False, False, False
+            return 0, '', '', False, False, False
         else:
             if char in (curses.KEY_EXIT, 27, ord('q')) and \
                     self.focus > 0:
-                return -1, '', '', False, False
+                return -1, '', '', False, False, False
             elif char in (ord(' '), ord('l'), curses.KEY_RIGHT, curses.KEY_ENTER, ord('\n'), ord('\r')) and self._focus in (1, 2):
                 # check boxes
                 self._widgets[self._focus].toggle_checked()
                 if self._focus == 1 and self._opened_from_editor:
                     self._widgets[2].enabled = self._widgets[1].checked
-            elif char in ( ord('\t'), 9, curses.KEY_DOWN):
+            elif char in (ord('\t'), 9, curses.KEY_DOWN):
                 self._focus_next()
             elif char == curses.KEY_UP:
                 self._focus_previous()
@@ -1013,7 +1049,7 @@ class PyRadioRenameFile(object):
                     self._widgets[self._focus].toggle_checked()
                 elif self._focus == 3:
                     # ok, execute
-                    ret = self._rename_file()
+                    ret = self._act_on_file()
                     return self._get_result(ret)
                 elif self._focus == 4:
                     # cancel
@@ -1021,7 +1057,7 @@ class PyRadioRenameFile(object):
             elif char == ord('s') and self._focus > 0:
                 # s, execute
                 if self._widgets[-2].enabled:
-                    ret = self._rename_file()
+                    ret = self._act_on_file()
                     return self._get_result(ret)
                 return 0, '', '', False, False
             elif self._focus == 0:
@@ -1033,7 +1069,7 @@ class PyRadioRenameFile(object):
                    -1: cancel
                 """
                 ret = self._line_editor.keypress(self._win, char)
-                if ret ==2:
+                if ret == 2:
                     self._win.touchwin()
                 elif ret == 1:
                     # get next char
@@ -1064,7 +1100,7 @@ class PyRadioConnectionType(object):
             self._parent = parent
         y, x = self._parent.getmaxyx()
         new_y = int(y/2) - 2
-        new_x = int( (x - len(self._text) - 9 - 4) /2 )
+        new_x = int((x - len(self._text) - 9 - 4) / 2)
         self.MaxX = len(self._text) + 9 + 4
         self._win = None
         self._win = curses.newwin(10, self.MaxX, new_y, new_x)
@@ -1115,7 +1151,7 @@ class PyRadioConnectionType(object):
             self._win.addstr(2, len(self._text) + 3, '{}'.format(self.connection_type), curses.color_pair(3))
             self._win.refresh()
 
-        return  0
+        return 0
 
 
 
