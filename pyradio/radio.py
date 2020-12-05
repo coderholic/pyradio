@@ -3064,11 +3064,13 @@ class PyRadio(object):
 
     def _paste(self, playlist=''):
         if self._unnamed_register:
+            # ok, I have someting to paste
+
             if playlist == '':
                 # paste to current playlist / register
                 self._cnf.dirty_playlist = True
                 if self.number_of_items == 0:
-                    self._cnf.stations = [ self._unnamed_register ]
+                    self._cnf.stations = [self._unnamed_register]
                     self.number_of_items = self._cnf.number_of_stations = 1
                     self.selection = -1
                     self.startPos = 0
@@ -3490,7 +3492,7 @@ class PyRadio(object):
                     """ Config > Select Default Station """
                     self.ws.operation_mode = self.ws.SELECT_STATION_MODE
                     if self._station_select_win is None:
-                        self._station_select_win = PyRadioSelectStation(self.outerBodyWin,
+                        self._station_select_win = PyRadioSelectStation(self.bodyWin,
                                 self._cnf.stations_dir,
                                 self._config_win._config_options['default_playlist'][1],
                                 self._config_win._config_options['default_station'][1])
@@ -4919,7 +4921,8 @@ class PyRadio(object):
         else:
             logger.error('rename playlist NORMAL_MODE: not a copy')
             if create and open_file:
-                self.stations = []
+                self._cnf.stations = []
+                self.stations = self._cnf.stations
                 self.number_of_items = 0
                 self._cnf.add_to_playlist_history(*last_history)
             self._cnf.replace_playlist_history_items(
@@ -5139,19 +5142,24 @@ class PyRadio(object):
         self._config_win.refresh_config_win()
 
     def _redisplay_player_select_win_refresh_and_resize(self):
-        self._player_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
+        if not self._config_win.too_small:
+            self._player_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):
-        self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
+        if not self._config_win.too_small:
+            self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
 
     def _playlist_select_win_refresh_and_resize(self):
-        self._playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
+        if not self._config_win.too_small:
+            self._playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):
-        self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
+        if not self._config_win.too_small:
+            self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
 
     def _redisplay_station_select_win_refresh_and_resize(self):
-        self._station_select_win.refresh_and_resize(self.outerBodyWin.getmaxyx())
+        if not self._config_win.too_small:
+            self._station_select_win.refresh_and_resize(self.outerBodyWin.getmaxyx())
 
     def _redisplay_print_save_modified_playlist(self):
         self._print_save_modified_playlist(self.ws.operation_mode)
@@ -5160,6 +5168,9 @@ class PyRadio(object):
         self.search.show(self.outerBodyWin, repaint=True)
 
     def _redisplay_theme_mode(self):
+        if self.ws.window_mode == self.ws.CONFIG_MODE and \
+                self._config_win.too_small:
+            return
         self._theme_selector.parent = self.outerBodyWin
         self._show_theme_selector()
         if self.theme_forced_selection:

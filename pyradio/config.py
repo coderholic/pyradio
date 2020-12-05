@@ -708,6 +708,37 @@ class PyRadioStations(object):
                 ret -= 4
             return ret
 
+    def paste_station_to_named_playlist(self, a_station, a_playlist):
+        """ Appends a station to a playlist or register
+        which is not opened in PyRadio.
+
+        return    0: All ok
+                 -2  -  playlist not found
+                 -3  -  negative number specified
+                 -4  -  number not found
+                 -5: Error writing file
+                 -6: Error renaming file
+        """
+        if path.exists(self, a_station, a_playlist):
+            m_station = a_station[:]
+            ch = ('  ', ',')
+            for a_ch in ch:
+                if a_ch in m_station[0]:
+                    m_station[0] = '"' + m_station[0] + '"'
+                    break
+
+            w_str = ','.join(m_station)
+            while w_str.endswith(','):
+                w_str = w_str[:-1]
+            try:
+                with open(a_playlist, 'a') as f:
+                    f.write(w_str)
+                return 0
+            except:
+                return -5
+        else:
+            return -2
+
     def remove_station(self, target):
         self.dirty_playlist = True
         d = collections.deque(self.stations)
@@ -1235,6 +1266,16 @@ class PyRadioConfig(PyRadioStations):
                 else:
                     self.opts['force_http'][1] = False
         self.opts['dirty_config'][1] = False
+
+        # check if default playlist exists
+        if self.opts['default_playlist'][1] != 'stations':
+            ch = path.join(self.stations_dir, self.opts['default_playlist'][1] + '.csv')
+            if not path.exists(ch):
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Default playlist "({}") does not exist; reverting to "stations"'.format(self.opts['default_station'][1]))
+                self.opts['default_playlist'][1] = 'stations'
+                self.opts['default_station'][1] = 'False'
+                #self.opts['dirty_config'][1] = True
         return 0
 
     def save_config(self):

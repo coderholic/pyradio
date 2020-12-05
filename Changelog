@@ -1,6 +1,10 @@
-2020-11-30 s-n-g
+2020-12-04 s-n-g
     * Starting 0.8.8-beta7
     * Implementing "Create Playlist" (\n)
+    * Revert to stations playlist if default one (set by
+      config) does not exist
+    * Second level config windows will not be displayed
+      when main window shows "Window too small" message
     * "Title: (null)" will not appear any more (vlc)
 
 2020-11-23 s-n-g
