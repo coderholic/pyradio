@@ -90,6 +90,13 @@ class PyRadio(object):
         we continue playing, otherwise, we stop playback """
     active_stations = [ [ '', 0 ], [ '', -1 ] ]
 
+    """ Used when loading a playlist from ' moe '.
+        If the first station (selection) exists in the new playlist,
+        we mark it as selected
+        If the second station (playing) exists in the new playlist,
+        we continue playing, otherwise, we stop playback """
+    saved_active_stations = [ [ '', 0 ], [ '', -1 ] ]
+
     """ Used when opening a station after rename.
         If the first station (selection) exists in the new playlist,
         we mark it as selected
@@ -211,6 +218,7 @@ class PyRadio(object):
                 self.ws.SELECT_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
                 self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
                 self.ws.SELECT_PLAYLIST_MODE: self._playlist_select_win_refresh_and_resize,
+                self.ws.PASTE_MODE: self._playlist_select_win_refresh_and_resize,
                 self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
                 self.ws.MAIN_HELP_MODE: self._show_main_help,
                 self.ws.MAIN_HELP_MODE_PAGE_2: self._show_main_help_page_2,
@@ -283,6 +291,7 @@ class PyRadio(object):
                 self.ws.CONFIG_MODE: self._show_config_help,
                 self.ws.SELECT_PLAYER_MODE: self._show_config_player_help,
                 self.ws.SELECT_PLAYLIST_MODE: self._show_config_playlist_help,
+                self.ws.PASTE_MODE: self._show_config_playlist_help,
                 self.ws.SELECT_STATION_MODE: self._show_config_station_help,
                 self.ws.SELECT_STATION_ENCODING_MODE: self._show_config_encoding_help,
                 self.ws.SELECT_ENCODING_MODE: self._show_config_encoding_help,
@@ -310,6 +319,7 @@ class PyRadio(object):
                 self.ws.PLAYLIST_MODE: 1,
                 self.ws.SELECT_PLAYLIST_MODE: 1,
                 self.ws.THEME_MODE: 2,
+                self.ws.PASTE_MODE: 3,
                 }
 
         # which search mode opens from each allowed mode
@@ -318,6 +328,7 @@ class PyRadio(object):
                 self.ws.PLAYLIST_MODE: self.ws.SEARCH_PLAYLIST_MODE,
                 self.ws.THEME_MODE: self.ws.SEARCH_THEME_MODE,
                 self.ws.SELECT_PLAYLIST_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
+                self.ws.PASTE_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
                 self.ws.SELECT_STATION_MODE: self.ws.SEARCH_SELECT_STATION_MODE,
                 }
 
@@ -2238,6 +2249,7 @@ class PyRadio(object):
             if need_to_scan_playlist:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Scanning playlist for stations...')
+                logger.error('DE\n\nactive_stations: {}\n\n'.format(self.active_stations))
                 self.selection, self.playing = self._get_stations_ids((
                     self.active_stations[0][0],
                     self.active_stations[1][0]))
@@ -2891,7 +2903,8 @@ class PyRadio(object):
                 _apply_main_windows(ret)
             elif self.ws.operation_mode == self.ws.THEME_MODE:
                 self._theme_selector.set_theme(self._theme_selector._themes[ret])
-            elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE:
+            elif self.ws.operation_mode in (self.ws.SELECT_PLAYLIST_MODE,
+                                            self.ws.PASTE_MODE):
                 self._playlist_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
                 self._station_select_win.setPlaylistById(ret, adjust=True)
@@ -2902,7 +2915,8 @@ class PyRadio(object):
                 _apply_main_windows(ret)
             elif self.ws.previous_operation_mode == self.ws.THEME_MODE:
                 self._theme_selector.set_theme(self._theme_selector._themes[ret])
-            elif self.ws.previous_operation_mode == self.ws.SELECT_PLAYLIST_MODE:
+            elif self.ws.previous_operation_mode in (self.ws.SELECT_PLAYLIST_MODE,
+                                                     self.ws.PASTE_MODE):
                 self._playlist_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.previous_operation_mode == self.ws.SELECT_STATION_MODE:
                 self._station_select_win.setPlaylistById(ret, adjust=True)
@@ -3171,6 +3185,8 @@ class PyRadio(object):
             # get station to register
             # accept a-z, 0-9 and -
             if char == ord('\''):
+                self._set_active_stations()
+                self.saved_active_stations = self.active_stations[:]
                 self._status_suffix = "'"
                 self._update_status_bar_right(status_suffix="'")
                 self._cnf.open_register_list = True
@@ -3178,7 +3194,7 @@ class PyRadio(object):
                 self.selections[self.ws.REGISTER_MODE][:-1] = self.playlist_selections[self.ws.REGISTER_MODE][:]
             elif char in range(48, 58) or char in range(97, 123):
                 self._cnf.register_to_open = chr(char).lower()
-                self._update_status_bar_right()
+                self._update_status_bar_right(status_suffix='')
             else:
                 self._update_status_bar_right(status_suffix='')
                 return
@@ -3249,6 +3265,7 @@ class PyRadio(object):
                 # paste
                 self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
+                    # paste to another playlist / register
                     self._print_not_implemented_yet()
                 else:
                     self._paste(playlist=self.stations[self.selection][-1])
@@ -3863,6 +3880,11 @@ class PyRadio(object):
                     self.refreshBody()
                     # Do this here to properly resize
                     return
+
+        elif self.ws.operation_mode == self.ws.PASTE_MODE:
+            self.ws.close_window()
+            self.refreshBody()
+            return
 
         elif self.ws.operation_mode == self.ws.THEME_MODE and (
                 char not in self._chars_to_bypass and \
@@ -4646,7 +4668,7 @@ class PyRadio(object):
 
                 if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                         curses.KEY_RIGHT, ord('l')):
-                    self._update_status_bar_right()
+                    self._update_status_bar_right(status_suffix='')
                     if self._cnf.open_register_list:
                         self.playlist_selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing]
                         self.selections[self.ws.REGISTER_MODE] = [self.selection, self.startPos, self.playing, self._cnf.playlists]
@@ -4659,7 +4681,7 @@ class PyRadio(object):
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Loading playlist: "{}"'.format(self.stations[self.selection][-1]))
                         playlist_to_try_to_open = self.stations[self.selection][-1]
-                        ret = self._cnf.read_playlist_file(stationFile = playlist_to_try_to_open)
+                        ret = self._cnf.read_playlist_file(stationFile=playlist_to_try_to_open)
                         logger.error('DE playlist_selections = {}'.format(playlist_to_try_to_open))
 
                         if ret == -1:
@@ -4690,7 +4712,9 @@ class PyRadio(object):
                             #self.ll('ENTER')
                             self.ws.close_window()
                             self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+                            self.active_stations = self.saved_active_stations[:]
                             self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
+                            self._set_active_stations()
                             self._give_me_a_search_class(self.ws.operation_mode)
                             if self.playing < 0:
                                 self._put_selection_in_the_middle(force=True)
