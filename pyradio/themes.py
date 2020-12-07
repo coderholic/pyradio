@@ -13,7 +13,6 @@ from .common import *
 logger = logging.getLogger(__name__)
 
 
-
 class PyRadioTheme(object):
     _colors = {}
     _active_colors = {}
@@ -29,7 +28,7 @@ class PyRadioTheme(object):
 
     def __init__(self, cnf):
         self._cnf = cnf
-        _applied_theme_max_colors = 8
+        self._applied_theme_max_colors = 8
 
     def __del__(self):
         self._colors = None
@@ -107,7 +106,7 @@ class PyRadioTheme(object):
         return result, self.applied_theme_name
 
     def _load_default_theme(self, a_theme):
-        if self._cnf.fallback_theme :
+        if self._cnf.fallback_theme:
             self.applied_theme_name = self._cnf.fallback_theme
         else:
             self.applied_theme_name = 'dark'
@@ -119,7 +118,7 @@ class PyRadioTheme(object):
             logger.info('Applying fallback theme: "{0}" instead of: "{1}"'.format(self.applied_theme_name, a_theme))
         self.open_theme(self.applied_theme_name)
 
-    def open_theme(self, a_theme = '', a_path=''):
+    def open_theme(self, a_theme='', a_path=''):
         """ Read a theme and place it in _colors
             a_theme: theme name
             a_path:  theme path (enpty if internal theme)
@@ -132,20 +131,20 @@ class PyRadioTheme(object):
             a_theme = 'dark'
 
         if a_theme == 'dark' or a_theme == 'default':
-            self._colors[THEME_ITEMS[3][0]] = [ curses.COLOR_WHITE, curses.COLOR_BLACK ]
-            self._colors[THEME_ITEMS[2][0]] = [ curses.COLOR_BLACK, curses.COLOR_GREEN ]
+            self._colors[THEME_ITEMS[3][0]] = [curses.COLOR_WHITE, curses.COLOR_BLACK]
+            self._colors[THEME_ITEMS[2][0]] = [curses.COLOR_BLACK, curses.COLOR_GREEN]
             # selection
-            self._colors[THEME_ITEMS[5][0]] = [ curses.COLOR_BLACK, curses.COLOR_MAGENTA ]
-            self._colors[THEME_ITEMS[6][0]] = [ curses.COLOR_BLACK, curses.COLOR_GREEN ]
-            self._colors[THEME_ITEMS[4][0]]  = [ curses.COLOR_GREEN, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[5][0]] = [curses.COLOR_BLACK, curses.COLOR_MAGENTA]
+            self._colors[THEME_ITEMS[6][0]] = [curses.COLOR_BLACK, curses.COLOR_GREEN]
+            self._colors[THEME_ITEMS[4][0]] = [curses.COLOR_GREEN, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # Titles
             # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
-            self._colors[THEME_ITEMS[0][0]] = [ curses.COLOR_BLUE, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[0][0]] = [curses.COLOR_BLUE, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # help window
-            self._colors[THEME_ITEMS[1][0]] = [ curses.COLOR_YELLOW, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[1][0]] = [curses.COLOR_YELLOW, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # Edit Cursor
-            self._colors[THEME_ITEMS[7][0]] = [ curses.COLOR_WHITE, curses.COLOR_MAGENTA ]
+            self._colors[THEME_ITEMS[7][0]] = [curses.COLOR_WHITE, curses.COLOR_MAGENTA]
             # info
             self._colors['Colors'] = 8
             self._colors['Name'] = 'dark'
@@ -153,20 +152,20 @@ class PyRadioTheme(object):
             self.applied_theme_name = 'dark'
 
         elif a_theme == 'dark_16_colors':
-            self._colors[THEME_ITEMS[3][0]] = [ 15, 8 ]
-            self._colors[THEME_ITEMS[2][0]] = [ curses.COLOR_BLACK, 10 ]
+            self._colors[THEME_ITEMS[3][0]] = [15, 8]
+            self._colors[THEME_ITEMS[2][0]] = [curses.COLOR_BLACK, 10]
             # selection
-            self._colors[THEME_ITEMS[5][0]] = [ curses.COLOR_BLACK, 13 ]
-            self._colors[THEME_ITEMS[6][0]] = [ curses.COLOR_BLACK, 10 ]
-            self._colors[THEME_ITEMS[4][0]]  = [ 10, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[5][0]] = [curses.COLOR_BLACK, 13]
+            self._colors[THEME_ITEMS[6][0]] = [curses.COLOR_BLACK, 10]
+            self._colors[THEME_ITEMS[4][0]] = [10, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # Titles
             # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
-            self._colors[THEME_ITEMS[0][0]] = [ 12, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[0][0]] = [12, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # help window
-            self._colors[THEME_ITEMS[1][0]] = [ 11, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[1][0]] = [11, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # Edit Cursor
-            self._colors[THEME_ITEMS[7][0]] = [ 15, curses.COLOR_MAGENTA ]
+            self._colors[THEME_ITEMS[7][0]] = [15, curses.COLOR_MAGENTA]
             # info
             self._colors['Colors'] = 16
             self._colors['Name'] = 'dark_16_colors'
@@ -174,20 +173,20 @@ class PyRadioTheme(object):
             self.applied_theme_name = 'dark_16_colors'
 
         elif a_theme == 'light':
-            self._colors[THEME_ITEMS[3][0]] = [ curses.COLOR_BLACK, curses.COLOR_WHITE ]
-            self._colors[THEME_ITEMS[2][0]] = [ curses.COLOR_WHITE, curses.COLOR_BLUE ]
+            self._colors[THEME_ITEMS[3][0]] = [curses.COLOR_BLACK, curses.COLOR_WHITE]
+            self._colors[THEME_ITEMS[2][0]] = [curses.COLOR_WHITE, curses.COLOR_BLUE]
             # selection
-            self._colors[THEME_ITEMS[5][0]] = [ curses.COLOR_WHITE, curses.COLOR_MAGENTA ]
-            self._colors[THEME_ITEMS[6][0]] = [ curses.COLOR_WHITE, curses.COLOR_BLUE ]
-            self._colors[THEME_ITEMS[4][0]]  = [ curses.COLOR_RED, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[5][0]] = [curses.COLOR_WHITE, curses.COLOR_MAGENTA]
+            self._colors[THEME_ITEMS[6][0]] = [curses.COLOR_WHITE, curses.COLOR_BLUE]
+            self._colors[THEME_ITEMS[4][0]] = [curses.COLOR_RED, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # Titles
             # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
-            self._colors[THEME_ITEMS[0][0]] = [ curses.COLOR_BLUE, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[0][0]] = [curses.COLOR_BLUE, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # help window
-            self._colors[THEME_ITEMS[1][0]] = [ curses.COLOR_MAGENTA, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[1][0]] = [curses.COLOR_MAGENTA, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # Edit Cursor
-            self._colors[THEME_ITEMS[7][0]] = [ curses.COLOR_WHITE, curses.COLOR_MAGENTA ]
+            self._colors[THEME_ITEMS[7][0]] = [curses.COLOR_WHITE, curses.COLOR_MAGENTA]
             # info
             self._colors['Colors'] = 8
             self._colors['Name'] = 'light'
@@ -195,20 +194,20 @@ class PyRadioTheme(object):
             self.applied_theme_name = 'light'
 
         elif a_theme == 'light_16_colors':
-            self._colors[THEME_ITEMS[3][0]] = [ 8, 15 ]
-            self._colors[THEME_ITEMS[2][0]] = [ 15, 12 ]
+            self._colors[THEME_ITEMS[3][0]] = [8, 15]
+            self._colors[THEME_ITEMS[2][0]] = [15, 12]
             # selection
-            self._colors[THEME_ITEMS[5][0]] = [ 15, 13 ]
-            self._colors[THEME_ITEMS[6][0]] = [ 15, 12 ]
-            self._colors[THEME_ITEMS[4][0]]  = [ 9, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[5][0]] = [15, 13]
+            self._colors[THEME_ITEMS[6][0]] = [15, 12]
+            self._colors[THEME_ITEMS[4][0]] = [9, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # Titles
             # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
-            self._colors[THEME_ITEMS[0][0]] = [ 12, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[0][0]] = [12, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # help window
-            self._colors[THEME_ITEMS[1][0]] = [ 13, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[1][0]] = [13, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # Edit Cursor
-            self._colors[THEME_ITEMS[7][0]] = [ 15, 13 ]
+            self._colors[THEME_ITEMS[7][0]] = [15, 13]
             # info
             self._colors['Colors'] = 16
             self._colors['Name'] = 'light_16_colors'
@@ -216,20 +215,20 @@ class PyRadioTheme(object):
             self.applied_theme_name = 'light_16_colors'
 
         elif a_theme == 'black_on_white' or a_theme == 'bow':
-            self._colors[THEME_ITEMS[3][0]] = [ 245, 15 ]
-            self._colors[THEME_ITEMS[2][0]] = [ 15, 245 ]
+            self._colors[THEME_ITEMS[3][0]] = [245, 15]
+            self._colors[THEME_ITEMS[2][0]] = [15, 245]
             # selection
-            self._colors[THEME_ITEMS[5][0]] = [ 15, 245 ]
-            self._colors[THEME_ITEMS[6][0]] = [ 0, 245 ]
-            self._colors[THEME_ITEMS[4][0]]  = [ 0, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[5][0]] = [15, 245]
+            self._colors[THEME_ITEMS[6][0]] = [0, 245]
+            self._colors[THEME_ITEMS[4][0]] = [0, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # Titles
             # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
-            self._colors[THEME_ITEMS[0][0]] = [ 0, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[0][0]] = [0, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # help window
-            self._colors[THEME_ITEMS[1][0]] = [ 245, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[1][0]] = [245, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # Edit Cursor
-            self._colors[THEME_ITEMS[7][0]] = [ 15, 238 ]
+            self._colors[THEME_ITEMS[7][0]] = [15, 238]
             # info
             self._colors['Colors'] = 256
             self._colors['Name'] = 'black_on_white'
@@ -237,20 +236,20 @@ class PyRadioTheme(object):
             self.applied_theme_name = 'black_on_white'
 
         elif a_theme == 'white_on_black' or a_theme == 'wob':
-            self._colors[THEME_ITEMS[3][0]] = [ 247, 235 ]
-            self._colors[THEME_ITEMS[2][0]] = [ 234, 253 ]
+            self._colors[THEME_ITEMS[3][0]] = [247, 235]
+            self._colors[THEME_ITEMS[2][0]] = [234, 253]
             # selection
-            self._colors[THEME_ITEMS[5][0]] = [ 235, 247, ]
-            self._colors[THEME_ITEMS[6][0]] = [ 235, 253 ]
-            self._colors[THEME_ITEMS[4][0]]  = [ 255, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[5][0]] = [235, 247]
+            self._colors[THEME_ITEMS[6][0]] = [235, 253]
+            self._colors[THEME_ITEMS[4][0]] = [255, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # Titles
             # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
-            self._colors[THEME_ITEMS[0][0]] = [ 253, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[0][0]] = [253, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # help window
-            self._colors[THEME_ITEMS[1][0]] = [ 247, self._colors[THEME_ITEMS[3][0]][BACKGROUND()] ]
+            self._colors[THEME_ITEMS[1][0]] = [247, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
             # Edit Cursor
-            self._colors[THEME_ITEMS[7][0]] = [ 15, 247 ]
+            self._colors[THEME_ITEMS[7][0]] = [15, 247]
             # info
             self._colors['Colors'] = 256
             self._colors['Name'] = 'white_on_black'
@@ -279,10 +278,9 @@ class PyRadioTheme(object):
         return ret
 
     def _get_theme_path(self, a_theme):
-        out_themes = []
         #self.root_path = path.join(path.dirname(__file__), 'stations.csv')
-        theme_dirs = [ path.join(self._cnf.stations_dir, 'themes') ,
-            path.join(path.dirname(__file__), 'themes') ]
+        theme_dirs = [path.join(self._cnf.stations_dir, 'themes'),
+                      path.join(path.dirname(__file__), 'themes')]
         for theme_dir in theme_dirs:
             files = glob.glob(path.join(theme_dir, '*.pyradio-theme'))
             if files:
@@ -306,6 +304,7 @@ class PyRadioTheme(object):
 
     def getTransparency(self):
         return self._transparent
+
 
 class PyRadioThemeReadWrite(object):
 
@@ -336,7 +335,7 @@ class PyRadioThemeReadWrite(object):
 
         try:
             with open(theme_path, 'r') as thmfile:
-                lines = [line.strip() for line in thmfile if line.strip() and not line.startswith('#') ]
+                lines = [line.strip() for line in thmfile if line.strip() and not line.startswith('#')]
 
         except:
             logger.error('read_theme: read error on: {}'.format(theme_path))
@@ -352,7 +351,7 @@ class PyRadioThemeReadWrite(object):
                 logger.error('read_theme: file is corrupt: {}'.format(theme_path))
                 return 4, None
             try:
-                this_color = ( int(vsp[0]), int(vsp[1]) )
+                this_color = (int(vsp[0]), int(vsp[1]))
                 for x in this_color:
                     if x > max_colors:
                         max_colors = x
@@ -362,7 +361,7 @@ class PyRadioThemeReadWrite(object):
                 return 4, None
             for it in THEME_ITEMS:
                 if sp[0] == it[0]:
-                    self._temp_colors[str(sp[0])] = [ this_color[0], this_color[1] ]
+                    self._temp_colors[str(sp[0])] = [this_color[0], this_color[1]]
                     break
 
         if self._theme_is_incomplete():
@@ -400,6 +399,7 @@ class PyRadioThemeReadWrite(object):
                     return check
         return num_of_colors
 
+
 class PyRadioThemeSelector(object):
     """ Theme Selector Window """
     TITLE = ' Available Themes '
@@ -435,12 +435,12 @@ class PyRadioThemeSelector(object):
     changed_from_config = False
 
     def __init__(self, parent, config, theme,
-            applied_theme_name, applied_theme_max_colors,
-            config_theme_name,
-            title_color_pair, box_color_pair,
-            applied_color_pair, normal_color_pair,
-            cursor_color_pair, applied_cursor_color_pair,
-            is_transparent, log_file=''):
+                 applied_theme_name, applied_theme_max_colors,
+                 config_theme_name,
+                 title_color_pair, box_color_pair,
+                 applied_color_pair, normal_color_pair,
+                 cursor_color_pair, applied_cursor_color_pair,
+                 is_transparent, log_file=''):
         self.parent = parent
         self._cnf = config
         self._theme = theme
@@ -461,7 +461,7 @@ class PyRadioThemeSelector(object):
         self._themes = []
 
     def show(self):
-        self._themes = [ [ 'dark', 'dark' ] ]
+        self._themes = [['dark', 'dark']]
         #if curses.COLORS >= 16:
         #    self._themes.append([ 'dark_16_colors', '' ])
         #    self._items += 1
@@ -474,13 +474,13 @@ class PyRadioThemeSelector(object):
         #    self._themes.append([ 'white_on_black', '' ])
         #    self._items += 2
 
-        self._themes.append([ 'dark_16_colors', '' ])
+        self._themes.append(['dark_16_colors', ''])
         self._items += 1
-        self._themes.append([ 'light', '' ])
-        self._themes.append([ 'light_16_colors', '' ])
+        self._themes.append(['light', ''])
+        self._themes.append(['light_16_colors', ''])
         self._items += 1
-        self._themes.append([ 'black_on_white', '' ])
-        self._themes.append([ 'white_on_black', '' ])
+        self._themes.append(['black_on_white', ''])
+        self._themes.append(['white_on_black', ''])
         self._items += 2
         # scan for package and user themes
         themes_to_add = self._scan_for_theme_files(self._cnf.stations_dir)
@@ -502,8 +502,8 @@ class PyRadioThemeSelector(object):
     def _scan_for_theme_files(self, cnf_path, user_themes_first=False):
         out_themes = []
         #self.root_path = path.join(path.dirname(__file__), 'stations.csv')
-        theme_dirs = [ path.join(path.dirname(__file__), 'themes'),
-                path.join(cnf_path, 'themes') ]
+        theme_dirs = [path.join(path.dirname(__file__), 'themes'),
+                      path.join(cnf_path, 'themes')]
         if user_themes_first:
             theme_dirs.reverse()
         for i, theme_dir in enumerate(theme_dirs):
@@ -513,7 +513,7 @@ class PyRadioThemeSelector(object):
                 for a_file in files:
                      theme_name, ret = self._can_use_theme(a_file)
                      if ret:
-                         tmp_themes.append([ theme_name, a_file ])
+                         tmp_themes.append([theme_name, a_file])
                 if tmp_themes:
                     tmp_themes.sort()
                     tmp_themes.reverse()
@@ -620,8 +620,6 @@ class PyRadioThemeSelector(object):
             self.log('width = {}\n'.format(self._width))
         self.X = int((maxX - self._width) / 2)
 
-
-
         self._page_jump = int(self._items / 2)
         self._win = None
         self._win = curses.newwin(self._height, self._width, self.Y, self.X)
@@ -650,7 +648,7 @@ class PyRadioThemeSelector(object):
     def selection(self, val):
         old_selection = self._selection
         if val < 0:
-            self._selection =0
+            self._selection = 0
             self._start_pos = 0
         elif val >= len(self._themes):
             self._selection = len(self._themes) - 1
@@ -732,18 +730,18 @@ class PyRadioThemeSelector(object):
             pass
         # display trasnparency indicator
         if self._transparent:
-            self._win.addstr(self._height-1, self._width -4, '[T]', curses.color_pair(self._box_color_pair))
+            self._win.addstr(self._height-1, self._width - 4, '[T]', curses.color_pair(self._box_color_pair))
         else:
             try:
-                self._win.addstr(self._height-1, self._width -4, '───', curses.color_pair(self._box_color_pair))
+                self._win.addstr(self._height-1, self._width - 4, '───', curses.color_pair(self._box_color_pair))
             except:
-                self._win.addstr(self._height-1, self._width -4, '───'.encode('utf-8'), curses.color_pair(self._box_color_pair))
+                self._win.addstr(self._height-1, self._width - 4, '───'.encode('utf-8'), curses.color_pair(self._box_color_pair))
         self._win.refresh()
         curses.doupdate()
 
     def _draw_box(self):
         self._win.box()
-        self._win.move(0,1)
+        self._win.move(0, 1)
         self._win.addstr(self.TITLE, curses.color_pair(self._title_color_pair))
 
     def _go_up(self):
@@ -752,7 +750,7 @@ class PyRadioThemeSelector(object):
             self._selection -= 1
         if self._selection < 0:
             self.selection = len(self._themes) - 1
-        elif self._selection == self._start_pos -1:
+        elif self._selection == self._start_pos - 1:
             self._start_pos -= 1
         self.refresh()
 
@@ -768,7 +766,7 @@ class PyRadioThemeSelector(object):
 
     def _go_home(self):
         self._selection = 0
-        self._start_pos =0
+        self._start_pos = 0
         self.refresh()
 
     def _go_end(self):
@@ -810,8 +808,8 @@ class PyRadioThemeSelector(object):
             # new theme
             pass
         elif char in (curses.KEY_ENTER, ord('\n'),
-                ord('\r'), ord('l'),
-                curses.KEY_RIGHT):
+                      ord('\r'), ord('l'),
+                      curses.KEY_RIGHT):
             self._applied_theme = self._selection
             self._applied_theme_name = self._themes[self._selection][0]
             #if self.changed_from_config:
@@ -870,7 +868,7 @@ class PyRadioThemeSelector(object):
             elif sel < 0:
                 sel = 0
             self.selection = sel
-        elif char in map(ord,map(str,range(0,10))):
+        elif char in map(ord,map(str,range(0, 10))):
             self.jumpnr += chr(char)
         elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):
             self.jumpnr = ''
@@ -900,6 +898,7 @@ class PyRadioThemeSelector(object):
     def _log(self, msg):
         with open(self._log_file, 'a') as log_file:
             log_file.write(msg)
+
 
 class PyRadioThemeEditor(object):
 

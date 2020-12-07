@@ -14,7 +14,7 @@ class Log(object):
     msg = suffix = counter = cursesScreen = None
 
     last_written_string = ''
-    last_written_suffix=''
+    last_written_suffix = ''
     display_help_message = False
 
     asked_to_stop = False
@@ -30,7 +30,7 @@ class Log(object):
 
     def setScreen(self, cursesScreen):
         self.cursesScreen = cursesScreen
-        self.width = int(cursesScreen.getmaxyx()[1] -1)
+        self.width = int(cursesScreen.getmaxyx()[1] - 1)
 
         # Redisplay the last message
         if self.msg:
@@ -40,12 +40,18 @@ class Log(object):
         if first_print:
             first_print = False
             try:
-                self.cursesScreen.addstr(0, self.width +1, ' ')
+                self.cursesScreen.addstr(0, self.width + 1, ' ')
             except:
                 pass
         return first_print
 
-    def write(self, msg=None, suffix=None, counter=None, help_msg=False, error_msg=False, notify_function=None):
+    def write(self,
+              msg=None,
+              suffix=None,
+              counter=None,
+              help_msg=False,
+              error_msg=False,
+              notify_function=None):
         if self.cursesScreen:
             with self.lock:
                 if msg:
@@ -59,7 +65,7 @@ class Log(object):
                     """
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Refusing to show message; player is stopped: "{}"'.format(msg))
-                    #return
+                    # return
                 elif self._player_stopped == 1:
                     self._player_stopped = 2
                 if self.asked_to_stop:
@@ -77,9 +83,12 @@ class Log(object):
                 #    logger.debug('self.counter = "{}"'.format(self.counter))
 
                 first_print = True
-                if msg is not None: self.msg = msg
-                if suffix is not None: self.suffix = suffix
-                if counter is not None: self.counter = counter
+                if msg is not None:
+                    self.msg = msg
+                if suffix is not None:
+                    self.suffix = suffix
+                if counter is not None:
+                    self.counter = counter
                 self.error_msg = True if error_msg else False
 
                 #if logger.isEnabledFor(logging.DEBUG):
@@ -100,7 +109,11 @@ class Log(object):
                 if self.msg:
                     self.cursesScreen.erase()
                     try:
-                        d_msg = self.msg.strip()[0: self.width].replace("\r", "").replace("\n", "")
+                        d_msg = self.msg.strip()[0: self.width].replace(
+                            "\r", ""
+                        ).replace(
+                            "\n", ""
+                        )
                         self.cursesScreen.addstr(0, 1, d_msg)
                     except:
                         try:
@@ -126,10 +139,15 @@ class Log(object):
                 if self.suffix:
                     d_msg = ' [' + self.suffix + ']'
                     try:
-                        self.cursesScreen.addstr(0, self._active_width - len(d_msg), d_msg + ' ')
+                        self.cursesScreen.addstr(
+                            0, self._active_width - len(d_msg),
+                            d_msg + ' ')
                     except:
                         pass
-                    self.cursesScreen.chgat(0, self._active_width - len(d_msg) +1, len(d_msg) -1, curses.color_pair(1))
+                    self.cursesScreen.chgat(
+                        0, self._active_width - len(d_msg) + 1,
+                        len(d_msg) - 1,
+                        curses.color_pair(1))
                     first_print = self._do_i_print_last_char(first_print)
                     self.cursesScreen.refresh()
                     self._active_width -= len(d_msg)
@@ -144,7 +162,10 @@ class Log(object):
                         if self.suffix:
                             self._active_width += 1
                         d_msg = ' [' + self.counter + ']'
-                        self.cursesScreen.addstr(0, self._active_width - len(d_msg), d_msg)
+                        self.cursesScreen.addstr(
+                            0,
+                            self._active_width - len(d_msg),
+                            d_msg)
                         first_print = self._do_i_print_last_char(first_print)
                         self.cursesScreen.refresh()
                         self._active_width -= len(d_msg)
@@ -161,7 +182,10 @@ class Log(object):
                     if not self.error_msg:
                         self.counter = None
                         suffix_string = ' Press ? for help'
-                        self.cursesScreen.addstr(0, self._active_width - len(suffix_string), suffix_string)
+                        self.cursesScreen.addstr(
+                            0,
+                            self._active_width - len(suffix_string),
+                            suffix_string)
                         self.cursesScreen.refresh()
                         self.display_help_message = True
                         if logger.isEnabledFor(logging.DEBUG):
@@ -176,7 +200,7 @@ class Log(object):
                     self._player_stopped = 0
                     return
                 self.cursesScreen.refresh()
-                #logger.error('DE _player_stopped = {}'.format(self._player_stopped))
+                # logger.error('DE _player_stopped = {}'.format(self._player_stopped))
 
     def readline(self):
         pass

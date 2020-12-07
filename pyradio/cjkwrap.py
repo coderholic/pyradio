@@ -85,6 +85,7 @@ class CJKWrapper(textwrap.TextWrapper):
             reversed_chunks[-1] = chunk_end
         elif not cur_line:
             cur_line.append(reversed_chunks.pop())
+
     def _wrap_chunks(self, chunks):
         lines = []
         if self.width <= 0:
@@ -96,24 +97,34 @@ class CJKWrapper(textwrap.TextWrapper):
         while chunks:
             cur_line = []
             cur_len = 0
+
             if lines:
                 indent = self.subsequent_indent
             else:
                 indent = self.initial_indent
             width = self.width - len(indent)
-            if self.drop_whitespace and chunks[-1].strip() == '' and lines:
+
+            if self.drop_whitespace and \
+                    chunks[-1].strip() == '' and \
+                    lines:
                 del chunks[-1]
+
             while chunks:
-                l = cjklen(chunks[-1])
-                if cur_len + l <= width:
+                chunk = cjklen(chunks[-1])
+                if cur_len + chunk <= width:
                     cur_line.append(chunks.pop())
-                    cur_len += l
+                    cur_len += chunk
                 else:
                     break
+
             if chunks and cjklen(chunks[-1]) > width:
                 self._handle_long_word(chunks, cur_line, cur_len, width)
-            if self.drop_whitespace and cur_line and cur_line[-1].strip() == '':
+
+            if self.drop_whitespace and \
+                    cur_line and \
+                    cur_line[-1].strip() == '':
                 del cur_line[-1]
+
             if cur_line:
                 lines.append(indent + ''.join(cur_line))
         return lines

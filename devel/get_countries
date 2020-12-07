@@ -11,7 +11,8 @@ curl -L https://github.com/umpirsky/country-list/raw/master/data/en_US/country.j
     sed -e 's/,/,\n/g' \
         -e 's/{"/{\n"/' \
         -e 's/}/\n}/' countries-new.py | \
-        sed -e 's/^"/    "/' > pyradio/countries.py
+        sed -e 's/^"/    "/' -e 's/":"/": "/' > pyradio/countries.py
+    echo >> pyradio/countries.py
     git add pyradio/countries.py
 } || {
 echo "

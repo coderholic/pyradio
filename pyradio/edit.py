@@ -24,14 +24,15 @@ class PyRadioSearch(SimpleCursesLineEdit):
     _caption = 'Search'
 
     def __init__(self, parent, width, begin_y, begin_x, **kwargs):
-        SimpleCursesLineEdit.__init__(self, parent, width, begin_y, begin_x,
+        SimpleCursesLineEdit.__init__(
+            self, parent, width, begin_y, begin_x,
             key_up_function_handler=self._get_history_previous,
             key_down_function_handler=self._get_history_next,
             **kwargs)
         if version_info < (3, 0):
-            self._range_command='xrange'
+            self._range_command = 'xrange'
         else:
-            self._range_command='range'
+            self._range_command = 'range'
 
     def show(self, parent_win, repaint=False):
         if repaint:
@@ -42,13 +43,15 @@ class PyRadioSearch(SimpleCursesLineEdit):
         y, x = self.parent_win.getmaxyx()
         new_y = y - self._height + 1
         new_x = x - self._width
-        super(PyRadioSearch, self).show(self.parent_win, new_y=new_y, new_x=new_x)
+        super(PyRadioSearch, self).show(
+            self.parent_win,
+            new_y=new_y,
+            new_x=new_x)
         y, x = self._caption_win.getmaxyx()
         if self._boxed:
             try:
                 self._caption_win.addstr(2, 0, '┴', self.box_color)
                 self._caption_win.addstr(0, x-1, '┤', self.box_color)
-                pass
             except:
                 self._caption_win.addstr(2, 0, '┴'.encode('utf-8'), self.box_color)
                 try:
@@ -121,7 +124,7 @@ class PyRadioSearch(SimpleCursesLineEdit):
             return None
 
     def print_not_found(self):
-        self._edit_win.addstr(0,0,'Term not found!'.ljust(self._max_chars_to_display), self.edit_color)
+        self._edit_win.addstr(0, 0, 'Term not found!'.ljust(self._max_chars_to_display), self.edit_color)
         self._edit_win.refresh()
         sleep(.3)
         self.refreshEditWindow()
@@ -151,8 +154,8 @@ class PyRadioEditor(object):
 
     _focus = 0
 
-    _line_editor = [ None, None ]
-    _line_editor_yx = ( (3, 2), (6, 2) )
+    _line_editor = [None, None]
+    _line_editor_yx = ((3, 2), (6, 2))
 
     _item = []
     _orig_item = []
@@ -165,7 +168,12 @@ class PyRadioEditor(object):
     # 3: show all
     _too_small = False
 
-    def __init__(self, stations, selection, parent, config_encoding, adding=True):
+    def __init__(self,
+                 stations,
+                 selection,
+                 parent,
+                 config_encoding,
+                 adding=True):
         self._stations = stations
         self._selection = selection
         self._pos_to_insert = selection + 1
@@ -226,6 +234,7 @@ class PyRadioEditor(object):
         else:
             self._line_editor[0].string = ''
             self._line_editor[1].string = ''
+
         try:
             if item[2]:
                 self._encoding = item[2]
@@ -234,14 +243,15 @@ class PyRadioEditor(object):
         except:
             self._encoding = self._config_encoding
         self._orig_encoding = self._encoding
-        self._old_encoding  = self._encoding
+        self._old_encoding = self._encoding
         self._item = item
         self._orig_item = item
 
     def _add_editors(self):
-        for ed in range(0,2):
+        for ed in range(0, 2):
             if self._line_editor[ed] is None:
-                self._line_editor[ed] = SimpleCursesLineEdit(parent=self._win,
+                self._line_editor[ed] = SimpleCursesLineEdit(
+                    parent=self._win,
                     width=-2,
                     begin_y=self._line_editor_yx[ed][0],
                     begin_x=self._line_editor_yx[ed][1],
@@ -271,7 +281,10 @@ class PyRadioEditor(object):
 
         if self.maxY < 11 or self.maxX < 44:
             txt = ' Window too small to display content '
-            error_win = curses.newwin(3, len(txt) + 2, int(self.maxY / 2) - 1, int((self.maxX - len(txt)) / 2))
+            error_win = curses.newwin(3,
+                                      len(txt) + 2,
+                                      int(self.maxY / 2) - 1,
+                                      int((self.maxX - len(txt)) / 2))
             error_win.bkgdset(' ', curses.color_pair(3))
             error_win.erase()
             error_win.box()
@@ -320,7 +333,6 @@ class PyRadioEditor(object):
             self._win.addstr(14 + step, 5, 'Esc', curses.color_pair(4))
             self._win.addstr(14 + step, 23, 'Cancel operation.', curses.color_pair(5))
 
-
             self._win.addstr(15 + step, 5, 's', curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
             self._win.addstr('q', curses.color_pair(4))
@@ -358,7 +370,7 @@ class PyRadioEditor(object):
         self._win.refresh()
         self._update_focus()
         if not self._too_small:
-            for ed in range(0,2):
+            for ed in range(0, 2):
                 self._line_editor[ed].show(self._win, opening=False)
 
     def _show_alternative_modes(self):
@@ -371,7 +383,7 @@ class PyRadioEditor(object):
         if disp == 100:
             """ print paste mode is on on all editors """
             """ set all editors' paste mode """
-            for i,n in enumerate(self._line_editor):
+            for i, n in enumerate(self._line_editor):
                 n.paste_mode = True
                 # fix for python 2
                 #self._win.addstr(*lin[i], '[', curses.color_pair(5))
@@ -442,7 +454,7 @@ class PyRadioEditor(object):
             col = 9
         else:
             col = 5
-        self._win.addstr(8, int((self.maxX - 18) /2), '[', curses.color_pair(4))
+        self._win.addstr(8, int((self.maxX - 18) / 2), '[', curses.color_pair(4))
         self._win.addstr(' OK ', curses.color_pair(col))
         self._win.addstr(']  [', curses.color_pair(4))
 
@@ -467,7 +479,7 @@ class PyRadioEditor(object):
         if ret == 1:
             if self._encoding == self._config_encoding:
                 self._encoding = ''
-            self.new_station = [ self._line_editor[0].string.strip(), self._line_editor[1].string.strip(), self._encoding, '']
+            self.new_station = [self._line_editor[0].string.strip(), self._line_editor[1].string.strip(), self._encoding, '']
         return ret
 
     def _validate(self):
@@ -509,19 +521,19 @@ class PyRadioEditor(object):
                 self.new_station = None
                 self._reset_editors_modes()
                 ret = -1
-            elif char in ( ord('\t'), 9, curses.KEY_DOWN):
+            elif char in (ord('\t'), 9, curses.KEY_DOWN):
                 self.focus +=1
                 self._reset_editors_escape_mode()
             elif char == curses.KEY_UP:
-                self.focus -=1
+                self.focus -= 1
                 self._reset_editors_escape_mode()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
                 if self._focus == 0:
                     # Name
-                    self.focus +=1
+                    self.focus += 1
                 elif self._focus == 1:
                     # URL
-                    self.focus +=1
+                    self.focus += 1
                 elif self._focus == 2:
                     # encoding
                     return 3
@@ -539,7 +551,7 @@ class PyRadioEditor(object):
                 self.focus = abs(ret + 2)
                 self._reset_editors_modes()
             elif (char in (curses.ascii.DC2, 18) and not self._adding) or \
-                    (char == ord('r') and not self._adding and self.focus >1):
+                    (char == ord('r') and not self._adding and self.focus > 1):
                 # ^R, revert to saved
                 self.item = self._orig_item
                 if self.item[2]:
@@ -547,7 +559,7 @@ class PyRadioEditor(object):
                 else:
                     self._encoding = self._config_encoding
                 self._orig_encoding = self._encoding
-                for i in range(0,2):
+                for i in range(0, 2):
                     self._line_editor[i]._go_to_end()
             elif self._focus <= 1:
                 """
@@ -593,7 +605,8 @@ class PyRadioEditor(object):
 class PyRadioRenameFile(object):
     """ PyRadio copy file dialog """
 
-    def __init__(self, filename, parent, create=False, open_afterwards=True, title='', opened_from_editor = False):
+    def __init__(self, filename, parent, create=False,
+                 open_afterwards=True, title='', opened_from_editor=False):
         self._invalid_chars = '<>|:"\\/?*'
         self.maxY = self.maxX = 0
         self._win = self._parent_win = self._line_editor = None
@@ -728,7 +741,8 @@ class PyRadioRenameFile(object):
 
         # add editor
         if self._widgets[0] is None:
-            self._widgets[0] = SimpleCursesLineEdit(parent=self._win,
+            self._widgets[0] = SimpleCursesLineEdit(
+                parent=self._win,
                 width=-2,
                 begin_y=self._line_editor_yx[0],
                 begin_x=self._line_editor_yx[1],
@@ -797,8 +811,8 @@ class PyRadioRenameFile(object):
             self.initial_enabled = None
         if self.checked_checkbox:
             # set initial checkmarks
-            zipped =zip((self._widgets[1], self._widgets[2]),
-                    self.checked_checkbox)
+            zipped = zip((self._widgets[1], self._widgets[2]),
+                         self.checked_checkbox)
             for n in zipped:
                 n[0].checked = n[1]
             self.checked_checkbox = None
@@ -825,8 +839,8 @@ class PyRadioRenameFile(object):
         if self._error_string:
             y = 2 if adjust_line_Y == 0 else 1
             self._win.addstr(y, self.maxX - 2 - len(self._error_string),
-                    self._error_string,
-                    curses.color_pair(5))
+                             self._error_string,
+                             curses.color_pair(5))
         else:
             self._win.addstr(2, self.maxX - 26, 25 * ' ', curses.color_pair(5))
         self._win.touchline(2, 1)
@@ -880,7 +894,7 @@ class PyRadioRenameFile(object):
             self._win.addstr(16 + adjust_line_Y, 5, 's', curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
             self._win.addstr('q', curses.color_pair(4))
-            self._win.addstr(16 + adjust_line_Y , 23, 'Exeute / Cancel operation (not in Line Editor).', curses.color_pair(5))
+            self._win.addstr(16 + adjust_line_Y, 23, 'Exeute / Cancel operation (not in Line Editor).', curses.color_pair(5))
 
             self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
             self._win.addstr(17 + adjust_line_Y, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
@@ -918,7 +932,6 @@ class PyRadioRenameFile(object):
                 self._widgets[2].show()
             self._widgets[3].show()
             self._widgets[4].show()
-
 
     def _show_title(self, a_title=''):
         if a_title:
@@ -1031,7 +1044,9 @@ class PyRadioRenameFile(object):
             if char in (curses.KEY_EXIT, 27, ord('q')) and \
                     self.focus > 0:
                 return -1, '', '', False, False, False
-            elif char in (ord(' '), ord('l'), curses.KEY_RIGHT, curses.KEY_ENTER, ord('\n'), ord('\r')) and self._focus in (1, 2):
+            elif char in (ord(' '), ord('l'), curses.KEY_RIGHT,
+                          curses.KEY_ENTER, ord('\n'),
+                          ord('\r')) and self._focus in (1, 2):
                 # check boxes
                 self._widgets[self._focus].toggle_checked()
                 if self._focus == 1 and self._opened_from_editor:
@@ -1085,6 +1100,7 @@ class PyRadioRenameFile(object):
         #self.show()
         return self._get_result(ret)
 
+
 class PyRadioConnectionType(object):
 
     _title = ' Connection Type '
@@ -1129,8 +1145,6 @@ class PyRadioConnectionType(object):
         self._win.addstr('          Accept parameter', curses.color_pair(5))
         self._win.addstr(8, 2, 'Esc q h RIGHT', curses.color_pair(4))
         self._win.addstr('    Cancel operation', curses.color_pair(5))
-
-
         self._win.refresh()
 
     def keypress(self, char):

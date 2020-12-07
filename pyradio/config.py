@@ -719,7 +719,7 @@ class PyRadioStations(object):
                  -5: Error writing file
                  -6: Error renaming file
         """
-        if path.exists(self, a_station, a_playlist):
+        if path.exists(a_playlist):
             m_station = a_station[:]
             ch = ('  ', ',')
             for a_ch in ch:

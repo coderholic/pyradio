@@ -1,6 +1,7 @@
 import os
 from sys import platform
 
+
 def RemoveWinVlcLogFiles(*args):
     """ Removes all VLC log files within pyradio config
         directory on Windows.
@@ -9,16 +10,17 @@ def RemoveWinVlcLogFiles(*args):
     """
     if platform.startswith('win'):
         adir = args[0]
-        #print('config = "{}"'.format(adir))
+        # print('config = "{}"'.format(adir))
         files = [file for file in os.listdir(adir) if 'vlc_log.' in file]
         if files:
             for afile in files:
-                #print(afile)
+                #i print(afile)
                 try:
-                    #print('removing "{}"'.format(afile))
+                    # print('removing "{}"'.format(afile))
                     os.remove(os.path.join(adir, afile))
                 except:
                     pass
+
 
 if __name__ == "__main__":
     # example:

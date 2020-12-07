@@ -8,7 +8,7 @@ except ImportError:
 import threading
 import logging
 from .cjkwrap import cjklen, PY3
-#from os import get_terminal_size
+# from os import get_terminal_size
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -325,7 +325,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         self._last_search = post_data
         url = 'http://www.radio-browser.info/webservice/json/stations/search'
         try:
-            #r = requests.get(url=url)
+            # r = requests.get(url=url)
             r = requests.get(url=url, headers=self._open_headers, json=post_data, timeout=self._search_timeout)
             r.raise_for_status()
             self._raw_stations = self._extract_data(json.loads(r.text))
@@ -370,9 +370,9 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
                 u' {0}{1}│{2}│{3}kb',
                 u' {0}{1}│{2}│{3}kb│{4}',
                 u' {0}{1}│{2}│{3}kb│{4}│{5}',
-        )
+                )
         self._get_output_format(width)
-        #logger.error('DE self._output_format = {}'.format(self._output_format))
+        # logger.error('DE self._output_format = {}'.format(self._output_format))
         out = ['{0}. '.format(str(id_in_list + 1).rjust(pad)), '', '']
 
         # format info field
@@ -535,12 +535,12 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
         return ret
 
     def get_columns_separators(self,
-            width,
-            use_old_output_format=False,
-            adjust=0,
-            adjust_for_body=False,
-            adjust_for_header=False,
-            ):
+                               width,
+                               use_old_output_format=False,
+                               adjust=0,
+                               adjust_for_body=False,
+                               adjust_for_header=False,
+                               ):
         """Calculates columns separators for a given width
         based on self._output_format.
 
