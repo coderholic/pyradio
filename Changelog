@@ -1,7 +1,10 @@
-2020-12-06 s-n-g
-    * Starting 0.8.8-beta7
+2020-12-10 s-n-g
+    * Starting 0.8.8
+    * Implementing "Paste to playlist" (\p) command
     * Implementing "Create Playlist" (\n)
     * Addind \u (show Unnamed Register) command
+    * Fixing volume display for MPV on python3 before a
+      valid Title has been received
     * Revert to stations playlist if default one (set by
       config) does not exist
     * Second level config windows will not be displayed

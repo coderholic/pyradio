@@ -1011,8 +1011,7 @@ class Player(object):
         self.outputStream.write(msg=new_input, counter='')
         if self.oldUserInput['Title'] == '':
             self.oldUserInput['Input'] = new_input
-        else:
-            self.oldUserInput['Title'] = new_input
+        self.oldUserInput['Title'] = new_input
         self.playback_is_on = True
         if stop():
             return False
@@ -1107,12 +1106,17 @@ class Player(object):
                                                 stdout=subprocess.DEVNULL,
                                                 stdin=subprocess.DEVNULL,
                                                 stderr=subprocess.DEVNULL)
-                t = threading.Thread(target=self.updateMPVStatus, args=(lambda: self.stop_mpv_status_update_thread, ))
+                t = threading.Thread(
+                    target=self.updateMPVStatus,
+                    args=(lambda: self.stop_mpv_status_update_thread, )
+                )
             else:
-                self.process = subprocess.Popen(opts, shell=False,
-                                                stdout=subprocess.PIPE,
-                                                stdin=subprocess.PIPE,
-                                                stderr=subprocess.STDOUT)
+                self.process = subprocess.Popen(
+                    opts, shell=False,
+                    stdout=subprocess.PIPE,
+                    stdin=subprocess.PIPE,
+                    stderr=subprocess.STDOUT
+                )
                 t = threading.Thread(target=self.updateStatus, args=())
         t.start()
         # start playback check timer thread
@@ -1156,7 +1160,6 @@ class Player(object):
         self._no_mute_on_stop_playback()
 
         # First close the subprocess
-        logger.error('DE self._stop()')
         self._stop()
         # Here is fallback solution and cleanup
         self.stop_timeout_counter_thread = True

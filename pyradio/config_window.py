@@ -674,9 +674,9 @@ class PyRadioSelectEncodings(object):
             curses.color_pair(4))
         for i in range(1, self.maxX - 1):
             try:
-                self._win.addch(self.maxY -4,  i, '─', curses.color_pair(3))
+                self._win.addch(self.maxY - 4,  i, '─', curses.color_pair(3))
             except:
-                self._win.addstr(self.maxY -4 , i, u'─'.encode('utf-8'), curses.color_pair(3))
+                self._win.addstr(self.maxY - 4, i, u'─'.encode('utf-8'), curses.color_pair(3))
         try:
             self._win.addch(self.maxY - 4, 0, '├', curses.color_pair(3))
             self._win.addch(self.maxY - 4, self.maxX - 1, '┤', curses.color_pair(3))
@@ -981,6 +981,7 @@ class PyRadioSelectPlaylist(object):
         #self._include_registers = True
         if self._include_registers:
             self._title = ' Paste: Select target '
+            self._playlist_in_editor = self._selected_playlist
         self.init_window()
 
     def __del__(self):
@@ -992,10 +993,6 @@ class PyRadioSelectPlaylist(object):
         self.maxY = self._num_of_items + 2
         if self.maxY > self._parent_maxY - 2:
             self.maxY = self._parent_maxY - 2
-        #elif self.maxY < 12:
-        #    self.maxY = 12
-        #if self.maxY < 7:
-        #    self.maxY = 7
         self._calculate_width()
         self._win = None
         Y = int((self._parent_maxY - self.maxY) / 2) + self._parent_Y
@@ -1007,7 +1004,6 @@ class PyRadioSelectPlaylist(object):
         self._parent_maxX = parent_maxYX[1]
         self.init_window()
         self.refresh_win(resizing=True)
-        self._resize()
 
     def _calculate_width(self):
         self.maxX = self._max_len + 5 + len(str(self._num_of_items))
@@ -1018,15 +1014,16 @@ class PyRadioSelectPlaylist(object):
             self.maxX = self._parent_maxX - 4
 
     def refresh_win(self, resizing=False):
-        """ set_encoding is False when resizing """
-        #self.init_window(set_encoding)
         self._win.bkgdset(' ', curses.color_pair(3))
         self._win.erase()
         self._win.box()
-        self._win.addstr(0,
-            int((self.maxX - len(self._title)) / 2),
+        self._win.addstr(
+            0, int((self.maxX - len(self._title)) / 2),
             self._title,
-            curses.color_pair(4))
+            curses.color_pair(4)
+        )
+        if resizing:
+            self._resize()
         self.refresh_selection(resizing)
 
     def refresh_selection(self, resizing=False):
@@ -1036,13 +1033,13 @@ class PyRadioSelectPlaylist(object):
             #logger.error('de i = {0}, startPos = {1}'.format(i, self.startPos))
             if i + self.startPos < self._num_of_items:
                 line, pad = self._format_line(i, pad)
-                col = self._get_color(i)
-                self._win.hline(i + 1, 1, ' ', self.maxX - 2, col)
-                self._win.addstr(i + 1, 1, line[:self.maxX - 3], col)
+                colour = self._get_color(i)
+                self._win.hline(i + 1, 1, ' ', self.maxX - 2, colour)
+                self._win.addstr(i + 1, 1, line[:self.maxX - 3], colour)
             else:
                 break
+        self._win.refresh()
         if not resizing:
-            self._win.refresh()
             if self._select_playlist_error > -2:
                 self.print_select_playlist_error()
 
@@ -1051,13 +1048,12 @@ class PyRadioSelectPlaylist(object):
             self.startPos = 0
         else:
             self._fix_startPos()
-        self.refresh_selection()
 
     def _get_color(self, i):
         col = curses.color_pair(5)
         if self._items[i + self.startPos] == self._orig_playlist:
             if i + self.startPos == self._selected_playlist_id:
-                col =curses.color_pair(9)
+                col = curses.color_pair(9)
             else:
                 col = curses.color_pair(4)
         elif i + self.startPos == self._selected_playlist_id:
@@ -1066,12 +1062,13 @@ class PyRadioSelectPlaylist(object):
 
     def _format_line(self, i, pad):
         """ PyRadioSelectPlaylist format line """
-        line = '{0}. {1}'.format(str(i + self.startPos + 1).rjust(pad),
-                self._items[i + self.startPos])
+        line = '{0}. {1}'.format(
+            str(i + self.startPos + 1).rjust(pad),
+            self._items[i + self.startPos]
+        )
         return line, pad
 
     def _read_items(self):
-        to_del = -1
         self._items = []
         self._items = glob.glob(path.join(self._config_path, '*.csv'))
         if len(self._items) > 0:
@@ -1088,20 +1085,22 @@ class PyRadioSelectPlaylist(object):
             return 0, -1
         for i, an_item in enumerate(self._items):
             if self._include_registers:
-                self._items[i] = an_item.replace(self._registers_path +  sep, '').replace('.csv', '').replace('register_', 'Register: ')
+                self._items[i] = an_item.replace(self._registers_path + sep, '').replace('.csv', '').replace('register_', 'Register: ')
                 self._items[i] = self._items[i].replace(self._config_path + sep, '')
-                if self._items[i] == self._selected_playlist:
-                    to_del = i
             else:
                 self._items[i] = an_item.replace(self._config_path + sep, '').replace('.csv', '')
-        """ get already loaded playlist id """
-        if not self._include_registers:
+        if self._include_registers:
+            """ Remove playlist in editor """
+            try:
+                self._items.remove(self._playlist_in_editor)
+            except ValueError:
+                pass
+        else:
+            """ get already loaded playlist id """
             for i, a_playlist in enumerate(self._items):
                 if a_playlist ==self._selected_playlist:
                     self._selected_playlist_id = i
                     break
-        if to_del >= 0:
-            del self._items[to_del]
         self._max_len = cjklen(max(self._items, key=cjklen))
         self._num_of_items = len(self._items)
 
@@ -1144,7 +1143,7 @@ class PyRadioSelectPlaylist(object):
                 ret = self._items[self._selected_playlist_id].replace('Register: ', 'register_')
                 ret = path.join(self._config_path, '.registers', ret + '.csv')
             else:
-                ret = path.join(self._config_path, self._items[self._selected_playlist_id], ret + '.csv')
+                ret = path.join(self._config_path, self._items[self._selected_playlist_id] + '.csv')
             if platform == 'win32':
                 ret.replace('.registers', '_registers')
             return 0, ret
@@ -1215,6 +1214,14 @@ class PyRadioSelectPlaylist(object):
             self.startPos = self._selected_playlist_id - int((self.maxY - 2) / 2)
 
     def keypress(self, char):
+        """ Return restlt from playlist selection window
+
+        Results are:
+        -1, ''              - Continue in window
+         0, station title   - selected station title (for config window)
+         0, station path    - selected station path (for paste window)
+         1, ''              - Cancel
+        """
         if self._select_playlist_error == -1 or \
                 self._select_playlist_error == 0:
             self._error_win = None
