@@ -721,23 +721,24 @@ class Player(object):
                 if stop():
                     break
                 subsystemOut = fp.readline()
-                subsystemOut = subsystemOut.strip()
+                subsystemOut = subsystemOut.strip().replace(u'\ufeff', '')
                 subsystemOut = subsystemOut.replace("\r", "").replace("\n", "")
                 if subsystemOut == '':
                     continue
-                logger.error('DE >>> "{}"'.format(subsystemOut))
+                # logger.error('DE >>> "{}"'.format(subsystemOut))
                 if not self._is_accepted_input(subsystemOut):
                     continue
-                logger.error('DE --- accepted')
+                # logger.error('DE --- accepted')
                 if self.oldUserInput['Input'] != subsystemOut:
                     if stop():
                         break
                     if (logger.isEnabledFor(logging.DEBUG)):
                         if version_info < (3, 0):
                             disp = subsystemOut.encode('utf-8', 'replace').strip()
-                            logger.debug("User input: {}".format(disp))
+                            # logger.debug("User input: {}".format(disp))
                         else:
-                            logger.debug("User input: {}".format(subsystemOut))
+                            # logger.debug("User input: {}".format(subsystemOut))
+                            pass
                     self.oldUserInput['Input'] = subsystemOut
                     if self.volume_string in subsystemOut:
                         if stop():
@@ -1171,8 +1172,10 @@ class Player(object):
         if self.process is not None:
             if platform.startswith('win'):
                 try:
-                    subprocess.Call(['Taskkill', '/PID', '{}'.format(self.process.pid), '/F'])
+                    subprocess.Call(['Taskkill', '/PID', '{}'.format(self.process.pid), '/F', '/T'])
+                    logger.error('Taskkill killed PID {}'.format(self.process.pid))
                     self.process = None
+                    logger.error('***** self.process = None')
                 except:
                     logger.error('Taskkill failed to kill PID {}'.format(self.process.pid))
             else:
@@ -1848,8 +1851,9 @@ class VlcPlayer(Player):
             return
         if self.WIN:
             if self.process:
+                logger.error('>>>> Terminating process')
                 self._req('quit')
-            threading.Thread(target=self._remove_vlc_stdout_log_file, args=()).start()
+            threading.Thread(target=self._remove_vlc_stdout_log_file, args=()).start() 
         else:
             self._sendCommand("shutdown\n")
         self._icy_data = {}
@@ -1991,6 +1995,9 @@ class VlcPlayer(Player):
                 sock.close()
         except:
             pass
+        if msg == 'quit':
+            self.process.terminate()
+            self.process = None
         if ret_function:
             ret_function(response)
         return response
@@ -2021,7 +2028,11 @@ class VlcPlayer(Player):
                     if ind > -1:
                         vol = vol[:ind]
                         break
-                self.actual_volume = int(vol)
+                try:
+                    self.actual_volume = int(vol)
+                except ValueError:
+                    logger.error('DE _get_volume_response: ValueError: vol = {}'.format(vol))
+                    return
                 logger.error('DE _get_volume_response: vol = {}'.format(vol))
                 break
         if self.actual_volume == 0:

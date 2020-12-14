@@ -862,7 +862,9 @@ class PyRadio(object):
 
     def playSelectionBrowser(self):
             self.log.display_help_message = False
-            self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0] + '"')
+
+            # self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0] + '"')
+
             #### self._cnf.browsing_station_service = True
             # Add a history item to preserve browsing_station_service
             # Need to add TITLE, if service found
@@ -2842,7 +2844,7 @@ class PyRadio(object):
             delta = (d1 - d2).days
 
             # PROGRAM DEBUG: Uncomment this to force check
-            delta=check_days
+            # delta=check_days
             if delta < check_days:
                 clean_date_files(files)
                 if logger.isEnabledFor(logging.INFO):

@@ -148,11 +148,10 @@ class PyRadioStationsBrowser(object):
 
 class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
 
-    BASE_URL = 'www.radio-browser.info'
+    BASE_URL = 'api.radio-browser.info'
     TITLE = 'Radio Browser'
 
-    _open_url = \
-            'http://www.radio-browser.info/webservice/json/stations/topvote/100'
+    _open_url = 'https://de1.api.radio-browser.info/json/stations/topvote/100'
     _open_headers = {'user-agent': 'PyRadio/dev'}
 
     _raw_stations = []
@@ -224,15 +223,15 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             if id_in_list < len(self._raw_stations):
                 if self._raw_stations[id_in_list]['real_url']:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Using existing url: "{}"'.format(self._raw_stations[id_in_list]['url']))
-                    return self._raw_stations[id_in_list]['url']
+                        logger.debug('Using existing url: "{}"'.format(self._raw_stations[id_in_list]['url_resolved']))
+                    return self._raw_stations[id_in_list]['url_resolved']
                 else:
-                    stationid = self._raw_stations[id_in_list]['id']
+                    stationid = self._raw_stations[id_in_list]['stationuuid']
                     url = self.real_url(stationid)
                     if url:
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('URL retrieved: "{0}" <- "{1}'.format(url, self._raw_stations[id_in_list]['url']))
-                        self._raw_stations[id_in_list]['url'] = url
+                        self._raw_stations[id_in_list]['url_resolved'] = url
                         self._raw_stations[id_in_list]['real_url'] = True
                         self._raw_stations[id_in_list]['played'] = True
                     else:
@@ -324,11 +323,14 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             post_data['hidebroken'] = 'true'
         self._last_search = post_data
         url = 'http://www.radio-browser.info/webservice/json/stations/search'
+        url = self._open_url
         try:
             # r = requests.get(url=url)
             r = requests.get(url=url, headers=self._open_headers, json=post_data, timeout=self._search_timeout)
             r.raise_for_status()
+            logger.error(r.text)
             self._raw_stations = self._extract_data(json.loads(r.text))
+            logger.error('DE {}'.format(self._raw_stations))
         except requests.exceptions.RequestException as e:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error(e)
@@ -450,10 +452,12 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             for n in a_search_result:
                 ret.append({'name': n['name'].replace(',', ' ')})
                 ret[-1]['url'] = n['url']
-                ret[-1]['real_url'] = False
+                ret[-1]['url_resolved'] = n['url_resolved']
+                ret[-1]['real_url'] = True if n['url_resolved'] else False
                 ret[-1]['played'] = False
                 ret[-1]['hls'] = n['hls']
-                ret[-1]['id'] = n['id']
+                ret[-1]['stationuuid'] = n['stationuuid']
+                ret[-1]['countrycode'] = n['countrycode']
                 ret[-1]['country'] = n['country']
                 if isinstance(n['clickcount'], int):
                     # old API
