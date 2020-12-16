@@ -1,3 +1,12 @@
+2020-12-18 s-n-g
+    * Version 0.8.8.2
+    * Gracefully exit when the terminal is closed
+
+2020-12-14 s-n-g
+    * Version 0.8.8.1
+    * Fixing (?) vlc terminataion on Windows
+    * Restarting radio-browser.info implementation
+
 2020-12-10 s-n-g
     * Starting 0.8.8
     * Implementing "Paste to playlist" (\p) command

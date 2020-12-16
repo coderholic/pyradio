@@ -99,25 +99,6 @@ def shell():
             pyradio_config.force_to_remove_lock_file = True
             sys.exit()
 
-        # set window title
-        if platform.startswith('win'):
-            import ctypes
-            try:
-                if pyradio_config.locked:
-                    ctypes.windll.kernel32.SetConsoleTitleW("PyRadio: The Internet Radio player (Session Locked)")
-                else:
-                    ctypes.windll.kernel32.SetConsoleTitleW("PyRadio: The Internet Radio player")
-            except:
-                pass
-        else:
-            try:
-                if pyradio_config.locked:
-                    sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07")
-                else:
-                    sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player\x07")
-            except:
-                pass
-
         if args.show_config_dir:
             print('PyRadio config dir: "{}"'.format(pyradio_config.stations_dir))
             sys.exit()
@@ -211,13 +192,16 @@ def shell():
             theme_to_use = pyradio_config.theme
 
         # Starts the radio TUI.
-        pyradio = PyRadio(pyradio_config,
-                play=args.play,
-                req_player=requested_player,
-                theme=theme_to_use)
+        pyradio = PyRadio(
+            pyradio_config,
+            play=args.play,
+            req_player=requested_player,
+            theme=theme_to_use
+        )
         """ Setting ESCAPE key delay to 25ms
         Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses"""
         environ.setdefault('ESCDELAY', '25')
+        set_terminal_title()
         curses.wrapper(pyradio.setup)
         if pyradio.setup_return_status:
             print('\nThank you for using PyRadio. Cheers!')
@@ -266,6 +250,26 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
     elif ret == -8:
         print('File type not supported')
         sys.exit(1)
+
+def set_terminal_title():
+    # set window title
+    if platform.startswith('win'):
+        import ctypes
+        try:
+            if pyradio_config.locked:
+                ctypes.windll.kernel32.SetConsoleTitleW("PyRadio: The Internet Radio player (Session Locked)")
+            else:
+                ctypes.windll.kernel32.SetConsoleTitleW("PyRadio: The Internet Radio player")
+        except:
+            pass
+    else:
+        try:
+            if pyradio_config.locked:
+                sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07")
+            else:
+                sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player\x07")
+        except:
+            pass
 
 def open_conf_dir(cnf):
     import subprocess

@@ -13,7 +13,7 @@ import threading
 import logging
 import os
 import random
-#import signal
+import signal
 from sys import version as python_version, version_info, platform
 from os.path import join, basename, getmtime, getsize
 from os import remove
@@ -183,6 +183,7 @@ class PyRadio(object):
         logger.error('DE p REGISTER_MODE: {0}, {1}, {2}'.format(*self.playlist_selections[2]))
 
     def __init__(self, pyradio_config, play=False, req_player='', theme=''):
+        self._system_asked_to_terminate = False
         self._cnf = pyradio_config
         self._theme = PyRadioTheme(self._cnf)
         if theme:
@@ -694,6 +695,7 @@ class PyRadio(object):
                         self.bodyWin.chgat(lineNum, n, 1, sep_col)
 
     def run(self):
+        self._register_signals_handlers()
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
             if self.requested_player:
                 if ',' in self.requested_player:
@@ -707,7 +709,6 @@ class PyRadio(object):
             except KeyboardInterrupt:
                 pass
         else:
-            self._register_windows_handlers()
 
             # start update detection and notification thread
             if CAN_CHECK_FOR_UPDATES:
@@ -751,7 +752,7 @@ class PyRadio(object):
                         return
                 except KeyboardInterrupt:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Ctrl-C pressed... Exiting...')
+                        logger.debug('Ctrl-C pressed... Terminating...')
                     self.player.ctrl_c_pressed = True
                     self.ctrl_c_handler(0, 0)
                     break
@@ -2894,7 +2895,7 @@ class PyRadio(object):
                     clean_date_files(files, -1)
                     create_tadays_date_file(a_path)
                     if logger.isEnabledFor(logging.INFO):
-                        logger.info('detectUpdateThread: No update found. Will check again in {} days. Exiting...'.format(check_days))
+                        logger.info('detectUpdateThread: No update found. Will check again in {} days. Terminating...'.format(check_days))
                     break
                 else:
                     # PROGRAM DEBUG: set program's version
@@ -2962,7 +2963,7 @@ class PyRadio(object):
                 connection_fail_count += 1
                 if connection_fail_count > 4:
                     if logger.isEnabledFor(logging.ERROR):
-                        logger.error('detectUpdateThread: Error: Too many connection failures. Exiting...')
+                        logger.error('detectUpdateThread: Error: Too many connection failures. Terminating...')
                     break
                 delay(60, stop)
 
@@ -3222,6 +3223,12 @@ class PyRadio(object):
         return ret
 
     def keypress(self, char):
+        if self._system_asked_to_terminate:
+            """ Make sure we exit when signal received """
+            if logger.isEnabledFor(logging.debug):
+                logger.debug('keypress: Asked to stop. Stoping...')
+            return -1
+
         if char in (ord('#'), curses.KEY_RESIZE):
             self._normal_mode_resize()
             self._do_display_notify()
@@ -4019,7 +4026,7 @@ class PyRadio(object):
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search and \
                 char not in (ord('T'),)):
-            logger.error('DE \n\nExiting theme selector?\n\n')
+            logger.error('DE \n\nTerminating theme selector?\n\n')
             theme_id, save_theme = self._theme_selector.keypress(char)
 
             #if self._cnf.theme_not_supported:
@@ -5426,7 +5433,7 @@ class PyRadio(object):
     """''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
         Windows only section
     ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''"""
-    def _register_windows_handlers(self):
+    def _register_signals_handlers(self):
         if platform.startswith('win'):
             """ disable close button """
             import win32console, win32gui, win32con, win32api
@@ -5436,8 +5443,12 @@ class PyRadio(object):
                if hMenu:
                    try:
                        win32gui.DeleteMenu(hMenu, win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
+                       if logger.isEnabledFor(logging.DEBUG):
+                           logger.debug('SetConsoleCtrlHandler: close button disabled')
                    except:
-                       pass
+                       if logger.isEnabledFor(logging.DEBUG):
+                           logger.debug('SetConsoleCtrlHandler: failed to disable close button')
+
             """ install handlers for exit / close signals"""
             try:
                 result = win32api.SetConsoleCtrlHandler(self._windows_signal_handler, True)
@@ -5451,37 +5462,91 @@ class PyRadio(object):
                     logger.debug('SetConsoleCtrlHandler: Failed to register (with Exception)!!!')
             # Trying to catch Windows log-ogg, reboot, halt
             # No luck....
-            #import signal
-            #try:
-            #    signal.signal(signal.SIGINT, self._windows_signal_handler)
-            #except:
-            #    if logger.isEnabledFor(logging.DEBUG):
-            #        logger.debug('SetConsoleCtrlHandler: Signal SIGINT failed to register (with Exception)!!!')
+            # import signal
+            # try:
+            #     signal.signal(signal.SIGINT, self._windows_signal_handler)
+            # except:
+            #     if logger.isEnabledFor(logging.DEBUG):
+            #         logger.debug('SetConsoleCtrlHandler: Signal SIGINT failed to register (with Exception)!!!')
 
-            #try:
-            #    signal.signal(signal.SIGINT, self._windows_signal_handler)
-            #except:
-            #    if logger.isEnabledFor(logging.DEBUG):
-            #        logger.debug('SetConsoleCtrlHandler: Signal SIGINT failed to register (with Exception)!!!')
+            # try:
+            #     signal.signal(signal.SIGINT, self._windows_signal_handler)
+            # except:
+            #     if logger.isEnabledFor(logging.DEBUG):
+            #         logger.debug('SetConsoleCtrlHandler: Signal SIGINT failed to register (with Exception)!!!')
+
+        else:
+            self.handled_signals = {
+                'SIGHUP': signal.SIGHUP,
+                'SIGTERM': signal.SIGTERM,
+                'SIGKIL': signal.SIGKILL,
+            }
+            self.def_signal_handlers = {}
+            try:
+                for a_sig in self.handled_signals.keys():
+                    self.def_signal_handlers[a_sig] = signal.signal(
+                        self.handled_signals[a_sig],
+                        self._linux_signal_handler
+                    )
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('SetConsoleCtrlHandler: Handler for signal {} registered'.format(a_sig))
+            except:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('SetConsoleCtrlHandler: Failed to register handler for signal {}'.format(a_sig))
+
+    def _linux_signal_handler(self, a_signal, a_frame):
+        if self._system_asked_to_terminate:
+            return
+        self._system_asked_to_terminate = True
+        if logger.isEnabledFor(logging.INFO):
+            # logger.info('System asked me to terminate (signal: {})!!!'.format(list(self.handled_signals.keys())[list(self.handled_signals.values()).index(a_signal)]))
+            logger.info('My terminal got closed... Terminating...')
+        self._force_exit = True
+        self.stop_update_notification_thread = True
+        self.player.stop_timeout_counter_thread = True
+        if self.ws.operation_mode != self.ws.PLAYLIST_MODE:
+            if self._cnf.dirty_playlist:
+                self._cnf.save_playlist_file()
+        self.player.close()
+        self._cnf.save_config()
+        #self._wait_for_threads()
+        self._cnf.remove_session_lock_file()
+        for a_sig in self.handled_signals.keys():
+            try:
+                signal.signal(
+                    self.handled_signals[a_sig],
+                    self.def_signal_handlers[a_sig]
+                )
+            except:
+                pass
 
     def _windows_signal_handler(self, event):
         """ windows signal handler
             https://danielkaes.wordpress.com/2009/06/04/how-to-catch-kill-events-with-python/
         """
-        import win32con, win32api, signal
+        import win32con, win32api
         if event in (win32con.CTRL_C_EVENT,
-                            win32con.CTRL_LOGOFF_EVENT,
-                             win32con.CTRL_BREAK_EVENT,
-                             win32con.CTRL_SHUTDOWN_EVENT,
-                             win32con.CTRL_CLOSE_EVENT,
-                             signal.SIGINT,
-                             signal.SIGBREAK):
+                     win32con.CTRL_LOGOFF_EVENT,
+                     win32con.CTRL_BREAK_EVENT,
+                     win32con.CTRL_SHUTDOWN_EVENT,
+                     win32con.CTRL_CLOSE_EVENT,
+                     signal.SIGINT,
+                     signal.SIGBREAK):
+            if self._system_asked_to_terminate:
+                return
+            self._system_asked_to_terminate = True
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('My console window got closed... Terminating...')
             self._force_exit = True
-            self.ctrl_c_handler(0,0)
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Windows asked me to terminate!!')
+            self.player.close_from_windows()
+            self._cnf.save_config()
+            self._wait_for_threads()
+            self._cnf.remove_session_lock_file()
+            if self.ws.operation_mode != self.ws.PLAYLIST_MODE:
+                if self._cnf.dirty_playlist:
+                    self._cnf.save_playlist_file()
             try:
-                result = win32api.SetConsoleCtrlHandler(self._windows_signal_handler, False)
+                win32api.SetConsoleCtrlHandler(self._windows_signal_handler, False)
             except:
                 pass
         return False

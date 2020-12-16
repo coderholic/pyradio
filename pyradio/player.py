@@ -1155,8 +1155,14 @@ class Player(object):
                 if logger.isEnabledFor(logging.ERROR):
                     logger.error(msg.format(command).strip(), exc_info=True)
 
+    def close_from_windows(self):
+        """ kill player instance when window console is closed """
+        if self.process:
+            self.close()
+            self._stop()
+
     def close(self):
-        """ exit pyradio (and kill player instance) """
+        """ kill player instance """
 
         self._no_mute_on_stop_playback()
 
@@ -1413,7 +1419,7 @@ class MpvPlayer(Player):
         self._send_mpv_command('pause')
 
     def _stop(self):
-        """ exit pyradio (and kill mpv instance) """
+        """ kill mpv instance """
         self.stop_mpv_status_update_thread = True
         self._send_mpv_command('quit')
         os.system("rm " + self.mpvsocket + " 2>/dev/null");
@@ -1687,7 +1693,7 @@ class MpPlayer(Player):
         self._sendCommand("p")
 
     def _stop(self):
-        """ exit pyradio (and kill mplayer instance) """
+        """ kill mplayer instance """
         self._sendCommand("q")
         self._icy_data = {}
 
@@ -1844,7 +1850,7 @@ class VlcPlayer(Player):
             self._sendCommand("stop\n")
 
     def _stop(self):
-        """ exit pyradio (and kill vlc instance) """
+        """ kill vlc instance """
         logger.error('setting self.stop_win_vlc_status_update_thread = True')
         self.stop_win_vlc_status_update_thread = True
         if self.ctrl_c_pressed:
@@ -1853,7 +1859,7 @@ class VlcPlayer(Player):
             if self.process:
                 logger.error('>>>> Terminating process')
                 self._req('quit')
-            threading.Thread(target=self._remove_vlc_stdout_log_file, args=()).start() 
+            threading.Thread(target=self._remove_vlc_stdout_log_file, args=()).start()
         else:
             self._sendCommand("shutdown\n")
         self._icy_data = {}
