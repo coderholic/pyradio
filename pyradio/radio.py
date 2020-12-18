@@ -3784,13 +3784,16 @@ class PyRadio(object):
             elif ret == 1:
                 # ok
                 if self.ws.operation_mode == self.ws.EDIT_STATION_MODE:
-                    old_encoding = self.stations[self.selection]
-                    if old_encoding == self._cnf.default_encoding:
-                        old_encoding = ''
-                    if old_encoding != self._station_editor.new_station[2]:
-                        if self.player.isPlaying():
-                            self.stopPlayer()
-                            restart_player = True
+                    """ editing a station """
+                    if self.player.isPlaying() and self.selection == self.playing:
+                        """ editing the station that's playing """
+                        old_encoding = self.stations[self.selection]
+                        if old_encoding == self._cnf.default_encoding:
+                            old_encoding = ''
+                        if old_encoding != self._station_editor.new_station[2]:
+                            if self.player.isPlaying():
+                                self.stopPlayer()
+                                restart_player = True
 
                     if self.stations[self.selection] != self._station_editor.new_station:
                         self._cnf.dirty_playlist = True
@@ -3798,6 +3801,7 @@ class PyRadio(object):
                     if self.selection == self.playing:
                         self._last_played_station = self._station_editor.new_station
                 else:
+                    """ adding a new station """
                     self._cnf.dirty_playlist = True
                     if self._station_editor.append and self.number_of_items > 0:
                         self.stations.append(self._station_editor.new_station)
@@ -3807,7 +3811,7 @@ class PyRadio(object):
                         self.startPos = self.number_of_items - self.bodyMaxY
                     else:
                         if self.number_of_items == 0:
-                            self._cnf.stations = [ self._station_editor.new_station ]
+                            self._cnf.stations = [self._station_editor.new_station]
                             self.number_of_items = self._cnf.number_of_stations = 1
                             self.selection = -1
                             self.startPos = 0
