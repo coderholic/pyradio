@@ -3791,9 +3791,8 @@ class PyRadio(object):
                         if old_encoding == self._cnf.default_encoding:
                             old_encoding = ''
                         if old_encoding != self._station_editor.new_station[2]:
-                            if self.player.isPlaying():
-                                self.stopPlayer()
-                                restart_player = True
+                            self.stopPlayer()
+                            restart_player = True
 
                     if self.stations[self.selection] != self._station_editor.new_station:
                         self._cnf.dirty_playlist = True
@@ -4030,7 +4029,6 @@ class PyRadio(object):
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search and \
                 char not in (ord('T'),)):
-            logger.error('DE \n\nTerminating theme selector?\n\n')
             theme_id, save_theme = self._theme_selector.keypress(char)
 
             #if self._cnf.theme_not_supported:

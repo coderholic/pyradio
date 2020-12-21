@@ -1,3 +1,8 @@
+2020-12-21 s-n-g
+    * Theme selection window will not crash when resizing
+    * After editing a station, restart playback only if the
+      encoding of the station that's playing has been changed
+
 2020-12-18 s-n-g
     * Version 0.8.8.2
     * Gracefully exit when the terminal is closed

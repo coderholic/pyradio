@@ -601,6 +601,8 @@ class PyRadioThemeSelector(object):
 
     def _get_metrics(self):
         maxY, maxX = self.parent.getmaxyx()
+        maxY -= 2
+        maxX -= 2
         num_of_themes = len(self._themes)
         if num_of_themes > 4:
             if num_of_themes + 2 < maxY - 2:
@@ -611,22 +613,40 @@ class PyRadioThemeSelector(object):
                 self.Y = 2
         else:
             self.Y = int((maxY - self._items + 2) / 2)
+        if self.Y <= 2:
+            self.Y = 3
         self._height = self._items + 2
 
         if self.log:
             self.log('max_title_width = {}\n'.format(self._max_title_width))
         self._width = self._max_title_width + 4
-        if self.log:
-            self.log('width = {}\n'.format(self._width))
-        self.X = int((maxX - self._width) / 2)
 
-        self._page_jump = int(self._items / 2)
-        self._win = None
-        self._win = curses.newwin(self._height, self._width, self.Y, self.X)
-        self._win.bkgdset(' ', curses.color_pair(self._box_color_pair))
-        #self._win.erase()
-        self._draw_box()
-        self.refresh()
+        """ check if too small """
+        maxY, maxX = self.parent.getmaxyx()
+        if self._height < 5 or self._width >= maxX - 2:
+            txt = ' Window too small '
+            self._win = curses.newwin(3, len(txt) + 2, int(maxY / 2), int((maxX - len(txt)) / 2))
+            self._win.bkgdset(' ', curses.color_pair(3))
+            self._win.erase()
+            self._win.box()
+            self._win.addstr(1, 1, txt, curses.color_pair(4))
+            self._win.refresh()
+            self._win.refresh()
+            self._too_small = True
+        else:
+            self._too_small = False
+
+            if self.log:
+                self.log('width = {}\n'.format(self._width))
+            self.X = int((maxX - self._width) / 2)
+
+            self._page_jump = int(self._items / 2)
+            self._win = None
+            self._win = curses.newwin(self._height, self._width, self.Y, self.X)
+            self._win.bkgdset(' ', curses.color_pair(self._box_color_pair))
+            #self._win.erase()
+            self._draw_box()
+            self.refresh()
 
     def getmaxyx(self):
         return self._width, self._height
@@ -681,48 +701,52 @@ class PyRadioThemeSelector(object):
                 break
 
     def refresh(self):
+        if self._too_small:
+            return
         if self.log:
             self.log('======================\n')
             self.log('{}\n'.format(self._themes))
-        for i in range(self._start_pos, self._start_pos + self._items):
+        self._draw_box()
+        for i in range(0, self._height - 2):
+            an_item = i + self._start_pos
             token = ' '
-            if i in self._title_ids:
+            if an_item in self._title_ids:
                 col = curses.color_pair(self._title_color_pair)
-            elif self._start_pos + i == self.selection:
+            elif an_item == self.selection:
                 # on selection, display cursor
                 if self._selection == self._applied_theme:
                     col = curses.color_pair(self._applied_cursor_color_pair)
                 else:
                     col = curses.color_pair(self._cursor_color_pair)
             else:
-                if self._start_pos + i == self._applied_theme:
+                if an_item == self._applied_theme:
                     col = curses.color_pair(self._applied_color_pair)
                 else:
                     col = curses.color_pair(self._normal_color_pair)
             self._win.hline(i + 1, 1, ' ', self._max_title_width + 2, col)
-            if self._start_pos + i == self._config_theme:
+            if an_item == self._config_theme:
                 token = '*'
-            if i in self._title_ids:
+            if an_item in self._title_ids:
                 self._win.move(i + 1, 0)
                 try:
                     self._win.addstr('├', curses.color_pair(3))
-                    self._win.move(i + 1, len(self._themes[i][0]) + 3)
-                    self._win.addstr('─' * (self._width - 2 - len(self._themes[i][0]) - 2), curses.color_pair(3))
+                    self._win.move(i + 1, len(self._themes[an_item][0]) + 3)
+                    self._win.addstr('─' * (self._width - 2 - len(self._themes[an_item][0]) - 2), curses.color_pair(3))
                     try:
                         self._win.addstr('┤', curses.color_pair(3))
                     except:
                         pass
                 except:
                     self._win.addstr('├'.encode('utf-8'), curses.color_pair(3))
-                    self._win.move(i + 1, len(self._themes[i][0]) + 2)
-                    self._win.addstr('─'.encode('utf-8') * (self._width - 2 - len(self._themes[i][0]) - 2), curses.color_pair(3))
+                    self._win.move(i + 1, len(self._themes[an_item][0]) + 2)
+                    self._win.addstr('─'.encode('utf-8') * (self._width - 2 - len(self._themes[an_item][0]) - 2), curses.color_pair(3))
                     try:
                         self._win.addstr('┤'.encode('utf-8'), curses.color_pair(3))
                     except:
                         pass
-                self._win.addstr(i+1, 1, token + self._themes[i][0], col)
+                self._win.addstr(i+1, 1, token + self._themes[an_item][0], col)
             else:
-                self._win.addstr(i+1, 1, token + self._themes[i][0], col)
+                self._win.addstr(i+1, 1, token + self._themes[an_item][0], col)
 
         try:
             self._win.move(sel, self._width - 2)
@@ -750,8 +774,8 @@ class PyRadioThemeSelector(object):
             self._selection -= 1
         if self._selection < 0:
             self.selection = len(self._themes) - 1
-        elif self._selection == self._start_pos - 1:
-            self._start_pos -= 1
+        if self._selection < self._start_pos:
+            self._start_pos = self.selection
         self.refresh()
 
     def _go_down(self):
@@ -760,8 +784,8 @@ class PyRadioThemeSelector(object):
             self._selection += 1
         if self._selection == len(self._themes):
             self.selection = 0
-        elif self._selection == self._start_pos + self._items:
-            self._start_pos += 1
+        if self._selection >= self._height - 2:
+            self._start_pos = self.selection - self._height + 3
         self.refresh()
 
     def _go_home(self):
@@ -796,6 +820,8 @@ class PyRadioThemeSelector(object):
               True  : theme is to be saved in config
               False : theme is not to be saved in config
         """
+        if  self._too_small:
+            return -1, False
         if char in (ord('e'), ):
             # edit theme
             if self._themes[self._selection][1] == '' or \
