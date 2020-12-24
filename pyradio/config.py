@@ -934,6 +934,13 @@ class PyRadioStations(object):
         return ret, ret_index, rev_ret_index
 
 class PyRadioConfig(PyRadioStations):
+    """ Pyradio Config Class """
+
+    """ I will get this when a player is selected
+        It will be used when command line parameters are evaluated
+    """
+    PLAYER_CMD = None
+    command_line_params_not_ready = False
 
     fallback_theme = ''
 
@@ -945,25 +952,32 @@ class PyRadioConfig(PyRadioStations):
     locked = False
 
     opts = collections.OrderedDict()
-    opts[ 'general_title' ] = [ 'General Options', '' ]
-    opts[ 'player' ] = [ 'Player: ', '' ]
-    opts[ 'default_playlist' ] = [ 'Def. playlist: ', 'stations' ]
-    opts[ 'default_station' ] = [ 'Def station: ', 'False' ]
-    opts[ 'default_encoding' ] = [ 'Def. encoding: ', 'utf-8' ]
-    opts[ 'conn_title' ] = [ 'Connection Options: ', '' ]
-    opts[ 'connection_timeout' ] = [ 'Connection timeout: ', '10' ]
-    opts[ 'force_http' ] = [ 'Force http connections: ', False ]
-    opts[ 'theme_title' ] = [ 'Theme Options', '' ]
-    opts[ 'theme' ] = [ 'Theme: ', 'dark' ]
-    opts[ 'use_transparency' ] = [ 'Use transparency: ', False ]
-    opts[ 'playlist_manngement_title' ] = [ 'Playlist Management Options', '' ]
-    opts[ 'confirm_station_deletion' ] = [ 'Confirm station deletion: ', True ]
-    opts[ 'confirm_playlist_reload' ] = [ 'Confirm playlist reload: ', True ]
-    opts[ 'auto_save_playlist' ] = [ 'Auto save playlist: ', False ]
-    opts[ 'requested_player' ] = [ '', '' ]
-    opts[ 'dirty_config' ] = [ '', False ]
+    opts['general_title'] = ['General Options', '']
+    opts['player'] = ['Player: ', '']
+    opts['default_playlist'] = ['Def. playlist: ', 'stations']
+    opts['default_station'] = ['Def station: ', 'False']
+    opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
+    opts['conn_title'] = ['Connection Options: ', '']
+    opts['connection_timeout'] = ['Connection timeout: ', '10']
+    opts['force_http'] = ['Force http connections: ', False]
+    opts['theme_title'] = ['Theme Options', '']
+    opts['theme'] = ['Theme: ', 'dark']
+    opts['use_transparency'] = ['Use transparency: ', False]
+    opts['playlist_manngement_title'] = ['Playlist Management Options', '']
+    opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
+    opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
+    opts['auto_save_playlist'] = ['Auto save playlist: ', False]
+    opts['requested_player'] = ['', '']
+    opts['dirty_config'] = ['', False]
+
+    params = {
+        'mpv': [1, 'Do not use any extra player parameters'],
+        'mplayer': [1, 'Do not use any extra player parameters'],
+        'vlc': [1, 'Do not use any extra player parameters']
+    }
 
     def __init__(self):
+        self._profile_name = 'pyradio'
         self.player = ''
         self.requested_player = ''
         self.confirm_station_deletion = True
@@ -991,6 +1005,50 @@ class PyRadioConfig(PyRadioStations):
         self._check_config_file(self.stations_dir)
         self.config_file = path.join(self.stations_dir, 'config')
         self.force_to_remove_lock_file = False
+
+    @property
+    def profile_name(self):
+        return self._profile_name
+
+    @profile_name.setter
+    def profile_name(self, val):
+        raise ValueError('parameter is read only')
+
+    @property
+    def command_line_params(self):
+        the_id = self.params[self.PLAYER_CMD][0]
+        if the_id == 1:
+            return ''
+        the_string = self.params[self.PLAYER_CMD][the_id]
+        return '' if the_string.startswith('profile:') else the_string
+
+    @command_line_params.setter
+    def command_line_params(self, val):
+        self.command_line_params_not_ready = False
+        if val:
+            parts = val.split(':')
+            if len(parts) > 1 and parts[0] in ('mpv', 'mplayer', 'vlc'):
+                """ add to params """
+                self.params[parts[0]].append(':'.join(parts[1:]))
+                """ change first params item to point to this new item """
+                self.params[parts[0]][0] = len(self.params[parts[0]]) - 1
+
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(self.params)
+                print(self.params)
+
+                if len(parts) > 2:
+                    if parts[1] == 'profile':
+                        """ Custom profile for player """
+                        if self.PLAYER_CMD:
+                            self.eval_command_line_params()
+                            logger.error('profile is set!!!')
+                        else:
+                            """ Since we don't know which player we use yet
+                                we do not know if this profile has to be
+                                applied. So set evaluate for later...
+                            """
+                            self.command_line_params_not_ready = True
 
     @property
     def requested_player(self):
@@ -1139,6 +1197,23 @@ class PyRadioConfig(PyRadioStations):
     def session_lock_file(self, val):
         return
 
+    def reset_profile_name(self):
+        self._profile_name = 'pyradio'
+
+    def eval_command_line_params(self):
+        self.command_line_params_not_ready = False
+        the_id = self.params[self.PLAYER_CMD][0]
+        the_string = self.params[self.PLAYER_CMD][the_id]
+        if the_string.startswith('profile:'):
+            self._profile_name = the_string.replace('profile:', '')
+        if self._profile_name == '':
+            self._profile_name = 'pyradio'
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Invalid profile... Falling back to "[pyradio]"')
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Setting profile to "[{}]"'.format(self._profile_name))
+
     def _get_lock_file(self):
         ''' Populate self._session_lock_file
             If it exists, locked becomes True
@@ -1154,7 +1229,7 @@ class PyRadioConfig(PyRadioStations):
                 except:
                     pass
         else:
-            self._session_lock_file =  path.join(self.stations_dir, 'pyradio.lock')
+            self._session_lock_file = path.join(self.stations_dir, 'pyradio.lock')
 
         if path.exists(self._session_lock_file):
                 self.locked = True

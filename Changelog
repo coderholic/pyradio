@@ -1,3 +1,6 @@
+2020-12-24 s-n-g
+    * pyradio will always use a profile
+
 2020-12-21 s-n-g
     * Theme selection window will not crash when resizing
     * After editing a station, restart playback only if the

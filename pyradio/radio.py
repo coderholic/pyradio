@@ -412,18 +412,23 @@ class PyRadio(object):
         self.log = Log()
         # For the time being, supported players are mpv, mplayer and vlc.
         try:
-            self.player = player.probePlayer(requested_player=self.requested_player)(
+            self.player = player.probePlayer(
+                requested_player=self.requested_player)(
+                    self._cnf,
                     self.log,
-                    self._cnf.default_encoding,
-                    self._cnf.stations_dir,
-                    self._cnf.connection_timeout_int,
-                    self._cnf.force_http,
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
                     self._show_station_info_from_thread)
         except:
             # no player
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
+
+        # if self.ws.operation_mode != self.ws.NO_PLAYER_ERROR_MODE:
+        #     """ evaluate extra player parameters """
+        #     self._cnf.PLAYER_CMD = self.player.PLAYER_CMD
+        #     self.player.config_files = self.player.all_config_files[self.player.PLAYER_CMD][:]
+        #     if self._cnf.command_line_params_not_ready:
+        #         self._cnf.eval_command_line_params()
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen(init_from_setup=True)

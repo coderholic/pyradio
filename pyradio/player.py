@@ -166,33 +166,85 @@ class Player(object):
     GET_AUDIO_CODEC = b'{ "command": ["get_property", "audio-codec"], "request_id": 300 }\n'
     GET_AUDIO_CODEC_NAME = b'{ "command": ["get_property", "audio-codec-name"], "request_id": 400 }\n'
 
+    all_config_files = {}
+
     def __init__(self,
-            outputStream,
-            config_encoding,
-            config_dir,
-            playback_timeout,
-            force_http,
-            playback_timeout_counter,
-            playback_timeout_handler,
-            info_display_handler):
+                 config,
+                 outputStream,
+                 playback_timeout_counter,
+                 playback_timeout_handler,
+                 info_display_handler):
         self.outputStream = outputStream
-        self.config_encoding = config_encoding
-        self.config_dir = config_dir
+        self._cnf = config
+        self.config_encoding = self._cnf.default_encoding
+        self.config_dir = self._cnf.stations_dir
         try:
-            self.playback_timeout = int(playback_timeout)
-        except:
+            self.playback_timeout = int(self._cnf.connection_timeout_int)
+        except ValueError:
             self.playback_timeout = 10
-        self.force_http = force_http
+        self.force_http = self._cnf.force_http
         self.playback_timeout_counter = playback_timeout_counter
         self.playback_timeout_handler = playback_timeout_handler
         self.info_display_handler = info_display_handler
         self.status_update_lock = outputStream.lock
 
+        self.config_files = []
+        self._get_all_config_files()
+        if self._cnf.command_line_params_not_ready:
+            self._cnf.eval_command_line_params()
+
         #if self.WIN and self.PLAYER_CMD == 'cvlc':
         if platform == 'win32':
             """ delete old vlc files (vlc_log.*) """
             from .del_vlc_log import RemoveWinVlcLogFiles
-            threading.Thread(target=RemoveWinVlcLogFiles(config_dir)).start()
+            threading.Thread(target=RemoveWinVlcLogFiles(self.config_dir)).start()
+
+    def _get_all_config_files(self):
+
+        """ MPV config files """
+        config_files = []
+        config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
+
+        if platform.startswith('darwin'):
+            config_files.append("/usr/local/etc/mpv/mpv.conf")
+        elif platform.startswith('win'):
+            config_files[0] = os.path.join(os.getenv('APPDATA'), "mpv", "mpv.conf")
+        else:
+            # linux, freebsd, etc.
+            config_files.append("/etc/mpv/mpv.conf")
+        self.all_config_files['mpv'] = config_files[:]
+
+        """ MPlayer config files """
+        config_files = []
+        config_files = [expanduser("~") + "/.mplayer/config"]
+        if platform.startswith('darwin'):
+            config_files.append("/usr/local/etc/mplayer/mplayer.conf")
+        elif platform.startswith('win'):
+            if os.path.exists('C:\\mplayer\\mplayer.exe'):
+                config_files[0] = 'C:\\mplayer\mplayer\\config'
+            elif os.path.exists(os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
+                config_files[0] = os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer", "config")
+            elif os.path.exists(os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer.exe")):
+                config_files[0] = os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer", "config")
+            else:
+                config_files = []
+        self.all_config_files['mplayer'] = config_files[:]
+
+    @property
+    def profile_name(self):
+        return self._cnf.profile_name
+
+    @profile_name.setter
+    def is_register(self, value):
+        raise ValueError('property is read only')
+
+    @property
+    def profile_token(self):
+        return  '[' + self.profile_name + ']'
+
+    @profile_token.setter
+    def is_register(self, value):
+        raise ValueError('property is read only')
 
     def __del__(self):
         self.close()
@@ -323,13 +375,13 @@ class Player(object):
                 logger.debug('Volume not saved!!! (config file not found!!!)')
             return 'Volume not saved!!!'
         ret_strings = ('Volume: already saved...',
-                    'Volume: {}% saved',
-                    'Volume: {}% NOT saved (Error writing file)',
-                    'Volume: NOT saved!')
+                       'Volume: {}% saved',
+                       'Volume: {}% NOT saved (Error writing file)',
+                       'Volume: NOT saved!')
         log_strings = ('Volume is -1. Aborting...',
-                    'Volume is {}%. Saving...',
-                    'Error saving profile "{}"',
-                    'Error saving volume...')
+                       'Volume is {}%. Saving...',
+                       'Error saving profile "{}"',
+                       'Error saving volume...')
         if self.volume == -1:
             """ inform no change """
             if (logger.isEnabledFor(logging.DEBUG)):
@@ -348,6 +400,9 @@ class Player(object):
             ret_string = ret_strings[1].format(str(self.volume))
             if os.path.exists(config_file):
                 if platform.startswith('win'):
+                    """ This is actually only for mplayer
+                        which does not support profiles on Windows
+                    """
                     with open(config_file, 'r') as c_file:
                         config_string = c_file.read()
                     if "volume=" in config_string:
@@ -376,12 +431,12 @@ class Player(object):
                         with open(config_file, 'r') as c_file:
                             config_string = c_file.read()
 
-                        if "[pyradio]" in config_string:
+                        if self.profile_token in config_string:
                             profile_found = True
 
-                            """ split on [pyradio]
+                            """ split on self.profile_token
                             last item has our options """
-                            sections = config_string.split("[pyradio]")
+                            sections = config_string.split(self.profile_token)
 
                             """ split at [ - i.e. isolate consecutive profiles
                             first item has pyradio options """
@@ -412,7 +467,7 @@ class Player(object):
                                 sections[-1] = py_section[0]
 
                             """ finally get the string back together """
-                            config_string = "[pyradio]".join(sections)
+                            config_string = self.profile_token.join(sections)
 
                         try:
                             with open(config_file, "w") as c_file:
@@ -425,14 +480,19 @@ class Player(object):
 
             """ no user profile or user config file does not exist """
             if not profile_found:
-                if not os.path.isdir(os.path.dirname(config_file)):
+                if os.path.isdir(os.path.dirname(config_file)):
+                    if os.path.exists(config_file):
+                        new_profile_string = '\n' + config_string
+                    else:
+                        new_profile_string = "volume=100\n\n" + config_string
+                else:
                     try:
                         os.mkdir(os.path.dirname(config_file))
                     except OSError:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug(log_strings[2].format(config_file))
                         return ret_strings[2].format(str(self.volume))
-                new_profile_string = "volume=100\n\n" + config_string
+                    new_profile_string = "volume=100\n\n" + config_string
                 try:
                     with open(config_file, "a") as c_file:
                         c_file.write(new_profile_string.format(str(self.volume)))
@@ -607,7 +667,6 @@ class Player(object):
                                 #logger.error('DE audio data\n\n{}\n\n'.format(self._icy_data))
                         self.info_display_handler()
         except:
-            has_error = True
             if logger.isEnabledFor(logging.ERROR):
                 logger.error("Error in updateStatus thread.", exc_info=True)
             return
@@ -616,8 +675,8 @@ class Player(object):
 
     def updateMPVStatus(self, *args):
         stop = args[0]
-        if (logger.isEnabledFor(logging.INFO)):
-            logger.info("MPV updateStatus thread started.")
+        if (logger.isEnabledFor(logging.DEBUG)):
+            logger.debug("MPV updateStatus thread started.")
 
         while True:
             try:
@@ -1068,7 +1127,7 @@ class Player(object):
     def isPlaying(self):
         return bool(self.process)
 
-    def play(self, name, streamUrl, encoding = ''):
+    def play(self, name, streamUrl, encoding=''):
         """ use a multimedia player to play a stream """
         self.close()
         self.name = name
@@ -1089,7 +1148,10 @@ class Player(object):
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)
         self.stop_mpv_status_update_thread = False
-        #logger.error('DE opts\n\n{}\n\n'.format(opts))
+        if self._cnf.command_line_params:
+            opts.append(self._cnf.command_line_params)
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Executing command: {}'.format(' '.join(opts)))
         if platform.startswith('win') and self.PLAYER_CMD == 'cvlc':
             self.stop_win_vlc_status_update_thread = False
             """Launches vlc windowless"""
@@ -1120,21 +1182,26 @@ class Player(object):
                 )
                 t = threading.Thread(target=self.updateStatus, args=())
         t.start()
+        if self.PLAYER_CMD == 'cvlc':
+            self._get_volume()
         # start playback check timer thread
+        if self.PLAYER_CMD == 'cvlc':
+            self._get_volume()
         self.stop_timeout_counter_thread = False
         try:
             self.connection_timeout_thread = threading.Thread(
-                    target=self.playback_timeout_counter,
-                    args=(self.playback_timeout,
-                        self.name,
-                        lambda: self.stop_timeout_counter_thread))
+                target=self.playback_timeout_counter,
+                args=(self.playback_timeout,
+                      self.name,
+                      lambda: self.stop_timeout_counter_thread)
+            )
             self.connection_timeout_thread.start()
-            if (logger.isEnabledFor(logging.ERROR)):
-                logger.error("playback detection thread started")
+            if (logger.isEnabledFor(logging.DEBUG)):
+                logger.debug("playback detection thread started")
         except:
             self.connection_timeout_thread = None
             if (logger.isEnabledFor(logging.ERROR)):
-                logger.error("playback detection thread start failed")
+                logger.error("playback detection thread failed to start")
         if logger.isEnabledFor(logging.INFO):
             logger.info("Player started")
 
@@ -1289,15 +1356,6 @@ class MpvPlayer(Player):
 
         """ String to denote volume change """
         volume_string = 'Volume: '
-        config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
-
-        if platform.startswith('darwin'):
-            config_files.append("/usr/local/etc/mpv/mpv.conf")
-        elif platform.startswith('win'):
-            config_files[0] = os.path.join(os.getenv('APPDATA'), "mpv", "mpv.conf")
-        else:
-            # linux, freebsd, etc.
-            config_files.append("/etc/mpv/mpv.conf")
 
         mpvsocket = '/tmp/mpvsocket.{}'.format(os.getpid())
         if logger.isEnabledFor(logging.DEBUG):
@@ -1313,12 +1371,28 @@ class MpvPlayer(Player):
                 'quit':        b'{ "command": ["quit"], "request_id": 1004}\n',
                 }
 
+    def __init__(self,
+                 config,
+                 outputStream,
+                 playback_timeout_counter,
+                 playback_timeout_handler,
+                 info_display_handler):
+        config.PLAYER_CMD = 'mpv'
+        super(MpvPlayer, self).__init__(
+            config,
+            outputStream,
+            playback_timeout_counter,
+            playback_timeout_handler,
+            info_display_handler
+        )
+        self.config_files = self.all_config_files['mpv']
+
     def save_volume(self):
         """ Saving Volume in Windows does not work;
             Profiles not supported... """
         if int(self.volume) > 999:
             self.volume = -2
-        return self._do_save_volume("[pyradio]\nvolume={}\n")
+        return self._do_save_volume(self.profile_token + "\nvolume={}\n")
 
     def _configHasProfile(self):
         """ Checks if mpv config has [pyradio] entry / profile.
@@ -1329,18 +1403,30 @@ class MpvPlayer(Player):
         volume-max=300
         volume=50"""
 
+        self.PROFILE_FROM_USER = False
         for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
                 with open(config_file) as f:
                     config_string = f.read()
-                if "[pyradio]" in config_string:
+                if self.profile_token in config_string:
                     if i == 0:
                         self.PROFILE_FROM_USER = True
-                    return 1
-        return 0
+                        return 1
+
+        """ profile not found in config
+            create a default profile
+        """
+        try:
+            with open(self.config_files[0], "a") as f:
+                f.write('\n[{}]\n'.format(self.profile_name))
+                f.write('volume=100\n')
+            self.PROFILE_FROM_USER = True
+            return 1
+        except:
+            return 0
 
     def _buildStartOpts(self, streamUrl, playList=False):
-        """ Builds the options to pass to subprocess."""
+        """ Builds the options to pass to mpv subprocess."""
 
         """ Test for newer MPV versions as it supports different IPC flags. """
         p = subprocess.Popen([self.REAL_PLAYER_CMD, "--no-video",  "--input-ipc-server"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
@@ -1348,11 +1434,11 @@ class MpvPlayer(Player):
         if "not found" not in str(out[0]):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug("--input-ipc-server is supported.")
-            newerMpv = 1;
+            newerMpv = 1
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug("--input-ipc-server is not supported.")
-            newerMpv = 0;
+            newerMpv = 0
         if playList:
             if newerMpv:
                 opts = [self.REAL_PLAYER_CMD, "--no-video", "--quiet", "--playlist=" + self._url_to_use(streamUrl), "--input-ipc-server=" + self.mpvsocket]
@@ -1363,13 +1449,23 @@ class MpvPlayer(Player):
                 opts = [self.REAL_PLAYER_CMD, "--no-video", "--quiet", self._url_to_use(streamUrl), "--input-ipc-server=" + self.mpvsocket]
             else:
                 opts = [self.REAL_PLAYER_CMD, "--no-video", "--quiet", self._url_to_use(streamUrl), "--input-unix-socket=" + self.mpvsocket]
+
+        """ Do I have user profile in config?
+            If so, can I use it?
+        """
         if self.USE_PROFILE == -1:
             self.USE_PROFILE = self._configHasProfile()
 
         if self.USE_PROFILE == 1:
-            opts.append("--profile=pyradio")
-            if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug("using profile [pyradio]")
+            opts.append("--profile=" + self.profile_name)
+            if (logger.isEnabledFor(logging.INFO)):
+                logger.info('Using profile: "[{}]"'.format(self.profile_name))
+        else:
+            if (logger.isEnabledFor(logging.INFO)):
+                if self.USE_PROFILE == 0:
+                    logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
+                else:
+                    logger.info('No usable profile found')
         return opts
 
     def _mute(self):
@@ -1380,7 +1476,6 @@ class MpvPlayer(Player):
         return self._get_mute_status()
 
     def _get_mute_status(self):
-        got_it = True
         while True:
             sock = self._connect_to_socket(self.mpvsocket)
             try:
@@ -1624,27 +1719,27 @@ class MpPlayer(Player):
         """ String to denote volume change """
         volume_string = 'Volume: '
 
-        config_files = [expanduser("~") + "/.mplayer/config"]
-        if platform.startswith('darwin'):
-            config_files.append("/usr/local/etc/mplayer/mplayer.conf")
-        elif platform.startswith('win'):
-            if os.path.exists('C:\\mplayer\\mplayer.exe'):
-                config_files[0] = 'C:\\mplayer\mplayer\\config'
-            elif os.path.exists(os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
-                config_files[0] = os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer", "config")
-            elif os.path.exists(os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer.exe")):
-                config_files[0] = os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer", "config")
-            else:
-                config_files = []
-        else:
-            # linux, freebsd, etc.
-            config_files.append("/etc/mplayer/mplayer.conf")
+    def __init__(self,
+                 config,
+                 outputStream,
+                 playback_timeout_counter,
+                 playback_timeout_handler,
+                 info_display_handler):
+        config.PLAYER_CMD = 'mplayer'
+        super(MpPlayer, self).__init__(
+            config,
+            outputStream,
+            playback_timeout_counter,
+            playback_timeout_handler,
+            info_display_handler
+        )
+        self.config_files = self.all_config_files['mplayer']
 
     def save_volume(self):
         if platform.startswith('win'):
             return self._do_save_volume("volume={}\r\n")
             return 0
-        return self._do_save_volume("[pyradio]\nvolstep=1\nvolume={}\n")
+        return self._do_save_volume(self.profile_token + "\nvolstep=1\nvolume={}\n")
 
     def _configHasProfile(self):
         """ Checks if mplayer config has [pyradio] entry / profile.
@@ -1655,32 +1750,59 @@ class MpPlayer(Player):
         volstep=2
         volume=28"""
 
-        """ Existing mplayer Windows implementations do not support profiles """
+        self.PROFILE_FROM_USER = False
         if platform.startswith('win'):
+            """ Existing mplayer Windows implementations
+                do not support profiles
+            """
             return 0
         for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
                 with open(config_file) as f:
                     config_string = f.read()
-                if "[pyradio]" in config_string:
+                if self.profile_token in config_string:
                     if i == 0:
                         self.PROFILE_FROM_USER = True
-                    return 1
-        return 0
+                        return 1
+
+        """ profile not found in config
+            create a default profile
+        """
+        try:
+            with open(self.config_files[0], "a") as f:
+                f.write('\n[{}]\n'.format(self.profile_name))
+                f.write('volstep=1\n')
+                f.write('volume=100\n')
+            self.PROFILE_FROM_USER = True
+            return 1
+        except:
+            return 0
 
     def _buildStartOpts(self, streamUrl, playList=False):
-        """ Builds the options to pass to subprocess."""
+        """ Builds the options to pass to mplayer subprocess."""
         opts = [self.REAL_PLAYER_CMD, "-vo", "null", "-quiet"]
+
+        """ Do I have user profile in config?
+            If so, can I use it?
+        """
         if self.USE_PROFILE == -1:
             self.USE_PROFILE = self._configHasProfile()
 
         if self.USE_PROFILE == 1:
             opts.append("-profile")
-            opts.append("pyradio")
-            if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug("using profile [pyradio]")
+            opts.append(self.profile_name)
+            if (logger.isEnabledFor(logging.INFO)):
+                logger.info('Using profile: "[{}]"'.format(self.profile_name))
+        else:
+            if (logger.isEnabledFor(logging.INFO)):
+                if self.USE_PROFILE == 0:
+                    logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
+                else:
+                    logger.info('No usable profile found')
+
         if playList:
             opts.append("-playlist")
+
         opts.append(self._url_to_use(streamUrl))
         return opts
 
@@ -1776,11 +1898,27 @@ class VlcPlayer(Player):
         _port = None
         win_show_vlc_volume_function = None
 
+    def __init__(self,
+                 config,
+                 outputStream,
+                 playback_timeout_counter,
+                 playback_timeout_handler,
+                 info_display_handler):
+        config.PLAYER_CMD = 'cvlc'
+        super(VlcPlayer, self).__init__(
+            config,
+            outputStream,
+            playback_timeout_counter,
+            playback_timeout_handler,
+            info_display_handler
+        )
+        # self.config_files = self.all_config_files['vlc']
+
     def save_volume(self):
         pass
 
     def _buildStartOpts(self, streamUrl, playList=False):
-        """ Builds the options to pass to subprocess."""
+        """ Builds the options to pass to vlc subprocess."""
         #opts = [self.REAL_PLAYER_CMD, "-Irc", "--quiet", streamUrl]
         if self.WIN:
             """ Get a random port (44000-44999)
@@ -1913,16 +2051,16 @@ class VlcPlayer(Player):
         ret = False
         if self.WIN:
             accept_filter = (self.volume_string,
-                    "debug: ",
-                    "format: ",
-                    "using: ",
-                    )
+                             "debug: ",
+                             "format: ",
+                             "using: ",
+                             )
         else:
             accept_filter = (self.volume_string,
-                    "http stream debug: ",
-                    "format: ",
-                    ": using",
-                    )
+                             "http stream debug: ",
+                             "format: ",
+                             ": using",
+                             )
         reject_filter = ()
         for n in accept_filter:
             if n in input_string:
@@ -1942,6 +2080,7 @@ class VlcPlayer(Player):
             self._win_get_volume()
         else:
             self._sendCommand("voldown 0\n")
+        self.show_volume = True
 
     def _no_mute_on_stop_playback(self):
         """ make sure vlc does not stop muted """

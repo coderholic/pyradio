@@ -85,6 +85,8 @@ def shell():
                         help="Print config directory [CONFIG DIR] location and exit.")
     parser.add_argument("-ocd", "--open-config-dir", action='store_true',
                         help="Open config directory [CONFIG DIR] with default file manager.")
+    parser.add_argument('-epp', '--extra_player_parameters', default=None,
+                        help='Provide extra player parameters as a string. Then strings format is [player_name:parameters]. player_name can be "mpv", "mplayer" or "vlc". Alternative format to pass a profile: [player_name:profile:profile_name]. In this case, the profile_name must be a valid profile defined in the player\'s config file (not for VLC).')
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
     parser.add_argument("-d", "--debug", action='store_true',
@@ -93,6 +95,14 @@ def shell():
     sys.stdout.flush()
 
     with pyradio_config_file() as pyradio_config:
+
+        # extra player parameters
+        if args.extra_player_parameters:
+            if ':' in args.extra_player_parameters:
+                pyradio_config.command_line_params = args.extra_player_parameters
+            else:
+                print('Error in parameter: "-epp".\n  Parameter format: "player_name:parameters"\n                 or "player_name:profile:name_of_profile"\n')
+                sys.exit()
 
         if args.unlock:
             pyradio_config.locked = False
