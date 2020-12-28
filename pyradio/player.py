@@ -98,14 +98,14 @@ except ImportError:  # Forced testing
 
 
 def find_vlc_on_windows(config_dir=None):
-    REAL_PLAYER_CMD =''
+    PLAYER_CMD = ''
     for path in ('C:\\Program Files\\VideoLAN\\VLC\\vlc.exe',
                 'C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe'
                 ):
         if os.path.exists(path):
-            REAL_PLAYER_CMD = path
+            PLAYER_CMD = path
             break
-    return REAL_PLAYER_CMD
+    return PLAYER_CMD
 
     #result = []
     #for root, dirs, files in os.walk(path):
@@ -190,10 +190,10 @@ class Player(object):
 
         self.config_files = []
         self._get_all_config_files()
-        if self._cnf.command_line_params_not_ready:
-            self._cnf.eval_command_line_params()
+        if self._cnf.command_line_params_not_ready is not None:
+            self._cnf.command_line_params = self._cnf.command_line_params_not_ready
 
-        #if self.WIN and self.PLAYER_CMD == 'cvlc':
+        #if self.WIN and self.PLAYER_NAME == 'vlc':
         if platform == 'win32':
             """ delete old vlc files (vlc_log.*) """
             from .del_vlc_log import RemoveWinVlcLogFiles
@@ -399,84 +399,85 @@ class Player(object):
             config_file = self.config_files[0]
             ret_string = ret_strings[1].format(str(self.volume))
             if os.path.exists(config_file):
-                if platform.startswith('win'):
-                    """ This is actually only for mplayer
-                        which does not support profiles on Windows
-                    """
+                # if platform.startswith('win'):
+                #     """ This is actually only for mplayer
+                #         which does not support profiles on Windows
+                #     """
+                #     with open(config_file, 'r') as c_file:
+                #         config_string = c_file.read()
+                #     if "volume=" in config_string:
+                #         config_string = config_string.replace('#Volume set from pyradio\n', '')
+                #         vol = config_string.splitlines()
+                #         for i, v_string in enumerate(vol):
+                #             if v_string.startswith('volume'):
+                #                 vol[i] = '#Volume set from pyradio\nvolume={}'.format(self.volume)
+                #                 break
+                #         config_string = '\n'.join(vol)
+                #     else:
+                #         out = config_string + 'volume={}'.format(self.volume)
+                #         config_string = out
+                #     try:
+                #         with open(config_file, "w") as c_file:
+                #             c_file.write(config_string)
+                #         volume = self.volume
+                #         self.volume = -1
+                #         self.PROFILE_FROM_USER = True
+                #         return ret_strings[1].format(str(volume))
+                #     except:
+                #         if (logger.isEnabledFor(logging.DEBUG)):
+                #             logger.debug(log_strings[2].format(config_file))
+                #         return ret_strings[2].format(str(self.volume))
+                # else:
+                if self.PROFILE_FROM_USER:
                     with open(config_file, 'r') as c_file:
                         config_string = c_file.read()
-                    if "volume=" in config_string:
-                        vol = config_string.splitlines()
-                        for i, v_string in enumerate(vol):
-                            if v_string.startswith('volume'):
-                                vol[i] = '\n#Volume set from pyradio\nvolume={}'.format(self.volume)
+
+                    if self.profile_token in config_string:
+                        profile_found = True
+
+                        """ split on self.profile_token
+                        last item has our options """
+                        sections = config_string.split(self.profile_token)
+
+                        """ split at [ - i.e. isolate consecutive profiles
+                        first item has pyradio options """
+                        py_section = sections[-1].split("[")
+
+                        """ split to lines in order to get '^volume=' """
+                        py_options = py_section[0].split("\n")
+
+                        """ replace volume line """
+                        vol_set = False
+                        for i, opt in enumerate(py_options):
+                            if opt.startswith("volume="):
+                                py_options[i]="volume=" + str(self.volume)
+                                vol_set = True
                                 break
-                        config_string = '\n'.join(vol)
-                    else:
-                        out = config_string + 'volume={}'.format(self.volume)
-                        config_string = out
+                        """ or add it if it does not exist """
+                        if not vol_set:
+                            py_options.append("volume=" + str(self.volume))
+
+                        """ join lines together in py_section's first item """
+                        py_section[0] = "\n".join(py_options)
+
+                        """ join consecutive profiles (if exist)
+                        in last item of sections """
+                        if len(py_section) > 1:
+                            sections[-1] = "[".join(py_section)
+                        else:
+                            sections[-1] = py_section[0]
+
+                        """ finally get the string back together """
+                        config_string = self.profile_token.join(sections)
+
                     try:
                         with open(config_file, "w") as c_file:
                             c_file.write(config_string)
-                        volume = self.volume
                         self.volume = -1
-                        self.PROFILE_FROM_USER = True
-                        return ret_strings[1].format(str(volume))
-                    except:
+                    except EnvironmentError:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug(log_strings[2].format(config_file))
                         return ret_strings[2].format(str(self.volume))
-                else:
-                    if self.PROFILE_FROM_USER:
-                        with open(config_file, 'r') as c_file:
-                            config_string = c_file.read()
-
-                        if self.profile_token in config_string:
-                            profile_found = True
-
-                            """ split on self.profile_token
-                            last item has our options """
-                            sections = config_string.split(self.profile_token)
-
-                            """ split at [ - i.e. isolate consecutive profiles
-                            first item has pyradio options """
-                            py_section = sections[-1].split("[")
-
-                            """ split to lines in order to get '^volume=' """
-                            py_options = py_section[0].split("\n")
-
-                            """ replace volume line """
-                            vol_set = False
-                            for i, opt in enumerate(py_options):
-                                if opt.startswith("volume="):
-                                    py_options[i]="volume=" + str(self.volume)
-                                    vol_set = True
-                                    break
-                            """ or add it if it does not exist """
-                            if not vol_set:
-                                py_options.append("volume=" + str(self.volume))
-
-                            """ join lines together in py_section's first item """
-                            py_section[0] = "\n".join(py_options)
-
-                            """ join consecutive profiles (if exist)
-                            in last item of sections """
-                            if len(py_section) > 1:
-                                sections[-1] = "[".join(py_section)
-                            else:
-                                sections[-1] = py_section[0]
-
-                            """ finally get the string back together """
-                            config_string = self.profile_token.join(sections)
-
-                        try:
-                            with open(config_file, "w") as c_file:
-                                c_file.write(config_string)
-                            self.volume = -1
-                        except EnvironmentError:
-                            if (logger.isEnabledFor(logging.DEBUG)):
-                                logger.debug(log_strings[2].format(config_file))
-                            return ret_strings[2].format(str(self.volume))
 
             """ no user profile or user config file does not exist """
             if not profile_found:
@@ -484,7 +485,7 @@ class Player(object):
                     if os.path.exists(config_file):
                         new_profile_string = '\n' + config_string
                     else:
-                        new_profile_string = "volume=100\n\n" + config_string
+                        new_profile_string = "volume=50\n\n" + config_string
                 else:
                     try:
                         os.mkdir(os.path.dirname(config_file))
@@ -492,7 +493,7 @@ class Player(object):
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug(log_strings[2].format(config_file))
                         return ret_strings[2].format(str(self.volume))
-                    new_profile_string = "volume=100\n\n" + config_string
+                    new_profile_string = "volume=50\n\n" + config_string
                 try:
                     with open(config_file, "a") as c_file:
                         c_file.write(new_profile_string.format(str(self.volume)))
@@ -551,13 +552,13 @@ class Player(object):
                     self.oldUserInput['Input'] = subsystemOut
                     if self.volume_string in subsystemOut:
                         # disable volume for mpv
-                        if self.PLAYER_CMD != "mpv":
+                        if self.PLAYER_NAME != "mpv":
                             #logger.error("***** volume")
                             if self.oldUserInput['Volume'] != subsystemOut:
                                 self.oldUserInput['Volume'] = subsystemOut
                                 self.volume = ''.join(c for c in subsystemOut if c.isdigit())
 
-                                # IMPORTANT: do this here, so that cvlc actual_volume
+                                # IMPORTANT: do this here, so that vlc actual_volume
                                 # gets updated in _format_volume_string
                                 string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
@@ -587,7 +588,7 @@ class Player(object):
                                 else:
                                     self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0].encode('utf-8')
                                 self.info_display_handler()
-                        if self.PLAYER_CMD == 'mpv' and version_info < (3, 0):
+                        if self.PLAYER_NAME == 'mpv' and version_info < (3, 0):
                             for a_cmd in (
                                     b'{ "command": ["get_property", "metadata"], "request_id": 100 }\n',
                                     self.GET_AUDIO_CODEC,
@@ -803,13 +804,13 @@ class Player(object):
                         if stop():
                             break
                         # disable volume for mpv
-                        if self.REAL_PLAYER_CMD != "mpv":
+                        if self.PLAYER_CMD != "mpv":
                             #logger.error("***** volume")
                             if self.oldUserInput['Volume'] != subsystemOut:
                                 self.oldUserInput['Volume'] = subsystemOut
                                 self.volume = ''.join(c for c in subsystemOut if c.isdigit())
 
-                                # IMPORTANT: do this here, so that cvlc actual_volume
+                                # IMPORTANT: do this here, so that vlc actual_volume
                                 # gets updated in _format_volume_string
                                 string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
@@ -1149,10 +1150,13 @@ class Player(object):
         opts = self._buildStartOpts(streamUrl, isPlayList)
         self.stop_mpv_status_update_thread = False
         if self._cnf.command_line_params:
-            opts.append(self._cnf.command_line_params)
+            params = self._cnf.command_line_params.split(' ')
+            for a_param in params:
+                if a_param:
+                    opts.append(a_param)
         if logger.isEnabledFor(logging.INFO):
             logger.info('Executing command: {}'.format(' '.join(opts)))
-        if platform.startswith('win') and self.PLAYER_CMD == 'cvlc':
+        if platform.startswith('win') and self.PLAYER_NAME == 'vlc':
             self.stop_win_vlc_status_update_thread = False
             """Launches vlc windowless"""
             startupinfo = subprocess.STARTUPINFO()
@@ -1164,7 +1168,7 @@ class Player(object):
                     self.config_encoding,
                     lambda: self.stop_win_vlc_status_update_thread))
         else:
-            if self.PLAYER_CMD == "mpv" and version_info > (3, 0):
+            if self.PLAYER_NAME == "mpv" and version_info > (3, 0):
                 self.process = subprocess.Popen(opts, shell=False,
                                                 stdout=subprocess.DEVNULL,
                                                 stdin=subprocess.DEVNULL,
@@ -1182,11 +1186,9 @@ class Player(object):
                 )
                 t = threading.Thread(target=self.updateStatus, args=())
         t.start()
-        if self.PLAYER_CMD == 'cvlc':
+        if self.PLAYER_NAME == 'vlc':
             self._get_volume()
         # start playback check timer thread
-        if self.PLAYER_CMD == 'cvlc':
-            self._get_volume()
         self.stop_timeout_counter_thread = False
         try:
             self.connection_timeout_thread = threading.Thread(
@@ -1266,9 +1268,9 @@ class Player(object):
     def toggleMute(self):
         """ mute / unmute player """
 
-        if self.PLAYER_CMD == 'mpv':
+        if self.PLAYER_NAME == 'mpv':
             self.muted = self._mute()
-        elif self.PLAYER_CMD == 'cvlc':
+        elif self.PLAYER_NAME == 'vlc':
             self._mute()
         else:
             self.muted = not self.muted
@@ -1331,9 +1333,9 @@ class Player(object):
 class MpvPlayer(Player):
     """Implementation of Player object for MPV"""
 
+    PLAYER_NAME = "mpv"
     PLAYER_CMD = "mpv"
-    REAL_PLAYER_CMD = "mpv"
-    if pywhich(REAL_PLAYER_CMD):
+    if pywhich(PLAYER_CMD):
         executable_found = True
     else:
         executable_found = False
@@ -1377,7 +1379,7 @@ class MpvPlayer(Player):
                  playback_timeout_counter,
                  playback_timeout_handler,
                  info_display_handler):
-        config.PLAYER_CMD = 'mpv'
+        config.PLAYER_NAME = 'mpv'
         super(MpvPlayer, self).__init__(
             config,
             outputStream,
@@ -1419,7 +1421,7 @@ class MpvPlayer(Player):
         try:
             with open(self.config_files[0], "a") as f:
                 f.write('\n[{}]\n'.format(self.profile_name))
-                f.write('volume=100\n')
+                f.write('volume=50\n')
             self.PROFILE_FROM_USER = True
             return 1
         except:
@@ -1429,7 +1431,7 @@ class MpvPlayer(Player):
         """ Builds the options to pass to mpv subprocess."""
 
         """ Test for newer MPV versions as it supports different IPC flags. """
-        p = subprocess.Popen([self.REAL_PLAYER_CMD, "--no-video",  "--input-ipc-server"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
+        p = subprocess.Popen([self.PLAYER_CMD, "--no-video",  "--input-ipc-server"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
         out = p.communicate()
         if "not found" not in str(out[0]):
             if logger.isEnabledFor(logging.DEBUG):
@@ -1441,14 +1443,14 @@ class MpvPlayer(Player):
             newerMpv = 0
         if playList:
             if newerMpv:
-                opts = [self.REAL_PLAYER_CMD, "--no-video", "--quiet", "--playlist=" + self._url_to_use(streamUrl), "--input-ipc-server=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--no-video", "--quiet", "--playlist=" + self._url_to_use(streamUrl), "--input-ipc-server=" + self.mpvsocket]
             else:
-                opts = [self.REAL_PLAYER_CMD, "--no-video", "--quiet", "--playlist=" + self._url_to_use(streamUrl), "--input-unix-socket=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--no-video", "--quiet", "--playlist=" + self._url_to_use(streamUrl), "--input-unix-socket=" + self.mpvsocket]
         else:
             if newerMpv:
-                opts = [self.REAL_PLAYER_CMD, "--no-video", "--quiet", self._url_to_use(streamUrl), "--input-ipc-server=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--no-video", "--quiet", self._url_to_use(streamUrl), "--input-ipc-server=" + self.mpvsocket]
             else:
-                opts = [self.REAL_PLAYER_CMD, "--no-video", "--quiet", self._url_to_use(streamUrl), "--input-unix-socket=" + self.mpvsocket]
+                opts = [self.PLAYER_CMD, "--no-video", "--quiet", self._url_to_use(streamUrl), "--input-unix-socket=" + self.mpvsocket]
 
         """ Do I have user profile in config?
             If so, can I use it?
@@ -1685,9 +1687,9 @@ class MpvPlayer(Player):
 class MpPlayer(Player):
     """Implementation of Player object for MPlayer"""
 
+    PLAYER_NAME = "mplayer"
     PLAYER_CMD = "mplayer"
-    REAL_PLAYER_CMD = "mplayer"
-    if pywhich(REAL_PLAYER_CMD):
+    if pywhich(PLAYER_CMD):
         executable_found = True
     else:
         executable_found = False
@@ -1725,7 +1727,7 @@ class MpPlayer(Player):
                  playback_timeout_counter,
                  playback_timeout_handler,
                  info_display_handler):
-        config.PLAYER_CMD = 'mplayer'
+        config.PLAYER_NAME = 'mplayer'
         super(MpPlayer, self).__init__(
             config,
             outputStream,
@@ -1751,11 +1753,11 @@ class MpPlayer(Player):
         volume=28"""
 
         self.PROFILE_FROM_USER = False
-        if platform.startswith('win'):
-            """ Existing mplayer Windows implementations
-                do not support profiles
-            """
-            return 0
+        #if platform.startswith('win'):
+        #    """ Existing mplayer Windows implementations
+        #        do not support profiles
+        #    """
+        #    return 0
         for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
                 with open(config_file) as f:
@@ -1772,7 +1774,7 @@ class MpPlayer(Player):
             with open(self.config_files[0], "a") as f:
                 f.write('\n[{}]\n'.format(self.profile_name))
                 f.write('volstep=1\n')
-                f.write('volume=100\n')
+                f.write('volume=50\n')
             self.PROFILE_FROM_USER = True
             return 1
         except:
@@ -1780,7 +1782,7 @@ class MpPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to mplayer subprocess."""
-        opts = [self.REAL_PLAYER_CMD, "-vo", "null", "-quiet"]
+        opts = [self.PLAYER_CMD, "-vo", "null", "-quiet"]
 
         """ Do I have user profile in config?
             If so, can I use it?
@@ -1848,21 +1850,21 @@ class MpPlayer(Player):
 
 class VlcPlayer(Player):
     """Implementation of Player for VLC"""
+    PLAYER_NAME = "vlc"
     WIN = False
     if platform.startswith('win'):
         WIN = True
-    PLAYER_CMD = "cvlc"
     if WIN:
         # TODO: search and finde vlc.exe
-        # REAL_PLAYER_CMD = "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"
-        REAL_PLAYER_CMD = find_vlc_on_windows()
-        if REAL_PLAYER_CMD:
+        # PLAYER_CMD = "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"
+        PLAYER_CMD = find_vlc_on_windows()
+        if PLAYER_CMD:
             executable_found = True
         else:
             executable_found = False
     else:
-        REAL_PLAYER_CMD = "cvlc"
-        if pywhich(REAL_PLAYER_CMD):
+        PLAYER_CMD = "cvlc"
+        if pywhich(PLAYER_CMD):
             executable_found = True
         else:
             executable_found = False
@@ -1904,7 +1906,7 @@ class VlcPlayer(Player):
                  playback_timeout_counter,
                  playback_timeout_handler,
                  info_display_handler):
-        config.PLAYER_CMD = 'cvlc'
+        config.PLAYER_NAME = 'vlc'
         super(VlcPlayer, self).__init__(
             config,
             outputStream,
@@ -1919,7 +1921,7 @@ class VlcPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         """ Builds the options to pass to vlc subprocess."""
-        #opts = [self.REAL_PLAYER_CMD, "-Irc", "--quiet", streamUrl]
+        #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
         if self.WIN:
             """ Get a random port (44000-44999)
                 Create a log file for vlc and make sure it is unique
@@ -1944,7 +1946,7 @@ class VlcPlayer(Player):
                 if ok_to_go_on:
                     break
 
-            opts = [self.REAL_PLAYER_CMD, "-Irc", "--rc-host",
+            opts = [self.PLAYER_CMD, "-Irc", "--rc-host",
                 "127.0.0.1:" + str(self._port),
                 "--file-logging", "--logmode", "text", "--log-verbose", "4",
                 "--logfile", self._vlc_stdout_log_file, "-vv",
@@ -1955,7 +1957,7 @@ class VlcPlayer(Player):
                 logger.info('vlc log file: "{}"'.format(self._vlc_stdout_log_file))
 
         else:
-            opts = [self.REAL_PLAYER_CMD, "-Irc", "-vv", self._url_to_use(streamUrl)]
+            opts = [self.PLAYER_CMD, "-Irc", "-vv", self._url_to_use(streamUrl)]
         return opts
 
     def _mute(self):
@@ -2228,16 +2230,16 @@ def probePlayer(requested_player=''):
     implementedPlayers = Player.__subclasses__()
     if logger.isEnabledFor(logging.INFO):
         logger.info("Implemented players: " +
-                    ", ".join([player.PLAYER_CMD
+                    ", ".join([player.PLAYER_NAME
                               for player in implementedPlayers]))
 
     if requested_player:
         req = requested_player.split(',')
         for r_player in req:
-            if r_player == 'vlc':
-                r_player = 'cvlc'
+            if r_player == 'cvlc':
+                r_player = 'vlc'
             for player in implementedPlayers:
-                if player.PLAYER_CMD == r_player:
+                if player.PLAYER_NAME == r_player:
                     ret_player = check_player(player)
                     if ret_player is not None:
                         return ret_player
@@ -2254,7 +2256,7 @@ def probePlayer(requested_player=''):
 
 def check_player(a_player):
     try:
-        p = subprocess.Popen([a_player.REAL_PLAYER_CMD, "--help"],
+        p = subprocess.Popen([a_player.PLAYER_CMD, "--help"],
                              stdout=subprocess.PIPE,
                              stdin=subprocess.PIPE,
                              shell=False)

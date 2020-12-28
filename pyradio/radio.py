@@ -423,13 +423,6 @@ class PyRadio(object):
             # no player
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
 
-        # if self.ws.operation_mode != self.ws.NO_PLAYER_ERROR_MODE:
-        #     """ evaluate extra player parameters """
-        #     self._cnf.PLAYER_CMD = self.player.PLAYER_CMD
-        #     self.player.config_files = self.player.all_config_files[self.player.PLAYER_CMD][:]
-        #     if self._cnf.command_line_params_not_ready:
-        #         self._cnf.eval_command_line_params()
-
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen(init_from_setup=True)
 
@@ -470,7 +463,8 @@ class PyRadio(object):
         self.initFooter()
         self.log.setScreen(self.footerWin)
         if init_from_setup:
-            self.log.write(msg='Selected player: {}'.format(self._format_player_string()), help_msg=True)
+            if self.player:
+                self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
         # for light color scheme
          # TODO
         self.outerBodyWin.bkgdset(' ', curses.color_pair(5))
@@ -519,7 +513,7 @@ class PyRadio(object):
         self.outerBodyWin.noutrefresh()
         if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
             if self.requested_player:
-                if self.requested_player in ('mpv', 'mplayer', 'vlc', 'cvlc'):
+                if self.requested_player in ('mpv', 'mplayer', 'vlc'):
                     atxt = """PyRadio is not able to use the player you specified.
 
                     This player ({}) is supported by PyRadio, but it probably
@@ -728,7 +722,7 @@ class PyRadio(object):
                     self._update_notification_thread.start()
 
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
-            self.log.write(msg='Selected player: {}'.format(self._format_player_string()), help_msg=True)
+            self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
             if self.play != 'False':
                 if self.play is None:
                     num = random.randint(0, len(self.stations))
@@ -976,7 +970,7 @@ class PyRadio(object):
 
     def _show_player_is_stopped(self):
         self.log.write(
-            msg='{}'.format(self._format_player_string())
+            msg=self.player.PLAYER_NAME
             + player_start_stop_token[1],
             help_msg=True, suffix=self._status_suffix, counter=''
         )
@@ -1064,12 +1058,6 @@ class PyRadio(object):
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('No playlists found!!!')
         return num_of_playlists, playing
-
-    def _format_player_string(self):
-        if self.player:
-            if self.player.PLAYER_CMD == 'cvlc':
-                return 'vlc'
-            return self.player.PLAYER_CMD
 
     def _show_theme_selector_from_config(self):
         self._theme_name = self._config_win._config_options['theme'][1]
@@ -4657,7 +4645,7 @@ class PyRadio(object):
                     #self.ws.operation_mode = self.ws.window_mode = self.ws.CONFIG_MODE
                     self.ws.window_mode = self.ws.CONFIG_MODE
                     if not self.player.isPlaying():
-                        self.log.write(msg='Selected player: {}'.format(self._format_player_string()), help_msg=True)
+                        self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
                     self._show_config_window()
                     return
 
@@ -4671,8 +4659,12 @@ class PyRadio(object):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.info('encoding = {}'.format(self._old_station_encoding))
                     self.ws.operation_mode = self.ws.SELECT_STATION_ENCODING_MODE
-                    self._encoding_select_win = PyRadioSelectEncodings(self.outerBodyMaxY,
-                            self.outerBodyMaxX, self._old_station_encoding, self._cnf.default_encoding)
+                    self._encoding_select_win = PyRadioSelectEncodings(
+                        self.outerBodyMaxY,
+                        self.outerBodyMaxX,
+                        self._old_station_encoding,
+                        self._cnf.default_encoding
+                    )
                     self._encoding_select_win.init_window()
                     self._encoding_select_win.refresh_win()
                     self._encoding_select_win.setEncoding(self._old_station_encoding)
@@ -5267,12 +5259,9 @@ class PyRadio(object):
             else:
                 if self.selections[mode][0] < self.bodyMaxY:
                     self.selections[mode][1] = 0
-                    logger.error('DE 1')
                 elif self.selections[mode][0] >= len(files) - self.bodyMaxY:
                     self.selections[mode][1] = len(files) - self.bodyMaxY
-                    logger.error('DE 2')
                 else:
-                    logger.error('DE 3')
                     self.selections[mode][1] =  self.selections[mode][0] - int(self.bodyMaxY / 2)
             self.ll('_find_renamed_selection(): after')
         else:
