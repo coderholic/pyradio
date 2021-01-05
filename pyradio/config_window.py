@@ -421,180 +421,418 @@ class PyRadioConfigWindow(object):
                 self.refresh_selection()
             elif sel == 'use_transparency':
                 #self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]
-                self._toggle_transparency_function(changed_from_config_window=True,
-                        force_value=not self._config_options[ 'use_transparency' ][1])
+                self._toggle_transparency_function(
+                    changed_from_config_window=True,
+                    force_value=not self._config_options['use_transparency'][1]
+                )
                 self.refresh_selection()
         return -1, []
 
+
+class ExtraParameters(object):
+    """ display player's extra parameters
+        in a foreign curses window
+    """
+
+    def __init__(self,
+                 config,
+                 player,
+                 win,
+                 focus,
+                 startY=0,
+                 startX=0,
+                 max_lines=10):
+        self._cnf = config
+        self._orig_params = dict(self._cnf.params)
+        self._working_params = dict(self._cnf.params)
+        self._player = player
+        self._old_player = player
+        self._win = win
+        self._focus = focus
+        self._selections = {
+            'mpv': [0, 0, 0],
+            'mplayer': [0, 0, 0],
+            'vlc': [0, 0, 0]
+        }
+        self._items_dict = {
+            'mpv': [],
+            'mplayer': [],
+            'vlc': []
+        }
+        self._dict_to_list()
+        self._items = self._items_dict[player]
+
+        """ start Y, X """
+        self.startY = startY
+        self.startX = startX
+
+        """ maximum number of lines to display """
+        self.max_lines = max_lines
+
+        self._get_width()
+
+    @property
+    def player(self):
+        return self._player
+
+    @player.setter
+    def player(self, a_player):
+        if a_player in ('mpv', 'mplayer', 'vlc'):
+            self._player = a_player
+            self._items = self._items_dict[a_player]
+            self.refresh_win()
+
+    @property
+    def selection(self):
+        return(self._selections[self._player][0])
+
+    @selection.setter
+    def selection(self, val):
+        self._selections[self._player][0] = val
+
+    @property
+    def startPos(self):
+        return(self._selections[self._player][1])
+
+    @startPos.setter
+    def startPos(self, val):
+        self._selections[self._player][1] = val
+
+    @property
+    def active(self):
+        """ this is the parameter to be used by the player """
+        return(self._selections[self._player][2])
+
+    @active.setter
+    def active(self, val):
+        self._selections[self._player][2] = val
+
+    @property
+    def is_dirty(self):
+        self._list_to_dict()
+        for a_set in self._working_params.keys():
+            try:
+                if str(self._working_params[a_set]) != str(self._orig_params[a_set]):
+                    return False
+            except KeyError:
+                return False
+        return True
+
+    @is_dirty.setter
+    def is_dirty(self, val):
+        raise ValueError('property is read only')
+
+    def _dict_to_list(self):
+        """ convert self._working_params dict
+            to self._items dict, and set self.active
+        """
+        for a_param_set in self._working_params.keys():
+            for i, a_param in enumerate(self._working_params[a_param_set]):
+                if i == 0:
+                    self._selections[a_param_set][2] = int(a_param) - 1
+                else:
+                    self._items_dict[a_param_set].append(a_param)
+
+    def _list_to_dict(self):
+        """ convert self._items_dict to self._working_parmas """
+        for a_params_set in self._items_dict.keys():
+            the_list = [self._selections[a_params_set][2] + 1]
+            the_list.extend(self._items_dict[a_params_set])
+            self._working_params[a_params_set] = the_list[:]
+
+    def _get_width(self):
+        Y, X = self._win.getmaxyx()
+        self._width = X - self.startX - 2
+
+    def refresh_win(self):
+        for a_line in range(0, len(self._items)):
+            if a_line < self.max_lines:
+                item = self.startPos + a_line
+                col = curses.color_pair(5)
+                if self._focus():
+                    if item == self.active:
+                        col = curses.color_pair(9)
+                    elif item == self.selection:
+                        col = curses.color_pair(6)
+                else:
+                    if item == self.active:
+                        col = curses.color_pair(4)
+
+                item_str = self._items[0]
+                self._win.addstr(
+                    self.startY + item,
+                    self.startX,
+                    ' ' + item_str + ' ' * (self._width - cjklen(item_str)),
+                    col
+                )
+        self._win.refresh()
+
+    def set_player(self, a_player):
+        logger.error('DE a_player = {}'.format(a_player))
+        if a_player in ('mpv', 'mplayer', 'vlc'):
+            self._old_player = self._player
+            self._player = a_player
+            self._items = self._items_dict[a_player]
+
+            if len(self._items) < self.max_lines:
+                """ "erase" window """
+                empty_str = ' ' * self._width
+                for a_line in range(len(self._items), self.max_lines):
+                    self._win.addstr(self.startY + a_line,
+                                     self.startX,
+                                     empty_str,
+                                     curses.color_pair(5))
+            self.refresh_win()
+
+    def resize(self, window, startY=None, startX=None):
+        self._win = window
+        if startY is not None:
+            self.startY = startY
+        if startX is not None:
+            self.startX = startX
+        self._get_width()
+
+        # erase params window
+        # done by containing window
+
+        self.refresh_win()
+
+    def set_window(self, window):
+        self.resize(window=window)
+
+    def keypress(self, char):
+        pass
+
 class PyRadioSelectPlayer(object):
 
-    maxY = 6
-    maxX = 25
-    selection = [ 0, 0 ]
+    maxY = 13
+    maxX = 72
+    selection = 0
 
     _title = ' Player Selection '
 
     _win = None
+    _extra = None
 
     if platform == 'win32':
-        _players =  ( 'mplayer', 'vlc' )
+        _usable_players = ('mplayer', 'vlc')
     else:
-        _players =  ( 'mpv', 'mplayer', 'vlc' )
-    _working_players = [ [], [] ]
+        _usable_players = ('mpv', 'mplayer', 'vlc')
 
-    # REMINDER: column 1 is     acive players - displayed right
-    #           column 0 is available players - displayed left
-    _column = 1
+    _working_players = [[], []]
 
-    def __init__(self, maxY, maxX, player):
-        self._parent_maxY = maxY
-        self._parent_maxX = maxX
+    """ mlength is the length of the longest item in the
+        players list, which is '[ ] mplayer ' = 14
+    """
+    mlength = 13
+
+    def __init__(self, config, parent, player):
+        logger.error('DE player = {}'.format(player))
+        self._cnf = config
+        self._parent = parent
+        self._parent_maxY, self._parent_maxX = parent.getmaxyx()
         self.player = player
         self._orig_player = player
-        self._populate_working_players()
-        self._validate_column()
+        self.focus = True
+
+        """ players contain supported players
+            it is a list of lists
+            each list contains three items
+            0 - player name
+            1 - True if enabled for detection
+            2 - True if usable on platform
+        """
+        self._players = []
+        logger.error('DE init ============')
+        self._populate_players()
         self.init_window()
+        self.refresh_win(do_params=True)
 
     def init_window(self):
         self._win = None
-        self._win = curses.newwin(self.maxY, self.maxX,
-                int((self._parent_maxY - self.maxY) / 2),
-                int((self._parent_maxX - self.maxX) / 2))
+        self._win = curses.newwin(
+            self.maxY, self.maxX,
+            int((self._parent_maxY - self.maxY) / 2),
+            int((self._parent_maxX - self.maxX) / 2)
+        )
+        if self._extra is None:
+            self._extra = ExtraParameters(
+                self._cnf,
+                self.selected_player_name(),
+                self._win,
+                lambda: not self.focus,
+                startY=2,
+                startX=self.mlength + 11,
+            )
+        else:
+            self._extra.set_window(self._win)
 
-    def refresh_win(self):
+    def selected_player_name(self):
+        return self._players[self.selection][0]
+
+    def _populate_players(self):
+        parts = self.player.replace(' ', '').split(',')
+        for ap in parts:
+            self._players.append([ap, True, True])
+
+        if len(parts) < 3:
+            """ add missing player """
+            for ap in ('mpv', 'mplayer', 'vlc'):
+                if ap not in parts:
+                    self._players.append(ap, False, True)
+
+        """ find unuseable players for platform """
+        for i, ap in enumerate(self._players):
+            apl = ap[0]
+            if apl not in self._usable_players:
+                self._players[i][-1] = False
+                self._players[i][-2] = False
+
+        logger.error('DE playsers = {}'.format(self._players))
+
+    def refresh_win(self, do_params=False):
         self._win.bkgdset(' ', curses.color_pair(3))
         self._win.erase()
         self._win.box()
-        self._win.addstr(0,
-            int((self.maxX - len(self._title)) / 2),
+        self._win.addstr(
+            0, int((self.maxX - len(self._title)) / 2),
             self._title,
             curses.color_pair(4))
-        self._win.addstr(1, 2, 'Supported' , curses.color_pair(4))
-        self._win.addstr(1, int(self.maxX / 2 + 2), 'Active' , curses.color_pair(4))
+        self._win.addstr(1, 2, 'Supported Players', curses.color_pair(4))
+        self._win.addstr(1, self.mlength + 11, 'Extra Player Parameters', curses.color_pair(4))
+        #self._win.addstr(1, int(self.maxX / 2 + 2), 'Active' , curses.color_pair(4))
         self.refresh_selection()
+        if do_params:
+            self._extra.set_player(self.selected_player_name())
 
     def refresh_selection(self):
-        for i in range(2, self.maxY - 1):
-            self._win.hline(i, 1, ' ', self.maxX - 2, curses.color_pair(5))
+        for i in range(0, len(self._players)):
+            token = ' [✔] ' if self._players[i][1] else ' [ ] '
+            first_char = last_char = ' '
+            if self.focus:
+                if self.selection == i:
+                    col = curses.color_pair(6)
+                else:
+                    col = curses.color_pair(5)
+            else:
+                col = curses.color_pair(5)
+                if self.selection == i:
+                    col = curses.color_pair(4)
+                    # first_char = '>'
+                    # last_char = '<'
+            pad = self.mlength - (len(token) + len(self._players[i][0])) + 3
+            self._win.addstr(
+                i+2, 1,
+                first_char + token + self._players[i][0] +
+                pad * ' ' + last_char,
+                col
+            )
+            # self._win.hline(i+2, 1, ' ', self.maxX - 2, curses.color_pair(5))
+        self._win.refresh()
+        return
 
         if self._working_players[0]:
             if self.selection[0] >= len(self._working_players[0]):
                 self.selection[0] = 0
-            for i, pl in enumerate(self._working_players[0]):
-                col =curses.color_pair(5)
-                if self.selection[0] == i:
-                    if self._column == 0:
-                        col = curses.color_pair(6)
-                        self._win.hline(i+2, int(self.maxX / 2) + 1, ' ', int(self.maxX / 2) - 1, col)
-                self._win.addstr(i+2, int(self.maxX / 2 + 2), pl, col)
-
-        if self._working_players[1]:
-            if self.selection[1] >= len(self._working_players[1]):
-                self.selection[1] = 0
-            for i, pl in enumerate(self._working_players[1]):
-                col = curses.color_pair(5)
-                if self.selection[1] == i:
-                    if self._column == 1:
-                        col = curses.color_pair(6)
-                        self._win.hline(i+2, 1, ' ', int(self.maxX / 2) - 1, col)
-                self._win.addstr(i+2, 2, pl, col)
-
-        for i in range(1, self.maxY - 1):
-            try:
-                self._win.addch(i, int(self.maxX / 2), '│', curses.color_pair(3))
-            except:
-                self._win.addstr(i, int(self.maxX / 2), u'│'.encode('utf-8'), curses.color_pair(3))
-        try:
-            self._win.addch(self.maxY - 1, int(self.maxX / 2), '┴', curses.color_pair(3))
-        except:
-            self._win.addstr(self.maxY - 1, int(self.maxX / 2), u'┴'.encode('utf-8'), curses.color_pair(3))
-
-        self._win.refresh()
 
     def refresh_and_resize(self, maxY, maxX):
         self._parent_maxY = maxY
         self._parent_maxX = maxX
         self.init_window()
-        self.refresh_win()
-
-    def _populate_working_players(self, these_players=''):
-        if these_players:
-            self._working_players[0] = these_players.replace(' ', '').split(',')
-        else:
-            self._working_players[0] = self._orig_player.replace(' ', '').split(',')
-        self._working_players[1] = []
-        for i, pl in enumerate(self._players):
-            if pl not in self._working_players[0]:
-                self._working_players[1].append(pl)
+        self._extra.set_window(self._win)
+        self.refresh_win(True)
 
     def keypress(self, char):
         if char in (9, ):
-            new_column = self._switch_column()
-            if self._working_players[new_column]:
-                self._column = new_column
-                self.refresh_selection()
+            self._switch_column()
+            self.refresh_selection()
 
-        elif char in (curses.KEY_RIGHT, ord('l')):
-            if self._column == 0:
-                if self._working_players[0]:
-                    item = self._working_players[0][self.selection[0]]
-                    self._working_players[0].remove(item)
-                    self._working_players[0].append(item)
-                    self.refresh_selection()
-
-        elif char in (curses.KEY_UP, ord('k')):
-            if self._working_players[self._column]:
-                self.selection[self._column] -= 1
-                if self.selection[self._column] == -1:
-                    self.selection[self._column] = len(self._working_players[self._column]) - 1
-                self.refresh_selection()
-
-        elif char in (curses.KEY_DOWN, ord('j')):
-            if self._working_players[self._column]:
-                self.selection[self._column] += 1
-                if self.selection[self._column] == len(self._working_players[self._column]):
-                    self.selection[self._column] = 0
-                self.refresh_selection()
-
-        elif char in (curses.KEY_EXIT, 27, ord('q'), curses.KEY_LEFT, ord('h')):
+        elif char in (
+            curses.KEY_EXIT, 27,
+            ord('q'), curses.KEY_LEFT,
+            ord('h')
+        ):
             self._win.nodelay(True)
             char = self._win.getch()
             self._win.nodelay(False)
             if char == -1:
                 """ ESCAPE """
-                return 1, []
+                return 1
 
-        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
-            ord(' '), ord('l'), curses.KEY_RIGHT):
-            other_column = self._switch_column()
-            this_item = self._working_players[self._column][self.selection[self._column]]
-            self._working_players[self._column].remove(this_item)
-            self._working_players[other_column].append(this_item)
-            self._validate_column()
+        elif char in (
+            curses.KEY_ENTER, ord('\n'), ord('\r'),
+            ord(' '), ord('l'), curses.KEY_RIGHT
+        ):
+            self._players[self.selection][1] = not self._players[self.selection][1]
             self.refresh_selection()
 
         elif char == ord('r'):
-            self._populate_working_players()
+            self._populate_players()
             self.refresh_selection()
 
         elif char == ord('s'):
-            if self._working_players[0]:
-                self.player = ','.join(self._working_players[0])
-                return 0, self._working_players[0]
-        return -1, []
+            working_players = []
+            for a_player in self._players:
+                if a_player[1]:
+                    working_players.append(a_player[0])
+
+            if working_players:
+                self.player = ','.join(working_players)
+            else:
+                self.player = ','.join(self._usable_players)
+            return 0
+
+        if self.focus:
+            if char in (curses.ascii.NAK, 21):
+                # ^U, move player Up
+                x = self._players.pop(self.selection)
+                if self.selection == 0:
+                    self._players.append(x)
+                    self.selection = len(self._players) - 1
+                else:
+                    self.selection -= 1
+                    self._players.insert(self.selection, x)
+                self.refresh_selection()
+
+            elif char in (curses.ascii.EOT, 4):
+                # ^D, move player Down
+                if self.selection == len(self._players) - 1:
+                    x = self._players.pop(self.selection)
+                    self._players.insert(0, x)
+                    self.selection = 0
+                else:
+                    x = self._players.pop(self.selection)
+                    self.selection += 1
+                    self._players.insert(self.selection, x)
+                self.refresh_selection()
+
+            elif char in (curses.KEY_UP, ord('k')):
+                self.selection -= 1
+                if self.selection < 0:
+                    self.selection = len(self._players) - 1
+                self.refresh_selection()
+                self._extra.set_player(self.selected_player_name())
+
+            elif char in (curses.KEY_DOWN, ord('j')):
+                self.selection += 1
+                if self.selection == len(self._players):
+                    self.selection = 0
+                self.refresh_selection()
+                self._extra.set_player(self.selected_player_name())
+
+        else:
+            self._extra.keypress(char)
+        return -1
 
     def _switch_column(self):
-        col = (1, 0)
-        return col[self._column]
+        self.focus = not self.focus
+        self.refresh_selection()
+        self._extra.refresh_win()
 
     def setPlayers(self, these_players):
         self.player = these_players
-        self._populate_working_players(these_players)
-        self._validate_column()
-
-    def _validate_column(self):
-        if not self._working_players[self._column]:
-            self._column = self._switch_column()
+        self._players = []
+        self._populate_players()
 
 class PyRadioSelectEncodings(object):
     max_enc_len = 15

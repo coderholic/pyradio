@@ -971,8 +971,8 @@ class PyRadioConfig(PyRadioStations):
     opts['dirty_config'] = ['', False]
 
     params = {
-        'mpv': [1, 'Do not use any extra player parameters'],
-        'mplayer': [1, 'Do not use any extra player parameters'],
+        'mpv': [1, 'profile:pyradio'],
+        'mplayer': [1, 'profile:pyradio'],
         'vlc': [1, 'Do not use any extra player parameters']
     }
 
@@ -1027,7 +1027,7 @@ class PyRadioConfig(PyRadioStations):
         self.command_line_params_not_ready = None
         if val:
             if self.PLAYER_NAME:
-                parts = val.split(':')
+                parts = val.replace('\'', '').replace('"', '').split(':')
                 if len(parts) > 1 and parts[0] in ('mpv', 'mplayer', 'vlc'):
                     if self.PLAYER_NAME == 'vlc' and parts[1] == 'profile':
                         if logger.isEnabledFor(logging.DEBUG):

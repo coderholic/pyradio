@@ -1600,6 +1600,22 @@ class PyRadio(object):
                             caption=' Configuration Help ')
 
     def _show_config_player_help(self):
+        if self._player_select_win.focus:
+            txt = """Up|,|j|,|Down|,|k      |Change player selection.
+                     TAB              |Move selection to Extra Parameters column.
+                     Enter|,|Space      |Toggle player's detestion potentiality.
+                     Right|,|l          |Move player to the end of the list.
+                     ^U|/|^D            |Move player |u|p or |d|own.
+                     r                |Revert to saved values.
+                     s                |Save players.
+                     Esc|,|q|,|Left|,|h     |Cancel.
+                     %_Player Keys_
+                     -|/|+| or |,|/|.       |Change volume.
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc)."""
+            self._show_help(txt,
+                            mode_to_set=self.ws.SELECT_PLAYER_HELP_MODE,
+                            caption=' Player Selection Help ')
+        else:
             txt = """Up|,|j|,|Down|,|k      |Change player selection.
                      TAB              |Move selection to other column.
                      Enter|,|Space      |Move player to other column.
@@ -3572,15 +3588,16 @@ class PyRadio(object):
                     self.ws.operation_mode = self.ws.SELECT_PLAYER_MODE
                     if self._player_select_win is None:
                         self._player_select_win = PyRadioSelectPlayer(
-                                self.outerBodyMaxY,
-                                self.outerBodyMaxX,
-                                self._config_win._config_options['player'][1])
+                            self._cnf,
+                            self.outerBodyWin,
+                            self._config_win._config_options['player'][1])
                     else:
+                        self._player_select_win._parent = self.outerBodyWin
                         self._player_select_win._parent_maxY, self._player_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
-                    self._player_select_win.init_window()
-                    self._player_select_win.refresh_win()
-                    self._player_select_win.setPlayers(self._config_win._config_options['player'][1])
-                    self._player_select_win.refresh_selection()
+                        self._player_select_win.init_window()
+                        self._player_select_win.refresh_win()
+                        # self._player_select_win.setPlayers(self._config_win._config_options['player'][1])
+                        # self._player_select_win.refresh_selection()
 
                 elif ret == self.ws.SELECT_ENCODING_MODE:
                     """ Config > Select Default Encoding """
@@ -3703,15 +3720,15 @@ class PyRadio(object):
         elif self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE and \
                 char not in self._chars_to_bypass:
             if char not in self._chars_to_bypass:
-                ret, ret_list = self._player_select_win.keypress(char)
+                ret = self._player_select_win.keypress(char)
                 if ret >= 0:
                     if ret == 0:
-                        new_players = ','.join(ret_list)
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('new_players = {}'.format(new_players))
-                        self._config_win._config_options['player'][1] = new_players
+                            logger.debug('new_players = {}'.format(self._player_select_win.player))
+                        self._config_win._config_options['player'][1] = self._player_select_win.player
                     self.ws.close_window()
                     self._config_win.refresh_config_win()
+                    self._player_select_win = None
                 return
 
         elif self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE and \
