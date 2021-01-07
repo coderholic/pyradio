@@ -1300,9 +1300,14 @@ class PyRadioConfig(PyRadioStations):
         except:
             self.__dirty_config = False
             return -1
+        self.params = {
+            'mpv': [1, 'profile:pyradio'],
+            'mplayer': [1, 'profile:pyradio'],
+            'vlc': [1, 'Do not use any extra player parameters']
+        }
         for line in lines:
             sp = line.replace(' ', '').split('=')
-            if len(sp) != 2:
+            if len(sp) < 2:
                 return -2
             if sp[1] == '':
                 return -2
@@ -1353,6 +1358,10 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['force_http'][1] = True
                 else:
                     self.opts['force_http'][1] = False
+            elif sp[0] in ('mpv_parameter',
+                           'mplayer_parameter',
+                           'vlc_parameter'):
+                self._config_to_params(sp)
         self.opts['dirty_config'][1] = False
 
         # check if default playlist exists
@@ -1365,6 +1374,16 @@ class PyRadioConfig(PyRadioStations):
                 self.opts['default_station'][1] = 'False'
                 #self.opts['dirty_config'][1] = True
         return 0
+
+    def _config_to_params(self, a_param):
+        player = a_param[0].split('_')[0]
+        default = False
+        if a_param[1].startswith('*'):
+            default = True
+            a_param[1] = a_param[1][1:]
+        self.params[player].append('='.join(a_param[1:]))
+        if default:
+            self.params[player][0] = len(self.params[player]) - 1
 
     def save_config(self):
         """ Save config file
@@ -1493,7 +1512,8 @@ auto_save_playlist = {10}
             self.opts['default_station'][1] = '-1'
         try:
             with open(self.config_file, 'w') as cfgfile:
-                cfgfile.write(txt.format(self.opts['player'][1],
+                cfgfile.write(txt.format(
+                    self.opts['player'][1],
                     self.opts['default_playlist'][1],
                     self.opts['default_station'][1],
                     self.opts['default_encoding'][1],
@@ -1504,6 +1524,19 @@ auto_save_playlist = {10}
                     self.opts['confirm_station_deletion'][1],
                     self.opts['confirm_playlist_reload'][1],
                     self.opts['auto_save_playlist'][1]))
+
+                """ write extra player parameters to file """
+                for a_set in self.params.keys():
+                    if len(self.params[a_set]) > 2:
+                        txt = '''# {} extra parameters\n'''
+                        cfgfile.write(txt.format(a_set))
+                        for i, a_param in enumerate(self.params[a_set]):
+                            if i == 0:
+                                default = a_param
+                            elif i > 1:
+                                txt = '*' + a_param if i == default else a_param
+                                cfgfile.write('{}\n'.format(a_set + '_parameter=' + txt))
+
         except:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Error saving config')

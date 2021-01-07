@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 from collections import deque
 import logging
-logger = logging.getLogger(__name__)
-
 import locale
 locale.setlocale(locale.LC_ALL, "")
+logger = logging.getLogger(__name__)
 
 
 class Window_Stack_Constants(object):
@@ -87,6 +86,8 @@ class Window_Stack_Constants(object):
     PLAYLIST_RENAME_ERROR = 310
     PLAYLIST_CREATE_ERROR = 311
     PLAYLIST_NOT_SAVED_ERROR_MODE = 312
+    PROFILE_EDIT_DELETE_ERROR_MODE = 313
+    MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE = 314
     THEME_MODE = 400
     HISTORY_EMPTY_NOTIFICATION = 500
     UPDATE_NOTIFICATION_MODE = 1000
@@ -174,6 +175,8 @@ class Window_Stack_Constants(object):
         CONNECTION_MODE: 'CONNECTION_MODE',
         PASTE_MODE: 'PASTE_MODE',
         UNNAMED_REGISTER_MODE: 'UNNAMED_REGISTER_MODE',
+        PROFILE_EDIT_DELETE_ERROR_MODE: 'PROFILE_EDIT_DELETE_ERROR_MODE ',
+        MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: 'MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE',
     }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -225,6 +228,8 @@ class Window_Stack_Constants(object):
         PLAYLIST_CREATE_ERROR,
         PLAYLIST_NOT_SAVED_ERROR_MODE,
         UNNAMED_REGISTER_MODE,
+        PROFILE_EDIT_DELETE_ERROR_MODE,
+        MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE,
     )
 
     def __init__(self):
