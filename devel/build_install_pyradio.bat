@@ -61,6 +61,7 @@ if not exist "%APPDATA%\pyradio\help\*" mkdir %APPDATA%\pyradio\help
 copy /Y *.html %APPDATA%\pyradio\help >NUL
 copy /Y devel\pyradio.* %APPDATA%\pyradio\help >NUL
 copy /Y devel\*.lnk %APPDATA%\pyradio\help >NUL
+python devel\reg.py
 echo *** HTML files copyed to "%APPDATA%\pyradio\help"
 
 if [%MPLAYER%]==[] (
@@ -159,6 +160,7 @@ python -m site --user-site 2>nul >>dirs
 python2 -m site --user-site 2>nul >>dirs
 python3 -m site --user-site 2>nul >>dirs
 python devel\windirs.py
+python devel\unreg.py
 echo DEL dirs >>pyremove.bat
 echo echo PyRadio successfully uninstalled! >>pyremove.bat
 

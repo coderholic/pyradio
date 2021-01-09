@@ -1,3 +1,8 @@
+2021-01-09 s-n-g
+    * adding autostart BAT file on Windows to
+      prevent session locking when Windows
+      terminate while PyRadio is still running
+
 2020-12-24 s-n-g
     * pyradio will always use a profile
 

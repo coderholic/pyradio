@@ -10,7 +10,7 @@ from sys import platform
 from .common import *
 from .window_stack import Window_Stack_Constants
 from .cjkwrap import cjklen
-#from .cjkwrap import PY3, is_wide, cjklen
+from .config import SUPPORTED_PLAYERS
 from .encodings import *
 from .themes import *
 import logging
@@ -448,14 +448,28 @@ class ExtraParameters(object):
                  focus,
                  startY=0,
                  startX=0,
-                 max_lines=10):
+                 max_lines=10,
+                 from_config=True):
         self._cnf = config
         self._orig_params = dict(self._cnf.params)
-        self._working_params = dict(self._cnf.params)
-        self._player = player
-        self._old_player = player
+        self._orig_player = player
         self._win = win
         self._focus = focus
+        self.from_config = from_config
+
+        """ start Y, X """
+        self.startY = startY
+        self.startX = startX
+
+        """ maximum number of lines to display """
+        self.max_lines = max_lines
+
+        self.reset()
+        self._get_width()
+
+    def reset(self):
+        self._player = self._orig_player
+        self._working_params = dict(self._orig_params)
         self._selections = {
             'mpv': [0, 0, 0],
             'mplayer': [0, 0, 0],
@@ -467,16 +481,7 @@ class ExtraParameters(object):
             'vlc': []
         }
         self._dict_to_list()
-        self._items = self._items_dict[player]
-
-        """ start Y, X """
-        self.startY = startY
-        self.startX = startX
-
-        """ maximum number of lines to display """
-        self.max_lines = max_lines
-
-        self._get_width()
+        self._items = self._items_dict[self._player]
 
     @property
     def player(self):
@@ -484,7 +489,7 @@ class ExtraParameters(object):
 
     @player.setter
     def player(self, a_player):
-        if a_player in ('mpv', 'mplayer', 'vlc'):
+        if a_player in SUPPORTED_PLAYERS:
             self._player = a_player
             self._items = self._items_dict[a_player]
             self.refresh_win()
@@ -541,7 +546,7 @@ class ExtraParameters(object):
                     self._items_dict[a_param_set].append(a_param)
 
     def _list_to_dict(self):
-        """ convert self._items_dict to self._working_parmas """
+        """ convert self._items_dict to self._working_params """
         for a_params_set in self._items_dict.keys():
             the_list = [self._selections[a_params_set][2] + 1]
             the_list.extend(self._items_dict[a_params_set])
@@ -597,8 +602,8 @@ class ExtraParameters(object):
         return col
 
     def set_player(self, a_player):
-        if a_player in ('mpv', 'mplayer', 'vlc'):
-            self._old_player = self._player
+        if a_player in SUPPORTED_PLAYERS:
+            self._orig_player = self._player
             self._player = a_player
             self._items = self._items_dict[a_player]
 
@@ -664,6 +669,7 @@ class ExtraParameters(object):
                  1 - display help
                  2 - error, number of max lines reached
                  3 - error, cannot edit or delete first item
+                 4 - error, no editing when opened by "Z"
         """
         if char in (
             curses.KEY_ENTER, ord('\n'),
@@ -699,37 +705,45 @@ class ExtraParameters(object):
             self.refresh_win()
 
         elif char == ord('x'):
-            if self.selection == 0:
-                # error: cannot delete first item
-                return 3
+            if self.from_config:
+                if self.selection == 0:
+                    # error: cannot delete first item
+                    return 3
+                else:
+                    self._win.addstr(
+                        self.startY + len(self._items) - 1,
+                        self.startX,
+                        ' ' * (self._width + 1),
+                        curses.color_pair(5)
+                    )
+                    self._items.pop(self.selection)
+                    if self.active == self.selection:
+                        self.active = 0
+                    if self.selection >= len(self._items):
+                        self.selection -= 1
+                    self.refresh_win()
             else:
-                self._win.addstr(
-                    self.startY + len(self._items) - 1,
-                    self.startX,
-                    ' ' * (self._width + 1),
-                    curses.color_pair(5)
-                )
-                self._items.pop(self.selection)
-                if self.active == self.selection:
-                    self.active = 0
-                if self.selection >= len(self._items):
-                    self.selection -= 1
-                self.refresh_win()
+                return 4
 
         elif char == ord('e'):
-            if self.selection == 0:
-                # error: cannot edit first item
-                return 3
+            if self.from_config:
+                if self.selection == 0:
+                    # error: cannot edit first item
+                    return 3
+                else:
+                    pass
             else:
-                pass
+                return 4
 
         elif char == ord('a'):
-            if len(self._items) == self.max_lines:
-                # error: cannot add more items
-                return 2
+            if self.from_config:
+                if len(self._items) == self.max_lines:
+                    # error: cannot add more items
+                    return 2
+                else:
+                    pass
             else:
-                return 2
-                pass
+                return 4
 
         return -1
 
@@ -744,11 +758,6 @@ class PyRadioSelectPlayer(object):
 
     _win = None
     _extra = None
-
-    if platform == 'win32':
-        _usable_players = ('mplayer', 'vlc')
-    else:
-        _usable_players = ('mpv', 'mplayer', 'vlc')
 
     _working_players = [[], []]
 
@@ -774,10 +783,20 @@ class PyRadioSelectPlayer(object):
             2 - True if usable on platform
         """
         self._players = []
-        logger.error('DE init ============')
         self._populate_players()
         self.init_window()
         self.refresh_win(do_params=True)
+
+    @property
+    def from_config(self):
+        if self._extra:
+            return self._extra.from_config
+        else:
+            return True
+
+    @from_config.setter
+    def from_config(self, val):
+        raise ValueError('property is read only')
 
     def init_window(self):
         self._win = None
@@ -805,22 +824,16 @@ class PyRadioSelectPlayer(object):
         return self._players[self.selection][0]
 
     def _populate_players(self):
+        self._players.clear()
         parts = self.player.replace(' ', '').split(',')
         for ap in parts:
             self._players.append([ap, True, True])
 
-        if len(parts) < 3:
+        if len(parts) < len(SUPPORTED_PLAYERS):
             """ add missing player """
-            for ap in ('mpv', 'mplayer', 'vlc'):
+            for ap in SUPPORTED_PLAYERS:
                 if ap not in parts:
-                    self._players.append(ap, False, True)
-
-        """ find unuseable players for platform """
-        for i, ap in enumerate(self._players):
-            apl = ap[0]
-            if apl not in self._usable_players:
-                self._players[i][-1] = False
-                self._players[i][-2] = False
+                    self._players.append([ap, False, True])
 
         logger.error('DE playsers = {}'.format(self._players))
 
@@ -902,9 +915,9 @@ class PyRadioSelectPlayer(object):
                 return 1
 
         elif char == ord('r'):
-            self._extra = None
+            self._extra.reset()
             self._populate_players()
-            self.refresh_selection()
+            self.refresh_win(do_params=True)
 
         elif char == ord('s'):
             working_players = []
@@ -915,7 +928,7 @@ class PyRadioSelectPlayer(object):
             if working_players:
                 self.player = ','.join(working_players)
             else:
-                self.player = ','.join(self._usable_players)
+                self.player = ','.join(SUPPORTED_PLAYERS)
             return 0
 
         if self.focus:

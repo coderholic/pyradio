@@ -22,6 +22,11 @@ from .log import Log
 
 logger = logging.getLogger(__name__)
 
+if platform == 'win32':
+    SUPPORTED_PLAYERS = ('mplayer', 'vlc')
+else:
+    SUPPORTED_PLAYERS = ('mpv', 'mplayer', 'vlc')
+
 
 class PyRadioStations(object):
     """ PyRadio stations file management """
@@ -970,11 +975,19 @@ class PyRadioConfig(PyRadioStations):
     opts['requested_player'] = ['', '']
     opts['dirty_config'] = ['', False]
 
+    """ parameters used by the program
+        may get modified by "Z" command
+        but will not be saved to file
+    """
     params = {
         'mpv': [1, 'profile:pyradio'],
         'mplayer': [1, 'profile:pyradio'],
         'vlc': [1, 'Do not use any extra player parameters']
     }
+    """ parameters read from config file
+        can only be modified from config window
+    """
+    saved_params = dict(params)
 
     def __init__(self):
         self._profile_name = 'pyradio'
@@ -1028,7 +1041,7 @@ class PyRadioConfig(PyRadioStations):
         if val:
             if self.PLAYER_NAME:
                 parts = val.replace('\'', '').replace('"', '').split(':')
-                if len(parts) > 1 and parts[0] in ('mpv', 'mplayer', 'vlc'):
+                if len(parts) > 1 and parts[0] in SUPPORTED_PLAYERS:
                     if self.PLAYER_NAME == 'vlc' and parts[1] == 'profile':
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('VLC does not support profiles')
@@ -1242,9 +1255,21 @@ class PyRadioConfig(PyRadioStations):
                 except:
                     pass
         else:
-            self._session_lock_file = path.join(self.stations_dir, 'pyradio.lock')
-
+            self._session_lock_file = path.join(getenv('APPDATA'), 'pyradio', 'pyradio.lock')
         if path.exists(self._session_lock_file):
+            if platform == 'win32':
+                win_lock = path.join(getenv('APPDATA'), 'pyradio', '_windows.lock')
+                if path.exists(win_lock):
+                    """ pyradio lock file was probably not deleted the last
+                        time Windows terminated. It should be safe to use it
+                    """
+                    try:
+                        remove(win_lock)
+                    except:
+                        pass
+                else:
+                    self.locked = True
+            else:
                 self.locked = True
         else:
             try:
@@ -1362,7 +1387,17 @@ class PyRadioConfig(PyRadioStations):
                            'mplayer_parameter',
                            'vlc_parameter'):
                 self._config_to_params(sp)
+
+        """ make sure extra params have only up to 10 items each
+            (well, actually 11 items, since the first one is the
+            index to the default string in the list)
+        """
+        logger.error('DE \n\n{}\n\n'.format(self.params))
+        for n in self.params.keys():
+            self.params[n] = self.params[n][:11]
+
         self.opts['dirty_config'][1] = False
+        self.saved_params = dict(self.params)
 
         # check if default playlist exists
         if self.opts['default_playlist'][1] != 'stations':
@@ -1526,11 +1561,18 @@ auto_save_playlist = {10}
                     self.opts['auto_save_playlist'][1]))
 
                 """ write extra player parameters to file """
-                for a_set in self.params.keys():
-                    if len(self.params[a_set]) > 2:
-                        txt = '''# {} extra parameters\n'''
+                first_param = True
+                for a_set in self.saved_params.keys():
+                    if len(self.saved_params[a_set]) > 2:
+                        if first_param:
+                            txt = '''# Player Extra parameters section
+
+# {} extra parameters\n'''
+
+                        else:
+                            txt = '''# {} extra parameters\n'''
                         cfgfile.write(txt.format(a_set))
-                        for i, a_param in enumerate(self.params[a_set]):
+                        for i, a_param in enumerate(self.saved_params[a_set]):
                             if i == 0:
                                 default = a_param
                             elif i > 1:

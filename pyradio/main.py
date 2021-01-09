@@ -12,11 +12,6 @@ from .config import PyRadioConfig
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
-if platform.startswith('win'):
-    IMPLEMENTED_PLAYERS = ('mplayer', 'vlc')
-else:
-    IMPLEMENTED_PLAYERS = ('mpv', 'mplayer', 'vlc')
-
 @contextmanager
 def pyradio_config_file():
     cf = PyRadioConfig()
