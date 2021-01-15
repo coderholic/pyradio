@@ -97,6 +97,9 @@ class PyRadioConfigWindow(object):
         self.init_config_win()
         self.refresh_config_win()
         self._old_use_transparency = self._config_options['use_transparency'][1]
+        if self._cnf.params_changed:
+            self._cnf.dirty_config = True
+            # self._config_options['dirty_config'] = ['', True]
 
     def __del__(self):
         self._toggle_transparency_function = None
@@ -167,7 +170,7 @@ class PyRadioConfigWindow(object):
     def _print_title(self):
         if self._config_options == self._saved_config_options and \
             self._old_theme == self._saved_config_options['theme'][1] and \
-            self._old_use_transparency == self._saved_config_options['use_transparency'][1]:
+                self._old_use_transparency == self._saved_config_options['use_transparency'][1] and not self._cnf.params_changed:
             dirty_title = '─ '
         else:
             dirty_title = ' *'
@@ -436,6 +439,72 @@ class PyRadioConfigWindow(object):
         return -1, []
 
 
+class PyRadioExtraParams(object):
+
+    def __init__(self,
+                 config,
+                 parent):
+        self._extra = None
+        self._cnf = config
+        self._parent = parent
+        self._win = None
+        self._title = ' Player Extra Parameters '
+        self._too_small_str = '  Window too small'
+        self._redisplay()
+
+    def set_parrent(self, window):
+        self._parent = window
+        self._redisplay()
+
+    def _redisplay(self):
+        pY, pX = self._parent.getmaxyx()
+        if pY < 12 or pX < 30:
+            self._too_small = True
+            self._win = curses.newwin(
+                3, len(self._too_small_str) + 4,
+                int((pY - 3) / 2) + 2,
+                int((pX - len(self._too_small_str)) / 2)
+            )
+            self.show()
+        else:
+            self._too_small = False
+            self.maxX = pX - 2 if pX < 40 else 40
+            self._win = curses.newwin(
+                12, self.maxX,
+                int((pY - 12) / 2) + 2,
+                int((pX - self.maxX) / 2)
+            )
+        if self._extra:
+            self._extra.set_window(self._win)
+            self.show()
+        else:
+            self._extra = ExtraParameters(
+                self._cnf,
+                self._cnf.PLAYER_NAME,
+                self._win,
+                lambda: True,
+                from_config=False
+            )
+
+    def show(self):
+        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.erase()
+        self._win.box()
+        if self._too_small:
+            self._win.addstr(1, 1, self._too_small_str,
+                             curses.color_pair(5))
+            self._win.refresh()
+        else:
+            self._win.addstr(
+                0, int((self.maxX - len(self._title)) / 2),
+                self._title,
+                curses.color_pair(4))
+            self._extra.refresh_win()
+
+    def keypress(self, char):
+        return self._extra.keypress(char)
+
+
 class ExtraParameters(object):
     """ display player's extra parameters
         in a foreign curses window
@@ -446,12 +515,13 @@ class ExtraParameters(object):
                  player,
                  win,
                  focus,
-                 startY=0,
-                 startX=0,
+                 startY=1,
+                 startX=1,
                  max_lines=10,
                  from_config=True):
         self._cnf = config
         self._orig_params = dict(self._cnf.params)
+        logger.error('DE orig params = {}'.format(self._orig_params))
         self._orig_player = player
         self._win = win
         self._focus = focus
@@ -468,6 +538,7 @@ class ExtraParameters(object):
         self._get_width()
 
     def reset(self):
+        self._is_dirty = False
         self._player = self._orig_player
         self._working_params = dict(self._orig_params)
         self._selections = {
@@ -520,15 +591,17 @@ class ExtraParameters(object):
         self._selections[self._player][2] = val
 
     @property
+    def params(self):
+        """ Returns the parameters as changed by the user """
+        return self._orig_params
+
+    @params.setter
+    def params(self, val):
+        raise ValueError('parameter is read only')
+
+    @property
     def is_dirty(self):
-        self._list_to_dict()
-        for a_set in self._working_params.keys():
-            try:
-                if str(self._working_params[a_set]) != str(self._orig_params[a_set]):
-                    return False
-            except KeyError:
-                return False
-        return True
+        return self._is_dirty
 
     @is_dirty.setter
     def is_dirty(self, val):
@@ -544,6 +617,7 @@ class ExtraParameters(object):
                     self._selections[a_param_set][2] = int(a_param) - 1
                 else:
                     self._items_dict[a_param_set].append(a_param)
+        logger.error('DE selections = {}'.format(self._selections))
 
     def _list_to_dict(self):
         """ convert self._items_dict to self._working_params """
@@ -628,7 +702,8 @@ class ExtraParameters(object):
         # erase params window
         # done by containing window
 
-        self.refresh_win()
+        if self.from_config:
+            self.refresh_win()
 
     def set_window(self, window):
         self.resize(window=window)
@@ -660,6 +735,24 @@ class ExtraParameters(object):
                     self.selection = len(self._items) - 1
         self.refresh_win()
 
+    def save_results(self):
+        """ set _is_dirty to True if paramaters have changes,
+            False otherwise. Also, pass working parameters to
+            original parameters effectively saving any changes.
+        """
+        self._list_to_dict()
+
+        for a_set in self._working_params.keys():
+            try:
+                if str(self._working_params[a_set]) != str(self._orig_params[a_set]):
+                    self._is_dirty = False
+            except KeyError:
+                self._is_dirty = False
+        self._is_dirty = True
+        logger.error('DE save dirty = {}'.format(self._is_dirty))
+
+        self._orig_params = dict(self._working_params)
+
     def keypress(self, char):
         """ Extra parameters keypress
             Returns:
@@ -669,16 +762,30 @@ class ExtraParameters(object):
                  1 - display help
                  2 - error, number of max lines reached
                  3 - error, cannot edit or delete first item
-                 4 - error, no editing when opened by "Z"
         """
         if char in (
             curses.KEY_ENTER, ord('\n'),
             ord('\r'), ord(' '), ord('l'),
                 curses.KEY_RIGHT):
-            self.active = self.selection
-            self.refresh_win()
             # activate selection
+            self.active = self.selection
+            if self.from_config:
+                self.refresh_win()
+            else:
+                self.save_results()
             return 0
+
+        elif char in (
+            curses.KEY_EXIT, 27,
+            ord('q'), curses.KEY_LEFT,
+            ord('h')
+        ):
+            self._win.nodelay(True)
+            char = self._win.getch()
+            self._win.nodelay(False)
+            if char == -1:
+                """ ESCAPE """
+                return -2
 
         elif char == ord('?'):
             # display help
@@ -722,8 +829,6 @@ class ExtraParameters(object):
                     if self.selection >= len(self._items):
                         self.selection -= 1
                     self.refresh_win()
-            else:
-                return 4
 
         elif char == ord('e'):
             if self.from_config:
@@ -732,8 +837,6 @@ class ExtraParameters(object):
                     return 3
                 else:
                     pass
-            else:
-                return 4
 
         elif char == ord('a'):
             if self.from_config:
@@ -742,8 +845,6 @@ class ExtraParameters(object):
                     return 2
                 else:
                     pass
-            else:
-                return 4
 
         return -1
 

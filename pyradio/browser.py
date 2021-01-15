@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class PyRadioStationsBrowser(object):
-    """A base class to get results from online radio directory services.
+    """ A base class to get results from online radio directory services.
 
-    Actual implementations should be subclasses of this one.
+        Actual implementations should be subclasses of this one.
     """
 
     BASE_URL = ''

@@ -5,7 +5,7 @@
 # Ben Dowling - 2009 - 2010
 # Kirill Klenov - 2012
 # Peter Stevenson (2E0PGS) - 2018
-# Spiros Georgaras - 2018, 2020
+# Spiros Georgaras - 2018, 2021
 
 import curses
 import curses.ascii
@@ -284,6 +284,7 @@ class PyRadio(object):
                 self.ws.UNNAMED_REGISTER_MODE: self._show_unnamed_register,
                 self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
                 self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
+                self.ws.PLAYER_PARAMS_MODE: self._redisplay_params,
                 }
 
         """ list of help functions """
@@ -307,7 +308,8 @@ class PyRadio(object):
                 self.ws.YANK_HELP_MODE: self._show_yank_help,
                 self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
                 self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
-                }
+                self.ws.PLAYER_PARAMS_MODE: self._show_config_player_help,
+        }
 
         """ search classes
             0 - station search
@@ -356,6 +358,31 @@ class PyRadio(object):
                 'v': self._volume_save
         }
 
+        self.buttons = {
+            curses.BUTTON1_CLICKED: 'BUTTON1_CLICKED',
+            curses.BUTTON1_DOUBLE_CLICKED: 'BUTTON1_DOUBLE_CLICKED',
+            curses.BUTTON1_PRESSED: 'BUTTON1_PRESSED',
+            curses.BUTTON1_RELEASED: 'BUTTON1_RELEASED',
+            curses.BUTTON1_TRIPLE_CLICKED: 'BUTTON1_TRIPLE_CLICKED',
+            curses.BUTTON2_CLICKED: 'BUTTON2_CLICKED',
+            curses.BUTTON2_DOUBLE_CLICKED: 'BUTTON2_DOUBLE_CLICKED',
+            curses.BUTTON2_PRESSED: 'BUTTON2_PRESSED',
+            curses.BUTTON2_RELEASED: 'BUTTON2_RELEASED',
+            curses.BUTTON2_TRIPLE_CLICKED: 'BUTTON2_TRIPLE_CLICKED',
+            curses.BUTTON3_CLICKED: 'BUTTON3_CLICKED',
+            curses.BUTTON3_DOUBLE_CLICKED: 'BUTTON3_DOUBLE_CLICKED',
+            curses.BUTTON3_PRESSED: 'BUTTON3_PRESSED',
+            curses.BUTTON3_RELEASED: 'BUTTON3_RELEASED',
+            curses.BUTTON3_TRIPLE_CLICKED: 'BUTTON3_TRIPLE_CLICKED',
+            curses.BUTTON4_CLICKED: 'BUTTON4_CLICKED',
+            curses.BUTTON4_DOUBLE_CLICKED: 'BUTTON4_DOUBLE_CLICKED',
+            curses.BUTTON4_PRESSED: 'BUTTON4_PRESSED',
+            curses.BUTTON4_RELEASED: 'BUTTON4_RELEASED',
+            curses.BUTTON4_TRIPLE_CLICKED: 'BUTTON4_TRIPLE_CLICKED',
+            curses.BUTTON_ALT: 'BUTTON_ALT',
+            curses.BUTTON_CTRL: 'BUTTON_CTRL',
+            curses.BUTTON_SHIFT: 'BUTTON_SHIFT',
+        }
 
     def __del__(self):
         self.transientWin = None
@@ -454,10 +481,14 @@ class PyRadio(object):
         self.headWin = curses.newwin(1, self.maxX, 0, 0)
         self.outerBodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
         #self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
+        self.bodyWinStartY = 2 + self._cnf.internal_header_height
+        self.bodyWinEndY = self.maxY - self.bodyWinStartY - 1
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('body starts at line {0}, ends at line {1}'.format(self.bodyWinStartY, self.bodyWinEndY))
         self.bodyWin = curses.newwin(
             self.maxY - 4 - self._cnf.internal_header_height,
             self.maxX - 2,
-            2 + self._cnf.internal_header_height,
+            self.bodyWinStartY,
             1)
         self.footerWin = curses.newwin(1, self.maxX, self.maxY - 1, 0)
         # txtWin used mainly for error reports
@@ -745,6 +776,10 @@ class PyRadio(object):
             if self._cnf.foreign_file:
                 """ ask to copy this playlist in config dir """
                 self._print_handle_foreign_playlist()
+
+            curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
+            #curses.mouseinterval(0)
+
 
             while True:
                 try:
@@ -1640,7 +1675,6 @@ class PyRadio(object):
                          g| / |G            |Move to first / last item.
                          Enter|,|Space
                          Right|,|l          |Activate current selection.
-                         a| / |e| / |x        ||A|dd / |e|dit / delete item.
                          Esc|,|q|,|Left|,|h     |Cancel.
                          %_Player Keys_
                          -|/|+| or |,|/|.       |Change volume.
@@ -3292,6 +3326,83 @@ class PyRadio(object):
         self.selections[self.ws.PLAYLIST_MODE][2] = playing
         return ret
 
+    def _page_up(self):
+        self._update_status_bar_right()
+        if self.number_of_items > 0:
+            sel = self.selection - self.pageChange
+            if sel < 0 and self.selection > 0:
+                sel = 0
+            self.setStation(sel)
+            self.refreshBody()
+
+    def _page_down(self):
+        self._update_status_bar_right()
+        if self.number_of_items > 0:
+            sel = self.selection + self.pageChange
+            if self.selection == len(self.stations) - 1:
+                sel = 0
+            elif sel >= len(self.stations):
+                sel = len(self.stations) - 1
+            self.setStation(sel)
+            self.refreshBody()
+
+    def _handle_main_window_mouse_event(self):
+        try:
+            _, mx, my, _, a_button = curses.getmouse()
+        except curses.error:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Mouse error, assuming scroll down')
+            self._page_down()
+            return
+        try:
+            key_event = self.buttons[a_button]
+            logger.debug('Mouse event is {}'.format(key_event))
+        except KeyError:
+            logger.debug('Mouse event is UNKNOWN, assuming scroll down')
+            self._page_down()
+            return
+        if a_button & curses.BUTTON4_PRESSED:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Mouse button 4 pressed: assuming scroll up')
+            self._page_up()
+        elif a_button & curses.BUTTON2_RELEASED \
+                or a_button & curses.BUTTON2_CLICKED:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Mouse button 2 clicked: muting the player')
+            self._update_status_bar_right()
+            self._volume_mute()
+            return
+        if self.bodyWinStartY <= my <= self.bodyWinEndY:
+            if a_button & curses.BUTTON1_DOUBLE_CLICKED \
+                    or a_button & curses.BUTTON1_TRIPLE_CLICKED \
+                    or a_button & curses.BUTTON1_CLICKED \
+                    or a_button & curses.BUTTON1_RELEASED:
+                new_selection = self.startPos + my - self.bodyWinStartY
+                if new_selection == self.selection:
+                    do_update = False
+                else:
+                    do_update = True
+                    self.selection = new_selection
+
+                if a_button & curses.BUTTON1_DOUBLE_CLICKED \
+                        or a_button & curses.BUTTON1_TRIPLE_CLICKED:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        if a_button & curses.BUTTON1_DOUBLE_CLICKED:
+                            logger.debug('Mouse button 1 double click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
+                        else:
+                            logger.debug('Mouse button 1 triple click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
+                    do_update = True
+                    self.playSelection()
+                elif a_button & curses.BUTTON1_CLICKED \
+                        or a_button & curses.BUTTON1_RELEASED:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse button 1 click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
+                if do_update:
+                    self.refreshBody()
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Mouse is not on Body Window...')
+
     def keypress(self, char):
         if self._system_asked_to_terminate:
             """ Make sure we exit when signal received """
@@ -3571,6 +3682,12 @@ class PyRadio(object):
         # End of Add to Register - char = y
         #
         ##############################################################################
+
+        elif char == curses.KEY_MOUSE:
+            if self.ws.operation_mode in \
+                    (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
+                self._handle_main_window_mouse_event()
+            return
 
         elif char == ord('H') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
@@ -4494,6 +4611,37 @@ class PyRadio(object):
             self.refreshBody()
             return
 
+        elif self.ws.operation_mode == self.ws.PLAYER_PARAMS_MODE:
+            ret = self._player_select_win.keypress(char)
+            if ret == -2:
+                # Cancel
+                self.ws.close_window()
+                self._player_select_win = None
+                self.refreshBody()
+
+            elif ret == 0:
+                # Parameter selected
+                if self._player_select_win._extra.is_dirty:
+                    logger.error('DE I am here!!!')
+                    logger.error('DE params = {}'.format(self._cnf.params))
+                    self._cnf.params = dict(self._player_select_win._extra.params)
+                    logger.error('DE params = {}'.format(self._cnf.params))
+                    self._cnf.params_changed = True
+                self.ws.close_window()
+                self._player_select_win = None
+                self.refreshBody()
+
+            elif ret == 1:
+                # Help
+                self._player_select_win.focus = False
+                self._player_select_win.from_config = False
+                self._show_config_player_help()
+
+            elif ret > 1:
+                # error
+                pass
+
+            return
         elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
             if self.ws.operation_mode in (
                 self.ws.MAIN_HELP_MODE,
@@ -4651,25 +4799,11 @@ class PyRadio(object):
                 return
 
             if char in (curses.KEY_PPAGE, ):
-                self._update_status_bar_right()
-                if self.number_of_items > 0:
-                    sel = self.selection - self.pageChange
-                    if sel < 0 and self.selection > 0:
-                        sel = 0
-                    self.setStation(sel)
-                    self.refreshBody()
+                self._page_up()
                 return
 
             if char in (curses.KEY_NPAGE, ):
-                self._update_status_bar_right()
-                if self.number_of_items > 0:
-                    sel = self.selection + self.pageChange
-                    if self.selection == len(self.stations) - 1:
-                        sel = 0
-                    elif sel >= len(self.stations):
-                        sel = len(self.stations) - 1
-                    self.setStation(sel)
-                    self.refreshBody()
+                self._page_down()
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -4860,6 +4994,19 @@ class PyRadio(object):
                         parent=self.bodyWin,
                         connection_type=self.player.force_http)
                     self._connection_type_edit.show()
+                    return
+
+                elif char in (ord('Z'), ):
+                    self._random_requested = False
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
+                    self.ws.operation_mode = self.ws.PLAYER_PARAMS_MODE
+                    self._player_select_win = PyRadioExtraParams(
+                        self._cnf,
+                        self.bodyWin
+                    )
+                    self._player_select_win.show()
                     return
 
                 elif char == ord('J'):
@@ -5468,6 +5615,9 @@ class PyRadio(object):
         if self.theme_forced_selection:
             self._theme_selector.set_theme(self.theme_forced_selection)
         self._print_ask_to_create_theme()
+
+    def _redisplay_params(self):
+        self._player_select_win.set_parrent(self.bodyWin)
 
     def _load_renamed_playlist(self, a_file, old_file, is_copy):
         if logger.isEnabledFor(logging.DEBUG):

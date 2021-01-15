@@ -989,6 +989,8 @@ class PyRadioConfig(PyRadioStations):
     """
     saved_params = dict(params)
 
+    params_changed = False
+
     def __init__(self):
         self._profile_name = 'pyradio'
         self.player = ''
@@ -1004,7 +1006,10 @@ class PyRadioConfig(PyRadioStations):
         self.theme = 'dark'
         self.use_transparency = False
 
-        self.dirty_config = False
+        if self.params_changed:
+            self.dirty_config = True
+        else:
+            self.dirty_config = False
         # True if player changed by config window
         self.player_changed = False
         # [ old player, new player ]
@@ -1180,7 +1185,7 @@ class PyRadioConfig(PyRadioStations):
             ret = int(self.opts['connection_timeout'][1])
             if not 5 <= ret <= 60:
                 ret = 10
-        except:
+        except ValueError:
             ret = 10
         self.opts['connection_timeout'][1] = str(ret)
         return ret
@@ -1216,6 +1221,10 @@ class PyRadioConfig(PyRadioStations):
 
     def reset_profile_name(self):
         self._profile_name = 'pyradio'
+
+    def get_profile_name_from_saved_params(self):
+        self.command_line_params_not_ready = self.saved_params[self.PLAYER_NAME][self.saved_params[self.PLAYER_NAME][0]]
+        self.set_profile_from_command_line()
 
     def set_profile_from_command_line(self):
         parts = self.command_line_params_not_ready.split(':')
@@ -1255,7 +1264,10 @@ class PyRadioConfig(PyRadioStations):
                 except:
                     pass
         else:
-            self._session_lock_file = path.join(getenv('APPDATA'), 'pyradio', 'pyradio.lock')
+            if platform == 'win32':
+                self._session_lock_file = path.join(getenv('APPDATA'), 'pyradio', 'pyradio.lock')
+            else:
+                self._session_lock_file = path.join(getenv('HOME'), '.config', 'pyradio')
         if path.exists(self._session_lock_file):
             if platform == 'win32':
                 win_lock = path.join(getenv('APPDATA'), 'pyradio', '_windows.lock')
@@ -1392,7 +1404,6 @@ class PyRadioConfig(PyRadioStations):
             (well, actually 11 items, since the first one is the
             index to the default string in the list)
         """
-        logger.error('DE \n\n{}\n\n'.format(self.params))
         for n in self.params.keys():
             self.params[n] = self.params[n][:11]
 
@@ -1562,15 +1573,30 @@ auto_save_playlist = {10}
 
                 """ write extra player parameters to file """
                 first_param = True
+                logger.error('DE saved params = {}'.format(self.saved_params))
                 for a_set in self.saved_params.keys():
                     if len(self.saved_params[a_set]) > 2:
                         if first_param:
                             txt = '''# Player Extra parameters section
+#
+# Each supported player can have up to 9 entries in this section,
+# specifying extra parameters to be used when it is executed.
+# The format is "[player name]_parameter=[parameters]"
+# The parameter part can either be:
+# 1) "profile:[name of profile]" or 2) [prayer parameters]
+# When (1) is used, the [name of profile] should exist in the
+# player's config file (otherwise it will be created).
+# The use of profiles will be silently ignored for VLC, which
+# does not support profiles.
+# When (2) is used, the parameters are added to those specified
+# at PyRadio's default profile (again not for VLC).
+# An asterisk will indicate the parameter to be used as default.
 
 # {} extra parameters\n'''
+                            first_param = False
 
                         else:
-                            txt = '''# {} extra parameters\n'''
+                            txt = '''\n# {} extra parameters\n'''
                         cfgfile.write(txt.format(a_set))
                         for i, a_param in enumerate(self.saved_params[a_set]):
                             if i == 0:
@@ -1590,6 +1616,7 @@ auto_save_playlist = {10}
         if logger.isEnabledFor(logging.INFO):
             logger.info('Config saved')
         self.opts['dirty_config'][1] = False
+        self.params_changed = False
         return 0
 
     def read_playlist_file(self, stationFile='', is_register=False):
