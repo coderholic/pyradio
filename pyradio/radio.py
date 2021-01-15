@@ -1472,8 +1472,9 @@ class PyRadio(object):
                  !Registe mode (')
                  '                |Open registers list.
                  a-z| / |0-9        |Open named register.
-                 !Connection type
-                 z                |Toggle "Force http connections" """
+                 !Player Customization
+                 z                |Toggle "Force http connections"
+                 Z                |Extra player parameters"""
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_3,
                         reset_metrics=False)
@@ -3354,11 +3355,52 @@ class PyRadio(object):
                 logger.debug('Mouse error, assuming scroll down')
             self._page_down()
             return
+
+        # This code is feom ranger
+        # x-values above ~220 suddenly became negative, apparently
+        # it's sufficient to add 0xFF to fix that error.
+        if my < 0:
+            my += 0xFF
+
+        if mx < 0:
+            mx += 0xFF
+
         try:
             key_event = self.buttons[a_button]
-            logger.debug('Mouse event is {}'.format(key_event))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Mouse event is {}'.format(key_event))
         except KeyError:
-            logger.debug('Mouse event is UNKNOWN, assuming scroll down')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Mouse event is UNKNOWN, looking for SHIFT')
+            if a_button & curses.BUTTON_SHIFT:
+                # volume up/down
+                if (a_button & curses.BUTTON_CTRL) or \
+                        (a_button & curses.BUTTON_ALT):
+                    return
+                a_button ^= curses.BUTTON_SHIFT
+                try:
+                    key_event = self.buttons[a_button]
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event is SHIFT-{}'.format(key_event))
+                except KeyError:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event is SHIFT-UNKNOWN, assuming SHIFT scroll down')
+                    a_button = 1
+
+                if a_button & curses.BUTTON4_PRESSED:
+                    self._volume_up()
+                elif a_button & 1:
+                    self._volume_down()
+                return
+
+            elif a_button & curses.BUTTON_CTRL:
+                if (a_button & curses.BUTTON_SHIFT) or \
+                        (a_button & curses.BUTTON_ALT):
+                    return
+                if a_button & curses.BUTTON2_CLICKED:
+                    self._volume_save()
+                    return
+
             self._page_down()
             return
         if a_button & curses.BUTTON4_PRESSED:
