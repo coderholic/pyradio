@@ -60,6 +60,55 @@ def rel(path):
 def is_ascii(s):
     return all(ord(c) < 128 for c in s)
 
+def shift_only(event):
+    if (event & curses.BUTTON_SHIFT) \
+            and not (event & curses.BUTTON_CTRL) \
+            and not (event & curses.BUTTON_ALT):
+        return True
+    else:
+        return False
+
+def ctrl_only(event):
+    if (event & curses.BUTTON_CTRL) \
+            and not (event & curses.BUTTON_SHIFT) \
+            and not (event & curses.BUTTON_ALT):
+        return True
+    else:
+        return False
+
+def alt_only(event):
+    if (event & curses.BUTTON_ALT) \
+            and not (event & curses.BUTTON_SHIFT) \
+            and not (event & curses.BUTTON_CTRL):
+        return True
+    else:
+        return False
+
+def alt_ctrl(event):
+    if (event & curses.BUTTON_ALT) \
+            and not (event & curses.BUTTON_SHIFT) \
+            and (event & curses.BUTTON_CTRL):
+        return True
+    else:
+        return False
+
+def number_of_modifiers(event):
+    ret = 0
+    for a_mod in (curses.BUTTON_SHIFT,
+                  curses.BUTTON_CTRL,
+                  curses.BUTTON_ALT):
+        if event & a_mod:
+            ret += 1
+    return ret
+
+def no_modifiers(event):
+    ret = number_of_modifiers(event)
+    return True if ret == 0 else False
+
+def multi_modifiers(event):
+    return not no_modifiers(event)
+
+
 class PyRadio(object):
     player = None
     ws = Window_Stack()
@@ -3365,85 +3414,80 @@ class PyRadio(object):
         if mx < 0:
             mx += 0xFF
 
-        try:
-            key_event = self.buttons[a_button]
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Mouse event is {}'.format(key_event))
-        except KeyError:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Mouse event is UNKNOWN, looking for SHIFT')
-            if a_button & curses.BUTTON_SHIFT:
-                # volume up/down
-                if (a_button & curses.BUTTON_CTRL) or \
-                        (a_button & curses.BUTTON_ALT):
-                    return
-                a_button ^= curses.BUTTON_SHIFT
-                try:
-                    key_event = self.buttons[a_button]
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Mouse event is SHIFT-{}'.format(key_event))
-                except KeyError:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Mouse event is SHIFT-UNKNOWN, assuming SHIFT scroll down')
-                    a_button = 1
+        if shift_only(a_button):
+            # looking for wheel
+            try:
+                key_event = self.buttons[a_button & curses.BUTTON_SHIFT]
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Mouse event is {}'.format(key_event))
+            except KeyError:
+                a_button = 1
 
-                if a_button & curses.BUTTON4_PRESSED:
-                    self._volume_up()
-                elif a_button & 1:
-                    self._volume_down()
+            # check value
+            if a_button & curses.BUTTON4_PRESSED:
+                self._volume_up()
+            else:
+                self._volume_down()
+            return
+
+        #elif ctrl_only(a_button):
+        #    # looking for BUTTON2_CLICKED
+        #    logger.error('DE CTRL only!')
+        #    if a_button & curses.BUTTON4_PRESSED:
+        #        #self._update_status_bar_right()
+        #        self._volume_mute()
+        #        return
+
+        #elif alt_ctrl(a_button):
+        #    logger.error('DE CTRL only!')
+        #    if a_button & curses.BUTTON4_PRESSED:
+        #        #self._update_status_bar_right()
+        #        self._volume_save()
+        #        return
+
+        elif no_modifiers(a_button):
+            try:
+                key_event = self.buttons[a_button]
+
+            except KeyError:
+                self._page_down()
                 return
 
-            elif a_button & curses.BUTTON_CTRL:
-                if (a_button & curses.BUTTON_SHIFT) or \
-                        (a_button & curses.BUTTON_ALT):
-                    return
-                if a_button & curses.BUTTON2_CLICKED:
-                    self._volume_save()
-                    return
+            if a_button & curses.BUTTON4_PRESSED:
+                self._page_up()
+                return
 
-            self._page_down()
-            return
-        if a_button & curses.BUTTON4_PRESSED:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Mouse button 4 pressed: assuming scroll up')
-            self._page_up()
-        elif a_button & curses.BUTTON2_RELEASED \
-                or a_button & curses.BUTTON2_CLICKED:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Mouse button 2 clicked: muting the player')
-            self._update_status_bar_right()
-            self._volume_mute()
-            return
-        if self.bodyWinStartY <= my <= self.bodyWinEndY:
-            if a_button & curses.BUTTON1_DOUBLE_CLICKED \
-                    or a_button & curses.BUTTON1_TRIPLE_CLICKED \
-                    or a_button & curses.BUTTON1_CLICKED \
-                    or a_button & curses.BUTTON1_RELEASED:
-                new_selection = self.startPos + my - self.bodyWinStartY
-                if new_selection == self.selection:
-                    do_update = False
-                else:
-                    do_update = True
-                    self.selection = new_selection
-
+            # looging for BUTTON 1 events
+            if self.bodyWinStartY <= my <= self.bodyWinEndY:
                 if a_button & curses.BUTTON1_DOUBLE_CLICKED \
-                        or a_button & curses.BUTTON1_TRIPLE_CLICKED:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        if a_button & curses.BUTTON1_DOUBLE_CLICKED:
-                            logger.debug('Mouse button 1 double click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
-                        else:
-                            logger.debug('Mouse button 1 triple click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
-                    do_update = True
-                    self.playSelection()
-                elif a_button & curses.BUTTON1_CLICKED \
+                        or a_button & curses.BUTTON1_TRIPLE_CLICKED \
+                        or a_button & curses.BUTTON1_CLICKED \
                         or a_button & curses.BUTTON1_RELEASED:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Mouse button 1 click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
-                if do_update:
-                    self.refreshBody()
-        else:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Mouse is not on Body Window...')
+                    new_selection = self.startPos + my - self.bodyWinStartY
+                    if new_selection == self.selection:
+                        do_update = False
+                    else:
+                        do_update = True
+                        self.selection = new_selection
+
+                    if a_button & curses.BUTTON1_DOUBLE_CLICKED \
+                            or a_button & curses.BUTTON1_TRIPLE_CLICKED:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            if a_button & curses.BUTTON1_DOUBLE_CLICKED:
+                                logger.debug('Mouse button 1 double click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
+                            else:
+                                logger.debug('Mouse button 1 triple click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
+                        do_update = True
+                        self.playSelection()
+                    elif a_button & curses.BUTTON1_CLICKED \
+                            or a_button & curses.BUTTON1_RELEASED:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Mouse button 1 click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
+                    if do_update:
+                        self.refreshBody()
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Mouse is not on Body Window...')
 
     def keypress(self, char):
         if self._system_asked_to_terminate:
