@@ -276,6 +276,8 @@ def set_terminal_title():
         except:
             pass
 
+    sys.stdout.flush()
+
 def open_conf_dir(cnf):
     import subprocess
     import os

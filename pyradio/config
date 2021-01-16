@@ -36,6 +36,15 @@ default_station = False
 # Default value: utf-8
 default_encoding = utf-8
 
+# Enable mouse
+# If this options is enabled, the mouse can be used to scroll the
+# playlist, start playback, etc.
+# Mouse integration is highly terminal dependent, that's why it
+# is disabled by default.
+#
+# Default value: False
+enable_mouse = False
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server
 # message indicating that playback has actually started.

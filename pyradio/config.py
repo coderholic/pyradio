@@ -962,6 +962,7 @@ class PyRadioConfig(PyRadioStations):
     opts['default_playlist'] = ['Def. playlist: ', 'stations']
     opts['default_station'] = ['Def station: ', 'False']
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
+    opts['enable_mouse'] = ['Enable mouse: ', False]
     opts['conn_title'] = ['Connection Options: ', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
@@ -974,6 +975,8 @@ class PyRadioConfig(PyRadioStations):
     opts['auto_save_playlist'] = ['Auto save playlist: ', False]
     opts['requested_player'] = ['', '']
     opts['dirty_config'] = ['', False]
+
+    original_mousemask = (0, 0)
 
     """ parameters used by the program
         may get modified by "Z" command
@@ -1082,6 +1085,15 @@ class PyRadioConfig(PyRadioStations):
         if self.opts['player'][1] != self.opts['requested_player'][1]:
             self.opts['player'][1] = self.requested_player
             self.opts['dirty_config'][1] = True
+
+    @property
+    def enable_mouse(self):
+        return self.opts['enable_mouse'][1]
+
+    @enable_mouse.setter
+    def enable_mouse(self, val):
+        self.opts['enable_mouse'][1] = val
+        self.opts['dirty_config'][1] = True
 
     @property
     def player(self):
@@ -1218,6 +1230,12 @@ class PyRadioConfig(PyRadioStations):
     @session_lock_file.setter
     def session_lock_file(self, val):
         return
+
+    def setup_mouse(self):
+        if self.enable_mouse:
+            curses.mousemask(curses.ALL_MOUSE_EVENTS
+                             | curses.REPORT_MOUSE_POSITION)
+            #curses.mouseinterval(0)
 
     def reset_profile_name(self):
         self._profile_name = 'pyradio'
@@ -1370,6 +1388,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['default_station'][1] = None
                 else:
                     self.opts['default_station'][1] = st
+            elif sp[0] == 'enable_mouse':
+                if sp[1].lower() == 'false':
+                    self.opts['enable_mouse'][1] = False
+                else:
+                    self.opts['enable_mouse'][1] = True
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False
@@ -1489,6 +1512,15 @@ default_station = {2}
 # Default value: utf-8
 default_encoding = {3}
 
+# Enable mouse
+# If this options is enabled, the mouse can be used to scroll the
+# playlist, start playback, etc.
+# Mouse integration is highly terminal dependent, that's why it
+# is disabled by default.
+#
+# Default value: False
+enable_mouse = {4}
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server
 # message indicating that playback has actually started.
@@ -1499,7 +1531,7 @@ default_encoding = {3}
 #
 # Valid values: 5 - 60
 # Default value: 10
-connection_timeout = {4}
+connection_timeout = {5}
 
 # Force http connections
 # Most radio stations use plain old http protocol to broadcast, but
@@ -1508,7 +1540,7 @@ connection_timeout = {4}
 #
 # Valid values: True, true, False, false
 # Default value: False
-force_http = {5}
+force_http = {6}
 
 # Default theme
 # Hardcooded themes:
@@ -1519,7 +1551,7 @@ force_http = {5}
 #   black_on_white (bow) (256 colors)
 #   white_on_black (wob) (256 colors)
 # Default value = 'dark'
-theme = {6}
+theme = {7}
 
 # Transparency setting
 # If False, theme colors will be used.
@@ -1528,7 +1560,7 @@ theme = {6}
 # not running, the terminal's background color will be used.
 # Valid values: True, true, False, false
 # Default value: False
-use_transparency = {7}
+use_transparency = {8}
 
 
 # Playlist management
@@ -1537,20 +1569,20 @@ use_transparency = {7}
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {8}
+confirm_station_deletion = {9}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within Pyradio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {9}
+confirm_playlist_reload = {10}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {10}
+auto_save_playlist = {11}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
@@ -1563,6 +1595,7 @@ auto_save_playlist = {10}
                     self.opts['default_playlist'][1],
                     self.opts['default_station'][1],
                     self.opts['default_encoding'][1],
+                    self.opts['enable_mouse'][1],
                     self.opts['connection_timeout'][1],
                     self.opts['force_http'][1],
                     self.opts['theme'][1],

@@ -55,6 +55,7 @@ class PyRadioConfigWindow(object):
     _help_text.append(['This is the encoding used by default when reading data provided by a station such as song title, etc. If reading said data ends up in an error, "utf-8" will be used instead.', '|',
     'If changed, playback must be restarted so that changes take effect.',
     '|', 'Default value: utf-8'])
+    _help_text.append(['If this options is enabled, the mouse can be used to scroll the playlist, start playback, etc.', '|', 'Mouse integration is highly terminal dependent, that\'s why it is disabled by default.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
@@ -270,6 +271,7 @@ class PyRadioConfigWindow(object):
         self._config_options['default_playlist'][1] = 'stations'
         self._config_options['default_station'][1] = 'False'
         self._config_options['default_encoding'][1] = 'utf-8'
+        self._config_options['enable_mouse'][1] = 'False'
         self._config_options['connection_timeout'][1] = '10'
         self._config_options['theme_title'][1] = ''
         # Transparency
@@ -390,6 +392,10 @@ class PyRadioConfigWindow(object):
                 return 1, []
         elif char in (ord('s'), ):
             self._old_theme = self._config_options['theme'][1]
+            if self._saved_config_options['enable_mouse'][1] == self._config_options['enable_mouse'][1]:
+                self.mouse_changed = False
+            else:
+                self.mouse_changed = True
             self._saved_config_options = deepcopy(self._config_options)
             if self._cnf.opts != self._saved_config_options:
                 # check if player has changed
@@ -425,9 +431,11 @@ class PyRadioConfigWindow(object):
                 return self.n_u.SELECT_STATION_MODE, []
             elif sel == 'confirm_station_deletion' or \
                     sel == 'confirm_playlist_reload' or \
+                    sel == 'enable_mouse' or \
                     sel == 'auto_save_playlist' or \
                     sel == 'force_http':
                 self._config_options[sel][1] = not self._config_options[sel][1]
+                logger.error('DE {}'.format(self._config_options))
                 self.refresh_selection()
             elif sel == 'use_transparency':
                 #self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]

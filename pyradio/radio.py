@@ -819,16 +819,17 @@ class PyRadio(object):
                     self.playSelection()
                     self._goto_playing_station(changing_playlist=True)
                 self.refreshBody()
-                self.selections[self.ws.NORMAL_MODE] = [self.selection, self.startPos, self.playing, self.stations]
+                self.selections[self.ws.NORMAL_MODE] = [self.selection,
+                                                        self.startPos,
+                                                        self.playing,
+                                                        self.stations]
                 #self.ll('run')
 
             if self._cnf.foreign_file:
                 """ ask to copy this playlist in config dir """
                 self._print_handle_foreign_playlist()
 
-            curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
-            #curses.mouseinterval(0)
-
+            self._cnf.setup_mouse()
 
             while True:
                 try:
@@ -3396,16 +3397,35 @@ class PyRadio(object):
             self.setStation(sel)
             self.refreshBody()
 
-    def _handle_main_window_mouse_event(self):
-        try:
-            _, mx, my, _, a_button = curses.getmouse()
-        except curses.error:
+    def _handle_mouse(self, main_window=True):
+        my, mx, a_button = self._get_mouse()
+        if a_button == -1:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Mouse error, assuming scroll down')
+                logger.debug('Mouse event: assuming scroll down')
             self._page_down()
             return
 
-        # This code is feom ranger
+        stop_here = self._handle_all_windows_mouse_event(my, mx, a_button)
+        logger.error('stop_here = {}'.format(stop_here))
+        if not stop_here:
+            if main_window:
+                _, update = self._handle_main_window_mouse_event(my, mx, a_button)
+
+                if update:
+                    self.refreshBody()
+
+
+    def _get_mouse(self):
+        """ Gets a mouse event
+            Returns mouse Y, mouse X, button info
+            If an error occurs, returns 0, 0, -1
+        """
+        try:
+            _, mx, my, _, a_button = curses.getmouse()
+        except curses.error:
+            return 0, 0, -1
+
+        # This code is from ranger
         # x-values above ~220 suddenly became negative, apparently
         # it's sufficient to add 0xFF to fix that error.
         if my < 0:
@@ -3414,50 +3434,58 @@ class PyRadio(object):
         if mx < 0:
             mx += 0xFF
 
+        return my, mx, a_button
+
+    def _handle_all_windows_mouse_event(self, my, mx, a_button):
+        """ Common mouse handler: volume up/down/mute
+            Returns True if activated
+                    False if not (someone else has to
+                                  handle this event)
+        """
         if shift_only(a_button):
             # looking for wheel
-            try:
-                key_event = self.buttons[a_button & curses.BUTTON_SHIFT]
+            if a_button ^ curses.BUTTON_SHIFT not in self.buttons.keys():
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Mouse event is {}'.format(key_event))
-            except KeyError:
-                a_button = 1
-
-            # check value
-            if a_button & curses.BUTTON4_PRESSED:
-                self._volume_up()
-            else:
+                    logger.debug('Mouse event: assuming volume down')
                 self._volume_down()
-            return
-
-        #elif ctrl_only(a_button):
-        #    # looking for BUTTON2_CLICKED
-        #    logger.error('DE CTRL only!')
-        #    if a_button & curses.BUTTON4_PRESSED:
-        #        #self._update_status_bar_right()
-        #        self._volume_mute()
-        #        return
-
-        #elif alt_ctrl(a_button):
-        #    logger.error('DE CTRL only!')
-        #    if a_button & curses.BUTTON4_PRESSED:
-        #        #self._update_status_bar_right()
-        #        self._volume_save()
-        #        return
-
+                return True
+            elif a_button & curses.BUTTON4_PRESSED:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Mouse event: volume up')
+                self._volume_up()
+                return True
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Mouse event: not applicable')
+            return False
         elif no_modifiers(a_button):
-            try:
-                key_event = self.buttons[a_button]
+            if a_button & curses.BUTTON2_CLICKED:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Mouse event: volume mute')
+                self._volume_mute()
+                return True
+            elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
+                self._handle_passive_windows()
+                return True
+            return False
+        else:
+            return False
 
-            except KeyError:
+    def _handle_main_window_mouse_event(self, my, mx, a_button):
+        if no_modifiers(a_button):
+            if a_button not in self.buttons.keys():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Mouse event on main window: page down')
                 self._page_down()
-                return
+                return True, True
 
             if a_button & curses.BUTTON4_PRESSED:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Mouse event on main window: page up')
                 self._page_up()
-                return
+                return True, True
 
             # looging for BUTTON 1 events
+            do_update = True
             if self.bodyWinStartY <= my <= self.bodyWinEndY:
                 if a_button & curses.BUTTON1_DOUBLE_CLICKED \
                         or a_button & curses.BUTTON1_TRIPLE_CLICKED \
@@ -3467,7 +3495,6 @@ class PyRadio(object):
                     if new_selection == self.selection:
                         do_update = False
                     else:
-                        do_update = True
                         self.selection = new_selection
 
                     if a_button & curses.BUTTON1_DOUBLE_CLICKED \
@@ -3483,11 +3510,28 @@ class PyRadio(object):
                             or a_button & curses.BUTTON1_RELEASED:
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Mouse button 1 click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
-                    if do_update:
-                        self.refreshBody()
+                    return True, do_update
+                else:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Mouse event on main window: button not handled')
+                    return False, False
             else:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Mouse is not on Body Window...')
+                    logger.debug('Mouse event on main window: not on Body window')
+                return False, False
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Mouse event on main window: not applicable')
+            return False, False
+
+    def _handle_passive_windows(self):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Mode is in PASSIVE_WINDOWS')
+        self.helpWinContainer = None
+        self.helpWin = None
+        self.ws.close_window()
+        self.refreshBody()
+        self._main_help_id = 0
 
     def keypress(self, char):
         if self._system_asked_to_terminate:
@@ -3772,7 +3816,9 @@ class PyRadio(object):
         elif char == curses.KEY_MOUSE:
             if self.ws.operation_mode in \
                     (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
-                self._handle_main_window_mouse_event()
+                self._handle_mouse()
+            else:
+                self._handle_mouse(main_window=False)
             return
 
         elif char == ord('H') and self.ws.operation_mode in \
@@ -4750,13 +4796,7 @@ class PyRadio(object):
                     self.ws.close_window()
                     func[self._main_help_id]()
                     return
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Mode is in PASSIVE_WINDOWS')
-            self.helpWinContainer = None
-            self.helpWin = None
-            self.ws.close_window()
-            self.refreshBody()
-            self._main_help_id = 0
+            self._handle_passive_windows()
             return
 
         else:
