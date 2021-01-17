@@ -1514,7 +1514,7 @@ default_encoding = {3}
 
 # Enable mouse
 # If this options is enabled, the mouse can be used to scroll the
-# playlist, start playback, etc.
+# playlist, start, stop and mute the player, adjust its volume etc.
 # Mouse integration is highly terminal dependent, that's why it
 # is disabled by default.
 #

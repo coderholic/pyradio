@@ -274,6 +274,7 @@ class PyRadio(object):
                 self.ws.MAIN_HELP_MODE: self._show_main_help,
                 self.ws.MAIN_HELP_MODE_PAGE_2: self._show_main_help_page_2,
                 self.ws.MAIN_HELP_MODE_PAGE_3: self._show_main_help_page_3,
+                self.ws.MAIN_HELP_MODE_PAGE_4: self._show_main_help_page_4,
                 self.ws.PLAYLIST_HELP_MODE: self._show_playlist_help,
                 self.ws.THEME_HELP_MODE: self._show_theme_help,
                 self.ws.CONFIG_HELP_MODE: self._show_config_help,
@@ -334,6 +335,7 @@ class PyRadio(object):
                 self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
                 self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
                 self.ws.PLAYER_PARAMS_MODE: self._redisplay_params,
+                self.ws.MOUSE_RESTART_INFO_MODE: self._print_mouse_restart_info,
                 }
 
         """ list of help functions """
@@ -1201,13 +1203,16 @@ class PyRadio(object):
 
         """ Display a help, info or question window.  """
         if mode_to_set == self.ws.MAIN_HELP_MODE:
-            caption = ' Help (1/3) '
+            caption = ' Help (1/4) '
             prompt=' Press n/p or any other key to hide '
         elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_2:
-            caption = ' Help (2/3) '
+            caption = ' Help (2/4) '
             prompt=' Press n/p or any other key to hide '
         elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_3:
-            caption = ' Help (3/3) '
+            caption = ' Help (3/4) '
+            prompt=' Press n/p or any other key to hide '
+        elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_4:
+            caption = ' Help (4/4) '
             prompt=' Press n/p or any other key to hide '
         self.helpWinContainer = None
         self.helpWin = None
@@ -1216,7 +1221,7 @@ class PyRadio(object):
         box_col = curses.color_pair(3)
         caption_col = curses.color_pair(4)
         lines = txt.split('\n')
-        st_lines = [item.replace('\r','') for item in lines]
+        st_lines = [item.replace('\r', '') for item in lines]
         lines = [item.strip() for item in st_lines]
 
         if mode_to_set in self._help_metrics.keys():
@@ -1485,6 +1490,7 @@ class PyRadio(object):
                         reset_metrics=False)
         self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_2] = self._help_metrics[self.ws.MAIN_HELP_MODE]
         self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_3] = self._help_metrics[self.ws.MAIN_HELP_MODE]
+        self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_4] = self._help_metrics[self.ws.MAIN_HELP_MODE]
 
     def _show_main_help_page_2(self):
         txt = """!Playlist editing
@@ -1527,6 +1533,17 @@ class PyRadio(object):
                  Z                |Extra player parameters"""
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_3,
+                        reset_metrics=False)
+
+    def _show_main_help_page_4(self):
+        txt = """!Mouse Support
+                 Click            |Change selection.
+                 Double click     |Start / stop the player.
+                 Middle click     |Toggle mute.
+                 Wheel            |Page up / down.
+                 Shift-Wheel      |Adjust volume."""
+        self._show_help(txt,
+                        mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_4,
                         reset_metrics=False)
 
     def _show_playlist_help(self):
@@ -1849,7 +1866,64 @@ class PyRadio(object):
                         mode_to_set=self.ws.YANK_HELP_MODE,
                         caption=' Copy Mode Help')
 
+    def _print_mouse_restart_info(self):
+        txt = '''You have just changed the mouse support config
+                 option.
+
+                 |PyRadio| must be |restarted| for this change to
+                 take effect.
+                 '''
+        self._show_help(txt, self.ws.MOUSE_RESTART_INFO_MODE,
+                        caption=' Program Restart required ',
+                        prompt=' Press any key... ',
+                        is_message=True)
+
     def _print_session_locked(self):
+        txt = '''This session is |locked| by another |PyRadio instance|.
+
+                 You can still play stations, load and edit playlists,
+                 load and test themes, but any changes will |not| be
+                 recorded in the configuration file.
+
+                 If you are sure this is the |only| active |PyRadio|
+                 instance, exit |PyRadio| now and execute the following
+                 command: |pyradio --unlock|
+                 '''
+        self._show_help(txt, self.ws.SESSION_LOCKED_MODE,
+                        caption=' Session Locked ',
+                        prompt=' Press any key... ',
+                        is_message=True)
+
+        txt = '''This session is |locked| by another |PyRadio instance|.
+
+                 You can still play stations, load and edit playlists,
+                 load and test themes, but any changes will |not| be
+                 recorded in the configuration file.
+
+                 If you are sure this is the |only| active |PyRadio|
+                 instance, exit |PyRadio| now and execute the following
+                 command: |pyradio --unlock|
+                 '''
+        self._show_help(txt, self.ws.SESSION_LOCKED_MODE,
+                        caption=' Session Locked ',
+                        prompt=' Press any key... ',
+                        is_message=True)
+
+        txt = '''This session is |locked| by another |PyRadio instance|.
+
+                 You can still play stations, load and edit playlists,
+                 load and test themes, but any changes will |not| be
+                 recorded in the configuration file.
+
+                 If you are sure this is the |only| active |PyRadio|
+                 instance, exit |PyRadio| now and execute the following
+                 command: |pyradio --unlock|
+                 '''
+        self._show_help(txt, self.ws.SESSION_LOCKED_MODE,
+                        caption=' Session Locked ',
+                        prompt=' Press any key... ',
+                        is_message=True)
+
         txt = '''This session is |locked| by another |PyRadio instance|.
 
                  You can still play stations, load and edit playlists,
@@ -3406,14 +3480,13 @@ class PyRadio(object):
             return
 
         stop_here = self._handle_all_windows_mouse_event(my, mx, a_button)
-        logger.error('stop_here = {}'.format(stop_here))
+        # logger.error('stop_here = {}'.format(stop_here))
         if not stop_here:
             if main_window:
                 _, update = self._handle_main_window_mouse_event(my, mx, a_button)
 
                 if update:
                     self.refreshBody()
-
 
     def _get_mouse(self):
         """ Gets a mouse event
@@ -3504,8 +3577,11 @@ class PyRadio(object):
                                 logger.debug('Mouse button 1 double click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
                             else:
                                 logger.debug('Mouse button 1 triple click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
+                        if self.player.isPlaying() and not do_update:
+                            self.stopPlayer(show_message=True)
+                        else:
+                            self.playSelection()
                         do_update = True
-                        self.playSelection()
                     elif a_button & curses.BUTTON1_CLICKED \
                             or a_button & curses.BUTTON1_RELEASED:
                         if logger.isEnabledFor(logging.DEBUG):
@@ -3994,6 +4070,8 @@ class PyRadio(object):
                                 self._show_player_changed_in_config()
                                 self._cnf.player_changed = False
                             self.player.playback_timeout = int(self._cnf.connection_timeout)
+                            if self._config_win.mouse_support_option_changed:
+                                self._print_mouse_restart_info()
                         elif ret == 1:
                             # config not modified
                             self._show_notification_with_delay(
@@ -4778,13 +4856,15 @@ class PyRadio(object):
             if self.ws.operation_mode in (
                 self.ws.MAIN_HELP_MODE,
                 self.ws.MAIN_HELP_MODE_PAGE_2,
-                    self.ws.MAIN_HELP_MODE_PAGE_3):
+                self.ws.MAIN_HELP_MODE_PAGE_3,
+                    self.ws.MAIN_HELP_MODE_PAGE_4):
                 if char in (ord('n'), ord('p'), ):
                     self.helpWinContainer = None
                     self.helpWin = None
                     func = (self._show_main_help,
                             self._show_main_help_page_2,
-                            self._show_main_help_page_3)
+                            self._show_main_help_page_3,
+                            self._show_main_help_page_4)
                     if char == ord('n'):
                         self._main_help_id += 1
                         if self._main_help_id == len(func):

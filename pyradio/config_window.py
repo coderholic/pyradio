@@ -55,7 +55,7 @@ class PyRadioConfigWindow(object):
     _help_text.append(['This is the encoding used by default when reading data provided by a station such as song title, etc. If reading said data ends up in an error, "utf-8" will be used instead.', '|',
     'If changed, playback must be restarted so that changes take effect.',
     '|', 'Default value: utf-8'])
-    _help_text.append(['If this options is enabled, the mouse can be used to scroll the playlist, start playback, etc.', '|', 'Mouse integration is highly terminal dependent, that\'s why it is disabled by default.', '|', 'Default value: False'])
+    _help_text.append(['If this options is enabled, the mouse can be used to scroll the playlist, start, stop and mute the player, adjust its volume etc.', '|', 'Mouse support is highly terminal dependent, that\'s why it is disabled by default.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
@@ -393,9 +393,9 @@ class PyRadioConfigWindow(object):
         elif char in (ord('s'), ):
             self._old_theme = self._config_options['theme'][1]
             if self._saved_config_options['enable_mouse'][1] == self._config_options['enable_mouse'][1]:
-                self.mouse_changed = False
+                self.mouse_support_option_changed = False
             else:
-                self.mouse_changed = True
+                self.mouse_support_option_changed = True
             self._saved_config_options = deepcopy(self._config_options)
             if self._cnf.opts != self._saved_config_options:
                 # check if player has changed
@@ -435,7 +435,6 @@ class PyRadioConfigWindow(object):
                     sel == 'auto_save_playlist' or \
                     sel == 'force_http':
                 self._config_options[sel][1] = not self._config_options[sel][1]
-                logger.error('DE {}'.format(self._config_options))
                 self.refresh_selection()
             elif sel == 'use_transparency':
                 #self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]
