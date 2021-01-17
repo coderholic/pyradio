@@ -23,6 +23,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
 * [PyRadio Themes](#pyradio-themes)
+* [Mouse support](#mouse-support)
 * [Session Locking](#session-locking)
 * [Update notification](#update-notification)
 * [Cleaning up](#cleaning-up)
@@ -540,6 +541,26 @@ Setting transparency on, will actually force **PyRadio** to not use its own back
 
 When the *Theme selection window* is visible, a "**[T]**" string displayed  at  its  bottom right corner will indicate that transparency is *on*.
 
+## Mouse support
+
+Being a console application, **PyRadio** was never intended to work with a mouse.
+
+What has to be understood about using the mouse on a console application is that the result is highly dependent on the terminal used and the way it implements mouse support.
+
+Having said that, and since the question of using the mouse with **PyRadio** has been risen, basic mouse support has been implemented; starting, stopping and muting the player, scrolling within the playlist and adjusting the player's volume is now possible using the mouse.
+
+All one has to do is enable mouse support in the "*Config Window*" (mouse support is disabled by default) and restart **Pyradio** for the change to take effect.
+
+Then, the mouse can be used as follows:
+
+| Action       | Result                                                     |
+|--------------|------------------------------------------------------------|
+| Click        | Change selection                                           |
+| Double click | Start / stop the player                                    |
+| Middle click | Toggle player muting<br>(does not work with all terminals) |
+| Wheel        | Scroll up / down                                           |
+| Shift-Wheel  | Adjust volume<br>(does not work with all terminals)        |
+
 ## Session Locking
 
 **PyRadio** uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.
@@ -634,3 +655,7 @@ Finally, include the file produced in your report.
 **PyRadio** uses code from the following projects:
 
 1. [CJKwrap](https://gitlab.com/fgallaire/cjkwrap) by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.
+
+2. [ranger](https://ranger.github.io/) - A console file manager with VI key bindings.
+
+3. [Vifm](https://vifm.info/) -  A file manager with curses interface, which provides Vi[m]-like environment.

@@ -962,7 +962,7 @@ class PyRadioConfig(PyRadioStations):
     opts['default_playlist'] = ['Def. playlist: ', 'stations']
     opts['default_station'] = ['Def station: ', 'False']
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
-    opts['enable_mouse'] = ['Enable mouse: ', False]
+    opts['enable_mouse'] = ['Enable mouse support: ', False]
     opts['conn_title'] = ['Connection Options: ', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]

@@ -640,6 +640,37 @@ Setting transparency on, will actually force \fBpyradio\fR to not use its own ba
 
 When the \fITheme selection window\fR is visible, a "\fI[T]\fR" string displayed at its bottom right corner will indicate that transparency is \fIon\fR.
 
+## MOUSE SUPPORT
+
+Being a console application, \fBpyradio\fR was never intended to work with a mouse.
+
+What has to be understood about using the mouse on a console application is that the result is highly dependent on the terminal used and the way it implements mouse support.
+
+Having said that, and since the question of using the mouse with \fBpyradio\fR has been risen, basic mouse support has been implemented; starting, stopping and muting the player, scrolling within the playlist and adjusting the player's volume is now possible using the mouse.
+
+All one has to do is enable mouse support in the "\fIConfig Window\fR" (mouse support is disabled by default) and restart \fBpyradio\fR for the change to take effect.
+
+Then, the mouse can be used as follows:
+
+.RS 5
+
+.IP \fBClick
+Change selection
+
+.IP \fBDouble\ click
+Start / stop the player
+
+.IP \fBMiddle\ click
+Toggle player muting (does not work with all terminals)
+
+.IP \fBWheel
+Scroll up / down
+
+.IP \fBShift-Wheel
+Adjust volume (does not work with all terminals)
+
+.RE
+
 .SH SESSION LOCKING
 
 \fBpyradio\fR uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.
@@ -751,12 +782,18 @@ Finally, include the file produced in your report.
 .SH ACKNOWLEGEMENT
 
 .PP
-\fBpyradio\fR uses code frorm the following projects:
+\fBpyradio\fR uses code from the following projects:
 
 .RS 5
 
 .IP 1. 3
 \fBCJKwrap\fR (\fIhttps://gitlab.com/fgallaire/cjkwrap\fR) by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.
+
+.IP 2. 3
+\fBranger\fR (\fIhttps://ranger.github.io/\fR) - A console file manager with VI key bindings.
+
+.IP 3. 3
+\fBVifm\fR (\fIhttps://vifm.info/\fR) -  A file manager with curses interface, which provides Vi[m]-like environment.
 
 .SH FILES
 .PP

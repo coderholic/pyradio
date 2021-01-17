@@ -51,6 +51,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
 <li><a href="#pyradio-themes">PyRadio Themes</a></li>
+<li><a href="#mouse-support">Mouse support</a></li>
 <li><a href="#session-locking">Session Locking</a></li>
 <li><a href="#update-notification">Update notification</a></li>
 <li><a href="#cleaning-up">Cleaning up</a></li>
@@ -375,6 +376,42 @@ volume=28</pre>
 <p>Pressing “<strong>T</strong>” will toggle the transparency setting and save this state in <strong>PyRadio</strong>’s configuration file (transparency is off by default).</p>
 <p>Setting transparency on, will actually force <strong>PyRadio</strong> to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
 <p>When the <em>Theme selection window</em> is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that transparency is <em>on</em>.</p>
+<h2 id="mouse-support">Mouse support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>Being a console application, <strong>PyRadio</strong> was never intended to work with a mouse.</p>
+<p>What has to be understood about using the mouse on a console application is that the result is highly dependent on the terminal used and the way it implements mouse support.</p>
+<p>Having said that, and since the question of using the mouse with <strong>PyRadio</strong> has been risen, basic mouse support has been implemented; starting, stopping and muting the player, scrolling within the playlist and adjusting the player’s volume is now possible using the mouse.</p>
+<p>All one has to do is enable mouse support in the “<em>Config Window</em>” (mouse support is disabled by default) and restart <strong>Pyradio</strong> for the change to take effect.</p>
+<p>Then, the mouse can be used as follows:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Action</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Click</td>
+<td>Change selection</td>
+</tr>
+<tr class="even">
+<td>Double click</td>
+<td>Start / stop the player</td>
+</tr>
+<tr class="odd">
+<td>Middle click</td>
+<td>Toggle player muting<br>(does not work with all terminals)</td>
+</tr>
+<tr class="even">
+<td>Wheel</td>
+<td>Scroll up / down</td>
+</tr>
+<tr class="odd">
+<td>Shift-Wheel</td>
+<td>Adjust volume<br>(does not work with all terminals)</td>
+</tr>
+</tbody>
+</table>
 <h2 id="session-locking">Session Locking <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.</p>
 <p>Subsequent instances will be “<em>locked</em>”. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will <strong>not</strong> be recorded in the configuration file.</p>
@@ -430,7 +467,9 @@ $ pyradio -d</pre>
 <h2 id="acknowledgment">Acknowledgment <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> uses code from the following projects:</p>
 <ol type="1">
-<li><a target="_blank" href="https://gitlab.com/fgallaire/cjkwrap">CJKwrap</a> by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.</li>
+<li><a target="_blank" href="https://gitlab.com/fgallaire/cjkwrap">CJKwrap</a> by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.</p></li>
+<li><a target="_blank" href="https://ranger.github.io/">ranger</a> - A console file manager with VI key bindings.</p></li>
+<li><a target="_blank" href="https://vifm.info/">Vifm</a> - A file manager with curses interface, which provides Vi[m]-like environment.</p></li>
 </ol>
 </body>
 </html>
