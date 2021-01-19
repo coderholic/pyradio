@@ -81,7 +81,7 @@ def shell():
     parser.add_argument("-ocd", "--open-config-dir", action='store_true',
                         help="Open config directory [CONFIG DIR] with default file manager.")
     parser.add_argument('-epp', '--extra_player_parameters', default=None,
-                        help='Provide extra player parameters as a string. Then strings format is [player_name:parameters]. player_name can be "mpv", "mplayer" or "vlc". Alternative format to pass a profile: [player_name:profile:profile_name]. In this case, the profile_name must be a valid profile defined in the player\'s config file (not for VLC).')
+                        help='Provide extra player parameters as a string. The string\'s format is [player_name:parameters]. player_name can be "mpv", "mplayer" or "vlc". Alternative format to pass a profile: [player_name:profile:profile_name]. In this case, the profile_name must be a valid profile defined in the player\'s config file (not for VLC).')
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
     parser.add_argument("-d", "--debug", action='store_true',

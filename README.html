@@ -14,10 +14,10 @@
     dl {margin: 2em;} 
     dd {margin: 1em;} 
     dt {font-weight: bold;} 
-    TABLE {border: 1px solid SaddleBrown;} 
-    TH {text-align: left; color: SaddleBrown;border: 1px solid SaddleBrown;} 
-    TD {text-align: left; padding-right: 8px;border: 1px solid SaddleBrown;} 
-    pre { background-color: rgba(139, 69, 19, 0.80); color: #fff; padding: 1.5em; border: 1px solid #A87207; border-radius: 15px; overflow: auto;}
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; overflow: auto;}
       code{white-space: pre-wrap;}
       span.smallcaps{font-variant: small-caps;}
       span.underline{text-decoration: underline;}
@@ -72,7 +72,8 @@ a:visited{color: SaddleBrown;}
 <pre>$ pyradio -h
 
 usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-               [-t THEME] [-scd] [-ocd] [-d]
+               [-t THEME] [-scd] [-ocd] [-epp EXTRA_PLAYER_PARAMETERS]
+               [--unlock] [-d]
 
 Curses based Internet radio player
 
@@ -89,14 +90,23 @@ optional arguments:
                         mpv, mplayer, vlc.
   -a, --add             Add station to list.
   -ls, --list-playlists
-                        List of available playlists in config dir ([CONFIG DIR]).
+                        List of available playlists in config dir.
   -l, --list            List of available stations in a playlist.
   -t THEME, --theme THEME
                         Use specified theme.
   -scd, --show-config-dir
-                        Print config directory  ([CONFIG DIR]) location and exit.
+                        Print config directory [CONFIG DIR] location and exit.
   -ocd, --open-config-dir
-                        Open config directory ([CONFIG DIR]) with default file manager.
+                        Open config directory [CONFIG DIR] with default file
+                        manager.
+  -epp EXTRA_PLAYER_PARAMETERS, --extra_player_parameters EXTRA_PLAYER_PARAMETERS
+                        Provide extra player parameters as a string. The
+                        string&#39;s format is [player_name:parameters].
+                        player_name can be &quot;mpv&quot;, &quot;mplayer&quot; or &quot;vlc&quot;.
+                        Alternative format to pass a profile:
+                        [player_name:profile:profile_name]. In this case, the
+                        profile_name must be a valid profile defined in the
+                        player&#39;s config file (not for VLC).
   --unlock              Remove sessions&#39; lock file.
   -d, --debug           Start pyradio in debug mode.</pre>
 <p>The following options can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>:</p>
@@ -135,6 +145,7 @@ J                 Create a jump tag
 &#39; \ y             Get into Registers, Extra Commands               y (yank) is not applicable         -
                   and Yank modes, respectively
 z                 Toggle &quot;Force http connections&quot;                  -                                  -
+Z                 Display the &quot;Extra Player Parameter&quot; window      -                                  -
 ?                 Show keys help                                   [Valid]                            [Valid]
 #                 Redraw window                                    [Valid]                            [Valid]
 Esc/q             Quit                                             -                                  -
@@ -379,7 +390,7 @@ volume=28</pre>
 <p>When the <em>Theme selection window</em> is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that transparency is <em>on</em>.</p>
 <h2 id="mouse-support">Mouse support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Being a console application, <strong>PyRadio</strong> was never intended to work with a mouse.</p>
-<p>What has to be understood about using the mouse on a console application is that the result is highly dependent on the terminal used and the way it implements mouse support.</p>
+<p>Furthermore, when using the mouse on a console application, the result is highly dependent on the terminal used and the way it implements mouse support.</p>
 <p>Having said that, and since the question of using the mouse with <strong>PyRadio</strong> has been risen, basic mouse support has been implemented; starting, stopping and muting the player, scrolling within the playlist and adjusting the player’s volume is now possible using the mouse.</p>
 <p>All one has to do is enable mouse support in the “<em>Config Window</em>” (mouse support is disabled by default) and restart <strong>Pyradio</strong> for the change to take effect.</p>
 <p>Then, the mouse can be used as follows:</p>
@@ -392,23 +403,23 @@ volume=28</pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Click</td>
+<td><strong>Click</strong></td>
 <td>Change selection</td>
 </tr>
 <tr class="even">
-<td>Double click</td>
+<td><strong>Double click</strong></td>
 <td>Start / stop the player</td>
 </tr>
 <tr class="odd">
-<td>Middle click</td>
+<td><strong>Middle click</strong></td>
 <td>Toggle player muting<br>(does not work with all terminals)</td>
 </tr>
 <tr class="even">
-<td>Wheel</td>
+<td><strong>Wheel</strong></td>
 <td>Scroll up / down</td>
 </tr>
 <tr class="odd">
-<td>Shift-Wheel</td>
+<td><strong>Shift-Wheel</strong></td>
 <td>Adjust volume<br>(does not work with all terminals)</td>
 </tr>
 </tbody>

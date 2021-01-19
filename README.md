@@ -49,7 +49,8 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 $ pyradio -h
 
 usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-               [-t THEME] [-scd] [-ocd] [-d]
+               [-t THEME] [-scd] [-ocd] [-epp EXTRA_PLAYER_PARAMETERS]
+               [--unlock] [-d]
 
 Curses based Internet radio player
 
@@ -66,14 +67,23 @@ optional arguments:
                         mpv, mplayer, vlc.
   -a, --add             Add station to list.
   -ls, --list-playlists
-                        List of available playlists in config dir ([CONFIG DIR]).
+                        List of available playlists in config dir.
   -l, --list            List of available stations in a playlist.
   -t THEME, --theme THEME
                         Use specified theme.
   -scd, --show-config-dir
-                        Print config directory  ([CONFIG DIR]) location and exit.
+                        Print config directory [CONFIG DIR] location and exit.
   -ocd, --open-config-dir
-                        Open config directory ([CONFIG DIR]) with default file manager.
+                        Open config directory [CONFIG DIR] with default file
+                        manager.
+  -epp EXTRA_PLAYER_PARAMETERS, --extra_player_parameters EXTRA_PLAYER_PARAMETERS
+                        Provide extra player parameters as a string. The
+                        string's format is [player_name:parameters].
+                        player_name can be "mpv", "mplayer" or "vlc".
+                        Alternative format to pass a profile:
+                        [player_name:profile:profile_name]. In this case, the
+                        profile_name must be a valid profile defined in the
+                        player's config file (not for VLC).
   --unlock              Remove sessions' lock file.
   -d, --debug           Start pyradio in debug mode.
 ```
@@ -116,6 +126,7 @@ J                 Create a jump tag
 ' \ y             Get into Registers, Extra Commands               y (yank) is not applicable         -
                   and Yank modes, respectively
 z                 Toggle "Force http connections"                  -                                  -
+Z                 Display the "Extra Player Parameter" window      -                                  -
 ?                 Show keys help                                   [Valid]                            [Valid]
 #                 Redraw window                                    [Valid]                            [Valid]
 Esc/q             Quit                                             -                                  -
@@ -546,7 +557,7 @@ When the *Theme selection window* is visible, a "**[T]**" string displayed  at  
 
 Being a console application, **PyRadio** was never intended to work with a mouse.
 
-What has to be understood about using the mouse on a console application is that the result is highly dependent on the terminal used and the way it implements mouse support.
+Furthermore, when using the mouse on a console application, the result is highly dependent on the terminal used and the way it implements mouse support.
 
 Having said that, and since the question of using the mouse with **PyRadio** has been risen, basic mouse support has been implemented; starting, stopping and muting the player, scrolling within the playlist and adjusting the player's volume is now possible using the mouse.
 
@@ -555,12 +566,12 @@ All one has to do is enable mouse support in the "*Config Window*" (mouse suppor
 Then, the mouse can be used as follows:
 
 | Action       | Result                                                     |
-|--------------|------------------------------------------------------------|
-| Click        | Change selection                                           |
-| Double click | Start / stop the player                                    |
-| Middle click | Toggle player muting<br>(does not work with all terminals) |
-| Wheel        | Scroll up / down                                           |
-| Shift-Wheel  | Adjust volume<br>(does not work with all terminals)        |
+|----------------------|------------------------------------------------------------|
+| **Click**        | Change selection                                           |
+| **Double click** | Start / stop the player                                    |
+| **Middle click** | Toggle player muting<br>(does not work with all terminals) |
+| **Wheel**        | Scroll up / down                                           |
+| **Shift-Wheel**  | Adjust volume<br>(does not work with all terminals)        |
 
 ## Session Locking
 

@@ -38,6 +38,8 @@ Use specified \fITHEME\fR.
 Print config directory (\fI[CONFIG DIR]\fR) location and exit.
 .IP \fB-ocd\fR,\fB--open-config-dir\fR
 Open config directory (\fI[CONFIG DIR]\fR) with default file manager.
+.IP \fB-epp\ \fIEXTRA_PLAYER_PARAMETERS\fR,\ \fB--extra_player_parameters\ \fIEXTRA_PLAYER_PARAMETERS\fR
+Provide extra player parameters as a string. For more information, refer to the \fIEXTRA PLAYER PARAMETERS\fR section.
 .IP \fB--unlock
 Remove sessions' lock file.
 .IP \fB-d\fR,\fB\ \--debug
@@ -108,6 +110,10 @@ Toggle background transparency
 Open the \fIConfiguration window
 .IP \fB'\ \\\\\ y\fR
 Get into \fIRegisters\fR, \fIExtra Commands\fR, \fIYank\fR mode, respectively
+.IP \fBz\fR
+Toggle "Force http connections"
+.IP \fBZ\fR
+Display the "Extra Player Parameters" window.
 .IP \fB?
 Show keys help
 .IP \fBEsc\fR/\fBq
@@ -644,7 +650,7 @@ When the \fITheme selection window\fR is visible, a "\fI[T]\fR" string displayed
 
 Being a console application, \fBpyradio\fR was never intended to work with a mouse.
 
-What has to be understood about using the mouse on a console application is that the result is highly dependent on the terminal used and the way it implements mouse support.
+Furthermore, when using the mouse on a console application, the result is highly dependent on the terminal used and the way it implements mouse support.
 
 Having said that, and since the question of using the mouse with \fBpyradio\fR has been risen, basic mouse support has been implemented; starting, stopping and muting the player, scrolling within the playlist and adjusting the player's volume is now possible using the mouse.
 
