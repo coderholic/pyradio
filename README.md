@@ -29,6 +29,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Cleaning up](#cleaning-up)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
+* [TODO](#todo)
 * [Acknowlegement](#acknowlegement)
 
 ## Requirements
@@ -650,6 +651,15 @@ Then try to reproduce the bug and exit **pyradio**.
 
 Finally, include the file produced in your report.
 
+## TODO
+
+- [ ] Any user request I find interesting :)
+- [x] Basic mouse support ([#119](https://github.com/coderholic/pyradio/issues/119))
+- [ ] New player selection configuration window ([#118](https://github.com/coderholic/pyradio/issues/118))
+- [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
+- [ ] Notify the user that the package's stations.csv has changed
+- [ ] Update / uninstall using command line parameters (-U / -R)
+
 ## Acknowledgment
 
 **PyRadio** uses code from the following projects:
@@ -658,4 +668,4 @@ Finally, include the file produced in your report.
 
 2. [ranger](https://ranger.github.io/) - A console file manager with VI key bindings.
 
-3. [Vifm](https://vifm.info/) -  A file manager with curses interface, which provides Vi[m]-like environment.
+3. [Vifm](https://vifm.info/) -  A file manager with curses interface, which provides a Vi[m]-like environment.
