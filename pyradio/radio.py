@@ -4831,12 +4831,8 @@ class PyRadio(object):
 
             elif ret == 0:
                 # Parameter selected
-                if self._player_select_win._extra.is_dirty:
-                    logger.error('DE I am here!!!')
-                    logger.error('DE params = {}'.format(self._cnf.params))
-                    self._cnf.params = dict(self._player_select_win._extra.params)
-                    logger.error('DE params = {}'.format(self._cnf.params))
-                    self._cnf.params_changed = True
+                if self._cnf.params_changed:
+                    self._cnf.params = dict(self._player_select_win.params)
                 self.ws.close_window()
                 self._player_select_win = None
                 self.refreshBody()

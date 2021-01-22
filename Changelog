@@ -1,3 +1,9 @@
+2021-01-22 s-n-g
+    * Basic mouse support implemented
+    * Config option to enable mouse support added
+    * Fixing a bug which would lead to a crash when "r"
+      would be pressed in the config window.
+
 2021-01-09 s-n-g
     * adding autostart BAT file on Windows to
       prevent session locking when Windows

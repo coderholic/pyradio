@@ -1454,6 +1454,15 @@ class PyRadioConfig(PyRadioStations):
         if default:
             self.params[player][0] = len(self.params[player]) - 1
 
+    def check_parameters(self):
+        ''' Config parameters check '''
+        for a_key in self.saved_params.keys():
+            if self.saved_params[a_key] != self.params[a_key]:
+                self.dirty_config = True
+                self.opts['dirty_config'] = ['', True]
+                return True
+        return False
+
     def save_config(self):
         """ Save config file
 
@@ -1467,6 +1476,14 @@ class PyRadioConfig(PyRadioStations):
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (session locked)')
             return 1
+
+        ''' Check if parameters are changed
+            Do it this way (not using is_ditry) to capture
+            parameter changes due to 'Z' also
+        '''
+        if self.check_parameters():
+                self.saved_params = dict(self.params)
+
         if not self.opts['dirty_config'][1]:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (not modified)')

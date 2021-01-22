@@ -98,9 +98,11 @@ class PyRadioConfigWindow(object):
         self.init_config_win()
         self.refresh_config_win()
         self._old_use_transparency = self._config_options['use_transparency'][1]
-        if self._cnf.params_changed:
-            self._cnf.dirty_config = True
-            # self._config_options['dirty_config'] = ['', True]
+
+        ''' Config window parameters check '''
+        for a_key in self._cnf.saved_params.keys():
+            if self._cnf.saved_params[a_key] != self._cnf.params[a_key]:
+                self._cnf.dirty_config = True
 
     def __del__(self):
         self._toggle_transparency_function = None
@@ -298,7 +300,7 @@ class PyRadioConfigWindow(object):
             self._config_options['dirty_config'] = ['', True]
 
     def _apply_a_theme(self, a_theme, use_transparency=None):
-        theme = PyRadioTheme(self._cnf.stations_dir)
+        theme = PyRadioTheme(self._cnf)
         theme.readAndApplyTheme(a_theme, use_transparency=use_transparency)
         theme = None
         curses.doupdate()
@@ -391,6 +393,7 @@ class PyRadioConfigWindow(object):
                 self._cnf.theme = self._old_theme
                 return 1, []
         elif char in (ord('s'), ):
+            # save and exit
             self._old_theme = self._config_options['theme'][1]
             if self._saved_config_options['enable_mouse'][1] == self._config_options['enable_mouse'][1]:
                 self.mouse_support_option_changed = False
@@ -408,7 +411,6 @@ class PyRadioConfigWindow(object):
                 self._cnf.dirty_config = True
             else:
                 self._cnf.dirty_config = False
-            # save and exit
             return 0, [1]
         elif char in (
             curses.KEY_ENTER, ord('\n'),
@@ -458,6 +460,14 @@ class PyRadioExtraParams(object):
         self._title = ' Player Extra Parameters '
         self._too_small_str = '  Window too small'
         self._redisplay()
+
+    @property
+    def params(self):
+        return self._extra._working_params
+
+    @params.setter
+    def params(self, val):
+        raise ValueError('property is read only')
 
     def set_parrent(self, window):
         self._parent = window
@@ -544,8 +554,16 @@ class ExtraParameters(object):
         self.reset()
         self._get_width()
 
+    def check_parameters(self):
+        ''' Exrta Parameters check '''
+        for a_key in self._orig_params.keys():
+            if self._orig_params[a_key] != self._working_params[a_key]:
+                self._cnf.dirty_config = self._cnf.params_changed = True
+                self._cnf.opts['dirty_config'] = ['', True]
+                return True
+        return False
+
     def reset(self):
-        self._is_dirty = False
         self._player = self._orig_player
         self._working_params = dict(self._orig_params)
         self._selections = {
@@ -606,21 +624,16 @@ class ExtraParameters(object):
     def params(self, val):
         raise ValueError('parameter is read only')
 
-    @property
-    def is_dirty(self):
-        return self._is_dirty
-
-    @is_dirty.setter
-    def is_dirty(self, val):
-        raise ValueError('property is read only')
-
     def _dict_to_list(self):
         """ convert self._working_params dict
             to self._items dict, and set self.active
         """
+        logger.error('DE\n')
+        logger.error('DE working params = {}'.format(self._working_params))
         for a_param_set in self._working_params.keys():
             for i, a_param in enumerate(self._working_params[a_param_set]):
                 if i == 0:
+                    logger.error('DE a_param = {}'.format(a_param))
                     self._selections[a_param_set][2] = int(a_param) - 1
                 else:
                     self._items_dict[a_param_set].append(a_param)
@@ -743,21 +756,12 @@ class ExtraParameters(object):
         self.refresh_win()
 
     def save_results(self):
-        """ set _is_dirty to True if paramaters have changes,
-            False otherwise. Also, pass working parameters to
-            original parameters effectively saving any changes.
+        """ pass working parameters to original parameters
+		    effectively saving any changes.
         """
+        logger.error('DE ===== save_results')
         self._list_to_dict()
-
-        for a_set in self._working_params.keys():
-            try:
-                if str(self._working_params[a_set]) != str(self._orig_params[a_set]):
-                    self._is_dirty = False
-            except KeyError:
-                self._is_dirty = False
-        self._is_dirty = True
-        logger.error('DE save dirty = {}'.format(self._is_dirty))
-
+        self.check_parameters()
         self._orig_params = dict(self._working_params)
 
     def keypress(self, char):
@@ -773,7 +777,7 @@ class ExtraParameters(object):
         if char in (
             curses.KEY_ENTER, ord('\n'),
             ord('\r'), ord(' '), ord('l'),
-                curses.KEY_RIGHT):
+                curses.KEY_RIGHT, ord('s')):
             # activate selection
             self.active = self.selection
             if self.from_config:
@@ -904,6 +908,16 @@ class PyRadioSelectPlayer(object):
 
     @from_config.setter
     def from_config(self, val):
+        raise ValueError('property is read only')
+
+    @property
+    def is_dirty(self):
+        if self._extra is not None:
+            return self._extra.is_dirty
+        return False
+
+    @is_dirty.setter
+    def is_dirty(self, val):
         raise ValueError('property is read only')
 
     def init_window(self):
@@ -1037,6 +1051,7 @@ class PyRadioSelectPlayer(object):
                 self.player = ','.join(working_players)
             else:
                 self.player = ','.join(SUPPORTED_PLAYERS)
+            self._extra.save_results()
             return 0
 
         if self.focus:
