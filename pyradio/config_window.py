@@ -13,6 +13,7 @@ from .cjkwrap import cjklen
 from .config import SUPPORTED_PLAYERS
 from .encodings import *
 from .themes import *
+from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons
 import logging
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -78,11 +79,16 @@ class PyRadioConfigWindow(object):
 
     def __init__(self, parent, config,
                  toggle_transparency_function,
-                 show_theme_selector_function):
+                 show_theme_selector_function,
+                 save_parameters_function,
+                 reset_parameters_function
+                 ):
         self.parent = parent
         self._cnf = config
         self._toggle_transparency_function = toggle_transparency_function
         self._show_theme_selector_function = show_theme_selector_function
+        self._save_parameters_function = save_parameters_function
+        self._reset_parameters_function = reset_parameters_function
         self._saved_config_options = deepcopy(config.opts)
         self._config_options = deepcopy(config.opts)
         self._old_theme = self._config_options['theme'][1]
@@ -98,9 +104,12 @@ class PyRadioConfigWindow(object):
         self.init_config_win()
         self.refresh_config_win()
         self._old_use_transparency = self._config_options['use_transparency'][1]
-        if self._cnf.params_changed:
-            self._cnf.dirty_config = True
-            # self._config_options['dirty_config'] = ['', True]
+
+        ''' Config window parameters check '''
+        logger.error('DE \n\ncheck params\n{0}\n{1}'.format(self._cnf.saved_params, self._cnf.params))
+        for a_key in self._cnf.saved_params.keys():
+            if self._cnf.saved_params[a_key] != self._cnf.params[a_key]:
+                self._cnf.dirty_config = True
 
     def __del__(self):
         self._toggle_transparency_function = None
@@ -169,12 +178,15 @@ class PyRadioConfigWindow(object):
         self.refresh_selection()
 
     def _print_title(self):
-        if self._config_options == self._saved_config_options and \
-            self._old_theme == self._saved_config_options['theme'][1] and \
-                self._old_use_transparency == self._saved_config_options['use_transparency'][1] and not self._cnf.params_changed:
-            dirty_title = '─ '
-        else:
+        if self._cnf.dirty_config:
             dirty_title = ' *'
+        else:
+            if self._config_options == self._saved_config_options and \
+                self._old_theme == self._saved_config_options['theme'][1] and \
+                    self._old_use_transparency == self._saved_config_options['use_transparency'][1] and not self._cnf.params_changed:
+                dirty_title = '─ '
+            else:
+                dirty_title = ' *'
         X = int((self.maxX - len(self._title) - 1) / 2)
         try:
             self._win.addstr(0, X, dirty_title, curses.color_pair(3))
@@ -298,7 +310,7 @@ class PyRadioConfigWindow(object):
             self._config_options['dirty_config'] = ['', True]
 
     def _apply_a_theme(self, a_theme, use_transparency=None):
-        theme = PyRadioTheme(self._cnf.stations_dir)
+        theme = PyRadioTheme(self._cnf)
         theme.readAndApplyTheme(a_theme, use_transparency=use_transparency)
         theme = None
         curses.doupdate()
@@ -376,6 +388,7 @@ class PyRadioConfigWindow(object):
             self._config_options['theme'][1] = self._old_theme
             self._saved_config_options['theme'][1] = self._old_theme
             self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
+            self._reset_parameters_function()
             self.refresh_selection()
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Saved options loaded')
@@ -391,6 +404,7 @@ class PyRadioConfigWindow(object):
                 self._cnf.theme = self._old_theme
                 return 1, []
         elif char in (ord('s'), ):
+            # save and exit
             self._old_theme = self._config_options['theme'][1]
             if self._saved_config_options['enable_mouse'][1] == self._config_options['enable_mouse'][1]:
                 self.mouse_support_option_changed = False
@@ -408,7 +422,7 @@ class PyRadioConfigWindow(object):
                 self._cnf.dirty_config = True
             else:
                 self._cnf.dirty_config = False
-            # save and exit
+            self._save_parameters_function()
             return 0, [1]
         elif char in (
             curses.KEY_ENTER, ord('\n'),
@@ -447,6 +461,9 @@ class PyRadioConfigWindow(object):
 
 
 class PyRadioExtraParams(object):
+    ''' Class to display extra player parameters on
+        main window. No editing allowed!
+    '''
 
     def __init__(self,
                  config,
@@ -458,6 +475,14 @@ class PyRadioExtraParams(object):
         self._title = ' Player Extra Parameters '
         self._too_small_str = '  Window too small'
         self._redisplay()
+
+    @property
+    def params(self):
+        return self._extra._working_params
+
+    @params.setter
+    def params(self, val):
+        raise ValueError('property is read only')
 
     def set_parrent(self, window):
         self._parent = window
@@ -512,6 +537,251 @@ class PyRadioExtraParams(object):
         return self._extra.keypress(char)
 
 
+class ExtraParametersEditor(object):
+
+    def __init__(self,
+                 parent,
+                 config,
+                 string=''):
+        self._parent = parent
+        self._cnf = config
+        self.edit_string = string
+        self._caption = ' Parameter:  '
+        self._string = self._orig_string = string
+
+        self.Y, self.X = self._parent.getbegyx()
+        self.Y += 1
+        self.X += 1
+        self.maxY, self.maxX = self._parent.getmaxyx()
+        self.maxY -= 2
+        self.maxX -= 2
+        self._win = curses.newwin(
+            self.maxY, self.maxX,
+            self.Y, self.X)
+        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.erase()
+        logger.error('DE Y={0}, X={1}, maxY={2}, maxX={3}'.format(
+            self.Y, self.X, self.maxY, self.maxX))
+
+        self._focus = 0
+        self._widgets = [None, None, None]
+
+        self._too_small = False
+
+        self._opening = True
+
+        # add line editor
+        self._widgets[0] = SimpleCursesLineEdit(
+            parent=self._win,
+            width=self.maxX - len(self._caption),
+            begin_y=self.Y,
+            begin_x=self.X + len(self._caption) - 1,
+            boxed=False,
+            has_history=False,
+            caption='',
+            box_color=curses.color_pair(9),
+            caption_color=curses.color_pair(4),
+            edit_color=curses.color_pair(9),
+            cursor_color=curses.color_pair(8),
+            unfocused_color=curses.color_pair(5),
+            string_changed_handler=self._string_changed)
+        self._widgets[0].bracket = False
+        self._line_editor = self._widgets[0]
+
+        # add horizontal push buttons
+        self._h_buttons = SimpleCursesHorizontalPushButtons(
+                Y=2, captions=('OK', 'Cancel'),
+                color_focused=curses.color_pair(9),
+                color=curses.color_pair(4),
+                bracket_color=curses.color_pair(5),
+                parent=self._win)
+        self._h_buttons.calculate_buttons_position()
+        self._widgets[1], self._widgets[2] = self._h_buttons.buttons
+        self._widgets[1]._focused = self._widgets[2].focused = False
+
+        if not self._orig_string:
+            self._widgets[1].enabled = False
+
+    def _string_changed(self):
+        pass
+
+    def resize(self, parent):
+        self._parent = parent
+        self.Y, self.X = self._parent.getbegyx()
+        self.Y += 1
+        self.X += 1
+        self._win.mvwin(self.Y, self.X)
+
+        self._h_buttons.calculate_buttons_position(parent=self._win)
+        self._win.refresh()
+        self.refresh_win()
+
+    def show(self):
+        self._win.addstr(0, 0, self._caption, curses.color_pair(5))
+        try:
+            self._win.addstr(4, 3, '─' * (self.maxX - 6), curses.color_pair(3))
+        except:
+            self._win.addstr(4, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+        self._win.addstr(4, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
+
+
+        self._win.addstr(5, 5, 'TAB', curses.color_pair(4))
+        self._win.addstr(', ', curses.color_pair(5))
+        self._win.addstr('Down', curses.color_pair(4))
+        self._win.addstr(' / ', curses.color_pair(5))
+        self._win.addstr('Up', curses.color_pair(4))
+        self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
+        self._win.addstr(6, 5, 'ENTER', curses.color_pair(4))
+        self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
+        step = 0
+        if self._orig_string:
+            self._win.addstr(7, 5, 'r', curses.color_pair(4))
+            self._win.addstr(', ', curses.color_pair(5))
+            self._win.addstr('^R', curses.color_pair(4))
+            self._win.addstr(7, 23, 'Revert to saved values (', curses.color_pair(5))
+            self._win.addstr('^R', curses.color_pair(4))
+            self._win.addstr(' when in Line Editor).', curses.color_pair(5))
+            step = 1
+        self._win.addstr(7 + step, 5, 'Esc', curses.color_pair(4))
+        self._win.addstr(7 + step, 23, 'Cancel operation.', curses.color_pair(5))
+
+        self._win.addstr(8 + step, 5, 's', curses.color_pair(4))
+        self._win.addstr(' / ', curses.color_pair(5))
+        self._win.addstr('q', curses.color_pair(4))
+        self._win.addstr(8 + step , 23, 'Save / Cancel (not in Line Editor).', curses.color_pair(5))
+
+        self._win.addstr(9 + step, 5, '?', curses.color_pair(4))
+        self._win.addstr(9 + step, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
+        self._win.refresh()
+        self.refresh_win()
+
+    def refresh_win(self):
+        if not self._too_small:
+            self._line_editor.show(
+                self._win, opening=self._opening,
+                new_y=self.Y,
+                new_x=self.X + len(self._caption) - 1)
+            self._widgets[1].show()
+            self._widgets[2].show()
+            self._opening = False
+
+    def _update_focus(self):
+        # use _focused here to avoid triggering
+        # widgets' refresh
+        for i, x in enumerate(self._widgets):
+            if x:
+                if self._focus == i:
+                    x._focused = True
+                else:
+                    x._focused = False
+
+    def _focus_next(self):
+        if self._focus == len(self._widgets) - 1:
+            self._focus = 0
+        else:
+            focus = self._focus + 1
+            while not self._widgets[focus].enabled:
+                focus += 1
+            self._focus = focus
+
+    def _focus_previous(self):
+        if self._focus == 0:
+            self._focus = len(self._widgets) - 1
+        else:
+            focus = self._focus - 1
+            while not self._widgets[focus].enabled:
+                focus -= 1
+            self._focus = focus
+
+    def keypress(self, char):
+        ''' Extra parameter editor keypress
+            Returns:
+                0: Response ready (in edit_string)
+                1: Continue
+                2: Display line editor help
+        '''
+        ret = 1
+        if char in (curses.KEY_EXIT, 27, ord('q')) and \
+                self._focus > 0:
+            self.edit_string = ''
+            ret = 0
+        elif char in (ord('\t'), 9, curses.KEY_DOWN):
+            self._focus_next()
+        elif char == curses.KEY_UP:
+            self._focus_previous()
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+            if self._focus == 0:
+                # go to next field
+                self._focus_next()
+            elif self._focus == 1:
+                # save string
+                self.edit_string = self._line_editor.string.strip()
+                ret = 0
+            else:
+                # cancel
+                self.edit_string = ''
+                ret = 0
+        elif char == ord('s') and self._focus > 0:
+            # s, execute
+            if self._widgets[1].enabled:
+                self.edit_string = self._line_editor.string.strip()
+                ret = 0
+        elif self._focus == 0:
+            """
+             Returns:
+                2: display help
+                1: get next char
+                0: exit edit mode, string isvalid
+               -1: cancel
+            """
+            ret = self._line_editor.keypress(self._win, char)
+            if ret == 2:
+                self._win.touchwin()
+            elif ret == 1:
+                # get next char
+                if self._line_editor.string.strip():
+                    self._widgets[1].enabled = True
+                else:
+                    self._widgets[1].enabled = False
+                ret = 1
+            elif ret == 0:
+                # exit, string is valid
+                self.edit_string = self._line_editor.string.strip()
+                ret = 0
+            elif ret == -1:
+                # cancel
+                self.edit_string = ''
+                ret = 0
+
+        if ret == 1:
+            self._update_focus()
+            self.refresh_win()
+        # Continue
+        return ret
+
+
+        try:
+            self._count += 1
+        except:
+            self._count = 1
+        logger.error('DE count = {}'.format(self._count))
+        if self._count > 2:
+            logger.error('DE return 0')
+            return 0
+        else:
+            logger.error('DE return 1')
+            return 1
+
+    def _update_focus(self):
+        # use _focused here to avoid triggering
+        # widgets' refresh
+        for i, x in enumerate(self._widgets):
+            if x:
+                if self._focus == i:
+                    x._focused = True
+                else:
+                    x._focused = False
+
 class ExtraParameters(object):
     """ display player's extra parameters
         in a foreign curses window
@@ -527,7 +797,7 @@ class ExtraParameters(object):
                  max_lines=10,
                  from_config=True):
         self._cnf = config
-        self._orig_params = dict(self._cnf.params)
+        self._orig_params = deepcopy(self._cnf.params)
         logger.error('DE orig params = {}'.format(self._orig_params))
         self._orig_player = player
         self._win = win
@@ -544,10 +814,17 @@ class ExtraParameters(object):
         self.reset()
         self._get_width()
 
+    def check_parameters(self):
+        ''' Exrta Parameters check '''
+        for a_key in self._orig_params.keys():
+            if self._orig_params[a_key] != self._working_params[a_key]:
+                self._cnf.dirty_config = self._cnf.params_changed = True
+                return True
+        return False
+
     def reset(self):
-        self._is_dirty = False
         self._player = self._orig_player
-        self._working_params = dict(self._orig_params)
+        self._working_params = deepcopy(self._orig_params)
         self._selections = {
             'mpv': [0, 0, 0],
             'mplayer': [0, 0, 0],
@@ -606,21 +883,16 @@ class ExtraParameters(object):
     def params(self, val):
         raise ValueError('parameter is read only')
 
-    @property
-    def is_dirty(self):
-        return self._is_dirty
-
-    @is_dirty.setter
-    def is_dirty(self, val):
-        raise ValueError('property is read only')
-
     def _dict_to_list(self):
         """ convert self._working_params dict
             to self._items dict, and set self.active
         """
+        logger.error('DE\n')
+        logger.error('DE working params = {}'.format(self._working_params))
         for a_param_set in self._working_params.keys():
             for i, a_param in enumerate(self._working_params[a_param_set]):
                 if i == 0:
+                    logger.error('DE a_param = {}'.format(a_param))
                     self._selections[a_param_set][2] = int(a_param) - 1
                 else:
                     self._items_dict[a_param_set].append(a_param)
@@ -743,22 +1015,14 @@ class ExtraParameters(object):
         self.refresh_win()
 
     def save_results(self):
-        """ set _is_dirty to True if paramaters have changes,
-            False otherwise. Also, pass working parameters to
-            original parameters effectively saving any changes.
+        """ pass working parameters to original parameters
+		    effectively saving any changes.
         """
+        logger.error('DE ===== save_results')
         self._list_to_dict()
-
-        for a_set in self._working_params.keys():
-            try:
-                if str(self._working_params[a_set]) != str(self._orig_params[a_set]):
-                    self._is_dirty = False
-            except KeyError:
-                self._is_dirty = False
-        self._is_dirty = True
-        logger.error('DE save dirty = {}'.format(self._is_dirty))
-
-        self._orig_params = dict(self._working_params)
+        self.check_parameters()
+        self._orig_params = deepcopy(self._working_params)
+        logger.error('DE orig params = {}'.format(self._orig_params))
 
     def keypress(self, char):
         """ Extra parameters keypress
@@ -769,11 +1033,13 @@ class ExtraParameters(object):
                  1 - display help
                  2 - error, number of max lines reached
                  3 - error, cannot edit or delete first item
+                 4 - edit parameter
+                 5 - add parameter
         """
         if char in (
             curses.KEY_ENTER, ord('\n'),
             ord('\r'), ord(' '), ord('l'),
-                curses.KEY_RIGHT):
+                curses.KEY_RIGHT, ord('s')):
             # activate selection
             self.active = self.selection
             if self.from_config:
@@ -792,6 +1058,7 @@ class ExtraParameters(object):
             self._win.nodelay(False)
             if char == -1:
                 """ ESCAPE """
+                self.reset()
                 return -2
 
         elif char == ord('?'):
@@ -842,16 +1109,16 @@ class ExtraParameters(object):
                 if self.selection == 0:
                     # error: cannot edit first item
                     return 3
-                else:
-                    pass
+                # edit parameter
+                return 4
 
         elif char == ord('a'):
             if self.from_config:
                 if len(self._items) == self.max_lines:
                     # error: cannot add more items
                     return 2
-                else:
-                    pass
+                # add parameter
+                return 5
 
         return -1
 
@@ -883,6 +1150,17 @@ class PyRadioSelectPlayer(object):
         self._orig_player = player
         self.focus = True
 
+        ''' Is editor active?
+                0 - Not active
+                1 - Adding a parameter
+                2 - Editing a parameter
+        '''
+        self.editing = 0
+        ''' result of parameter editing'''
+        self.edit_string = None
+        ''' parameter editor window '''
+        self._parameter_editor = None
+
         """ players contain supported players
             it is a list of lists
             each list contains three items
@@ -904,6 +1182,16 @@ class PyRadioSelectPlayer(object):
 
     @from_config.setter
     def from_config(self, val):
+        raise ValueError('property is read only')
+
+    @property
+    def is_dirty(self):
+        if self._extra is not None:
+            return self._extra.is_dirty
+        return False
+
+    @is_dirty.setter
+    def is_dirty(self, val):
         raise ValueError('property is read only')
 
     def init_window(self):
@@ -949,16 +1237,29 @@ class PyRadioSelectPlayer(object):
         self._win.bkgdset(' ', curses.color_pair(3))
         self._win.erase()
         self._win.box()
-        self._win.addstr(
-            0, int((self.maxX - len(self._title)) / 2),
-            self._title,
-            curses.color_pair(4))
-        self._win.addstr(1, 2, 'Supported Players', curses.color_pair(4))
-        self._win.addstr(1, self.mlength + 11, 'Extra Player Parameters', curses.color_pair(4))
-        #self._win.addstr(1, int(self.maxX / 2 + 2), 'Active' , curses.color_pair(4))
-        self.refresh_selection()
-        if do_params:
-            self._extra.set_player(self.selected_player_name())
+        logger.error('DE Player refresh_win: editing = {}'.format(self.editing))
+        if self.editing == 0:
+            self._win.addstr(
+                0, int((self.maxX - len(self._title)) / 2),
+                self._title,
+                curses.color_pair(4))
+            self._win.addstr(1, 2, 'Supported Players', curses.color_pair(4))
+            self._win.addstr(1, self.mlength + 11, 'Extra Player Parameters', curses.color_pair(4))
+            #self._win.addstr(1, int(self.maxX / 2 + 2), 'Active' , curses.color_pair(4))
+            self.refresh_selection()
+            if do_params:
+                self._extra.set_player(self.selected_player_name())
+        else:
+            logger.error('DE Player refresh_win: editing > 0 = {}'.format(self.editing))
+            if self.editing == 1:
+                title = ' Add player paremeter '
+            else:
+                title = ' Edit player paremeter '
+            self._win.addstr(
+                0, int((self.maxX - len(title)) / 2),
+                title, curses.color_pair(4))
+            self._win.refresh()
+            self._parameter_editor.show()
 
     def refresh_selection(self):
         for i in range(0, len(self._players)):
@@ -995,101 +1296,132 @@ class PyRadioSelectPlayer(object):
         self._parent_maxX = maxX
         self.init_window()
         self._extra.set_window(self._win)
+        if self._parameter_editor:
+            self._parameter_editor.resize(self._win)
         self.refresh_win(True)
+
+    def reset(self):
+        self._extra.reset()
+        self._populate_players()
+        self.refresh_win(do_params=True)
 
     def keypress(self, char):
         """ Player selection keypress
             Returns:
-              -3 -
-              -2 -
+              -2 - error, number of max lines reached
+              -3 - error, cannot edit or delete first item
               -1 - Continue
                0 - Accept changes
                1 - Cancel
         """
-        if char in (9, ):
-            self._switch_column()
-            self.refresh_selection()
+        if self.editing == 0:
+            if char in (9, ):
+                self._switch_column()
+                self.refresh_selection()
 
-        elif char in (
-            curses.KEY_EXIT, 27,
-            ord('q'), curses.KEY_LEFT,
-            ord('h')
-        ):
-            self._win.nodelay(True)
-            char = self._win.getch()
-            self._win.nodelay(False)
-            if char == -1:
-                """ ESCAPE """
-                return 1
-
-        elif char == ord('r'):
-            self._extra.reset()
-            self._populate_players()
-            self.refresh_win(do_params=True)
-
-        elif char == ord('s'):
-            working_players = []
-            for a_player in self._players:
-                if a_player[1]:
-                    working_players.append(a_player[0])
-
-            if working_players:
-                self.player = ','.join(working_players)
-            else:
-                self.player = ','.join(SUPPORTED_PLAYERS)
-            return 0
-
-        if self.focus:
-            if char in (
-                curses.KEY_ENTER, ord('\n'), ord('\r'),
-                ord(' '), ord('l'), curses.KEY_RIGHT
+            elif char in (
+                curses.KEY_EXIT, 27,
+                ord('q'), curses.KEY_LEFT,
+                ord('h')
             ):
-                self._players[self.selection][1] = not self._players[self.selection][1]
-                self.refresh_selection()
+                self._win.nodelay(True)
+                char = self._win.getch()
+                self._win.nodelay(False)
+                if char == -1:
+                    """ ESCAPE """
+                    return 1
 
-            elif char in (curses.ascii.NAK, 21):
-                # ^U, move player Up
-                x = self._players.pop(self.selection)
-                if self.selection == 0:
-                    self._players.append(x)
-                    self.selection = len(self._players) - 1
+            elif char == ord('r'):
+                self.reset()
+
+            elif char == ord('s'):
+                working_players = []
+                for a_player in self._players:
+                    if a_player[1]:
+                        working_players.append(a_player[0])
+
+                if working_players:
+                    self.player = ','.join(working_players)
                 else:
+                    self.player = ','.join(SUPPORTED_PLAYERS)
+                self._extra.save_results()
+                return 0
+
+            if self.focus:
+                if char in (
+                    curses.KEY_ENTER, ord('\n'), ord('\r'),
+                    ord(' '), ord('l'), curses.KEY_RIGHT
+                ):
+                    self._players[self.selection][1] = not self._players[self.selection][1]
+                    self.refresh_selection()
+
+                elif char in (curses.ascii.NAK, 21):
+                    # ^U, move player Up
+                    x = self._players.pop(self.selection)
+                    if self.selection == 0:
+                        self._players.append(x)
+                        self.selection = len(self._players) - 1
+                    else:
+                        self.selection -= 1
+                        self._players.insert(self.selection, x)
+                    self.refresh_selection()
+
+                elif char in (curses.ascii.EOT, 4):
+                    # ^D, move player Down
+                    if self.selection == len(self._players) - 1:
+                        x = self._players.pop(self.selection)
+                        self._players.insert(0, x)
+                        self.selection = 0
+                    else:
+                        x = self._players.pop(self.selection)
+                        self.selection += 1
+                        self._players.insert(self.selection, x)
+                    self.refresh_selection()
+
+                elif char in (curses.KEY_UP, ord('k')):
                     self.selection -= 1
-                    self._players.insert(self.selection, x)
-                self.refresh_selection()
+                    if self.selection < 0:
+                        self.selection = len(self._players) - 1
+                    self.refresh_selection()
+                    self._extra.set_player(self.selected_player_name())
 
-            elif char in (curses.ascii.EOT, 4):
-                # ^D, move player Down
-                if self.selection == len(self._players) - 1:
-                    x = self._players.pop(self.selection)
-                    self._players.insert(0, x)
-                    self.selection = 0
-                else:
-                    x = self._players.pop(self.selection)
+                elif char in (curses.KEY_DOWN, ord('j')):
                     self.selection += 1
-                    self._players.insert(self.selection, x)
-                self.refresh_selection()
+                    if self.selection == len(self._players):
+                        self.selection = 0
+                    self.refresh_selection()
+                    self._extra.set_player(self.selected_player_name())
 
-            elif char in (curses.KEY_UP, ord('k')):
-                self.selection -= 1
-                if self.selection < 0:
-                    self.selection = len(self._players) - 1
-                self.refresh_selection()
-                self._extra.set_player(self.selected_player_name())
-
-            elif char in (curses.KEY_DOWN, ord('j')):
-                self.selection += 1
-                if self.selection == len(self._players):
-                    self.selection = 0
-                self.refresh_selection()
-                self._extra.set_player(self.selected_player_name())
+            else:
+                ret = self._extra.keypress(char)
+                if ret == 2:
+                    # error, number of max lines reached
+                    return -2
+                elif ret == 3:
+                    # error, cannot edit or delete first item
+                    return -3
+                elif ret == 4:
+                    # edit parameter
+                    self.editing = 2
+                    self.refresh_win()
+                elif ret == 5:
+                    # add parameter
+                    self._parameter_editor = ExtraParametersEditor(
+                        self._win,
+                        self._cnf)
+                    self.editing = 1
+                    self.refresh_win()
 
         else:
-            ret = self._extra.keypress(char)
-            if ret == 2:
-                return -2
-            elif ret == 3:
-                return -3
+            # adding or editing a parameter
+            ret = self._parameter_editor.keypress(char)
+            logger.error('DE extra key = {}'.format(ret))
+            if ret == 0:
+                logger.error('DE erasing...')
+                self.editing = 0
+                self.refresh_win(True)
+                self._parameter_editor = None
+
         return -1
 
     def _switch_column(self):

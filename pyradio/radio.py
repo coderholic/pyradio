@@ -14,6 +14,7 @@ import logging
 import os
 import random
 import signal
+from copy import deepcopy
 from sys import version as python_version, version_info, platform
 from os.path import join, basename, getmtime, getsize
 from os import remove
@@ -474,6 +475,9 @@ class PyRadio(object):
                                     logger.info("RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1]))
                         except:
                             pass
+        # self._cnf.PROGRAM_UPDATE = {'cur_version': self.info,
+        #                             'new_version': '0.8.9'
+        #                             }
 
         try:
             curses.curs_set(0)
@@ -2447,6 +2451,8 @@ class PyRadio(object):
                         caption=' Update Notifiaction ',
                         prompt=' Press any key to hide ',
                         is_message=True)
+        # PROGRAM_UPDATE = {'cur_version': self.info,
+        #                   'new_version': self._update_version_do_display}
         self._update_version = ''
 
     def _print_clear_register(self):
@@ -2943,13 +2949,27 @@ class PyRadio(object):
                 self._config_win._saved_config_options['use_transparency'][1] = self._cnf.use_transparency
                 self._config_win._old_use_transparency = self._cnf.use_transparency
 
+    def _save_parameters(self):
+        logger.error('DE sae_parameters: player select win = {}'.format(self._player_select_win))
+        if self._player_select_win is not None:
+            self._cnf.params = deepcopy(self._player_select_win._extra._orig_params)
+            self._player_select_win = None
+            logger.error('DE params = {}'.format(self._cnf.params))
+
+    def _reset_parameters(self):
+        if self._player_select_win is not None:
+            self._player_select_win.reset()
+
     def _show_config_window(self):
         if self._config_win is None:
             self._config_win = PyRadioConfigWindow(
                 self.outerBodyWin,
                 self._cnf,
                 self._toggle_transparency,
-                self._show_theme_selector_from_config)
+                self._show_theme_selector_from_config,
+                self._save_parameters,
+                self._reset_parameters
+            )
         else:
             self._config_win.parent = self.outerBodyWin
             self._config_win.refresh_config_win()
@@ -4116,13 +4136,14 @@ class PyRadio(object):
                         self._config_win._config_options['player'][1] = self._player_select_win.player
                     self.ws.close_window()
                     self._config_win.refresh_config_win()
-                    self._player_select_win = None
+                    # Do NOT set _player_select_win to None here
+                    # or parameters will be lost!!!
+                    # self._player_select_win = None
                 else:
                     if ret == -2:
                         logger.error('DE number of max lines reached!!!')
                         self._print_max_number_of_profiles_error()
                     elif ret == -3:
-                        logger.error('DE cannot edit or delete first item')
                         self._print_default_profile_edit_delete_error()
                 return
 
@@ -4831,12 +4852,8 @@ class PyRadio(object):
 
             elif ret == 0:
                 # Parameter selected
-                if self._player_select_win._extra.is_dirty:
-                    logger.error('DE I am here!!!')
-                    logger.error('DE params = {}'.format(self._cnf.params))
-                    self._cnf.params = dict(self._player_select_win._extra.params)
-                    logger.error('DE params = {}'.format(self._cnf.params))
-                    self._cnf.params_changed = True
+                if self._cnf.params_changed:
+                    self._cnf.params = deepcopy(self._player_select_win.params)
                 self.ws.close_window()
                 self._player_select_win = None
                 self.refreshBody()

@@ -209,7 +209,13 @@ def shell():
         set_terminal_title()
         curses.wrapper(pyradio.setup)
         if pyradio.setup_return_status:
-            print('\nThank you for using PyRadio. Cheers!')
+            if pyradio_config.PROGRAM_UPDATE:
+                print('\nUpdating PyRadio')
+                print('  Current version: {}'.format(pyradio_config.PROGRAM_UPDATE['cur_version'].replace(' PyRadio ', '')))
+                print('      New version: {}\n'.format(pyradio_config.PROGRAM_UPDATE['new_version']))
+                print('\n')
+            else:
+                print('\nThank you for using PyRadio. Cheers!')
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
 

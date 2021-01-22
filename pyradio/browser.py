@@ -40,15 +40,15 @@ class PyRadioStationsBrowser(object):
     _outer_internal_body_half_diff = 1
 
     def __init__(self, search=None):
-        """Initialize the station's browser.
+        """ Initialize the station's browser.
 
-        It should return a valid search result (for example,
-        www.radio-browser.info implementation, returns 100 stations
-        sorted by number of votes).
+            It should return a valid search result (for example,
+            www.radio-browser.info implementation, returns 100 stations
+            sorted by number of votes).
 
-        Parameters
-        ----------
-        search
+            Parameters
+            ----------
+            search
             Search parameters to be used instead of the default.
         """
 

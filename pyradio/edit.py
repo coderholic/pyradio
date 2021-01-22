@@ -787,7 +787,7 @@ class PyRadioRenameFile(object):
         # add buttons
         if self._widgets[3] is None:
             self._h_buttons = SimpleCursesHorizontalPushButtons(
-                    Y=self._line_editor_yx[0] + 5 + adjust_line_Y if self._open_afterwards else self._line_editor_yx[0] + 4 + adjust_line_Y,
+                    Y=8 + adjust_line_Y if self._open_afterwards else 7 + adjust_line_Y,
                     captions=('OK', 'Cancel'),
                     color_focused=curses.color_pair(9),
                     color=curses.color_pair(4),

@@ -11,6 +11,7 @@ from time import ctime
 from datetime import datetime
 from shutil import copyfile, move
 import threading
+from copy import deepcopy
 from .browser import PyRadioStationsBrowser, probeBrowsers
 HAS_REQUESTS = True
 try:
@@ -990,9 +991,11 @@ class PyRadioConfig(PyRadioStations):
     """ parameters read from config file
         can only be modified from config window
     """
-    saved_params = dict(params)
+    saved_params = deepcopy(params)
 
     params_changed = False
+
+    PROGRAM_UPDATE = None
 
     def __init__(self):
         self._profile_name = 'pyradio'
@@ -1055,10 +1058,13 @@ class PyRadioConfig(PyRadioStations):
                             logger.debug('VLC does not support profiles')
                     else:
                         """ add to params """
+                        logger.error('DE \n\n{0}\n{1}'.format(self.saved_params, self.params))
                         self.params[parts[0]].append(':'.join(parts[1:]))
                         """ change first params item to point to this new item """
                         self.params[parts[0]][0] = len(self.params[parts[0]]) - 1
+                        logger.error('DE \n{0}\n{1}\n\n'.format(self.saved_params, self.params))
 
+                        self.dirty_config = True
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug(self.params)
                         print(self.params)
@@ -1431,7 +1437,7 @@ class PyRadioConfig(PyRadioStations):
             self.params[n] = self.params[n][:11]
 
         self.opts['dirty_config'][1] = False
-        self.saved_params = dict(self.params)
+        self.saved_params = deepcopy(self.params)
 
         # check if default playlist exists
         if self.opts['default_playlist'][1] != 'stations':
@@ -1441,7 +1447,6 @@ class PyRadioConfig(PyRadioStations):
                     logger.info('Default playlist "({}") does not exist; reverting to "stations"'.format(self.opts['default_station'][1]))
                 self.opts['default_playlist'][1] = 'stations'
                 self.opts['default_station'][1] = 'False'
-                #self.opts['dirty_config'][1] = True
         return 0
 
     def _config_to_params(self, a_param):
@@ -1453,6 +1458,16 @@ class PyRadioConfig(PyRadioStations):
         self.params[player].append('='.join(a_param[1:]))
         if default:
             self.params[player][0] = len(self.params[player]) - 1
+
+    def check_parameters(self):
+        ''' Config parameters check '''
+        logger.error('DE check_params: params = {}'.format(self.params))
+
+        for a_key in self.saved_params.keys():
+            if self.saved_params[a_key] != self.params[a_key]:
+                self.dirty_config = True
+                return True
+        return False
 
     def save_config(self):
         """ Save config file
@@ -1467,6 +1482,16 @@ class PyRadioConfig(PyRadioStations):
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (session locked)')
             return 1
+
+        ''' Check if parameters are changed
+            Do it this way (not using is_ditry) to capture
+            parameter changes due to 'Z' also
+        '''
+        logger.error('DE save_conifg: saved params = {}'.format(self.saved_params))
+        if self.check_parameters():
+                self.saved_params = deepcopy(self.params)
+        logger.error('DE save_conifg: saved params = {}'.format(self.saved_params))
+
         if not self.opts['dirty_config'][1]:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (not modified)')
@@ -1648,7 +1673,7 @@ auto_save_playlist = {11}
             pass
         if logger.isEnabledFor(logging.INFO):
             logger.info('Config saved')
-        self.opts['dirty_config'][1] = False
+        self.dirty_config = False
         self.params_changed = False
         return 0
 

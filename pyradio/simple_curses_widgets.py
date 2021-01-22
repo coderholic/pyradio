@@ -591,15 +591,16 @@ class SimpleCursesHorizontalPushButtons(object):
             self._parent = parent
         if self._parent:
             Y, X = self._parent.getmaxyx()
+            offY, offX = self._parent.getbegyx()
             if orientation == 'left':
-                self._X = self._left_or_right_margin
+                self._X = offX + self._left_or_right_margin
             elif orientation == 'right':
                 self._X = X - self._left_or_right_margin - self._width
             else:
-                self._X = int((X - self._width) / 2)
+                self._X = offX + int((X - self._width) / 2)
             # place widgets
             X = self._X
-            Y = self._Y
+            Y = self._Y + offY
             for n in self._buttons:
                 n.mvwin(Y, X, show)
                 X += n.width + 2
