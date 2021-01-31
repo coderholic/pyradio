@@ -1711,7 +1711,9 @@ class PyRadio(object):
                             caption=' Configuration Help ')
 
     def _show_config_player_help(self):
-        if self._player_select_win.focus:
+        if self._player_select_win.editing > 0:
+            self._show_line_editor_help()
+        elif self._player_select_win.focus:
             txt = """TAB              |Move selection to |Extra Parameters| column.
                      Up|,|j|,|Down|,|k      |Change player selection.
                      Enter|,|Space

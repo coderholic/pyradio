@@ -538,6 +538,8 @@ class PyRadioExtraParams(object):
 
 
 class ExtraParametersEditor(object):
+    ''' Class to edit or add parameters
+    '''
 
     def __init__(self,
                  parent,
@@ -585,7 +587,9 @@ class ExtraParametersEditor(object):
             cursor_color=curses.color_pair(8),
             unfocused_color=curses.color_pair(5),
             string_changed_handler=self._string_changed)
-        self._widgets[0].bracket = False
+        self._widgets[0].bracket = True
+        self._widgets[0]._use_paste_mode = True
+        self._widgets[0]._paste_mode = False      # enables direct insersion of ? and \
         self._line_editor = self._widgets[0]
 
         # add horizontal push buttons
@@ -1313,6 +1317,7 @@ class PyRadioSelectPlayer(object):
               -1 - Continue
                0 - Accept changes
                1 - Cancel
+               2 - Display editor help
         """
         if self.editing == 0:
             if char in (9, ):
@@ -1413,14 +1418,22 @@ class PyRadioSelectPlayer(object):
                     self.refresh_win()
 
         else:
+            # return from parameter editor
             # adding or editing a parameter
             ret = self._parameter_editor.keypress(char)
-            logger.error('DE extra key = {}'.format(ret))
             if ret == 0:
-                logger.error('DE erasing...')
+                # accept parameter or cancel
                 self.editing = 0
+                if self._parameter_editor.edit_string:
+                    self._extra._items.append(self._parameter_editor.edit_string)
+                    self._extra.selection = len(self._extra._items) - 1
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('New parameter: ' + self._extra._items[-1])
                 self.refresh_win(True)
                 self._parameter_editor = None
+            elif ret == 2:
+                # show editor help
+                return ret
 
         return -1
 
