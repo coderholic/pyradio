@@ -1079,6 +1079,7 @@ class PyRadioConfig(PyRadioStations):
                     we do not know if this profile has to be
                     applied. So set evaluate for later...
                 """
+                print('Will check command line parameters later...({})'.format(val))
                 self.command_line_params_not_ready = val
 
     @property
@@ -1247,6 +1248,7 @@ class PyRadioConfig(PyRadioStations):
         self._profile_name = 'pyradio'
 
     def get_profile_name_from_saved_params(self):
+        logger.error('DE ***** get_profile_name_from_saved_params')
         self.command_line_params_not_ready = self.saved_params[self.PLAYER_NAME][self.saved_params[self.PLAYER_NAME][0]]
         self.set_profile_from_command_line()
 
@@ -1433,8 +1435,9 @@ class PyRadioConfig(PyRadioStations):
             (well, actually 11 items, since the first one is the
             index to the default string in the list)
         """
-        for n in self.params.keys():
-            self.params[n] = self.params[n][:11]
+        if self.params:
+            for n in self.params.keys():
+                self.params[n] = self.params[n][:12]
 
         self.opts['dirty_config'][1] = False
         self.saved_params = deepcopy(self.params)

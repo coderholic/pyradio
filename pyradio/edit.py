@@ -328,7 +328,7 @@ class PyRadioEditor(object):
                 self._win.addstr('^R', curses.color_pair(4))
                 self._win.addstr(14, 23, 'Revert to saved values (', curses.color_pair(5))
                 self._win.addstr('^R', curses.color_pair(4))
-                self._win.addstr(' when in Line Editor).', curses.color_pair(5))
+                self._win.addstr(' in Line Editor).', curses.color_pair(5))
                 step = 1
             self._win.addstr(14 + step, 5, 'Esc', curses.color_pair(4))
             self._win.addstr(14 + step, 23, 'Cancel operation.', curses.color_pair(5))

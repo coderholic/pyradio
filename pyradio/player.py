@@ -192,6 +192,8 @@ class Player(object):
         self._get_all_config_files()
         if self._cnf.command_line_params_not_ready is not None:
             self._cnf.command_line_params = self._cnf.command_line_params_not_ready
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Setting command line parameters to: "{0}" <- "{1}"'.format(self._cnf.command_line_params, self._cnf.command_line_params_not_ready))
 
         #if self.WIN and self.PLAYER_NAME == 'vlc':
         if platform == 'win32':
@@ -1211,18 +1213,14 @@ class Player(object):
         """ send keystroke command to player """
 
         if(self.process is not None):
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Sending Command: {}".format(command).strip())
             try:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug("Command: {}".format(command).strip())
                 self.process.stdin.write(command.encode('utf-8', 'replace'))
-                try:
-                    self.process.stdin.flush()
-                except:
-                    pass
+                self.process.stdin.flush()
             except:
-                msg = "Error when sending: {}"
                 if logger.isEnabledFor(logging.ERROR):
-                    logger.error(msg.format(command).strip(), exc_info=True)
+                    logger.error('Error while sending Command: {}'.format(command).strip(), exc_info=True)
 
     def close_from_windows(self):
         """ kill player instance when window console is closed """

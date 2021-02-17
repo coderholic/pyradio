@@ -106,7 +106,7 @@ class PyRadioConfigWindow(object):
         self._old_use_transparency = self._config_options['use_transparency'][1]
 
         ''' Config window parameters check '''
-        logger.error('DE \n\ncheck params\n{0}\n{1}'.format(self._cnf.saved_params, self._cnf.params))
+        # logger.error('DE \n\ncheck params\n{0}\n{1}'.format(self._cnf.saved_params, self._cnf.params))
         for a_key in self._cnf.saved_params.keys():
             if self._cnf.saved_params[a_key] != self._cnf.params[a_key]:
                 self._cnf.dirty_config = True
@@ -548,7 +548,7 @@ class ExtraParametersEditor(object):
         self._parent = parent
         self._cnf = config
         self.edit_string = string
-        self._caption = ' Parameter:  '
+        self._caption = ' Parameter value '
         self._string = self._orig_string = string
 
         self.Y, self.X = self._parent.getbegyx()
@@ -570,14 +570,12 @@ class ExtraParametersEditor(object):
 
         self._too_small = False
 
-        self._opening = True
-
         # add line editor
         self._widgets[0] = SimpleCursesLineEdit(
             parent=self._win,
-            width=self.maxX - len(self._caption),
-            begin_y=self.Y,
-            begin_x=self.X + len(self._caption) - 1,
+            width=self.maxX - 2,
+            begin_y=self.Y + 1,
+            begin_x=self.X + 1,
             boxed=False,
             has_history=False,
             caption='',
@@ -587,14 +585,15 @@ class ExtraParametersEditor(object):
             cursor_color=curses.color_pair(8),
             unfocused_color=curses.color_pair(5),
             string_changed_handler=self._string_changed)
-        self._widgets[0].bracket = True
+        self._widgets[0].string = string
+        self._widgets[0].bracket = False
         self._widgets[0]._use_paste_mode = True
-        self._widgets[0]._paste_mode = False      # enables direct insersion of ? and \
+        self._widgets[0]._paste_mode = True      # enables direct insersion of ? and \
         self._line_editor = self._widgets[0]
 
         # add horizontal push buttons
         self._h_buttons = SimpleCursesHorizontalPushButtons(
-                Y=2, captions=('OK', 'Cancel'),
+                Y=3, captions=('OK', 'Cancel'),
                 color_focused=curses.color_pair(9),
                 color=curses.color_pair(4),
                 bracket_color=curses.color_pair(5),
@@ -623,51 +622,50 @@ class ExtraParametersEditor(object):
     def show(self):
         self._win.addstr(0, 0, self._caption, curses.color_pair(5))
         try:
-            self._win.addstr(4, 3, '─' * (self.maxX - 6), curses.color_pair(3))
+            self._win.addstr(5, 3, '─' * (self.maxX - 6), curses.color_pair(3))
         except:
-            self._win.addstr(4, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
-        self._win.addstr(4, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
+            self._win.addstr(5, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+        self._win.addstr(5, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
 
 
-        self._win.addstr(5, 5, 'TAB', curses.color_pair(4))
+        self._win.addstr(6, 5, 'TAB', curses.color_pair(4))
         self._win.addstr(', ', curses.color_pair(5))
         self._win.addstr('Down', curses.color_pair(4))
         self._win.addstr(' / ', curses.color_pair(5))
         self._win.addstr('Up', curses.color_pair(4))
         self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
-        self._win.addstr(6, 5, 'ENTER', curses.color_pair(4))
+        self._win.addstr(7, 5, 'ENTER', curses.color_pair(4))
         self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
         step = 0
         if self._orig_string:
-            self._win.addstr(7, 5, 'r', curses.color_pair(4))
+            self._win.addstr(8, 5, 'r', curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
             self._win.addstr('^R', curses.color_pair(4))
-            self._win.addstr(7, 23, 'Revert to saved values (', curses.color_pair(5))
+            self._win.addstr(8, 23, 'Revert to saved values (', curses.color_pair(5))
             self._win.addstr('^R', curses.color_pair(4))
-            self._win.addstr(' when in Line Editor).', curses.color_pair(5))
+            self._win.addstr(' in Line Editor).', curses.color_pair(5))
             step = 1
-        self._win.addstr(7 + step, 5, 'Esc', curses.color_pair(4))
-        self._win.addstr(7 + step, 23, 'Cancel operation.', curses.color_pair(5))
+        self._win.addstr(8 + step, 5, 'Esc', curses.color_pair(4))
+        self._win.addstr(8 + step, 23, 'Cancel operation.', curses.color_pair(5))
 
-        self._win.addstr(8 + step, 5, 's', curses.color_pair(4))
+        self._win.addstr(9 + step, 5, 's', curses.color_pair(4))
         self._win.addstr(' / ', curses.color_pair(5))
         self._win.addstr('q', curses.color_pair(4))
-        self._win.addstr(8 + step , 23, 'Save / Cancel (not in Line Editor).', curses.color_pair(5))
+        self._win.addstr(9 + step , 23, 'Save / Cancel (not in Line Editor).', curses.color_pair(5))
 
-        self._win.addstr(9 + step, 5, '?', curses.color_pair(4))
-        self._win.addstr(9 + step, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
+        self._win.addstr(10 + step, 5, '?', curses.color_pair(4))
+        self._win.addstr(10 + step, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
         self._win.refresh()
         self.refresh_win()
 
     def refresh_win(self):
         if not self._too_small:
             self._line_editor.show(
-                self._win, opening=self._opening,
-                new_y=self.Y,
-                new_x=self.X + len(self._caption) - 1)
+                self._win, opening=False,
+                new_y=self.Y + 1,
+                new_x=self.X + 1)
             self._widgets[1].show()
             self._widgets[2].show()
-            self._opening = False
 
     def _update_focus(self):
         # use _focused here to avoid triggering
@@ -798,11 +796,12 @@ class ExtraParameters(object):
                  focus,
                  startY=1,
                  startX=1,
-                 max_lines=10,
+                 max_lines=11,
                  from_config=True):
         self._cnf = config
         self._orig_params = deepcopy(self._cnf.params)
-        logger.error('DE orig params = {}'.format(self._orig_params))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('original parameters = {}'.format(self._orig_params))
         self._orig_player = player
         self._win = win
         self._focus = focus
@@ -877,6 +876,7 @@ class ExtraParameters(object):
     @active.setter
     def active(self, val):
         self._selections[self._player][2] = val
+        logger.error('DE \n\nselections\n\n{}'.format(self._selections))
 
     @property
     def params(self):
@@ -891,12 +891,12 @@ class ExtraParameters(object):
         """ convert self._working_params dict
             to self._items dict, and set self.active
         """
-        logger.error('DE\n')
-        logger.error('DE working params = {}'.format(self._working_params))
+        # logger.error('DE\n')
+        # logger.error('DE working params = {}'.format(self._working_params))
         for a_param_set in self._working_params.keys():
             for i, a_param in enumerate(self._working_params[a_param_set]):
                 if i == 0:
-                    logger.error('DE a_param = {}'.format(a_param))
+                    # logger.error('DE a_param = {}'.format(a_param))
                     self._selections[a_param_set][2] = int(a_param) - 1
                 else:
                     self._items_dict[a_param_set].append(a_param)
@@ -1022,11 +1022,15 @@ class ExtraParameters(object):
         """ pass working parameters to original parameters
 		    effectively saving any changes.
         """
-        logger.error('DE ===== save_results')
+        logger.error('DE save_results')
+        logger.error('DE 1 working_params = {}'.format(self._working_params))
         self._list_to_dict()
+        logger.error('DE 2 working_params = {}'.format(self._working_params))
         self.check_parameters()
+        logger.error('DE 3 working_params = {}'.format(self._working_params))
         self._orig_params = deepcopy(self._working_params)
-        logger.error('DE orig params = {}'.format(self._orig_params))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('new parameters = {}'.format(self._orig_params))
 
     def keypress(self, char):
         """ Extra parameters keypress
@@ -1045,7 +1049,9 @@ class ExtraParameters(object):
             ord('\r'), ord(' '), ord('l'),
                 curses.KEY_RIGHT, ord('s')):
             # activate selection
+            logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
             self.active = self.selection
+            logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
             if self.from_config:
                 self.refresh_win()
             else:
@@ -1129,7 +1135,7 @@ class ExtraParameters(object):
 
 class PyRadioSelectPlayer(object):
 
-    maxY = 13
+    maxY = 14
     maxX = 72
     selection = 0
 
@@ -1146,7 +1152,8 @@ class PyRadioSelectPlayer(object):
     mlength = 13
 
     def __init__(self, config, parent, player):
-        logger.error('DE player = {}'.format(player))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('current players = {}'.format(player))
         self._cnf = config
         self._parent = parent
         self._parent_maxY, self._parent_maxX = parent.getmaxyx()
@@ -1235,13 +1242,13 @@ class PyRadioSelectPlayer(object):
                 if ap not in parts:
                     self._players.append([ap, False, True])
 
-        logger.error('DE playsers = {}'.format(self._players))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('all players parameters = {}'.format(self._players))
 
     def refresh_win(self, do_params=False):
         self._win.bkgdset(' ', curses.color_pair(3))
         self._win.erase()
         self._win.box()
-        logger.error('DE Player refresh_win: editing = {}'.format(self.editing))
         if self.editing == 0:
             self._win.addstr(
                 0, int((self.maxX - len(self._title)) / 2),
@@ -1318,6 +1325,8 @@ class PyRadioSelectPlayer(object):
                0 - Accept changes
                1 - Cancel
                2 - Display editor help
+               3 - Editor is visible
+               4 - Editor exited
         """
         if self.editing == 0:
             if char in (9, ):
@@ -1408,7 +1417,12 @@ class PyRadioSelectPlayer(object):
                 elif ret == 4:
                     # edit parameter
                     self.editing = 2
+                    self._parameter_editor = ExtraParametersEditor(
+                        self._win,
+                        self._cnf,
+                        string=self._extra._items[self._extra.selection])
                     self.refresh_win()
+                    return 3
                 elif ret == 5:
                     # add parameter
                     self._parameter_editor = ExtraParametersEditor(
@@ -1416,6 +1430,7 @@ class PyRadioSelectPlayer(object):
                         self._cnf)
                     self.editing = 1
                     self.refresh_win()
+                    return 3
 
         else:
             # return from parameter editor
@@ -1423,14 +1438,23 @@ class PyRadioSelectPlayer(object):
             ret = self._parameter_editor.keypress(char)
             if ret == 0:
                 # accept parameter or cancel
-                self.editing = 0
                 if self._parameter_editor.edit_string:
-                    self._extra._items.append(self._parameter_editor.edit_string)
-                    self._extra.selection = len(self._extra._items) - 1
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('New parameter: ' + self._extra._items[-1])
+                    if self.editing == 1:
+                        ''' add parameter  '''
+                        self._extra._items.append(self._parameter_editor.edit_string)
+                        self._extra.selection = len(self._extra._items) - 1
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('New parameter: ' + self._extra._items[-1])
+                    else:
+                        ''' change parameter '''
+                        self._extra._items[self._extra.selection] = self._parameter_editor.edit_string
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('New parameter value: ' + self._parameter_editor.edit_string)
+
+                self.editing = 0
                 self.refresh_win(True)
                 self._parameter_editor = None
+                return 4
             elif ret == 2:
                 # show editor help
                 return ret

@@ -335,8 +335,9 @@ class PyRadio(object):
                 self.ws.UNNAMED_REGISTER_MODE: self._show_unnamed_register,
                 self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
                 self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
-                self.ws.PLAYER_PARAMS_MODE: self._redisplay_params,
+                self.ws.PLAYER_PARAMS_MODE: self._redisplay_player_select_win_refresh_and_resize,
                 self.ws.MOUSE_RESTART_INFO_MODE: self._print_mouse_restart_info,
+                self.ws.IN_PLAYER_PARAMS_EDITOR: self._redisplay_player_select_win_refresh_and_resize,
                 }
 
         """ list of help functions """
@@ -361,6 +362,7 @@ class PyRadio(object):
                 self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
                 self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
                 self.ws.PLAYER_PARAMS_MODE: self._show_config_player_help,
+                self.ws.IN_PLAYER_PARAMS_EDITOR: self._show_params_ediror_help,
         }
 
         """ search classes
@@ -969,27 +971,42 @@ class PyRadio(object):
                     )
             self._check_to_open_playlist()
 
-    def playSelection(self):
+    def playSelection(self, restart=False):
+        """ start playback using current selection
+            if restart = True, start the station that has
+            been played last
+        """
+        # logger.error('DE \n\n\nplaying = {}'.format(self.playing))
         self._station_rename_from_info = False
         if self.stations[self.selection][3]:
             self.playSelectionBrowser()
         else:
-            self.playing = self.selection
-            self._last_played_station = self.stations[self.selection]
+            # logger.error('DE \n\nselection = {0}, playing = {1}\nlast played = {2}\n\n'.format(self.selection, self.playing, self._last_played_station))
+            # logger.error('DE \n\nselection = {}'.format(self.selections))
             stream_url = ''
             self.log.display_help_message = False
+            if restart:
+                stream_url = self._last_played_station[1]
+                enc = self._last_played_station[2]
+                self.playing = self._last_played_station_id
+            else:
+                if self._cnf.browsing_station_service:
+                    if self._cnf.online_browser.have_to_retrieve_url:
+                        self.log.display_help_message = False
+                        self.log.write(msg='Station: "' + self._last_played_station[0] + '" - Retrieving URL...')
+                        stream_url = self._cnf.online_browser.url(self.selection)
+                self._last_played_station = self.stations[self.selection]
+                self._last_played_station_id = self.selection
+                self.playing = self.selection
+                if not stream_url:
+                    stream_url = self.stations[self.selection][1]
+                try:
+                    enc = self.stations[self.selection][2].strip()
+                except:
+                    enc = ''
+
+            # start player
             self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0] + '"')
-            if self._cnf.browsing_station_service:
-                if self._cnf.online_browser.have_to_retrieve_url:
-                    self.log.display_help_message = False
-                    self.log.write(msg='Station: "' + self._last_played_station[0] + '" - Retrieving URL...')
-                    stream_url = self._cnf.online_browser.url(self.selection)
-            if not stream_url:
-                stream_url = self.stations[self.selection][1]
-            try:
-                enc = self.stations[self.selection][2].strip()
-            except:
-                enc = ''
             try:
                 self.player.play(self._last_played_station[0], stream_url, self.get_active_encoding(enc))
             except OSError:
@@ -1059,6 +1076,7 @@ class PyRadio(object):
         except:
             pass
         finally:
+            self._last_played_station_id = self.playing
             self.playing = -1
             if show_message:
                 self._show_player_is_stopped()
@@ -1625,6 +1643,40 @@ class PyRadio(object):
         self._show_help(txt,
                         mode_to_set=self.ws.SEARCH_HELP_MODE,
                         caption=' Search Help ')
+
+    def _show_params_ediror_help(self):
+        if platform.lower().startswith('darwin'):
+            txt = """Left| / |Right        |Move to next / previous character.
+            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+            ^W| / |^K             |Clear to start / end of line.
+            ^U                  |Clear line.
+            DEL|,|^D              |Delete character.
+            Backspace|,|^H        |Backspace (delete previous character).
+            Up| / |Down           |Go to previous / next field.
+            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+            Esc                 |Cancel operation.
+
+            |Managing player volume does not work in editing mode.
+            """
+        else:
+            txt = """Left| / |Right        |Move to next / previous character.
+            M-F| / |M-B           |Move to next / previous word.
+            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
+            ^W| / |M-D|,|^K         |Clear to start / end of line.
+            ^U                  |Clear line.
+            DEL|,|^D              |Delete character.
+            Backspace|,|^H        |Backspace (delete previous character).
+            Up| / |Down           |Go to previous / next field.
+            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+            Esc                 |Cancel operation.
+
+            |Managing player volume does not work in editing mode.
+            """
+            if platform.startswith('win'):
+                txt = txt.replace('M-', 'A-')
+        self._show_help(txt,
+                        mode_to_set=self.ws.IN_PLAYER_PARAMS_EDITOR_HELP_MODE,
+                        caption=' Line Editor Help ')
 
     def _show_line_editor_help(self):
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE) \
@@ -4003,7 +4055,7 @@ class PyRadio(object):
                         self._player_select_win._parent = self.outerBodyWin
                         self._player_select_win._parent_maxY, self._player_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
                         self._player_select_win.init_window()
-                        self._player_select_win.refresh_win()
+                        self._player_select_win.refresh_win(do_params=True)
                         # self._player_select_win.setPlayers(self._config_win._config_options['player'][1])
                         # self._player_select_win.refresh_selection()
 
@@ -4075,17 +4127,21 @@ class PyRadio(object):
                         elif ret == 0:
                             # Config saved successfully
                             if self.player.isPlaying():
-                                if self._cnf.opts['default_encoding'][1] == self._old_config_encoding:
-                                    self.log.write(msg=msg[1])
-                                    self.player.threadUpdateTitle()
-                                else:
+                                if self._cnf.opts['default_encoding'][1] != self._old_config_encoding or \
+                                        self._cnf.opts['force_http'][1] != self.player.force_http:
+                                    logger.error('restarting...\n\n')
                                     self.log.write(msg=msg[2])
                                     self.player.threadUpdateTitle()
                                     sleep(1.5)
-                                    self.playSelection()
+                                    self.playSelection(restart=True)
+                                else:
+                                    logger.error('not restarting...\n\n')
+                                    self.log.write(msg=msg[1])
+                                    self.player.threadUpdateTitle()
                             else:
                                 self.log.write(msg=msg[1], help_msg=True, suffix=self._status_suffix)
                             self._old_config_encoding = self._cnf.opts['default_encoding'][1]
+                            self.player.force_http = self._cnf.opts['force_http'][1]
                             if self._config_win:
                                 self._config_win._old_use_transparency = self._cnf.use_transparency
                             if self._cnf.player_changed:
@@ -4127,27 +4183,42 @@ class PyRadio(object):
                     self._config_win = None
                 return
 
-        elif self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE and \
-                char not in self._chars_to_bypass:
-            if char not in self._chars_to_bypass:
-                ret = self._player_select_win.keypress(char)
-                if ret >= 0:
-                    if ret == 0:
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('new_players = {}'.format(self._player_select_win.player))
-                        self._config_win._config_options['player'][1] = self._player_select_win.player
+        elif (self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE and \
+                char not in self._chars_to_bypass) or \
+                self.ws.operation_mode == self.ws.IN_PLAYER_PARAMS_EDITOR:
+
+            ret = self._player_select_win.keypress(char)
+            if ret >= 0:
+                if ret == 0:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('new_players = {}'.format(self._player_select_win.player))
+                    self._config_win._config_options['player'][1] = self._player_select_win.player
                     self.ws.close_window()
                     self._config_win.refresh_config_win()
-                    # Do NOT set _player_select_win to None here
-                    # or parameters will be lost!!!
-                    # self._player_select_win = None
-                else:
-                    if ret == -2:
-                        logger.error('DE number of max lines reached!!!')
-                        self._print_max_number_of_profiles_error()
-                    elif ret == -3:
-                        self._print_default_profile_edit_delete_error()
-                return
+                    ''' Do NOT set _player_select_win to None here
+                        or parameters will be lost!!!
+                        self._player_select_win = None
+                    '''
+                elif ret == 1:
+                    self.ws.close_window()
+                    self._config_win.refresh_config_win()
+                    ''' Do NOT set _player_select_win to None here
+                        or parameters will be lost!!!
+                        self._player_select_win = None
+                    '''
+                elif ret == 3:
+                    ''' Got into paramater editor '''
+                    self.ws.operation_mode = self.ws.IN_PLAYER_PARAMS_EDITOR
+                elif ret ==4:
+                    ''' Parameter editor exited '''
+                    self.ws.close_window()
+            else:
+                if ret == -2:
+                    logger.error('DE number of max lines reached!!!')
+                    self._print_max_number_of_profiles_error()
+                elif ret == -3:
+                    self._print_default_profile_edit_delete_error()
+            return
 
         elif self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE and \
                 char not in self._chars_to_bypass:
@@ -4187,7 +4258,7 @@ class PyRadio(object):
                         while self.player.isPlaying():
                             sleep(.25)
                         self.player.config_encoding = self._cnf.default_encoding
-                        self.playSelection()
+                        self.playSelection(restart=True)
                 return
 
         elif self.ws.operation_mode in \
@@ -4262,7 +4333,7 @@ class PyRadio(object):
                         logger.info('*** Restarting playback due to encoding change ***')
                     while self.player.isPlaying():
                         sleep(.25)
-                    self.playSelection()
+                    self.playSelection(restart=True)
             elif ret == 2:
                 # display line editor help
                 self._show_line_editor_help()
@@ -4841,6 +4912,13 @@ class PyRadio(object):
                 self.ws.close_window()
                 self.player.force_http = self._connection_type_edit.connection_type
                 self._connection_type_edit = None
+                if self.player.isPlaying():
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('*** Restarting playback due to connection type change ***')
+                    self.stopPlayer()
+                    while self.player.isPlaying():
+                        sleep(.25)
+                    self.playSelection(restart=True)
             self.refreshBody()
             return
 
@@ -5840,9 +5918,6 @@ class PyRadio(object):
         if self.theme_forced_selection:
             self._theme_selector.set_theme(self.theme_forced_selection)
         self._print_ask_to_create_theme()
-
-    def _redisplay_params(self):
-        self._player_select_win.set_parrent(self.bodyWin)
 
     def _load_renamed_playlist(self, a_file, old_file, is_copy):
         if logger.isEnabledFor(logging.DEBUG):
