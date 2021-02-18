@@ -1151,11 +1151,6 @@ class Player(object):
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
         opts = self._buildStartOpts(streamUrl, isPlayList)
         self.stop_mpv_status_update_thread = False
-        if self._cnf.command_line_params:
-            params = self._cnf.command_line_params.split(' ')
-            for a_param in params:
-                if a_param:
-                    opts.append(a_param)
         if logger.isEnabledFor(logging.INFO):
             logger.info('Executing command: {}'.format(' '.join(opts)))
         if platform.startswith('win') and self.PLAYER_NAME == 'vlc':
@@ -1450,6 +1445,12 @@ class MpvPlayer(Player):
             else:
                 opts = [self.PLAYER_CMD, "--no-video", "--quiet", self._url_to_use(streamUrl), "--input-unix-socket=" + self.mpvsocket]
 
+
+        ''' this will set the profile too '''
+        params = []
+        if self._cnf.command_line_params:
+            params = self._cnf.command_line_params.split(' ')
+
         """ Do I have user profile in config?
             If so, can I use it?
         """
@@ -1466,6 +1467,12 @@ class MpvPlayer(Player):
                     logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
                 else:
                     logger.info('No usable profile found')
+
+        ''' add command line parameters '''
+        if params:
+            for a_param in params:
+                opts.append(a_param)
+
         return opts
 
     def _mute(self):
@@ -1782,6 +1789,11 @@ class MpPlayer(Player):
         """ Builds the options to pass to mplayer subprocess."""
         opts = [self.PLAYER_CMD, "-vo", "null", "-quiet"]
 
+        ''' this will set the profile too '''
+        params = []
+        if self._cnf.command_line_params:
+            params = self._cnf.command_line_params.split(' ')
+
         """ Do I have user profile in config?
             If so, can I use it?
         """
@@ -1804,6 +1816,12 @@ class MpPlayer(Player):
             opts.append("-playlist")
 
         opts.append(self._url_to_use(streamUrl))
+
+        ''' add command line parameters '''
+        if params:
+            for a_param in params:
+                opts.append(a_param)
+
         return opts
 
     def _mute(self):
@@ -1956,6 +1974,17 @@ class VlcPlayer(Player):
 
         else:
             opts = [self.PLAYER_CMD, "-Irc", "-vv", self._url_to_use(streamUrl)]
+
+
+        ''' take care of command line parameters '''
+        params = []
+        if self._cnf.command_line_params:
+            params = self._cnf.command_line_params.split(' ')
+            ''' add command line parameters '''
+            if params:
+                for a_param in params:
+                    opts.append(a_param)
+
         return opts
 
     def _mute(self):

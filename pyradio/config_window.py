@@ -425,8 +425,8 @@ class PyRadioConfigWindow(object):
             self._save_parameters_function()
             return 0, [1]
         elif char in (
-            curses.KEY_ENTER, ord('\n'),
-            ord('\r'), ord(' '), ord('l'), curses.KEY_RIGHT):
+                curses.KEY_ENTER, ord('\n'),
+                ord('\r'), ord(' '), ord('l'), curses.KEY_RIGHT):
             # alter option value
             vals = list(self._config_options.items())
             sel = vals[self.selection][0]
@@ -468,6 +468,10 @@ class PyRadioExtraParams(object):
     def __init__(self,
                  config,
                  parent):
+        self._max_lines = 16
+        self._note_text = ' Note '
+        self._note_line1 = 'Changes made here wil be'
+        self._note_line2 = 'saved in the configuration file'
         self._extra = None
         self._cnf = config
         self._parent = parent
@@ -490,7 +494,7 @@ class PyRadioExtraParams(object):
 
     def _redisplay(self):
         pY, pX = self._parent.getmaxyx()
-        if pY < 12 or pX < 30:
+        if pY < self._max_lines + 2 or pX < 30:
             self._too_small = True
             self._win = curses.newwin(
                 3, len(self._too_small_str) + 4,
@@ -502,8 +506,8 @@ class PyRadioExtraParams(object):
             self._too_small = False
             self.maxX = pX - 2 if pX < 40 else 40
             self._win = curses.newwin(
-                12, self.maxX,
-                int((pY - 12) / 2) + 2,
+                self._max_lines, self.maxX,
+                int((pY - self._max_lines) / 2) + 2,
                 int((pX - self.maxX) / 2)
             )
         if self._extra:
@@ -531,6 +535,16 @@ class PyRadioExtraParams(object):
                 0, int((self.maxX - len(self._title)) / 2),
                 self._title,
                 curses.color_pair(4))
+            # show note
+            try:
+                self._win.addstr(12, 2, '─' * (self.maxX - 4), curses.color_pair(3))
+            except:
+                self._win.addstr(12, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+            self._win.addstr(12, int((self.maxX - len(self._note_text))/2), self._note_text, curses.color_pair(3))
+
+            self._win.addstr(13, int((self.maxX - len(self._note_line1)) / 2), self._note_line1, curses.color_pair(5))
+            self._win.addstr(14, int((self.maxX - len(self._note_line2)) / 2), self._note_line2, curses.color_pair(5))
+
             self._extra.refresh_win()
 
     def keypress(self, char):
@@ -562,8 +576,6 @@ class ExtraParametersEditor(object):
             self.Y, self.X)
         self._win.bkgdset(' ', curses.color_pair(3))
         self._win.erase()
-        logger.error('DE Y={0}, X={1}, maxY={2}, maxX={3}'.format(
-            self.Y, self.X, self.maxY, self.maxX))
 
         self._focus = 0
         self._widgets = [None, None, None]
@@ -761,17 +773,13 @@ class ExtraParametersEditor(object):
         # Continue
         return ret
 
-
         try:
             self._count += 1
         except:
             self._count = 1
-        logger.error('DE count = {}'.format(self._count))
         if self._count > 2:
-            logger.error('DE return 0')
             return 0
         else:
-            logger.error('DE return 1')
             return 1
 
     def _update_focus(self):
@@ -799,10 +807,11 @@ class ExtraParameters(object):
                  max_lines=11,
                  from_config=True):
         self._cnf = config
-        self._orig_params = deepcopy(self._cnf.params)
+        self._orig_params = deepcopy(self._cnf.saved_params)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('original parameters = {}'.format(self._orig_params))
         self._orig_player = player
+        # logger.error('DE orig player = {}'.format(self._orig_player))
         self._win = win
         self._focus = focus
         self.from_config = from_config
@@ -814,7 +823,7 @@ class ExtraParameters(object):
         """ maximum number of lines to display """
         self.max_lines = max_lines
 
-        self.reset()
+        self.reset(saved=False)
         self._get_width()
 
     def check_parameters(self):
@@ -825,9 +834,20 @@ class ExtraParameters(object):
                 return True
         return False
 
-    def reset(self):
+    def reset(self, saved=True):
+        ''' reset Player Selection Options
+
+            Parameter
+            ========
+            saved:
+                False - load params from config (default)
+                True  - load saved params from config
+        '''
         self._player = self._orig_player
-        self._working_params = deepcopy(self._orig_params)
+        if saved:
+            self._working_params = deepcopy(self._cnf.saved_params)
+        else:
+            self._working_params = deepcopy(self._cnf.params)
         self._selections = {
             'mpv': [0, 0, 0],
             'mplayer': [0, 0, 0],
@@ -840,6 +860,7 @@ class ExtraParameters(object):
         }
         self._dict_to_list()
         self._items = self._items_dict[self._player]
+        self._original_active = self.active
 
     @property
     def player(self):
@@ -869,6 +890,17 @@ class ExtraParameters(object):
         self._selections[self._player][1] = val
 
     @property
+    def original_active(self):
+        if self._player == self._cnf.PLAYER_NAME:
+            return self._original_active
+        else:
+            return self.selection
+
+    @original_active.setter
+    def original_active(self, val):
+        raise ValueError('property is read only')
+
+    @property
     def active(self):
         """ this is the parameter to be used by the player """
         return(self._selections[self._player][2])
@@ -876,7 +908,6 @@ class ExtraParameters(object):
     @active.setter
     def active(self, val):
         self._selections[self._player][2] = val
-        logger.error('DE \n\nselections\n\n{}'.format(self._selections))
 
     @property
     def params(self):
@@ -900,7 +931,7 @@ class ExtraParameters(object):
                     self._selections[a_param_set][2] = int(a_param) - 1
                 else:
                     self._items_dict[a_param_set].append(a_param)
-        logger.error('DE selections = {}'.format(self._selections))
+        # logger.error('DE selections = {}'.format(self._selections))
 
     def _list_to_dict(self):
         """ convert self._items_dict to self._working_params """
@@ -1022,12 +1053,12 @@ class ExtraParameters(object):
         """ pass working parameters to original parameters
 		    effectively saving any changes.
         """
-        logger.error('DE save_results')
-        logger.error('DE 1 working_params = {}'.format(self._working_params))
+        # logger.error('DE save_results')
+        # logger.error('DE 1 working_params = {}'.format(self._working_params))
         self._list_to_dict()
-        logger.error('DE 2 working_params = {}'.format(self._working_params))
+        # logger.error('DE 2 working_params = {}'.format(self._working_params))
         self.check_parameters()
-        logger.error('DE 3 working_params = {}'.format(self._working_params))
+        # logger.error('DE 3 working_params = {}'.format(self._working_params))
         self._orig_params = deepcopy(self._working_params)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('new parameters = {}'.format(self._orig_params))
@@ -1049,9 +1080,15 @@ class ExtraParameters(object):
             ord('\r'), ord(' '), ord('l'),
                 curses.KEY_RIGHT, ord('s')):
             # activate selection
-            logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
+            # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
             self.active = self.selection
-            logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
+            # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
+
+            ''' reset profile '''
+            if self._cnf.PLAYER_NAME == self._orig_player:
+                if not self._items[self.active].startswith('profile:'):
+                    self._cnf._profile_name = 'pyradio'
+
             if self.from_config:
                 self.refresh_win()
             else:
@@ -1095,7 +1132,7 @@ class ExtraParameters(object):
             self.selection = len(self._items) - 1
             self.refresh_win()
 
-        elif char == ord('x'):
+        elif char in (ord('x'), curses.KEY_DC):
             if self.from_config:
                 if self.selection == 0:
                     # error: cannot delete first item
@@ -1107,10 +1144,12 @@ class ExtraParameters(object):
                         ' ' * (self._width + 1),
                         curses.color_pair(5)
                     )
-                    self._items.pop(self.selection)
-                    if self.active == self.selection:
+                    if self.active == self.selection or self.selection > len(self._items):
                         self.active = 0
-                    if self.selection >= len(self._items):
+                    elif self.active > self.selection:
+                        self.active -= 1
+                    self._items.pop(self.selection)
+                    while self.selection > len(self._items) - 1:
                         self.selection -= 1
                     self.refresh_win()
 
@@ -1261,7 +1300,6 @@ class PyRadioSelectPlayer(object):
             if do_params:
                 self._extra.set_player(self.selected_player_name())
         else:
-            logger.error('DE Player refresh_win: editing > 0 = {}'.format(self.editing))
             if self.editing == 1:
                 title = ' Add player paremeter '
             else:
@@ -1315,6 +1353,7 @@ class PyRadioSelectPlayer(object):
         self._extra.reset()
         self._populate_players()
         self.refresh_win(do_params=True)
+        self._cnf.params_changed = False
 
     def keypress(self, char):
         """ Player selection keypress

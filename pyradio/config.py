@@ -998,6 +998,7 @@ class PyRadioConfig(PyRadioStations):
     PROGRAM_UPDATE = None
 
     def __init__(self):
+        self.player_params = []
         self._profile_name = 'pyradio'
         self.player = ''
         self.requested_player = ''
@@ -1040,11 +1041,16 @@ class PyRadioConfig(PyRadioStations):
 
     @property
     def command_line_params(self):
+        self._profile_name = '' if self.PLAYER_NAME == 'vlc' else 'pyradio'
         the_id = self.params[self.PLAYER_NAME][0]
         if the_id == 1:
             return ''
         the_string = self.params[self.PLAYER_NAME][the_id]
-        return '' if the_string.startswith('profile:') else the_string
+        if the_string.startswith('profile:'):
+            self.get_profile_name_from_saved_params()
+            return ''
+        else:
+            return the_string
 
     @command_line_params.setter
     def command_line_params(self, val):
@@ -1248,8 +1254,11 @@ class PyRadioConfig(PyRadioStations):
         self._profile_name = 'pyradio'
 
     def get_profile_name_from_saved_params(self):
-        logger.error('DE ***** get_profile_name_from_saved_params')
-        self.command_line_params_not_ready = self.saved_params[self.PLAYER_NAME][self.saved_params[self.PLAYER_NAME][0]]
+        ''' populate command_line_params_not_ready because this
+            is what self.set_profile_from_command_line() reads
+        '''
+        # self.command_line_params_not_ready = self.PLAYER_NAME + ':' + self.saved_params[self.PLAYER_NAME][self.saved_params[self.PLAYER_NAME][0]]
+        self.command_line_params_not_ready = self.PLAYER_NAME + ':' + self.params[self.PLAYER_NAME][self.params[self.PLAYER_NAME][0]]
         self.set_profile_from_command_line()
 
     def set_profile_from_command_line(self):
@@ -1677,7 +1686,6 @@ auto_save_playlist = {11}
         if logger.isEnabledFor(logging.INFO):
             logger.info('Config saved')
         self.dirty_config = False
-        self.params_changed = False
         return 0
 
     def read_playlist_file(self, stationFile='', is_register=False):

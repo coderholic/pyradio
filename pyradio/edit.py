@@ -1106,6 +1106,8 @@ class PyRadioConnectionType(object):
     _title = ' Connection Type '
     _text = 'Force http connections: '
     _help_text = ' Help '
+    _note_text = ' Note '
+    _max_lines = 14
 
     def __init__(self, parent, connection_type):
         self._parent = parent
@@ -1115,36 +1117,58 @@ class PyRadioConnectionType(object):
         if parent:
             self._parent = parent
         y, x = self._parent.getmaxyx()
-        new_y = int(y/2) - 2
+        new_y = int((y - self._max_lines) / 2) + 2
         new_x = int((x - len(self._text) - 9 - 4) / 2)
         self.MaxX = len(self._text) + 9 + 4
         self._win = None
-        self._win = curses.newwin(10, self.MaxX, new_y, new_x)
-        self._win.bkgdset(' ', curses.color_pair(3))
-        self._win.erase()
-        self._win.box()
+        if y < self._max_lines + 2 or x < self.MaxX + 2:
+            self._win = curses.newwin(3, 20, int((y-2)/2), int((x - 20) / 2))
+            self._win.bkgdset(' ', curses.color_pair(3))
+            self._win.erase()
+            self._win.box()
+            self._win.addstr(1, 2, 'Window too small', curses.color_pair(5))
+        else:
 
-        # show title
-        x = int((self.MaxX - len(self._title)) / 2)
-        self._win.addstr(0, x, self._title, curses.color_pair(4))
+            self._win = curses.newwin(self._max_lines, self.MaxX, new_y, new_x)
+            self._win.bkgdset(' ', curses.color_pair(3))
+            self._win.erase()
+            self._win.box()
 
-        # show content
-        self._win.addstr(2, 4, self._text, curses.color_pair(5))
-        self._win.addstr('{}'.format(self.connection_type), curses.color_pair(4))
+            # show title
+            x = int((self.MaxX - len(self._title)) / 2)
+            self._win.addstr(0, x, self._title, curses.color_pair(4))
 
-        # show help
-        try:
-            self._win.addstr(4, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
-        except:
-            self._win.addstr(4, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
-        self._win.addstr(4, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
-        self._win.addstr(5, 2, 'j k l SPACE', curses.color_pair(4))
-        self._win.addstr(6, 2, 'RIGHT UP DOWN', curses.color_pair(4))
-        self._win.addstr('    Toggle parameter', curses.color_pair(5))
-        self._win.addstr(7, 2, 'ENTER s', curses.color_pair(4))
-        self._win.addstr('          Accept parameter', curses.color_pair(5))
-        self._win.addstr(8, 2, 'Esc q h RIGHT', curses.color_pair(4))
-        self._win.addstr('    Cancel operation', curses.color_pair(5))
+            # show content
+            self._win.addstr(2, 4, self._text, curses.color_pair(5))
+            self._win.addstr('{}'.format(self.connection_type), curses.color_pair(4))
+
+            # show help
+            try:
+                self._win.addstr(4, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
+            except:
+                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+            self._win.addstr(4, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
+
+
+
+            self._win.addstr(5, 2, 'j k l SPACE', curses.color_pair(4))
+            self._win.addstr(6, 2, 'RIGHT UP DOWN', curses.color_pair(4))
+            self._win.addstr('    Toggle parameter', curses.color_pair(5))
+            self._win.addstr(7, 2, 'ENTER s', curses.color_pair(4))
+            self._win.addstr('          Accept parameter', curses.color_pair(5))
+            self._win.addstr(8, 2, 'Esc q h RIGHT', curses.color_pair(4))
+            self._win.addstr('    Cancel operation', curses.color_pair(5))
+
+            # show note
+            try:
+                self._win.addstr(10, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
+            except:
+                self._win.addstr(10, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+            self._win.addstr(10, int((self.MaxX - len(self._note_text))/2), self._note_text, curses.color_pair(3))
+
+            self._win.addstr(11, 4, 'Changes made here will not be', curses.color_pair(5))
+            self._win.addstr(12, 3, 'saved in the configuration file', curses.color_pair(5))
+
         self._win.refresh()
 
     def keypress(self, char):

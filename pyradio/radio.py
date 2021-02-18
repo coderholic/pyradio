@@ -971,6 +971,15 @@ class PyRadio(object):
                     )
             self._check_to_open_playlist()
 
+    def restartPlayer(self, msg=''):
+        if self.player.isPlaying():
+            if msg and logger.isEnabledFor(logging.INFO):
+                logger.info(msg)
+            self.stopPlayer()
+            while self.player.isPlaying():
+                sleep(.25)
+            self.playSelection(restart=True)
+
     def playSelection(self, restart=False):
         """ start playback using current selection
             if restart = True, start the station that has
@@ -1788,7 +1797,7 @@ class PyRadio(object):
                          g| / |G            |Move to first / last item.
                          Enter|,|Space
                          Right|,|l          |Activate current selection.
-                         a| / |e| / |x        ||A|dd / |e|dit / delete item.
+                         a| / |e| / |x|,|DEL    ||A|dd / |e|dit / |d|elete item.
                          r                |Revert to saved values.
                          s                |Save players (selection and parameters).
                          Esc|,|q|,|Left|,|h     |Cancel.
@@ -2482,7 +2491,7 @@ class PyRadio(object):
             parameters sets, a limit which has already been reached.
 
             At this point you can either |e|dit an existing set or
-            delete ("|x|") an existing one and then |a|dd a new one.
+            delete (|x|,|DEL|) an existing one and then |a|dd a new one.
             '''
         self._show_help(
             txt,
@@ -3006,13 +3015,15 @@ class PyRadio(object):
     def _save_parameters(self):
         logger.error('DE sae_parameters: player select win = {}'.format(self._player_select_win))
         if self._player_select_win is not None:
-            self._cnf.params = deepcopy(self._player_select_win._extra._orig_params)
+            self._cnf.params = deepcopy(self._player_select_win._extra.params)
             self._player_select_win = None
             logger.error('DE params = {}'.format(self._cnf.params))
 
     def _reset_parameters(self):
         if self._player_select_win is not None:
             self._player_select_win.reset()
+        self._cnf.dirty_config = False
+        self._cnf.params_changed = False
 
     def _show_config_window(self):
         if self._config_win is None:
@@ -4036,152 +4047,154 @@ class PyRadio(object):
 
         elif self.ws.operation_mode == self.ws.CONFIG_MODE and \
                 char not in self._chars_to_bypass:
-            if char not in self._chars_to_bypass:
-                if char in (ord('r'), ord('d')):
-                    self._player_select_win = None
-                    self._encoding_select_win = None
-                    self._playlist_select_win = None
-                    self._station_select_win = None
-                ret, ret_list = self._config_win.keypress(char)
-                if ret == self.ws.SELECT_PLAYER_MODE:
-                    """ Config > Select Player """
-                    self.ws.operation_mode = self.ws.SELECT_PLAYER_MODE
-                    if self._player_select_win is None:
-                        self._player_select_win = PyRadioSelectPlayer(
-                            self._cnf,
-                            self.outerBodyWin,
-                            self._config_win._config_options['player'][1])
-                    else:
-                        self._player_select_win._parent = self.outerBodyWin
-                        self._player_select_win._parent_maxY, self._player_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
-                        self._player_select_win.init_window()
-                        self._player_select_win.refresh_win(do_params=True)
-                        # self._player_select_win.setPlayers(self._config_win._config_options['player'][1])
-                        # self._player_select_win.refresh_selection()
+            if char in (ord('r'), ord('d')):
+                self._player_select_win = None
+                self._encoding_select_win = None
+                self._playlist_select_win = None
+                self._station_select_win = None
+            ret, ret_list = self._config_win.keypress(char)
+            if ret == self.ws.SELECT_PLAYER_MODE:
+                """ Config > Select Player """
+                self.ws.operation_mode = self.ws.SELECT_PLAYER_MODE
+                if self._player_select_win is None:
+                    self._player_select_win = PyRadioSelectPlayer(
+                        self._cnf,
+                        self.outerBodyWin,
+                        self._config_win._config_options['player'][1])
+                else:
+                    self._player_select_win._parent = self.outerBodyWin
+                    self._player_select_win._parent_maxY, self._player_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
+                    self._player_select_win.init_window()
+                    self._player_select_win.refresh_win(do_params=True)
+                    # self._player_select_win.setPlayers(self._config_win._config_options['player'][1])
+                    # self._player_select_win.refresh_selection()
 
-                elif ret == self.ws.SELECT_ENCODING_MODE:
-                    """ Config > Select Default Encoding """
-                    self.ws.operation_mode = self.ws.SELECT_ENCODING_MODE
-                    if self._encoding_select_win is None:
-                        self._encoding_select_win = PyRadioSelectEncodings(
-                                self.outerBodyMaxY,
-                                self.outerBodyMaxX,
-                                self._cnf.default_encoding,
-                                self._cnf.default_encoding)
-                    else:
-                        self._encoding_select_win._parent_maxY, self._encoding_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
-                    self._encoding_select_win.init_window()
-                    self._encoding_select_win.refresh_win()
-                    self._encoding_select_win.setEncoding(self._config_win._config_options['default_encoding'][1])
+            elif ret == self.ws.SELECT_ENCODING_MODE:
+                """ Config > Select Default Encoding """
+                self.ws.operation_mode = self.ws.SELECT_ENCODING_MODE
+                if self._encoding_select_win is None:
+                    self._encoding_select_win = PyRadioSelectEncodings(
+                            self.outerBodyMaxY,
+                            self.outerBodyMaxX,
+                            self._cnf.default_encoding,
+                            self._cnf.default_encoding)
+                else:
+                    self._encoding_select_win._parent_maxY, self._encoding_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
+                self._encoding_select_win.init_window()
+                self._encoding_select_win.refresh_win()
+                self._encoding_select_win.setEncoding(self._config_win._config_options['default_encoding'][1])
 
-                elif ret == self.ws.SELECT_PLAYLIST_MODE:
-                    """ Config > Select Default Playlist """
-                    self.ws.operation_mode = self.ws.SELECT_PLAYLIST_MODE
-                    if self._playlist_select_win is None:
-                        self._playlist_select_win = PyRadioSelectPlaylist(
-                            self.bodyWin,
-                            self._cnf.stations_dir,
-                            self._config_win._config_options['default_playlist'][1]
-                        )
-                    else:
-                        self._playlist_select_win._parent_maxY, self._playlist_select_win._parent_maxX = self.bodyWin.getmaxyx()
-                    self._playlist_select_win.init_window()
-                    self._playlist_select_win.refresh_win()
-                    self._playlist_select_win.setPlaylist(self._config_win._config_options['default_playlist'][1])
+            elif ret == self.ws.SELECT_PLAYLIST_MODE:
+                """ Config > Select Default Playlist """
+                self.ws.operation_mode = self.ws.SELECT_PLAYLIST_MODE
+                if self._playlist_select_win is None:
+                    self._playlist_select_win = PyRadioSelectPlaylist(
+                        self.bodyWin,
+                        self._cnf.stations_dir,
+                        self._config_win._config_options['default_playlist'][1]
+                    )
+                else:
+                    self._playlist_select_win._parent_maxY, self._playlist_select_win._parent_maxX = self.bodyWin.getmaxyx()
+                self._playlist_select_win.init_window()
+                self._playlist_select_win.refresh_win()
+                self._playlist_select_win.setPlaylist(self._config_win._config_options['default_playlist'][1])
 
-                elif ret == self.ws.SELECT_STATION_MODE:
-                    """ Config > Select Default Station """
-                    self.ws.operation_mode = self.ws.SELECT_STATION_MODE
-                    if self._station_select_win is None:
-                        self._station_select_win = PyRadioSelectStation(
-                            self.bodyWin,
-                            self._cnf.stations_dir,
-                            self._config_win._config_options['default_playlist'][1],
-                            self._config_win._config_options['default_station'][1]
-                        )
-                    else:
-                        self._station_select_win._parent_maxY, self._station_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
-                        self._station_select_win.update_playlist_and_station(self._config_win._config_options['default_playlist'][1], self._config_win._config_options['default_station'][1])
-                    self._station_select_win.init_window()
-                    self._station_select_win.refresh_win()
-                    self._station_select_win.setStation(self._config_win._config_options['default_station'][1])
+            elif ret == self.ws.SELECT_STATION_MODE:
+                """ Config > Select Default Station """
+                self.ws.operation_mode = self.ws.SELECT_STATION_MODE
+                if self._station_select_win is None:
+                    self._station_select_win = PyRadioSelectStation(
+                        self.bodyWin,
+                        self._cnf.stations_dir,
+                        self._config_win._config_options['default_playlist'][1],
+                        self._config_win._config_options['default_station'][1]
+                    )
+                else:
+                    self._station_select_win._parent_maxY, self._station_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
+                    self._station_select_win.update_playlist_and_station(self._config_win._config_options['default_playlist'][1], self._config_win._config_options['default_station'][1])
+                self._station_select_win.init_window()
+                self._station_select_win.refresh_win()
+                self._station_select_win.setStation(self._config_win._config_options['default_station'][1])
 
-                elif ret >= 0:
-                    msg = ( 'Error saving config. Press any key to exit...',
-                            'Config saved successfully!!!',
-                            'Config saved - Restarting playback (encoding changed)')
-                    self.ws.close_window()
-                    self.bodyWin.box()
-                    self._print_body_header()
-                    self.refreshBody()
-                    if ret == 0:
-                        ret = self._cnf.save_config()
-                        if ret == -1:
-                            # Error saving config
-                            if self.player.isPlaying():
-                                self.stopPlayer()
-                                self.refreshBody()
-                            self.log.display_help_message = False
-                            self.log.write(msg=msg[0], help_msg=False, suffix=self._status_suffix)
-                            self._print_config_save_error()
-                        elif ret == 0:
-                            # Config saved successfully
-                            if self.player.isPlaying():
-                                if self._cnf.opts['default_encoding'][1] != self._old_config_encoding or \
-                                        self._cnf.opts['force_http'][1] != self.player.force_http:
-                                    logger.error('restarting...\n\n')
-                                    self.log.write(msg=msg[2])
-                                    self.player.threadUpdateTitle()
-                                    sleep(1.5)
-                                    self.playSelection(restart=True)
-                                else:
-                                    logger.error('not restarting...\n\n')
-                                    self.log.write(msg=msg[1])
-                                    self.player.threadUpdateTitle()
+            elif ret >= 0:
+                msg = ( 'Error saving config. Press any key to exit...',
+                        'Config saved successfully!!!',
+                        'Config saved - Restarting playback (parameters changed)')
+                self.ws.close_window()
+                self.bodyWin.box()
+                self._print_body_header()
+                self.refreshBody()
+                if ret == 0:
+                    ret = self._cnf.save_config()
+                    if ret == -1:
+                        # Error saving config
+                        if self.player.isPlaying():
+                            self.stopPlayer()
+                            self.refreshBody()
+                        self.log.display_help_message = False
+                        self.log.write(msg=msg[0], help_msg=False, suffix=self._status_suffix)
+                        self._print_config_save_error()
+                    elif ret == 0:
+                        # Config saved successfully
+                        if self.player.isPlaying():
+                            logger.error('params_changed = {}'.format(self._cnf.params_changed))
+                            if self._cnf.opts['default_encoding'][1] != self._old_config_encoding or \
+                                    self._cnf.opts['force_http'][1] != self.player.force_http or \
+                                    self._cnf.params_changed:
+                                self._cnf.params_changed = False
+                                self.log.write(msg=msg[2])
+                                self.player.threadUpdateTitle()
+                                if logger.isEnabledFor(logging.INFO):
+                                    logger.info('*** Restarting playback (parameters changed)')
+                                sleep(1.5)
+                                self.playSelection(restart=True)
                             else:
-                                self.log.write(msg=msg[1], help_msg=True, suffix=self._status_suffix)
-                            self._old_config_encoding = self._cnf.opts['default_encoding'][1]
-                            self.player.force_http = self._cnf.opts['force_http'][1]
-                            if self._config_win:
-                                self._config_win._old_use_transparency = self._cnf.use_transparency
-                            if self._cnf.player_changed:
-                                self._show_player_changed_in_config()
-                                self._cnf.player_changed = False
-                            self.player.playback_timeout = int(self._cnf.connection_timeout)
-                            if self._config_win.mouse_support_option_changed:
-                                self._print_mouse_restart_info()
-                        elif ret == 1:
-                            # config not modified
-                            self._show_notification_with_delay(
-                                    txt='___Config not modified!!!___',
-                                    mode_to_set=self.ws.NORMAL_MODE,
-                                    callback_function=self.refreshBody)
-                    else:
-                        # restore transparency, if necessary
-                        if self._config_win._config_options['use_transparency'][1] != self._config_win._saved_config_options['use_transparency'][1]:
-                            self._toggle_transparency(changed_from_config_window=False,
-                                    force_value=self._config_win._saved_config_options['use_transparency'][1])
-                        # restore theme, if necessary
-                        if self._cnf.opts['theme'][1] != self._config_win._config_options['theme'][1]:
-                            #self._config_win._apply_a_theme(self._cnf.opts['theme'][1])
-                            ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.opts['theme'][1])
-                            if ret == 0:
-                                self._theme_name = self._cnf.theme
-                            else:
-                                self._theme_name = ret_theme_name
-                                self._cnf.theme_has_error = True if ret == -1 else False
-                                self._cnf.theme_not_supported = True
-                            curses.doupdate()
-                        # make sure config is not saved
-                        self._config_win._saved_config_options['dirty_config'][1] = False
-                        self._cnf.dirty_config = False
-                    # clean up
-                    self._player_select_win = None
-                    self._encoding_select_win = None
-                    self._playlist_select_win = None
-                    self._station_select_win = None
-                    self._config_win = None
-                return
+                                self.log.write(msg=msg[1])
+                                self.player.threadUpdateTitle()
+                        else:
+                            self.log.write(msg=msg[1], help_msg=True, suffix=self._status_suffix)
+                        self._old_config_encoding = self._cnf.opts['default_encoding'][1]
+                        self.player.force_http = self._cnf.opts['force_http'][1]
+                        if self._config_win:
+                            self._config_win._old_use_transparency = self._cnf.use_transparency
+                        if self._cnf.player_changed:
+                            self._show_player_changed_in_config()
+                            self._cnf.player_changed = False
+                        self.player.playback_timeout = int(self._cnf.connection_timeout)
+                        if self._config_win.mouse_support_option_changed:
+                            self._print_mouse_restart_info()
+                    elif ret == 1:
+                        # config not modified
+                        self._show_notification_with_delay(
+                                txt='___Config not modified!!!___',
+                                mode_to_set=self.ws.NORMAL_MODE,
+                                callback_function=self.refreshBody)
+                else:
+                    # restore transparency, if necessary
+                    if self._config_win._config_options['use_transparency'][1] != self._config_win._saved_config_options['use_transparency'][1]:
+                        self._toggle_transparency(changed_from_config_window=False,
+                                force_value=self._config_win._saved_config_options['use_transparency'][1])
+                    # restore theme, if necessary
+                    if self._cnf.opts['theme'][1] != self._config_win._config_options['theme'][1]:
+                        #self._config_win._apply_a_theme(self._cnf.opts['theme'][1])
+                        ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.opts['theme'][1])
+                        if ret == 0:
+                            self._theme_name = self._cnf.theme
+                        else:
+                            self._theme_name = ret_theme_name
+                            self._cnf.theme_has_error = True if ret == -1 else False
+                            self._cnf.theme_not_supported = True
+                        curses.doupdate()
+                    # make sure config is not saved
+                    self._config_win._saved_config_options['dirty_config'][1] = False
+                    self._cnf.dirty_config = False
+                # clean up
+                self._player_select_win = None
+                self._encoding_select_win = None
+                self._playlist_select_win = None
+                self._station_select_win = None
+                self._config_win = None
+            return
 
         elif (self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE and \
                 char not in self._chars_to_bypass) or \
@@ -4246,19 +4259,14 @@ class PyRadio(object):
                                 self._cnf.dirty_playlist = False
                                 self._cnf.online_browser.set_encoding(self.selection, ret_encoding)
                             if self.player.isPlaying():
-                                self.stopPlayer()
                                 restart_player = True
                         #self._config_win._config_options['default_encoding'][1] = ret_encoding
                     self.ws.close_window()
                     self.refreshBody()
                     self._encoding_select_win = None
+                    self.player.config_encoding = self._cnf.default_encoding
                     if restart_player:
-                        if logger.isEnabledFor(logging.INFO):
-                            logger.info('*** Restarting playback due to encoding change ***')
-                        while self.player.isPlaying():
-                            sleep(.25)
-                        self.player.config_encoding = self._cnf.default_encoding
-                        self.playSelection(restart=True)
+                        self.restartPlayer('*** Restarting playback due to encoding change ***')
                 return
 
         elif self.ws.operation_mode in \
@@ -4290,7 +4298,6 @@ class PyRadio(object):
                         if old_encoding == self._cnf.default_encoding:
                             old_encoding = ''
                         if old_encoding != self._station_editor.new_station[2]:
-                            self.stopPlayer()
                             restart_player = True
 
                     if self.stations[self.selection] != self._station_editor.new_station:
@@ -4329,11 +4336,7 @@ class PyRadio(object):
                 self._station_editor = None
                 self.refreshBody()
                 if restart_player:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('*** Restarting playback due to encoding change ***')
-                    while self.player.isPlaying():
-                        sleep(.25)
-                    self.playSelection(restart=True)
+                    self.restartPlayer('*** Restarting playback due to encoding change ***')
             elif ret == 2:
                 # display line editor help
                 self._show_line_editor_help()
@@ -4906,19 +4909,17 @@ class PyRadio(object):
                 # Cancel
                 self.ws.close_window()
                 self._connection_type_edit = None
-                pass
             elif ret == 1:
                 # changed
+                force_http = self._connection_type_edit.connection_type
+                restart = False if force_http == self.player.force_http else True
+                self.player.force_http = force_http
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('force http connections = {}'.format(self.player.force_http))
                 self.ws.close_window()
-                self.player.force_http = self._connection_type_edit.connection_type
                 self._connection_type_edit = None
-                if self.player.isPlaying():
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('*** Restarting playback due to connection type change ***')
-                    self.stopPlayer()
-                    while self.player.isPlaying():
-                        sleep(.25)
-                    self.playSelection(restart=True)
+                if restart:
+                    self.restartPlayer('*** Restarting playback due to connection type change ***')
             self.refreshBody()
             return
 
@@ -4935,8 +4936,12 @@ class PyRadio(object):
                 if self._cnf.params_changed:
                     self._cnf.params = deepcopy(self._player_select_win.params)
                 self.ws.close_window()
+                if self._player_select_win._extra.active != self._player_select_win._extra.original_active:
+                    self.restartPlayer('*** Restarting playback due to player parameter change ***')
                 self._player_select_win = None
                 self.refreshBody()
+                self._cnf.dirty_config = False
+                self._cnf.params_changed = False
 
             elif ret == 1:
                 # Help
@@ -5294,7 +5299,7 @@ class PyRadio(object):
                     self._update_status_bar_right(status_suffix='')
                     self.ws.operation_mode = self.ws.CONNECTION_MODE
                     self._connection_type_edit = PyRadioConnectionType(
-                        parent=self.bodyWin,
+                        parent=self.outerBodyWin,
                         connection_type=self.player.force_http)
                     self._connection_type_edit.show()
                     return
@@ -5870,8 +5875,11 @@ class PyRadio(object):
         self._config_win.refresh_config_win()
 
     def _redisplay_player_select_win_refresh_and_resize(self):
-        if not self._config_win.too_small:
-            self._player_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
+        if self._config_win:
+            if not self._config_win.too_small:
+                self._player_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
+        else:
+            self._player_select_win.set_parrent(self.outerBodyWin)
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):
         if not self._config_win.too_small:
@@ -5979,7 +5987,7 @@ class PyRadio(object):
             return -1
 
     def _show_http_connection(self):
-        self._connection_type_edit.show(parent=self.bodyWin)
+        self._connection_type_edit.show(parent=self.outerBodyWin)
 
     """''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     Windows only section
