@@ -3,11 +3,11 @@ from sys import platform
 
 
 def RemoveWinVlcLogFiles(*args):
-    """ Removes all VLC log files within pyradio config
+    ''' Removes all VLC log files within pyradio config
         directory on Windows.
 
         Files currently in use will not be deleted.
-    """
+    '''
     if platform.startswith('win'):
         adir = args[0]
         # print('config = "{}"'.format(adir))

@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>PyRadio README</title>
-  <style type="text/css">
+    <style> 
     html {margin: 2em;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
     h3 {margin-top: 2em; color: SaddleBrown;} 
@@ -17,12 +17,8 @@
     TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto;} 
     TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
-    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; overflow: auto;}
-      code{white-space: pre-wrap;}
-      span.smallcaps{font-variant: small-caps;}
-      span.underline{text-decoration: underline;}
-      div.column{display: inline-block; vertical-align: top; width: 50%;}
-  a{ color: SaddleBrown;}
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; overflow: auto;} 
+    a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
 </head>
@@ -72,8 +68,8 @@ a:visited{color: SaddleBrown;}
 <pre>$ pyradio -h
 
 usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-               [-t THEME] [-scd] [-ocd] [-epp EXTRA_PLAYER_PARAMETERS]
-               [--unlock] [-d]
+               [-t THEME] [-scd] [-ocd] [-ep EXTRA_PLAYER_PARAMETERS]
+               [-ap ACTIVE_PLAYER_PARAM_ID] [-lp] [--unlock] [-d]
 
 Curses based Internet radio player
 
@@ -99,16 +95,23 @@ optional arguments:
   -ocd, --open-config-dir
                         Open config directory [CONFIG DIR] with default file
                         manager.
-  -epp EXTRA_PLAYER_PARAMETERS, --extra_player_parameters EXTRA_PLAYER_PARAMETERS
+  -ep EXTRA_PLAYER_PARAMETERS, --extra-player_parameters EXTRA_PLAYER_PARAMETERS
                         Provide extra player parameters as a string. The
                         string&#39;s format is [player_name:parameters].
-                        player_name can be &quot;mpv&quot;, &quot;mplayer&quot; or &quot;vlc&quot;.
+                        player_name can be &#39;mpv&#39;, &#39;mplayer&#39; or &#39;vlc&#39;.
                         Alternative format to pass a profile:
                         [player_name:profile:profile_name]. In this case, the
                         profile_name must be a valid profile defined in the
                         player&#39;s config file (not for VLC).
+  -ap ACTIVE_PLAYER_PARAM_ID, --active-player-param-id ACTIVE_PLAYER_PARAM_ID
+                        Specify the extra player parameter set to be used with
+                        the default player. ACTIVE_PLAYER_PARAM_ID is 1-11
+                        (refer to the output of the -lp option)
+  -lp, --list-player-parameters
+                        List extra players parameters.
   --unlock              Remove sessions&#39; lock file.
-  -d, --debug           Start pyradio in debug mode.</pre>
+  -d, --debug           Start pyradio in debug mode.
+</pre>
 <p>The following options can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>:</p>
 <ul>
 <li><strong>-s</strong> - parameter <strong>default_playlist</strong> (default value: <strong>stations</strong>)</li>
@@ -296,15 +299,75 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>will instruct <strong>PyRadio</strong> to use VLC; if it is not found, the program will terminate with an error.</p>
 <pre>pyradio -u vlc,mplayer,mpv</pre>
 <p>will instruct <strong>PyRadio</strong> to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The default player to use can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>, parameter <strong>player</strong> (default value is <strong>mpv, mplayer, vlc</strong>).</p>
+<p>The default player to use can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>, parameter <strong>player</strong> (default value is <strong>mpv, mplayer, vlc</strong>), using the “<em>Configuration Window</em>”, through which <strong>extra player parameters</strong> can be set.</p>
+<h3 id="extra-player-parameters">Extra Player Parameters</h3>
+<p>All three supported players can accept a significant number of “<em>command line parameters</em>”, which are well documented and accessible through man pages (on linux and macOs) or the documentation (on Windows).</p>
+<p><strong>PyRadio</strong> uses some of these parameters in order to execute and communicate with the players. In particular, the following parameters are in use <strong>by default</strong>:</p>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 91%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Player</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>mpv</td>
+<td>–no-video, –quiet, –input-ipc-server, –input-unix-socket, –playlist, –profile</td>
+</tr>
+<tr class="even">
+<td>mplayer</td>
+<td>-vo, -quiet, -playlist, -profile</td>
+</tr>
+<tr class="odd">
+<td>vlc</td>
+<td>-Irc, -vv<br><strong>Windows only:</strong> –rc-host, –file-logging, –logmode, –log-verbose, –logfile</td>
+</tr>
+</tbody>
+</table>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The user should not use or change the above player parameters. Failing to do so, may render the player <strong><em>unusable</em></strong>.</p>
+<p><strong>PyRadio</strong> provides a way for the user to add extra parameters to the player, either by a command line parameter, or the “<em>Configuration Window</em>” (under “<em>Player:</em>”).</p>
+<p>This way, 10 sets of parameters can be inserted and made available for selection.</p>
+<h4 id="using-the-command-line">Using the command line</h4>
+<p>When the command line parameter (<strong>-epp</strong> or <strong>–extra_player_parameters</strong>) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player.</p>
+<p>The format of the parameter is the following: <strong>[player_name:parameters]</strong></p>
+<p>Where:</p>
+<ul>
+<li><strong>player_name</strong>: the name of the player</li>
+<li><strong>parameters</strong>: the actual player parameters</li>
+</ul>
+<p>Example:</p>
+<pre>pyradio -epp &quot;vlc:--force-dolby-surround 2&quot;</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a parameter is passed to “<em>mpv</em>” or “<em>mplayer</em>”, <strong>PyRadio</strong>&quot; will use the default player profile (called “<strong>pyradio</strong>”).</p>
+<p>For “<em>mpv</em>” and “<em>mplayer</em>” a profile can be specified (“<em>vlc</em>” does not support profiles). In this case the format of the <strong>parameters</strong> part of the command line is: <strong>profile:profile_name</strong>.</p>
+<p>Where:</p>
+<ul>
+<li><strong>profile</strong>: the word “<em>profile</em>”</li>
+<li><strong>profile_name</strong>: the name of a profile. The profile must be already defined in the player’s configuration file.</li>
+</ul>
+<p>Example:</p>
+<pre>pyradio -epp &quot;mpv:profile:second_sound_card&quot;</pre>
+<h4 id="using-the-configuration-window">Using the Configuration Window</h4>
+<p>When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with <strong>PyRadio</strong> and edit its extra parameters.</p>
+<p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg">pyradio-player-selection.jpg</a></p>
+<p>Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).</p>
+<p>The user can add (“<strong>a</strong>”) a new parameter, edit (“<strong>e</strong>”) an existing set and delete (“<strong>x</strong>” or “<strong>DEL</strong>”) one.</p>
+<h3 id="changing-parameters-set">Changing parameters set</h3>
+<p>While <strong>PyRadio</strong> is running, the user can change the parameters set used by the player using the “<em>Player Extra Parameters</em>” window, by pressing “<strong>Z</strong>”.</p>
+<p>If playback is on, changing the player’s parameters will make the player restart the playback so that the new parameters get used.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Any changes made this way will not be saved but will be in effect until <strong>PyRadio</strong> terminates.</p>
 <h2 id="player-connection-protocol">Player connection protocol <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Most radio stations use plain old http protocol to broadcast, but some of them use https.</p>
 <p>Experience has shown that playing a <strong>https</strong> radio station depends on the combination of the station’s configuration and the player used.</p>
 <p>If such a station fails to play, one might as well try to use <strong>http</strong> protocol to connect to it.</p>
 <p><strong>PyRadio</strong> provides a way to instruct the player used to do so; the “<em>Force http connections</em>” configuration parameter. If it is <em>False</em> (the default), the player will use whatever protocol the station proposes (either <strong>http</strong> or <strong>https</strong>). When changed to <strong>True</strong>, all connections will use the <strong>http</strong> protocol.</p>
 <p>When the selected player is initialized (at program startup), it reads this configuration parameter and acts accordingly.</p>
-<p>If the parameter has to be changed mid-session (without restarting the program), one would press “<em>z</em>” to display the “<em>Connection Type</em>” window, where the parameter’s value can be set as desired.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Changes made using the “<em>Connection Type</em>” window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds.</p>
+<p>If the parameter has to be changed mid-session (without restarting the program), one would press “<strong>z</strong>” to display the “<em>Connection Type</em>” window, where the parameter’s value can be set as desired.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Changes made using the “<em>Connection Type</em>” window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds. Furthermore, changing the configuration stored value, will not affect the “working” value of the parameter.</p>
 <h2 id="player-default-volume-level">Player default volume level <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>MPV and MPlayer, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with VLC.</p>
 <p>This introduces a problem to <strong>PyRadio</strong>: every time a user plays a station (i.e restarts playback), even though he may have already set the volume to a desired level, the playback starts at the player’s default level.</p>
@@ -480,7 +543,7 @@ $ pyradio -d</pre>
 <ul>
 <li>[ ] Any user request I find interesting :)</li>
 <li>[x] Basic mouse support (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/119">#119</a>)</li>
-<li>[ ] New player selection configuration window (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>)</li>
+<li>[x] New player selection configuration window (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>)</li>
 <li>[ ] Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>)</li>
 <li>[ ] Notify the user that the package’s stations.csv has changed</li>
 <li>[ ] Update / uninstall using command line parameters (-U / -R)</li>

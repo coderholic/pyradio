@@ -21,7 +21,13 @@ do
         rm tmp.md
         exit 1
     }
-    sed -i '/<style[^>]*>/a \
+
+    sed -i "/<style/,/<.style>/d" ${out}
+
+    # sed -i '/<style[^>]*>/a \
+
+    sed -i '/<title>/a \
+    <style> \
     html {margin: 2em;} \
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} \
     h3 {margin-top: 2em; color: SaddleBrown;} \
@@ -33,7 +39,8 @@ do
     TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto;} \
     TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} \
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} \
-    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; overflow: auto;}' ${out}
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; overflow: auto;} \
+    </style>' ${out}
     sed -i -e 's/<code>//g' \
         -e 's{</code>{{g' \
         -e 's{<a href="#pyradio">pyradio</a>{[pyradio]{' \

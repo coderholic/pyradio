@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 class DisabledWidget(object):
-    """A dummy class that only returns enabled = False
+    '''A dummy class that only returns enabled = False
 
     To be used in complex dialogs
-    """
+    '''
     enabled = False
     focus = False
     checked = False
@@ -24,7 +24,7 @@ class DisabledWidget(object):
 
 
 class SimpleCursesWidget(object):
-    """An abstract widget class """
+    '''An abstract widget class '''
     _win = _parent = _callback_function = None
     _focused = _showed = False
     _enabled = True
@@ -74,7 +74,7 @@ class SimpleCursesWidget(object):
 
     @property
     def caption(self):
-        """The text of the widget"""
+        '''The text of the widget'''
         return self._caption
 
     @caption.setter
@@ -85,7 +85,7 @@ class SimpleCursesWidget(object):
 
     @property
     def enabled(self):
-        """Returns if the widget is enabled"""
+        '''Returns if the widget is enabled'''
         return self._enabled
 
     @enabled.setter
@@ -96,7 +96,7 @@ class SimpleCursesWidget(object):
 
     @property
     def focused(self):
-        """Returns if the widget has focus"""
+        '''Returns if the widget has focus'''
         return self._focused
 
     @focused.setter
@@ -107,7 +107,7 @@ class SimpleCursesWidget(object):
 
     @property
     def color_focused(self):
-        """The color to use when the widget has the focus"""
+        '''The color to use when the widget has the focus'''
         return self._color_focused
 
     @color_focused.setter
@@ -118,7 +118,7 @@ class SimpleCursesWidget(object):
 
     @property
     def color(self):
-        """The normal color of the widget (no focus)"""
+        '''The normal color of the widget (no focus)'''
         return self._color
 
     @color.setter
@@ -148,20 +148,20 @@ class SimpleCursesWidget(object):
         return self._win.getmaxyx() if self._win else (0, 0)
 
     def mvwin(self, Y, X, show=True, erase=False):
-        """Move the widget
+        '''Move the widget
 
-        Parameters
-        ==========
-        Y, X
-            New T and X coodrinates
-        show
-            If True, display the widget at its new location.
-            Otherwise, just calculate the new location.
-        erase
-            If True, erase the window before moving it
-            if False (the default), do not erase the
-              window; the parent will erase itself
-        """
+            Parameters
+            ==========
+            Y, X
+                New T and X coodrinates
+            show
+                If True, display the widget at its new location.
+                Otherwise, just calculate the new location.
+            erase
+                If True, erase the window before moving it
+                if False (the default), do not erase the
+                  window; the parent will erase itself
+        '''
 
         if self._win:
             if erase:
@@ -189,41 +189,41 @@ class SimpleCursesWidget(object):
             self.refresh()
 
     def resize(self):
-        """Resize the widget.
-        The window (_win) gets created here"""
+        '''Resize the widget.
+        The window (_win) gets created here'''
 
         pass
 
     def resize_and_show(self):
-        """Resize and show the widget"""
+        '''Resize and show the widget'''
         self.resize()
         self.show()
 
     def show(self):
-        """Display the widget"""
+        '''Display the widget'''
         self._showed = True
 
     def refresh(self):
-        """Refresh the widget"""
+        '''Refresh the widget'''
         pass
 
     def key(char):
-        """Handle keyboard input
+        '''Handle keyboard input
 
-        Returns
-        =======
-            True
-                The character was not handled by the widget.
-                The calling function can go on and handle it.
-            False
-                The character was handled by the widget.
-                The calling function does not need to handle it.
-        """
+            Returns
+            =======
+                True
+                    The character was not handled by the widget.
+                    The calling function can go on and handle it.
+                False
+                    The character was handled by the widget.
+                    The calling function does not need to handle it.
+        '''
         return False
 
 
 class SimpleCursesCheckBox(SimpleCursesWidget):
-    """A very simple checkbox curses widget """
+    '''A very simple checkbox curses widget '''
     _checked = False
     _highlight_all = False
 
@@ -232,31 +232,31 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
                  color_focused, color, bracket_color,
                  char='✔', checked=False, focused=False,
                  highlight_all=False, callback_function=None):
-        """Initialize the widget.
+        '''Initialize the widget.
 
-        Parameters
-        ----------
-        Y, X
-            Y, X position of widget in its parent (int)
-        caption
-            The caption of the widget (string).
-        color_focused
-            Active checkbox color (curses.color_pair)
-        color
-            Inactive checkbox color (curses.color_pair)
-        bracket_color
-            The color of the brackets (curses.color_pair)
-        char
-            The character to indicate a checked checkbox (string)
-        checked
-            Index of checked checkbox (int)
-        focused
-            True if widget has focus (boolean)
-        highlight_all
-            Focused behaviour (boolean).
-            If True, the whole window uses the active color.
-            If False, only char uses the active color.
-        """
+            Parameters
+            ----------
+            Y, X
+                Y, X position of widget in its parent (int)
+            caption
+                The caption of the widget (string).
+            color_focused
+                Active checkbox color (curses.color_pair)
+            color
+                Inactive checkbox color (curses.color_pair)
+            bracket_color
+                The color of the brackets (curses.color_pair)
+            char
+                The character to indicate a checked checkbox (string)
+            checked
+                Index of checked checkbox (int)
+            focused
+                True if widget has focus (boolean)
+            highlight_all
+                Focused behaviour (boolean).
+                If True, the whole window uses the active color.
+                If False, only char uses the active color.
+        '''
 
         self._Y = Y
         self._X = X
@@ -269,14 +269,14 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         self._color = color
         self._bracket_color = bracket_color
 
-        # initialize the window
+        ''' initialize the window '''
         self.resize()
 
     @property
     def char(self):
-        """Character to indicate a checked checkbox
+        '''Character to indicate a checked checkbox
            Default: ✔
-        """
+        '''
 
         return self._char
 
@@ -287,7 +287,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
 
     @property
     def checked(self):
-        """Returns if the checkbox is ckecked"""
+        '''Returns if the checkbox is ckecked'''
 
         return self._checked
 
@@ -298,8 +298,8 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
 
     @property
     def highlight_all(self):
-        """Returns if the whole window will use the
-        focused color when focused"""
+        '''Returns if the whole window will use the
+        focused color when focused'''
         return self._highlight_all
 
     @highlight_all.setter
@@ -308,10 +308,11 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         self.refresh()
 
     def resize(self):
-        """Resize the widget
+        '''Resize the widget
            For changes to be displayed,
-           use show afterwards"""
-        # use cjklen for cjk support
+           use show afterwards'''
+
+        ''' use cjklen for cjk support '''
         if self._win:
             del self._win
         self._width = None
@@ -319,7 +320,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         self._win = curses.newwin(1, self._width, self._Y, self._X)
 
     def show(self):
-        """Put the widget on the screen"""
+        '''Put the widget on the screen'''
         if self._win:
             self._win.bkgdset(' ', self._color)
             self._win.erase()
@@ -329,7 +330,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
             self._showed = True
 
     def refresh(self):
-        """Refresh the widget's content"""
+        '''Refresh the widget's content'''
         if self._win:
             char = self._char if self._checked else ' '
             if not self._enabled:
@@ -370,7 +371,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         self.refresh()
 
     def _get_metrics(self):
-        """ Calculate width and height based on caption """
+        ''' Calculate width and height based on caption '''
         self._height = 1
         self._width = len(self._title) + 4
 
@@ -396,7 +397,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
                  constant_width=0,
                  parent=None,
                  callback_function=None):
-        """Initialize the wizard.
+        '''Initialize the wizard.
 
         Parameters
         ----------
@@ -420,7 +421,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
         callback_function
             The function to call when the button
             is "clicked". Default is None
-        """
+        '''
 
         self._Y = Y
         self._X = X
@@ -459,7 +460,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
             self._win = curses.newwin(1, self._width, self._Y, self._X)
 
     def show(self):
-        """Put the widget on the screen"""
+        '''Put the widget on the screen'''
         if self._win:
             self._win.bkgdset(' ', self._color)
             self._win.erase()
@@ -469,7 +470,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
             self._showed = True
 
     def refresh(self):
-        """Refresh the widget's content"""
+        '''Refresh the widget's content'''
         if self._win:
             if self._enabled:
                 self._win.addstr(0, 0, '[', self._bracket_color)
@@ -504,12 +505,12 @@ class SimpleCursesPushButton(SimpleCursesWidget):
 
 
 class SimpleCursesHorizontalPushButtons(object):
-    """A helper class to create horizontally
+    '''A helper class to create horizontally
     spaced curses push buttons.
 
     After its creation, use show() to display them.
     Access to individual button is through <class>.buttons
-    """
+    '''
     _X = _width = 0
     _parent = None
     _left_or_right_margin = 2
@@ -520,7 +521,7 @@ class SimpleCursesHorizontalPushButtons(object):
                  parent = None,
                  focused=0,
                  left_or_right_margin = 2):
-        """Initialize the wizard.
+        '''Initialize the wizard.
 
         Parameters
         ----------
@@ -547,7 +548,7 @@ class SimpleCursesHorizontalPushButtons(object):
             the first time the widget is displayed. Default
             value is 0 (i.e. the first button). Set it to -1
             to disable it, i part of other widget. (int)
-        """
+        '''
 
         self._buttons = []
         for n in captions:
@@ -567,12 +568,12 @@ class SimpleCursesHorizontalPushButtons(object):
         self._Y = Y
         self._left_or_right_margin = left_or_right_margin
         if -1 < focused < len(self._buttons):
-            # use _focused so that we don't refresh
+            ''' use _focused so that we don't refresh '''
             self._buttons[focused]._focused = True
         self._parent = parent
 
     def show(self, parent=None, orientation='center', show=True):
-        """Display the widget
+        '''Display the widget
 
         Parameters
         ==========
@@ -586,7 +587,7 @@ class SimpleCursesHorizontalPushButtons(object):
             If True, the widget is displayed at its new position.
             Never explicitly set it to False;
             use calculate_buttons_position() instead.
-        """
+        '''
         if parent:
             self._parent = parent
         if self._parent:
@@ -598,7 +599,7 @@ class SimpleCursesHorizontalPushButtons(object):
                 self._X = X - self._left_or_right_margin - self._width
             else:
                 self._X = offX + int((X - self._width) / 2)
-            # place widgets
+            ''' place widgets '''
             X = self._X
             Y = self._Y + offY
             for n in self._buttons:
@@ -606,16 +607,16 @@ class SimpleCursesHorizontalPushButtons(object):
                 X += n.width + 2
 
     def calculate_buttons_position(self, parent=None, orientation='center'):
-        """Calculate buttons position but do not display them.
-        It will call show() with show=False"""
+        '''Calculate buttons position but do not display them.
+        It will call show() with show=False'''
         self.show(parent, orientation, show=False)
 
     @property
     def buttons(self):
-        """The list of buttons within the widget.
+        '''The list of buttons within the widget.
         This is the way to get access to an individual
         button and use its functionality.
-        """
+        '''
         return self._buttons
 
     @buttons.setter
@@ -624,11 +625,11 @@ class SimpleCursesHorizontalPushButtons(object):
 
     @property
     def parent(self):
-        """The parent window of the widget.
+        '''The parent window of the widget.
         This is a window, not another widget.
         If not set (or invalid), the buttons will not be
         vissible even if show() is called.
-        """
+        '''
         return self._parent
 
     @parent.setter
@@ -640,16 +641,16 @@ class SimpleCursesHorizontalPushButtons(object):
 
 
 class SimpleCursesLineEdit(object):
-    """ Class to insert one line of text
+    ''' Class to insert one line of text
     Python 3 supports all chars
     Python 2 supports ascii only
 
-    """
+    '''
     string = ''
     _string = ''
     _displayed_string = ''
 
-    """ windows """
+    ''' windows '''
     _parent_win = None
     _caption_win = None      # contains box and caption
     _edit_win = None         # contains the "input box"
@@ -657,17 +658,17 @@ class SimpleCursesLineEdit(object):
     _use_paste_mode = False  # paste mode is off by default
     _paste_mode = False      # enables direct insersion of ? and \
 
-    """ Default value for string length """
+    ''' Default value for string length '''
     _max_chars_to_display = 0
 
-    """ Cursor position within _max_chars_to_display """
+    ''' Cursor position within _max_chars_to_display '''
     _curs_pos = 0
     _disp_curs_pos = 0
-    """ First char of sting to display """
+    ''' First char of sting to display '''
     _first = 0
     _last = 0
 
-    """ init values """
+    ''' init values '''
     y = x = 0
     _caption = 'Insert string'
     _disp_caption = ' Insert string: '
@@ -694,11 +695,11 @@ class SimpleCursesLineEdit(object):
 
     _focused = True
 
-    """ if width < 1, auto_width gets this value,
-        so that width gets parent.width - auto_width """
+    ''' if width < 1, auto_width gets this value,
+        so that width gets parent.width - auto_width '''
     _auto_width = 1
 
-    """ string to redisplay after exiting help """
+    ''' string to redisplay after exiting help '''
     _restore_data = []
 
     log = None
@@ -715,15 +716,15 @@ class SimpleCursesLineEdit(object):
                    '[', ']', '{', '}', '|', '\\', '/',
                    )
 
-    """ Set to True to restringt accepted characters to ASCII only """
+    ''' Set to True to restringt accepted characters to ASCII only '''
     _pure_ascii = False
 
-    """ True if backlash has been pressed """
+    ''' True if backlash has been pressed '''
     _backslash_pressed = False
 
-    """ Behaviour of ? key regarding \
+    ''' Behaviour of ? key regarding \
         If True, display ? (\? to display help)
-        If False, display help """
+        If False, display help '''
     _show_help_with_backslash_pressed = False
 
     _mode_changed = None
@@ -747,10 +748,10 @@ class SimpleCursesLineEdit(object):
                 elif key == 'string':
                     self._string = value
                 elif key == 'caption':
-                    """ string on editing line """
+                    ''' string on editing line '''
                     self._caption = value
                 elif key == 'title':
-                    """ string on box """
+                    ''' string on box '''
                     self.title = value
                 elif key == 'box_color':
                     self.box_color = value
@@ -772,25 +773,25 @@ class SimpleCursesLineEdit(object):
                     self._log_file = value
                     self.log = self._log
                 elif key == 'key_up_function_handler':
-                    # callback function for KEY_UP
+                    ''' callback function for KEY_UP '''
                     self._key_up_function_handler = value
                 elif key == 'key_down_function_handler':
-                    # callback function for KEY_DOWN
+                    ''' callback function for KEY_DOWN '''
                     self._key_down_function_handler = value
                 elif key == 'key_pgup_function_handler':
-                    # callback function for KEY_PPAGE
+                    ''' callback function for KEY_PPAGE '''
                     self._key_pgup_function_handler = value
                 elif key == 'key_pgdown_function_handler':
-                    # callback function for KEY_NPAGE
+                    ''' callback function for KEY_NPAGE '''
                     self._key_pgdown_function_handler = value
                 elif key == 'key_tab_function_handler':
-                    # callback function for TAB
+                    ''' callback function for TAB '''
                     self._key_tab_function_handler = value
                 elif key == 'key_stab_function_handler':
-                    # callback function for KEY_STAB
+                    ''' callback function for KEY_STAB '''
                     self._key_stab_function_handler = value
                 elif key == 'string_changed_handler':
-                    # callback function for KEY_STAB
+                    ''' callback function for KEY_STAB '''
                     self._string_changed_handler = value
 
         if self._has_history:
@@ -884,8 +885,8 @@ class SimpleCursesLineEdit(object):
         self._pure_ascii = val
 
     def _is_cjk(self):
-        """ Check if string contains CJK characters.
-            If string is empty reset history index """
+        ''' Check if string contains CJK characters.
+            If string is empty reset history index '''
         old_cjk = self._cjk
         if len(self.string) == cjklen(self.string):
             self._cjk = False
@@ -897,8 +898,8 @@ class SimpleCursesLineEdit(object):
                 logger.debug('=== CJK editing is {} ==='.format('ON' if self._cjk else 'OFF'))
 
     def keep_restore_data(self):
-        """ Keep a copy of current editor state
-            so that it can be restored later. """
+        ''' Keep a copy of current editor state
+            so that it can be restored later. '''
         self._restore_data = [
             self.string,
             self._displayed_string,
@@ -974,7 +975,7 @@ class SimpleCursesLineEdit(object):
                     self.y, self.x + len(self._disp_caption)
                 )
                 try:
-                    # printing at the end of the window, do not break...
+                    ''' printing at the end of the window, do not break... '''
                     self._caption_win.addstr(0, maxX - 1, ']', self.caption_color)
                 except:
                     pass
@@ -996,7 +997,7 @@ class SimpleCursesLineEdit(object):
                 active_edit_color = self.caption_color
         self._edit_win.erase()
 
-        # opening
+        ''' opening '''
         if opening:
             if self._restore_data:
                 self._string = self._restore_data[0]
@@ -1010,7 +1011,7 @@ class SimpleCursesLineEdit(object):
                 self._curs_pos = self._disp_curs_pos = self._first = 0
         self._edit_win.addstr(0, 0, self._displayed_string, active_edit_color)
 
-        # reset position
+        ''' reset position '''
         if self._reset_position:
             self._reset_position = False
             self._go_to_end()
@@ -1022,7 +1023,7 @@ class SimpleCursesLineEdit(object):
             self.log('displayed string: "{}"\n'.format(self._displayed_string))
 
         if self.focused:
-            # enable this to get info on function
+            ''' enable this to get info on function '''
             #if logger.isEnabledFor(logging.DEBUG):
             #    logger.debug('refreshEditWindow:\n  first={0}, curs={1}, dcurs={2}, max={3}\n  len={4}, cjklen={5}\n  string="{6}"\n  len={7}, cjklen={8}\n  disstr="{9}"'.format(self._first, self._curs_pos, self._disp_curs_pos, self._max_chars_to_display, len(self.string), cjklen(self.string), self.string, len(self._displayed_string), cjklen(self._displayed_string), self._displayed_string))
             self._edit_win.chgat(0, self._disp_curs_pos, 1, self.cursor_color)
@@ -1135,7 +1136,7 @@ class SimpleCursesLineEdit(object):
         if self.string:
             if self._first + self._curs_pos > 0:
                 if self._curs_pos == 0:
-                    # remove non visible char from the left of the string
+                    ''' remove non visible char from the left of the string '''
                     self.string = self.string[:self._first-1] + self.string[self._first:]
                     self._first -= 1
                     self._curs_pos = 0
@@ -1201,14 +1202,14 @@ class SimpleCursesLineEdit(object):
                         pos = n
                         break
             if pos == 0:
-                # word_delimiter not found:
+                ''' word_delimiter not found: '''
                 self._go_to_start()
                 return
             else:
-                # word delimiter found
+                ''' word delimiter found '''
                 if str_len < self._max_chars_to_display or \
                         pos >= self._first:
-                    # pos is on screen
+                    ''' pos is on screen '''
                     self._curs_pos = pos - self._first + 1
                 else:
                     self._first = n + 1
@@ -1233,16 +1234,16 @@ class SimpleCursesLineEdit(object):
             pos = 0
         if pos > 0:
             if pos < len(self._displayed_string):
-                # pos is on screen
+                ''' pos is on screen '''
                 self._curs_pos = pos + 1 - self._first
                 self._disp_curs_pos = cjklen(self._displayed_string[:self._curs_pos])
             else:
                 if pos < self._first + len(self._displayed_string):
-                    # pos is on middle and on screen
+                    ''' pos is on middle and on screen '''
                     self._curs_pos = pos - self._first + 1
                     self._disp_curs_pos = cjklen(self._displayed_string[:self._curs_pos])
                 else:
-                    # pos is off screen
+                    ''' pos is off screen '''
                     self._first = 0
                     self._curs_pos = pos + 2
                     self._displayed_string = tmp = self.string[:self._curs_pos]
@@ -1254,14 +1255,14 @@ class SimpleCursesLineEdit(object):
                     self._disp_curs_pos = cjklen(self._displayed_string[:-1])
 
         else:
-            # word delimiter not found
+            ''' word delimiter not found '''
             self._go_to_end()
 
     def _go_right(self):
         if self.string and not self._at_end_of_sting():
             if self._cjk:
                 if cjklen(self.string) < self._max_chars_to_display:
-                    # just go to next char
+                    ''' just go to next char '''
                     if self._curs_pos <= len(self.string):
                         self._curs_pos += 1
                     self._disp_curs_pos = cjklen(self.string[:self._curs_pos])
@@ -1271,10 +1272,10 @@ class SimpleCursesLineEdit(object):
                     at_end_of_disp = self._at_last_char_of_displayed_string()
                     self._curs_pos += 1
                     if self._curs_pos <= len(self._displayed_string):
-                        # just go to next char
+                        ''' just go to next char '''
                         self._disp_curs_pos = cjklen(self.string[self._first:self._first+self._curs_pos])
                     else:
-                        # scroll one char right
+                        ''' scroll one char right '''
                         self._displayed_string = self.string[self._first:self._first+len(self._displayed_string)+1]
                         while cjklen(self._displayed_string) >= self._max_chars_to_display + 1:
                             self._first += 1
@@ -1309,7 +1310,7 @@ class SimpleCursesLineEdit(object):
         if self._first + self._curs_pos > 0:
             if self._cjk:
                 if self._curs_pos > 0:
-                    # just go to previous char
+                    ''' just go to previous char '''
                     self._curs_pos -= 1
                     self._disp_curs_pos = cjklen(self._displayed_string[:self._curs_pos])
                 else:
@@ -1350,9 +1351,9 @@ class SimpleCursesLineEdit(object):
             self._is_cjk()
 
     def _can_show_help(self):
-        """ return not xor of two values
+        ''' return not xor of two values
                 self._backslash_pressed,
-                self._show_help_with_backslash_pressed"""
+                self._show_help_with_backslash_pressed'''
         if self._paste_mode:
             return False
         return not (
@@ -1362,13 +1363,13 @@ class SimpleCursesLineEdit(object):
                 and self._show_help_with_backslash_pressed))
 
     def keypress(self, win, char):
-        """
+        '''
          returns:
             2: display help
             1: get next char
             0: exit edit mode, string is valid
            -1: cancel
-        """
+        '''
         #self._log_file='/home/spiros/edit.log'
         #self._log_file='C:\\Users\\spiros\\edit.log'
         #self.log = self._log
@@ -1379,7 +1380,7 @@ class SimpleCursesLineEdit(object):
 
         if platform.startswith('win'):
             if char == 420:
-                """ A-D, clear to end of line """
+                ''' A-D, clear to end of line '''
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: clear-to-end')
                 self._clear_to_end_of_line()
@@ -1388,7 +1389,7 @@ class SimpleCursesLineEdit(object):
                     self._string_changed_handler()
                 return 1
             elif char == 422:
-                """ A-F, move to next word """
+                ''' A-F, move to next word '''
                 if self.string:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('action: next-word')
@@ -1396,7 +1397,7 @@ class SimpleCursesLineEdit(object):
                     self.refreshEditWindow()
                 return 1
             elif char == 418:
-                """ A-B, move to previous word """
+                ''' A-B, move to previous word '''
                 if self.string:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('action: previous-word')
@@ -1410,7 +1411,7 @@ class SimpleCursesLineEdit(object):
             return 1
 
         elif char in (ord('?'), ) and self._can_show_help():
-            # display help
+            ''' display help '''
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('action: help')
             self.keep_restore_data()
@@ -1420,7 +1421,7 @@ class SimpleCursesLineEdit(object):
             return 2
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
-            """ ENTER """
+            ''' ENTER '''
             self._backslash_pressed = False
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('action: enter')
@@ -1438,7 +1439,7 @@ class SimpleCursesLineEdit(object):
                 self.log('   *** char = {}\n'.format(char))
             self._edit_win.nodelay(False)
             if char == -1:
-                """ ESCAPE """
+                ''' ESCAPE '''
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: Cancel')
                 self._string = ''
@@ -1450,7 +1451,7 @@ class SimpleCursesLineEdit(object):
                 if self.log is not None:
                     self.log('   *** char = {}\n'.format(char))
                 if char in (ord('d'), ):
-                    """ A-D, clear to end of line """
+                    ''' A-D, clear to end of line '''
                     if self.string:
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('action: clear-to-end')
@@ -1458,13 +1459,13 @@ class SimpleCursesLineEdit(object):
                         if self._string_changed_handler:
                             self._string_changed_handler()
                 elif char in (ord('f'), ):
-                    """ A-F, move to next word """
+                    ''' A-F, move to next word '''
                     if self.string:
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('action: next-word')
                         self._next_word()
                 elif char in (ord('b'), ):
-                    """ A-B, move to previous word """
+                    ''' A-B, move to previous word '''
                     if self.string:
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('action: previous-word')
@@ -1473,7 +1474,7 @@ class SimpleCursesLineEdit(object):
                     return 1
 
         elif char in (curses.KEY_RIGHT, ):
-            """ KEY_RIGHT """
+            ''' KEY_RIGHT '''
             self._backslash_pressed = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -1481,7 +1482,7 @@ class SimpleCursesLineEdit(object):
             self._go_right()
 
         elif char in (curses.KEY_LEFT, ):
-            """ KEY_LEFT """
+            ''' KEY_LEFT '''
             self._backslash_pressed = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -1489,7 +1490,7 @@ class SimpleCursesLineEdit(object):
                 self._go_left()
 
         elif char in (curses.KEY_HOME, curses.ascii.SOH):
-            """ KEY_HOME, ^A """
+            ''' KEY_HOME, ^A '''
             self._backslash_pressed = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -1497,7 +1498,7 @@ class SimpleCursesLineEdit(object):
                 self._go_to_start()
 
         elif char in (curses.KEY_END, curses.ascii.ENQ):
-            """ KEY_END, ^E """
+            ''' KEY_END, ^E '''
             self._backslash_pressed = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -1505,7 +1506,7 @@ class SimpleCursesLineEdit(object):
                 self._go_to_end()
 
         elif char in (curses.ascii.ETB, ):
-            """ ^W, clear to start of line """
+            ''' ^W, clear to start of line '''
             self._backslash_pressed = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -1515,7 +1516,7 @@ class SimpleCursesLineEdit(object):
                     self._string_changed_handler()
 
         elif char in (curses.ascii.VT, ):
-            """ Ctrl-K - clear to end of line """
+            ''' Ctrl-K - clear to end of line '''
             self._backslash_pressed = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -1525,7 +1526,7 @@ class SimpleCursesLineEdit(object):
                     self._string_changed_handler()
 
         elif char in (curses.ascii.NAK, ):
-            """ ^U, clear line """
+            ''' ^U, clear line '''
             self._backslash_pressed = False
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('action: clear')
@@ -1536,7 +1537,7 @@ class SimpleCursesLineEdit(object):
                 self._string_changed_handler()
 
         elif char in (curses.KEY_DC, curses.ascii.EOT):
-            """ DEL key, ^D """
+            ''' DEL key, ^D '''
             self._backslash_pressed = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -1546,7 +1547,7 @@ class SimpleCursesLineEdit(object):
                     self._string_changed_handler()
 
         elif char in (curses.KEY_BACKSPACE, curses.ascii.BS, 127):
-            """ KEY_BACKSPACE """
+            ''' KEY_BACKSPACE '''
             self._backslash_pressed = False
             if self.string:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -1556,7 +1557,7 @@ class SimpleCursesLineEdit(object):
                     self._string_changed_handler()
 
         elif char in (curses.KEY_UP, curses.ascii.DLE):
-            """ KEY_UP, ^N """
+            ''' KEY_UP, ^N '''
             self._backslash_pressed = False
             if self._key_up_function_handler is not None:
                 try:
@@ -1568,7 +1569,7 @@ class SimpleCursesLineEdit(object):
                     curses.ungetch(char)
 
         elif char in (curses.KEY_DOWN, curses.ascii.SO):
-            """ KEY_DOWN, ^P """
+            ''' KEY_DOWN, ^P '''
             self._backslash_pressed = False
             if self._key_down_function_handler is not None:
                 try:
@@ -1580,7 +1581,7 @@ class SimpleCursesLineEdit(object):
                     curses.ungetch(char)
 
         elif char in (curses.KEY_NPAGE, ):
-            """ PgDn """
+            ''' PgDn '''
             self._backslash_pressed = False
             if self._key_pgdown_function_handler is not None:
                 try:
@@ -1592,7 +1593,7 @@ class SimpleCursesLineEdit(object):
                     curses.ungetch(char)
 
         elif char in (curses.KEY_PPAGE, ):
-            """ PgUp """
+            ''' PgUp '''
             self._backslash_pressed = False
             if self._key_pgup_function_handler is not None:
                 try:
@@ -1601,7 +1602,7 @@ class SimpleCursesLineEdit(object):
                     pass
 
         elif char in (9, ):
-            """ TAB """
+            ''' TAB '''
             self._backslash_pressed = False
             if self._key_tab_function_handler is not None:
                 try:
@@ -1613,7 +1614,7 @@ class SimpleCursesLineEdit(object):
                     curses.ungetch(char)
 
         elif char in (curses.KEY_BTAB, ):
-            """ Shift-TAB """
+            ''' Shift-TAB '''
             self._backslash_pressed = False
             if self._key_stab_function_handler is not None:
                 try:
@@ -1625,12 +1626,12 @@ class SimpleCursesLineEdit(object):
                     curses.ungetch(char)
 
         elif 0 <= char <= 31:
-            """ do not accept any other control characters """
+            ''' do not accept any other control characters '''
             self._backslash_pressed = False
 
         elif char == ord('p') and self._backslash_pressed \
                 and self._use_paste_mode:
-            """ toggle paste mode """
+            ''' toggle paste mode '''
             self._backslash_pressed = False
             self._paste_mode = not self._paste_mode
             if self._mode_changed:
@@ -1644,7 +1645,7 @@ class SimpleCursesLineEdit(object):
                 self.log('====================\n')
             if version_info < (3, 0) or (self._pure_ascii and not platform.startswith('win')):
                 if 32 <= char < 127:
-                    # accept only ascii characters
+                    ''' accept only ascii characters '''
                     if len(self._string) == self._first + self._curs_pos:
                         self._string += chr(char)
                         self._add_to_end = True
@@ -1676,7 +1677,7 @@ class SimpleCursesLineEdit(object):
                     self._add_to_end = False
                     self._displayed_string = self.string[self._first:self._first+self._max_chars_to_display]
             if self._add_to_end:
-                # adding to end of string
+                ''' adding to end of string '''
                 while cjklen(self._displayed_string) > self._max_chars_to_display:
                     self._displayed_string = self._displayed_string[1:]
                     self._first += 1
@@ -1686,7 +1687,7 @@ class SimpleCursesLineEdit(object):
                 else:
                     self._disp_curs_pos = self._curs_pos
             else:
-                # adding to middle of string
+                ''' adding to middle of string '''
                 while cjklen(self._displayed_string) > self._max_chars_to_display:
                     self._displayed_string = self._displayed_string[:-1]
                 if self._cjk:
@@ -1710,25 +1711,25 @@ class SimpleCursesLineEdit(object):
 
         bytes = []
         if char <= 127:
-            # 1 bytes
+            ''' 1 byte '''
             bytes.append(char)
         #elif 194 <= char <= 223:
         elif 192 <= char <= 223:
-            # 2 bytes
+            ''' 2 bytes '''
             bytes.append(char)
             bytes.append(get_check_next_byte())
         elif 224 <= char <= 239:
-            # 3 bytes
+            ''' 3 bytes '''
             bytes.append(char)
             bytes.append(get_check_next_byte())
             bytes.append(get_check_next_byte())
         elif 240 <= char <= 244:
-            # 4 bytes
+            ''' 4 bytes '''
             bytes.append(char)
             bytes.append(get_check_next_byte())
             bytes.append(get_check_next_byte())
             bytes.append(get_check_next_byte())
-        """ no zero byte allowed """
+        ''' no zero byte allowed '''
         while 0 in bytes:
             bytes.remove(0)
         if version_info < (3, 0):
@@ -1774,7 +1775,7 @@ class SimpleCursesLineEdit(object):
     def run(self):
         self._edit_win.nodelay(False)
         self._edit_win.keypad(True)
-        # make sure we don't get into an infinite loop
+        ''' make sure we don't get into an infinite loop '''
         self._ungetch_unbound_keys = False
         try:
             curses.curs_set(0)

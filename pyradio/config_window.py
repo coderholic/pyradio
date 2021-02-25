@@ -32,9 +32,10 @@ class PyRadioConfigWindow(object):
 
     selection = __selection = 1
 
-    """ Keep a copy of saved values for theme and transparency
+    ''' Keep a copy of saved values for theme and transparency
         Work-around for 'T' auto save (trasnsparency), and
-        's'/Space them saving """
+        's'/Space them saving
+    '''
     _old_use_transparency = False
     _old_theme = ''
 
@@ -104,6 +105,8 @@ class PyRadioConfigWindow(object):
         self.init_config_win()
         self.refresh_config_win()
         self._old_use_transparency = self._config_options['use_transparency'][1]
+
+        self._cnf.get_player_params_from_backup()
 
         ''' Config window parameters check '''
         # logger.error('DE \n\ncheck params\n{0}\n{1}'.format(self._cnf.saved_params, self._cnf.params))
@@ -215,7 +218,7 @@ class PyRadioConfigWindow(object):
                             self._win.addstr('{}'.format(it[1]), hcol)
                         else:
                             if it[1] is None:
-                                # random station
+                                ''' random station '''
                                 self._win.addstr('{}'.format('Random'), hcol)
                             else:
                                 self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6]), hcol)
@@ -271,11 +274,11 @@ class PyRadioConfigWindow(object):
                 except:
                     pass
         self._num_of_help_lines = len(self._help_lines[self.selection])
-        """
-        # Uncomment if trouble with help lines
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('self._num_of_help_lines = {}'.format(self._num_of_help_lines))
-        """
+        '''
+        Uncomment if trouble with help lines
+        '''
+        #if logger.isEnabledFor(logging.DEBUG):
+        #    logger.debug('self._num_of_help_lines = {}'.format(self._num_of_help_lines))
 
     def _load_default_values(self):
         self._config_options['general_title'][1] = ''
@@ -286,7 +289,7 @@ class PyRadioConfigWindow(object):
         self._config_options['enable_mouse'][1] = 'False'
         self._config_options['connection_timeout'][1] = '10'
         self._config_options['theme_title'][1] = ''
-        # Transparency
+        ''' Transparency '''
         #self._old_use_transparency = self._config_options['use_transparency'][1]
         self._config_options['use_transparency'][1] = False
         self._config_options['force_http'][1] = False
@@ -296,9 +299,10 @@ class PyRadioConfigWindow(object):
         self._config_options['confirm_playlist_reload'][1] = True
         self._config_options['auto_save_playlist'][1] = False
         self._config_options['requested_player'][1] = ''
-        # Theme
-        # Put this AFTER applying transparency, so that _do_init_pairs in
-        # _toggle_transparency does not overwrite pairs with applied theme values
+        ''' Theme
+            Put this AFTER applying transparency, so that _do_init_pairs in
+            _toggle_transparency does not overwrite pairs with applied theme values
+        '''
         self._config_options['theme'][1] = 'dark'
         self._apply_a_theme('dark', False)
         self._check_if_config_is_dirty()
@@ -377,14 +381,15 @@ class PyRadioConfigWindow(object):
             old_theme = self._config_options['theme'][1]
             old_transparency = self._config_options['use_transparency'][1]
             self._config_options = deepcopy(self._saved_config_options)
-            # Transparency
+            ''' Transparency '''
             self._config_options['use_transparency'][1] = self._old_use_transparency
             self._toggle_transparency_function(
                 changed_from_config_window=True,
                 force_value=self._old_use_transparency)
-            # Theme
-            # Put it after applying transparency, so that saved color_pairs
-            # do not get loaded instead of active ones
+            ''' Theme
+                Put it after applying transparency, so that saved color_pairs
+                do not get loaded instead of active ones
+            '''
             self._config_options['theme'][1] = self._old_theme
             self._saved_config_options['theme'][1] = self._old_theme
             self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
@@ -397,14 +402,14 @@ class PyRadioConfigWindow(object):
             char = self._win.getch()
             self._win.nodelay(False)
             if char == -1:
-                """ ESCAPE """
+                ''' ESCAPE '''
                 #self._config_options['theme'][1] = self._old_theme
                 self._saved_config_options['theme'][1] = self._old_theme
                 self._cnf.opts['theme'][1] = self._old_theme
                 self._cnf.theme = self._old_theme
                 return 1, []
         elif char in (ord('s'), ):
-            # save and exit
+            ''' save and exit '''
             self._old_theme = self._config_options['theme'][1]
             if self._saved_config_options['enable_mouse'][1] == self._config_options['enable_mouse'][1]:
                 self.mouse_support_option_changed = False
@@ -412,7 +417,7 @@ class PyRadioConfigWindow(object):
                 self.mouse_support_option_changed = True
             self._saved_config_options = deepcopy(self._config_options)
             if self._cnf.opts != self._saved_config_options:
-                # check if player has changed
+                ''' check if player has changed '''
                 if self._cnf.opts['player'][1] != self._saved_config_options['player'][1]:
                     self._cnf.player_changed = True
                     self._cnf.player_values = [self._cnf.opts['player'][1], self._saved_config_options['player'][1]]
@@ -427,7 +432,7 @@ class PyRadioConfigWindow(object):
         elif char in (
                 curses.KEY_ENTER, ord('\n'),
                 ord('\r'), ord(' '), ord('l'), curses.KEY_RIGHT):
-            # alter option value
+            ''' alter option value '''
             vals = list(self._config_options.items())
             sel = vals[self.selection][0]
             if sel == 'player':
@@ -468,16 +473,19 @@ class PyRadioExtraParams(object):
     def __init__(self,
                  config,
                  parent):
+        ''' setting editing to 0 so that help functions work '''
+        self.editing = 0
         self._max_lines = 16
         self._note_text = ' Note '
-        self._note_line1 = 'Changes made here wil be'
+        self._note_line1 = 'Changes made here wil not be'
         self._note_line2 = 'saved in the configuration file'
         self._extra = None
         self._cnf = config
         self._parent = parent
         self._win = None
         self._title = ' Player Extra Parameters '
-        self._too_small_str = '  Window too small'
+        self._too_small_str = 'Window too small'
+        self._cnf.get_player_params_from_backup(param_type=1)
         self._redisplay()
 
     @property
@@ -535,7 +543,7 @@ class PyRadioExtraParams(object):
                 0, int((self.maxX - len(self._title)) / 2),
                 self._title,
                 curses.color_pair(4))
-            # show note
+            ''' show note '''
             try:
                 self._win.addstr(12, 2, '─' * (self.maxX - 4), curses.color_pair(3))
             except:
@@ -582,7 +590,7 @@ class ExtraParametersEditor(object):
 
         self._too_small = False
 
-        # add line editor
+        ''' add line editor '''
         self._widgets[0] = SimpleCursesLineEdit(
             parent=self._win,
             width=self.maxX - 2,
@@ -600,10 +608,11 @@ class ExtraParametersEditor(object):
         self._widgets[0].string = string
         self._widgets[0].bracket = False
         self._widgets[0]._use_paste_mode = True
-        self._widgets[0]._paste_mode = True      # enables direct insersion of ? and \
+        ''' enables direct insersion of ? and \ '''
+        self._widgets[0]._paste_mode = True
         self._line_editor = self._widgets[0]
 
-        # add horizontal push buttons
+        ''' add horizontal push buttons '''
         self._h_buttons = SimpleCursesHorizontalPushButtons(
                 Y=3, captions=('OK', 'Cancel'),
                 color_focused=curses.color_pair(9),
@@ -680,8 +689,9 @@ class ExtraParametersEditor(object):
             self._widgets[2].show()
 
     def _update_focus(self):
-        # use _focused here to avoid triggering
-        # widgets' refresh
+        ''' use _focused here to avoid triggering
+            widgets' refresh
+        '''
         for i, x in enumerate(self._widgets):
             if x:
                 if self._focus == i:
@@ -725,52 +735,52 @@ class ExtraParametersEditor(object):
             self._focus_previous()
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             if self._focus == 0:
-                # go to next field
+                ''' go to next field '''
                 self._focus_next()
             elif self._focus == 1:
-                # save string
+                ''' save string '''
                 self.edit_string = self._line_editor.string.strip()
                 ret = 0
             else:
-                # cancel
+                ''' cancel '''
                 self.edit_string = ''
                 ret = 0
         elif char == ord('s') and self._focus > 0:
-            # s, execute
+            ''' s, execute '''
             if self._widgets[1].enabled:
                 self.edit_string = self._line_editor.string.strip()
                 ret = 0
         elif self._focus == 0:
-            """
+            '''
              Returns:
                 2: display help
                 1: get next char
                 0: exit edit mode, string isvalid
                -1: cancel
-            """
+            '''
             ret = self._line_editor.keypress(self._win, char)
             if ret == 2:
                 self._win.touchwin()
             elif ret == 1:
-                # get next char
+                ''' get next char '''
                 if self._line_editor.string.strip():
                     self._widgets[1].enabled = True
                 else:
                     self._widgets[1].enabled = False
                 ret = 1
             elif ret == 0:
-                # exit, string is valid
+                ''' exit, string is valid '''
                 self.edit_string = self._line_editor.string.strip()
                 ret = 0
             elif ret == -1:
-                # cancel
+                ''' cancel '''
                 self.edit_string = ''
                 ret = 0
 
         if ret == 1:
             self._update_focus()
             self.refresh_win()
-        # Continue
+        ''' Continue '''
         return ret
 
         try:
@@ -783,8 +793,9 @@ class ExtraParametersEditor(object):
             return 1
 
     def _update_focus(self):
-        # use _focused here to avoid triggering
-        # widgets' refresh
+        ''' use _focused here to avoid triggering
+            widgets' refresh
+        '''
         for i, x in enumerate(self._widgets):
             if x:
                 if self._focus == i:
@@ -793,9 +804,9 @@ class ExtraParametersEditor(object):
                     x._focused = False
 
 class ExtraParameters(object):
-    """ display player's extra parameters
+    ''' display player's extra parameters
         in a foreign curses window
-    """
+    '''
 
     def __init__(self,
                  config,
@@ -816,11 +827,11 @@ class ExtraParameters(object):
         self._focus = focus
         self.from_config = from_config
 
-        """ start Y, X """
+        ''' start Y, X '''
         self.startY = startY
         self.startX = startX
 
-        """ maximum number of lines to display """
+        ''' maximum number of lines to display '''
         self.max_lines = max_lines
 
         self.reset(saved=False)
@@ -902,7 +913,7 @@ class ExtraParameters(object):
 
     @property
     def active(self):
-        """ this is the parameter to be used by the player """
+        ''' this is the parameter to be used by the player '''
         return(self._selections[self._player][2])
 
     @active.setter
@@ -911,7 +922,7 @@ class ExtraParameters(object):
 
     @property
     def params(self):
-        """ Returns the parameters as changed by the user """
+        ''' Returns the parameters as changed by the user '''
         return self._orig_params
 
     @params.setter
@@ -919,9 +930,9 @@ class ExtraParameters(object):
         raise ValueError('parameter is read only')
 
     def _dict_to_list(self):
-        """ convert self._working_params dict
+        ''' convert self._working_params dict
             to self._items dict, and set self.active
-        """
+        '''
         # logger.error('DE\n')
         # logger.error('DE working params = {}'.format(self._working_params))
         for a_param_set in self._working_params.keys():
@@ -934,7 +945,7 @@ class ExtraParameters(object):
         # logger.error('DE selections = {}'.format(self._selections))
 
     def _list_to_dict(self):
-        """ convert self._items_dict to self._working_params """
+        ''' convert self._items_dict to self._working_params '''
         for a_params_set in self._items_dict.keys():
             the_list = [self._selections[a_params_set][2] + 1]
             the_list.extend(self._items_dict[a_params_set])
@@ -996,7 +1007,7 @@ class ExtraParameters(object):
             self._items = self._items_dict[a_player]
 
             if len(self._items) < self.max_lines:
-                """ "erase" window """
+                ''' "erase" window '''
                 empty_str = ' ' * self._width
                 for a_line in range(len(self._items), self.max_lines):
                     self._win.addstr(self.startY + a_line,
@@ -1013,8 +1024,9 @@ class ExtraParameters(object):
             self.startX = startX
         self._get_width()
 
-        # erase params window
-        # done by containing window
+        ''' erase params window
+            done by containing window
+        '''
 
         if self.from_config:
             self.refresh_win()
@@ -1050,9 +1062,9 @@ class ExtraParameters(object):
         self.refresh_win()
 
     def save_results(self):
-        """ pass working parameters to original parameters
+        ''' pass working parameters to original parameters
 		    effectively saving any changes.
-        """
+        '''
         # logger.error('DE save_results')
         # logger.error('DE 1 working_params = {}'.format(self._working_params))
         self._list_to_dict()
@@ -1061,10 +1073,10 @@ class ExtraParameters(object):
         # logger.error('DE 3 working_params = {}'.format(self._working_params))
         self._orig_params = deepcopy(self._working_params)
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('new parameters = {}'.format(self._orig_params))
+            logger.debug('new parameters (not saved) = {}'.format(self._orig_params))
 
     def keypress(self, char):
-        """ Extra parameters keypress
+        ''' Extra parameters keypress
             Returns:
                 -2 - cancel
                 -1 - continue
@@ -1074,12 +1086,12 @@ class ExtraParameters(object):
                  3 - error, cannot edit or delete first item
                  4 - edit parameter
                  5 - add parameter
-        """
+        '''
         if char in (
             curses.KEY_ENTER, ord('\n'),
             ord('\r'), ord(' '), ord('l'),
                 curses.KEY_RIGHT, ord('s')):
-            # activate selection
+            ''' activate selection '''
             # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
             self.active = self.selection
             # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
@@ -1104,12 +1116,12 @@ class ExtraParameters(object):
             char = self._win.getch()
             self._win.nodelay(False)
             if char == -1:
-                """ ESCAPE """
+                ''' ESCAPE '''
                 self.reset()
                 return -2
 
         elif char == ord('?'):
-            # display help
+            ''' display help '''
             return 1
 
         elif char in (curses.KEY_UP, ord('k')):
@@ -1135,7 +1147,7 @@ class ExtraParameters(object):
         elif char in (ord('x'), curses.KEY_DC):
             if self.from_config:
                 if self.selection == 0:
-                    # error: cannot delete first item
+                    ''' error: cannot delete first item '''
                     return 3
                 else:
                     self._win.addstr(
@@ -1156,17 +1168,17 @@ class ExtraParameters(object):
         elif char == ord('e'):
             if self.from_config:
                 if self.selection == 0:
-                    # error: cannot edit first item
+                    ''' error: cannot edit first item '''
                     return 3
-                # edit parameter
+                ''' edit parameter '''
                 return 4
 
         elif char == ord('a'):
             if self.from_config:
                 if len(self._items) == self.max_lines:
-                    # error: cannot add more items
+                    ''' error: cannot add more items '''
                     return 2
-                # add parameter
+                ''' add parameter '''
                 return 5
 
         return -1
@@ -1185,9 +1197,9 @@ class PyRadioSelectPlayer(object):
 
     _working_players = [[], []]
 
-    """ mlength is the length of the longest item in the
+    ''' mlength is the length of the longest item in the
         players list, which is '[ ] mplayer ' = 14
-    """
+    '''
     mlength = 13
 
     def __init__(self, config, parent, player):
@@ -1211,13 +1223,13 @@ class PyRadioSelectPlayer(object):
         ''' parameter editor window '''
         self._parameter_editor = None
 
-        """ players contain supported players
+        ''' players contain supported players
             it is a list of lists
             each list contains three items
             0 - player name
             1 - True if enabled for detection
             2 - True if usable on platform
-        """
+        '''
         self._players = []
         self._populate_players()
         self.init_window()
@@ -1276,7 +1288,7 @@ class PyRadioSelectPlayer(object):
             self._players.append([ap, True, True])
 
         if len(parts) < len(SUPPORTED_PLAYERS):
-            """ add missing player """
+            ''' add missing player '''
             for ap in SUPPORTED_PLAYERS:
                 if ap not in parts:
                     self._players.append([ap, False, True])
@@ -1323,8 +1335,10 @@ class PyRadioSelectPlayer(object):
                 col = curses.color_pair(5)
                 if self.selection == i:
                     col = curses.color_pair(4)
-                    # first_char = '>'
-                    # last_char = '<'
+                    '''
+                        first_char = '>'
+                        last_char = '<'
+                    '''
             pad = self.mlength - (len(token) + len(self._players[i][0])) + 3
             self._win.addstr(
                 i+2, 1,
@@ -1356,7 +1370,7 @@ class PyRadioSelectPlayer(object):
         self._cnf.params_changed = False
 
     def keypress(self, char):
-        """ Player selection keypress
+        ''' Player selection keypress
             Returns:
               -2 - error, number of max lines reached
               -3 - error, cannot edit or delete first item
@@ -1366,11 +1380,12 @@ class PyRadioSelectPlayer(object):
                2 - Display editor help
                3 - Editor is visible
                4 - Editor exited
-        """
+        '''
         if self.editing == 0:
             if char in (9, ):
-                self._switch_column()
-                self.refresh_selection()
+                if self._players[self.selection][1]:
+                    self._switch_column()
+                    self.refresh_selection()
 
             elif char in (
                 curses.KEY_EXIT, 27,
@@ -1381,7 +1396,7 @@ class PyRadioSelectPlayer(object):
                 char = self._win.getch()
                 self._win.nodelay(False)
                 if char == -1:
-                    """ ESCAPE """
+                    ''' ESCAPE '''
                     return 1
 
             elif char == ord('r'):
@@ -1409,7 +1424,7 @@ class PyRadioSelectPlayer(object):
                     self.refresh_selection()
 
                 elif char in (curses.ascii.NAK, 21):
-                    # ^U, move player Up
+                    ''' ^U, move player Up '''
                     x = self._players.pop(self.selection)
                     if self.selection == 0:
                         self._players.append(x)
@@ -1420,7 +1435,7 @@ class PyRadioSelectPlayer(object):
                     self.refresh_selection()
 
                 elif char in (curses.ascii.EOT, 4):
-                    # ^D, move player Down
+                    ''' ^D, move player Down '''
                     if self.selection == len(self._players) - 1:
                         x = self._players.pop(self.selection)
                         self._players.insert(0, x)
@@ -1448,13 +1463,13 @@ class PyRadioSelectPlayer(object):
             else:
                 ret = self._extra.keypress(char)
                 if ret == 2:
-                    # error, number of max lines reached
+                    ''' error, number of max lines reached '''
                     return -2
                 elif ret == 3:
-                    # error, cannot edit or delete first item
+                    ''' error, cannot edit or delete first item '''
                     return -3
                 elif ret == 4:
-                    # edit parameter
+                    ''' edit parameter '''
                     self.editing = 2
                     self._parameter_editor = ExtraParametersEditor(
                         self._win,
@@ -1463,7 +1478,7 @@ class PyRadioSelectPlayer(object):
                     self.refresh_win()
                     return 3
                 elif ret == 5:
-                    # add parameter
+                    ''' add parameter '''
                     self._parameter_editor = ExtraParametersEditor(
                         self._win,
                         self._cnf)
@@ -1472,11 +1487,12 @@ class PyRadioSelectPlayer(object):
                     return 3
 
         else:
-            # return from parameter editor
-            # adding or editing a parameter
+            ''' return from parameter editor
+                adding or editing a parameter
+            '''
             ret = self._parameter_editor.keypress(char)
             if ret == 0:
-                # accept parameter or cancel
+                ''' accept parameter or cancel '''
                 if self._parameter_editor.edit_string:
                     if self.editing == 1:
                         ''' add parameter  '''
@@ -1495,7 +1511,7 @@ class PyRadioSelectPlayer(object):
                 self._parameter_editor = None
                 return 4
             elif ret == 2:
-                # show editor help
+                ''' show editor help '''
                 return ret
 
         return -1
@@ -1570,7 +1586,7 @@ class PyRadioSelectEncodings(object):
             self.maxY -= 1
         self.list_maxY = self.maxY - 5
         self.maxX = self._num_of_columns * (self.max_enc_len + 2) + 2
-        # Enable this to see geometry
+        ''' Enable this to see geometry '''
         #if logger.isEnabledFor(logging.DEBUG):
         #    logger.debug('maxY,maxX = {0},{1}'.format(self.maxY, self.maxX))
         #    logger.debug('Number of columns = {}'.format(self._num_of_columns))
@@ -1578,7 +1594,7 @@ class PyRadioSelectEncodings(object):
         #    logger.debug('Number of visible rows = {}'.format(self.list_maxY))
 
     def refresh_win(self, set_encoding=True):
-        """ set_encoding is False when resizing """
+        ''' set_encoding is False when resizing '''
         self._fix_geometry()
         self.init_window(set_encoding)
         self._win.bkgdset(' ', curses.color_pair(3))
@@ -1844,7 +1860,7 @@ class PyRadioSelectEncodings(object):
             char = self._win.getch()
             self._win.nodelay(False)
             if char == -1:
-                """ ESCAPE """
+                ''' ESCAPE '''
                 return 1, ''
 
         elif char in (curses.KEY_ENTER, ord('\n'),
@@ -1873,7 +1889,7 @@ class PyRadioSelectPlaylist(object):
     pageChange = 5
     jumpnr = ''
 
-    # offset to current item for padding calculation
+    ''' offset to current item for padding calculation '''
     pad_adjustment = 0
 
     def __init__(self,
@@ -1881,7 +1897,7 @@ class PyRadioSelectPlaylist(object):
                  config_path,
                  default_playlist,
                  include_registers=False):
-        """ Select a playlist from a list
+        ''' Select a playlist from a list
 
         include_registers changes its behavior
 
@@ -1893,12 +1909,12 @@ class PyRadioSelectPlaylist(object):
         permits playlist and register selection.
         default_playlist is removed from the list.
         Returns: state, playlist/register path
-        """
+        '''
         self._parent_maxY, self._parent_maxX = parent.getmaxyx()
         try:
             self._parent_Y, _ = parent.getbegyx()
         except:
-            # revert to old behavior
+            ''' revert to old behavior '''
             self._parent_Y = 1
         self._config_path = config_path
         self.playlist = default_playlist
@@ -1988,7 +2004,7 @@ class PyRadioSelectPlaylist(object):
         return col
 
     def _format_line(self, i, pad):
-        """ PyRadioSelectPlaylist format line """
+        ''' PyRadioSelectPlaylist format line '''
         line = '{0}. {1}'.format(
             str(i + self.startPos + 1).rjust(pad),
             self._items[i + self.startPos]
@@ -2017,13 +2033,13 @@ class PyRadioSelectPlaylist(object):
             else:
                 self._items[i] = an_item.replace(self._config_path + sep, '').replace('.csv', '')
         if self._include_registers:
-            """ Remove playlist in editor """
+            ''' Remove playlist in editor '''
             try:
                 self._items.remove(self._playlist_in_editor)
             except ValueError:
                 pass
         else:
-            """ get already loaded playlist id """
+            ''' get already loaded playlist id '''
             for i, a_playlist in enumerate(self._items):
                 if a_playlist ==self._selected_playlist:
                     self._selected_playlist_id = i
@@ -2142,14 +2158,14 @@ class PyRadioSelectPlaylist(object):
             self.startPos = self._selected_playlist_id - int((self.maxY - 2) / 2)
 
     def keypress(self, char):
-        """ Return restlt from playlist selection window
+        ''' Return restlt from playlist selection window
 
         Results are:
         -1, ''              - Continue in window
          0, station title   - selected station title (for config window)
          0, station path    - selected station path (for paste window)
          1, ''              - Cancel
-        """
+        '''
         if self._select_playlist_error == -1 or \
                 self._select_playlist_error == 0:
             self._error_win = None
@@ -2170,7 +2186,7 @@ class PyRadioSelectPlaylist(object):
             char = self._win.getch()
             self._win.nodelay(False)
             if char == -1:
-                """ ESCAPE """
+                ''' ESCAPE '''
                 self._select_playlist_error = -2
                 return 1, ''
 
@@ -2286,7 +2302,9 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
             logger.info('displaying stations from: "{}"'.format(default_playlist))
         PyRadioSelectPlaylist.__init__(self, parent, config_path, default_station)
         self._title = ' Station Selection '
-        # adding 2 to padding calculation (i.e. no selection and random selection
+        ''' adding 2 to padding calculation
+            (i.e. no selection and random selection
+        '''
         self.pad_adjustment = 2
 
     def update_playlist_and_station(self, a_playlist, a_station):
@@ -2368,7 +2386,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         return col
 
     def _format_line(self, i, pad):
-        """ PyRadioSelectStation format line """
+        ''' PyRadioSelectStation format line '''
         fixed_pad = pad
         if i + self.startPos < 2:
             line = '{0}  {1}'.format(' '.rjust(fixed_pad),

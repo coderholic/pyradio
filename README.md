@@ -49,8 +49,8 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 $ pyradio -h
 
 usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-               [-t THEME] [-scd] [-ocd] [-epp EXTRA_PLAYER_PARAMETERS]
-               [--unlock] [-d]
+               [-t THEME] [-scd] [-ocd] [-ep EXTRA_PLAYER_PARAMETERS]
+               [-ap ACTIVE_PLAYER_PARAM_ID] [-lp] [--unlock] [-d]
 
 Curses based Internet radio player
 
@@ -76,16 +76,23 @@ optional arguments:
   -ocd, --open-config-dir
                         Open config directory [CONFIG DIR] with default file
                         manager.
-  -epp EXTRA_PLAYER_PARAMETERS, --extra_player_parameters EXTRA_PLAYER_PARAMETERS
+  -ep EXTRA_PLAYER_PARAMETERS, --extra-player_parameters EXTRA_PLAYER_PARAMETERS
                         Provide extra player parameters as a string. The
                         string's format is [player_name:parameters].
-                        player_name can be "mpv", "mplayer" or "vlc".
+                        player_name can be 'mpv', 'mplayer' or 'vlc'.
                         Alternative format to pass a profile:
                         [player_name:profile:profile_name]. In this case, the
                         profile_name must be a valid profile defined in the
                         player's config file (not for VLC).
+  -ap ACTIVE_PLAYER_PARAM_ID, --active-player-param-id ACTIVE_PLAYER_PARAM_ID
+                        Specify the extra player parameter set to be used with
+                        the default player. ACTIVE_PLAYER_PARAM_ID is 1-11
+                        (refer to the output of the -lp option)
+  -lp, --list-player-parameters
+                        List extra players parameters.
   --unlock              Remove sessions' lock file.
   -d, --debug           Start pyradio in debug mode.
+
 ```
 
 The following options can also be set in **PyRadio**'s [configuration file](#config-file):
@@ -405,8 +412,75 @@ pyradio -u vlc,mplayer,mpv
 ```
 will instruct **PyRadio** to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.
 
-**Note:** The default player to use can also be set in **PyRadio**'s [configuration file](#config-file), parameter **player** (default value is **mpv, mplayer, vlc**).
+The default player to use can also be set in **PyRadio**'s [configuration file](#config-file), parameter **player** (default value is **mpv, mplayer, vlc**), using the "*Configuration Window*", through which **extra player parameters** can be set.
 
+### Extra Player Parameters
+
+All three supported players can accept a significant number of "*command line parameters*", which are well documented and accessible through man pages (on linux and macOs) or the documentation (on Windows).
+
+**PyRadio** uses some of these parameters in order to execute and communicate with the players. In particular, the following parameters are in use **by default**:
+
+| Player  | Parameters                                                                                    |
+|---------|-----------------------------------------------------------------------------------------------|
+| mpv     | --no-video, --quiet, --input-ipc-server, --input-unix-socket, --playlist, --profile           |
+| mplayer | -vo, -quiet, -playlist, -profile                                                              |
+| vlc     | -Irc, -vv<br>**Windows only:** --rc-host, --file-logging, --logmode, --log-verbose, --logfile |
+
+**Note:** The user should not use or change the above player parameters. Failing to do so, may render the player ***unusable***.
+
+**PyRadio** provides a way for the user to add extra parameters to the player, either by a command line parameter, or the "*Configuration Window*" (under "*Player:*").
+
+This way, 10 sets of parameters can be inserted and made available for selection.
+
+#### Using the command line
+
+When the command line parameter (**-epp** or **--extra_player_parameters**) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player.
+
+The format of the parameter is the following: **[player_name:parameters]**
+
+Where:
+
+- **player_name**: the name of the player
+- **parameters**: the actual player parameters
+
+Example:
+
+```
+pyradio -epp "vlc:--force-dolby-surround 2"
+```
+
+**Note:** When a parameter is passed to "*mpv*" or "*mplayer*", **PyRadio**" will use the default player profile (called "**pyradio**").
+
+For "*mpv*" and "*mplayer*" a profile can be specified ("*vlc*" does not support profiles). In this case the format of the **parameters** part of the command line is: **profile:profile_name**.
+
+Where:
+
+- **profile**: the word "*profile*"
+- **profile_name**: the name of a profile. The profile must be already defined in the player's configuration file.
+
+Example:
+
+```
+pyradio -epp "mpv:profile:second_sound_card"
+```
+
+#### Using the Configuration Window
+
+When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with **PyRadio** and edit its extra parameters.
+
+[pyradio-player-selection.jpg](https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg)
+
+Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).
+
+The user can add ("**a**") a new parameter, edit ("**e**") an existing set and delete ("**x**" or "**DEL**") one.
+
+### Changing parameters set
+
+While **PyRadio** is running, the user can change the parameters set used by the player using the "*Player Extra Parameters*" window, by pressing "**Z**".
+
+If playback is on, changing the player's parameters will make the player restart the playback so that the new parameters get used.
+
+**Note:** Any changes made this way will not be saved but will be in effect until **PyRadio** terminates.
 
 ## Player connection protocol
 
@@ -420,9 +494,9 @@ If such a station fails to play, one might as well try to use **http** protocol 
 
 When the selected player is initialized (at program startup), it reads this configuration parameter and acts accordingly.
 
-If the parameter has to be changed mid-session (without restarting the program), one would press "*z*" to display the "*Connection Type*" window, where the parameter's value can be set as desired.
+If the parameter has to be changed mid-session (without restarting the program), one would press "**z**" to display the "*Connection Type*" window, where the parameter's value can be set as desired.
 
-**Note:** Changes made using the "*Connection Type*" window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds.
+**Note:** Changes made using the "*Connection Type*" window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds. Furthermore, changing the configuration stored value, will not affect the "working" value of the parameter.
 
 ## Player default volume level
 
@@ -593,7 +667,7 @@ If so, a notification message will be displayed, informing the user about it.
 
 Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; **PyRadio** will search and remove any previously installed files when the "**-u**" (uninstall) parameter is used.
 
-This procedure will remove any **Pyradio** files installed in your system, but will leave instact **PyRadio** configuration files. 
+This procedure will remove any **Pyradio** files installed in your system, but will leave instact **PyRadio** configuration files.
 
 Windows users notice: This procedure **will not** uninstall python, mplayer, or git from your system.
 
@@ -666,7 +740,7 @@ Finally, include the file produced in your report.
 
 - [ ] Any user request I find interesting :)
 - [x] Basic mouse support ([#119](https://github.com/coderholic/pyradio/issues/119))
-- [ ] New player selection configuration window ([#118](https://github.com/coderholic/pyradio/issues/118))
+- [x] New player selection configuration window ([#118](https://github.com/coderholic/pyradio/issues/118))
 - [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
 - [ ] Notify the user that the package's stations.csv has changed
 - [ ] Update / uninstall using command line parameters (-U / -R)

@@ -30,18 +30,18 @@ else:
 
 
 class PyRadioStations(object):
-    """ PyRadio stations file management """
+    ''' PyRadio stations file management '''
     #station_path = ''
     #station_file_name = ''
     #station_title = ''
     foreign_title = ''
     previous_station_path = ''
 
-    """ this is always on users config dir """
+    ''' this is always on users config dir '''
     stations_dir = ''
     registers_dir = ''
 
-    """ True if playlist not in config dir """
+    ''' True if playlist not in config dir '''
     foreign_file = False
 
     stations = []
@@ -51,11 +51,11 @@ class PyRadioStations(object):
     selected_playlist = -1
     number_of_stations = -1
 
-    """ playlist_version:
+    ''' playlist_version:
             2: 4 columns (name,URL,encoding,online browser)
             1: 3 columns (name,URL,encoding)
             0: 2 columns (name,URL)
-    """
+    '''
     PLAYLIST_HAS_NAME_URL = 0
     PLAYLIST_HAS_NAME_URL_ENCODING = 1
     PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER = 2
@@ -77,7 +77,7 @@ class PyRadioStations(object):
 
     jump_tag = -1
 
-    # station directory service object
+    ''' station directory service object '''
     _online_browser = None
 
     _register_to_open = None
@@ -95,7 +95,7 @@ class PyRadioStations(object):
         else:
             self.stations_dir = path.join(getenv('HOME', '~'), '.config', 'pyradio')
             self.registers_dir = path.join(self.stations_dir, '.registers')
-        """ Make sure config dirs exists """
+        ''' Make sure config dirs exists '''
         for a_dir in (self.stations_dir, self.registers_dir):
             if not path.exists(a_dir):
                 try:
@@ -108,8 +108,8 @@ class PyRadioStations(object):
         self._ps = PyRadioPlaylistStack()
 
         if not self.locked:
-            """ If a station.csv file exitst, which is wrong,
-                we rename it to stations.csv """
+            ''' If a station.csv file exitst, which is wrong,
+                we rename it to stations.csv '''
             if path.exists(path.join(self.stations_dir, 'station.csv')):
                     copyfile(path.join(self.stations_dir, 'station.csv'),
                             path.join(self.stations_dir, 'stations.csv'))
@@ -240,9 +240,9 @@ class PyRadioStations(object):
         return self.stations[id_in_list][1].strip()
 
     def _move_old_csv(self, usr):
-        """ if a ~/.pyradio files exists, relocate it in user
+        ''' if a ~/.pyradio files exists, relocate it in user
             config folder and rename it to stations.csv, or if
-            that exists, to pyradio.csv """
+            that exists, to pyradio.csv '''
 
         src = path.join(getenv('HOME', '~'), '.pyradio')
         dst = path.join(usr, 'pyradio.csv')
@@ -267,12 +267,12 @@ class PyRadioStations(object):
             copyfile(root, path.join(usr, 'stations.csv'))
 
     def copy_playlist_to_config_dir(self):
-        """ Copy a foreign playlist in config dir
+        ''' Copy a foreign playlist in config dir
             Returns:
                 -1: error copying file
                  0: success
                  1: playlist renamed
-        """
+        '''
         ret = 0
         st = path.join(self.stations_dir, self.station_file_name)
         if path.exists(st):
@@ -294,7 +294,7 @@ class PyRadioStations(object):
         return ret
 
     def is_same_playlist(self, a_playlist):
-        """ Checks if a playlist is already loaded """
+        ''' Checks if a playlist is already loaded '''
         if a_playlist == self.station_path:
             return True
         else:
@@ -304,7 +304,7 @@ class PyRadioStations(object):
         return self.is_same_playlist(self.previous_station_path)
 
     def _is_playlist_in_config_dir(self):
-        """ Check if a csv file is in the config dir """
+        ''' Check if a csv file is in the config dir '''
         if path.dirname(self.station_path) == self.stations_dir:
             self.foreign_file = False
             self.foreign_title = ''
@@ -322,7 +322,7 @@ class PyRadioStations(object):
         return p, -2
 
     def _get_playlist_abspath_from_data(self, stationFile=''):
-        """ Get playlist absolute path
+        ''' Get playlist absolute path
             Returns: playlist path, result
               Result is:
                 0  -  playlist found
@@ -330,16 +330,16 @@ class PyRadioStations(object):
                -3  -  negative number specified
                -4  -  number not found
                -8  -  file type not supported
-               """
+               '''
         ret = -1
         orig_input = stationFile
 
         if stationFile:
             if stationFile.endswith('.csv'):
-                """ relative or absolute path """
+                ''' relative or absolute path '''
                 stationFile = path.abspath(stationFile)
             else:
-                """ try to find it in config dir """
+                ''' try to find it in config dir '''
                 if path.exists(stationFile):
                     return '', -8
                 stationFile += '.csv'
@@ -354,14 +354,14 @@ class PyRadioStations(object):
                     return p, 0
 
         if ret == -1:
-            """ Check if playlist number was specified """
+            ''' Check if playlist number was specified '''
             if orig_input.replace('-', '').isdigit():
                 sel = int(orig_input) - 1
                 if sel == -1:
                     stationFile = path.join(self.stations_dir, 'stations.csv')
                     return stationFile, 0
                 elif sel < 0:
-                    """ negative playlist number """
+                    ''' negative playlist number '''
                     return '', -3
                 else:
                     n, f = self.read_playlists()
@@ -369,13 +369,13 @@ class PyRadioStations(object):
                         stationFile = self.playlists[sel][-1]
                         return stationFile, 0
                     else:
-                        """ playlist number sel does not exit """
+                        ''' playlist number sel does not exit '''
                         return '', -4
             else:
                 return '', -2
 
     def read_playlist_file(self, stationFile='', is_register=False):
-        """ Read a csv file
+        ''' Read a csv file
             Returns: number
                 x  -  number of stations or
                -1  -  playlist is malformed
@@ -384,7 +384,7 @@ class PyRadioStations(object):
                -4  -  number not found (from _get_playlist_abspath_from_data)
                -7  -  playlist recovery failed
                -8  -  file not supported (from _get_playlist_abspath_from_data)
-               """
+               '''
 
         ret = 0
         if self._register_to_open:
@@ -395,7 +395,7 @@ class PyRadioStations(object):
             self._is_register = False
         read_file = True
         if ret < 0:
-            # returns -2, -3, -4 or -8
+            ''' returns -2, -3, -4 or -8 '''
             if self._register_to_open:
                 self._reading_stations = []
                 prev_file = self.station_path
@@ -412,8 +412,9 @@ class PyRadioStations(object):
             else:
                 self.playlist_recovery_result = self._recover_backed_up_playlist(stationFile)
                 if self.playlist_recovery_result > 0:
-                    # playlist recovery failed
-                    # reason in cnf.playlist_recovery_result
+                    ''' playlist recovery failed
+                        reason in cnf.playlist_recovery_result
+                    '''
                     return -7
             prev_file = self.station_path
             prev_format = self._playlist_version
@@ -456,14 +457,14 @@ class PyRadioStations(object):
         return self.number_of_stations
 
     def _recover_backed_up_playlist(self, stationFile):
-        """ If a playlist backup file exists (.txt file), try to
+        ''' If a playlist backup file exists (.txt file), try to
             recover it (rename it to .csv)
 
             Return:
                 -1: playlist recovered
                  0: no back up file found
                  1: remove (empty) csv file failed
-                 2: rename txt to csv failed """
+                 2: rename txt to csv failed '''
         backup_stationFile = stationFile.replace('.csv', '.txt')
         if path.isfile(backup_stationFile):
             try:
@@ -478,31 +479,31 @@ class PyRadioStations(object):
                 try:
                     remove(stationFile)
                 except:
-                    # remove failed
+                    ''' remove failed '''
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Playlist recovery failed: Cannot remove CSV file')
                     return 1
             try:
                 rename(backup_stationFile, stationFile)
             except:
-                # rename failed
+                ''' rename failed '''
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Playlist recovery failed: Cannot rename TXT file to CSV')
                 return 2
-            # playlist recovered
+            ''' playlist recovered '''
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Playlist recovery successful!!!')
             return -1
-        # no playlist back up found
+        ''' no playlist back up found '''
         return 0
 
     def _playlist_format_changed(self):
-        """ Check if we have new or old format
+        ''' Check if we have new or old format
             and report if format has changed
 
             Format type can change by editing encoding,
             deleting a non-utf-8 station etc.
-        """
+        '''
         playlist_version = self.PLAYLIST_HAS_NAME_URL
         for n in self.stations:
             if n[3] != '':
@@ -523,14 +524,14 @@ class PyRadioStations(object):
         return ret
 
     def save_playlist_file(self, stationFile=''):
-        """ Save a playlist
+        ''' Save a playlist
         Create a txt file and write stations in it.
         Then rename it to final target
 
         return    0: All ok
                  -1: Error writing file
                  -2: Error renaming file
-        """
+        '''
         if self._playlist_format_changed():
             self.dirty_playlist = True
 
@@ -560,8 +561,8 @@ class PyRadioStations(object):
         #tmp_stations.reverse()
         try:
             #with open(st_new_file, 'w') as cfgfile:
-            """ Convert self._open_string to
-                open(st_new_file, 'w') """
+            ''' Convert self._open_string to
+                open(st_new_file, 'w') '''
             with eval(self._open_string[self._open_string_id].replace("'r'", "'w'").replace('stationFile','st_new_file')) as cfgfile:
                 writter = csv.writer(cfgfile)
                 for a_station in tmp_stations:
@@ -580,9 +581,9 @@ class PyRadioStations(object):
         return 0
 
     def _format_playlist_row(self, a_row):
-        """ Return a 2-column if in old format,
+        ''' Return a 2-column if in old format,
             a 3-column row if has encoding, or
-            a 4 column row if has online browser flag too """
+            a 4 column row if has online browser flag too '''
         if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER:
             return a_row
         elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
@@ -638,8 +639,8 @@ class PyRadioStations(object):
         return item if rem_item is None else rem_item
 
     def clean_playlist_history(self):
-        """Remove all register items from
-           the end of history"""
+        '''Remove all register items from
+           the end of history'''
         item = None
         while self._ps._p[-1][6]:
             item = self._ps.pop()
@@ -649,8 +650,8 @@ class PyRadioStations(object):
         return self._ps.copy()
 
     def replace_playlist_history_items(self, a_search_path, new_item):
-        """ Find a_search_path in history and replace
-            the item found with new_item """
+        ''' Find a_search_path in history and replace
+            the item found with new_item '''
         return self._ps.replace(a_search_path, new_item)
 
     def _bytes_to_human(self, B):
@@ -673,7 +674,7 @@ class PyRadioStations(object):
             return '{0:.2f} TB'.format(B/TB)
 
     def append_station(self, params, stationFile=''):
-        """ Append a station to csv file
+        ''' Append a station to csv file
 
         return    0: All ok
                  -2  -  playlist not found
@@ -681,7 +682,7 @@ class PyRadioStations(object):
                  -4  -  number not found
                  -5: Error writing file
                  -6: Error renaming file
-        """
+        '''
         if stationFile:
             st_file = stationFile
         else:
@@ -697,8 +698,8 @@ class PyRadioStations(object):
                 logger.debug('Appending station to playlist: "{}"'.format(stationFile))
             try:
                 #with open(st_file, 'a') as cfgfile:
-                """ Convert self._open_string to
-                    with open(st_file, 'a') """
+                ''' Convert self._open_string to
+                    with open(st_file, 'a') '''
                 with eval(self._open_string[self._open_string_id].replace("'r'", "'a'").replace('stationFile','st_file')) as cfgfile:
                     writter = csv.writer(cfgfile)
                     writter.writerow(params)
@@ -715,7 +716,7 @@ class PyRadioStations(object):
             return ret
 
     def paste_station_to_named_playlist(self, a_station, a_playlist):
-        """ Appends a station to a playlist or register
+        ''' Appends a station to a playlist or register
         which is not opened in PyRadio.
 
         return    0: All ok
@@ -724,7 +725,7 @@ class PyRadioStations(object):
                  -4  -  number not found
                  -5: Error writing file
                  -6: Error renaming file
-        """
+        '''
         if path.exists(a_playlist):
             m_station = a_station[:]
             ch = ('  ', ',')
@@ -757,8 +758,8 @@ class PyRadioStations(object):
         return ret, self.number_of_stations
 
     def insert_station(self, station, target):
-        """ Insert a station in the list at index target
-        It is inserted ABOVE old target (old target becomes old target + 1)"""
+        ''' Insert a station in the list at index target
+        It is inserted ABOVE old target (old target becomes old target + 1)'''
         #logger.error('DE target= {0}, number_of_stations = {1}'.format(target, self.number_of_stations))
         if target < 0 or \
                 target > self.number_of_stations or \
@@ -780,8 +781,8 @@ class PyRadioStations(object):
         return True, self.number_of_stations
 
     def move_station(self, source, target):
-        """ Moves a station in the list from index source to index target
-        It is moved ABOVE old target (old target becomes old target + 1)"""
+        ''' Moves a station in the list from index source to index target
+        It is moved ABOVE old target (old target becomes old target + 1)'''
         #logger.error('DE source = {0}, target = {1}'.format(source, target))
         #logger.error('DE number_of_stations = {}'.format(self.number_of_stations))
         if source == target or \
@@ -854,7 +855,7 @@ class PyRadioStations(object):
                 a_file_time = ctime(path.getmtime(a_file))
                 self.playlists.append([a_file_name, a_file_time, a_file_size, a_file])
         self.playlists.sort()
-        """ get already loaded playlist id """
+        ''' get already loaded playlist id '''
         for i, a_playlist in enumerate(self.playlists):
             if a_playlist[-1] == self.station_path:
                 self.selected_playlist = i
@@ -940,11 +941,11 @@ class PyRadioStations(object):
         return ret, ret_index, rev_ret_index
 
 class PyRadioConfig(PyRadioStations):
-    """ Pyradio Config Class """
+    ''' Pyradio Config Class '''
 
-    """ I will get this when a player is selected
+    ''' I will get this when a player is selected
         It will be used when command line parameters are evaluated
-    """
+    '''
     PLAYER_NAME = None
     command_line_params_not_ready = None
 
@@ -954,7 +955,7 @@ class PyRadioConfig(PyRadioStations):
     theme_has_error = False
     theme_not_supported_notification_shown = False
 
-    # True if lock file exists
+    ''' True if lock file exists '''
     locked = False
 
     opts = collections.OrderedDict()
@@ -979,26 +980,31 @@ class PyRadioConfig(PyRadioStations):
 
     original_mousemask = (0, 0)
 
-    """ parameters used by the program
+    ''' parameters used by the program
         may get modified by "Z" command
         but will not be saved to file
-    """
+    '''
     params = {
         'mpv': [1, 'profile:pyradio'],
         'mplayer': [1, 'profile:pyradio'],
         'vlc': [1, 'Do not use any extra player parameters']
     }
-    """ parameters read from config file
+    ''' parameters read from config file
         can only be modified from config window
-    """
+    '''
     saved_params = deepcopy(params)
 
     params_changed = False
 
+    ''' number of user specified (-pp) extra
+        player parameter parameter id
+    '''
+    user_param_id = 0
+
     PROGRAM_UPDATE = None
 
     def __init__(self):
-        self.player_params = []
+        self.backup_player_params = [[]]
         self._profile_name = 'pyradio'
         self.player = ''
         self.requested_player = ''
@@ -1017,9 +1023,9 @@ class PyRadioConfig(PyRadioStations):
             self.dirty_config = True
         else:
             self.dirty_config = False
-        # True if player changed by config window
+        ''' True if player changed by config window '''
         self.player_changed = False
-        # [ old player, new player ]
+        ''' [ old player, new player ] '''
         self.player_values = []
 
         self._session_lock_file = ''
@@ -1063,10 +1069,10 @@ class PyRadioConfig(PyRadioStations):
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('VLC does not support profiles')
                     else:
-                        """ add to params """
+                        ''' add to params '''
                         logger.error('DE \n\n{0}\n{1}'.format(self.saved_params, self.params))
                         self.params[parts[0]].append(':'.join(parts[1:]))
-                        """ change first params item to point to this new item """
+                        ''' change first params item to point to this new item '''
                         self.params[parts[0]][0] = len(self.params[parts[0]]) - 1
                         logger.error('DE \n{0}\n{1}\n\n'.format(self.saved_params, self.params))
 
@@ -1077,14 +1083,14 @@ class PyRadioConfig(PyRadioStations):
 
                         if len(parts) > 2:
                             if parts[1] == 'profile':
-                                """ Custom profile for player """
+                                ''' Custom profile for player '''
                                 self.command_line_params_not_ready = val
                                 self.set_profile_from_command_line()
             else:
-                """ Since we don't know which player we use yet
+                ''' Since we don't know which player we use yet
                     we do not know if this profile has to be
                     applied. So set evaluate for later...
-                """
+                '''
                 print('Will check command line parameters later...({})'.format(val))
                 self.command_line_params_not_ready = val
 
@@ -1191,7 +1197,7 @@ class PyRadioConfig(PyRadioStations):
 
     @property
     def connection_timeout(self):
-        """ connection timeout as string """
+        ''' connection timeout as string '''
         return self.opts['connection_timeout'][1]
 
     @connection_timeout.setter
@@ -1201,11 +1207,11 @@ class PyRadioConfig(PyRadioStations):
 
     @property
     def connection_timeout_int(self):
-        """ connection timeout as integer
+        ''' connection timeout as integer
             if < 5 or > 60, set to 10
             On error set to 10
             Read only
-        """
+        '''
         try:
             ret = int(self.opts['connection_timeout'][1])
             if not 5 <= ret <= 60:
@@ -1292,7 +1298,7 @@ class PyRadioConfig(PyRadioStations):
         if path.exists('/run/user'):
             from os import geteuid
             self._session_lock_file = path.join('/run/user', str(geteuid()), 'pyradio.lock')
-            # remove old style session lock file (if it exists)
+            ''' remove old style session lock file (if it exists) '''
             if path.exists(path.join(self.stations_dir, '.lock')):
                 try:
                     remove(path.join(self.stations_dir, '.lock'))
@@ -1307,9 +1313,9 @@ class PyRadioConfig(PyRadioStations):
             if platform == 'win32':
                 win_lock = path.join(getenv('APPDATA'), 'pyradio', '_windows.lock')
                 if path.exists(win_lock):
-                    """ pyradio lock file was probably not deleted the last
+                    ''' pyradio lock file was probably not deleted the last
                         time Windows terminated. It should be safe to use it
-                    """
+                    '''
                     try:
                         remove(win_lock)
                     except:
@@ -1389,7 +1395,7 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['player'][1] = self.opts['player'][1].replace('mpv,', '')
             elif sp[0] == 'connection_timeout':
                 self.opts['connection_timeout'][1] = sp[1].strip()
-                # check integer number and set to 10 if error
+                ''' check integer number and set to 10 if error '''
                 x = self.connection_timeout_int
             elif sp[0] == 'default_encoding':
                 self.opts['default_encoding'][1] = sp[1].strip()
@@ -1440,10 +1446,10 @@ class PyRadioConfig(PyRadioStations):
                            'vlc_parameter'):
                 self._config_to_params(sp)
 
-        """ make sure extra params have only up to 10 items each
-            (well, actually 11 items, since the first one is the
+        ''' make sure extra params have only up to 10 items each
+        (well, actually 11 items, since the first one is the
             index to the default string in the list)
-        """
+        '''
         if self.params:
             for n in self.params.keys():
                 self.params[n] = self.params[n][:12]
@@ -1451,7 +1457,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['dirty_config'][1] = False
         self.saved_params = deepcopy(self.params)
 
-        # check if default playlist exists
+        ''' check if default playlist exists '''
         if self.opts['default_playlist'][1] != 'stations':
             ch = path.join(self.stations_dir, self.opts['default_playlist'][1] + '.csv')
             if not path.exists(ch):
@@ -1460,6 +1466,31 @@ class PyRadioConfig(PyRadioStations):
                 self.opts['default_playlist'][1] = 'stations'
                 self.opts['default_station'][1] = 'False'
         return 0
+
+    def init_backup_player_params(self):
+        # logger.error('DE ====  init_backup_player_params ====')
+        if self.params:
+            self.backup_player_params = [self.params[self.PLAYER_NAME][:],
+                                         self.params[self.PLAYER_NAME][:]]
+            # logger.error('DE backup_player_params = {}'.format(self.backup_player_params))
+
+    def set_backup_params_from_session(self):
+        # logger.error('DE ==== set_backup_params_from_session  ====')
+        # logger.error('DE backup params before = {}'.format(self.backup_player_params))
+        self.backup_player_params[1] = self.params[self.PLAYER_NAME][:]
+        # logger.error('DE backup params  after = {}'.format(self.backup_player_params))
+
+    def get_player_params_from_backup(self, param_type=0):
+        # logger.error('DE ==== get_player_params_from_backup  ====')
+        if param_type in (0, 'config'):
+            the_param_type = 0
+        elif param_type in (1, 'session'):
+            the_param_type = 1
+        # logger.error('DE param_type = "{0}", {1}'.format(param_type, the_param_type))
+        # logger.error('DE params before = {}'.format(self.params))
+        self.params[self.PLAYER_NAME] = self.backup_player_params[the_param_type][:]
+        # logger.error('DE params  after = {}'.format(self.params))
+        # logger.error('DE backup_player_params = {}'.format(self.backup_player_params))
 
     def _config_to_params(self, a_param):
         player = a_param[0].split('_')[0]
@@ -1473,7 +1504,7 @@ class PyRadioConfig(PyRadioStations):
 
     def check_parameters(self):
         ''' Config parameters check '''
-        logger.error('DE check_params: params = {}'.format(self.params))
+        #logger.error('DE check_params: params = {}'.format(self.params))
 
         for a_key in self.saved_params.keys():
             if self.saved_params[a_key] != self.params[a_key]:
@@ -1482,14 +1513,15 @@ class PyRadioConfig(PyRadioStations):
         return False
 
     def save_config(self):
-        """ Save config file
+        ''' Save config file
 
             Creates config.restore (back up file)
             Returns:
                 -1: Error saving config
                  0: Config saved successfully
                  1: Config not saved (not modified)
-                 TODO: 2: Config not saved (session locked) """
+                 TODO: 2: Config not saved (session locked) '''
+        logger.error('DE buckup_params = {}'.format(self.backup_player_params))
         if self.locked:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (session locked)')
@@ -1499,10 +1531,12 @@ class PyRadioConfig(PyRadioStations):
             Do it this way (not using is_ditry) to capture
             parameter changes due to 'Z' also
         '''
-        logger.error('DE save_conifg: saved params = {}'.format(self.saved_params))
+        # logger.error('DE save_conifg: saved params = {}'.format(self.saved_params))
+        self.get_player_params_from_backup()
         if self.check_parameters():
                 self.saved_params = deepcopy(self.params)
-        logger.error('DE save_conifg: saved params = {}'.format(self.saved_params))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('saved params = {}'.format(self.saved_params))
 
         if not self.opts['dirty_config'][1]:
             if logger.isEnabledFor(logging.INFO):
@@ -1641,9 +1675,8 @@ auto_save_playlist = {11}
                     self.opts['confirm_playlist_reload'][1],
                     self.opts['auto_save_playlist'][1]))
 
-                """ write extra player parameters to file """
+                ''' write extra player parameters to file '''
                 first_param = True
-                logger.error('DE saved params = {}'.format(self.saved_params))
                 for a_set in self.saved_params.keys():
                     if len(self.saved_params[a_set]) > 2:
                         if first_param:
@@ -1686,6 +1719,9 @@ auto_save_playlist = {11}
         if logger.isEnabledFor(logging.INFO):
             logger.info('Config saved')
         self.dirty_config = False
+        self.params_changed = False
+        # Do not touch the active value
+        # self.init_backup_player_params()
         return 0
 
     def read_playlist_file(self, stationFile='', is_register=False):
@@ -1862,7 +1898,7 @@ class PyRadioPlaylistStack(object):
             raise ValueError('member "{}" does not exist'.format(member))
 
     def _find_history_by_id(self, a_search, it_id, start=0):
-        """ Find a history item
+        ''' Find a history item
 
             Parameters
             ==========
@@ -1875,7 +1911,7 @@ class PyRadioPlaylistStack(object):
             history item,
             index,
             reversed index (len - id - 1)
-        """
+        '''
         logger.error('DE looking for: ' + a_search + ' with id: ' + it_id)
         for i, n in enumerate(self._p):
             if (n[self._id[it_id]] == a_search) and (i >= start):
@@ -1910,8 +1946,8 @@ class PyRadioPlaylistStack(object):
             self.pop()
 
     def replace(self, a_search_path, new_item):
-        """ Find a_search_path in history and replace
-            the item found with new_item """
+        ''' Find a_search_path in history and replace
+            the item found with new_item '''
         if not isinstance(new_item, list) and \
                 not isinstance(new_item, tuple):
             return -2

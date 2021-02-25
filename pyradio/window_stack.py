@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class Window_Stack_Constants(object):
-    """ Modes of Operation """
+    ''' Modes of Operation '''
     NO_PLAYER_ERROR_MODE = -1
     NORMAL_MODE = 0
     PLAYLIST_MODE = 1
@@ -93,6 +93,7 @@ class Window_Stack_Constants(object):
     PLAYLIST_NOT_SAVED_ERROR_MODE = 312
     PROFILE_EDIT_DELETE_ERROR_MODE = 313
     MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE = 314
+    USER_PARAMETER_ERROR = 315
     THEME_MODE = 400
     HISTORY_EMPTY_NOTIFICATION = 500
     UPDATE_NOTIFICATION_MODE = 1000
@@ -187,6 +188,7 @@ class Window_Stack_Constants(object):
         MOUSE_RESTART_INFO_MODE: 'MOUSE_RESTART_INFO_MODE',
         IN_PLAYER_PARAMS_EDITOR: 'IN_PLAYER_PARAMS_EDITOR',
         IN_PLAYER_PARAMS_EDITOR_HELP_MODE: 'IN_PLAYER_PARAMS_EDITOR_HELP_MODE',
+        USER_PARAMETER_ERROR: 'USER_PARAMETER_ERROR',
     }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -243,6 +245,7 @@ class Window_Stack_Constants(object):
         MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE,
         MOUSE_RESTART_INFO_MODE,
         IN_PLAYER_PARAMS_EDITOR_HELP_MODE,
+        USER_PARAMETER_ERROR,
     )
 
     def __init__(self):
@@ -267,8 +270,9 @@ class Window_Stack(Window_Stack_Constants):
     @operation_mode.setter
     def operation_mode(self, a_mode):
         if a_mode in self.MAIN_MODES:
-            # also setting operation_mode in
-            # window_mode property setter
+            ''' also setting operation_mode in
+                window_mode property setter
+            '''
             self.window_mode = a_mode
         else:
             tmp = [a_mode, self._dq[-1][1]]
@@ -321,14 +325,14 @@ class Window_Stack(Window_Stack_Constants):
         return
 
     def str_to_mode(self, stringToFind):
-        """ return mode number when givven mode name """
+        ''' return mode number when givven mode name '''
         for item in self.MODE_NAMES.items():
             if item[1] == stringToFind:
                 return item[0]
         return -2
 
     def str_to_mode_tuple(self, stringToFind):
-        """ return mode tuple when givven mode name """
+        ''' return mode tuple when givven mode name '''
         for item in self.MODE_NAMES.items():
             if item[1] == stringToFind:
                 return item

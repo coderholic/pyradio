@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH PYRADIO 1 "January 2021"
+.TH PYRADIO 1 "February 2021"
 
 .SH NAME
 .PP
@@ -38,8 +38,15 @@ Use specified \fITHEME\fR.
 Print config directory (\fI[CONFIG DIR]\fR) location and exit.
 .IP \fB-ocd\fR,\fB--open-config-dir\fR
 Open config directory (\fI[CONFIG DIR]\fR) with default file manager.
-.IP \fB-epp\ \fIEXTRA_PLAYER_PARAMETERS\fR,\ \fB--extra_player_parameters\ \fIEXTRA_PLAYER_PARAMETERS\fR
-Provide extra player parameters as a string. For more information, refer to the \fIEXTRA PLAYER PARAMETERS\fR section.
+.IP \fB-ep\ \fIEXTRA_PLAYER_PARAMETERS\fR,\ \fB--extra_player_parameters\ \fIEXTRA_PLAYER_PARAMETERS\fR
+Provide extra player parameters as a string. For more information, refer to the \fBEXTRA PLAYER PARAMETERS\fR section.
+
+.IP \fB-ap\fR\ \fIACTIVE_PLAYER_PARAM_ID\fR,\ \fB--active-player-param-id\fR\ \fIACTIVE_PLAYER_PARAM_ID\fR
+Specify the extra player parameter set to be used with the default player. \fIACTIVE_PLAYER_PARAM_ID\fR is 1-11.
+
+.IP \fB-lp
+List extra players parameters.
+
 .IP \fB--unlock
 Remove sessions' lock file.
 .IP \fB-d\fR,\fB\ \--debug
@@ -465,6 +472,96 @@ will instruct \fBpyradio\fR to look for VLC, then MPlayer and finaly for MPV and
 .IP \fBNote\fR
 The default player to use can also be set in \fBpyradio\fR’s configuration file, parameter \fIplayer\fR (default value is \fImpv, mplayer, vlc\fR).
 
+.SH
+\fBEXTRA PLAYER PARAMETERS\fR
+
+All three supported players can accept a significant number of "\fIcommand line parameters\fR", which are well documented and accessible through man pages (on linux and macOs) or the documentation (on Windows).
+
+\fBpyradio\fR uses some of these parameters in order to execute and communicate with the players. In particular, the following parameters are in use \fBby default\fR:
+
+.RS 5
+.IP \fBPlayer\fR 10
+\fBParameters\fR
+.IP \fBmpv\fR 10
+--no-video, --quiet, --input-ipc-server, --input-unix-socket, --playlist, --profile
+.IP \fBmplayer\fR 10
+-vo, -quiet, -playlist, -profile
+.IP \fBvlc\fR 10
+-Irc, -vv. \fIOn Windows only:\fR --rc-host, --file-logging, --logmode, --log-verbose, --logfile
+.RE
+
+.IP \fBNote\fR
+The user should not use or change the above player parameters. Failing to do so, may render the player \fBunusable\fR.
+
+.P
+\fBpyradio\fR provides a way for the user to add extra parameters to the player, either by a command line parameter, or the "\fIConfiguration Window\fR" (under "\fIPlayer:\fR").
+
+This way, 10 sets of parameters can be inserted and made available for selection.
+
+\fBUSING THE COMMAND LINE\fR
+
+When the command line parameter (\fB-epp\fR or \fB-extra_player_parameters\fR) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player.
+
+The format of the parameter is the following: \fI[\fBplayer_name\fR:\fBparameters\fI]\fR.
+
+Where:
+
+.RS 5
+.IP \fBplayer_name\fR
+the name of the player (\fImpv\fR, \fImplayer\fR or \fIvlc\fR)
+.IP \fBparameters\fR
+the actual player parameters
+.RE
+
+.P
+Example:
+
+.HP
+
+\fIpyradio -epp "vlc:--force-dolby-surround 2"\fR
+
+
+.IP \fBNote\fR
+When a parameter is passed to \fImpv\fR or \fImplayer\fR, \fBpyradio\fR will use the default player profile (called \fBpyradio\fR).
+
+.P
+For \fImpv\fR and \fImplayer\fR a profile can be specified (\fIvlc\fR does not support profiles). In this case the format of the \fBparameters\fR part of the command line is: \fI[\fBprofile\fR:\fBprofile_name\fI]\fR.
+
+Where:
+.RS 5
+.IP \fBprofile
+the word "\fIprofile\fR"
+.IP \fBprofile_name
+the name of a profile. The profile must be already defined in the player's configuration file.
+.RE
+
+.P
+Example:
+
+.HP
+
+\fIpyradio -epp "mpv:profile:second_sound_card"
+
+.P
+\fBUSING THE CONFIGURATION WINDOW\fR
+
+When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with \fBpyradio\fR and edit its extra parameters.
+
+[pyradio-player-selection.jpg](https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg)
+
+Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).
+
+The user can add ("\fBa\fR") a new parameter, edit ("\fBe\fR") an existing set and delete ("\fBx\fR" or "\fBDEL\fR") one.
+
+\fBCHANGING PARAMETERS' SET\fR
+
+While \fBpyradio\fR is running, the user can change the parameters' set used by the player using the "\fIPlayer Extra Parameters\fR" window, by pressing "\fBZ\fR".
+
+If playback is on, changing the player's parameters will make the player restart the playback so that the new parameters is used.
+
+.IP \fBNote\fR
+Any changes made this way will not be saved but will be in effect until \fBpyradio\fR terminates.
+
 
 .SH PLAYER CONNECTION PROTOCOL
 
@@ -481,7 +578,7 @@ When the selected player is initialized (at program startup), it reads this conf
 If the parameter has to be changed mid-session (without restarting the program), one would press "\fIz\fR" to display the "\fIConnection Type\fR" window, where the parameter's value can be set as desired.
 
 .IP \fBNote\fR
-Changes made using the "\fIConnection Type\fR" window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds.
+Changes made using the "\fIConnection Type\fR" window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds. Furthermore, changing the configuration stored value, will not affect the "working" value of the parameter.
 
 .SH PLAYER DEFAULT VOLUME LEVEL
 .PP
@@ -698,7 +795,7 @@ If so, a notification message will be displayed, informing the user about it.
 .PP
 Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; \fBpyradio\fR will search and remove any previously installed files when the "\fB-u\fR" (uninstall) parameter is used.
 
-This procedure will remove any \fBpyradio\fR files installed in your system, but will leave instact \fBpyradio\fR configuration files. 
+This procedure will remove any \fBpyradio\fR files installed in your system, but will leave instact \fBpyradio\fR configuration files.
 
 Windows users notice: This procedure \fBwill not\fR uninstall python, mplayer, or git from your system.
 
