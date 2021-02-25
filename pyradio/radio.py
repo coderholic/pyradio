@@ -509,17 +509,16 @@ class PyRadio(object):
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
                     self._show_station_info_from_thread)
-            self._cnf.init_backup_player_params()
-
-            ''' activate user specified player parameter set '''
-            if self._cnf.user_param_id > 0:
-                if self.set_param_set_by_id(self._cnf.user_param_id):
-                    self._cnf.user_param_id = 0
-                else:
-                    self._cnf.user_param_id = -1
         except:
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
+
+        if self.ws.operation_mode != self.ws.NO_PLAYER_ERROR_MODE:
+            if self._cnf.command_line_params_not_ready is not None:
+                self._cnf.command_line_params = self._cnf.command_line_params_not_ready
+            else:
+                if self._cnf.backup_player_params is None:
+                    self._cnf.init_backup_player_params()
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen(init_from_setup=True)
@@ -4190,8 +4189,6 @@ class PyRadio(object):
                                 self.player.threadUpdateTitle()
                         else:
                             self.log.write(msg=msg[1], help_msg=True, suffix=self._status_suffix)
-                        # Do not touch the active value
-                        # self._cnf.init_backup_player_params()
                         self._old_config_encoding = self._cnf.opts['default_encoding'][1]
                         # Do not update the active force_http
                         # self.player.force_http = self._cnf.opts['force_http'][1]

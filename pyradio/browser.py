@@ -330,7 +330,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             r.raise_for_status()
             logger.error(r.text)
             self._raw_stations = self._extract_data(json.loads(r.text))
-            logger.error('DE {}'.format(self._raw_stations))
+            # logger.error('DE {}'.format(self._raw_stations))
         except requests.exceptions.RequestException as e:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error(e)

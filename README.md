@@ -78,12 +78,13 @@ optional arguments:
                         manager.
   -ep EXTRA_PLAYER_PARAMETERS, --extra-player_parameters EXTRA_PLAYER_PARAMETERS
                         Provide extra player parameters as a string. The
-                        string's format is [player_name:parameters].
-                        player_name can be 'mpv', 'mplayer' or 'vlc'.
-                        Alternative format to pass a profile:
-                        [player_name:profile:profile_name]. In this case, the
-                        profile_name must be a valid profile defined in the
-                        player's config file (not for VLC).
+                        parameter is saved in the configuration file and is
+                        activated for the current session. The string's format
+                        is [player_name:parameters]. player_name can be 'mpv',
+                        'mplayer' or 'vlc'. Alternative format to pass a
+                        profile: [player_name:profile:profile_name]. In this
+                        case, the profile_name must be a valid profile defined
+                        in the player's config file (not for VLC).
   -ap ACTIVE_PLAYER_PARAM_ID, --active-player-param-id ACTIVE_PLAYER_PARAM_ID
                         Specify the extra player parameter set to be used with
                         the default player. ACTIVE_PLAYER_PARAM_ID is 1-11

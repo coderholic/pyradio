@@ -81,7 +81,7 @@ def shell():
     parser.add_argument('-ocd', '--open-config-dir', action='store_true',
                         help='Open config directory [CONFIG DIR] with default file manager.')
     parser.add_argument('-ep', '--extra-player_parameters', default=None,
-                        help="Provide extra player parameters as a string. The string\'s format is [player_name:parameters]. player_name can be 'mpv', 'mplayer' or 'vlc'. Alternative format to pass a profile: [player_name:profile:profile_name]. In this case, the profile_name must be a valid profile defined in the player\'s config file (not for VLC).")
+                        help="Provide extra player parameters as a string. The parameter is saved in the configuration file and is activated for the current session. The string\'s format is [player_name:parameters]. player_name can be 'mpv', 'mplayer' or 'vlc'. Alternative format to pass a profile: [player_name:profile:profile_name]. In this case, the profile_name must be a valid profile defined in the player\'s config file (not for VLC).")
     parser.add_argument('-ap', '--active-player-param-id', default=0, help='Specify the extra player parameter set to be used with the default player. ACTIVE_PLAYER_PARAM_ID is 1-11 (refer to the output of the -lp option)')
     parser.add_argument('-lp', '--list-player-parameters', default=None,
                         action='store_true',
@@ -140,11 +140,21 @@ def shell():
                 print('')
             sys.exit()
 
-
         ''' extra player parameters '''
         if args.extra_player_parameters:
             if ':' in args.extra_player_parameters:
-                pyradio_config.command_line_params = args.extra_player_parameters
+                if pyradio_config.locked:
+                    print('Error: This session is locked!')
+                    print('       Please exist any other instances of the program')
+                    print('       that are currently running and try again.')
+                    sys.exit(1)
+                else:
+                    if args.extra_player_parameters.startswith('vlc:profile'):
+                        print('Error in parameter: "-ep".')
+                        print('  VLC does not supports profiles\n')
+                        sys.exit()
+                    else:
+                        pyradio_config.command_line_params = args.extra_player_parameters
             else:
                 print('Error in parameter: "-ep".')
                 print('  Parameter format: "player_name:parameters"')

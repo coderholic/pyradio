@@ -1004,7 +1004,7 @@ class PyRadioConfig(PyRadioStations):
     PROGRAM_UPDATE = None
 
     def __init__(self):
-        self.backup_player_params = [[]]
+        self.backup_player_params = None
         self._profile_name = 'pyradio'
         self.player = ''
         self.requested_player = ''
@@ -1062,36 +1062,46 @@ class PyRadioConfig(PyRadioStations):
     def command_line_params(self, val):
         self.command_line_params_not_ready = None
         if val:
+            if val.startswith('vlc:profile'):
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('VLC does not support profiles')
+                self.init_backup_player_params()
+                return
+
             if self.PLAYER_NAME:
                 parts = val.replace('\'', '').replace('"', '').split(':')
                 if len(parts) > 1 and parts[0] in SUPPORTED_PLAYERS:
-                    if self.PLAYER_NAME == 'vlc' and parts[1] == 'profile':
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('VLC does not support profiles')
+                    ''' add to params '''
+                    # logger.error('DE \n\n{0}\n{1}'.format(self.saved_params, self.params))
+                    to_add = ':'.join(parts[1:])
+                    if to_add in self.params[parts[0]]:
+                        added_id = self.params[parts[0]].index(to_add)
                     else:
-                        ''' add to params '''
-                        logger.error('DE \n\n{0}\n{1}'.format(self.saved_params, self.params))
-                        self.params[parts[0]].append(':'.join(parts[1:]))
-                        ''' change first params item to point to this new item '''
-                        self.params[parts[0]][0] = len(self.params[parts[0]]) - 1
-                        logger.error('DE \n{0}\n{1}\n\n'.format(self.saved_params, self.params))
+                        self.params[parts[0]].append(to_add)
+                        added_id = len(self.params[parts[0]]) - 1
+                    # logger.error('DE \n{0}\n{1}\n\n'.format(self.saved_params, self.params))
 
-                        self.dirty_config = True
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug(self.params)
-                        print(self.params)
+                    self.dirty_config = True
 
-                        if len(parts) > 2:
-                            if parts[1] == 'profile':
-                                ''' Custom profile for player '''
-                                self.command_line_params_not_ready = val
-                                self.set_profile_from_command_line()
+                    if len(parts) > 2:
+                        if parts[1] == 'profile':
+                            ''' Custom profile for player '''
+                            self.command_line_params_not_ready = val
+                            self.set_profile_from_command_line()
+
+                ''' change second backup params item to point to this new item
+                    if the parameter belongs to the player pyradio currently uses
+                '''
+                if parts[0] == self.PLAYER_NAME:
+                    self.init_backup_player_params()
+                    self.backup_player_params[1][0] = added_id
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Setting active parameters: "{}"'.format(self.backup_player_params[1]))
             else:
                 ''' Since we don't know which player we use yet
                     we do not know if this profile has to be
                     applied. So set evaluate for later...
                 '''
-                print('Will check command line parameters later...({})'.format(val))
                 self.command_line_params_not_ready = val
 
     @property
@@ -1521,7 +1531,6 @@ class PyRadioConfig(PyRadioStations):
                  0: Config saved successfully
                  1: Config not saved (not modified)
                  TODO: 2: Config not saved (session locked) '''
-        logger.error('DE buckup_params = {}'.format(self.backup_player_params))
         if self.locked:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (session locked)')
@@ -1720,8 +1729,6 @@ auto_save_playlist = {11}
             logger.info('Config saved')
         self.dirty_config = False
         self.params_changed = False
-        # Do not touch the active value
-        # self.init_backup_player_params()
         return 0
 
     def read_playlist_file(self, stationFile='', is_register=False):
