@@ -520,6 +520,13 @@ class PyRadio(object):
                 if self._cnf.backup_player_params is None:
                     self._cnf.init_backup_player_params()
 
+            ''' activate user specified player parameter set '''
+            if self._cnf.user_param_id > 0:
+                if self.set_param_set_by_id(self._cnf.user_param_id):
+                    self._cnf.user_param_id = 0
+                else:
+                    self._cnf.user_param_id = -1
+
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen(init_from_setup=True)
 
