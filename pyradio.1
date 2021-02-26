@@ -40,13 +40,10 @@ Print config directory (\fI[CONFIG DIR]\fR) location and exit.
 Open config directory (\fI[CONFIG DIR]\fR) with default file manager.
 .IP \fB-ep\ \fIEXTRA_PLAYER_PARAMETERS\fR,\ \fB--extra_player_parameters\ \fIEXTRA_PLAYER_PARAMETERS\fR
 Provide extra player parameters as a string. For more information, refer to the \fBEXTRA PLAYER PARAMETERS\fR section.
-
 .IP \fB-ap\fR\ \fIACTIVE_PLAYER_PARAM_ID\fR,\ \fB--active-player-param-id\fR\ \fIACTIVE_PLAYER_PARAM_ID\fR
 Specify the extra player parameter set to be used with the default player. \fIACTIVE_PLAYER_PARAM_ID\fR is 1-11.
-
 .IP \fB-lp
 List extra players parameters.
-
 .IP \fB--unlock
 Remove sessions' lock file.
 .IP \fB-d\fR,\fB\ \--debug
@@ -500,7 +497,7 @@ This way, 10 sets of parameters can be inserted and made available for selection
 
 \fBUSING THE COMMAND LINE\fR
 
-When the command line parameter (\fB-epp\fR or \fB-extra_player_parameters\fR) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player.
+When the command line parameter (\fB-epp\fR or \fB-extra_player_parameters\fR) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.
 
 The format of the parameter is the following: \fI[\fBplayer_name\fR:\fBparameters\fI]\fR.
 
@@ -542,6 +539,7 @@ Example:
 
 \fIpyradio -epp "mpv:profile:second_sound_card"
 
+
 .P
 \fBUSING THE CONFIGURATION WINDOW\fR
 
@@ -555,13 +553,15 @@ The user can add ("\fBa\fR") a new parameter, edit ("\fBe\fR") an existing set a
 
 \fBCHANGING PARAMETERS' SET\fR
 
+.P
+When all desired parameter sets are already defined, using the \fB-ap\fR (\fB--active-player-param-id\fR) command line parameter can activate the set that corresponds to the number specified. The number to use for any given set can be retrieved using the \fB-lp\fR (\fB--list-player-parameters\fR) command line parameter.
+
 While \fBpyradio\fR is running, the user can change the parameters' set used by the player using the "\fIPlayer Extra Parameters\fR" window, by pressing "\fBZ\fR".
 
 If playback is on, changing the player's parameters will make the player restart the playback so that the new parameters is used.
 
 .IP \fBNote\fR
 Any changes made this way will not be saved but will be in effect until \fBpyradio\fR terminates.
-
 
 .SH PLAYER CONNECTION PROTOCOL
 

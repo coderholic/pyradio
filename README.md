@@ -435,7 +435,7 @@ This way, 10 sets of parameters can be inserted and made available for selection
 
 #### Using the command line
 
-When the command line parameter (**-epp** or **--extra_player_parameters**) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player.
+When the command line parameter (**-epp** or **--extra_player_parameters**) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.
 
 The format of the parameter is the following: **[player_name:parameters]**
 
@@ -476,6 +476,8 @@ Each of the supported players can have up to 11 sets of extra parameters (the fi
 The user can add ("**a**") a new parameter, edit ("**e**") an existing set and delete ("**x**" or "**DEL**") one.
 
 ### Changing parameters set
+
+When all desired parameter sets are already defined, using the **-ap** (**--active-player-param-id**) command line parameter can activate the set that corresponds to the number specified. The number to use for any given set can be retrieved using the **-lp** (**--list-player-parameters**) command line parameter.
 
 While **PyRadio** is running, the user can change the parameters set used by the player using the "*Player Extra Parameters*" window, by pressing "**Z**".
 
@@ -740,11 +742,12 @@ Finally, include the file produced in your report.
 ## TODO
 
 - [ ] Any user request I find interesting :)
-- [x] Basic mouse support ([#119](https://github.com/coderholic/pyradio/issues/119))
-- [x] New player selection configuration window ([#118](https://github.com/coderholic/pyradio/issues/118))
-- [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
+- [x] Basic mouse support ([#119](https://github.com/coderholic/pyradio/issues/119)) - v. 0.8.8.3
+- [x] Players extra parameters ([#118](https://github.com/coderholic/pyradio/issues/118)) - v. 0.8.8.3
+- [x] New player selection configuration window ([#118](https://github.com/coderholic/pyradio/issues/118)) - v. 0.8.8.3
 - [ ] Notify the user that the package's stations.csv has changed
 - [ ] Update / uninstall using command line parameters (-U / -R)
+- [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
 
 ## Acknowledgment
 

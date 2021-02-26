@@ -339,6 +339,7 @@ class PyRadio(object):
                 self.ws.MOUSE_RESTART_INFO_MODE: self._print_mouse_restart_info,
                 self.ws.IN_PLAYER_PARAMS_EDITOR: self._redisplay_player_select_win_refresh_and_resize,
                 self.ws.USER_PARAMETER_ERROR: self._print_user_parameter_error,
+                self.ws.IN_PLAYER_PARAMS_EDITOR_HELP_MODE: self._show_params_ediror_help,
                 }
 
         ''' list of help functions '''
@@ -4263,6 +4264,9 @@ class PyRadio(object):
                         or parameters will be lost!!!
                         self._player_select_win = None
                     '''
+                elif ret == 2:
+                    ''' display line editor help '''
+                    self._show_params_ediror_help()
                 elif ret == 3:
                     ''' Got into paramater editor '''
                     self.ws.operation_mode = self.ws.IN_PLAYER_PARAMS_EDITOR

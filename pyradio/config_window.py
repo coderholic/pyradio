@@ -725,7 +725,9 @@ class ExtraParametersEditor(object):
                 2: Display line editor help
         '''
         ret = 1
-        if char in (curses.KEY_EXIT, 27, ord('q')) and \
+        if char == ord('?') and self._focus > 0:
+            return 2
+        elif char in (curses.KEY_EXIT, 27, ord('q')) and \
                 self._focus > 0:
             self.edit_string = ''
             ret = 0
@@ -805,7 +807,7 @@ class ExtraParametersEditor(object):
 
 class ExtraParameters(object):
     ''' display player's extra parameters
-        in a foreign curses window
+        in a foreign curses window ('Z')
     '''
 
     def __init__(self,
@@ -835,6 +837,9 @@ class ExtraParameters(object):
         self.max_lines = max_lines
 
         self.reset(saved=False)
+        ''' set cursor to active item '''
+        for a_key in self._selections.keys():
+            self._selections[a_key][0] = self._selections[a_key][2]
         self._get_width()
 
     def check_parameters(self):
@@ -942,7 +947,7 @@ class ExtraParameters(object):
                     self._selections[a_param_set][2] = int(a_param) - 1
                 else:
                     self._items_dict[a_param_set].append(a_param)
-        # logger.error('DE selections = {}'.format(self._selections))
+        logger.error('DE selections = {}'.format(self._selections))
 
     def _list_to_dict(self):
         ''' convert self._items_dict to self._working_params '''
@@ -1086,6 +1091,7 @@ class ExtraParameters(object):
                  3 - error, cannot edit or delete first item
                  4 - edit parameter
                  5 - add parameter
+                 6 - line editor help
         '''
         if char in (
             curses.KEY_ENTER, ord('\n'),
@@ -1382,6 +1388,7 @@ class PyRadioSelectPlayer(object):
                4 - Editor exited
         '''
         if self.editing == 0:
+            ''' focus on players '''
             if char in (9, ):
                 if self._players[self.selection][1]:
                     self._switch_column()
@@ -1461,6 +1468,7 @@ class PyRadioSelectPlayer(object):
                     self._extra.set_player(self.selected_player_name())
 
             else:
+                ''' focus on parameters '''
                 ret = self._extra.keypress(char)
                 if ret == 2:
                     ''' error, number of max lines reached '''

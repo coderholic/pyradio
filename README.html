@@ -21,13 +21,16 @@
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
 </head>
 <body>
-<header>
+<header id="title-block-header">
 </header>
 <h1 style="color: SaddleBrown"id="pyradio">PyRadio</h1>
 <p>Command line internet radio player.</p>
-<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic" class="uri">https://github.com/coderholic</a></p>
+<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
 <li><a href="#requirements">Requirements</a></li>
@@ -62,7 +65,7 @@ a:visited{color: SaddleBrown;}
 <li>MPV, MPlayer or VLC installed and in your path.</li>
 </ul>
 <h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (e.g. <em>Arch Linux</em> and derivatives can install <a target="_blank" href="https://aur.archlinux.org/packages/pyradio-git/">pyradio-git</a> from AUR).</p>
+<p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (e.g. <em>Arch Linux</em> and derivatives can install <a target="_blank" href="https://aur.archlinux.org/packages/pyradio-git/">pyradio-git</a> from AUR).</p>
 <p>In any other case, and since <strong>PyRadio</strong> is currently not available via pip, you will have to <a href="build.html">build it from source</a>.</p>
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre>$ pyradio -h
@@ -175,7 +178,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 </ol>
 <p>The functions available through the <em>secondary modes</em> are content dependent, so you can see what command is available by pressing “<strong>?</strong>” while within a secondary mode. Pressing any other key will exit the secondary mode.</p>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong>PyRadio</strong> will terminate.</p>
+<p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong>PyRadio</strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong>PyRadio</strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
 <p>The file can also be altered while <strong>PyRadio</strong> is running by pressing “<strong>c</strong>”, which will open the “<strong>Configuration window</strong>”. This window presents all <strong>PyRadio</strong> options and provide the way to change them and finally save them by pressing “<strong>s</strong>”.</p>
 <p>In any case, <strong>PyRadio</strong> will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).</p>
@@ -183,9 +186,9 @@ Esc/q/Left/h      -                                                Cancel / clos
 <h2 id="about-playlist-files">About Playlist files <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
 <p>Optionally, a third column can be inserted, stating the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
-<p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
+<p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2em;"><strong>Tip:</strong> If you already have a custom <em>stations.csv</em> file, but want to update it with <strong>PyRadio</strong>’s default one, you just rename it, run <strong>PyRadio</strong> (so that the default one get created) and then merge the two files.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong>~/.pyradio</strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong>~/.config/pyradio</strong>) and renamed to <strong>stations.csv</strong> or if this file exists, to <strong>pyradio.csv</strong>. In this case, this file will be the default one.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong>~/.pyradio</strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong>~/.config/pyradio</strong>) and renamed to <strong>stations.csv</strong> or if this file exists, to <strong>pyradio.csv</strong>. In this case, this file will be the default one.</p>
 <h3 id="specifying-a-playlist-to-load-command-line">Specifying a playlist to load (command line)</h3>
 <p><strong>PyRadio</strong> will normally load its default playlist file, as described above, upon its execution. A different file can be loaded when the <strong>-s</strong> command line option is used.</p>
 <p>The <strong>-s</strong> option will accept:</p>
@@ -289,7 +292,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>This would be useful in the case where most of your stations do not use <strong>utf-8</strong>. Instead of editing the playlist and add the encoding to each and every affected station, you just set it globally.</p>
 <h3 id="finding-the-right-encoding">Finding the right encoding</h3>
 <p>A valid encoding list can be found at:</p>
-<p><a target="_blank" href="https://docs.python.org/2.7/library/codecs.html#standard-encodings" class="uri">https://docs.python.org/2.7/library/codecs.html#standard-encodings</a></p>
+<p><a target="_blank" href="https://docs.python.org/2.7/library/codecs.html#standard-encodings">https://docs.python.org/2.7/library/codecs.html#standard-encodings</a></p>
 <p>replacing <strong>2.7</strong> with specific version: <strong>3.0</strong> up to current python version.</p>
 <h2 id="player-detection-selection">Player detection / selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.</p>
@@ -334,7 +337,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p><strong>PyRadio</strong> provides a way for the user to add extra parameters to the player, either by a command line parameter, or the “<em>Configuration Window</em>” (under “<em>Player:</em>”).</p>
 <p>This way, 10 sets of parameters can be inserted and made available for selection.</p>
 <h4 id="using-the-command-line">Using the command line</h4>
-<p>When the command line parameter (<strong>-epp</strong> or <strong>–extra_player_parameters</strong>) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player.</p>
+<p>When the command line parameter (<strong>-epp</strong> or <strong>–extra_player_parameters</strong>) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.</p>
 <p>The format of the parameter is the following: <strong>[player_name:parameters]</strong></p>
 <p>Where:</p>
 <ul>
@@ -343,7 +346,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 </ul>
 <p>Example:</p>
 <pre>pyradio -epp &quot;vlc:--force-dolby-surround 2&quot;</pre>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a parameter is passed to “<em>mpv</em>” or “<em>mplayer</em>”, <strong>PyRadio</strong>&quot; will use the default player profile (called “<strong>pyradio</strong>”).</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a parameter is passed to “<em>mpv</em>” or “<em>mplayer</em>”, <strong>PyRadio</strong>" will use the default player profile (called “<strong>pyradio</strong>”).</p>
 <p>For “<em>mpv</em>” and “<em>mplayer</em>” a profile can be specified (“<em>vlc</em>” does not support profiles). In this case the format of the <strong>parameters</strong> part of the command line is: <strong>profile:profile_name</strong>.</p>
 <p>Where:</p>
 <ul>
@@ -358,6 +361,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).</p>
 <p>The user can add (“<strong>a</strong>”) a new parameter, edit (“<strong>e</strong>”) an existing set and delete (“<strong>x</strong>” or “<strong>DEL</strong>”) one.</p>
 <h3 id="changing-parameters-set">Changing parameters set</h3>
+<p>When all desired parameter sets are already defined, using the <strong>-ap</strong> (<strong>–active-player-param-id</strong>) command line parameter can activate the set that corresponds to the number specified. The number to use for any given set can be retrieved using the <strong>-lp</strong> (<strong>–list-player-parameters</strong>) command line parameter.</p>
 <p>While <strong>PyRadio</strong> is running, the user can change the parameters set used by the player using the “<em>Player Extra Parameters</em>” window, by pressing “<strong>Z</strong>”.</p>
 <p>If playback is on, changing the player’s parameters will make the player restart the playback so that the new parameters get used.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Any changes made this way will not be saved but will be in effect until <strong>PyRadio</strong> terminates.</p>
@@ -376,7 +380,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>This is done by typing “<strong>v</strong>” right after setting a desired volume level.</p>
 <h3 id="mpv">MPV</h3>
 <p>MPV uses profiles to customize its behavior.</p>
-<p><strong>PyRadio</strong> defines a profile called “<strong>[pyradio]</strong>” in MPV’s configuration file (e.g. <em>~/.config/mpv/mpv.conf</em>). This profile will be used every time playback is started.</p>
+<p><strong>PyRadio</strong> defines a profile called “<strong>[pyradio]</strong>” in MPV’s configuration file (e.g. <em>~/.config/mpv/mpv.conf</em>). This profile will be used every time playback is started.</p>
 <p>Example:</p>
 <pre>volume=100
 
@@ -384,7 +388,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 volume=50</pre>
 <h3 id="mplayer">MPlayer</h3>
 <p>MPlayer uses profiles to customize its behavior as well.</p>
-<p><strong>PyRadio</strong> defines a profile called “<strong>[pyradio]</strong>” in MPV’s configuration file (e.g. <em>~/.mplayer/config</em>). This profile will be used every time playback is started.</p>
+<p><strong>PyRadio</strong> defines a profile called “<strong>[pyradio]</strong>” in MPV’s configuration file (e.g. <em>~/.mplayer/config</em>). This profile will be used every time playback is started.</p>
 <p>Example:</p>
 <pre>volume=100
 
@@ -405,7 +409,7 @@ volume=28</pre>
 <p>There are 36 named registers (name is <strong>a-z</strong>, <strong>0-9</strong>) and one unnamed register.</p>
 <ul>
 <li><strong>Named registers</strong> are actually files that contain stations and can be opened and edited as regular playlist files. There are some differences in handling them: they are accessible either individually or using a special window, they are automatically saved, and writing errors are ignored. The later means that registers should not be regarded as normal playlist files that can be safely saved and used forever; this is true as long as there’s no problem with writing to them; if a writing error occurs they may get overwritten or emptied. To permanently save a register, on would <strong>rename</strong> it to a normal playlist file.</p></li>
-<li>The <strong>unnamed register</strong> holds just one station (the one that has been copied or added to a register or deleted from a playlist), and it is the one used when pasting to a register or a playlist. One can see its contents by pressing &quot;**&quot;.</p></li>
+<li>The <strong>unnamed register</strong> holds just one station (the one that has been copied or added to a register or deleted from a playlist), and it is the one used when pasting to a register or a playlist. One can see its contents by pressing "**".</p></li>
 </ul>
 <p>To <strong>copy</strong> a station to a register one would press “<strong>y</strong>” and:</p>
 <ul>
@@ -424,7 +428,7 @@ volume=28</pre>
 <ul>
 <li>“<strong>p</strong>” while editing a playlist or register.</p></li>
 <li>“<strong>\p</strong>” while editing a playlist or register. This would open the “<em>Paste selection</em>” window.</p></li>
-<li>“<strong>\p</strong>” in the “<em>Playlist Selection</em> or the”<em>Registers</em>&quot; window.</p></li>
+<li>“<strong>\p</strong>” in the “<em>Playlist Selection</em> or the”<em>Registers</em>" window.</p></li>
 </ul>
 <h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> comes with 6 preconfigured (hard coded) themes:</p>
@@ -541,13 +545,21 @@ $ pyradio -d</pre>
 <p>Then try to reproduce the bug and exit <strong>pyradio</strong>.</p>
 <p>Finally, include the file produced in your report.</p>
 <h2 id="todo">TODO <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<ul>
-<li>[ ] Any user request I find interesting :)</li>
-<li>[x] Basic mouse support (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/119">#119</a>)</li>
-<li>[x] New player selection configuration window (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>)</li>
-<li>[ ] Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>)</li>
-<li>[ ] Notify the user that the package’s stations.csv has changed</li>
-<li>[ ] Update / uninstall using command line parameters (-U / -R)</li>
+<ul class="task-list">
+<li><input type="checkbox" disabled="" />
+Any user request I find interesting :)</li>
+<li><input type="checkbox" disabled="" checked="" />
+Basic mouse support (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/119">#119</a>) - v. 0.8.8.3</li>
+<li><input type="checkbox" disabled="" checked="" />
+Players extra parameters (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
+<li><input type="checkbox" disabled="" checked="" />
+New player selection configuration window (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
+<li><input type="checkbox" disabled="" />
+Notify the user that the package’s stations.csv has changed</li>
+<li><input type="checkbox" disabled="" />
+Update / uninstall using command line parameters (-U / -R)</li>
+<li><input type="checkbox" disabled="" />
+Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>)</li>
 </ul>
 <h2 id="acknowledgment">Acknowledgment <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> uses code from the following projects:</p>

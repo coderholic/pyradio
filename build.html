@@ -21,13 +21,16 @@
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
 </head>
 <body>
-<header>
+<header id="title-block-header">
 </header>
 <h1 style="color: SaddleBrown"id="pyradio-build-instructions">PyRadio Build Instructions</h1>
 <p><strong>PyRadio</strong>: Command line internet radio player.</p>
-<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic" class="uri">https://github.com/coderholic</a></p>
+<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
 <li><a href="#building-from-source">Building from source</a>
@@ -52,7 +55,7 @@ a:visited{color: SaddleBrown;}
 <li>A pre-built package is not available to you.</li>
 <li>You want to use a particular python version. For example, most pre-built packages nowadays are built using python 3.x. If for any reason you have to use python 2.x, this is the way to go.</li>
 </ul>
-<p>For the installation you will need <strong><em>git</em></strong> and <strong><em>setuptools</em></strong> (e.g. <em>python-setuptools</em>, <em>python3-setuptools</em> or <em>python2-setuptools</em>) to be already installed.</p>
+<p>For the installation you will need <strong><em>git</em></strong> and <strong><em>setuptools</em></strong> (e.g. <em>python-setuptools</em>, <em>python3-setuptools</em> or <em>python2-setuptools</em>) to be already installed.</p>
 <p>Finally, you will use the <strong><em>build_install_pyradio</em></strong> script, located int the <strong><em>devel</em></strong> directory.</p>
 <p>To see your options, execute:</p>
 <pre>devel/build_install_pyradio -h</pre>
