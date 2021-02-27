@@ -25,6 +25,8 @@ class Log(object):
 
     _player_stopped = 0
 
+    _show_status_updates = False
+
     def __init__(self):
         self.width = None
 
@@ -118,11 +120,12 @@ class Log(object):
                         except:
                             if logger.isEnabledFor(logging.ERROR):
                                 logger.error('Cannot update the Status Bar...')
-                    if logger.isEnabledFor(logging.DEBUG):
-                        try:
-                            logger.debug('Status: "{}"'.format(self.msg))
-                        except:
-                            pass
+                    if self._show_status_updates:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            try:
+                                logger.debug('Status: "{}"'.format(self.msg))
+                            except:
+                                pass
 
                 self._active_width = self.width
 
@@ -147,8 +150,9 @@ class Log(object):
                     first_print = self._do_i_print_last_char(first_print)
                     self.cursesScreen.refresh()
                     self._active_width -= len(d_msg)
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Suffix: {}'.format(self.suffix))
+                if self._show_status_updates:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Suffix: {}'.format(self.suffix))
 
                 ''' display counter '''
                 if self.counter:
@@ -166,8 +170,9 @@ class Log(object):
                         self.cursesScreen.refresh()
                         self._active_width -= len(d_msg)
                         self.display_help_message = False
-                if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Counter: {}'.format(self.counter))
+                if self._show_status_updates:
+                    if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Counter: {}'.format(self.counter))
 
                 if self.asked_to_stop:
                     self.asked_to_stop = False
@@ -184,8 +189,9 @@ class Log(object):
                             suffix_string)
                         self.cursesScreen.refresh()
                         self.display_help_message = True
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('Press ? for help: yes')
+                        if self._show_status_updates:
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('Press ? for help: yes')
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Press ? for help: no')

@@ -625,12 +625,12 @@ class PyRadioRenameFile(object):
         else:
             self._to_path = self._from_path
             self._display_from_file = self._from_file
-        logger.error('filename = {0}\nfrom path = {1}\nfrom file = {2}\nto path = {3}\ndisplay name = {4}'.format(
-            filename,
-            self._from_path,
-            self._from_file,
-            self._to_path,
-            self._display_from_file))
+        # logger.error('filename = {0}\nfrom path = {1}\nfrom file = {2}\nto path = {3}\ndisplay name = {4}'.format(
+        #     filename,
+        #     self._from_path,
+        #     self._from_file,
+        #     self._to_path,
+        #     self._display_from_file))
 
         self._parent_win = parent
         self._create = create
@@ -818,7 +818,7 @@ class PyRadioRenameFile(object):
             self.checked_checkbox = None
 
 
-        #logger.error('DE \n\nmaxY = {}, maxX = {}\n\n'.format(self.maxY, self.maxX))
+        # logger.error('DE \n\nmaxY = {}, maxX = {}\n\n'.format(self.maxY, self.maxX))
         if self.maxY < 22 + adjust_line_Y or self.maxX < 74:
             if self.maxY < 11 or self.maxX < 44:
                 txt = ' Window too small to display content '

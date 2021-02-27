@@ -443,7 +443,7 @@ class PyRadioStations(object):
                     return -1
 
         self.stations = list(self._reading_stations)
-        #logger.error('DE stations\n{}\n\n'.format(self.stations))
+        # logger.error('DE stations\n{}\n\n'.format(self.stations))
         self._reading_stations = []
         self._ps.add(is_register=self._open_register_list or is_register)
         self._set_playlist_elements(stationFile)
@@ -760,7 +760,7 @@ class PyRadioStations(object):
     def insert_station(self, station, target):
         ''' Insert a station in the list at index target
         It is inserted ABOVE old target (old target becomes old target + 1)'''
-        #logger.error('DE target= {0}, number_of_stations = {1}'.format(target, self.number_of_stations))
+        # logger.error('DE target= {0}, number_of_stations = {1}'.format(target, self.number_of_stations))
         if target < 0 or \
                 target > self.number_of_stations or \
                 self.number_of_stations == 0:
@@ -777,21 +777,21 @@ class PyRadioStations(object):
             self.stations = list(d)
         self.dirty_playlist = True
         self.number_of_stations = len(self.stations)
-        #logger.error('DE number_of_stations = {}'.format(self.number_of_stations))
+        # logger.error('DE number_of_stations = {}'.format(self.number_of_stations))
         return True, self.number_of_stations
 
     def move_station(self, source, target):
         ''' Moves a station in the list from index source to index target
         It is moved ABOVE old target (old target becomes old target + 1)'''
-        #logger.error('DE source = {0}, target = {1}'.format(source, target))
-        #logger.error('DE number_of_stations = {}'.format(self.number_of_stations))
+        # logger.error('DE source = {0}, target = {1}'.format(source, target))
+        # logger.error('DE number_of_stations = {}'.format(self.number_of_stations))
         if source == target or \
                 source < 0 or \
                 target < 0 or \
                 source >= self.number_of_stations or \
                 target >= self.number_of_stations or \
                 self.number_of_stations == 0:
-            #logger.error('\n\nreturning False\n\n')
+            # logger.error('\n\nreturning False\n\n')
             return False
         if source < target:
             step = 1
@@ -800,7 +800,7 @@ class PyRadioStations(object):
         d = collections.deque(self.stations)
         d.rotate(-source)
         source_item = d.popleft()
-        #logger.error('DE source_item = "{}"'.format(source_item))
+        # logger.error('DE source_item = "{}"'.format(source_item))
         d.rotate(source)
         d.rotate(-target)
         d.appendleft(source_item)
@@ -890,11 +890,11 @@ class PyRadioStations(object):
             self.dirty_playlist = False
 
     def save_station_position(self, startPos, selection, playing):
-        #logger.error('DE startPos = {0}, selection = {1}'.format(startPos, selection))
+        # logger.error('DE startPos = {0}, selection = {1}'.format(startPos, selection))
         self._ps.startPos = startPos
         self._ps.selection = selection
         self._ps.playing = playing
-        #logger.error('DE  self._ps._p\n\n{}\n\n'.format(self._ps._p))
+        # logger.error('DE  self._ps._p\n\n{}\n\n'.format(self._ps._p))
 
     def append_to_register(self, register, station):
         reg_file = path.join(self.registers_dir, 'register_' + register + '.csv')
@@ -1516,7 +1516,7 @@ class PyRadioConfig(PyRadioStations):
 
     def check_parameters(self):
         ''' Config parameters check '''
-        #logger.error('DE check_params: params = {}'.format(self.params))
+        # logger.error('DE check_params: params = {}'.format(self.params))
 
         for a_key in self.saved_params.keys():
             if self.saved_params[a_key] != self.params[a_key]:
@@ -1898,7 +1898,7 @@ class PyRadioPlaylistStack(object):
             startPos, selection, playing,
             is_register,
             browsing_station_service])
-        #logger.error('DE playlist history\n{}\n'.format(self._p))
+        # logger.error('DE playlist history\n{}\n'.format(self._p))
 
     def get_item_member(self, member, item_id=-1):
         if member in self._id.keys():

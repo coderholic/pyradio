@@ -1319,7 +1319,7 @@ class SimpleCursesLineEdit(object):
                     while cjklen(self._displayed_string) > self._max_chars_to_display:
                         self._displayed_string = self._displayed_string[:-1]
             else:
-                logger.error('simple')
+                # logger.error('simple')
                 self._go_left_simple()
 
     def _go_left_simple(self):
