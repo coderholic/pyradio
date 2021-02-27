@@ -1048,12 +1048,12 @@ class PyRadioConfig(PyRadioStations):
     @property
     def command_line_params(self):
         self._profile_name = '' if self.PLAYER_NAME == 'vlc' else 'pyradio'
-        the_id = self.params[self.PLAYER_NAME][0]
+        the_id = self.backup_player_params[1][0]
         if the_id == 1:
             return ''
-        the_string = self.params[self.PLAYER_NAME][the_id]
+        the_string = self.backup_player_params[1][the_id]
         if the_string.startswith('profile:'):
-            self.get_profile_name_from_saved_params()
+            self.get_profile_name_from_saved_params(the_string)
             return ''
         else:
             return the_string
@@ -1269,12 +1269,14 @@ class PyRadioConfig(PyRadioStations):
     def reset_profile_name(self):
         self._profile_name = 'pyradio'
 
-    def get_profile_name_from_saved_params(self):
+    def get_profile_name_from_saved_params(self, a_string=None):
         ''' populate command_line_params_not_ready because this
             is what self.set_profile_from_command_line() reads
         '''
-        # self.command_line_params_not_ready = self.PLAYER_NAME + ':' + self.saved_params[self.PLAYER_NAME][self.saved_params[self.PLAYER_NAME][0]]
-        self.command_line_params_not_ready = self.PLAYER_NAME + ':' + self.params[self.PLAYER_NAME][self.params[self.PLAYER_NAME][0]]
+        if a_string:
+            self.command_line_params_not_ready = self.PLAYER_NAME + ':' + a_string
+        else:
+            self.command_line_params_not_ready = self.PLAYER_NAME + ':' + self.params[self.PLAYER_NAME][self.params[self.PLAYER_NAME][0]]
         self.set_profile_from_command_line()
 
     def set_profile_from_command_line(self):
