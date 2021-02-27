@@ -2106,7 +2106,7 @@ class VlcPlayer(Player):
         if self.WIN:
             self._win_get_volume()
         else:
-            self._sendCommand('voldown 0\n')
+            self._sendCommand('volume\n')
         self.show_volume = True
 
     def _no_mute_on_stop_playback(self):

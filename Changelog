@@ -1,3 +1,7 @@
+2021-02-27 s-n-g
+    * Fixing double click behavior (while in playback
+      double clicking to a different station will start it.
+    * vcl will not start muted (volume = 0)
 2021-02-26 s-n-g
     * Basic mouse support implemented
     * Config option to enable mouse support added
