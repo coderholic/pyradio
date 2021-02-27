@@ -3706,10 +3706,10 @@ class PyRadio(object):
                             or a_button & curses.BUTTON1_TRIPLE_CLICKED:
                         if logger.isEnabledFor(logging.DEBUG):
                             if a_button & curses.BUTTON1_DOUBLE_CLICKED:
-                                logger.debug('Mouse button 1 double click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
+                                logger.debug('Mouse button 1 double click on line {0} with start pos {1}, selection {2} and playing = {3}'.format(my, self.startPos, self.selection, self.playing))
                             else:
-                                logger.debug('Mouse button 1 triple click on line {0} with start pos {1} and selection {2}'.format(my, self.startPos, self.selection))
-                        if self.player.isPlaying() and not do_update:
+                                logger.debug('Mouse button 1 triple click on line {0} with start pos {1}, selection {2} and playing = {3}'.format(my, self.startPos, self.selection, self.playing))
+                        if self.player.isPlaying() and self.selection == self.playing:
                             self.stopPlayer(show_message=True)
                         else:
                             self.playSelection()
