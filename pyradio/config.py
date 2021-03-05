@@ -85,6 +85,9 @@ class PyRadioStations(object):
 
     _registers_lock = threading.Lock()
 
+    ''' set to True if a stations.csv is found in user's folder '''
+    _user_csv_found = False
+
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -262,6 +265,7 @@ class PyRadioStations(object):
             E.g. not need sudo when you add new station, etc '''
 
         if path.exists(path.join(usr, 'stations.csv')):
+            self._user_csv_found = True
             return
         else:
             copyfile(root, path.join(usr, 'stations.csv'))

@@ -57,7 +57,8 @@ class Log(object):
         if self.cursesScreen:
             with self.lock:
                 if msg:
-                    if player_start_stop_token[1] in msg:
+                    if player_start_stop_token[1] in msg or \
+                            player_start_stop_token[2] in msg:\
                         self._player_stopped += 1
                     elif msg.startswith(player_start_stop_token[0]):
                         self._player_stopped = 0
@@ -119,7 +120,7 @@ class Log(object):
                             self.cursesScreen.addstr(0, 1, d_msg)
                         except:
                             if logger.isEnabledFor(logging.ERROR):
-                                logger.error('Cannot update the Status Bar...')
+                                logger.error('Error updating the Status Bar')
                     if self._show_status_updates:
                         if logger.isEnabledFor(logging.DEBUG):
                             try:
@@ -193,8 +194,9 @@ class Log(object):
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('Press ? for help: yes')
                 else:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Press ? for help: no')
+                    if self._show_status_updates:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Press ? for help: no')
 
                 if self.asked_to_stop:
                     self.asked_to_stop = False

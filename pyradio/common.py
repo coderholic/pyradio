@@ -29,5 +29,7 @@ THEME_ITEMS = (
 """ Messages to display when player starts / stops
     Used in log to stop runaway threads from printing
     messages after playback is stopped """
-player_start_stop_token = ('Initialization: "', ': Playback stopped')
+player_start_stop_token = ('Initialization: "',
+                           ': Playback stopped',
+                           ': Player terminated abnormally!')
 

@@ -516,6 +516,10 @@ class Player(object):
         return False
 
     def updateStatus(self, *args):
+        stop = args[0]
+        process = args[1]
+        stop_player = args[2]
+        detect_if_player_exited = args[3]
         has_error = False
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('updateStatus thread started.')
@@ -667,11 +671,25 @@ class Player(object):
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Error in updateStatus thread.', exc_info=True)
             return
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('detect_if_player_exited = "{}"'.format(detect_if_player_exited()))
+        if detect_if_player_exited():
+            if not platform.startswith('win32'):
+                poll = process.poll()
+                if poll is not None:
+                    logger.error('----==== player disappeared! ====----')
+                    stop_player(from_update_thread=True)
+            logger.error('----==== player disappeared! ====----')
+            stop_player(from_update_thread=True)
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('updateStatus thread stopped.')
 
     def updateMPVStatus(self, *args):
         stop = args[0]
+        process = args[1]
+        stop_player = args[2]
+        detect_if_player_exited = args[3]
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('MPV updateStatus thread started.')
 
@@ -743,6 +761,14 @@ class Player(object):
                 finally:
                     pass
         sock.close()
+        if not stop():
+            ''' haven't been asked to stop '''
+            # logger.error('\n\nDE NOT ASKED TO STOP\n\n')
+            # poll = process.poll()
+            # logger.error('DE poll = {}'.format(poll))
+            # if poll is not None:
+            logger.error('----==== MPV disappeared! ====----')
+            stop_player(from_update_thread=True)
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('MPV updateStatus thread stopped.')
 
@@ -753,9 +779,12 @@ class Player(object):
         fn = args[0]
         enc = args[1]
         stop = args[2]
+        process = args[3]
+        stop_player = args[4]
+        detect_if_player_exited = args[5]
         ''' Force volume display even when icy title is not received '''
         self.oldUserInput['Title'] = 'Playing: "{}"'.format(self.name)
-        logger.error('DE ==== {0}\n{1}\n{2}'.format(fn, enc, stop))
+        # logger.error('DE ==== {0}\n{1}\n{2}'.format(fn, enc, stop))
         #with lock:
         #    self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
         #    self.outputStream.write(msg=self.oldUserInput['Title'])
@@ -764,6 +793,11 @@ class Player(object):
         while not go_on:
             if stop():
                 break
+            poll= process.poll()
+            if poll is not None:
+                logger.error('----==== vlc disappeared! ====----')
+                stop_player(from_update_thread=True)
+                break
             try:
                 fp = open(fn, mode='rt', encoding=enc, errors='ignore')
                 go_on = True
@@ -771,10 +805,13 @@ class Player(object):
                 pass
 
         try:
-            logger.error('DE >>>>====----  BREFORE OUT  ----====<<<<')
-            #out = self.process.stdout
             while(True):
                 if stop():
+                    break
+                poll= process.poll()
+                if poll is not None:
+                    logger.error('----==== vlc disappeared! ====----')
+                    stop_player(from_update_thread=True)
                     break
                 subsystemOut = fp.readline()
                 subsystemOut = subsystemOut.strip().replace(u'\ufeff', '')
@@ -788,6 +825,11 @@ class Player(object):
                 if self.oldUserInput['Input'] != subsystemOut:
                     if stop():
                         break
+                    poll= process.poll()
+                    if poll is not None:
+                        logger.error('----==== vlc disappeared! ====----')
+                        stop_player(from_update_thread=True)
+                        break
                     if (logger.isEnabledFor(logging.DEBUG)):
                         if version_info < (3, 0):
                             disp = subsystemOut.encode('utf-8', 'replace').strip()
@@ -798,6 +840,11 @@ class Player(object):
                     self.oldUserInput['Input'] = subsystemOut
                     if self.volume_string in subsystemOut:
                         if stop():
+                            break
+                        poll= process.poll()
+                        if poll is not None:
+                            logger.error('----==== vlc disappeared! ====----')
+                            stop_player(from_update_thread=True)
                             break
                         # disable volume for mpv
                         if self.PLAYER_CMD != "mpv":
@@ -815,6 +862,11 @@ class Player(object):
                                     self.threadUpdateTitle()
                     elif self._is_in_playback_token(subsystemOut):
                         if stop():
+                            break
+                        poll= process.poll()
+                        if poll is not None:
+                            logger.error('----==== vlc disappeared! ====----')
+                            stop_player(from_update_thread=True)
                             break
                         self.stop_timeout_counter_thread = True
                         try:
@@ -840,6 +892,11 @@ class Player(object):
                         # logger.error('DE 3 {}'.format(self._icy_data))
                     elif self._is_icy_entry(subsystemOut):
                         if stop():
+                            break
+                        poll= process.poll()
+                        if poll is not None:
+                            logger.error('----==== vlc disappeared! ====----')
+                            stop_player(from_update_thread=True)
                             break
                         if not self.playback_is_on:
                             if logger.isEnabledFor(logging.INFO):
@@ -875,6 +932,11 @@ class Player(object):
                     else:
                         if stop():
                             break
+                        poll= process.poll()
+                        if poll is not None:
+                            logger.error('----==== vlc disappeared! ====----')
+                            stop_player(from_update_thread=True)
+                            break
                         for a_token in self.icy_audio_tokens.keys():
                             if a_token in subsystemOut:
                                 if not self.playback_is_on:
@@ -908,8 +970,10 @@ class Player(object):
             has_error = True
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Error in Win VLC updateStatus thread.', exc_info=True)
-        if (logger.isEnabledFor(logging.INFO)):
-            logger.info('Win VLC updateStatus thread stopped.')
+            poll= process.poll()
+            if poll is not None:
+                logger.error('----==== vlc disappeared! ====----')
+                stop_player(from_update_thread=True)
         try:
             fp.close()
         except:
@@ -1124,7 +1188,7 @@ class Player(object):
     def isPlaying(self):
         return bool(self.process)
 
-    def play(self, name, streamUrl, encoding=''):
+    def play(self, name, streamUrl, stop_player, detect_if_player_exited, encoding=''):
         ''' use a multimedia player to play a stream '''
         self.close()
         self.name = name
@@ -1157,7 +1221,10 @@ class Player(object):
             t = threading.Thread(target=self.updateWinVLCStatus, args=(
                     self._vlc_stdout_log_file,
                     self.config_encoding,
-                    lambda: self.stop_win_vlc_status_update_thread))
+                    lambda: self.stop_win_vlc_status_update_thread,
+                    self.process,
+                    stop_player,
+                    detect_if_player_exited))
         else:
             if self.PLAYER_NAME == 'mpv' and version_info > (3, 0):
                 self.process = subprocess.Popen(opts, shell=False,
@@ -1166,7 +1233,10 @@ class Player(object):
                                                 stderr=subprocess.DEVNULL)
                 t = threading.Thread(
                     target=self.updateMPVStatus,
-                    args=(lambda: self.stop_mpv_status_update_thread, )
+                    args=(lambda: self.stop_mpv_status_update_thread,
+                          self.process,
+                          stop_player,
+                          detect_if_player_exited)
                 )
             else:
                 self.process = subprocess.Popen(
@@ -1175,7 +1245,12 @@ class Player(object):
                     stdin=subprocess.PIPE,
                     stderr=subprocess.STDOUT
                 )
-                t = threading.Thread(target=self.updateStatus, args=())
+                t = threading.Thread(
+                    target=self.updateStatus,
+                    args=(lambda: self.stop_mpv_status_update_thread,
+                          self.process,
+                          stop_player,
+                          detect_if_player_exited))
         t.start()
         if self.PLAYER_NAME == 'vlc':
             self._get_volume()
@@ -1244,8 +1319,8 @@ class Player(object):
                 try:
                     os.kill(self.process.pid, 15)
                     self.process.wait()
-                except ProcessLookupError:
-                    # except:
+                except:
+                    # except ProcessLookupError:
                     pass
             self.process = None
 
@@ -1542,10 +1617,14 @@ class MpvPlayer(Player):
 
     def _connect_to_socket(self, server_address):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('sock = '.format(sock))
         try:
             sock.connect(server_address)
             return sock
         except socket.error as err:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('error is "{}"'.format(err))
             sock.close()
             return None
 
@@ -1785,7 +1864,7 @@ class MpPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
-        opts = [self.PLAYER_CMD, '-vo', 'null', '-quiet']
+        opts = [self.PLAYER_CMD, '-vo', 'null', '-quiet', '-softvol', '-softvol-max', '300', 'volstep', '1']
 
         ''' this will set the profile too '''
         params = []
