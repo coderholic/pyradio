@@ -210,6 +210,7 @@ Finally, install **PyRadio's Python packages** requirements:
 ```
 pip install windows-curses
 pip install pywin32
+pip install requests
 ```
 
 And you are done!

@@ -14,8 +14,9 @@ if ' ' in bat:
     bat = '"' + bat + '"'
 
 try:
-    winreg.DeleteValue(rhandle,
-                      'PyRadioLockFile')
+    winreg.DeleteValue(rhandle, 'PyRadioLockFile')
+except:
+    pass
 finally:
   winreg.CloseKey(rhandle)
-                    
+

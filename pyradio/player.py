@@ -672,8 +672,6 @@ class Player(object):
                 logger.error('Error in updateStatus thread.', exc_info=True)
             return
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('detect_if_player_exited = "{}"'.format(detect_if_player_exited()))
         if detect_if_player_exited():
             if not platform.startswith('win32'):
                 poll = process.poll()
@@ -1618,10 +1616,22 @@ class MpvPlayer(Player):
     def _connect_to_socket(self, server_address):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         if logger.isEnabledFor(logging.INFO):
-            logger.info('sock = '.format(sock))
+            logger.info('sock = '.format(repr(sock)))
         try:
             sock.connect(server_address)
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Connected!!!')
             return sock
+        except socket.gaierror as gaierror:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('gaierror = "{}"'.format(gaierror))
+            sock.close()
+            return None
+        except socket.herror as herror:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('herror = "{}"'.format(herror))
+            sock.close()
+            return None
         except socket.error as err:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('error is "{}"'.format(err))

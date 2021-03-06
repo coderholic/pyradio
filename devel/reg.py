@@ -25,4 +25,4 @@ try:
           '_windows.lock')))
 finally:
     winreg.CloseKey(rhandle)
-                    
+

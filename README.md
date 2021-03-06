@@ -35,6 +35,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 ## Requirements
 
 * python 2.7+/3.5+
+    - requests
 * MPV, MPlayer or VLC installed and in your path.
 
 ## Installation
@@ -424,7 +425,7 @@ All three supported players can accept a significant number of "*command line pa
 | Player  | Parameters                                                                                    |
 |---------|-----------------------------------------------------------------------------------------------|
 | mpv     | --no-video, --quiet, --input-ipc-server, --input-unix-socket, --playlist, --profile           |
-| mplayer | -vo, -quiet, -playlist, -profile                                                              |
+| mplayer | -vo, -quiet, -playlist, -softvol, -softvol-max 300, -profile                                  |
 | vlc     | -Irc, -vv<br>**Windows only:** --rc-host, --file-logging, --logmode, --log-verbose, --logfile |
 
 **Note:** The user should not use or change the above player parameters. Failing to do so, may render the player ***unusable***.

@@ -1005,7 +1005,7 @@ class PyRadioConfig(PyRadioStations):
     '''
     user_param_id = 0
 
-    PROGRAM_UPDATE = None
+    PROGRAM_UPDATE = False
 
     def __init__(self):
         self.backup_player_params = None

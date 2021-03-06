@@ -23,7 +23,7 @@ Reasons to build from source
 * A pre-built package is not available to you.
 * You want to use a particular python version. For example, most pre-built packages nowadays are built using python 3.x. If for any reason you have to use python 2.x, this is the way to go.
 
-For the installation you will need ***git*** and ***setuptools*** (e.g. *python-setuptools*, *python3-setuptools* or *python2-setuptools*) to be already installed.
+For the installation you will need ***git***, ***setuptools*** (e.g. *python-setuptools*, *python3-setuptools* or *python2-setuptools*) and ***requests*** (e.g. *python-requests*, *python3-requests* or *python2-requests*) to be already installed.
 
 Finally, you will use the ***build_install_pyradio*** script, located int the ***devel*** directory.
 
@@ -39,7 +39,7 @@ Before installing **PyRadio** you have to prepare your system, so that you end u
 
 ### Linux
 
-Use your distribution method to install *python-setuptools*, *git*, *sed* and any one of *MPV*, *MPlayer* and/or *VLC*.
+Use your distribution method to install *python-setuptools*, *python-requests*, *git*, *sed* and any one of *MPV*, *MPlayer* and/or *VLC*.
 
 When you are done, proceed to  "[Performing the installation](#performing-the-installation)".
 

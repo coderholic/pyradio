@@ -9,6 +9,7 @@ from contextlib import contextmanager
 
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
+from .update import PyRadioUpdate, PyRadioUpdateOnWindows
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
@@ -86,6 +87,10 @@ def shell():
     parser.add_argument('-lp', '--list-player-parameters', default=None,
                         action='store_true',
                         help='List extra players parameters.')
+    parser.add_argument('-U', '--update', action='store_true',
+                        help='Update PyRadio.')
+    parser.add_argument('-R', '--uninstall', action='store_true',
+                        help='Uninstall PyRadio.')
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
     parser.add_argument('-d', '--debug', action='store_true',
@@ -94,6 +99,24 @@ def shell():
     sys.stdout.flush()
 
     with pyradio_config_file() as pyradio_config:
+
+        if args.update:
+            try:
+                upd = PyRadioUpdate(package=2)
+                upd.update_pyradio()
+            except RuntimeError:
+                upd = PyRadioUpdateOnWindows(package=2)
+                upd.update_or_uninstall_on_windows(mode='update-open')
+            sys.exit()
+
+        if args.uninstall:
+            try:
+                upd = PyRadioUpdate(package=2)
+                upd.remove_pyradio()
+            except RuntimeError:
+                upd = PyRadioUpdateOnWindows(package=2)
+                upd.update_or_uninstall_on_windows(mode='uninstall-open')
+            sys.exit()
 
         ''' chaeck conflicting parameters '''
         if args.active_player_param_id and \
@@ -269,14 +292,39 @@ def shell():
             Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses
         '''
         environ.setdefault('ESCDELAY', '25')
-        set_terminal_title()
+
+        ''' set window title '''
+        if platform.startswith('win'):
+            import ctypes
+            try:
+                if pyradio_config.locked:
+                    win_title = 'PyRadio: The Internet Radio Player (Session Locked)'
+                else:
+                    win_title = 'PyRadio: The Internet Radio Player'
+                ctypes.windll.kernel32.SetConsoleTitleW(win_title)
+            except:
+                pass
+        else:
+            try:
+                if pyradio_config.locked:
+                    sys.stdout.write('\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07')
+                else:
+                    sys.stdout.write('\x1b]2;PyRadio: The Internet Radio player\x07')
+            except:
+                pass
+
+        sys.stdout.flush()
+
+
         curses.wrapper(pyradio.setup)
         if pyradio.setup_return_status:
             if pyradio_config.PROGRAM_UPDATE:
-                print('\nUpdating PyRadio')
-                print('  Current version: {}'.format(pyradio_config.PROGRAM_UPDATE['cur_version'].replace(' PyRadio ', '')))
-                print('      New version: {}\n'.format(pyradio_config.PROGRAM_UPDATE['new_version']))
-                print('\n')
+                if platform.startswith('win'):
+                    upd = PyRadioUpdateOnWindows(package=2)
+                    upd.update_or_uninstall_on_windows(mode='update-open')
+                else:
+                    upd = PyRadioUpdate(package=2)
+                    upd.update_pyradio()
             else:
                 print('\nThank you for using PyRadio. Cheers!')
         else:
@@ -324,28 +372,6 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
     elif ret == -8:
         print('File type not supported')
         sys.exit(1)
-
-def set_terminal_title():
-    # set window title
-    if platform.startswith('win'):
-        import ctypes
-        try:
-            if pyradio_config.locked:
-                ctypes.windll.kernel32.SetConsoleTitleW('PyRadio: The Internet Radio player (Session Locked)')
-            else:
-                ctypes.windll.kernel32.SetConsoleTitleW('PyRadio: The Internet Radio player')
-        except:
-            pass
-    else:
-        try:
-            if pyradio_config.locked:
-                sys.stdout.write('\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07')
-            else:
-                sys.stdout.write('\x1b]2;PyRadio: The Internet Radio player\x07')
-        except:
-            pass
-
-    sys.stdout.flush()
 
 def open_conf_dir(cnf):
     import subprocess

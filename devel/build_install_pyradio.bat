@@ -1,196 +1,207 @@
-@echo off
-set arg1=%1
-set PROGRAM=python
-if "%1"=="-h" goto :displayhelp
+@ECHO OFF
+IF "%1"=="--help" GOTO displayhelp
+IF "%1"=="-h" GOTO displayhelp
+setlocal EnableDelayedExpansion
 
-REM Check if we have admin rights
+::net file to test privileges, 1>NUL redirects output, 2>NUL redirects errors
+:: https://gist.github.com/neremin/3a4020c172053d837ab37945d81986f6
+:: https://stackoverflow.com/questions/13212033/get-windows-version-in-a-batch-file
 net session >nul 2>&1
-if NOT %errorLevel% == 0 (
-    echo.
-    echo Error: You must have Administrative permissions to run this script.
-    echo        Please start cmd "As Administrator"
-    echo.
-    goto :endofscript
+IF '%errorlevel%' == '0' ( GOTO START ) ELSE (
+    for /f "tokens=4-5 delims=. " %%i in ('ver') do set VERSION=%%i.%%j
+    IF "%version%" == "6.1" ( GOTO win7exit )
+    IF "%version%" == "6.0" ( GOTO win7exit )
+    GOTO getPrivileges
 )
 
-if "%1"=="--help" goto :displayhelp
-if "%1"=="-u" goto :uninstall
-if "%1"=="" goto :noparam
-set "PROGRAM=python%arg1%"
+:win7exit
+ECHO.
+ECHO Error: You must have Administrative permissions to run this script.
+ECHO        Please start cmd "As Administrator".
+ECHO.
+ECHO        If that does not work, ask the system administrator to
+ECHO        install PyRadio for you.
+ECHO.
+GOTO endnopause
+
+:getPrivileges
+IF "%version%" == "6.1" ( GOTO win7exit )
+IF "%version%" == "6.0" ( GOTO win7exit )
+
+IF "%1"=="" (
+    CLS
+    ECHO Installing / Updating python modules
+    pip install windows-curses --upgrade 1>NUL 2>NUL
+    pip install pywin32 --upgrade 1>NUL 2>NUL
+    pip install requests --upgrade 1>NUL 2>NUL
+)
+
+IF '%1'=='ELEV' ( GOTO START ) ELSE ( ECHO Running elevated in a different window)
+ECHO >>DOPAUSE
+
+SET "batchPath=%~f0"
+SET "batchArgs=ELEV"
+
+::Add quotes to the batch path, IF needed
+SET "script=%0"
+SET script=%script:"=%
+IF '%0'=='!script!' ( GOTO PathQuotesDone )
+    SET "batchPath=""%batchPath%"""
+:PathQuotesDone
+
+::Add quotes to the arguments, IF needed.
+:ArgLoop
+IF '%1'=='' ( GOTO EndArgLoop ) ELSE ( GOTO AddArg )
+    :AddArg
+    SET "arg=%1"
+    SET arg=%arg:"=%
+    IF '%1'=='!arg!' ( GOTO NoQuotes )
+        SET "batchArgs=%batchArgs% "%1""
+        GOTO QuotesDone
+        :NoQuotes
+        SET "batchArgs=%batchArgs% %1"
+    :QuotesDone
+    SHIFT
+    GOTO ArgLoop
+:EndArgLoop
+
+::Create and run the vb script to elevate the batch file
+ECHO SET UAC = CreateObject^("Shell.Application"^) > "%temp%\OEgetPrivileges.vbs"
+ECHO UAC.ShellExecute "cmd", "/c ""!batchPath! !batchArgs!""", "", "runas", 1 >> "%temp%\OEgetPrivileges.vbs"
+"%temp%\OEgetPrivileges.vbs"
+EXIT /B
+
+:START
+::Remove the elevation tag and SET the correct working directory
+IF '%1'=='ELEV' ( SHIFT /1 )
+CD /d %~dp0
+
+::Do your adminy thing here...
+
+CD ..
+SET arg1=%1
+SET PROGRAM=python
+
+
+:: Get Desktop LINK FILE
+:startdesktop
+CHCP 1251 >NUL
+FOR /f "usebackq tokens=1,2,*" %%B IN (`reg query "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop`) DO SET DESKTOP=%%D
+CHCP 866 >NUL
+FOR /f "delims=" %%i IN ('ECHO %DESKTOP%') DO SET DESKTOP=%%i
+
+SET ALL=0
+IF "%1"=="-u" GOTO uninstall
+IF "%1"=="-R" GOTO uninstall
+IF "%1"=="-U" (
+    SET ALL=1
+    GOTO uninstall
+)
+IF "%1"=="" GOTO noparam
+SET "PROGRAM=python%arg1%"
+
 :noparam
-cls
+CLS
+FOR /R .\... %%f in (*.pyc) DO DEL /q "%%~ff"
 
-for /R .\... %%f in (*.pyc) do del /q "%%~ff"
-
-REM Get mplayer
-set "MPLAYER="
-set "MPLAYER_SYSTEM="
-if exist C:\mplayer (
-    set "MPLAYER=C:\mplayer"
-    set "MPLAYER_SYSTEM=yes"
-)
-if exist %USERPROFILE%\mplayer\mplayer.exe set "MPLAYER=%USERPROFILE%\mplayer"
-if exist %APPDATA%\pyradio\mplayer\mplayer.exe set "MPLAYER=%APPDATA%\pyradio\mplayer"
-
-
-set "MPLAYER_IN_PATH="
-echo ;%PATH%; | find /C /I ";%MPLAYER%;" >NUL
-if "%ERRORLEVEL%" == "0" set "MPLAYER_IN_PATH=yes"
-
-%PROGRAM% setup.py build
-if %ERRORLEVEL% == 0 goto :install
-goto :endofscript
+%PROGRAM% SETup.py build
+IF %ERRORLEVEL% == 0 GOTO install
+GOTO endofscript
 
 :install
-%PROGRAM% setup.py install
-if %ERRORLEVEL% == 0 goto :installhtml
-echo.
-echo.
-echo ###############################################
-echo # The installation has failed!!!              #
-echo # This is probably because PyRadio is already #
-echo # running, so files cannot be overwritten.    #
-echo # Please terminate PyRadio and try again.     #
-echo ###############################################
-goto :endofscript
+%PROGRAM% SETup.py install
+IF %ERRORLEVEL% == 0 GOTO installhtml
+ECHO.
+ECHO.
+ECHO ###############################################
+ECHO # The installation has failed!                #
+ECHO # This is probably because PyRadio is already #
+ECHO # running, so files canNOT be overwritten.    #
+ECHO # Please terminate PyRadio and try again.     #
+ECHO ###############################################
+GOTO endofscript 
 
 :installhtml
-echo.
-if not exist "%APPDATA%\pyradio\*" mkdir %APPDATA%\pyradio
-if not exist "%APPDATA%\pyradio\help\*" mkdir %APPDATA%\pyradio\help
-copy /Y *.html %APPDATA%\pyradio\help >NUL
-copy /Y devel\pyradio.* %APPDATA%\pyradio\help >NUL
-copy /Y devel\*.lnk %APPDATA%\pyradio\help >NUL
+ECHO.
+IF NOT EXIST "%APPDATA%\pyradio\*" MKDIR %APPDATA%\pyradio
+IF NOT EXIST "%APPDATA%\pyradio\help\*" MKDIR %APPDATA%\pyradio\help
+COPY /Y *.html %APPDATA%\pyradio\help >NUL
+COPY /Y devel\pyradio.* %APPDATA%\pyradio\help >NUL
+COPY /Y devel\*.lnk %APPDATA%\pyradio\help >NUL
 python devel\reg.py
-echo *** HTML files copyed to "%APPDATA%\pyradio\help"
-
-if [%MPLAYER%]==[] (
-    echo.
-    echo "mplayer" has not been found on your system.
-    echo.
-    echo Please refer to the guide in
-    echo     %APPDATA%\pyradio\help\windows.html
-    echo to install it.
-    echo.
-    echo You can execute "pyradio -ocd" and navigate to
-    echo the "help" directory to find the file.
-    echo.
-    echo When done, execute the installation again.
-    echo.
-    goto :endofscript
-)
+ECHO *** HTML files copyed to "%APPDATA%\pyradio\help"
 
 
-REM set "MPLAYER_IN_PATH="
-rem echo MPLAYER_IN_PATH is %MPLAYER_IN_PATH%
-echo === Player "mplayer" found in "%MPLAYER%"
-if "%MPLAYER_IN_PATH%"=="" (
-    if "%MPLAYER_SYSTEM%"=="" goto :usermplayer
-    REM FOR /F "tokens=2*" %%A IN ('REG QUERY "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" /v PATH 2^>NUL') DO SET READ_PATH=%%B
-    echo !!! Player "mplayer" not found in PATH
-    echo     Add "%MPLAYER%" to PATH and log off or restart
-    goto :startdesktop
-)
-echo === Player "mplayer" found in PATH
-goto :startdesktop
-
-:usermplayer
-REM Install for user
-REM FOR /F "tokens=2*" %%A IN ('REG QUERY "HKEY_CURRENT_USER\Environment" /v PATH 2^>NUL') DO SET READ_PATH=%%B
-echo !!! Player "mplayer" not found in PATH
-echo     Add "%MPLAYER%" to user PATH and log off or restart
-
-REM Get Desktop
-:startdesktop
-CHCP 1251 >Nul
-for /f "usebackq tokens=1,2,*" %%B IN (`reg query "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Desktop`) do set DESKTOP=%%D
-CHCP 866 >Nul
-for /f "delims=" %%i IN ('echo %DESKTOP%') do set DESKTOP=%%i
-if exist %DESKTOP% goto :desktop
-
-
-:desktop
-if not exist %DESKTOP%\PyRadio.lnk goto :linkcopy
-echo === Dekstop Shortcut already exists
-goto :toend
+:: Install lnk file
+IF NOT EXIST %DESKTOP%\PyRadio.lnk GOTO linkcopy
+ECHO === Dekstop Shortcut already exists
+GOTO toend
 
 
 :linkcopy
-echo *** Installing Dekstop Shortcut
-copy %APPDATA%\pyradio\help\*.lnk %DESKTOP% >NUL
-goto :toend
+ECHO *** Installing Dekstop Shortcut
+COPY %APPDATA%\pyradio\help\*.lnk %DESKTOP% >NUL
+GOTO toend
 
 
 :displayhelp
-echo Build and install PyRadio
-echo.
-echo Execute:
-echo     devel\build_install_pyradio "<PARAMETERS>"
-echo.
-echo Parameters are optional:
-echo      2 -  use python2 to build and install
-echo      3 -  use python3 to build and install
-echo     -u -  uninstall PyRadio
-echo     -h
-echo --help -  display help
-echo.
-goto :endofscript
+ECHO Build and install PyRadio
+ECHO.
+ECHO Execute:
+ECHO     devel\build_install_pyradio "<PARAMETERS>"
+ECHO.
+ECHO Parameters are optional:
+ECHO           -U   -   update PyRadio
+ECHO       -u, -R   -   uninstall PyRadio
+ECHO   -h, --help   -   display this help
+ECHO.
+GOTO endnopause
 
 :toend
-echo.
-echo.
-echo Installation successful!
-goto :endofscript
-
+ECHO.
+ECHO.
+ECHO Installation successful!
+IF EXIST "DOPAUSE" ( GOTO endofscript )
+GOTO endnopause
 
 
 :uninstall
-echo Uninstalling PyRadio
-echo ** Gathering information...
-DEL pyremove.bat 2>nul
-echo echo ** Removing executable ... done>>pyremove.bat
-echo echo ** Removing Desktop shortcut ... done >>pyremove.bat
-echo IF EXIST "%DESKTOP%\PyRadio.lnk" DEL "%DESKTOP%\PyRadio.lnk" 2>nul >>pyremove.bat
-python devel\site.py exe 2>nul >>pyremove.bat
-REM echo echo ** Removing Python files ... done >>pyremove.bat
-python devel\site.py 2>nul >dirs
-python2 devel\site.py 2>nul >>dirs
-python3 devel\site.py 2>nul >>dirs
-python -m site --user-site 2>nul >>dirs
-python2 -m site --user-site 2>nul >>dirs
-python3 -m site --user-site 2>nul >>dirs
+ECHO This may take some time...
+ECHO *********************************************************
+ECHO.
+ECHO PyRadio will NOT uninstalled MPlayer, Python and/or Git.
+ECHO You will have to manually uninstall them.
+ECHO.
+ECHO PyRadio user files will be left instact.
+ECHO You can find them at
+ECHO     %APPDATA%\pyradio
+ECHO.
+ECHO *********************************************************
+ECHO.
+DEL pyremove.bat 2>NUL
+ECHO ECHO Uninstalling PyRadio>>pyremove.bat
+ECHO ECHO ** Gathering information...>>pyremove.bat
+ECHO ECHO ** Removing executable ... done>>pyremove.bat
+ECHO ECHO ** Removing Desktop shortcut ... done >>pyremove.bat
+ECHO IF EXIST "%DESKTOP%\PyRadio.lnk" DEL "%DESKTOP%\PyRadio.lnk" 2>NUL >>pyremove.bat
+python devel\site.py exe 2>NUL >>pyremove.bat
+python devel\site.py 2>NUL >dirs
+python -m site --user-site 2>NUL >>dirs
 python devel\windirs.py
 python devel\unreg.py
-echo DEL dirs >>pyremove.bat
-echo echo PyRadio successfully uninstalled! >>pyremove.bat
-
-echo echo. >>pyremove.bat
-echo echo ********************************************************* >>pyremove.bat
-echo echo. >>pyremove.bat
-echo echo PyRadio has not uninstalled MPlayer, Python and/or Git. >>pyremove.bat
-echo echo You will have to manually uninstall them. >>pyremove.bat
-echo echo. >>pyremove.bat
-echo echo PyRadio user files are left instact. You can find them at >>pyremove.bat
-echo echo %APPDATA%\pyradio >>pyremove.bat
-echo echo. >>pyremove.bat
-echo echo ********************************************************** >>pyremove.bat
-echo echo. >>pyremove.bat
-REM copy pyremove.bat con
-REM pause
-
-REM IF EXIST %APPDATA%\pyradio\mplayer (
-REM echo **********************************************************
-REM echo *
-REM echo * Directory "%APPDATA%\pyradio"
-REM echo * NOT deleted since it contains the MPlayer installation
-REM echo *
-REM echo **********************************************************
-REM echo.
-REM ) ELSE (
-REM echo ** Removing user files...
-REM RD /S /Q %APPDATA%\pyradio
-REM )
-pyremove.bat
+ECHO DEL dirs >>pyremove.bat
+ECHO ECHO. >>pyremove.bat
+ECHO ECHO. >>pyremove.bat
+ECHO ECHO PyRadio successfully uninstalled! >>pyremove.bat
+ECHO ECHO. >>pyremove.bat
+:: IF EXIST "DOPAUSE" ( ECHO PAUSE >>pyremove.bat )
+:: PAUSE
+CALL pyremove.bat
+IF %ALL% == 1 ( GOTO noparam )
 
 :endofscript
+ECHO.
+DEL DOPAUSE 2>NUL
+PAUSE
 
+:endnopause
