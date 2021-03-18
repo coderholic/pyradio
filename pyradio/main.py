@@ -101,6 +101,10 @@ def shell():
     with pyradio_config_file() as pyradio_config:
 
         if args.update:
+            if pyradio_config.distro != 'None' and \
+                    not platform.startswith('win'):
+                no_update()
+
             try:
                 upd = PyRadioUpdate(package=2)
                 upd.update_pyradio()
@@ -110,6 +114,10 @@ def shell():
             sys.exit()
 
         if args.uninstall:
+            if pyradio_config.distro != 'None' and \
+                    not platform.startswith('win'):
+                no_update(action='uninstall')
+
             try:
                 upd = PyRadioUpdate(package=2)
                 upd.remove_pyradio()
@@ -329,6 +337,10 @@ def shell():
                 print('\nThank you for using PyRadio. Cheers!')
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
+
+def no_update(action='update'):
+    print('PyRadio has been installed using your distribution\'s package manager.\nPlease use that to {} it.\n'.format(action))
+    sys.exit(1)
 
 def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True):
     if exit_if_malformed:

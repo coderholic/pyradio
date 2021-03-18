@@ -168,7 +168,7 @@ class PyRadioUpdate(object):
             self._dir = os.path.join('/tmp', 'tmp_pyradio')
         else:
             self._dir = os.path.join(os.path.expanduser('~'), 'tmp_pyradio')
-        print('Using directory: "{}"'.format(tmp))
+        print('Using directory: "{}"'.format(self._dir))
 
         ''' create tmp directory '''
         self._mkdir(self._dir, self._empty_dir, self._permission_error)
@@ -188,10 +188,12 @@ class PyRadioUpdate(object):
             print('Error: Failed to download PyRadio source code...\n')
             sys.exit(1)
 
+        ''' PROGRAM DEBUG: uncomment this to use the latest changes '''
+        shutil.copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', '/tmp/tmp_pyradio/pyradio-devel/devel/build_install_pyradio')
         if mode == 'update':
             ''' install pyradio '''
             try:
-                subprocess.call('sudo devel/build_install_pyradio', shell=True)
+                subprocess.call('sudo devel/build_install_pyradio -x', shell=True)
                 ret = True
             except:
                 ret = False
@@ -200,7 +202,7 @@ class PyRadioUpdate(object):
         else:
             ''' install pyradio '''
             try:
-                subprocess.call('sudo devel/build_install_pyradio -u', shell=True)
+                subprocess.call('sudo devel/build_install_pyradio -x -u', shell=True)
                 ret = True
             except:
                 ret = False

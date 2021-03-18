@@ -64,7 +64,7 @@ function uninstall(){
         echo "PyRadio is not installed..."
         exit
     }
-    sudo echo 'Uninstalling PyRadio'
+    echo 'Uninstalling PyRadio'
     user=$(which pyradio | grep '\.local')
     [ -z "$user" ] && {
         echo -n '** Removing executable ... '
@@ -187,6 +187,17 @@ do
             TO_PYTHON=2
             shift
             ;;
+        -x)
+            #
+            # Hidden parameter; to be used by
+            #     PyRadio -U, -R
+            # command line parameters
+            #
+            # DO NOT USE IT on any other circumstance
+            #
+            REMOVE_DIR=$(dirname "$PWD")
+            shift
+            ;;
         *)    # unknown option
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
@@ -220,6 +231,9 @@ for prog in git sed ;do
         fi
     }
 done
+
+# uninstall previous versions
+uninstall
 
 # delete any files that were left from previous attempt
 [ -z "$TO_USER" ] && {
@@ -309,4 +323,6 @@ python"${TO_PYTHON}" setup.py build && {
     #git checkout pyradio/radio.py
 }
 rm sed.$$ 2>/dev/null
-
+[ -z "$REMOVE_DIR" ] || {
+    (sleep 5; sudo rm -r "$REMOVE_DIR") &
+}
