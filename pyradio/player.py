@@ -1254,20 +1254,24 @@ class Player(object):
             self._get_volume()
         # start playback check timer thread
         self.stop_timeout_counter_thread = False
-        try:
-            self.connection_timeout_thread = threading.Thread(
-                target=self.playback_timeout_counter,
-                args=(self.playback_timeout,
-                      self.name,
-                      lambda: self.stop_timeout_counter_thread)
-            )
-            self.connection_timeout_thread.start()
-            if (logger.isEnabledFor(logging.DEBUG)):
-                logger.debug('playback detection thread started')
-        except:
-            self.connection_timeout_thread = None
-            if (logger.isEnabledFor(logging.ERROR)):
-                logger.error('playback detection thread failed to start')
+        if self.playback_timeout > 0:
+            try:
+                self.connection_timeout_thread = threading.Thread(
+                    target=self.playback_timeout_counter,
+                    args=(self.playback_timeout,
+                          self.name,
+                          lambda: self.stop_timeout_counter_thread)
+                )
+                self.connection_timeout_thread.start()
+                if (logger.isEnabledFor(logging.DEBUG)):
+                    logger.debug('playback detection thread started')
+            except:
+                self.connection_timeout_thread = None
+                if (logger.isEnabledFor(logging.ERROR)):
+                    logger.error('playback detection thread failed to start')
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('playback detection thread not starting (timeout is 0)')
         if logger.isEnabledFor(logging.INFO):
             logger.info('Player started')
 

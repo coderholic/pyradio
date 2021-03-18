@@ -22,8 +22,8 @@ except ModuleNotFoundError:
 def isRunning():
     ctypes.windll.kernel32.SetConsoleTitleW(curdir)
     print('PyRadio is still running. Please terminate it to continue ... ')
-    while WindowExists('PyRadio: The Internet Radio Player') or \
-            WindowExists('PyRadio: The Internet Radio Player (Session Locked)'):
+    while WindowExists('PyRadio: Your Internet Radio Player') or \
+            WindowExists('PyRadio: Your Internet Radio Player (Session Locked)'):
         sleep(1)
     print('')
 

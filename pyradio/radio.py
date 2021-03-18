@@ -454,7 +454,10 @@ class PyRadio(object):
             return
         if logger.isEnabledFor(logging.INFO):
             logger.info('<<<===---  Program start  ---===>>>')
-            logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), system()))
+            if self._cnf.distro == 'None':
+                logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), system()))
+            else:
+                logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), self._cnf.distro))
             logger.info('Terminal supports {} colors'.format(curses.COLORS))
         self.stdscr = stdscr
         if app_state:
@@ -484,6 +487,9 @@ class PyRadio(object):
                                     logger.info("RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1]))
                         except:
                             pass
+        if self._cnf.distro != 'None':
+            self.info += '({})'.format(self._cnf.distro)
+
         try:
             curses.curs_set(0)
         except:
@@ -841,11 +847,10 @@ class PyRadio(object):
                         logger.info('(detectUpdateThread): session locked. Not starting!!!')
                 else:
                     distro_package_found = False
-                    for a_distro_package in distro_package:
-                        if os.path.isfile(a_distro_package):
-                            if logger.isEnabledFor(logging.INFO):
-                                logger.info('(detectUpdateThread): distro installation detected. Not starting!!!')
-                            distro_package_found = True
+                    if self._cnf.distro != 'None' and not platform.startswith('win'):
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('(detectUpdateThread): distro installation detected. Not starting!!!')
+                        distro_package_found = True
                     if not distro_package_found:
                         self._update_notification_thread = threading.Thread(
                             target=self.detectUpdateThread,

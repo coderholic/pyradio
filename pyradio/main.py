@@ -298,18 +298,18 @@ def shell():
             import ctypes
             try:
                 if pyradio_config.locked:
-                    win_title = 'PyRadio: The Internet Radio Player (Session Locked)'
+                    win_title = 'PyRadio: Your Internet Radio Player (Session Locked)'
                 else:
-                    win_title = 'PyRadio: The Internet Radio Player'
+                    win_title = 'PyRadio: Your Internet Radio Player'
                 ctypes.windll.kernel32.SetConsoleTitleW(win_title)
             except:
                 pass
         else:
             try:
                 if pyradio_config.locked:
-                    sys.stdout.write('\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07')
+                    sys.stdout.write('\x1b]2;PyRadio: Your Internet Radio Player (Session Locked)\x07')
                 else:
-                    sys.stdout.write('\x1b]2;PyRadio: The Internet Radio player\x07')
+                    sys.stdout.write('\x1b]2;PyRadio: Your Internet Radio Player\x07')
             except:
                 pass
 

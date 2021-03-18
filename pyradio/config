@@ -53,7 +53,7 @@ enable_mouse = False
 # unreachable, and display the "Failed to connect to: [station]"
 # message.
 #
-# Valid values: 5 - 60
+# Valid values: 5 - 60, 0 disables check
 # Default value: 10
 connection_timeout = 10
 
@@ -104,4 +104,14 @@ confirm_playlist_reload = True
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 auto_save_playlist = False
+
+# The name of the distribution providing the package.
+# If this parameter is set to anything other than "None"
+# PyRadio will not permit updating (-U command line
+# parameter) or removing the package (-R command line
+# parameter).
+#
+# Packagers must populate this paramater as needed!
+#
+distro = None
 

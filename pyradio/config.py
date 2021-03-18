@@ -962,6 +962,7 @@ class PyRadioConfig(PyRadioStations):
     ''' True if lock file exists '''
     locked = False
 
+    _distro = 'None'
     opts = collections.OrderedDict()
     opts['general_title'] = ['General Options', '']
     opts['player'] = ['Player: ', '']
@@ -1022,6 +1023,7 @@ class PyRadioConfig(PyRadioStations):
         self.connection_timeout = '10'
         self.theme = 'dark'
         self.use_transparency = False
+        self._distro = 'None'
 
         if self.params_changed:
             self.dirty_config = True
@@ -1040,6 +1042,14 @@ class PyRadioConfig(PyRadioStations):
         self._check_config_file(self.stations_dir)
         self.config_file = path.join(self.stations_dir, 'config')
         self.force_to_remove_lock_file = False
+
+    @property
+    def distro(self):
+        return self._distro
+
+    @distro.setter
+    def distro(self, val):
+        raise ValueError('parameter is read only')
 
     @property
     def profile_name(self):
@@ -1228,8 +1238,9 @@ class PyRadioConfig(PyRadioStations):
         '''
         try:
             ret = int(self.opts['connection_timeout'][1])
-            if not 5 <= ret <= 60:
-                ret = 10
+            if ret != 0:
+                if not 5 <= ret <= 60:
+                    ret = 10
         except ValueError:
             ret = 10
         self.opts['connection_timeout'][1] = str(ret)
@@ -1411,7 +1422,9 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['player'][1] = self.opts['player'][1].replace('mpv,', '')
             elif sp[0] == 'connection_timeout':
                 self.opts['connection_timeout'][1] = sp[1].strip()
-                ''' check integer number and set to 10 if error '''
+                ''' check integer number and set to 10 if error
+                    x is a dummy parameter
+                '''
                 x = self.connection_timeout_int
             elif sp[0] == 'default_encoding':
                 self.opts['default_encoding'][1] = sp[1].strip()
@@ -1461,6 +1474,23 @@ class PyRadioConfig(PyRadioStations):
                            'mplayer_parameter',
                            'vlc_parameter'):
                 self._config_to_params(sp)
+            elif sp[0] == 'distro':
+                self._distro = sp[1].strip()
+
+        ''' read distro from package config file '''
+        package_config_file = path.join(path.dirname(__file__), 'config')
+        try:
+            with open(package_config_file, 'r') as pkg_config:
+                lines = [line.strip() for line in pkg_config if line.strip() and not line.startswith('#') ]
+            for line in lines:
+                sp = line.split('=')
+                sp[0] = sp[0].strip()
+                sp[1] = sp[1].strip()
+                if sp[0] == 'distro':
+                    self._distro = sp[1].strip()
+                    # print('Package distro is "{}"'.format(self._distro))
+        except:
+            pass
 
         ''' make sure extra params have only up to 10 items each
         (well, actually 11 items, since the first one is the
@@ -1615,7 +1645,7 @@ enable_mouse = {4}
 # unreachable, and display the "Failed to connect to: [station]"
 # message.
 #
-# Valid values: 5 - 60
+# Valid values: 5 - 60, 0 disables check
 # Default value: 10
 connection_timeout = {5}
 
