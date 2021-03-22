@@ -92,6 +92,8 @@ optional arguments:
                         (refer to the output of the -lp option)
   -lp, --list-player-parameters
                         List extra players parameters.
+  -U, --update          Update PyRadio.
+  -R, --uninstall       Uninstall PyRadio.
   --unlock              Remove sessions' lock file.
   -d, --debug           Start pyradio in debug mode.
 
@@ -747,7 +749,7 @@ Finally, include the file produced in your report.
 - [x] Players extra parameters ([#118](https://github.com/coderholic/pyradio/issues/118)) - v. 0.8.8.3
 - [x] New player selection configuration window ([#118](https://github.com/coderholic/pyradio/issues/118)) - v. 0.8.8.3
 - [ ] Notify the user that the package's stations.csv has changed
-- [ ] Update / uninstall using command line parameters (-U / -R)
+- [x] Update / uninstall using command line parameters (-U / -R) - v. 0.9.0
 - [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
 
 ## Acknowledgment

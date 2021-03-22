@@ -234,10 +234,15 @@ class PyRadio(object):
         logger.error('DE p PLAYLIST_MODE: {0}, {1}, {2}'.format(*self.playlist_selections[1]))
         logger.error('DE p REGISTER_MODE: {0}, {1}, {2}'.format(*self.playlist_selections[2]))
 
-    def __init__(self, pyradio_config, play=False, req_player='', theme=''):
+    def __init__(self, pyradio_config,
+                 play=False,
+                 req_player='',
+                 theme='',
+                 force_update=''):
         self._system_asked_to_terminate = False
         self._cnf = pyradio_config
         self._theme = PyRadioTheme(self._cnf)
+        self._force_update = force_update
         if theme:
             self._theme_name = theme
         ind = self._cnf.current_playlist_index()
@@ -2685,7 +2690,7 @@ class PyRadio(object):
                 You have chosen not to update |PyRadio| at this time!
 
                  Please keep in mind that you are able to update
-                 |PyRadio| by executing the command:
+                 at any time using the command:
 
                  ___________________|pyradio -U|
             '''
@@ -3333,8 +3338,8 @@ class PyRadio(object):
             d2 = datetime.strptime(a_date, '%Y-%m-%d')
             delta = (d1 - d2).days
 
-            ''' PROGRAM DEBUG: Uncomment this to force check '''
-            delta=check_days
+            if self._force_update:
+                delta=check_days
             if delta < check_days:
                 clean_date_files(files)
                 if logger.isEnabledFor(logging.INFO):
@@ -3368,18 +3373,14 @@ class PyRadio(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: Asked to stop. Stoping...')
                 break
-            ''' PROGRAM DEBUG: set program's version
-                to check display functionality
-            '''
-            last_tag='"name":"0.8.8-beta4"'
+
+            if self._force_update:
+                last_tag='"name":"' + self._force_update + '"'
+
             if last_tag:
                 connection_fail_count = 0
                 x = str(last_tag).split('"name":"')
                 last_tag = x[1].split('"')[0]
-                ''' PROGRAM DEBUG: set last github tag's version
-                    to check display functionality
-                '''
-                last_tag = '0.8.8.6'
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('detectUpdateThread: Upstream version found: {}'.format(last_tag))
                 if this_version == last_tag:
@@ -4325,6 +4326,21 @@ class PyRadio(object):
                         self._print_config_save_error()
                     elif ret == 0:
                         ''' Config saved successfully '''
+
+                        ''' sync backup parameters '''
+                        old_id = self._cnf.backup_player_params[1][0]
+                        old_param = self._cnf.backup_player_params[1][old_id]
+                        self._cnf.backup_player_params[1][1:] = self._cnf.backup_player_params[0][1:]
+                        if old_param in self._cnf.backup_player_params[1]:
+                            ''' old param exists, point to it '''
+                            self._cnf.backup_player_params[1][0] = self._cnf.backup_player_params[1].index(old_param)
+                        else:
+                            ''' old param is gone, use the one from config '''
+                            self._cnf.backup_player_params[1][0] = self._cnf.backup_player_params[0][0]
+                        ''' if effective parameter has changed, mark it '''
+                        if self._cnf.backup_player_params[1][self._cnf.backup_player_params[1][0]] != old_param:
+                            self._cnf.params_changed = True
+
                         if self.player.isPlaying():
                             # logger.error('params_changed = {}'.format(self._cnf.params_changed))
                             #if self._cnf.opts['default_encoding'][1] != self._old_config_encoding or \

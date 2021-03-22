@@ -119,8 +119,9 @@ class Log(object):
                             d_msg = self.msg.encode('utf-8', 'replace').strip()[0: self.width].replace('\r', '').replace('\n', '')
                             self.cursesScreen.addstr(0, 1, d_msg)
                         except:
-                            if logger.isEnabledFor(logging.ERROR):
-                                logger.error('Error updating the Status Bar')
+                            pass
+                            # if logger.isEnabledFor(logging.ERROR):
+                            #     logger.error('Error updating the Status Bar')
                     if self._show_status_updates:
                         if logger.isEnabledFor(logging.DEBUG):
                             try:

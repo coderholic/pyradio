@@ -55,9 +55,9 @@ class PyRadioUpdate(object):
 
     ZIP_DIR  = ('pyradio-master', 'pyradio-master', 'pyradio-devel')
 
+    install = False
 
     def __init__(self, package=0):
-        package = 2
         if platform.system().lower().startswith('win'):
             raise RuntimeError('This is a linux only class...')
         self._dir = self._install_dir = ''
@@ -72,11 +72,18 @@ class PyRadioUpdate(object):
                 self.update_or_uninstall_on_windows('update')
         else:
             ''' update PyRadio under Linux and MacOS '''
-            print('Updating PyRadio...')
+            if self.install:
+                print('Installing PyRadio...')
+            else:
+                print('Updating PyRadio...')
             if self._do_it():
-                print('\n\nPyRadio updated to the latest release!')
-                print('Thank you for your continuous support to this project!')
-                print('Enjoy!\n')
+                if self.install:
+                    print('\n\nPyRadio succesfully installed!')
+                    print('Hope you have a lot of fun using it!')
+                else:
+                    print('\n\nPyRadio updated to the latest release!')
+                    print('Thank you for your continuous support to this project!')
+                print('Cheers!\n')
                 sys.exit()
             else:
                 print('\n\nAn error occured during the installation!')
@@ -109,7 +116,7 @@ class PyRadioUpdate(object):
     def update_or_uninstall_on_windows(self, mode='update'):
         isRunning()
         ''' Creates BAT file to update or unisntall PyRadio on Windows'''
-        self._dir = os.path.join(os.path.expanduser('~'), 'tmp_pyradio')
+        self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
         shutil.rmtree(self._dir, ignore_errors=True)
         os.makedirs(self._dir, exist_ok=True)
         if mode.startswith('update'):
@@ -125,12 +132,12 @@ class PyRadioUpdate(object):
                 b.write('CLS\n')
                 b.write('pip install requests --upgrade 1>NUL 2>NUL\n')
                 if mode.startswith('update'):
-                    b.write('COPY "{}" . 1>NUL\n'.format(__file__))
-                    b.write('python update.py --do-update\n')
+                    b.write('COPY "{}" . 1>NUL\n'.format(os.path.abspath(__file__)))
+                    b.write('python install.py --do-update\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
                     b.write('devel\\build_install_pyradio.bat -U\n')
                 else:
-                    b.write('COPY "{}" uninstall.py 1>NUL\n'.format(__file__))
+                    b.write('COPY "{}" uninstall.py 1>NUL\n'.format(os.path.abspath(__file__)))
                     b.write('python uninstall.py --do-uninstall\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
                     b.write('devel\\build_install_pyradio.bat -u\n')
@@ -165,9 +172,9 @@ class PyRadioUpdate(object):
 
         '''' get tmp dir '''
         if os.path.isdir('/tmp'):
-            self._dir = os.path.join('/tmp', 'tmp_pyradio')
+            self._dir = os.path.join('/tmp', 'tmp-pyradio')
         else:
-            self._dir = os.path.join(os.path.expanduser('~'), 'tmp_pyradio')
+            self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
         print('Using directory: "{}"'.format(self._dir))
 
         ''' create tmp directory '''
@@ -188,8 +195,10 @@ class PyRadioUpdate(object):
             print('Error: Failed to download PyRadio source code...\n')
             sys.exit(1)
 
-        ''' PROGRAM DEBUG: uncomment this to use the latest changes '''
-        shutil.copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', '/tmp/tmp_pyradio/pyradio-devel/devel/build_install_pyradio')
+        ''' PROGRAM DEBUG: uncomment this to use the latest
+            build_install_pyradio changes.
+        '''
+        # shutil.copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', '/tmp/tmp-pyradio/pyradio/devel/build_install_pyradio')
         if mode == 'update':
             ''' install pyradio '''
             try:
@@ -306,10 +315,9 @@ class PyRadioUpdate(object):
 class PyRadioUpdateOnWindows(PyRadioUpdate):
 
     def __init__(self, fromTUI=False, package=0):
-        package = 2
         if not platform.system().lower().startswith('win'):
             raise RuntimeError('This is a windows only class...')
-        self._dir = os.path.join(os.path.expanduser('~'), 'tmp_pyradio')
+        self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
         self._package = package
         self._fromTUI = fromTUI
 
@@ -318,14 +326,14 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
         print('To complete the process you will have to execute a batch file.')
         print('Windows Explorer will open the location of the batch file to run.\n')
         print('Please double click\n\n    update.bat\n\nto get PyRadio\'s latest version.\n')
-        print('After you are done, you can delete the folder named "tmp-pyradio"')
+        print('After you are done, you can delete the folder:\n\n    "{}"'.format(os.path.join(os.path.expanduser("~"), 'tmp-pyradio')))
 
     @classmethod
     def print_uninstall_bat_created(cls):
         print('To complete the process you will have to execute a batch file.')
         print('Windows Explorer will open the location of the batch file to run.\n')
         print('Please double click\n\n    uninstall.bat\n\nto remove PyRadio from your system.\n')
-        print('After you are done, you can delete the folder named "tmp-pyradio"')
+        print('After you are done, you can delete the folder:\n\n    "{}"'.format(os.path.join(os.path.expanduser("~"), 'tmp-pyradio')))
 
     def update_pyradio(self):
         self._do_it()
@@ -353,34 +361,6 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
             sys.exit(1)
 
         os.chdir(self._dir)
-        cur_dir = os.path.join(self._dir, self.ZIP_DIR[self._package])
-
-
-        shutil.copyfile('C:\\Users\\Spiros\\pyradio\\devel\\build_install_pyradio.bat',
-            'C:\\Users\\Spiros\\tmp_pyradio\\pyradio-devel\\devel\\build_install_pyradio.bat')
-        sys.exit()
-        # input('File copyied... Press ENTER to continue ')
-        if mode == 'update':
-            ''' install pyradio '''
-            try:
-                subprocess.call(os.path.join(cur_dir, 'devel\\build_install_pyradio.bat'), shell=True)
-                ret = True
-            except:
-                ret = False
-            self._clean_up()
-            return ret
-        else:
-            ''' uninstall pyradio '''
-            try:
-                # path = os.path.join(cur_dir, 'devel\\build_install_pyradio.bat')
-                # print('Running BAT file... "{}"'.format(path))
-                subprocess.call(os.path.join(cur_dir, 'devel\\build_install_pyradio.bat') + ' -u', shell=True)
-                ret = True
-            except:
-                ret = False
-                print('Error running BAT file!!!')
-            self._clean_up()
-            return ret
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, SUPPRESS as SUPPRESS
@@ -395,7 +375,7 @@ if __name__ == '__main__':
     ''' extra downloads
         only use them after the developer says so,
         for debug purposes only
-            --sng           download developer release
+            --sng           download developer release (master)
             --sng-devel     download developer devel branch
     '''
     parser.add_argument('--sng', action='store_true', help=SUPPRESS)
@@ -438,8 +418,27 @@ if __name__ == '__main__':
         sys.exit()
     elif args.do_update:
         ''' coming from update BAT file on Windows'''
-        print('do_update')
         upd = PyRadioUpdateOnWindows(package=package)
         upd.update_pyradio()
         sys.exit()
+
+    ''' Installation!!! '''
+    if platform.system().lower().startswith('win'):
+        subprocess.call('pip install windows-curses --upgrade')
+        subprocess.call('pip install pywin32 --upgrade')
+        subprocess.call('pip install requests --upgrade')
+        uni = PyRadioUpdateOnWindows()
+        uni.update_or_uninstall_on_windows(mode='update-open')
+        while not os.path.isfile(os.path.join(uni._dir, 'update.bat')):
+            pass
+        os.chdir(uni._dir)
+        subprocess.call('update.bat')
+        print('\n\nNow you can delete the folder:')
+        print('    "{}"'.format(uni._dir))
+        print('and the file:')
+        print('    "{}"'.format(__file__))
+    else:
+        uni = PyRadioUpdate()
+        uni.install = True
+        uni.update_pyradio()
 

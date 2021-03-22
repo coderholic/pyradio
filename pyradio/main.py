@@ -2,14 +2,14 @@
 import sys
 import curses
 import logging
-from argparse import ArgumentParser
+from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 from os import path, getenv, environ
 from sys import platform, version_info
 from contextlib import contextmanager
 
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
-from .update import PyRadioUpdate, PyRadioUpdateOnWindows
+from .install import PyRadioUpdate, PyRadioUpdateOnWindows
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
@@ -95,21 +95,37 @@ def shell():
                         help="Remove sessions' lock file.")
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Start pyradio in debug mode.')
+    ''' extra downloads
+        only use them after the developer says so,
+        for debug purposes only
+            --sng             download developer release (master)
+            --sng-devel       download developer devel branch
+            --force-update    give a versio > than current,
+                              to check update notification functionality
+    '''
+    parser.add_argument('--sng-master', action='store_true', help=SUPPRESS)
+    parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
+    parser.add_argument('--force-update', default='', help=SUPPRESS)
     args = parser.parse_args()
     sys.stdout.flush()
 
     with pyradio_config_file() as pyradio_config:
 
-        if args.update:
+        if args.update or args.sng_master or args.sng_devel:
             if pyradio_config.distro != 'None' and \
                     not platform.startswith('win'):
                 no_update()
 
+            package = 0
+            if args.sng_master:
+                package = 1
+            elif args.sng_devel:
+                package = 2
             try:
-                upd = PyRadioUpdate(package=2)
+                upd = PyRadioUpdate(package=package)
                 upd.update_pyradio()
             except RuntimeError:
-                upd = PyRadioUpdateOnWindows(package=2)
+                upd = PyRadioUpdateOnWindows(package=package)
                 upd.update_or_uninstall_on_windows(mode='update-open')
             sys.exit()
 
@@ -119,10 +135,10 @@ def shell():
                 no_update(action='uninstall')
 
             try:
-                upd = PyRadioUpdate(package=2)
+                upd = PyRadioUpdate()
                 upd.remove_pyradio()
             except RuntimeError:
-                upd = PyRadioUpdateOnWindows(package=2)
+                upd = PyRadioUpdateOnWindows()
                 upd.update_or_uninstall_on_windows(mode='uninstall-open')
             sys.exit()
 
@@ -294,7 +310,8 @@ def shell():
             pyradio_config,
             play=args.play,
             req_player=requested_player,
-            theme=theme_to_use
+            theme=theme_to_use,
+            force_update=args.force_update
         )
         ''' Setting ESCAPE key delay to 25ms
             Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses
@@ -320,18 +337,19 @@ def shell():
                     sys.stdout.write('\x1b]2;PyRadio: Your Internet Radio Player\x07')
             except:
                 pass
-
         sys.stdout.flush()
 
-
+        ''' curses wrapper '''
         curses.wrapper(pyradio.setup)
+
+        ''' curses is off '''
         if pyradio.setup_return_status:
             if pyradio_config.PROGRAM_UPDATE:
                 if platform.startswith('win'):
-                    upd = PyRadioUpdateOnWindows(package=2)
+                    upd = PyRadioUpdateOnWindows()
                     upd.update_or_uninstall_on_windows(mode='update-open')
                 else:
-                    upd = PyRadioUpdate(package=2)
+                    upd = PyRadioUpdate()
                     upd.update_pyradio()
             else:
                 print('\nThank you for using PyRadio. Cheers!')

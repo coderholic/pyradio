@@ -60,11 +60,14 @@ rm -f /tmp/pyradio-uninstall.$$ /tmp/pyradio-delete.$$ 2>/dev/null
 
 function uninstall(){
     local user
-    user=$(which pyradio 2>/dev/null) || {
-        echo "PyRadio is not installed..."
-        exit
+    [ -z "$1" ] && {
+        user=$(which pyradio 2>/dev/null) || {
+            echo "PyRadio is not installed..."
+            exit
+        }
     }
-    echo 'Uninstalling PyRadio'
+    # keep this sudo as to not break lines
+    sudo echo 'Uninstalling PyRadio'
     user=$(which pyradio | grep '\.local')
     [ -z "$user" ] && {
         echo -n '** Removing executable ... '
@@ -233,7 +236,7 @@ for prog in git sed ;do
 done
 
 # uninstall previous versions
-uninstall
+uninstall 1
 
 # delete any files that were left from previous attempt
 [ -z "$TO_USER" ] && {
@@ -288,7 +291,7 @@ python"${TO_PYTHON}" setup.py build && {
         }
     } || {
         echo "***** installing for user..."
-        python"${TO_PYTHON}" setup.py install --user | tee installed && {
+        python"${TO_PYTHON}" setup.py install --user && {
             gzip -k pyradio.1
             mkdir -p ~/.local/share/man/man1 2>/dev/null
             mv -f pyradio.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio.1.gz ~/.local/local/share/man/man1
@@ -323,6 +326,4 @@ python"${TO_PYTHON}" setup.py build && {
     #git checkout pyradio/radio.py
 }
 rm sed.$$ 2>/dev/null
-[ -z "$REMOVE_DIR" ] || {
-    (sleep 5; sudo rm -r "$REMOVE_DIR") &
-}
+[ -z "$REMOVE_DIR" ] || [[ $REMOVE_DIR == *pyradio ]] && sudo rm -fr "$REMOVE_DIR"
