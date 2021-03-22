@@ -109,13 +109,21 @@ def shell():
     args = parser.parse_args()
     sys.stdout.flush()
 
+    config_already_read = False
+
     with pyradio_config_file() as pyradio_config:
 
-        if args.update or args.sng_master or args.sng_devel:
+        if args.uninstall or args.update or \
+                args.sng_master or args.sng_devel:
+            if not config_already_read:
+                read_config(pyradio_config)
+                config_already_read = True
             if pyradio_config.distro != 'None' and \
                     not platform.startswith('win'):
-                no_update()
+                no_update(args.uninstall)
+            sys.exit()
 
+        if args.update or args.sng_master or args.sng_devel:
             package = 0
             if args.sng_master:
                 package = 1
@@ -227,13 +235,9 @@ def shell():
 
         if args.list is False and args.add is False:
             print('Reading config...')
-        ret = pyradio_config.read_config()
-        if ret == -1:
-            print('Error opening config: "{}"'.format(pyradio_config.config_file))
-            sys.exit(1)
-        elif ret == -2:
-            print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
-            sys.exit(1)
+        if not config_already_read:
+            read_config(pyradio_config)
+            config_already_read = True
 
         if args.use_player != '':
             requested_player = args.use_player
@@ -356,8 +360,18 @@ def shell():
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
 
-def no_update(action='update'):
-    print('PyRadio has been installed using your distribution\'s package manager.\nPlease use that to {} it.\n'.format(action))
+def read_config(pyradio_config):
+    ret = pyradio_config.read_config()
+    if ret == -1:
+        print('Error opening config: "{}"'.format(pyradio_config.config_file))
+        sys.exit(1)
+    elif ret == -2:
+        print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
+        sys.exit(1)
+
+def no_update(uninstall):
+    action = 'uninstall' if uninstall else 'update'
+    print('PyRadio has been installed using either pip or your distribution\'s\npackage manager. Please use that to {} it.\n'.format(action))
     sys.exit(1)
 
 def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True):

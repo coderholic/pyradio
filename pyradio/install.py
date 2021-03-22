@@ -160,7 +160,7 @@ class PyRadioUpdate(object):
 
     def _do_it(self, mode='update'):
         ''' do I have git installed? '''
-        if subprocess.call('git --version 2>/dev/null 1>&2' ,shell=True) == 0:
+        if subprocess.call('git --version 2>/dev/null 1>&2', shell=True) == 0:
             self.git_found = True
         else:
             self.git_found = False
@@ -424,6 +424,10 @@ if __name__ == '__main__':
 
     ''' Installation!!! '''
     if platform.system().lower().startswith('win'):
+        ret = subprocess.call('pyradio -h 1>NUL 2>NUL', shell=True)
+        if ret == 0:
+            print('PyRadio is already installed.\n')
+            sys.exit(1)
         subprocess.call('pip install windows-curses --upgrade')
         subprocess.call('pip install pywin32 --upgrade')
         subprocess.call('pip install requests --upgrade')
@@ -438,6 +442,10 @@ if __name__ == '__main__':
         print('and the file:')
         print('    "{}"'.format(__file__))
     else:
+        ret = subprocess.call('pyradio -h 1>/dev/null 2>&1', shell=True)
+        if ret == 0:
+            print('PyRadio is already installed.\n')
+            sys.exit(1)
         uni = PyRadioUpdate()
         uni.install = True
         uni.update_pyradio()
