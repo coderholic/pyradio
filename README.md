@@ -29,6 +29,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Cleaning up](#cleaning-up)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
+* [Packagin PyRadio](#packaging-pyradio)
 * [TODO](#todo)
 * [Acknowlegement](#acknowlegement)
 
@@ -741,6 +742,36 @@ To create it, enter the following commands in a terminal:
 Then try to reproduce the bug and exit **pyradio**.
 
 Finally, include the file produced in your report.
+
+## Packaging Pyradio
+
+If you are a packager and would like to produce a package for your distribution please do follow this mini guide.
+
+**PyRadio** is able to update and uninstall itself, when installed from sources.
+
+This is something you do not want to be available when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
+
+In order to accomplice that, you just have to change the **distro** configuration parameter in the **config** file.
+
+**PyRadio** will read this parameter and will disable updating and uninstalling, when set to anything other than "**None**".
+
+So, here's how you do that:
+
+Once you are in the sources top level directory (typically "*pyradio*"), you execute the command:
+
+```
+sed -i 's/distro = None/distro = YOUR DISTRO NAME' pyradio/config
+```
+
+Then you go on to produce the package as you would normally do.
+
+For example, an **Arch Linux** packager would use this command:
+
+```
+sed -i 's/distro = None/distro = Arch Linux' pyradio/config
+```
+
+The distro name you insert here will appear in **PyRadio**'s log file, so that I know where the package came from while debugging, so if you are not packaging for a specific distribution, please do use something meaningful (for example, using "*xxx*" will do the job, but provides no useful information).
 
 ## TODO
 

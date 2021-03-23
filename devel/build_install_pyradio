@@ -326,4 +326,14 @@ python"${TO_PYTHON}" setup.py build && {
     #git checkout pyradio/radio.py
 }
 rm sed.$$ 2>/dev/null
-[ -z "$REMOVE_DIR" ] || [[ $REMOVE_DIR == *pyradio ]] && sudo rm -fr "$REMOVE_DIR"
+
+# remove instasllation directory
+if [ ! -z "$REMOVE_DIR" ];then
+    if [ "$REMOVE_DIR" = "$HOME/pyradio" ] || \
+            [ "$REMOVE_DIR" = "$HOME/tmp-pyradio" ] || \
+            [ "$REMOVE_DIR" = "/tmp/pyradio" ] || \
+            [ "$REMOVE_DIR" = "/tmp/tmp-pyradio" ];then
+        sudo rm -fr "$REMOVE_DIR"
+    fi
+fi
+

@@ -42,11 +42,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#macos">macOS</a></li>
 <li><a href="windows.html">Windows</a></li>
 </ul></li>
-<li><a href="#performing-the-installation">Performing the installation</a>
-<ul>
-<li><a href="#development-version">Development version</a></li>
-<li><a href="#stable-version">Stable version</a></li>
-</ul></li>
+<li><a href="#performing-the-installation">Performing the installation</a></li>
 </ul></li>
 <li><a href="README.html">Return to main doc</a></li>
 </ul>
@@ -56,21 +52,23 @@ a:visited{color: SaddleBrown;}
 <li>A pre-built package is not available to you.</li>
 <li>You want to use a particular python version. For example, most pre-built packages nowadays are built using python 3.x. If for any reason you have to use python 2.x, this is the way to go.</li>
 </ul>
-<p>For the installation you will need <strong><em>git</em></strong>, <strong><em>setuptools</em></strong> (e.g. <em>python-setuptools</em>, <em>python3-setuptools</em> or <em>python2-setuptools</em>) and <strong><em>requests</em></strong> (e.g. <em>python-requests</em>, <em>python3-requests</em> or <em>python2-requests</em>) to be already installed.</p>
-<p>Finally, you will use the <strong><em>build_install_pyradio</em></strong> script, located int the <strong><em>devel</em></strong> directory.</p>
-<p>To see your options, execute:</p>
-<pre>devel/build_install_pyradio -h</pre>
+<p>For the installation you will need:</p>
+<ol type="1">
+<li><strong><em>setuptools</em></strong> (e.g. <em>python-setuptools</em>, <em>python3-setuptools</em> or <em>python2-setuptools</em>)</li>
+<li><strong><em>requests</em></strong> (e.g. <em>python-requests</em>, <em>python3-requests</em> or <em>python2-requests</em>) to be already installed.</li>
+</ol>
+<p>The procedure presented here will not provide you with the sources; it will download and install them and then delete them. If you have to have <strong>PyRadio</strong>’s sources, you can just:</p>
+<pre>git clone https://github.com/coderholic/pyradio.git</pre>
+<p>or download a zip from <strong>PyRadio</strong>’s <a target="_blank" href="https://github.com/coderholic/pyradio">main page</a>.</p>
 <h2 id="preparing-for-the-installation">Preparing for the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Before installing <strong>PyRadio</strong> you have to prepare your system, so that you end up with a working installation. The process depends on the OS you are on.</p>
 <h3 id="linux">Linux</h3>
-<p>Use your distribution method to install <em>python-setuptools</em>, <em>python-requests</em>, <em>git</em>, <em>sed</em> and any one of <em>MPV</em>, <em>MPlayer</em> and/or <em>VLC</em>.</p>
+<p>Use your distribution method to install <em>python-setuptools</em>, <em>python-requests</em>, <em>sed</em> and any one of <em>MPV</em>, <em>MPlayer</em> and/or <em>VLC</em>.</p>
 <p>When you are done, proceed to “<a href="#performing-the-installation">Performing the installation</a>”.</p>
 <h3 id="macos">macOS</h3>
 <p>Everything you need to install, run and keep <strong>pyradio</strong> up-to-date is available on <a target="_blank" href="https://github.com/Homebrew/homebrew">Homebrew</a>. If you haven’t already downloaded its client, go ahead and do it.</p>
 <p>Open a <strong>terminal</strong> and type:</p>
 <pre>/usr/bin/ruby -e &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</pre>
-<p>Then just install <strong>git</strong>:</p>
-<pre>brew install git</pre>
 <p>Depending on your Mac OS version, you may have to install <strong>sed</strong> too:</p>
 <pre>brew install gnu-sed --default-names</pre>
 <p>Now it’s time to install a media player. You are free to install any one of them or even more than one…</p>
@@ -89,24 +87,18 @@ a:visited{color: SaddleBrown;}
 sudo ln -s /usr/local/bin/vlc /usr/local/bin/cvlc</pre>
 <p>Your system is ready now for <strong>pyradio</strong> to be installed. You can follow the instructions given at “<a href="#performing-the-installation">Performing the installation</a>”.</p>
 <h2 id="performing-the-installation">Performing the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>First thing you do is get the source. Open a <strong>terminal</strong> and type:</p>
-<pre>git clone https://github.com/coderholic/pyradio.git
-cd pyradio</pre>
-<p>Then you have to decide to either build the development version or one of the available stable versions.</p>
-<h3 id="development-version">Development version</h3>
-<pre>devel/build_install_pyradio</pre>
-<h3 id="stable-version">Stable version</h3>
-<p>Get tag information.</p>
-<pre>git fetch --all --tags --prune
-git tag</pre>
-<p>This will report to you something similar to:</p>
-<pre>0.1
-0.4
-0.6.0</pre>
-<p>Now is the time to pick a version.</p>
-<p>For this example we will go with v. <strong>0.6.0</strong>.</p>
-<pre>git checkout tags/0.6.0 -b 0.6.0</pre>
-<p>Finally, build and install</p>
-<pre>devel/build_install_pyradio</pre>
+<p>First thing you do is get the installation script. Open a <strong>terminal</strong> and type:</p>
+<pre>cd
+wget https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py</pre>
+<p>or using curl:</p>
+<pre>cd
+curl -L https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py -o install.py</pre>
+<p><strong>Note</strong>: If you have neither <em>wget</em> or <em>curl</em> installed, just right click on <a target="_blank" href="https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py">this link</a> and use your browser “<strong>Save as</strong>” menu entry to save the file in your home folder.</p>
+<p>Finally, execute the command:</p>
+<pre>python install.py</pre>
+<p>On <strong>Debian</strong> based systems you will have to execute:</p>
+<pre>python3 install.py</pre>
+<p>If for some reason you want a <strong>python 2</strong> installation, execute:</p>
+<pre>python2 install.py</pre>
 </body>
 </html>

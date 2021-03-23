@@ -12,8 +12,6 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [macOS](#macos)
         * [Windows](windows.md)
     * [Performing the installation](#performing-the-installation)
-        * [Development version](#development-version)
-        * [Stable version](#stable-version)
 * [Return to main doc](README.md)
 
 ## Building from source
@@ -23,15 +21,18 @@ Reasons to build from source
 * A pre-built package is not available to you.
 * You want to use a particular python version. For example, most pre-built packages nowadays are built using python 3.x. If for any reason you have to use python 2.x, this is the way to go.
 
-For the installation you will need ***git***, ***setuptools*** (e.g. *python-setuptools*, *python3-setuptools* or *python2-setuptools*) and ***requests*** (e.g. *python-requests*, *python3-requests* or *python2-requests*) to be already installed.
+For the installation you will need:
 
-Finally, you will use the ***build_install_pyradio*** script, located int the ***devel*** directory.
+1.  ***setuptools*** (e.g. *python-setuptools*, *python3-setuptools* or *python2-setuptools*)
+ 2. ***requests*** (e.g. *python-requests*, *python3-requests* or *python2-requests*) to be already installed.
 
-To see your options, execute:
+The procedure presented here will not provide you with the sources; it will download and install them and then delete them.  If you have to have **PyRadio**'s sources, you can just:
 
 ```
-devel/build_install_pyradio -h
+git clone https://github.com/coderholic/pyradio.git
 ```
+
+or download a zip from **PyRadio**'s [main page](https://github.com/coderholic/pyradio).
 
 ## Preparing for the installation
 
@@ -39,12 +40,12 @@ Before installing **PyRadio** you have to prepare your system, so that you end u
 
 ### Linux
 
-Use your distribution method to install *python-setuptools*, *python-requests*, *git*, *sed* and any one of *MPV*, *MPlayer* and/or *VLC*.
+Use your distribution method to install *python-setuptools*, *python-requests*, *sed* and any one of *MPV*, *MPlayer* and/or *VLC*.
 
 When you are done, proceed to  "[Performing the installation](#performing-the-installation)".
 
 
-### macOS 
+### macOS
 
 Everything you need to install, run and keep **pyradio** up-to-date is available on [Homebrew](https://github.com/Homebrew/homebrew). If you haven't already downloaded its client, go ahead and do it.
 
@@ -52,12 +53,6 @@ Open a **terminal** and type:
 
 ```
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-```
-
-Then just install **git**:
-
-```
-brew install git
 ```
 
 Depending on your Mac OS version, you may have to install **sed** too:
@@ -107,49 +102,37 @@ Your system is ready now for **pyradio** to be installed. You can follow the ins
 
 ## Performing the installation
 
-First thing you do is get the source. Open a **terminal** and type:
+First thing you do is get the installation script. Open a **terminal** and type:
 
 ```
-git clone https://github.com/coderholic/pyradio.git
-cd pyradio
+cd
+wget https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py
 ```
 
-Then you have to decide to either build the development version or one of the available stable versions.
-
-### Development version
+or using curl:
 
 ```
-devel/build_install_pyradio
+cd
+curl -L https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py -o install.py
 ```
 
-### Stable version
+**Note**: If you have neither *wget* or *curl* installed, just right click on [this link](https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py) and use your browser "**Save as**" menu entry to save the file in your home folder.
 
-Get tag information.
-
-```
-git fetch --all --tags --prune
-git tag
-```
-
-This will report to you something similar to:
+Finally, execute the command:
 
 ```
-0.1
-0.4
-0.6.0
+python install.py
 ```
 
-Now is the time to pick a version.
-
-For this example we will go with v. **0.6.0**.
+On **Debian** based systems you will have to execute:
 
 ```
-git checkout tags/0.6.0 -b 0.6.0
+python3 install.py
 ```
 
-Finally, build and install
+If for some reason you want a **python 2** installation, execute:
 
 ```
-devel/build_install_pyradio
+python2 install.py
 ```
 

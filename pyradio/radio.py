@@ -109,7 +109,6 @@ def no_modifiers(event):
 def multi_modifiers(event):
     return not no_modifiers(event)
 
-
 class PyRadio(object):
     player = None
     ws = Window_Stack()
@@ -4815,15 +4814,6 @@ class PyRadio(object):
             self.ws.operation_mode = self._search_modes[self.ws.operation_mode]
             return
 
-
-        #elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_MODE:
-        #    self.helpWinContainer = None
-        #    self.helpWin = None
-        #    self.ws.close_window()
-        #    with self._update_notify_lock:
-        #        self._update_version = ''
-        #    self.refreshBody()
-        #    return
 
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_MODE:
             with self._update_notify_lock:

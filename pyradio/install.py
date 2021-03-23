@@ -19,6 +19,14 @@ try:
 except ModuleNotFoundError:
     HAVE_REQUESTS = False
 
+def is_pyradio_user_installed():
+    if platform.system().lower().startswith('darwin'):
+        return False
+    p = subprocess.Popen('which pyradio', shell=True, stdout=subprocess.PIPE)
+    ret = str(p.communicate()[0])
+    home = os.path.expanduser('~')
+    return True if ret.startswith(home) else False
+
 def isRunning():
     ctypes.windll.kernel32.SetConsoleTitleW(curdir)
     print('PyRadio is still running. Please terminate it to continue ... ')
@@ -43,11 +51,6 @@ class PyRadioUpdate(object):
             2   -   s-h-g devel
     '''
 
-    GIT_URL = ('https://github.com/coderholic/pyradio.git',
-                'https://github.com/s-n-g/pyradio.git',
-                'https://github.com/s-n-g/pyradio.git',
-                )
-
     ZIP_URL = ('https://github.com/coderholic/pyradio/archive/master.zip',
                 'https://github.com/s-n-g/pyradio/archive/master.zip',
                 'https://github.com/s-n-g/pyradio/archive/devel.zip',
@@ -56,12 +59,14 @@ class PyRadioUpdate(object):
     ZIP_DIR  = ('pyradio-master', 'pyradio-master', 'pyradio-devel')
 
     install = False
+    user = False
 
-    def __init__(self, package=0):
+    def __init__(self, package=0, user=False):
         if platform.system().lower().startswith('win'):
             raise RuntimeError('This is a linux only class...')
         self._dir = self._install_dir = ''
         self._package = package
+        self.user = user
 
     def update_pyradio(self, win_open_dir=False):
         if platform.system().lower().startswith('win'):
@@ -114,6 +119,7 @@ class PyRadioUpdate(object):
                 sys.exit(1)
 
     def update_or_uninstall_on_windows(self, mode='update'):
+        params = ('', '--sng-master', '--sng-devel')
         isRunning()
         ''' Creates BAT file to update or unisntall PyRadio on Windows'''
         self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
@@ -133,12 +139,18 @@ class PyRadioUpdate(object):
                 b.write('pip install requests --upgrade 1>NUL 2>NUL\n')
                 if mode.startswith('update'):
                     b.write('COPY "{}" . 1>NUL\n'.format(os.path.abspath(__file__)))
-                    b.write('python install.py --do-update\n')
+                    if self._package == 0:
+                        b.write('python install.py --do-update\n')
+                    else:
+                        b.write('python install.py --do-update ' + params[self._package] + '\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
                     b.write('devel\\build_install_pyradio.bat -U\n')
                 else:
                     b.write('COPY "{}" uninstall.py 1>NUL\n'.format(os.path.abspath(__file__)))
-                    b.write('python uninstall.py --do-uninstall\n')
+                    if self._package == 0:
+                        b.write('python uninstall.py --do-uninstall\n')
+                    else:
+                        b.write('python uninstall.py --do-uninstall ' + params[self._package] + '\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
                     b.write('devel\\build_install_pyradio.bat -u\n')
         except:
@@ -159,13 +171,8 @@ class PyRadioUpdate(object):
         sys.exit(1)
 
     def _do_it(self, mode='update'):
-        ''' do I have git installed? '''
-        if subprocess.call('git --version 2>/dev/null 1>&2', shell=True) == 0:
-            self.git_found = True
-        else:
-            self.git_found = False
-            if not HAVE_REQUESTS:
-                self._no_download_method()
+        if not HAVE_REQUESTS:
+            self._no_download_method()
 
         ''' Am I root ?'''
         self._prompt_sudo()
@@ -201,8 +208,9 @@ class PyRadioUpdate(object):
         # shutil.copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', '/tmp/tmp-pyradio/pyradio/devel/build_install_pyradio')
         if mode == 'update':
             ''' install pyradio '''
+            param = ' --user' if self.user  else ''
             try:
-                subprocess.call('sudo devel/build_install_pyradio -x', shell=True)
+                subprocess.call('sudo devel/build_install_pyradio -x' + param, shell=True)
                 ret = True
             except:
                 ret = False
@@ -219,19 +227,13 @@ class PyRadioUpdate(object):
             return ret
 
     def _download_pyradio(self):
-        need_the_zip = True
         os.chdir(self._dir)
-        if self.git_found and self._package == 0:
-            self._install_dir = 'pyradio'
-            if subprocess.call('git clone https://github.com/coderholic/pyradio.git', shell=True) == 0:
-                need_the_zip = False
-        if need_the_zip:
-            print('Downloading PyRadio source code...')
-            self._install_dir = self.ZIP_DIR[self._package]
-            if not self._download_file(self.ZIP_URL[self._package],
-                    os.path.join(self._dir, self.ZIP_DIR[self._package] + '.zip')):
-                print('Error: Failed to download PyRadio source code...\n')
-                sys.exit(1)
+        print('Downloading PyRadio source code...')
+        self._install_dir = self.ZIP_DIR[self._package]
+        if not self._download_file(self.ZIP_URL[self._package],
+                os.path.join(self._dir, self.ZIP_DIR[self._package] + '.zip')):
+            print('Error: Failed to download PyRadio source code...\n')
+            sys.exit(1)
 
             print('Extracting RyRadio source code...')
             with zipfile.ZipFile(os.path.join(self._dir, self.ZIP_DIR[self._package] + '.zip')) as z:
@@ -342,13 +344,8 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
         self._do_it(mode='uninstall')
 
     def _do_it(self, mode='update'):
-        ''' do I have git installed? '''
-        if subprocess.call('git --version 1>NUL 2>NUL', shell=True) == 0:
-            self.git_found = True
-        else:
-            self.git_found = False
-            if not HAVE_REQUESTS:
-                self._no_download_method()
+        if not HAVE_REQUESTS:
+            self._no_download_method()
 
         self._download_pyradio()
 
@@ -364,21 +361,26 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, SUPPRESS as SUPPRESS
-    parser = ArgumentParser(description='PyRadio update / uninstall tool')
+    parser = ArgumentParser(description='PyRadio update / uninstall tool',
+                            epilog='When executed without an argument, it installs PyRario.')
     parser.add_argument('-U', '--update', action='store_true',
                         help='Update PyRadio.')
+    parser.add_argument('--user', action='store_true',
+                        help='Install only for current user (linux only)')
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='Uninstall PyRadio.')
+
+    ''' to be used by intermediate scripts '''
     parser.add_argument('--do-update', action='store_true', help=SUPPRESS)
     parser.add_argument('--do-uninstall', action='store_true', help=SUPPRESS)
 
     ''' extra downloads
         only use them after the developer says so,
         for debug purposes only
-            --sng           download developer release (master)
+            --sng-master    download developer release (master)
             --sng-devel     download developer devel branch
     '''
-    parser.add_argument('--sng', action='store_true', help=SUPPRESS)
+    parser.add_argument('--sng-master', action='store_true', help=SUPPRESS)
     parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
 
     args = parser.parse_args()
@@ -386,7 +388,7 @@ if __name__ == '__main__':
 
     ''' download official release '''
     package = 0
-    if args.sng:
+    if args.sng_master:
         package = 1
     if args.sng_devel:
         package = 2
@@ -409,6 +411,7 @@ if __name__ == '__main__':
             upd.print_update_bat_created()
         else:
             upd = PyRadioUpdate(package=package)
+            upd.user = is_pyradio_user_installed()
             upd.update_pyradio()
         sys.exit()
     elif args.do_uninstall:
@@ -431,7 +434,7 @@ if __name__ == '__main__':
         subprocess.call('pip install windows-curses --upgrade')
         subprocess.call('pip install pywin32 --upgrade')
         subprocess.call('pip install requests --upgrade')
-        uni = PyRadioUpdateOnWindows()
+        uni = PyRadioUpdateOnWindows(package=package)
         uni.update_or_uninstall_on_windows(mode='update-open')
         while not os.path.isfile(os.path.join(uni._dir, 'update.bat')):
             pass
@@ -446,7 +449,9 @@ if __name__ == '__main__':
         if ret == 0:
             print('PyRadio is already installed.\n')
             sys.exit(1)
-        uni = PyRadioUpdate()
+        uni = PyRadioUpdate(package=package)
         uni.install = True
+        if not platform.system().lower().startswith('darwin'):
+            uni.user = args.user
         uni.update_pyradio()
 

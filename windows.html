@@ -51,6 +51,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#pyradio-installation">3. PyRadio installation</a>
 <ul>
 <li><a href="#final-steps">3.1 Final steps</a></li>
+<li><a href="#cleaning-up">3.2 Cleaning up</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#updating-pyradio">Updating PyRadio</a></li>
@@ -129,14 +130,11 @@ Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;licen
 <h3 id="pyradio-installation">3. PyRadio installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>At last!</p>
 <p>You are ready to install <strong>PyRadio</strong>!</p>
-<p>So here’s how you do it:</p>
-<p>Go to <a target="_blank" href="https://github.com/coderholic/pyradio/releases">PyRadio’s Releases page</a> and download the latest release (either a zip or a tar.gz file).</p>
-<p>Extract this file to your “<em>Home</em>” directory (“<strong>C:\Users\[Your User Name]</strong>” or “<strong>%USERPROFILE%</strong>) - you will get a directory whose name is similar to”<strong>pyradio-0.8.9</strong>".</p>
-<p>I will use this name for the following examples; you will have to use the actual name of directory you got from the extraction.</p>
+<p>So here’s how you do it: Right click on <a target="_blank" href="https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py">this link</a> and use your browser “<strong>Save as</strong>” menu entry to save the file in your home folder as <strong>install.py</strong>.</p>
 <p>Finally, open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>).</p>
 <p>Then type:</p>
-<pre>cd pyradio-0.8.9
-devel\build_install_pyradio</pre>
+<pre>cd %USERPROFILE%
+python install.py</pre>
 <h4 id="final-steps">3.1 Final steps</h4>
 <p>If the installation is successful, you will get something similar to the following snippet:</p>
 <pre>...
@@ -155,9 +153,16 @@ Finished processing dependencies for pyradio==0.8.9
 
 Installation successful!
 </pre>
-<p>If you are not using Git, you can safely delete the <strong>pyradio-0.8.9</strong> directory.</p>
 <p>Finally, you can type <strong>pyradio</strong> and enjoy!</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch <strong>PyRadio</strong> and optionally modify it (change font size, window dimensions, etc). If it’s not there, you can just copy it from the “<em>help</em>” directory of the <strong>Explorer File Manager</strong> which will open after executing <strong>pyradio -ocd</strong>.</p>
+<h3 id="cleaning-up">3.2 Cleaning up <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<p>After the installation is completed, there will be some files left on your system, which you may want to remove. These are:</p>
+<ol type="1">
+<li><strong>install.py</strong>: The script you originally downloaded. It should be in your home folder.</li>
+<li><strong>tmp-pyradio</strong>: A folder containing <strong>PyRadio</strong>’s sources and intermediate installation scripts. It should be in your home folder.</li>
+</ol>
+<p>You can safely delete these files.</p>
+<p>If you need to have <strong>PyRadio</strong>’s sources, you can just get them from the “<em>tmp-pyradio</em>” folder.</p>
 <h2 id="updating-pyradio">Updating PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> will inform you when a new release is available and ask you to go on with the update.</p>
 <p>If you answer “<em>y</em>” to the question asked, <strong>PyRadio</strong> will terminate after creating an update batch file and opening Windows Explorer to its location.</p>

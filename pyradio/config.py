@@ -1335,7 +1335,7 @@ class PyRadioConfig(PyRadioStations):
             if platform == 'win32':
                 self._session_lock_file = path.join(getenv('APPDATA'), 'pyradio', 'pyradio.lock')
             else:
-                self._session_lock_file = path.join(getenv('HOME'), '.config', 'pyradio')
+                self._session_lock_file = path.join(getenv('HOME'), '.config', 'pyradio', 'pyradio.lock')
         if path.exists(self._session_lock_file):
             if platform == 'win32':
                 win_lock = path.join(getenv('APPDATA'), 'pyradio', '_windows.lock')
@@ -1475,6 +1475,8 @@ class PyRadioConfig(PyRadioStations):
                            'vlc_parameter'):
                 self._config_to_params(sp)
             elif sp[0] == 'distro':
+                ''' mark as dirty to force saving config to remove setting '''
+                self.dirty_config = True
                 self._distro = sp[1].strip()
 
         ''' read distro from package config file '''
@@ -1490,7 +1492,7 @@ class PyRadioConfig(PyRadioStations):
                     self._distro = sp[1].strip()
                     # print('Package distro is "{}"'.format(self._distro))
         except:
-            pass
+            self._distro = 'None'
 
         ''' make sure extra params have only up to 10 items each
         (well, actually 11 items, since the first one is the

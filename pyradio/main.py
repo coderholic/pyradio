@@ -9,7 +9,7 @@ from contextlib import contextmanager
 
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
-from .install import PyRadioUpdate, PyRadioUpdateOnWindows
+from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
@@ -89,6 +89,9 @@ def shell():
                         help='List extra players parameters.')
     parser.add_argument('-U', '--update', action='store_true',
                         help='Update PyRadio.')
+    if platform.startswith('linux'):
+        parser.add_argument('--user', action='store_true', default=False,
+                            help='Install for current user only.')
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='Uninstall PyRadio.')
     parser.add_argument('--unlock', action='store_true',
@@ -98,7 +101,7 @@ def shell():
     ''' extra downloads
         only use them after the developer says so,
         for debug purposes only
-            --sng             download developer release (master)
+            --sng-master      download developer release (master)
             --sng-devel       download developer devel branch
             --force-update    give a versio > than current,
                               to check update notification functionality
@@ -113,24 +116,24 @@ def shell():
 
     with pyradio_config_file() as pyradio_config:
 
-        if args.uninstall or args.update or \
-                args.sng_master or args.sng_devel:
+        package = 0
+        if args.uninstall or args.update:
+            if args.sng_master:
+                package = 1
+            elif args.sng_devel:
+                package = 2
             if not config_already_read:
                 read_config(pyradio_config)
                 config_already_read = True
             if pyradio_config.distro != 'None' and \
                     not platform.startswith('win'):
                 no_update(args.uninstall)
-            sys.exit()
 
-        if args.update or args.sng_master or args.sng_devel:
-            package = 0
-            if args.sng_master:
-                package = 1
-            elif args.sng_devel:
-                package = 2
+        if args.update:
             try:
                 upd = PyRadioUpdate(package=package)
+                if platform.startswith('linux'):
+                    upd.user = args.user
                 upd.update_pyradio()
             except RuntimeError:
                 upd = PyRadioUpdateOnWindows(package=package)
@@ -138,19 +141,15 @@ def shell():
             sys.exit()
 
         if args.uninstall:
-            if pyradio_config.distro != 'None' and \
-                    not platform.startswith('win'):
-                no_update(action='uninstall')
-
             try:
-                upd = PyRadioUpdate()
+                upd = PyRadioUpdate(package=package)
                 upd.remove_pyradio()
             except RuntimeError:
-                upd = PyRadioUpdateOnWindows()
+                upd = PyRadioUpdateOnWindows(package=package)
                 upd.update_or_uninstall_on_windows(mode='uninstall-open')
             sys.exit()
 
-        ''' chaeck conflicting parameters '''
+        ''' check conflicting parameters '''
         if args.active_player_param_id and \
                 args.extra_player_parameters:
           print('Error: You cannot use parameters "-ep" and "-ap" together!\n')
@@ -354,6 +353,7 @@ def shell():
                     upd.update_or_uninstall_on_windows(mode='update-open')
                 else:
                     upd = PyRadioUpdate()
+                    upd.user = is_pyradio_user_installed()
                     upd.update_pyradio()
             else:
                 print('\nThank you for using PyRadio. Cheers!')

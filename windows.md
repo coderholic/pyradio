@@ -17,6 +17,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [2.2 VLC installation](#vlc-installation)
     * [3. PyRadio installation](#pyradio-installation)
         * [3.1 Final steps](#final-steps)
+        * [3.2 Cleaning up](#cleaning-up)
 * [Updating PyRadio](#updating-pyradio)
 * [Uninstalling PyRadio](#uninstalling-pyradio)
 * [Reporing bugs](#reporting-bugs)
@@ -114,21 +115,15 @@ At last!
 
 You are ready to install **PyRadio**!
 
-So here's how you do it:
-
-Go to [PyRadio's Releases page](https://github.com/coderholic/pyradio/releases) and download the latest release (either a zip or a tar.gz file).
-
-Extract this file to your "*Home*" directory ("**C:\\Users\\[Your User Name]**" or "**%USERPROFILE%**) - you will get a directory whose name is similar to  "**pyradio-0.8.9**".
-
-I will use this name for the following examples; you will have to use the actual name of directory you got from the extraction.
+So here's how you do it: Right click on [this link](https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py) and use your browser "**Save as**" menu entry to save the file in your home folder as **install.py**.
 
 Finally, open a console (press the **Win** key, type **cmd** and press **ENTER**).
 
 Then type:
 
 ```
-cd pyradio-0.8.9
-devel\build_install_pyradio
+cd %USERPROFILE%
+python install.py
 ```
 
 #### 3.1 Final steps
@@ -154,12 +149,21 @@ Installation successful!
 
 ```
 
-If you are not using Git, you can safely delete the **pyradio-0.8.9** directory.
-
 Finally, you can type **pyradio** and enjoy!
 
 **Note:** For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch **PyRadio** and optionally modify it (change font size, window dimensions, etc). If it's not there, you can just copy it from the "*help*" directory of the **Explorer File Manager** which will open after executing **pyradio -ocd**.
 
+
+### 3.2 Cleaning up
+
+After the installation is completed, there will be some files left on your system, which you may want to remove. These are:
+
+1. **install.py**: The script you originally downloaded. It should be in your home folder.
+2. **tmp-pyradio**: A folder containing **PyRadio**'s sources and intermediate installation scripts. It should be in your home folder.
+
+You can safely delete these files.
+
+If you need to have **PyRadio**'s sources, you can just get them from the "*tmp-pyradio*" folder.
 
 ## Updating PyRadio
 
