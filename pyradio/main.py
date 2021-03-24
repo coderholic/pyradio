@@ -101,6 +101,7 @@ def shell():
     ''' extra downloads
         only use them after the developer says so,
         for debug purposes only
+            --devel           download official devel branch
             --sng-master      download developer release (master)
             --sng-devel       download developer devel branch
             --force-update    give a versio > than current,
@@ -108,6 +109,7 @@ def shell():
     '''
     parser.add_argument('--sng-master', action='store_true', help=SUPPRESS)
     parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
+    parser.add_argument('--devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--force-update', default='', help=SUPPRESS)
     args = parser.parse_args()
     sys.stdout.flush()
@@ -122,6 +124,8 @@ def shell():
                 package = 1
             elif args.sng_devel:
                 package = 2
+            elif args.devel:
+                package = 3
             if not config_already_read:
                 read_config(pyradio_config)
                 config_already_read = True

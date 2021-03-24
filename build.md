@@ -106,17 +106,17 @@ First thing you do is get the installation script. Open a **terminal** and type:
 
 ```
 cd
-wget https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py
+wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py
 ```
 
 or using curl:
 
 ```
 cd
-curl -L https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py -o install.py
+curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py -o install.py
 ```
 
-**Note**: If you have neither *wget* or *curl* installed, just right click on [this link](https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py) and use your browser "**Save as**" menu entry to save the file in your home folder.
+**Note**: If you have neither *wget* or *curl* installed, just right click on [this link](https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py) and use your browser "**Save link as**" menu entry to save the file in your home folder.
 
 Finally, execute the command:
 

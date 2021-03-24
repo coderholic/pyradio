@@ -842,10 +842,6 @@ class PyRadio(object):
         else:
             ''' start update detection and notification thread '''
             if CAN_CHECK_FOR_UPDATES:
-                ''' if any of these files are found, no update check will occur
-                    TODO: find pyradio's script installation path under macOS
-                '''
-                distro_package = ('/usr/bin/pyradio', )
                 if self._cnf.locked:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('(detectUpdateThread): session locked. Not starting!!!')

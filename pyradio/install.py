@@ -49,14 +49,16 @@ class PyRadioUpdate(object):
             0   -   official release
             1   -   s-n-g release
             2   -   s-h-g devel
+            3   -   official devel
     '''
 
     ZIP_URL = ('https://github.com/coderholic/pyradio/archive/master.zip',
                 'https://github.com/s-n-g/pyradio/archive/master.zip',
                 'https://github.com/s-n-g/pyradio/archive/devel.zip',
+                'https://github.com/coderholic/pyradio/archive/devel.zip',
                 )
 
-    ZIP_DIR  = ('pyradio-master', 'pyradio-master', 'pyradio-devel')
+    ZIP_DIR  = ('pyradio-master', 'pyradio-master', 'pyradio-devel', 'pyradio-devel')
 
     install = False
     user = False
@@ -190,7 +192,7 @@ class PyRadioUpdate(object):
             print('Error: Cannot create temp directory: "{}"'.format(self._dir))
             sys.exit(1)
 
-        ''' downloaad pyradio '''
+        ''' download pyradio '''
         self._download_pyradio()
 
         ''' change to pyradio directory '''
@@ -280,7 +282,7 @@ class PyRadioUpdate(object):
         self._mkdir(self._dir, self._empty_dir, self._permission_error)
 
     def _permission_error(self):
-        print('Error: You don\'t have permission to create: ""\n'.format(self._dir))
+        print('Error: You don\'t have permission to create: "{}"\n'.format(self._dir))
         sys.exit(1)
 
     def _clean_up(self):
@@ -377,11 +379,13 @@ if __name__ == '__main__':
     ''' extra downloads
         only use them after the developer says so,
         for debug purposes only
+            --devel         download official devel branch
             --sng-master    download developer release (master)
             --sng-devel     download developer devel branch
     '''
     parser.add_argument('--sng-master', action='store_true', help=SUPPRESS)
     parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
+    parser.add_argument('--devel', action='store_true', help=SUPPRESS)
 
     args = parser.parse_args()
     sys.stdout.flush()
@@ -390,8 +394,10 @@ if __name__ == '__main__':
     package = 0
     if args.sng_master:
         package = 1
-    if args.sng_devel:
+    elif args.sng_devel:
         package = 2
+    elif args.devel:
+        package = 3
 
     if args.uninstall:
         if platform.system().lower().startswith('win'):

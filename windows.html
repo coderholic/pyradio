@@ -34,29 +34,33 @@ a:visited{color: SaddleBrown;}
 <p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
+<li><a href="#pyradio-on-windows">PyRadio on Windows</a>
+<ul>
+<li><a href="#table-of-contents">Table of contents</a></li>
 <li><a href="#running-pyradio-on-windows">Running PyRadio on Windows</a></li>
 <li><a href="#how-it-all-works">How it all works</a></li>
 <li><a href="#installation">Installation</a>
 <ul>
-<li><a href="#python-installation">1. Python installation</a>
+<li><a href="#1-python-installation">1. Python installation</a>
 <ul>
-<li><a href="#installing-python">1.1 Installing Python</a></li>
-<li><a href="#verifying-the-installation">1.2 Verifying the installation</a></li>
+<li><a href="#11-installing-python">1.1 Installing Python</a></li>
+<li><a href="#12-verifying-the-installation">1.2 Verifying the installation</a></li>
 </ul></li>
-<li><a href="#player-installation">2. Player installation</a>
+<li><a href="#2-player-installation">2. Player installation</a>
 <ul>
-<li><a href="#mplayer-installation">2.1 MPlayer installation</a></li>
-<li><a href="#vlc-installation">2.2 VLC installation</a></li>
+<li><a href="#21-mplayer-installation">2.1 MPlayer installation</a></li>
+<li><a href="#22-vlc-installation">2.2 VLC installation</a></li>
 </ul></li>
-<li><a href="#pyradio-installation">3. PyRadio installation</a>
+<li><a href="#3-pyradio-installation">3. PyRadio installation</a>
 <ul>
-<li><a href="#final-steps">3.1 Final steps</a></li>
-<li><a href="#cleaning-up">3.2 Cleaning up</a></li>
+<li><a href="#31-final-steps">3.1 Final steps</a></li>
+<li><a href="#32-cleaning-up">3.2 Cleaning up</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#updating-pyradio">Updating PyRadio</a></li>
 <li><a href="#uninstalling-pyradio">Uninstalling PyRadio</a></li>
-<li><a href="#reporting-bugs">Reporing bugs</a></li>
+<li><a href="#reporting-bugs">Reporting bugs</a></li>
+</ul></li>
 </ul>
 <p><a href="build.html">[Back to Build Instructions]</a> | <a href="README.html">[Back to README]</a></p>
 <h2 id="running-pyradio-on-windows">Running PyRadio on Windows <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
@@ -155,7 +159,7 @@ Installation successful!
 </pre>
 <p>Finally, you can type <strong>pyradio</strong> and enjoy!</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch <strong>PyRadio</strong> and optionally modify it (change font size, window dimensions, etc). If it’s not there, you can just copy it from the “<em>help</em>” directory of the <strong>Explorer File Manager</strong> which will open after executing <strong>pyradio -ocd</strong>.</p>
-<h3 id="cleaning-up">3.2 Cleaning up <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h4 id="cleaning-up">3.2 Cleaning up</h4>
 <p>After the installation is completed, there will be some files left on your system, which you may want to remove. These are:</p>
 <ol type="1">
 <li><strong>install.py</strong>: The script you originally downloaded. It should be in your home folder.</li>
@@ -174,7 +178,7 @@ Installation successful!
 <pre>pyradio -R</pre>
 <p><strong>PyRadio</strong> create an uninstall batch file and open Windows Explorer to its location.</p>
 <p>You just double click on the batch file (called <strong>uninstall.bat</strong>) to complete the procedure.</p>
-<h3 id="reporting-bugs">Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h2 id="reporting-bugs">Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>When a bug is found, please do report it by <a target="_blank" href="https://github.com/coderholic/pyradio/issues">opening an issue at github</a>.</p>
 <p>In you report you should, at the very least, state your <strong>pyradio version</strong> and <strong>python version</strong>.</p>
 <p>It would be really useful to include <strong>%USERPROFILE%/pyradio.log</strong> in your report.</p>

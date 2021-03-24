@@ -6,21 +6,23 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 ## Table of contents
 
-* [Running PyRadio on Windows](#running-pyradio-on-windows)
-* [How it all works](#how-it-all-works)
-* [Installation](#installation)
-    * [1. Python installation](#python-installation)
-        * [1.1 Installing Python](#installing-python)
-        * [1.2 Verifying the installation](#verifying-the-installation)
-    * [2. Player installation](#player-installation)
-        * [2.1 MPlayer installation](#mplayer-installation)
-        * [2.2 VLC installation](#vlc-installation)
-    * [3. PyRadio installation](#pyradio-installation)
-        * [3.1 Final steps](#final-steps)
-        * [3.2 Cleaning up](#cleaning-up)
-* [Updating PyRadio](#updating-pyradio)
-* [Uninstalling PyRadio](#uninstalling-pyradio)
-* [Reporing bugs](#reporting-bugs)
+- [PyRadio on Windows](#pyradio-on-windows)
+  - [Table of contents](#table-of-contents)
+  - [Running PyRadio on Windows](#running-pyradio-on-windows)
+  - [How it all works](#how-it-all-works)
+  - [Installation](#installation)
+    - [1. Python installation](#1-python-installation)
+      - [1.1 Installing Python](#11-installing-python)
+      - [1.2 Verifying the installation](#12-verifying-the-installation)
+    - [2. Player installation](#2-player-installation)
+      - [2.1 MPlayer installation](#21-mplayer-installation)
+      - [2.2 VLC installation](#22-vlc-installation)
+    - [3. PyRadio installation](#3-pyradio-installation)
+      - [3.1 Final steps](#31-final-steps)
+      - [3.2 Cleaning up](#32-cleaning-up)
+  - [Updating PyRadio](#updating-pyradio)
+  - [Uninstalling PyRadio](#uninstalling-pyradio)
+  - [Reporting bugs](#reporting-bugs)
 
 [[Back to Build Instructions]](build.md) | [[Back to README]](README.md)
 
@@ -154,7 +156,7 @@ Finally, you can type **pyradio** and enjoy!
 **Note:** For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch **PyRadio** and optionally modify it (change font size, window dimensions, etc). If it's not there, you can just copy it from the "*help*" directory of the **Explorer File Manager** which will open after executing **pyradio -ocd**.
 
 
-### 3.2 Cleaning up
+#### 3.2 Cleaning up
 
 After the installation is completed, there will be some files left on your system, which you may want to remove. These are:
 
@@ -192,7 +194,7 @@ pyradio -R
 
 You just double click on the batch file (called **uninstall.bat**) to complete the procedure.
 
-### Reporting bugs
+## Reporting bugs
 
 When a bug is found, please do report it by [opening an issue at github](https://github.com/coderholic/pyradio/issues).
 
