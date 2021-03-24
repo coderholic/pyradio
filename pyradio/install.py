@@ -235,13 +235,13 @@ class PyRadioUpdate(object):
             print('Error: Failed to download PyRadio source code...\n')
             sys.exit(1)
 
-            print('Extracting RyRadio source code...')
-            with zipfile.ZipFile(os.path.join(self._dir, self.ZIP_DIR[self._package] + '.zip')) as z:
-                try:
-                    z.extractall(path=self._dir)
-                except:
-                    print('Error: PyRadio source code ZIP file is corrupt...\n')
-                    sys.exit(1)
+        print('Extracting RyRadio source code...')
+        with zipfile.ZipFile(os.path.join(self._dir, self.ZIP_DIR[self._package] + '.zip')) as z:
+            try:
+                z.extractall(path=self._dir)
+            except:
+                print('Error: PyRadio source code ZIP file is corrupt...\n')
+                sys.exit(1)
 
     def _mkdir(self, name, dir_exist_function=None, _permission_error_function=None):
         if os.path.isdir(name):
