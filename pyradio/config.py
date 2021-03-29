@@ -12,6 +12,8 @@ from datetime import datetime
 from shutil import copyfile, move
 import threading
 from copy import deepcopy
+from pyradio import version, app_state
+
 from .browser import PyRadioStationsBrowser, probeBrowsers
 HAS_REQUESTS = True
 try:
@@ -1007,6 +1009,7 @@ class PyRadioConfig(PyRadioStations):
     user_param_id = 0
 
     PROGRAM_UPDATE = False
+    current_pyradio_version = None
 
     def __init__(self):
         self.backup_player_params = None
@@ -1275,6 +1278,45 @@ class PyRadioConfig(PyRadioStations):
     def session_lock_file(self, val):
         return
 
+    def get_pyradio_version(self):
+        ''' reads pyradio version from installed files
+
+            Retrurns
+                self.info
+                    The string to display at left top corner of main window
+                self.current_pyradio_version
+                    The version to use when checking for updates
+        '''
+        ret = None
+        if app_state:
+            self.info = " PyRadio {0}-{1} ".format(version, app_state)
+        else:
+            self.info = " PyRadio {0} ".format(version)
+            ''' git_description can be set at build time
+                if so, revision will be shown along with the version
+            '''
+            # if revision is not 0
+            git_description = ''
+            if git_description:
+                if git_description == 'not_from_git':
+                    ret = "RyRadio built from zip file (revision unknown)"
+                else:
+                    git_info = git_description.split('-')
+                    if git_info[1] != '0':
+                        try:
+                            if 'beta' in git_info[1] or 'rc' in git_info[1].lower():
+                                self.info = " Pyradio {1}-{1}".format(git_info[0], git_info[1])
+                                ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[2])
+                            else:
+                                self.info = " PyRadio {0}-r{1} ".format(version, git_info[1])
+                                ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1])
+                        except:
+                            pass
+        self.current_pyradio_version = self.info.replace(' PyRadio ', '')
+        # if self._distro != 'None':
+        #     self.info += '({})'.format(self._distro)
+        return ret
+
     def setup_mouse(self):
         if self.enable_mouse:
             curses.mousemask(curses.ALL_MOUSE_EVENTS
@@ -1476,7 +1518,7 @@ class PyRadioConfig(PyRadioStations):
                 self._config_to_params(sp)
             elif sp[0] == 'distro':
                 ''' mark as dirty to force saving config to remove setting '''
-                self.dirty_config = True
+                # self.dirty_config = True
                 self._distro = sp[1].strip()
 
         ''' read distro from package config file '''

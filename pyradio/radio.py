@@ -29,8 +29,6 @@ try:
 except:
     HAVE_PSUTIL = False
 
-from pyradio import version, app_state
-
 from .config import HAS_REQUESTS
 from .common import *
 from .window_stack import Window_Stack
@@ -40,6 +38,7 @@ from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnec
 from .themes import *
 from .cjkwrap import cjklen
 from . import player
+from .install import version_string_to_tuple, get_github_tag
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -464,35 +463,6 @@ class PyRadio(object):
                 logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), self._cnf.distro))
             logger.info('Terminal supports {} colors'.format(curses.COLORS))
         self.stdscr = stdscr
-        if app_state:
-            self.info = " PyRadio {0}-{1} ".format(version, app_state)
-        else:
-            self.info = " PyRadio {0} ".format(version)
-            ''' git_description can be set at build time
-                if so, revision will be shown along with the version
-            '''
-            # if revision is not 0
-            git_description = ''
-            if git_description:
-                if git_description == 'not_from_git':
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info("RyRadio built from zip file (revision unknown)")
-                else:
-                    git_info = git_description.split('-')
-                    if git_info[1] != '0':
-                        try:
-                            if 'beta' in git_info[1] or 'rc' in git_info[1].lower():
-                                self.info = " Pyradio {1}-{1}".format(git_info[0], git_info[1])
-                                if logger.isEnabledFor(logging.INFO):
-                                    logger.info("RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[2]))
-                            else:
-                                self.info = " PyRadio {0}-r{1} ".format(version, git_info[1])
-                                if logger.isEnabledFor(logging.INFO):
-                                    logger.info("RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1]))
-                        except:
-                            pass
-        if self._cnf.distro != 'None':
-            self.info += '({})'.format(self._cnf.distro)
 
         try:
             curses.curs_set(0)
@@ -509,6 +479,10 @@ class PyRadio(object):
             self._theme_name = ret_theme_name
             self._cnf.theme_not_supported = True
             self._cnf.theme_has_error = True if ret == -1 else False
+
+        rev = self._cnf.get_pyradio_version()
+        if logger.isEnabledFor(logging.INFO) and rev:
+            logger.info(rev)
 
         self.log = Log()
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
@@ -578,7 +552,7 @@ class PyRadio(object):
         # txtWin used mainly for error reports
         self.txtWin = None
         self.txtWin = curses.newwin(self.maxY - 4, self.maxX - 4, 2, 2)
-        self.initHead(self.info)
+        self.initHead(self._cnf.info)
         self.initFooter()
         self.log.setScreen(self.footerWin)
         if init_from_setup:
@@ -854,7 +828,8 @@ class PyRadio(object):
                     if not distro_package_found:
                         self._update_notification_thread = threading.Thread(
                             target=self.detectUpdateThread,
-                            args=(self._cnf.stations_dir, self._update_notify_lock,
+                            args=(self._cnf,
+                                  self._update_notify_lock,
                                   lambda: self.stop_update_notification_thread))
                         self._update_notification_thread.start()
 
@@ -3253,7 +3228,7 @@ class PyRadio(object):
                             mode_to_set=self.ws.STATION_INFO_MODE,
                             caption=' Station Info ', is_message=True)
 
-    def detectUpdateThread(self, a_path, a_lock, stop):
+    def detectUpdateThread(self, config, a_lock, stop):
         ''' a thread to check if an update is available '''
 
         def delay(secs, stop):
@@ -3261,23 +3236,6 @@ class PyRadio(object):
                 sleep(.5)
                 if stop():
                     return
-
-        def to_ver(this_version):
-            a_v = this_version.replace('-', '.').lower()
-            a_l = a_v.split('.')
-            while len(a_l) < 4:
-                a_l.append('0')
-            a_n_l = []
-            for n in a_l:
-                if 'beta' in n:
-                    a_n_l.append(-200+int(a_l[-1].replace('beta', '')))
-                elif 'rc' in n:
-                    a_n_l.append(-100+int(a_l[-1].replace('rc', '')))
-                elif 'r' in n:
-                    a_n_l.append(int(a_l[-1].replace('r', '')))
-                else:
-                    a_n_l.append(int(n))
-            return a_n_l
 
         def clean_date_files(files, start=0):
             files_to_delete = files[start+1:]
@@ -3303,16 +3261,14 @@ class PyRadio(object):
             min = secs % 60
             return str(hour) + ':' + str(min)
 
-        check_days = 10
         if logger.isEnabledFor(logging.INFO):
             logger.info('detectUpdateThread: Starting...')
-        ##################
-        #delay(5, stop)
-        from pyradio import version as my_version, app_state as my_app_state
-        if my_app_state == '':
-            this_version = my_version
+        a_path = config.stations_dir
+        if config.current_pyradio_version:
+            this_version = config.current_pyradio_version
         else:
-            this_version = my_version+'-'+my_app_state
+            this_version = config.get_pyradio_version()
+        check_days = 10
         connection_fail_count = 0
         ran = 5
         if logger.isEnabledFor(logging.INFO):
@@ -3334,48 +3290,35 @@ class PyRadio(object):
             delta = (d1 - d2).days
 
             if self._force_update:
+                ''' enable update check '''
                 delta=check_days
             if delta < check_days:
                 clean_date_files(files)
                 if logger.isEnabledFor(logging.INFO):
                     if check_days - delta == 1:
-                        logger.info('detectUpdateThread: Will check again tomorrow...')
+                        logger.info('detectUpdateThread: Pyradio is up to date. Will check again tomorrow...')
                     else:
-                        logger.info('detectUpdateThread: Will check again in {} days...'.format(check_days - delta))
+                        logger.info('detectUpdateThread: Pyradio is up to date. Will check again in {} days...'.format(check_days - delta))
                 return
 
         if logger.isEnabledFor(logging.INFO):
             logger.info('detectUpdateThread: Checking for updates')
-        url = 'https://api.github.com/repos/coderholic/pyradio/tags'
         while True:
             if stop():
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: Asked to stop. Stoping...')
                 break
-            if version_info < (3, 0):
-                try:
-                    last_tag = urlopen(url).read(300)
-                except:
-                    last_tag = None
-            else:
-                try:
-                    with urlopen(url) as https_response:
-                        last_tag = https_response.read(300)
-                except:
-                    last_tag = None
-
+            last_tag = get_github_tag()
             if stop():
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: Asked to stop. Stoping...')
                 break
 
             if self._force_update:
-                last_tag='"name":"' + self._force_update + '"'
+                last_tag= self._force_update
 
             if last_tag:
                 connection_fail_count = 0
-                x = str(last_tag).split('"name":"')
-                last_tag = x[1].split('"')[0]
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('detectUpdateThread: Upstream version found: {}'.format(last_tag))
                 if this_version == last_tag:
@@ -3385,12 +3328,8 @@ class PyRadio(object):
                         logger.info('detectUpdateThread: No update found. Will check again in {} days. Terminating...'.format(check_days))
                     break
                 else:
-                    ''' PROGRAM DEBUG: set program's version
-                        to check display functionality
-                    '''
-                    #this_version='0.8.8-RC1'
-                    existing_version = to_ver(this_version)
-                    new_version = to_ver(last_tag)
+                    existing_version = version_string_to_tuple(this_version)
+                    new_version = version_string_to_tuple(last_tag)
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('current version = {0}, upstream version = {1}'.format(existing_version, new_version))
                     if existing_version < new_version:

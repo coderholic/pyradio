@@ -4,15 +4,19 @@
 
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
-## Table of contents
+## Table of Contents
+
+<!-- vim-markdown-toc Marked -->
 
 * [Building from source](#building-from-source)
-    * [Preparing for the installation](#preparing-for-the-installation)
-        * [Linux](#linux)
-        * [macOS](#macos)
-        * [Windows](windows.md)
-    * [Performing the installation](#performing-the-installation)
-* [Return to main doc](README.md)
+* [Preparing for the installation](#preparing-for-the-installation)
+    * [Linux](#linux)
+    * [macOS](#macos)
+    * [Windows](#windows)
+* [Performing the installation](#performing-the-installation)
+
+<!-- vim-markdown-toc -->
+[[Return to main doc](README.md)]
 
 ## Building from source
 
@@ -98,7 +102,9 @@ sudo ln -s /usr/local/bin/vlc /usr/local/bin/cvlc
 
 Your system is ready now for **pyradio** to be installed. You can follow the instructions given at "[Performing the installation](#performing-the-installation)".
 
+### Windows
 
+Windows installation is presented in its [own page](windows.md).
 
 ## Performing the installation
 

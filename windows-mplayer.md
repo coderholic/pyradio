@@ -4,11 +4,14 @@
 
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
+## Table of Contents
 
-## Table of contents
+<!-- vim-markdown-toc Marked -->
 
 * [MPlayer installation](#mplayer-installation)
-    * [Adding MPlayer to the PATH](#adding-mplayer-to-the-path)
+* [Adding MPlayer to the PATH](#adding-mplayer-to-the-path)
+
+<!-- vim-markdown-toc -->
 
 [[Back to Build Instructions]](windows.md) [[Back to README]](README.md)
 
@@ -49,7 +52,7 @@ If you are unsure on how to do that, please refer to the following image (you ca
 [Navigating to %APPDATA%](https://members.hellug.gr/sng/pyradio/appdata.jpg)
 
 
-### Adding MPlayer to the PATH
+## Adding MPlayer to the PATH
 
 The final step is to add MPlayer to the PATH System Variable.
 

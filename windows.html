@@ -32,37 +32,35 @@ a:visited{color: SaddleBrown;}
 <h1 style="color: SaddleBrown"id="pyradio-on-windows">PyRadio on Windows</h1>
 <p><strong>PyRadio</strong>: Command line internet radio player.</p>
 <p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
-<h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<!-- vim-markdown-toc Marked -->
 <ul>
-<li><a href="#pyradio-on-windows">PyRadio on Windows</a>
-<ul>
-<li><a href="#table-of-contents">Table of contents</a></li>
 <li><a href="#running-pyradio-on-windows">Running PyRadio on Windows</a></li>
 <li><a href="#how-it-all-works">How it all works</a></li>
 <li><a href="#installation">Installation</a>
 <ul>
-<li><a href="#1-python-installation">1. Python installation</a>
+<li><a href="#python-installation">Python installation</a>
 <ul>
-<li><a href="#11-installing-python">1.1 Installing Python</a></li>
-<li><a href="#12-verifying-the-installation">1.2 Verifying the installation</a></li>
+<li><a href="#installing-python">Installing Python</a></li>
+<li><a href="#verifying-the-installation">Verifying the installation</a></li>
 </ul></li>
-<li><a href="#2-player-installation">2. Player installation</a>
+<li><a href="#player-installation">Player installation</a>
 <ul>
-<li><a href="#21-mplayer-installation">2.1 MPlayer installation</a></li>
-<li><a href="#22-vlc-installation">2.2 VLC installation</a></li>
+<li><a href="#mplayer-installation">MPlayer installation</a></li>
+<li><a href="#vlc-installation">VLC installation</a></li>
 </ul></li>
-<li><a href="#3-pyradio-installation">3. PyRadio installation</a>
+<li><a href="#pyradio-installation">PyRadio installation</a>
 <ul>
-<li><a href="#31-final-steps">3.1 Final steps</a></li>
-<li><a href="#32-cleaning-up">3.2 Cleaning up</a></li>
+<li><a href="#final-steps">Final steps</a></li>
+<li><a href="#cleaning-up">Cleaning up</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#updating-pyradio">Updating PyRadio</a></li>
 <li><a href="#uninstalling-pyradio">Uninstalling PyRadio</a></li>
 <li><a href="#reporting-bugs">Reporting bugs</a></li>
-</ul></li>
 </ul>
-<p><a href="build.html">[Back to Build Instructions]</a> | <a href="README.html">[Back to README]</a></p>
+<!-- vim-markdown-toc -->
+<p>[<a href="build.html">Back to Build Instructions</a>] | [<a href="README.html">Back to README</a>]</p>
 <h2 id="running-pyradio-on-windows">Running PyRadio on Windows <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>What? A linux console application on Windows?</p>
 <p>Yes, sure. Why not?</p>
@@ -76,18 +74,18 @@ a:visited{color: SaddleBrown;}
 <p>Other than that, you will have a fully functional <strong>PyRadio</strong> installation.</p>
 <p>Having said that, let us proceed with the installation.</p>
 <h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>The installation consists of three (optionally four) steps:</p>
+<p>The installation consists of three steps:</p>
 <ol type="1">
 <li><strong>Python</strong> installation</li>
 <li><strong>Player</strong> installation</li>
 <li><strong>PyRadio</strong> installation</li>
 </ol>
-<h3 id="python-installation">1. Python installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
-<h4 id="installing-python">1.1 Installing Python</h4>
+<h3 id="python-installation">Python installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h4 id="installing-python">Installing Python</h4>
 <p>If you don’t already have <strong>Python</strong>, just get to its <a target="_blank" href="https://www.python.org/downloads/windows/">Windows Downloads</a> page and download the latest <strong>3.x</strong> release.</p>
 <p>When the download is done, run its setup and select “<em>Custom Installation</em>” so that you can “<em>Add Python to environment varaibles</em>”. You can refer to the following image to see the relevant setting.</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/python1.jpg">Python Installation</a></p>
-<h4 id="verifying-the-installation">1.2 Verifying the installation</h4>
+<h4 id="verifying-the-installation">Verifying the installation</h4>
 <p>Either if you have just installed <strong>Python</strong> or you already have it installed, you need to verify that its executable is in the <strong>PATH</strong> (i.e. <strong>Python</strong> can be executed from a console by typing“<em>python</em>”).</p>
 <p>So, go ahead and open a console (the command is <strong>cmd</strong>) and type <strong>python</strong>.</p>
 <p>If you get something similar to the following snippet, you are good to go.</p>
@@ -97,7 +95,7 @@ Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;licen
 <p>If the command could not be found, you have to run the installation again, select “<em>Modify</em>” and set the “<em>Add Python to environment variables</em>” option. You can refer to the following image to see the relevant setting.</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/python2.jpg">Python Installation Modification</a></p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If you don’t have the setup file of the original <strong>Python</strong> installation, you will have to <strong>download</strong> it from <a target="_blank" href="https://www.python.org/downloads/windows/">Python’s Windows Downloads</a>. In case you want to upgrade to the latest version, you <strong>must uninstall</strong> the one currently installed, beforehand.</p>
-<h3 id="player-installation">2. Player installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h3 id="player-installation">Player installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>It’s time to decide which player you want to use, either <a target="_blank" href="http://www.mplayerhq.hu/design7/news.html">MPlayer</a> or <a target="_blank" href="https://www.videolan.org/vlc/">VLC</a>, or even both of them.</p>
 <p>This is what you should know before making your decision:</p>
 <table>
@@ -126,20 +124,20 @@ Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;licen
 </tr>
 </tbody>
 </table>
-<h4 id="mplayer-installation">2.1 MPlayer installation</h4>
+<h4 id="mplayer-installation">MPlayer installation</h4>
 <p>If <a target="_blank" href="http://www.mplayerhq.hu/">MPlayer</a> is your selection, please refer to the <a href="windows-mplayer.html">relevant instructions</a>.</p>
-<h4 id="vlc-installation">2.2 VLC installation</h4>
+<h4 id="vlc-installation">VLC installation</h4>
 <p>If <a target="_blank" href="https://www.videolan.org/vlc/">VLC</a> is your selection, just go and get it and install it as any other Windows program.</p>
 <p>As long as you install it to its default location (e.g “<em>C:\Program Files\VideoLAN\VLC</em>” or “<em>C:\Program Files (x86)\VideoLAN\VLC</em>”) <strong>Pyradio</strong> will be able to detect and use it.</p>
-<h3 id="pyradio-installation">3. PyRadio installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h3 id="pyradio-installation">PyRadio installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
 <p>At last!</p>
 <p>You are ready to install <strong>PyRadio</strong>!</p>
-<p>So here’s how you do it: Right click on <a target="_blank" href="https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py">this link</a> and use your browser “<strong>Save as</strong>” menu entry to save the file in your home folder as <strong>install.py</strong>.</p>
+<p>So here’s how you do it: Right click on <a target="_blank" href="https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py">this link</a> and use your browser “<strong>Save as</strong>” menu entry to save the file in your home folder as <strong>install.py</strong>.</p>
 <p>Finally, open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>).</p>
 <p>Then type:</p>
 <pre>cd %USERPROFILE%
 python install.py</pre>
-<h4 id="final-steps">3.1 Final steps</h4>
+<h4 id="final-steps">Final steps</h4>
 <p>If the installation is successful, you will get something similar to the following snippet:</p>
 <pre>...
 Installing pyradio-script.py script to C:\Users\spiros\AppData\Local\Programs\Python\Python37\Scripts
@@ -159,7 +157,7 @@ Installation successful!
 </pre>
 <p>Finally, you can type <strong>pyradio</strong> and enjoy!</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch <strong>PyRadio</strong> and optionally modify it (change font size, window dimensions, etc). If it’s not there, you can just copy it from the “<em>help</em>” directory of the <strong>Explorer File Manager</strong> which will open after executing <strong>pyradio -ocd</strong>.</p>
-<h4 id="cleaning-up">3.2 Cleaning up</h4>
+<h4 id="cleaning-up">Cleaning up</h4>
 <p>After the installation is completed, there will be some files left on your system, which you may want to remove. These are:</p>
 <ol type="1">
 <li><strong>install.py</strong>: The script you originally downloaded. It should be in your home folder.</li>

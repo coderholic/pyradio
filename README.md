@@ -4,53 +4,54 @@ Command line internet radio player.
 
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
-## Table of contents
+## Table of Contents
 
-  - [Table of contents](#table-of-contents)
-  - [Requirements](#requirements)
-  - [Installation](#installation)
-  - [Command line options](#command-line-options)
-  - [Controls](#controls)
-  - [PyRadio's Modes](#pyradios-modes)
-  - [Config file](#config-file)
-  - [About Playlist files](#about-playlist-files)
-    - [Specifying a playlist to load (command line)](#specifying-a-playlist-to-load-command-line)
-    - [Managing playlists (within PyRadio)](#managing-playlists-within-pyradio)
-    - [Managing "foreign" playlists](#managing-foreign-playlists)
-    - [Playlist history](#playlist-history)
-  - [Search function](#search-function)
-  - [Line editor](#line-editor)
-    - [CJK characters support](#cjk-characters-support)
-  - [Moving stations around](#moving-stations-around)
-  - [Specifying stations' encoding](#specifying-stations-encoding)
-    - [Station by station encoding declaration](#station-by-station-encoding-declaration)
-    - [Global encoding declaration](#global-encoding-declaration)
-    - [Finding the right encoding](#finding-the-right-encoding)
-  - [Player detection / selection](#player-detection--selection)
-    - [Extra Player Parameters](#extra-player-parameters)
-      - [Using the command line](#using-the-command-line)
-      - [Using the Configuration Window](#using-the-configuration-window)
-    - [Changing parameters set](#changing-parameters-set)
-  - [Player connection protocol](#player-connection-protocol)
-  - [Player default volume level](#player-default-volume-level)
-    - [MPV](#mpv)
-    - [MPlayer](#mplayer)
-  - [Displaying Station Info](#displaying-station-info)
-  - [Copying and pasting - Registers](#copying-and-pasting---registers)
-  - [PyRadio Themes](#pyradio-themes)
-    - [Using transparency](#using-transparency)
-  - [Mouse support](#mouse-support)
-  - [Session Locking](#session-locking)
-    - [Session unlocking](#session-unlocking)
-  - [Update notification](#update-notification)
-  - [Cleaning up](#cleaning-up)
-    - [Previous cleaning up procedure](#previous-cleaning-up-procedure)
-  - [Debug mode](#debug-mode)
-  - [Reporting bugs](#reporting-bugs)
-  - [Packaging Pyradio](#packaging-pyradio)
-  - [TODO](#todo)
-  - [Acknowledgment](#acknowledgment)
+<!-- vim-markdown-toc Marked -->
 
+* [Requirements](#requirements)
+* [Installation](#installation)
+* [Command line options](#command-line-options)
+* [Controls](#controls)
+* [PyRadio's Modes](#pyradio's-modes)
+* [Config file](#config-file)
+* [About Playlist files](#about-playlist-files)
+    * [Specifying a playlist to load (command line)](#specifying-a-playlist-to-load-(command-line))
+    * [Managing playlists (within PyRadio)](#managing-playlists-(within-pyradio))
+    * [Managing "foreign" playlists](#managing-"foreign"-playlists)
+    * [Playlist history](#playlist-history)
+* [Search function](#search-function)
+* [Line editor](#line-editor)
+    * [CJK characters support](#cjk-characters-support)
+* [Moving stations around](#moving-stations-around)
+* [Specifying stations' encoding](#specifying-stations'-encoding)
+    * [Station by station encoding declaration](#station-by-station-encoding-declaration)
+    * [Global encoding declaration](#global-encoding-declaration)
+    * [Finding the right encoding](#finding-the-right-encoding)
+* [Player detection / selection](#player-detection-/-selection)
+    * [Extra Player Parameters](#extra-player-parameters)
+        * [Using the command line](#using-the-command-line)
+        * [Using the Configuration Window](#using-the-configuration-window)
+    * [Changing parameters set](#changing-parameters-set)
+* [Player connection protocol](#player-connection-protocol)
+* [Player default volume level](#player-default-volume-level)
+    * [MPV](#mpv)
+    * [MPlayer](#mplayer)
+* [Displaying Station Info](#displaying-station-info)
+* [Copying and pasting - Registers](#copying-and-pasting---registers)
+* [PyRadio Themes](#pyradio-themes)
+    * [Using transparency](#using-transparency)
+* [Mouse support](#mouse-support)
+* [Session Locking](#session-locking)
+    * [Session unlocking](#session-unlocking)
+* [Update notification](#update-notification)
+* [Cleaning up](#cleaning-up)
+* [Debug mode](#debug-mode)
+* [Reporting bugs](#reporting-bugs)
+* [Packaging Pyradio](#packaging-pyradio)
+* [TODO](#todo)
+* [Acknowledgment](#acknowledgment)
+
+<!-- vim-markdown-toc -->
 
 ## Requirements
 
@@ -113,6 +114,7 @@ optional arguments:
   -lp, --list-player-parameters
                         List extra players parameters.
   -U, --update          Update PyRadio.
+  --user                Install only for current user (linux only).
   -R, --uninstall       Uninstall PyRadio.
   --unlock              Remove sessions' lock file.
   -d, --debug           Start pyradio in debug mode.
@@ -691,53 +693,7 @@ If so, a notification message will be displayed, informing the user about it.
 
 ## Cleaning up
 
-Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; **PyRadio** will search and remove any previously installed files when the "**-u**" (uninstall) parameter is used.
-
-This procedure will remove any **Pyradio** files installed in your system, but will leave instact **PyRadio** configuration files.
-
-Windows users notice: This procedure **will not** uninstall python, mplayer, or git from your system.
-
-Example:
-
-    $ devel/build_install_pyradio -u
-    Uninstalling PyRadio
-    ** Removing executable ... done
-    ** Removing help files ... done
-    Looking for python installed files
-    ** Removing "pyradio-0.8.8-py3.8.egg" ... done
-    ** Removing "pyradio-0.8.6-py2.7.egg" ... done
-    ** Removing "pyradio-0.8.8-py3.8.egg" ... done
-    PyRadio successfully uninstalled
-
-In this example, running *devel/build_install_pyradio -u* has removed **PyRadio** python 3.8 system wide installation files, **PyRadio** python 2.7 system wide installation files,  and **PyRadio** python 3.8 user installation files, found in the system.
-
-I would recommend to execute *devel/build_install_pyradio -u* from time to time, and reinstall **Pyradio** right after its completion.
-
-### Previous cleaning up procedure
-
-As **PyRadio** versions accumulate, when building from source, one may have to *clean up* old installation files.
-
-To do that, one has to observe the installation process in order to find out where the package is installed. The installation would complete printing the following messages (on *python 3.7*):
-
-    Installed /usr/lib/python3.7/site-packages/pyradio-0.7.8-py3.7.egg
-    Processing dependencies for pyradio==0.7.8
-    Finished processing dependencies for pyradio==0.7.8
-
-From this we get that the installation directory is **/usr/lib/python3.7/site-packages**. This may be different though, depending on the distribution and python version used.
-
-Let's see what **PyRadio** files exist there:
-
-
-    $ ls -d /usr/lib/python3.7/site-packages/pyradio*
-
-    /usr/lib/python3.7/site-packages/pyradio-0.7.6.2-py3.7.egg
-    /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg
-    /usr/lib/python3.7/site-packages/pyradio-0.7.8-py3.7.egg
-
-As we see, previous versions still exist in this system: **0.7.6.2** and **0.7.7**. These files (actually directories) can safely be removed:
-
-    $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-.7.6.2-py3.7.egg
-    $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg
+**PyRadio** will uninstall all previously installed versions when updated (using the **-U** command line parameter), so no extra steps are needed any more to house keep your system.
 
 ## Debug mode
 
@@ -766,15 +722,9 @@ Finally, include the file produced in your report.
 
 If you are a packager and would like to produce a package for your distribution please do follow this mini guide.
 
-**PyRadio** is able to update and uninstall itself, when installed from sources.
+**PyRadio** is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
 
-This is something you do not want to be available when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
-
-In order to accomplice that, you just have to change the **distro** configuration parameter in the **config** file.
-
-**PyRadio** will read this parameter and will disable updating and uninstalling, when set to anything other than "**None**".
-
-So, here's how you do that:
+In order to accomplice that, you just have to change the **distro** configuration parameter in the **config** file. **PyRadio** will read this parameter and will disable updating and uninstalling, when set to anything other than "**None**". So, here's how you do that:
 
 Once you are in the sources top level directory (typically "*pyradio*"), you execute the command:
 
@@ -790,7 +740,9 @@ For example, an **Arch Linux** packager would use this command:
 sed -i 's/distro = None/distro = Arch Linux' pyradio/config
 ```
 
-The distro name you insert here will appear in **PyRadio**'s log file, so that I know where the package came from while debugging, so if you are not packaging for a specific distribution, please do use something meaningful (for example, using "*xxx*" will do the job, but provides no useful information).
+The distro name you insert here will appear in **PyRadio**'s "*Configuration Window*". In addition to that it will appear in the log file, so that I know where the package came from while debugging.
+
+Having siad that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using "*xxx*" will do the job, but provides no useful information).
 
 ## TODO
 

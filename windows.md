@@ -4,27 +4,29 @@
 
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
-## Table of contents
+## Table of Contents
 
-- [PyRadio on Windows](#pyradio-on-windows)
-  - [Table of contents](#table-of-contents)
-  - [Running PyRadio on Windows](#running-pyradio-on-windows)
-  - [How it all works](#how-it-all-works)
-  - [Installation](#installation)
-    - [1. Python installation](#1-python-installation)
-      - [1.1 Installing Python](#11-installing-python)
-      - [1.2 Verifying the installation](#12-verifying-the-installation)
-    - [2. Player installation](#2-player-installation)
-      - [2.1 MPlayer installation](#21-mplayer-installation)
-      - [2.2 VLC installation](#22-vlc-installation)
-    - [3. PyRadio installation](#3-pyradio-installation)
-      - [3.1 Final steps](#31-final-steps)
-      - [3.2 Cleaning up](#32-cleaning-up)
-  - [Updating PyRadio](#updating-pyradio)
-  - [Uninstalling PyRadio](#uninstalling-pyradio)
-  - [Reporting bugs](#reporting-bugs)
+<!-- vim-markdown-toc Marked -->
 
-[[Back to Build Instructions]](build.md) | [[Back to README]](README.md)
+* [Running PyRadio on Windows](#running-pyradio-on-windows)
+* [How it all works](#how-it-all-works)
+* [Installation](#installation)
+    * [Python installation](#python-installation)
+        * [Installing Python](#installing-python)
+        * [Verifying the installation](#verifying-the-installation)
+    * [Player installation](#player-installation)
+        * [MPlayer installation](#mplayer-installation)
+        * [VLC installation](#vlc-installation)
+    * [PyRadio installation](#pyradio-installation)
+        * [Final steps](#final-steps)
+        * [Cleaning up](#cleaning-up)
+* [Updating PyRadio](#updating-pyradio)
+* [Uninstalling PyRadio](#uninstalling-pyradio)
+* [Reporting bugs](#reporting-bugs)
+
+<!-- vim-markdown-toc -->
+
+[[Back to Build Instructions](build.md)] | [[Back to README](README.md)]
 
 ## Running PyRadio on Windows
 
@@ -52,15 +54,15 @@ Having said that, let us proceed with the installation.
 
 ## Installation
 
-The installation consists of three (optionally four) steps:
+The installation consists of three steps:
 
 1. **Python** installation
 2. **Player** installation
 3. **PyRadio** installation
 
-### 1. Python installation
+### Python installation
 
-#### 1.1 Installing Python
+#### Installing Python
 
 If you don't already have **Python**, just get to its [Windows Downloads](https://www.python.org/downloads/windows/) page and download the latest **3.x** release.
 
@@ -69,7 +71,7 @@ When the download is done, run its setup and select "*Custom Installation*" so t
 [Python Installation](https://members.hellug.gr/sng/pyradio/python1.jpg)
 
 
-#### 1.2 Verifying the installation
+#### Verifying the installation
 
 Either if you have just installed **Python** or you already have it installed, you need to verify that its executable is in the **PATH** (i.e. **Python** can be executed from a console by typing"*python*").
 
@@ -89,7 +91,7 @@ If the command could not be found, you have to run the installation again, selec
 
 **Note:** If you don't have the setup file of the original **Python** installation, you will have to **download** it from [Python's Windows Downloads](https://www.python.org/downloads/windows/). In case you want to upgrade to the latest version, you **must uninstall** the one currently installed, beforehand.
 
-### 2. Player installation
+### Player installation
 
 It's time to decide which player you want to use, either [MPlayer](http://www.mplayerhq.hu/design7/news.html) or [VLC](https://www.videolan.org/vlc/), or even both of them.
 
@@ -101,23 +103,23 @@ This is what you should know before making your decision:
 | **Cons** | Extra steps to install<br>May not play all streams (e.g. m3u8) | Titles update is not consistent (if any)    |
 
 
-#### 2.1 MPlayer installation
+#### MPlayer installation
 
 If [MPlayer](http://www.mplayerhq.hu/) is your selection, please refer to the [relevant instructions](windows-mplayer.md).
 
-#### 2.2 VLC installation
+#### VLC installation
 
 If [VLC](https://www.videolan.org/vlc/) is your selection, just go and get it and install it as any other Windows program.
 
 As long as you install it to its default location (e.g "*C:\\Program Files\\VideoLAN\\VLC*" or "*C:\\Program Files (x86)\\VideoLAN\\VLC*") **Pyradio** will be able to detect and use it.
 
-### 3. PyRadio installation
+### PyRadio installation
 
 At last!
 
 You are ready to install **PyRadio**!
 
-So here's how you do it: Right click on [this link](https://raw.githubusercontent.com/coderholic/pyradio/devel/pyradio/install.py) and use your browser "**Save as**" menu entry to save the file in your home folder as **install.py**.
+So here's how you do it: Right click on [this link](https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py) and use your browser "**Save as**" menu entry to save the file in your home folder as **install.py**.
 
 Finally, open a console (press the **Win** key, type **cmd** and press **ENTER**).
 
@@ -128,7 +130,7 @@ cd %USERPROFILE%
 python install.py
 ```
 
-#### 3.1 Final steps
+#### Final steps
 
 If the installation is successful, you will get something similar to the following snippet:
 
@@ -156,7 +158,7 @@ Finally, you can type **pyradio** and enjoy!
 **Note:** For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch **PyRadio** and optionally modify it (change font size, window dimensions, etc). If it's not there, you can just copy it from the "*help*" directory of the **Explorer File Manager** which will open after executing **pyradio -ocd**.
 
 
-#### 3.2 Cleaning up
+#### Cleaning up
 
 After the installation is completed, there will be some files left on your system, which you may want to remove. These are:
 

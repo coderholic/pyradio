@@ -178,6 +178,8 @@ class PyRadioConfigWindow(object):
                 pass
         else:
             self._win.addstr(1, self._second_column, 'Option Help', curses.color_pair(4))
+            ''' print distro name '''
+            ''' TODO: make sure it does not overwrite an option name '''
         self.refresh_selection()
 
     def _print_title(self):
@@ -196,6 +198,15 @@ class PyRadioConfigWindow(object):
         except:
             self._win.addstr(0, X, dirty_title.encode('utf-8'), curses.color_pair(3))
         self._win.addstr(self._title + ' ', curses.color_pair(4))
+
+        if self._cnf.distro != 'None':
+            try:
+                X = int((self.maxX - 20 - len(self._cnf.distro) - 1) / 2)
+                self._win.addstr(self.maxY - 1, X, ' Package provided by ', curses.color_pair(5))
+                # self._win.addstr(min_lines + 2, 3 + int(abs(8 - len(self._cnf.distro)) / 2), self._cnf.distro, curses.color_pair(4))
+                self._win.addstr(self._cnf.distro + ' ', curses.color_pair(4))
+            except:
+                pass
 
     def refresh_selection(self):
         self._print_title()

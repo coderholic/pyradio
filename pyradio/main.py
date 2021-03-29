@@ -6,10 +6,11 @@ from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 from os import path, getenv, environ
 from sys import platform, version_info
 from contextlib import contextmanager
+from platform import system
 
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
-from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed
+from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed, version_string_to_tuple, get_github_tag
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
@@ -91,13 +92,15 @@ def shell():
                         help='Update PyRadio.')
     if platform.startswith('linux'):
         parser.add_argument('--user', action='store_true', default=False,
-                            help='Install for current user only.')
+                            help='Install only for current user (linux only).')
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='Uninstall PyRadio.')
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Start pyradio in debug mode.')
+    parser.add_argument('-V', '--version', action='store_true',
+                        help='Display version information.')
     ''' extra downloads
         only use them after the developer says so,
         for debug purposes only
@@ -118,6 +121,15 @@ def shell():
 
     with pyradio_config_file() as pyradio_config:
 
+        if args.version:
+            pyradio_config.get_pyradio_version()
+            print('PyRadio version: {}'.format(pyradio_config.current_pyradio_version))
+            print('Python version: {}'.format(sys.version.replace('\n', ' ').replace('\r', ' ')))
+            pyradio_config.read_config()
+            if pyradio_config.distro != 'None':
+                print('Distribution: {}'.format(pyradio_config.distro))
+            sys.exit()
+
         package = 0
         if args.uninstall or args.update:
             if args.sng_master:
@@ -134,6 +146,19 @@ def shell():
                 no_update(args.uninstall)
 
         if args.update:
+            if package == 0:
+                pyradio_config.get_pyradio_version()
+                last_tag = get_github_tag()
+                if last_tag:
+                    print('Released version   :  {}'.format(last_tag))
+                    print('Installed version  :  {}'.format(pyradio_config.current_pyradio_version))
+                    if version_string_to_tuple(last_tag) <= version_string_to_tuple(pyradio_config.current_pyradio_version):
+                        print('Latest version already installed. Nothing to do....')
+                        sys.exit()
+                else:
+                    print('Error reading online version.\nPlease make sure you are connected to the internet and try again.')
+                    sys.exit(1)
+
             try:
                 upd = PyRadioUpdate(package=package)
                 if platform.startswith('linux'):

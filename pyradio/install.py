@@ -14,6 +14,14 @@ except:
     pass
 
 try:
+    from urllib.request import urlopen
+except ImportError:
+    try:
+        from urllib2 import urlopen
+    except ImportError:
+        pass
+
+try:
     import requests
     HAVE_REQUESTS = True
 except ModuleNotFoundError:
@@ -34,6 +42,41 @@ def isRunning():
             WindowExists('PyRadio: Your Internet Radio Player (Session Locked)'):
         sleep(1)
     print('')
+
+def version_string_to_tuple(this_version):
+    a_v = this_version.replace('-', '.').lower()
+    a_l = a_v.split('.')
+    while len(a_l) < 4:
+        a_l.append('0')
+    a_n_l = []
+    for n in a_l:
+        if 'beta' in n:
+            a_n_l.append(-200+int(a_l[-1].replace('beta', '')))
+        elif 'rc' in n:
+            a_n_l.append(-100+int(a_l[-1].replace('rc', '')))
+        elif 'r' in n:
+            pass
+        else:
+            a_n_l.append(int(n))
+    return a_n_l
+
+def get_github_tag():
+    url = 'https://api.github.com/repos/coderholic/pyradio/tags'
+    if sys.version_info < (3, 0):
+        try:
+            ret = urlopen(url).read(300)
+        except:
+            ret = None
+    else:
+        try:
+            with urlopen(url) as https_response:
+                ret = https_response.read(300)
+        except:
+            ret = None
+    if ret:
+        return str(ret).split('"name":')[1].split(',')[0].replace('"', '').replace("'", '')
+    else:
+        return None
 
 def WindowExists(title):
     try:
@@ -62,6 +105,7 @@ class PyRadioUpdate(object):
 
     install = False
     user = False
+    python2 = False
 
     def __init__(self, package=0, user=False):
         if platform.system().lower().startswith('win'):
@@ -208,9 +252,11 @@ class PyRadioUpdate(object):
             build_install_pyradio changes.
         '''
         # shutil.copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', '/tmp/tmp-pyradio/pyradio/devel/build_install_pyradio')
+        param = ' 2' if sys.version_info[0] == 2 else ''
         if mode == 'update':
             ''' install pyradio '''
-            param = ' --user' if self.user  else ''
+            if self.user:
+                param += ' --user'
             try:
                 subprocess.call('sudo devel/build_install_pyradio -x' + param, shell=True)
                 ret = True
@@ -221,7 +267,7 @@ class PyRadioUpdate(object):
         else:
             ''' install pyradio '''
             try:
-                subprocess.call('sudo devel/build_install_pyradio -x -u', shell=True)
+                subprocess.call('sudo devel/build_install_pyradio -x -u' + param, shell=True)
                 ret = True
             except:
                 ret = False
@@ -367,8 +413,9 @@ if __name__ == '__main__':
                             epilog='When executed without an argument, it installs PyRario.')
     parser.add_argument('-U', '--update', action='store_true',
                         help='Update PyRadio.')
-    parser.add_argument('--user', action='store_true',
-                        help='Install only for current user (linux only)')
+    if platform.startswith('linux'):
+        parser.add_argument('--user', action='store_true',
+                            help='Install only for current user (linux only).')
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='Uninstall PyRadio.')
 
@@ -407,6 +454,8 @@ if __name__ == '__main__':
             uni.print_uninstall_bat_created()
         else:
             uni = PyRadioUpdate(package=package)
+            if args.python2:
+                uni.python2 = True
             uni.remove_pyradio()
         sys.exit()
     elif args.update:
@@ -417,17 +466,23 @@ if __name__ == '__main__':
             upd.print_update_bat_created()
         else:
             upd = PyRadioUpdate(package=package)
+            if args.python2:
+                uni.python2 = True
             upd.user = is_pyradio_user_installed()
             upd.update_pyradio()
         sys.exit()
     elif args.do_uninstall:
         ''' coming from uninstall BAT file on Windows'''
         uni = PyRadioUpdateOnWindows(package=package)
+        if args.python2:
+            uni.python2 = True
         uni.remove_pyradio()
         sys.exit()
     elif args.do_update:
         ''' coming from update BAT file on Windows'''
         upd = PyRadioUpdateOnWindows(package=package)
+        if args.python2:
+            uni.python2 = True
         upd.update_pyradio()
         sys.exit()
 
@@ -456,6 +511,8 @@ if __name__ == '__main__':
             print('PyRadio is already installed.\n')
             sys.exit(1)
         uni = PyRadioUpdate(package=package)
+        if args.python2:
+            uni.python2 = True
         uni.install = True
         if not platform.system().lower().startswith('darwin'):
             uni.user = args.user
