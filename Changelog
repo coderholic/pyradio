@@ -1,9 +1,10 @@
-2021-03-23 s-n-g
+2021-03-30 s-n-g
     * Implemented a simplified method to install, update, uninstall.
     * PyRadio will detect its player abnormal termination.
     * Player's connection timeout can now be disabled. Once a player is
       started, it will be considered to be connected immediately.
-    * Active players parameter list is always synchronized to saved.
+    * BUG FIX: Active players parameter list is always synchronized to saved.
+    * BUG FIX: Clicking on empty space (past last station) will not crash pyradio.
 
 2021-02-27 s-n-g
     * Version 0.8.8.5 (BUG FIX release)

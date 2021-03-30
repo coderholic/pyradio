@@ -3776,6 +3776,8 @@ class PyRadio(object):
                         or a_button & curses.BUTTON1_CLICKED \
                         or a_button & curses.BUTTON1_RELEASED:
                     new_selection = self.startPos + my - self.bodyWinStartY
+                    if new_selection >= self.number_of_items:
+                        return False, False
                     if new_selection == self.selection:
                         do_update = False
                     else:

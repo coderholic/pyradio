@@ -742,7 +742,7 @@ sed -i 's/distro = None/distro = Arch Linux' pyradio/config
 
 The distro name you insert here will appear in **PyRadio**'s "*Configuration Window*". In addition to that it will appear in the log file, so that I know where the package came from while debugging.
 
-Having siad that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using "*xxx*" will do the job, but provides no useful information).
+Having said that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using "*xxx*" will do the job, but provides no useful information).
 
 ## TODO
 
@@ -751,7 +751,7 @@ Having siad that, if you are not packaging for a specific distribution, please d
 - [x] Players extra parameters ([#118](https://github.com/coderholic/pyradio/issues/118)) - v. 0.8.8.3
 - [x] New player selection configuration window ([#118](https://github.com/coderholic/pyradio/issues/118)) - v. 0.8.8.3
 - [ ] Notify the user that the package's stations.csv has changed
-- [x] Update / uninstall using command line parameters (-U / -R) - v. 0.9.0
+- [x] Update / uninstall using command line parameters (-U / -R) - v. 0.8.9
 - [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
 
 ## Acknowledgment
