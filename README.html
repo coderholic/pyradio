@@ -7,6 +7,7 @@
   <title>PyRadio README</title>
     <style> 
     html {margin: 2em;} 
+    body {width: 750px; margin: auto;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
     h3 {margin-top: 2em; color: SaddleBrown;} 
     h4 {margin-top: 2em; color: SaddleBrown;} 
@@ -33,9 +34,9 @@ a:visited{color: SaddleBrown;}
 <p>Command line internet radio player.</p>
 <p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="requirements">Requirements <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
-<li><a href="#requirements">Requirements</a></li>
 <li><a href="#installation">Installation</a></li>
 <li><a href="#command-line-options">Command line options</a></li>
 <li><a href="#controls">Controls</a></li>
@@ -43,6 +44,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#config-file">Config file</a></li>
 <li><a href="#about-playlist-files">About Playlist files</a>
 <ul>
+<li><a href="#integrating-new-stations">Integrating new stations</a></li>
 <li><a href="#specifying-a-playlist-to-load-(command-line)">Specifying a playlist to load (command line)</a></li>
 <li><a href="#managing-playlists-(within-pyradio)">Managing playlists (within PyRadio)</a></li>
 <li><a href="#managing-%22foreign%22-playlists">Managing “foreign” playlists</a></li>
@@ -95,13 +97,12 @@ a:visited{color: SaddleBrown;}
 <li><a href="#acknowledgment">Acknowledgment</a></li>
 </ul>
 <!-- vim-markdown-toc -->
-<h2 id="requirements">Requirements <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
-<li>python 2.7+/3.5+
+<li>python 2.7/3.5+
 <ul>
 <li>requests</li>
 </ul></li>
-<li>MPV, MPlayer or VLC installed and in your path.</li>
+<li>MPV, MPlayer or VLC installed and in your path</li>
 </ul>
 <h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (e.g. <em>Arch Linux</em> and derivatives can install <a target="_blank" href="https://aur.archlinux.org/packages/pyradio-git/">pyradio-git</a> from AUR).</p>
@@ -229,8 +230,12 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
 <p>Optionally, a third column can be inserted, stating the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
 <p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2em;"><strong>Tip:</strong> If you already have a custom <em>stations.csv</em> file, but want to update it with <strong>PyRadio</strong>’s default one, you just rename it, run <strong>PyRadio</strong> (so that the default one get created) and then merge the two files.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong>~/.pyradio</strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong>~/.config/pyradio</strong>) and renamed to <strong>stations.csv</strong> or if this file exists, to <strong>pyradio.csv</strong>. In this case, this file will be the default one.</p>
+<h3 id="integrating-new-stations">Integrating new stations</h3>
+<p>When the package’s “<em>stations.csv</em>” files is updated, the changes it has will not automatically appear in the user’s stations file.</p>
+<p>What <strong>PyRadio</strong> will do is inform the user that these changes do exist and give him a chance to <strong>integrate</strong> these changes to his stations file, by appending the new stations to the file.</p>
+<p>When this is done, the first added station will be selected so that the user can inspect the changes and decide to keep or delete the new stations.</p>
+<p><strong>PyRadio</strong> will only add stations to the user’s stations file; no station will be deleted as a result of this procedure.</p>
 <h3 id="specifying-a-playlist-to-load-command-line">Specifying a playlist to load (command line)</h3>
 <p><strong>PyRadio</strong> will normally load its default playlist file, as described above, upon its execution. A different file can be loaded when the <strong>-s</strong> command line option is used.</p>
 <p>The <strong>-s</strong> option will accept:</p>
@@ -577,8 +582,8 @@ Basic mouse support (<a target="_blank" href="https://github.com/coderholic/pyra
 Players extra parameters (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
 <li><input type="checkbox" disabled="" checked="" />
 New player selection configuration window (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
-<li><input type="checkbox" disabled="" />
-Notify the user that the package’s stations.csv has changed</li>
+<li><input type="checkbox" disabled="" checked="" />
+Notify the user that the package’s stations.csv has changed -v 0.8.9</li>
 <li><input type="checkbox" disabled="" checked="" />
 Update / uninstall using command line parameters (-U / -R) - v. 0.8.9</li>
 <li><input type="checkbox" disabled="" />

@@ -38,7 +38,7 @@ from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnec
 from .themes import *
 from .cjkwrap import cjklen
 from . import player
-from .install import version_string_to_tuple, get_github_tag
+from .install import version_string_to_list, get_github_tag
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -347,6 +347,8 @@ class PyRadio(object):
                 self.ws.IN_PLAYER_PARAMS_EDITOR: self._redisplay_player_select_win_refresh_and_resize,
                 self.ws.USER_PARAMETER_ERROR: self._print_user_parameter_error,
                 self.ws.IN_PLAYER_PARAMS_EDITOR_HELP_MODE: self._show_params_ediror_help,
+                self.ws.STATIONS_ASK_TO_INTEGRATE_MODE: self._print_ask_to_integrate,
+                self.ws.STATIONS_INTEGRATED_MODE: self._print_integrated,
                 }
 
         ''' list of help functions '''
@@ -664,16 +666,19 @@ class PyRadio(object):
                 if self._theme_selector:
                     self.theme_forced_selection = self._theme_selector._themes[self._theme_selector.selection]
             self._redisplay[self._redisplay_list[n][0]]()
+
+        if self._cnf.integrate_stations and \
+                self.ws.operation_mode == self.ws.NORMAL_MODE:
+            ''' display ask to integrate stations '''
+            self._print_ask_to_integrate()
+        elif self._cnf.playlist_recovery_result == -1:
             ''' display playlist recovered '''
-            if self._cnf.playlist_recovery_result == -1:
-                self._show_playlist_recovered()
-                return
+            self._show_playlist_recovered()
+        elif self._cnf.theme_not_supported:
             ''' display theme not supported '''
-            if self._cnf.theme_not_supported:
-                self._show_theme_not_supported()
-                return
-            if self._cnf.user_param_id == -1:
-                self._print_user_parameter_error()
+            self._show_theme_not_supported()
+        elif self._cnf.user_param_id == -1:
+            self._print_user_parameter_error()
 
     def refreshNoPlayerBody(self, a_string):
         col = curses.color_pair(5)
@@ -877,20 +882,24 @@ class PyRadio(object):
         ''' get a search class for a givven operation mode
             the class is returned in self.search
         '''
-        if self._search_classes[self._mode_to_search[operation_mode]] is None:
-            self._search_classes[self._mode_to_search[operation_mode]] \
-                = \
-                PyRadioSearch(
-                    parent=self.outerBodyWin,
-                    width=33,
-                    begin_y=0,
-                    begin_x=0,
-                    boxed=True,
-                    has_history=True,
-                    box_color=curses.color_pair(5),
-                    caption_color=curses.color_pair(4),
-                    edit_color=curses.color_pair(5),
-                    cursor_color=curses.color_pair(8))
+        try:
+            if self._search_classes[self._mode_to_search[operation_mode]] is None:
+                self._search_classes[self._mode_to_search[operation_mode]] \
+                    = \
+                    PyRadioSearch(
+                        parent=self.outerBodyWin,
+                        width=33,
+                        begin_y=0,
+                        begin_x=0,
+                        boxed=True,
+                        has_history=True,
+                        box_color=curses.color_pair(5),
+                        caption_color=curses.color_pair(4),
+                        edit_color=curses.color_pair(5),
+                        cursor_color=curses.color_pair(8))
+        except KeyError:
+            self.search = None
+            return
         self.search = self._search_classes[self._mode_to_search[operation_mode]]
         #self.search.pure_ascii = True
         if self.ws.previous_operation_mode == self.ws.CONFIG_MODE:
@@ -955,8 +964,8 @@ class PyRadio(object):
                 self.startPos = self.number_of_items - self.bodyMaxY
             else:
                 self.startPos = int(self.selection+1/self.bodyMaxY) - int(self.bodyMaxY/2)
-        if logger.isEnabledFor(logging.ERROR):
-            logger.error('DE ===== _put:startPos -> {0}, force = {1}'.format(self.startPos, force))
+        # if logger.isEnabledFor(logging.ERROR):
+        #     logger.error('DE ===== _put:startPos -> {0}, force = {1}'.format(self.startPos, force))
 
     def setStation(self, number):
         ''' Select the given station number '''
@@ -2571,6 +2580,34 @@ class PyRadio(object):
                         prompt=' ',
                         is_message=True)
 
+    def _print_ask_to_integrate(self):
+        txt = '''
+            The package's |stations.csv| file has been
+            changed. Do you want to integrate these
+            changes to |your station's| file?
+
+            Press "|y|" to accept or |n| to decline.
+            '''
+        self._show_help(txt, self.ws.STATIONS_ASK_TO_INTEGRATE_MODE,
+                        caption=' New Stations available ',
+                        prompt=' ',
+                        is_message=True)
+        curses.doupdate()
+
+    def _print_integrated(self):
+        txt = '''
+            |PyRadio| has added |{}| new stations at the end
+            of the playlist. You can now inspect them and
+            decide to keep or delete them.
+
+            For your convenience, the selection has now
+            moved to the first inserted station.
+            '''
+        self._show_help(txt.format(self._cnf.added_stations), self.ws.STATIONS_INTEGRATED_MODE,
+                        caption=' New Stations integrated ',
+                        prompt=' Press any key to hide ',
+                        is_message=True)
+
     def _print_config_save_error(self):
         txt = '''An error occured while saving the configuration file!
 
@@ -2771,7 +2808,6 @@ class PyRadio(object):
             if need_to_scan_playlist:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Scanning playlist for stations...')
-                logger.error('DE\n\nactive_stations: {}\n\n'.format(self.active_stations))
                 self.selection, self.playing = self._get_stations_ids((
                     self.active_stations[0][0],
                     self.active_stations[1][0]))
@@ -3291,7 +3327,7 @@ class PyRadio(object):
 
             if self._force_update:
                 ''' enable update check '''
-                delta=check_days
+                delta = check_days
             if delta < check_days:
                 clean_date_files(files)
                 if logger.isEnabledFor(logging.INFO):
@@ -3315,7 +3351,7 @@ class PyRadio(object):
                 break
 
             if self._force_update:
-                last_tag= self._force_update
+                last_tag = self._force_update
 
             if last_tag:
                 connection_fail_count = 0
@@ -3328,8 +3364,8 @@ class PyRadio(object):
                         logger.info('detectUpdateThread: No update found. Will check again in {} days. Terminating...'.format(check_days))
                     break
                 else:
-                    existing_version = version_string_to_tuple(this_version)
-                    new_version = version_string_to_tuple(last_tag)
+                    existing_version = version_string_to_list(this_version)
+                    new_version = version_string_to_list(last_tag)
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('current version = {0}, upstream version = {1}'.format(existing_version, new_version))
                     if existing_version < new_version:
@@ -3355,9 +3391,8 @@ class PyRadio(object):
                             ''' Wait until self._update_version becomes ''
                                 which means that notification window has been
                                 displayed. Then create date file and exit.
-                                If asked to terminate, do not write date file '''
-                            ########################
-                            #delay(5, stop)
+                                If asked to terminate, do not write date file
+                            '''
                             delay(5, stop)
                             if stop():
                                 if logger.isEnabledFor(logging.DEBUG):
@@ -5132,6 +5167,29 @@ class PyRadio(object):
             '''
             self._cnf.get_player_params_from_backup(param_type=1)
             return
+
+        elif self.ws.operation_mode == self.ws.STATIONS_ASK_TO_INTEGRATE_MODE:
+            if char == ord('y'):
+                self._cnf._integrate_stations = False
+                self.ws.close_window()
+                self._cnf.integrate_playlists()
+                if self._cnf.added_stations > 0:
+                    if self._cnf.added_stations > self.bodyMaxY:
+                        self.selection = self._cnf.number_of_stations
+                        self.startPos = self.selection - 1
+                    else:
+                        self.setStation(-1)
+                        self.selection = self._cnf.number_of_stations
+                    self._cnf.number_of_stations = len(self.stations)
+                    self._cnf.dirty_playlist = True
+                    self.refreshBody()
+                self._print_integrated()
+            elif char == ord('n'):
+                self._cnf._integrate_stations = False
+                self.ws.close_window()
+                self.refreshBody()
+            return
+
         elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
             if self.ws.operation_mode in (
                 self.ws.MAIN_HELP_MODE,

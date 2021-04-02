@@ -80,7 +80,7 @@ theme = dark
 # Transparency setting
 # If False, theme colors will be used.
 # If True and a compositor is running, the stations' window
-# background will be transparent. If True and a compositor is 
+# background will be transparent. If True and a compositor is
 # not running, the terminal's background color will be used.
 # Valid values: True, true, False, false
 # Default value: False

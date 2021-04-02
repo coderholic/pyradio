@@ -1,6 +1,17 @@
 #!/bin/bash
+# update stations_updated in __init.py
+ST=$(git status | grep pyradio/stations.csv)
+if [ -z "$ST" ];then
+    sed -i 's/stations_updated = .*/stations_updated = False/' pyradio/__init__.py
+else
+    sed -i 's/stations_updated = .*/stations_updated = True/' pyradio/__init__.py
+fi
+
+
 # convert TABs to SPACEs in Changelog
 sed -i 's/\t/    /g' Changelog
+
+
 # Create HTML file from md files
 for afile in README.md build.md windows.md windows-mplayer.md
 do
@@ -29,6 +40,7 @@ do
     sed -i '/<title>/a \
     <style> \
     html {margin: 2em;} \
+    body {width: 750px; margin: auto;} \
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} \
     h3 {margin-top: 2em; color: SaddleBrown;} \
     h4 {margin-top: 2em; color: SaddleBrown;} \

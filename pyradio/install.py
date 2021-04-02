@@ -43,7 +43,7 @@ def isRunning():
         sleep(1)
     print('')
 
-def version_string_to_tuple(this_version):
+def version_string_to_list(this_version):
     a_v = this_version.replace('-', '.').lower()
     a_l = a_v.split('.')
     while len(a_l) < 4:
@@ -413,9 +413,11 @@ if __name__ == '__main__':
                             epilog='When executed without an argument, it installs PyRario.')
     parser.add_argument('-U', '--update', action='store_true',
                         help='Update PyRadio.')
-    if platform.startswith('linux'):
+    if platform.system().lower().startswith('linux'):
         parser.add_argument('--user', action='store_true',
                             help='Install only for current user (linux only).')
+    parser.add_argument('--python2', action='store_true',
+                        help='Install using python 2.')
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='Uninstall PyRadio.')
 

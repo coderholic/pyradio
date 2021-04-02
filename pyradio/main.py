@@ -10,7 +10,7 @@ from platform import system
 
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
-from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed, version_string_to_tuple, get_github_tag
+from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed, version_string_to_list, get_github_tag
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
@@ -152,7 +152,7 @@ def shell():
                 if last_tag:
                     print('Released version   :  {}'.format(last_tag))
                     print('Installed version  :  {}'.format(pyradio_config.current_pyradio_version))
-                    if version_string_to_tuple(last_tag) <= version_string_to_tuple(pyradio_config.current_pyradio_version):
+                    if version_string_to_list(last_tag) <= version_string_to_list(pyradio_config.current_pyradio_version):
                         print('Latest version already installed. Nothing to do....')
                         sys.exit()
                 else:

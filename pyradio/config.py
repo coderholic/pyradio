@@ -12,7 +12,7 @@ from datetime import datetime
 from shutil import copyfile, move
 import threading
 from copy import deepcopy
-from pyradio import version, app_state
+from pyradio import version, app_state, stations_updated
 
 from .browser import PyRadioStationsBrowser, probeBrowsers
 HAS_REQUESTS = True
@@ -90,6 +90,9 @@ class PyRadioStations(object):
     ''' set to True if a stations.csv is found in user's folder '''
     _user_csv_found = False
 
+    ''' mark changed package stations.csv  '''
+    _integrate_stations = False
+
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -122,6 +125,22 @@ class PyRadioStations(object):
 
             self._move_old_csv(self.stations_dir)
             self._check_stations_csv(self.stations_dir, self.root_path)
+
+    @property
+    def integrate_stations(self):
+        return self._integrate_stations
+
+    @integrate_stations.setter
+    def user_has_stations_csv(self, val):
+        raise ValueError('parameter is read only')
+
+    @property
+    def user_has_stations_csv(self):
+        return self._user_csv_found
+
+    @user_has_stations_csv.setter
+    def user_has_stations_csv(self, val):
+        raise ValueError('parameter is read only')
 
     @property
     def is_register(self):
@@ -380,6 +399,40 @@ class PyRadioStations(object):
             else:
                 return '', -2
 
+    def _package_stations(self):
+        ''' read package stations.csv file '''
+        with open(self.root_path, 'r') as cfgfile:
+            for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
+                if not row:
+                    continue
+                try:
+                    name, url = [s.strip() for s in row]
+                    yield [name, url, '', '']
+                except:
+                    try:
+                        name, url, enc = [s.strip() for s in row]
+                        yield [name, url, enc, '']
+                    except:
+                        name, url, enc, onl = [s.strip() for s in row]
+                        yield [name, url, enc, onl]
+
+    def integrate_playlists(self):
+        ''''''
+
+        ''' get user station urls '''
+        self.added_stations = 0
+        urls = []
+        for n in self.stations:
+            urls.append(n[1])
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('----==== Stations integration ====----')
+        for a_pkg_station in self._package_stations():
+            if a_pkg_station[1] not in urls:
+                self.stations.append(a_pkg_station)
+                self.added_stations += 1
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Added: {0} - {1}'.format(self.added_stations, a_pkg_station))
+
     def read_playlist_file(self, stationFile='', is_register=False):
         ''' Read a csv file
             Returns: number
@@ -460,6 +513,37 @@ class PyRadioStations(object):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('read_playlist_file: Playlist version: {}'.format(self._playlist_version_to_string[self._playlist_version]))
         self.jump_tag = -1
+
+        ''' check for package's stations.csv change '''
+        delete_ver_files = False
+        if self._user_csv_found:
+            if stationFile == path.join(self.stations_dir, 'stations.csv'):
+                if self.current_pyradio_version is None:
+                    self.get_pyradio_version()
+                ver_file = path.join(self.stations_dir, '.' + self.current_pyradio_version + '.ver')
+                if stations_updated:
+                    if not path.exists(ver_file):
+                        import filecmp
+                        if not filecmp.cmp(stationFile, self.root_path):
+                            ''' need to ask the user to integrate stations '''
+                            self._integrate_stations = True
+                            delete_ver_files = True
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('Stations integration is due!')
+                else:
+                    ''' delete all ver files and create current '''
+                    delete_ver_files = True
+        if delete_ver_files:
+            files = glob.glob(path.join(self.stations_dir, '.*.ver'))
+            if files:
+                for a_file in files:
+                    try:
+                        remove(a_file)
+                    except:
+                        pass
+            with open(ver_file, 'a') as f:
+                pass
+
         return self.number_of_stations
 
     def _recover_backed_up_playlist(self, stationFile):
@@ -1284,7 +1368,7 @@ class PyRadioConfig(PyRadioStations):
             Retrurns
                 self.info
                     The string to display at left top corner of main window
-                self.current_pyradio_version
+                self.get_current_pyradio_version
                     The version to use when checking for updates
         '''
         ret = None
@@ -1312,7 +1396,7 @@ class PyRadioConfig(PyRadioStations):
                                 ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1])
                         except:
                             pass
-        self.current_pyradio_version = self.info.replace(' PyRadio ', '')
+        self.current_pyradio_version = self.info.replace(' PyRadio ', '').replace(' ', '')
         # if self._distro != 'None':
         #     self.info += '({})'.format(self._distro)
         return ret

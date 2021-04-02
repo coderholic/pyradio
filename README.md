@@ -5,16 +5,16 @@ Command line internet radio player.
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 ## Table of Contents
-
+## Requirements
 <!-- vim-markdown-toc Marked -->
 
-* [Requirements](#requirements)
 * [Installation](#installation)
 * [Command line options](#command-line-options)
 * [Controls](#controls)
 * [PyRadio's Modes](#pyradio's-modes)
 * [Config file](#config-file)
 * [About Playlist files](#about-playlist-files)
+    * [Integrating new stations](#integrating-new-stations)
     * [Specifying a playlist to load (command line)](#specifying-a-playlist-to-load-(command-line))
     * [Managing playlists (within PyRadio)](#managing-playlists-(within-pyradio))
     * [Managing "foreign" playlists](#managing-"foreign"-playlists)
@@ -53,11 +53,9 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 <!-- vim-markdown-toc -->
 
-## Requirements
-
-* python 2.7+/3.5+
+* python 2.7/3.5+
     - requests
-* MPV, MPlayer or VLC installed and in your path.
+* MPV, MPlayer or VLC installed and in your path
 
 ## Installation
 
@@ -219,10 +217,18 @@ Optionally, a third column can be inserted, stating the encoding used by the sta
 
 **PyRadio** will by default load the user's stations file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
 
-**Tip:** If you already have a custom *stations.csv* file, but want to update it with **PyRadio**'s default one, you just rename it, run **PyRadio** (so that the default one get created) and then merge the two files.
-
-
 **Note:** Older versions used to use **~/.pyradio** as default stations file. If this file is found, it will be copied to use's config directory (e.g. **~/.config/pyradio**) and renamed to **stations.csv** or if this file exists, to **pyradio.csv**. In this case, this file will be the default one.
+
+
+### Integrating new stations
+
+When the package's "*stations.csv*" files is updated, the changes it has will not automatically appear in the user's stations file.
+
+What **PyRadio** will do is inform the user that these changes do exist and give him a chance to **integrate** these changes to his stations file, by appending the new stations to the file.
+
+When this is done, the first added station will be selected so that the user can inspect the changes and decide to keep or delete the new stations.
+
+**PyRadio** will only add stations to the user's stations file; no station will be deleted as a result of this procedure.
 
 ### Specifying a playlist to load (command line)
 
@@ -750,7 +756,7 @@ Having said that, if you are not packaging for a specific distribution, please d
 - [x] Basic mouse support ([#119](https://github.com/coderholic/pyradio/issues/119)) - v. 0.8.8.3
 - [x] Players extra parameters ([#118](https://github.com/coderholic/pyradio/issues/118)) - v. 0.8.8.3
 - [x] New player selection configuration window ([#118](https://github.com/coderholic/pyradio/issues/118)) - v. 0.8.8.3
-- [ ] Notify the user that the package's stations.csv has changed
+- [x] Notify the user that the package's stations.csv has changed -v 0.8.9
 - [x] Update / uninstall using command line parameters (-U / -R) - v. 0.8.9
 - [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
 
