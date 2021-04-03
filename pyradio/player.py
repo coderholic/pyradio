@@ -481,7 +481,7 @@ class Player(object):
                     if os.path.exists(config_file):
                         new_profile_string = '\n' + config_string
                     else:
-                        new_profile_string = 'volume=50\n\n' + config_string
+                        new_profile_string = self.NEW_PROFILE_STRING + config_string
                 else:
                     try:
                         os.mkdir(os.path.dirname(config_file))
@@ -489,7 +489,7 @@ class Player(object):
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug(log_strings[2].format(config_file))
                         return ret_strings[2].format(str(self.volume))
-                    new_profile_string = 'volume=50\n\n' + config_string
+                    new_profile_string = self.NEW_PROFILE_STRING + config_string
                 try:
                     with open(config_file, 'a') as c_file:
                         c_file.write(new_profile_string.format(str(self.volume)))
@@ -1399,6 +1399,7 @@ class MpvPlayer(Player):
 
     PLAYER_NAME = 'mpv'
     PLAYER_CMD = 'mpv'
+    NEW_PROFILE_STRING = 'volume=50\n\n'
     if pywhich(PLAYER_CMD):
         executable_found = True
     else:
@@ -1486,7 +1487,7 @@ class MpvPlayer(Player):
         try:
             with open(self.config_files[0], 'a') as f:
                 f.write('\n[{}]\n'.format(self.profile_name))
-                f.write('volume=50\n')
+                f.write(self.NEW_PROFILE_STRING)
             self.PROFILE_FROM_USER = True
             return 1
         except:
@@ -1772,6 +1773,7 @@ class MpPlayer(Player):
 
     PLAYER_NAME = 'mplayer'
     PLAYER_CMD = 'mplayer'
+    NEW_PROFILE_STRING = 'softvol=1\nsoftvol-max=300\nvolstep=1\nvolume=50\n\n'
     if pywhich(PLAYER_CMD):
         executable_found = True
     else:
@@ -1859,8 +1861,7 @@ class MpPlayer(Player):
         try:
             with open(self.config_files[0], 'a') as f:
                 f.write('\n[{}]\n'.format(self.profile_name))
-                f.write('volstep=1\n')
-                f.write('volume=50\n')
+                f.write(self.NEW_PROFILE_STRING)
             self.PROFILE_FROM_USER = True
             return 1
         except:
@@ -1868,7 +1869,7 @@ class MpPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
-        opts = [self.PLAYER_CMD, '-vo', 'null', '-quiet', '-softvol', '-softvol-max', '300', 'volstep', '1']
+        opts = [self.PLAYER_CMD, '-vo', 'null', '-quiet']
 
         ''' this will set the profile too '''
         params = []
@@ -1944,6 +1945,7 @@ class MpPlayer(Player):
     def _format_volume_string(self, volume_string):
         ''' format mplayer's volume '''
         return '[' + volume_string[volume_string.find(self.volume_string):].replace(' %','%').replace('ume', '')+'] '
+
 
 class VlcPlayer(Player):
     '''Implementation of Player for VLC'''

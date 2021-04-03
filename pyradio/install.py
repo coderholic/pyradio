@@ -431,10 +431,12 @@ if __name__ == '__main__':
             --devel         download official devel branch
             --sng-master    download developer release (master)
             --sng-devel     download developer devel branch
+            --force         force installation (even if already installed)
     '''
     parser.add_argument('--sng-master', action='store_true', help=SUPPRESS)
     parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--devel', action='store_true', help=SUPPRESS)
+    parser.add_argument('-f', '--force', action='store_true', help=SUPPRESS)
 
     args = parser.parse_args()
     sys.stdout.flush()
@@ -490,10 +492,11 @@ if __name__ == '__main__':
 
     ''' Installation!!! '''
     if platform.system().lower().startswith('win'):
-        ret = subprocess.call('pyradio -h 1>NUL 2>NUL', shell=True)
-        if ret == 0:
-            print('PyRadio is already installed.\n')
-            sys.exit(1)
+        if not args.force:
+            ret = subprocess.call('pyradio -h 1>NUL 2>NUL', shell=True)
+            if ret == 0:
+                print('PyRadio is already installed.\n')
+                sys.exit(1)
         subprocess.call('pip install windows-curses --upgrade')
         subprocess.call('pip install pywin32 --upgrade')
         subprocess.call('pip install requests --upgrade')
@@ -508,10 +511,11 @@ if __name__ == '__main__':
         print('and the file:')
         print('    "{}"'.format(__file__))
     else:
-        ret = subprocess.call('pyradio -h 1>/dev/null 2>&1', shell=True)
-        if ret == 0:
-            print('PyRadio is already installed.\n')
-            sys.exit(1)
+        if not args.force:
+            ret = subprocess.call('pyradio -h 1>/dev/null 2>&1', shell=True)
+            if ret == 0:
+                print('PyRadio is already installed.\n')
+                sys.exit(1)
         uni = PyRadioUpdate(package=package)
         if args.python2:
             uni.python2 = True

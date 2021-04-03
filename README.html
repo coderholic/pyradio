@@ -9,8 +9,9 @@
     html {margin: 2em;} 
     body {width: 750px; margin: auto;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
-    h3 {margin-top: 2em; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
     h4 {margin-top: 2em; color: SaddleBrown;} 
+    h4:before {content: "# "; font-size: 200%; font-weight: bold; vertical-align: middle;} 
     STRONG {color: SaddleBrown;} 
     dl {margin: 2em;} 
     dd {margin: 1em;} 
@@ -34,9 +35,9 @@ a:visited{color: SaddleBrown;}
 <p>Command line internet radio player.</p>
 <p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<h2 id="requirements">Requirements <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
+<li><a href="#requirements">Requirements</a></li>
 <li><a href="#installation">Installation</a></li>
 <li><a href="#command-line-options">Command line options</a></li>
 <li><a href="#controls">Controls</a></li>
@@ -88,7 +89,10 @@ a:visited{color: SaddleBrown;}
 <ul>
 <li><a href="#session-unlocking">Session unlocking</a></li>
 </ul></li>
-<li><a href="#update-notification">Update notification</a></li>
+<li><a href="#update-notification">Update notification</a>
+<ul>
+<li><a href="#updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</a></li>
+</ul></li>
 <li><a href="#cleaning-up">Cleaning up</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
 <li><a href="#reporting-bugs">Reporting bugs</a></li>
@@ -97,6 +101,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#acknowledgment">Acknowledgment</a></li>
 </ul>
 <!-- vim-markdown-toc -->
+<h2 id="requirements">Requirements <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
 <li>python 2.7/3.5+
 <ul>
@@ -157,8 +162,7 @@ optional arguments:
   --user                Install only for current user (linux only).
   -R, --uninstall       Uninstall PyRadio.
   --unlock              Remove sessions&#39; lock file.
-  -d, --debug           Start pyradio in debug mode.
-</pre>
+  -d, --debug           Start pyradio in debug mode.</pre>
 <p>The following options can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>:</p>
 <ul>
 <li><strong>-s</strong> - parameter <strong>default_playlist</strong> (default value: <strong>stations</strong>)</li>
@@ -372,7 +376,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 </tr>
 <tr class="even">
 <td>mplayer</td>
-<td>-vo, -quiet, -playlist, -softvol, -softvol-max 300, -profile</td>
+<td>-vo, -quiet, -playlist, -profile</td>
 </tr>
 <tr class="odd">
 <td>vlc</td>
@@ -384,7 +388,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p><strong>PyRadio</strong> provides a way for the user to add extra parameters to the player, either by a command line parameter, or the “<em>Configuration Window</em>” (under “<em>Player:</em>”).</p>
 <p>This way, 10 sets of parameters can be inserted and made available for selection.</p>
 <h4 id="using-the-command-line">Using the command line</h4>
-<p>When the command line parameter (<strong>-epp</strong> or <strong>–extra_player_parameters</strong>) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.</p>
+<p>When the command line parameter (<strong>-ep</strong> or <strong>–extra_player_parameters</strong>) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.</p>
 <p>The format of the parameter is the following: <strong>[player_name:parameters]</strong></p>
 <p>Where:</p>
 <ul>
@@ -392,7 +396,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <li><strong>parameters</strong>: the actual player parameters</li>
 </ul>
 <p>Example:</p>
-<pre>pyradio -epp &quot;vlc:--force-dolby-surround 2&quot;</pre>
+<pre>pyradio -ep &quot;vlc:--force-dolby-surround 2&quot;</pre>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a parameter is passed to “<em>mpv</em>” or “<em>mplayer</em>”, <strong>PyRadio</strong>" will use the default player profile (called “<strong>pyradio</strong>”).</p>
 <p>For “<em>mpv</em>” and “<em>mplayer</em>” a profile can be specified (“<em>vlc</em>” does not support profiles). In this case the format of the <strong>parameters</strong> part of the command line is: <strong>profile:profile_name</strong>.</p>
 <p>Where:</p>
@@ -401,7 +405,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <li><strong>profile_name</strong>: the name of a profile. The profile must be already defined in the player’s configuration file.</li>
 </ul>
 <p>Example:</p>
-<pre>pyradio -epp &quot;mpv:profile:second_sound_card&quot;</pre>
+<pre>pyradio -ep &quot;mpv:profile:second_sound_card&quot;</pre>
 <h4 id="using-the-configuration-window">Using the Configuration Window</h4>
 <p>When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with <strong>PyRadio</strong> and edit its extra parameters.</p>
 <p><a target="_blank" href="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg">pyradio-player-selection.jpg</a></p>
@@ -440,8 +444,11 @@ volume=50</pre>
 <pre>volume=100
 
 [pyradio]
+softvol=1
+softvol-max=300
 volstep=1
-volume=28</pre>
+volume=50</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Starting with <strong>PyRadio v. 0.8.9</strong>, <em>mplayer</em>’s default profile will use its internal mixer to adjust its volume; this is accompliced using the “<em>softvol=1</em>” and “<em>softvol-max=300</em>” lines above. The user may choose to remove these lines from the config (to activate system-wide volume adjustment) or add them to the config (in case the profile was created by an older <strong>PyRadio</strong> version).</p>
 <h2 id="displaying-station-info">Displaying Station Info <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>When a connection to a radio station has been established, the station starts sending audio data for the user to listen to.</p>
 <p>Well, that’s obvious, right?</p>
@@ -546,7 +553,17 @@ volume=28</pre>
 <p>If for any reason <strong>PyRadio</strong> always starts in “<em>locked mode</em>”, one can <strong>unlock</strong> the session, using the “<em>–unlock</em>” command line parameter.</p>
 <h2 id="update-notification">Update notification <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> will periodically (once every 10 days) check whether a new version has been released.</p>
-<p>If so, a notification message will be displayed, informing the user about it.</p>
+<p>If so, a notification message will be displayed, informing the user about it and asking to proceed with updating the program (provided this is not a distribution package).</p>
+<h3 id="updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</h3>
+<p>First thing you do is get the installation script. Open a <strong>terminal</strong> and type:</p>
+<pre>cd
+wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py</pre>
+<p>or using curl:</p>
+<pre>cd
+curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py -o install.py</pre>
+<p><strong>Note</strong>: If you have neither <em>wget</em> or <em>curl</em> installed, or you are on Windows, just right click on <a target="_blank" href="https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py">this link</a> and use your browser “<strong>Save link as</strong>” menu entry to save the file in your home folder.</p>
+<p>Finally, execute the command:</p>
+<pre>python install.py --force</pre>
 <h2 id="cleaning-up">Cleaning up <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> will uninstall all previously installed versions when updated (using the <strong>-U</strong> command line parameter), so no extra steps are needed any more to house keep your system.</p>
 <h2 id="debug-mode">Debug mode <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
@@ -576,18 +593,18 @@ $ pyradio -d</pre>
 <ul class="task-list">
 <li><input type="checkbox" disabled="" />
 Any user request I find interesting :)</li>
+<li><input type="checkbox" disabled="" />
+Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>)</li>
+<li><input type="checkbox" disabled="" checked="" />
+Notify the user that the package’s stations.csv has changed -v 0.8.9</li>
+<li><input type="checkbox" disabled="" checked="" />
+Update / uninstall using command line parameters (-U / -R) - v. 0.8.9</li>
 <li><input type="checkbox" disabled="" checked="" />
 Basic mouse support (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/119">#119</a>) - v. 0.8.8.3</li>
 <li><input type="checkbox" disabled="" checked="" />
 Players extra parameters (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
 <li><input type="checkbox" disabled="" checked="" />
 New player selection configuration window (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
-<li><input type="checkbox" disabled="" checked="" />
-Notify the user that the package’s stations.csv has changed -v 0.8.9</li>
-<li><input type="checkbox" disabled="" checked="" />
-Update / uninstall using command line parameters (-U / -R) - v. 0.8.9</li>
-<li><input type="checkbox" disabled="" />
-Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>)</li>
 </ul>
 <h2 id="acknowledgment">Acknowledgment <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> uses code from the following projects:</p>

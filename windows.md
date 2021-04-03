@@ -21,6 +21,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [Final steps](#final-steps)
         * [Cleaning up](#cleaning-up)
 * [Updating PyRadio](#updating-pyradio)
+    * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
 * [Uninstalling PyRadio](#uninstalling-pyradio)
 * [Reporting bugs](#reporting-bugs)
 
@@ -79,11 +80,9 @@ So, go ahead and open a console (the command is **cmd**) and type **python**.
 
 If you get something similar to the following snippet, you are good to go.
 
-```
-Python 3.6.4 (v3.6.4:d48eceb, Dec 19 2017, 06:54:40) [MSC v.1900 64 bit (AMD64)] on win
-Type "help", "copyright", "credits" or "license" for more information.
->>>
-```
+    Python 3.6.4 (v3.6.4:d48eceb, Dec 19 2017, 06:54:40) [MSC v.1900 64 bit (AMD64)] on win
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>>
 
 If the command could not be found, you have to run the installation again, select "*Modify*" and set the "*Add Python to environment variables*" option. You can refer to the following image to see the relevant setting.
 
@@ -125,33 +124,29 @@ Finally, open a console (press the **Win** key, type **cmd** and press **ENTER**
 
 Then type:
 
-```
-cd %USERPROFILE%
-python install.py
-```
+    cd %USERPROFILE%
+    python install.py
 
 #### Final steps
 
 If the installation is successful, you will get something similar to the following snippet:
 
-```
-...
-Installing pyradio-script.py script to C:\Users\spiros\AppData\Local\Programs\Python\Python37\Scripts
-Installing pyradio.exe script to C:\Users\spiros\AppData\Local\Programs\Python\Python37\Scripts
+    ...
+    Installing pyradio-script.py script to C:\Users\spiros\AppData\Local\Programs\Python\Python37\Scripts
+    Installing pyradio.exe script to C:\Users\spiros\AppData\Local\Programs\Python\Python37\Scripts
 
-Installed c:\users\spiros\appdata\local\programs\python\python37\lib\site-packages\pyradio-0.8.9-py3.7.egg
-Processing dependencies for pyradio==0.8.9
-Finished processing dependencies for pyradio==0.8.9
+    Installed c:\users\spiros\appdata\local\programs\python\python37\lib\site-packages\pyradio-0.8.9-py3.7.egg
+    Processing dependencies for pyradio==0.8.9
+    Finished processing dependencies for pyradio==0.8.9
 
-*** HTML files copyed to "C:\Users\spiros\AppData\Roaming\pyradio\help"
-=== Player "mplayer" found in "C:\Users\spiros\mplayer"
-=== Player "mplayer" found in PATH
-*** Installing Dekstop Shortcut
+    *** HTML files copyed to "C:\Users\spiros\AppData\Roaming\pyradio\help"
+    === Player "mplayer" found in "C:\Users\spiros\mplayer"
+    === Player "mplayer" found in PATH
+    *** Installing Dekstop Shortcut
 
 
-Installation successful!
+    Installation successful!
 
-```
 
 Finally, you can type **pyradio** and enjoy!
 
@@ -179,18 +174,26 @@ You just double click on the batch file (called **update.bat**) to go on with th
 
 In any case, you can perform the update at any time, using the command:
 
-```
-pyradio -U
-```
+    pyradio -U
+
+
+### Updating a pre 0.8.9 installation
+
+If you are on a pre 0.8.9 release and want to update **PyRadio**, just follow the [installation instructions](#pyradio-installation), but add the "*--force*" command line parameter to the installation command.
+
+So, instead of
+
+    python install.py
+
+do a
+
+    python install.py --force
 
 ## Uninstalling PyRadio
 
 To uninstall **PyRadio** you just have to open a console window and execute the command:
 
-
-```
-pyradio -R
-```
+    pyradio -R
 
 **PyRadio** create an uninstall batch file and open Windows Explorer to its location.
 

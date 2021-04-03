@@ -496,6 +496,7 @@ class PyRadio(object):
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
                     self._show_station_info_from_thread)
+            logger.error('DE \n\nNEW_PROFILE_STRING = {}\n\n'.format(self.player.NEW_PROFILE_STRING))
         except:
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE

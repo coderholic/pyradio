@@ -629,7 +629,16 @@ Example:
 .br
 volstep=1
 .br
-volume=28
+softvol=1
+.br
+softvol-max=300
+.br
+volstep=1
+.br
+volume=50
+
+.IP \fBNote:
+Starting with \fBpyradioR v. 0.8.9\fR, \fImplayer\fR's default profile will use its internal mixer to adjust its volume; this is accompliced using the "\fIsoftvol=1\fR" and "\fIsoftvol-max=300\fR" lines above. The user may choose to remove these lines from the config (to activate system-wide volume adjustment) or add them to the config (in case the profile was created by an older \fBpyradio\fR version).
 
 .SH DISPLAYING STATION INFO
 
@@ -786,7 +795,7 @@ Adjust volume (does not work with all terminals)
 
 Subsequent instances will be "\fIlocked\fR. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will \fBnot\fR be recorded in the configuration file.
 
-\fBSeeeion unlocking\fR
+\fBSession unlocking\fR
 
 If for any reason \fBpyradio\fR always starts in \fIlocked mode\fR, one can \fBunclock\fR the session, using the "\fB--unlock\fR" command line paremater.
 
@@ -794,7 +803,7 @@ If for any reason \fBpyradio\fR always starts in \fIlocked mode\fR, one can \fBu
 .PP
 \fBpyradio\fR will periodically (once every 10 days) check whether a new version has been released.
 
-If so, a notification message will be displayed, informing the user about it.
+If so, a notification message will be displayed, informing the user about it and asking to proceed with updating the program (provided this is not a distribution package).
 
 .SH CLEANING UP
 

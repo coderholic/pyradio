@@ -9,8 +9,9 @@
     html {margin: 2em;} 
     body {width: 750px; margin: auto;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
-    h3 {margin-top: 2em; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
     h4 {margin-top: 2em; color: SaddleBrown;} 
+    h4:before {content: "# "; font-size: 200%; font-weight: bold; vertical-align: middle;} 
     STRONG {color: SaddleBrown;} 
     dl {margin: 2em;} 
     dd {margin: 1em;} 
@@ -36,31 +37,19 @@ a:visited{color: SaddleBrown;}
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
-<li><a href="#building-from-source">Building from source</a></li>
 <li><a href="#preparing-for-the-installation">Preparing for the installation</a>
 <ul>
 <li><a href="#linux">Linux</a></li>
 <li><a href="#macos">macOS</a></li>
 <li><a href="#windows">Windows</a></li>
 </ul></li>
-<li><a href="#performing-the-installation">Performing the installation</a></li>
+<li><a href="#performing-the-installation">Performing the installation</a>
+<ul>
+<li><a href="#updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</a></li>
+</ul></li>
 </ul>
 <!-- vim-markdown-toc -->
-<p>[<a href="README.html">Return to main doc</a>]</p>
-<h2 id="building-from-source">Building from source <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>Reasons to build from source</p>
-<ul>
-<li>A pre-built package is not available to you.</li>
-<li>You want to use a particular python version. For example, most pre-built packages nowadays are built using python 3.x. If for any reason you have to use python 2.x, this is the way to go.</li>
-</ul>
-<p>For the installation you will need:</p>
-<ol type="1">
-<li><strong><em>setuptools</em></strong> (e.g. <em>python-setuptools</em>, <em>python3-setuptools</em> or <em>python2-setuptools</em>)</li>
-<li><strong><em>requests</em></strong> (e.g. <em>python-requests</em>, <em>python3-requests</em> or <em>python2-requests</em>) to be already installed.</li>
-</ol>
-<p>The procedure presented here will not provide you with the sources; it will download and install them and then delete them. If you have to have <strong>PyRadio</strong>’s sources, you can just:</p>
-<pre>git clone https://github.com/coderholic/pyradio.git</pre>
-<p>or download a zip from <strong>PyRadio</strong>’s <a target="_blank" href="https://github.com/coderholic/pyradio">main page</a>.</p>
+<p><a href="README.html">[Return to main doc]</a></p>
 <h2 id="preparing-for-the-installation">Preparing for the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Before installing <strong>PyRadio</strong> you have to prepare your system, so that you end up with a working installation. The process depends on the OS you are on.</p>
 <h3 id="linux">Linux</h3>
@@ -103,5 +92,11 @@ curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/inst
 <pre>python3 install.py</pre>
 <p>If for some reason you want a <strong>python 2</strong> installation, execute:</p>
 <pre>python2 install.py</pre>
+<h3 id="updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</h3>
+<p>If you are on a pre 0.8.9 release and want to update <strong>PyRadio</strong>, just follow the instructions above, but add the “<em>–force</em>” command line parameter to the installation command.</p>
+<p>So, instead of</p>
+<pre>python install.py</pre>
+<p>do a</p>
+<pre>python install.py --force</pre>
 </body>
 </html>

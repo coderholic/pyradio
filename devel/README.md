@@ -7,9 +7,9 @@ This file will help a normal user to build and install **PyRadio** using
 * or python version 3.x (explicit)
 
 From the repository directory, type
-```
-devel/build_install_pyradio -h
-```
+
+    devel/build_install_pyradio -h
+
 for options.
 
 # Development files for PyRadio
@@ -30,9 +30,9 @@ If ***pandoc*** is not installed and you try to use
 this hook, you will not be able to commit your changes.
 
 To install it, execute
-```
-ln -s devel/pre-commit .git/hooks/pre-commit
-```
+
+    ln -s devel/pre-commit .git/hooks/pre-commit
+
 
 ## 2. what_tag
 
@@ -43,9 +43,8 @@ It will not perform the actual action; just report
 what you should do manually.
 
 Check it out:
-```
-devel/what_tag
-```
+
+    devel/what_tag
 
 ### How this works
 1. set package version in ***pyradio/\_\_init\_\_.py***.

@@ -1,9 +1,11 @@
-2021-04-02 s-n-g
+2021-04-03 s-n-g
+    * Version 0.8.9
     * Implemented a simplified method to install, update, uninstall.
     * PyRadio will detect its player abnormal termination.
     * Player's connection timeout can now be disabled. Once a player is
       started, it will be considered to be connected immediately.
     * stations.csv changes can now be integrated into user's stations.csv
+    * mplayer "pyradio" profile will use the internal mixer to adjust volume
     * BUG FIX: Active players parameter list is always synchronized to saved.
     * BUG FIX: Clicking on empty space (past last station) will not crash pyradio.
 

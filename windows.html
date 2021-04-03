@@ -9,8 +9,9 @@
     html {margin: 2em;} 
     body {width: 750px; margin: auto;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
-    h3 {margin-top: 2.5em; color: SaddleBrown; border-bottom:1px solid SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
     h4 {margin-top: 2em; color: SaddleBrown;} 
+    h4:before {content: "# "; font-size: 200%; font-weight: bold; vertical-align: middle;} 
     STRONG {color: SaddleBrown;} 
     dl {margin: 2em;} 
     dd {margin: 1em;} 
@@ -56,7 +57,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#cleaning-up">Cleaning up</a></li>
 </ul></li>
 </ul></li>
-<li><a href="#updating-pyradio">Updating PyRadio</a></li>
+<li><a href="#updating-pyradio">Updating PyRadio</a>
+<ul>
+<li><a href="#updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</a></li>
+</ul></li>
 <li><a href="#uninstalling-pyradio">Uninstalling PyRadio</a></li>
 <li><a href="#reporting-bugs">Reporting bugs</a></li>
 </ul>
@@ -154,8 +158,7 @@ Finished processing dependencies for pyradio==0.8.9
 *** Installing Dekstop Shortcut
 
 
-Installation successful!
-</pre>
+Installation successful!</pre>
 <p>Finally, you can type <strong>pyradio</strong> and enjoy!</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch <strong>PyRadio</strong> and optionally modify it (change font size, window dimensions, etc). If it’s not there, you can just copy it from the “<em>help</em>” directory of the <strong>Explorer File Manager</strong> which will open after executing <strong>pyradio -ocd</strong>.</p>
 <h4 id="cleaning-up">Cleaning up</h4>
@@ -172,6 +175,12 @@ Installation successful!
 <p>You just double click on the batch file (called <strong>update.bat</strong>) to go on with the update.</p>
 <p>In any case, you can perform the update at any time, using the command:</p>
 <pre>pyradio -U</pre>
+<h3 id="updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<p>If you are on a pre 0.8.9 release and want to update <strong>PyRadio</strong>, just follow the <a href="#pyradio-installation">installation instructions</a>, but add the “<em>–force</em>” command line parameter to the installation command.</p>
+<p>So, instead of</p>
+<pre>python install.py</pre>
+<p>do a</p>
+<pre>python install.py --force</pre>
 <h2 id="uninstalling-pyradio">Uninstalling PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>To uninstall <strong>PyRadio</strong> you just have to open a console window and execute the command:</p>
 <pre>pyradio -R</pre>
