@@ -986,7 +986,7 @@ class PyRadio(object):
         elif self.selection < self.startPos:
             self.startPos = self.selection
 
-    def playSelectionBrowser(self):
+    def playSelectionBrowser(self, a_url=None):
             self.log.display_help_message = False
 
             # self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0] + '"')
@@ -996,10 +996,14 @@ class PyRadio(object):
                 Need to add TITLE, if service found
             '''
             self._cnf.add_to_playlist_history(
-                    station_path=self.stations[self.selection][0],
+                    station_path=a_url if a_url else self.stations[self.selection][0],
                     browsing_station_service=True
                     )
-            self._check_to_open_playlist()
+            if a_url:
+                ''' dirty hack here...  '''
+                self._cnf._ps._p[-2][-1] = False
+                # logger.error(self._cnf._ps._p)
+            self._check_to_open_playlist(a_url)
 
     def restartPlayer(self, msg=''):
         if self.player.isPlaying():
@@ -1030,11 +1034,11 @@ class PyRadio(object):
                 enc = self._last_played_station[2]
                 self.playing = self._last_played_station_id
             else:
-                if self._cnf.browsing_station_service:
-                    if self._cnf.online_browser.have_to_retrieve_url:
-                        self.log.display_help_message = False
-                        self.log.write(msg='Station: "' + self._last_played_station[0] + '" - Retrieving URL...')
-                        stream_url = self._cnf.online_browser.url(self.selection)
+                # if self._cnf.browsing_station_service:
+                #     if self._cnf.online_browser.have_to_retrieve_url:
+                #         self.log.display_help_message = False
+                #         self.log.write(msg='Station: "' + self._last_played_station[0] + '" - Retrieving URL...')
+                #         stream_url = self._cnf.online_browser.url(self.selection)
                 self._last_played_station = self.stations[self.selection]
                 self._last_played_station_id = self.selection
                 self.playing = self.selection
@@ -2848,8 +2852,12 @@ class PyRadio(object):
         # self.ll('_align_stations_and_refresh')
         self.refreshBody()
 
-    def _open_playlist(self):
-        ''' open playlist '''
+    def _open_playlist(self, a_url=None):
+        ''' open playlist
+
+            Parameters:
+                a_url:  this should be an online service url
+        '''
         self._cnf.save_station_position(self.startPos, self.selection, self.playing)
         self._set_active_stations()
         self._update_status_bar_right()
@@ -2858,8 +2866,9 @@ class PyRadio(object):
             if HAS_REQUESTS:
                 txt = '''Connecting to service. Please wait...'''
                 self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+                online_service_url = 'https://' + a_url if a_url else self.stations[self.selection][1]
                 try:
-                    self._cnf.open_browser(self.stations[self.selection][1])
+                    self._cnf.open_browser(online_service_url)
                 except TypeError:
                     pass
                 if self._cnf.online_browser:
@@ -3502,13 +3511,18 @@ class PyRadio(object):
             self._print_update_notification()
         self._update_notify_lock.release()
 
-    def _check_to_open_playlist(self):
+    def _check_to_open_playlist(self, a_url=None):
+        ''' Open a playlist after saving current playlist (if needed)
+
+            Parameters
+                a_url:  An online service url
+        '''
         if self._cnf.dirty_playlist:
             if self._cnf.auto_save_playlist:
                 ''' save playlist and open playlist '''
                 ret = self.saveCurrentPlaylist()
                 if ret == 0:
-                    self._open_playlist()
+                    self._open_playlist(a_url)
                 else:
                     if self._cnf.browsing_station_service:
                         self._cnf.removed_playlist_history_item()
@@ -3516,7 +3530,7 @@ class PyRadio(object):
                 ''' ask to save playlist '''
                 self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE)
         else:
-            self._open_playlist()
+            self._open_playlist(a_url)
 
     def _normal_mode_resize(self):
         if platform.startswith('win'):
@@ -5436,6 +5450,20 @@ class PyRadio(object):
                     self._encoding_select_win.init_window()
                     self._encoding_select_win.refresh_win()
                     self._encoding_select_win.setEncoding(self._old_station_encoding)
+
+                elif char == ord('O'):
+                    ''' Open Online services
+                        Currently only BrowserInfoBrowser is available
+                        so go ahead and open this one.
+                        If a second one is implemented in the future,
+                        this should display a selection list.
+                    '''
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
+                    self._cnf.browsing_station_service = True
+                    self.playSelectionBrowser(a_url='api.radio-browser.info')
+                    return
 
                 elif char in (ord('o'), ):
                     self.jumpnr = ''

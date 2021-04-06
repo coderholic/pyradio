@@ -1015,7 +1015,7 @@ class PyRadioStations(object):
         self._ps.remove_duplicates()
 
     def history_item(self, an_item=-1):
-        logger.error('DE /// history_item = {}'.format(self._ps._p[an_item]))
+        # logger.error('DE /// history_item = {}'.format(self._ps._p[an_item]))
         return self._ps._p[an_item][:]
 
     def find_history_by_station_path(self, a_path):
@@ -1616,12 +1616,13 @@ class PyRadioConfig(PyRadioStations):
                 sp[1] = sp[1].strip()
                 if sp[0] == 'distro':
                     self._distro = sp[1].strip()
-                    # print('Package distro is "{}"'.format(self._distro))
+                    if not self._distro:
+                        self._distro = 'None'
         except:
             self._distro = 'None'
 
         ''' make sure extra params have only up to 10 items each
-        (well, actually 11 items, since the first one is the
+            (well, actually 11 items, since the first one is the
             index to the default string in the list)
         '''
         if self.params:
@@ -2060,7 +2061,7 @@ class PyRadioPlaylistStack(object):
             startPos, selection, playing,
             is_register,
             browsing_station_service])
-        # logger.error('DE playlist history\n{}\n'.format(self._p))
+        logger.error('DE playlist history\n{}\n'.format(self._p))
 
     def get_item_member(self, member, item_id=-1):
         if member in self._id.keys():

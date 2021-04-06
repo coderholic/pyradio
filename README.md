@@ -736,13 +736,13 @@ In order to accomplice that, you just have to change the **distro** configuratio
 
 Once you are in the sources top level directory (typically "*pyradio*"), you execute the command:
 
-    sed -i 's/distro = None/distro = YOUR DISTRO NAME' pyradio/config
+    sed -i 's/distro = None/distro = YOUR DISTRO NAME/' pyradio/config
 
 Then you go on to produce the package as you would normally do.
 
 For example, an **Arch Linux** packager would use this command:
 
-    sed -i 's/distro = None/distro = Arch Linux' pyradio/config
+    sed -i 's/distro = None/distro = Arch Linux/' pyradio/config
 
 The distro name you insert here will appear in **PyRadio**'s "*Configuration Window*". In addition to that it will appear in the log file, so that I know where the package came from while debugging.
 
