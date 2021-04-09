@@ -115,6 +115,49 @@ def find_vlc_on_windows(config_dir=None):
     #return result
 
 
+def info_dict_to_list(info, fix_highlight, max_width):
+    max_len = 0
+    for a_title in info.keys():
+        if len(a_title) > max_len:
+            max_len = len(a_title)
+        info[a_title] = info[a_title].replace('_','¸')
+    # logger.error('DE info\n{}\n\n'.format(info))
+
+    a_list = []
+    for n in info.keys():
+        a_list.extend(wrap(n.rjust(max_len, ' ') + ': |' + info[n],
+                             width=max_width,
+                             subsequent_indent=(2+max_len)*'_'))
+
+    # logger.error('DE a_list\n\n{}\n\n'.format(a_list))
+
+    ''' make sure title is not alone in line '''
+    for a_title in ('URL:', 'site:'):
+        for n, an_item in enumerate(a_list):
+            if an_item.endswith(a_title):
+                url = a_list[n+1].split('_|')[1]
+                # merge items
+                bar = '' if a_title.endswith('L:') else '|'
+                a_list[n] = a_list[n] + ' ' + bar + url
+                a_list.pop(n+1)
+                break
+
+    # logger.error('DE a_list\n\n{}\n\n'.format(a_list))
+
+    a_list[0] = a_list[0].replace('|', '')
+
+    if fix_highlight:
+        for x in fix_highlight:
+            for n, an_item in enumerate(a_list):
+                if x[0] in an_item:
+                    rep_name = n
+                if x[1] in an_item:
+                    web_name = n
+                    break
+            for n in range(rep_name + 1, web_name):
+                a_list[n] = '|' + a_list[n]
+    return a_list
+
 class Player(object):
     ''' Media player class. Playing is handled by player sub classes '''
     process = None
@@ -306,54 +349,18 @@ class Player(object):
                 info['Encoding'] = enc_to_show
             if x[0].startswith('Reported'):
                 info['Station URL'] = a_station[1]
-
-        max_len = 0
-        for a_title in info.keys():
-            if len(a_title) > max_len:
-                max_len = len(a_title)
-            info[a_title] = info[a_title].replace('_','¸')
         info['Website'] = unquote(info['Website'])
-        # logger.error('DE info\n{}\n\n'.format(info))
 
         a_list = []
-        for n in info.keys():
-            a_list.extend(wrap(n.rjust(max_len, ' ') + ': |' + info[n],
-                                 width=max_width,
-                                 subsequent_indent=(2+max_len)*'_'))
-
-        # logger.error('DE a_list\n\n{}\n\n'.format(a_list))
-
-        for a_title in ('URL:', 'site:'):
-            # make sure title is not alone in line
-            for n, an_item in enumerate(a_list):
-                if an_item.endswith(a_title):
-                    url = a_list[n+1].split('_|')[1]
-                    # merge items
-                    bar = '' if a_title.endswith('L:') else '|'
-                    a_list[n] = a_list[n] + ' ' + bar + url
-                    a_list.pop(n+1)
-                    break
-
-        # logger.error('DE a_list\n\n{}\n\n'.format(a_list))
-
-        a_list[0] = a_list[0].replace('|', '')
         fix_highlight = (
                 ('Reported ', 'Station URL:'),
                 ('Website:', 'Genre:'),
                 ('Genre:', 'Encoding:')
                 )
-        for x in fix_highlight:
-            for n, an_item in enumerate(a_list):
-                if x[0] in an_item:
-                    rep_name = n
-                if x[1] in an_item:
-                    web_name = n
-                    break
-            for n in range(rep_name + 1, web_name):
-                a_list[n] = '|' + a_list[n]
+        a_list = info_dict_to_list(info, fix_highlight, max_width)
+
         if 'Codec:' not in a_list[-1]:
             a_list[n] = '|' + a_list[n]
-
 
         ret = '|' + '\n'.join(a_list).replace('Encoding: |', 'Encoding: ').replace('URL: |', 'URL: ').replace('\n', '\n|')
         tail = ''

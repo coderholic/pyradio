@@ -332,6 +332,7 @@ class PyRadio(object):
                 self.ws.YANK_HELP_MODE: self._show_yank_help,
                 self.ws.STATION_INFO_ERROR_MODE: self._print_station_info_error,
                 self.ws.STATION_INFO_MODE: self._show_station_info,
+                self.ws.STATION_DATABASE_INFO_MODE: self._browser_station_info,
                 self.ws.RENAME_PLAYLIST_MODE: self._show_rename_dialog,
                 self.ws.CREATE_PLAYLIST_MODE: self._show_rename_dialog,
                 self.ws.PLAYLIST_COPY_ERROR: self._print_playlist_copy_error,
@@ -1096,6 +1097,7 @@ class PyRadio(object):
 
     def connectionFailed(self):
         if self.ws.operation_mode in (self.ws.STATION_INFO_MODE,
+                self.ws.STATION_DATABASE_INFO_MODE,
                 self.ws.STATION_INFO_ERROR_MODE):
             self.ws.close_window()
         old_playing = self.playing
@@ -3252,6 +3254,18 @@ class PyRadio(object):
                 self.ws.close_window()
             self._show_station_info()
 
+    def _browser_station_info(self):
+        max_width = self.bodyMaxX - 24
+        if max_width < 56:
+            max_width = 56
+        txt, tail = self._cnf._online_browser.get_info_string(
+            self.selection,
+            max_width=max_width)
+        self._station_rename_from_info = False
+        self._show_help(txt,
+                        mode_to_set=self.ws.STATION_DATABASE_INFO_MODE,
+                        caption=' Station Database Info ', is_message=True)
+
     def _show_station_info(self):
         max_width = self.bodyMaxX - 24
         if max_width < 56:
@@ -3872,6 +3886,12 @@ class PyRadio(object):
         self.ws.close_window()
         self.refreshBody()
         self._main_help_id = 0
+
+    def _normal_station_info(self):
+        if self.player.isPlaying():
+            self._show_station_info()
+        else:
+            self._print_station_info_error()
 
     def keypress(self, char):
         self.detect_if_player_exited = True
@@ -5388,14 +5408,20 @@ class PyRadio(object):
                     self._cnf.jump_tag = -1
                     self._paste()
 
+                elif char == ord('I'):
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
+                    if self._cnf.browsing_station_service:
+                        self._browser_station_info()
+                    else:
+                        self._normal_station_info()
+
                 elif char == ord('i'):
                     self.jumpnr = ''
                     self._cnf.jump_tag = -1
                     self._update_status_bar_right(status_suffix='')
-                    if self.player.isPlaying():
-                        self._show_station_info()
-                    else:
-                        self._print_station_info_error()
+                    self._normal_station_info()
 
                 elif char == ord('e'):
                     self.jumpnr = ''

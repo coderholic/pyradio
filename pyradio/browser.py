@@ -3,12 +3,14 @@
 from dns import resolver
 import random
 import json
+import collections
 try:
     import requests
 except ImportError:
     pass
 import threading
 import logging
+from .player import info_dict_to_list
 from .cjkwrap import cjklen, PY3
 
 import locale
@@ -208,6 +210,36 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
                 else:
                     return self._raw_stations[id_in_list]['url']
         return ''
+
+    def get_info_string(self, a_station, max_width=60):
+        guide = (
+            ('Name',  'name'),
+            ('URL', 'url_resolved'),
+            ('Website', 'homepage'),
+            ('Tags', 'tags'),
+            ('Votes', 'votes'),
+            ('Clicks', 'clickcount'),
+            ('Country', 'country'),
+            ('State', 'state'),
+            ('Bitrate', 'bitrate'),
+            ('Codec', 'codec')
+        )
+        info = collections.OrderedDict()
+        for n in guide:
+            info[n[0]] = self._raw_stations[a_station][n[1]]
+            if n[1] == 'bitrate':
+                info[n[0]] += ' kb/s'
+
+        a_list = []
+        fix_highlight = []
+        a_list = info_dict_to_list(info, fix_highlight, max_width)
+        ret = '|' + '\n|'.join(a_list)
+        sp = ret.split('\n')
+        for i, n in enumerate(sp):
+            if ': ' not in n:
+                sp[i] = n[1:]
+        ret = '\n'.join(sp).replace(': |', ':| ').replace(': ', ':| ')
+        return ret, ''
 
     def search(self, data, url=None):
         ''' Search for stations with parameters.
@@ -429,6 +461,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
                 ret[-1]['codec'] = n['codec']
                 ret[-1]['state'] = n['state']
                 ret[-1]['tags'] = n['tags']
+                ret[-1]['homepage'] = n['homepage']
                 if isinstance(n['clickcount'], int):
                     # old API
                     ret[-1]['votes'] = str(n['votes'])
@@ -439,7 +472,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
                     ret[-1]['votes'] = n['votes']
                     ret[-1]['clickcount'] = n['clickcount']
                     ret[-1]['bitrate'] = n['bitrate']
-                ret[-1]['language'] = n['language']
+                ret[-1]['language'] = n['language'].capitalize()
                 ret[-1]['encoding'] = ''
                 self._get_max_len(ret[-1]['votes'],
                                   ret[-1]['clickcount'])
