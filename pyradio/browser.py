@@ -234,11 +234,32 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
         fix_highlight = []
         a_list = info_dict_to_list(info, fix_highlight, max_width)
         ret = '|' + '\n|'.join(a_list)
+        # logger.error('DE \n\n{}\n\n'.format(ret))
         sp = ret.split('\n')
+        wrong_wrap = -1
         for i, n in enumerate(sp):
-            if ': ' not in n:
-                sp[i] = n[1:]
+            # logger.exception('DE {0}: "{1}"'.format(i, n))
+            if wrong_wrap == i:
+                sp[i] = n.replace('|', '')
+                sp[i-1] += sp[i].replace('_', '')
+                sp[i] = '*' + sp[i]
+                wrong_wrap = -1
+            else:
+                if ': ' not in n:
+                    sp[i] = n[1:]
+                if n[-1] ==  ':':
+                    ''' wrong wrapping! '''
+                    wrong_wrap = i + 1
+                    sp[i] += '|'
+                    if sp[i][-1] != ' ':
+                        sp[i] += ' '
+                    if sp[i][0] != '|':
+                        sp[i] = '|' + sp[i]
+        for i, n in enumerate(sp):
+            if n[0] == '*':
+                sp.pop(i)
         ret = '\n'.join(sp).replace(': |', ':| ').replace(': ', ':| ')
+        # logger.error('DE \n\n{}\n\n'.format(ret))
         return ret, ''
 
     def search(self, data, url=None):
