@@ -763,21 +763,25 @@ class PyRadio(object):
         #     self.selections[0][0],
         #     self.selections[0][1],
         #     self.selections[0][2]))
-        if lineNum + self.startPos == self.selection and \
-                self.selection == self.playing:
-            col = curses.color_pair(9)
-            ''' initialize col_sep here to have separated cursor '''
-            sep_col = curses.color_pair(5)
-            self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
-        elif lineNum + self.startPos == self.selection:
-            col = curses.color_pair(6)
-            ''' initialize col_sep here to have separated cursor '''
-            sep_col = curses.color_pair(5)
-            self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
-        elif lineNum + self.startPos == self.playing:
-            col = curses.color_pair(4)
-            sep_col = curses.color_pair(5)
-            self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+        if station:
+            if lineNum + self.startPos == self.selection and \
+                    self.selection == self.playing:
+                col = curses.color_pair(9)
+                ''' initialize col_sep here to have separated cursor '''
+                sep_col = curses.color_pair(5)
+                self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+            elif lineNum + self.startPos == self.selection:
+                col = curses.color_pair(6)
+                ''' initialize col_sep here to have separated cursor '''
+                sep_col = curses.color_pair(5)
+                self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+            elif lineNum + self.startPos == self.playing:
+                col = curses.color_pair(4)
+                sep_col = curses.color_pair(5)
+                self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+        else:
+            ''' this is only for a browser service '''
+            col = curses.color_pair(5)
 
         ## self.maxY, self.maxX = self.stdscr.getmaxyx()
         ## logger.error('DE ==== width = {}'.format(self.maxX - 2))
@@ -792,7 +796,10 @@ class PyRadio(object):
                 pass
         else:
             if self._cnf.browsing_station_service:
-                played, line = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.bodyMaxX)
+                if station:
+                    played, line = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.bodyMaxX)
+                else:
+                    played, line = self._cnf.online_browser.format_empty_line(self.bodyMaxX)
             else:
                 line = self._format_station_line("{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0]))
             try:
@@ -800,6 +807,7 @@ class PyRadio(object):
             except:
                 pass
 
+        if station:
             if self._cnf.browsing_station_service and sep_col:
                 ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
                 if ticks:
@@ -6139,7 +6147,13 @@ class PyRadio(object):
                 if i < len(self.stations):
                     self.__displayBodyLine(lineNum, pad, self.stations[i])
                 else:
+                    ''' display browser empty lines (station=None) '''
+                    if self._cnf.browsing_station_service:
+                        for n in range(i+1, self.bodyMaxY + 1):
+                            self.__displayBodyLine(lineNum, pad, None)
+                            lineNum += 1
                     break
+
         if self._cnf.browsing_station_service:
             if self._cnf.internal_header_height > 0:
                 headers = self._cnf.online_browser.get_internal_header(pad, self.bodyMaxX)

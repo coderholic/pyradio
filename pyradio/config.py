@@ -2061,7 +2061,7 @@ class PyRadioPlaylistStack(object):
             startPos, selection, playing,
             is_register,
             browsing_station_service])
-        logger.error('DE playlist history\n{}\n'.format(self._p))
+        # logger.error('DE playlist history\n{}\n'.format(self._p))
 
     def get_item_member(self, member, item_id=-1):
         if member in self._id.keys():

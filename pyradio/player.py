@@ -120,6 +120,8 @@ def info_dict_to_list(info, fix_highlight, max_width):
     for a_title in info.keys():
         if len(a_title) > max_len:
             max_len = len(a_title)
+        if version_info < (3, 0):
+            info[a_title] = info[a_title].encode('utf-8', 'replace')
         info[a_title] = info[a_title].replace('_','¸')
     # logger.error('DE info\n{}\n\n'.format(info))
 

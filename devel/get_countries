@@ -4,14 +4,19 @@
 #
 echo -n '# -*- coding: utf-8 -*-
 # This is from https://github.com/umpirsky/country-list
-countries = ' > countries-new.py
+' > countries-new.py
 
-curl -L https://github.com/umpirsky/country-list/raw/master/data/en_US/country.json\ >> countries-new.py && {
-    echo >> countries-new.py
-    sed -e 's/,/,\n/g' \
-        -e 's/{"/{\n"/' \
-        -e 's/}/\n}/' countries-new.py | \
-        sed -e 's/^"/    "/' -e 's/":"/": "/' > pyradio/countries.py
+
+curl https://raw.githubusercontent.com/umpirsky/country-list/master/data/en/country.json > X && {
+    sed \
+        -e 's/,/,\n/g' \
+        -e 's/{/countries = {\n/' \
+        -e 's/}/\n}/' X | sed \
+            -e 's/^"/    "/' \
+            -e 's/":"/": "/' >> countries-new.py
+    rm X
+    mv countries-new.py pyradio/countries.py
+
     echo >> pyradio/countries.py
     git add pyradio/countries.py
 } || {
@@ -20,6 +25,6 @@ echo "
 ERROR: Cannot update Countries list
 
 "
-rm countries-new.py
 
 }
+rm countries-new.py X 2>/dev/null

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # http://www.radio-browser.info/webservice#Advanced_station_search
 from dns import resolver
+from copy import deepcopy
 import random
 import json
 import collections
@@ -12,12 +13,18 @@ import threading
 import logging
 from .player import info_dict_to_list
 from .cjkwrap import cjklen, PY3
+from .countries import countries
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
+def capitalize_comma_separated_string(a_string):
+    sp = a_string.split(',')
+    for i, n in enumerate(sp):
+        sp[i] = n.strip().capitalize()
+    return ', '.join(sp)
 
 class PyRadioStationsBrowser(object):
     ''' A base class to get results from online radio directory services.
@@ -126,9 +133,10 @@ class PyRadioStationsBrowser(object):
 class BrowserInfoBrowser(PyRadioStationsBrowser):
 
     BASE_URL = 'api.radio-browser.info'
-    TITLE = 'Radio Browser'
+    TITLE = 'Radio Browser '
 
-    _open_headers = {'user-agent': 'PyRadio/dev'}
+    _open_headers = {'User-Agent': 'PyRadio/dev',
+                     'Content-Type': 'application/json'}
 
     _raw_stations = []
 
@@ -143,6 +151,9 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
     _raw_stations = []
     _internal_header_height = 1
 
+    _search_history = []
+    _search_history_index = -1
+
     _columns_width = {
             'votes': 7,
             'clickcount': 7,
@@ -156,16 +167,48 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
 
     _dns_info = None
 
-    def __init__(self, config_encoding, search=None):
+    def __init__(self, config_encoding, session=None, search=None):
+        if session:
+            self._session = session
+        else:
+            self._session = requests.Session()
+
         self._config_encoding = config_encoding
         self._dns_info = BrowserInfoDnsLookup()
         self._server = self._dns_info.give_me_a_server_url()
-        self._open_url = 'https://{}/json/stations/topvote/100'.format(self._server)
+        # self.TITLE = 'Radio Browser ({})'.format(self._server)
+        self._calculate_title()
 
-        if search:
-            self.search(search)
+        self._search_history.append({
+            'type': 'topvote',
+            'term': '100',
+            'param': None,
+        })
+
+        self._search_history.append({
+            'type': 'bytagexact',
+            'term': 'big band',
+            'param': {'order': 'votes', 'reverse': 'true'},
+        })
+        self._search_history_index = 1
+
+        self.search()
+
+    @property
+    def server(self):
+        return self._server
+
+    @property
+    def add_to_title(self):
+        return self._server.split('.')[0]
+
+    def _calculate_title(self):
+        country = self._server.split('.')[0]
+        up = country[:-1].upper()
+        if up in countries.keys():
+            self.TITLE = 'Radio Browser ({})'.format(countries[up])
         else:
-            self.search({'order': 'votes', 'reverse': 'true'})
+            self.TITLE = 'Radio Browser ({})'.format(country)
 
     def stations(self, playlist_format=1):
         ''' Return stations' list (in PyRadio playlist format)
@@ -211,19 +254,35 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
                     return self._raw_stations[id_in_list]['url']
         return ''
 
+    def click(self, a_station):
+        # http://nl1.api.radio-browser.info/pls/url/stationuuid
+        url = self._server + '/json/url/' + self._raw_stations['stationuuid']
+        pass
+        try:
+            requests.get(url=url, headers=self._open_headers, timeout=(self._search_timeout, 2 * self._search_timeout))
+        except:
+            pass
+
+    def vote(self, a_station):
+        pass
+
     def get_info_string(self, a_station, max_width=60):
-        guide = (
+        guide = [
             ('Name',  'name'),
-            ('URL', 'url_resolved'),
+            ('URL', 'url'),
+            ('Resolved URL', 'url_resolved'),
             ('Website', 'homepage'),
             ('Tags', 'tags'),
             ('Votes', 'votes'),
             ('Clicks', 'clickcount'),
             ('Country', 'country'),
             ('State', 'state'),
+            ('Language', 'language'),
             ('Bitrate', 'bitrate'),
             ('Codec', 'codec')
-        )
+        ]
+        if self._raw_stations[a_station]['url'] == self._raw_stations[a_station]['url_resolved']:
+            guide.pop(2)
         info = collections.OrderedDict()
         for n in guide:
             info[n[0]] = self._raw_stations[a_station][n[1]]
@@ -262,7 +321,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
         # logger.error('DE \n\n{}\n\n'.format(ret))
         return ret, ''
 
-    def search(self, data, url=None):
+    def search(self):
         ''' Search for stations with parameters.
             Result is limited to 100 stations by default (use the
             'limit' parameter to change it).
@@ -294,43 +353,104 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
                         encoding       : station encoding ('' means utf-8)
         '''
 
-        self._output_format = -1
-        valid_params = (
-            'name', 'nameExact',
-            'country', 'countryExact',
-            'state', 'stateExact',
-            'language', 'languageExact',
-            'tags', 'tagExact',
-            'tagList',
-            'bitrateMin', 'bitrateMax',
-            'order',
-            'reverse',
-            'offset',
-            'codec',
-            'limit'
-        )
+        url = self._format_url(self._search_history[self._search_history_index])
+        logger.error('DE \n\nurl = "{}"\n\n'.format(url))
         post_data = {}
-        for n in valid_params:
-            if n in data.keys():
-                post_data[n] = data[n]
-        if 'limit' not in post_data.keys():
-            post_data['limit'] = 100
-        if not 'hidebroken' not in post_data.keys():
-            post_data['hidebroken'] = 'true'
-        self._last_search = post_data
-        if url is None:
-            url = self._open_url
+        if self._search_history[self._search_history_index]['param']:
+            post_data = deepcopy(self._search_history[self._search_history_index]['param'])
+
+        self._output_format = -1
+        if self._search_type > 0:
+            if 'limit' not in post_data.keys():
+                post_data['limit'] = 100
+            if not 'hidebroken' not in post_data.keys():
+                post_data['hidebroken'] = True
+        # url = 'https://' + self._server + '/json/stations/search'
+        logger.error('DE \n\nheaders = "{}"'.format(self._open_headers))
+        logger.error('DE \n\npost_data = "{}"'.format(post_data))
         try:
             # r = requests.get(url=url)
-            r = requests.get(url=url, headers=self._open_headers, json=post_data, timeout=self._search_timeout)
+            r = self._session.get(url=url, headers=self._open_headers, params=post_data, timeout=(self._search_timeout, 2 * self._search_timeout))
             r.raise_for_status()
-            # logger.error(r.text)
             self._raw_stations = self._extract_data(json.loads(r.text))
             # logger.error('DE \n\n{}'.format(self._raw_stations))
         except requests.exceptions.RequestException as e:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error(e)
             self._raw_stations = []
+
+    def _format_url(self, a_search):
+        if a_search['type'] in ('topvote',
+                                'topclick',
+                                'lastclick',
+                                'lastchange',
+                                'changed',
+                                'improvable',
+                                'broken',
+                                ):
+            url = 'http://{0}{1}'.format(
+                self._server,
+                '/json/stations/{}'.format(a_search['type'])
+            )
+            if a_search['term'] not in ('', '0'):
+                url += '/{}'.format(a_search['term'])
+            self._search_type = 0
+
+        elif a_search['type'] in ('byuuid',
+                                  'byname',
+                                  'bynameexact',
+                                  'bycodec',
+                                  'bycodecexact',
+                                  'bycountry',
+                                  'bycountryexact',
+                                  'bycountrycodeexact',
+                                  'bystate',
+                                  'bystateexact',
+                                  'bylanguage',
+                                  'bylanguageexact',
+                                  'bytag',
+                                  'bytagexact',
+                                  ):
+            url = 'http://{0}{1}/{2}'.format(
+                self._server,
+                '/json/stations/{}'.format(a_search['type']),
+                a_search['term']
+            )
+            self._search_type = 1
+
+        return url
+
+    def format_empty_line(self, width):
+        if self._output_format == 0:
+            return  -1, ' '
+        info = (
+            (),
+            ('bitrate', ),
+            ('votes', 'bitrate'),
+            ('votes', 'clickcount', 'bitrate'),
+            ('votes', 'clickcount', 'bitrate', 'country'),
+            ('votes', 'clickcount', 'bitrate', 'country', 'language'),
+            ('votes', 'clickcount', 'bitrate', 'country', 'state', 'language'),
+            ('votes', 'clickcount', 'bitrate', 'codec', 'country', 'state', 'language', 'tags')
+        )
+
+        out = ['', '']
+        i_out = []
+        for i, n in enumerate(info[self._output_format]):
+            i_out.append(u'│' + ' ' * self._columns_width[n])
+        out[1] = ''.join(i_out)
+
+        name_width = width-len(out[1])
+        out[0] = ' ' * name_width
+
+        if PY3:
+            return -1, '{0}{1}'.format(*out)
+        else:
+            return -1 , '{0}{1}'.format(
+                out[0],
+                out[1].encode('utf-8', 'replace')
+            )
+
 
     def format_station_line(self, id_in_list, pad, width):
         ''' Create a formated line for a station
@@ -472,8 +592,10 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
         if a_search_result:
             for n in a_search_result:
                 ret.append({'name': n['name'].replace(',', ' ')})
+                ret[-1]['stationuuid'] = n['stationuuid']
                 ret[-1]['url'] = n['url']
                 ret[-1]['url_resolved'] = n['url_resolved']
+                ret[-1]['url'] = n['url']
                 ret[-1]['played'] = False
                 ret[-1]['hls'] = n['hls']
                 ret[-1]['stationuuid'] = n['stationuuid']
@@ -481,7 +603,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
                 ret[-1]['country'] = n['country']
                 ret[-1]['codec'] = n['codec']
                 ret[-1]['state'] = n['state']
-                ret[-1]['tags'] = n['tags']
+                ret[-1]['tags'] = n['tags'].replace(',', ', ')
                 ret[-1]['homepage'] = n['homepage']
                 if isinstance(n['clickcount'], int):
                     # old API
@@ -493,7 +615,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
                     ret[-1]['votes'] = n['votes']
                     ret[-1]['clickcount'] = n['clickcount']
                     ret[-1]['bitrate'] = n['bitrate']
-                ret[-1]['language'] = n['language'].capitalize()
+                ret[-1]['language'] = capitalize_comma_separated_string(n['language'])
                 ret[-1]['encoding'] = ''
                 self._get_max_len(ret[-1]['votes'],
                                   ret[-1]['clickcount'])
