@@ -45,6 +45,7 @@ class Window_Stack_Constants(object):
     PLAYER_PARAMS_MODE = 65
     STATIONS_ASK_TO_INTEGRATE_MODE = 66
     STATION_DATABASE_INFO_MODE = 67
+    VOTE_RESULT_MODE = 68
     MAIN_HELP_MODE = 100
     MAIN_HELP_MODE_PAGE_2 = 101
     MAIN_HELP_MODE_PAGE_3 = 102
@@ -199,6 +200,7 @@ class Window_Stack_Constants(object):
         USER_PARAMETER_ERROR: 'USER_PARAMETER_ERROR',
         STATIONS_ASK_TO_INTEGRATE_MODE: 'STATIONS_ASK_TO_INTEGRATE_MODE',
         STATIONS_INTEGRATED_MODE: 'STATIONS_INTEGRATED_MODE',
+        VOTE_RESULT_MODE: 'VOTE_RESULT_MODE',
     }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -258,6 +260,7 @@ class Window_Stack_Constants(object):
         USER_PARAMETER_ERROR,
         STATIONS_INTEGRATED_MODE,
         STATION_DATABASE_INFO_MODE,
+        VOTE_RESULT_MODE,
     )
 
     def __init__(self):

@@ -350,6 +350,7 @@ class PyRadio(object):
                 self.ws.IN_PLAYER_PARAMS_EDITOR_HELP_MODE: self._show_params_ediror_help,
                 self.ws.STATIONS_ASK_TO_INTEGRATE_MODE: self._print_ask_to_integrate,
                 self.ws.STATIONS_INTEGRATED_MODE: self._print_integrated,
+                self.ws.VOTE_RESULT_MODE: self._print_vote_result,
                 }
 
         ''' list of help functions '''
@@ -1074,6 +1075,8 @@ class PyRadio(object):
                 return
             self.selections[0][2] = self.playing
         self._do_display_notify()
+        if self._cnf.browsing_station_service:
+            self._cnf._online_browser.click(self.playing)
 
     def playbackTimeoutCounter(self, *args):
         timeout = args[0]
@@ -2016,6 +2019,21 @@ class PyRadio(object):
                         mode_to_set=self.ws.YANK_HELP_MODE,
                         caption=' Copy Mode Help')
 
+    def _print_vote_result(self):
+        txt = '''
+                You have just voted for the following station:
+                ____|{0}|
+
+                 Voting result
+                 ____|{1}|
+                 '''
+        self._show_help(txt.format(self.stations[self.playing][0],
+                                   self._cnf._online_browser.vote_result),
+                        self.ws.VOTE_RESULT_MODE,
+                        caption=' Staion Vote Result ',
+                        prompt=' Press any key... ',
+                        is_message=True)
+
     def _print_mouse_restart_info(self):
         txt = '''
                 You have just changed the mouse support config
@@ -2882,6 +2900,7 @@ class PyRadio(object):
                 except TypeError:
                     pass
                 if self._cnf.online_browser:
+                    self._cnf.vote_callback = self._print_vote_result
                     tmp_stations = self._cnf.stations
                     if tmp_stations:
                         #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
@@ -5415,6 +5434,19 @@ class PyRadio(object):
                     self.jumpnr = ''
                     self._cnf.jump_tag = -1
                     self._paste()
+
+                elif char == ord('V'):
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
+                    if self._cnf.browsing_station_service:
+                        txt = '''Voting for station. Please wait...'''
+                        self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+                        self._cnf._online_browser.vote_callback = self._print_vote_result
+                        if self.player.isPlaying():
+                            self._cnf._online_browser.vote(self.playing)
+                        else:
+                            self._cnf._online_browser.vote(self.selection)
 
                 elif char == ord('I'):
                     self.jumpnr = ''

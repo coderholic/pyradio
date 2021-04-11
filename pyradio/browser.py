@@ -39,6 +39,7 @@ class PyRadioStationsBrowser(object):
     _internal_header_height = 0
     _url_timeout = 3
     _search_timeout = 3
+    _vote_callback = None
 
     # Normally outer boddy (holding box, header, internal header) is
     # 2 chars wider that the internal body (holding the stations)
@@ -87,6 +88,14 @@ class PyRadioStationsBrowser(object):
     def title(self, value):
         self.TITLE = value
 
+    @property
+    def vote_callback(self):
+        return self._vote_callback
+
+    @vote_callback.setter
+    def vote_callback(self, val):
+        self._vote_callback = val
+
     def stations(self, playlist_format=1):
         return []
 
@@ -129,6 +138,12 @@ class PyRadioStationsBrowser(object):
     def format_station_line(self, id_in_list, pad, width):
         return ''
 
+    def click(self, a_station):
+        pass
+
+    def vote(self, a_station):
+        pass
+
 
 class BrowserInfoBrowser(PyRadioStationsBrowser):
 
@@ -167,7 +182,10 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
 
     _dns_info = None
 
-    def __init__(self, config_encoding, session=None, search=None):
+    def __init__(self,
+                 config_encoding,
+                 session=None,
+                 search=None):
         if session:
             self._session = session
         else:
@@ -176,8 +194,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
         self._config_encoding = config_encoding
         self._dns_info = BrowserInfoDnsLookup()
         self._server = self._dns_info.give_me_a_server_url()
-        # self.TITLE = 'Radio Browser ({})'.format(self._server)
-        self._calculate_title()
+        self._get_title()
 
         self._search_history.append({
             'type': 'topvote',
@@ -202,13 +219,16 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
     def add_to_title(self):
         return self._server.split('.')[0]
 
-    def _calculate_title(self):
-        country = self._server.split('.')[0]
+    def _get_title(self):
+        self.TITLE = 'Radio Browser ({})'.format(self._country_from_server(self._server))
+
+    def _country_from_server(self, a_server):
+        country = a_server.split('.')[0]
         up = country[:-1].upper()
         if up in countries.keys():
-            self.TITLE = 'Radio Browser ({})'.format(countries[up])
+            return countries[up]
         else:
-            self.TITLE = 'Radio Browser ({})'.format(country)
+            return country
 
     def stations(self, playlist_format=1):
         ''' Return stations' list (in PyRadio playlist format)
@@ -255,16 +275,30 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
         return ''
 
     def click(self, a_station):
-        # http://nl1.api.radio-browser.info/pls/url/stationuuid
-        url = self._server + '/json/url/' + self._raw_stations['stationuuid']
-        pass
+        url = 'http://' + self._server + '/json/url/' + self._raw_stations[a_station]['stationuuid']
         try:
-            requests.get(url=url, headers=self._open_headers, timeout=(self._search_timeout, 2 * self._search_timeout))
+            r = self._session.get(url=url, headers=self._open_headers, timeout=(self._search_timeout, 2 * self._search_timeout))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Station click result: "{}"'.format(r.text))
         except:
-            pass
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Station click failed...')
 
     def vote(self, a_station):
-        pass
+        url = 'http://' + self._server + '/json/vote/' + self._raw_stations[a_station]['stationuuid']
+        try:
+            r = self._session.get(url=url, headers=self._open_headers, timeout=(self._search_timeout, 2 * self._search_timeout))
+            message = json.loads(r.text)
+            self.vote_result = message['message'][0].upper() + message['message'][1:]
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Station vote result: "{}"'.format(self.vote_result))
+        except:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Station voting failed...')
+            self.vote_result = 'Voting for station failed'
+
+        if self._vote_callback:
+            self._vote_callback()
 
     def get_info_string(self, a_station, max_width=60):
         guide = [
