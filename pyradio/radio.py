@@ -4947,7 +4947,7 @@ class PyRadio(object):
                     ret = self.search.get_previous(
                         self._search_list,
                         sel,
-                        search_function=self._cnf._online_browser.get_next
+                        search_function=self._cnf._online_browser.get_previous
                     )
                 else:
                     ret = self.search.get_previous(self._search_list, sel)

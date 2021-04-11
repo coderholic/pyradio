@@ -452,7 +452,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
                         logger.debug('backward search term "{0}" found at {1}'.format(search_term, n))
                     return n
             """ if not found start from list end """
-            for n in range(len(a_list) - 1, start, -1):
+            for n in range(len(self._raw_stations) - 1, start, -1):
                 if self._search_in_station(search_term, n):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('backward search term "{0}" found at {1}'.format(search_term, n))
