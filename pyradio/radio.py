@@ -2024,7 +2024,7 @@ class PyRadio(object):
                 You have just voted for the following station:
                 ____|{0}|
 
-                 Voting result
+                 Voting result:
                  ____|{1}|
                  '''
         self._show_help(txt.format(self.stations[self.playing][0],
@@ -2900,7 +2900,7 @@ class PyRadio(object):
                 except TypeError:
                     pass
                 if self._cnf.online_browser:
-                    self._cnf.vote_callback = self._print_vote_result
+                    self._cnf._online_browser.vote_callback = self._print_vote_result
                     tmp_stations = self._cnf.stations
                     if tmp_stations:
                         #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
@@ -4906,7 +4906,14 @@ class PyRadio(object):
             if self.search.string:
                 if sel == len(self._search_list):
                     sel = 0
-                ret = self.search.get_next(self._search_list, sel)
+                if self._cnf.browsing_station_service:
+                    ret = self.search.get_next(
+                        self._search_list,
+                        sel,
+                        search_function=self._cnf._online_browser.get_next
+                    )
+                else:
+                    ret = self.search.get_next(self._search_list, sel)
                 if ret is not None:
                     self._apply_search_result(ret, reapply=True)
             else:
@@ -4936,7 +4943,14 @@ class PyRadio(object):
             if self.search.string:
                 if sel < 0:
                     sel = len(self._search_list) - 1
-                ret = self.search.get_previous(self._search_list, sel)
+                if self._cnf.browsing_station_service:
+                    ret = self.search.get_previous(
+                        self._search_list,
+                        sel,
+                        search_function=self._cnf._online_browser.get_next
+                    )
+                else:
+                    ret = self.search.get_previous(self._search_list, sel)
                 if ret is not None:
                     self._apply_search_result(ret, reapply=True)
             else:
@@ -4964,7 +4978,14 @@ class PyRadio(object):
                 ''' perform search '''
                 if sel == len(self._search_list):
                     sel = 0
-                ret = self.search.get_next(self._search_list, sel)
+                if self._cnf.browsing_station_service:
+                    ret = self.search.get_next(
+                        self._search_list,
+                        sel,
+                        search_function=self._cnf._online_browser.get_next
+                    )
+                else:
+                    ret = self.search.get_next(self._search_list, sel)
                 if ret is None:
                     if self.search.string:
                         self.search.print_not_found()
@@ -5442,7 +5463,6 @@ class PyRadio(object):
                     if self._cnf.browsing_station_service:
                         txt = '''Voting for station. Please wait...'''
                         self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
-                        self._cnf._online_browser.vote_callback = self._print_vote_result
                         if self.player.isPlaying():
                             self._cnf._online_browser.vote(self.playing)
                         else:

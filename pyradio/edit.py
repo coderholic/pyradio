@@ -83,8 +83,22 @@ class PyRadioSearch(SimpleCursesLineEdit):
         if self._has_history:
             self.string = self._input_history.return_history(-1, self.string)
 
-    def get_next(self, a_list, start=0, stop=None):
+    def get_next(self,
+                 a_list,
+                 start=0,
+                 stop=None,
+                 search_term=None,
+                 search_function=None
+                 ):
         if self.string:
+            if search_function:
+                ''' use online browser search instead '''
+                return search_function(
+                    self.string,
+                    start=start,
+                    stop=stop
+                )
+
             for n in eval(self._range_command)(start, len(a_list)):
                 if self.string.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
@@ -103,8 +117,22 @@ class PyRadioSearch(SimpleCursesLineEdit):
         else:
             return None
 
-    def get_previous(self, a_list, start=0, stop=None):
+    def get_previous(self,
+                     a_list,
+                     start=0,
+                     stop=None,
+                     search_term=None,
+                     search_function=None
+                     ):
         if self.string:
+            if search_function:
+                ''' use online browser search instead '''
+                return search_function(
+                    self.string,
+                    start=start,
+                    stop=stop
+                )
+
             for n in eval(self._range_command)(start, -1, -1):
                 if self.string.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):

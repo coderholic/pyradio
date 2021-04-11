@@ -969,7 +969,10 @@ class PyRadioStations(object):
         return -1
 
     def open_browser(self, url):
-        self._online_browser = probeBrowsers(url)(self.default_encoding)
+        self._online_browser = probeBrowsers(url)(
+            self.default_encoding,
+            pyradio_info=self.info
+        )
         if self._online_browser:
             self.stations = self._online_browser.stations(2)
             self._reading_stations = []

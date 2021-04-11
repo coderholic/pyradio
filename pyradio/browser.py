@@ -49,7 +49,11 @@ class PyRadioStationsBrowser(object):
     _outer_internal_body_diff = 2
     _outer_internal_body_half_diff = 1
 
-    def __init__(self, search=None):
+    def __init__(self,
+                 config_encoding,
+                 session=None,
+                 search=None,
+                 pyradio_info=None):
         ''' Initialize the station's browser.
 
             It should return a valid search result (for example,
@@ -150,7 +154,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
     BASE_URL = 'api.radio-browser.info'
     TITLE = 'Radio Browser '
 
-    _open_headers = {'User-Agent': 'PyRadio/dev',
+    _headers = {'User-Agent': 'PyRadio/dev',
                      'Content-Type': 'application/json'}
 
     _raw_stations = []
@@ -185,12 +189,15 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
     def __init__(self,
                  config_encoding,
                  session=None,
-                 search=None):
+                 search=None,
+                 pyradio_info=None):
         if session:
             self._session = session
         else:
             self._session = requests.Session()
-
+        self._pyradio_info = pyradio_info.strip()
+        if self._pyradio_info:
+            self._headers['User-Agent'] = self._pyradio_info.replace(' ', '/')
         self._config_encoding = config_encoding
         self._dns_info = BrowserInfoDnsLookup()
         self._server = self._dns_info.give_me_a_server_url()
@@ -277,7 +284,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
     def click(self, a_station):
         url = 'http://' + self._server + '/json/url/' + self._raw_stations[a_station]['stationuuid']
         try:
-            r = self._session.get(url=url, headers=self._open_headers, timeout=(self._search_timeout, 2 * self._search_timeout))
+            r = self._session.get(url=url, headers=self._headers, timeout=(self._search_timeout, 2 * self._search_timeout))
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Station click result: "{}"'.format(r.text))
         except:
@@ -287,7 +294,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
     def vote(self, a_station):
         url = 'http://' + self._server + '/json/vote/' + self._raw_stations[a_station]['stationuuid']
         try:
-            r = self._session.get(url=url, headers=self._open_headers, timeout=(self._search_timeout, 2 * self._search_timeout))
+            r = self._session.get(url=url, headers=self._headers, timeout=(self._search_timeout, 2 * self._search_timeout))
             message = json.loads(r.text)
             self.vote_result = message['message'][0].upper() + message['message'][1:]
             if logger.isEnabledFor(logging.DEBUG):
@@ -400,18 +407,76 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
             if not 'hidebroken' not in post_data.keys():
                 post_data['hidebroken'] = True
         # url = 'https://' + self._server + '/json/stations/search'
-        logger.error('DE \n\nheaders = "{}"'.format(self._open_headers))
+        logger.error('DE \n\nheaders = "{}"'.format(self._headers))
         logger.error('DE \n\npost_data = "{}"'.format(post_data))
         try:
             # r = requests.get(url=url)
-            r = self._session.get(url=url, headers=self._open_headers, params=post_data, timeout=(self._search_timeout, 2 * self._search_timeout))
+            r = self._session.get(url=url, headers=self._headers, params=post_data, timeout=(self._search_timeout, 2 * self._search_timeout))
             r.raise_for_status()
             self._raw_stations = self._extract_data(json.loads(r.text))
+            for n in self._raw_stations:
+                logger.error('{}'.format(n))
             # logger.error('DE \n\n{}'.format(self._raw_stations))
         except requests.exceptions.RequestException as e:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error(e)
             self._raw_stations = []
+
+    def get_next(self, search_term, start=0, stop=None):
+        if search_term:
+            pass
+            for n in range(start, len(self._raw_stations)):
+                if self._search_in_station(search_term, n):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('forward search term "{0}" found at {1}'.format(search_term, n))
+                    return n
+
+            """ if not found start from list top """
+            for n in range(0, start):
+                if self._search_in_station(search_term, n):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('forward search term "{0}" found at {1}'.format(search_term, n))
+                    return n
+            """ if not found return None """
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('forward search term "{}" not found'.format(search_term))
+            return None
+        else:
+            return None
+
+    def get_previous(self, search_term, start=0, stop=None):
+        if search_term:
+            for n in range(start, -1, -1):
+                if self._search_in_station(search_term, n):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('backward search term "{0}" found at {1}'.format(search_term, n))
+                    return n
+            """ if not found start from list end """
+            for n in range(len(a_list) - 1, start, -1):
+                if self._search_in_station(search_term, n):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('backward search term "{0}" found at {1}'.format(search_term, n))
+                    return n
+            """ if not found return None """
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('backward search term "{}" not found'.format(search_term))
+            return None
+        else:
+            return None
+
+    def _search_in_station(self, a_search_term, a_station):
+        guide = (
+            'name',
+            'country',
+            'codec',
+            'tags',
+            'bitrate',
+            'language'
+        )
+        for n in guide:
+            if a_search_term.lower() in self._raw_stations[a_station][n].lower():
+                return True
+        return False
 
     def _format_url(self, a_search):
         if a_search['type'] in ('topvote',
@@ -983,6 +1048,8 @@ class PyRadioBrowserInfoData(object):
             jdata = {'hidebroken': 'true'}
             headers = {'user-agent': 'PyRadio/dev',
                        'encoding': 'application/json'}
+            if self._pyradio_info:
+                headers['user-agent'] = self._pyradio_info.replace(' ', '/')
             try:
                 r = requests.get(url, headers=headers, json=jdata, timeout=self._timeout)
                 r.raise_for_status()
