@@ -5,6 +5,7 @@ from copy import deepcopy
 import random
 import json
 import collections
+from operator import itemgetter
 try:
     import requests
 except ImportError:
@@ -149,7 +150,7 @@ class PyRadioStationsBrowser(object):
         pass
 
 
-class BrowserInfoBrowser(PyRadioStationsBrowser):
+class RadioBrowserInfo(PyRadioStationsBrowser):
 
     BASE_URL = 'api.radio-browser.info'
     TITLE = 'Radio Browser '
@@ -199,7 +200,7 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
         if self._pyradio_info:
             self._headers['User-Agent'] = self._pyradio_info.replace(' ', '/')
         self._config_encoding = config_encoding
-        self._dns_info = BrowserInfoDnsLookup()
+        self._dns_info = RadioBrowserInfoDns()
         self._server = self._dns_info.give_me_a_server_url()
         self._get_title()
 
@@ -888,8 +889,28 @@ class BrowserInfoBrowser(PyRadioStationsBrowser):
         title = '#'.rjust(pad) + '  Name'
         return ((title, columns_separotors, columns[self._output_format]), )
 
+    def create_sort_window(self, parent):
+        self._sort = RadioBrowserInfoSort(parent)
+        self._sort.show()
 
-class PyRadioBrowserInfoData(object):
+    def show_sort_window(self):
+        self._sort.show()
+
+    def keypress(self, char):
+        '''
+            Returns:
+                -1: Cancel
+                 0: Done, result is in ....
+                 1: Continue
+        '''
+        ret = self._sort.keypress(char)
+
+        if ret == 0:
+            self.active_selection = self._sort.active_selection
+            self._sort = None
+        return ret
+
+class RadioBrowserInfoData(object):
     ''' Read search parameters for radio.browser.info service
 
         parameters are:
@@ -1080,7 +1101,7 @@ class PyRadioBrowserInfoData(object):
         lock.release()
 
 
-class BrowserInfoDnsLookup(object):
+class RadioBrowserInfoDns(object):
     ''' Preforms query the DNS SRV record of
         _api._tcp.radio-browser.info which
         gives the list of server names directly
@@ -1126,6 +1147,165 @@ class BrowserInfoDnsLookup(object):
 
         for a_url in self._urls:
             yield a_url
+
+class RadioBrowserInfoSort(object):
+
+    TITLE = ' Sort by  '
+
+    items = collections.OrderedDict()
+    items = {
+        'Name': 'name',
+        'Votes': 'votes',
+        'Clicks': 'clicks',
+        'Bitrate': 'bitrate',
+        'Codec': 'codec',
+        'Country': 'country',
+        'State': 'state',
+        'Language': 'language',
+        'Tag': 'tags'
+    }
+
+    _too_small = False
+
+    def __init__(self, parent, active=None):
+        self.active = self.selection = 0
+        self.maxY = len(self.items) + 2
+        self._maxX = max(len(x) for x in self.items.keys()) + 4
+        if len(self.TITLE) + 4 > self.maxX:
+            self.maxX = len(self.TITLE) + 4
+        self._win = None
+        if active:
+            self.set_active_by_value(active)
+
+    def set_parent(self, parent):
+        self._parent = parent
+        self.show()
+
+    def set_active_by_value(self, a_string, set_selection=True):
+        for i, n in enumerate(self.items.values()):
+            if a_string == n:
+                if set_selection:
+                    self.active = self.selection = i
+                else:
+                    self.active = i
+                return
+
+        if set_selection:
+            self.active = self.selection = 0
+        else:
+            self.active = 0
+
+    def show(self):
+        pY, pX = self._parent.getmaxyx()
+        if self.maxY > pY -2 or self.maxX > pX -2:
+            self._too_small = True
+            msg = 'Window too small to display content!'
+            if self.maxX < len(msg) + 2:
+                msg = 'Window too small!'
+            self._win = curses.newwin(
+                3, len(msg) + 2,
+                int(pY / 2) - 1,
+                int((pX - len(msg)) / 2))
+            self._win.bkgdset(' ', curses.color_pair(3))
+            self._win.box()
+            try:
+                self._win.addstr(
+                    1, 1,
+                    msg, curses.color_pair(5))
+            except:
+                pass
+            self._win.refresh()
+            return
+
+        self._win = curses.newwin(
+            self.maxY, self.maxX,
+            int((pY - self.maxY) / 2),
+            int((pX - self.maxX) / 2)
+        )
+        self._win.bkgdset(' ', curses.color_pair(3))
+        # self._win.erase()
+        self._win.box()
+        self._win.addstr(0, int((self.maxX - len(self.TITLE)) / 2),
+                         self.TITLE, curses.color_pair(4))
+        self._refresh()
+
+    def _refresh(self):
+        for i, n in self.items.keys():
+            col = 5
+            if i == self.active == self.selection:
+                col = 4
+            elif i == self.selection:
+                col = 3
+            elif i == self.active:
+                col = 2
+
+            self._win.addstr(i + 1, 2, n + ' ' * (self.maxX - 2 - len(n)), curses.color_pair(col))
+        self._win.refresh()
+
+    def keypress(char):
+        '''
+            Returns:
+                -1: Cancel
+                 0: Done, result is in ....
+                 1: Continue
+        '''
+        if not self._too_small:
+
+            if char in (
+                curses.KEY_EXIT, ord('q'), 27,
+                ord('h'), curses.KEY_RIGHT
+            ):
+                return -1
+
+            elif char in (
+                ord('l'), ord(' '), '\n', '\r',
+                curses.KEY_LEFT, curses.KEY_ENTER
+            ):
+                for i, n in enumerate(self.items.keys()):
+                    if i == self.selection:
+                        self.active_selection = self.items[n]
+                        break
+                return 0
+
+            elif char in (ord('g'), curses.KEY_HOME):
+                self.selection = 0
+                self._refresh()
+
+            elif char in (ord('G'), curses.KEY_END):
+                self.selection = len(self.items) - 1
+                self._refresh()
+
+            elif char in (curses.KEY_PPAGE, ):
+                if self.selection == 0:
+                    self.selection = len(self.items) - 1
+                else:
+                    self.selection -= 5
+                    if self.selection < 0:
+                        self.selection = len(self.items) - 1
+                self._refresh()
+
+            elif char in (curses.KEY_NPAGE):
+                if self.selection == len(self.items) - 1:
+                    self.selection = 0
+                else:
+                    self.selection += 5
+                    if self.selection >= len(self.items):
+                        self.selection = 0
+                self._refresh()
+
+            elif char in (ord('k'), curses.KEY_UP):
+                self.selection -= 1
+                if self.selection <= 0:
+                    self.selection = len(self.items) - 1
+                self._refresh()
+
+            elif char in (ord('j'), curses.KEY_DOWN):
+                self.selection += 1
+                if self.selection == len(self.items):
+                    self.selection = 0
+                self._refresh()
+
+        return 1
 
 
 def probeBrowsers(a_browser_url):

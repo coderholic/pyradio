@@ -351,6 +351,7 @@ class PyRadio(object):
                 self.ws.STATIONS_ASK_TO_INTEGRATE_MODE: self._print_ask_to_integrate,
                 self.ws.STATIONS_INTEGRATED_MODE: self._print_integrated,
                 self.ws.VOTE_RESULT_MODE: self._print_vote_result,
+                self.ws.VOTE_SORT_MODE: self._show_vote_sort_selection_window,
                 }
 
         ''' list of help functions '''
@@ -3315,6 +3316,14 @@ class PyRadio(object):
                             mode_to_set=self.ws.STATION_INFO_MODE,
                             caption=' Station Info ', is_message=True)
 
+    def _show_vote_sort_selection_window(self):
+        self.ws.operation_mode = self.ws.VOTE_SORT_MODE
+        self._online_browser.show_sort_window()
+
+    def _create_vote_sort_selection_window(self):
+        self.ws.operation_mode = self.ws.VOTE_SORT_MODE
+        self._online_browser.create_sort_window(parent=self.bodyWin)
+
     def detectUpdateThread(self, config, a_lock, stop):
         ''' a thread to check if an update is available '''
 
@@ -6187,8 +6196,11 @@ class PyRadio(object):
         self.bodyWin.erase()
         self.outerBodyWin.erase()
         self.outerBodyWin.box()
-        self.bodyWin.move(1, 1)
-        self.bodyWin.move(0, 0)
+        try:
+            self.bodyWin.move(1, 1)
+            self.bodyWin.move(0, 0)
+        except:
+            pass
         self._print_body_header()
         pad = len(str(self.startPos + self.bodyMaxY))
 
