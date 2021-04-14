@@ -215,7 +215,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             'term': 'big band',
             'param': {'order': 'votes', 'reverse': 'true'},
         })
-        self._search_history_index = 1
+        self._search_history_index = 0
 
         self.search()
 

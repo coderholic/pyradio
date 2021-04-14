@@ -1,3 +1,9 @@
+2021-04-14 s-n-g
+    * Version 0.8.9.1
+    * Implemented the so called "Listening" mode, in which PyRadio TUI
+      can be reduced down to a single line (the "Status Bar"). Requested
+      for tilling WM use (#128)[https://github.com/coderholic/pyradio/issues/128]
+
 2021-04-03 s-n-g
     * Version 0.8.9
     * Implemented a simplified method to install, update, uninstall.

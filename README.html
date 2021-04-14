@@ -41,7 +41,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#installation">Installation</a></li>
 <li><a href="#command-line-options">Command line options</a></li>
 <li><a href="#controls">Controls</a></li>
-<li><a href="#pyradio&#39;s-modes">PyRadio’s Modes</a></li>
+<li><a href="#pyradio-modes">PyRadio Modes</a></li>
 <li><a href="#config-file">Config file</a></li>
 <li><a href="#about-playlist-files">About Playlist files</a>
 <ul>
@@ -106,6 +106,7 @@ a:visited{color: SaddleBrown;}
 <li>python 2.7/3.5+
 <ul>
 <li>requests</li>
+<li>dnspython</li>
 </ul></li>
 <li>MPV, MPlayer or VLC installed and in your path</li>
 </ul>
@@ -208,13 +209,14 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All windows - except the <em>Search window</em> - support changing the volume and muting / unmuting the player (provided that <strong>PyRadio</strong> is actually connected to a station).</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When inserting numbers (either to jump to a station or to move a station), the number will be displayed at the right bottom corner of the window, suffixed by a “<em>G</em>”, i.e. pressing <em>35</em> will display <em>[35G]</em>.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When tagging a station position for a move action (by pressing “<strong>J</strong>”), the position will be displayed at the right bottom corner of the window, suffixed by a “<em>J</em>”, i.e. pressing “<em>J</em>” on position <em>35</em> will display <em>[35J]</em>.</p>
-<h2 id="pyradios-modes">PyRadio’s Modes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="pyradio-modes">PyRadio Modes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> has the following primary modes:</p>
 <ol type="1">
 <li>The <strong>Main</strong> mode, which is the one you get when you open the program, showing you a list of stations (a playlist), that you can play and edit; this is why it is also called the <strong>editing mode</strong>. All other modes derive from this one, and it’s the mode you have to get to in order to terminate the program.</p></li>
 <li>The <strong>Playlist</strong> mode, which you can open by pressing “<strong>o</strong>”. Then you can open, create, paste a station, etc.</p></li>
 <li>The <strong>Registers</strong> mode. This is identical to the “<em>Playlist</em>” mode, but instead of displaying playlists, it displays register. You can enter this mode by pressing “<strong>’’</strong>” (two single quotes) and exit from it by pressing “<strong>Esc</strong>” or “<strong>q</strong>”. You can also press “<strong>’</strong>” (single quote) to get to the <strong>Playlist</strong> mode and back.</p></li>
 <li>The <strong>Register Main</strong> mode, which is identical to the “<em>Main</em>” mode, except it displays the content of a <strong>named</strong> register.</p></li>
+<li>The <strong>Listening</strong> mode, which is intended to be used when you want <strong>PyRadio</strong> to just play your favorite station and not take up too much space. It is ideal for tilling window manager use, as the whole TUI can be reduced all the way down to a single line (displaying the “<em>Status Bar</em>”). In this mode, adjusting, muting and saving the volume are the only action available. To get <strong>PyRadio</strong> back to normal operation one would just resize its window to a reasonable size (7 lines vertically, or more).</p></li>
 </ol>
 <p>A set of <strong>secondary modes</strong> is also available (a secondary mode works within a primary one):</p>
 <ol type="1">
@@ -580,7 +582,8 @@ $ pyradio -d</pre>
 <p>Finally, include the file produced in your report.</p>
 <h2 id="packaging-pyradio">Packaging Pyradio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>If you are a packager and would like to produce a package for your distribution please do follow this mini guide.</p>
-<p><strong>PyRadio</strong> is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; <strong>PyRadio</strong> should be updated and uninstalled using the distro package manager.</p>
+<p>First of all, make sure you declare the pacakges’s requirements to the relevant section of your manifest (or whatever) file. These are: 1. requests 2. dnspython</p>
+<p>After that, you will have to modify some files, because <strong>PyRadio</strong> is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; <strong>PyRadio</strong> should be updated and uninstalled using the distro package manager.</p>
 <p>In order to accomplice that, you just have to change the <strong>distro</strong> configuration parameter in the <strong>config</strong> file. <strong>PyRadio</strong> will read this parameter and will disable updating and uninstalling, when set to anything other than “<strong>None</strong>”. So, here’s how you do that:</p>
 <p>Once you are in the sources top level directory (typically “<em>pyradio</em>”), you execute the command:</p>
 <pre>sed -i &#39;s/distro = None/distro = YOUR DISTRO NAME/&#39; pyradio/config</pre>

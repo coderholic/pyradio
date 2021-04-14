@@ -34,6 +34,7 @@ IF "%1"=="" (
     pip install windows-curses --upgrade 1>NUL 2>NUL
     pip install pywin32 --upgrade 1>NUL 2>NUL
     pip install requests --upgrade 1>NUL 2>NUL
+    pip install dnspython --upgrade 1>NUL 2>NUL
 )
 
 IF '%1'=='ELEV' ( GOTO START ) ELSE ( ECHO Running elevated in a different window)

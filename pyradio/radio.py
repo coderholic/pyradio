@@ -522,60 +522,109 @@ class PyRadio(object):
         self.setupAndDrawScreen(init_from_setup=True)
 
         ''' position playlist in window '''
-        self.outerBodyMaxY, self.outerBodyMaxX = self.outerBodyWin.getmaxyx()
-        self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
-        if self.selections[self.ws.PLAYLIST_MODE][0] < self.bodyMaxY:
+        try:
+            self.outerBodyMaxY, self.outerBodyMaxX = self.outerBodyWin.getmaxyx()
+            self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
+        except:
+            pass
+        try:
+            if self.selections[self.ws.PLAYLIST_MODE][0] < self.bodyMaxY:
+                self.selections[self.ws.PLAYLIST_MODE][1] = 0
+            elif self.selections[self.ws.PLAYLIST_MODE][0] > len(self._cnf.playlists) - self.bodyMaxY + 1:
+                # TODO make sure this is ok
+                self.selections[self.ws.PLAYLIST_MODE][1] = len(self._cnf.playlists) - self.bodyMaxY
+            else:
+                self.selections[self.ws.PLAYLIST_MODE][1] = self.selections[self.ws.PLAYLIST_MODE][0] - int(self.bodyMaxY/2)
+        except:
             self.selections[self.ws.PLAYLIST_MODE][1] = 0
-        elif self.selections[self.ws.PLAYLIST_MODE][0] > len(self._cnf.playlists) - self.bodyMaxY + 1:
-            # TODO make sure this is ok
-            self.selections[self.ws.PLAYLIST_MODE][1] = len(self._cnf.playlists) - self.bodyMaxY
-        else:
-            self.selections[self.ws.PLAYLIST_MODE][1] = self.selections[self.ws.PLAYLIST_MODE][0] - int(self.bodyMaxY/2)
         self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
         # self.ll('setup')
         self.run()
 
     def setupAndDrawScreen(self, init_from_setup=False):
+        self._limited_height_mode = False
         self.maxY, self.maxX = self.stdscr.getmaxyx()
 
         self.headWin = None
         self.bodyWin = None
         self.outerBodyWin = None
         self.footerWin = None
-        self.headWin = curses.newwin(1, self.maxX, 0, 0)
-        self.outerBodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
-        #self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
-        self.bodyWinStartY = 2 + self._cnf.internal_header_height
-        self.bodyWinEndY = self.maxY - self.bodyWinStartY - 1
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('body starts at line {0}, ends at line {1}'.format(self.bodyWinStartY, self.bodyWinEndY))
-        self.bodyWin = curses.newwin(
-            self.maxY - 4 - self._cnf.internal_header_height,
-            self.maxX - 2,
-            self.bodyWinStartY,
-            1)
         self.footerWin = curses.newwin(1, self.maxX, self.maxY - 1, 0)
-        # txtWin used mainly for error reports
-        self.txtWin = None
-        self.txtWin = curses.newwin(self.maxY - 4, self.maxX - 4, 2, 2)
-        self.initHead(self._cnf.info)
-        self.initFooter()
-        self.log.setScreen(self.footerWin)
-        if init_from_setup:
-            if self.player:
-                self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
-        ''' for light color scheme '''
-         # TODO
-        self.outerBodyWin.bkgdset(' ', curses.color_pair(5))
-        self.bodyWin.bkgdset(' ', curses.color_pair(5))
-        self.initBody()
+        self.headWin = curses.newwin(1, self.maxX, 0, 0)
 
+        if self.maxY < 8:
+            self._limited_height_mode = True
+            if self.maxY == 1:
+                self.bodyWin = self.footerWin
+            else:
+                self.bodyWin = curses.newwin(
+                    self.maxY - 1, self.maxX, 0, 0)
+                self.bodyWin.bkgdset(' ', curses.color_pair(5))
+                self.bodyWin.erase()
+                if self.player.isPlaying():
+                    self.bodyWin.addstr(self.maxY - 2, 0, ' Station: ', curses.color_pair(5))
+                    try:
+                        self.bodyWin.addstr(self._last_played_station[0], curses.color_pair(4))
+                    except:
+                        pass
+                else:
+                    self.bodyWin.addstr(self.maxY - 2, 0, ' Status: ', curses.color_pair(5))
+                    self.bodyWin.addstr('Idle', curses.color_pair(4))
+                if self.maxY - 3 >= 0:
+                    if self._cnf.browsing_station_service:
+                        self.bodyWin.addstr(self.maxY - 3, 0, ' Service: ', curses.color_pair(5))
+                    else:
+                        self.bodyWin.addstr(self.maxY - 3, 0, ' Playlist: ', curses.color_pair(5))
+                    try:
+                        self.bodyWin.addstr(self._cnf.station_title, curses.color_pair(4))
+                    except:
+                        pass
+                if self.maxY - 4 >= 0:
+                    self._cnf.get_pyradio_version(),
+                    self.bodyWin.addstr(self.maxY - 4, 0, 'PyRadio ' + self._cnf.current_pyradio_version, curses.color_pair(4))
+
+                self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
+                self.bodyWin.refresh()
+
+        else:
+            self.outerBodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
+            #self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
+            self.bodyWinStartY = 2 + self._cnf.internal_header_height
+            self.bodyWinEndY = self.maxY - self.bodyWinStartY - 1
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('body starts at line {0}, ends at line {1}'.format(self.bodyWinStartY, self.bodyWinEndY))
+            self.bodyWin = curses.newwin(
+                self.maxY - 4 - self._cnf.internal_header_height,
+                self.maxX - 2,
+                self.bodyWinStartY,
+                1)
+
+            # txtWin used mainly for error reports
+            self.txtWin = None
+            try:
+                self.txtWin = curses.newwin(self.maxY - 4, self.maxX - 4, 2, 2)
+            except:
+                pass
+            if not self._limited_height_mode:
+                self.initHead(self._cnf.info)
+            ''' for light color scheme '''
+             # TODO
+            self.outerBodyWin.bkgdset(' ', curses.color_pair(5))
+            self.bodyWin.bkgdset(' ', curses.color_pair(5))
+            self.initBody()
 
         #self.stdscr.timeout(100)
         self.bodyWin.keypad(1)
 
         #self.stdscr.noutrefresh()
 
+        self.initFooter()
+        self.log.setScreen(self.footerWin)
+        if init_from_setup:
+            if self.player:
+                self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
+        else:
+            self.footerWin.refresh()
         curses.doupdate()
 
     def initHead(self, info):
@@ -647,6 +696,13 @@ class PyRadio(object):
 
     def initFooter(self):
         ''' Initializes the body/story window '''
+
+        ''' This would be the first step to make the status bar
+            appear as plain text in "Listening Mode"
+
+            col = 5 if self._limited_height_mode else 7
+            self.footerWin.bkgd(' ', curses.color_pair(col))
+        '''
         self.footerWin.bkgd(' ', curses.color_pair(7))
         self.footerWin.noutrefresh()
 
@@ -3929,6 +3985,23 @@ class PyRadio(object):
         else:
             self._print_station_info_error()
 
+    def _handle_limited_height_keys(self, char):
+        if char in (ord('+'), ord('='), ord('.')):
+            self._update_status_bar_right()
+            self._volume_up()
+
+        elif char in (ord('-'), ord(',')):
+            self._update_status_bar_right()
+            self._volume_down()
+
+        elif char in (ord('m'), ):
+            self._update_status_bar_right()
+            self._volume_mute()
+
+        elif char in (ord('v'), ):
+            self._update_status_bar_right()
+            self._volume_save()
+
     def keypress(self, char):
         self.detect_if_player_exited = True
         if self._system_asked_to_terminate:
@@ -3942,7 +4015,11 @@ class PyRadio(object):
             self._do_display_notify()
             return
 
-        elif self.ws.operation_mode in (
+        if self._limited_height_mode:
+            self._handle_limited_height_keys(char)
+            return
+
+        if self.ws.operation_mode in (
             self.ws.NO_PLAYER_ERROR_MODE,
             self.ws.CONFIG_SAVE_ERROR_MODE
         ):
@@ -4852,9 +4929,10 @@ class PyRadio(object):
 
         elif char in (ord('/'), ) and self.ws.operation_mode in self._search_modes.keys():
             self._update_status_bar_right()
-            self._give_me_a_search_class(self.ws.operation_mode)
-            self.search.show(self.outerBodyWin)
-            self.ws.operation_mode = self._search_modes[self.ws.operation_mode]
+            if self.maxY > 5:
+                self._give_me_a_search_class(self.ws.operation_mode)
+                self.search.show(self.outerBodyWin)
+                self.ws.operation_mode = self._search_modes[self.ws.operation_mode]
             return
 
 
@@ -5016,24 +5094,10 @@ class PyRadio(object):
             self._toggle_transparency()
             return
 
-        elif char in (ord('+'), ord('='), ord('.')):
-            self._update_status_bar_right()
-            self._volume_up()
-            return
-
-        elif char in (ord('-'), ord(',')):
-            self._update_status_bar_right()
-            self._volume_down()
-            return
-
-        elif char in (ord('m'), ):
-            self._update_status_bar_right()
-            self._volume_mute()
-            return
-
-        elif char in (ord('v'), ):
-            self._update_status_bar_right()
-            self._volume_save()
+        elif char in (ord('+'), ord('='), ord('.'),
+                      ord('-'), ord(','), ord('m'),
+                      ord('v')):
+            self._handle_limited_height_keys(char)
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_SCAN_ERROR_MODE:
@@ -6193,9 +6257,12 @@ class PyRadio(object):
 
 
     def _redisplay_stations_and_playlists(self):
+        if self._limited_height_mode:
+            return
         self.bodyWin.erase()
         self.outerBodyWin.erase()
-        self.outerBodyWin.box()
+        if self.maxY > 2:
+            self.outerBodyWin.box()
         try:
             self.bodyWin.move(1, 1)
             self.bodyWin.move(0, 0)

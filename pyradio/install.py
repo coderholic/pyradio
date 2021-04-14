@@ -173,11 +173,12 @@ class PyRadioUpdate(object):
         os.makedirs(self._dir, exist_ok=True)
         if mode.startswith('update'):
             bat = os.path.join(self._dir, 'update.bat')
-            PyRadioUpdateOnWindows.print_update_bat_created()
+            os.system('CLS')
+            # PyRadioUpdateOnWindows.print_update_bat_created()
         else:
             bat = os.path.join(self._dir, 'uninstall.bat')
             os.system('CLS')
-            PyRadioUpdateOnWindows.print_uninstall_bat_created()
+            # PyRadioUpdateOnWindows.print_uninstall_bat_created()
         try:
             with open(bat, "w") as b:
                 b.write('@ECHO OFF\n')

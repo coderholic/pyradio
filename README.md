@@ -11,7 +11,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Installation](#installation)
 * [Command line options](#command-line-options)
 * [Controls](#controls)
-* [PyRadio's Modes](#pyradio's-modes)
+* [PyRadio Modes](#pyradio-modes)
 * [Config file](#config-file)
 * [About Playlist files](#about-playlist-files)
     * [Integrating new stations](#integrating-new-stations)
@@ -57,6 +57,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 ## Requirements
 * python 2.7/3.5+
     - requests
+    - dnspython
 * MPV, MPlayer or VLC installed and in your path
 
 ## Installation
@@ -171,7 +172,7 @@ The same logic applies to all **PyRadio** windows.
 **Note:** When tagging a station position for a move action (by pressing "**J**"), the position will be displayed at the right bottom corner of the window, suffixed by a "*J*", i.e. pressing "*J*" on position *35* will display *[35J]*.
 
 
-## PyRadio's Modes
+## PyRadio Modes
 
 **PyRadio** has the following primary modes:
 
@@ -182,6 +183,8 @@ The same logic applies to all **PyRadio** windows.
 3. The **Registers** mode. This is identical to the "*Playlist*" mode, but instead of displaying playlists, it displays register. You can enter this mode by pressing "**''**" (two single quotes) and exit from it by pressing "**Esc**" or "**q**". You can also press "**'**" (single quote) to get to the **Playlist** mode and back.
 
 4. The **Register Main** mode, which is identical to the "*Main*" mode, except it displays the content of a **named** register.
+
+5. The **Listening** mode, which is intended to be used when you want **PyRadio** to just play your favorite station and not take up too much space. It is ideal for tilling window manager use, as the whole TUI can be reduced all the way down to a single line (displaying the "*Status Bar*"). In this mode, adjusting, muting and saving the volume are the only action available. To get **PyRadio** back to normal operation one would just resize its window to a reasonable size (7 lines vertically, or more).
 
 A set of **secondary modes** is also available (a secondary mode works within a primary one):
 
@@ -730,7 +733,11 @@ Finally, include the file produced in your report.
 
 If you are a packager and would like to produce a package for your distribution please do follow this mini guide.
 
-**PyRadio** is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
+First of all, make sure you declare the pacakges's requirements to the relevant section of your manifest (or whatever) file. These are:
+1. requests
+2. dnspython
+
+After that, you will have to modify some files, because **PyRadio** is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
 
 In order to accomplice that, you just have to change the **distro** configuration parameter in the **config** file. **PyRadio** will read this parameter and will disable updating and uninstalling, when set to anything other than "**None**". So, here's how you do that:
 
