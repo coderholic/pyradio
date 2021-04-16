@@ -21,7 +21,11 @@ try:
 except ImportError:
     HAS_REQUESTS = False
 from .log import Log
-
+HAS_DNSPYTHON = True
+try:
+    from dns import resolver
+except ImportError:
+    HAS_DNSPYTHON = FALSE
 
 logger = logging.getLogger(__name__)
 
@@ -970,6 +974,7 @@ class PyRadioStations(object):
 
     def open_browser(self, url):
         self._online_browser = probeBrowsers(url)(
+            self,
             self.default_encoding,
             pyradio_info=self.info
         )

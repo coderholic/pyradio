@@ -96,7 +96,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#cleaning-up">Cleaning up</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
 <li><a href="#reporting-bugs">Reporting bugs</a></li>
-<li><a href="#packaging-pyradio">Packaging Pyradio</a></li>
+<li><a href="#packaging-pyradio">Packaging PyRadio</a></li>
 <li><a href="#todo">TODO</a></li>
 <li><a href="#acknowledgment">Acknowledgment</a></li>
 </ul>
@@ -516,7 +516,7 @@ volume=50</pre>
 <p>Being a console application, <strong>PyRadio</strong> was never intended to work with a mouse.</p>
 <p>Furthermore, when using the mouse on a console application, the result is highly dependent on the terminal used and the way it implements mouse support.</p>
 <p>Having said that, and since the question of using the mouse with <strong>PyRadio</strong> has been risen, basic mouse support has been implemented; starting, stopping and muting the player, scrolling within the playlist and adjusting the player’s volume is now possible using the mouse.</p>
-<p>All one has to do is enable mouse support in the “<em>Config Window</em>” (mouse support is disabled by default) and restart <strong>Pyradio</strong> for the change to take effect.</p>
+<p>All one has to do is enable mouse support in the “<em>Config Window</em>” (mouse support is disabled by default) and restart <strong>PyRadio</strong> for the change to take effect.</p>
 <p>Then, the mouse can be used as follows:</p>
 <table>
 <thead>
@@ -580,7 +580,7 @@ curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/inst
 $ pyradio -d</pre>
 <p>Then try to reproduce the bug and exit <strong>pyradio</strong>.</p>
 <p>Finally, include the file produced in your report.</p>
-<h2 id="packaging-pyradio">Packaging Pyradio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="packaging-pyradio">Packaging PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>If you are a packager and would like to produce a package for your distribution please do follow this mini guide.</p>
 <p>First of all, make sure you declare the pacakges’s requirements to the relevant section of your manifest (or whatever) file. These are: 1. requests 2. dnspython</p>
 <p>After that, you will have to modify some files, because <strong>PyRadio</strong> is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; <strong>PyRadio</strong> should be updated and uninstalled using the distro package manager.</p>

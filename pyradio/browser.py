@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # http://www.radio-browser.info/webservice#Advanced_station_search
+import curses
 from dns import resolver
 from copy import deepcopy
 import random
@@ -21,6 +22,14 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
+def country_from_server(a_server):
+    country = a_server.split('.')[0]
+    up = country[:-1].upper()
+    if up in countries.keys():
+        return countries[up]
+    else:
+        return country
+
 def capitalize_comma_separated_string(a_string):
     sp = a_string.split(',')
     for i, n in enumerate(sp):
@@ -35,12 +44,14 @@ class PyRadioStationsBrowser(object):
 
     BASE_URL = ''
     TITLE = ''
+    _parent = None
     _raw_stations = []
     _last_search = None
     _internal_header_height = 0
     _url_timeout = 3
     _search_timeout = 3
     _vote_callback = None
+    _sort = None
 
     # Normally outer boddy (holding box, header, internal header) is
     # 2 chars wider that the internal body (holding the stations)
@@ -51,6 +62,7 @@ class PyRadioStationsBrowser(object):
     _outer_internal_body_half_diff = 1
 
     def __init__(self,
+                 config,
                  config_encoding,
                  session=None,
                  search=None,
@@ -68,6 +80,16 @@ class PyRadioStationsBrowser(object):
         '''
 
         pass
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, val):
+        self._parent = val
+        if self._sort:
+            self._sort._parent = val
 
     @property
     def outer_internal_body_half_diff(self):
@@ -185,13 +207,18 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             'codec': 5
             }
 
+    _server_selection_window = None
     _dns_info = None
 
+    search_by = _old_search_by = None
+
     def __init__(self,
+                 config,
                  config_encoding,
                  session=None,
                  search=None,
                  pyradio_info=None):
+        self._cnf = config
         if session:
             self._session = session
         else:
@@ -207,15 +234,15 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         self._search_history.append({
             'type': 'topvote',
             'term': '100',
-            'param': None,
+            'post_data': None,
         })
 
         self._search_history.append({
             'type': 'bytagexact',
             'term': 'big band',
-            'param': {'order': 'votes', 'reverse': 'true'},
+            'post_data': {'order': 'votes', 'reverse': 'true'},
         })
-        self._search_history_index = 0
+        self._search_history_index = 1
 
         self.search()
 
@@ -228,15 +255,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         return self._server.split('.')[0]
 
     def _get_title(self):
-        self.TITLE = 'Radio Browser ({})'.format(self._country_from_server(self._server))
-
-    def _country_from_server(self, a_server):
-        country = a_server.split('.')[0]
-        up = country[:-1].upper()
-        if up in countries.keys():
-            return countries[up]
-        else:
-            return country
+        self.TITLE = 'Radio Browser ({})'.format(country_from_server(self._server))
 
     def stations(self, playlist_format=1):
         ''' Return stations' list (in PyRadio playlist format)
@@ -327,7 +346,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             guide.pop(2)
         info = collections.OrderedDict()
         for n in guide:
-            info[n[0]] = self._raw_stations[a_station][n[1]]
+            info[n[0]] = str(self._raw_stations[a_station][n[1]])
             if n[1] == 'bitrate':
                 info[n[0]] += ' kb/s'
 
@@ -398,8 +417,8 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         url = self._format_url(self._search_history[self._search_history_index])
         logger.error('DE \n\nurl = "{}"\n\n'.format(url))
         post_data = {}
-        if self._search_history[self._search_history_index]['param']:
-            post_data = deepcopy(self._search_history[self._search_history_index]['param'])
+        if self._search_history[self._search_history_index]['post_data']:
+            post_data = deepcopy(self._search_history[self._search_history_index]['post_data'])
 
         self._output_format = -1
         if self._search_type > 0:
@@ -422,6 +441,44 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             if logger.isEnabledFor(logging.ERROR):
                 logger.error(e)
             self._raw_stations = []
+
+    def _get_search_elements(self, a_search):
+        '''
+            get "by search" and "reverse"
+            values from a search dict.
+            To be used with the sort function
+        '''
+        a_term = a_search['term']
+        p_data = a_search['post_data']
+        self.search_by = None
+        self.reverse = False
+        if a_search['post_data']:
+            if 'order' in a_search['post_data'].keys():
+                self.search_by = a_search['post_data']['order']
+            if 'reverse' in a_search['post_data']:
+                self.reverse = True if a_search['post_data']['reverse'] == 'true' else False
+                logger.error('DE calc reverse = {}'.format(self.reverse))
+
+        if self.search_by is None:
+            a_type = a_search['type']
+            if a_type == 'byname':
+                self.search_by = 'name'
+            elif a_type == 'topvotes':
+                self.search_by = 'votes'
+            elif a_type == 'clickcount':
+                self.search_by = 'clickcount'
+            elif a_type == 'bitrate':
+                self.search_by = 'bitrate'
+            elif a_type == 'codec':
+                self.search_by = 'codec'
+            elif a_type == 'country':
+                self.search_by = 'country'
+            elif a_type == 'state':
+                self.search_by = 'state'
+            elif a_type == 'language':
+                self.search_by = 'language'
+            elif a_type == 'tags':
+                self.search_by = 'tags'
 
     def get_next(self, search_term, start=0, stop=None):
         if search_term:
@@ -601,9 +658,9 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             # full with state
             out[2] = ' ' + info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['votes'].rjust(self._columns_width['votes'])[:self._columns_width['votes']],
-                self._raw_stations[id_in_list]['clickcount'].rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
-                self._raw_stations[id_in_list]['bitrate'].rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
+                str(self._raw_stations[id_in_list]['votes']).rjust(self._columns_width['votes'])[:self._columns_width['votes']],
+                str(self._raw_stations[id_in_list]['clickcount']).rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
+                str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
                 self._raw_stations[id_in_list]['codec'].rjust(self._columns_width['codec'])[:self._columns_width['codec']],
                 self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country'])[:self._columns_width['country']],
                 self._raw_stations[id_in_list]['state'].ljust(self._columns_width['state'])[:self._columns_width['state']],
@@ -614,9 +671,9 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             # full with state
             out[2] = ' ' + info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['votes'].rjust(self._columns_width['votes'])[:self._columns_width['votes']],
-                self._raw_stations[id_in_list]['clickcount'].rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
-                self._raw_stations[id_in_list]['bitrate'].rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
+                str(self._raw_stations[id_in_list]['votes']).rjust(self._columns_width['votes'])[:self._columns_width['votes']],
+                str(self._raw_stations[id_in_list]['clickcount']).rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
+                str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
                 self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country'])[:self._columns_width['country']],
                 self._raw_stations[id_in_list]['state'].ljust(self._columns_width['state'])[:self._columns_width['state']],
                 self._raw_stations[id_in_list]['language'].ljust(self._columns_width['language'])[:self._columns_width['language']]
@@ -625,9 +682,9 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             # full with state
             out[2] = ' ' + info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['votes'].rjust(self._columns_width['votes'])[:self._columns_width['votes']],
-                self._raw_stations[id_in_list]['clickcount'].rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
-                self._raw_stations[id_in_list]['bitrate'].rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
+                str(self._raw_stations[id_in_list]['votes']).rjust(self._columns_width['votes'])[:self._columns_width['votes']],
+                str(self._raw_stations[id_in_list]['clickcount']).rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
+                str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
                 self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country'])[:self._columns_width['country']],
                 self._raw_stations[id_in_list]['language'].ljust(self._columns_width['language'])[:self._columns_width['language']]
             )
@@ -635,29 +692,29 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             # full or condensed info
             out[2] = ' ' + info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['votes'].rjust(self._columns_width['votes'])[:self._columns_width['votes']],
-                self._raw_stations[id_in_list]['clickcount'].rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
-                self._raw_stations[id_in_list]['bitrate'].rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
+                str(self._raw_stations[id_in_list]['votes']).rjust(self._columns_width['votes'])[:self._columns_width['votes']],
+                str(self._raw_stations[id_in_list]['clickcount']).rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
+                str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
                 self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country'])[:self._columns_width['country']]
             )
         elif self._output_format == 2:
             out[2] = ' ' + info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['votes'].rjust(self._columns_width['votes'])[:self._columns_width['votes']],
-                self._raw_stations[id_in_list]['bitrate'].rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2]
+                str(self._raw_stations[id_in_list]['votes']).rjust(self._columns_width['votes'])[:self._columns_width['votes']],
+                str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2]
             )
         elif self._output_format == 3:
             out[2] = ' ' + info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['votes'].rjust(self._columns_width['votes'])[:self._columns_width['votes']],
-                self._raw_stations[id_in_list]['clickcount'].rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
-                self._raw_stations[id_in_list]['bitrate'].rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2]
+                str(self._raw_stations[id_in_list]['votes']).rjust(self._columns_width['votes'])[:self._columns_width['votes']],
+                str(self._raw_stations[id_in_list]['clickcount']).rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
+                str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2]
             )
         elif self._output_format == 1:
             # Bitrate only
             out[2] = info[self._output_format].format(
                 pl,
-                self._raw_stations[id_in_list]['bitrate'].rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2]
+                str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2]
             )
 
         name_width = width-len(out[0])-len(out[2])
@@ -707,14 +764,14 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 ret[-1]['homepage'] = n['homepage']
                 if isinstance(n['clickcount'], int):
                     # old API
-                    ret[-1]['votes'] = str(n['votes'])
-                    ret[-1]['clickcount'] = str(n['clickcount'])
-                    ret[-1]['bitrate'] = str(n['bitrate'])
-                else:
-                    # new API
                     ret[-1]['votes'] = n['votes']
                     ret[-1]['clickcount'] = n['clickcount']
                     ret[-1]['bitrate'] = n['bitrate']
+                else:
+                    # new API
+                    ret[-1]['votes'] = int(n['votes'])
+                    ret[-1]['clickcount'] = int(n['clickcount'])
+                    ret[-1]['bitrate'] = int(n['bitrate'])
                 ret[-1]['language'] = capitalize_comma_separated_string(n['language'])
                 ret[-1]['encoding'] = ''
                 self._get_max_len(ret[-1]['votes'],
@@ -742,7 +799,8 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         numeric_data = (votes, clicks)
         # logger.error('DE numeric_data = {}'.format(numeric_data))
         min_data = (6, 7)
-        for i, n in enumerate(numeric_data):
+        for i, x in enumerate(numeric_data):
+            n = str(x)
             if len(n) > self._max_len[i]:
                 self._max_len[i] = len(n) if len(n) > min_data[i] else min_data[i]
 
@@ -889,25 +947,45 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         title = '#'.rjust(pad) + '  Name'
         return ((title, columns_separotors, columns[self._output_format]), )
 
-    def create_sort_window(self, parent):
-        self._sort = RadioBrowserInfoSort(parent)
-        self._sort.show()
+    def select_servers(self):
+        if self._server_selection_window is None:
+            self._server_selection_window = RadioBrowserInfoServersSelect(
+                self.parent, self._dns_info.server_urls, self._server)
+        else:
+            self._server_selection_window.set_parent(self.parent)
+        self._server_selection_window.show()
 
-    def show_sort_window(self):
+    def sort(self):
+        '''
+            Create and show the Sort window
+        '''
+        if self._sort is None:
+            self._get_search_elements(
+                self._search_history[self._search_history_index]
+            )
+            self._sort = RadioBrowserInfoSort(
+                parent=self.parent,
+                search_by=self.search_by
+            )
         self._sort.show()
 
     def keypress(self, char):
-        '''
+        ''' RadioBrowserInfo keypress
+
             Returns:
                 -1: Cancel
                  0: Done, result is in ....
                  1: Continue
         '''
         ret = self._sort.keypress(char)
-
         if ret == 0:
-            self.active_selection = self._sort.active_selection
-            self._sort = None
+            self.search_by = self._sort.search_by
+            if self.search_by == self._old_search_by:
+                self.reverse = not self.reverse
+            else:
+                self.reverse = False
+            self._raw_stations = sorted(self._raw_stations, key=itemgetter(self.search_by), reverse=self.reverse)
+            self._old_search_by = self.search_by
         return ret
 
 class RadioBrowserInfoData(object):
@@ -1150,13 +1228,13 @@ class RadioBrowserInfoDns(object):
 
 class RadioBrowserInfoSort(object):
 
-    TITLE = ' Sort by  '
+    TITLE = ' Sort by '
 
     items = collections.OrderedDict()
     items = {
         'Name': 'name',
         'Votes': 'votes',
-        'Clicks': 'clicks',
+        'Clicks': 'clickcount',
         'Bitrate': 'bitrate',
         'Codec': 'codec',
         'Country': 'country',
@@ -1167,15 +1245,25 @@ class RadioBrowserInfoSort(object):
 
     _too_small = False
 
-    def __init__(self, parent, active=None):
+    def __init__(self, parent, search_by=None):
+        self._parent = parent
         self.active = self.selection = 0
+        if search_by:
+            if search_by in self.items.values():
+                self.active = self.selection = self._value_to_index(search_by)
         self.maxY = len(self.items) + 2
-        self._maxX = max(len(x) for x in self.items.keys()) + 4
+        self.maxX = max(len(x) for x in self.items.keys()) + 4
         if len(self.TITLE) + 4 > self.maxX:
             self.maxX = len(self.TITLE) + 4
         self._win = None
-        if active:
-            self.set_active_by_value(active)
+        if search_by:
+            self.set_active_by_value(search_by)
+
+    def _value_to_index(self, val):
+        for i, n in enumerate(self.items.values()):
+            if val == n:
+                return i
+        return -1
 
     def set_parent(self, parent):
         self._parent = parent
@@ -1196,22 +1284,23 @@ class RadioBrowserInfoSort(object):
             self.active = 0
 
     def show(self):
+        self._too_small = False
         pY, pX = self._parent.getmaxyx()
-        if self.maxY > pY -2 or self.maxX > pX -2:
+        Y, X = self._parent.getbegyx()
+        if self.maxY > pY or self.maxX > pX -2:
             self._too_small = True
             msg = 'Window too small to display content!'
-            if self.maxX < len(msg) + 2:
+            if pX < len(msg) + 2:
                 msg = 'Window too small!'
             self._win = curses.newwin(
                 3, len(msg) + 2,
-                int(pY / 2) - 1,
+                Y + int((pY - 3) / 2),
                 int((pX - len(msg)) / 2))
             self._win.bkgdset(' ', curses.color_pair(3))
             self._win.box()
             try:
-                self._win.addstr(
-                    1, 1,
-                    msg, curses.color_pair(5))
+                self._win.addstr( 1, 1, msg,
+                                 curses.color_pair(5))
             except:
                 pass
             self._win.refresh()
@@ -1219,91 +1308,305 @@ class RadioBrowserInfoSort(object):
 
         self._win = curses.newwin(
             self.maxY, self.maxX,
-            int((pY - self.maxY) / 2),
+            Y + int((pY - self.maxY) / 2),
             int((pX - self.maxX) / 2)
         )
         self._win.bkgdset(' ', curses.color_pair(3))
         # self._win.erase()
         self._win.box()
-        self._win.addstr(0, int((self.maxX - len(self.TITLE)) / 2),
-                         self.TITLE, curses.color_pair(4))
+        self._win.addstr(0, 1,
+                         self.TITLE,
+                         curses.color_pair(4))
         self._refresh()
 
     def _refresh(self):
-        for i, n in self.items.keys():
+        for i, n in enumerate(self.items.keys()):
             col = 5
             if i == self.active == self.selection:
-                col = 4
+                col = 9
             elif i == self.selection:
-                col = 3
+                col = 6
             elif i == self.active:
-                col = 2
+                col = 4
 
-            self._win.addstr(i + 1, 2, n + ' ' * (self.maxX - 2 - len(n)), curses.color_pair(col))
+            self._win.addstr(i + 1, 1,
+                             ' {}'.format(n.ljust(self.maxX - 3)),
+                             curses.color_pair(col))
         self._win.refresh()
 
-    def keypress(char):
-        '''
+    def keypress(self, char):
+        ''' RadioBrowserInfoSort keypress
+
             Returns:
                 -1: Cancel
                  0: Done, result is in ....
                  1: Continue
         '''
-        if not self._too_small:
 
-            if char in (
-                curses.KEY_EXIT, ord('q'), 27,
-                ord('h'), curses.KEY_RIGHT
-            ):
-                return -1
+        if self._too_small:
+            return 1
 
-            elif char in (
-                ord('l'), ord(' '), '\n', '\r',
-                curses.KEY_LEFT, curses.KEY_ENTER
-            ):
-                for i, n in enumerate(self.items.keys()):
-                    if i == self.selection:
-                        self.active_selection = self.items[n]
-                        break
-                return 0
+        if char in (
+            curses.KEY_EXIT, ord('q'), 27,
+            ord('h'), curses.KEY_LEFT
+        ):
+            return -1
 
-            elif char in (ord('g'), curses.KEY_HOME):
-                self.selection = 0
-                self._refresh()
+        elif char in (
+            ord('l'), ord(' '), ord('\n'), ord('\r'),
+            curses.KEY_RIGHT, curses.KEY_ENTER
+        ):
+            for i, n in enumerate(self.items.keys()):
+                if i == self.selection:
+                    self.search_by = self.items[n]
+                    self.active = i
+                    break
+            return 0
 
-            elif char in (ord('G'), curses.KEY_END):
+        elif char in (ord('g'), curses.KEY_HOME):
+            self.selection = 0
+            self._refresh()
+
+        elif char in (ord('G'), curses.KEY_END):
+            self.selection = len(self.items) - 1
+            self._refresh()
+
+        elif char in (curses.KEY_PPAGE, ):
+            if self.selection == 0:
                 self.selection = len(self.items) - 1
-                self._refresh()
-
-            elif char in (curses.KEY_PPAGE, ):
-                if self.selection == 0:
-                    self.selection = len(self.items) - 1
-                else:
-                    self.selection -= 5
-                    if self.selection < 0:
-                        self.selection = len(self.items) - 1
-                self._refresh()
-
-            elif char in (curses.KEY_NPAGE):
-                if self.selection == len(self.items) - 1:
+            else:
+                self.selection -= 5
+                if self.selection < 0:
                     self.selection = 0
-                else:
-                    self.selection += 5
-                    if self.selection >= len(self.items):
-                        self.selection = 0
-                self._refresh()
+            self._refresh()
 
-            elif char in (ord('k'), curses.KEY_UP):
-                self.selection -= 1
-                if self.selection <= 0:
+        elif char in (curses.KEY_NPAGE, ):
+            if self.selection == len(self.items) - 1:
+                self.selection = 0
+            else:
+                self.selection += 5
+                if self.selection >= len(self.items):
                     self.selection = len(self.items) - 1
-                self._refresh()
+            self._refresh()
 
-            elif char in (ord('j'), curses.KEY_DOWN):
-                self.selection += 1
-                if self.selection == len(self.items):
+        elif char in (ord('k'), curses.KEY_UP):
+            self.selection -= 1
+            if self.selection < 0:
+                self.selection = len(self.items) - 1
+            self._refresh()
+
+        elif char in (ord('j'), curses.KEY_DOWN):
+            self.selection += 1
+            if self.selection == len(self.items):
+                self.selection = 0
+            self._refresh()
+
+        return 1
+
+
+class RadioBrowserInfoServersSelect(object):
+
+    TITLE = ' Server Selection '
+
+    def __init(self, parent, servers, current_server):
+        self._parent = parent
+        self.items = list(servers)
+        self.server = current_server
+
+        self.servers = RadioBrowserInfoServers(
+            parent, servers, current_server
+        )
+        self.maxY = self.servers.maxY + 2
+        self.maxX = self.servers.maxX + 2
+
+    def show(self):
+        self._too_small = False
+        pY, pX = self._parent.getmaxyx()
+        Y, X = self._parent.getbegyx()
+        if self.maxY > pY or self.maxX > pX -2:
+            self._too_small = True
+            msg = 'Window too small to display content!'
+            if pX < len(msg) + 2:
+                msg = 'Window too small!'
+            self._win = curses.newwin(
+                3, len(msg) + 2,
+                Y + int((pY - 3) / 2),
+                int((pX - len(msg)) / 2))
+            self._win.bkgdset(' ', curses.color_pair(3))
+            self._win.box()
+            try:
+                self._win.addstr( 1, 1, msg,
+                                 curses.color_pair(5))
+            except:
+                pass
+            self._win.refresh()
+            return
+
+        self._win = curses.newwin(
+            self.maxY, self.maxX,
+            Y + int((pY - self.maxY) / 2),
+            int((pX - self.maxX) / 2)
+        )
+        self._win.bkgdset(' ', curses.color_pair(3))
+        # self._win.erase()
+        self._win.box()
+        self._win.addstr(0, 1,
+                         self.TITLE,
+                         curses.color_pair(4))
+        self._win.refresh()
+        self.server._parent = self._parent
+        self.servers.show()
+
+    def set_parent(self, parent):
+        self._parent = parent
+        self.servers._parent = parent
+
+    def keypress(self, char):
+        ''' RadioBrowserInfoServersSelect keypress
+
+            Returns:
+                -1: Cancel
+                 0: Done, result is in ....
+                 1: Continue
+        '''
+
+        ret = self.servers.keypress(char)
+
+        if ret == 2:
+            ret = 1
+
+        return ret
+
+
+class RadioBrowserInfoServers(object):
+    ''' Display Radio Browser server
+        This is supposed to be pluged into
+        another widget
+    '''
+
+    _too_small = False
+
+    def __init__(self, parent, servers, current_server):
+        self._parent = parent
+        self.items = list(servers)
+        self.server = current_server
+
+        for i, n in servers:
+            if current_server in n:
+                self.active = self.selection = i
+                break
+
+        s_max = 0
+        for i, n in enumerate(self.items):
+            if self.server == n:
+                self.selection = self.active = i
+            self.items[i] = country_from_server(n) + '  ({})'.format(n)
+            if len(self.items[i]) > s_max:
+                s_max = len(self.items[i])
+        self.items.sort()
+        for i, n in enumerate(self.items):
+            if len(self.items[i]) < s_max:
+                self.items[i] = self.items[i].replace('(', ' ' * (s_max - len(self.items[i])) + '(')
+        for n in self.items:
+            logger.error(n)
+        self.maxY = len(self.items)
+        self.maxX = len(self.items[0])
+
+    def show(self):
+        self._too_small = False
+        pY, pX = self._parent.getmaxyx()
+        Y, X = self._parent.getbegyx()
+        if self.maxY > pY or self.maxX > pX -2:
+            ''' display nothing
+                let the parent do whatever
+            '''
+            self._too_small = True
+        else:
+            self._win = curses.newwin(
+                self.maxY, self.maxX,
+                Y + 1, X + 1
+            )
+            for i, n in self.items:
+                col = 5
+                if i == self.active == self.selection:
+                    col = 9
+                elif i == self.selection:
+                    col = 6
+                elif i == self.active:
+                    col = 4
+            self._win.addstr(i, 0 , n, curses.color_pair(col))
+        self._win.refresh()
+
+    def keypress(self, char):
+        ''' RadioBrowserInfoServers keypress
+
+            Returns:
+                -1: Cancel
+                 0: Done, result is in ....
+                 1: Continue
+                 2: Show help
+        '''
+
+        if self._too_small:
+            return 1
+
+        if char in (
+            curses.KEY_EXIT, ord('q'), 27,
+            ord('h'), curses.KEY_LEFT
+        ):
+            return -1
+
+        elif char in (
+            ord('l'), ord(' '), ord('\n'), ord('\r'),
+            curses.KEY_RIGHT, curses.KEY_ENTER
+        ):
+            for i, n in enumerate(self.items.keys()):
+                if i == self.selection:
+                    self.search_by = self.items[n]
+                    self.active = i
+                    break
+            return 0
+
+        elif char in (ord('?'), ):
+            return 2
+
+        elif char in (ord('g'), curses.KEY_HOME):
+            self.selection = 0
+            self._refresh()
+
+        elif char in (ord('G'), curses.KEY_END):
+            self.selection = len(self.items) - 1
+            self._refresh()
+
+        elif char in (curses.KEY_PPAGE, ):
+            if self.selection == 0:
+                self.selection = len(self.items) - 1
+            else:
+                self.selection -= 5
+                if self.selection < 0:
                     self.selection = 0
-                self._refresh()
+            self._refresh()
+
+        elif char in (curses.KEY_NPAGE, ):
+            if self.selection == len(self.items) - 1:
+                self.selection = 0
+            else:
+                self.selection += 5
+                if self.selection >= len(self.items):
+                    self.selection = len(self.items) - 1
+            self._refresh()
+
+        elif char in (ord('k'), curses.KEY_UP):
+            self.selection -= 1
+            if self.selection < 0:
+                self.selection = len(self.items) - 1
+            self._refresh()
+
+        elif char in (ord('j'), curses.KEY_DOWN):
+            self.selection += 1
+            if self.selection == len(self.items):
+                self.selection = 0
+            self._refresh()
 
         return 1
 

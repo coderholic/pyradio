@@ -29,7 +29,7 @@ try:
 except:
     HAVE_PSUTIL = False
 
-from .config import HAS_REQUESTS
+from .config import HAS_REQUESTS, HAS_DNSPYTHON
 from .common import *
 from .window_stack import Window_Stack
 from .config_window import *
@@ -138,7 +138,7 @@ class PyRadio(object):
         we continue playing, otherwise, we stop playback '''
     active_stations = [['', 0], ['', -1]]
 
-    ''' Used when loading a playlist from ' moe '.
+    ''' Used when loading a playlist from ''.
         If the first station (selection) exists in the new playlist,
         we mark it as selected
         If the second station (playing) exists in the new playlist,
@@ -321,10 +321,7 @@ class PyRadio(object):
                 self.ws.EDIT_STATION_URL_ERROR: self._print_editor_url_error,
                 self.ws.PY2_EDITOR_ERROR: self._print_py2_editor_error,
                 self.ws.REQUESTS_MODULE_NOT_INSTALLED_ERROR: self._print_requests_not_installed_error,
-                self.ws.UNKNOWN_BROWSER_SERVICE_ERROR: self._print_unknown_browser_service,
-                self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
-                self.ws.PLAYER_CHANGED_INFO_MODE: self._show_player_changed_in_config,
-                self.ws.REGISTER_SAVE_ERROR_MODE: self._print_register_save_error,
+                self.ws.DNSPYTHON_MODULE_NOT_INSTALLED_ERROR: self._print_dnspython_not_installed_error,
                 self.ws.CLEAR_REGISTER_MODE: self._print_clear_register,
                 self.ws.CLEAR_ALL_REGISTERS_MODE: self._print_clear_all_registers,
                 self.ws.REGISTER_HELP_MODE: self._show_register_help,
@@ -351,7 +348,8 @@ class PyRadio(object):
                 self.ws.STATIONS_ASK_TO_INTEGRATE_MODE: self._print_ask_to_integrate,
                 self.ws.STATIONS_INTEGRATED_MODE: self._print_integrated,
                 self.ws.VOTE_RESULT_MODE: self._print_vote_result,
-                self.ws.VOTE_SORT_MODE: self._show_vote_sort_selection_window,
+                self.ws.BROWSER_SORT_MODE: self._browser_sort,
+                self.ws.BROWSER_SERVER_SELECTION_MODE: self._browser_server_selection,
                 }
 
         ''' list of help functions '''
@@ -590,7 +588,7 @@ class PyRadio(object):
             self.outerBodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
             #self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
             self.bodyWinStartY = 2 + self._cnf.internal_header_height
-            self.bodyWinEndY = self.maxY - self.bodyWinStartY - 1
+            self.bodyWinEndY = self.maxY - 1
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('body starts at line {0}, ends at line {1}'.format(self.bodyWinStartY, self.bodyWinEndY))
             self.bodyWin = curses.newwin(
@@ -598,6 +596,10 @@ class PyRadio(object):
                 self.maxX - 2,
                 self.bodyWinStartY,
                 1)
+
+            ''' set browser parent so that ir resizes correctly '''
+            if self._cnf.browsing_station_service:
+                self._cnf._online_browser.parent = self.bodyWin
 
             # txtWin used mainly for error reports
             self.txtWin = None
@@ -1130,6 +1132,7 @@ class PyRadio(object):
                                'Are you sure a supported player is installed?')
                 self.playing = -1
                 return
+            self._set_active_stations()
             self.selections[0][2] = self.playing
         self._do_display_notify()
         if self._cnf.browsing_station_service:
@@ -2314,6 +2317,23 @@ class PyRadio(object):
                         prompt=' Press any key ',
                         is_message=True)
 
+    def _print_dnspython_not_installed_error(self):
+        txt = '''
+        Module "|dnspython|" not found!
+
+        In order to use |Radio Browser| stations directory
+        service, the "|dnspython|" module must be installed.
+
+        Exit |PyRadio| now, install the module (named
+        |python-dnspython| or |python{}-dnspython|) and try
+        executing |PyRadio| again.
+        '''
+        self._show_help(txt.format(python_version[0]),
+                        self.ws.DNSPYTHON_MODULE_NOT_INSTALLED_ERROR,
+                        caption=' Module Error ',
+                        prompt=' Press any key ',
+                        is_message=True)
+
     def _print_requests_not_installed_error(self):
         txt = '''
         Module "|requests|" not found!
@@ -2831,6 +2851,7 @@ class PyRadio(object):
                                     a_startPos=-1,
                                     a_selection=-1,
                                     force_scan_playlist=False):
+        logger.error('DE al 1 active_stations = \n\n{}\n\n'.format(self.active_stations))
         need_to_scan_playlist = False
         ''' refresh reference '''
         self.stations = self._cnf.stations
@@ -2898,6 +2919,7 @@ class PyRadio(object):
             if need_to_scan_playlist:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Scanning playlist for stations...')
+                logger.error('DE \n\n{}\n\n'.format(self.active_stations))
                 self.selection, self.playing = self._get_stations_ids((
                     self.active_stations[0][0],
                     self.active_stations[1][0]))
@@ -2949,37 +2971,46 @@ class PyRadio(object):
         if self._cnf.browsing_station_service:
             # TODO
             if HAS_REQUESTS:
-                txt = '''Connecting to service. Please wait...'''
-                self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
-                online_service_url = 'https://' + a_url if a_url else self.stations[self.selection][1]
-                try:
-                    self._cnf.open_browser(online_service_url)
-                except TypeError:
-                    pass
-                if self._cnf.online_browser:
-                    self._cnf._online_browser.vote_callback = self._print_vote_result
-                    tmp_stations = self._cnf.stations
-                    if tmp_stations:
-                        #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
-                        self._cnf.station_path = self._cnf.online_browser.BASE_URL
-                        self._cnf.station_title = self._cnf.online_browser.title
-                        self.stations = tmp_stations[:]
-                        self.stations = self._cnf.stations
-                        if self.player.isPlaying():
+                if HAS_DNSPYTHON:
+                    txt = '''Connecting to service. Please wait...'''
+                    self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+                    online_service_url = 'https://' + a_url if a_url else self.stations[self.selection][1]
+                    try:
+                        self._cnf.open_browser(online_service_url)
+                    except TypeError:
+                        pass
+                    if self._cnf.online_browser:
+                        ''' set browser parent so that ir resizes correctly '''
+                        if self._cnf.browsing_station_service:
+                            self._cnf._online_browser.parent = self.bodyWin
+
+                        self._cnf._online_browser.vote_callback = self._print_vote_result
+                        tmp_stations = self._cnf.stations
+                        if tmp_stations:
+                            #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
+                            self._cnf.station_path = self._cnf.online_browser.BASE_URL
+                            self._cnf.station_title = self._cnf.online_browser.title
+                            self._set_active_stations()
+                            self.stations = tmp_stations[:]
+                            self.stations = self._cnf.stations
+                            self.number_of_items = len(self.stations)
+                            self.selection = 0
+                            self.startPos = 0
+                            self.setupAndDrawScreen()
                             self.detect_if_player_exited = False
-                            self.stopPlayer()
-                        self.selection = 0
-                        self.startPos = 0
-                        self.number_of_items = len(self.stations)
-                        self.setupAndDrawScreen()
-                        #self.refreshBody()
+                            self._align_stations_and_refresh(self.ws.operation_mode)
+                            self._set_active_stations()
+                        else:
+                            self._cnf.remove_from_playlist_history()
+                            self._print_service_connection_error()
+                            self._cnf.browsing_station_service = False
                     else:
                         self._cnf.remove_from_playlist_history()
-                        self._print_service_connection_error()
+                        self._print_unknown_browser_service()
                         self._cnf.browsing_station_service = False
                 else:
                     self._cnf.remove_from_playlist_history()
-                    self._print_unknown_browser_service()
+                    self._print_dnspython_not_installed_error()
                     self._cnf.browsing_station_service = False
             else:
                 self._cnf.remove_from_playlist_history()
@@ -3247,7 +3278,7 @@ class PyRadio(object):
                     self.active_stations = [
                             ['', self.selection],
                             ['', -1]]
-        # logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
+        logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
 
     def _set_rename_stations(self):
         if self.stations:
@@ -3371,14 +3402,6 @@ class PyRadio(object):
             self._show_help(txt,
                             mode_to_set=self.ws.STATION_INFO_MODE,
                             caption=' Station Info ', is_message=True)
-
-    def _show_vote_sort_selection_window(self):
-        self.ws.operation_mode = self.ws.VOTE_SORT_MODE
-        self._online_browser.show_sort_window()
-
-    def _create_vote_sort_selection_window(self):
-        self.ws.operation_mode = self.ws.VOTE_SORT_MODE
-        self._online_browser.create_sort_window(parent=self.bodyWin)
 
     def detectUpdateThread(self, config, a_lock, stop):
         ''' a thread to check if an update is available '''
@@ -4002,6 +4025,12 @@ class PyRadio(object):
             self._update_status_bar_right()
             self._volume_save()
 
+    def _browser_server_selection(self):
+        self._cnf._online_browser.select_servers()
+
+    def _browser_sort(self):
+        self._cnf._online_browser.sort()
+
     def keypress(self, char):
         self.detect_if_player_exited = True
         if self._system_asked_to_terminate:
@@ -4012,7 +4041,8 @@ class PyRadio(object):
 
         if char in (ord('#'), curses.KEY_RESIZE):
             self._normal_mode_resize()
-            self._do_display_notify()
+            if not self._limited_height_mode:
+                self._do_display_notify()
             return
 
         if self._limited_height_mode:
@@ -4761,6 +4791,20 @@ class PyRadio(object):
                     self._station_editor._encoding = self._station_editor._old_encoding
                 self.ws.close_window()
                 self._station_editor.show()
+            return
+
+        elif self.ws.operation_mode == self.ws.BROWSER_SORT_MODE and \
+                char not in self._chars_to_bypass:
+            ret = self._cnf._online_browser.keypress(char)
+            if ret < 1:
+                self.ws.close_window()
+                if ret == 0:
+                    self._set_active_stations()
+                    self._cnf.stations = self._cnf._online_browser.stations(2)
+                    self.stations = self._cnf.stations
+                    self._align_stations_and_refresh(self.ws.operation_mode)
+                else:
+                    self.refreshBody()
             return
 
         elif self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE and \
@@ -5550,6 +5594,14 @@ class PyRadio(object):
                     else:
                         self._normal_station_info()
 
+                elif char == ord('S'):
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
+                    if self._cnf.browsing_station_service:
+                        self.ws.operation_mode = self.ws.BROWSER_SORT_MODE
+                        self._browser_sort()
+
                 elif char == ord('i'):
                     self.jumpnr = ''
                     self._cnf.jump_tag = -1
@@ -5774,6 +5826,7 @@ class PyRadio(object):
             elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
                 self._random_requested = False
 
+                logger.error('DE pl 1 active_stations = \n\n{}\n\n'.format(self.active_stations))
                 if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                             curses.KEY_RIGHT, ord('l')):
                     self._update_status_bar_right(status_suffix='')
@@ -5817,7 +5870,9 @@ class PyRadio(object):
                             # self.ll('ENTER')
                             self.ws.close_window()
                             self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
-                            self.active_stations = self.saved_active_stations[:]
+                            if self.saved_active_stations != [['', 0], ['', -1]]:
+                                self.active_stations = self.saved_active_stations[:]
+                                self.saved_active_stations = [['', 0], ['', -1]]
                             self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
                             self._set_active_stations()
                             self._give_me_a_search_class(self.ws.operation_mode)

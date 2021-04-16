@@ -48,7 +48,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Cleaning up](#cleaning-up)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
-* [Packaging Pyradio](#packaging-pyradio)
+* [Packaging PyRadio](#packaging-pyradio)
 * [TODO](#todo)
 * [Acknowledgment](#acknowledgment)
 
@@ -656,7 +656,7 @@ Furthermore, when using the mouse on a console application, the result is highly
 
 Having said that, and since the question of using the mouse with **PyRadio** has been risen, basic mouse support has been implemented; starting, stopping and muting the player, scrolling within the playlist and adjusting the player's volume is now possible using the mouse.
 
-All one has to do is enable mouse support in the "*Config Window*" (mouse support is disabled by default) and restart **Pyradio** for the change to take effect.
+All one has to do is enable mouse support in the "*Config Window*" (mouse support is disabled by default) and restart **PyRadio** for the change to take effect.
 
 Then, the mouse can be used as follows:
 
@@ -729,7 +729,7 @@ Then try to reproduce the bug and exit **pyradio**.
 
 Finally, include the file produced in your report.
 
-## Packaging Pyradio
+## Packaging PyRadio
 
 If you are a packager and would like to produce a package for your distribution please do follow this mini guide.
 
