@@ -25,7 +25,12 @@ Before installing **PyRadio** you have to prepare your system, so that you end u
 
 ### Linux
 
-Use your distribution method to install *python-setuptools*, *python-requests*, *sed* and any one of *MPV*, *MPlayer* and/or *VLC*.
+Use your distribution method to install 
+1. *python-setuptools*
+2. *python-requests*
+3. *python-dnspython*
+4. *sed*
+5. any one of *MPV*, *MPlayer* and/or *VLC*.
 
 When you are done, proceed to  "[Performing the installation](#performing-the-installation)".
 
