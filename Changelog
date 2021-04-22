@@ -1,3 +1,7 @@
+2021-04-20 s-n-g
+    * Fixing python 2 return from Radio Browser TUI breakage
+    * Adding dnspython module existence check
+
 2021-04-14 s-n-g
     * Version 0.8.9.1
     * Implemented the so called "Listening" mode, in which PyRadio TUI

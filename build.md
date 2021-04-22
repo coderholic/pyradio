@@ -26,18 +26,23 @@ Before installing **PyRadio** you have to prepare your system, so that you end u
 ### Linux
 
 Use your distribution method to install 
+
 1. *python-setuptools*
 2. *python-requests*
 3. *python-dnspython*
 4. *sed*
-5. any one of *MPV*, *MPlayer* and/or *VLC*.
+5. any one of *MPV*, *MPlayer* or *VLC*.
 
 When you are done, proceed to  "[Performing the installation](#performing-the-installation)".
 
 
 ### macOS
 
-Everything you need to install, run and keep **pyradio** up-to-date is available on [Homebrew](https://github.com/Homebrew/homebrew). If you haven't already downloaded its client, go ahead and do it.
+First thing you do is install python dependencies (assuming python 3 is installed):
+
+    pip3 install --upgrade requests dnspython
+
+Everything else you need to install and run **pyradio** is available on [Homebrew](https://github.com/Homebrew/homebrew). If you haven't already downloaded its client, go ahead and do it.
 
 Open a **terminal** and type:
 

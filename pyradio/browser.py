@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 # http://www.radio-browser.info/webservice#Advanced_station_search
 import curses
-from dns import resolver
+try:
+    from dns import resolver
+except ImportError:
+    pass
 from copy import deepcopy
 import random
 import json
@@ -23,12 +26,15 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 logger = logging.getLogger(__name__)
 
 def country_from_server(a_server):
-    country = a_server.split('.')[0]
-    up = country[:-1].upper()
-    if up in countries.keys():
-        return countries[up]
+    if a_server:
+        country = a_server.split('.')[0]
+        up = country[:-1].upper()
+        if up in countries.keys():
+            return countries[up]
+        else:
+            return country
     else:
-        return country
+        return None
 
 def capitalize_comma_separated_string(a_string):
     sp = a_string.split(',')
@@ -66,7 +72,9 @@ class PyRadioStationsBrowser(object):
                  config_encoding,
                  session=None,
                  search=None,
-                 pyradio_info=None):
+                 pyradio_info=None,
+                 search_return_function=None,
+                 message_function=None):
         ''' Initialize the station's browser.
 
             It should return a valid search result (for example,
@@ -156,7 +164,7 @@ class PyRadioStationsBrowser(object):
         '''
         pass
 
-    def search(self, data=None):
+    def search(self, go_back_in_history=True):
         return []
 
     def set_encoding(self, id_in_list, new_encoding):
@@ -212,12 +220,16 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
 
     search_by = _old_search_by = None
 
+    keyboard_handler = None
+
     def __init__(self,
                  config,
                  config_encoding,
                  session=None,
                  search=None,
-                 pyradio_info=None):
+                 pyradio_info=None,
+                 search_return_function=None,
+                 message_function=None):
         self._cnf = config
         if session:
             self._session = session
@@ -227,24 +239,32 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         if self._pyradio_info:
             self._headers['User-Agent'] = self._pyradio_info.replace(' ', '/')
         self._config_encoding = config_encoding
+        self._message_function = message_function
+        self._search_return_function = search_return_function
+
+
+    def initialize(self):
         self._dns_info = RadioBrowserInfoDns()
         self._server = self._dns_info.give_me_a_server_url()
-        self._get_title()
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('random server is ' + self._server)
+        if self._server:
+            self._get_title()
 
-        self._search_history.append({
-            'type': 'topvote',
-            'term': '100',
-            'post_data': None,
-        })
+            self._search_history.append({
+                'type': 'topvote',
+                'term': '100',
+                'post_data': None,
+            })
 
-        self._search_history.append({
-            'type': 'bytagexact',
-            'term': 'big band',
-            'post_data': {'order': 'votes', 'reverse': 'true'},
-        })
-        self._search_history_index = 1
-
-        self.search()
+            self._search_history.append({
+                'type': 'bytagexact',
+                'term': 'big band',
+                'post_data': {'order': 'votes', 'reverse': 'true'},
+            })
+            self._search_history_index = 1
+            return True
+        return False
 
     @property
     def server(self):
@@ -382,7 +402,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         # logger.error('DE \n\n{}\n\n'.format(ret))
         return ret, ''
 
-    def search(self):
+    def search(self, go_back_in_history=True):
         ''' Search for stations with parameters.
             Result is limited to 100 stations by default (use the
             'limit' parameter to change it).
@@ -414,8 +434,17 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                         encoding       : station encoding ('' means utf-8)
         '''
 
+        if self._message_function:
+            self._message_function()
+        self.search_by = self._old_search_by = None
+        self._get_search_elements(
+            self._search_history[self._search_history_index]
+        )
+        self._old_search_by = self.search_by
+        self._sort = None
         url = self._format_url(self._search_history[self._search_history_index])
-        logger.error('DE \n\nurl = "{}"\n\n'.format(url))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('== search url = "{}"'.format(url))
         post_data = {}
         if self._search_history[self._search_history_index]['post_data']:
             post_data = deepcopy(self._search_history[self._search_history_index]['post_data'])
@@ -427,20 +456,24 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             if not 'hidebroken' not in post_data.keys():
                 post_data['hidebroken'] = True
         # url = 'https://' + self._server + '/json/stations/search'
-        logger.error('DE \n\nheaders = "{}"'.format(self._headers))
-        logger.error('DE \n\npost_data = "{}"'.format(post_data))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('== headers = "{}"'.format(self._headers))
+            logger.debug('== post_data = "{}"'.format(post_data))
         try:
             # r = requests.get(url=url)
             r = self._session.get(url=url, headers=self._headers, params=post_data, timeout=(self._search_timeout, 2 * self._search_timeout))
             r.raise_for_status()
             self._raw_stations = self._extract_data(json.loads(r.text))
-            for n in self._raw_stations:
-                logger.error('{}'.format(n))
             # logger.error('DE \n\n{}'.format(self._raw_stations))
+            ret = True, go_back_in_history
         except requests.exceptions.RequestException as e:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error(e)
             self._raw_stations = []
+            ret = False, go_back_in_history
+
+        if self._search_return_function:
+            self._search_return_function(ret)
 
     def _get_search_elements(self, a_search):
         '''
@@ -457,7 +490,6 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 self.search_by = a_search['post_data']['order']
             if 'reverse' in a_search['post_data']:
                 self.reverse = True if a_search['post_data']['reverse'] == 'true' else False
-                logger.error('DE calc reverse = {}'.format(self.reverse))
 
         if self.search_by is None:
             a_type = a_search['type']
@@ -482,7 +514,6 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
 
     def get_next(self, search_term, start=0, stop=None):
         if search_term:
-            pass
             for n in range(start, len(self._raw_stations)):
                 if self._search_in_station(search_term, n):
                     if logger.isEnabledFor(logging.DEBUG):
@@ -532,7 +563,11 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             'language'
         )
         for n in guide:
-            if a_search_term.lower() in self._raw_stations[a_station][n].lower():
+            source = self._raw_stations[a_station][n]
+            if isinstance(source, int):
+                ''' this is one of the numerical data '''
+                source = str(source)
+            if a_search_term.lower() in source.lower():
                 return True
         return False
 
@@ -932,6 +967,23 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         return columns_separotors
 
     def get_internal_header(self, pad, width):
+        guide = {
+            'name': 'Name',
+            'votes': '  Votes',
+            'clickcount': ' Clicks',
+            'bitrate': 'Bitrate',
+            'codec': 'Codec',
+            'country': 'Country',
+            'state': 'State',
+            'language': 'Language',
+            'tags': 'Tags',
+        }
+        # logger.error('DE search = {}'.format(self._search_history[self._search_history_index]))
+        reset_search_elements = False
+        if self.search_by is None:
+            reset_search_elements = True
+            self._get_search_elements(self._search_history[self._search_history_index])
+            # logger.error('DE search by = {}'.format(self.search_by))
         columns = ((),
                    ('Bitrate', ),
                    ('  Votes', 'Bitrate'),
@@ -944,8 +996,20 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         columns_separotors = self.get_columns_separators(width, use_old_output_format=True)
         if self._output_format == 1:
             columns_separotors[0] -= 2
-        title = '#'.rjust(pad) + '  Name'
-        return ((title, columns_separotors, columns[self._output_format]), )
+        title = '#'.rjust(pad), ' Name '
+        if reset_search_elements:
+            self._old_search_by = self.search_by
+        # logger.error('DE search by = {}'.format(self.search_by))
+        # logger.error('DE Looking for: "{}"'.format(guide[self.search_by]))
+        # logger.error('DE Names = {}'.format(columns[self._output_format]))
+        if guide[self.search_by] == 'Name':
+            highlight = -2
+        else:
+            try:
+                highlight = columns[self._output_format].index(guide[self.search_by])
+            except:
+                highlight = -1
+        return highlight, ((title, columns_separotors, columns[self._output_format]), )
 
     def select_servers(self):
         if self._server_selection_window is None:
@@ -953,6 +1017,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 self.parent, self._dns_info.server_urls, self._server)
         else:
             self._server_selection_window.set_parent(self.parent)
+        self.keyboard_handler = self._server_selection_window
         self._server_selection_window.show()
 
     def sort(self):
@@ -967,6 +1032,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 parent=self.parent,
                 search_by=self.search_by
             )
+        self.keyboard_handler = self._sort
         self._sort.show()
 
     def keypress(self, char):
@@ -977,15 +1043,40 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                  0: Done, result is in ....
                  1: Continue
         '''
-        ret = self._sort.keypress(char)
+        ret = self.keyboard_handler.keypress(char)
+
         if ret == 0:
-            self.search_by = self._sort.search_by
-            if self.search_by == self._old_search_by:
-                self.reverse = not self.reverse
-            else:
-                self.reverse = False
-            self._raw_stations = sorted(self._raw_stations, key=itemgetter(self.search_by), reverse=self.reverse)
-            self._old_search_by = self.search_by
+            if self.keyboard_handler == self._sort:
+                self.search_by = self._sort.search_by
+                if self.search_by == self._old_search_by:
+                    self.reverse = not self.reverse
+                else:
+                    self.reverse = False
+                    if self.search_by != self._old_search_by:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('search by = "{}"'.format(self.search_by))
+                        ''' set reverse to True for numerical values
+                            when changing sort type
+                        '''
+                        if self.search_by in (
+                            'votes',
+                            'clickcount',
+                            'bitrate'
+                        ):
+                            self.reverse = True
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('settng reverse to {}'.format(self.reverse))
+
+                self._raw_stations = sorted(self._raw_stations, key=itemgetter(self.search_by), reverse=self.reverse)
+                self._old_search_by = self.search_by
+
+            elif self.keyboard_handler == self._server_selection_window:
+                if ret == 0:
+                    self._server = self._server_selection_window.server
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('user selected server is ' + self._server)
+                    self._get_title()
+
         return ret
 
 class RadioBrowserInfoData(object):
@@ -1170,7 +1261,7 @@ class RadioBrowserInfoData(object):
             else:
                 ret, my_data[an_item] = get_data(an_item)
             if stop():
-                if logger.isEnabledFor(logger.DEBUG):
+                if logger.isEnabledFor(logging.DEBUG):
                     logger.info('Asked to stop after working on "{}"...'.format(an_item))
                 self._terminated = True
                 return
@@ -1198,6 +1289,10 @@ class RadioBrowserInfoDns(object):
 
         return tuple(self._urls) if self._urls is not None else None
 
+    @server_urls.setter
+    def server_urls(self, val):
+        return
+
     def _get_urls(self):
         self._urls = []
         result = None
@@ -1205,7 +1300,6 @@ class RadioBrowserInfoDns(object):
             result = resolver.query('_api._tcp.radio-browser.info', 'SRV')
         except:
             self._urls = None
-            return ''
 
         for n in result:
             self._urls.append(str(n).split(' ')[-1][:-1])
@@ -1215,8 +1309,11 @@ class RadioBrowserInfoDns(object):
         if self._urls is None:
             self._get_urls()
 
-        num = random.randint(0, len(self._urls) - 1)
-        return self._urls[num]
+        if self._urls:
+            num = random.randint(0, len(self._urls) - 1)
+            return self._urls[num]
+        else:
+            return None
 
     def servers(self):
         ''' server urls as generator '''
@@ -1230,8 +1327,7 @@ class RadioBrowserInfoSort(object):
 
     TITLE = ' Sort by '
 
-    items = collections.OrderedDict()
-    items = {
+    items = collections.OrderedDict({
         'Name': 'name',
         'Votes': 'votes',
         'Clicks': 'clickcount',
@@ -1241,7 +1337,7 @@ class RadioBrowserInfoSort(object):
         'State': 'state',
         'Language': 'language',
         'Tag': 'tags'
-    }
+    })
 
     _too_small = False
 
@@ -1408,7 +1504,7 @@ class RadioBrowserInfoServersSelect(object):
 
     TITLE = ' Server Selection '
 
-    def __init(self, parent, servers, current_server):
+    def __init__(self, parent, servers, current_server):
         self._parent = parent
         self.items = list(servers)
         self.server = current_server
@@ -1450,11 +1546,13 @@ class RadioBrowserInfoServersSelect(object):
         self._win.bkgdset(' ', curses.color_pair(3))
         # self._win.erase()
         self._win.box()
-        self._win.addstr(0, 1,
-                         self.TITLE,
-                         curses.color_pair(4))
+        self._win.addstr(
+            0, int((self.maxX - len(self.TITLE)) / 2),
+            self.TITLE,
+            curses.color_pair(4)
+        )
         self._win.refresh()
-        self.server._parent = self._parent
+        self.servers._parent = self._win
         self.servers.show()
 
     def set_parent(self, parent):
@@ -1474,6 +1572,8 @@ class RadioBrowserInfoServersSelect(object):
 
         if ret == 2:
             ret = 1
+        if ret == 0:
+            self.server = self.servers.server
 
         return ret
 
@@ -1491,26 +1591,25 @@ class RadioBrowserInfoServers(object):
         self.items = list(servers)
         self.server = current_server
 
-        for i, n in servers:
-            if current_server in n:
-                self.active = self.selection = i
-                break
-
         s_max = 0
         for i, n in enumerate(self.items):
             if self.server == n:
                 self.selection = self.active = i
-            self.items[i] = country_from_server(n) + '  ({})'.format(n)
+            self.items[i] = ' ' + country_from_server(n) + '  ({}) '.format(n)
             if len(self.items[i]) > s_max:
                 s_max = len(self.items[i])
         self.items.sort()
         for i, n in enumerate(self.items):
             if len(self.items[i]) < s_max:
                 self.items[i] = self.items[i].replace('(', ' ' * (s_max - len(self.items[i])) + '(')
-        for n in self.items:
-            logger.error(n)
         self.maxY = len(self.items)
         self.maxX = len(self.items[0])
+
+        ''' get selection and active server id '''
+        for i, n in enumerate(self.items):
+            if self.server in n:
+                self.active = self.selection = i
+                break
 
     def show(self):
         self._too_small = False
@@ -1526,7 +1625,7 @@ class RadioBrowserInfoServers(object):
                 self.maxY, self.maxX,
                 Y + 1, X + 1
             )
-            for i, n in self.items:
+            for i, n in enumerate(self.items):
                 col = 5
                 if i == self.active == self.selection:
                     col = 9
@@ -1534,8 +1633,11 @@ class RadioBrowserInfoServers(object):
                     col = 6
                 elif i == self.active:
                     col = 4
-            self._win.addstr(i, 0 , n, curses.color_pair(col))
-        self._win.refresh()
+                try:
+                    self._win.addstr(i, 0 , n, curses.color_pair(col))
+                except:
+                    pass
+            self._win.refresh()
 
     def keypress(self, char):
         ''' RadioBrowserInfoServers keypress
@@ -1560,9 +1662,9 @@ class RadioBrowserInfoServers(object):
             ord('l'), ord(' '), ord('\n'), ord('\r'),
             curses.KEY_RIGHT, curses.KEY_ENTER
         ):
-            for i, n in enumerate(self.items.keys()):
+            for i, n in enumerate(self.items):
                 if i == self.selection:
-                    self.search_by = self.items[n]
+                    self.server = n.split('(')[1].replace(') ', '')
                     self.active = i
                     break
             return 0
@@ -1572,11 +1674,11 @@ class RadioBrowserInfoServers(object):
 
         elif char in (ord('g'), curses.KEY_HOME):
             self.selection = 0
-            self._refresh()
+            self.show()
 
         elif char in (ord('G'), curses.KEY_END):
             self.selection = len(self.items) - 1
-            self._refresh()
+            self.show()
 
         elif char in (curses.KEY_PPAGE, ):
             if self.selection == 0:
@@ -1585,7 +1687,7 @@ class RadioBrowserInfoServers(object):
                 self.selection -= 5
                 if self.selection < 0:
                     self.selection = 0
-            self._refresh()
+            self.show()
 
         elif char in (curses.KEY_NPAGE, ):
             if self.selection == len(self.items) - 1:
@@ -1594,26 +1696,25 @@ class RadioBrowserInfoServers(object):
                 self.selection += 5
                 if self.selection >= len(self.items):
                     self.selection = len(self.items) - 1
-            self._refresh()
+            self.show()
 
         elif char in (ord('k'), curses.KEY_UP):
             self.selection -= 1
             if self.selection < 0:
                 self.selection = len(self.items) - 1
-            self._refresh()
+            self.show()
 
         elif char in (ord('j'), curses.KEY_DOWN):
             self.selection += 1
             if self.selection == len(self.items):
                 self.selection = 0
-            self._refresh()
+            self.show()
 
         return 1
 
 
 def probeBrowsers(a_browser_url):
     base_url = a_browser_url.split('/')[2]
-    logger.error('DE base_url = ' + base_url)
     if not base_url:
         base_url = a_browser_url
     implementedBrowsers = PyRadioStationsBrowser.__subclasses__()

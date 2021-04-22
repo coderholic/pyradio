@@ -25,7 +25,7 @@ HAS_DNSPYTHON = True
 try:
     from dns import resolver
 except ImportError:
-    HAS_DNSPYTHON = FALSE
+    HAS_DNSPYTHON = False
 
 logger = logging.getLogger(__name__)
 
@@ -972,20 +972,14 @@ class PyRadioStations(object):
                 return i
         return -1
 
-    def open_browser(self, url):
+    def open_browser(self, url, search_return_function, message_function):
         self._online_browser = probeBrowsers(url)(
             self,
             self.default_encoding,
-            pyradio_info=self.info
+            pyradio_info=self.info,
+            search_return_function=search_return_function,
+            message_function=message_function
         )
-        if self._online_browser:
-            self.stations = self._online_browser.stations(2)
-            self._reading_stations = []
-            #self._set_playlist_elements(stationFile)
-            #self.previous_station_path = prev_file
-            #self._is_playlist_in_config_dir()
-            self.number_of_stations = len(self.stations)
-            self.dirty_playlist = False
 
     def save_station_position(self, startPos, selection, playing):
         # logger.error('DE startPos = {0}, selection = {1}'.format(startPos, selection))

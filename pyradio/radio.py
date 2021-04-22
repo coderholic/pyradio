@@ -350,6 +350,7 @@ class PyRadio(object):
                 self.ws.VOTE_RESULT_MODE: self._print_vote_result,
                 self.ws.BROWSER_SORT_MODE: self._browser_sort,
                 self.ws.BROWSER_SERVER_SELECTION_MODE: self._browser_server_selection,
+                self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
                 }
 
         ''' list of help functions '''
@@ -2514,8 +2515,7 @@ class PyRadio(object):
         failed, or that the service has failed, in which
         case you should try again later.
         '''
-        self._show_help(txt.format(self.stations[self.selection][0],
-                                   self.stations[self.selection][1]),
+        self._show_help(txt,
                         self.ws.SERVICE_CONNECTION_ERROR,
                         caption=' Service Unavailable ',
                         prompt=' Press any key ',
@@ -2851,7 +2851,7 @@ class PyRadio(object):
                                     a_startPos=-1,
                                     a_selection=-1,
                                     force_scan_playlist=False):
-        logger.error('DE al 1 active_stations = \n\n{}\n\n'.format(self.active_stations))
+        # logger.error('DE al 1 active_stations = \n\n{}\n\n'.format(self.active_stations))
         need_to_scan_playlist = False
         ''' refresh reference '''
         self.stations = self._cnf.stations
@@ -2919,7 +2919,7 @@ class PyRadio(object):
             if need_to_scan_playlist:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Scanning playlist for stations...')
-                logger.error('DE \n\n{}\n\n'.format(self.active_stations))
+                # logger.error('DE \n\n{}\n\n'.format(self.active_stations))
                 self.selection, self.playing = self._get_stations_ids((
                     self.active_stations[0][0],
                     self.active_stations[1][0]))
@@ -2959,6 +2959,15 @@ class PyRadio(object):
         # self.ll('_align_stations_and_refresh')
         self.refreshBody()
 
+    def _show_connect_to_server_message(self):
+        ''' display a passive message telling the user
+            to wait while connecting to server.
+
+            To be used with onlines services only
+        '''
+        txt = '''Connecting to service. Please wait...'''
+        self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+
     def _open_playlist(self, a_url=None):
         ''' open playlist
 
@@ -2972,38 +2981,26 @@ class PyRadio(object):
             # TODO
             if HAS_REQUESTS:
                 if HAS_DNSPYTHON:
-                    txt = '''Connecting to service. Please wait...'''
-                    self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+                    self._show_connect_to_server_message()
                     online_service_url = 'https://' + a_url if a_url else self.stations[self.selection][1]
                     try:
-                        self._cnf.open_browser(online_service_url)
+                        self._cnf.open_browser(
+                            online_service_url,
+                            self._return_from_online_browser_search,
+                            self._show_connect_to_server_message)
                     except TypeError:
                         pass
+                    logger.error('DE online browser = {}'.format(self._cnf._online_browser))
                     if self._cnf.online_browser:
-                        ''' set browser parent so that ir resizes correctly '''
-                        if self._cnf.browsing_station_service:
-                            self._cnf._online_browser.parent = self.bodyWin
+                        tmp_stations = []
 
-                        self._cnf._online_browser.vote_callback = self._print_vote_result
-                        tmp_stations = self._cnf.stations
-                        if tmp_stations:
-                            #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
-                            self._cnf.station_path = self._cnf.online_browser.BASE_URL
-                            self._cnf.station_title = self._cnf.online_browser.title
-                            self._set_active_stations()
-                            self.stations = tmp_stations[:]
-                            self.stations = self._cnf.stations
-                            self.number_of_items = len(self.stations)
-                            self.selection = 0
-                            self.startPos = 0
-                            self.setupAndDrawScreen()
-                            self.detect_if_player_exited = False
-                            self._align_stations_and_refresh(self.ws.operation_mode)
-                            self._set_active_stations()
-                        else:
+                        if not self._cnf._online_browser.initialize():
                             self._cnf.remove_from_playlist_history()
                             self._print_service_connection_error()
                             self._cnf.browsing_station_service = False
+                            return
+
+                        self._cnf._online_browser.search()
                     else:
                         self._cnf.remove_from_playlist_history()
                         self._print_unknown_browser_service()
@@ -3076,6 +3073,49 @@ class PyRadio(object):
             if self.number_of_items > 0 or self._cnf.open_register_list:
                 self.refreshBody()
         # self.ll('_open_playlist(): returning')
+
+    def _return_from_online_browser_search(self, ret):
+        ''' ret is (success, from user search)
+                success
+                    True or False
+                from user search
+                    if success is False
+                        True if from user search or server change
+                        False if from opening browser
+        '''
+
+        if not ret[0]:
+            if ret[1]:
+                self._goto_history_back_handler()
+                self._print_service_connection_error()
+            else:
+                self._cnf.remove_from_playlist_history()
+                self._print_service_connection_error()
+            self._cnf.browsing_station_service = False
+            return
+
+        tmp_stations = self._cnf._online_browser.stations(2)
+
+        ''' set browser parent so that it resizes correctly '''
+        if self._cnf.browsing_station_service:
+            self._cnf._online_browser.parent = self.bodyWin
+
+        if tmp_stations:
+            self._cnf.stations = tmp_stations[:]
+            self.stations = self._cnf.stations
+            self._cnf._online_browser.vote_callback = self._print_vote_result
+            self._cnf.number_of_stations = len(self.stations)
+            self._cnf.dirty_playlist = False
+            #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
+            self._cnf.station_path = self._cnf.online_browser.BASE_URL
+            self._cnf.station_title = self._cnf.online_browser.title
+            self.number_of_items = len(self.stations)
+            self.selection = 0
+            self.startPos = 0
+            self.setupAndDrawScreen()
+            self.detect_if_player_exited = False
+            self._align_stations_and_refresh(self.ws.operation_mode)
+            self._set_active_stations()
 
     def _open_playlist_from_history(self,
                                     reset=False,
@@ -3253,7 +3293,14 @@ class PyRadio(object):
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('** Got it at {}'.format(i_find[0]))
                             break
-                        if a_station[0] == a_find:
+                        ''' python 2 fix
+                            a_find may be unicode under python 2, so convert to str
+                        '''
+                        if isinstance(a_find, str):
+                            a_find_str = a_find
+                        else:
+                            a_find_str = a_find.encode('utf-8', 'ignore')
+                        if a_station[0] == a_find_str:
                             i_find[j] = i
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('** Found at {}'.format(i))
@@ -3278,7 +3325,7 @@ class PyRadio(object):
                     self.active_stations = [
                             ['', self.selection],
                             ['', -1]]
-        logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
+        # logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
 
     def _set_rename_stations(self):
         if self.stations:
@@ -4031,6 +4078,16 @@ class PyRadio(object):
     def _browser_sort(self):
         self._cnf._online_browser.sort()
 
+    def _goto_history_back_handler(self):
+        self._update_status_bar_right(status_suffix='')
+        if self.ws.operation_mode == self.ws.NORMAL_MODE:
+            if self._cnf.can_go_back_in_time:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('opening previous playlist')
+                self._open_playlist_from_history()
+            else:
+                self._show_no_more_playlist_history()
+
     def keypress(self, char):
         self.detect_if_player_exited = True
         if self._system_asked_to_terminate:
@@ -4196,14 +4253,7 @@ class PyRadio(object):
 
             elif char == ord('\\'):
                 ''' \\ pressed - go back in history '''
-                self._update_status_bar_right(status_suffix='')
-                if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                    if self._cnf.can_go_back_in_time:
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('opening previous playlist')
-                        self._open_playlist_from_history()
-                    else:
-                        self._show_no_more_playlist_history()
+                self._goto_history_back_handler()
 
             elif char == ord(']'):
                 ''' ] pressed - go to first playlist in history '''
@@ -4792,6 +4842,20 @@ class PyRadio(object):
                 self.ws.close_window()
                 self._station_editor.show()
             return
+
+        elif self.ws.operation_mode == self.ws.BROWSER_SERVER_SELECTION_MODE and \
+                char not in self._chars_to_bypass:
+            ret = self._cnf._online_browser.keypress(char)
+            if ret < 1:
+                self.ws.close_window()
+                if ret == 0:
+                    self.refreshBody()
+                    self._set_active_stations()
+                    self._cnf._online_browser.search()
+                else:
+                    self.refreshBody()
+            return
+
 
         elif self.ws.operation_mode == self.ws.BROWSER_SORT_MODE and \
                 char not in self._chars_to_bypass:
@@ -5594,6 +5658,14 @@ class PyRadio(object):
                     else:
                         self._normal_station_info()
 
+                elif char == ord('C'):
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
+                    if self._cnf.browsing_station_service:
+                        self.ws.operation_mode = self.ws.BROWSER_SERVER_SELECTION_MODE
+                        self._browser_server_selection()
+
                 elif char == ord('S'):
                     self.jumpnr = ''
                     self._cnf.jump_tag = -1
@@ -6342,10 +6414,18 @@ class PyRadio(object):
 
         if self._cnf.browsing_station_service:
             if self._cnf.internal_header_height > 0:
-                headers = self._cnf.online_browser.get_internal_header(pad, self.bodyMaxX)
-                # logger.error('DE {}'.format(headers))
+                sort_column_color = 4 if curses.color_pair(2) == curses.color_pair(4) else 6
+                # logger.error('DE ---=== col = {} ===---'.format(sort_column_color))
+                highlight, headers = self._cnf.online_browser.get_internal_header(pad, self.bodyMaxX)
+                # logger.error('DE highlight = {}'.format(highlight))
+                # logger.error('DE headers = {}'.format(headers))
                 for i, a_header in enumerate(headers):
-                    self.outerBodyWin.addstr(i + 1, 1, a_header[0], curses.color_pair(2))
+                    if highlight == -2:
+                        self.outerBodyWin.addstr(i + 1, 1, a_header[0][0], curses.color_pair(2))
+                        self.outerBodyWin.addstr(i + 1, pad + 2, a_header[0][1], curses.color_pair(sort_column_color))
+                    else:
+                        self.outerBodyWin.addstr(i + 1, 1, a_header[0][0], curses.color_pair(2))
+                        self.outerBodyWin.addstr(i + 1, pad + 2, a_header[0][1], curses.color_pair(2))
                     column_separator = a_header[1]
                     column_name = a_header[2]
                     # logger.error('DE {}'.format(column_separator))
@@ -6356,7 +6436,10 @@ class PyRadio(object):
                         else:
                             self.outerBodyWin.addstr(i + 1, col + 2, '│', curses.color_pair(5))
                         try:
-                            self.outerBodyWin.addstr(column_name[j], curses.color_pair(2))
+                            if j == highlight:
+                                self.outerBodyWin.addstr(column_name[j], curses.color_pair(sort_column_color))
+                            else:
+                                self.outerBodyWin.addstr(column_name[j], curses.color_pair(2))
                         except:
                             pass
         self.outerBodyWin.refresh()
