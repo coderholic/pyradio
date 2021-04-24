@@ -6431,11 +6431,7 @@ class PyRadio(object):
 
         if self._cnf.browsing_station_service:
             if self._cnf.internal_header_height > 0:
-                sort_column_color = 6 if curses.color_pair(2) == curses.color_pair(4) else 4
                 sort_column_color = 4
-                logger.error('DE ---=== col = {} ===---'.format(sort_column_color))
-                logger.error('DE color_pair(2) = {}'.format(curses.color_pair(2)))
-                logger.error('DE color_pair(4) = {}'.format(curses.color_pair(4)))
                 highlight, headers = self._cnf.online_browser.get_internal_header(pad, self.bodyMaxX)
                 # logger.error('DE highlight = {}'.format(highlight))
                 # logger.error('DE headers = {}'.format(headers))
