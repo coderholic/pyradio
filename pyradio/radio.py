@@ -1719,7 +1719,16 @@ class PyRadio(object):
                  Double click     |Start / stop the player.
                  Middle click     |Toggle mute.
                  Wheel            |Page up / down.
-                 Shift-Wheel      |Adjust volume.'''
+                 Shift-Wheel      |Adjust volume.
+                 !Radio Browser
+                 O                |Open |Radio Browser|.
+                 c                |Open |c|onfig window.
+                 C                |Select server to |c|onnect to.
+                 s                ||S|earch for stations.
+                 S                ||S|ort search results.
+                 I                |Station |i|nfo (current selection).
+                 V                ||V|ote for station.
+                 \\\\               |Close Browser (go back in history).'''
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_4,
                         reset_metrics=False)
@@ -2088,8 +2097,8 @@ class PyRadio(object):
                  Voting result:
                  ____|{1}|
                  '''
-        self._show_help(txt.format(self.stations[self.playing][0],
-                                   self._cnf._online_browser.vote_result),
+        self._show_help(txt.format(self._cnf._online_browser.vote_result[0],
+                                   self._cnf._online_browser.vote_result[1]),
                         self.ws.VOTE_RESULT_MODE,
                         caption=' Staion Vote Result ',
                         prompt=' Press any key... ',
@@ -5702,16 +5711,19 @@ class PyRadio(object):
                     self.jumpnr = ''
                     self._cnf.jump_tag = -1
                     self._update_status_bar_right(status_suffix='')
-                    if self._cnf.locked:
-                        self._print_session_locked()
-                        return
-                    self._old_config_encoding = self._cnf.opts['default_encoding'][1]
-                    ''' open config window '''
-                    #self.ws.operation_mode = self.ws.window_mode = self.ws.CONFIG_MODE
-                    self.ws.window_mode = self.ws.CONFIG_MODE
-                    if not self.player.isPlaying():
-                        self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
-                    self._show_config_window()
+                    if self._cnf.browsing_station_service:
+                        self._print_not_implemented_yet()
+                    else:
+                        if self._cnf.locked:
+                            self._print_session_locked()
+                            return
+                        self._old_config_encoding = self._cnf.opts['default_encoding'][1]
+                        ''' open config window '''
+                        #self.ws.operation_mode = self.ws.window_mode = self.ws.CONFIG_MODE
+                        self.ws.window_mode = self.ws.CONFIG_MODE
+                        if not self.player.isPlaying():
+                            self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
+                        self._show_config_window()
                     return
 
                 elif char in (ord('E'), ):
@@ -5795,17 +5807,22 @@ class PyRadio(object):
                     return
 
                 elif char in(ord('s'), ):
-                    self._update_status_bar_right()
-                    if self._cnf.browsing_station_service or \
-                            self._cnf.is_register:
-                        return
-                    if self._cnf.dirty_playlist:
-                        self.saveCurrentPlaylist()
+                    self.jumpnr = ''
+                    self._cnf.jump_tag = -1
+                    self._update_status_bar_right(status_suffix='')
+                    if self._cnf.browsing_station_service:
+                        self._print_not_implemented_yet()
                     else:
-                        self._show_notification_with_delay(
-                                txt='___Playlist not modified!!!___',
-                                mode_to_set=self.ws.NORMAL_MODE,
-                                callback_function=self.refreshBody)
+                        if self._cnf.browsing_station_service or \
+                                self._cnf.is_register:
+                            return
+                        if self._cnf.dirty_playlist:
+                            self.saveCurrentPlaylist()
+                        else:
+                            self._show_notification_with_delay(
+                                    txt='___Playlist not modified!!!___',
+                                    mode_to_set=self.ws.NORMAL_MODE,
+                                    callback_function=self.refreshBody)
                     return
 
                 elif char in (ord('r'), ):
@@ -6414,8 +6431,11 @@ class PyRadio(object):
 
         if self._cnf.browsing_station_service:
             if self._cnf.internal_header_height > 0:
-                sort_column_color = 4 if curses.color_pair(2) == curses.color_pair(4) else 6
-                # logger.error('DE ---=== col = {} ===---'.format(sort_column_color))
+                sort_column_color = 6 if curses.color_pair(2) == curses.color_pair(4) else 4
+                sort_column_color = 4
+                logger.error('DE ---=== col = {} ===---'.format(sort_column_color))
+                logger.error('DE color_pair(2) = {}'.format(curses.color_pair(2)))
+                logger.error('DE color_pair(4) = {}'.format(curses.color_pair(4)))
                 highlight, headers = self._cnf.online_browser.get_internal_header(pad, self.bodyMaxX)
                 # logger.error('DE highlight = {}'.format(highlight))
                 # logger.error('DE headers = {}'.format(headers))

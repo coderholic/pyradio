@@ -333,16 +333,19 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
 
     def vote(self, a_station):
         url = 'http://' + self._server + '/json/vote/' + self._raw_stations[a_station]['stationuuid']
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Voting for: {}'.format(self._raw_stations[a_station]))
+            logger.debug('Voting url: ' + url)
         try:
             r = self._session.get(url=url, headers=self._headers, timeout=(self._search_timeout, 2 * self._search_timeout))
             message = json.loads(r.text)
-            self.vote_result = message['message'][0].upper() + message['message'][1:]
+            self.vote_result = self._raw_stations[a_station]['name'], message['message'][0].upper() + message['message'][1:]
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Station vote result: "{}"'.format(self.vote_result))
+                logger.debug('Voting result: "{}"'.format(message))
         except:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Station voting failed...')
-            self.vote_result = 'Voting for station failed'
+            self.vote_result = self._raw_stations[a_station]['name'], 'Voting for station failed'
 
         if self._vote_callback:
             self._vote_callback()

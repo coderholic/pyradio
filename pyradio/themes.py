@@ -223,7 +223,7 @@ class PyRadioTheme(object):
             self._colors[THEME_ITEMS[4][0]] = [0, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             ''' Titles '''
             # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
-            self._colors[THEME_ITEMS[0][0]] = [0, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
+            self._colors[THEME_ITEMS[0][0]] = [245, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             ''' help window '''
             self._colors[THEME_ITEMS[1][0]] = [245, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
@@ -244,7 +244,7 @@ class PyRadioTheme(object):
             self._colors[THEME_ITEMS[4][0]] = [255, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             ''' Titles '''
             # calculated value: self._colors['Titles'] = self._colors[THEME_ITEMS[4][0]]
-            self._colors[THEME_ITEMS[0][0]] = [253, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
+            self._colors[THEME_ITEMS[0][0]] = [245, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             ''' help window '''
             self._colors[THEME_ITEMS[1][0]] = [247, self._colors[THEME_ITEMS[3][0]][BACKGROUND()]]
             # calculated value: self._colors['Messages'] = [ self._colors[THEME_ITEMS[4][0]][FOREGROUND()], self._colors[THEME_ITEMS[2][0]][FOREGROUND()] ]
