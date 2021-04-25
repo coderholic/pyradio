@@ -19,7 +19,7 @@ class DisabledWidget(object):
     focus = False
     checked = False
 
-    def __init(self):
+    def __init__(self):
         pass
 
 
@@ -222,6 +222,34 @@ class SimpleCursesWidget(object):
         return False
 
 
+class SimpleMenuEntries(SimpleCursesWidget):
+    ''' A menu entries widget
+        (a list of items vertically stacked)
+        with selection and active item.
+    '''
+    def __init__(self,
+                 Y, X,
+                 window,
+                 items,
+                 color,
+                 color_active,
+                 color_cursor_selection,
+                 color_cursor_active,
+                 callback_function=None
+                 ):
+        ''' Initialize the widget.
+
+            Parameters
+            ----------
+            Y, X
+                Y, X position of widget in its parent (int)
+            window
+                The window to print items into
+            color
+                Inactive checkbox color (curses.color_pair)
+        '''
+        pass
+
 class SimpleCursesCheckBox(SimpleCursesWidget):
     '''A very simple checkbox curses widget '''
     _checked = False
@@ -232,7 +260,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
                  color_focused, color, bracket_color,
                  char='✔', checked=False, focused=False,
                  highlight_all=False, callback_function=None):
-        '''Initialize the widget.
+        ''' Initialize the widget.
 
             Parameters
             ----------
@@ -277,7 +305,6 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         '''Character to indicate a checked checkbox
            Default: ✔
         '''
-
         return self._char
 
     @char.setter
@@ -288,7 +315,6 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
     @property
     def checked(self):
         '''Returns if the checkbox is ckecked'''
-
         return self._checked
 
     @checked.setter
@@ -1662,6 +1688,8 @@ class SimpleCursesLineEdit(object):
                     char = chr(char)
                 else:
                     char = self._get_char(win, char)
+                if char is None:
+                    return 1
                 if self._pure_ascii:
                     if ord(char) > 127:
                         return 1
@@ -1737,11 +1765,14 @@ class SimpleCursesLineEdit(object):
         else:
             buf = bytearray(bytes)
             out = self._decode_string(buf)
-            if PY3:
-                if is_wide(out) and not self._cjk:
-                    self._cjk = True
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('=== CJK editing is ON ===')
+            if out:
+                if PY3:
+                    if is_wide(out) and not self._cjk:
+                        self._cjk = True
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('=== CJK editing is ON ===')
+            else:
+                out = None
         return out
 
     def _encode_string(self, data):

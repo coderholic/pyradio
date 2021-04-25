@@ -1,6 +1,6 @@
 #!/bin/bash
 cd devel
-git clone https://gitlab.com/fgallaire/cjkwrap && {
+git clone https://gitlab.com/fgallaire/cjkwrap.git/ && {
     cd cjkwrap
     cp cjkwrap.py ../../pyradio/cjkwrap.py
     # back to devel
