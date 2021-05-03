@@ -227,6 +227,12 @@ class SimpleMenuEntries(SimpleCursesWidget):
         (a list of items vertically stacked)
         with selection and active item.
     '''
+
+    ''' items alignment '''
+    LEFT = 0        # default
+    RIGHT = 1
+    CENTER = 2      # not implemented
+
     def __init__(self,
                  Y, X,
                  window,
@@ -235,6 +241,11 @@ class SimpleMenuEntries(SimpleCursesWidget):
                  color_active,
                  color_cursor_selection,
                  color_cursor_active,
+                 selection=0,
+                 active=-1,
+                 margin=0,
+                 align=0,
+                 right_arrow_selects=True,
                  callback_function=None
                  ):
         ''' Initialize the widget.
@@ -244,11 +255,185 @@ class SimpleMenuEntries(SimpleCursesWidget):
             Y, X
                 Y, X position of widget in its parent (int)
             window
-                The window to print items into
+                The window to print items into. It must already exist
+                (this widget will not create a window)
+            items
+                A list or tuple containing the menu items
             color
-                Inactive checkbox color (curses.color_pair)
+                The normal color of the non-selected items
+            color_active
+                The color of the active item (no cursor on it)
+            color_cursor_selection
+                The cursor color
+            color_cursor_active
+                The cursor color when cursor is on the active item
+            selection
+                The id of the currently selected item
+            active
+                The id of the active item
+            margin
+                Number of spaces to add before and after each item caption
+            align
+                Items alignment (left, right, center)
+            right_arrow_selects
+                If True (default) right arrow and "l" selects the new
+                active item (for example a menu). Set it to False if
+                the widget is part of a composite widget.
+            callback_function
+                A function to execute when new active item selected
         '''
-        pass
+        self._Y = Y
+        self._X = X
+        self._win = window
+        self.items = items
+        self._color = color
+        self._color_active = color_active
+        self._color_cursor_active = color_cursor_active
+        self._color_cursor_selection = color_cursor_selection
+        self._margin = margin
+        self._align = align
+        self._right_arrow_selects = right_arrow_selects
+        self._callback_function = callback_function
+        self.selection = selection
+        self.active = active
+        self._focused = True
+        self._enabled = True
+        self._showed = False
+
+        self.set_items()
+
+    @property
+    def enabled(self):
+        '''Returns if the widget is enabled'''
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        self._enabled = value
+        if self._showed:
+            self.show()
+
+    @property
+    def focused(self):
+        '''Returns if the widget has focus'''
+        return self._focused
+
+    @focused.setter
+    def focused(self, value):
+        self._focused = value
+        if self._showed:
+            self.show()
+
+    def set_items(self, items=None):
+        if items:
+            self.items = tuple(items[:])
+        self._item_width = len(max(self.items, key=len))
+        self._maxX = self._item_width + 2 * self._margin
+        self._maxY = len(self.items)
+
+    def show(self):
+        for i, n in enumerate(self.items):
+            if self._align == self.LEFT:
+                disp_item = ' ' * self._margin + n.ljust(self._item_width) + ' ' * self._margin
+            elif self._align == self.RIGHT:
+                disp_item = ' ' * self._margin + n.rjust(self._item_width) + ' ' * self._margin
+            if self._focused and self._enabled:
+                col = self._color
+                if i == self.selection == self.active:
+                    col = self._color_active
+                elif i == self.selection:
+                    col =self._color_cursor_selection
+                elif i == self.active:
+                    col = self._color_cursor_active
+            elif self._enabled:
+                col = self._color
+                if i == self.active:
+                    col = self._color_active
+            else:
+                col = self._color
+            self._win.addstr(i + Y, X, disp_item, color_pair(col))
+        self._showed = True
+
+    def keypress(self, char):
+        ''' SimpleMenuEntries keypress
+
+            Returns
+            -------
+               -1 - Cancel
+                0 - Item selected
+                1 - Continue
+                2 - Display help
+        '''
+        if (not self._focused) or (not self._enabled):
+            return 1
+
+        if char in (
+            curses.KEY_EXIT, ord('q'), 27,
+            ord('h'), curses.KEY_LEFT
+        ):
+            return -1
+
+        elif char == ord('?'):
+            return 2
+
+        elif self._right_arrow_selects and char in (
+            ord('l'), ord(' '), ord('\n'), ord('\r'),
+            curses.KEY_RIGHT, curses.KEY_ENTER
+        ):
+            self.active = self.selection
+            ''' Do not refresh the widget, it will
+                probably be hidden next
+            '''
+            return 0
+
+        elif not self._right_arrow_selects and char in (
+            ord(' '), ord('\n'), ord('\r'),
+            curses.KEY_ENTER
+        ):
+            self.active = self.selection
+            self.show()
+            return 0
+
+        elif char in (ord('g'), curses.KEY_HOME):
+            self.selection = 0
+            self.show()
+
+        elif char in (ord('G'), curses.KEY_END):
+            self.selection = len(self.items) - 1
+            self.show()
+
+        elif char in (curses.KEY_PPAGE, ):
+            if self.selection == 0:
+                self.selection = len(self.items) - 1
+            else:
+                self.selection -= 5
+                if self.selection < 0:
+                    self.selection = 0
+            self.show()
+
+        elif char in (curses.KEY_NPAGE, ):
+            if self.selection == len(self.items) - 1:
+                self.selection = 0
+            else:
+                self.selection += 5
+                if self.selection >= len(self.items):
+                    self.selection = len(self.items) - 1
+            self.show()
+
+        elif char in (ord('k'), curses.KEY_UP):
+            self.selection -= 1
+            if self.selection < 0:
+                self.selection = len(self.items) - 1
+            self.show()
+
+        elif char in (ord('j'), curses.KEY_DOWN):
+            self.selection += 1
+            if self.selection == len(self.items):
+                self.selection = 0
+            self.show()
+
+        return 1
+
 
 class SimpleCursesCheckBox(SimpleCursesWidget):
     '''A very simple checkbox curses widget '''

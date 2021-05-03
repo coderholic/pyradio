@@ -213,6 +213,11 @@ class Player(object):
 
     all_config_files = {}
 
+    ''' the function to call when a station starts to play
+        (playback detected) to add a click to its click counter
+    '''
+    click_station_function = None
+
     def __init__(self,
                  config,
                  outputStream,
@@ -517,6 +522,10 @@ class Player(object):
             except:
                 pass
             self.delay_thread = None
+
+        ''' click station (if applicable) '''
+        if self.click_station_function and self.isPlaying():
+            self.click_station_function()
 
     def _is_in_playback_token(self, a_string):
         for a_token in self._playback_token_tuple:

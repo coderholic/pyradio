@@ -348,6 +348,7 @@ class PyRadio(object):
                 self.ws.STATIONS_ASK_TO_INTEGRATE_MODE: self._print_ask_to_integrate,
                 self.ws.STATIONS_INTEGRATED_MODE: self._print_integrated,
                 self.ws.VOTE_RESULT_MODE: self._print_vote_result,
+                self.ws.BROWSER_SEARCH_MODE: self._browser_search,
                 self.ws.BROWSER_SORT_MODE: self._browser_sort,
                 self.ws.BROWSER_SERVER_SELECTION_MODE: self._browser_server_selection,
                 self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
@@ -600,6 +601,7 @@ class PyRadio(object):
 
             ''' set browser parent so that ir resizes correctly '''
             if self._cnf.browsing_station_service:
+                self._cnf._online_browser.outer_parent = self.outerBodyWin
                 self._cnf._online_browser.parent = self.bodyWin
 
             # txtWin used mainly for error reports
@@ -1136,8 +1138,22 @@ class PyRadio(object):
             self._set_active_stations()
             self.selections[0][2] = self.playing
         self._do_display_notify()
-        if self._cnf.browsing_station_service:
+        try:
+            self.playback_timeout = int(self._cnf.connection_timeout_int)
+        except ValueError:
+            self.playback_timeout = 10
+        if self._cnf.browsing_station_service and self.playback_timeout == 0:
+            ''' if playback timeout check if disabled,
+                click the station immediately (even if the station
+                may turn out to be broken)
+            '''
+            self._click_station()
+
+    def _click_station(self):
+        if self._cnf._online_browser:
             self._cnf._online_browser.click(self.playing)
+        else:
+            self.player.click_station_function = None
 
     def playbackTimeoutCounter(self, *args):
         timeout = args[0]
@@ -3009,7 +3025,11 @@ class PyRadio(object):
                             self._cnf.browsing_station_service = False
                             return
 
+                        ''' make sure we don't send a wrong click '''
+                        self.player.click_station_function = None
+                        logger.error('---=== Click function is None ===---')
                         self._cnf._online_browser.search()
+                        self.player.click_station_function = self._click_station
                     else:
                         self._cnf.remove_from_playlist_history()
                         self._print_unknown_browser_service()
@@ -3024,6 +3044,7 @@ class PyRadio(object):
                 self._cnf.browsing_station_service = False
         elif self._cnf.register_to_open:
             ''' open a register '''
+            self.player.click_station_function = None
             self._playlist_in_editor = self._cnf.register_to_open
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('opening register: ' + self._cnf.register_to_open)
@@ -3058,6 +3079,7 @@ class PyRadio(object):
             #else:
             #    txt = '''Reading playlists. Please wait...'''
             #self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+            self.player.click_station_function = None
             if self.ws.operation_mode != self.ws.PLAYLIST_MODE:
                 self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.stations]
             self.ws.window_mode = self.ws.PLAYLIST_MODE
@@ -3269,6 +3291,7 @@ class PyRadio(object):
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Closing online browser!')
                     self._cnf.online_browser = None
+                    self.player.click_station_function = None
                 ''' check if browsing_station_service has changed '''
                 if not self._cnf.browsing_station_service and \
                         removed_playlist_history_item[-1]:
@@ -4084,6 +4107,18 @@ class PyRadio(object):
     def _browser_server_selection(self):
         self._cnf._online_browser.select_servers()
 
+    def _browser_init_search(self, parent):
+        ''' Start browser search window
+        '''
+        logger.error('DE _browser_init_search()')
+        self._cnf._online_browser.do_search(parent, init=True)
+
+    def _browser_search(self):
+        ''' Redisplay browser search window
+        '''
+        logger.error('DE _browser_search()')
+        self._cnf._online_browser.do_search()
+
     def _browser_sort(self):
         self._cnf._online_browser.sort()
 
@@ -4866,6 +4901,15 @@ class PyRadio(object):
             return
 
 
+        elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
+                char not in self._chars_to_bypass:
+
+            ret = self._cnf._online_browser.keypress(char)
+            if ret == -1:
+                self.ws.close_window()
+                self.refreshBody()
+            return
+
         elif self.ws.operation_mode == self.ws.BROWSER_SORT_MODE and \
                 char not in self._chars_to_bypass:
             ret = self._cnf._online_browser.keypress(char)
@@ -5553,6 +5597,7 @@ class PyRadio(object):
                 self.bodyWin.nodelay(False)
                 if char == -1:
                     ''' ESCAPE '''
+                    self.player.click_station_function = None
                     self._update_status_bar_right(status_suffix='')
                     if self.ws.operation_mode == self.ws.PLAYLIST_MODE:
                         ''' return to stations view '''
@@ -5811,7 +5856,8 @@ class PyRadio(object):
                     self._cnf.jump_tag = -1
                     self._update_status_bar_right(status_suffix='')
                     if self._cnf.browsing_station_service:
-                        self._print_not_implemented_yet()
+                        self.ws.operation_mode = self.ws.BROWSER_SEARCH_MODE
+                        self._browser_init_search(parent=self.outerBodyWin)
                     else:
                         if self._cnf.browsing_station_service or \
                                 self._cnf.is_register:

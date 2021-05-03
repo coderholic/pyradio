@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# http://www.radio-browser.info/webservice#Advanced_station_search
 import curses
 try:
     from dns import resolver
@@ -19,6 +18,7 @@ import logging
 from .player import info_dict_to_list
 from .cjkwrap import cjklen, PY3
 from .countries import countries
+from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -50,14 +50,14 @@ class PyRadioStationsBrowser(object):
 
     BASE_URL = ''
     TITLE = ''
-    _parent = None
+    _parent = _outer_parent = None
     _raw_stations = []
     _last_search = None
     _internal_header_height = 0
     _url_timeout = 3
     _search_timeout = 3
     _vote_callback = None
-    _sort = None
+    _sort = _sort_win = None
 
     # Normally outer boddy (holding box, header, internal header) is
     # 2 chars wider that the internal body (holding the stations)
@@ -98,6 +98,16 @@ class PyRadioStationsBrowser(object):
         self._parent = val
         if self._sort:
             self._sort._parent = val
+
+    @property
+    def outer_parent(self):
+        return self._outer_parent
+
+    @outer_parent.setter
+    def outer_parent(self, val):
+        self._outer_parent = val
+        if self._sort_win:
+            self._sort_win._parent = val
 
     @property
     def outer_internal_body_half_diff(self):
@@ -322,14 +332,16 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         return ''
 
     def click(self, a_station):
-        url = 'http://' + self._server + '/json/url/' + self._raw_stations[a_station]['stationuuid']
-        try:
-            r = self._session.get(url=url, headers=self._headers, timeout=(self._search_timeout, 2 * self._search_timeout))
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Station click result: "{}"'.format(r.text))
-        except:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Station click failed...')
+        def do_click(a_station_uuid):
+            url = 'http://' + self._server + '/json/url/' + a_station_uuid
+            try:
+                r = self._session.get(url=url, headers=self._headers, timeout=(self._search_timeout, 2 * self._search_timeout))
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Station click result: "{}"'.format(r.text))
+            except:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Station click failed...')
+        threading.Thread(target=do_click, args=(self._raw_stations[a_station]['stationuuid'], )).start()
 
     def vote(self, a_station):
         url = 'http://' + self._server + '/json/vote/' + self._raw_stations[a_station]['stationuuid']
@@ -1081,6 +1093,192 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                     self._get_title()
 
         return ret
+
+    def do_search(self, parent=None, init=False):
+        if init:
+            self._sort_win = RadioBrowserInfoSearchWindow(
+                parent=parent,
+                init=init
+            )
+        self.keyboard_handler = self._sort_win
+        self._sort_win.show()
+
+class RadioBrowserInfoSearchWindow(object):
+
+    search_by_items = (
+        'Name',
+        'Tag',
+        'Country',
+        'State',
+        'Codec',
+        'Language',
+    )
+
+    sort_by_items = (
+        'None',
+        'Random',
+        'Name',
+        'Tag',
+        'Country',
+        'State',
+        'Language',
+        'Votes',
+        'Clicks',
+        'Bitrate',
+        'Codec',
+    )
+
+    def __init__(self,
+                 parent,
+                 init=False
+                 ):
+        self._parent = parent
+        self._init = init
+        self._too_small = False
+        self._focus = 0
+        self._win = None
+        self.maxY = self.maxX = 0
+        self.TITLE = ' Radio Browser Search '
+
+        self._widgets = [ None, None, None, None, None ]
+
+    @property
+    def focus(self):
+        return self._focus
+
+    @focus.setter
+    def focus(self, val):
+        if val in range(0, len(self._widgets)):
+            self._focus = val
+        else:
+            if val < 0:
+                self._focus = len(self._widgets) - 1
+            else:
+                self._focus = 0
+        self.show()
+
+    def show(self):
+        pY, pX = self._parent.getmaxyx()
+        logger.error('DE pY = {}, pX = {}'.format(pY, pX))
+        self.Y, self.X = self._parent.getbegyx()
+
+        if self.maxY != pY or self.maxX != pX:
+            logger.error('DE --== SEARCH ==--')
+            pY, pX = self._parent.getmaxyx()
+            logger.error('DE pY = {}, pX = {}'.format(pY, pX))
+            self.maxY = pY
+            self.maxX = pX
+            self._win = self._parent
+            # self._win = curses.newwin(
+            #     self.maxY, self.maxX,
+            #     Y, X
+            # )
+            self._win.bkgdset(' ', curses.color_pair(5))
+            # self._win.erase()
+            self._win.box()
+            self._win.addstr(0, int((self.maxX - len(self.TITLE)) / 2),
+                             self.TITLE,
+                             curses.color_pair(4))
+            self._win.refresh()
+            self._erase_win(self.maxY, self.maxX, self.Y, self.X)
+
+        ''' start displaying things '''
+        self._win.addstr(1, 2, 'Search for', curses.color_pair(5))
+        self._win.addstr(4, 2, 'Search by', curses.color_pair(5))
+
+        for i, n in enumerate(self._widgets):
+            if n is None:
+                if i == 0:
+                    self._widgets[0] = SimpleCursesLineEdit(
+                        parent=self._win,
+                        width=-2,
+                        begin_y=3,
+                        begin_x=2,
+                        boxed=False,
+                        has_history=False,
+                        caption='',
+                        box_color=curses.color_pair(9),
+                        caption_color=curses.color_pair(4),
+                        edit_color=curses.color_pair(9),
+                        cursor_color=curses.color_pair(8),
+                        unfocused_color=curses.color_pair(5),
+                        string_changed_handler='')
+                    self._widgets[0].bracket = False
+                    self._line_editor = self._widgets[0]
+                elif i == 1:
+                    self._widgets[i] = None
+                elif i == 2:
+                    self._widgets[i] = None
+                elif i == 3:
+                    self._widgets[i] = None
+                elif i == 4:
+                    self._widgets[i] = None
+                    ''' add horizontal push buttons '''
+                    self._h_buttons = SimpleCursesHorizontalPushButtons(
+                            Y=6, captions=('OK', 'Cancel'),
+                            color_focused=curses.color_pair(9),
+                            color=curses.color_pair(4),
+                            bracket_color=curses.color_pair(5),
+                            parent=self._win)
+                    #self._h_buttons.calculate_buttons_position()
+                    self._widgets[4], self._widgets[5] = self._h_buttons.buttons
+                    self._widgets[4]._focused = self._widgets[5].focused = False
+
+        self._win.refresh()
+        self._update_focus()
+        if not self._too_small:
+            self._line_editor.show(self._win, opening=False)
+            self._h_buttons.calculate_buttons_position()
+            self._widgets[1].show()
+            self._widgets[2].show()
+        # self._refresh()
+
+    def _update_focus(self):
+        # use _focused here to avoid triggering
+        # widgets' refresh
+        for i, x in enumerate(self._widgets):
+            if x:
+                if self._focus == i:
+                    x._focused = True
+                else:
+                    x._focused = False
+
+    def _erase_win(self, pY, pX, Y, X):
+        empty_win = curses.newwin(
+            pY - 2, pX - 2,
+            Y + 1, X + 1
+        )
+        empty_win.bkgdset(' ', curses.color_pair(5))
+        empty_win.erase()
+        empty_win.refresh()
+
+    def keypress(self, char):
+        ''' RadioBrowserInfoSearchWindow keypress
+
+            Returns
+            -------
+               -1 - Cancel
+                0 - do search
+                1 - Continue
+                2 - Display help
+        '''
+        if self._too_small:
+            return 1
+
+        if char == ord('?'):
+            return 2
+
+        if char in (
+            curses.KEY_EXIT, ord('q'), 27,
+            ord('h'), curses.KEY_LEFT
+        ):
+            return -1
+
+        elif char in (
+            ord('l'), ord(' '), ord('\n'), ord('\r'),
+            curses.KEY_RIGHT, curses.KEY_ENTER
+        ):
+            return 0
 
 class RadioBrowserInfoData(object):
     ''' Read search parameters for radio.browser.info service
