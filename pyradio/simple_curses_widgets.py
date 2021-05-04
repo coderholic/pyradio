@@ -222,6 +222,329 @@ class SimpleCursesWidget(object):
         return False
 
 
+class SimpleCursesWidgetColumns(SimpleCursesWidget):
+    ''' A widget to display selectable items
+        in columns on a foreign window.
+    '''
+
+    ''' items alignment '''
+    LEFT = 0        # default
+    RIGHT = 1
+    CENTER = 2      # not implemented
+
+    ''' items placement '''
+    VERICAL = True
+    HORIZONTAL = False
+
+    def __init__(self,
+                 Y, X,
+                 window,
+                 items,
+                 max_width,
+                 color,
+                 color_active,
+                 color_cursor_selection,
+                 color_cursor_active,
+                 placement=True,
+                 selection=0,
+                 active=-1,
+                 margin=0,
+                 align=0,
+                 callback_function=None
+                 ):
+        ''' Initialize the widget.
+
+            Parameters
+            ----------
+            Y, X
+                Y, X position of widget in its parent (int)
+            window
+                The window to print items into. It must already exist
+                (this widget will not create a window)
+            items
+                A list or tuple containing the menu items
+            max_width
+                The maximum width the widget can occupy.
+                The number of columns is determined by this value
+            color
+                The normal color of the non-selected items
+            color_active
+                The color of the active item (no cursor on it)
+            color_cursor_selection
+                The cursor color
+            color_cursor_active
+                The cursor color when cursor is on the active item
+            placement
+                The items placement when displayed,
+                either vertical (default) or horizontal
+            selection
+                The id of the currently selected item
+            active
+                The id of the active item
+            margin
+                Number of spaces to add before and after each item caption
+            align
+                Items alignment (left, right, center)
+            callback_function
+                A function to execute when new active item selected
+        '''
+        self._Y = Y
+        self._X = X
+        self._win = window
+        self.items = items
+        self._max_width = max_width
+        self._color = color
+        self._color_active = color_active
+        self._color_cursor_active = color_cursor_active
+        self._color_cursor_selection = color_cursor_selection
+        self._margin = margin
+        self._align = align
+        self._placement = placement
+        self._callback_function = callback_function
+        self.selection = selection
+        self.active = active
+        self._focused = True
+        self._enabled = True
+        self._showed = False
+        self._coords = []
+
+        self.set_items()
+
+    @property
+    def margin(self):
+        '''Returns the widget's Y position '''
+        return self._margin
+
+    @property
+    def height(self):
+        '''Returns the widget's Y position '''
+        return self._maxY
+
+    @height.setter
+    def height(self, value):
+        self._maxY = value
+
+    @property
+    def width(self):
+        '''Returns the widget's X position '''
+        return self._maxX
+
+    @width.setter
+    def width(self, value):
+        self._maxX = value
+
+    @property
+    def Y(self):
+        '''Returns the widget's Y position '''
+        return self._Y
+
+    @Y.setter
+    def Y(self, value):
+        self._Y = value
+
+    @property
+    def X(self):
+        '''Returns the widget's X position '''
+        return self._X
+
+    @X.setter
+    def X(self, value):
+        self._X = value
+
+    @property
+    def window(self):
+        '''Returns if the widget is enabled'''
+        return self._enabled
+
+    @window.setter
+    def window(self, value):
+        self._win = value
+        # if self._showed:
+        #     self.show()
+
+    @property
+    def enabled(self):
+        '''Returns if the widget is enabled'''
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        self._enabled = value
+        # if self._showed:
+        #     self.show()
+
+    @property
+    def focused(self):
+        '''Returns if the widget has focus'''
+        return self._focused
+
+    @focused.setter
+    def focused(self, value):
+        self._focused = value
+        # if self._showed:
+        #     self.show()
+
+    @property
+    def max_width(self):
+        '''Returns if the widget has focus'''
+        return self._max_width
+
+    @max_width.setter
+    def max_width(self, value):
+        self._max_width = value
+        self.set_items()
+
+    def set_items(self, items=None):
+        if items:
+            self.items = tuple(items[:])
+        self._item_width = len(max(self.items, key=len)) + 2 * self._margin
+        self._columns = int((self._max_width / self._item_width))
+        if self._columns == 1:
+            self._columns = 2
+        self._maxX = self._columns * self._item_width
+        self._maxY = int(len(self.items) / self._columns)
+        if len(self.items) % self._columns != 0:
+            self._maxY += 1
+        self._coords = []
+
+    def show(self):
+        logger.error('DE columns = {}, rows ={}'.format(self._columns, self._maxY))
+        for i, n in enumerate(self.items):
+            ''' create string to display '''
+            if self._align == self.LEFT:
+                disp_item = ' ' * self._margin + n.ljust(self._item_width - 2 * self._margin) + ' ' * self._margin
+            elif self._align == self.RIGHT:
+                disp_item = ' ' * self._margin + n.rjust(self._item_width - 2 * self._margin) + ' ' * self._margin
+            else:
+                disp_item = n.center(self._item_width)
+
+            ''' find color to use '''
+            if self._focused and self._enabled:
+                col = self._color
+                if i == self.selection == self.active:
+                    col = self._color_active
+                elif i == self.selection:
+                    col =self._color_cursor_selection
+                elif i == self.active:
+                    col = self._color_cursor_active
+            elif self._enabled:
+                col = self._color
+                if i == self.active:
+                    col = self._color_active
+            else:
+                col = self._color
+
+            ''' fill coords list, if not filled yet '''
+            if len(self._coords) != len(self.items):
+                if i == 0:
+                    column = row = 0
+                else:
+                    if self._placement == self.VERICAL:
+                        row = int(i / self._maxY)
+                        column = int(i % self._maxY)
+                    else:
+                        column = int(i / self._columns)
+                        row = int(i % self._columns)
+                logger.error('DE i = {}, column = {}, row = {}'.format(i, column, row))
+
+                self._coords.append((column, row))
+
+            ''' display string '''
+            try:
+                self._win.addstr(
+                    self._Y + self._coords[i][0],
+                    self._X + self._coords[i][1] * self._item_width,
+                    disp_item,
+                    col
+                )
+            except:
+                logger.error('error displaying item {}'.format(i))
+
+        self._showed = True
+        for i, n in enumerate(self._coords):
+            logger.error('{}: {}, {}'.format(i, *n))
+
+    def keypress(self, char):
+        ''' SimpleMenuEntries keypress
+
+            Returns
+            -------
+               -1 - Cancel
+                0 - Item selected
+                1 - Continue
+                2 - Display help
+        '''
+        if (not self._focused) or (not self._enabled):
+            return 1
+
+        if char in (
+            curses.KEY_EXIT, ord('q'), 27,
+            ord('h'), curses.KEY_LEFT
+        ):
+            return -1
+
+        elif char == ord('?'):
+            return 2
+
+        elif self._right_arrow_selects and char in (
+            ord('l'), ord(' '), ord('\n'), ord('\r'),
+            curses.KEY_RIGHT, curses.KEY_ENTER
+        ):
+            self.active = self.selection
+            ''' Do not refresh the widget, it will
+                probably be hidden next
+            '''
+            return 0
+
+        elif not self._right_arrow_selects and char in (
+            ord(' '), ord('\n'), ord('\r'),
+            curses.KEY_ENTER
+        ):
+            self.active = self.selection
+            self.show()
+            return 0
+
+        elif char in (ord('g'), curses.KEY_HOME):
+            self.selection = 0
+            self.show()
+
+        elif char in (ord('G'), curses.KEY_END):
+            self.selection = len(self.items) - 1
+            self.show()
+
+        elif char in (curses.KEY_PPAGE, ):
+            if self.selection == 0:
+                self.selection = len(self.items) - 1
+            else:
+                self.selection -= 5
+                if self.selection < 0:
+                    self.selection = 0
+            self.show()
+
+        elif char in (curses.KEY_NPAGE, ):
+            if self.selection == len(self.items) - 1:
+                self.selection = 0
+            else:
+                self.selection += 5
+                if self.selection >= len(self.items):
+                    self.selection = len(self.items) - 1
+            self.show()
+
+        elif char in (ord('k'), curses.KEY_UP):
+            self.selection -= 1
+            if self.selection < 0:
+                self.selection = len(self.items) - 1
+            self.show()
+
+        elif char in (ord('j'), curses.KEY_DOWN):
+            self.selection += 1
+            if self.selection == len(self.items):
+                self.selection = 0
+            self.show()
+
+        return 1
+
+
 class SimpleMenuEntries(SimpleCursesWidget):
     ''' A menu entries widget
         (a list of items vertically stacked)
@@ -303,6 +626,53 @@ class SimpleMenuEntries(SimpleCursesWidget):
         self.set_items()
 
     @property
+    def height(self):
+        '''Returns the widget's Y position '''
+        return self._maxY
+
+    @height.setter
+    def height(self, value):
+        self._maxY = val
+
+    @property
+    def width(self):
+        '''Returns the widget's X position '''
+        return self._maxX
+
+    @width.setter
+    def width(self, value):
+        self._maxX = val
+
+    @property
+    def Y(self):
+        '''Returns the widget's Y position '''
+        return self._Y
+
+    @Y.setter
+    def Y(self, value):
+        self._Y = val
+
+    @property
+    def X(self):
+        '''Returns the widget's X position '''
+        return self._X
+
+    @X.setter
+    def X(self, value):
+        self._X = val
+
+    @property
+    def window(self):
+        '''Returns if the widget is enabled'''
+        return self._enabled
+
+    @window.setter
+    def window(self, value):
+        self._win = value
+        if self._showed:
+            self.show()
+
+    @property
     def enabled(self):
         '''Returns if the widget is enabled'''
         return self._enabled
@@ -351,7 +721,7 @@ class SimpleMenuEntries(SimpleCursesWidget):
                     col = self._color_active
             else:
                 col = self._color
-            self._win.addstr(i + Y, X, disp_item, color_pair(col))
+            self._win.addstr(i + self._Y, self._X, disp_item, col)
         self._showed = True
 
     def keypress(self, char):
