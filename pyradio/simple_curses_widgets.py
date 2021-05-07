@@ -46,7 +46,7 @@ class SimpleCursesWidget(object):
 
     @Y.setter
     def Y(self, value):
-        raise ValueError('parameter is read only')
+        self._Y = value
 
     @property
     def X(self):
@@ -54,7 +54,7 @@ class SimpleCursesWidget(object):
 
     @X.setter
     def X(self, value):
-        raise ValueError('parameter is read only')
+        self._X = value
 
     @property
     def height(self):
@@ -829,6 +829,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
                 Inactive checkbox color (curses.color_pair)
             bracket_color
                 The color of the brackets (curses.color_pair)
+                Also the color to use when widget is disabled
             char
                 The character to indicate a checked checkbox (string)
             checked
@@ -899,6 +900,14 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         self._width = None
         self._width = len(self._caption) + 4
         self._win = curses.newwin(1, self._width, self._Y, self._X)
+
+    def move(self, new_Y=None, new_X=None):
+        if new_Y:
+            self._Y = new_Y
+        if new_X:
+            self._X = new_X
+        if self._win:
+            self._win.mvwin(self._Y, self._X)
 
     def show(self):
         '''Put the widget on the screen'''

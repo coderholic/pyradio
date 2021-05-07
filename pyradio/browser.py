@@ -273,6 +273,13 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 'post_data': {'order': 'votes', 'reverse': 'true'},
             })
             self._search_history_index = 1
+
+            self._search_history.append({
+                'type': 'search',
+                'term': '',
+                'post_data': {'name': 'jazsssss'},
+            })
+            self._search_history_index = 2
             return True
         return False
 
@@ -477,9 +484,12 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         try:
             # r = requests.get(url=url)
             r = self._session.get(url=url, headers=self._headers, params=post_data, timeout=(self._search_timeout, 2 * self._search_timeout))
+            logger.error('== request sent ')
             r.raise_for_status()
+            logger.error('== request raised ')
             self._raw_stations = self._extract_data(json.loads(r.text))
-            # logger.error('DE \n\n{}'.format(self._raw_stations))
+            logger.error('== got reply')
+            logger.error('DE \n\n{}'.format(self._raw_stations))
             ret = True, go_back_in_history
         except requests.exceptions.RequestException as e:
             if logger.isEnabledFor(logging.ERROR):
@@ -526,6 +536,14 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 self.search_by = 'language'
             elif a_type == 'tags':
                 self.search_by = 'tags'
+
+        if self.search_by is None:
+            if p_data:
+                if 'name' in p_data.keys():
+                    self.search_by = 'name'
+
+        if self.search_by is None:
+            self.search_by = 'name'
 
     def get_next(self, search_term, start=0, stop=None):
         if search_term:
@@ -624,6 +642,13 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 a_search['term']
             )
             self._search_type = 1
+
+        elif a_search['type'] == 'search':
+            url = 'http://{0}{1}'.format(
+                self._server,
+                '/json/stations/search'
+            )
+            self._search_type = 2
 
         return url
 
@@ -1105,14 +1130,21 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
 
 class RadioBrowserInfoSearchWindow(object):
 
+    # search_by_items = (
+    #     'No search term',
+    #     'Name',
+    #     'Tag',
+    #     'Country',
+    #     'State',
+    #     'Codec',
+    #     'Language',
+    # )
+
     search_by_items = (
-        'No search term',
-        'Name',
-        'Tag',
-        'Country',
-        'State',
-        'Codec',
-        'Language',
+        'Votes',
+        'Clicks',
+        'Recent click',
+        'Recently changed'
     )
 
     sort_by_items = (
@@ -1195,22 +1227,27 @@ class RadioBrowserInfoSearchWindow(object):
         for i, n in enumerate(self._widgets):
             if n is None:
                 if i == 0:
-                    self._widgets[0] = SimpleCursesLineEdit(
-                        parent=self._win,
-                        width=-2,
-                        begin_y=3,
-                        begin_x=2,
-                        boxed=False,
-                        has_history=False,
-                        caption='',
-                        box_color=curses.color_pair(9),
-                        caption_color=curses.color_pair(4),
-                        edit_color=curses.color_pair(9),
-                        cursor_color=curses.color_pair(8),
-                        unfocused_color=curses.color_pair(5),
-                        string_changed_handler='')
-                    self._widgets[0].bracket = False
-                    self._line_editor = self._widgets[0]
+                    self._widgets[2] = SimpleCursesCheckBox(
+                        1, 2, 'Display by',
+                        curses.color_pair(9),
+                        curses.color_pair(4),
+                        curses.color_pair(5))
+                    #self._widgets[0] = SimpleCursesLineEdit(
+                    #    parent=self._win,
+                    #    width=-2,
+                    #    begin_y=3,
+                    #    begin_x=2,
+                    #    boxed=False,
+                    #    has_history=False,
+                    #    caption='',
+                    #    box_color=curses.color_pair(9),
+                    #    caption_color=curses.color_pair(4),
+                    #    edit_color=curses.color_pair(9),
+                    #    cursor_color=curses.color_pair(8),
+                    #    unfocused_color=curses.color_pair(5),
+                    #    string_changed_handler='')
+                    #self._widgets[0].bracket = False
+                    #self._line_editor = self._widgets[0]
                 elif i == 1:
                     ''' search by '''
                     self._widgets[i] = SimpleCursesWidgetColumns(
@@ -1249,7 +1286,7 @@ class RadioBrowserInfoSearchWindow(object):
                 elif i == 4:
                     '''' sort ascending / descending '''
                     self._widgets[4] = SimpleCursesCheckBox(
-                            self._widgets[3].Y + self._widgets[3].height + 2, self._widgets[3].X - 2 + self._widgets[3].margin,
+                            self._widgets[3].Y + self._widgets[3].height + 1, self._widgets[3].X - 2 + self._widgets[3].margin,
                             'Sort descending',
                             curses.color_pair(9), curses.color_pair(4), curses.color_pair(5))
                 elif i == 5:
@@ -1289,16 +1326,15 @@ class RadioBrowserInfoSearchWindow(object):
             self._h_buttons.calculate_buttons_position()
             for n in range(1, len(self._widgets)):
                 if self._widgets[n]:
-                    if i in (2, 4):
-                        if i == 2:
+                    if n in (2, 4):
+                        if n == 2:
                             self._widgets[2].Y = self._widgets[1].Y + self._widgets[1].height + 2
                         else:
-                            self._widgets[4].Y = self._widgets[3].Y + self._widgets[3].height + 2
+                            self._widgets[4].Y = self._widgets[3].Y + self._widgets[3].height + 1
                             self._widgets[4].X = self._widgets[3].X - 2 + self._widgets[3].margin
-                        self._widgets[i].window = self._win
-                        self._widgets[i].resize()
-                    else:
-                        self._widgets[n].show()
+                        self._widgets[n].move()
+                        # self._widgets[n].resize()
+                    self._widgets[n].show()
         self._win.refresh()
 
         # self._refresh()

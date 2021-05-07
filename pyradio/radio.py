@@ -1142,18 +1142,11 @@ class PyRadio(object):
             self.playback_timeout = int(self._cnf.connection_timeout_int)
         except ValueError:
             self.playback_timeout = 10
-        if self._cnf.browsing_station_service and self.playback_timeout == 0:
-            ''' if playback timeout check if disabled,
-                click the station immediately (even if the station
-                may turn out to be broken)
-            '''
-            self._click_station()
+        self._click_station()
 
     def _click_station(self):
         if self._cnf._online_browser:
             self._cnf._online_browser.click(self.playing)
-        else:
-            self.player.click_station_function = None
 
     def playbackTimeoutCounter(self, *args):
         timeout = args[0]
@@ -3026,10 +3019,7 @@ class PyRadio(object):
                             return
 
                         ''' make sure we don't send a wrong click '''
-                        self.player.click_station_function = None
-                        logger.error('---=== Click function is None ===---')
                         self._cnf._online_browser.search()
-                        self.player.click_station_function = self._click_station
                     else:
                         self._cnf.remove_from_playlist_history()
                         self._print_unknown_browser_service()
@@ -3044,7 +3034,6 @@ class PyRadio(object):
                 self._cnf.browsing_station_service = False
         elif self._cnf.register_to_open:
             ''' open a register '''
-            self.player.click_station_function = None
             self._playlist_in_editor = self._cnf.register_to_open
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('opening register: ' + self._cnf.register_to_open)
@@ -3079,7 +3068,6 @@ class PyRadio(object):
             #else:
             #    txt = '''Reading playlists. Please wait...'''
             #self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
-            self.player.click_station_function = None
             if self.ws.operation_mode != self.ws.PLAYLIST_MODE:
                 self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self._cnf.stations]
             self.ws.window_mode = self.ws.PLAYLIST_MODE
@@ -3125,28 +3113,28 @@ class PyRadio(object):
             self._cnf.browsing_station_service = False
             return
 
+        ''' get stations with online field '''
         tmp_stations = self._cnf._online_browser.stations(2)
 
         ''' set browser parent so that it resizes correctly '''
         if self._cnf.browsing_station_service:
             self._cnf._online_browser.parent = self.bodyWin
 
-        if tmp_stations:
-            self._cnf.stations = tmp_stations[:]
-            self.stations = self._cnf.stations
-            self._cnf._online_browser.vote_callback = self._print_vote_result
-            self._cnf.number_of_stations = len(self.stations)
-            self._cnf.dirty_playlist = False
-            #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
-            self._cnf.station_path = self._cnf.online_browser.BASE_URL
-            self._cnf.station_title = self._cnf.online_browser.title
-            self.number_of_items = len(self.stations)
-            self.selection = 0
-            self.startPos = 0
-            self.setupAndDrawScreen()
-            self.detect_if_player_exited = False
-            self._align_stations_and_refresh(self.ws.operation_mode)
-            self._set_active_stations()
+        self._cnf.stations = tmp_stations[:]
+        self.stations = self._cnf.stations
+        self._cnf._online_browser.vote_callback = self._print_vote_result
+        self._cnf.number_of_stations = len(self.stations)
+        self._cnf.dirty_playlist = False
+        #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
+        self._cnf.station_path = self._cnf.online_browser.BASE_URL
+        self._cnf.station_title = self._cnf.online_browser.title
+        self.number_of_items = len(self.stations)
+        self.selection = 0
+        self.startPos = 0
+        self.setupAndDrawScreen()
+        self.detect_if_player_exited = False
+        self._align_stations_and_refresh(self.ws.operation_mode)
+        self._set_active_stations()
 
     def _open_playlist_from_history(self,
                                     reset=False,
@@ -3291,7 +3279,6 @@ class PyRadio(object):
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Closing online browser!')
                     self._cnf.online_browser = None
-                    self.player.click_station_function = None
                 ''' check if browsing_station_service has changed '''
                 if not self._cnf.browsing_station_service and \
                         removed_playlist_history_item[-1]:
@@ -5597,7 +5584,6 @@ class PyRadio(object):
                 self.bodyWin.nodelay(False)
                 if char == -1:
                     ''' ESCAPE '''
-                    self.player.click_station_function = None
                     self._update_status_bar_right(status_suffix='')
                     if self.ws.operation_mode == self.ws.PLAYLIST_MODE:
                         ''' return to stations view '''
@@ -6474,6 +6460,12 @@ class PyRadio(object):
                             self.__displayBodyLine(lineNum, pad, None)
                             lineNum += 1
                     break
+        else:
+            ''' we have no stations to display '''
+            if self._cnf.browsing_station_service:
+                ''' we have to display emplty lines '''
+                for n in range(0, self.bodyMaxY + 1):
+                    self.__displayBodyLine(n, pad, None)
 
         if self._cnf.browsing_station_service:
             if self._cnf.internal_header_height > 0:

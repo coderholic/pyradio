@@ -12,6 +12,13 @@ from .common import *
 
 logger = logging.getLogger(__name__)
 
+def hex_color_to_rgb(a_color_string):
+    return tuple(int(a_color_string[i:i+2], 16) for i in (0, 2, 4))
+
+def hex_color_to_curses_rgb(a_color_string):
+    rgb = hex_color_to_rgb(a_color_string)
+    return tuple(int(round(x * 1000.0 / 255.0)) for x in rgb)
+
 
 class PyRadioTheme(object):
     _colors = {}
@@ -387,7 +394,7 @@ class PyRadioThemeReadWrite(object):
         for a_check in checks:
             if a_theme_name.endswith(a_check):
                 try:
-                    num_of_colors = int(a_check[1:])
+                    num_of_colors = int(a_check[1:]) - 1
                 except:
                     pass
                 break
@@ -395,7 +402,7 @@ class PyRadioThemeReadWrite(object):
         if num_of_colors == 0 or num_of_colors not in checks:
             num_of_colors = max_color
             for check in checks:
-                if num_of_colors <= check:
+                if num_of_colors < check:
                     return check
         return num_of_colors
 
