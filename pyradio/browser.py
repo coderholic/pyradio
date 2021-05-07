@@ -240,6 +240,16 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                  pyradio_info=None,
                  search_return_function=None,
                  message_function=None):
+        '''
+            When first_search is True, it means that we are opening
+            the browser. If empty result is returned by the first
+            browser search, we show an empty stations' list.
+            if it is False and an empty result is returned by the first
+            browser search, which means we are already in the browser's
+            search screen, we just display the 'no result message'.
+            All of this is done at radio.py
+        '''
+        self.first_search = True
         self._cnf = config
         if session:
             self._session = session
@@ -272,14 +282,13 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 'term': 'big band',
                 'post_data': {'order': 'votes', 'reverse': 'true'},
             })
-            self._search_history_index = 1
 
             self._search_history.append({
                 'type': 'search',
                 'term': '',
-                'post_data': {'name': 'jazsssss'},
+                'post_data': {'name': 'jaz'},
             })
-            self._search_history_index = 2
+            self._search_history_index = 1
             return True
         return False
 
@@ -465,8 +474,6 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         self._old_search_by = self.search_by
         self._sort = None
         url = self._format_url(self._search_history[self._search_history_index])
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('== search url = "{}"'.format(url))
         post_data = {}
         if self._search_history[self._search_history_index]['post_data']:
             post_data = deepcopy(self._search_history[self._search_history_index]['post_data'])
@@ -477,25 +484,31 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 post_data['limit'] = 100
             if not 'hidebroken' not in post_data.keys():
                 post_data['hidebroken'] = True
-        # url = 'https://' + self._server + '/json/stations/search'
+
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('== headers = "{}"'.format(self._headers))
-            logger.debug('== post_data = "{}"'.format(post_data))
+            logger.debug('  == history = {}'.format(self._search_history[self._search_history_index]))
+            logger.debug('  == url = "{}"'.format(url))
+            logger.debug('  == headers = "{}"'.format(self._headers))
+            logger.debug('  == post_data = "{}"'.format(post_data))
+
+        ''' keep server results here '''
+        new_raw_stations = []
+
         try:
-            # r = requests.get(url=url)
             r = self._session.get(url=url, headers=self._headers, params=post_data, timeout=(self._search_timeout, 2 * self._search_timeout))
-            logger.error('== request sent ')
             r.raise_for_status()
-            logger.error('== request raised ')
-            self._raw_stations = self._extract_data(json.loads(r.text))
-            logger.error('== got reply')
-            logger.error('DE \n\n{}'.format(self._raw_stations))
-            ret = True, go_back_in_history
+            new_raw_stations = self._extract_data(json.loads(r.text))
+            # logger.error('DE \n\n{}'.format(new_raw_stations))
+            ret = True, len(new_raw_stations), go_back_in_history
         except requests.exceptions.RequestException as e:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error(e)
             self._raw_stations = []
-            ret = False, go_back_in_history
+            ret = False, 0, go_back_in_history
+
+        ''' use server result '''
+        if len(new_raw_stations) > 0:
+            self._raw_stations = new_raw_stations[:]
 
         if self._search_return_function:
             self._search_return_function(ret)
@@ -506,6 +519,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             values from a search dict.
             To be used with the sort function
         '''
+        logger.error('DE search in function is "{}"'.format(a_search))
         a_term = a_search['term']
         p_data = a_search['post_data']
         self.search_by = None
@@ -516,12 +530,14 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             if 'reverse' in a_search['post_data']:
                 self.reverse = True if a_search['post_data']['reverse'] == 'true' else False
 
+        logger.error('DE search by was "{}"'.format(self.search_by))
         if self.search_by is None:
             a_type = a_search['type']
             if a_type == 'byname':
                 self.search_by = 'name'
-            elif a_type == 'topvotes':
+            elif a_type == 'topvote':
                 self.search_by = 'votes'
+                logger.error('DE search by is votes')
             elif a_type == 'clickcount':
                 self.search_by = 'clickcount'
             elif a_type == 'bitrate':
@@ -541,9 +557,13 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             if p_data:
                 if 'name' in p_data.keys():
                     self.search_by = 'name'
+                    logger.error('DE search by is name (default)')
 
         if self.search_by is None:
             self.search_by = 'name'
+            logger.error('DE search by is name (default)')
+
+        logger.error('DE search by is "{}"'.format(self.search_by))
 
     def get_next(self, search_term, start=0, stop=None):
         if search_term:
@@ -1227,27 +1247,27 @@ class RadioBrowserInfoSearchWindow(object):
         for i, n in enumerate(self._widgets):
             if n is None:
                 if i == 0:
-                    self._widgets[2] = SimpleCursesCheckBox(
-                        1, 2, 'Display by',
-                        curses.color_pair(9),
-                        curses.color_pair(4),
-                        curses.color_pair(5))
-                    #self._widgets[0] = SimpleCursesLineEdit(
-                    #    parent=self._win,
-                    #    width=-2,
-                    #    begin_y=3,
-                    #    begin_x=2,
-                    #    boxed=False,
-                    #    has_history=False,
-                    #    caption='',
-                    #    box_color=curses.color_pair(9),
-                    #    caption_color=curses.color_pair(4),
-                    #    edit_color=curses.color_pair(9),
-                    #    cursor_color=curses.color_pair(8),
-                    #    unfocused_color=curses.color_pair(5),
-                    #    string_changed_handler='')
-                    #self._widgets[0].bracket = False
-                    #self._line_editor = self._widgets[0]
+                    #self._widgets[2] = SimpleCursesCheckBox(
+                    #    1, 2, 'Display by',
+                    #    curses.color_pair(9),
+                    #    curses.color_pair(4),
+                    #    curses.color_pair(5))
+                    self._widgets[0] = SimpleCursesLineEdit(
+                        parent=self._win,
+                        width=-2,
+                        begin_y=3,
+                        begin_x=2,
+                        boxed=False,
+                        has_history=False,
+                        caption='',
+                        box_color=curses.color_pair(9),
+                        caption_color=curses.color_pair(4),
+                        edit_color=curses.color_pair(9),
+                        cursor_color=curses.color_pair(8),
+                        unfocused_color=curses.color_pair(5),
+                        string_changed_handler='')
+                    self._widgets[0].bracket = False
+                    self._line_editor = self._widgets[0]
                 elif i == 1:
                     ''' search by '''
                     self._widgets[i] = SimpleCursesWidgetColumns(

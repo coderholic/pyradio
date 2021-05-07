@@ -1605,13 +1605,27 @@ class PyRadio(object):
         #arg[1].release()
         self.refreshBody()
 
+    def _show_no_browser_results(self):
+        self._show_notification_with_delay(delay=1.5,
+                txt='''
+                _____Query fetched no results!!!______
+
+                __Please change your search criteria__
+                __________and try again...
+                ''',
+                mode_to_set=self.ws.NO_BROWSER_SEARCH_RESULT_NOTIFICATION,
+                callback_function=self.closeTimedNotificationWindow)
+
     def _show_no_more_playlist_history(self):
         self._show_notification_with_delay(
                 txt='___Top of history reached!!!___',
                 mode_to_set=self.ws.HISTORY_EMPTY_NOTIFICATION,
-                callback_function=self.closeHistoryEmptyNotification)
+                callback_function=self.closeTimedNotificationWindow)
 
-    def closeHistoryEmptyNotification(self):
+    def closeTimedNotificationWindow(self):
+        ''' closes a window opend by _show_notification_with_delay
+            (threaded delayed notification)
+        '''
         self.ws.close_window()
         self.refreshBody()
 
@@ -3104,7 +3118,7 @@ class PyRadio(object):
         '''
 
         if not ret[0]:
-            if ret[1]:
+            if ret[2]:
                 self._goto_history_back_handler()
                 self._print_service_connection_error()
             else:
@@ -3120,21 +3134,34 @@ class PyRadio(object):
         if self._cnf.browsing_station_service:
             self._cnf._online_browser.parent = self.bodyWin
 
-        self._cnf.stations = tmp_stations[:]
-        self.stations = self._cnf.stations
-        self._cnf._online_browser.vote_callback = self._print_vote_result
-        self._cnf.number_of_stations = len(self.stations)
-        self._cnf.dirty_playlist = False
-        #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
-        self._cnf.station_path = self._cnf.online_browser.BASE_URL
-        self._cnf.station_title = self._cnf.online_browser.title
-        self.number_of_items = len(self.stations)
-        self.selection = 0
-        self.startPos = 0
-        self.setupAndDrawScreen()
-        self.detect_if_player_exited = False
-        self._align_stations_and_refresh(self.ws.operation_mode)
-        self._set_active_stations()
+        if ret[1] == 0 and not self._cnf._online_browser.first_search:
+            logger.error('DE --== no items found ==--\noperating mode = {}'.format(self.ws.operation_mode))
+            ''' go back to search mode '''
+            self.ws.operation_mode = self.ws.BROWSER_SEARCH_MODE
+            ''' display no results message '''
+            self._show_no_browser_results()
+
+        else:
+            self._cnf.stations = tmp_stations[:]
+            self.stations = self._cnf.stations
+            self._cnf._online_browser.vote_callback = self._print_vote_result
+            self._cnf.number_of_stations = len(self.stations)
+            self._cnf.dirty_playlist = False
+            #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
+            self._cnf.station_path = self._cnf.online_browser.BASE_URL
+            self._cnf.station_title = self._cnf.online_browser.title
+            self.number_of_items = len(self.stations)
+            self.selection = 0
+            self.startPos = 0
+            self.setupAndDrawScreen()
+            self.detect_if_player_exited = False
+            self._align_stations_and_refresh(self.ws.operation_mode)
+            self._set_active_stations()
+
+        ''' all consecutive searches will display the
+            the 'no result' message'
+        '''
+        self._cnf._online_browser.first_search = False
 
     def _open_playlist_from_history(self,
                                     reset=False,
@@ -4892,7 +4919,11 @@ class PyRadio(object):
                 char not in self._chars_to_bypass:
 
             ret = self._cnf._online_browser.keypress(char)
-            if ret == -1:
+            if ret == 0:
+                self._cnf._online_browser._search_history_index = 2
+                self._cnf._online_browser.search()
+
+            elif ret == -1:
                 self.ws.close_window()
                 self.refreshBody()
             return
