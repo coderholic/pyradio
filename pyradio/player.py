@@ -1632,13 +1632,7 @@ class MpvPlayer(Player):
         try:
             sock.connect(server_address)
             return sock
-        except socket.gaierror as gaierror:
-            sock.close()
-            return None
-        except socket.herror as herror:
-            sock.close()
-            return None
-        except socket.error as err:
+        except:
             sock.close()
             return None
 

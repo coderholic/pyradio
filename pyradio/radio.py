@@ -813,7 +813,7 @@ class PyRadio(object):
                 w_header, curses.color_pair(4)
             )
 
-    def __displayBodyLine(self, lineNum, pad, station):
+    def __displayBodyLine(self, lineNum, pad, station, return_line=False):
         col = curses.color_pair(5)
         sep_col = None
         # logger.error('DE selection  = {0},{1},{2},{3}'.format(
@@ -826,31 +826,33 @@ class PyRadio(object):
         #     self.selections[0][0],
         #     self.selections[0][1],
         #     self.selections[0][2]))
-        if station:
-            if lineNum + self.startPos == self.selection and \
-                    self.selection == self.playing:
-                col = curses.color_pair(9)
-                ''' initialize col_sep here to have separated cursor '''
-                sep_col = curses.color_pair(5)
-                self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
-            elif lineNum + self.startPos == self.selection:
-                col = curses.color_pair(6)
-                ''' initialize col_sep here to have separated cursor '''
-                sep_col = curses.color_pair(5)
-                self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
-            elif lineNum + self.startPos == self.playing:
-                col = curses.color_pair(4)
-                sep_col = curses.color_pair(5)
-                self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
-        else:
-            ''' this is only for a browser service '''
-            col = curses.color_pair(5)
+        if not return_line:
+            if station:
+                if lineNum + self.startPos == self.selection and \
+                        self.selection == self.playing:
+                    col = curses.color_pair(9)
+                    ''' initialize col_sep here to have separated cursor '''
+                    sep_col = curses.color_pair(5)
+                    self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+                elif lineNum + self.startPos == self.selection:
+                    col = curses.color_pair(6)
+                    ''' initialize col_sep here to have separated cursor '''
+                    sep_col = curses.color_pair(5)
+                    self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+                elif lineNum + self.startPos == self.playing:
+                    col = curses.color_pair(4)
+                    sep_col = curses.color_pair(5)
+                    self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+            else:
+                ''' this is only for a browser service '''
+                col = curses.color_pair(5)
 
         ## self.maxY, self.maxX = self.stdscr.getmaxyx()
         ## logger.error('DE ==== width = {}'.format(self.maxX - 2))
         #if self.ws.operation_mode == self.ws.PLAYLIST_MODE or \
         #        self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
         #            self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
+
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
             line = self._format_playlist_line(lineNum, pad, station)
             try:
@@ -864,18 +866,25 @@ class PyRadio(object):
                 else:
                     played, line = self._cnf.online_browser.format_empty_line(self.bodyMaxX)
             else:
-                line = self._format_station_line("{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0]))
+                if station:
+                    line = self._format_station_line("{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0]))
+                else:
+                    line = ' ' * (self.bodyMaxX - 2)
+
+            if return_line:
+                ''' return empty line '''
+                return line
+
             try:
                 self.bodyWin.addstr(lineNum, 0, line, col)
             except:
                 pass
 
-        if station:
-            if self._cnf.browsing_station_service and sep_col:
-                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
-                if ticks:
-                    for n in ticks:
-                        self.bodyWin.chgat(lineNum, n, 1, sep_col)
+        if station and self._cnf.browsing_station_service and sep_col:
+            ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
+            if ticks:
+                for n in ticks:
+                    self.bodyWin.chgat(lineNum, n, 1, sep_col)
 
     def run(self):
         self._register_signals_handlers()
@@ -2997,7 +3006,8 @@ class PyRadio(object):
 
             To be used with onlines services only
         '''
-        txt = '''Connecting to service. Please wait...'''
+        txt = '''Connecting to service.
+                 ____Please wait...'''
         self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
 
     def _open_playlist(self, a_url=None):
@@ -6466,8 +6476,14 @@ class PyRadio(object):
     def _redisplay_stations_and_playlists(self):
         if self._limited_height_mode:
             return
-        self.bodyWin.erase()
         self.outerBodyWin.erase()
+        if self._redisplay_list[-1][0] ==self.ws.BROWSER_SEARCH_MODE and \
+                self._redisplay_list[-2][0] == self.ws.NORMAL_MODE:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('---=== Not displaying stations (Radio Browser window follows) ===---')
+            self.outerBodyWin.refresh()
+            return
+        self.bodyWin.erase()
         if self.maxY > 2:
             self.outerBodyWin.box()
         try:
@@ -6475,13 +6491,6 @@ class PyRadio(object):
             self.bodyWin.move(0, 0)
         except:
             pass
-        if self._redisplay_list[-1][0] ==self.ws.BROWSER_SEARCH_MODE and \
-                self._redisplay_list[-2][0] == self.ws.NORMAL_MODE:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('---=== Not displaying stations (Radio Browser window follows) ===---')
-            self.outerBodyWin.refresh()
-            self.bodyWin.refresh()
-            return
         self._print_body_header()
         pad = len(str(self.startPos + self.bodyMaxY))
 
@@ -6493,17 +6502,25 @@ class PyRadio(object):
                     self.__displayBodyLine(lineNum, pad, self.stations[i])
                 else:
                     ''' display browser empty lines (station=None) '''
+                    line = self.__displayBodyLine(0, pad, None, return_line = True)
                     if self._cnf.browsing_station_service:
                         for n in range(i+1, self.bodyMaxY + 1):
-                            self.__displayBodyLine(lineNum, pad, None)
+                            try:
+                                self.bodyWin.addstr(lineNum, 0, line, curses.color_pair(5))
+                            except:
+                                pass
                             lineNum += 1
                     break
         else:
             ''' we have no stations to display '''
             if self._cnf.browsing_station_service:
                 ''' we have to display emplty lines '''
+                line = self.__displayBodyLine(0, pad, None, return_line = True)
                 for n in range(0, self.bodyMaxY + 1):
-                    self.__displayBodyLine(n, pad, None)
+                    try:
+                        self.bodyWin.addstr(n, 0, line, curses.color_pair(5))
+                    except:
+                        pass
 
         if self._cnf.browsing_station_service:
             if self._cnf.internal_header_height > 0:
