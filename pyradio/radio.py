@@ -6475,6 +6475,13 @@ class PyRadio(object):
             self.bodyWin.move(0, 0)
         except:
             pass
+        if self._redisplay_list[-1][0] ==self.ws.BROWSER_SEARCH_MODE and \
+                self._redisplay_list[-2][0] == self.ws.NORMAL_MODE:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('---=== Not displaying stations (Radio Browser window follows) ===---')
+            self.outerBodyWin.refresh()
+            self.bodyWin.refresh()
+            return
         self._print_body_header()
         pad = len(str(self.startPos + self.bodyMaxY))
 
