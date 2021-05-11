@@ -1,6 +1,9 @@
-2021-04-20 s-n-g
+2021-05-11 s-n-g
+    * Screen flickering when moving within the stations' list eliminated
+    * VLC player is available again (disabled by unreported bug)
+    * Advancing Radio Browser support
     * Fixing python 2 return from Radio Browser TUI breakage
-    * Adding dnspython module existence check
+    * Adding dnspython module availability check
 
 2021-04-14 s-n-g
     * Version 0.8.9.1

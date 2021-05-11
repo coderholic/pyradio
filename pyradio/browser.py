@@ -288,7 +288,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 'term': '',
                 'post_data': {'name': 'jaz'},
             })
-            self._search_history_index = 1
+            self._search_history_index = 0
             return True
         return False
 
@@ -1238,7 +1238,7 @@ class RadioBrowserInfoSearchWindow(object):
                          self.TITLE,
                          curses.color_pair(4))
         self._win.refresh()
-        self._erase_win(self.maxY, self.maxX, self.Y, self.X)
+        # self._erase_win(self.maxY, self.maxX, self.Y, self.X)
 
         ''' start displaying things '''
         self._win.addstr(1, 2, 'Search for', curses.color_pair(5))
@@ -1369,14 +1369,6 @@ class RadioBrowserInfoSearchWindow(object):
                 else:
                     x._focused = False
 
-    def _erase_win(self, pY, pX, Y, X):
-        empty_win = curses.newwin(
-            pY - 2, pX - 2,
-            Y + 1, X + 1
-        )
-        empty_win.bkgdset(' ', curses.color_pair(5))
-        empty_win.erase()
-        empty_win.refresh()
 
     def keypress(self, char):
         ''' RadioBrowserInfoSearchWindow keypress

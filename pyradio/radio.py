@@ -456,6 +456,7 @@ class PyRadio(object):
         self.transientWin = None
 
     def setup(self, stdscr):
+        # curses.savetty()
         self.setup_return_status = True
         if not curses.has_colors():
             self.setup_return_status = False
@@ -499,7 +500,6 @@ class PyRadio(object):
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
                     self._show_station_info_from_thread)
-            logger.error('DE \n\nNEW_PROFILE_STRING = {}\n\n'.format(self.player.NEW_PROFILE_STRING))
         except:
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
@@ -593,7 +593,7 @@ class PyRadio(object):
             self.bodyWinEndY = self.maxY - 1
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('body starts at line {0}, ends at line {1}'.format(self.bodyWinStartY, self.bodyWinEndY))
-            self.bodyWin = curses.newwin(
+            self.bodyWin = self.outerBodyWin.subwin(
                 self.maxY - 4 - self._cnf.internal_header_height,
                 self.maxX - 2,
                 self.bodyWinStartY,
@@ -615,6 +615,7 @@ class PyRadio(object):
             ''' for light color scheme '''
              # TODO
             self.outerBodyWin.bkgdset(' ', curses.color_pair(5))
+            self.outerBodyWin.erase()
             self.bodyWin.bkgdset(' ', curses.color_pair(5))
             self.initBody()
 
@@ -880,11 +881,11 @@ class PyRadio(object):
             except:
                 pass
 
-        if station and self._cnf.browsing_station_service and sep_col:
-            ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
-            if ticks:
-                for n in ticks:
-                    self.bodyWin.chgat(lineNum, n, 1, sep_col)
+            if station and self._cnf.browsing_station_service and sep_col:
+                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
+                if ticks:
+                    for n in ticks:
+                        self.bodyWin.chgat(lineNum, n, 1, sep_col)
 
     def run(self):
         self._register_signals_handlers()
@@ -5883,6 +5884,8 @@ class PyRadio(object):
                     self._cnf.jump_tag = -1
                     self._update_status_bar_right(status_suffix='')
                     if self._cnf.browsing_station_service:
+                        self._print_not_implemented_yet()
+                        return
                         self.ws.operation_mode = self.ws.BROWSER_SEARCH_MODE
                         self._browser_init_search(parent=self.outerBodyWin)
                     else:
@@ -6476,51 +6479,103 @@ class PyRadio(object):
     def _redisplay_stations_and_playlists(self):
         if self._limited_height_mode:
             return
-        self.outerBodyWin.erase()
         if self._redisplay_list[-1][0] ==self.ws.BROWSER_SEARCH_MODE and \
                 self._redisplay_list[-2][0] == self.ws.NORMAL_MODE:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Not displaying stations (Radio Browser window follows) ===---')
             self.outerBodyWin.refresh()
             return
-        self.bodyWin.erase()
+
+        # self.bodyWin.erase()
         if self.maxY > 2:
             self.outerBodyWin.box()
         try:
             self.bodyWin.move(1, 1)
             self.bodyWin.move(0, 0)
         except:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('====---- cursrm move failed ----====')
             pass
         self._print_body_header()
         pad = len(str(self.startPos + self.bodyMaxY))
 
-        ''' display the content '''
-        if self.number_of_items > 0:
-            for lineNum in range(self.bodyMaxY):
-                i = lineNum + self.startPos
-                if i < len(self.stations):
-                    self.__displayBodyLine(lineNum, pad, self.stations[i])
-                else:
-                    ''' display browser empty lines (station=None) '''
-                    line = self.__displayBodyLine(0, pad, None, return_line = True)
-                    if self._cnf.browsing_station_service:
-                        for n in range(i+1, self.bodyMaxY + 1):
-                            try:
-                                self.bodyWin.addstr(lineNum, 0, line, curses.color_pair(5))
-                            except:
-                                pass
-                            lineNum += 1
-                    break
-        else:
-            ''' we have no stations to display '''
+        if self.number_of_items == 0:
             if self._cnf.browsing_station_service:
-                ''' we have to display emplty lines '''
+                ''' we have to fill the screen with emplty lines '''
                 line = self.__displayBodyLine(0, pad, None, return_line = True)
                 for n in range(0, self.bodyMaxY + 1):
                     try:
                         self.bodyWin.addstr(n, 0, line, curses.color_pair(5))
                     except:
                         pass
+                pass
+            else:
+                self.bodyWin.erase()
+        else:
+            for lineNum in range(self.bodyMaxY):
+                i = lineNum + self.startPos
+                if i < len(self.stations):
+                    if not self._cnf.browsing_station_service and \
+                            self.ws.operation_mode == self.ws.NORMAL_MODE:
+                        try:
+                            self.bodyWin.move(lineNum, 0)
+                            self.bodyWin.clrtoeol()
+                        except:
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('====---- clear line move failed----====')
+                    self.__displayBodyLine(lineNum, pad, self.stations[i])
+                else:
+                    if self._cnf.browsing_station_service:
+                        ''' display browser empty lines (station=None) '''
+                        line = self.__displayBodyLine(0, pad, None, return_line = True)
+                        if self._cnf.browsing_station_service:
+                            for n in range(i+1, self.bodyMaxY + 1):
+                                try:
+                                    self.bodyWin.addstr(lineNum, 0, line, curses.color_pair(5))
+                                except:
+                                    pass
+                                lineNum += 1
+                        break
+                    else:
+                        logger.error('clearing window from line {} to end.'.format(i))
+                        try:
+                            self.bodyWin.move(i, 0)
+                            self.bodyWin.clrtobot()
+                        except:
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('====---- clear to end of window failed----====')
+                        break
+
+
+
+
+        #''' display the content '''
+        #if self.number_of_items > 0:
+        #    for lineNum in range(self.bodyMaxY):
+        #        i = lineNum + self.startPos
+        #        if i < len(self.stations):
+        #            self.__displayBodyLine(lineNum, pad, self.stations[i])
+        #        else:
+        #            ''' display browser empty lines (station=None) '''
+        #            line = self.__displayBodyLine(0, pad, None, return_line = True)
+        #            if self._cnf.browsing_station_service:
+        #                for n in range(i+1, self.bodyMaxY + 1):
+        #                    try:
+        #                        self.bodyWin.addstr(lineNum, 0, line, curses.color_pair(5))
+        #                    except:
+        #                        pass
+        #                    lineNum += 1
+        #            break
+        #else:
+        #    ''' we have no stations to display '''
+        #    if self._cnf.browsing_station_service:
+        #        ''' we have to display emplty lines '''
+        #        line = self.__displayBodyLine(0, pad, None, return_line = True)
+        #        for n in range(0, self.bodyMaxY + 1):
+        #            try:
+        #                self.bodyWin.addstr(n, 0, line, curses.color_pair(5))
+        #            except:
+        #                pass
 
         if self._cnf.browsing_station_service:
             if self._cnf.internal_header_height > 0:
@@ -6551,7 +6606,9 @@ class PyRadio(object):
                                 self.outerBodyWin.addstr(column_name[j], curses.color_pair(2))
                         except:
                             pass
+        self.outerBodyWin.touchwin()
         self.outerBodyWin.refresh()
+        self.bodyWin.touchwin()
         self.bodyWin.refresh()
 
     def _redisplay_config(self):

@@ -219,7 +219,8 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 #done
 
 # check dependencies :)
-for prog in git sed ;do
+# for prog in git sed ;do
+for prog in sed ;do
     ${prog} --version 2>/dev/null 1>&2 || {
         if [ "${prog}" = "sed" ];then
             sed 's/a/b/' LICENCE > /dev/null ||{

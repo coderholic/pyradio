@@ -33,3 +33,14 @@ player_start_stop_token = ('Initialization: "',
                            ': Playback stopped',
                            ': Player terminated abnormally!')
 
+def erase_curses_win(self, Y, X, beginY, beginX, char=' ', color=5):
+    ''' empty a part of the screen
+    '''
+    empty_win = curses.newwin(
+        Y - 2, X - 2,
+        beginY + 1, beginX + 1
+    )
+    empty_win.bkgdset(char, curses.color_pair(color))
+    empty_win.erase()
+    empty_win.refresh()
+
