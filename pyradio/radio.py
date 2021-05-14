@@ -237,6 +237,8 @@ class PyRadio(object):
                  req_player='',
                  theme='',
                  force_update=''):
+        self._current_selection = 0
+        self._force_print_all_lines = False
         self._system_asked_to_terminate = False
         self._cnf = pyradio_config
         self._theme = PyRadioTheme(self._cnf)
@@ -1056,6 +1058,7 @@ class PyRadio(object):
         ''' If we press up at the first station, we go to the last one and
             if we press down on the last one we go back to the first one.
         '''
+        old_start_pos = self.startPos
         if number < 0:
             number = len(self.stations) - 1
         elif number >= len(self.stations):
@@ -1067,6 +1070,8 @@ class PyRadio(object):
             self.startPos = self.selection - self.bodyMaxY + 1
         elif self.selection < self.startPos:
             self.startPos = self.selection
+
+        self._force_print_all_lines = self.startPos != old_start_pos
 
     def playSelectionBrowser(self, a_url=None):
             self.log.display_help_message = False
@@ -3941,7 +3946,7 @@ class PyRadio(object):
             if sel < 0 and self.selection > 0:
                 sel = 0
             self.setStation(sel)
-            self.refreshBody()
+            self._handle_cursor_move_up()
 
     def _page_down(self):
         self._update_status_bar_right()
@@ -3952,7 +3957,7 @@ class PyRadio(object):
             elif sel >= len(self.stations):
                 sel = len(self.stations) - 1
             self.setStation(sel)
-            self.refreshBody()
+            self._handle_cursor_move_down()
 
     def _handle_mouse(self, main_window=True):
         self.detect_if_player_exited = True
@@ -4156,6 +4161,64 @@ class PyRadio(object):
                 self._open_playlist_from_history()
             else:
                 self._show_no_more_playlist_history()
+
+    def _handle_cursor_move_up(self):
+        # logger.error('DE selection = {}, start pos = {}, current selection = {}, b_start = {}, b_end = {}, maxY = {}, maxX = {}'.format(self.selection, self.startPos, self._current_selection, self.bodyWinStartY, self.bodyWinEndY, self.bodyMaxY, self.maxX))
+        if self._force_print_all_lines:
+            self._force_print_all_lines = False
+        else:
+            if self.selection < self._current_selection:
+                if self.selection >= self.startPos:
+                    self.bodyWin.untouchwin()
+                    self._unselect_line(self._current_selection)
+                    self._select_line(self.selection)
+                    self.bodyWin.refresh()
+                    return
+        self.refreshBody()
+
+    def _handle_cursor_move_down(self):
+        # logger.error('DE selection = {}, start pos = {}, current selection = {}, b_start = {}, b_end = {}, maxY = {}, maxX = {}'.format(self.selection, self.startPos, self._current_selection, self.bodyWinStartY, self.bodyWinEndY, self.bodyMaxY, self.maxX))
+        if self._force_print_all_lines:
+            self._force_print_all_lines = False
+        else:
+            if self.selection > self._current_selection:
+                lines = self.maxY - 2 - self.bodyWinStartY - self.selection
+                lines = self.bodyMaxY - (self.selection-self.startPos)
+                # logger.error('DE lines = {}'.format(lines))
+                if lines > 0:
+                    self.bodyWin.untouchwin()
+                    self._unselect_line(self._current_selection)
+                    self._select_line(self.selection)
+                    self.bodyWin.refresh()
+                    return
+        self.refreshBody()
+
+    def _select_line(self, a_line):
+        # if a_line - self.startPos < 0:
+        #     logger.error('*** _unselect_line: a_line:{0} -  start pos:{1} = {2}'.format(a_line, self.startPos, a_line-self.startPos))
+        #     return
+        col = 9 if a_line == self.playing else 6
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     logger.debug('selecting line {}, color {}'.format(a_line - self.startPos, col))
+        ''' chgat also touches the libe '''
+        try:
+            self.bodyWin.chgat(a_line - self.startPos, 0, -1, curses.color_pair(col))
+        except:
+            pass
+
+    def _unselect_line(self, a_line):
+        # if a_line - self.startPos < 0:
+        #     if logger.isEnabledFor(logging.ERROR):
+        #         logger.error('*** _unselect_line: a_line:{0} -  start pos:{1} = {2}'.format(a_line, self.startPos, a_line-self.startPos))
+        #     return
+        col = 4 if a_line == self.playing else 5
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     logger.debug('unselecting line {}, color {}'.format(a_line - self.startPos, col))
+        ''' chgat also touches the libe '''
+        try:
+            self.bodyWin.chgat(a_line - self.startPos, 0, -1, curses.color_pair(col))
+        except:
+            pass
 
     def keypress(self, char):
         self.detect_if_player_exited = True
@@ -4431,6 +4494,7 @@ class PyRadio(object):
             '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
         elif char == curses.KEY_MOUSE:
+            self._current_selection = self.selection
             if self.ws.operation_mode in \
                     (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
                 self._handle_mouse()
@@ -5565,6 +5629,10 @@ class PyRadio(object):
 
         else:
 
+            self._current_selection = self.selection
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('current selection = {}'.format(self._current_selection))
+
             if char in (ord('?'), ):
                 self._update_status_bar_right()
                 self._print_help()
@@ -5679,14 +5747,14 @@ class PyRadio(object):
                 self._update_status_bar_right()
                 if self.number_of_items > 0:
                     self.setStation(self.selection + 1)
-                    self.refreshBody()
+                    self._handle_cursor_move_down()
                 return
 
             if char in (curses.KEY_UP, ord('k')):
                 self._update_status_bar_right()
                 if self.number_of_items > 0:
                     self.setStation(self.selection - 1)
-                    self.refreshBody()
+                    self._handle_cursor_move_up()
                 return
 
             if char in (curses.KEY_PPAGE, ):
@@ -5884,8 +5952,8 @@ class PyRadio(object):
                     self._cnf.jump_tag = -1
                     self._update_status_bar_right(status_suffix='')
                     if self._cnf.browsing_station_service:
-                        self._print_not_implemented_yet()
-                        return
+                        # self._print_not_implemented_yet()
+                        # return
                         self.ws.operation_mode = self.ws.BROWSER_SEARCH_MODE
                         self._browser_init_search(parent=self.outerBodyWin)
                     else:

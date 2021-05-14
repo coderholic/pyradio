@@ -288,7 +288,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 'term': '',
                 'post_data': {'name': 'jaz'},
             })
-            self._search_history_index = 0
+            self._search_history_index = 1
             return True
         return False
 
