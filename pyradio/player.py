@@ -825,10 +825,10 @@ class Player(object):
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
                 if subsystemOut == '':
                     continue
-                # logger.error('DE >>> "{}"'.format(subsystemOut))
+                # logger.error('subsystemOut = "{0}"'.format(subsystemOut))
                 if not self._is_accepted_input(subsystemOut):
                     continue
-                # logger.error('DE --- accepted')
+                logger.error('accepted inp = "{0}"'.format(subsystemOut))
                 if self.oldUserInput['Input'] != subsystemOut:
                     if stop():
                         break
@@ -853,20 +853,18 @@ class Player(object):
                             logger.error('----==== vlc disappeared! ====----')
                             stop_player(from_update_thread=True)
                             break
-                        # disable volume for mpv
-                        if self.PLAYER_CMD != "mpv":
-                            # logger.error("***** volume")
-                            if self.oldUserInput['Volume'] != subsystemOut:
-                                self.oldUserInput['Volume'] = subsystemOut
-                                self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                        # logger.error("***** volume")
+                        if self.oldUserInput['Volume'] != subsystemOut:
+                            self.oldUserInput['Volume'] = subsystemOut
+                            self.volume = ''.join(c for c in subsystemOut if c.isdigit())
 
-                                # IMPORTANT: do this here, so that vlc actual_volume
-                                # gets updated in _format_volume_string
-                                string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
+                            # IMPORTANT: do this here, so that vlc actual_volume
+                            # gets updated in _format_volume_string
+                            string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
-                                if self.show_volume and self.oldUserInput['Title']:
-                                    self.outputStream.write(msg=string_to_show, counter='')
-                                    self.threadUpdateTitle()
+                            if self.show_volume and self.oldUserInput['Title']:
+                                self.outputStream.write(msg=string_to_show, counter='')
+                                self.threadUpdateTitle()
                     elif self._is_in_playback_token(subsystemOut):
                         if stop():
                             break
@@ -2165,10 +2163,20 @@ class VlcPlayer(Player):
         ''' vlc input filtering '''
         ret = False
         if self.WIN:
+            ''' adding _playback_token_tuple contents here
+                otherwise they may not be handled at all...
+            '''
             accept_filter = (self.volume_string,
                              'debug: ',
                              'format: ',
                              'using: ',
+                             'Content-Type',
+                             'main audio',
+                             'Segment #',
+                             'icy-name',
+                             'icy-url',
+                             'icy-genre',
+                             'icy-br',
                              )
         else:
             accept_filter = (self.volume_string,

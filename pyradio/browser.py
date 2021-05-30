@@ -1181,6 +1181,27 @@ class RadioBrowserInfoSearchWindow(object):
         'Codec',
     )
 
+    yx = [
+        [0, 0],     # (0) search check box
+        [0, 0],     # (1) caption 0
+        [0, 0],     # (2) caption 1
+        [0, 0],     # (3) caption 2
+        [0, 0],     # (4) caption 3
+        [0, 0],     # (5) caption 4
+        [0, 0],     # (6) caption 5
+        [0, 0],     # (7) limit
+        [0, 0],     # (8) buttons
+    ]
+
+    captions = (
+        '',
+        'Name',
+        'Tag',
+        'Country',
+        'State',
+        'Language',
+        'Codec')
+
     def __init__(self,
                  parent,
                  init=False
@@ -1197,7 +1218,7 @@ class RadioBrowserInfoSearchWindow(object):
             this is the width of each of them
         '''
         self._half_width = 0
-        self._widgets = [ None, None, None, None, None, None, None, None]
+        self._widgets = [ None ]
 
     @property
     def focus(self):
@@ -1213,6 +1234,28 @@ class RadioBrowserInfoSearchWindow(object):
             else:
                 self._focus = 0
         self.show()
+
+    def _get_a_third(self):
+        ''' calculate window / 3 X
+            this is the length of a line editor + 2
+        '''
+        X = int ((self.maxX - 6) / 3)
+        return X
+        return X if X % 2 == 0 else X - 1
+
+    def _calculate_widgets_yx(self, Y, X):
+        ''' set Y and X for search check box and limit field '''
+        self.yx[0] = self.yx[7] = [Y, 2]
+        ''' set y for all consecutive widgets '''
+        self.yx[1][0] = self.yx[2][0] = self.yx[3][0] = Y
+        self.yx[4][0] = self.yx[5][0] = self.yx[6][0] = Y + 3
+        self.yx[7][0] = self.yx[6][0] + 2
+        self.yx[8][0] = self.yx[7][0] + 1
+
+
+        self.yx[1][1] = self.yx[4][1] = 3
+        self.yx[2][1] = self.yx[5][1] = 3 + X
+        self.yx[3][1] = self.yx[6][1] = 3 + 2 * X
 
     def show(self):
         pY, pX = self._parent.getmaxyx()
@@ -1231,130 +1274,168 @@ class RadioBrowserInfoSearchWindow(object):
             #     Y, X
             # )
             self._half_width = int((self.maxX -2 ) / 2) -3
+        X = self._get_a_third()
+
+        self._too_small = True if X < 19 else False
+
         self._win.bkgdset(' ', curses.color_pair(5))
-        # self._win.erase()
+        self._win.erase()
         self._win.box()
         self._win.addstr(0, int((self.maxX - len(self.TITLE)) / 2),
                          self.TITLE,
                          curses.color_pair(4))
-        self._win.refresh()
+        if self._too_small:
+            self._win.erase()
+            # TODO Print messge
+            self._win.refresh()
+            return
+
+        # self._win.refresh()
         # self._erase_win(self.maxY, self.maxX, self.Y, self.X)
 
-        ''' start displaying things '''
-        self._win.addstr(1, 2, 'Search for', curses.color_pair(5))
-        self._win.addstr(4, 2, 'Search by', curses.color_pair(5))
+        if self._widgets[0] is None:
+            ''' display by '''
+            self._widgets[0] = SimpleCursesCheckBox(
+                    2, 2,
+                    'Display by',
+                    curses.color_pair(9), curses.color_pair(4), curses.color_pair(5))
 
-        for i, n in enumerate(self._widgets):
-            if n is None:
-                if i == 0:
-                    #self._widgets[2] = SimpleCursesCheckBox(
-                    #    1, 2, 'Display by',
-                    #    curses.color_pair(9),
-                    #    curses.color_pair(4),
-                    #    curses.color_pair(5))
-                    self._widgets[0] = SimpleCursesLineEdit(
-                        parent=self._win,
-                        width=-2,
-                        begin_y=3,
-                        begin_x=2,
-                        boxed=False,
-                        has_history=False,
-                        caption='',
-                        box_color=curses.color_pair(9),
-                        caption_color=curses.color_pair(4),
-                        edit_color=curses.color_pair(9),
-                        cursor_color=curses.color_pair(8),
-                        unfocused_color=curses.color_pair(5),
-                        string_changed_handler='')
-                    self._widgets[0].bracket = False
-                    self._line_editor = self._widgets[0]
-                elif i == 1:
-                    ''' search by '''
-                    self._widgets[i] = SimpleCursesWidgetColumns(
-                        Y=5, X=3, window=self._win,
-                        selection=0,
-                        active=0,
-                        items=self.search_by_items,
-                        color=curses.color_pair(5),
-                        color_active=curses.color_pair(4),
-                        color_cursor_selection=curses.color_pair(6),
-                        color_cursor_active=curses.color_pair(9),
-                        margin=1,
-                        max_width=self._half_width
-                    )
-                elif i == 2:
-                    ''' search exact '''
-                    self._widgets[2] = SimpleCursesCheckBox(
-                            self._widgets[1].Y + self._widgets[1].height + 2, 2,
-                            'Exact match',
-                            curses.color_pair(9), curses.color_pair(4), curses.color_pair(5))
-                elif i == 3:
-                    ''' sort by '''
-                    self._widgets[i] = SimpleCursesWidgetColumns(
-                        Y=5, X=self.maxX - 1 - self._half_width,
-                        max_width=self._half_width,
-                        window=self._win,
-                        selection=0,
-                        active=0,
-                        items=self.sort_by_items,
-                        color=curses.color_pair(5),
-                        color_active=curses.color_pair(4),
-                        color_cursor_selection=curses.color_pair(6),
-                        color_cursor_active=curses.color_pair(9),
-                        margin=1
-                    )
-                elif i == 4:
-                    '''' sort ascending / descending '''
-                    self._widgets[4] = SimpleCursesCheckBox(
-                            self._widgets[3].Y + self._widgets[3].height + 1, self._widgets[3].X - 2 + self._widgets[3].margin,
-                            'Sort descending',
-                            curses.color_pair(9), curses.color_pair(4), curses.color_pair(5))
-                elif i == 5:
-                    '''' limit results '''
-                    self._widgets[5] = None
-                elif i == 6:
-                    self._widgets[i] = None
-                    ''' add horizontal push buttons '''
-                    self._h_buttons = SimpleCursesHorizontalPushButtons(
-                            Y=5 + len(self.search_by_items) + 2,
-                            captions=('OK', 'Cancel'),
-                            color_focused=curses.color_pair(9),
-                            color=curses.color_pair(4),
-                            bracket_color=curses.color_pair(5),
-                            parent=self._win)
-                    #self._h_buttons.calculate_buttons_position()
-                    self._widgets[6], self._widgets[7] = self._h_buttons.buttons
-                    self._widgets[6]._focused = self._widgets[7].focused = False
-            else:
-                if i in (1, 3):
-                    ''' update lists' window '''
-                    if i == 3:
-                        self._widgets[3].X = self.maxX - 1 - self._half_width
-                    self._widgets[i].window = self._win
-                    self._widgets[i].max_width = self._half_width
+            ''' display by columns (index = 1) '''
+            self._widgets.append(SimpleCursesWidgetColumns(
+                Y=2, X=3, window=self._win,
+                selection=0,
+                active=0,
+                items=self.search_by_items,
+                color=curses.color_pair(5),
+                color_active=curses.color_pair(4),
+                color_cursor_selection=curses.color_pair(6),
+                color_cursor_active=curses.color_pair(9),
+                margin=1,
+                max_width=self._half_width
+            ))
 
-        self._win.addstr(
-            4,
-            self._widgets[3].X - 2 + self._widgets[3].margin,
-            'Sort by',
-            curses.color_pair(5)
-        )
-        self._win.refresh()
+            ''' sort by (index = 2) '''
+            self._widgets.append(SimpleCursesWidgetColumns(
+                Y=2, X=self.maxX - 1 - self._half_width,
+                max_width=self._half_width,
+                window=self._win,
+                selection=0,
+                active=0,
+                items=self.sort_by_items,
+                color=curses.color_pair(5),
+                color_active=curses.color_pair(4),
+                color_cursor_selection=curses.color_pair(6),
+                color_cursor_active=curses.color_pair(9),
+                margin=1
+            ))
+
+            '''' sort ascending / descending (index = 3) '''
+            self._widgets.append(SimpleCursesCheckBox(
+                    self._widgets[2].Y + self._widgets[2].height + 1,
+                    self._widgets[2].X - 2 + self._widgets[2].margin,
+                    'Reverse order',
+                    curses.color_pair(9), curses.color_pair(5), curses.color_pair(5)))
+
+            ''' Two lines under the lists '''
+            Y = max(self._widgets[2].Y, self._widgets[1].Y + self._widgets[1].height, self._widgets[3].Y) + 2
+
+            ''' search check box (index = 4) '''
+            self._win.addstr(
+                self._widgets[2].Y - 1,
+                self._widgets[2].X - 2,
+                 'Sort by', curses.color_pair(4))
+            self._widgets.append(SimpleCursesCheckBox(
+                    Y, 2, 'Search',
+                    curses.color_pair(9), curses.color_pair(4), curses.color_pair(5)))
+            self._calculate_widgets_yx(Y, X)
+            for n in range(1,6):
+                self._win.addstr(
+                    self.yx[n][0],
+                    self.yx[n][1],
+                    self.captions[n],
+                    curses.color_pair(5))
+                self._widgets.append(SimpleCursesCheckBox(
+                    self.yx[n][0] + 1,
+                    self.yx[n][1] + len(self.captions[n]) + 2,
+                    'Exact',
+                    curses.color_pair(9), curses.color_pair(5), curses.color_pair(5)))
+                self._widgets.append(SimpleCursesLineEdit(
+                    parent=self._win,
+                    width=X-2,
+                    begin_y=self.yx[n][0]+2,
+                    begin_x=self.yx[n][1],
+                    boxed=False,
+                    has_history=False,
+                    caption='',
+                    box_color=curses.color_pair(9),
+                    caption_color=curses.color_pair(4),
+                    edit_color=curses.color_pair(9),
+                    cursor_color=curses.color_pair(8),
+                    unfocused_color=curses.color_pair(5)))
+                self._widgets[-1].bracket = False
+                self._widgets[-1].use_paste_mode = True
+                self._widgets[-1].string = self.captions[n]
+
+            self._h_buttons = SimpleCursesHorizontalPushButtons(
+                self.yx[-1][0],
+                captions=('OK', 'Cancel'),
+                color_focused=curses.color_pair(9),
+                color=curses.color_pair(4),
+                bracket_color=curses.color_pair(5),
+                parent=self._win)
+            self._widgets.append(self._h_buttons.buttons[0])
+            self._widgets.append(self._h_buttons.buttons[1])
+            for i, n in enumerate(self._widgets):
+                self._widgets[i].id = i
+                if i < 5:
+                    self._widgets[i].enabled = True
+                else:
+                    self._widgets[i].enabled = False
+
+            self._widgets[-1].enabled = True
+            self._widgets[-2].enabled = True
+            #self._h_buttons.calculate_buttons_position()
+
+            self._win.refresh()
+            # if not self._too_small:
+            #     self._line_editor.show(self._win, opening=False)
+            #     self._h_buttons.calculate_buttons_position()
+            #     for n in range(1, len(self._widgets)):
+            #         if self._widgets[n]:
+            #             if n in (2, 4):
+            #                 if n == 2:
+            #                     self._widgets[2].Y = self._widgets[1].Y + self._widgets[1].height + 2
+            #                 else:
+            #                     self._widgets[4].Y = self._widgets[3].Y + self._widgets[3].height + 1
+            #                     self._widgets[4].X = self._widgets[3].X - 2 + self._widgets[3].margin
+            #                 self._widgets[n].move()
+            #                 # self._widgets[n].resize()
+            #             self._widgets[n].show()
+
+            # use _focused here to avoid triggering
+            # widgets' refresh
+            self._focus = 1
+            self._widgets[0].checked = True
+        else:
+            pass
+            ''' update up to lists '''
+            for i in range(0,3):
+                self._widgets[i].show()
+            ''' Two lines under the lists '''
+            Y = max(self._widgets[2].Y, self._widgets[1].Y + self._widgets[1].height, self._widgets[3].Y) + 2
+            ''' show descending check box '''
+            self._widgets[3].Y = self._widgets[2].Y + self._widgets[2].height + 1,
+            self._widgets[3].X = self._widgets[2].X - 2 + self._widgets[2].margin,
+            self._widgets[3].show()
+            self._calculate_widgets_yx(Y, X)
+        self._h_buttons.calculate_buttons_position()
         self._update_focus()
-        if not self._too_small:
-            self._line_editor.show(self._win, opening=False)
-            self._h_buttons.calculate_buttons_position()
-            for n in range(1, len(self._widgets)):
-                if self._widgets[n]:
-                    if n in (2, 4):
-                        if n == 2:
-                            self._widgets[2].Y = self._widgets[1].Y + self._widgets[1].height + 2
-                        else:
-                            self._widgets[4].Y = self._widgets[3].Y + self._widgets[3].height + 1
-                            self._widgets[4].X = self._widgets[3].X - 2 + self._widgets[3].margin
-                        self._widgets[n].move()
-                        # self._widgets[n].resize()
-                    self._widgets[n].show()
+        for n in self._widgets:
+            try:
+                n.show()
+            except:
+                n.show(self._win, opening=False)
+        ''' This will show the collumns '''
         self._win.refresh()
 
         # self._refresh()
@@ -1365,10 +1446,11 @@ class RadioBrowserInfoSearchWindow(object):
         for i, x in enumerate(self._widgets):
             if x:
                 if self._focus == i:
+                    logger.error('_update_focus: {} - True'.format(i))
                     x._focused = True
                 else:
+                    logger.error('_update_focus: {} - False'.format(i))
                     x._focused = False
-
 
     def keypress(self, char):
         ''' RadioBrowserInfoSearchWindow keypress

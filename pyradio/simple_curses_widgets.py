@@ -419,19 +419,27 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 disp_item = n.center(self._item_width)
 
             ''' find color to use '''
+            logger.error('DE self._focused = {}'.format(self._focused))
             if self._focused and self._enabled:
+                logger.error('DE focused and enabled')
                 col = self._color
-                if i == self.selection == self.active:
-                    col = self._color_active
+                logger.error('{0}, sel={1}, ac={2}'.format(i, self.selection, self.active))
+                if i == self.selection and i == self.active:
+                    col = self._color_cursor_active
+                    logger.error('active color')
                 elif i == self.selection:
                     col =self._color_cursor_selection
+                    logger.error('color_cursor_selection')
                 elif i == self.active:
-                    col = self._color_cursor_active
+                    col = self._color_active
+                    logger.error('color_cursor_active')
             elif self._enabled:
+                logger.error('DE enabled')
                 col = self._color
                 if i == self.active:
                     col = self._color_active
             else:
+                logger.error('DE not focused')
                 col = self._color
 
             ''' fill coords list, if not filled yet '''
@@ -1619,6 +1627,10 @@ class SimpleCursesLineEdit(object):
             self._edit_win.chgat(0, self._disp_curs_pos, 1, self.cursor_color)
 
         self._edit_win.refresh()
+
+    def move(self, parent, newY, newX, opening=False):
+        kwargs={'new_y': newY, 'new_x': newX, 'opening': opening}
+        self.show(parent, **kwargs)
 
     def show(self, parent_win, **kwargs):
         opening = True

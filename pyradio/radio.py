@@ -884,10 +884,13 @@ class PyRadio(object):
                 pass
 
             if station and self._cnf.browsing_station_service and sep_col:
-                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
-                if ticks:
-                    for n in ticks:
-                        self.bodyWin.chgat(lineNum, n, 1, sep_col)
+                self._change_browser_ticks(lineNum, sep_col)
+
+    def _change_browser_ticks(self, lineNum, sep_col):
+        ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
+        if ticks:
+            for n in ticks:
+                self.bodyWin.chgat(lineNum, n, 1, sep_col)
 
     def run(self):
         self._register_signals_handlers()
@@ -2138,7 +2141,7 @@ class PyRadio(object):
         self._show_help(txt.format(self._cnf._online_browser.vote_result[0],
                                    self._cnf._online_browser.vote_result[1]),
                         self.ws.VOTE_RESULT_MODE,
-                        caption=' Staion Vote Result ',
+                        caption=' Station Vote Result ',
                         prompt=' Press any key... ',
                         is_message=True)
 
@@ -4205,6 +4208,11 @@ class PyRadio(object):
             self.bodyWin.chgat(a_line - self.startPos, 0, -1, curses.color_pair(col))
         except:
             pass
+        if self._cnf.browsing_station_service:
+            try:
+                self._change_browser_ticks(a_line - self.startPos, curses.color_pair(5))
+            except:
+                pass
 
     def _unselect_line(self, a_line):
         # if a_line - self.startPos < 0:
@@ -4219,6 +4227,11 @@ class PyRadio(object):
             self.bodyWin.chgat(a_line - self.startPos, 0, -1, curses.color_pair(col))
         except:
             pass
+        if self._cnf.browsing_station_service:
+            try:
+                self._change_browser_ticks(a_line - self.startPos, curses.color_pair(5))
+            except:
+                pass
 
     def keypress(self, char):
         self.detect_if_player_exited = True
