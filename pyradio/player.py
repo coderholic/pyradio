@@ -341,7 +341,7 @@ class Player(object):
         info['Playlist Name'] = a_station[0]
         for x in guide:
             if x[1] in self._icy_data.keys():
-                info[x[0]] = self._icy_data[x[1]]
+                info[x[0]] = self._icy_data[x[1]].strip()
             else:
                 info[x[0]] = ''
             if x[0] == 'Bitrate':
@@ -350,8 +350,8 @@ class Player(object):
             if x[0] == 'Genre':
                 info['Encoding'] = enc_to_show
             if x[0].startswith('Reported'):
-                info['Station URL'] = a_station[1]
-        info['Website'] = unquote(info['Website'])
+                info['Station URL'] = a_station[1].strip()
+        info['Website'] = unquote(info['Website']).strip()
 
         a_list = []
         fix_highlight = (
@@ -547,6 +547,7 @@ class Player(object):
                     subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
                 if subsystemOut == '':
                     break
+                # logger.error('subsystemOut = "{0}"'.format(subsystemOut))
                 if not self._is_accepted_input(subsystemOut):
                     continue
                 subsystemOut = subsystemOut.strip()
@@ -1975,11 +1976,13 @@ class VlcPlayer(Player):
         icy_tokens = ('New Icy-Title=', )
 
         icy_audio_tokens = {
-                'Icy-Name: ': 'icy-name',
-                'Icy-Genre: ': 'icy-genre',
-                'icy-url: ': 'icy-url',
-                'icy-br: ': 'icy-br',
-                'format: ': 'audio_format',
+                'Icy-Name:': 'icy-name',
+                'Icy-Genre:': 'icy-genre',
+                'icy-name:': 'icy-name',
+                'icy-genre:': 'icy-genre',
+                'icy-url:': 'icy-url',
+                'icy-br:': 'icy-br',
+                'format:': 'audio_format',
                 'using audio decoder module ': 'codec-name',
                 }
 
@@ -2173,16 +2176,16 @@ class VlcPlayer(Player):
                              'Content-Type',
                              'main audio',
                              'Segment #',
-                             'icy-name',
-                             'icy-url',
-                             'icy-genre',
-                             'icy-br',
+                             'icy-',
+                             'Icy-'
                              )
         else:
             accept_filter = (self.volume_string,
                              'http stream debug: ',
                              'format: ',
                              ': using',
+                             'icy-',
+                             'Icy-',
                              )
         reject_filter = ()
         for n in accept_filter:
