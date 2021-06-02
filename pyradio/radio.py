@@ -836,16 +836,16 @@ class PyRadio(object):
                     col = curses.color_pair(9)
                     ''' initialize col_sep here to have separated cursor '''
                     sep_col = curses.color_pair(5)
-                    self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+                    # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
                 elif lineNum + self.startPos == self.selection:
                     col = curses.color_pair(6)
                     ''' initialize col_sep here to have separated cursor '''
                     sep_col = curses.color_pair(5)
-                    self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+                    # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
                 elif lineNum + self.startPos == self.playing:
                     col = curses.color_pair(4)
                     sep_col = curses.color_pair(5)
-                    self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+                    # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
             else:
                 ''' this is only for a browser service '''
                 col = curses.color_pair(5)
@@ -878,7 +878,9 @@ class PyRadio(object):
                 ''' return empty line '''
                 return line
 
+            self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
             try:
+                # logger.error('line: "{}"'.format(line))
                 self.bodyWin.addstr(lineNum, 0, line, col)
             except:
                 pass
@@ -6560,7 +6562,7 @@ class PyRadio(object):
     def _redisplay_stations_and_playlists(self):
         if self._limited_height_mode:
             return
-        if self._redisplay_list[-1][0] ==self.ws.BROWSER_SEARCH_MODE and \
+        if self._redisplay_list[-1][0] == self.ws.BROWSER_SEARCH_MODE and \
                 self._redisplay_list[-2][0] == self.ws.NORMAL_MODE:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Not displaying stations (Radio Browser window follows) ===---')
@@ -6575,8 +6577,7 @@ class PyRadio(object):
             self.bodyWin.move(0, 0)
         except:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('====---- cursrm move failed ----====')
-            pass
+                logger.debug('====---- cursor move failed ----====')
         self._print_body_header()
         pad = len(str(self.startPos + self.bodyMaxY))
 
