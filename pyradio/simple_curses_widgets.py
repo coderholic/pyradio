@@ -222,6 +222,202 @@ class SimpleCursesWidget(object):
         return False
 
 
+class SimpleCursesCounter(SimpleCursesWidget):
+    ''' A class to provide a counter
+
+        Parameters
+        ==========
+        Y, X, window
+            Coordinates and parent window
+        value, minumum, maximum, step, big_step
+            counter parameters
+            step : small changer (h, l)
+            big_step : big change (PgUp, PgDn)
+        number_length
+            minimum length of number when displayed
+            the number is right alligned, i.e. a value of 11
+            with a number_length of 4, will display '  11'
+        color
+            text color
+        counter_color
+            counter color when enabled
+        counter_color_disabled
+            counter color when disabled
+    '''
+    def __init__(
+        self, Y, X, window,
+        color, counter_color, counter_color_disabled,
+        minimum=0, maximum=100,
+        step=1, big_step=5, value=1,
+        number_length=3, string='{0}'
+    ):
+        self._Y = Y
+        self._X = X
+        self._win = self._parent = window
+        self._min = minimum
+        self._max = maximum
+        self._step = step
+        self._big_step = big_step
+        self._value = value
+        if self._value < self._min:
+            self._value = self.min
+        if self._value > self._max:
+            self._value = self._max
+        self._len = number_length
+        max_len = len(str(self._max))
+        if self._len < max_len:
+            self._len = max_len
+        self.string = string
+        self._color = color
+        self._counter_color = counter_color
+        self._counter_color_disabled = counter_color_disabled
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, val):
+        self._value = val
+
+    @property
+    def minimum(self):
+        return self._min
+
+    @minimum.setter
+    def minimum(self, val):
+        self._min = val
+
+    @property
+    def maximum(self):
+        return self._max
+
+    @maximum.setter
+    def maximum(self, val):
+        self._max = val
+        max_len = len(srt(self._max))
+        if self._len < max_len:
+            self._len = max_len
+
+    @property
+    def step(self):
+        return self._step
+
+    @step.setter
+    def step(self, val):
+        self._step = val
+
+    @property
+    def big_step(self):
+        return self._big_step
+
+    @big_step.setter
+    def big_step(self, val):
+        self._big_step = val
+
+    @property
+    def number_length(self):
+        return self._len
+
+    @number_length.setter
+    def number_length(self, val):
+        self._len = val
+        max_len = len(srt(self._max))
+        if self._len < max_len:
+            self._len = max_len
+
+    @property
+    def string(self):
+        return self._prefix + self._number + self._suffix
+
+    @string.setter
+    def string(self, value):
+        self._number = '{0}'
+        if value:
+            sp = value.split('{0}')
+            self._prefix = sp[0]
+            if len(sp) > 1:
+                self._suffix = sp[1]
+        else:
+            self._prefix = ''
+            self._suffix = ''
+
+    def move(self, newY=-1, newX=-1, parent=None):
+        if newY > 0:
+            self._Y = newY
+        if newX > 0:
+            self._X = newX
+        if parent:
+            self._win = self._parent = parent
+
+    def show(self, window, opening=False):
+        if window:
+            self._win = self._parent = window
+        if self._enabled and self._focused:
+            col = self._counter_color
+        else:
+            col = self._counter_color_disabled
+        self._win.move(self._Y, self._X)
+        if self._prefix:
+            self._win.addstr(self._prefix, self._color)
+        self._win.addstr(self._number.format(str(self._value).rjust(self._len)), col)
+        if self._suffix:
+            self._win.addstr(self._suffix, self._color)
+        ''' overwrite last self._len characters '''
+        self._win.addstr(' ' * self._len, self._color)
+
+    def keypress(self, char):
+        ''' SimpleCursesCounter keypress
+
+            Returns
+            -------
+               -1 - Cancel
+                0   Counter changed
+                1 - Continue
+                2 - Display help
+        '''
+        if (not self._focused) or (not self._enabled):
+            return 1
+
+        if char in (
+            curses.KEY_EXIT, ord('q'), 27,
+        ):
+            return -1
+
+        elif char == ord('?'):
+            return 2
+
+        elif char in (curses.KEY_PPAGE, ):
+            self._value -= self._big_step
+            if self._value < self._min:
+                self._value = self._min
+            self.show()
+            return 0
+
+        elif char in (curses.KEY_NPAGE, ):
+            self._value += self._big_step
+            if self._value > self._max:
+                self._value = self._max
+            self.show()
+            return 0
+
+        elif char in (ord('h'), curses.KEY_LEFT):
+            self._value -= self._step
+            if self._value < self._min:
+                self._value = self._min
+            self.show()
+            return 0
+
+        elif char in (ord('l'), curses.KEY_RIGHT):
+            self._value += self._step
+            if self._value > self._max:
+                self._value = self._max
+            self.show()
+            return 0
+
+        return 1
+
+
 class SimpleCursesWidgetColumns(SimpleCursesWidget):
     ''' A widget to display selectable items
         in columns on a foreign window.
@@ -354,7 +550,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
     @property
     def window(self):
         '''Returns if the widget is enabled'''
-        return self._enabled
+        return self._win
 
     @window.setter
     def window(self, value):
@@ -392,6 +588,9 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
     @max_width.setter
     def max_width(self, value):
         self._max_width = value
+        self.set_items()
+
+    def recalculate_columns(self):
         self.set_items()
 
     def set_items(self, items=None):
@@ -1170,6 +1369,11 @@ class SimpleCursesHorizontalPushButtons(object):
             self._buttons[focused]._focused = True
         self._parent = parent
 
+    def move(self, newY, newX=0):
+        self._Y = newY
+        for n in self._buttons:
+            n.Y = newY
+
     def show(self, parent=None, orientation='center', show=True):
         '''Display the widget
 
@@ -1628,9 +1832,14 @@ class SimpleCursesLineEdit(object):
 
         self._edit_win.refresh()
 
-    def move(self, parent, newY, newX, opening=False):
-        kwargs={'new_y': newY, 'new_x': newX, 'opening': opening}
-        self.show(parent, **kwargs)
+    def move(self, parent, newY, newX, opening=False, update=True):
+        if update:
+            kwargs={'new_y': newY, 'new_x': newX, 'opening': opening}
+            self.show(parent, **kwargs)
+        else:
+            self._parent_win = parent
+            self.y = newY
+            self.x = newX
 
     def show(self, parent_win, **kwargs):
         opening = True

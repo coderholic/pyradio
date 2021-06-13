@@ -18,7 +18,7 @@ import logging
 from .player import info_dict_to_list
 from .cjkwrap import cjklen, PY3
 from .countries import countries
-from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox
+from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -1196,10 +1196,10 @@ class RadioBrowserInfoSearchWindow(object):
     captions = (
         '',
         'Name',
-        'Tag',
         'Country',
-        'State',
         'Language',
+        'Tag',
+        'State',
         'Codec')
 
     def __init__(self,
@@ -1249,7 +1249,7 @@ class RadioBrowserInfoSearchWindow(object):
         ''' set y for all consecutive widgets '''
         self.yx[1][0] = self.yx[2][0] = self.yx[3][0] = Y
         self.yx[4][0] = self.yx[5][0] = self.yx[6][0] = Y + 3
-        self.yx[7][0] = self.yx[6][0] + 2
+        self.yx[7][0] = self.yx[6][0] + 3
         self.yx[8][0] = self.yx[7][0] + 1
 
 
@@ -1274,9 +1274,12 @@ class RadioBrowserInfoSearchWindow(object):
             #     Y, X
             # )
             self._half_width = int((self.maxX -2 ) / 2) -3
-        X = self._get_a_third()
+            logger.error('>>>> hajf width = {} <<<<'.format(self._half_width))
 
-        self._too_small = True if X < 19 else False
+        if self.maxX < 80 or self.maxY < 22:
+            self._too_small = True
+        else:
+            self._too_small = False
 
         self._win.bkgdset(' ', curses.color_pair(5))
         self._win.erase()
@@ -1284,14 +1287,18 @@ class RadioBrowserInfoSearchWindow(object):
         self._win.addstr(0, int((self.maxX - len(self.TITLE)) / 2),
                          self.TITLE,
                          curses.color_pair(4))
+
         if self._too_small:
-            self._win.erase()
             # TODO Print messge
+            msg = 'Window too small'
+            self._win.addstr(
+                int(self.maxY/2), int((self.maxX - len(msg))/2),
+                msg, curses.color_pair(5)
+            )
             self._win.refresh()
             return
 
-        # self._win.refresh()
-        # self._erase_win(self.maxY, self.maxX, self.Y, self.X)
+        X = self._get_a_third()
 
         if self._widgets[0] is None:
             ''' display by '''
@@ -1348,7 +1355,7 @@ class RadioBrowserInfoSearchWindow(object):
                     Y, 2, 'Search',
                     curses.color_pair(9), curses.color_pair(4), curses.color_pair(5)))
             self._calculate_widgets_yx(Y, X)
-            for n in range(1,6):
+            for n in range(1,7):
                 self._win.addstr(
                     self.yx[n][0],
                     self.yx[n][1],
@@ -1376,6 +1383,21 @@ class RadioBrowserInfoSearchWindow(object):
                 self._widgets[-1].use_paste_mode = True
                 self._widgets[-1].string = self.captions[n]
 
+            ''' limit - index = -3 '''
+            self._widgets.append(
+                SimpleCursesCounter(
+                    Y=self.yx[-2][0],
+                    X=self.yx[-2][1],
+                    window=self._win,
+                    color=curses.color_pair(5),
+                    counter_color=curses.color_pair(4),
+                    counter_color_disabled=curses.color_pair(5),
+                    minimum=20, maximum=1000,
+                    step=1, big_step=10,
+                    value=100, string='Limit results to {0} items'
+                )
+            )
+            ''' buttons - index -2, -1 '''
             self._h_buttons = SimpleCursesHorizontalPushButtons(
                 self.yx[-1][0],
                 captions=('OK', 'Cancel'),
@@ -1397,37 +1419,82 @@ class RadioBrowserInfoSearchWindow(object):
             #self._h_buttons.calculate_buttons_position()
 
             self._win.refresh()
-            # if not self._too_small:
-            #     self._line_editor.show(self._win, opening=False)
-            #     self._h_buttons.calculate_buttons_position()
-            #     for n in range(1, len(self._widgets)):
-            #         if self._widgets[n]:
-            #             if n in (2, 4):
-            #                 if n == 2:
-            #                     self._widgets[2].Y = self._widgets[1].Y + self._widgets[1].height + 2
-            #                 else:
-            #                     self._widgets[4].Y = self._widgets[3].Y + self._widgets[3].height + 1
-            #                     self._widgets[4].X = self._widgets[3].X - 2 + self._widgets[3].margin
-            #                 self._widgets[n].move()
-            #                 # self._widgets[n].resize()
-            #             self._widgets[n].show()
 
             # use _focused here to avoid triggering
             # widgets' refresh
             self._focus = 1
             self._widgets[0].checked = True
         else:
-            pass
+            # self._erase_content()
             ''' update up to lists '''
-            for i in range(0,3):
-                self._widgets[i].show()
+            self._widgets[1].window = self._widgets[2].window = self._win
+            self._widgets[1].max_width = self._widgets[2].max_width = self._half_width
+            self._widgets[2].X = self.maxX - 1 - self._half_width
+            self._widgets[3].move(
+                self._widgets[2].Y + self._widgets[2].height + 1,
+                self._widgets[2].X - 2 + self._widgets[2].margin
+            )
+            self._widgets[1].recalculate_columns()
+            self._widgets[2].recalculate_columns()
+            ''' search check box (index = 4) '''
+            self._win.addstr(
+                self._widgets[2].Y - 1,
+                self._widgets[2].X - 2,
+                 'Sort by', curses.color_pair(4))
+            # for i in range(0,4):
+            #     self._widgets[i].show()
+            # self._win.refresh()
+            logger.error('\n\n== 0 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
             ''' Two lines under the lists '''
             Y = max(self._widgets[2].Y, self._widgets[1].Y + self._widgets[1].height, self._widgets[3].Y) + 2
+            ''' place search check box '''
+            self._widgets[4].move(Y, 2)
             ''' show descending check box '''
-            self._widgets[3].Y = self._widgets[2].Y + self._widgets[2].height + 1,
+            self._widgets[3].Y = self._widgets[2].Y + self._widgets[2].height + 1
             self._widgets[3].X = self._widgets[2].X - 2 + self._widgets[2].margin,
             self._widgets[3].show()
+
+            ''' search check box (index = 4) '''
+            self._win.addstr(
+                self._widgets[2].Y - 1,
+                self._widgets[2].X - 2,
+                 'Sort by', curses.color_pair(4))
+            ''' Search check box not moved, will be handled by show '''
+            self._win.refresh()
             self._calculate_widgets_yx(Y, X)
+            logger.error('== 1 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
+            for n in range(0,6):
+                ''' place editors' captions '''
+                self._win.addstr(
+                    self.yx[n+1][0],
+                    self.yx[n+1][1],
+                    self.captions[n+1],
+                    curses.color_pair(5)
+                )
+                ''' move exact check boxes '''
+                self._widgets[5+n*2].move(
+                    self.yx[n+1][0] + 1,
+                    self.yx[n+1][1] + len(self.captions[n+1]) + 2
+                )
+                ''' move line editors '''
+                self._widgets[6+n*2].move(
+                    self._win,
+                    self.yx[n+1][0]+2,
+                    self.yx[n+1][1],
+                    update=False
+                )
+                ''' change line editors width '''
+
+            ''' move limit field '''
+            self._widgets[-3].move(
+                self.yx[-2][0],
+                self.yx[-2][1]
+            )
+            ''' move buttons Y '''
+            self._h_buttons.move(self.yx[-1][0])
+            self._win.refresh()
+
+        logger.error('== 2 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
         self._h_buttons.calculate_buttons_position()
         self._update_focus()
         for n in self._widgets:
