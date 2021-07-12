@@ -71,7 +71,7 @@ You just go to [videolan.org](http://www.videolan.org/vlc/download-macos.html), 
 
 Finally, add a symbolic link to the executable as follows:
 
-    sudo ln -s /Applications/VLC.app/Contents/MacOS/VLC /usr/bin/cvlc
+    sudo ln -s /Applications/VLC.app/Contents/MacOS/VLC /usr/local/bin/cvlc
 
 b\. ***Homebrew package***
 
