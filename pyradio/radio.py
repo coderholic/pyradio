@@ -1695,6 +1695,7 @@ class PyRadio(object):
                  H M L            |Go to top / middle / bottom of screen.
                  P                |Go to |P|laying station.
                  Enter|,|Right|,|l    |Play selected station.
+                 ^N| / |^P          |Play |N|ext or |P|revious station.
                  i                |Display station |i|nfo (when playing).
                  r                |Select and play a random station.
                  Space|,|Left|,|h     |Stop / start playing selected station.
@@ -4235,6 +4236,32 @@ class PyRadio(object):
             except:
                 pass
 
+    def _move_cursor_one_up(self):
+        self._update_status_bar_right()
+        if self.number_of_items > 0:
+            self.setStation(self.selection - 1)
+            self._handle_cursor_move_up()
+
+    def _move_cursor_one_down(self):
+        self._update_status_bar_right()
+        if self.number_of_items > 0:
+            self.setStation(self.selection + 1)
+            self._handle_cursor_move_down()
+
+    def _play_next_station(self):
+        logger.error('DE ^N pressed!!!')
+        self.selection = self.playing
+        self._move_cursor_one_down()
+        self.playSelection()
+        self.refreshBody()
+
+    def _play_previous_station(self):
+        logger.error('DE ^P pressed!!!')
+        self.selection = self.playing
+        self._move_cursor_one_up()
+        self.playSelection()
+        self.refreshBody()
+
     def keypress(self, char):
         self.detect_if_player_exited = True
         if self._system_asked_to_terminate:
@@ -5759,17 +5786,11 @@ class PyRadio(object):
                     return
 
             if char in (curses.KEY_DOWN, ord('j')):
-                self._update_status_bar_right()
-                if self.number_of_items > 0:
-                    self.setStation(self.selection + 1)
-                    self._handle_cursor_move_down()
+                self._move_cursor_one_down()
                 return
 
             if char in (curses.KEY_UP, ord('k')):
-                self._update_status_bar_right()
-                if self.number_of_items > 0:
-                    self.setStation(self.selection - 1)
-                    self._handle_cursor_move_up()
+                self._move_cursor_one_up()
                 return
 
             if char in (curses.KEY_PPAGE, ):
@@ -5781,7 +5802,15 @@ class PyRadio(object):
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char in (ord('a'), ord('A')):
+                if self.player.isPlaying() and char in (curses.ascii.SO, curses.KEY_NEXT):
+                    self._play_next_station()
+                    return
+
+                elif self.player.isPlaying() and char in (curses.ascii.DLE, curses.KEY_PREVIOUS):
+                    self._play_previous_station()
+                    return
+
+                elif char in (ord('a'), ord('A')):
                     self.jumpnr = ''
                     self._cnf.jump_tag = -1
                     self._update_status_bar_right(status_suffix='')

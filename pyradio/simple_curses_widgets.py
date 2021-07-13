@@ -168,7 +168,10 @@ class SimpleCursesWidget(object):
                 self._win.erase()
                 self._win.touchwin()
                 self._win.refresh()
-            self._win.mvwin(Y, X)
+            try:
+                self._win.mvwin(Y, X)
+            except:
+                pass
             self._Y = Y
             self._X = X
             if show:
@@ -239,14 +242,18 @@ class SimpleCursesCounter(SimpleCursesWidget):
             with a number_length of 4, will display '  11'
         color
             text color
-        counter_color
-            counter color when enabled
+        counter_color_focused
+            counter color when enabled and focused
+        counter_color_not_focused
+            counter color when enabled but not focused
         counter_color_disabled
             counter color when disabled
     '''
     def __init__(
         self, Y, X, window,
-        color, counter_color, counter_color_disabled,
+        color, counter_color_focused,
+        counter_color_not_focused,
+        counter_color_disabled,
         minimum=0, maximum=100,
         step=1, big_step=5, value=1,
         number_length=3, string='{0}'
@@ -269,7 +276,8 @@ class SimpleCursesCounter(SimpleCursesWidget):
             self._len = max_len
         self.string = string
         self._color = color
-        self._counter_color = counter_color
+        self._counter_color_focused = counter_color_focused
+        self._counter_color_not_focused = counter_color_not_focused
         self._counter_color_disabled = counter_color_disabled
 
     @property
@@ -353,8 +361,11 @@ class SimpleCursesCounter(SimpleCursesWidget):
     def show(self, window, opening=False):
         if window:
             self._win = self._parent = window
-        if self._enabled and self._focused:
-            col = self._counter_color
+        if self._enabled:
+            if self._focused:
+                col = self._counter_color_focused
+            else:
+                col = self._counter_color_not_focused
         else:
             col = self._counter_color_disabled
         self._win.move(self._Y, self._X)

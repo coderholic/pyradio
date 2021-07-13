@@ -1390,7 +1390,8 @@ class RadioBrowserInfoSearchWindow(object):
                     X=self.yx[-2][1],
                     window=self._win,
                     color=curses.color_pair(5),
-                    counter_color=curses.color_pair(4),
+                    counter_color_focused=curses.color_pair(4),
+                    counter_color_not_focused=curses.color_pair(4),
                     counter_color_disabled=curses.color_pair(5),
                     minimum=20, maximum=1000,
                     step=1, big_step=10,
@@ -1414,9 +1415,8 @@ class RadioBrowserInfoSearchWindow(object):
                 else:
                     self._widgets[i].enabled = False
 
-            self._widgets[-1].enabled = True
-            self._widgets[-2].enabled = True
-            #self._h_buttons.calculate_buttons_position()
+            for i in range(-3, 0):
+                self._widgets[i].enabled = True
 
             self._win.refresh()
 
@@ -1484,6 +1484,7 @@ class RadioBrowserInfoSearchWindow(object):
                     update=False
                 )
                 ''' change line editors width '''
+                self._widgets[6+n*2].width = X - 2
 
             ''' move limit field '''
             self._widgets[-3].move(
