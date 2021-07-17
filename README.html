@@ -399,7 +399,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 </ul>
 <p>Example:</p>
 <pre>pyradio -ep &quot;vlc:--force-dolby-surround 2&quot;</pre>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a parameter is passed to “<em>mpv</em>” or “<em>mplayer</em>”, <strong>PyRadio</strong>" will use the default player profile (called “<strong>pyradio</strong>”).</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a parameter is passed to “<em>mpv</em>” or “<em>mplayer</em>”, <strong>PyRadio</strong>” will use the default player profile (called “<strong>pyradio</strong>”).</p>
 <p>For “<em>mpv</em>” and “<em>mplayer</em>” a profile can be specified (“<em>vlc</em>” does not support profiles). In this case the format of the <strong>parameters</strong> part of the command line is: <strong>profile:profile_name</strong>.</p>
 <p>Where:</p>
 <ul>
@@ -465,7 +465,7 @@ volume=50</pre>
 <p>There are 36 named registers (name is <strong>a-z</strong>, <strong>0-9</strong>) and one unnamed register.</p>
 <ul>
 <li><strong>Named registers</strong> are actually files that contain stations and can be opened and edited as regular playlist files. There are some differences in handling them: they are accessible either individually or using a special window, they are automatically saved, and writing errors are ignored. The later means that registers should not be regarded as normal playlist files that can be safely saved and used forever; this is true as long as there’s no problem with writing to them; if a writing error occurs they may get overwritten or emptied. To permanently save a register, on would <strong>rename</strong> it to a normal playlist file.</p></li>
-<li>The <strong>unnamed register</strong> holds just one station (the one that has been copied or added to a register or deleted from a playlist), and it is the one used when pasting to a register or a playlist. One can see its contents by pressing "**".</p></li>
+<li>The <strong>unnamed register</strong> holds just one station (the one that has been copied or added to a register or deleted from a playlist), and it is the one used when pasting to a register or a playlist. One can see its contents by pressing “**“.</p></li>
 </ul>
 <p>To <strong>copy</strong> a station to a register one would press “<strong>y</strong>” and:</p>
 <ul>
@@ -484,7 +484,7 @@ volume=50</pre>
 <ul>
 <li>“<strong>p</strong>” while editing a playlist or register.</p></li>
 <li>“<strong>\p</strong>” while editing a playlist or register. This would open the “<em>Paste selection</em>” window.</p></li>
-<li>“<strong>\p</strong>” in the “<em>Playlist Selection</em> or the”<em>Registers</em>" window.</p></li>
+<li>“<strong>\p</strong>” in the “<em>Playlist Selection</em> or the”<em>Registers</em>” window.</p></li>
 </ul>
 <h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> comes with 6 preconfigured (hard coded) themes:</p>
