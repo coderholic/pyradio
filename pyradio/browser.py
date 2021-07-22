@@ -267,7 +267,10 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         self._dns_info = RadioBrowserInfoDns()
         self._server = self._dns_info.give_me_a_server_url()
         if logger.isEnabledFor(logging.INFO):
-            logger.info('random server is ' + self._server)
+            if self._server:
+                logger.info('random server is ' + self._server)
+            else:
+                logger.info('No server URL found!!!')
         if self._server:
             self._get_title()
 
@@ -1770,8 +1773,11 @@ class RadioBrowserInfoDns(object):
         except:
             self._urls = None
 
-        for n in result:
-            self._urls.append(str(n).split(' ')[-1][:-1])
+        if result:
+            for n in result:
+                self._urls.append(str(n).split(' ')[-1][:-1])
+        else:
+            self._urls = None
 
     def give_me_a_server_url(self):
         ''' Returns a random server '''

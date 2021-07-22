@@ -354,6 +354,7 @@ class PyRadio(object):
                 self.ws.BROWSER_SORT_MODE: self._browser_sort,
                 self.ws.BROWSER_SERVER_SELECTION_MODE: self._browser_server_selection,
                 self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
+                self.ws.BROWSER_OPEN_MODE: self._show_connect_to_server_message,
                 }
 
         ''' list of help functions '''
@@ -3020,7 +3021,7 @@ class PyRadio(object):
         '''
         txt = '''Connecting to service.
                  ____Please wait...'''
-        self._show_help(txt, self.ws.NORMAL_MODE, caption=' ', prompt=' ', is_message=True)
+        self._show_help(txt, self.ws.BROWSER_OPEN_MODE, caption=' ', prompt=' ', is_message=True)
 
     def _open_playlist(self, a_url=None):
         ''' open playlist
@@ -3041,7 +3042,7 @@ class PyRadio(object):
                         self._cnf.open_browser(
                             online_service_url,
                             self._return_from_online_browser_search,
-                            self._show_connect_to_server_message)
+                            None)
                     except TypeError:
                         pass
                     logger.error('DE online browser = {}'.format(self._cnf._online_browser))
@@ -3050,9 +3051,12 @@ class PyRadio(object):
 
                         if not self._cnf._online_browser.initialize():
                             self._cnf.remove_from_playlist_history()
+                            self.ws.close_window()
                             self._print_service_connection_error()
                             self._cnf.browsing_station_service = False
                             return
+
+                        self.ws.close_window()
 
                         ''' make sure we don't send a wrong click '''
                         self._cnf._online_browser.search()
