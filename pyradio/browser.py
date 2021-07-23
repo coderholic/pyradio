@@ -351,16 +351,18 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         return ''
 
     def click(self, a_station):
-        def do_click(a_station_uuid):
+        def do_click(a_station, a_station_uuid):
             url = 'http://' + self._server + '/json/url/' + a_station_uuid
             try:
                 r = self._session.get(url=url, headers=self._headers, timeout=(self._search_timeout, 2 * self._search_timeout))
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Station click result: "{}"'.format(r.text))
+                # if '"ok":true' in r.text:
+                #     self._raw_stations[a_station]['clickcount'] += 1
             except:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Station click failed...')
-        threading.Thread(target=do_click, args=(self._raw_stations[a_station]['stationuuid'], )).start()
+        threading.Thread(target=do_click, args=(a_station, self._raw_stations[a_station]['stationuuid'], )).start()
 
     def vote(self, a_station):
         url = 'http://' + self._server + '/json/vote/' + self._raw_stations[a_station]['stationuuid']
@@ -371,12 +373,18 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             r = self._session.get(url=url, headers=self._headers, timeout=(self._search_timeout, 2 * self._search_timeout))
             message = json.loads(r.text)
             self.vote_result = self._raw_stations[a_station]['name'], message['message'][0].upper() + message['message'][1:]
+            logger.error('DE voting result = {}'.format(self.vote_result))
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Voting result: "{}"'.format(message))
+            ret = message['ok']
         except:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Station voting failed...')
             self.vote_result = self._raw_stations[a_station]['name'], 'Voting for station failed'
+            ret = False
+
+        if ret:
+            self._raw_stations[a_station]['votes'] += 1
 
         if self._vote_callback:
             self._vote_callback()
@@ -515,6 +523,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
 
         if self._search_return_function:
             self._search_return_function(ret)
+
 
     def _get_search_elements(self, a_search):
         '''
@@ -1205,6 +1214,13 @@ class RadioBrowserInfoSearchWindow(object):
         'State',
         'Codec')
 
+    ''' vertical placement of widgets
+        used for navigation
+    '''
+    left_column = (0, 1, 4, 5, 6, 7, 8, 17, 18)
+    middle_column = (9, 10, 11, 12)
+    right_column = (2, 3, 13, 14, 15, 16, 19)
+
     def __init__(self,
                  parent,
                  init=False
@@ -1427,6 +1443,18 @@ class RadioBrowserInfoSearchWindow(object):
             # widgets' refresh
             self._focus = 1
             self._widgets[0].checked = True
+
+            # set vertical placement variable
+            for i in range(0, len(self._widgets)):
+                if self._widgets[i].id in self.left_column:
+                    self._widgets[i]._vert = self.left_column
+                elif self._widgets[i].id in self.middle_column:
+                    self._widgets[i]._vert = self.middle_column
+                elif self._widgets[i].id in self.right_column:
+                    self._widgets[i]._vert = self.right_column
+                self._widgets[i]._vert_id = self._widgets[i]._vert.index(self._widgets[i].id)
+                # logger.error('DE =======\ni = {0}\nw = {1}\nid = {2}\n_vert = {3}\n_vert_id = {4}'.format(i, self._widgets[i], self._widgets[i].id, self._widgets[i]._vert, self._widgets[i]._vert_id))
+
         else:
             # self._erase_content()
             ''' update up to lists '''
