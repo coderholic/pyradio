@@ -554,7 +554,7 @@ class PyRadioEditor(object):
             elif char in (ord('\t'), 9, curses.KEY_DOWN):
                 self.focus +=1
                 self._reset_editors_escape_mode()
-            elif char == curses.KEY_UP:
+            elif char in (curses.KEY_UP, curses.KEY_BTAB):
                 self.focus -= 1
                 self._reset_editors_escape_mode()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
@@ -1083,7 +1083,7 @@ class PyRadioRenameFile(object):
                     self._widgets[2].enabled = self._widgets[1].checked
             elif char in (ord('\t'), 9, curses.KEY_DOWN):
                 self._focus_next()
-            elif char == curses.KEY_UP:
+            elif char in (curses.KEY_UP, curses.KEY_BTAB):
                 self._focus_previous()
             elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
                 if self._focus == 0:

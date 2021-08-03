@@ -1217,9 +1217,18 @@ class RadioBrowserInfoSearchWindow(object):
     ''' vertical placement of widgets
         used for navigation
     '''
-    left_column = (0, 1, 4, 5, 6, 7, 8, 17, 18)
-    middle_column = (9, 10, 11, 12)
-    right_column = (2, 3, 13, 14, 15, 16, 19)
+    _left_column = (0, 1, 4, 5, 6, 11, 12, 17, 18)
+    _middle_column = (7, 8, 13, 14)
+    _right_column = (2, 3, 9, 10, 15, 16, 19)
+
+    ''' line editors ids '''
+    _line_editor_id = []
+
+    ''' columns widget ids '''
+    _columns_id = []
+
+    ''' check boxrs ids to enable/disable columns widgets '''
+    _check_box_to_enable_widgets = (0, 4)
 
     def __init__(self,
                  parent,
@@ -1365,11 +1374,11 @@ class RadioBrowserInfoSearchWindow(object):
             ''' Two lines under the lists '''
             Y = max(self._widgets[2].Y, self._widgets[1].Y + self._widgets[1].height, self._widgets[3].Y) + 2
 
-            ''' search check box (index = 4) '''
             self._win.addstr(
                 self._widgets[2].Y - 1,
                 self._widgets[2].X - 2,
                  'Sort by', curses.color_pair(4))
+            ''' search check box (index = 4) '''
             self._widgets.append(SimpleCursesCheckBox(
                     Y, 2, 'Search',
                     curses.color_pair(9), curses.color_pair(4), curses.color_pair(5)))
@@ -1379,7 +1388,7 @@ class RadioBrowserInfoSearchWindow(object):
                     self.yx[n][0],
                     self.yx[n][1],
                     self.captions[n],
-                    curses.color_pair(5))
+                    curses.color_pair(4))
                 self._widgets.append(SimpleCursesCheckBox(
                     self.yx[n][0] + 1,
                     self.yx[n][1] + len(self.captions[n]) + 2,
@@ -1409,12 +1418,12 @@ class RadioBrowserInfoSearchWindow(object):
                     X=self.yx[-2][1],
                     window=self._win,
                     color=curses.color_pair(5),
-                    counter_color_focused=curses.color_pair(4),
+                    counter_color_focused=curses.color_pair(9),
                     counter_color_not_focused=curses.color_pair(4),
                     counter_color_disabled=curses.color_pair(5),
                     minimum=20, maximum=1000,
                     step=1, big_step=10,
-                    value=100, string='Limit results to {0} items'
+                    value=100, string='Limit results to {0} stations'
                 )
             )
             ''' buttons - index -2, -1 '''
@@ -1429,6 +1438,10 @@ class RadioBrowserInfoSearchWindow(object):
             self._widgets.append(self._h_buttons.buttons[1])
             for i, n in enumerate(self._widgets):
                 self._widgets[i].id = i
+                if type(self._widgets[i]).__name__ == 'SimpleCursesLineEdit':
+                    self._line_editor_id.append(i)
+                elif type(self._widgets[i]).__name__ == 'SimpleCursesWidgetColumns':
+                    self._columns_id.append(i)
                 if i < 5:
                     self._widgets[i].enabled = True
                 else:
@@ -1441,17 +1454,16 @@ class RadioBrowserInfoSearchWindow(object):
 
             # use _focused here to avoid triggering
             # widgets' refresh
-            self._focus = 1
             self._widgets[0].checked = True
 
             # set vertical placement variable
             for i in range(0, len(self._widgets)):
-                if self._widgets[i].id in self.left_column:
-                    self._widgets[i]._vert = self.left_column
-                elif self._widgets[i].id in self.middle_column:
-                    self._widgets[i]._vert = self.middle_column
-                elif self._widgets[i].id in self.right_column:
-                    self._widgets[i]._vert = self.right_column
+                if self._widgets[i].id in self._left_column:
+                    self._widgets[i]._vert = self._left_column
+                elif self._widgets[i].id in self._middle_column:
+                    self._widgets[i]._vert = self._middle_column
+                elif self._widgets[i].id in self._right_column:
+                    self._widgets[i]._vert = self._right_column
                 self._widgets[i]._vert_id = self._widgets[i]._vert.index(self._widgets[i].id)
                 # logger.error('DE =======\ni = {0}\nw = {1}\nid = {2}\n_vert = {3}\n_vert_id = {4}'.format(i, self._widgets[i], self._widgets[i].id, self._widgets[i]._vert, self._widgets[i]._vert_id))
 
@@ -1560,24 +1572,197 @@ class RadioBrowserInfoSearchWindow(object):
                 0 - do search
                 1 - Continue
                 2 - Display help
+                3 - Display Line Editor Help
         '''
+        if char in (
+            curses.KEY_EXIT, ord('q'), 27
+        ):
+            return -1
+
         if self._too_small:
             return 1
+
+        class_name = type(self._widgets[self._focus]).__name__
+
+        if char in (ord('\t'), 9):
+            self._focus_next()
+        elif char in (curses.KEY_BTAB, ):
+            self._focus_previous()
+        # elif char in (curses.KEY_UP, ):
+        #     self._focus_up()
+        # elif char in (curses.KEY_DOWN, ):
+        #     self._focus_down()
+        # elif char in (9, curses.KEY_TA)
+        elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
+                      ord('\r')) and self._focus == len(self._widgets) - 1:
+            ''' enter on cancel button  '''
+            return -1
+        elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
+                      ord('\r')) and self._focus == len(self._widgets) - 2:
+            ''' enter on ok button  '''
+            return 0
+
+        else:
+            if class_name == 'SimpleCursesWidgetColumns':
+                ret = self._widgets[self._focus].keypress(char)
+                if ret == 0:
+                    # item selected
+                    self._win.refresh()
+                elif ret == 2:
+                    # cursor moved
+                    self._win.refresh()
+
+            elif self._focus in self._check_box_to_enable_widgets:
+                ret = self._widgets[self._focus].keypress(char)
+                if not ret:
+                    tp = list(self._check_box_to_enable_widgets)
+                    tp.remove(self._focus)
+                    other = tp[0]
+                    self._widgets[other].checked = not self._widgets[self._focus].checked
+                    self._fix_widgets_enabling()
+                    self._win.refresh()
+                    return 1
+
+            elif class_name == 'SimpleCursesCheckBox':
+                ret = self._widgets[self._focus].keypress(char)
+                if not ret:
+                    return 1
+
+            elif class_name == 'SimpleCursesCounter':
+                ret = self._widgets[self._focus].keypress(char)
+                if ret == 0:
+                    self._win.refresh()
+                    return 1
+
+            elif class_name == 'SimpleCursesLineEdit':
+                ret = self._widgets[self._focus].keypress(self._win, char)
+                if ret == -1:
+                    # Cancel
+                    return -1
+                elif ret == 2:
+                    # display Line Editor Help
+                    return 3
+
+            if char in (ord('j'), curses.KEY_UP) and \
+                    class_name != 'SimpleCursesWidgetColumns':
+                self._focus_up()
+            elif char in (ord('k'), curses.KEY_DOWN) and \
+                    class_name != 'SimpleCursesWidgetColumns':
+                self._focus_down()
+            elif char in (ord('l'), curses.KEY_RIGHT) and \
+                    class_name not in ('SimpleCursesWidgetColumns',
+                                       'SimpleCursesLineEdit'):
+                self._focus_next()
+            elif char in (ord('h'), curses.KEY_LEFT) and \
+                    class_name not in ('SimpleCursesWidgetColumns',
+                                       'SimpleCursesLineEdit'):
+                self._focus_previous()
 
         if char == ord('?'):
             return 2
 
-        if char in (
-            curses.KEY_EXIT, ord('q'), 27,
-            ord('h'), curses.KEY_LEFT
-        ):
-            return -1
+        ''' continue '''
+        return 1
 
-        elif char in (
-            ord('l'), ord(' '), ord('\n'), ord('\r'),
-            curses.KEY_RIGHT, curses.KEY_ENTER
-        ):
-            return 0
+    def _fix_widgets_enabling(self):
+        col = True if self._widgets[0].checked else False
+        self._widgets[1].enabled = col
+        for i in range(self._check_box_to_enable_widgets[1] + 1, len(self._widgets) - 3):
+            self._widgets[i].enabled = not col
+            # logger.error('DE widget {0} enabled: {1}'.format(i, not col))
+
+    def _focus_next(self):
+        # logger.error('DE focus next ==========================')
+        new_focus = self._focus + 1
+        if new_focus == len(self._widgets):
+            new_focus = 0
+        # logger.error('DE new_focus = {}'.format(new_focus))
+        focus_ok = False
+        for i in range(new_focus, len(self._widgets)):
+            if self._widgets[i].enabled:
+                new_focus = i
+                focus_ok = True
+                # logger.error('DE 1 new_focus = {}'.format(new_focus))
+                break
+        if not focus_ok:
+            for i in range(0, new_focus + 1):
+                if self._widgets[i].enabled:
+                    new_focus = i
+                    focus_ok = True
+                    # logger.error('DE 2 new_focus = {}'.format(new_focus))
+                    break
+        logger.error('DE new_focus = {}'.format(new_focus))
+        # logger.error('DE end focus next ==========================')
+        self._apply_new_focus(new_focus)
+
+    def _focus_previous(self):
+        # logger.error('DE focus previous ==========================')
+        new_focus = self._focus - 1
+        if new_focus == -1:
+            new_focus = len(self._widgets) - 1
+        # logger.error('DE new_focus = {}'.format(new_focus))
+        focus_ok = False
+        for i in range(new_focus, -1, -1):
+            # logger.error('DE i = {}'.format(i))
+            if self._widgets[i].enabled:
+                new_focus = i
+                focus_ok = True
+                # logger.error('DE 1 new_focus = {}'.format(new_focus))
+                break
+        if not focus_ok:
+            for i in range(len(self._widgets) - 1, new_focus, -1):
+                # logger.error('DE i = {}'.format(i))
+                if self._widgets[i].enabled:
+                    new_focus = i
+                    focus_ok = True
+                    # logger.error('DE 2 new_focus = {}'.format(new_focus))
+                    break
+        # logger.error('DE end focus previous ==========================')
+        self._apply_new_focus(new_focus)
+
+    def _focus_up(self):
+        logger.error('DE self._focus_up()')
+        new_focus, col = self._get_column_list(self._focus)
+        logger.error('DE new_focus = {0}, col = {1}'.format(new_focus, col))
+        while True:
+            new_focus -= 1
+            logger.error('DE new_focus = {}'.format(new_focus))
+            if new_focus < 0:
+                new_focus = len(col) - 1
+            logger.error('DE new_focus = {}'.format(new_focus))
+            logger.error('DE col[new_focus] = {}'.format(col[new_focus]))
+            if self._widgets[col[new_focus]].enabled:
+                break
+        self._apply_new_focus(col[new_focus])
+
+    def _focus_down(self):
+        new_focus, col = self._get_column_list(self._focus)
+        logger.error('DE new_focus = {0}, col = {1}'.format(new_focus, col))
+        while True:
+            new_focus += 1
+            logger.error('DE new_focus = {}'.format(new_focus))
+            if new_focus == len(col):
+                new_focus = 0
+            logger.error('DE new_focus = {}'.format(new_focus))
+            logger.error('DE col[new_focus] = {}'.format(col[new_focus]))
+            if self._widgets[col[new_focus]].enabled:
+                break
+        self._apply_new_focus(col[new_focus])
+
+    def _apply_new_focus(self, new_focus):
+        if new_focus != self._focus:
+            self._widgets[self._focus].focused = False
+            self._focus = new_focus
+            self._widgets[self._focus].focused = True
+            self._win.refresh()
+
+    def _get_column_list(self, this_id):
+        if this_id in self._left_column:
+            return self._left_column.index(this_id), self._left_column
+        elif this_id in self._middle_column:
+            return self._middle_column.index(this_id), self._middle_column
+        elif this_id in self._right_column:
+            return self._right_column.index(this_id), self._right_column
 
 class RadioBrowserInfoData(object):
     ''' Read search parameters for radio.browser.info service

@@ -71,6 +71,7 @@ class Window_Stack_Constants(object):
     YANK_HELP_MODE = 118
     MOUSE_RESTART_INFO_MODE = 119
     IN_PLAYER_PARAMS_EDITOR_HELP_MODE = 120
+    RADIO_BROWSER_SEARCH_HELP_MODE = 121
     # TODO: return values from opening theme
     PLAYLIST_RECOVERY_ERROR_MODE = 200
     PLAYLIST_NOT_FOUND_ERROR_MODE = 201
@@ -212,6 +213,7 @@ class Window_Stack_Constants(object):
         BROWSER_SEARCH_MODE: 'BROWSER_SEARCH_MODE',
         NO_BROWSER_SEARCH_RESULT_NOTIFICATION: 'NO_BROWSER_SEARCH_RESULT_NOTIFICATION',
         BROWSER_OPEN_MODE: 'BROWSER_OPEN_MODE',
+        RADIO_BROWSER_SEARCH_HELP_MODE: 'RADIO_BROWSER_SEARCH_HELP_MODE',
     }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -273,6 +275,7 @@ class Window_Stack_Constants(object):
         STATIONS_INTEGRATED_MODE,
         STATION_DATABASE_INFO_MODE,
         VOTE_RESULT_MODE,
+        RADIO_BROWSER_SEARCH_HELP_MODE,
     )
 
     def __init__(self):

@@ -355,6 +355,7 @@ class PyRadio(object):
                 self.ws.BROWSER_SERVER_SELECTION_MODE: self._browser_server_selection,
                 self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
                 self.ws.BROWSER_OPEN_MODE: self._show_connect_to_server_message,
+                self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
                 }
 
         ''' list of help functions '''
@@ -380,6 +381,7 @@ class PyRadio(object):
                 self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
                 self.ws.PLAYER_PARAMS_MODE: self._show_config_player_help,
                 self.ws.IN_PLAYER_PARAMS_EDITOR: self._show_params_ediror_help,
+                self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
         }
 
         ''' search classes
@@ -1688,6 +1690,23 @@ class PyRadio(object):
         self._theme_not_supported_notification_duration = 0.75
         #arg[1].release()
         self.refreshBody()
+
+    def _show_radio_browser_search_help(self):
+        txt = '''Tab| / |Sh-Tab     |Go to next / previous field.
+                 j|, |Up| / |k|, |Down  |Go to next / previous field vertivally.
+                 h|, |Left| / |l|, |Right
+                 _________________|Go to next / previous field (when
+                 _________________|applicable). Also, change counter value.
+                 Space            |Toggle check buttons.
+                 _________________|Toggle multiple selection.
+                 Enter            |Perform search / cancel (on push buttons).
+                 Esc              |Cancel operation.
+                 _
+                 |Managing player volume does not work in search mode.
+                 '''
+        self._show_help(txt,
+                        mode_to_set=self.ws.RADIO_BROWSER_SEARCH_HELP_MODE,
+                        caption=' Radio Browser Search Help ')
 
     def _show_main_help(self):
         txt = '''Up|,|j|,|PgUp|,
@@ -5036,17 +5055,27 @@ class PyRadio(object):
             return
 
 
-        elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
-                char not in self._chars_to_bypass:
+        # elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
+        #         (char == ord('?') or char not in self._chars_to_bypass):
+        elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
 
             ret = self._cnf._online_browser.keypress(char)
+            logger.error('DE BROWSER SEARCH ret = {}'.format(ret))
             if ret == 0:
+                ''' Ok, search term is valid '''
                 self._cnf._online_browser._search_history_index = 2
                 self._cnf._online_browser.search()
 
             elif ret == -1:
+                ''' Cancel '''
                 self.ws.close_window()
                 self.refreshBody()
+            elif ret == 2:
+                ''' Display help '''
+                self._show_radio_browser_search_help()
+            elif ret == 3:
+                ''' display help editor help '''
+                self._show_line_editor_help()
             return
 
         elif self.ws.operation_mode == self.ws.BROWSER_SORT_MODE and \
@@ -6709,6 +6738,9 @@ class PyRadio(object):
                     column_name = a_header[2]
                     # logger.error('DE {}'.format(column_separator))
                     # logger.error('DE {}'.format(column_name))
+                    ''' clear empty space after "Name" '''
+                    to_clear_start = pad + 2 + len(a_header[0][1])
+                    self.outerBodyWin.addstr((column_separator[0] - to_clear_start) * ' ', curses.color_pair(2))
                     for j, col in enumerate(column_separator):
                         if version_info < (3, 0):
                             self.outerBodyWin.addstr(i + 1, col + 2, u'│'.encode('utf-8', 'replace'), curses.color_pair(5))

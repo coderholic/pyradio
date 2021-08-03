@@ -210,7 +210,7 @@ class SimpleCursesWidget(object):
         '''Refresh the widget'''
         pass
 
-    def key(char):
+    def keypress(char):
         '''Handle keyboard input
 
             Returns
@@ -279,6 +279,9 @@ class SimpleCursesCounter(SimpleCursesWidget):
         self._counter_color_focused = counter_color_focused
         self._counter_color_not_focused = counter_color_not_focused
         self._counter_color_disabled = counter_color_disabled
+
+    def refresh(self):
+        self.show(self._win)
 
     @property
     def value(self):
@@ -376,6 +379,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
             self._win.addstr(self._suffix, self._color)
         ''' overwrite last self._len characters '''
         self._win.addstr(' ' * self._len, self._color)
+        self._showed = True
 
     def keypress(self, char):
         ''' SimpleCursesCounter keypress
@@ -402,28 +406,28 @@ class SimpleCursesCounter(SimpleCursesWidget):
             self._value -= self._big_step
             if self._value < self._min:
                 self._value = self._min
-            self.show()
+            self.show(self._win)
             return 0
 
         elif char in (curses.KEY_NPAGE, ):
             self._value += self._big_step
             if self._value > self._max:
                 self._value = self._max
-            self.show()
+            self.show(self._win)
             return 0
 
         elif char in (ord('h'), curses.KEY_LEFT):
             self._value -= self._step
             if self._value < self._min:
                 self._value = self._min
-            self.show()
+            self.show(self._win)
             return 0
 
         elif char in (ord('l'), curses.KEY_RIGHT):
             self._value += self._step
             if self._value > self._max:
                 self._value = self._max
-            self.show()
+            self.show(self._win)
             return 0
 
         return 1
@@ -457,6 +461,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                  active=-1,
                  margin=0,
                  align=0,
+                 right_arrow_selects = False,
                  callback_function=None
                  ):
         ''' Initialize the widget.
@@ -492,6 +497,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 Number of spaces to add before and after each item caption
             align
                 Items alignment (left, right, center)
+            right_arrow_selects
+                If True, pressing right arrow will activate the selected item
             callback_function
                 A function to execute when new active item selected
         '''
@@ -506,6 +513,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         self._color_cursor_selection = color_cursor_selection
         self._margin = margin
         self._align = align
+        self._right_arrow_selects = right_arrow_selects
         self._placement = placement
         self._callback_function = callback_function
         self.selection = selection
@@ -566,8 +574,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
     @window.setter
     def window(self, value):
         self._win = value
-        # if self._showed:
-        #     self.show()
+        if self._showed:
+            self.show()
 
     @property
     def enabled(self):
@@ -577,8 +585,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
     @enabled.setter
     def enabled(self, value):
         self._enabled = value
-        # if self._showed:
-        #     self.show()
+        if self._showed:
+            self.show()
 
     @property
     def focused(self):
@@ -588,8 +596,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
     @focused.setter
     def focused(self, value):
         self._focused = value
-        # if self._showed:
-        #     self.show()
+        if self._showed:
+            self.show()
 
     @property
     def max_width(self):
@@ -679,30 +687,32 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 logger.error('error displaying item {}'.format(i))
 
         self._showed = True
-        for i, n in enumerate(self._coords):
-            logger.error('{}: {}, {}'.format(i, *n))
+        # for i, n in enumerate(self._coords):
+        #     logger.error('Item {}: X = {}, Y = {}'.format(i, *n))
+
+        self._showed = True
 
     def keypress(self, char):
-        ''' SimpleMenuEntries keypress
+        ''' SimpleCursesWidgetColumns keypress
 
             Returns
             -------
                -1 - Cancel
                 0 - Item selected
                 1 - Continue
-                2 - Display help
+                2 - Cursor moved
+                3 - Display help
         '''
         if (not self._focused) or (not self._enabled):
             return 1
 
         if char in (
             curses.KEY_EXIT, ord('q'), 27,
-            ord('h'), curses.KEY_LEFT
         ):
             return -1
 
         elif char == ord('?'):
-            return 2
+            return 3
 
         elif self._right_arrow_selects and char in (
             ord('l'), ord(' '), ord('\n'), ord('\r'),
@@ -725,10 +735,12 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         elif char in (ord('g'), curses.KEY_HOME):
             self.selection = 0
             self.show()
+            return 2
 
         elif char in (ord('G'), curses.KEY_END):
             self.selection = len(self.items) - 1
             self.show()
+            return 2
 
         elif char in (curses.KEY_PPAGE, ):
             if self.selection == 0:
@@ -738,6 +750,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 if self.selection < 0:
                     self.selection = 0
             self.show()
+            return 2
 
         elif char in (curses.KEY_NPAGE, ):
             if self.selection == len(self.items) - 1:
@@ -747,18 +760,61 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 if self.selection >= len(self.items):
                     self.selection = len(self.items) - 1
             self.show()
+            return 2
 
         elif char in (ord('k'), curses.KEY_UP):
             self.selection -= 1
             if self.selection < 0:
                 self.selection = len(self.items) - 1
             self.show()
+            return 2
 
         elif char in (ord('j'), curses.KEY_DOWN):
             self.selection += 1
             if self.selection == len(self.items):
                 self.selection = 0
             self.show()
+            return 2
+
+        elif char in (ord('l'), curses.KEY_RIGHT):
+            pY, pX = self._coords[self.selection]
+            # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+            pX += 1
+            if pX >= self._columns:
+                pX = 0
+            # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+            # logger.error('DE {}'.format(self._coords))
+            try:
+                it = self._coords.index((pY, pX))
+            except ValueError:
+                it = self._coords.index((pY, 0))
+            # logger.error('DE it = {}'.format(it))
+            self.selection = it
+            self.show()
+            return 2
+
+        elif char in (ord('h'), curses.KEY_LEFT):
+            pY, pX = self._coords[self.selection]
+            # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+            pX -= 1
+            if pX < 0:
+                pX = self._columns - 1
+            # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+            # logger.error('DE {}'.format(self._coords))
+            try:
+                it = self._coords.index((pY, pX))
+            except ValueError:
+                pX -= 1
+                while True:
+                    try:
+                        it = self._coords.index((pY, pX))
+                        break
+                    except ValueError:
+                        pX -= 1
+            # logger.error('DE it = {}'.format(it))
+            self.selection = it
+            self.show()
+            return 2
 
         return 1
 
@@ -1183,10 +1239,10 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         self._height = 1
         self._width = len(self._title) + 4
 
-    def key(self, char):
+    def keypress(self, char):
         if self._focused and \
                 self.enabled and \
-                char in (ord(' '), ):
+                char in (ord(' '), curses.KEY_ENTER):
             self.checked = not self._checked
             if self._checked and \
                     self._callback_function is not None:
@@ -1302,7 +1358,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
             self._win.touchwin()
             self._win.refresh()
 
-    def key(self, char):
+    def keypress(self, char):
         if char in (ord(' '), ord('\n'),
                     ord('\r'), curses.KEY_ENTER) and \
                 self._focused:
@@ -1467,7 +1523,6 @@ class SimpleCursesLineEdit(object):
     _parent_win = None
     _caption_win = None      # contains box and caption
     _edit_win = None         # contains the "input box"
-    _enabled = True
     _use_paste_mode = False  # paste mode is off by default
     _paste_mode = False      # enables direct insersion of ? and \
 
@@ -1507,6 +1562,8 @@ class SimpleCursesLineEdit(object):
     _ungetch_unbound_keys = False
 
     _focused = True
+    _enabled = True
+    _showed = False
 
     ''' if width < 1, auto_width gets this value,
         so that width gets parent.width - auto_width '''
@@ -1612,12 +1669,25 @@ class SimpleCursesLineEdit(object):
         self._calculate_window_metrics()
 
     @property
+    def focused(self):
+        '''Returns if the widget has focus'''
+        return self._focused
+
+    @focused.setter
+    def focused(self, value):
+        self._focused = value
+        if self._showed:
+            self.refresh()
+
+    @property
     def enabled(self):
         return self._enabled
 
     @enabled.setter
     def enabled(self, val):
         self._enabled = val
+        if self._showed:
+            self.refresh()
 
     @property
     def backslash_pressed(self):
@@ -1660,16 +1730,6 @@ class SimpleCursesLineEdit(object):
         else:
             self._width = val
             self._auto_width = val
-
-    @property
-    def focused(self):
-        return self._focused
-
-    @focused.setter
-    def focused(self, val):
-        if val != self._focused:
-            self._focused = val
-            # self.show(self.parent_win)
 
     @property
     def string(self):
@@ -1822,7 +1882,8 @@ class SimpleCursesLineEdit(object):
             else:
                 self.string = self._displayed_string = ''
                 self._curs_pos = self._disp_curs_pos = self._first = 0
-        self._edit_win.addstr(0, 0, self._displayed_string, active_edit_color)
+        if self._enabled:
+            self._edit_win.addstr(0, 0, self._displayed_string, active_edit_color)
 
         ''' reset position '''
         if self._reset_position:
@@ -1842,6 +1903,7 @@ class SimpleCursesLineEdit(object):
             self._edit_win.chgat(0, self._disp_curs_pos, 1, self.cursor_color)
 
         self._edit_win.refresh()
+        self._showed = True
 
     def move(self, parent, newY, newX, opening=False, update=True):
         if update:
@@ -1851,6 +1913,9 @@ class SimpleCursesLineEdit(object):
             self._parent_win = parent
             self.y = newY
             self.x = newX
+
+    def refresh(self):
+        self.show(self._parent_win, opening=False)
 
     def show(self, parent_win, **kwargs):
         opening = True
@@ -1889,6 +1954,7 @@ class SimpleCursesLineEdit(object):
                 )
         self._caption_win.refresh()
         self.refreshEditWindow(opening)
+        self._showed = True
 
     def _go_to_start(self):
         self._first = self._curs_pos = self._disp_curs_pos = 0
