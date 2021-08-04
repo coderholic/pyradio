@@ -402,14 +402,14 @@ class SimpleCursesCounter(SimpleCursesWidget):
         elif char == ord('?'):
             return 2
 
-        elif char in (curses.KEY_PPAGE, ):
+        elif char in (curses.KEY_NPAGE, ):
             self._value -= self._big_step
             if self._value < self._min:
                 self._value = self._min
             self.show(self._win)
             return 0
 
-        elif char in (curses.KEY_NPAGE, ):
+        elif char in (curses.KEY_PPAGE, ):
             self._value += self._big_step
             if self._value > self._max:
                 self._value = self._max
@@ -626,7 +626,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         self._coords = []
 
     def show(self):
-        logger.error('DE columns = {}, rows ={}'.format(self._columns, self._maxY))
+        # logger.error('DE columns = {}, rows ={}'.format(self._columns, self._maxY))
         for i, n in enumerate(self.items):
             ''' create string to display '''
             if self._align == self.LEFT:
@@ -637,27 +637,27 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 disp_item = n.center(self._item_width)
 
             ''' find color to use '''
-            logger.error('DE self._focused = {}'.format(self._focused))
+            # logger.error('DE self._focused = {}'.format(self._focused))
             if self._focused and self._enabled:
-                logger.error('DE focused and enabled')
+                # logger.error('DE focused and enabled')
                 col = self._color
-                logger.error('{0}, sel={1}, ac={2}'.format(i, self.selection, self.active))
+                # logger.error('{0}, sel={1}, ac={2}'.format(i, self.selection, self.active))
                 if i == self.selection and i == self.active:
                     col = self._color_cursor_active
-                    logger.error('active color')
+                    # logger.error('active color')
                 elif i == self.selection:
                     col =self._color_cursor_selection
-                    logger.error('color_cursor_selection')
+                    # logger.error('color_cursor_selection')
                 elif i == self.active:
                     col = self._color_active
-                    logger.error('color_cursor_active')
+                    # logger.error('color_cursor_active')
             elif self._enabled:
-                logger.error('DE enabled')
+                # logger.error('DE enabled')
                 col = self._color
                 if i == self.active:
                     col = self._color_active
             else:
-                logger.error('DE not focused')
+                # logger.error('DE not focused')
                 col = self._color
 
             ''' fill coords list, if not filled yet '''
@@ -671,7 +671,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                     else:
                         column = int(i / self._columns)
                         row = int(i % self._columns)
-                logger.error('DE i = {}, column = {}, row = {}'.format(i, column, row))
+                # logger.error('DE i = {}, column = {}, row = {}'.format(i, column, row))
 
                 self._coords.append((column, row))
 
@@ -686,7 +686,6 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             except:
                 logger.error('error displaying item {}'.format(i))
 
-        self._showed = True
         # for i, n in enumerate(self._coords):
         #     logger.error('Item {}: X = {}, Y = {}'.format(i, *n))
 

@@ -25,6 +25,66 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
+RADIO_BROWSER_DISPLAY_TERMS = {
+    'topvote': 0,
+    'topclick': 1,
+    'lastclick': 2,
+    'lastchange': 3,
+    'changed': -1,
+    'improvable': -1,
+    'broken': -1,
+}
+
+RADIO_BROWSER_SEARCH_BY_TERMS = {
+    'byuuid': -1,
+    'byname': 5,
+    'bynameexact': 5,
+    'bycodec': 16,
+    'bycodecexact': 16,
+    'bycountry': 8,
+    'bycountryexact': 8,
+    'bycountrycodeexact': -1,
+    'bystate': 14,
+    'bystateexact': 14,
+    'bylanguage': 10,
+    'bylanguageexact': 10,
+    'bytag': 12,
+    'bytagexact': 12,
+}
+
+RADIO_BROWSER_SEARCH_SORT_TERMS = {
+    'random': 1,
+    'name': 2,
+    'tags': 3,
+    'country': 4,
+    'state': 5,
+    'language': 6,
+    'votes': 7,
+    'clickcount': 8,
+    'bitrate': 9,
+    'codec': 10,
+}
+
+RADIO_BROWSER_SEARCH_TERMS = {
+    'name': 6,
+    'nameExact': 5,
+    'country': 8,
+    'countryExact': 7,
+    'countrycode': -1,
+    'state': 13,
+    'stateExact': 14,
+    'language': 10,
+    'languageExact': 9,
+    'tag': 12,
+    'tagList': 12,
+    'tagExact': 11,
+    'codec': 16,
+    'bitrateMin': -1,
+    'bitrateMax': -1,
+    'has_geo_info': -1,
+    'offset': -1,
+}
+
 def country_from_server(a_server):
     if a_server:
         country = a_server.split('.')[0]
@@ -57,7 +117,7 @@ class PyRadioStationsBrowser(object):
     _url_timeout = 3
     _search_timeout = 3
     _vote_callback = None
-    _sort = _sort_win = None
+    _sort = _search_win = None
 
     # Normally outer boddy (holding box, header, internal header) is
     # 2 chars wider that the internal body (holding the stations)
@@ -106,8 +166,8 @@ class PyRadioStationsBrowser(object):
     @outer_parent.setter
     def outer_parent(self, val):
         self._outer_parent = val
-        if self._sort_win:
-            self._sort_win._parent = val
+        if self._search_win:
+            self._search_win._parent = val
 
     @property
     def outer_internal_body_half_diff(self):
@@ -275,8 +335,8 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             self._get_title()
 
             self._search_history.append({
-                'type': 'topvote',
-                'term': '100',
+                'type': 'lastclick',
+                'term': '50',
                 'post_data': None,
             })
 
@@ -289,9 +349,9 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             self._search_history.append({
                 'type': 'search',
                 'term': '',
-                'post_data': {'name': 'jaz'},
+                'post_data': {'name': 'Jazz', 'codec': 'mp3', 'order': 'clickcount', 'reverse': 'true', 'limit': '40'},
             })
-            self._search_history_index = 1
+            self._search_history_index = 2
             return True
         return False
 
@@ -373,7 +433,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             r = self._session.get(url=url, headers=self._headers, timeout=(self._search_timeout, 2 * self._search_timeout))
             message = json.loads(r.text)
             self.vote_result = self._raw_stations[a_station]['name'], message['message'][0].upper() + message['message'][1:]
-            logger.error('DE voting result = {}'.format(self.vote_result))
+            # logger.error('DE voting result = {}'.format(self.vote_result))
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Voting result: "{}"'.format(message))
             ret = message['ok']
@@ -531,7 +591,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             values from a search dict.
             To be used with the sort function
         '''
-        logger.error('DE search in function is "{}"'.format(a_search))
+        logger.error('DE search in function _get_search_elements is\n\t"{}"'.format(a_search))
         a_term = a_search['term']
         p_data = a_search['post_data']
         self.search_by = None
@@ -637,14 +697,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         return False
 
     def _format_url(self, a_search):
-        if a_search['type'] in ('topvote',
-                                'topclick',
-                                'lastclick',
-                                'lastchange',
-                                'changed',
-                                'improvable',
-                                'broken',
-                                ):
+        if a_search['type'] in RADIO_BROWSER_DISPLAY_TERMS.keys():
             url = 'http://{0}{1}'.format(
                 self._server,
                 '/json/stations/{}'.format(a_search['type'])
@@ -653,21 +706,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 url += '/{}'.format(a_search['term'])
             self._search_type = 0
 
-        elif a_search['type'] in ('byuuid',
-                                  'byname',
-                                  'bynameexact',
-                                  'bycodec',
-                                  'bycodecexact',
-                                  'bycountry',
-                                  'bycountryexact',
-                                  'bycountrycodeexact',
-                                  'bystate',
-                                  'bystateexact',
-                                  'bylanguage',
-                                  'bylanguageexact',
-                                  'bytag',
-                                  'bytagexact',
-                                  ):
+        elif a_search['type'] in RADIO_BROWSER_SEARCH_BY_TERMS.keys():
             url = 'http://{0}{1}/{2}'.format(
                 self._server,
                 '/json/stations/{}'.format(a_search['type']),
@@ -1153,12 +1192,13 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
 
     def do_search(self, parent=None, init=False):
         if init:
-            self._sort_win = RadioBrowserInfoSearchWindow(
+            self._search_win = RadioBrowserInfoSearchWindow(
                 parent=parent,
                 init=init
             )
-        self.keyboard_handler = self._sort_win
-        self._sort_win.show()
+        self._search_win.set_search_history(self._search_history_index, self._search_history)
+        self.keyboard_handler = self._search_win
+        self._search_win.show()
 
 class RadioBrowserInfoSearchWindow(object):
 
@@ -1263,6 +1303,106 @@ class RadioBrowserInfoSearchWindow(object):
                 self._focus = 0
         self.show()
 
+    def _search_term_to_widgets(self, a_search):
+        logger.error('DE =========================')
+        logger.error('DE term = {}'.format(a_search))
+        logger.error('DE type = {}'.format(a_search['type']))
+        self._widgets[-3].value = 100
+        self._widgets[-2].enabled = True
+        self._widgets[-1].enabled = True
+        if a_search['type'] in RADIO_BROWSER_DISPLAY_TERMS.keys():
+            ''' populate the "Display by" part '''
+            self._widgets[0].checked = True
+            self._widgets[4].checked = False
+            self._widgets[1].selection = self._widgets[1].active = RADIO_BROWSER_DISPLAY_TERMS[a_search['type']]
+            self._widgets[2].selection = 0
+            self._widgets[3].checked = False
+
+            self._widgets[-3].value = int(a_search['term'])
+            for i in range(5, len(self._widgets) - 3):
+                try:
+                    self._widgets[i].string = ''
+                except:
+                    self._widgets[i].checked = False
+                self._widgets[i].enabled = False
+
+            self._focus = 1
+            logger.error('DE RADIO_BROWSER_DISPLAY_TERMS[a_search["type"]] = {}'.format(RADIO_BROWSER_DISPLAY_TERMS[a_search['type']]))
+
+        else:
+            ''' populate the "Search" part '''
+            self._widgets[0].checked = False
+            self._widgets[4].checked = True
+            self._widgets[1].selection = self._widgets[1].active = 0
+            self._widgets[2].selection = self._widgets[2].active = 0
+            self._widgets[3].checked = False
+            for i in range(5, len(self._widgets) - 3):
+                try:
+                    self._widgets[i].string = ''
+                except:
+                    self._widgets[i].checked = False
+                self._widgets[i].enabled = True
+
+            if a_search['type'] in RADIO_BROWSER_SEARCH_BY_TERMS.keys():
+                line_edit = RADIO_BROWSER_SEARCH_BY_TERMS[a_search['type']]
+
+                if a_search['type'].endswith('exact'):
+                    logger.error('DE Exact checked!!!')
+                    self._widgets[line_edit-1].checked = True
+                self._widgets[line_edit].string = a_search['term']
+                self._focus = line_edit
+                logger.error('DE RADIO_BROWSER_SEARCH_BY_TERMS[a_search["type"]] = {}'.format(RADIO_BROWSER_SEARCH_BY_TERMS[a_search['type']]))
+
+            elif a_search['type'] == 'search':
+                ''' populate the "Search" part '''
+                s_id_list = []
+                for n in a_search['post_data'].items():
+                    logger.error('DE ===== n = {}'.format(n))
+                    if n[0] in RADIO_BROWSER_SEARCH_TERMS.keys():
+                        if n[1] != -1:
+                            s_id = RADIO_BROWSER_SEARCH_TERMS[n[0]]
+                            logger.error('DE s_id = {}'.format(s_id))
+                            if type(self._widgets[s_id]).__name__ == 'SimpleCursesLineEdit':
+                                self._widgets[s_id].string = n[1]
+                                logger.error('DE n[0] = {0}, string = "{1}"'.format(n[0], n[1]))
+                            else:
+                                self._widgets[s_id].checked = bool(n[1])
+                                logger.error('DE n[0] = {0}, n[1] = {1}, bool = {2}'.format(n[0], n[1], bool(n[1])))
+                            s_id_list.append(s_id)
+                self._focus = min(s_id_list)
+
+            if a_search['post_data']:
+                for n in a_search['post_data'].keys():
+                    if n == 'order':
+                        order = a_search['post_data']['order']
+                        if order in RADIO_BROWSER_SEARCH_SORT_TERMS.keys():
+                            order_id = RADIO_BROWSER_SEARCH_SORT_TERMS[order]
+                            self._widgets[2].selection = self._widgets[2].active = order_id
+                    elif n == 'limit':
+                        self._widgets[-3].value = int(a_search['post_data']['limit'])
+                    elif n == 'reverse':
+                        self._widgets[3].checked = bool(a_search['post_data']['reverse'])
+
+
+        logger.error('DE =========================')
+
+    def set_search_history(
+            self,
+            main_window_search_history_index,
+            main_window_search_history
+    ):
+        ''' get search history from main window
+
+            Return self._search_term
+        '''
+        self._history_id = main_window_search_history_index
+        self._history = main_window_search_history
+        self._search_term = self._history[self._history_id]
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('  == search history: {}'.format(self._history))
+            logger.debug('  == search history index: {}'.format(self._history_id))
+            logger.debug('  == active search term: {}'.format(self._search_term))
+
     def _get_a_third(self):
         ''' calculate window / 3 X
             this is the length of a line editor + 2
@@ -1272,28 +1412,29 @@ class RadioBrowserInfoSearchWindow(object):
         return X if X % 2 == 0 else X - 1
 
     def _calculate_widgets_yx(self, Y, X):
+        # logger.error('DE {}'.format(self.yx))
         ''' set Y and X for search check box and limit field '''
         self.yx[0] = self.yx[7] = [Y, 2]
         ''' set y for all consecutive widgets '''
         self.yx[1][0] = self.yx[2][0] = self.yx[3][0] = Y
         self.yx[4][0] = self.yx[5][0] = self.yx[6][0] = Y + 3
         self.yx[7][0] = self.yx[6][0] + 3
-        self.yx[8][0] = self.yx[7][0] + 1
+        self.yx[8][0] = self.yx[7][0] + 2
 
 
         self.yx[1][1] = self.yx[4][1] = 3
         self.yx[2][1] = self.yx[5][1] = 3 + X
         self.yx[3][1] = self.yx[6][1] = 3 + 2 * X
+        # logger.error('DE {}'.format(self.yx))
 
     def show(self):
         pY, pX = self._parent.getmaxyx()
-        logger.error('DE pY = {}, pX = {}'.format(pY, pX))
+        # logger.error('DE pY = {}, pX = {}'.format(pY, pX))
         self.Y, self.X = self._parent.getbegyx()
 
         if self.maxY != pY or self.maxX != pX:
-            logger.error('DE --== SEARCH ==--')
             pY, pX = self._parent.getmaxyx()
-            logger.error('DE pY = {}, pX = {}'.format(pY, pX))
+            # logger.error('DE pY = {}, pX = {}'.format(pY, pX))
             self.maxY = pY
             self.maxX = pX
             self._win = self._parent
@@ -1302,9 +1443,9 @@ class RadioBrowserInfoSearchWindow(object):
             #     Y, X
             # )
             self._half_width = int((self.maxX -2 ) / 2) -3
-            logger.error('>>>> hajf width = {} <<<<'.format(self._half_width))
+            # logger.error('>>>> hajf width = {} <<<<'.format(self._half_width))
 
-        if self.maxX < 80 or self.maxY < 22:
+        if self.maxX < 78 or self.maxY < 22:
             self._too_small = True
         else:
             self._too_small = False
@@ -1384,11 +1525,11 @@ class RadioBrowserInfoSearchWindow(object):
                     curses.color_pair(9), curses.color_pair(4), curses.color_pair(5)))
             self._calculate_widgets_yx(Y, X)
             for n in range(1,7):
-                self._win.addstr(
-                    self.yx[n][0],
-                    self.yx[n][1],
-                    self.captions[n],
-                    curses.color_pair(4))
+                # self._win.addstr(
+                #     self.yx[n][0],
+                #     self.yx[n][1],
+                #     self.captions[n],
+                #     curses.color_pair(4))
                 self._widgets.append(SimpleCursesCheckBox(
                     self.yx[n][0] + 1,
                     self.yx[n][1] + len(self.captions[n]) + 2,
@@ -1450,11 +1591,8 @@ class RadioBrowserInfoSearchWindow(object):
             for i in range(-3, 0):
                 self._widgets[i].enabled = True
 
+            self._search_term_to_widgets(self._search_term)
             self._win.refresh()
-
-            # use _focused here to avoid triggering
-            # widgets' refresh
-            self._widgets[0].checked = True
 
             # set vertical placement variable
             for i in range(0, len(self._widgets)):
@@ -1468,7 +1606,6 @@ class RadioBrowserInfoSearchWindow(object):
                 # logger.error('DE =======\ni = {0}\nw = {1}\nid = {2}\n_vert = {3}\n_vert_id = {4}'.format(i, self._widgets[i], self._widgets[i].id, self._widgets[i]._vert, self._widgets[i]._vert_id))
 
         else:
-            # self._erase_content()
             ''' update up to lists '''
             self._widgets[1].window = self._widgets[2].window = self._win
             self._widgets[1].max_width = self._widgets[2].max_width = self._half_width
@@ -1484,10 +1621,7 @@ class RadioBrowserInfoSearchWindow(object):
                 self._widgets[2].Y - 1,
                 self._widgets[2].X - 2,
                  'Sort by', curses.color_pair(4))
-            # for i in range(0,4):
-            #     self._widgets[i].show()
-            # self._win.refresh()
-            logger.error('\n\n== 0 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
+            # logger.error('\n\n== 0 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
             ''' Two lines under the lists '''
             Y = max(self._widgets[2].Y, self._widgets[1].Y + self._widgets[1].height, self._widgets[3].Y) + 2
             ''' place search check box '''
@@ -1505,15 +1639,15 @@ class RadioBrowserInfoSearchWindow(object):
             ''' Search check box not moved, will be handled by show '''
             self._win.refresh()
             self._calculate_widgets_yx(Y, X)
-            logger.error('== 1 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
+            # logger.error('== 1 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
             for n in range(0,6):
                 ''' place editors' captions '''
-                self._win.addstr(
-                    self.yx[n+1][0],
-                    self.yx[n+1][1],
-                    self.captions[n+1],
-                    curses.color_pair(5)
-                )
+                # self._win.addstr(
+                #     self.yx[n+1][0],
+                #     self.yx[n+1][1],
+                #     self.captions[n+1],
+                #     curses.color_pair(5)
+                # )
                 ''' move exact check boxes '''
                 self._widgets[5+n*2].move(
                     self.yx[n+1][0] + 1,
@@ -1538,18 +1672,28 @@ class RadioBrowserInfoSearchWindow(object):
             self._h_buttons.move(self.yx[-1][0])
             self._win.refresh()
 
-        logger.error('== 2 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
+        # logger.error('== 2 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
         self._h_buttons.calculate_buttons_position()
         self._update_focus()
+        self._fix_widgets_enabling()
+        self._fix_search_captions_color()
         for n in self._widgets:
             try:
                 n.show()
             except:
                 n.show(self._win, opening=False)
-        ''' This will show the collumns '''
+
         self._win.refresh()
 
-        # self._refresh()
+    def _fix_search_captions_color(self):
+        col = 5 if self._widgets[0].checked else 4
+        for n in range(1,7):
+            self._win.addstr(
+                self.yx[n][0],
+                self.yx[n][1],
+                self.captions[n],
+                curses.color_pair(col))
+        self._win.refresh()
 
     def _update_focus(self):
         # use _focused here to avoid triggering
@@ -1557,10 +1701,10 @@ class RadioBrowserInfoSearchWindow(object):
         for i, x in enumerate(self._widgets):
             if x:
                 if self._focus == i:
-                    logger.error('_update_focus: {} - True'.format(i))
+                    # logger.error('_update_focus: {} - True'.format(i))
                     x._focused = True
                 else:
-                    logger.error('_update_focus: {} - False'.format(i))
+                    # logger.error('_update_focus: {} - False'.format(i))
                     x._focused = False
 
     def keypress(self, char):
@@ -1665,6 +1809,7 @@ class RadioBrowserInfoSearchWindow(object):
         return 1
 
     def _fix_widgets_enabling(self):
+        self._fix_search_captions_color()
         col = True if self._widgets[0].checked else False
         self._widgets[1].enabled = col
         for i in range(self._check_box_to_enable_widgets[1] + 1, len(self._widgets) - 3):
@@ -1691,7 +1836,7 @@ class RadioBrowserInfoSearchWindow(object):
                     focus_ok = True
                     # logger.error('DE 2 new_focus = {}'.format(new_focus))
                     break
-        logger.error('DE new_focus = {}'.format(new_focus))
+        # logger.error('DE new_focus = {}'.format(new_focus))
         # logger.error('DE end focus next ==========================')
         self._apply_new_focus(new_focus)
 
@@ -1721,30 +1866,30 @@ class RadioBrowserInfoSearchWindow(object):
         self._apply_new_focus(new_focus)
 
     def _focus_up(self):
-        logger.error('DE self._focus_up()')
+        # logger.error('DE self._focus_up()')
         new_focus, col = self._get_column_list(self._focus)
-        logger.error('DE new_focus = {0}, col = {1}'.format(new_focus, col))
+        # logger.error('DE new_focus = {0}, col = {1}'.format(new_focus, col))
         while True:
             new_focus -= 1
-            logger.error('DE new_focus = {}'.format(new_focus))
+            # logger.error('DE new_focus = {}'.format(new_focus))
             if new_focus < 0:
                 new_focus = len(col) - 1
-            logger.error('DE new_focus = {}'.format(new_focus))
-            logger.error('DE col[new_focus] = {}'.format(col[new_focus]))
+            # logger.error('DE new_focus = {}'.format(new_focus))
+            # logger.error('DE col[new_focus] = {}'.format(col[new_focus]))
             if self._widgets[col[new_focus]].enabled:
                 break
         self._apply_new_focus(col[new_focus])
 
     def _focus_down(self):
         new_focus, col = self._get_column_list(self._focus)
-        logger.error('DE new_focus = {0}, col = {1}'.format(new_focus, col))
+        # logger.error('DE new_focus = {0}, col = {1}'.format(new_focus, col))
         while True:
             new_focus += 1
-            logger.error('DE new_focus = {}'.format(new_focus))
+            # logger.error('DE new_focus = {}'.format(new_focus))
             if new_focus == len(col):
                 new_focus = 0
-            logger.error('DE new_focus = {}'.format(new_focus))
-            logger.error('DE col[new_focus] = {}'.format(col[new_focus]))
+            # logger.error('DE new_focus = {}'.format(new_focus))
+            # logger.error('DE col[new_focus] = {}'.format(col[new_focus]))
             if self._widgets[col[new_focus]].enabled:
                 break
         self._apply_new_focus(col[new_focus])

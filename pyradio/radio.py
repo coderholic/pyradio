@@ -112,6 +112,7 @@ class PyRadio(object):
     player = None
     ws = Window_Stack()
 
+    _i_am_resizing = False
     _redisplay_list = []
 
     ''' number of items (stations or playlists) in current view '''
@@ -737,6 +738,15 @@ class PyRadio(object):
                 if self._theme_selector:
                     self.theme_forced_selection = self._theme_selector._themes[self._theme_selector.selection]
             self._redisplay[self._redisplay_list[n][0]]()
+
+        # logger.error('DE window mode = {}'.format(self.ws.window_mode))
+        # logger.error('DE operation mode = {}'.format(self.ws.operation_mode))
+        # logger.error('DE Browser search mode = {}'.format(self.ws.BROWSER_SEARCH_MODE))
+        if self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
+                self._i_am_resizing:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Redisplaying Radio Browser Search Window!!!')
+            self._browser_search()
 
         if self._cnf.integrate_stations and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -4175,7 +4185,6 @@ class PyRadio(object):
     def _browser_search(self):
         ''' Redisplay browser search window
         '''
-        logger.error('DE _browser_search()')
         self._cnf._online_browser.do_search()
 
     def _browser_sort(self):
@@ -4294,9 +4303,11 @@ class PyRadio(object):
             return -1
 
         if char in (ord('#'), curses.KEY_RESIZE):
+            self._i_am_resizing = True
             self._normal_mode_resize()
             if not self._limited_height_mode:
                 self._do_display_notify()
+            self._i_am_resizing = False
             return
 
         if self._limited_height_mode:
