@@ -718,6 +718,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             curses.KEY_RIGHT, curses.KEY_ENTER
         ):
             self.active = self.selection
+            logger.error('DE active = {}'.format(self.active))
             ''' Do not refresh the widget, it will
                 probably be hidden next
             '''
@@ -728,6 +729,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             curses.KEY_ENTER
         ):
             self.active = self.selection
+            logger.error('DE active = {}'.format(self.active))
             self.show()
             return 0
 

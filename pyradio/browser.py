@@ -337,12 +337,12 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             self._search_history.append({
                 'type': 'lastclick',
                 'term': '50',
-                'post_data': None,
+                'post_data': {'reverse': 'true'}
             })
 
             self._search_history.append({
                 'type': 'bytagexact',
-                'term': 'big band',
+                'term': 'jpop',
                 'post_data': {'order': 'votes', 'reverse': 'true'},
             })
 
@@ -351,7 +351,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 'term': '',
                 'post_data': {'name': 'Jazz', 'codec': 'mp3', 'order': 'clickcount', 'reverse': 'true', 'limit': '40'},
             })
-            self._search_history_index = 2
+            self._search_history_index = 1
             return True
         return False
 
@@ -808,10 +808,10 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 str(self._raw_stations[id_in_list]['clickcount']).rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
                 str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
                 self._raw_stations[id_in_list]['codec'].rjust(self._columns_width['codec'])[:self._columns_width['codec']],
-                self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country'])[:self._columns_width['country']],
-                self._raw_stations[id_in_list]['state'].ljust(self._columns_width['state'])[:self._columns_width['state']],
-                self._raw_stations[id_in_list]['language'].ljust(self._columns_width['language'])[:self._columns_width['language']],
-                self._raw_stations[id_in_list]['tags'].ljust(self._columns_width['tags'])[:self._columns_width['tags']]
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country']), self._columns_width['country']),
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['state'].ljust(self._columns_width['state']), self._columns_width['state']),
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['language'].ljust(self._columns_width['language']), self._columns_width['language']),
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['tags'].ljust(self._columns_width['tags']), self._columns_width['tags'])
             )
         if self._output_format == 6:
             # full with state
@@ -820,9 +820,10 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 str(self._raw_stations[id_in_list]['votes']).rjust(self._columns_width['votes'])[:self._columns_width['votes']],
                 str(self._raw_stations[id_in_list]['clickcount']).rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
                 str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
-                self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country'])[:self._columns_width['country']],
-                self._raw_stations[id_in_list]['state'].ljust(self._columns_width['state'])[:self._columns_width['state']],
-                self._raw_stations[id_in_list]['language'].ljust(self._columns_width['language'])[:self._columns_width['language']]
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country']), self._columns_width['country']),
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['state'].ljust(self._columns_width['state']), self._columns_width['state']),
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['language'].ljust(self._columns_width['language']), self._columns_width['language']),
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['tags'].ljust(self._columns_width['tags']), self._columns_width['tags'])
             )
         if self._output_format == 5:
             # full with state
@@ -831,8 +832,8 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 str(self._raw_stations[id_in_list]['votes']).rjust(self._columns_width['votes'])[:self._columns_width['votes']],
                 str(self._raw_stations[id_in_list]['clickcount']).rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
                 str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
-                self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country'])[:self._columns_width['country']],
-                self._raw_stations[id_in_list]['language'].ljust(self._columns_width['language'])[:self._columns_width['language']]
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country']), self._columns_width['country']),
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['language'].ljust(self._columns_width['language']), self._columns_width['language']),
             )
         if self._output_format == 4:
             # full or condensed info
@@ -841,7 +842,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 str(self._raw_stations[id_in_list]['votes']).rjust(self._columns_width['votes'])[:self._columns_width['votes']],
                 str(self._raw_stations[id_in_list]['clickcount']).rjust(self._columns_width['clickcount'])[:self._columns_width['clickcount']],
                 str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2],
-                self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country'])[:self._columns_width['country']]
+                self._fix_cjk_string_width(self._raw_stations[id_in_list]['country'].ljust(self._columns_width['country']), self._columns_width['country']),
             )
         elif self._output_format == 2:
             out[2] = ' ' + info[self._output_format].format(
@@ -863,8 +864,9 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2]
             )
 
-        name_width = width-len(out[0])-len(out[2])
-        out[1] = self._fix_cjk_string_width(self._raw_stations[id_in_list]['name'].ljust(name_width)[:name_width], name_width)
+        name_width = width-len(out[0])-cjklen(out[2])
+        # logger.error('width-len(out[0])-len(out[2]) - {0}-{1}-{2} = {3}'.format(width, len(out[0]), len(out[2]), name_width))
+        out[1] = self._fix_cjk_string_width(self._raw_stations[id_in_list]['name'], name_width)
         if PY3:
             # if pl == '╞':
             #    out[2] += '╡'
@@ -887,6 +889,8 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
     def _fix_cjk_string_width(self, a_string, width):
         while cjklen(a_string) > width:
             a_string = a_string[:-1]
+        while cjklen(a_string) < width:
+            a_string += ' '
         return a_string
 
     def _extract_data(self, a_search_result):
@@ -1202,15 +1206,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
 
 class RadioBrowserInfoSearchWindow(object):
 
-    # search_by_items = (
-    #     'No search term',
-    #     'Name',
-    #     'Tag',
-    #     'Country',
-    #     'State',
-    #     'Codec',
-    #     'Language',
-    # )
+    NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION = 3
 
     search_by_items = (
         'Votes',
@@ -1307,7 +1303,7 @@ class RadioBrowserInfoSearchWindow(object):
         logger.error('DE =========================')
         logger.error('DE term = {}'.format(a_search))
         logger.error('DE type = {}'.format(a_search['type']))
-        self._widgets[-3].value = 100
+        self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value = 100
         self._widgets[-2].enabled = True
         self._widgets[-1].enabled = True
         if a_search['type'] in RADIO_BROWSER_DISPLAY_TERMS.keys():
@@ -1318,8 +1314,8 @@ class RadioBrowserInfoSearchWindow(object):
             self._widgets[2].selection = 0
             self._widgets[3].checked = False
 
-            self._widgets[-3].value = int(a_search['term'])
-            for i in range(5, len(self._widgets) - 3):
+            self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value = int(a_search['term'])
+            for i in range(5, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
                 try:
                     self._widgets[i].string = ''
                 except:
@@ -1336,7 +1332,7 @@ class RadioBrowserInfoSearchWindow(object):
             self._widgets[1].selection = self._widgets[1].active = 0
             self._widgets[2].selection = self._widgets[2].active = 0
             self._widgets[3].checked = False
-            for i in range(5, len(self._widgets) - 3):
+            for i in range(5, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
                 try:
                     self._widgets[i].string = ''
                 except:
@@ -1379,12 +1375,51 @@ class RadioBrowserInfoSearchWindow(object):
                             order_id = RADIO_BROWSER_SEARCH_SORT_TERMS[order]
                             self._widgets[2].selection = self._widgets[2].active = order_id
                     elif n == 'limit':
-                        self._widgets[-3].value = int(a_search['post_data']['limit'])
+                        self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value = int(a_search['post_data']['limit'])
                     elif n == 'reverse':
                         self._widgets[3].checked = bool(a_search['post_data']['reverse'])
 
 
         logger.error('DE =========================')
+
+    def _widgets_to_search_term(self):
+        ret = {'type': '', 'term': '', 'post_data': {}}
+        type_part = ''
+        order_part = ''
+        if self._widgets[0].checked:
+            ''' type is "Display by" '''
+            ''' get search type '''
+            for key in RADIO_BROWSER_DISPLAY_TERMS.items():
+                if key[1] == self._widgets[1].active:
+                    type_part = key[0]
+                    break
+            logger.error('DE type_part = "{}"'.format(type_part))
+            if type_part:
+                ret['type'] = type_part
+            else:
+                logger.error('Radio Browser Search: Error in search parameters!')
+                return None
+            ''' get limit (term)'''
+            ret['term'] = str(self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value)
+            ''' get order '''
+            if self._widgets[2].active > 0:
+                for key in RADIO_BROWSER_SEARCH_SORT_TERMS.items():
+                    if key[1] == self._widgets[2].active:
+                        order_part = key[0]
+                        break
+                logger.error('DE order_part = "{}"'.format(order_part))
+                if order_part:
+                    ret['post_data']['order'] = order_part
+            ''' check for revrese order '''
+            if self._widgets[3].checked:
+                ret['post_data']['reverse'] = 'true'
+
+        else:
+            ''' type is searchi (simple or advanced) '''
+            pass
+
+        logger.error('DE ret = {}'.format(ret))
+        return ret
 
     def set_search_history(
             self,
@@ -1521,7 +1556,7 @@ class RadioBrowserInfoSearchWindow(object):
                  'Sort by', curses.color_pair(4))
             ''' search check box (index = 4) '''
             self._widgets.append(SimpleCursesCheckBox(
-                    Y, 2, 'Search',
+                    Y, 2, 'Search for',
                     curses.color_pair(9), curses.color_pair(4), curses.color_pair(5)))
             self._calculate_widgets_yx(Y, X)
             for n in range(1,7):
@@ -1588,7 +1623,7 @@ class RadioBrowserInfoSearchWindow(object):
                 else:
                     self._widgets[i].enabled = False
 
-            for i in range(-3, 0):
+            for i in range(-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION, 0):
                 self._widgets[i].enabled = True
 
             self._search_term_to_widgets(self._search_term)
@@ -1664,7 +1699,7 @@ class RadioBrowserInfoSearchWindow(object):
                 self._widgets[6+n*2].width = X - 2
 
             ''' move limit field '''
-            self._widgets[-3].move(
+            self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].move(
                 self.yx[-2][0],
                 self.yx[-2][1]
             )
@@ -1744,6 +1779,8 @@ class RadioBrowserInfoSearchWindow(object):
         elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
                       ord('\r')) and self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''
+            self._widgets_to_search_term()
+            return 1
             return 0
 
         else:
@@ -1812,7 +1849,7 @@ class RadioBrowserInfoSearchWindow(object):
         self._fix_search_captions_color()
         col = True if self._widgets[0].checked else False
         self._widgets[1].enabled = col
-        for i in range(self._check_box_to_enable_widgets[1] + 1, len(self._widgets) - 3):
+        for i in range(self._check_box_to_enable_widgets[1] + 1, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
             self._widgets[i].enabled = not col
             # logger.error('DE widget {0} enabled: {1}'.format(i, not col))
 
