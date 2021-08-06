@@ -1094,7 +1094,7 @@ class PyRadio(object):
     def playSelectionBrowser(self, a_url=None):
             self.log.display_help_message = False
 
-            # self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0] + '"')
+            # self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0])
 
             #### self._cnf.browsing_station_service = True
             ''' Add a history item to preserve browsing_station_service
@@ -1142,7 +1142,7 @@ class PyRadio(object):
                 # if self._cnf.browsing_station_service:
                 #     if self._cnf.online_browser.have_to_retrieve_url:
                 #         self.log.display_help_message = False
-                #         self.log.write(msg='Station: "' + self._last_played_station[0] + '" - Retrieving URL...')
+                #         self.log.write(msg='Station: ' + self._last_played_station[0] + ' - Retrieving URL...')
                 #         stream_url = self._cnf.online_browser.url(self.selection)
                 self._last_played_station = self.stations[self.selection]
                 self._last_played_station_id = self.selection
@@ -1155,7 +1155,7 @@ class PyRadio(object):
                     enc = ''
 
             ''' start player '''
-            self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0] + '"')
+            self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0])
             try:
                 self.player.play(self._last_played_station[0],
                                  stream_url,
@@ -1199,13 +1199,13 @@ class PyRadio(object):
             if n <= lim:
                 if stop():
                     return
-                self.log.write(msg='Connecting to: "{}"'.format(station_name))
+                self.log.write(msg='Connecting to: ' + station_name)
                 self.log.write(counter='{}'.format(n))
             else:
                 if stop():
                     return
                 if not_showed:
-                    self.log.write(msg='Connecting to: "{}"'.format(station_name))
+                    self.log.write(msg='Connecting to: ' + station_name)
                     not_showed = False
         self.connectionFailed()
 
@@ -1229,7 +1229,7 @@ class PyRadio(object):
         if logger.isEnabledFor(logging.INFO):
             logger.info('*** Start of playback NOT detected!!! ***')
         self.player.stop_mpv_status_update_thread = True
-        self.log.write(msg='Failed to connect to: "{}"'.format(self._last_played_station[0]))
+        self.log.write(msg='Failed to connect to: ' + self._last_played_station[0])
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             if logger.isEnabledFor(logging.INFO):

@@ -85,6 +85,14 @@ RADIO_BROWSER_SEARCH_TERMS = {
     'offset': -1,
 }
 
+RADIO_BROWSER_EXACT_SEARCH_TERM = {
+    'name': 'nameExact',
+    'country': 'countryExact',
+    'state': 'stateExact',
+    'language': 'languageExact',
+    'tag': 'tagExact'
+}
+
 def country_from_server(a_server):
     if a_server:
         country = a_server.split('.')[0]
@@ -351,7 +359,13 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 'term': '',
                 'post_data': {'name': 'Jazz', 'codec': 'mp3', 'order': 'clickcount', 'reverse': 'true', 'limit': '40'},
             })
-            self._search_history_index = 1
+
+            self._search_history.append({
+                'type': 'search',
+                'term': '',
+                'post_data': {'tagExact': 'true', 'tag': 'blues', 'codec': 'mp3', 'order': 'clickcount', 'reverse': 'true', 'limit': '140'},
+            })
+            self._search_history_index = 3
             return True
         return False
 
@@ -468,7 +482,13 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             guide.pop(2)
         info = collections.OrderedDict()
         for n in guide:
-            info[n[0]] = str(self._raw_stations[a_station][n[1]])
+            try:
+                info[n[0]] = str(self._raw_stations[a_station][n[1]])
+            except:
+                ''' do this here for python 2
+                    TODO: make the previous statement work on py2
+                '''
+                pass
             if n[1] == 'bitrate':
                 info[n[0]] += ' kb/s'
 
@@ -866,7 +886,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
 
         name_width = width-len(out[0])-cjklen(out[2])
         # logger.error('width-len(out[0])-len(out[2]) - {0}-{1}-{2} = {3}'.format(width, len(out[0]), len(out[2]), name_width))
-        out[1] = self._fix_cjk_string_width(self._raw_stations[id_in_list]['name'], name_width)
+        out[1] = self._fix_cjk_string_width(self._raw_stations[id_in_list]['name'].ljust(name_width)[:name_width], name_width)
         if PY3:
             # if pl == '╞':
             #    out[2] += '╡'
@@ -1402,24 +1422,67 @@ class RadioBrowserInfoSearchWindow(object):
             ''' get limit (term)'''
             ret['term'] = str(self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value)
             ''' get order '''
-            if self._widgets[2].active > 0:
-                for key in RADIO_BROWSER_SEARCH_SORT_TERMS.items():
-                    if key[1] == self._widgets[2].active:
-                        order_part = key[0]
-                        break
-                logger.error('DE order_part = "{}"'.format(order_part))
-                if order_part:
-                    ret['post_data']['order'] = order_part
-            ''' check for revrese order '''
-            if self._widgets[3].checked:
-                ret['post_data']['reverse'] = 'true'
+            self._order_to_term(ret)
 
         else:
             ''' type is searchi (simple or advanced) '''
-            pass
+            what_type = []
+            for i in range(5, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
+                if self._widgets[i].string:
+                    what_type.append(i)
+            if len(what_type) == 0:
+                logger.error('Radio Browser Search: Error in search parameters!')
+                return None
 
+            if len(what_type) == 1:
+                ''' simple search '''
+                logger.error('DE simple search')
+                for n in RADIO_BROWSER_SEARCH_BY_TERMS.items():
+                    if n[1] == what_type[0]:
+                        ret['type'] = n [0]
+                        break
+                if self._widgets[what_type[0] - 1].checked:
+                    ret['type'] += 'exact'
+                ret['term'] = self._widgets[what_type[0]].string
+            else:
+                ''' advanced search '''
+                logger.error('DE advanced search')
+                ret['type'] = 'search'
+
+                logger.error('DE what_type = {}'.format(what_type))
+                for a_what_type in what_type:
+                    for n in RADIO_BROWSER_SEARCH_TERMS.items():
+                        if n[1] == a_what_type:
+                            if n[0] == 'tagList':
+                                if ',' not in self._widgets[a_what_type].string:
+                                    continue
+                            if n[0] == 'tag':
+                                if ',' in self._widgets[a_what_type].string:
+                                    continue
+                            ret['post_data'][n[0]] = self._widgets[a_what_type].string
+                            if self._widgets[a_what_type-1].checked:
+                                if n[0] in RADIO_BROWSER_EXACT_SEARCH_TERM.keys():
+                                    ret['post_data'][RADIO_BROWSER_EXACT_SEARCH_TERM[n[0]]] = 'true'
+
+            ''' get limit (term)'''
+            ret['post_data']['limit'] = str(self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value)
+
+            self._order_to_term(ret)
         logger.error('DE ret = {}'.format(ret))
         return ret
+
+    def _order_to_term(self, ret):
+        if self._widgets[2].active > 0:
+            for key in RADIO_BROWSER_SEARCH_SORT_TERMS.items():
+                if key[1] == self._widgets[2].active:
+                    order_part = key[0]
+                    break
+            logger.error('DE order_part = "{}"'.format(order_part))
+            if order_part:
+                ret['post_data']['order'] = order_part
+        ''' check for revrese order '''
+        if self._widgets[3].checked:
+            ret['post_data']['reverse'] = 'true'
 
     def set_search_history(
             self,

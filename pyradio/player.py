@@ -536,7 +536,7 @@ class Player(object):
         #    self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
         #    self.outputStream.write(msg=self.oldUserInput['Title'])
         ''' Force volume display even when icy title is not received '''
-        self.oldUserInput['Title'] = 'Playing: "{}"'.format(self.name)
+        self.oldUserInput['Title'] = 'Playing: ' + self.name
         try:
             out = self.process.stdout
             while(True):
@@ -585,7 +585,7 @@ class Player(object):
                                 logger.info('*** updateStatus(): Start of playback detected ***')
                         #if self.outputStream.last_written_string.startswith('Connecting to'):
                         if self.oldUserInput['Title'] == '':
-                            new_input = 'Playing: "{}"'.format(self.name)
+                            new_input = 'Playing: ' + self.name
                         else:
                             new_input = self.oldUserInput['Title']
                         self.outputStream.write(msg=new_input, counter='')
@@ -615,30 +615,39 @@ class Player(object):
                         if not subsystemOut.endswith('Icy-Title=(null)'):
                             # logger.error('***** icy_entry: "{}"'.format(subsystemOut))
                             title = self._format_title_string(subsystemOut)
+                            # logger.error('DE title = "{}"'.format(title))
                             ok_to_display = False
                             if not self.playback_is_on:
                                 if logger.isEnabledFor(logging.INFO):
                                     logger.info('*** updateStatus(): Start of playback detected (Icy-Title received) ***')
                             self.playback_is_on = True
-                            if title[len(self.icy_title_prefix):].strip():
+                            ''' detect empty Icy-Title '''
+                            title_without_prefix = title[len(self.icy_title_prefix):].strip()
+                            # logger.error('DE title_without_prefix = "{}"'.format(title_without_prefix))
+                            if title_without_prefix:
                                 #self._stop_delay_thread()
                                 # logger.error("***** updating title")
-                                self.oldUserInput['Title'] = title
-                                # make sure title will not pop-up while Volume value is on
-                                if self.delay_thread is None:
-                                    ok_to_display = True
-                                if ok_to_display and self.playback_is_on:
-                                    string_to_show = self.title_prefix + title
-                                    self.outputStream.write(msg=string_to_show, counter='')
+                                if title_without_prefix.strip() == '-':
+                                    ''' Icy-Title is empty '''
+                                    if logger.isEnabledFor(logging.DEBUG):
+                                        logger.debug('Icy-Title = " - ", not displaying...')
                                 else:
-                                    if logger.isEnabledFor(logging.debug):
-                                        logger.debug('***** Title change inhibited: ok_to_display = {0}, playbabk_is_on = {1}'.format(ok_to_display, self.playback_is_on))
+                                    self.oldUserInput['Title'] = title
+                                    # make sure title will not pop-up while Volume value is on
+                                    if self.delay_thread is None:
+                                        ok_to_display = True
+                                    if ok_to_display and self.playback_is_on:
+                                        string_to_show = self.title_prefix + title
+                                        self.outputStream.write(msg=string_to_show, counter='')
+                                    else:
+                                        if logger.isEnabledFor(logging.debug):
+                                            logger.debug('***** Title change inhibited: ok_to_display = {0}, playbabk_is_on = {1}'.format(ok_to_display, self.playback_is_on))
                             else:
                                 ok_to_display = True
                                 if (logger.isEnabledFor(logging.INFO)):
                                     logger.info('Icy-Title is NOT valid')
                                 if ok_to_display and self.playback_is_on:
-                                    title = 'Playing: "{}"'.format(self.name)
+                                    title = 'Playing: ' + self.name
                                     self.oldUserInput['Title'] = title
                                     string_to_show = self.title_prefix + title
                                     self.outputStream.write(msg=string_to_show, counter='')
@@ -791,7 +800,7 @@ class Player(object):
         stop_player = args[4]
         detect_if_player_exited = args[5]
         ''' Force volume display even when icy title is not received '''
-        self.oldUserInput['Title'] = 'Playing: "{}"'.format(self.name)
+        self.oldUserInput['Title'] = 'Playing: ' + self.name
         # logger.error('DE ==== {0}\n{1}\n{2}'.format(fn, enc, stop))
         #with lock:
         #    self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
@@ -846,6 +855,7 @@ class Player(object):
                             # logger.debug("User input: {}".format(subsystemOut))
                             pass
                     self.oldUserInput['Input'] = subsystemOut
+                    logger.error('DE subsystemOut = "' + subsystemOut + '"')
                     if self.volume_string in subsystemOut:
                         if stop():
                             break
@@ -883,7 +893,7 @@ class Player(object):
                                 logger.info('*** updateWinVLCStatus(): Start of playback detected ***')
                         #if self.outputStream.last_written_string.startswith('Connecting to'):
                         if self.oldUserInput['Title'] == '':
-                            new_input = 'Playing: "{}"'.format(self.name)
+                            new_input = 'Playing: ' + self.name
                         else:
                             new_input = self.oldUserInput['Title']
                         self.outputStream.write(msg=new_input, counter='')
@@ -926,7 +936,7 @@ class Player(object):
                                 if (logger.isEnabledFor(logging.INFO)):
                                     logger.info('Icy-Title is NOT valid')
                                 if ok_to_display and self.playback_is_on:
-                                    title = 'Playing: "{}"'.format(self.name)
+                                    title = 'Playing: ' + self.name
                                     self.oldUserInput['Title'] = title
                                     string_to_show = self.title_prefix + title
                                     self.outputStream.write(msg=string_to_show, counter='')
@@ -1035,20 +1045,26 @@ class Player(object):
             if version_info > (3, 0):
                 title = a_data.split(b'"icy-title":"')[1].split(b'"}')[0]
                 if title:
-                    try:
-                        self.oldUserInput['Title'] = 'Title: ' + title.decode(self._station_encoding, 'replace')
-                    except:
-                        self.oldUserInput['Title'] = 'Title: ' + title.decode('utf-8', 'replace')
-                    string_to_show = self.title_prefix + self.oldUserInput['Title']
-                    if stop():
-                        return False
-                    self.outputStream.write(msg=string_to_show, counter='')
+                    if title == b'-' or title == b' - ':
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Icy-Title = " - ", not displaying...')
+                    else:
+                        try:
+                            self.oldUserInput['Title'] = 'Title: ' + title.decode(self._station_encoding, 'replace')
+                        except:
+                            self.oldUserInput['Title'] = 'Title: ' + title.decode('utf-8', 'replace')
+                        string_to_show = self.title_prefix + self.oldUserInput['Title']
+                        if stop():
+                            return False
+                        self.outputStream.write(msg=string_to_show, counter='')
                     if not self.playback_is_on:
+                        if stop():
+                            return False
                         return self._set_mpv_playback_is_on(stop)
                 else:
                     if (logger.isEnabledFor(logging.INFO)):
                         logger.info('Icy-Title is NOT valid')
-                    title = 'Playing: "{}"'.format(self.name)
+                    title = 'Playing: ' + self.name
                     string_to_show = self.title_prefix + title
                     if stop():
                         return False
@@ -1134,7 +1150,7 @@ class Player(object):
             pass
         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
                     logger.info('*** _set_mpv_playback_is_on(): Start of playback detected ***')
-        new_input = 'Playing: "{}"'.format(self.name)
+        new_input = 'Playing: ' + self.name
         self.outputStream.write(msg=new_input, counter='')
         if self.oldUserInput['Title'] == '':
             self.oldUserInput['Input'] = new_input
@@ -1186,7 +1202,7 @@ class Player(object):
             if ret_string == self.icy_title_prefix + final_text_string:
                 return ret_string
             else:
-                return ret_string + ': "' + final_text_string + '"'
+                return ret_string + ': ' + final_text_string
 
     def _format_volume_string(self, volume_string):
         return self._title_string_format_text_tag(volume_string)
@@ -1204,9 +1220,10 @@ class Player(object):
         self.title_prefix = ''
         self.playback_is_on = False
         self.delay_thread = None
-        self.outputStream.write(msg='Station: "{}" - Opening connection...'.format(name), counter='')
+        # self.outputStream.write(msg='Station: "{}" - Opening connection...'.format(name), counter='')
+        self.outputStream.write(msg='Station: ' + name + ' - Opening connection...', counter='')
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Selected Station: "{}"'.format(name))
+            logger.info('Selected Station: ' + name)
         if encoding:
             self._station_encoding = encoding
         else:
