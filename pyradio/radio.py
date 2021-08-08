@@ -4179,7 +4179,6 @@ class PyRadio(object):
     def _browser_init_search(self, parent):
         ''' Start browser search window
         '''
-        logger.error('DE _browser_init_search()')
         self._cnf._online_browser.do_search(parent, init=True)
 
     def _browser_search(self):
@@ -5087,6 +5086,30 @@ class PyRadio(object):
             elif ret == 3:
                 ''' display help editor help '''
                 self._show_line_editor_help()
+            elif ret == 4:
+                ''' search parameter error '''
+                self._show_notification_with_delay(
+                        txt='___Error in search parameters!!!___',
+                        mode_to_set=self.ws.BROWSER_SEARCH_MODE,
+                        callback_function=self.refreshBody)
+            elif ret ==5:
+                ''' save search history '''
+                self._show_notification_with_delay(
+                        txt='___Function not implemented yet!!!___',
+                        mode_to_set=self.ws.BROWSER_SEARCH_MODE,
+                        callback_function=self.refreshBody)
+            elif ret ==6:
+                ''' save search history '''
+                self._show_notification_with_delay(
+                        txt='___Function not implemented yet!!!___',
+                        mode_to_set=self.ws.BROWSER_SEARCH_MODE,
+                        callback_function=self.refreshBody)
+            elif ret ==7:
+                ''' save search history '''
+                self._show_notification_with_delay(
+                        txt='___Function not implemented yet!!!___',
+                        mode_to_set=self.ws.BROWSER_SEARCH_MODE,
+                        callback_function=self.refreshBody)
             return
 
         elif self.ws.operation_mode == self.ws.BROWSER_SORT_MODE and \

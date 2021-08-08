@@ -351,7 +351,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             self._search_history.append({
                 'type': 'bytagexact',
                 'term': 'jpop',
-                'post_data': {'order': 'votes', 'reverse': 'true'},
+                'post_data': {'limit': '100', 'order': 'votes', 'reverse': 'true'},
             })
 
             self._search_history.append({
@@ -1320,19 +1320,25 @@ class RadioBrowserInfoSearchWindow(object):
         self.show()
 
     def _search_term_to_widgets(self, a_search):
-        logger.error('DE =========================')
-        logger.error('DE term = {}'.format(a_search))
-        logger.error('DE type = {}'.format(a_search['type']))
+        # logger.error('DE =========================')
+        # logger.error('DE term = {}'.format(a_search))
+        # logger.error('DE type = {}'.format(a_search['type']))
+        self._widgets[1].selection = self._widgets[1].active = 0
+        self._widgets[2].selection = self._widgets[2].active = 0
+        self._widgets[3].checked = False
         self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value = 100
         self._widgets[-2].enabled = True
         self._widgets[-1].enabled = True
+        for i in range(5, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
+            if type(self._widgets[i]).__name__ == 'SimpleCursesLineEdit':
+                self._widgets[i].string = ''
+            else:
+                self._widgets[i].checked = False
         if a_search['type'] in RADIO_BROWSER_DISPLAY_TERMS.keys():
             ''' populate the "Display by" part '''
             self._widgets[0].checked = True
             self._widgets[4].checked = False
             self._widgets[1].selection = self._widgets[1].active = RADIO_BROWSER_DISPLAY_TERMS[a_search['type']]
-            self._widgets[2].selection = 0
-            self._widgets[3].checked = False
 
             self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value = int(a_search['term'])
             for i in range(5, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
@@ -1343,7 +1349,7 @@ class RadioBrowserInfoSearchWindow(object):
                 self._widgets[i].enabled = False
 
             self._focus = 1
-            logger.error('DE RADIO_BROWSER_DISPLAY_TERMS[a_search["type"]] = {}'.format(RADIO_BROWSER_DISPLAY_TERMS[a_search['type']]))
+            # logger.error('DE RADIO_BROWSER_DISPLAY_TERMS[a_search["type"]] = {}'.format(RADIO_BROWSER_DISPLAY_TERMS[a_search['type']]))
 
         else:
             ''' populate the "Search" part '''
@@ -1353,37 +1359,33 @@ class RadioBrowserInfoSearchWindow(object):
             self._widgets[2].selection = self._widgets[2].active = 0
             self._widgets[3].checked = False
             for i in range(5, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
-                try:
-                    self._widgets[i].string = ''
-                except:
-                    self._widgets[i].checked = False
                 self._widgets[i].enabled = True
 
             if a_search['type'] in RADIO_BROWSER_SEARCH_BY_TERMS.keys():
                 line_edit = RADIO_BROWSER_SEARCH_BY_TERMS[a_search['type']]
 
                 if a_search['type'].endswith('exact'):
-                    logger.error('DE Exact checked!!!')
+                    # logger.error('DE Exact checked!!!')
                     self._widgets[line_edit-1].checked = True
                 self._widgets[line_edit].string = a_search['term']
                 self._focus = line_edit
-                logger.error('DE RADIO_BROWSER_SEARCH_BY_TERMS[a_search["type"]] = {}'.format(RADIO_BROWSER_SEARCH_BY_TERMS[a_search['type']]))
+                # logger.error('DE RADIO_BROWSER_SEARCH_BY_TERMS[a_search["type"]] = {}'.format(RADIO_BROWSER_SEARCH_BY_TERMS[a_search['type']]))
 
             elif a_search['type'] == 'search':
                 ''' populate the "Search" part '''
                 s_id_list = []
                 for n in a_search['post_data'].items():
-                    logger.error('DE ===== n = {}'.format(n))
+                    # logger.error('DE ===== n = {}'.format(n))
                     if n[0] in RADIO_BROWSER_SEARCH_TERMS.keys():
                         if n[1] != -1:
                             s_id = RADIO_BROWSER_SEARCH_TERMS[n[0]]
-                            logger.error('DE s_id = {}'.format(s_id))
+                            # logger.error('DE s_id = {}'.format(s_id))
                             if type(self._widgets[s_id]).__name__ == 'SimpleCursesLineEdit':
                                 self._widgets[s_id].string = n[1]
-                                logger.error('DE n[0] = {0}, string = "{1}"'.format(n[0], n[1]))
+                                # logger.error('DE n[0] = {0}, string = "{1}"'.format(n[0], n[1]))
                             else:
                                 self._widgets[s_id].checked = bool(n[1])
-                                logger.error('DE n[0] = {0}, n[1] = {1}, bool = {2}'.format(n[0], n[1], bool(n[1])))
+                                # logger.error('DE n[0] = {0}, n[1] = {1}, bool = {2}'.format(n[0], n[1], bool(n[1])))
                             s_id_list.append(s_id)
                 self._focus = min(s_id_list)
 
@@ -1400,7 +1402,7 @@ class RadioBrowserInfoSearchWindow(object):
                         self._widgets[3].checked = bool(a_search['post_data']['reverse'])
 
 
-        logger.error('DE =========================')
+        # logger.error('DE =========================')
 
     def _widgets_to_search_term(self):
         ret = {'type': '', 'term': '', 'post_data': {}}
@@ -1413,7 +1415,7 @@ class RadioBrowserInfoSearchWindow(object):
                 if key[1] == self._widgets[1].active:
                     type_part = key[0]
                     break
-            logger.error('DE type_part = "{}"'.format(type_part))
+            # logger.error('DE type_part = "{}"'.format(type_part))
             if type_part:
                 ret['type'] = type_part
             else:
@@ -1421,22 +1423,21 @@ class RadioBrowserInfoSearchWindow(object):
                 return None
             ''' get limit (term)'''
             ret['term'] = str(self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value)
-            ''' get order '''
-            self._order_to_term(ret)
 
         else:
             ''' type is searchi (simple or advanced) '''
             what_type = []
             for i in range(5, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
-                if self._widgets[i].string:
-                    what_type.append(i)
+                if type(self._widgets[i]).__name__ == 'SimpleCursesLineEdit':
+                    if self._widgets[i].string:
+                        what_type.append(i)
             if len(what_type) == 0:
                 logger.error('Radio Browser Search: Error in search parameters!')
                 return None
 
             if len(what_type) == 1:
                 ''' simple search '''
-                logger.error('DE simple search')
+                # logger.error('DE simple search')
                 for n in RADIO_BROWSER_SEARCH_BY_TERMS.items():
                     if n[1] == what_type[0]:
                         ret['type'] = n [0]
@@ -1446,10 +1447,10 @@ class RadioBrowserInfoSearchWindow(object):
                 ret['term'] = self._widgets[what_type[0]].string
             else:
                 ''' advanced search '''
-                logger.error('DE advanced search')
+                # logger.error('DE advanced search')
                 ret['type'] = 'search'
 
-                logger.error('DE what_type = {}'.format(what_type))
+                # logger.error('DE what_type = {}'.format(what_type))
                 for a_what_type in what_type:
                     for n in RADIO_BROWSER_SEARCH_TERMS.items():
                         if n[1] == a_what_type:
@@ -1467,8 +1468,10 @@ class RadioBrowserInfoSearchWindow(object):
             ''' get limit (term)'''
             ret['post_data']['limit'] = str(self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value)
 
-            self._order_to_term(ret)
-        logger.error('DE ret = {}'.format(ret))
+        ''' get order '''
+        self._order_to_term(ret)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Search term returned: {}'.format(ret))
         return ret
 
     def _order_to_term(self, ret):
@@ -1477,7 +1480,7 @@ class RadioBrowserInfoSearchWindow(object):
                 if key[1] == self._widgets[2].active:
                     order_part = key[0]
                     break
-            logger.error('DE order_part = "{}"'.format(order_part))
+            # logger.error('DE order_part = "{}"'.format(order_part))
             if order_part:
                 ret['post_data']['order'] = order_part
         ''' check for revrese order '''
@@ -1493,13 +1496,14 @@ class RadioBrowserInfoSearchWindow(object):
 
             Return self._search_term
         '''
-        self._history_id = main_window_search_history_index
-        self._history = main_window_search_history
+        self._history_id = self._selected_history_id = main_window_search_history_index
+        self._history = deepcopy(main_window_search_history)
         self._search_term = self._history[self._history_id]
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('  == search history: {}'.format(self._history))
-            logger.debug('  == search history index: {}'.format(self._history_id))
-            logger.debug('  == active search term: {}'.format(self._search_term))
+            logger.debug('Search history')
+            logger.debug('     search history: {}'.format(self._history))
+            logger.debug('     search history index: {}'.format(self._history_id))
+            logger.debug('     active search term: {}'.format(self._search_term))
 
     def _get_a_third(self):
         ''' calculate window / 3 X
@@ -1772,6 +1776,30 @@ class RadioBrowserInfoSearchWindow(object):
 
         # logger.error('== 2 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
         self._h_buttons.calculate_buttons_position()
+        self._print_history_legent()
+        self._display_all_widgets()
+
+    def _print_history_legent(self):
+        self._win.addstr(self.maxY - 2, 2 , 'History item: ')
+        self._win.addstr('{}'.format(self._selected_history_id + 1), curses.color_pair(4))
+        self._win.addstr('/{}    '.format(len(self._history)))
+        self._win.addstr(self.maxY - 2, self.maxX - 54,'Navigation: ')
+        self._win.addstr('^N', curses.color_pair(4))
+        self._win.addstr('/')
+        self._win.addstr('^P', curses.color_pair(4))
+        self._win.addstr(', Delete: ')
+        self._win.addstr('^X', curses.color_pair(4))
+        self._win.addstr(', Default: ')
+        self._win.addstr('^D', curses.color_pair(4))
+        self._win.addstr(', Save: ')
+        self._win.addstr('^W', curses.color_pair(4))
+
+    def _activate_search_term(self, a_search_term):
+        self._search_term_to_widgets(a_search_term)
+        self._win.refresh()
+        self._display_all_widgets()
+
+    def _display_all_widgets(self):
         self._update_focus()
         self._fix_widgets_enabling()
         self._fix_search_captions_color()
@@ -1780,7 +1808,6 @@ class RadioBrowserInfoSearchWindow(object):
                 n.show()
             except:
                 n.show(self._win, opening=False)
-
         self._win.refresh()
 
     def _fix_search_captions_color(self):
@@ -1815,6 +1842,10 @@ class RadioBrowserInfoSearchWindow(object):
                 1 - Continue
                 2 - Display help
                 3 - Display Line Editor Help
+                4 - Error in search paremeter
+                5 - Save search history
+                6 - Delete history item
+                7 - Set default item
         '''
         if char in (
             curses.KEY_EXIT, ord('q'), 27
@@ -1842,9 +1873,51 @@ class RadioBrowserInfoSearchWindow(object):
         elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
                       ord('\r')) and self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''
-            self._widgets_to_search_term()
+            new_search_term = self._widgets_to_search_term()
+            if new_search_term:
+                for i, a_search_term in enumerate(self._history):
+                    logger.error('{0} - {1}'.format(i, a_search_term))
+                for a_search_term in self._history:
+                    if new_search_term == a_search_term:
+                        self._history_id = self._selected_history_id
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('New search term already in history, id = {}'.format(self._history_id))
+                        break
+            else:
+                ''' error in search term '''
+                return 4
             return 1
             return 0
+
+        elif char in (curses.ascii.SO, ):
+            ''' ^N - Next history item '''
+            if len(self._history) > 1:
+                self._selected_history_id += 1
+                if self._selected_history_id >= len(self._history):
+                    self._selected_history_id = 0
+                self._print_history_legent()
+                self._activate_search_term(self._history[self._selected_history_id])
+
+        elif char in (curses.ascii.DLE, ):
+            ''' ^P - Previous history item '''
+            if len(self._history) > 1:
+                self._selected_history_id -= 1
+                if self._selected_history_id <0:
+                    self._selected_history_id = len(self._history) - 1
+                self._print_history_legent()
+                self._activate_search_term(self._history[self._selected_history_id])
+
+        elif char in (curses.ascii.ETB, ):
+            ''' ^W - Save search history '''
+            return 5
+
+        elif char in (curses.ascii.CAN, ):
+            ''' ^X - Delete history item '''
+            return 6
+
+        elif char in (curses.ascii.EOT, ):
+            ''' ^D - Set default item '''
+            return 7
 
         else:
             if class_name == 'SimpleCursesWidgetColumns':
