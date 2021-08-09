@@ -357,6 +357,7 @@ class PyRadio(object):
                 self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
                 self.ws.BROWSER_OPEN_MODE: self._show_connect_to_server_message,
                 self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
+            self.ws.BROWSER_PERFORMING_SEARCH_MODE: self._show_performing_search_message,
                 }
 
         ''' list of help functions '''
@@ -3052,6 +3053,16 @@ class PyRadio(object):
                  ____Please wait...'''
         self._show_help(txt, self.ws.BROWSER_OPEN_MODE, caption=' ', prompt=' ', is_message=True)
 
+    def _show_performing_search_message(self):
+        ''' display a passive message telling the user
+            to wait while performing search.
+
+            To be used with onlines services only
+        '''
+        txt = '''__Performing search.__
+                 ____Please wait...'''
+        self._show_help(txt, self.ws.BROWSER_PERFORMING_SEARCH_MODE, caption=' ', prompt=' ', is_message=True)
+
     def _open_playlist(self, a_url=None):
         ''' open playlist
 
@@ -3172,6 +3183,11 @@ class PyRadio(object):
                         False if from opening browser
         '''
 
+        if self.ws.operation_mode in (
+            self.ws.BROWSER_OPEN_MODE,
+            self.ws.BROWSER_PERFORMING_SEARCH_MODE,
+        ):
+            self.ws.close_window()
         if not ret[0]:
             if ret[2]:
                 self._goto_history_back_handler()
@@ -4294,6 +4310,7 @@ class PyRadio(object):
         self.refreshBody()
 
     def keypress(self, char):
+        logger.error('DE char = {}'.format(char))
         self.detect_if_player_exited = True
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
@@ -5073,7 +5090,10 @@ class PyRadio(object):
             logger.error('DE BROWSER SEARCH ret = {}'.format(ret))
             if ret == 0:
                 ''' Ok, search term is valid '''
-                self._cnf._online_browser._search_history_index = 2
+                self._cnf._online_browser.get_history_from_search()
+                self.ws.close_window()
+                self.refreshBody()
+                self._show_performing_search_message()
                 self._cnf._online_browser.search()
 
             elif ret == -1:
