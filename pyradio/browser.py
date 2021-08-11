@@ -18,7 +18,7 @@ import logging
 from .player import info_dict_to_list
 from .cjkwrap import cjklen, PY3
 from .countries import countries
-from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter
+from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, DisabledWidget
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -1312,7 +1312,7 @@ class RadioBrowserInfoSearchWindow(object):
     '''
     _left_column = (0, 1, 4, 5, 6, 11, 12, 17, 18)
     _middle_column = (7, 8, 13, 14, 18)
-    _right_column = (2, 3, 9, 10, 15, 16, 19)
+    _right_column = (2, 3, 9, 10, 16, 19)
 
     ''' line editors ids '''
     _line_editor_id = []
@@ -1699,16 +1699,14 @@ class RadioBrowserInfoSearchWindow(object):
                     curses.color_pair(9), curses.color_pair(4), curses.color_pair(5)))
             self._calculate_widgets_yx(Y, X)
             for n in range(1,7):
-                # self._win.addstr(
-                #     self.yx[n][0],
-                #     self.yx[n][1],
-                #     self.captions[n],
-                #     curses.color_pair(4))
-                self._widgets.append(SimpleCursesCheckBox(
-                    self.yx[n][0] + 1,
-                    self.yx[n][1] + len(self.captions[n]) + 2,
-                    'Exact',
-                    curses.color_pair(9), curses.color_pair(5), curses.color_pair(5)))
+                if n == 6:
+                    self._widgets.append(DisabledWidget())
+                else:
+                    self._widgets.append(SimpleCursesCheckBox(
+                        self.yx[n][0] + 1,
+                        self.yx[n][1] + len(self.captions[n]) + 2,
+                        'Exact',
+                        curses.color_pair(9), curses.color_pair(5), curses.color_pair(5)))
                 self._widgets.append(SimpleCursesLineEdit(
                     parent=self._win,
                     width=X-2,
@@ -1773,14 +1771,15 @@ class RadioBrowserInfoSearchWindow(object):
 
             # set vertical placement variable
             for i in range(0, len(self._widgets)):
-                if self._widgets[i].id in self._left_column:
-                    self._widgets[i]._vert = self._left_column
-                elif self._widgets[i].id in self._middle_column:
-                    self._widgets[i]._vert = self._middle_column
-                elif self._widgets[i].id in self._right_column:
-                    self._widgets[i]._vert = self._right_column
-                self._widgets[i]._vert_id = self._widgets[i]._vert.index(self._widgets[i].id)
-                # logger.error('DE =======\ni = {0}\nw = {1}\nid = {2}\n_vert = {3}\n_vert_id = {4}'.format(i, self._widgets[i], self._widgets[i].id, self._widgets[i]._vert, self._widgets[i]._vert_id))
+                if type(self._widgets[i]).__name__ != 'DisabledWidget':
+                    if self._widgets[i].id in self._left_column:
+                        self._widgets[i]._vert = self._left_column
+                    elif self._widgets[i].id in self._middle_column:
+                        self._widgets[i]._vert = self._middle_column
+                    elif self._widgets[i].id in self._right_column:
+                        self._widgets[i]._vert = self._right_column
+                    self._widgets[i]._vert_id = self._widgets[i]._vert.index(self._widgets[i].id)
+                    # logger.error('DE =======\ni = {0}\nw = {1}\nid = {2}\n_vert = {3}\n_vert_id = {4}'.format(i, self._widgets[i], self._widgets[i].id, self._widgets[i]._vert, self._widgets[i]._vert_id))
 
         else:
             ''' update up to lists '''

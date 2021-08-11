@@ -15,13 +15,23 @@ class DisabledWidget(object):
 
     To be used in complex dialogs
     '''
-    enabled = False
+    _enabled = False
     focus = False
     checked = False
 
     def __init__(self):
         pass
 
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        pass
+
+    def show(self):
+        pass
 
 class SimpleCursesWidget(object):
     '''An abstract widget class '''
