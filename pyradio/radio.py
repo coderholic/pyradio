@@ -4630,7 +4630,8 @@ class PyRadio(object):
         elif char in (ord('t'), ) and \
                 self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE,
                     self.ws.ADD_STATION_MODE, self.ws.THEME_MODE,
-                    self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE) and \
+                    self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE,
+                    self.ws.BROWSER_SEARCH_MODE) and \
                 self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
                 not self.is_search_mode(self.ws.operation_mode) and \
                 self.ws.window_mode not in (self.ws.CONFIG_MODE, ):

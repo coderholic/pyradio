@@ -1,4 +1,13 @@
 2021-08-11
+    * Version 0.8.9.5 (0.9-beta2)
+    * Fixed a crash that would occur when searching for name only in
+      RadioBrowser Search Window
+    * Do not display the Theme Selection Window when pressing "t" in a
+      RadioBrowser Line Editor
+    * Updated History legend aread
+    * Updated docs
+
+2021-08-11
     * Version 0.8.9.4 (0.9-beta1)
     * Radio Browser implementation is now usable (but still not complete)
     * Implemented ^N,^P to play next/previous station as per (#135)

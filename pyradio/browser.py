@@ -37,8 +37,8 @@ RADIO_BROWSER_DISPLAY_TERMS = {
 
 RADIO_BROWSER_SEARCH_BY_TERMS = {
     'byuuid': -1,
-    'byname': 5,
-    'bynameexact': 5,
+    'byname': 6,
+    'bynameexact': 6,
     'bycodec': 16,
     'bycodecexact': 16,
     'bycountry': 8,
@@ -306,6 +306,12 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
 
     keyboard_handler = None
 
+    ''' _search_history_index            - current item in this browser  -  corresponds to search window _history_id
+        _search_default_history_index    - autoload item in this browser  -  corresponds to search window _default_history_id
+    '''
+    _search_history_index = 1
+    _search_default_history_index = 1
+
     def __init__(self,
                  config,
                  config_encoding,
@@ -361,8 +367,8 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             })
 
             # self._search_history.append({
-            #     'type': 'bytagexact',
-            #     'term': 'jpop',
+            #     'type': 'bytag',
+            #     'term': 'big band',
             #     'post_data': {'order': 'votes', 'reverse': 'true'},
             # })
 
@@ -1257,7 +1263,10 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 limit=self._default_max_number_of_results,
                 init=init
             )
-        self._search_win.set_search_history(self._search_history_index, self._search_history, init)
+        self._search_win.set_search_history(
+            self._search_default_history_index,
+            self._search_history_index,
+            self._search_history, init)
         self.keyboard_handler = self._search_win
         self._search_win.show()
 
@@ -1325,7 +1334,11 @@ class RadioBrowserInfoSearchWindow(object):
 
     _default_limit = 100
 
-    _history_id = _selected_history_id = 0
+    ''' _selected_history_id  : current id in search window
+        _history_id           : current id (active in browser)    - corresponds in browser to _search_history_index
+        _default_history_id   : default id (autoload for service) - corresponds in browser to _search_default_history_index
+    '''
+    _history_id = _selected_history_id = _default_history_id = 1
     _history = []
 
     def __init__(self,
@@ -1501,10 +1514,11 @@ class RadioBrowserInfoSearchWindow(object):
 
             if len(what_type) == 1:
                 ''' simple search '''
-                # logger.error('DE simple search')
+                logger.error('DE simple search')
                 for n in RADIO_BROWSER_SEARCH_BY_TERMS.items():
                     if n[1] == what_type[0]:
                         ret['type'] = n [0]
+                        logger.error('DE type = {}'.format(ret['type']))
                         break
                 if self._widgets[what_type[0] - 1].checked:
                     ret['type'] += 'exact'
@@ -1557,6 +1571,7 @@ class RadioBrowserInfoSearchWindow(object):
 
     def set_search_history(
             self,
+            main_window_default_search_history_index,
             main_window_search_history_index,
             main_window_search_history,
             init=False
@@ -1567,6 +1582,7 @@ class RadioBrowserInfoSearchWindow(object):
         '''
         self._history_id = main_window_search_history_index
         if init:
+            self._default_history_id = main_window_default_search_history_index
             self._selected_history_id = main_window_search_history_index
         logger.error('DE set_search_history - _selected_history_id={}'.format(self._selected_history_id))
         self._history = deepcopy(main_window_search_history)
@@ -1816,7 +1832,7 @@ class RadioBrowserInfoSearchWindow(object):
             self._win.refresh()
             self._calculate_widgets_yx(Y, X)
             # logger.error('== 1 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
-            for n in range(0,6):
+            for n in range(0,5):
                 ''' place editors' captions '''
                 # self._win.addstr(
                 #     self.yx[n+1][0],
@@ -1850,17 +1866,24 @@ class RadioBrowserInfoSearchWindow(object):
 
         # logger.error('== 2 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
         self._h_buttons.calculate_buttons_position()
-        self._print_history_legent()
+        self._print_history_legend()
         self._display_all_widgets()
 
-    def _print_history_legent(self):
+    def _print_history_legend(self):
         self._win.addstr(self.maxY - 2, 2 , 'History item: ')
         self._win.addstr('{}'.format(self._selected_history_id), curses.color_pair(4))
         self._win.addstr('/{} '.format(len(self._history)-1))
-        if self._selected_history_id == self._history_id:
-            self._win.addstr(self.maxY - 3, 2, 'Item in Browser', curses.color_pair(4))
-        else:
-            self._win.addstr(self.maxY - 3, 2, 25 * ' ')
+
+        self._win.addstr(self.maxY - 3, 2, 25 * ' ')
+        if self._selected_history_id == 0:
+                self._win.addstr(self.maxY - 3, 2, 'Template!!!', curses.color_pair(4))
+        elif self._selected_history_id == self._history_id:
+            if self._default_history_id == self._history_id:
+                self._win.addstr(self.maxY - 3, 2, 'Item in Browser, Default', curses.color_pair(4))
+            else:
+                self._win.addstr(self.maxY - 3, 2, 'Item in Browser', curses.color_pair(4))
+        elif self._selected_history_id == self._default_history_id:
+                self._win.addstr(self.maxY - 3, 2, 'Default item', curses.color_pair(4))
 
         msg = 'History navigation: ^N/^P, Go to empty item: ^Y'
         thisX = self.maxX - 2 - len(msg)
@@ -1987,7 +2010,7 @@ class RadioBrowserInfoSearchWindow(object):
                 self._selected_history_id += 1
                 if self._selected_history_id >= len(self._history):
                     self._selected_history_id = 0
-                self._print_history_legent()
+                self._print_history_legend()
                 self._activate_search_term(self._history[self._selected_history_id])
 
         elif char in (curses.ascii.DLE, ):
@@ -1996,7 +2019,7 @@ class RadioBrowserInfoSearchWindow(object):
                 self._selected_history_id -= 1
                 if self._selected_history_id <0:
                     self._selected_history_id = len(self._history) - 1
-                self._print_history_legent()
+                self._print_history_legend()
                 self._activate_search_term(self._history[self._selected_history_id])
 
         elif char in (curses.ascii.SYN, ):
@@ -2014,7 +2037,7 @@ class RadioBrowserInfoSearchWindow(object):
         elif char in (curses.ascii.EM, ):
             ''' ^Y - Set default item '''
             self._selected_history_id = 0
-            self._print_history_legent()
+            self._print_history_legend()
             self._activate_search_term(self._history[self._selected_history_id])
 
         else:
@@ -2073,7 +2096,7 @@ class RadioBrowserInfoSearchWindow(object):
                     new_focus = self._focus + 2
                     # logger.error('DE focus = {}'.format(new_focus))
                     if new_focus == 15:
-                        new_focus = 17
+                        new_focus = 16
                     # logger.error('DE focus = {}'.format(new_focus))
                     self._apply_new_focus(new_focus)
                 else:

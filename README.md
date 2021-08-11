@@ -41,13 +41,13 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [PyRadio Themes](#pyradio-themes)
     * [Using transparency](#using-transparency)
 * [Mouse support](#mouse-support)
+* [Online radio directory services](#online-radio-directory-services)
 * [Session Locking](#session-locking)
     * [Session unlocking](#session-unlocking)
 * [Update notification](#update-notification)
     * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
 * [Cleaning up](#cleaning-up)
 * [Debug mode](#debug-mode)
-* [Online radio directory services](#online-radio-directory-services)
 * [Reporting bugs](#reporting-bugs)
 * [Packaging PyRadio](#packaging-pyradio)
 * [TODO](#todo)
@@ -669,6 +669,18 @@ Then, the mouse can be used as follows:
 | **Wheel**        | Scroll up / down                                           |
 | **Shift-Wheel**  | Adjust volume<br>(does not work with all terminals)        |
 
+## Online radio directory services
+
+**PyRadio** supports the following *Online radio directory services*:
+
+- [RadioBrowser](https://www.radio-browser.info/) 
+
+    This is a community driven effort (like wikipedia) with the aim of collecting as many internet radio and TV stations as possible. 
+
+    Read more at [PyRadio RadioBrowser Implementation](radio-browser.md)
+
+To access supported services, just press "**O**" (capital "*o*") at the program's main window.
+
 ## Session Locking
 
 **PyRadio** uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.
@@ -712,18 +724,6 @@ Finally, execute the command:
 Adding the "**-d**" option to the command line will instruct **PyRadio** to enter *Debug mode*, which means that it will print debug messages to a file. This file will always reside in the user's home directory and will be named *pyradio.log*.
 
 In case of a bug or a glitch, please include this file to the issue you will [open at github](https://github.com/coderholic/pyradio/issues).
-
-## Online radio directory services
-
-**PyRadio** supports the following *Online radio directory services*:
-
-- [RadioBrowser](https://www.radio-browser.info/) 
-
-    This is a community driven effort (like wikipedia) with the aim of collecting as many internet radio and TV stations as possible. 
-
-    Read more at [PyRadio RadioBrowser Implementation](radio-browser.md)
-
-To access supported services, just press "**O**" (capital "*o*") at the program's main window.
 
 ## Reporting bugs
 
