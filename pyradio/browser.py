@@ -157,6 +157,10 @@ class PyRadioStationsBrowser(object):
 
         pass
 
+    def __del__(self):
+        self._sort = None
+        self._search_win = None
+
     @property
     def parent(self):
         return self._parent
@@ -261,7 +265,7 @@ class PyRadioStationsBrowser(object):
 class RadioBrowserInfo(PyRadioStationsBrowser):
 
     BASE_URL = 'api.radio-browser.info'
-    TITLE = 'Radio Browser '
+    TITLE = 'RadioBrowser '
 
     _headers = {'User-Agent': 'PyRadio/dev',
                      'Content-Type': 'application/json'}
@@ -386,7 +390,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
         return self._server.split('.')[0]
 
     def _get_title(self):
-        self.TITLE = 'Radio Browser ({})'.format(country_from_server(self._server))
+        self.TITLE = 'RadioBrowser ({})'.format(country_from_server(self._server))
 
     def stations(self, playlist_format=1):
         ''' Return stations' list (in PyRadio playlist format)
@@ -742,6 +746,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             if a_search_copy['type'].startswith('bycountry') and \
                     len(a_search_copy['term']) == 2:
                 a_search_copy['type'] = 'bycountrycodeexact'
+                a_search_copy['term'] = a_search_copy['term'].upper()
             url = 'http://{0}{1}/{2}'.format(
                 self._server,
                 '/json/stations/{}'.format(a_search_copy['type']),
@@ -759,7 +764,7 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                     ''' look for country code '''
                     if len(a_search_copy['post_data']['country']) == 2:
                         ''' revert to countrcode '''
-                        a_search_copy['post_data']['countrycode'] = a_search_copy['post_data']['country']
+                        a_search_copy['post_data']['countrycode'] = a_search_copy['post_data']['country'].upper()
                         try:
                             a_search_copy['post_data'].pop('country', None)
                             # a_search_copy['post_data'].pop('countryExact', None)
@@ -1127,12 +1132,10 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
                 columns_separotors[n] -= adjust
         return columns_separotors
 
-    def get_history_from_search(self, close=True):
+    def get_history_from_search(self):
         if self._search_win:
             self._search_history_index, history = self._search_win.get_history()
             self._search_history = deepcopy(history)
-            if close:
-                self._search_win = None
 
     def get_internal_header(self, pad, width):
         guide = {
@@ -1337,13 +1340,26 @@ class RadioBrowserInfoSearchWindow(object):
         self._focus = 0
         self._win = None
         self.maxY = self.maxX = 0
-        self.TITLE = ' Radio Browser Search '
+        self.TITLE = ' RadioBrowser Search '
 
         ''' we have two columns;
             this is the width of each of them
         '''
         self._half_width = 0
         self._widgets = [ None ]
+
+    def __del__(self):
+        for a_widget in self._widgets:
+            # logger.error('DE deleting: {}'.format(a_widget))
+            a_widget = None
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, val):
+        self._parent = val
 
     @property
     def focus(self):
@@ -1467,7 +1483,7 @@ class RadioBrowserInfoSearchWindow(object):
             if type_part:
                 ret['type'] = type_part
             else:
-                logger.error('Radio Browser Search: Error in search parameters!')
+                logger.error('RadioBrowser Search: Error in search parameters!')
                 return None
             ''' get limit (term)'''
             ret['term'] = str(self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value)
@@ -1480,7 +1496,7 @@ class RadioBrowserInfoSearchWindow(object):
                     if self._widgets[i].string:
                         what_type.append(i)
             if len(what_type) == 0:
-                logger.error('Radio Browser Search: Error in search parameters!')
+                logger.error('RadioBrowser Search: Error in search parameters!')
                 return None
 
             if len(what_type) == 1:
@@ -1603,7 +1619,7 @@ class RadioBrowserInfoSearchWindow(object):
             self._half_width = int((self.maxX -2 ) / 2) -3
             # logger.error('>>>> hajf width = {} <<<<'.format(self._half_width))
 
-        if self.maxX < 78 or self.maxY < 22:
+        if self.maxX < 80 or self.maxY < 22:
             self._too_small = True
         else:
             self._too_small = False
@@ -1705,10 +1721,12 @@ class RadioBrowserInfoSearchWindow(object):
                     caption_color=curses.color_pair(4),
                     edit_color=curses.color_pair(9),
                     cursor_color=curses.color_pair(8),
-                    unfocused_color=curses.color_pair(5)))
+                    unfocused_color=curses.color_pair(5),
+                    key_up_function_handler=self._focus_up,
+                    key_down_function_handler=self._focus_down))
                 self._widgets[-1].bracket = False
                 self._widgets[-1].use_paste_mode = True
-                self._widgets[-1].string = self.captions[n]
+                #self._widgets[-1].string = self.captions[n]
 
             ''' limit - index = -3 '''
             self._widgets.append(
@@ -1839,39 +1857,25 @@ class RadioBrowserInfoSearchWindow(object):
     def _print_history_legent(self):
         self._win.addstr(self.maxY - 2, 2 , 'History item: ')
         self._win.addstr('{}'.format(self._selected_history_id), curses.color_pair(4))
-        self._win.addstr('/{}    '.format(len(self._history)-1))
-        my_strings = (
-            'History navigation: ^N/^P, Go to empty item: ^Y, Delete current item: ^X, Set Default item: ^B, Save history: ^V',
-            'History navigation: ^N/^P, Empty item: ^Y, Delete current item: ^X, Set Default item: ^B, Save history: ^V',
-            'History navigation: ^N/^P, Empty: ^Y, Delete item: ^X, Set Default item: ^B, Save history: ^V',
-            'History navigation: ^N/^P, Empty: ^Y, Delete item: ^X, Set Default item: ^B, Save: ^V',
-            'History navigation: ^N/^P, Empty: ^Y, Delete item: ^X, Default: ^B, Save: ^V',
-            'History navigation: ^N/^P, Empty: ^Y, Delete: ^X, Default: ^B, Save: ^V',
-            'Navigation: ^N/^P, Empty: ^Y, Delete: ^X, Default: ^B, Save: ^V',
-            'Navigation: ^N/^P, Delete: ^X, Default: ^B, Save: ^V',
-        )
+        self._win.addstr('/{} '.format(len(self._history)-1))
+        if self._selected_history_id == self._history_id:
+            self._win.addstr(self.maxY - 3, 2, 'Item in Browser', curses.color_pair(4))
+        else:
+            self._win.addstr(self.maxY - 3, 2, 25 * ' ')
 
-        for n in my_strings:
-            l = len(n) + 25
-            if self.maxX >= len(n) + 25:
-                self._win.addstr(
-                    self.maxY - 2,
-                    self.maxX - 2 - len(n),
-                    n
-                )
-                this_string = n
-                this_string_start = self.maxX - 2 - len(n)
-                break
+        msg = 'History navigation: ^N/^P, Go to empty item: ^Y'
+        thisX = self.maxX - 2 - len(msg)
+        self._win.addstr(self.maxY - 3, thisX, msg)
+        self._carret_chgat(self.maxY-3, thisX, msg)
+        msg = 'Delete item: ^X, Make default: ^B, Save history: ^V'
+        thisX = self.maxX - 2 - len(msg)
+        self._win.addstr(self.maxY - 2, thisX, msg)
+        self._carret_chgat(self.maxY-2, thisX, msg)
 
-        indexes = [i for i, c in enumerate(this_string) if c == '^']
+    def _carret_chgat(self, Y, X, a_string):
+        indexes = [i for i, c in enumerate(a_string) if c == '^']
         for n in indexes:
-            self._win.chgat(
-                self.maxY - 2,
-                this_string_start + n,
-                2,
-                curses.color_pair(4)
-            )
-
+            self._win.chgat(Y, X+n, 2, curses.color_pair(4))
 
     def _activate_search_term(self, a_search_term):
         self._search_term_to_widgets(a_search_term)
@@ -1957,23 +1961,27 @@ class RadioBrowserInfoSearchWindow(object):
                 for i, a_search_term in enumerate(self._history):
                     logger.error('{0} - {1}'.format(i, a_search_term))
 
-                self._history_id = self._selected_history_id =  -1
+                # self._history_id = self._selected_history_id =  -1
+                found = False
                 for a_search_term in self._history:
                     if new_search_term == a_search_term:
                         self._history_id = self._selected_history_id
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('New search term already in history, id = {}'.format(self._history_id))
+                        found = True
                         break
 
-                if self._history_id == -1:
+                if not found:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Adding new search term to history, id = {}'.format(len(self._history)))
                     self._history.append(new_search_term)
                     self._history_id = self._selected_history_id = len(self._history) - 1
+
+                logger.error('DE return 0')
+                return 0
             else:
                 ''' error in search term '''
                 return 4
-            return 0
 
         elif char in (curses.ascii.SO, ):
             ''' ^N - Next history item '''
@@ -2051,11 +2059,13 @@ class RadioBrowserInfoSearchWindow(object):
                 elif ret == 2:
                     # display Line Editor Help
                     return 3
+                elif ret < 2:
+                    return 1
 
-            if char in (ord('j'), curses.KEY_UP) and \
+            if char in (ord('k'), curses.KEY_UP) and \
                     class_name != 'SimpleCursesWidgetColumns':
                 self._focus_up()
-            elif char in (ord('k'), curses.KEY_DOWN) and \
+            elif char in (ord('j'), curses.KEY_DOWN) and \
                     class_name != 'SimpleCursesWidgetColumns':
                 self._focus_down()
             elif char in (ord('l'), curses.KEY_RIGHT) and \
@@ -2677,7 +2687,7 @@ class RadioBrowserInfoServersSelect(object):
 
 
 class RadioBrowserInfoServers(object):
-    ''' Display Radio Browser server
+    ''' Display RadioBrowser server
         This is supposed to be pluged into
         another widget
     '''

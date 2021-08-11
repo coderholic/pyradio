@@ -16,11 +16,12 @@
     dl {margin: 2em;} 
     dd {margin: 1em;} 
     dt {font-weight: bold;} 
-    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate;} 
     TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
     pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; overflow: auto;} 
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; width: 100%;} 
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
@@ -95,6 +96,7 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#cleaning-up">Cleaning up</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
+<li><a href="#online-radio-directory-services">Online radio directory services</a></li>
 <li><a href="#reporting-bugs">Reporting bugs</a></li>
 <li><a href="#packaging-pyradio">Packaging PyRadio</a></li>
 <li><a href="#todo">TODO</a></li>
@@ -571,6 +573,14 @@ curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/inst
 <h2 id="debug-mode">Debug mode <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Adding the “<strong>-d</strong>” option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a target="_blank" href="https://github.com/coderholic/pyradio/issues">open at github</a>.</p>
+<h2 id="online-radio-directory-services">Online radio directory services <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p><strong>PyRadio</strong> supports the following <em>Online radio directory services</em>:</p>
+<ul>
+<li><a target="_blank" href="https://www.radio-browser.info/">RadioBrowser</a></p>
+<p>This is a community driven effort (like wikipedia) with the aim of collecting as many internet radio and TV stations as possible.</p>
+<p>Read more at <a href="radio-browser.html">PyRadio RadioBrowser Implementation</a></p></li>
+</ul>
+<p>To access supported services, just press “<strong>O</strong>” (capital “<em>o</em>”) at the program’s main window.</p>
 <h2 id="reporting-bugs">Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>When a bug is found, please do report it by <a target="_blank" href="https://github.com/coderholic/pyradio/issues">opening an issue at github</a>, as already stated above.</p>
 <p>In you report you should, at the very least, state your <strong>pyradio version</strong>, <strong>python version</strong> and <strong>method</strong> of installation (built from source, AUR, snap, whatever).</p>

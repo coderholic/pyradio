@@ -746,7 +746,7 @@ class PyRadio(object):
         if self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
                 self._i_am_resizing:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Redisplaying Radio Browser Search Window!!!')
+                logger.debug('Redisplaying RadioBrowser Search Window!!!')
             self._browser_search()
 
         if self._cnf.integrate_stations and \
@@ -1717,7 +1717,7 @@ class PyRadio(object):
                  '''
         self._show_help(txt,
                         mode_to_set=self.ws.RADIO_BROWSER_SEARCH_HELP_MODE,
-                        caption=' Radio Browser Search Help ')
+                        caption=' RadioBrowser Search Help ')
 
     def _show_main_help(self):
         txt = '''Up|,|j|,|PgUp|,
@@ -1795,8 +1795,8 @@ class PyRadio(object):
                  Middle click     |Toggle mute.
                  Wheel            |Page up / down.
                  Shift-Wheel      |Adjust volume.
-                 !Radio Browser
-                 O                |Open |Radio Browser|.
+                 !RadioBrowser
+                 O                |Open |RadioBrowser|.
                  c                |Open |c|onfig window.
                  C                |Select server to |c|onnect to.
                  s                ||S|earch for stations.
@@ -2406,7 +2406,7 @@ class PyRadio(object):
         txt = '''
         Module "|dnspython|" not found!
 
-        In order to use |Radio Browser| stations directory
+        In order to use |RadioBrowser| stations directory
         service, the "|dnspython|" module must be installed.
 
         Exit |PyRadio| now, install the module (named
@@ -4310,7 +4310,7 @@ class PyRadio(object):
         self.refreshBody()
 
     def keypress(self, char):
-        logger.error('DE char = {}'.format(char))
+        # logger.error('DE char = {}'.format(char))
         self.detect_if_player_exited = True
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
@@ -6681,7 +6681,7 @@ class PyRadio(object):
         if self._redisplay_list[-1][0] == self.ws.BROWSER_SEARCH_MODE and \
                 self._redisplay_list[-2][0] == self.ws.NORMAL_MODE:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('---=== Not displaying stations (Radio Browser window follows) ===---')
+                logger.debug('---=== Not displaying stations (RadioBrowser window follows) ===---')
             self.outerBodyWin.refresh()
             return
 
@@ -6794,7 +6794,10 @@ class PyRadio(object):
                     # logger.error('DE {}'.format(column_name))
                     ''' clear empty space after "Name" '''
                     to_clear_start = pad + 2 + len(a_header[0][1])
-                    self.outerBodyWin.addstr((column_separator[0] - to_clear_start) * ' ', curses.color_pair(2))
+                    try:
+                        self.outerBodyWin.addstr((column_separator[0] - to_clear_start) * ' ', curses.color_pair(2))
+                    except:
+                        pass
                     for j, col in enumerate(column_separator):
                         if version_info < (3, 0):
                             self.outerBodyWin.addstr(i + 1, col + 2, u'│'.encode('utf-8', 'replace'), curses.color_pair(5))

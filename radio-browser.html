@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PyRadio RadioBrowser Implementation</title>
+    <style> 
+    html {margin: 2em;} 
+    body {width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin-top: 2em; color: SaddleBrown;} 
+    h4:before {content: "# "; font-size: 200%; font-weight: bold; vertical-align: middle;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; overflow: auto;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; width: 100%;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown"id="pyradio-radiobrowser-implementation">PyRadio RadioBrowser Implementation</h1>
+<p><a target="_blank" href="https://www.radio-browser.info/">RadioBrowser</a> is “a community driven effort (like wikipedia) with the aim of collecting as many internet radio and TV stations as possible.”</p>
+<p><strong>PyRadio</strong> uses the API provided to integrate it and provide its users the possibility to enjoy this great project.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> As of the writing of this (v. <strong>0.8.9.4</strong>, which should actually be called <strong><em>0.9-beta1</em></strong>), the implementation is not yet complete, but it is usable (accessing and querying the service is up and running). Whenever a feature is not implemented yet, it will be explicitly marked as such.</p>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<!-- vim-markdown-toc Marked -->
+<ul>
+<li><a href="#opening-radiobrowser">Opening RadioBrowser</a></li>
+<li><a href="#closing-radiobrowser">Closing RadioBrowser</a></li>
+<li><a href="#how-it-works">How it works</a>
+<ul>
+<li><a href="#searching-in-the-list-of-stations">Searching in the list of stations</a></li>
+<li><a href="#sorting-stations">Sorting stations</a></li>
+</ul></li>
+<li><a href="#controls">Controls</a></li>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#station-database-information">Station Database Information</a></li>
+<li><a href="#station-clicking-and-voting">Station clicking and voting</a></li>
+<li><a href="#server-selection">Server Selection</a></li>
+<li><a href="#search-window">Search Window</a>
+<ul>
+<li><a href="#search-term-composition">Search term composition</a></li>
+<li><a href="#history-management">History Management</a></li>
+</ul></li>
+</ul>
+<!-- vim-markdown-toc -->
+<p><a href="README.html">[Return to main doc]</a></p>
+<h2 id="opening-radiobrowser">Opening RadioBrowser <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>To open <strong>RadioBrowser</strong> one would just press “<strong>O</strong>” at the program’s main window. Since at this point this is the only service supported, the service will be activated.</p>
+<figure>
+<img src="https://members.hellug.gr/sng/pyradio/pyradio-radio-browser.png" alt="Pyradio’s RadioBrowser interface" /><figcaption aria-hidden="true">Pyradio’s RadioBrowser interface</figcaption>
+</figure>
+<p>Upon activation, the <strong>default query</strong> will be preformed and (if successful) its results will be presented to the user. If unsuccessful, a relevant message will be displayed and the program will return to the local playlist that was previously opened.</p>
+<p>By default, <strong>PyRadio</strong> will load the first 100 most voted stations on <strong>RadioBrowser</strong>.</p>
+<h2 id="closing-radiobrowser">Closing RadioBrowser <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p><strong>PyRadio</strong> treats the service as a special kind of a playlist, thus to close the service it is enough to “<em>go back to playlist history</em>”, pressing “<strong>\\</strong>” (double backslash).</p>
+<h2 id="how-it-works">How it works <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>The implementation uses a list structure (we’ll call it “<strong>search history</strong>” from now on) to keep user specified queries (we’ll call them “<strong>search terms</strong>”).</p>
+<p>The first item in the “<strong>search history</strong>” is the “<strong>empty search term</strong>” (or “<strong>empty item</strong>”), which cannot be deleted and cannot be used to actually query <strong>RadioBrowser</strong>; it is there to provide a “<strong>search term template</strong>” for user inserted search terms.</p>
+<p>Upon activation, the “<strong>default search term</strong>” is used to automatically query a randomly selected <strong>RadioBrowser</strong> server and display stations’ results.</p>
+<p>Once the results are fetched, they act as a special kind of playlist (some of the features of a local playlist are not functional, such as station renaming and such), and other features are introduced (such as the sort function and the station info function).</p>
+<p>Each search result, i.e. each station, has more data attached to it than just its name and URL (bitrate, votes, clicks, etc.). This data is displayed in field columns; the number of visible columns depend on the width of the window and the name of the column that matches the sorting criteria is “highlighted”.</p>
+<h3 id="searching-in-the-list-of-stations">Searching in the list of stations</h3>
+<p>The normal local playlist search function has been enhanced in order to be able to search through the list of stations, since each station has a lot more info attached to it.</p>
+<p>Searching for any string will return matches in the “<strong>Name</strong>” field only (just like in a local playlist), but starting the search string with a plus sign (“<strong>+</strong>”) will produce results from all available fields (visible or not).</p>
+<h3 id="sorting-stations">Sorting stations</h3>
+<p>Pressing “<strong>S</strong>” (capital “s”) will present the user with a sorting list. Selecting one of the items will sort the stations based on it; selecting it again will reverse sorting order.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This sorting function is different than the query sorting criterion which can be selected in the <a href="#search-window">Search window</a>. This one just sorts a query result set, the one in the “<strong>Search window</strong>” affects the actual stations that will be in the result set.</p>
+<h2 id="controls">Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>These are the <strong>RadioBrowser</strong> specific keys one can use in addition to local playlist keys (if applicable).</p>
+<table>
+<thead>
+<tr class="header">
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>O</td>
+<td>Open RadioBrowser</td>
+</tr>
+<tr class="even">
+<td>c</td>
+<td>Open config window</td>
+</tr>
+<tr class="odd">
+<td>C</td>
+<td>Select server to connect to</td>
+</tr>
+<tr class="even">
+<td>s</td>
+<td>Search for stations</td>
+</tr>
+<tr class="odd">
+<td>S</td>
+<td>Sort search results</td>
+</tr>
+<tr class="even">
+<td>I</td>
+<td>Station database info (current selection)</td>
+</tr>
+<tr class="odd">
+<td>V</td>
+<td>Vote for station</td>
+</tr>
+<tr class="even">
+<td>\\</td>
+<td>Close RadioBrowser</td>
+</tr>
+</tbody>
+</table>
+<h2 id="configuration">Configuration <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>This feature has not been implemented yet.</p>
+<h2 id="station-database-information">Station Database Information <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>The database information of the selected station can be displayed by pressing “<strong>I</strong>” (capital “i”). Keep in mind that, this is different than the “Station ino” displayed by pressing “<strong>i</strong>” (lowercase “i”), which is still abailable and presents live data.</p>
+<h2 id="station-clicking-and-voting">Station clicking and voting <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p><strong>RadioBrowser</strong> provides two ways to measure a station’s popularity: voting and clicking.</p>
+<p><strong>Clicking</strong> a station means that the station has been listened to; <strong>PyRadio</strong> will send a “click request” any time the user starts playback of a station; <strong>RadioBrowser</strong> will either reject or accept the action, and either ignore or increase click count for the station based on several criteria (time between consecutive clicks, possibly IP, etc.)</p>
+<p>For this reason <strong>PyRadio</strong> will in no case adjust the click count presented to the user.</p>
+<p><strong>Voting</strong> for a station is a different thing; the user has to choose to vote for it. In <strong>PyRadio</strong> a “vote request” is sent when “<strong>V</strong>” (capital “v”) is pressed. If the vote has been accepted, the cote counter will be increased by one.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Inconsistencies between a voted for station’s local vote counter value and the one reported in a consecutive server response should be expected, since it seems servers’ vote counter sync may take some time to complete.</p>
+<h2 id="server-selection">Server Selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p><strong>RadioBrowser</strong> provides several servers to the public (currently in Germany, France and The Netherlands), which are constantly kept in sync. Its API provides a way to “discover” these servers and then select the one to use.</p>
+<p><strong>PyRadio</strong> will randomly select one of these servers and will display its location in its window title.</p>
+<p>Pressing “<strong>C</strong>” (capital “c”) will provide a list of available servers to choose from. This selection will be honored until the service is closed.</p>
+<h2 id="search-window">Search Window <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>The “<strong>Search window</strong>” opens when “<strong>s</strong>” is pressed and loads the “<strong>search term</strong>” that was used to fetch the stations currently presented in the “<strong>RadioBrowser window</strong>”. If this is the first time this window is opened within this session, the search term that’s loaded is the “<strong>default search term</strong>”.</p>
+<p>Navigation between the various fields is done using the “<strong>Tab</strong>” (and “<strong>Shift-Tab</strong>”) key, the arrows and <strong>vim keys</strong> (“<strong>j</strong>”, “<strong>k</strong>”, “<strong>h</strong>” and “<strong>l</strong>”), provided that any given key is not already used by one of the on window “widgets”.</p>
+<figure>
+<img src="https://members.hellug.gr/sng/pyradio/radio-browser-search-window.png" alt="RadioBrowser Search Window" /><figcaption aria-hidden="true">RadioBrowser Search Window</figcaption>
+</figure>
+<p>This window performs two functions:</p>
+<ol type="1">
+<li>composes a search term to be forwarded to the search function and</li>
+<li>manages the “<strong>search history</strong>”.</li>
+</ol>
+<h3 id="search-term-composition">Search term composition</h3>
+<p>The “<strong>Search window</strong>” can be divided in four parts:</p>
+<ul>
+<li>The “<strong>Display</strong>” part</p>
+<p>In this part one would select to fetch a list of stations based on a single criterion such as their vote count, click count, etc.</p></li>
+<li>The “<strong>Search</strong>” part</p>
+<p>In this part, the user would insert a search string to one or more of the available fields.</p>
+<p>Each of the fields has an “<strong>Exact</strong>” checkbox. If checked, an exact match will be returned, hopefully.</p>
+<p>In the “<strong>Country</strong>” field one could either provide the name of a country or its two-letter code (based on <a target="_blank" href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">ISO 3166</a>). For example, to get a list of Greek stations, you would either insert “<em>greece</em>” or the country code, which is “<em>gr</em>”.</p></li>
+</ul>
+<p>These two parts are mutually exclusive, since when one is activated through its corresponding checkbox, the other one gets disabled.</p>
+<ul>
+<li>The “<strong>Sort</strong>” part</p>
+<p>This part affects both previous parts.</p>
+<p>It provides the server with the sorting criteria upon which the results will be returned.</p></li>
+<li>The “<strong>Limit</strong>” part</p>
+<p>In this part the maximum number or returned stations is specified. The default value is 100 stations.</p>
+<p>The value can be changed using the left and right arrows or “<strong>h</strong>”, “<strong>l</strong>” and “<strong>PgUp</strong>”, “<strong>PgDn</strong>” for a step of 10.</p></li>
+</ul>
+<h3 id="history-management">History Management</h3>
+<p>At the bottom of the “<strong>Search window</strong>” you have the <strong>history information</strong> section; on the left the number of history items is displayed along with the number of the current history item (“<strong>search term</strong>”) and on the right there’s the history help legend.</p>
+<p>The keys to manage the history are all <strong>Control</strong> combinations:</p>
+<ul>
+<li><strong><sup>N<strong>, </strong></sup>P</strong></p>
+<p>Move to next / previous “<strong>search term</strong>” definition.</p></li>
+<li><strong>^Y</strong></p>
+<p>Move to the “<strong>empty search term</strong>” (history item 0). This is a quick way to “reset” all settings and start new. Of course, one could just navigate to this history item using <strong><sup>N<strong>, </strong></sup>P</strong>, but it’s here just for convenience.</p></li>
+<li><strong>^X</strong></p>
+<p>Delete the current history item.</p></li>
+<li><strong>^B</strong></p>
+<p>Make the current history item the <strong>default</strong> one for <strong>RadioBrowser</strong>. This means that, next time you open <strong>RadioBrowser</strong> this history item (“<strong>search term</strong>”) will be automatically loaded.</p></li>
+<li>“<strong>^W</strong>”</p>
+<p>Save the history.</p></li>
+</ul>
+<p>There is one thing you should take notice of: after inserting some data into the various fields, do not navigate to another “<strong>search term</strong>” before saving it; all your changes will be lost. You should just save the history and then move to a new item.</p>
+<p>When “<strong>OK</strong>” is pressed and a query to the service is made, all your “<strong>search</strong>” terms are there for you to manage even if the history has not been saved. As long as you do not close “<strong>RadioBrowser</strong>” you are OK.</p>
+</body>
+</html>
