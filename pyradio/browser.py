@@ -2069,11 +2069,27 @@ class RadioBrowserInfoSearchWindow(object):
             elif char in (ord('l'), curses.KEY_RIGHT) and \
                     class_name not in ('SimpleCursesWidgetColumns',
                                        'SimpleCursesLineEdit'):
-                self._focus_next()
+                if 5 <= self._widgets[self._focus].id <= 13:
+                    new_focus = self._focus + 2
+                    # logger.error('DE focus = {}'.format(new_focus))
+                    if new_focus == 15:
+                        new_focus = 17
+                    # logger.error('DE focus = {}'.format(new_focus))
+                    self._apply_new_focus(new_focus)
+                else:
+                    self._focus_next()
             elif char in (ord('h'), curses.KEY_LEFT) and \
                     class_name not in ('SimpleCursesWidgetColumns',
                                        'SimpleCursesLineEdit'):
-                self._focus_previous()
+                if 5 <= self._widgets[self._focus].id <= 13:
+                    new_focus = self._focus - 2
+                    # logger.error('DE focus = {}'.format(new_focus))
+                    if new_focus == 3:
+                        new_focus = 4
+                    # logger.error('DE focus = {}'.format(new_focus))
+                    self._apply_new_focus(new_focus)
+                else:
+                    self._focus_previous()
 
         if char == ord('?'):
             return 2
