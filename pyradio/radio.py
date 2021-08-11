@@ -5087,7 +5087,6 @@ class PyRadio(object):
         elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
 
             ret = self._cnf._online_browser.keypress(char)
-            logger.error('DE BROWSER SEARCH ret = {}'.format(ret))
             if ret == 0:
                 ''' Ok, search term is valid '''
                 self._cnf._online_browser.get_history_from_search()

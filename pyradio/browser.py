@@ -355,29 +355,29 @@ class RadioBrowserInfo(PyRadioStationsBrowser):
             })
 
             self._search_history.append({
-                'type': 'lastclick',
-                'term': '50',
+                'type': 'topvote',
+                'term': '100',
                 'post_data': {'reverse': 'true'}
             })
 
-            self._search_history.append({
-                'type': 'bytagexact',
-                'term': 'jpop',
-                'post_data': {'order': 'votes', 'reverse': 'true'},
-            })
+            # self._search_history.append({
+            #     'type': 'bytagexact',
+            #     'term': 'jpop',
+            #     'post_data': {'order': 'votes', 'reverse': 'true'},
+            # })
 
-            self._search_history.append({
-                'type': 'search',
-                'term': '',
-                'post_data': {'name': 'Jazz', 'codec': 'mp3', 'order': 'clickcount', 'reverse': 'true', 'limit': '40'},
-            })
+            # self._search_history.append({
+            #     'type': 'search',
+            #     'term': '',
+            #     'post_data': {'name': 'Jazz', 'codec': 'mp3', 'order': 'clickcount', 'reverse': 'true', 'limit': '40'},
+            # })
 
-            self._search_history.append({
-                'type': 'search',
-                'term': '',
-                'post_data': {'tagExact': 'true', 'tag': 'blues', 'codec': 'mp3', 'order': 'clickcount', 'reverse': 'true', 'limit': '140'},
-            })
-            self._search_history_index = 3
+            # self._search_history.append({
+            #     'type': 'search',
+            #     'term': '',
+            #     'post_data': {'tagExact': 'true', 'tag': 'blues', 'codec': 'mp3', 'order': 'clickcount', 'reverse': 'true', 'limit': '140'},
+            # })
+            self._search_history_index = 1
             return True
         return False
 
@@ -1977,7 +1977,6 @@ class RadioBrowserInfoSearchWindow(object):
                     self._history.append(new_search_term)
                     self._history_id = self._selected_history_id = len(self._history) - 1
 
-                logger.error('DE return 0')
                 return 0
             else:
                 ''' error in search term '''

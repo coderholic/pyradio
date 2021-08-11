@@ -140,6 +140,7 @@ a:visited{color: SaddleBrown;}
 <p>Pressing “<strong>C</strong>” (capital “c”) will provide a list of available servers to choose from. This selection will be honored until the service is closed.</p>
 <h2 id="search-window">Search Window <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>The “<strong>Search window</strong>” opens when “<strong>s</strong>” is pressed and loads the “<strong>search term</strong>” that was used to fetch the stations currently presented in the “<strong>RadioBrowser window</strong>”. If this is the first time this window is opened within this session, the search term that’s loaded is the “<strong>default search term</strong>”.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> In case the server returns no results, the window will automatically reopen so that you can redefine the “<strong>search term</strong>”.</p>
 <p>Navigation between the various fields is done using the “<strong>Tab</strong>” (and “<strong>Shift-Tab</strong>”) key, the arrows and <strong>vim keys</strong> (“<strong>j</strong>”, “<strong>k</strong>”, “<strong>h</strong>” and “<strong>l</strong>”), provided that any given key is not already used by one of the on window “widgets”.</p>
 <figure>
 <img src="https://members.hellug.gr/sng/pyradio/radio-browser-search-window.png" alt="RadioBrowser Search Window" /><figcaption aria-hidden="true">RadioBrowser Search Window</figcaption>
@@ -171,18 +172,40 @@ a:visited{color: SaddleBrown;}
 <h3 id="history-management">History Management</h3>
 <p>At the bottom of the “<strong>Search window</strong>” you have the <strong>history information</strong> section; on the left the number of history items is displayed along with the number of the current history item (“<strong>search term</strong>”) and on the right there’s the history help legend.</p>
 <p>The keys to manage the history are all <strong>Control</strong> combinations:</p>
-<ul>
-<li><strong><sup>N<strong>, </strong></sup>P</strong></p>
-<p>Move to next / previous “<strong>search term</strong>” definition.</p></li>
-<li><strong>^Y</strong></p>
-<p>Move to the “<strong>empty search term</strong>” (history item 0). This is a quick way to “reset” all settings and start new. Of course, one could just navigate to this history item using <strong><sup>N<strong>, </strong></sup>P</strong>, but it’s here just for convenience.</p></li>
-<li><strong>^X</strong></p>
-<p>Delete the current history item.</p></li>
-<li><strong>^B</strong></p>
-<p>Make the current history item the <strong>default</strong> one for <strong>RadioBrowser</strong>. This means that, next time you open <strong>RadioBrowser</strong> this history item (“<strong>search term</strong>”) will be automatically loaded.</p></li>
-<li>“<strong>^W</strong>”</p>
-<p>Save the history.</p></li>
-</ul>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 78%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>^N</strong> <strong>^P</strong></td>
+<td>Move to next / previous “<strong>search term</strong>” definition.</td>
+</tr>
+<tr class="even">
+<td><strong>^Y</strong></td>
+<td>Move to the “<strong>empty search term</strong>” (history item 0). This is a quick way to “reset” all settings and start new. Of course, one could just navigate to this history item using <strong>^N</strong> or <strong>^P</strong>, but it’s here just for convenience.</td>
+</tr>
+<tr class="odd">
+<td><strong>^X</strong></td>
+<td>Delete the current history item.<br>There is no confirmation and once an item is deleted there’s no undo function.<br><br><strong>Not implemented yet</strong></td>
+</tr>
+<tr class="even">
+<td><strong>^B</strong></td>
+<td>Make the current history item the <strong>default</strong> one for <strong>RadioBrowser</strong>.<br>This means that, next time you open <strong>RadioBrowser</strong> this history item (“<strong>search term</strong>”) will be automatically loaded.<br><br><strong>Not implemented yet</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>^W</strong></td>
+<td>Save the history.<br><br><strong>Not implemented yet</strong></td>
+</tr>
+</tbody>
+</table>
 <p>There is one thing you should take notice of: after inserting some data into the various fields, do not navigate to another “<strong>search term</strong>” before saving it; all your changes will be lost. You should just save the history and then move to a new item.</p>
 <p>When “<strong>OK</strong>” is pressed and a query to the service is made, all your “<strong>search</strong>” terms are there for you to manage even if the history has not been saved. As long as you do not close “<strong>RadioBrowser</strong>” you are OK.</p>
 </body>

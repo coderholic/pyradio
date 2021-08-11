@@ -1,12 +1,16 @@
-2021-08-10
+2021-08-11
     * Version 0.8.9.4 (0.9-beta1)
     * Radio Browser implementation is now usable (but still not complete)
     * Implemented ^N,^P to play next/previous station as per (#135)
     * Several python2 fixes
     * Updating docs
 
+2021-07-13 s-n-g
+    * Version 0.8.9.3
+      This is an "internal" release testing (#135)
+
 2021-05-11 s-n-g
-    * Version 08.9.2
+    * Version 0.8.9.2
     * Screen flickering when moving within the stations' list eliminated
     * VLC player is available again (disabled by unreported bug)
     * Advancing Radio Browser support

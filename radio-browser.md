@@ -113,6 +113,7 @@ Pressing "**C**" (capital "c") will provide a list of available servers to choos
 
 The "**Search window**" opens when "**s**" is pressed and loads the "**search term**" that was used to fetch the stations currently presented in the "**RadioBrowser window**". If this is the first time this window is opened within this session, the search term that's loaded is the "**default search term**".
 
+**Note:** In case the server returns no results, the window will automatically reopen so that you can redefine the "**search term**".
 
 Navigation between the various fields is done using the "**Tab**" (and "**Shift-Tab**") key, the arrows and **vim keys** ("**j**", "**k**", "**h**" and "**l**"), provided that any given key is not already used by one of the on window "widgets".
 
@@ -160,25 +161,13 @@ At the bottom of the "**Search window**" you have the **history information**  s
 
 The keys to manage the history are all **Control** combinations:
 
-- **^N**, **^P**
-
-    Move to next / previous "**search term**" definition.
-
-- **^Y**
-
-    Move to the "**empty search term**" (history item 0). This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using **^N**, **^P**, but it's here just for convenience.
-
-- **^X**
-
-    Delete the current history item.
-
-- **^B**
-
-    Make the current history item the **default** one for **RadioBrowser**. This means that, next time you open **RadioBrowser** this history item ("**search term**") will be automatically loaded.
-
-- "**^W**"
-
-    Save the history.
+|Key            |Action                                                |
+|---------------|------------------------------------------------------|
+|**^N** **^P**  |Move to next / previous "**search term**" definition. |
+|**^Y**         |Move to the "**empty search term**" (history item 0). This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using **^N** or **^P**, but it's here just for convenience.|
+|**^X**        |Delete the current history item.<br>There is no confirmation and once an item is deleted there's no undo function.<br><br>**Not implemented yet**|
+|**^B**        |Make the current history item the **default** one for **RadioBrowser**.<br>This means that, next time you open **RadioBrowser** this history item ("**search term**") will be automatically loaded.<br><br>**Not implemented yet**|
+|**^W**        |Save the history.<br><br>**Not implemented yet**|
 
 There is one thing you should take notice of: after inserting some data into the various fields, do not navigate to another "**search term**" before saving it; all your changes will be lost. You should just save the history and then move to a new item.
 
