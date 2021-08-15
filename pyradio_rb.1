@@ -1,0 +1,252 @@
+.\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
+.\" This manual is freely distributable under the terms of the GPL.
+.\"
+.TH pyradio_rb 1 "August 2021" pyradio
+
+.SH Name
+.PP
+pyradio \- a curses Internet radio player.
+
+.SH \fBPyRadio\ RadioBrowser\ Implementation
+
+\fBRadioBrowser\fR "is a community driven effort (like wikipedia) with the aim of collecting as many internet radio and TV stations as possible".
+
+\fBPyRadio\fR uses the API provided to integrate it and provide its users the possibility to enjoy this great project.
+
+.IP \fBNote:\fR
+As of the writing of this (v. \fI0.8.9.6\fR, which should actually be called \fI0.9-beta3\fR), the implementation is complete, but the service's configuration is not.
+
+.IP \fBOpening\ RadioBrowser
+
+To open \fBRadioBrowser\fR one would just press "\fIO\fR" at the program's main window. Since at this point this is the only service supported, the service will be activated.
+
+
+Upon activation, the \fBdefault query\fR will be preformed and (if successful) its results will be presented to the user. If unsuccessful, a relevant message will be displayed and the program will return to the local playlist that was previously opened.
+
+By default, \fBPyRadio\fR will load the first 100 most voted stations on \fBRadioBrowser\fR. 
+
+.IP \fBClosing\ RadioBrowser
+
+\fBPyRadio\fR treats the service as a special kind of a playlist, thus to close the service it is enough to "\fIgo back to playlist history\fR", pressing "\fI\\\\\fR".
+
+.IP \fBHow\ it\ works
+
+The implementation uses a list structure (we'll call it \fBsearch history\fR from now on) to keep user specified queries (we'll call them \fIsearch terms\fR).
+
+The first item in the \fBsearch history\fR is the \fIempty search term\fR (or \fIempty item\fR), which cannot be deleted and cannot be used to actually query \fBRadioBrowser\fR; it is there to provide a \fIsearch term template\fR for user inserted search terms.
+
+Upon activation, the \fIdefault search term\fR is used to automatically query a randomly selected \fBRadioBrowser\fR server and display stations' results.
+
+Once the results are fetched, they act as a special kind of playlist (some of the features of a local playlist are not functional, such as station renaming and such), and other features are introduced (such as the sort function and the station database info function).
+
+Each search result, i.e. each station, has more data attached to it than just its name and URL (bitrate, votes, clicks, etc.). This data is displayed in field columns; the number of visible columns depend on the terminal of the window. The name of the column that matches the sorting criteria is "highlighted".
+
+.RS
+.IP \fBSearching\ in\ the\ list\ of\ stations
+
+The normal local playlist search function has been enhanced in order to be able to search through the list of stations, since each station has a lot more info attached to it.
+
+Searching for any string will return matches in the \fIName\fR field only (just like in a local playlist), but starting the search string with a plus sign ("\fI+\fR") will produce results from all available fields (visible or not).
+
+.IP \fBSorting\ stations
+
+Pressing "\fIS\fR" will present the user with a sorting list. Selecting one of the items will sort the stations based on it; selecting it again will reverse sorting order.
+
+.RE
+
+.RS 14
+.IP \fBNote:
+This sorting function is different than the query sorting criterion which can be selected in the [Search window](#search-window). This one just sorts a query result set, the one in the \fBSearch window\fR affects the actual stations that will be in the result set.
+.RE
+
+.IP \fBControls
+
+These are the \fBRadioBrowser\fR specific keys one can use in addition to local playlist keys (if applicable).
+
+.RS 10
+.IP \fIO
+Open RadioBrowser
+.IP \fIc
+Open config window
+.IP \fIC
+Select server to connect to
+.IP \fIs
+Search for stations
+.IP \fIS
+Sort search results
+.IP \fII
+Station database info (current selection) |
+.IP \fIV
+Vote for station
+.IP \fI\\\\\\\\
+Close RadioBrowser
+.RE
+
+.IP \fBConfiguration
+
+This feature has not been implemented yet.
+
+.IP \fBStation\ Database\ Information
+
+The database information of the selected station can be displayed by pressing "\fII\fR". Keep in mind that, this is different than the \fIStation Info\fR displayed by pressing "\fIi\fR", which is still available and presents live data.
+
+.IP \fBStation\ clicking\ and\ voting
+
+\fBRadioBrowser\fR provides two ways to measure a station's popularity: voting and clicking.
+
+\fIClicking\fR a station means that the station has been listened to; \fBPyRadio\fR will send a "click request" any time the user starts playback of a station; \fBRadioBrowser\fR will either reject or accept the action, and either ignore or increase click count for the station based on several criteria (time between consecutive clicks, possibly IP, etc.) 
+
+For this reason \fBPyRadio\fR will in no case adjust the click count presented to the user.
+
+\fIVoting\fR for a station is a different thing; the user has to choose to vote for it. In \fBPyRadio\fR a "vote request" is sent when "\fIV\fR" is pressed. If the vote has been accepted, the vote counter will be increased by one.
+
+.RS
+.IP \fBNote:
+Inconsistencies between a voted for station's local vote counter value and the one reported in a consecutive server response should be expected, since it seems servers' vote counter sync may take some time to complete.
+.RE
+
+.IP \fBServer\ Selection
+
+\fBRadioBrowser\fR provides several servers to the public (currently in Germany, France and The Netherlands), which are constantly kept in sync. Its API provides a way to "discover" these servers and then select the one to use.
+
+\fBPyRadio\fR will randomly select one of these servers and will display its location in its window title.
+
+Pressing "\fIC\fR" will provide a list of available servers to choose from. This selection will be honored until the service is closed.
+
+.SH The Search Window
+
+The \fBSearch window\fR opens when "\fIs\fR" is pressed and loads the \fIsearch term\fR that was used to fetch the stations currently presented in the \fBRadioBrowser window\fR. If this is the first time this window is opened within this session, the search term that's loaded is the \fIdefault search term\fR.
+
+.IP \fBNote:
+In case the server returns no results, the window will automatically reopen so that you can redefine the \fIsearch term\fR.
+
+.PP
+Navigation between the various fields is done using the "\fBTab\fR" (and "\fBShift-Tab\fR") key, the arrows and vim keys ("\fBj\fR", "\fBk\fR", "\fBh\fR" and "\fBl\fR"), provided that any given key is not already used by one of the on window "widgets".
+
+This window performs two functions: 
+
+.RS 5
+.IP \fI1) 3
+composes a search term to be forwarded to the search function and 
+.IP \fI2)
+manages the \fBsearch history\fR.
+.RE
+
+.IP \fB1.\ Search\ term\ composition
+
+.RS 5
+.PP
+The \fBSearch window\fR can be divided in four parts:
+
+.IP \fI1.\fR\ The\ \fBDisplay\fR\ part
+
+In this part one would select to fetch a list of stations based on a single criterion such as their vote count, click count, etc.
+
+.IP \fI2.\fR\ The\ \fBSearch\fR\ part
+
+In this part, the user would insert a search string to one or more of the available fields.
+
+Each of the fields has an \fIExact\fR checkbox. If checked, an exact match will be returned, hopefully.
+
+In the \fICountry\fR field one could either provide the name of a country or its two-letter code (based on [ISO 3166](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)). For example, to get a list of Greek stations, you would either insert \fIgreece\fR or the country code, which is \fIgr\fR.
+
+These two parts are mutually exclusive, since when one is activated through its corresponding checkbox, the other one gets disabled.
+
+.IP \fI3.\fR\ The\ \fBSort\fR\ part
+
+This part affects both previous parts.
+
+It provides the server with the sorting criteria upon which the results will be returned.
+
+.IP \fI4.\fR\ The\ \fBLimit\fR
+
+In this part the maximum number or returned stations is specified. The default value is 100 stations.
+
+The value can be changed using the left and right arrows or "\fIh\fR", "\fIl\fR" and "\fIPgUp\fR", "\fIPgDn\fR" for a step of 10.
+.RE
+
+.IP \fB2.\ History\ Management
+
+.RS 5
+At the bottom of the \fBSearch window\fR you have the \fIhistory information\fR  section; on the left the number of history items is displayed along with the number of the current history item (\fIsearch term\fR) and on the right there's the history help legend.
+
+The keys to manage the history are all \fBControl\fR combinations:
+
+.IP \fI^N\fR\ \fI^P\fR 5 
+Move to next / previous \fIsearch term\fR definition. 
+
+.IP \fI^Y\fR         
+Move to the \fIempty search term\fR (history item 0). This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using \fI^N\fR or \fI^P\fR, but it's here just for convenience.
+
+.IP \fI^T\fR        
+Add current item to history.
+
+.IP \fI^X\fR        
+Delete the current history item.
+
+There is no confirmation and once an item is deleted there's no undo function.
+
+These rules apply:
+
+.RS 5
+.IP \fI1. 3
+The first item (\fIsearch term template\fR) cannot be deleted.
+
+.IP \fI2. 3
+When the history contains only two items (the \fIsearch term template\fR will always be the first one; the second one is a user defined \fIsearch term\fR), no item deletion is possible.
+
+.IP \fI3. 3
+When the \fIdefault search term\fR is deleted, the first user defined \fIsearch term\fR becomes the default one.
+.RE
+
+.IP \fI^B\fR        
+Make the current history item the \fIdefault\fR one for \fBRadioBrowser\fR and save the history.
+
+This means that, next time you open \fBRadioBrowser\fR this history item (\fIsearch term\fR) will be automatically loaded.
+
+.IP \fI^V\fR        
+Save the history.
+
+.RE
+.RS 5
+Here is one thing you should take notice of: after inserting some data into any of the various fields, do not navigate to another \fIsearch term\fR before adding it to the history; all your changes will be lost.
+
+Another thing you should be aware of, is that the \fBSearch Window\fR actually works on a copy of the \fIsearch history\fR used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "\fIOK\fR" is pressed. Pressing "\fICancel\fR" will make all the changes go away.
+
+Even when "\fIOK\fR" is pressed, and the "\fBSearch Window\fR" is closed, the "new" history is loaded into the service, but \fBNOT\fR saved to the \fIconfiguration file\fR.
+
+To really save the "new" history, press "\fI^V\fR" in the \fBSearch Window\fR.
+
+.IP \fBNote:
+The history is also saved to file when one changes the "\fIdefault\fR" item, pressing "\fI^B\fR" in the \fBSearch Window\fR.
+.RE
+
+.SH Reporting Bugs
+.PP
+When a bug is found, please do report it by opening an issue at github at \<\fIhttps://github.com/coderholic/pyradio/issues\fR\>, as already stated above.
+
+In you report you should, at the very least, state your \fIpyradio version\fR, \fIpython version\fR and \fImethod of installation\fR (built from source, AUR, snap, whatever).
+
+It would be really useful to include \fB~/pyradio.log\fR in your report.
+
+To create it, enter the following commands in a terminal:
+
+.HP
+
+\fI$\fR \fBrm ~/pyradio.log\fR
+.br
+\fI$\fR \fBpyradio -d\fR
+
+.PP
+Then try to reproduce the bug and exit pyradio.
+
+Finally, include the file produced in your report.
+
+.SH Files
+
+\fI~/.config/pyradio/radio-browser-config\fR
+
+.SH See also
+
+    pyradio(1)
+

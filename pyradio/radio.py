@@ -3085,7 +3085,7 @@ class PyRadio(object):
                             None)
                     except TypeError:
                         pass
-                    logger.error('DE online browser = {}'.format(self._cnf._online_browser))
+                    # logger.error('DE online browser = {}'.format(self._cnf._online_browser))
                     if self._cnf.online_browser:
                         tmp_stations = []
 
@@ -3377,6 +3377,7 @@ class PyRadio(object):
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Closing online browser!')
                     self._cnf.online_browser = None
+                    self.online_browser = False
                 ''' check if browsing_station_service has changed '''
                 if not self._cnf.browsing_station_service and \
                         removed_playlist_history_item[-1]:
@@ -4201,6 +4202,7 @@ class PyRadio(object):
         ''' Redisplay browser search window
         '''
         self._cnf._online_browser.do_search()
+        # self._cnf._online_browser.redisplay_search()
 
     def _browser_sort(self):
         self._cnf._online_browser.sort()
@@ -5112,19 +5114,27 @@ class PyRadio(object):
                         txt='___Error in search parameters!!!___',
                         mode_to_set=self.ws.BROWSER_SEARCH_MODE,
                         callback_function=self.refreshBody)
-            elif ret ==5:
+            elif ret == 5:
+                ''' save search history '''
+                self._cnf._online_browser.get_history_from_search()
+                if self._cnf._online_browser.save_config():
+                    self._show_notification_with_delay(
+                            txt='___History successfully saved!___',
+                            mode_to_set=self.ws.BROWSER_SEARCH_MODE,
+                            callback_function=self.refreshBody)
+                else:
+                    self._show_notification_with_delay(
+                            txt='___Error saving History!___',
+                            delay=1.25,
+                            mode_to_set=self.ws.BROWSER_SEARCH_MODE,
+                            callback_function=self.refreshBody)
+            elif ret == 6:
                 ''' save search history '''
                 self._show_notification_with_delay(
                         txt='___Function not implemented yet!!!___',
                         mode_to_set=self.ws.BROWSER_SEARCH_MODE,
                         callback_function=self.refreshBody)
-            elif ret ==6:
-                ''' save search history '''
-                self._show_notification_with_delay(
-                        txt='___Function not implemented yet!!!___',
-                        mode_to_set=self.ws.BROWSER_SEARCH_MODE,
-                        callback_function=self.refreshBody)
-            elif ret ==7:
+            elif ret == 7:
                 ''' save search history '''
                 self._show_notification_with_delay(
                         txt='___Function not implemented yet!!!___',
@@ -6028,8 +6038,9 @@ class PyRadio(object):
                     self.jumpnr = ''
                     self._cnf.jump_tag = -1
                     self._update_status_bar_right(status_suffix='')
-                    self._cnf.browsing_station_service = True
-                    self.playSelectionBrowser(a_url='api.radio-browser.info')
+                    if not self._cnf.browsing_station_service:
+                        self._cnf.browsing_station_service = True
+                        self.playSelectionBrowser(a_url='api.radio-browser.info')
                     return
 
                 elif char in (ord('o'), ):

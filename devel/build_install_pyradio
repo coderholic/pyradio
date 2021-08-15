@@ -80,6 +80,7 @@ function uninstall(){
         echo done
         echo -n '** Removing help files ... '
         sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio.1.gz 2>/dev/null
+        sudo rm -f /usr/share/man/man1/pyradio_rb.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio_rb.1.gz 2>/dev/null
         echo done
     } || {
         echo -n '** Removing executable ... '
@@ -92,6 +93,7 @@ function uninstall(){
             rm -rf ~/.local/local/share/doc/pyradio 2>/dev/null
         fi
         rm -f ~/.local/share/man/man1/pyradio.1.gz 2>/dev/null
+        rm -f ~/.local/share/man/man1/pyradio_rb.1.gz 2>/dev/null
         echo done
     }
 #set -x
@@ -142,7 +144,9 @@ cp ../*html usr/local/share/doc
 cp ../LICENCE usr/local/share/doc/copyright
 mkdir -p usr/local/share/man/man1
 cp ../pyradio.1 usr/local/share/man/man1/
+cp ../pyradio_rb.1 usr/local/share/man/man1/
 gzip usr/local/share/man/man1/pyradio.1
+gzip usr/local/share/man/man1/pyradio_rb.1
 sed -i "s/|version|/$cur_version/" DEBIAN/control
 cd ..
 
@@ -271,6 +275,8 @@ python"${TO_PYTHON}" setup.py build && {
         sudo python"${TO_PYTHON}" setup.py install && {
             gzip -k pyradio.1
             sudo mv -f pyradio.1.gz /usr/share/man/man1 2>/dev/null || sudo mv -f pyradio.1.gz /usr/local/share/man/man1
+            gzip -k pyradio_rb.1
+            sudo mv -f pyradio_rb.1.gz /usr/share/man/man1 2>/dev/null || sudo mv -f pyradio_rb.1.gz /usr/local/share/man/man1
             DOC=/usr/share/doc/pyradio
             sudo mkdir "$DOC" 2>/dev/null
             if [ ! -d "$DOC" ];then
@@ -294,8 +300,10 @@ python"${TO_PYTHON}" setup.py build && {
         echo "***** installing for user..."
         python"${TO_PYTHON}" setup.py install --user && {
             gzip -k pyradio.1
+            gzip -k pyradio_rb.1
             mkdir -p ~/.local/share/man/man1 2>/dev/null
             mv -f pyradio.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio.1.gz ~/.local/local/share/man/man1
+            mv -f pyradio_rb.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio_rb.1.gz ~/.local/local/share/man/man1
             DOC=~/.local/share/doc/pyradio
             mkdir -p "$DOC" 2>/dev/null
             if [ ! -d "$DOC" ];then

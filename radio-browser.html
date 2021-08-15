@@ -72,8 +72,8 @@ a:visited{color: SaddleBrown;}
 <p>The implementation uses a list structure (we’ll call it “<strong>search history</strong>” from now on) to keep user specified queries (we’ll call them “<strong>search terms</strong>”).</p>
 <p>The first item in the “<strong>search history</strong>” is the “<strong>empty search term</strong>” (or “<strong>empty item</strong>”), which cannot be deleted and cannot be used to actually query <strong>RadioBrowser</strong>; it is there to provide a “<strong>search term template</strong>” for user inserted search terms.</p>
 <p>Upon activation, the “<strong>default search term</strong>” is used to automatically query a randomly selected <strong>RadioBrowser</strong> server and display stations’ results.</p>
-<p>Once the results are fetched, they act as a special kind of playlist (some of the features of a local playlist are not functional, such as station renaming and such), and other features are introduced (such as the sort function and the station info function).</p>
-<p>Each search result, i.e. each station, has more data attached to it than just its name and URL (bitrate, votes, clicks, etc.). This data is displayed in field columns; the number of visible columns depend on the width of the window and the name of the column that matches the sorting criteria is “highlighted”.</p>
+<p>Once the results are fetched, they act as a special kind of playlist (some of the features of a local playlist are not functional, such as station renaming and such), and other features are introduced (such as the sort function and the station database info function).</p>
+<p>Each search result, i.e. each station, has more data attached to it than just its name and URL (bitrate, votes, clicks, etc.). This data is displayed in field columns; the number of visible columns depend on the terminal of the window. The name of the column that matches the sorting criteria is “highlighted”.</p>
 <h3 id="searching-in-the-list-of-stations">Searching in the list of stations</h3>
 <p>The normal local playlist search function has been enhanced in order to be able to search through the list of stations, since each station has a lot more info attached to it.</p>
 <p>Searching for any string will return matches in the “<strong>Name</strong>” field only (just like in a local playlist), but starting the search string with a plus sign (“<strong>+</strong>”) will produce results from all available fields (visible or not).</p>
@@ -127,12 +127,12 @@ a:visited{color: SaddleBrown;}
 <h2 id="configuration">Configuration <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>This feature has not been implemented yet.</p>
 <h2 id="station-database-information">Station Database Information <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>The database information of the selected station can be displayed by pressing “<strong>I</strong>” (capital “i”). Keep in mind that, this is different than the “Station ino” displayed by pressing “<strong>i</strong>” (lowercase “i”), which is still abailable and presents live data.</p>
+<p>The database information of the selected station can be displayed by pressing “<strong>I</strong>” (capital “i”). Keep in mind that, this is different than the “Station ino” displayed by pressing “<strong>i</strong>” (lowercase “i”), which is still available and presents live data.</p>
 <h2 id="station-clicking-and-voting">Station clicking and voting <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>RadioBrowser</strong> provides two ways to measure a station’s popularity: voting and clicking.</p>
 <p><strong>Clicking</strong> a station means that the station has been listened to; <strong>PyRadio</strong> will send a “click request” any time the user starts playback of a station; <strong>RadioBrowser</strong> will either reject or accept the action, and either ignore or increase click count for the station based on several criteria (time between consecutive clicks, possibly IP, etc.)</p>
 <p>For this reason <strong>PyRadio</strong> will in no case adjust the click count presented to the user.</p>
-<p><strong>Voting</strong> for a station is a different thing; the user has to choose to vote for it. In <strong>PyRadio</strong> a “vote request” is sent when “<strong>V</strong>” (capital “v”) is pressed. If the vote has been accepted, the cote counter will be increased by one.</p>
+<p><strong>Voting</strong> for a station is a different thing; the user has to choose to vote for it. In <strong>PyRadio</strong> a “vote request” is sent when “<strong>V</strong>” (capital “v”) is pressed. If the vote has been accepted, the vote counter will be increased by one.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Inconsistencies between a voted for station’s local vote counter value and the one reported in a consecutive server response should be expected, since it seems servers’ vote counter sync may take some time to complete.</p>
 <h2 id="server-selection">Server Selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>RadioBrowser</strong> provides several servers to the public (currently in Germany, France and The Netherlands), which are constantly kept in sync. Its API provides a way to “discover” these servers and then select the one to use.</p>
@@ -193,20 +193,27 @@ a:visited{color: SaddleBrown;}
 <td>Move to the “<strong>empty search term</strong>” (history item 0). This is a quick way to “reset” all settings and start new. Of course, one could just navigate to this history item using <strong>^N</strong> or <strong>^P</strong>, but it’s here just for convenience.</td>
 </tr>
 <tr class="odd">
-<td><strong>^X</strong></td>
-<td>Delete the current history item.<br>There is no confirmation and once an item is deleted there’s no undo function.<br><br><strong>Not implemented yet</strong></td>
+<td><strong>^T</strong></td>
+<td>Add current item to history.</td>
 </tr>
 <tr class="even">
-<td><strong>^B</strong></td>
-<td>Make the current history item the <strong>default</strong> one for <strong>RadioBrowser</strong>.<br>This means that, next time you open <strong>RadioBrowser</strong> this history item (“<strong>search term</strong>”) will be automatically loaded.<br><br><strong>Not implemented yet</strong></td>
+<td><strong>^X</strong></td>
+<td>Delete the current history item.<br>There is no confirmation and once an item is deleted there’s no undo function.<br>These rules apply:<br> 1. The first item (<strong>search term template</strong>) cannot be deleted.<br>2. When the history contains only two items (the <strong>search term template</strong> will always be the first one; the second one is a user defined <strong>search term</strong>), no item deletion is possible.<br>3. When the <strong>default search term</strong> is deleted, the first user defined <strong>search term</strong> becomes the default one.</td>
 </tr>
 <tr class="odd">
-<td><strong>^W</strong></td>
-<td>Save the history.<br><br><strong>Not implemented yet</strong></td>
+<td><strong>^B</strong></td>
+<td>Make the current history item the <strong>default</strong> one for <strong>RadioBrowser</strong> and save the history.<br>This means that, next time you open <strong>RadioBrowser</strong> this history item (“<strong>search term</strong>”) will be automatically loaded.</td>
+</tr>
+<tr class="even">
+<td><strong>^V</strong></td>
+<td>Save the history.</td>
 </tr>
 </tbody>
 </table>
-<p>There is one thing you should take notice of: after inserting some data into the various fields, do not navigate to another “<strong>search term</strong>” before saving it; all your changes will be lost. You should just save the history and then move to a new item.</p>
-<p>When “<strong>OK</strong>” is pressed and a query to the service is made, all your “<strong>search</strong>” terms are there for you to manage even if the history has not been saved. As long as you do not close “<strong>RadioBrowser</strong>” you are OK.</p>
+<p>Here is one thing you should take notice of: after inserting some data into any of the various fields, do not navigate to another “<strong>search term</strong>” before adding it to history; all your changes will be lost.</p>
+<p>Another thing you should be aware of, is that the <strong>Search Window</strong> actually works on a copy of the <strong>search history</strong> used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until “<strong>OK</strong>” is pressed. Pressing “<strong>Cancel</strong>” will make all the changes go away.</p>
+<p>Even when “<strong>OK</strong>” is pressed, and the “<strong>Search Window</strong>” is closed, the “new” history is loaded into the service, but NOT saved to the <em>configuration file</em>.</p>
+<p>To really save the “new” history, press “<strong>^V</strong>” in the <strong>Search Window</strong>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The history is also saved to file when one changes the “<strong>default</strong>” item, pressing “<strong>^B</strong>” in the <strong>Search Window</strong>.</p>
 </body>
 </html>

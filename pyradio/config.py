@@ -1130,6 +1130,7 @@ class PyRadioConfig(PyRadioStations):
 
         self._check_config_file(self.stations_dir)
         self.config_file = path.join(self.stations_dir, 'config')
+
         self.force_to_remove_lock_file = False
 
     @property

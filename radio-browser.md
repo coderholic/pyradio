@@ -49,9 +49,9 @@ The first item in the "**search history**" is the "**empty search term**" (or "*
 
 Upon activation, the "**default search term**" is used to automatically query a randomly selected **RadioBrowser** server and display stations' results.
 
-Once the results are fetched, they act as a special kind of playlist (some of the features of a local playlist are not functional, such as station renaming and such), and other features are introduced (such as the sort function and the station info function).
+Once the results are fetched, they act as a special kind of playlist (some of the features of a local playlist are not functional, such as station renaming and such), and other features are introduced (such as the sort function and the station database info function).
 
-Each search result, i.e. each station, has more data attached to it than just its name and URL (bitrate, votes, clicks, etc.). This data is displayed in field columns; the number of visible columns depend on the width of the window and the name of the column that matches the sorting criteria is "highlighted".
+Each search result, i.e. each station, has more data attached to it than just its name and URL (bitrate, votes, clicks, etc.). This data is displayed in field columns; the number of visible columns depend on the terminal of the window. The name of the column that matches the sorting criteria is "highlighted".
 
 ### Searching in the list of stations
 
@@ -87,7 +87,7 @@ This feature has not been implemented yet.
 
 ## Station Database Information
 
-The database information of the selected station can be displayed by pressing "**I**" (capital "i"). Keep in mind that, this is different than the "Station ino" displayed by pressing "**i**" (lowercase "i"), which is still abailable and presents live data.
+The database information of the selected station can be displayed by pressing "**I**" (capital "i"). Keep in mind that, this is different than the "Station ino" displayed by pressing "**i**" (lowercase "i"), which is still available and presents live data.
 
 ## Station clicking and voting
 
@@ -97,7 +97,7 @@ The database information of the selected station can be displayed by pressing "*
 
 For this reason **PyRadio** will in no case adjust the click count presented to the user.
 
-**Voting** for a station is a different thing; the user has to choose to vote for it. In **PyRadio** a "vote request" is sent when "**V**" (capital "v") is pressed. If the vote has been accepted, the cote counter will be increased by one.
+**Voting** for a station is a different thing; the user has to choose to vote for it. In **PyRadio** a "vote request" is sent when "**V**" (capital "v") is pressed. If the vote has been accepted, the vote counter will be increased by one.
 
 **Note:** Inconsistencies between a voted for station's local vote counter value and the one reported in a consecutive server response should be expected, since it seems servers' vote counter sync may take some time to complete.
 
@@ -165,10 +165,17 @@ The keys to manage the history are all **Control** combinations:
 |---------------|------------------------------------------------------|
 |**^N** **^P**  |Move to next / previous "**search term**" definition. |
 |**^Y**         |Move to the "**empty search term**" (history item 0). This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using **^N** or **^P**, but it's here just for convenience.|
-|**^X**        |Delete the current history item.<br>There is no confirmation and once an item is deleted there's no undo function.<br><br>**Not implemented yet**|
-|**^B**        |Make the current history item the **default** one for **RadioBrowser**.<br>This means that, next time you open **RadioBrowser** this history item ("**search term**") will be automatically loaded.<br><br>**Not implemented yet**|
-|**^W**        |Save the history.<br><br>**Not implemented yet**|
+|**^T**        |Add current item to history.|
+|**^X**        |Delete the current history item.<br>There is no confirmation and once an item is deleted there's no undo function.<br>These rules apply:<br> 1. The first item (**search term template**) cannot be deleted.<br>2. When the history contains only two items (the **search term template** will always be the first one; the second one is a user defined **search term**), no item deletion is possible.<br>3. When the **default search term** is deleted, the first user defined **search term** becomes the default one.|
+|**^B**        |Make the current history item the **default** one for **RadioBrowser** and save the history.<br>This means that, next time you open **RadioBrowser** this history item ("**search term**") will be automatically loaded.|
+|**^V**        |Save the history.|
 
-There is one thing you should take notice of: after inserting some data into the various fields, do not navigate to another "**search term**" before saving it; all your changes will be lost. You should just save the history and then move to a new item.
+Here is one thing you should take notice of: after inserting some data into any of the various fields, do not navigate to another "**search term**" before adding it to history; all your changes will be lost.
 
-When "**OK**" is pressed and a query to the service is made, all your "**search**" terms are there for you to manage even if the history has not been saved. As long as you do not close "**RadioBrowser**"  you are OK.
+Another thing you should be aware of, is that the **Search Window** actually works on a copy of the **search history** used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "**OK**" is pressed. Pressing "**Cancel**" will make all the changes go away.
+
+Even when "**OK**" is pressed, and the "**Search Window**" is closed, the "new" history is loaded into the service, but NOT saved to the *configuration file*.
+
+To really save the "new" history, press "**^V**" in the **Search Window**.
+
+**Note:** The history is also saved to file when one changes the "**default**" item, pressing "**^B**" in the **Search Window**.

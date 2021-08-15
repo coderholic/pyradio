@@ -1,3 +1,10 @@
+2021-08-15
+    * Version 0.8.9.6 (0.9-beta3)
+    * RadioBrowser History Management finalized
+    * Fields' placement fixed in RadioBrowser Search Window
+    * RadioBrowser man page added
+    * Docs updated
+
 2021-08-11
     * Version 0.8.9.5 (0.9-beta2)
     * Fixed a crash that would occur when searching for name only in

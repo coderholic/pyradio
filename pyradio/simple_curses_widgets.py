@@ -275,7 +275,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
         self._max = maximum
         self._step = step
         self._big_step = big_step
-        self._value = value
+        self._value = int(value)
         if self._value < self._min:
             self._value = self.min
         if self._value > self._max:
@@ -299,7 +299,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
 
     @value.setter
     def value(self, val):
-        self._value = val
+        self._value = int(val)
 
     @property
     def minimum(self):
