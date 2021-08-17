@@ -1,3 +1,7 @@
+2021-08-16 s-n-g
+	* RadioBrowser: added hidebroken to all queries
+	* RadioBrowser: if limit=0, disable result limit
+
 2021-08-15
     * Version 0.8.9.6 (0.9-beta3)
     * RadioBrowser History Management finalized
@@ -5,7 +9,7 @@
     * RadioBrowser man page added
     * Docs updated
 
-2021-08-11
+2021-08-11 s-n-g
     * Version 0.8.9.5 (0.9-beta2)
     * Fixed a crash that would occur when searching for name only in
       RadioBrowser Search Window
@@ -14,7 +18,7 @@
     * Updated History legend aread
     * Updated docs
 
-2021-08-11
+2021-08-11 s-n-g
     * Version 0.8.9.4 (0.9-beta1)
     * Radio Browser implementation is now usable (but still not complete)
     * Implemented ^N,^P to play next/previous station as per (#135)

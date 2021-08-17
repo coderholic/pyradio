@@ -117,6 +117,7 @@ class PyRadioStationsBrowser(object):
         Actual implementations should be subclasses of this one.
     '''
 
+    BROWSER_NAME = 'PyRadioStationsBrowser'
     BASE_URL = ''
     TITLE = ''
     _parent = _outer_parent = None
@@ -260,11 +261,18 @@ class PyRadioStationsBrowser(object):
         pass
 
     def vote(self, a_station):
-        pass
+        return True
+
+    def save_config(self):
+        return True
+
+    def is_config_dirty(self):
+        return False
 
 
 class RadioBrowser(PyRadioStationsBrowser):
 
+    BROWSER_NAME = 'RadioBrowser'
     BASE_URL = 'api.radio-browser.info'
     TITLE = 'RadioBrowser '
 
@@ -348,6 +356,9 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._message_function = message_function
         self._search_return_function = search_return_function
 
+
+    def is_config_dirty(self):
+        return self.browser_config.dirty if self.browser_config else False
 
     def initialize(self):
         self._dns_info = RadioBrowserDns()
@@ -566,8 +577,12 @@ class RadioBrowser(PyRadioStationsBrowser):
         if self._search_type > 0:
             if 'limit' not in post_data.keys() and self._default_max_number_of_results > 0:
                 post_data['limit'] = self._default_max_number_of_results
-            if not 'hidebroken' not in post_data.keys():
-                post_data['hidebroken'] = True
+            else:
+                if post_data['limit'] == '0':
+                    post_data.pop('limit')
+
+        if 'hidebroken' not in post_data.keys():
+            post_data['hidebroken'] = 'true'
 
         if logger.isEnabledFor(logging.INFO):
             logger.info('>>> RadioBrowser Query:')
@@ -1294,7 +1309,7 @@ class RadioBrowserConfig(object):
     default = 1
     limit = '100'
     terms = []
-    ditry = False
+    dirty = False
 
     def __init__(self, stations_dir):
         self.config_file = path.join(stations_dir, 'radio-browser-config')
@@ -1376,7 +1391,6 @@ class RadioBrowserConfig(object):
                     search_default_history_index,
                     default_server,
                     default_max_number_of_results):
-        logger.error('DE saving history config')
         txt = '''########################################
 # RadioBrowser config file for PyRadio #
 ########################################
@@ -1409,9 +1423,12 @@ DEFAULT_LIMIT = '''
             with open(self.config_file, 'w') as cfgfile:
                 cfgfile.write(txt)
         except:
-            logger.error('===== ERROR =====')
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('Saving Online Browser config file filed')
             return False
         self.dirty = False
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Saved Online Browser config file')
         return True
 
 class RadioBrowserSearchWindow(object):
@@ -1900,7 +1917,7 @@ class RadioBrowserSearchWindow(object):
                     counter_color_focused=curses.color_pair(9),
                     counter_color_not_focused=curses.color_pair(4),
                     counter_color_disabled=curses.color_pair(5),
-                    minimum=20, maximum=1000,
+                    minimum=0, maximum=1000,
                     step=1, big_step=10,
                     value=self._default_limit,
                     string='Limit results to {0} stations'
@@ -2223,7 +2240,7 @@ class RadioBrowserSearchWindow(object):
         elif char in (curses.ascii.CAN, ):
             ''' ^X - Delete history item '''
             if len(self._history) > 2 and \
-                    self._selected_history_id > 1:
+                    self._selected_history_id > 0:
                 if self._default_history_id == self._selected_history_id:
                     self._default_history_id = 1
                 self._history.pop(self._selected_history_id)
@@ -2232,6 +2249,7 @@ class RadioBrowserSearchWindow(object):
                     self._selected_history_id -= 1
                 self._print_history_legend()
                 self._activate_search_term(self._history[self._selected_history_id])
+                self._cnf.dirty = True
 
             # return 6
 
@@ -3102,5 +3120,3 @@ def probeBrowsers(a_browser_url):
     if logger.isEnabledFor(logging.INFO):
         logger.info('No supported browser found for: ' + a_browser_url)
     return None
-
-

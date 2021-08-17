@@ -357,7 +357,8 @@ class PyRadio(object):
                 self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
                 self.ws.BROWSER_OPEN_MODE: self._show_connect_to_server_message,
                 self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
-            self.ws.BROWSER_PERFORMING_SEARCH_MODE: self._show_performing_search_message,
+                self.ws.BROWSER_PERFORMING_SEARCH_MODE: self._show_performing_search_message,
+                self.ws.ASK_TO_SAVE_BROWSER_CONFIG: self._ask_to_save_browser_config,
                 }
 
         ''' list of help functions '''
@@ -620,7 +621,7 @@ class PyRadio(object):
             if not self._limited_height_mode:
                 self.initHead(self._cnf.info)
             ''' for light color scheme '''
-             # TODO
+            # TODO
             self.outerBodyWin.bkgdset(' ', curses.color_pair(5))
             self.outerBodyWin.erase()
             self.bodyWin.bkgdset(' ', curses.color_pair(5))
@@ -976,8 +977,8 @@ class PyRadio(object):
                     if (ret == -1):
                         return
                 except KeyboardInterrupt:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Ctrl-C pressed... Terminating...')
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Ctrl-C pressed... Terminating...')
                     self.player.ctrl_c_pressed = True
                     self.ctrl_c_handler(0, 0)
                     break
@@ -1012,6 +1013,7 @@ class PyRadio(object):
             self.search.box_color = curses.color_pair(5)
 
     def ctrl_c_handler(self, signum, frame):
+        # logger.error('self.ctrl_c_handler()')
         self.ctrl_c_pressed = True
         if self._cnf.dirty_playlist:
             ''' Try to auto save playlist on exit
@@ -1020,6 +1022,10 @@ class PyRadio(object):
         ''' Try to auto save config on exit
             Do not check result!!! '''
         self._cnf.save_config()
+        if self._cnf.browsing_station_service:
+            if self._cnf.online_browser:
+                if self._cnf.online_browser.is_config_dirty():
+                    self._cnf.online_browser.save_config()
         self._wait_for_threads()
 
     def _wait_for_threads(self):
@@ -1032,7 +1038,7 @@ class PyRadio(object):
     def _goto_playing_station(self, changing_playlist=False):
         ''' make sure playing station is visible '''
         if (self.player.isPlaying() or self.ws.operation_mode == self.ws.PLAYLIST_MODE) and \
-            (self.selection != self.playing or changing_playlist):
+                (self.selection != self.playing or changing_playlist):
             if changing_playlist:
                 self.startPos = 0
             # logger.error('self.bodyMaxY = {0}, items = {1}, self.playing = {2}'.format(self.bodyMaxY, self.number_of_items, self.playing))
@@ -1313,7 +1319,7 @@ class PyRadio(object):
             self.ws.operation_mode = self.ws.REMOVE_STATION_MODE
             curses.ungetch('y')
 
-    def saveCurrentPlaylist(self, stationFile =''):
+    def saveCurrentPlaylist(self, stationFile=''):
         ret = self._cnf.save_playlist_file(stationFile)
         self.refreshBody()
         if ret == 0 and not self._cnf.is_register:
@@ -1425,16 +1431,16 @@ class PyRadio(object):
         ''' Display a help, info or question window.  '''
         if mode_to_set == self.ws.MAIN_HELP_MODE:
             caption = ' Help (1/4) '
-            prompt=' Press n/p or any other key to hide '
+            prompt = ' Press n/p or any other key to hide '
         elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_2:
             caption = ' Help (2/4) '
-            prompt=' Press n/p or any other key to hide '
+            prompt = ' Press n/p or any other key to hide '
         elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_3:
             caption = ' Help (3/4) '
-            prompt=' Press n/p or any other key to hide '
+            prompt = ' Press n/p or any other key to hide '
         elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_4:
             caption = ' Help (4/4) '
-            prompt=' Press n/p or any other key to hide '
+            prompt = ' Press n/p or any other key to hide '
         self.helpWinContainer = None
         self.helpWin = None
         self.ws.operation_mode = mode_to_set
@@ -1481,7 +1487,7 @@ class PyRadio(object):
             inner_height = 3
             inner_width = cjklen(txt) + 4
             if use_empty_win:
-                height_to_use = inner_height +2
+                height_to_use = inner_height + 2
                 width_to_use = inner_width + 2
             else:
                 height_to_use = inner_height
@@ -1492,7 +1498,7 @@ class PyRadio(object):
                 self.ws.close_window()
                 self.refreshBody()
                 return
-            lines = [ txt , ]
+            lines = [txt, ]
         if use_empty_win:
             self.helpWinContainer = curses.newwin(height_to_use,width_to_use,
                     int((self.maxY-height_to_use)/2),
@@ -1534,7 +1540,7 @@ class PyRadio(object):
 
                 wsp = inner_width - 4
                 try:
-                    self.helpWin.addstr('─' * wsp , curses.color_pair(3))
+                    self.helpWin.addstr('─' * wsp, curses.color_pair(3))
                 except:
                     self.helpWin.addstr('─'.encode('utf-8') * wsp, curses.color_pair(3))
                 self.helpWin.addstr(i + 1, 5, lin, caption_col)
@@ -3364,6 +3370,12 @@ class PyRadio(object):
                 #for n in self._cnf._ps._p:
                 #    logger.error('DE cur {}'.format(n))
                 # logger.error('DE \n\nselection = {0}, startPos = {1}, playing = {2}\n\n'.format(self.selection, self.startPos, self.playing))
+                if self._cnf.online_browser:
+                    if self._cnf.online_browser.is_config_dirty():
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('Onine Browser config is dirty!')
+                        self._ask_to_save_browser_config()
+                        return False
                 self.stations = self._cnf.stations
                 self._align_stations_and_refresh(self.ws.PLAYLIST_MODE,
                         a_startPos=self.startPos,
@@ -3374,10 +3386,15 @@ class PyRadio(object):
                     self.refreshBody()
                 if not self._cnf.browsing_station_service and \
                         self._cnf.online_browser:
+                    # if self._cnf.online_browser.is_config_dirty():
+                    #     if logger.isEnabledFor(logging.INFO):
+                    #         logger.info('Onine Browser config is dirty!')
+                    #     self._ask_to_save_browser_config()
+                    #     return False
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Closing online browser!')
                     self._cnf.online_browser = None
-                    self.online_browser = False
+                    self._cnf.browsing_station_service = False
                 ''' check if browsing_station_service has changed '''
                 if not self._cnf.browsing_station_service and \
                         removed_playlist_history_item[-1]:
@@ -4311,6 +4328,19 @@ class PyRadio(object):
         self.playSelection()
         self.refreshBody()
 
+    def _ask_to_save_browser_config(self):
+        txt = '''
+                |{}|'s service configuration has been
+                altered but not saved. Do you want to save it now?
+
+                Press |y| to save it or any other key to decline.
+            '''
+        self._show_help(txt.format(self._cnf.online_browser.BROWSER_NAME),
+                        mode_to_set=self.ws.ASK_TO_SAVE_BROWSER_CONFIG,
+                        caption=' Online Browser Config not Saved! ',
+                        prompt='',
+                        is_message=True)
+
     def keypress(self, char):
         # logger.error('DE char = {}'.format(char))
         self.detect_if_player_exited = True
@@ -4860,7 +4890,7 @@ class PyRadio(object):
                 elif ret == 3:
                     ''' Got into paramater editor '''
                     self.ws.operation_mode = self.ws.IN_PLAYER_PARAMS_EDITOR
-                elif ret ==4:
+                elif ret == 4:
                     ''' Parameter editor exited '''
                     self.ws.close_window()
             else:
@@ -5084,7 +5114,6 @@ class PyRadio(object):
                     self.refreshBody()
             return
 
-
         # elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
         #         (char == ord('?') or char not in self._chars_to_bypass):
         elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
@@ -5304,6 +5333,32 @@ class PyRadio(object):
                         logger.info('Setting default theme: {}'.format(self._theme_name))
             return
 
+        elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG:
+            self.ws.close_window()
+            self.stations = self._cnf.stations
+            self._align_stations_and_refresh(self.ws.PLAYLIST_MODE,
+                                             a_startPos=self.startPos,
+                                             a_selection=self.selection,
+                                             force_scan_playlist=True)
+            if self.playing < 0:
+                self._put_selection_in_the_middle(force=True)
+            self.refreshBody()
+            if char == ord('y'):
+                if self._cnf._online_browser.save_config():
+                    self._show_notification_with_delay(
+                            txt='___History successfully saved!___',
+                            mode_to_set=self.ws.NORMAL_MODE,
+                            callback_function=self.refreshBody)
+                else:
+                    self._show_notification_with_delay(
+                            txt='___Error saving History!___',
+                            delay=1.25,
+                            mode_to_set=self.ws.NORMAL_MODE,
+                            callback_function=self.refreshBody)
+            self._cnf.online_browser = None
+            self._cnf.browsing_station_service = False
+            self._normal_mode_resize()
+
         elif self.ws.operation_mode == self.ws.CLEAR_REGISTER_MODE:
             if char in (ord('y'), ord('n')):
                 self.ws.close_window()
@@ -5328,7 +5383,6 @@ class PyRadio(object):
                 self.ws.operation_mode = self._search_modes[self.ws.operation_mode]
             return
 
-
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_MODE:
             with self._update_notify_lock:
                 self._update_version = ''
@@ -5352,7 +5406,7 @@ class PyRadio(object):
             if self.player:
                 self.detect_if_player_exited = False
                 self.stopPlayer()
-            self.ctrl_c_handler(0,0)
+            self.ctrl_c_handler(0, 0)
             return -1
 
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_NOK_MODE:
@@ -5370,7 +5424,7 @@ class PyRadio(object):
                 self._update_status_bar_right()
             ''' search forward '''
             if self.ws.operation_mode in \
-                    (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE ):
+                    (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
                 self._search_list = self.stations
                 sel = self.selection + 1
             elif self.ws.operation_mode == self.ws.THEME_MODE:
@@ -5397,7 +5451,7 @@ class PyRadio(object):
                 if ret is not None:
                     self._apply_search_result(ret, reapply=True)
             else:
-                    curses.ungetch('/')
+                curses.ungetch('/')
             return
 
         elif char in (ord('N'), ) and \
@@ -5553,7 +5607,7 @@ class PyRadio(object):
                     if self._cnf.browsing_station_service:
                         self._cnf.removed_playlist_history_item()
             elif char in (ord('n'), ):
-                    self._open_playlist()
+                self._open_playlist()
             elif char in (curses.KEY_EXIT, ord('q'), 27):
                 self.bodyWin.nodelay(True)
                 char = self.bodyWin.getch()
@@ -5920,7 +5974,7 @@ class PyRadio(object):
                     if char == ord('A'):
                         self._station_editor.append = True
                     self._station_editor.show()
-                    self._station_editor.item = [ '', '', '' ]
+                    self._station_editor.item = ['', '', '']
                     self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
                 elif char == ord('p'):
@@ -6078,7 +6132,7 @@ class PyRadio(object):
                         self.refreshBody()
                     return
 
-                elif char in(ord('x'), curses.KEY_DC):
+                elif char in (ord('x'), curses.KEY_DC):
                     # TODO: make it impossible when session locked?
                     self.jumpnr = ''
                     self._cnf.jump_tag = -1
@@ -6685,7 +6739,6 @@ class PyRadio(object):
             # self.ll('_find_renamed_selection(): reset parameters')
         self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
 
-
     def _redisplay_stations_and_playlists(self):
         if self._limited_height_mode:
             return
@@ -6754,9 +6807,6 @@ class PyRadio(object):
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('====---- clear to end of window failed----====')
                         break
-
-
-
 
         #''' display the content '''
         #if self.number_of_items > 0:
@@ -6961,7 +7011,6 @@ class PyRadio(object):
                 logger.debug('Activating parameter No {0} for player "{1}"'.format(a_param_id, self._cnf.PLAYER_NAME))
             return True
 
-
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     Windows only section
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -7046,6 +7095,10 @@ class PyRadio(object):
         if self.ws.operation_mode != self.ws.PLAYLIST_MODE:
             if self._cnf.dirty_playlist:
                 self._cnf.save_playlist_file()
+        if self._cnf.browsing_station_service:
+            if self._cnf.online_browser:
+                if self._cnf.online_browser.browser_config.is_config_dirty:
+                    self._cnf.online_browser.save_config()
         self.player.close()
         self._cnf.save_config()
         #self._wait_for_threads()
