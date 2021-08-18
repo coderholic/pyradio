@@ -3,7 +3,10 @@ import curses
 import curses.ascii
 import logging
 from sys import version_info, platform, version
-from .cjkwrap import PY3, is_wide, cjklen
+try:
+    from .cjkwrap import PY3, is_wide, cjklen
+except:
+    from cjkwrap import PY3, is_wide, cjklen
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -793,12 +796,19 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             pX += 1
             if pX >= self._columns:
                 pX = 0
+                pY += 1
             # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
             # logger.error('DE {}'.format(self._coords))
             try:
                 it = self._coords.index((pY, pX))
             except ValueError:
-                it = self._coords.index((pY, 0))
+                pX = 0
+                pY += 1
+                # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+                try:
+                    it = self._coords.index((pY, pX))
+                except:
+                    it = self._coords.index((0, 0))
             # logger.error('DE it = {}'.format(it))
             self.selection = it
             self.show()
@@ -810,20 +820,27 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             pX -= 1
             if pX < 0:
                 pX = self._columns - 1
-            # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
-            # logger.error('DE {}'.format(self._coords))
-            try:
-                it = self._coords.index((pY, pX))
-            except ValueError:
-                pX -= 1
-                while True:
+                pY -= 1
+                if pY < 0:
+                    self.selection = self._coords.index(max(self._coords))
+                else:
+                    # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+                    # logger.error('DE {}'.format(self._coords))
                     try:
                         it = self._coords.index((pY, pX))
-                        break
                     except ValueError:
                         pX -= 1
-            # logger.error('DE it = {}'.format(it))
-            self.selection = it
+                        while True:
+                            try:
+                                it = self._coords.index((pY, pX))
+                                break
+                            except ValueError:
+                                pX -= 1
+                    # logger.error('DE it = {}'.format(it))
+                    self.selection = it
+            else:
+                self.selection = self._coords.index((pY, pX))
+
             self.show()
             return 2
 
@@ -2730,3 +2747,89 @@ class SimpleCursesLineEditHistory(object):
         self._active_history_index = 0
 
 
+'''
+#
+#   Testing part
+#
+
+import logging
+logger = logging.getLogger('pyradio')
+logger.setLevel(logging.DEBUG)
+
+def main(stdscr):
+    __configureLogger()
+    curses.start_color()
+    curses.use_default_colors()
+    #stdscr.addstr('Number of colors: {0}, number of pairs: {1}\n'.format(curses.COLORS, curses.COLOR_PAIRS), curses.color_pair(0))
+    #stdscr.getch()
+
+    #pr(stdscr)
+    #stdscr.getch()
+
+    curses.init_pair(4,curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(5,curses.COLOR_WHITE,curses.COLOR_BLACK)
+    curses.init_pair(6,curses.COLOR_BLACK,curses.COLOR_RED)
+    curses.init_pair(9,curses.COLOR_BLACK,curses.COLOR_WHITE)
+    #curses.init_pair(1,237,248)
+    #for n in range(3,13):
+    #    stdscr.addstr(n,1,str(n),curses.color_pair(1))
+
+    stdscr.bkgdset(' ', curses.color_pair(3))
+    stdscr.erase()
+    stdscr.refresh()
+    search_by_items = (
+        'Votes',
+        'Clicks',
+        'Recent click',
+        'Recently changed',
+        'Item 1',
+        'Item 2',
+        'Item 3',
+        'Item 4',
+    )
+
+    a_widget = SimpleCursesWidgetColumns(
+        Y=2, X=3, window=stdscr,
+        selection=0,
+        active=0,
+        items=search_by_items,
+        color=curses.color_pair(5),
+        color_active=curses.color_pair(4),
+        color_cursor_selection=curses.color_pair(6),
+        color_cursor_active=curses.color_pair(9),
+        margin=1,
+        max_width=65
+    )
+    a_widget.show()
+
+    while True:
+        try:
+            c = stdscr.getch()
+            # logger.error('DE pressed "{0} - {1}"'.format(c, chr(c)))
+            ret = a_widget.keypress(c)
+            if (ret == -1):
+                return
+        except KeyboardInterrupt:
+            break
+
+def __configureLogger():
+    logger = logging.getLogger('pyradio')
+    logger.setLevel(logging.DEBUG)
+
+    # Handler
+    fh = logging.FileHandler('/home/spiros/pyradio.log')
+    fh.setLevel(logging.DEBUG)
+
+    # create formatter
+    PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    formatter = logging.Formatter(PATTERN)
+
+    # add formatter to ch
+    fh.setFormatter(formatter)
+
+    # add ch to logger
+    logger.addHandler(fh)
+
+if __name__ == "__main__":
+    curses.wrapper(main)
+'''
