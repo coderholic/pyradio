@@ -69,7 +69,7 @@ If you don't already have **Python**, just get to its [Windows Downloads](https:
 
 When the download is done, run its setup and select "*Custom Installation*" so that you can "*Add Python to environment varaibles*". You can refer to the following image to see the relevant setting.
 
-[Python Installation](https://members.hellug.gr/sng/pyradio/python1.jpg)
+![Python Installation](https://members.hellug.gr/sng/pyradio/python1.jpg)
 
 
 #### Verifying the installation
@@ -86,7 +86,7 @@ If you get something similar to the following snippet, you are good to go.
 
 If the command could not be found, you have to run the installation again, select "*Modify*" and set the "*Add Python to environment variables*" option. You can refer to the following image to see the relevant setting.
 
-[Python Installation Modification](https://members.hellug.gr/sng/pyradio/python2.jpg)
+![Python Installation Modification](https://members.hellug.gr/sng/pyradio/python2.jpg)
 
 **Note:** If you don't have the setup file of the original **Python** installation, you will have to **download** it from [Python's Windows Downloads](https://www.python.org/downloads/windows/). In case you want to upgrade to the latest version, you **must uninstall** the one currently installed, beforehand.
 
