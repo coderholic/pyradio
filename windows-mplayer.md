@@ -49,7 +49,7 @@ In either case, in order to do that, open an **Explorer File Manager** window, a
 
 If you are unsure on how to do that, please refer to the following image (you can ENTER **%USERPROFILE%** or **%APPDATA%** or any other Windows System Variable this way).
 
-[Navigating to %APPDATA%](https://members.hellug.gr/sng/pyradio/appdata.jpg)
+![Navigating to %APPDATA% (tip: open image in a new tab)](https://members.hellug.gr/sng/pyradio/appdata.jpg)
 
 
 ## Adding MPlayer to the PATH
@@ -64,7 +64,7 @@ Add the **path string** to the "*User variables for User*" section.
 
 In order to make the actual addition, please refer to the following image.
 
-[Adding MPlayer to the PATH](https://members.hellug.gr/sng/pyradio/path.jpg)
+![Adding MPlayer to the PATH (tip: open image in a new tab)](https://members.hellug.gr/sng/pyradio/path.jpg)
 
 After applying the changes you should **log off and back on** or **restart the system**, because changes done to the PATH variable will take effect the next time you log into the system.
 

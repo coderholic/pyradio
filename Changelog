@@ -1,8 +1,9 @@
 2021-08-18 s-n-g
+    * Version 0.8.9.7 (0.9-beta4)
     * RadioBrowser: closing with "q" or "Escape"
     * RadioBrowser: added hidebroken to all queries
     * RadioBrowser: if limit=0, disable result limit
-    * RadioBrowser: Finalized config save /read function
+    * RadioBrowser: finalized config save / read function
 
 2021-08-15
     * Version 0.8.9.6 (0.9-beta3)

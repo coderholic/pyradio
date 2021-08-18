@@ -341,7 +341,9 @@ This mode is designed to directly accept the "*?*" and "*\\*" characters (which 
 
 The *Line editor* supports the insertion of [CJK Unified Ideographs](https://en.wikipedia.org/wiki/CJK_Unified_Ideographs), as described on [CJK Unified Ideographs (Unicode block)](https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)) also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-point (character), actually take up a 2-character space, when rendered on the terminal.
 
-A depiction of the editor's behavior can be seen at this image: [pyradio-editor.jpg](https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg).
+A depiction of the editor's behavior can be seen at this image: 
+
+![CJK Characters on Pyradio](https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg)
 
 ## Moving stations around
 
@@ -484,7 +486,7 @@ Example:
 
 When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with **PyRadio** and edit its extra parameters.
 
-[pyradio-player-selection.jpg](https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg)
+![PyRadio Player Selectio Window](https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg)
 
 Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).
 
@@ -574,7 +576,11 @@ Now, not all stations send the whole set of data; most send their name, website,
 
 After a connection to a station has been established (after playback has started), just press "**i**" to display the station's info.
 
-The window that appears includes the "*Playlist Name*" (the station name we have in the playlist) and the "*Reported Name*" (the name the station transmitted to us) among other fields (an example can bee seen here: [pyradio-station-info.jpg](https://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg)). If these two names are not identical, the user can press "**r**" to rename the station in the playlist using the "*Reported Name*". This way an unknown station (when only the URL is known) can be correctly identified (after being inserted in a playlist with a dummy station name).
+The window that appears includes the "*Playlist Name*" (the station name we have in the playlist) and the "*Reported Name*" (the name the station transmitted to us) among other fields; an example can bee seen here:
+
+![PyRadio Station Info Window](https://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg)
+
+If these two names are not identical, the user can press "**r**" to rename the station in the playlist using the "*Reported Name*". This way an unknown station (when only the URL is known) can be correctly identified (after being inserted in a playlist with a dummy station name).
 
 ## Copying and pasting - Registers
 
