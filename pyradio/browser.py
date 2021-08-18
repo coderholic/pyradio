@@ -119,6 +119,7 @@ class PyRadioStationsBrowser(object):
 
     BROWSER_NAME = 'PyRadioStationsBrowser'
     BASE_URL = ''
+    AUTO_SAVE_CONFIG = False
     TITLE = ''
     _parent = _outer_parent = None
     _raw_stations = []
@@ -264,6 +265,15 @@ class PyRadioStationsBrowser(object):
         return True
 
     def save_config(self):
+        ''' setting AUTO_SAVE_CONFIG to True here, so that any
+            calling functions will call save_config (which does
+            nothing) directly (without displaying a confirm
+            window).
+
+            Subclasses should set it to False (if a confirmation
+            window is needed)
+        '''
+        self.AUTO_SAVE_CONFIG = True
         return True
 
     def is_config_dirty(self):
@@ -344,6 +354,8 @@ class RadioBrowser(PyRadioStationsBrowser):
         self.first_search = True
         self._cnf = config
         self.browser_config = RadioBrowserConfig(self._cnf.stations_dir)
+
+        logger.error('DE AUTO_SAVE_CONFIG = {}'.format(self.AUTO_SAVE_CONFIG))
 
         if session:
             self._session = session
@@ -584,25 +596,22 @@ class RadioBrowser(PyRadioStationsBrowser):
         if 'hidebroken' not in post_data.keys():
             post_data['hidebroken'] = 'true'
 
-        if logger.isEnabledFor(logging.INFO):
-            logger.info('>>> RadioBrowser Query:')
-            logger.info('  search term = {}'.format(self._search_history[self._search_history_index]))
-            logger.info('  url = "{}"'.format(url))
-            logger.info('  headers = "{}"'.format(self._headers))
-            logger.info('  post_data = "{}"'.format(post_data))
+        self._log_query(url, post_data)
 
         ''' keep server results here '''
         new_raw_stations = []
 
         try:
             r = self._session.get(url=url, headers=self._headers, params=post_data, timeout=(self._search_timeout, 2 * self._search_timeout))
+            self._log_response(r)
             r.raise_for_status()
+
             new_raw_stations = self._extract_data(json.loads(r.text))
             # logger.error('DE \n\n{}'.format(new_raw_stations))
             ret = True, len(new_raw_stations), go_back_in_history
         except requests.exceptions.RequestException as e:
-            if logger.isEnabledFor(logging.ERROR):
-                logger.error(e)
+            if logger.isEnabledFor(logging.INFO):
+                logger.info(e)
             self._raw_stations = []
             ret = False, 0, go_back_in_history
 
@@ -614,6 +623,26 @@ class RadioBrowser(PyRadioStationsBrowser):
             self._search_return_function(ret)
 
 
+    def _log_query(self, url, post_data):
+        if logger.isEnabledFor(logging.INFO):
+            try:
+                logger.info('>>> RadioBrowser Query:')
+                logger.info('  search term = {}'.format(self._search_history[self._search_history_index]))
+                logger.info('  url = "{}"'.format(url))
+                logger.info('  headers = "{}"'.format(self._headers))
+                logger.info('  post_data = "{}"'.format(post_data))
+            except:
+                pass
+
+    def _log_response(self, r):
+        if logger.isEnabledFor(logging.INFO):
+            try:
+                logger.info('>>> RadioBrowser Response Query:')
+                logger.info('  url = "{}"'.format(r.request.url))
+                logger.info('  body = "{}"'.format(r.request.body))
+                logger.info('  headers = "{}"'.format(r.request.headers))
+            except:
+                pass
     def _get_search_elements(self, a_search):
         '''
             get "by search" and "reverse"
@@ -1216,8 +1245,8 @@ class RadioBrowser(PyRadioStationsBrowser):
         random_server = self._dns_info.give_me_a_server_url()
         # logger.error('DE random_server = {}'.format(random_server))
         if random_server is None:
-            if logger.isEnabledFor(logging.ERROR):
-                logger.error('RadioBrowser: no server is reachable!')
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('RadioBrowser: No server is reachable!')
             return False
 
         self._default_max_number_of_results = int(self.browser_config.limit)

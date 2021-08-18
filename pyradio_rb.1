@@ -27,7 +27,7 @@ By default, \fBPyRadio\fR will load the first 100 most voted stations on \fBRadi
 
 .IP \fBClosing\ RadioBrowser
 
-\fBPyRadio\fR treats the service as a special kind of a playlist, thus to close the service it is enough to "\fIgo back to playlist history\fR", pressing "\fI\\\\\fR".
+\fBPyRadio\fR treats the service as a special kind of a playlist, thus to close the service it is enough to "\fIgo back to playlist history\fR", pressing "\fI\\\\\fR", in addition to the normal way ("\fIq\fR" or "\fIEscape\fR").
 
 .IP \fBHow\ it\ works
 
@@ -78,7 +78,7 @@ Sort search results
 Station database info (current selection) |
 .IP \fIV
 Vote for station
-.IP \fI\\\\\\\\
+.IP \fI\\\\\\\\\ q\ Escape
 Close RadioBrowser
 .RE
 
@@ -160,7 +160,7 @@ It provides the server with the sorting criteria upon which the results will be 
 
 .IP \fI4.\fR\ The\ \fBLimit\fR
 
-In this part the maximum number or returned stations is specified. The default value is 100 stations.
+In this part the maximum number or returned stations is specified. The default value is 100 stations (0 means no limit).
 
 The value can be changed using the left and right arrows or "\fIh\fR", "\fIl\fR" and "\fIPgUp\fR", "\fIPgDn\fR" for a step of 10.
 .RE

@@ -1022,10 +1022,13 @@ class PyRadio(object):
         ''' Try to auto save config on exit
             Do not check result!!! '''
         self._cnf.save_config()
+        ''' Try to auto save online browser config on exit
+            Do not check result!!! '''
         if self._cnf.browsing_station_service:
             if self._cnf.online_browser:
                 if self._cnf.online_browser.is_config_dirty():
                     self._cnf.online_browser.save_config()
+                self._cnf.online_browser = None
         self._wait_for_threads()
 
     def _wait_for_threads(self):
@@ -3370,12 +3373,16 @@ class PyRadio(object):
                 #for n in self._cnf._ps._p:
                 #    logger.error('DE cur {}'.format(n))
                 # logger.error('DE \n\nselection = {0}, startPos = {1}, playing = {2}\n\n'.format(self.selection, self.startPos, self.playing))
+                ''' check to if online browser config is dirty '''
                 if self._cnf.online_browser:
                     if self._cnf.online_browser.is_config_dirty():
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('Onine Browser config is dirty!')
-                        self._ask_to_save_browser_config()
-                        return False
+                        if self._cnf.online_browser.AUTO_SAVE_CONFIG:
+                            self._cnf.online_browser.save_config()
+                        else:
+                            self._ask_to_save_browser_config()
+                            return False
                 self.stations = self._cnf.stations
                 self._align_stations_and_refresh(self.ws.PLAYLIST_MODE,
                         a_startPos=self.startPos,
@@ -3386,11 +3393,6 @@ class PyRadio(object):
                     self.refreshBody()
                 if not self._cnf.browsing_station_service and \
                         self._cnf.online_browser:
-                    # if self._cnf.online_browser.is_config_dirty():
-                    #     if logger.isEnabledFor(logging.INFO):
-                    #         logger.info('Onine Browser config is dirty!')
-                    #     self._ask_to_save_browser_config()
-                    #     return False
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Closing online browser!')
                     self._cnf.online_browser = None
@@ -5906,7 +5908,8 @@ class PyRadio(object):
                         self.refreshBody()
                         return
                     else:
-                        if self._cnf.is_register:
+                        if self._cnf.is_register or \
+                                self._cnf.browsing_station_service:
                             ''' go back to playlist history '''
                             self._open_playlist_from_history()
                             return
@@ -7099,6 +7102,7 @@ class PyRadio(object):
             if self._cnf.online_browser:
                 if self._cnf.online_browser.browser_config.is_config_dirty:
                     self._cnf.online_browser.save_config()
+                    sel._cnf.online_browser = None
         self.player.close()
         self._cnf.save_config()
         #self._wait_for_threads()

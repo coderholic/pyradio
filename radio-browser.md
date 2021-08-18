@@ -39,7 +39,7 @@ By default, **PyRadio** will load the first 100 most voted stations on **RadioBr
 
 ## Closing RadioBrowser
 
-**PyRadio** treats the service as a special kind of a playlist, thus to close the service it is enough to "*go back to playlist history*", pressing "**\\\\**" (double backslash).
+**PyRadio** treats the service as a special kind of a playlist, thus to close the service it is enough to "*go back to playlist history*", pressing "**\\\\**" (double backslash), in addition to the normal way ("**q**" or **Escape**).
 
 ## How it works
 
@@ -69,16 +69,16 @@ Pressing "**S**" (capital "s") will present the user with a sorting list. Select
 
 These are the **RadioBrowser** specific keys one can use in addition to local playlist keys (if applicable).
 
-| Key  | Action                                    |
-|------|-------------------------------------------|
-| O    | Open RadioBrowser                         |
-| c    | Open config window                        |
-| C    | Select server to connect to               |
-| s    | Search for stations                       |
-| S    | Sort search results                       |
-| I    | Station database info (current selection) |
-| V    | Vote for station                          |
-| \\\\ | Close RadioBrowser                        |
+| Key           | Action                                    |
+|---------------|-------------------------------------------|
+| O             | Open RadioBrowser                         |
+| c             | Open config window                        |
+| C             | Select server to connect to               |
+| s             | Search for stations                       |
+| S             | Sort search results                       |
+| I             | Station database info (current selection) |
+| V             | Vote for station                          |
+| \\\\ q Escape | Close RadioBrowser                        |
 
 
 ## Configuration
@@ -151,7 +151,7 @@ These two parts are mutually exclusive, since when one is activated through its 
 
 - The "**Limit**" part
 
-    In this part the maximum number or returned stations is specified. The default value is 100 stations.
+    In this part the maximum number or returned stations is specified. The default value is 100 stations (0 means no limit).
 
     The value can be changed using the left and right arrows or "**h**", "**l**" and "**PgUp**", "**PgDn**" for a step of 10.
 

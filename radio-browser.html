@@ -67,7 +67,7 @@ a:visited{color: SaddleBrown;}
 <p>Upon activation, the <strong>default query</strong> will be preformed and (if successful) its results will be presented to the user. If unsuccessful, a relevant message will be displayed and the program will return to the local playlist that was previously opened.</p>
 <p>By default, <strong>PyRadio</strong> will load the first 100 most voted stations on <strong>RadioBrowser</strong>.</p>
 <h2 id="closing-radiobrowser">Closing RadioBrowser <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p><strong>PyRadio</strong> treats the service as a special kind of a playlist, thus to close the service it is enough to “<em>go back to playlist history</em>”, pressing “<strong>\\</strong>” (double backslash).</p>
+<p><strong>PyRadio</strong> treats the service as a special kind of a playlist, thus to close the service it is enough to “<em>go back to playlist history</em>”, pressing “<strong>\\</strong>” (double backslash), in addition to the normal way (“<strong>q</strong>” or <strong>Escape</strong>).</p>
 <h2 id="how-it-works">How it works <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>The implementation uses a list structure (we’ll call it “<strong>search history</strong>” from now on) to keep user specified queries (we’ll call them “<strong>search terms</strong>”).</p>
 <p>The first item in the “<strong>search history</strong>” is the “<strong>empty search term</strong>” (or “<strong>empty item</strong>”), which cannot be deleted and cannot be used to actually query <strong>RadioBrowser</strong>; it is there to provide a “<strong>search term template</strong>” for user inserted search terms.</p>
@@ -119,7 +119,7 @@ a:visited{color: SaddleBrown;}
 <td>Vote for station</td>
 </tr>
 <tr class="even">
-<td>\\</td>
+<td>\\ q Escape</td>
 <td>Close RadioBrowser</td>
 </tr>
 </tbody>
@@ -166,7 +166,7 @@ a:visited{color: SaddleBrown;}
 <p>This part affects both previous parts.</p>
 <p>It provides the server with the sorting criteria upon which the results will be returned.</p></li>
 <li>The “<strong>Limit</strong>” part</p>
-<p>In this part the maximum number or returned stations is specified. The default value is 100 stations.</p>
+<p>In this part the maximum number or returned stations is specified. The default value is 100 stations (0 means no limit).</p>
 <p>The value can be changed using the left and right arrows or “<strong>h</strong>”, “<strong>l</strong>” and “<strong>PgUp</strong>”, “<strong>PgDn</strong>” for a step of 10.</p></li>
 </ul>
 <h3 id="history-management">History Management</h3>
