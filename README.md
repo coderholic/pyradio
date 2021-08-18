@@ -4,6 +4,8 @@ Command line internet radio player.
 
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
+![Pyradio](https://members.hellug.gr/sng/pyradio/pyradio.png)
+
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
