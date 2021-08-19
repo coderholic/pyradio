@@ -3419,7 +3419,10 @@ class PyRadio(object):
         for j, a_find in enumerate(find):
             if a_find.strip():
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('** Looking for {0} station: "{1}"'.format(debug_str[j], a_find))
+                    try:
+                        logger.debug('** Looking for {0} station: "{1}"'.format(debug_str[j], a_find))
+                    except:
+                        logger.debug('** Looking for {0} station: "{1}"'.format(debug_str[j], a_find.encode('utf-8', 'replace')))
 
                 for i, a_station in enumerate(self.stations):
                     if i_find[j] == -1:
@@ -5117,6 +5120,7 @@ class PyRadio(object):
         #         (char == ord('?') or char not in self._chars_to_bypass):
         elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
 
+            ''' return from browser search '''
             ret = self._cnf._online_browser.keypress(char)
             if ret == 0:
                 ''' Ok, search term is valid '''

@@ -504,7 +504,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 ''' do this here for python 2
                     TODO: make the previous statement work on py2
                 '''
-                pass
+                info[n[0]] = self._raw_stations[a_station][n[1]].encode('utf-8', 'replace')
             if n[1] == 'bitrate':
                 info[n[0]] += ' kb/s'
 
@@ -1446,7 +1446,10 @@ DEFAULT_LIMIT = '''
 '''
         for n in range(1, len(search_history)):
             asterisk = '*' if n == search_default_history_index else ''
-            txt += 'SEARCH_TERM = ' + asterisk + str(search_history[n]) + '\n'
+            if PY3:
+                txt += 'SEARCH_TERM = ' + asterisk + str(search_history[n]) + '\n'
+            else:
+                txt += 'SEARCH_TERM = ' + asterisk + str(search_history[n]).replace('{u\'', '{\'').replace('u\'', '\'') + '\n'
 
         try:
             with open(self.config_file, 'w') as cfgfile:

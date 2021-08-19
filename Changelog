@@ -5,7 +5,8 @@
     * RadioBrowser: if limit=0, disable result limit
     * RadioBrowser: finalized config save / read function
     * RadioBrowser: Better navigation in the Search Window
-    * Updating docs
+    * Fixed a couple of python 2 crashes
+    * Updated docs
 
 2021-08-15
     * Version 0.8.9.6 (0.9-beta3)
