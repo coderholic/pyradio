@@ -885,7 +885,7 @@ class PyRadioStations(object):
                 source >= self.number_of_stations or \
                 target >= self.number_of_stations or \
                 self.number_of_stations == 0:
-            # logger.error('\n\nreturning False\n\n')
+            # logger.error('DE \n\nreturning False\n\n')
             return False
         if source < target:
             step = 1

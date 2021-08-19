@@ -1995,7 +1995,7 @@ class PyRadioSelectPlaylist(object):
         pad = len(str(self.startPos + self.maxY - 2 - self.pad_adjustment))
         # logger.error('DE \n\npos = {0}, pad = {1}\n\n'.format(self.startPos + self.maxY - 2 - self.pad_adjustment, pad))
         for i in range(0, self.maxY - 2):
-            # logger.error('de i = {0}, startPos = {1}'.format(i, self.startPos))
+            # logger.error('DE i = {0}, startPos = {1}'.format(i, self.startPos))
             if i + self.startPos < self._num_of_items:
                 line, pad = self._format_line(i, pad)
                 colour = self._get_color(i)

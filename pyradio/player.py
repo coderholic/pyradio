@@ -547,7 +547,7 @@ class Player(object):
                     subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
                 if subsystemOut == '':
                     break
-                # logger.error('subsystemOut = "{0}"'.format(subsystemOut))
+                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 if not self._is_accepted_input(subsystemOut):
                     continue
                 subsystemOut = subsystemOut.strip()
@@ -663,10 +663,10 @@ class Player(object):
                                     if logger.isEnabledFor(logging.INFO):
                                         logger.info('*** updateStatus(): Start of playback detected (Icy audio token received) ***')
                                 self.playback_is_on = True
-                                # logger.error(' DE token = "{}"'.format(a_token))
-                                # logger.error(' DE icy_audio_tokens[a_token] = "{}"'.format(self.icy_audio_tokens[a_token]))
+                                # logger.error('DE token = "{}"'.format(a_token))
+                                # logger.error('DE icy_audio_tokens[a_token] = "{}"'.format(self.icy_audio_tokens[a_token]))
                                 a_str = subsystemOut.split(a_token)
-                                # logger.error(' DE str = "{}"'.format(a_str))
+                                # logger.error('DE str = "{}"'.format(a_str))
                                 with self.status_update_lock:
                                     if self.icy_audio_tokens[a_token] == 'icy-br':
                                         self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1].replace('kbit/s', '')
@@ -780,7 +780,7 @@ class Player(object):
         sock.close()
         if not stop():
             ''' haven't been asked to stop '''
-            # logger.error('\n\nDE NOT ASKED TO STOP\n\n')
+            # logger.error('DE\n\n NOT ASKED TO STOP\n\n')
             # poll = process.poll()
             # logger.error('DE poll = {}'.format(poll))
             # if poll is not None:
@@ -835,10 +835,10 @@ class Player(object):
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
                 if subsystemOut == '':
                     continue
-                # logger.error('subsystemOut = "{0}"'.format(subsystemOut))
+                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 if not self._is_accepted_input(subsystemOut):
                     continue
-                logger.error('accepted inp = "{0}"'.format(subsystemOut))
+                # logger.error('DE accepted inp = "{0}"'.format(subsystemOut))
                 if self.oldUserInput['Input'] != subsystemOut:
                     if stop():
                         break
@@ -959,10 +959,10 @@ class Player(object):
                                     if logger.isEnabledFor(logging.INFO):
                                         logger.info('*** updateWinVLCStatus(): Start of playback detected (Icy audio token received) ***')
                                 self.playback_is_on = True
-                                # logger.error(' DE token = "{}"'.format(a_token))
-                                # logger.error(' DE icy_audio_tokens[a_token] = "{}"'.format(self.icy_audio_tokens[a_token]))
+                                # logger.error('DE token = "{}"'.format(a_token))
+                                # logger.error('DE icy_audio_tokens[a_token] = "{}"'.format(self.icy_audio_tokens[a_token]))
                                 a_str = subsystemOut.split(a_token)
-                                # logger.error(' DE str = "{}"'.format(a_str))
+                                # logger.error('DE str = "{}"'.format(a_str))
                                 with self.status_update_lock:
                                     if self.icy_audio_tokens[a_token] == 'icy-br':
                                         self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1].replace('kbit/s', '')
@@ -1182,7 +1182,6 @@ class Player(object):
             arg[0].write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']))
 
     def _is_icy_entry(self, a_string):
-        # logger.error("**** a_string = {}".format(a_string))
         for a_token in self.icy_tokens:
             if a_token in a_string:
                 return True
@@ -2122,7 +2121,8 @@ class VlcPlayer(Player):
 
     def _stop(self):
         ''' kill vlc instance '''
-        logger.error('setting self.stop_win_vlc_status_update_thread = True')
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('setting self.stop_win_vlc_status_update_thread = True')
         self.stop_win_vlc_status_update_thread = True
         if self.ctrl_c_pressed:
             return
@@ -2145,7 +2145,7 @@ class VlcPlayer(Player):
                         logger.debug('vlc log file removed: "' + file_to_remove + "'")
                 except:
                     pass
-                    # logger.error('Failed {}'.format(count))
+                    # logger.error('DE Failed {}'.format(count))
 
     def _volume_up(self):
         ''' increase vlc's volume '''

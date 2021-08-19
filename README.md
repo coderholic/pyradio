@@ -141,6 +141,8 @@ The following options can also be set in **PyRadio**'s [configuration file](#con
     H M L             Jump to the top / middle bottom of the list      [Valid]                            -
     P                 Jump to playing station                          Jump to playing playlist           -
     Enter/Right/l     Play selected station                            Open selected playlist             Apply selected theme
+    ^N / ^P           Play next/previous station                       -                                  -
+                        (if already in playback)
     r                 Select and play a random station                 Re-read playlists from disk        -
     Space/Left/h      Stop/start playing selected station              -                                  -
     Space             -                                                -                                  Apply theme and make it default
@@ -152,6 +154,7 @@ The following options can also be set in **PyRadio**'s [configuration file](#con
     e                 Edit current station                             -                                  -
     E                 Change station's encoding                        -                                  -
     DEL,x             Delete selected station                          -                                  -
+    O                 Open RadioBrowser                                -                                  -
     t T               Load theme / Toggle transparency                 [Valid]                            [Valid]
     c                 Open Configuration window.                       -                                  -
     / n N             Search, go to next / previous result             [Valid]                            [Valid]

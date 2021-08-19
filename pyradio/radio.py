@@ -1013,7 +1013,6 @@ class PyRadio(object):
             self.search.box_color = curses.color_pair(5)
 
     def ctrl_c_handler(self, signum, frame):
-        # logger.error('self.ctrl_c_handler()')
         self.ctrl_c_pressed = True
         if self._cnf.dirty_playlist:
             ''' Try to auto save playlist on exit
@@ -1044,7 +1043,7 @@ class PyRadio(object):
                 (self.selection != self.playing or changing_playlist):
             if changing_playlist:
                 self.startPos = 0
-            # logger.error('self.bodyMaxY = {0}, items = {1}, self.playing = {2}'.format(self.bodyMaxY, self.number_of_items, self.playing))
+            # logger.error('DE self.bodyMaxY = {0}, items = {1}, self.playing = {2}'.format(self.bodyMaxY, self.number_of_items, self.playing))
             if self.number_of_items < self.bodyMaxY:
                 self.startPos = 0
             elif self.playing < self.startPos or \
@@ -1068,7 +1067,7 @@ class PyRadio(object):
         elif force or self.selection < self.startPos or \
                 self.selection >= self.startPos + self.bodyMaxY:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('DE ===== _put:adjusting startPos')
+                logger.error('===== _put:adjusting startPos')
             if self.selection < self.bodyMaxY:
                 self.startPos = 0
                 if self.selection - int(self.bodyMaxY/2) > 0:
@@ -3271,8 +3270,8 @@ class PyRadio(object):
             False: We do not need resize
         '''
 
-        # logger.error('\n\n\n')
-        # logger.error('\n\nDE =1= ps.p {}\n\n'.format(self._cnf._ps._p))
+        # logger.error('DE\n\n\n')
+        # logger.error('DE\n\n =1= ps.p {}\n\n'.format(self._cnf._ps._p))
         result = True
         if not self._cnf.can_go_back_in_time and not list_of_registers:
             self._show_no_more_playlist_history()
@@ -3296,12 +3295,12 @@ class PyRadio(object):
 
             # logger.error('DE {}'.format(self._cnf._ps._p))
 
-            # logger.error('\n\nDE =2= ps.p {}\n\n'.format(self._cnf._ps._p))
+            # logger.error('DE\n\n =2= ps.p {}\n\n'.format(self._cnf._ps._p))
 
             # logger.error('DE \nself._cnf.station_path = {}\n'.format(self._cnf.station_path))
             ret = self._cnf.read_playlist_file(stationFile=self._cnf.station_path)
             # logger.error('DE \nret = {}\n'.format(ret))
-            # logger.error('\n\n\n')
+            # logger.error('DE\n\n\n')
 
             if ret == -1:
                 #self.stations = self._cnf.playlists
@@ -4046,7 +4045,7 @@ class PyRadio(object):
         stop_here = self._handle_middle_mouse(a_button)
         if not stop_here:
             stop_here = self._handle_all_windows_mouse_event(my, mx, a_button)
-            # logger.error('stop_here = {}'.format(stop_here))
+            # logger.error('DE stop_here = {}'.format(stop_here))
             if not stop_here:
                 if main_window:
                     _, update = self._handle_main_window_mouse_event(my, mx, a_button)
@@ -4269,7 +4268,7 @@ class PyRadio(object):
 
     def _select_line(self, a_line):
         # if a_line - self.startPos < 0:
-        #     logger.error('*** _unselect_line: a_line:{0} -  start pos:{1} = {2}'.format(a_line, self.startPos, a_line-self.startPos))
+        #     logger.error('DE *** _unselect_line: a_line:{0} -  start pos:{1} = {2}'.format(a_line, self.startPos, a_line-self.startPos))
         #     return
         col = 9 if a_line == self.playing else 6
         # if logger.isEnabledFor(logging.DEBUG):
@@ -4317,14 +4316,12 @@ class PyRadio(object):
             self._handle_cursor_move_down()
 
     def _play_next_station(self):
-        logger.error('DE ^N pressed!!!')
         self.selection = self.playing
         self._move_cursor_one_down()
         self.playSelection()
         self.refreshBody()
 
     def _play_previous_station(self):
-        logger.error('DE ^P pressed!!!')
         self.selection = self.playing
         self._move_cursor_one_up()
         self.playSelection()
@@ -4801,7 +4798,7 @@ class PyRadio(object):
                             self._cnf.params_changed = True
 
                         if self.player.isPlaying():
-                            # logger.error('params_changed = {}'.format(self._cnf.params_changed))
+                            # logger.error('DE params_changed = {}'.format(self._cnf.params_changed))
                             #if self._cnf.opts['default_encoding'][1] != self._old_config_encoding or \
                             #        self._cnf.opts['force_http'][1] != self.player.force_http or \
                             #        self._cnf.params_changed:
@@ -5029,7 +5026,7 @@ class PyRadio(object):
                 self.volume_functions[chr(char)]()
                 return
             ret, self.old_filename, self.new_filename, copy, open_file, pl_create = self._rename_playlist_dialog.keypress(char)
-            logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
+            # logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
             if ret not in (0, 2):
                 self._rename_playlist_dialog = None
             if ret == -3:
@@ -5055,9 +5052,9 @@ class PyRadio(object):
                 last_history[2] = path.basename(self.new_filename).replace('.csv', '')
                 ''' not a register, no online browser '''
                 last_history[-2:] = False, False
-                # logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
+                # logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
                 # logger.error('DE last_history = {}'.format(last_history))
-                # logger.error('last_history = {}'.format(last_history))
+                # logger.error('DE last_history = {}'.format(last_history))
                 if self.ws.window_mode == self.ws.NORMAL_MODE:
                         ''' rename the playlist on editor '''
                         self._rename_playlist_from_normal_mode(
@@ -6427,7 +6424,7 @@ class PyRadio(object):
                     replace_playlist_in_history,
                     last_history)
         # self.ll('after')
-        logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
+        logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
         logger.error('DE self._playlist_in_editor = {}'.format(self._playlist_in_editor))
         if open_file:
             ret_it, ret_id, rev_ret_id = self._cnf.find_history_by_station_path(self.new_filename)
@@ -6447,7 +6444,7 @@ class PyRadio(object):
                 if ret_id >= 0:
                     item = self._cnf.get_playlist_history_item(ret_id)
                     self._cnf.add_to_playlist_history(*item)
-                    logger.error('\n\nDE **** after addig playlist to history ps.p {}\n\n'.format(self._cnf._ps._p))
+                    logger.error('DE\n\n **** after adding playlist to history ps.p {}\n\n'.format(self._cnf._ps._p))
                     self._open_playlist_from_history(from_rename_action=True)
                     if self.playing > -1:
                         self.selection = self.playing
@@ -6457,10 +6454,10 @@ class PyRadio(object):
                     #self.active_stations = self.rename_stations
                     self._set_active_stations()
                     self._set_rename_stations()
-                    logger.error('\n\nDE **** after open playlist from history ps.p {}\n\n'.format(self._cnf._ps._p))
+                    logger.error('DE\n\n **** after open playlist from history ps.p {}\n\n'.format(self._cnf._ps._p))
                 else:
                     self._cnf.add_to_playlist_history(*last_history)
-                    logger.error('\n\nDE **** after addig playlist to history ps.p {}\n\n'.format(self._cnf._ps._p))
+                    logger.error('DE\n\n **** after addig playlist to history ps.p {}\n\n'.format(self._cnf._ps._p))
                     self._open_playlist_from_history(from_rename_action=True)
                     if self.playing > -1:
                         self.selection = self.playing
@@ -6527,7 +6524,7 @@ class PyRadio(object):
 
             self.ws.close_window()
             self.active_stations = self.rename_stations
-            logger.error('\n\nDE **** before open playlist from history ps.p {}\n\n'.format(self._cnf._ps._p))
+            logger.error('DE\n\n **** before open playlist from history ps.p {}\n\n'.format(self._cnf._ps._p))
             self._open_playlist_from_history(from_rename_action=True)
             if self.playing > -1:
                 self.selection = self.playing
@@ -6550,21 +6547,21 @@ class PyRadio(object):
             self._cnf.remove_from_playlist_history()
             self._cnf.add_to_playlist_history(*last_history)
         # self.ll('before return')
-        logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
+        logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
         #self.refreshBody()
 
     def _rename_playlist_from_normal_mode(self, copy, open_file, create, last_history):
         old_file_is_reg = True if os.path.basename(self.old_filename).startswith('register_') else False
-        # logger.error('\n\nDE **** {}'.format(self._cnf._ps._p))
+        # logger.error('DE\n\n **** {}'.format(self._cnf._ps._p))
 
-        # logger.error('title = {}'.format(self._cnf.station_title))
+        # logger.error('DE title = {}'.format(self._cnf.station_title))
         if copy:
-            logger.error('rename playlist NORMAL_MODE: copy file')
+            # logger.error('DE rename playlist NORMAL_MODE: copy file')
             if open_file:
-                # logger.error('rename playlist NORMAL_MODE: open file and copy')
+                # logger.error('DE rename playlist NORMAL_MODE: open file and copy')
                 self._cnf.add_to_playlist_history(*last_history)
         else:
-            # logger.error('rename playlist NORMAL_MODE: not a copy')
+            # logger.error('DE rename playlist NORMAL_MODE: not a copy')
             if create and open_file:
                 self._cnf.stations = []
                 self.stations = self._cnf.stations
@@ -6573,7 +6570,7 @@ class PyRadio(object):
             self._cnf.replace_playlist_history_items(
                     self.old_filename,
                     last_history)
-        # logger.error('\n\nDE **** ps.p {}\n\n'.format(self._cnf._ps._p))
+        # logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
 
         self.refreshBody()
         self._cnf.remove_playlist_history_duplicates()
@@ -6802,7 +6799,8 @@ class PyRadio(object):
                                 lineNum += 1
                         break
                     else:
-                        logger.error('clearing window from line {} to end.'.format(i))
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('clearing window from line {} to end.'.format(i))
                         try:
                             self.bodyWin.move(i, 0)
                             self.bodyWin.clrtobot()
@@ -6968,9 +6966,9 @@ class PyRadio(object):
             if self.playing < 0:
                 self._put_selection_in_the_middle(force=True)
                 self.refreshBody()
-            # logger.error('path = {}'.format(self._cnf.station_path))
-            # logger.error('station = {}'.format(self._cnf.station_file_name))
-            # logger.error('title = {}\n'.format(self._cnf.station_title))
+            # logger.error('DE path = {}'.format(self._cnf.station_path))
+            # logger.error('DE station = {}'.format(self._cnf.station_file_name))
+            # logger.error('DE title = {}\n'.format(self._cnf.station_title))
             self._cnf.set_playlist_elements(a_file)
             if is_copy:
                 self._cnf.add_to_playlist_history(
@@ -6979,9 +6977,9 @@ class PyRadio(object):
                         startPos=self.startPos,
                         selection=self.selection,
                         playing=self.playing)
-            # logger.error('path = {}'.format(self._cnf.station_path))
-            # logger.error('station = {}'.format(self._cnf.station_file_name))
-            # logger.error('title = {}\n'.format(self._cnf.station_title))
+            # logger.error('DE path = {}'.format(self._cnf.station_path))
+            # logger.error('DE station = {}'.format(self._cnf.station_file_name))
+            # logger.error('DE title = {}\n'.format(self._cnf.station_title))
 
     def _search_sublist__stem(self, a_list, a_search):
         return self._search_sublist(a_list, 0, a_search)

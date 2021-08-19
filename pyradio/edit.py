@@ -655,7 +655,7 @@ class PyRadioRenameFile(object):
         else:
             self._to_path = self._from_path
             self._display_from_file = self._from_file
-        # logger.error('filename = {0}\nfrom path = {1}\nfrom file = {2}\nto path = {3}\ndisplay name = {4}'.format(
+        # logger.error('DE filename = {0}\nfrom path = {1}\nfrom file = {2}\nto path = {3}\ndisplay name = {4}'.format(
         #     filename,
         #     self._from_path,
         #     self._from_file,

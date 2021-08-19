@@ -334,10 +334,10 @@ class PyRadioThemeReadWrite(object):
         """
         self._temp_colors = None
         if not path.isfile(theme_path):
-            logger.error('read_theme: file not found: {}'.format(theme_path))
+            logger.error('read_theme(): file not found: {}'.format(theme_path))
             return 1, None
         if not access(theme_path, R_OK):
-            logger.error('read_theme: file not readable: {}'.format(theme_path))
+            logger.error('read_theme(): file not readable: {}'.format(theme_path))
             return 2, None
 
         try:
@@ -345,7 +345,7 @@ class PyRadioThemeReadWrite(object):
                 lines = [line.strip() for line in thmfile if line.strip() and not line.startswith('#')]
 
         except:
-            logger.error('read_theme: read error on: {}'.format(theme_path))
+            logger.error('read_theme(): read error on: {}'.format(theme_path))
             return 3, None
         max_colors = 0
         self._temp_colors = {}
@@ -355,7 +355,7 @@ class PyRadioThemeReadWrite(object):
             vsp = sp[1].strip().split(',')
             if len(vsp) < 2:
                 self._temp_colors = None
-                logger.error('read_theme: file is corrupt: {}'.format(theme_path))
+                logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
                 return 4, None
             try:
                 this_color = (int(vsp[0]), int(vsp[1]))
@@ -364,7 +364,7 @@ class PyRadioThemeReadWrite(object):
                         max_colors = x
             except:
                 self._temp_colors = None
-                logger.error('read_theme: file is corrupt: {}'.format(theme_path))
+                logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
                 return 4, None
             for it in THEME_ITEMS:
                 if sp[0] == it[0]:
@@ -372,7 +372,7 @@ class PyRadioThemeReadWrite(object):
                     break
 
         if self._theme_is_incomplete():
-            logger.error('read_theme: file is incomplete: {}'.format(theme_path))
+            logger.error('read_theme(): file is incomplete: {}'.format(theme_path))
             return 5, None
 
         self._theme_name = theme_name

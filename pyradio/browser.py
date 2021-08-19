@@ -1871,7 +1871,11 @@ class RadioBrowserSearchWindow(object):
                 color_cursor_selection=curses.color_pair(6),
                 color_cursor_active=curses.color_pair(9),
                 margin=1,
-                max_width=self._half_width
+                max_width=self._half_width,
+                on_up_callback_function=self._focus_up,
+                on_down_callback_function=self._focus_down,
+                on_left_callback_function=self._focus_previous,
+                on_right_callback_function=self._focus_next
             ))
 
             ''' sort by (index = 2) '''
@@ -1886,7 +1890,11 @@ class RadioBrowserSearchWindow(object):
                 color_active=curses.color_pair(4),
                 color_cursor_selection=curses.color_pair(6),
                 color_cursor_active=curses.color_pair(9),
-                margin=1
+                margin=1,
+                on_up_callback_function=self._focus_up,
+                on_down_callback_function=self._focus_down,
+                on_left_callback_function=self._focus_previous,
+                on_right_callback_function=self._focus_next
             ))
 
             '''' sort ascending / descending (index = 3) '''
@@ -2007,7 +2015,7 @@ class RadioBrowserSearchWindow(object):
                 self._widgets[2].Y - 1,
                 self._widgets[2].X - 2,
                  'Sort by', curses.color_pair(4))
-            # logger.error('\n\n== 0 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
+
             ''' Two lines under the lists '''
             Y = max(self._widgets[2].Y, self._widgets[1].Y + self._widgets[1].height, self._widgets[3].Y) + 2
             ''' place search check box '''
@@ -2025,7 +2033,7 @@ class RadioBrowserSearchWindow(object):
             ''' Search check box not moved, will be handled by show '''
             self._win.refresh()
             self._calculate_widgets_yx(Y, X)
-            # logger.error('== 1 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
+
             for n in range(0, 6):
                 ''' place editors' captions '''
                 # self._win.addstr(
@@ -2059,7 +2067,6 @@ class RadioBrowserSearchWindow(object):
             self._h_buttons.move(self.yx[-1][0])
             self._win.refresh()
 
-        # logger.error('== 2 widget[{0}].Y = {1}'.format(3, self._widgets[3].Y))
         self._h_buttons.calculate_buttons_position()
         self._print_history_legend()
         self._display_all_widgets()

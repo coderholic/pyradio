@@ -460,6 +460,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
     VERICAL = True
     HORIZONTAL = False
 
+    _columns = _rows = 0
+
     def __init__(self,
                  Y, X,
                  window,
@@ -475,7 +477,11 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                  margin=0,
                  align=0,
                  right_arrow_selects = False,
-                 callback_function=None
+                 on_activate_callback_function=None,
+                 on_up_callback_function=None,
+                 on_down_callback_function=None,
+                 on_left_callback_function=None,
+                 on_right_callback_function=None
                  ):
         ''' Initialize the widget.
 
@@ -512,8 +518,20 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
                 Items alignment (left, right, center)
             right_arrow_selects
                 If True, pressing right arrow will activate the selected item
-            callback_function
+            on_activate_callback_function
                 A function to execute when new active item selected
+            on_up_callback_function
+                A function to execute when cursor is at row 0 and up is pressed
+                The cursor will not move
+            on_down_callback_function
+                A function to execute when cursor is at the bottom row and down
+                is pressed. The cursor will not move
+            on_left_callback_function
+                A function to execute when cursor is at the first column and left
+                is pressed. The cursor will not move
+            on_right_callback_function
+                A function to execute when cursor is at the last column and right
+                is pressed. The cursor will not move
         '''
         self._Y = Y
         self._X = X
@@ -528,7 +546,11 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         self._align = align
         self._right_arrow_selects = right_arrow_selects
         self._placement = placement
-        self._callback_function = callback_function
+        self._on_activate_callback_function = on_activate_callback_function
+        self._on_up_callback_function = on_up_callback_function
+        self._on_down_callback_function = on_down_callback_function
+        self._on_left_callback_function = on_left_callback_function
+        self._on_right_callback_function = on_right_callback_function
         self.selection = selection
         self.active = active
         self._focused = True
@@ -542,6 +564,24 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
     def margin(self):
         '''Returns the widget's Y position '''
         return self._margin
+
+    @property
+    def columns(self):
+        '''Returns the widget's number of columns '''
+        return self._columns
+
+    @columns.setter
+    def columns(self, value):
+        self._columns = value
+
+    @property
+    def rows(self):
+        '''Returns the widget's number of rows '''
+        return self._rows
+
+    @rows.setter
+    def rows(self, value):
+        self._rows = value
 
     @property
     def height(self):
@@ -625,6 +665,12 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
     def recalculate_columns(self):
         self.set_items()
 
+    def _last_in_row(self, pY, pX):
+        # logger.error('DE pY = {0}, pX = {1}'.format(pY, pX))
+        test = [x for x in self._coords if x[0] == pY]
+        # logger.error('DE test = {}'.format(test))
+        return True if test[-1] == (pY, pX) else False
+
     def set_items(self, items=None):
         if items:
             self.items = tuple(items[:])
@@ -702,6 +748,10 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         # for i, n in enumerate(self._coords):
         #     logger.error('Item {}: X = {}, Y = {}'.format(i, *n))
 
+        self._rows = max([x[0] for x in self._coords]) + 1
+        # logger.error('DE coords = {}'.format(self._coords))
+        # logger.error('DE columns = {0}, rows = {1}'.format(self._columns, self._rows))
+
         self._showed = True
 
     def keypress(self, char):
@@ -735,6 +785,8 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             ''' Do not refresh the widget, it will
                 probably be hidden next
             '''
+            if self._on_activate_callback_function:
+                self._on_activate_callback_function()
             return 0
 
         elif not self._right_arrow_selects and char in (
@@ -777,71 +829,89 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
             return 2
 
         elif char in (ord('k'), curses.KEY_UP):
-            self.selection -= 1
-            if self.selection < 0:
-                self.selection = len(self.items) - 1
-            self.show()
+            pY, pX = self._coords[self.selection]
+            if self._on_up_callback_function and pY == 0:
+                self._on_up_callback_function()
+            else:
+                self.selection -= 1
+                if self.selection < 0:
+                    self.selection = len(self.items) - 1
+                self.show()
             return 2
 
         elif char in (ord('j'), curses.KEY_DOWN):
-            self.selection += 1
-            if self.selection == len(self.items):
-                self.selection = 0
-            self.show()
+            pY, pX = self._coords[self.selection]
+            # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+            # logger.error('DE rows = {}'.format(self._rows))
+            if self._on_down_callback_function and \
+                    (pY == self._rows - 1 or self.selection == len(self.items) - 1):
+                self._on_down_callback_function()
+            else:
+                self.selection += 1
+                if self.selection == len(self.items):
+                    self.selection = 0
+                self.show()
             return 2
 
         elif char in (ord('l'), curses.KEY_RIGHT):
             pY, pX = self._coords[self.selection]
-            # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
-            pX += 1
-            if pX >= self._columns:
-                pX = 0
-                pY += 1
-            # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
-            # logger.error('DE {}'.format(self._coords))
-            try:
-                it = self._coords.index((pY, pX))
-            except ValueError:
-                pX = 0
-                pY += 1
+            if self._on_right_callback_function and \
+                    (pX == self._columns - 1 or self._last_in_row(pY, pX)):
+                self._on_right_callback_function()
+            else:
                 # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+                pX += 1
+                if pX >= self._columns:
+                    pX = 0
+                    pY += 1
+                # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+                # logger.error('DE {}'.format(self._coords))
                 try:
                     it = self._coords.index((pY, pX))
-                except:
-                    it = self._coords.index((0, 0))
-            # logger.error('DE it = {}'.format(it))
-            self.selection = it
-            self.show()
+                except ValueError:
+                    pX = 0
+                    pY += 1
+                    # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+                    try:
+                        it = self._coords.index((pY, pX))
+                    except:
+                        it = self._coords.index((0, 0))
+                # logger.error('DE it = {}'.format(it))
+                self.selection = it
+                self.show()
             return 2
 
         elif char in (ord('h'), curses.KEY_LEFT):
             pY, pX = self._coords[self.selection]
-            # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
-            pX -= 1
-            if pX < 0:
-                pX = self._columns - 1
-                pY -= 1
-                if pY < 0:
-                    self.selection = self._coords.index(max(self._coords))
-                else:
-                    # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
-                    # logger.error('DE {}'.format(self._coords))
-                    try:
-                        it = self._coords.index((pY, pX))
-                    except ValueError:
-                        pX -= 1
-                        while True:
-                            try:
-                                it = self._coords.index((pY, pX))
-                                break
-                            except ValueError:
-                                pX -= 1
-                    # logger.error('DE it = {}'.format(it))
-                    self.selection = it
+            if self._on_left_callback_function and pX == 0:
+                self._on_left_callback_function()
             else:
-                self.selection = self._coords.index((pY, pX))
+                # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+                pX -= 1
+                if pX < 0:
+                    pX = self._columns - 1
+                    pY -= 1
+                    if pY < 0:
+                        self.selection = self._coords.index(max(self._coords))
+                    else:
+                        # logger.error('DE pY ={0}, pX ={1}'.format(pY, pX))
+                        # logger.error('DE {}'.format(self._coords))
+                        try:
+                            it = self._coords.index((pY, pX))
+                        except ValueError:
+                            pX -= 1
+                            while True:
+                                try:
+                                    it = self._coords.index((pY, pX))
+                                    break
+                                except ValueError:
+                                    pX -= 1
+                        # logger.error('DE it = {}'.format(it))
+                        self.selection = it
+                else:
+                    self.selection = self._coords.index((pY, pX))
 
-            self.show()
+                self.show()
             return 2
 
         return 1
@@ -871,7 +941,7 @@ class SimpleMenuEntries(SimpleCursesWidget):
                  margin=0,
                  align=0,
                  right_arrow_selects=True,
-                 callback_function=None
+                 on_activate_callback_function=None,
                  ):
         ''' Initialize the widget.
 
@@ -904,7 +974,7 @@ class SimpleMenuEntries(SimpleCursesWidget):
                 If True (default) right arrow and "l" selects the new
                 active item (for example a menu). Set it to False if
                 the widget is part of a composite widget.
-            callback_function
+            on_activate_callback_function
                 A function to execute when new active item selected
         '''
         self._Y = Y
@@ -918,7 +988,11 @@ class SimpleMenuEntries(SimpleCursesWidget):
         self._margin = margin
         self._align = align
         self._right_arrow_selects = right_arrow_selects
-        self._callback_function = callback_function
+        self._on_activate_callback_function = on_activate_callback_function
+        self._on_up_callback_function = on_up_callback_function
+        self._on_down_callback_function = on_down_callback_function
+        self._on_left_callback_function = on_left_callback_function
+        self._on_right_callback_function = on_right_callback_function
         self.selection = selection
         self.active = active
         self._focused = True
@@ -1056,6 +1130,8 @@ class SimpleMenuEntries(SimpleCursesWidget):
             ''' Do not refresh the widget, it will
                 probably be hidden next
             '''
+            if self._on_activate_callback_function:
+                self._on_activate_callback_function()
             return 0
 
         elif not self._right_arrow_selects and char in (
@@ -2746,7 +2822,6 @@ class SimpleCursesLineEditHistory(object):
     def reset_index(self):
         self._active_history_index = 0
 
-
 '''
 #
 #   Testing part
@@ -2786,6 +2861,8 @@ def main(stdscr):
         'Item 2',
         'Item 3',
         'Item 4',
+        'Item 5',
+        'Item 6',
     )
 
     a_widget = SimpleCursesWidgetColumns(
@@ -2798,7 +2875,11 @@ def main(stdscr):
         color_cursor_selection=curses.color_pair(6),
         color_cursor_active=curses.color_pair(9),
         margin=1,
-        max_width=65
+        max_width=65,
+        on_up_callback_function=up,
+        on_down_callback_function=down,
+        on_left_callback_function=left,
+        on_right_callback_function=right
     )
     a_widget.show()
 
@@ -2811,6 +2892,18 @@ def main(stdscr):
                 return
         except KeyboardInterrupt:
             break
+
+def up():
+    logger.error('up')
+
+def down():
+    logger.error('down')
+
+def left():
+    logger.error('left')
+
+def right():
+    logger.error('right')
 
 def __configureLogger():
     logger = logging.getLogger('pyradio')
