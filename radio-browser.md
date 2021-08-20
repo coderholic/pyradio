@@ -61,7 +61,7 @@ Searching for any string will return matches in the "**Name**" field only (just 
 
 ### Sorting stations
 
-Pressing "**S**" (capital "s") will present the user with a sorting list. Selecting one of the items will sort the stations based on it; selecting it again will reverse sorting order.
+Pressing "**S**" will present the user with a sorting list. Selecting one of the items will sort the stations based on it; selecting it again will reverse sorting order.
 
 **Note:** This sorting function is different than the query sorting criterion which can be selected in the [Search window](#search-window). This one just sorts a query result set, the one in the "**Search window**" affects the actual stations that will be in the result set.
 
@@ -87,7 +87,7 @@ This feature has not been implemented yet.
 
 ## Station Database Information
 
-The database information of the selected station can be displayed by pressing "**I**" (capital "i"). Keep in mind that, this is different than the "Station ino" displayed by pressing "**i**" (lowercase "i"), which is still available and presents live data.
+The database information of the selected station can be displayed by pressing "**I**". Keep in mind that, this is different than the "Station ino" displayed by pressing "**i**" (lowercase "i"), which is still available and presents live data.
 
 ## Station clicking and voting
 
@@ -97,7 +97,7 @@ The database information of the selected station can be displayed by pressing "*
 
 For this reason **PyRadio** will in no case adjust the click count presented to the user.
 
-**Voting** for a station is a different thing; the user has to choose to vote for it. In **PyRadio** a "vote request" is sent when "**V**" (capital "v") is pressed. If the vote has been accepted, the vote counter will be increased by one.
+**Voting** for a station is a different thing; the user has to choose to vote for it. In **PyRadio** a "vote request" is sent when "**V**" is pressed. If the vote has been accepted, the vote counter will be increased by one.
 
 **Note:** Inconsistencies between a voted for station's local vote counter value and the one reported in a consecutive server response should be expected, since it seems servers' vote counter sync may take some time to complete.
 
@@ -107,7 +107,7 @@ For this reason **PyRadio** will in no case adjust the click count presented to 
 
 **PyRadio** will randomly select one of these servers and will display its location in its window title.
 
-Pressing "**C**" (capital "c") will provide a list of available servers to choose from. This selection will be honored until the service is closed.
+Pressing "**C**" will provide a list of available servers to choose from. This selection will be honored until the service is closed.
 
 ## Search Window
 
@@ -170,12 +170,10 @@ The keys to manage the history are all **Control** combinations:
 |**^B**        |Make the current history item the **default** one for **RadioBrowser** and save the history.<br>This means that, next time you open **RadioBrowser** this history item ("**search term**") will be automatically loaded.|
 |**^V**        |Save the history.|
 
-Here is one thing you should take notice of: after inserting some data into any of the various fields, do not navigate to another "**search term**" before adding it to history; all your changes will be lost.
+All movement actions (**^N**, **^P**, **^Y**) will check if the data currently in the "form" fields can create a new **search term** and if so, will add it to the history.
 
-Another thing you should be aware of, is that the **Search Window** actually works on a copy of the **search history** used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "**OK**" is pressed. Pressing "**Cancel**" will make all the changes go away.
+The **Search Window** actually works on a copy of the **search history** used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "**OK**" is pressed. Pressing "**Cancel**" will make all the changes go away.
 
 Even when "**OK**" is pressed, and the "**Search Window**" is closed, the "new" history is loaded into the service, but NOT saved to the *configuration file*.
 
-To really save the "new" history, press "**^V**" in the **Search Window**.
-
-**Note:** The history is also saved to file when one changes the "**default**" item, pressing "**^B**" in the **Search Window**.
+To really save the "new" history, press "**^V**" in the **Search Window**, or press "**y**" in the confirmation window upon exiting the service.

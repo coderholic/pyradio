@@ -1,10 +1,13 @@
-2021-08-18 s-n-g
+2021-08-20 s-n-g
     * Version 0.8.9.7 (0.9-beta4)
     * RadioBrowser: closing with "q" or "Escape"
     * RadioBrowser: do not close if network fails
     * RadioBrowser: added hidebroken to all queries
     * RadioBrowser: if limit=0, disable result limit
     * RadioBrowser: finalized config save / read function
+    * RadioBrowser: All Search Window movement keys (^N, ^P, ^Y)
+      will add a new history item (if possible)
+    * RadioBrowser: ^B does not save history to file
     * RadioBrowser: Better navigation in the Search Window
     * Fixed a couple of python 2 crashes
     * Updated docs

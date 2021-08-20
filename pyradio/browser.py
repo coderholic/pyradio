@@ -2251,6 +2251,10 @@ class RadioBrowserSearchWindow(object):
 
         elif char in (curses.ascii.SO, ):
             ''' ^N - Next history item '''
+            cur_history_id = self._selected_history_id
+            self._handle_new_or_existing_search_term()
+            if abs(self._selected_history_id - cur_history_id) > 1:
+                self._selected_history_id = cur_history_id
             if len(self._history) > 1:
                 self._selected_history_id += 1
                 if self._selected_history_id >= len(self._history):
@@ -2260,6 +2264,10 @@ class RadioBrowserSearchWindow(object):
 
         elif char in (curses.ascii.DLE, ):
             ''' ^P - Previous history item '''
+            cur_history_id = self._selected_history_id
+            self._handle_new_or_existing_search_term()
+            if abs(self._selected_history_id - cur_history_id) > 1:
+                self._selected_history_id = cur_history_id
             if len(self._history) > 1:
                 self._selected_history_id -= 1
                 if self._selected_history_id <0:
@@ -2278,6 +2286,7 @@ class RadioBrowserSearchWindow(object):
 
         elif char in (curses.ascii.CAN, ):
             ''' ^X - Delete history item '''
+            self._handle_new_or_existing_search_term()
             if len(self._history) > 2 and \
                     self._selected_history_id > 0:
                 if self._default_history_id == self._selected_history_id:
@@ -2301,7 +2310,8 @@ class RadioBrowserSearchWindow(object):
                     self._print_history_legend()
                     self._win.refresh()
                 ''' returning 5 will triger history save '''
-                return 5
+                # return 5
+                self._cnf.dirty = True
 
         elif char in (curses.ascii.EM, ):
             ''' ^Y - Set default item '''

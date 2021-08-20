@@ -209,16 +209,14 @@ Save the history.
 
 .RE
 .RS 5
-Here is one thing you should take notice of: after inserting some data into any of the various fields, do not navigate to another \fIsearch term\fR before adding it to the history; all your changes will be lost.
 
-Another thing you should be aware of, is that the \fBSearch Window\fR actually works on a copy of the \fIsearch history\fR used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "\fIOK\fR" is pressed. Pressing "\fICancel\fR" will make all the changes go away.
+All movement actions (\fI^N\fR, \fI^P\fR, \fI^Y\fR) will check if the data currently in the "form" fields can create a new \fBsearch term\fR and if so, will add it to the history.
+
+Tthe \fBSearch Window\fR actually works on a copy of the \fIsearch history\fR used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "\fIOK\fR" is pressed. Pressing "\fICancel\fR" will make all the changes go away.
 
 Even when "\fIOK\fR" is pressed, and the "\fBSearch Window\fR" is closed, the "new" history is loaded into the service, but \fBNOT\fR saved to the \fIconfiguration file\fR.
 
-To really save the "new" history, press "\fI^V\fR" in the \fBSearch Window\fR.
-
-.IP \fBNote:
-The history is also saved to file when one changes the "\fIdefault\fR" item, pressing "\fI^B\fR" in the \fBSearch Window\fR.
+To really save the "new" history, press "\fI^V\fR" in the \fBSearch Window\fR, or press "\fIy\fR" in the confirmation window upon exiting the service.
 .RE
 
 .SH Reporting Bugs

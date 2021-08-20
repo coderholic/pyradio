@@ -76,7 +76,7 @@ a:visited{color: SaddleBrown;}
 <p>The normal local playlist search function has been enhanced in order to be able to search through the list of stations, since each station has a lot more info attached to it.</p>
 <p>Searching for any string will return matches in the “<strong>Name</strong>” field only (just like in a local playlist), but starting the search string with a plus sign (“<strong>+</strong>”) will produce results from all available fields (visible or not).</p>
 <h3 id="sorting-stations">Sorting stations</h3>
-<p>Pressing “<strong>S</strong>” (capital “s”) will present the user with a sorting list. Selecting one of the items will sort the stations based on it; selecting it again will reverse sorting order.</p>
+<p>Pressing “<strong>S</strong>” will present the user with a sorting list. Selecting one of the items will sort the stations based on it; selecting it again will reverse sorting order.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This sorting function is different than the query sorting criterion which can be selected in the <a href="#search-window">Search window</a>. This one just sorts a query result set, the one in the “<strong>Search window</strong>” affects the actual stations that will be in the result set.</p>
 <h2 id="controls">Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>These are the <strong>RadioBrowser</strong> specific keys one can use in addition to local playlist keys (if applicable).</p>
@@ -125,17 +125,17 @@ a:visited{color: SaddleBrown;}
 <h2 id="configuration">Configuration <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>This feature has not been implemented yet.</p>
 <h2 id="station-database-information">Station Database Information <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>The database information of the selected station can be displayed by pressing “<strong>I</strong>” (capital “i”). Keep in mind that, this is different than the “Station ino” displayed by pressing “<strong>i</strong>” (lowercase “i”), which is still available and presents live data.</p>
+<p>The database information of the selected station can be displayed by pressing “<strong>I</strong>”. Keep in mind that, this is different than the “Station ino” displayed by pressing “<strong>i</strong>” (lowercase “i”), which is still available and presents live data.</p>
 <h2 id="station-clicking-and-voting">Station clicking and voting <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>RadioBrowser</strong> provides two ways to measure a station’s popularity: voting and clicking.</p>
 <p><strong>Clicking</strong> a station means that the station has been listened to; <strong>PyRadio</strong> will send a “click request” any time the user starts playback of a station; <strong>RadioBrowser</strong> will either reject or accept the action, and either ignore or increase click count for the station based on several criteria (time between consecutive clicks, possibly IP, etc.)</p>
 <p>For this reason <strong>PyRadio</strong> will in no case adjust the click count presented to the user.</p>
-<p><strong>Voting</strong> for a station is a different thing; the user has to choose to vote for it. In <strong>PyRadio</strong> a “vote request” is sent when “<strong>V</strong>” (capital “v”) is pressed. If the vote has been accepted, the vote counter will be increased by one.</p>
+<p><strong>Voting</strong> for a station is a different thing; the user has to choose to vote for it. In <strong>PyRadio</strong> a “vote request” is sent when “<strong>V</strong>” is pressed. If the vote has been accepted, the vote counter will be increased by one.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Inconsistencies between a voted for station’s local vote counter value and the one reported in a consecutive server response should be expected, since it seems servers’ vote counter sync may take some time to complete.</p>
 <h2 id="server-selection">Server Selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>RadioBrowser</strong> provides several servers to the public (currently in Germany, France and The Netherlands), which are constantly kept in sync. Its API provides a way to “discover” these servers and then select the one to use.</p>
 <p><strong>PyRadio</strong> will randomly select one of these servers and will display its location in its window title.</p>
-<p>Pressing “<strong>C</strong>” (capital “c”) will provide a list of available servers to choose from. This selection will be honored until the service is closed.</p>
+<p>Pressing “<strong>C</strong>” will provide a list of available servers to choose from. This selection will be honored until the service is closed.</p>
 <h2 id="search-window">Search Window <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>The “<strong>Search window</strong>” opens when “<strong>s</strong>” is pressed and loads the “<strong>search term</strong>” that was used to fetch the stations currently presented in the “<strong>RadioBrowser window</strong>”. If this is the first time this window is opened within this session, the search term that’s loaded is the “<strong>default search term</strong>”.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> In case the server returns no results, the window will automatically reopen so that you can redefine the “<strong>search term</strong>”.</p>
@@ -206,10 +206,9 @@ a:visited{color: SaddleBrown;}
 </tr>
 </tbody>
 </table>
-<p>Here is one thing you should take notice of: after inserting some data into any of the various fields, do not navigate to another “<strong>search term</strong>” before adding it to history; all your changes will be lost.</p>
-<p>Another thing you should be aware of, is that the <strong>Search Window</strong> actually works on a copy of the <strong>search history</strong> used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until “<strong>OK</strong>” is pressed. Pressing “<strong>Cancel</strong>” will make all the changes go away.</p>
+<p>All movement actions (<strong><sup>N<strong>, </strong></sup>P</strong>, <strong>^Y</strong>) will check if the data currently in the “form” fields can create a new <strong>search term</strong> and if so, will add it to the history.</p>
+<p>The <strong>Search Window</strong> actually works on a copy of the <strong>search history</strong> used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until “<strong>OK</strong>” is pressed. Pressing “<strong>Cancel</strong>” will make all the changes go away.</p>
 <p>Even when “<strong>OK</strong>” is pressed, and the “<strong>Search Window</strong>” is closed, the “new” history is loaded into the service, but NOT saved to the <em>configuration file</em>.</p>
-<p>To really save the “new” history, press “<strong>^V</strong>” in the <strong>Search Window</strong>.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The history is also saved to file when one changes the “<strong>default</strong>” item, pressing “<strong>^B</strong>” in the <strong>Search Window</strong>.</p>
+<p>To really save the “new” history, press “<strong>^V</strong>” in the <strong>Search Window</strong>, or press “<strong>y</strong>” in the confirmation window upon exiting the service.</p>
 </body>
 </html>

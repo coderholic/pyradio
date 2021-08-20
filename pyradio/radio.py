@@ -4332,7 +4332,7 @@ class PyRadio(object):
                 |{}|'s service configuration has been
                 altered but not saved. Do you want to save it now?
 
-                Press |y| to save it or any other key to decline.
+                Press |y| to save it or |n| to disregard it.
             '''
         self._show_help(txt.format(self._cnf.online_browser.BROWSER_NAME),
                         mode_to_set=self.ws.ASK_TO_SAVE_BROWSER_CONFIG,
@@ -5334,30 +5334,32 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG:
-            self.ws.close_window()
-            self.stations = self._cnf.stations
-            self._align_stations_and_refresh(self.ws.PLAYLIST_MODE,
-                                             a_startPos=self.startPos,
-                                             a_selection=self.selection,
-                                             force_scan_playlist=True)
-            if self.playing < 0:
-                self._put_selection_in_the_middle(force=True)
-            self.refreshBody()
-            if char == ord('y'):
-                if self._cnf._online_browser.save_config():
-                    self._show_notification_with_delay(
-                            txt='___History successfully saved!___',
-                            mode_to_set=self.ws.NORMAL_MODE,
-                            callback_function=self.refreshBody)
-                else:
-                    self._show_notification_with_delay(
-                            txt='___Error saving History!___',
-                            delay=1.25,
-                            mode_to_set=self.ws.NORMAL_MODE,
-                            callback_function=self.refreshBody)
-            self._cnf.online_browser = None
-            self._cnf.browsing_station_service = False
-            self._normal_mode_resize()
+            if char in (ord('n'), ord('n')):
+                self.ws.close_window()
+                self.stations = self._cnf.stations
+                self._align_stations_and_refresh(self.ws.PLAYLIST_MODE,
+                                                 a_startPos=self.startPos,
+                                                 a_selection=self.selection,
+                                                 force_scan_playlist=True)
+                if self.playing < 0:
+                    self._put_selection_in_the_middle(force=True)
+                self.refreshBody()
+                if char == ord('y'):
+                    if self._cnf._online_browser.save_config():
+                        self._show_notification_with_delay(
+                                txt='___History successfully saved!___',
+                                mode_to_set=self.ws.NORMAL_MODE,
+                                callback_function=self.refreshBody)
+                    else:
+                        self._show_notification_with_delay(
+                                txt='___Error saving History!___',
+                                delay=1.25,
+                                mode_to_set=self.ws.NORMAL_MODE,
+                                callback_function=self.refreshBody)
+                self._cnf.online_browser = None
+                self._cnf.browsing_station_service = False
+                self._normal_mode_resize()
+            return
 
         elif self.ws.operation_mode == self.ws.CLEAR_REGISTER_MODE:
             if char in (ord('y'), ord('n')):
