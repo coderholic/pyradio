@@ -3197,13 +3197,10 @@ class PyRadio(object):
         ):
             self.ws.close_window()
         if not ret[0]:
+            logger.error('DE operation mode = {}'.format(self.ws.operation_mode))
             if ret[2]:
                 self._goto_history_back_handler()
-                self._print_service_connection_error()
-            else:
-                self._cnf.remove_from_playlist_history()
-                self._print_service_connection_error()
-            self._cnf.browsing_station_service = False
+            self._print_service_connection_error()
             return
 
         ''' get stations with online field '''
@@ -5111,7 +5108,7 @@ class PyRadio(object):
                 if ret == 0:
                     self.refreshBody()
                     self._set_active_stations()
-                    self._cnf._online_browser.search()
+                    self._cnf._online_browser.search(go_back_in_history=False)
                 else:
                     self.refreshBody()
             return
@@ -5120,7 +5117,7 @@ class PyRadio(object):
         #         (char == ord('?') or char not in self._chars_to_bypass):
         elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
 
-            ''' return from browser search '''
+            ''' handle browser search key press '''
             ret = self._cnf._online_browser.keypress(char)
             if ret == 0:
                 ''' Ok, search term is valid '''
@@ -5128,7 +5125,7 @@ class PyRadio(object):
                 self.ws.close_window()
                 self.refreshBody()
                 self._show_performing_search_message()
-                self._cnf._online_browser.search()
+                self._cnf._online_browser.search(go_back_in_history=False)
 
             elif ret == -1:
                 ''' Cancel '''

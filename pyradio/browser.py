@@ -612,7 +612,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         except requests.exceptions.RequestException as e:
             if logger.isEnabledFor(logging.INFO):
                 logger.info(e)
-            self._raw_stations = []
+            # self._raw_stations = []
             ret = False, 0, go_back_in_history
 
         ''' use server result '''
