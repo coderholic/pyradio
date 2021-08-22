@@ -4,7 +4,7 @@
 
 **PyRadio** uses the API provided to integrate it and provide its users the possibility to enjoy this great project.
 
-**Note:** As of the writing of this (v. **0.8.9.4**, which should actually be called ***0.9-beta1***), the implementation is not yet complete, but it is usable (accessing and querying the service is up and running). Whenever a feature is not implemented yet, it will be explicitly marked as such.
+**Note:** As of the writing of this, the implementation is not yet complete, but it is usable (accessing and querying the service is up and running). Whenever a feature is not implemented yet, it will be explicitly marked as such.
 
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
@@ -35,7 +35,7 @@ To open **RadioBrowser** one would just press "**O**" at the program's main wind
 
 Upon activation, the **default query** will be preformed and (if successful) its results will be presented to the user. If unsuccessful, a relevant message will be displayed and the program will return to the local playlist that was previously opened.
 
-By default, **PyRadio** will load the first 100 most voted stations on **RadioBrowser**. 
+By default, **PyRadio** will load the first 100 most voted stations on **RadioBrowser**.
 
 ## Closing RadioBrowser
 
@@ -80,6 +80,7 @@ These are the **RadioBrowser** specific keys one can use in addition to local pl
 | V             | Vote for station                          |
 | \\\\ q Escape | Close RadioBrowser                        |
 
+**Note:** One would get this information using the program's help (pressing "**?**" and navigating to the last page of it).
 
 ## Configuration
 
@@ -93,7 +94,7 @@ The database information of the selected station can be displayed by pressing "*
 
 **RadioBrowser** provides two ways to measure a station's popularity: voting and clicking.
 
-**Clicking** a station means that the station has been listened to; **PyRadio** will send a "click request" any time the user starts playback of a station; **RadioBrowser** will either reject or accept the action, and either ignore or increase click count for the station based on several criteria (time between consecutive clicks, possibly IP, etc.) 
+**Clicking** a station means that the station has been listened to; **PyRadio** will send a "click request" any time the user starts playback of a station; **RadioBrowser** will either reject or accept the action, and either ignore or increase click count for the station based on several criteria (time between consecutive clicks, possibly IP, etc.)
 
 For this reason **PyRadio** will in no case adjust the click count presented to the user.
 
@@ -119,9 +120,9 @@ Navigation between the various fields is done using the "**Tab**" (and "**Shift-
 
 ![RadioBrowser Search Window](https://members.hellug.gr/sng/pyradio/radio-browser-search-window.png)
 
-This window performs two functions: 
+This window performs two functions:
 
-1) composes a search term to be forwarded to the search function and 
+1) composes a search term to be forwarded to the search function and
 2) manages the "**search history**".
 
 
@@ -164,15 +165,15 @@ The keys to manage the history are all **Control** combinations:
 |Key            |Action                                                |
 |---------------|------------------------------------------------------|
 |**^N** **^P**  |Move to next / previous "**search term**" definition. |
-|**^Y**         |Move to the "**empty search term**" (history item 0). This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using **^N** or **^P**, but it's here just for convenience.|
-|**^T**        |Add current item to history.|
+|**^T**         |Move to the "**empty search term**" (history item 0), the *template item*. This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using **^N** or **^P**, but it's here just for convenience.|
+|**^Y**        |Add current item to history.|
 |**^X**        |Delete the current history item.<br>There is no confirmation and once an item is deleted there's no undo function.<br>These rules apply:<br> 1. The first item (**search term template**) cannot be deleted.<br>2. When the history contains only two items (the **search term template** will always be the first one; the second one is a user defined **search term**), no item deletion is possible.<br>3. When the **default search term** is deleted, the first user defined **search term** becomes the default one.|
 |**^B**        |Make the current history item the **default** one for **RadioBrowser** and save the history.<br>This means that, next time you open **RadioBrowser** this history item ("**search term**") will be automatically loaded.|
 |**^V**        |Save the history.|
 
-All movement actions (**^N**, **^P**, **^Y**) will check if the data currently in the "form" fields can create a new **search term** and if so, will add it to the history.
+All history navigation actions (**^N**, **^P**, **^T**) will check if the data currently in the "form" fields can create a new **search term** and if so, will add it to the history.
 
-The **Search Window** actually works on a copy of the **search history** used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "**OK**" is pressed. Pressing "**Cancel**" will make all the changes go away.
+The **Search Window** actually works on a copy of the **search history** used by the service itself, so any changes made in it (adding and deleting items or changing the default item) are not passed to the service, until "**OK**" is pressed. Pressing "**Cancel**" will make all the changes go away.
 
 Even when "**OK**" is pressed, and the "**Search Window**" is closed, the "new" history is loaded into the service, but NOT saved to the *configuration file*.
 

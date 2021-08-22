@@ -9,6 +9,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
+* [Features](#features)
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Command line options](#command-line-options)
@@ -56,6 +57,23 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Acknowledgment](#acknowledgment)
 
 <!-- vim-markdown-toc -->
+
+## Features
+
+**PyRadio** provides the following features:
+
+ - vi like keys in addition to arrows and special keys
+ - Station editor (add/edit) with [CJK characters support](#cjk-characters-support)
+ - Configuration editor
+ - Multiple playlist support
+ - vi like station ragisters
+ - Search function
+ - Theming support
+ - [RadioBrowser](radio-browser.md) support
+ - Easy installation / updating
+ - Runs on Linux. MacOS and Windows
+
+and much more...
 
 ## Requirements
 * python 2.7/3.5+

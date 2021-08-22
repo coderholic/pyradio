@@ -359,6 +359,7 @@ class PyRadio(object):
                 self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
                 self.ws.BROWSER_PERFORMING_SEARCH_MODE: self._show_performing_search_message,
                 self.ws.ASK_TO_SAVE_BROWSER_CONFIG: self._ask_to_save_browser_config,
+                self.ws.BROWSER_CONFIG_MODE: self._browser_init_config,
                 }
 
         ''' list of help functions '''
@@ -739,7 +740,15 @@ class PyRadio(object):
             if n == 1:
                 if self._theme_selector:
                     self.theme_forced_selection = self._theme_selector._themes[self._theme_selector.selection]
-            self._redisplay[self._redisplay_list[n][0]]()
+            display = True
+            if n != len(self._redisplay_list) - 1 and self._redisplay_list[n][0] == self.ws.NORMAL_MODE:
+                if self._redisplay_list[n+1][0] in self.ws.FULL_SCREEN_MODES:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Not displaying stations, next mode is full screen')
+                    display = False
+            if display:
+                # logger.error('DE \n\ndisplaying mode {}\n\n'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
+                self._redisplay[self._redisplay_list[n][0]]()
 
         # logger.error('DE window mode = {}'.format(self.ws.window_mode))
         # logger.error('DE operation mode = {}'.format(self.ws.operation_mode))
@@ -1811,7 +1820,8 @@ class PyRadio(object):
                  S                ||S|ort search results.
                  I                |Station |i|nfo (current selection).
                  V                ||V|ote for station.
-                 \\\\               |Close Browser (go back in history).'''
+                 \\\\ q Escape      |Close Browser (go back in history).
+                 '''
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_4,
                         reset_metrics=False)
@@ -4211,6 +4221,13 @@ class PyRadio(object):
     def _browser_server_selection(self):
         self._cnf._online_browser.select_servers()
 
+    def _browser_init_config(self, parent=None, init=False):
+        ''' Show browser config window
+        '''
+        if parent is None:
+            parent = self.outerBodyWin
+        self._cnf._online_browser.show_config(parent, init)
+
     def _browser_init_search(self, parent):
         ''' Start browser search window
         '''
@@ -4662,7 +4679,7 @@ class PyRadio(object):
                 self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE,
                     self.ws.ADD_STATION_MODE, self.ws.THEME_MODE,
                     self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE,
-                    self.ws.BROWSER_SEARCH_MODE) and \
+                    self.ws.BROWSER_SEARCH_MODE, self.ws.BROWSER_CONFIG_MODE) and \
                 self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
                 not self.is_search_mode(self.ws.operation_mode) and \
                 self.ws.window_mode not in (self.ws.CONFIG_MODE, ):
@@ -5113,8 +5130,19 @@ class PyRadio(object):
                     self.refreshBody()
             return
 
-        # elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
-        #         (char == ord('?') or char not in self._chars_to_bypass):
+        elif self.ws.operation_mode == self.ws.BROWSER_CONFIG_MODE:
+            ''' handle browser config '''
+            ret = self._cnf._online_browser.keypress(char)
+            if ret == 0:
+                ''' ok, save browser config '''
+                self.ws.close_window()
+                self.refreshBody()
+
+            elif ret == -1:
+                ''' browser config save canceled '''
+                self.ws.close_window()
+                self.refreshBody()
+
         elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
 
             ''' handle browser search key press '''
@@ -5157,18 +5185,6 @@ class PyRadio(object):
                             delay=1.25,
                             mode_to_set=self.ws.BROWSER_SEARCH_MODE,
                             callback_function=self.refreshBody)
-            elif ret == 6:
-                ''' save search history '''
-                self._show_notification_with_delay(
-                        txt='___Function not implemented yet!!!___',
-                        mode_to_set=self.ws.BROWSER_SEARCH_MODE,
-                        callback_function=self.refreshBody)
-            elif ret == 7:
-                ''' save search history '''
-                self._show_notification_with_delay(
-                        txt='___Function not implemented yet!!!___',
-                        mode_to_set=self.ws.BROWSER_SEARCH_MODE,
-                        callback_function=self.refreshBody)
             return
 
         elif self.ws.operation_mode == self.ws.BROWSER_SORT_MODE and \
@@ -5334,7 +5350,7 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG:
-            if char in (ord('n'), ord('n')):
+            if char in (ord('y'), ord('n')):
                 self.ws.close_window()
                 self.stations = self._cnf.stations
                 self._align_stations_and_refresh(self.ws.PLAYLIST_MODE,
@@ -6047,11 +6063,15 @@ class PyRadio(object):
                     self.ws.operation_mode = self.ws.EDIT_STATION_MODE
 
                 elif char == ord('c'):
+                    ''' open config '''
                     self.jumpnr = ''
                     self._cnf.jump_tag = -1
                     self._update_status_bar_right(status_suffix='')
                     if self._cnf.browsing_station_service:
                         self._print_not_implemented_yet()
+                        return
+                        self.ws.operation_mode = self.ws.BROWSER_CONFIG_MODE
+                        self._browser_init_config(init=True)
                     else:
                         if self._cnf.locked:
                             self._print_session_locked()
@@ -6745,12 +6765,6 @@ class PyRadio(object):
     def _redisplay_stations_and_playlists(self):
         if self._limited_height_mode:
             return
-        if self._redisplay_list[-1][0] == self.ws.BROWSER_SEARCH_MODE and \
-                self._redisplay_list[-2][0] == self.ws.NORMAL_MODE:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('---=== Not displaying stations (RadioBrowser window follows) ===---')
-            self.outerBodyWin.refresh()
-            return
 
         # self.bodyWin.erase()
         if self.maxY > 2:
@@ -6811,34 +6825,6 @@ class PyRadio(object):
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('====---- clear to end of window failed----====')
                         break
-
-        #''' display the content '''
-        #if self.number_of_items > 0:
-        #    for lineNum in range(self.bodyMaxY):
-        #        i = lineNum + self.startPos
-        #        if i < len(self.stations):
-        #            self.__displayBodyLine(lineNum, pad, self.stations[i])
-        #        else:
-        #            ''' display browser empty lines (station=None) '''
-        #            line = self.__displayBodyLine(0, pad, None, return_line = True)
-        #            if self._cnf.browsing_station_service:
-        #                for n in range(i+1, self.bodyMaxY + 1):
-        #                    try:
-        #                        self.bodyWin.addstr(lineNum, 0, line, curses.color_pair(5))
-        #                    except:
-        #                        pass
-        #                    lineNum += 1
-        #            break
-        #else:
-        #    ''' we have no stations to display '''
-        #    if self._cnf.browsing_station_service:
-        #        ''' we have to display emplty lines '''
-        #        line = self.__displayBodyLine(0, pad, None, return_line = True)
-        #        for n in range(0, self.bodyMaxY + 1):
-        #            try:
-        #                self.bodyWin.addstr(n, 0, line, curses.color_pair(5))
-        #            except:
-        #                pass
 
         if self._cnf.browsing_station_service:
             if self._cnf.internal_header_height > 0:

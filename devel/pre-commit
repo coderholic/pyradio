@@ -103,5 +103,8 @@ do
     #
     # convert images to links
     images_to_links "$out"
+    if [ "$out" = "radio-browser.html" ];then
+        sed -i -e 's/<sup>N/^N/' -e 's/<.sup>P/^P/' -e 's|N<strong>, </strong>\^P|N</strong>, <strong>^P|' "$out"
+    fi
     git add ${out}
 done

@@ -35,7 +35,7 @@ a:visited{color: SaddleBrown;}
 <h1 style="color: SaddleBrown"id="pyradio-radiobrowser-implementation">PyRadio RadioBrowser Implementation</h1>
 <p><a target="_blank" href="https://www.radio-browser.info/">RadioBrowser</a> is “a community driven effort (like wikipedia) with the aim of collecting as many internet radio and TV stations as possible.”</p>
 <p><strong>PyRadio</strong> uses the API provided to integrate it and provide its users the possibility to enjoy this great project.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> As of the writing of this (v. <strong>0.8.9.4</strong>, which should actually be called <strong><em>0.9-beta1</em></strong>), the implementation is not yet complete, but it is usable (accessing and querying the service is up and running). Whenever a feature is not implemented yet, it will be explicitly marked as such.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> As of the writing of this, the implementation is not yet complete, but it is usable (accessing and querying the service is up and running). Whenever a feature is not implemented yet, it will be explicitly marked as such.</p>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
@@ -122,6 +122,7 @@ a:visited{color: SaddleBrown;}
 </tr>
 </tbody>
 </table>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> One would get this information using the program’s help (pressing “<strong>?</strong>” and navigating to the last page of it).</p>
 <h2 id="configuration">Configuration <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>This feature has not been implemented yet.</p>
 <h2 id="station-database-information">Station Database Information <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
@@ -185,11 +186,11 @@ a:visited{color: SaddleBrown;}
 <td>Move to next / previous “<strong>search term</strong>” definition.</td>
 </tr>
 <tr class="even">
-<td><strong>^Y</strong></td>
-<td>Move to the “<strong>empty search term</strong>” (history item 0). This is a quick way to “reset” all settings and start new. Of course, one could just navigate to this history item using <strong>^N</strong> or <strong>^P</strong>, but it’s here just for convenience.</td>
+<td><strong>^T</strong></td>
+<td>Move to the “<strong>empty search term</strong>” (history item 0), the <em>template item</em>. This is a quick way to “reset” all settings and start new. Of course, one could just navigate to this history item using <strong>^N</strong> or <strong>^P</strong>, but it’s here just for convenience.</td>
 </tr>
 <tr class="odd">
-<td><strong>^T</strong></td>
+<td><strong>^Y</strong></td>
 <td>Add current item to history.</td>
 </tr>
 <tr class="even">
@@ -206,8 +207,8 @@ a:visited{color: SaddleBrown;}
 </tr>
 </tbody>
 </table>
-<p>All movement actions (<strong><sup>N<strong>, </strong></sup>P</strong>, <strong>^Y</strong>) will check if the data currently in the “form” fields can create a new <strong>search term</strong> and if so, will add it to the history.</p>
-<p>The <strong>Search Window</strong> actually works on a copy of the <strong>search history</strong> used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until “<strong>OK</strong>” is pressed. Pressing “<strong>Cancel</strong>” will make all the changes go away.</p>
+<p>All history navigation actions (<strong>^N</strong>, <strong>^P</strong>, <strong>^T</strong>) will check if the data currently in the “form” fields can create a new <strong>search term</strong> and if so, will add it to the history.</p>
+<p>The <strong>Search Window</strong> actually works on a copy of the <strong>search history</strong> used by the service itself, so any changes made in it (adding and deleting items or changing the default item) are not passed to the service, until “<strong>OK</strong>” is pressed. Pressing “<strong>Cancel</strong>” will make all the changes go away.</p>
 <p>Even when “<strong>OK</strong>” is pressed, and the “<strong>Search Window</strong>” is closed, the “new” history is loaded into the service, but NOT saved to the <em>configuration file</em>.</p>
 <p>To really save the “new” history, press “<strong>^V</strong>” in the <strong>Search Window</strong>, or press “<strong>y</strong>” in the confirmation window upon exiting the service.</p>
 </body>

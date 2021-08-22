@@ -14,7 +14,7 @@ pyradio \- a curses Internet radio player.
 \fBPyRadio\fR uses the API provided to integrate it and provide its users the possibility to enjoy this great project.
 
 .IP \fBNote:\fR
-As of the writing of this (v. \fI0.8.9.6\fR, which should actually be called \fI0.9-beta3\fR), the implementation is complete, but the service's configuration is not.
+As of the writing of this, the implementation is complete, but the service's configuration is not.
 
 .IP \fBOpening\ RadioBrowser
 
@@ -23,7 +23,7 @@ To open \fBRadioBrowser\fR one would just press "\fIO\fR" at the program's main 
 
 Upon activation, the \fBdefault query\fR will be preformed and (if successful) its results will be presented to the user. If unsuccessful, a relevant message will be displayed and the program will return to the local playlist that was previously opened.
 
-By default, \fBPyRadio\fR will load the first 100 most voted stations on \fBRadioBrowser\fR. 
+By default, \fBPyRadio\fR will load the first 100 most voted stations on \fBRadioBrowser\fR.
 
 .IP \fBClosing\ RadioBrowser
 
@@ -82,6 +82,11 @@ Vote for station
 Close RadioBrowser
 .RE
 
+.RS 5
+.IP \fBNote:\fR
+One would get this information using the program's help (pressing "\fI?\fR" and navigating to the last page of it).
+.RE
+
 .IP \fBConfiguration
 
 This feature has not been implemented yet.
@@ -94,7 +99,7 @@ The database information of the selected station can be displayed by pressing "\
 
 \fBRadioBrowser\fR provides two ways to measure a station's popularity: voting and clicking.
 
-\fIClicking\fR a station means that the station has been listened to; \fBPyRadio\fR will send a "click request" any time the user starts playback of a station; \fBRadioBrowser\fR will either reject or accept the action, and either ignore or increase click count for the station based on several criteria (time between consecutive clicks, possibly IP, etc.) 
+\fIClicking\fR a station means that the station has been listened to; \fBPyRadio\fR will send a "click request" any time the user starts playback of a station; \fBRadioBrowser\fR will either reject or accept the action, and either ignore or increase click count for the station based on several criteria (time between consecutive clicks, possibly IP, etc.)
 
 For this reason \fBPyRadio\fR will in no case adjust the click count presented to the user.
 
@@ -123,11 +128,11 @@ In case the server returns no results, the window will automatically reopen so t
 .PP
 Navigation between the various fields is done using the "\fBTab\fR" (and "\fBShift-Tab\fR") key, the arrows and vim keys ("\fBj\fR", "\fBk\fR", "\fBh\fR" and "\fBl\fR"), provided that any given key is not already used by one of the on window "widgets".
 
-This window performs two functions: 
+This window performs two functions:
 
 .RS 5
 .IP \fI1) 3
-composes a search term to be forwarded to the search function and 
+composes a search term to be forwarded to the search function and
 .IP \fI2)
 manages the \fBsearch history\fR.
 .RE
@@ -172,16 +177,16 @@ At the bottom of the \fBSearch window\fR you have the \fIhistory information\fR 
 
 The keys to manage the history are all \fBControl\fR combinations:
 
-.IP \fI^N\fR\ \fI^P\fR 5 
-Move to next / previous \fIsearch term\fR definition. 
+.IP \fI^N\fR\ \fI^P\fR 5
+Move to next / previous \fIsearch term\fR definition.
 
-.IP \fI^Y\fR         
-Move to the \fIempty search term\fR (history item 0). This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using \fI^N\fR or \fI^P\fR, but it's here just for convenience.
+.IP \fI^T\fR
+Move to the \fIempty search term\fR (history item 0), the \fItemplate item\fR. This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using \fI^N\fR or \fI^P\fR, but it's here just for convenience.
 
-.IP \fI^T\fR        
+.IP \fI^Y\fR
 Add current item to history.
 
-.IP \fI^X\fR        
+.IP \fI^X\fR
 Delete the current history item.
 
 There is no confirmation and once an item is deleted there's no undo function.
@@ -199,18 +204,18 @@ When the history contains only two items (the \fIsearch term template\fR will al
 When the \fIdefault search term\fR is deleted, the first user defined \fIsearch term\fR becomes the default one.
 .RE
 
-.IP \fI^B\fR        
+.IP \fI^B\fR
 Make the current history item the \fIdefault\fR one for \fBRadioBrowser\fR and save the history.
 
 This means that, next time you open \fBRadioBrowser\fR this history item (\fIsearch term\fR) will be automatically loaded.
 
-.IP \fI^V\fR        
+.IP \fI^V\fR
 Save the history.
 
 .RE
 .RS 5
 
-All movement actions (\fI^N\fR, \fI^P\fR, \fI^Y\fR) will check if the data currently in the "form" fields can create a new \fBsearch term\fR and if so, will add it to the history.
+All history navigation actions (\fI^N\fR, \fI^P\fR, \fI^T\fR) will check if the data currently in the "form" fields can create a new \fBsearch term\fR and if so, will add it to the history.
 
 Tthe \fBSearch Window\fR actually works on a copy of the \fIsearch history\fR used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "\fIOK\fR" is pressed. Pressing "\fICancel\fR" will make all the changes go away.
 

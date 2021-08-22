@@ -1,3 +1,9 @@
+2021-08-22 s-n-g
+    * Version 0.8.9.8 (0.9-beta5)
+    * Fixing RadioBrowser save pop up window
+    * Interchanging ^T and ^Y in the RadioBrowser Search Window
+    * Addinf FULL_SCREEN_MODES for farter rendering
+
 2021-08-20 s-n-g
     * Version 0.8.9.7 (0.9-beta4)
     * RadioBrowser: closing with "q" or "Escape"
