@@ -8,7 +8,7 @@ fi
 echo "
 Available options:
        2   build using python v. 2.x
-      -u   uninstall pyradio
+      -R   remove (uninstall) pyradio
   --user   user install (in ~/.local)
 
 If no option is used, will build using Python 3
@@ -178,7 +178,7 @@ do
             do_debian
             exit
             ;;
-        -u)
+        -R)
             uninstall
             exit
             ;;

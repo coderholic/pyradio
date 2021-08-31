@@ -1,3 +1,13 @@
+2021-08-31 s-n-g
+    * Version 0.8.9.9
+    * Search history navigation will work with normal keys
+      in addition to Control-key combinations (when a line
+      editor does not have the focus)
+    * When navigating to a new search term, in the RadioBrowser
+      Search Window, the two main check boxes will always get
+      the focus (makes it easier to navigate using normal keys)
+    * Docs Updated
+
 2021-08-22 s-n-g
     * Version 0.8.9.8 (0.9-beta5)
     * Fixing RadioBrowser save pop up window

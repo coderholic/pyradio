@@ -83,7 +83,7 @@ and much more...
 
 ## Installation
 
-The best way to install **PyRadio** is via a distribution package, if one exists (e.g. *Arch Linux* and derivatives can install [pyradio-git](https://aur.archlinux.org/packages/pyradio-git/) from AUR).
+The best way to install **PyRadio** is via a distribution package, if one exists (e.g. *Arch Linux* and derivatives can install [any of these packages](https://aur.archlinux.org/packages/?K=pyradio) from the AUR).
 
 In any other case, and since **PyRadio** is currently not available via pip, you will have to [build it from source](build.md).
 
@@ -364,7 +364,7 @@ This mode is designed to directly accept the "*?*" and "*\\*" characters (which 
 
 The *Line editor* supports the insertion of [CJK Unified Ideographs](https://en.wikipedia.org/wiki/CJK_Unified_Ideographs), as described on [CJK Unified Ideographs (Unicode block)](https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)) also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-point (character), actually take up a 2-character space, when rendered on the terminal.
 
-A depiction of the editor's behavior can be seen at this image: 
+A depiction of the editor's behavior can be seen at this image:
 
 ![CJK Characters on Pyradio](https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg)
 
@@ -702,9 +702,9 @@ Then, the mouse can be used as follows:
 
 **PyRadio** supports the following *Online radio directory services*:
 
-- [RadioBrowser](https://www.radio-browser.info/) 
+- [RadioBrowser](https://www.radio-browser.info/)
 
-    This is a community driven effort (like wikipedia) with the aim of collecting as many internet radio and TV stations as possible. 
+    This is a community driven effort (like wikipedia) with the aim of collecting as many internet radio and TV stations as possible.
 
     Read more at [PyRadio RadioBrowser Implementation](radio-browser.md)
 

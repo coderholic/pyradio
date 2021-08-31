@@ -27,6 +27,8 @@ try:
 except ModuleNotFoundError:
     HAVE_REQUESTS = False
 
+VERSION = '0.8.9.9'
+
 def is_pyradio_user_installed():
     if platform.system().lower().startswith('darwin'):
         return False
@@ -95,13 +97,14 @@ class PyRadioUpdate(object):
             3   -   official devel
     '''
 
-    ZIP_URL = ('https://github.com/coderholic/pyradio/archive/master.zip',
-                'https://github.com/s-n-g/pyradio/archive/master.zip',
-                'https://github.com/s-n-g/pyradio/archive/devel.zip',
-                'https://github.com/coderholic/pyradio/archive/devel.zip',
-                )
+    ZIP_URL = ('https://github.com/coderholic/pyradio/archive/' + VERSION + '.zip',
+               'https://github.com/s-n-g/pyradio/archive/master.zip',
+               'https://github.com/s-n-g/pyradio/archive/devel.zip',
+               'https://github.com/coderholic/pyradio/archive/devel.zip',
+               'https://github.com/coderholic/pyradio/archive/master.zip',
+               )
 
-    ZIP_DIR  = ('pyradio-master', 'pyradio-master', 'pyradio-devel', 'pyradio-devel')
+    ZIP_DIR  = ('pyradio-' + VERSION, 'pyradio-master', 'pyradio-devel', 'pyradio-devel', 'pyradio-master')
 
     install = False
     user = False
@@ -165,7 +168,7 @@ class PyRadioUpdate(object):
                 sys.exit(1)
 
     def update_or_uninstall_on_windows(self, mode='update'):
-        params = ('', '--sng-master', '--sng-devel')
+        params = ('', '--sng-master', '--sng-devel', '--devel', '--master')
         isRunning()
         ''' Creates BAT file to update or unisntall PyRadio on Windows'''
         self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
@@ -347,7 +350,8 @@ class PyRadioUpdate(object):
                 sys.exit(1)
 
     def _download_file(self, url, filename):
-        # print('url = "{0}", filename = "{1}"'.format(url, filename))
+        print('  url: "{}"'.format(url))
+        print('  filename: "{}"'.format(filename))
         try:
             r = requests.get(url)
         except:
@@ -434,9 +438,10 @@ if __name__ == '__main__':
             --sng-devel     download developer devel branch
             --force         force installation (even if already installed)
     '''
+    parser.add_argument('--master', action='store_true', help=SUPPRESS)
+    parser.add_argument('--devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--sng-master', action='store_true', help=SUPPRESS)
     parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
-    parser.add_argument('--devel', action='store_true', help=SUPPRESS)
     parser.add_argument('-f', '--force', action='store_true', help=SUPPRESS)
 
     args = parser.parse_args()
@@ -445,11 +450,17 @@ if __name__ == '__main__':
     ''' download official release '''
     package = 0
     if args.sng_master:
+        ''' sng master '''
         package = 1
     elif args.sng_devel:
+        '''' sng devel '''
         package = 2
     elif args.devel:
+        ''' official devel '''
         package = 3
+    elif args.master:
+        ''' official master '''
+        package = 4
 
     if args.uninstall:
         if platform.system().lower().startswith('win'):

@@ -255,18 +255,18 @@ class SimpleCursesCounter(SimpleCursesWidget):
             with a number_length of 4, will display '  11'
         color
             text color
-        counter_color_focused
+        color_focused
             counter color when enabled and focused
-        counter_color_not_focused
+        color_not_focused
             counter color when enabled but not focused
-        counter_color_disabled
+        color_disabled
             counter color when disabled
     '''
     def __init__(
         self, Y, X, window,
-        color, counter_color_focused,
-        counter_color_not_focused,
-        counter_color_disabled,
+        color, color_focused,
+        color_not_focused,
+        color_disabled,
         minimum=0, maximum=100,
         step=1, big_step=5, value=1,
         number_length=3, string='{0}'
@@ -289,9 +289,9 @@ class SimpleCursesCounter(SimpleCursesWidget):
             self._len = max_len
         self.string = string
         self._color = color
-        self._counter_color_focused = counter_color_focused
-        self._counter_color_not_focused = counter_color_not_focused
-        self._counter_color_disabled = counter_color_disabled
+        self._color_focused = color_focused
+        self._color_not_focused = color_not_focused
+        self._color_disabled = color_disabled
 
     def refresh(self):
         self.show(self._win)
@@ -379,11 +379,11 @@ class SimpleCursesCounter(SimpleCursesWidget):
             self._win = self._parent = window
         if self._enabled:
             if self._focused:
-                col = self._counter_color_focused
+                col = self._color_focused
             else:
-                col = self._counter_color_not_focused
+                col = self._color_not_focused
         else:
-            col = self._counter_color_disabled
+            col = self._color_disabled
         self._win.move(self._Y, self._X)
         if self._prefix:
             self._win.addstr(self._prefix, self._color)
@@ -917,7 +917,7 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         return 1
 
 
-class SimpleMenuEntries(SimpleCursesWidget):
+class SimpleCursesMenuEntries(SimpleCursesWidget):
     ''' A menu entries widget
         (a list of items vertically stacked)
         with selection and active item.
@@ -1101,7 +1101,7 @@ class SimpleMenuEntries(SimpleCursesWidget):
         self._showed = True
 
     def keypress(self, char):
-        ''' SimpleMenuEntries keypress
+        ''' SimpleCursesMenuEntries keypress
 
             Returns
             -------
@@ -2822,7 +2822,102 @@ class SimpleCursesLineEditHistory(object):
     def reset_index(self):
         self._active_history_index = 0
 
-'''
+
+class SimpleCursesBoolean(SimpleCursesCounter):
+    ''' A class to provide a Boolean value
+
+        Parameters
+        ==========
+        Y, X, window
+            Coordinates and parent window
+        value
+            the value, either Tru of False (default)
+        color
+            text color
+        color_focused
+            counter color when enabled and focused
+        color_not_focused
+            counter color when enabled but not focused
+        color_disabled
+            counter color when disabled
+    '''
+
+    def __init__(
+        self, Y, X, window,
+        color, color_focused,
+        color_not_focused,
+        color_disabled,
+        string='{0}', value=False
+    ):
+        self._Y = Y
+        self._X = X
+        self._win = self._parent = window
+        self._value = value
+        self.string = string
+        self._color = color
+        self._color_focused = color_focused
+        self._color_not_focused = color_not_focused
+        self._color_disabled = color_disabled
+
+    def show(self, window=None):
+        if window:
+            self._win = self._parent = window
+        if self._enabled:
+            if self._focused:
+                col = self._color_focused
+            else:
+                col = self._color_not_focused
+        else:
+            col = self._color_disabled
+        self._win.move(self._Y, self._X)
+        if self._prefix:
+            self._win.addstr(self._prefix, self._color)
+        self._win.addstr(str(self._value), col)
+        if self._suffix:
+            self._win.addstr(self._suffix, self._color)
+        ''' overwrite last self._len characters '''
+        self._win.addstr(' ' * 2, self._color)
+        self._showed = True
+
+    def keypress(self, char):
+        ''' SimpleCursesBoolean keypress
+
+            Returns
+            -------
+               -1 - Cancel
+                0   Value changed
+                1 - Continue
+                2 - Display help
+        '''
+        if (not self._focused) or (not self._enabled):
+            return 1
+
+        if char in (
+            curses.KEY_EXIT, ord('q'), 27,
+        ):
+            return -1
+
+        elif char == ord('?'):
+            return 2
+
+        elif char in (ord(' '),
+                      ord('\n'), ord('\r'),
+                      curses.KEY_ENTER,
+                      ord('h'),
+                      curses.KEY_LEFT,
+                      ord('l'),
+                      curses.KEY_RIGHT):
+            self.toggle()
+            self.show(self._win)
+            return 0
+
+        return 1
+
+    def toggle(self):
+        ''' toggles SimpleCursesBoolean value '''
+        self._value = not self._value
+
+
 #
 #   Testing part
 #
@@ -2881,7 +2976,18 @@ def main(stdscr):
         on_left_callback_function=left,
         on_right_callback_function=right
     )
-    a_widget.show()
+    # a_widget.show()
+
+    a_widget = SimpleCursesBoolean(
+        Y=2, X=3, window=stdscr,
+        color=curses.color_pair(5),
+        color_focused=curses.color_pair(9),
+        color_not_focused=curses.color_pair(4),
+        color_disabled=curses.color_pair(5),
+        string='The valued is: {0}'
+    )
+    a_widget.focused = True
+    a_widget.show(window=stdscr)
 
     while True:
         try:
@@ -2925,4 +3031,4 @@ def __configureLogger():
 
 if __name__ == "__main__":
     curses.wrapper(main)
-'''
+

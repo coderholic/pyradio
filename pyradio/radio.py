@@ -359,7 +359,7 @@ class PyRadio(object):
                 self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
                 self.ws.BROWSER_PERFORMING_SEARCH_MODE: self._show_performing_search_message,
                 self.ws.ASK_TO_SAVE_BROWSER_CONFIG: self._ask_to_save_browser_config,
-                self.ws.BROWSER_CONFIG_MODE: self._browser_init_config,
+                self.ws.RADIO_BROWSER_CONFIG_MODE: self._browser_init_config,
                 }
 
         ''' list of help functions '''
@@ -736,6 +736,12 @@ class PyRadio(object):
         end = len(self._redisplay_list)
         if end == 0:
             end = 1
+        if start == 0:
+            st = [i for i, x in enumerate(self._redisplay_list) if x[0] in self.ws.FULL_SCREEN_MODES]
+            if st:
+                start = st[-1]
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('refreshBody(): start = {}'.format(start))
         for n in range(start, end):
             if n == 1:
                 if self._theme_selector:
@@ -1731,6 +1737,9 @@ class PyRadio(object):
                  Esc              |Cancel operation.
                  _
                  |Managing player volume does not work in search mode.
+
+                 |Search history navigation works with normal keys as well
+                 |(|^N| is the same as |n| when not in a line editor).
                  '''
         self._show_help(txt,
                         mode_to_set=self.ws.RADIO_BROWSER_SEARCH_HELP_MODE,
@@ -1821,6 +1830,9 @@ class PyRadio(object):
                  I                |Station |i|nfo (current selection).
                  V                ||V|ote for station.
                  \\\\ q Escape      |Close Browser (go back in history).
+
+                 |Search history navigation works with normal keys as well
+                 |(|^N| is the same as |n| when not in a line editor).
                  '''
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_4,
@@ -4679,7 +4691,7 @@ class PyRadio(object):
                 self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE,
                     self.ws.ADD_STATION_MODE, self.ws.THEME_MODE,
                     self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE,
-                    self.ws.BROWSER_SEARCH_MODE, self.ws.BROWSER_CONFIG_MODE) and \
+                    self.ws.BROWSER_SEARCH_MODE, self.ws.RADIO_BROWSER_CONFIG_MODE, self.ws.RADIO_BROWSER_CONFIG_FROM_CONFIG_MODE) and \
                 self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
                 not self.is_search_mode(self.ws.operation_mode) and \
                 self.ws.window_mode not in (self.ws.CONFIG_MODE, ):
@@ -5130,7 +5142,7 @@ class PyRadio(object):
                     self.refreshBody()
             return
 
-        elif self.ws.operation_mode == self.ws.BROWSER_CONFIG_MODE:
+        elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE:
             ''' handle browser config '''
             ret = self._cnf._online_browser.keypress(char)
             if ret == 0:
@@ -6070,7 +6082,7 @@ class PyRadio(object):
                     if self._cnf.browsing_station_service:
                         self._print_not_implemented_yet()
                         return
-                        self.ws.operation_mode = self.ws.BROWSER_CONFIG_MODE
+                        self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
                         self._browser_init_config(init=True)
                     else:
                         if self._cnf.locked:

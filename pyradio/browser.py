@@ -414,10 +414,12 @@ class RadioBrowser(PyRadioStationsBrowser):
     def save_config(self):
         ''' just an interface to config class save_config
         '''
-        return self.browser_config.save_config(self._search_history,
-                                               self._default_search_history_index,
-                                               self._default_server,
-                                               self._default_max_number_of_results)
+        return self.browser_config.save_config(
+            self.AUTO_SAVE_CONFIG,
+            self._search_history,
+            self._default_search_history_index,
+            self._default_server,
+            self._default_max_number_of_results)
 
     def url(self, id_in_list):
         ''' Get a station's url using resolved_url
@@ -1241,6 +1243,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._sort.show()
 
     def read_config(self):
+        ''' RadioBrowser read config '''
         self.browser_config.read_config()
         random_server = self._dns_info.give_me_a_server_url()
         # logger.error('DE random_server = {}'.format(random_server))
@@ -1249,6 +1252,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 logger.info('RadioBrowser: No server is reachable!')
             return False
 
+        self.AUTO_SAVE_CONFIG = self.browser_config.auto_save
         self._default_max_number_of_results = int(self.browser_config.limit)
         self._default_search_history_index = self._search_history_index = self.browser_config.default
         self._search_history = self.browser_config.terms
@@ -1341,6 +1345,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._config_win.show()
 
 class RadioBrowserConfig(object):
+    auto_save = False
     server = ''
     default = 1
     limit = '100'
@@ -1351,10 +1356,14 @@ class RadioBrowserConfig(object):
         self.config_file = path.join(stations_dir, 'radio-browser-config')
 
     def read_config(self):
+        ''' RadioBrowserConfig read config '''
         self.terms = [{ 'type': '',
                   'term': '100',
                   'post_data': {}
                   }]
+        self.default = 1
+        self.auto_save = False
+        self.limit = 100
         lines = []
         term_str = []
         try:
@@ -1379,12 +1388,13 @@ class RadioBrowserConfig(object):
                     sp[n] = sp[n].strip()
                 # logger.error('DE   sp = {}'.format(sp))
                 if sp[1]:
-                    if sp[0] == 'DEFAULT_SERVER':
+                    if sp[0] == 'AUTO_SAVE_CONFIG':
+                        self.auto_save = True if sp[1].lower() == 'true' else False
+                    elif sp[0] == 'DEFAULT_SERVER':
                         self.server = sp[1]
                     elif sp[0] == 'DEFAULT_LIMIT':
-                        self.limit = sp[1]
                         try:
-                            x = int(self.limit)
+                            self.limit = int(sp[1])
                         except:
                             self.limit = '100'
                     elif sp[0] == 'SEARCH_TERM':
@@ -1401,8 +1411,12 @@ class RadioBrowserConfig(object):
                 try:
                     self.terms.append(json.loads(term_str[n]))
                 except:
-                    if logger.isEnabledFor(logging.ERROR):
-                        logger.error('RadioBrowser: error inserting search term {}'.format(n))
+                    try:
+                        if logger.isEnabledFor(logging.ERROR):
+                            logger.error('RadioBrowser: error inserting search term {}'.format(n))
+                    except:
+                        if logger.isEnabledFor(logging.ERROR):
+                            logger.error('RadioBrowser: error inserting serch item id {}'.format(n))
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('RadioBrowser: no search terms found, reverting to defaults')
@@ -1423,6 +1437,7 @@ class RadioBrowserConfig(object):
 
 
     def save_config(self,
+                    auto_save,
                     search_history,
                     search_default_history_index,
                     default_server,
@@ -1431,7 +1446,18 @@ class RadioBrowserConfig(object):
 # RadioBrowser config file for PyRadio #
 ########################################
 #
+# Auto save config
+# If True, the config will be automatically saved upon
+# closing RadioBrowser. Otherwise, confirmation will be asked
+# Possible values: True, False (default)
+AUTO_SAVE_CONFIG = '''
+
+        txt += str(auto_save)
+
+        txt += '''
+
 # Default server
+# The server that RadioBrowser will use by default
 # Default: empty string (use random server)
 DEFAULT_SERVER = '''
 
@@ -1449,7 +1475,13 @@ DEFAULT_LIMIT = '''
         txt += '''
 
 # List of "search terms" (queries)
-# Default = "{'type': 'topvote', 'term': '100', 'post_data': {'reverse': 'true'}}"
+# An asterisk specifies the default search term (the
+# one activated when RadioBrowser opens up)
+# Default = {'type': 'topvote',
+#            'term': '100',
+#            'post_data': {'reverse': 'true'}
+#           }
+#
 '''
         for n in range(1, len(search_history)):
             asterisk = '*' if n == search_default_history_index else ''
@@ -1470,17 +1502,62 @@ DEFAULT_LIMIT = '''
             logger.info('Saved Online Browser config file')
         return True
 
-class RadioBrowserConfighWindow(object):
+class RadioBrowserConfigWindow(object):
 
-    _win = _widgets = _config = _history = None
+    TITLE = 'RadioBrowser Config'
+    _win = _widgets = _config = _history = _dns = None
     _default_history_id = _focus = 0
-    _showed = False
+    _auto_save =_showed = False
+    invalid = False
 
-    def __init__(self, parent, config, current_history, default_history_id):
+    def __init__(
+            self,
+            parent,
+            config,
+            current_history=None,
+            default_history_id=-1,
+            limit=100,
+    ):
         self._win = self._parent = parent
+        self.maxY, self.maxX = self._parent.getmaxyx()
         self._config = config
-        self._history = deepcopy(history)
-        self._default_history_id = default_history_id
+        if history is not None:
+            ''' The window is not created '''
+            self.invalid = True
+
+    def read_config(self):
+        ''' RadioBrowserConfighWindow read config '''
+        self._config.read_config()
+        self._dns = RadioBrowserDns()
+        random_server = self._dns_info.give_me_a_server_url()
+        # logger.error('DE random_server = {}'.format(random_server))
+        if random_server is None:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('RadioBrowserConfighWindow: No server is reachable!')
+            return None
+
+        self._auto_save = self._config.auto_save
+        self._default_limit = int(self._config.limit)
+        self._default_id = self._search_history_index = self._config.default
+        self._search_history = self._config.terms
+        self._default_server = self._config.server
+        if self._default_server:
+            self._server = self._default_server
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('RadioBrowser: server is set by user: ' + self._server)
+        else:
+            self._server = random_server
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('RadioBrowser: using random server: ' + self._server)
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('RadioBrowser: result limit = {}'.format(self._default_limit))
+            logger.info('RadioBrowser: default search term = {}'.format(self._default_id))
+            logger.info('RadioBrowser: search history')
+            for i, n in enumerate(self._search_history):
+                logger.info('  {0}: {1}'.format(i, n))
+        self._get_title()
+        return True
+
 
     @property
     def focus(self):
@@ -1499,7 +1576,84 @@ class RadioBrowserConfighWindow(object):
             self.show()
 
     def show(self, parent, init=False):
-        self._win = self._parent = parent
+        if self.invalid:
+            return
+        pY, pX = self._parent.getmaxyx()
+        # logger.error('DE pY = {}, pX = {}'.format(pY, pX))
+        self.Y, self.X = self._parent.getbegyx()
+
+        if self.maxY != pY or self.maxX != pX:
+            pY, pX = self._parent.getmaxyx()
+            # logger.error('DE pY = {}, pX = {}'.format(pY, pX))
+            self.maxY = pY
+            self.maxX = pX
+            self._win = self._parent
+
+        if self.maxX < 80 or self.maxY < 22:
+            self._too_small = True
+        else:
+            self._too_small = False
+
+        self._win.bkgdset(' ', curses.color_pair(5))
+        self._win.erase()
+        self._win.box()
+        self._win.addstr(0, int((self.maxX - len(self.TITLE)) / 2),
+                         self.TITLE,
+                         curses.color_pair(4))
+
+        if self._too_small:
+            # TODO Print messge
+            msg = 'Window too small'
+            self._win.addstr(
+                int(self.maxY/2), int((self.maxX - len(msg))/2),
+                msg, curses.color_pair(5)
+            )
+            self._win.refresh()
+            return
+
+        if self._widgets is None:
+            self._widgets = []
+
+            self._widgets.append(
+                SimpleCursesBoolean(
+                    Y=2, X=2,
+                    window=self._win,
+                    color=curses.color_pair(5),
+                    color_focused=curses.color_pair(9),
+                    color_not_focused=curses.color_pair(4),
+                    color_disabled=curses.color_pair(5),
+                    value=self._auto_save,
+                    string='Auto save config: {0}'
+                )
+            )
+            self._widgets[-1] = len(self._widgets) - 1
+
+            self._widgets.append(
+                SimpleCursesCounter(
+                    Y=5, X=2,
+                    window=self._win,
+                    color=curses.color_pair(5),
+                    color_focused=curses.color_pair(9),
+                    color_not_focused=curses.color_pair(4),
+                    color_disabled=curses.color_pair(5),
+                    minimum=0, maximum=1000,
+                    step=1, big_step=10,
+                    value=self._default_limit,
+                    string='Maximum number of results: {0}'
+                )
+            )
+            self._widgets[-1] = len(self._widgets) - 1
+
+        for n in self._widgets():
+            try:
+                self._widgets[n].show()
+            except:
+                self._widgets[n].show(self._win)
+
+        self._win.addstr(3, 2, 'If True, no confirmation will be asked before saving', curses.color_pair(5))
+        self._win.addstr(6, 2, 'A value of -1 will disable return items limiting', curses.color_pair(5))
+
+        self._win.refresh()
 
         self._showed = True
 
@@ -1682,7 +1836,7 @@ class RadioBrowserSearchWindow(object):
                     self._widgets[i].checked = False
                 self._widgets[i].enabled = False
 
-            self._focus = 1
+            self._focus = 0
             # logger.error('DE RADIO_BROWSER_DISPLAY_TERMS[a_search["type"]] = {}'.format(RADIO_BROWSER_DISPLAY_TERMS[a_search['type']]))
 
         else:
@@ -1702,7 +1856,7 @@ class RadioBrowserSearchWindow(object):
                     # logger.error('DE Exact checked!!!')
                     self._widgets[line_edit-1].checked = True
                 self._widgets[line_edit].string = a_search['term']
-                self._focus = line_edit
+                self._focus = 4
                 # logger.error('DE RADIO_BROWSER_SEARCH_BY_TERMS[a_search["type"]] = {}'.format(RADIO_BROWSER_SEARCH_BY_TERMS[a_search['type']]))
 
             elif a_search['type'] == 'search':
@@ -1721,7 +1875,7 @@ class RadioBrowserSearchWindow(object):
                                 self._widgets[s_id].checked = bool(n[1])
                                 # logger.error('DE n[0] = {0}, n[1] = {1}, bool = {2}'.format(n[0], n[1], bool(n[1])))
                             s_id_list.append(s_id)
-                self._focus = min(s_id_list)
+                self._focus = 4
 
         if a_search['post_data']:
             for n in a_search['post_data'].keys():
@@ -1759,7 +1913,7 @@ class RadioBrowserSearchWindow(object):
             ret['term'] = str(self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value)
 
         else:
-            ''' type is searchi (simple or advanced) '''
+            ''' type is search (simple or advanced) '''
             what_type = []
             for i in range(5, len(self._widgets) - self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION):
                 if type(self._widgets[i]).__name__ == 'SimpleCursesLineEdit':
@@ -2014,9 +2168,9 @@ class RadioBrowserSearchWindow(object):
                     X=self.yx[-2][1],
                     window=self._win,
                     color=curses.color_pair(5),
-                    counter_color_focused=curses.color_pair(9),
-                    counter_color_not_focused=curses.color_pair(4),
-                    counter_color_disabled=curses.color_pair(5),
+                    color_focused=curses.color_pair(9),
+                    color_not_focused=curses.color_pair(4),
+                    color_disabled=curses.color_pair(5),
                     minimum=0, maximum=1000,
                     step=1, big_step=10,
                     value=self._default_limit,
@@ -2230,6 +2384,62 @@ class RadioBrowserSearchWindow(object):
 
         return found, index
 
+    def _ctrl_n(self):
+        ''' ^N - Next history item '''
+        cur_history_id = self._selected_history_id
+        self._handle_new_or_existing_search_term()
+        if abs(self._selected_history_id - cur_history_id) > 1:
+            self._selected_history_id = cur_history_id
+        if len(self._history) > 1:
+            self._selected_history_id += 1
+            if self._selected_history_id >= len(self._history):
+                self._selected_history_id = 0
+            self._print_history_legend()
+            self._activate_search_term(self._history[self._selected_history_id])
+
+    def _ctrl_p(self):
+        ''' ^P - Previous history item '''
+        cur_history_id = self._selected_history_id
+        self._handle_new_or_existing_search_term()
+        if abs(self._selected_history_id - cur_history_id) > 1:
+            self._selected_history_id = cur_history_id
+        if len(self._history) > 1:
+            self._selected_history_id -= 1
+            if self._selected_history_id <0:
+                self._selected_history_id = len(self._history) - 1
+            self._print_history_legend()
+            self._activate_search_term(self._history[self._selected_history_id])
+
+    def _ctrl_x(self):
+        ''' ^X - Delete history item '''
+        self._handle_new_or_existing_search_term()
+        if len(self._history) > 2 and \
+                self._selected_history_id > 0:
+            if self._default_history_id == self._selected_history_id:
+                self._default_history_id = 1
+            self._history.pop(self._selected_history_id)
+            if self._selected_history_id == len(self._history):
+                self._selected_history_id -= 1
+            self._print_history_legend()
+            self._activate_search_term(self._history[self._selected_history_id])
+            self._cnf.dirty = True
+
+    def _ctrl_b(self):
+        ''' ^B - Set default item '''
+        ret = self._handle_new_or_existing_search_term()
+        if self._selected_history_id > 0:
+            if ret == 1:
+                self._default_history_id = self._selected_history_id
+                self._print_history_legend()
+                self._win.refresh()
+            self._cnf.dirty = True
+
+    def _ctrl_t(self):
+        ''' ^T - Go to template (item 0) '''
+        self._selected_history_id = 0
+        self._print_history_legend()
+        self._activate_search_term(self._history[self._selected_history_id])
+
     def keypress(self, char):
         ''' RadioBrowserSearchWindow keypress
 
@@ -2273,29 +2483,12 @@ class RadioBrowserSearchWindow(object):
 
         elif char in (curses.ascii.SO, ):
             ''' ^N - Next history item '''
-            cur_history_id = self._selected_history_id
-            self._handle_new_or_existing_search_term()
-            if abs(self._selected_history_id - cur_history_id) > 1:
-                self._selected_history_id = cur_history_id
-            if len(self._history) > 1:
-                self._selected_history_id += 1
-                if self._selected_history_id >= len(self._history):
-                    self._selected_history_id = 0
-                self._print_history_legend()
-                self._activate_search_term(self._history[self._selected_history_id])
+            logger.error('^N')
+            self._ctrl_n()
 
         elif char in (curses.ascii.DLE, ):
             ''' ^P - Previous history item '''
-            cur_history_id = self._selected_history_id
-            self._handle_new_or_existing_search_term()
-            if abs(self._selected_history_id - cur_history_id) > 1:
-                self._selected_history_id = cur_history_id
-            if len(self._history) > 1:
-                self._selected_history_id -= 1
-                if self._selected_history_id <0:
-                    self._selected_history_id = len(self._history) - 1
-                self._print_history_legend()
-                self._activate_search_term(self._history[self._selected_history_id])
+            self._ctrl_p()
 
         elif char in (curses.ascii.SYN, ):
             ''' ^V - Save search history '''
@@ -2304,39 +2497,20 @@ class RadioBrowserSearchWindow(object):
             return 5
 
         elif char in (curses.ascii.EM, ):
-            ''' ^T - Add history item '''
+            ''' ^Y - Add history item '''
             self._handle_new_or_existing_search_term()
 
         elif char in (curses.ascii.CAN, ):
             ''' ^X - Delete history item '''
-            self._handle_new_or_existing_search_term()
-            if len(self._history) > 2 and \
-                    self._selected_history_id > 0:
-                if self._default_history_id == self._selected_history_id:
-                    self._default_history_id = 1
-                self._history.pop(self._selected_history_id)
-
-                if self._selected_history_id == len(self._history):
-                    self._selected_history_id -= 1
-                self._print_history_legend()
-                self._activate_search_term(self._history[self._selected_history_id])
-                self._cnf.dirty = True
+            self._ctrl_x()
 
         elif char in (curses.ascii.STX, ):
             ''' ^B - Set default item '''
-            ret = self._handle_new_or_existing_search_term()
-            if self._selected_history_id > 0:
-                if ret == 1:
-                    self._default_history_id = self._selected_history_id
-                    self._print_history_legend()
-                    self._win.refresh()
-                self._cnf.dirty = True
+            self._ctrl_b()
 
         elif char in (curses.ascii.DC4, ):
-            ''' ^Y - Add current item to history'''
-            self._selected_history_id = 0
-            self._print_history_legend()
-            self._activate_search_term(self._history[self._selected_history_id])
+            ''' ^T - Go to template (item 0) '''
+            self._ctrl_t()
 
         else:
             if class_name == 'SimpleCursesWidgetColumns':
@@ -2381,7 +2555,37 @@ class RadioBrowserSearchWindow(object):
                 elif ret < 2:
                     return 1
 
-            if char in (ord('k'), curses.KEY_UP) and \
+            if char in (ord('n'), ):
+                ''' ^N - Next history item '''
+                self._ctrl_n()
+
+            elif char in (ord('p'), ):
+                ''' ^P - Previous history item '''
+                self._ctrl_p()
+
+            elif char in (ord('v'), ):
+                ''' ^V - Save search history '''
+                self._handle_new_or_existing_search_term()
+                ''' Save search history '''
+                return 5
+
+            elif char in (ord('t'), ):
+                ''' ^T - Go to template (item 0) '''
+                self._ctrl_t()
+
+            elif char in (ord('x'), ):
+                ''' ^X - Delete history item '''
+                self._ctrl_x()
+
+            elif char in (ord('b'), ):
+                ''' ^B - Set default item '''
+                self._ctrl_b()
+
+            elif char in (ord('y'), ):
+                ''' ^Y - Add current item to history'''
+                self._handle_new_or_existing_search_term()
+
+            elif char in (ord('k'), curses.KEY_UP) and \
                     class_name != 'SimpleCursesWidgetColumns':
                 self._focus_up()
             elif char in (ord('j'), curses.KEY_DOWN) and \

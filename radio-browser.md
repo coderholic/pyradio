@@ -171,6 +171,8 @@ The keys to manage the history are all **Control** combinations:
 |**^B**        |Make the current history item the **default** one for **RadioBrowser** and save the history.<br>This means that, next time you open **RadioBrowser** this history item ("**search term**") will be automatically loaded.|
 |**^V**        |Save the history.|
 
+**Note:** All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing "**x**" is the same as pressing "**^X**", "**v**" is the same as "**^V**" and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.
+
 All history navigation actions (**^N**, **^P**, **^T**) will check if the data currently in the "form" fields can create a new **search term** and if so, will add it to the history.
 
 The **Search Window** actually works on a copy of the **search history** used by the service itself, so any changes made in it (adding and deleting items or changing the default item) are not passed to the service, until "**OK**" is pressed. Pressing "**Cancel**" will make all the changes go away.

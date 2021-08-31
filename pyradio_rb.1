@@ -215,6 +215,10 @@ Save the history.
 .RE
 .RS 5
 
+.IP \fBNote\fR
+All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing "\fIx\fR" is the same as pressing "\fI^X\fR", "\fIv\fR" is the same as "\fI^V\fR" and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.
+
+.P
 All history navigation actions (\fI^N\fR, \fI^P\fR, \fI^T\fR) will check if the data currently in the "form" fields can create a new \fBsearch term\fR and if so, will add it to the history.
 
 Tthe \fBSearch Window\fR actually works on a copy of the \fIsearch history\fR used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "\fIOK\fR" is pressed. Pressing "\fICancel\fR" will make all the changes go away.
