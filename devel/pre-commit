@@ -112,5 +112,27 @@ do
             -e 's|<.strong><.sup>V<.strong>|<strong>^V</strong>|' \
             "$out"
     fi
+
+
+
+
     git add ${out}
 done
+
+# insert changelog to README.htm
+cat << STOP_HERE > pre
+<h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<pre style="height: 200px;">
+
+STOP_HERE
+cat Changelog >> pre
+echo '</pre>' >> pre
+
+sed -n '1,/<!-- Changelog -->/p' README.html > 1.txt
+sed -n '/<!-- Changelog -->/,$p' README.html > 2.txt
+cat 1.txt pre 2.txt > README.html
+rm 1.txt 2.txt pre
+
+sed -i '/<li><a href="#requirements">Requirements/ a\
+<li><a href="#changelog">Changelog</a></li>' README.html
+git add README.html

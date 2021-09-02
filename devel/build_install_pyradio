@@ -284,7 +284,7 @@ python"${TO_PYTHON}" setup.py build && {
                 DOC=/usr/local/share/doc/pyradio
                 mkdir "$DOC"
             fi
-            for n in README.* build.*
+            for n in *.md *.html
             do
                 sudo cp "$n" "$DOC"
             done
@@ -311,7 +311,7 @@ python"${TO_PYTHON}" setup.py build && {
                 DOC=~/.local/local/share/doc/pyradio
                 mkdir "$DOC"
             fi
-            for n in README.* build.*
+            for n in *.md *.html
             do
                 cp "$n" "$DOC"
             done

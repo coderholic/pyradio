@@ -120,7 +120,7 @@ ECHO # This is probably because PyRadio is already #
 ECHO # running, so files canNOT be overwritten.    #
 ECHO # Please terminate PyRadio and try again.     #
 ECHO ###############################################
-GOTO endofscript 
+GOTO endofscript
 
 :installhtml
 ECHO.

@@ -14,6 +14,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Installation](#installation)
 * [Command line options](#command-line-options)
 * [Controls](#controls)
+* [HTML help](#html-help)
 * [PyRadio Modes](#pyradio-modes)
 * [Config file](#config-file)
 * [About Playlist files](#about-playlist-files)
@@ -80,6 +81,8 @@ and much more...
     - requests
     - dnspython
 * MPV, MPlayer or VLC installed and in your path
+
+<!-- Changelog -->
 
 ## Installation
 
@@ -195,6 +198,12 @@ The same logic applies to all **PyRadio** windows.
 
 **Note:** When tagging a station position for a move action (by pressing "**J**"), the position will be displayed at the right bottom corner of the window, suffixed by a "*J*", i.e. pressing "*J*" on position *35* will display *[35J]*.
 
+
+## HTML help
+
+While in **PyRadio** main window, one can open the HTML (offline) help using "**\\?**" or "**\\h**".
+
+This is just a helper function for windows users who cannot use the man pages.
 
 ## PyRadio Modes
 

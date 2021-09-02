@@ -1,5 +1,11 @@
+2021-09-02 s-n-g
+    * HTML help can be displayed using \h or \?
+    * Fixing installation of HTML files for all platforms and modes
+    * Incorporating the Changelog into README.html (offline help)
+    * Updating docs
+
 2021-08-31 s-n-g
-    * Version 0.8.9.9
+    * Version 0.8.9.9 (0.9-beta6)
     * Search history navigation will work with normal keys
       in addition to Control-key combinations (when a line
       editor does not have the focus)

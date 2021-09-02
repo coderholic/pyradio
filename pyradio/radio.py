@@ -39,6 +39,7 @@ from .themes import *
 from .cjkwrap import cjklen
 from . import player
 from .install import version_string_to_list, get_github_tag
+from .html_help import HtmlHelp
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -1801,6 +1802,7 @@ class PyRadio(object):
                  p                |Select playlist/register to |p|aste to.
                  r                ||R|ename current playlist.
                  C                ||C|lear all registers.
+                 ?| or |h           |Display |H|TML help.
                  !Copy mode (y)
                  ENTER            |Copy station to unnamed register.
                  a-z| / |0-9        |Copy station to named register.
@@ -4465,7 +4467,13 @@ class PyRadio(object):
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
 
-            if char == ord('r'):
+            if char in (ord('h'), ord('?')):
+                ''' open html help '''
+                self._update_status_bar_right(status_suffix='')
+                html = HtmlHelp()
+                html.open_file(self._cnf.browsing_station_service)
+
+            elif char == ord('r'):
                 ''' rename playlist '''
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     self._set_rename_stations()
