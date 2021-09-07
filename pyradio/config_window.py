@@ -74,7 +74,7 @@ class PyRadioConfigWindow(object):
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.',
     '|', 'Default value: True'])
-    _help_text.append(['Specify whether you will be asked to confirm playlist reloading, when the playlist has not been modified within Pyradio.',
+    _help_text.append(['Specify whether you will be asked to confirm playlist reloading, when the playlist has not been modified within PyRadio.',
     '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to save a modified playlist whenever it needs saving.', '|', 'Default value: False'])
 

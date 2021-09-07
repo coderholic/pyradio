@@ -941,7 +941,8 @@ class PyRadio(object):
                 pass
         else:
             ''' start update detection and notification thread '''
-            if CAN_CHECK_FOR_UPDATES:
+            if CAN_CHECK_FOR_UPDATES and \
+                    not self._cnf.current_pyradio_version.endswith('-devel'):
                 if self._cnf.locked:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('(detectUpdateThread): session locked. Not starting!!!')
@@ -2747,7 +2748,7 @@ class PyRadio(object):
             You will find a copy of the saved playlist in
             "|{}|"
 
-            Pyradio will open this file when the playlist
+            PyRadio will open this file when the playlist
             is opened in the future.
             '''
         self._show_help(txt.format(self._cnf.station_path.replace('.csv',
@@ -3678,9 +3679,9 @@ class PyRadio(object):
                 clean_date_files(files)
                 if logger.isEnabledFor(logging.INFO):
                     if check_days - delta == 1:
-                        logger.info('detectUpdateThread: Pyradio is up to date. Will check again tomorrow...')
+                        logger.info('detectUpdateThread: PyRadio is up to date. Will check again tomorrow...')
                     else:
-                        logger.info('detectUpdateThread: Pyradio is up to date. Will check again in {} days...'.format(check_days - delta))
+                        logger.info('detectUpdateThread: PyRadio is up to date. Will check again in {} days...'.format(check_days - delta))
                 return
 
         if logger.isEnabledFor(logging.INFO):

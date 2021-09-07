@@ -1033,7 +1033,7 @@ class PyRadioStations(object):
         return ret, ret_index, rev_ret_index
 
 class PyRadioConfig(PyRadioStations):
-    ''' Pyradio Config Class '''
+    ''' PyRadio Config Class '''
 
     ''' I will get this when a player is selected
         It will be used when command line parameters are evaluated
@@ -1387,12 +1387,15 @@ class PyRadioConfig(PyRadioStations):
             if git_description:
                 if git_description == 'not_from_git':
                     ret = "RyRadio built from zip file (revision unknown)"
+                elif git_description == 'devel':
+                    self.info = " PyRadio-devel "
+                    ret = "RyRadio built from git (development)"
                 else:
                     git_info = git_description.split('-')
                     if git_info[1] != '0':
                         try:
                             if 'beta' in git_info[1] or 'rc' in git_info[1].lower():
-                                self.info = " Pyradio {1}-{1}".format(git_info[0], git_info[1])
+                                self.info = " PyRadio {1}-{1}".format(git_info[0], git_info[1])
                                 ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[2])
                             else:
                                 self.info = " PyRadio {0}-r{1} ".format(version, git_info[1])
@@ -1821,7 +1824,7 @@ confirm_station_deletion = {9}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
-# been modified within Pyradio
+# been modified within PyRadio
 # Valid values: True, true, False, false
 # Default value: True
 confirm_playlist_reload = {10}

@@ -57,7 +57,7 @@ def shell():
         elif sys.version_info.major == 3 and sys.version_info < (3, 5):
             version_too_old = True
     if version_too_old:
-        print('Pyradio requires python 2.7 or 3.5+...')
+        print('PyRadio requires python 2.7 or 3.5+...')
         sys.exit(1)
 
     requested_player = ''

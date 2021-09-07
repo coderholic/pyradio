@@ -96,7 +96,7 @@ confirm_station_deletion = True
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
-# been modified within Pyradio
+# been modified within PyRadio
 # Valid values: True, true, False, false
 confirm_playlist_reload = True
 
