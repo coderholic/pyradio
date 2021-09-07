@@ -347,17 +347,7 @@ class PyRadioUpdate(object):
         '''
         # shutil.copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', '/tmp/tmp-pyradio/pyradio/devel/build_install_pyradio')
 
-        ''' change git_discription in pyradio/config.py '''
-        if self._github_long_description is not None:
-            try:
-                with open(os.path.join(self._install_dir, 'pyradio', 'config.py'), 'r') as con:
-                    lines = con.read()
-                lines = lines.replace("git_description = ''", "git_description = '" + self._github_long_description + "'")
-                with open(os.path.join(self._install_dir, 'pyradio', 'config.py'), 'w') as con:
-                    con.write(lines)
-            except:
-                print('Error: Cannot change downloaded files...\n       Please close all running programs and try again.')
-                sys.exit(1)
+        self._change_git_discription_in_config_py()
 
         param = ' 2' if sys.version_info[0] == 2 else ''
         if mode == 'update':
@@ -380,6 +370,19 @@ class PyRadioUpdate(object):
                 ret = False
             self._clean_up()
             return ret
+
+    def _change_git_discription_in_config_py(self):
+        ''' change git_discription in pyradio/config.py '''
+        if self._github_long_description is not None:
+            try:
+                with open(os.path.join(self._install_dir, 'pyradio', 'config.py'), 'r') as con:
+                    lines = con.read()
+                lines = lines.replace("git_description = ''", "git_description = '" + self._github_long_description + "'")
+                with open(os.path.join(self._install_dir, 'pyradio', 'config.py'), 'w') as con:
+                    con.write(lines)
+            except:
+                print('Error: Cannot change downloaded files...\n       Please close all running programs and try again.')
+                sys.exit(1)
 
     def _download_pyradio(self):
         os.chdir(self._dir)
@@ -519,6 +522,8 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
         os.chdir(self._dir)
 
+        self._change_git_discription_in_config_py()
+
 if __name__ == '__main__':
     # print(get_github_long_description())
     # sys.exit()
@@ -551,7 +556,7 @@ if __name__ == '__main__':
     '''
     parser.add_argument(
         '--git', action='store_true',
-        help='install master branch from github (latest).')
+        help='install master branch from github (latest unreleased).')
     parser.add_argument('--master', action='store_true', help=SUPPRESS)
     parser.add_argument('--devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--sng-master', action='store_true', help=SUPPRESS)
@@ -565,20 +570,24 @@ if __name__ == '__main__':
     tag_name = github_long_description = None
     if args.sng_master:
         ''' sng master '''
+        args.force = True
         package = 1
         VERSION, github_long_description = get_github_long_description(use_sng_repo=True, sng_branch=True)
     elif args.sng_devel:
         '''' sng devel '''
+        args.force = True
         package = 2
         VERSION, github_long_description = get_github_long_description(use_sng_repo=True)
     elif args.devel:
         ''' official devel '''
         package = 3
         ''' go back to master '''
+        args.force = True
         package = 0
         VERSION = get_github_tag()
     elif args.master or args.git:
         ''' official master '''
+        args.force = True
         package = 4
         VERSION, github_long_description = get_github_long_description()
     else:

@@ -1,6 +1,6 @@
 import subprocess
 from sys import platform
-from os import path, startfile
+from os import path
 
 class HtmlHelp(object):
 
@@ -25,6 +25,7 @@ class HtmlHelp(object):
         a_file = self._files[1] if browser else self._files[0]
         this_platform = platform.lower()
         if this_platform.startswith('win'):
+            from os import startfile
             startfile(path.join(self._path, a_file))
         else:
             if this_platform.startswith('darwin'):
