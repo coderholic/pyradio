@@ -1803,7 +1803,7 @@ class PyRadio(object):
                  p                |Select playlist/register to |p|aste to.
                  r                ||R|ename current playlist.
                  C                ||C|lear all registers.
-                 ?| or |h           |Display |H|TML help.
+                 h                |Display |H|TML help.
                  !Copy mode (y)
                  ENTER            |Copy station to unnamed register.
                  a-z| / |0-9        |Copy station to named register.
@@ -4468,7 +4468,7 @@ class PyRadio(object):
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
 
-            if char in (ord('h'), ord('?')):
+            if char in (ord('h'), ):
                 ''' open html help '''
                 self._update_status_bar_right(status_suffix='')
                 html = HtmlHelp()

@@ -201,9 +201,9 @@ The same logic applies to all **PyRadio** windows.
 
 ## HTML help
 
-While in **PyRadio** main window, one can open the HTML (offline) help using "**\\?**" or "**\\h**".
+While in **PyRadio** main window, one can open the HTML (offline) help using "**\\h**".
 
-This is just a helper function for windows users who cannot use the man pages.
+This is just a helper function for windows users who cannot use the man pages, but is still available for all platforms.
 
 ## PyRadio Modes
 

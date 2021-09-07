@@ -6,8 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>PyRadio README</title>
     <style> 
-    html {margin: 2em;} 
-    body {width: 750px; margin: auto;} 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
     h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
     h4 {margin-top: 2em; color: SaddleBrown;} 
@@ -16,12 +19,12 @@
     dl {margin: 2em;} 
     dd {margin: 1em;} 
     dt {font-weight: bold;} 
-    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
     TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
-    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; overflow: auto;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
-    img{display: block; margin-left: auto; margin-right: auto; width: 100%;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 600px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
@@ -136,7 +139,7 @@ a:visited{color: SaddleBrown;}
 <pre style="height: 200px;">
 
 2021-09-07 s-n-g
-    * HTML help can be displayed using \h or \?
+    * HTML help can be displayed using \h
     * Fixing installation of HTML files for all platforms and modes
     * Incorporating the Changelog into README.html (offline help)
     * Adding --git option to install.py
@@ -734,8 +737,8 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When inserting numbers (either to jump to a station or to move a station), the number will be displayed at the right bottom corner of the window, suffixed by a “<em>G</em>”, i.e. pressing <em>35</em> will display <em>[35G]</em>.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When tagging a station position for a move action (by pressing “<strong>J</strong>”), the position will be displayed at the right bottom corner of the window, suffixed by a “<em>J</em>”, i.e. pressing “<em>J</em>” on position <em>35</em> will display <em>[35J]</em>.</p>
 <h2 id="html-help">HTML help <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>While in <strong>PyRadio</strong> main window, one can open the HTML (offline) help using “<strong>\?</strong>” or “<strong>\h</strong>”.</p>
-<p>This is just a helper function for windows users who cannot use the man pages.</p>
+<p>While in <strong>PyRadio</strong> main window, one can open the HTML (offline) help using “<strong>\h</strong>”.</p>
+<p>This is just a helper function for windows users who cannot use the man pages, but is still available for all platforms.</p>
 <h2 id="pyradio-modes">PyRadio Modes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> has the following primary modes:</p>
 <ol type="1">

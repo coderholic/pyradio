@@ -1,5 +1,5 @@
 2021-09-07 s-n-g
-    * HTML help can be displayed using \h or \?
+    * HTML help can be displayed using \h
     * Fixing installation of HTML files for all platforms and modes
     * Incorporating the Changelog into README.html (offline help)
     * Adding --git option to install.py
