@@ -1601,7 +1601,7 @@ class SimpleCursesHorizontalPushButtons(object):
         '''The parent window of the widget.
         This is a window, not another widget.
         If not set (or invalid), the buttons will not be
-        vissible even if show() is called.
+        visible even if show() is called.
         '''
         return self._parent
 

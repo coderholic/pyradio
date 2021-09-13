@@ -374,14 +374,14 @@ class Window_Stack(Window_Stack_Constants):
         return
 
     def str_to_mode(self, stringToFind):
-        ''' return mode number when givven mode name '''
+        ''' return mode number when given mode name '''
         for item in self.MODE_NAMES.items():
             if item[1] == stringToFind:
                 return item[0]
         return -2
 
     def str_to_mode_tuple(self, stringToFind):
-        ''' return mode tuple when givven mode name '''
+        ''' return mode tuple when given mode name '''
         for item in self.MODE_NAMES.items():
             if item[1] == stringToFind:
                 return item

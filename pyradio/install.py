@@ -254,7 +254,7 @@ class PyRadioUpdate(object):
     def update_or_uninstall_on_windows(self, mode='update'):
         params = ('', '--sng-master', '--sng-devel', '--devel', '--master')
         isRunning()
-        ''' Creates BAT file to update or unisntall PyRadio on Windows'''
+        ''' Creates BAT file to update or uninstall PyRadio on Windows'''
         self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
         shutil.rmtree(self._dir, ignore_errors=True)
         os.makedirs(self._dir, exist_ok=True)

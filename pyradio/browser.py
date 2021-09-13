@@ -568,7 +568,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                         votes          : station votes
                         clickcount     : station clicks
                         country        : station country
-                        state          : statiob state
+                        state          : station state
                         language       : station language
                         codec          : station codec
                         encoding       : station encoding ('' means utf-8)
@@ -1973,7 +1973,7 @@ class RadioBrowserSearchWindow(object):
             # logger.error('DE order_part = "{}"'.format(order_part))
             if order_part:
                 ret['post_data']['order'] = order_part
-        ''' check for revrese order '''
+        ''' check for reverse order '''
         if self._widgets[3].checked:
             ret['post_data']['reverse'] = 'true'
 

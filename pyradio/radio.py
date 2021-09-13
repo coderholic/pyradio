@@ -1001,7 +1001,7 @@ class PyRadio(object):
                     break
 
     def _give_me_a_search_class(self, operation_mode):
-        ''' get a search class for a givven operation mode
+        ''' get a search class for a given operation mode
             the class is returned in self.search
         '''
         try:
@@ -1873,7 +1873,7 @@ class PyRadio(object):
                      Enter|,|Right|,|l    |Apply selected theme.
                      Space            |Apply theme and make it default.
                      s                |Make theme default and close window.
-                     T                |Toggle theme trasparency.
+                     T                |Toggle theme transparency.
                      /| / |n| / |N        |Search, go to next / previous result.
                      Esc|,|q|,|Left|,|h     |Close window.
                      %_Player Keys_
@@ -3521,13 +3521,13 @@ class PyRadio(object):
             self.refreshBody()
 
     def _toggle_transparency(self, changed_from_config_window=False, force_value=None):
-        ''' Toggles theme trasparency.
+        ''' Toggles theme transparency.
 
             changed_from_config_window is used to inhibit toggling from within
             Config Window when 'T' is pressed.
 
-            force_value will set trasparency if True or False,
-            or toggle trasparency if None
+            force_value will set transparency if True or False,
+            or toggle transparency if None
         '''
         if self.ws.window_mode == self.ws.CONFIG_MODE and not changed_from_config_window:
             return
@@ -3726,7 +3726,7 @@ class PyRadio(object):
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('detectUpdateThread: Asked to stop. Stoping...')
                             break
-                        ''' set new verion '''
+                        ''' set new version '''
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('detectUpdateThread: Update available: {}'.format(last_tag))
                         a_lock.acquire()
@@ -3974,7 +3974,7 @@ class PyRadio(object):
 
     def _paste(self, playlist=''):
         if self._unnamed_register:
-            ''' ok, I have someting to paste '''
+            ''' ok, I have something to paste '''
 
             if playlist == '':
                 ''' paste to current playlist / register '''

@@ -67,7 +67,7 @@ The installation consists of three steps:
 
 If you don't already have **Python**, just get to its [Windows Downloads](https://www.python.org/downloads/windows/) page and download the latest **3.x** release.
 
-When the download is done, run its setup and select "*Custom Installation*" so that you can "*Add Python to environment varaibles*". You can refer to the following image to see the relevant setting.
+When the download is done, run its setup and select "*Custom Installation*" so that you can "*Add Python to environment variables*". You can refer to the following image to see the relevant setting.
 
 ![Python Installation](https://members.hellug.gr/sng/pyradio/python1.jpg)
 

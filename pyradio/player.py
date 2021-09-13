@@ -1433,7 +1433,7 @@ class MpvPlayer(Player):
         executable_found = False
 
     if executable_found:
-        ''' items of this tupple are considered icy-title
+        ''' items of this tuple are considered icy-title
             and get displayed after first icy-title is received '''
         icy_tokens = ('icy-title: ', )
 
@@ -1724,7 +1724,7 @@ class MpvPlayer(Player):
             Eventually will be used for python 2 only
 
             Python 2 cannot correctly read icy-title from
-            the socket (unidoce issue), so it has to read
+            the socket (unicode issue), so it has to read
             it from stdout.
         '''
 
@@ -1801,7 +1801,7 @@ class MpPlayer(Player):
         executable_found = False
 
     if executable_found:
-        ''' items of this tupple are considered icy-title
+        ''' items of this tuple are considered icy-title
             and get displayed after first icy-title is received
         '''
         icy_tokens = ('ICY Info:', )
@@ -1990,7 +1990,7 @@ class VlcPlayer(Player):
             executable_found = False
 
     if executable_found:
-        ''' items of this tupple are considered icy-title
+        ''' items of this tuple are considered icy-title
             and get displayed after first icy-title is received '''
         icy_tokens = ('New Icy-Title=', )
 
