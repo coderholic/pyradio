@@ -1,4 +1,5 @@
-2021-09-07 s-n-g
+2021-09-14 s-n-g
+    * adding last opened playlist support as per (#138)
     * HTML help can be displayed using \h
     * Fixing installation of HTML files for all platforms and modes
     * Incorporating the Changelog into README.html (offline help)

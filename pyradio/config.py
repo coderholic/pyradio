@@ -97,6 +97,9 @@ class PyRadioStations(object):
     ''' mark changed package stations.csv  '''
     _integrate_stations = False
 
+    ''' the playlist saved as last playlist (name only) '''
+    _last_opened_playlist_name = ''
+
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -259,6 +262,23 @@ class PyRadioStations(object):
     @can_go_back_in_time.setter
     def can_go_back_in_time(self, value):
         raise ValueError('property is read only')
+
+    def save_last_playlist(self):
+        lp = path.join(self.stations_dir, 'last_playlist')
+        llp = self._ps.last_local_playlist[2]
+        if llp:
+            # logger.error(f'llp = {llp} - saved = {self._last_opened_playlist_name}')
+            if llp != self._last_opened_playlist_name:
+                try:
+                    with open(lp, 'w') as f:
+                        f.write(llp)
+                except PermissionError:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Error writing last opened playlist file!')
+                    return
+                self._last_opened_playlist_name = llp
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Writing last opened playlist: ' + llp)
 
     def url(self, id_in_list):
         if self._ps.browsing_station_service:
@@ -1054,6 +1074,7 @@ class PyRadioConfig(PyRadioStations):
     opts = collections.OrderedDict()
     opts['general_title'] = ['General Options', '']
     opts['player'] = ['Player: ', '']
+    opts['open_last_playlist'] = ['Open last playlist: ', False]
     opts['default_playlist'] = ['Def. playlist: ', 'stations']
     opts['default_station'] = ['Def station: ', 'False']
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
@@ -1132,6 +1153,14 @@ class PyRadioConfig(PyRadioStations):
         self.config_file = path.join(self.stations_dir, 'config')
 
         self.force_to_remove_lock_file = False
+
+    @property
+    def open_last_playlist(self):
+        return self.opts['open_last_playlist'][1]
+
+    @open_last_playlist.setter
+    def open_last_playlist(self, val):
+        raise ValueError('parameter is read only')
 
     @property
     def distro(self):
@@ -1448,7 +1477,6 @@ class PyRadioConfig(PyRadioStations):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Profile for other player ({0} -> {1})'.format(parts[0], self.PLAYER_NAME))
 
-
     def _get_lock_file(self):
         ''' Populate self._session_lock_file
             If it exists, locked becomes True
@@ -1572,6 +1600,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['default_station'][1] = None
                 else:
                     self.opts['default_station'][1] = st
+            elif sp[0] == 'open_last_playlist':
+                if sp[1].lower() == 'false':
+                    self.opts['open_last_playlist'][1] = False
+                else:
+                    self.opts['open_last_playlist'][1] = True
             elif sp[0] == 'enable_mouse':
                 if sp[1].lower() == 'false':
                     self.opts['enable_mouse'][1] = False
@@ -1647,6 +1680,31 @@ class PyRadioConfig(PyRadioStations):
                 self.opts['default_playlist'][1] = 'stations'
                 self.opts['default_station'][1] = 'False'
         return 0
+
+    def get_last_playlist(self):
+        ''' read last opened playlist
+                reads:     ~/pyradio/last_playlist
+                returns:   last playlist name
+                sets:      self._last_opened_playlist_name (if successful)
+
+            CAUTION:
+                To be used by main.py only
+        '''
+        lp = path.join(self.stations_dir, 'last_playlist')
+        if path.exists(lp):
+            with open(lp, 'r') as f:
+                playlist = f.read().replace('\n', '').replace('\r', '')
+
+            if playlist != '':
+                if path.exists(path.join(self.stations_dir, playlist + '.csv')):
+                    print('  Opening last playlist: ' + playlist)
+                    self._last_opened_playlist_name = playlist
+                    return playlist
+                else:
+                    print('  Last playlist does not exist: ' + playlist)
+            else:
+                print('  Last playlist name is invalid!')
+        return None
 
     def init_backup_player_params(self):
         # logger.error('DE ====  init_backup_player_params ====')
@@ -1734,13 +1792,20 @@ class PyRadioConfig(PyRadioStations):
 # Default value: mpv,mplayer,vlc
 player = {0}
 
+# Open last playlist
+# If this option is enabled, the last opened playlist will be opened
+# the next time PyRadio is opened. This option will take precedence
+# over the "Def. playlist" option.
+# Default value: False
+open_last_playlist = {1}
+
 # Default playlist
 # This is the playlist to open if none is specified
-# You can scecify full path to CSV file, or if the playlist is in the
+# You can specify full path to CSV file, or if the playlist is in the
 # config directory, playlist name (filename without extension) or
 # playlist number (as reported by -ls command line option)
 # Default value: stations
-default_playlist = {1}
+default_playlist = {2}
 
 # Default station
 # This is the equivalent to the -p , --play command line parameter
@@ -1748,7 +1813,7 @@ default_playlist = {1}
 # Value is 1..number of stations, "-1" or "False" means no auto play
 # "0" or "Random" means play a random station
 # Default value: False
-default_station = {2}
+default_station = {3}
 
 # Default encoding
 # This is the encoding used by default when reading data provided by
@@ -1761,7 +1826,7 @@ default_station = {2}
 #   3.0 up to current python version.
 #
 # Default value: utf-8
-default_encoding = {3}
+default_encoding = {4}
 
 # Enable mouse
 # If this options is enabled, the mouse can be used to scroll the
@@ -1770,7 +1835,7 @@ default_encoding = {3}
 # is disabled by default.
 #
 # Default value: False
-enable_mouse = {4}
+enable_mouse = {5}
 
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server
@@ -1782,7 +1847,7 @@ enable_mouse = {4}
 #
 # Valid values: 5 - 60, 0 disables check
 # Default value: 10
-connection_timeout = {5}
+connection_timeout = {6}
 
 # Force http connections
 # Most radio stations use plain old http protocol to broadcast, but
@@ -1791,7 +1856,7 @@ connection_timeout = {5}
 #
 # Valid values: True, true, False, false
 # Default value: False
-force_http = {6}
+force_http = {7}
 
 # Default theme
 # Hardcooded themes:
@@ -1802,7 +1867,7 @@ force_http = {6}
 #   black_on_white (bow) (256 colors)
 #   white_on_black (wob) (256 colors)
 # Default value = 'dark'
-theme = {7}
+theme = {8}
 
 # Transparency setting
 # If False, theme colors will be used.
@@ -1811,7 +1876,7 @@ theme = {7}
 # not running, the terminal's background color will be used.
 # Valid values: True, true, False, false
 # Default value: False
-use_transparency = {8}
+use_transparency = {9}
 
 
 # Playlist management
@@ -1820,20 +1885,20 @@ use_transparency = {8}
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {9}
+confirm_station_deletion = {10}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within PyRadio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {10}
+confirm_playlist_reload = {11}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {11}
+auto_save_playlist = {12}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
@@ -1843,6 +1908,7 @@ auto_save_playlist = {11}
             with open(self.config_file, 'w') as cfgfile:
                 cfgfile.write(txt.format(
                     self.opts['player'][1],
+                    self.opts['open_last_playlist'][1],
                     self.opts['default_playlist'][1],
                     self.opts['default_station'][1],
                     self.opts['default_encoding'][1],
@@ -1892,6 +1958,8 @@ auto_save_playlist = {11}
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Error saving config')
             return -1
+        # if self.open_last_playlist:
+        #     self.save_last_playlist()
         try:
             remove(self.config_file + '.restore')
         except:
@@ -2027,6 +2095,16 @@ class PyRadioPlaylistStack(object):
     def playing(self, value):
         if self._p:
             self._p[-1][self._id['playing']] = value
+
+    @property
+    def last_local_playlist(self):
+        for n in range(len(self._p) -1, -1, -1):
+            if not self._p[n][-1] and not self._p[n][-2]:
+                return self._p[n]
+
+    @last_local_playlist.setter
+    def last_local_playlist(self, value):
+        raise ValueError('parameter is read only')
 
     def item(self, item_id=-1):
         try:

@@ -4,7 +4,7 @@ from copy import deepcopy
 from textwrap import wrap
 import glob
 import csv
-from os import path, sep
+from os import path, sep, remove
 from sys import platform
 
 from .common import *
@@ -48,7 +48,8 @@ class PyRadioConfigWindow(object):
     'This is the eqivelant to the -u , --use-player command line option.', '|',
     'Example:', '  player = vlc', 'or', '  player = vlc,mpv, mplayer', '|',
     'Default value: mpv,mplayer,vlc'])
-    _help_text.append(['This is the playlist to open at start up, if none is specified.', '|',
+    _help_text.append(['If this option is enabled, the last opened playlist will be opened the next time |PyRadio| is opened.', '|', 'This option will take precedence over the "Def. playlist" option.', '|', 'Default value: False'])
+    _help_text.append(['This is the playlist to open at start up, if none is specified and "Open last playlist" is not set.', '|',
     'This is the equivalent to the -s , --stations command line option.', '|',
     'Default value: stations'])
     _help_text.append(['The station number within the default playlist to play.', '|',
@@ -294,6 +295,7 @@ class PyRadioConfigWindow(object):
     def _load_default_values(self):
         self._config_options['general_title'][1] = ''
         self._config_options['player'][1] = 'mpv,mplayer,vlc'
+        self._config_options['open_last_playlist'][1] = 'False'
         self._config_options['default_playlist'][1] = 'stations'
         self._config_options['default_station'][1] = 'False'
         self._config_options['default_encoding'][1] = 'utf-8'
@@ -464,11 +466,16 @@ class PyRadioConfigWindow(object):
             elif sel == 'default_station':
                 return self.n_u.SELECT_STATION_MODE, []
             elif sel == 'confirm_station_deletion' or \
+                    sel == 'open_last_playlist' or \
                     sel == 'confirm_playlist_reload' or \
                     sel == 'enable_mouse' or \
                     sel == 'auto_save_playlist' or \
                     sel == 'force_http':
                 self._config_options[sel][1] = not self._config_options[sel][1]
+                # # if sel == 'open_last_playlist':
+                # #     if self._config_options[sel][1]:
+                # #         ''' became True, save last playlist '''
+                # #         self._cnf.save_last_playlist()
                 self.refresh_selection()
             elif sel == 'use_transparency':
                 #self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]

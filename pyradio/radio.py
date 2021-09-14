@@ -1045,6 +1045,8 @@ class PyRadio(object):
                 if self._cnf.online_browser.is_config_dirty():
                     self._cnf.online_browser.save_config()
                 self._cnf.online_browser = None
+        if self._cnf.open_last_playlist:
+            self._cnf.save_last_playlist()
         self._wait_for_threads()
 
     def _wait_for_threads(self):
@@ -3424,6 +3426,9 @@ class PyRadio(object):
                     result = True
                 else:
                     result = False
+                # if self._cnf.open_last_playlist and \
+                #         not self._cnf.browsing_station_service:
+                #     self._cnf.save_last_playlist()
             if result:
                 self._normal_mode_resize()
         return result
@@ -6353,6 +6358,9 @@ class PyRadio(object):
                                 self._put_selection_in_the_middle(force=True)
                                 self.refreshBody()
                             self._do_display_notify()
+
+                            # if self._cnf.open_last_playlist:
+                            #     self._cnf.save_last_playlist()
 
                 elif char in (ord('r'), ):
                     self._update_status_bar_right()

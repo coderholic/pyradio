@@ -273,6 +273,10 @@ def shell():
         if args.list is False and args.add is False:
             print('Reading playlist...')
         sys.stdout.flush()
+        if pyradio_config.open_last_playlist:
+            last_playlist = pyradio_config.get_last_playlist()
+            if last_playlist:
+                args.stations = last_playlist
         ret = pyradio_config.read_playlist_file(stationFile=args.stations)
         if ret < 0:
             print_playlist_selection_error(args.stations, pyradio_config, ret)

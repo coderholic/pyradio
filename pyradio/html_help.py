@@ -1,6 +1,12 @@
 import subprocess
+import logging
 from sys import platform
 from os import path
+
+logger = logging.getLogger(__name__)
+
+import locale
+locale.setlocale(locale.LC_ALL, "")
 
 class HtmlHelp(object):
 
@@ -24,6 +30,8 @@ class HtmlHelp(object):
     def open_file(self, browser=False):
         a_file = self._files[1] if browser else self._files[0]
         this_platform = platform.lower()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('HtmlHelp: opening "{}"'.format(path.join(self._path, a_file)))
         if this_platform.startswith('win'):
             from os import startfile
             startfile(path.join(self._path, a_file))
