@@ -298,10 +298,10 @@ class PyRadioTheme(object):
         return ''
 
     def toggleTransparency(self, force_value=None):
-        """ Toggles theme trasparency.
+        """ Toggles theme transparency.
 
-            force_value will set trasparency if True or False,
-            or toggle trasparency if None
+            force_value will set transparency if True or False,
+            or toggle transparency if None
         """
         if force_value is None:
             self._transparent = not self._transparent
@@ -760,7 +760,7 @@ class PyRadioThemeSelector(object):
             self._win.move(sel, self._width - 2)
         except:
             pass
-        ''' display trasnparency indicator '''
+        ''' display transparency indicator '''
         if self._transparent:
             self._win.addstr(self._height-1, self._width - 4, '[T]', curses.color_pair(self._box_color_pair))
         else:
