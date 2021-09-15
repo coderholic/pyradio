@@ -208,6 +208,14 @@ class PyRadioStations(object):
         self._ps.startPos = value
 
     @property
+    def history_playing(self):
+        return self._ps.playing
+
+    @history_playing.setter
+    def history_playing(self, value):
+        self._ps.playing = value
+
+    @property
     def browsing_station_service(self):
         return self._ps.browsing_station_service
 

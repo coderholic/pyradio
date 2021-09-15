@@ -119,7 +119,7 @@ class PyRadio(object):
     ''' number of items (stations or playlists) in current view '''
     number_of_items = 0
 
-    playing = -1
+    _playing = -1
     jumpnr = ''
     _backslash_pressed = False
     _register_assign_pressed = False
@@ -465,6 +465,16 @@ class PyRadio(object):
     def __del__(self):
         self.transientWin = None
 
+    @property
+    def playing(self):
+        return self._playing
+
+    @playing.setter
+    def playing(self, value):
+        logger.error('-------')
+        self._playing = value
+        self._update_history_positions_in_list()
+
     def setup(self, stdscr):
         # curses.savetty()
         self.setup_return_status = True
@@ -778,6 +788,7 @@ class PyRadio(object):
             self._show_theme_not_supported()
         elif self._cnf.user_param_id == -1:
             self._print_user_parameter_error()
+        self._update_history_positions_in_list()
 
     def refreshNoPlayerBody(self, a_string):
         col = curses.color_pair(5)
@@ -1045,6 +1056,7 @@ class PyRadio(object):
                 if self._cnf.online_browser.is_config_dirty():
                     self._cnf.online_browser.save_config()
                 self._cnf.online_browser = None
+        logger.error('DE selections = {}'.format(self._cnf._ps._p))
         if self._cnf.open_last_playlist:
             self._cnf.save_last_playlist()
         self._wait_for_threads()
@@ -1079,6 +1091,14 @@ class PyRadio(object):
             # logger.error('DE ===== _goto:startPos = {0}, changing_playlist = {1}'.format(self.startPos, changing_playlist))
             self.selection = self.playing
             self.refreshBody()
+
+    def _update_history_positions_in_list(self):
+        if self.ws.operation_mode == self.ws.NORMAL_MODE and \
+                not self._cnf.is_register:
+            self._cnf.history_startPos = self.startPos
+            self._cnf.history_selection = self.selection
+            self._cnf.history_playing = self._playing
+        logger.error('DE new selections = {}'.format(self._cnf._ps._p))
 
     def _put_selection_in_the_middle(self, force=False):
         if self.number_of_items < self.bodyMaxY or self.selection < self.bodyMaxY:
@@ -1118,6 +1138,8 @@ class PyRadio(object):
             self.startPos = self.selection
 
         self._force_print_all_lines = self.startPos != old_start_pos
+        self._update_history_positions_in_list()
+        logger.error('de setStation: selection = {}'.format(self.selection))
 
     def playSelectionBrowser(self, a_url=None):
             self.log.display_help_message = False
@@ -1165,6 +1187,7 @@ class PyRadio(object):
             if restart:
                 stream_url = self._last_played_station[1]
                 enc = self._last_played_station[2]
+                logger.error('setting playing to {}'.format(self._last_played_station_id))
                 self.playing = self._last_played_station_id
             else:
                 # if self._cnf.browsing_station_service:
@@ -1174,6 +1197,7 @@ class PyRadio(object):
                 #         stream_url = self._cnf.online_browser.url(self.selection)
                 self._last_played_station = self.stations[self.selection]
                 self._last_played_station_id = self.selection
+                logger.error('setting playing to {}'.format(self.selection))
                 self.playing = self.selection
                 if not stream_url:
                     stream_url = self.stations[self.selection][1]
@@ -1194,6 +1218,7 @@ class PyRadio(object):
             except OSError:
                 self.log.write(msg='Error starting player.'
                                'Are you sure a supported player is installed?')
+                logger.error('setting playing to 0')
                 self.playing = -1
                 return
             self._set_active_stations()
@@ -5869,6 +5894,7 @@ class PyRadio(object):
             self._current_selection = self.selection
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('current selection = {}'.format(self._current_selection))
+                self._update_history_positions_in_list()
 
             if char in (ord('?'), ):
                 self._update_status_bar_right()
