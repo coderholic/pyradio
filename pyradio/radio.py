@@ -235,7 +235,8 @@ class PyRadio(object):
         logger.error('DE p REGISTER_MODE: {0}, {1}, {2}'.format(*self.playlist_selections[2]))
 
     def __init__(self, pyradio_config,
-                 play=False,
+                 pre_select='False',
+                 play='False',
                  req_player='',
                  theme='',
                  force_update=''):
@@ -263,6 +264,7 @@ class PyRadio(object):
         self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
         # self.ll('begining...')
         self.play = play
+        self._pre_select = pre_select
         self.stdscr = None
         self.requested_player = req_player
         self.number_of_items = len(self._cnf.stations)
@@ -743,6 +745,8 @@ class PyRadio(object):
             self._redisplay_list = [0, 0]
 
     def refreshBody(self, start=0):
+        if self.player.ctrl_c_pressed:
+            return
         self._update_redisplay_list()
         end = len(self._redisplay_list)
         if end == 0:
@@ -751,8 +755,8 @@ class PyRadio(object):
             st = [i for i, x in enumerate(self._redisplay_list) if x[0] in self.ws.FULL_SCREEN_MODES]
             if st:
                 start = st[-1]
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('refreshBody(): start = {}'.format(start))
+                # if logger.isEnabledFor(logging.DEBUG):
+                #     logger.debug('refreshBody(): start = {}'.format(start))
         for n in range(start, end):
             if n == 1:
                 if self._theme_selector:
@@ -980,16 +984,27 @@ class PyRadio(object):
                 else:
                     if self.play.replace('-', '').isdigit():
                         num = int(self.play) - 1
-                self.setStation(num)
-                if self.number_of_items > 0:
-                    self.playSelection()
-                    self._goto_playing_station(changing_playlist=True)
-                self.refreshBody()
-                self.selections[self.ws.NORMAL_MODE] = [self.selection,
-                                                        self.startPos,
-                                                        self.playing,
-                                                        self.stations]
-                # self.ll('run')
+                if num < self.number_of_items:
+                    self.setStation(num)
+                    if self.number_of_items > 0:
+                        self.playSelection()
+                        self._goto_playing_station(changing_playlist=True)
+                    self.refreshBody()
+                    self.selections[self.ws.NORMAL_MODE] = [self.selection,
+                                                            self.startPos,
+                                                            self.playing,
+                                                            self.stations]
+                    # self.ll('run')
+
+            elif self._pre_select != 'False':
+                if self._pre_select < self.number_of_items:
+                    self.setStation(self._pre_select)
+                    self._put_selection_in_the_middle(force=True)
+                    self.refreshBody()
+                    self.selections[self.ws.NORMAL_MODE] = [self.selection,
+                                                            self.startPos,
+                                                            self.playing,
+                                                            self.stations]
 
             if self._cnf.foreign_file:
                 ''' ask to copy this playlist in config dir '''
@@ -1005,6 +1020,9 @@ class PyRadio(object):
                     if (ret == -1):
                         return
                 except KeyboardInterrupt:
+                    self.detect_if_player_exited = False
+                    self.player.stop_mpv_status_update_thread = True
+                    self.player.stop_win_vlc_status_update_thread = True
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Ctrl-C pressed... Terminating...')
                     self.player.ctrl_c_pressed = True
@@ -1041,7 +1059,7 @@ class PyRadio(object):
             self.search.box_color = curses.color_pair(5)
 
     def ctrl_c_handler(self, signum, frame):
-        self.ctrl_c_pressed = True
+        self.detect_if_player_exited = False
         if self._cnf.dirty_playlist:
             ''' Try to auto save playlist on exit
                 Do not check result!!! '''
@@ -1049,6 +1067,8 @@ class PyRadio(object):
         ''' Try to auto save config on exit
             Do not check result!!! '''
         self._cnf.save_config()
+        if self._cnf.open_last_playlist:
+            self._cnf.save_last_playlist(self.selections[0])
         ''' Try to auto save online browser config on exit
             Do not check result!!! '''
         if self._cnf.browsing_station_service:
@@ -1056,9 +1076,6 @@ class PyRadio(object):
                 if self._cnf.online_browser.is_config_dirty():
                     self._cnf.online_browser.save_config()
                 self._cnf.online_browser = None
-        logger.error('DE selections = {}'.format(self._cnf._ps._p))
-        if self._cnf.open_last_playlist:
-            self._cnf.save_last_playlist()
         self._wait_for_threads()
 
     def _wait_for_threads(self):
@@ -1094,11 +1111,11 @@ class PyRadio(object):
 
     def _update_history_positions_in_list(self):
         if self.ws.operation_mode == self.ws.NORMAL_MODE and \
-                not self._cnf.is_register:
+                self._cnf.is_local_playlist:
             self._cnf.history_startPos = self.startPos
             self._cnf.history_selection = self.selection
             self._cnf.history_playing = self._playing
-        logger.error('DE new selections = {}'.format(self._cnf._ps._p))
+        # logger.error('DE new selections = {}'.format(self._cnf._ps._p))
 
     def _put_selection_in_the_middle(self, force=False):
         if self.number_of_items < self.bodyMaxY or self.selection < self.bodyMaxY:
@@ -1139,7 +1156,7 @@ class PyRadio(object):
 
         self._force_print_all_lines = self.startPos != old_start_pos
         self._update_history_positions_in_list()
-        logger.error('de setStation: selection = {}'.format(self.selection))
+        # logger.error('de setStation: selection = {}'.format(self.selection))
 
     def playSelectionBrowser(self, a_url=None):
             self.log.display_help_message = False
@@ -1294,6 +1311,8 @@ class PyRadio(object):
             Also used at self.player.play as a loopback function
             for the status update thread.
         '''
+        self.player.stop_update_notification_thread = True
+        self.player.stop_win_vlc_status_update_thread = True
         if from_update_thread:
             self.detect_if_player_exited = True
             self.player.stop_timeout_counter_thread = True
@@ -1308,7 +1327,10 @@ class PyRadio(object):
                 # this one breaks the layout
                 # self._redisplay_stations_and_playlists()
 
-    def stopPlayer(self, show_message=True, from_update_thread=False):
+    def stopPlayer(self,
+                   show_message=True,
+                   from_update_thread=False,
+                   reset_playing=True):
         ''' stop player '''
         if from_update_thread:
             self.detect_if_player_exited = True
@@ -1319,7 +1341,8 @@ class PyRadio(object):
         finally:
             self._last_played_station_id = self.playing
             #self.selections[0][2] = -1
-            self.playing = -1
+            if reset_playing:
+                self.playing = -1
             if show_message:
                 self._show_player_is_stopped(from_update_thread)
 
@@ -5474,7 +5497,7 @@ class PyRadio(object):
                 self.saveCurrentPlaylist()
             if self.player:
                 self.detect_if_player_exited = False
-                self.stopPlayer()
+                self.stopPlayer(show_message=False, reset_playing=False)
             self.ctrl_c_handler(0, 0)
             return -1
 
@@ -5892,9 +5915,9 @@ class PyRadio(object):
         else:
 
             self._current_selection = self.selection
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('current selection = {}'.format(self._current_selection))
-                self._update_history_positions_in_list()
+            # if logger.isEnabledFor(logging.DEBUG):
+            #     logger.debug('current selection = {}'.format(self._current_selection))
+            self._update_history_positions_in_list()
 
             if char in (ord('?'), ):
                 self._update_status_bar_right()
@@ -6001,7 +6024,10 @@ class PyRadio(object):
                         #    self._open_playlist()
                         if self.player:
                             self.detect_if_player_exited = False
-                            self.stopPlayer()
+                            self.stopPlayer(
+                                show_message=False,
+                                reset_playing=False
+                            )
                         self.ctrl_c_handler(0,0)
                         return -1
                 else:
@@ -7128,9 +7154,12 @@ class PyRadio(object):
                     logger.debug('SetConsoleCtrlHandler: Failed to register handler for signal {}'.format(a_sig))
 
     def _linux_signal_handler(self, a_signal, a_frame):
+        logger.error('DE ----==== _linux_signal_handler  ====----')
         if self._system_asked_to_terminate:
             return
         self._system_asked_to_terminate = True
+        self.player.stop_update_notification_thread = True
+        self.player.stop_win_vlc_status_update_thread = True
         if logger.isEnabledFor(logging.INFO):
             # logger.info('System asked me to terminate (signal: {})!!!'.format(list(self.handled_signals.keys())[list(self.handled_signals.values()).index(a_signal)]))
             logger.info('My terminal got closed... Terminating...')

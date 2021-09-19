@@ -279,7 +279,7 @@ class Player(object):
         return self._cnf.profile_name
 
     @profile_name.setter
-    def is_register(self, value):
+    def progile_name(self, value):
         raise ValueError('property is read only')
 
     @property
@@ -287,7 +287,7 @@ class Player(object):
         return  '[' + self.profile_name + ']'
 
     @profile_token.setter
-    def is_register(self, value):
+    def profile_token(self, value):
         raise ValueError('property is read only')
 
     def __del__(self):
@@ -1937,6 +1937,7 @@ class MpPlayer(Player):
 
     def _stop(self):
         ''' kill mplayer instance '''
+        self.stop_mpv_status_update_thread = True
         self._sendCommand('q')
         self._icy_data = {}
 
@@ -2124,9 +2125,9 @@ class VlcPlayer(Player):
 
     def _stop(self):
         ''' kill vlc instance '''
+        self.stop_win_vlc_status_update_thread = True
         if logger.isEnabledFor(logging.INFO):
             logger.info('setting self.stop_win_vlc_status_update_thread = True')
-        self.stop_win_vlc_status_update_thread = True
         if self.ctrl_c_pressed:
             return
         if self.WIN:

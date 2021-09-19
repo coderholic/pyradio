@@ -273,11 +273,15 @@ def shell():
         if args.list is False and args.add is False:
             print('Reading playlist...')
         sys.stdout.flush()
+        is_last_playlist = False
         if pyradio_config.open_last_playlist:
             last_playlist = pyradio_config.get_last_playlist()
             if last_playlist:
                 args.stations = last_playlist
-        ret = pyradio_config.read_playlist_file(stationFile=args.stations)
+                is_last_playlist = True
+        ret = pyradio_config.read_playlist_file(
+            stationFile=args.stations,
+            is_last_playlist=is_last_playlist)
         if ret < 0:
             print_playlist_selection_error(args.stations, pyradio_config, ret)
 
@@ -337,6 +341,16 @@ def shell():
         if args.play == '-1':
             args.play = 'False'
 
+        ''' get auto play last playlist data '''
+        if pyradio_config.last_playlist_to_open != []:
+            pre_select = pyradio_config.last_playlist_to_open[1]
+            if pyradio_config.last_playlist_to_open[2] > -1:
+                args.play = str(pyradio_config.last_playlist_to_open[2] + 1)
+            else:
+                args.play = 'False'
+        else:
+            pre_select = 'False'
+
         theme_to_use = args.theme
         if not theme_to_use:
             theme_to_use = pyradio_config.theme
@@ -345,6 +359,7 @@ def shell():
         pyradio = PyRadio(
             pyradio_config,
             play=args.play,
+            pre_select=pre_select,
             req_player=requested_player,
             theme=theme_to_use,
             force_update=args.force_update

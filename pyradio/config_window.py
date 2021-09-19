@@ -48,12 +48,12 @@ class PyRadioConfigWindow(object):
     'This is the eqivelant to the -u , --use-player command line option.', '|',
     'Example:', '  player = vlc', 'or', '  player = vlc,mpv, mplayer', '|',
     'Default value: mpv,mplayer,vlc'])
-    _help_text.append(['If this option is enabled, the last opened playlist will be opened the next time |PyRadio| is opened.', '|', 'This option will take precedence over the "Def. playlist" option.', '|', 'Default value: False'])
+    _help_text.append(['If this option is enabled, the last local playlist loaded before terminating, will be automatically opened the next time PyRadio is executed.', '|', 'Furthermore, playback will resume, if it was on when PyRadio exited. Otherwise, station selection will be restored.', '|', 'This option will take precedence over the "Def. playlist" configuration option and the "-s" command line option.', '|', 'Default value: False'])
     _help_text.append(['This is the playlist to open at start up, if none is specified and "Open last playlist" is not set.', '|',
-    'This is the equivalent to the -s , --stations command line option.', '|',
+    'This is the equivalent to the -s, --stations command line option.', '|',
     'Default value: stations'])
     _help_text.append(['The station number within the default playlist to play.', '|',
-    'This is the equivalent to the -p , --play command line option.', '|',
+    'This is the equivalent to the -p, --play command line option.', '|',
     'Value is 1..number of stations, "False" means no auto play, "Random" means play a random station.', '|', 'Default value: False'])
     _help_text.append(['This is the encoding used by default when reading data provided by a station such as song title, etc. If reading said data ends up in an error, "utf-8" will be used instead.', '|',
     'If changed, playback must be restarted so that changes take effect.',

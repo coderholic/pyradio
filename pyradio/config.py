@@ -100,6 +100,9 @@ class PyRadioStations(object):
     ''' the playlist saved as last playlist (name only) '''
     _last_opened_playlist_name = ''
 
+    ''' last opened playlist splitted on , '''
+    last_playlist_to_open = []
+
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -148,6 +151,14 @@ class PyRadioStations(object):
     @user_has_stations_csv.setter
     def user_has_stations_csv(self, val):
         raise ValueError('parameter is read only')
+
+    @property
+    def is_local_playlist(self):
+        return self._ps.is_local_playlist
+
+    @is_local_playlist.setter
+    def is_local_playlist(self, value):
+        raise ValueError('property is read only')
 
     @property
     def is_register(self):
@@ -271,22 +282,19 @@ class PyRadioStations(object):
     def can_go_back_in_time(self, value):
         raise ValueError('property is read only')
 
-    def save_last_playlist(self):
+    def save_last_playlist(self, sel):
+        logger.error('sel = {}'.format(sel))
         lp = path.join(self.stations_dir, 'last_playlist')
-        llp = self._ps.last_local_playlist[2]
-        if llp:
+        llp = self._ps.last_local_playlist
+        out_pl = [llp[2], llp[4], llp[5]]
+        if llp[2]:
             # logger.error(f'llp = {llp} - saved = {self._last_opened_playlist_name}')
-            if llp != self._last_opened_playlist_name:
-                try:
-                    with open(lp, 'w') as f:
-                        f.write(llp)
-                except PermissionError:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('Error writing last opened playlist file!')
-                    return
-                self._last_opened_playlist_name = llp
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('Writing last opened playlist: ' + llp)
+            try:
+                with open(lp, 'w') as f:
+                    writter = csv.writer(f)
+                    writter.writerow(out_pl)
+            except PermissionError:
+                pass
 
     def url(self, id_in_list):
         if self._ps.browsing_station_service:
@@ -465,7 +473,11 @@ class PyRadioStations(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Added: {0} - {1}'.format(self.added_stations, a_pkg_station))
 
-    def read_playlist_file(self, stationFile='', is_register=False):
+    def read_playlist_file(
+        self,
+        stationFile='',
+        is_last_playlist=False,
+        is_register=False):
         ''' Read a csv file
             Returns: number
                 x  -  number of stations or
@@ -487,6 +499,7 @@ class PyRadioStations(object):
         read_file = True
         if ret < 0:
             ''' returns -2, -3, -4 or -8 '''
+            self.last_playlist_to_open = []
             if self._register_to_open:
                 self._reading_stations = []
                 prev_file = self.station_path
@@ -1698,20 +1711,43 @@ class PyRadioConfig(PyRadioStations):
             CAUTION:
                 To be used by main.py only
         '''
+        playlist = ''
         lp = path.join(self.stations_dir, 'last_playlist')
         if path.exists(lp):
             with open(lp, 'r') as f:
-                playlist = f.read().replace('\n', '').replace('\r', '')
+                for row in csv.reader(filter(lambda row: row[0]!='#', f), skipinitialspace=True):
+                    if not row:
+                        continue
+                    self.last_playlist_to_open = row
 
+            if len(self.last_playlist_to_open) == 0:
+                self.last_playlist_to_open = []
+                return None
+
+            if len(self.last_playlist_to_open) > 3:
+                self.last_playlist_to_open = self.last_playlist_to_open[:3]
+
+            while len(self.last_playlist_to_open) < 3:
+                self.last_playlist_to_open.append(0)
+
+            for i in range(-1, -3, -1):
+                try:
+                    x = int(self.last_playlist_to_open[i])
+                except ValueError:
+                    x = -1 if i == -1 else 0
+                self.last_playlist_to_open[i] = x
+
+
+            playlist = self.last_playlist_to_open[0]
             if playlist != '':
                 if path.exists(path.join(self.stations_dir, playlist + '.csv')):
-                    print('  Opening last playlist: ' + playlist)
+                    print('=> Opening last playlist: "' + playlist + '"')
                     self._last_opened_playlist_name = playlist
                     return playlist
                 else:
-                    print('  Last playlist does not exist: ' + playlist)
+                    print('=> Last playlist does not exist: "' + playlist + '"')
             else:
-                print('  Last playlist name is invalid!')
+                print('=> Last playlist name is invalid!')
         return None
 
     def init_backup_player_params(self):
@@ -1978,10 +2014,17 @@ auto_save_playlist = {12}
         self.params_changed = False
         return 0
 
-    def read_playlist_file(self, stationFile='', is_register=False):
+    def read_playlist_file(
+            self, stationFile='',
+            is_last_playlist=False,
+            is_register=False
+    ):
         if stationFile.strip() == '':
             stationFile = self.default_playlist
-        return super(PyRadioConfig, self).read_playlist_file(stationFile=stationFile, is_register=is_register)
+        return super(PyRadioConfig, self).read_playlist_file(
+            stationFile=stationFile,
+            is_last_playlist=is_last_playlist,
+            is_register=is_register)
 
 
 class PyRadioPlaylistStack(object):
@@ -2007,6 +2050,18 @@ class PyRadioPlaylistStack(object):
 
     def __len__(self):
         return len(self._p)
+
+    @property
+    def is_local_playlist(self):
+        if self._p:
+            return not self._p[-1][self._id['is_register']] and \
+                not self._p[-1][self._id['browsing_station_service']]
+        else:
+            return True
+
+    @is_local_playlist.setter
+    def is_local_playlist(self, value):
+        raise ValueError('parameter is read only')
 
     @property
     def is_register(self):
