@@ -78,6 +78,8 @@ def shell():
     parser.add_argument('-l', '--list', action='store_true',
                         help='List of available stations in a playlist.')
     parser.add_argument('-t', '--theme', default='', help='Use specified theme.')
+    parser.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
+                        help='Toggle autoload last opened playlist.')
     parser.add_argument('-scd', '--show-config-dir', action='store_true',
                         help='Print config directory [CONFIG DIR] location and exit.')
     parser.add_argument('-ocd', '--open-config-dir', action='store_true',
@@ -129,6 +131,19 @@ def shell():
             if pyradio_config.distro != 'None':
                 print('Distribution: {}'.format(pyradio_config.distro))
             sys.exit()
+
+        if args.toggle_load_last_playlist:
+            if pyradio_config.locked:
+                print('Error: Another instance of PyRadio is already running!')
+                print('       Please close it and try again...')
+                sys.exit(1)
+            else:
+                pyradio_config.read_config()
+                pyradio_config.opts['open_last_playlist'][1] = not pyradio_config.opts['open_last_playlist'][1]
+                pyradio_config.opts['dirty_config'][1] =  True
+                print('Setting auto load last playlist to: {}'.format(pyradio_config.opts['open_last_playlist'][1]))
+                pyradio_config.save_config(from_command_line=True)
+            sys.exit(0)
 
         package = 0
         if args.uninstall or args.update:

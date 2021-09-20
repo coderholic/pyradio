@@ -34,6 +34,8 @@ List of available playlists in config dir.
 List of available stations in a playlist.
 .IP \fB-t\fR\ \fITHEME\fR,\ \fB--theme\fR\ \fITHEME\fR
 Use specified \fITHEME\fR.
+.IP \fB-tlp\fR,\ \fB--toggle-load-last-playlist
+Toggle autoload last opened playlist.
 .IP \fB-scd\fR,\fB--show-config-dir\fR
 Print config directory (\fI[CONFIG DIR]\fR) location and exit.
 .IP \fB-ocd\fR,\fB--open-config-dir\fR
@@ -262,7 +264,38 @@ Playlists found in "/home/user/.config/pyradio"
 .IP \fBNote\fR
 The default playlist to load can also be set in \fBPyRadio\fR’s configuration file, parameter \fIdefault_playlist\fR (default value is \fIstations\fR).
 
+
+
 .RE
+.PP
+.B
+Autoloading playlists
+
+As already stated, \fBPyRadio\fR will normally load its default playlist (called "\fBstations\fR") upon startup.
+
+This behavior can be then changed in two ways:
+
+.RS 5
+.IP 1. 3
+Changing the default playlist.
+
+This is accomplished using the "\fBDef. playlist\fR" configuration option (optionally along with the "\fBDef. station\fR" option).
+
+.IP 2. 3
+Always loading the last used playlist at startup.
+
+This is accomplished using the "\fBOpen last playlist\fR" configuration option.
+
+In this case, the last used playlist will be opened the next time \fBPyRadio\fR will be executed, trying to restore the previously selected station or starting playback.
+
+This option will take precedence before the "\fBDef. playlist\fR" configuration option (if it is used) and the "\fI-s\fR" ("\fI--stations\fR") command line option.
+
+.RS 3
+.IP \fBNote:\fR
+When the "\fBOpen last playlist\fR" configuration option is set, all playlist operations will be performed to the last opened playlist. In order to use the "\fI-a\fR" ("\fI--add\fR") or "\fI-l\fR" ("\fI--list\fR") command line options along with the "\fI-s\fR" ("\fI--stations\fR") command line option, the "\fI-tlp\fR" "\fI--toggle-load-last-playlist\fR") option can be used to temporarily deactivate autoloading.
+.RE
+.RE
+
 .PP
 .B
 Managing Playlists (within Pyradio)

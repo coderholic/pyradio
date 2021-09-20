@@ -1122,8 +1122,8 @@ class PyRadio(object):
             self.startPos = 0
         elif force or self.selection < self.startPos or \
                 self.selection >= self.startPos + self.bodyMaxY:
-            if logger.isEnabledFor(logging.ERROR):
-                logger.error('===== _put:adjusting startPos')
+            # if logger.isEnabledFor(logging.ERROR):
+            #     logger.error('===== _put:adjusting startPos')
             if self.selection < self.bodyMaxY:
                 self.startPos = 0
                 if self.selection - int(self.bodyMaxY/2) > 0:
@@ -6809,7 +6809,6 @@ class PyRadio(object):
         ----
             self.selections[mode]
         '''
-        logger.error('DE search_file = ' + search_file)
         # self.ll('_find_renamed_selection(): before')
         files = glob.glob(path.join(search_path, '*.csv'))
         if files:
@@ -6824,7 +6823,6 @@ class PyRadio(object):
                 self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
                 # self.ll('_find_renamed_selection(): after not found')
                 return
-            logger.error('DE sel = {}'.format(sel))
             self.selections[mode][0] = self.selections[mode][2] = sel
 
             ''' Set startPos '''

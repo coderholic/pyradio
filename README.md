@@ -20,6 +20,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [About Playlist files](#about-playlist-files)
     * [Integrating new stations](#integrating-new-stations)
     * [Specifying a playlist to load (command line)](#specifying-a-playlist-to-load-(command-line))
+    * [Autoloading playlists](#autoloading-playlists)
     * [Managing playlists (within PyRadio)](#managing-playlists-(within-pyradio))
     * [Managing "foreign" playlists](#managing-"foreign"-playlists)
     * [Playlist history](#playlist-history)
@@ -117,6 +118,8 @@ In any other case, and since **PyRadio** is currently not available via pip, you
       -l, --list            List of available stations in a playlist.
       -t THEME, --theme THEME
                             Use specified theme.
+      -tlp, --toggle-load-last-playlist
+                              Toggle autoload last opened playlist.
       -scd, --show-config-dir
                             Print config directory [CONFIG DIR] location and exit.
       -ocd, --open-config-dir
@@ -298,6 +301,26 @@ To use the playlist number, one would execute the commands:
     $ pyradio -s 5
 
 **Note:** The default playlist to load can also be set in **PyRadio**'s [configuration file](#config-file), parameter **default_playlist** (default value is **stations**).
+
+### Autoloading playlists
+
+As already stated, **PyRadio** will normally load its default playlist (called "**stations**") upon startup.
+
+This behavior can be then changed in two ways:
+
+1. Changing the default playlist.
+
+    This is accomplished using the "**Def. playlist**" configuration option (optionally along with the "**Def. station**" option).
+
+2. Always loading the last used playlist at startup.
+
+    This is accomplished using the "**Open last playlist**" configuration option.
+
+    In this case, the last used playlist will be opened the next time **PyRadio** will be executed, trying to restore the previously selected station or starting playback.
+
+    This option will take precedence before the "**Def. playlist**" configuration option (if it is used) and the "**-s**" ("**--stations**") command line option.
+
+**Note:** When the "**Open last playlist**" configuration option is set, all playlist operations will be performed to the last opened playlist. In order to use the "**-a**" ("**--add**") or "**-l**" ("**--list**") command line options along with the "**-s**" ("**--stations**") command line option, the "**-tlp**" ("**--toggle-load-last-playlist**") option can be used to temporarily deactivate autoloading.
 
 ### Managing playlists (within PyRadio)
 

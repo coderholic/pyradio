@@ -1097,7 +1097,7 @@ class PyRadioConfig(PyRadioStations):
     opts['player'] = ['Player: ', '']
     opts['open_last_playlist'] = ['Open last playlist: ', False]
     opts['default_playlist'] = ['Def. playlist: ', 'stations']
-    opts['default_station'] = ['Def station: ', 'False']
+    opts['default_station'] = ['Def. station: ', 'False']
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
     opts['enable_mouse'] = ['Enable mouse support: ', False]
     opts['conn_title'] = ['Connection Options: ', '']
@@ -1795,7 +1795,7 @@ class PyRadioConfig(PyRadioStations):
                 return True
         return False
 
-    def save_config(self):
+    def save_config(self, from_command_line=False):
         ''' Save config file
 
             Creates config.restore (back up file)
@@ -1814,7 +1814,8 @@ class PyRadioConfig(PyRadioStations):
             parameter changes due to 'Z' also
         '''
         # logger.error('DE save_conifg: saved params = {}'.format(self.saved_params))
-        self.get_player_params_from_backup()
+        if not from_command_line:
+            self.get_player_params_from_backup()
         if self.check_parameters():
                 self.saved_params = deepcopy(self.params)
         if logger.isEnabledFor(logging.DEBUG):
