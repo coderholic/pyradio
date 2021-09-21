@@ -138,11 +138,11 @@ def shell():
                 print('       Please close it and try again...')
                 sys.exit(1)
             else:
-                pyradio_config.read_config()
+                read_config(pyradio_config)
                 pyradio_config.opts['open_last_playlist'][1] = not pyradio_config.opts['open_last_playlist'][1]
                 pyradio_config.opts['dirty_config'][1] =  True
                 print('Setting auto load last playlist to: {}'.format(pyradio_config.opts['open_last_playlist'][1]))
-                pyradio_config.save_config(from_command_line=True)
+                save_config()
             sys.exit(0)
 
         package = 0
@@ -218,7 +218,7 @@ def shell():
         if args.list_player_parameters:
             print('PyRadio Players Extra Parameters')
             print(32 * '-')
-            pyradio_config.read_config()
+            read_config(pyradio_config)
             default_player_name = pyradio_config.opts['player'][1].replace(' ', '').split(',')[0]
             if default_player_name == '':
                 default_player_name = SUPPORTED_PLAYERS[0]
@@ -430,6 +430,12 @@ def read_config(pyradio_config):
         sys.exit(1)
     elif ret == -2:
         print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
+        sys.exit(1)
+
+def save_config(pyradio_config):
+    ret = pyradio_config.save_config(from_command_line=True)
+    if ret == -1:
+        print('Error saving config!')
         sys.exit(1)
 
 def no_update(uninstall):

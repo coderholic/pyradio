@@ -283,7 +283,6 @@ class PyRadioStations(object):
         raise ValueError('property is read only')
 
     def save_last_playlist(self, sel):
-        logger.error('sel = {}'.format(sel))
         lp = path.join(self.stations_dir, 'last_playlist')
         llp = self._ps.last_local_playlist
         out_pl = [llp[2], llp[4], llp[5]]
@@ -1805,7 +1804,8 @@ class PyRadioConfig(PyRadioStations):
                  1: Config not saved (not modified)
                  TODO: 2: Config not saved (session locked) '''
         if self.locked:
-            if logger.isEnabledFor(logging.INFO):
+            if not from_command_line and \
+                    logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (session locked)')
             return 1
 
@@ -1817,12 +1817,14 @@ class PyRadioConfig(PyRadioStations):
         if not from_command_line:
             self.get_player_params_from_backup()
         if self.check_parameters():
-                self.saved_params = deepcopy(self.params)
-        if logger.isEnabledFor(logging.DEBUG):
+            self.saved_params = deepcopy(self.params)
+        if not from_command_line and \
+                logger.isEnabledFor(logging.DEBUG):
             logger.debug('saved params = {}'.format(self.saved_params))
 
         if not self.opts['dirty_config'][1]:
-            if logger.isEnabledFor(logging.INFO):
+            if not from_command_line and \
+                    logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (not modified)')
             return 1
         txt ='''# PyRadio Configuration File
@@ -2000,7 +2002,8 @@ auto_save_playlist = {12}
                                 cfgfile.write('{}\n'.format(a_set + '_parameter=' + txt))
 
         except:
-            if logger.isEnabledFor(logging.ERROR):
+            if not from_command_line and \
+                    logger.isEnabledFor(logging.ERROR):
                 logger.error('Error saving config')
             return -1
         # if self.open_last_playlist:
