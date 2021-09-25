@@ -9,7 +9,7 @@ from string import punctuation as string_punctuation
 try:
     # python 3
     from urllib.parse import urlparse
-except ImportError:
+except:
     from urlparse import urlparse
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesCheckBox, SimpleCursesHorizontalPushButtons, DisabledWidget
 from .log import Log

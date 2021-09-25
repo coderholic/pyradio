@@ -44,10 +44,10 @@ from .html_help import HtmlHelp
 CAN_CHECK_FOR_UPDATES = True
 try:
     from urllib.request import urlopen
-except ImportError:
+except:
     try:
         from urllib2 import urlopen
-    except ImportError:
+    except:
         CAN_CHECK_FOR_UPDATES = False
 
 logger = logging.getLogger(__name__)

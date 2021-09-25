@@ -14,7 +14,7 @@ import socket
 
 try:
     from urllib import unquote
-except ImportError:
+except:
     from urllib.parse import unquote
 from .cjkwrap import wrap
 from .encodings import get_encodings
@@ -29,7 +29,7 @@ try:  # Forced testing
             return pr
         else:
             return None
-except ImportError:  # Forced testing
+except:
     # Versions prior to Python 3.3 don't have shutil.which
 
     def pywhich (cmd, mode=os.F_OK | os.X_OK, path=None):

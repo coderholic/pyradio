@@ -18,13 +18,13 @@ from .browser import PyRadioStationsBrowser, probeBrowsers
 HAS_REQUESTS = True
 try:
     import requests
-except ImportError:
+except:
     HAS_REQUESTS = False
 from .log import Log
 HAS_DNSPYTHON = True
 try:
     from dns import resolver
-except ImportError:
+except:
     HAS_DNSPYTHON = False
 
 logger = logging.getLogger(__name__)

@@ -14,6 +14,8 @@ from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_inst
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
+PY3 = sys.version[0] == '3'
+
 @contextmanager
 def pyradio_config_file():
     cf = PyRadioConfig()
@@ -174,22 +176,36 @@ def shell():
                     print('Error reading online version.\nPlease make sure you are connected to the internet and try again.')
                     sys.exit(1)
 
+            python_version_to_use = 3 if PY3 else 2
             try:
-                upd = PyRadioUpdate(package=package)
+                upd = PyRadioUpdate(
+                    package=package,
+                    python_version_to_use=python_version_to_use
+                )
                 if platform.startswith('linux'):
                     upd.user = args.user
                 upd.update_pyradio()
             except RuntimeError:
-                upd = PyRadioUpdateOnWindows(package=package)
+                upd = PyRadioUpdateOnWindows(
+                    package=package,
+                    python_version_to_use=python_version_to_use
+                )
                 upd.update_or_uninstall_on_windows(mode='update-open')
             sys.exit()
 
         if args.uninstall:
+            python_version_to_use = 3 if PY3 else 2
             try:
-                upd = PyRadioUpdate(package=package)
+                upd = PyRadioUpdate(
+                    package=package,
+                    python_version_to_use=python_version_to_use
+                )
                 upd.remove_pyradio()
             except RuntimeError:
-                upd = PyRadioUpdateOnWindows(package=package)
+                upd = PyRadioUpdateOnWindows(
+                    package=package,
+                    python_version_to_use=python_version_to_use
+                )
                 upd.update_or_uninstall_on_windows(mode='uninstall-open')
             sys.exit()
 

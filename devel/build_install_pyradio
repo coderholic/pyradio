@@ -166,6 +166,7 @@ echo "==========================================================================
 }
 
 TO_PYTHON=3
+TO_PYTHON_FROM_X=''
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -191,18 +192,21 @@ do
             shift
             ;;
         2)
-            TO_PYTHON=2
+            [ -z "${TO_PYTHON_FROM_X}" ] && TO_PYTHON=2
             shift
             ;;
         -x)
             #
             # Hidden parameter; to be used by
-            #     PyRadio -U, -R
+            #     pyradio -U, -R
             # command line parameters
             #
             # DO NOT USE IT on any other circumstance
             #
             REMOVE_DIR=$(dirname "$PWD")
+            shift
+            TO_PYTHON=${1/python/}
+            TO_PYTHON_FROM_X=1
             shift
             ;;
         *)    # unknown option

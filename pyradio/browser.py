@@ -2,7 +2,7 @@
 import curses
 try:
     from dns import resolver
-except ImportError:
+except:
     pass
 from copy import deepcopy
 import random
@@ -12,7 +12,7 @@ import collections
 from operator import itemgetter
 try:
     import requests
-except ImportError:
+except:
     pass
 import threading
 import logging
@@ -355,7 +355,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._cnf = config
         self.browser_config = RadioBrowserConfig(self._cnf.stations_dir)
 
-        logger.error('DE AUTO_SAVE_CONFIG = {}'.format(self.AUTO_SAVE_CONFIG))
+        # logger.error('DE AUTO_SAVE_CONFIG = {}'.format(self.AUTO_SAVE_CONFIG))
 
         if session:
             self._session = session

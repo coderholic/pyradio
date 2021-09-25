@@ -11,24 +11,70 @@ try:
     import win32api
     import win32ui
     from os.path import curdir
-except ImportError:
+except:
     pass
 
 try:
     from urllib.request import urlopen
-except ImportError:
+except:
     try:
         from urllib2 import urlopen
-    except ImportError:
+    except:
         pass
 
 try:
     import requests
     HAVE_REQUESTS = True
-except ModuleNotFoundError:
+except:
     HAVE_REQUESTS = False
 
 VERSION = ''
+
+PY3 = sys.version[0] == '3'
+
+def print_pyradio_on():
+    print('''
+                     _____       _____           _ _
+                    |  __ \     |  __ \         | (_)
+                    | |__) |   _| |__) |__ _  __| |_  ___
+                    |  ___/ | | |  _  // _` |/ _` | |/ _ \\
+                    | |   | |_| | | \ \ (_| | (_| | | (_) |
+                    |_|    \__, |_|  \_\__,_|\__,_|_|\___/
+                            __/ |
+                           |___/
+
+
+                               installation script
+                                   running on ''')
+
+def print_python2():
+    print('''                   _____       _   _                    ___
+                  |  __ \     | | | |                  |__ \\
+                  | |__) |   _| |_| |__   ___  _ __       ) |
+                  |  ___/ | | | __| '_ \ / _ \| '_ \     / /
+                  | |   | |_| | |_| | | | (_) | | | |   / /_
+                  |_|    \__, |\__|_| |_|\___/|_| |_|  |____|
+                          __/ |
+                         |___/
+
+
+    ''')
+
+def print_python3():
+    print('''                   _____       _   _                    ____
+                  |  __ \     | | | |                  |___ \\
+                  | |__) |   _| |_| |__   ___  _ __      __) |
+                  |  ___/ | | | __| '_ \ / _ \| '_ \    |__ <
+                  | |   | |_| | |_| | | | (_) | | | |   ___) |
+                  |_|    \__, |\__|_| |_|\___/|_| |_|  |____/
+                          __/ |
+                         |___/
+
+
+    ''')
+
+def print_trying_to_install():
+    print('                              trying to install for')
 
 def is_pyradio_user_installed():
     if platform.system().lower().startswith('darwin'):
@@ -166,6 +212,87 @@ def WindowExists(title):
     else:
         return True
 
+
+class PythonExecutable(object):
+    is_debian = False
+    _python = [None, None]
+    requested_python_version = 3
+
+    def __init__(self, requested_python_version):
+        self.requested_python_version = requested_python_version
+        if platform.system().lower().startswith('linux'):
+            self._check_if_is_debian_based()
+        self._get_pythons()
+
+    def __str__(self):
+        return 'Is Debian: {0}\nPython: {1}, {2}\nRequested version: {3}'.format(
+            self.is_debian,
+            self._python[0],
+            self._python[1],
+            self.requested_python_version
+        )
+
+    @property
+    def python(self):
+        return self._python[self.requested_python_version-2]
+
+    @python.setter
+    def python(self, value):
+        raise RuntimeError('ValueError: property is read only!')
+
+    def _check_if_is_debian_based(self):
+        p = subprocess.Popen(
+            'apt --version',
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        p.communicate()
+        self.is_debian = True if p.returncode == 0 else False
+        return self.is_debian
+
+    def _get_pythons(self):
+        ''' get python (no version) '''
+        p = subprocess.Popen(
+            'python --version',
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        for com in p.communicate():
+            str_com = str(com)
+            if 'Python 2.' in str_com or \
+                    'python 2.' in str_com:
+                self._python[0] = 'python'
+                break
+            elif 'Python 3.' in str_com or \
+                    'python 3.' in str_com:
+                self._python[1] = 'python'
+                break
+
+        ''' get versioned names '''
+        for n in range(2, 4):
+            if self._python[n-2] is None:
+                self._get_python(n)
+
+    def _get_python(self, version):
+        p = subprocess.Popen(
+            'python' + str(version) + ' --version',
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        # print(p.communicate())
+        # print(p.returncode)
+        # if p.communicate()[0]:
+        p.communicate()
+        if p.returncode == 0:
+            self._python[version - 2] = 'python' + str(version)
+
+    def can_install(self):
+        return True if self._python[self.requested_python_version - 2] else False
+
+
 class PyRadioUpdate(object):
 
     ''' package values:
@@ -193,13 +320,23 @@ class PyRadioUpdate(object):
     user = False
     python2 = False
 
-    def __init__(self, package=0, user=False, github_long_description=None):
+    _python_exec = None
+
+    _delete_dir_limit = 0
+
+    def __init__(self,
+                 package=0,
+                 user=False,
+                 github_long_description=None,
+                 python_version_to_use=3):
         if platform.system().lower().startswith('win'):
             raise RuntimeError('This is a linux only class...')
         self._dir = self._install_dir = ''
         self._package = package
         self.user = user
         self._github_long_description = github_long_description
+        self._python_exec = PythonExecutable(python_version_to_use)
+        self.python2 = True if python_version_to_use == 2 else False
 
     def update_pyradio(self, win_open_dir=False):
         if platform.system().lower().startswith('win'):
@@ -279,17 +416,17 @@ class PyRadioUpdate(object):
                 if mode.startswith('update'):
                     b.write('COPY "{}" . 1>NUL\n'.format(os.path.abspath(__file__)))
                     if self._package == 0:
-                        b.write('python install.py --do-update\n')
+                        b.write(self._python_exec.python + ' install.py --do-update\n')
                     else:
-                        b.write('python install.py --do-update ' + params[self._package] + '\n')
+                        b.write(self._python_exec.python + ' install.py --do-update ' + params[self._package] + '\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
                     b.write('devel\\build_install_pyradio.bat -U\n')
                 else:
                     b.write('COPY "{}" uninstall.py 1>NUL\n'.format(os.path.abspath(__file__)))
                     if self._package == 0:
-                        b.write('python uninstall.py --do-uninstall\n')
+                        b.write(self._python_exec.python + ' uninstall.py --do-uninstall\n')
                     else:
-                        b.write('python uninstall.py --do-uninstall ' + params[self._package] + '\n')
+                        b.write(self._python_exec.python + ' uninstall.py --do-uninstall ' + params[self._package] + '\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
                     b.write('devel\\build_install_pyradio.bat -u\n')
         except:
@@ -306,8 +443,7 @@ class PyRadioUpdate(object):
 
     def _no_download_method(self):
         print('Error: PyRadio has no way to download files...')
-        print('       Please either install "git" or python\'s')
-        print('       module "requests" and try again.\n')
+        print('       Please either install python\'s "requests" module and try again.\n')
         sys.exit(1)
 
     def _do_it(self, mode='update'):
@@ -325,6 +461,7 @@ class PyRadioUpdate(object):
         print('Using directory: "{}"'.format(self._dir))
 
         ''' create tmp directory '''
+        self._delete_dir_limit = 0
         self._mkdir(self._dir, self._empty_dir, self._permission_error)
         if not os.path.isdir(self._dir):
             print('Error: Cannot create temp directory: "{}"'.format(self._dir))
@@ -349,27 +486,21 @@ class PyRadioUpdate(object):
 
         self._change_git_discription_in_config_py()
 
-        param = ' 2' if sys.version_info[0] == 2 else ''
+        param = ' 2' if self.python2 else ''
         if mode == 'update':
             ''' install pyradio '''
             if self.user:
                 param += ' --user'
-            try:
-                subprocess.call('sudo devel/build_install_pyradio -x' + param, shell=True)
-                ret = True
-            except:
-                ret = False
-            self._clean_up()
-            return ret
+            ret = subprocess.call('sudo devel/build_install_pyradio -x ' + self._python_exec.python + ' '  + param, shell=True)
         else:
-            ''' install pyradio '''
-            try:
-                subprocess.call('sudo devel/build_install_pyradio -x -u' + param, shell=True)
-                ret = True
-            except:
-                ret = False
-            self._clean_up()
-            return ret
+            ''' uninstall pyradio '''
+            ret = subprocess.call('sudo devel/build_install_pyradio -x ' + self._python_exec.python + ' -R' + param, shell=True)
+        if ret > 0:
+            ret = False
+        else:
+            ret = True
+        self._clean_up()
+        return ret
 
     def _change_git_discription_in_config_py(self):
         ''' change git_discription in pyradio/config.py '''
@@ -387,6 +518,10 @@ class PyRadioUpdate(object):
     def _download_pyradio(self):
         os.chdir(self._dir)
         if self._package == 0:
+            try:
+                VERSION ==  ''
+            except:
+                VERSION = get_github_tag()
             self.ZIP_URL[0] = self.ZIP_URL[0] + VERSION + '.zip'
             self.ZIP_DIR[0] += VERSION
         print('Downloading PyRadio source code...')
@@ -409,7 +544,7 @@ class PyRadioUpdate(object):
             self._clean_up()
         if sys.version_info[0] == 2:
           try:
-              os.makedirs(name, exist_ok=True)
+              os.makedirs(name)
           except OSError as e:
               if e.errno == 13:
                   if _permission_error_function:
@@ -435,10 +570,16 @@ class PyRadioUpdate(object):
               else:
                   print('Dir already exists...')
 
-    def _empty_dir(self):
-        print('Old "{}" found. Deleting...'.format(self._dir))
-        shutil.rmtree(self._dir, ignore_errors=True)
-        self._mkdir(self._dir, self._empty_dir, self._permission_error)
+    def _empty_dir(self, name=None):
+        ddir = self._dir if name is None else name
+        print('Old "{}" found. Deleting...'.format(ddir))
+        self._delete_dir_limit += 1
+        if self._delete_dir_limit > 2:
+            print('\n\nError: Cannot delete directory: "' + ddir  +  '"')
+            print('       Please relete it manually and try again... ')
+            sys.exit(1)
+        shutil.rmtree(ddir, ignore_errors=True)
+        self._mkdir(ddir, self._empty_dir, self._permission_error)
 
     def _permission_error(self):
         print('Error: You don\'t have permission to create: "{}"\n'.format(self._dir))
@@ -478,13 +619,19 @@ class PyRadioUpdate(object):
 
 class PyRadioUpdateOnWindows(PyRadioUpdate):
 
-    def __init__(self, fromTUI=False, package=0, github_long_description=None):
+    def __init__(self,
+                 fromTUI=False,
+                 package=0,
+                 github_long_description=None,
+                 python_version_to_use=3):
         if not platform.system().lower().startswith('win'):
             raise RuntimeError('This is a windows only class...')
         self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
         self._package = package
         self._fromTUI = fromTUI
         self._github_long_description = github_long_description
+        self._python_exec = PythonExecutable(python_version_to_use)
+        self.python2 = True if python_version_to_use == 2 else False
 
     @classmethod
     def print_update_bat_created(cls):
@@ -524,7 +671,10 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
         self._change_git_discription_in_config_py()
 
+
 if __name__ == '__main__':
+    print_pyradio_on()
+    print_python3() if PY3 else print_python2()
     # print(get_github_long_description())
     # sys.exit()
     from argparse import ArgumentParser, SUPPRESS as SUPPRESS
@@ -565,6 +715,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
     sys.stdout.flush()
 
+    if not PY3 and not args.python2:
+        print_trying_to_install()
+        print_python3()
+    # sys.exit()
+
+    python_version_to_use = 2 if args.python2 else 3
+    python_exec = PythonExecutable(python_version_to_use)
+    if not python_exec.can_install:
+        print('Error: Python {} not found on your system...\n'.format('2' if python_exec.requested_python_version == 2 else '3'))
+        sys.exit(1)
+
     ''' download official release '''
     package = 0
     tag_name = github_long_description = None
@@ -596,40 +757,53 @@ if __name__ == '__main__':
     if args.uninstall:
         if platform.system().lower().startswith('win'):
             ''' ok, create BAT file on Windows'''
-            uni = PyRadioUpdateOnWindows(package=package)
+            uni = PyRadioUpdateOnWindows(
+                package=package,
+                python_version_to_use=python_version_to_use
+            )
             uni.update_or_uninstall_on_windows(mode='uninstall-open')
             uni.print_uninstall_bat_created()
         else:
-            uni = PyRadioUpdate(package=package)
-            if args.python2:
-                uni.python2 = True
+            uni = PyRadioUpdate(
+                package=package,
+                python_version_to_use=python_version_to_use
+            )
             uni.remove_pyradio()
         sys.exit()
     elif args.update:
         if platform.system().lower().startswith('win'):
             ''' ok, create BAT file on Windows'''
-            upd = PyRadioUpdateOnWindows(package=package, github_long_description=github_long_description)
+            upd = PyRadioUpdateOnWindows(
+                package=package,
+                github_long_description=github_long_description,
+                python_version_to_use=python_version_to_use
+            )
             upd.update_or_uninstall_on_windows(mode='update-open')
             upd.print_update_bat_created()
         else:
-            upd = PyRadioUpdate(package=package, github_long_description=github_long_description)
-            if args.python2:
-                uni.python2 = True
+            upd = PyRadioUpdate(
+                package=package,
+                github_long_description=github_long_description,
+                python_version_to_use=python_version_to_use
+            )
             upd.user = is_pyradio_user_installed()
             upd.update_pyradio()
         sys.exit()
     elif args.do_uninstall:
         ''' coming from uninstall BAT file on Windows'''
-        uni = PyRadioUpdateOnWindows(package=package)
-        if args.python2:
-            uni.python2 = True
+        uni = PyRadioUpdateOnWindows(
+            package=package,
+            python_version_to_use=python_version_to_use
+        )
         uni.remove_pyradio()
         sys.exit()
     elif args.do_update:
         ''' coming from update BAT file on Windows'''
-        upd = PyRadioUpdateOnWindows(package=package, github_long_description=github_long_description)
-        if args.python2:
-            uni.python2 = True
+        upd = PyRadioUpdateOnWindows(
+            package=package,
+            github_long_description=github_long_description,
+            python_version_to_use=python_version_to_use
+        )
         upd.update_pyradio()
         sys.exit()
 
@@ -643,7 +817,11 @@ if __name__ == '__main__':
         subprocess.call('pip install windows-curses --upgrade')
         subprocess.call('pip install pywin32 --upgrade')
         subprocess.call('pip install requests --upgrade')
-        uni = PyRadioUpdateOnWindows(package=package, github_long_description=github_long_description)
+        uni = PyRadioUpdateOnWindows(
+            package=package,
+            github_long_description=github_long_description,
+            python_version_to_use=python_version_to_use
+        )
         uni.update_or_uninstall_on_windows(mode='update-open')
         while not os.path.isfile(os.path.join(uni._dir, 'update.bat')):
             pass
@@ -659,9 +837,11 @@ if __name__ == '__main__':
             if ret == 0:
                 print('PyRadio is already installed.\n')
                 sys.exit(1)
-        uni = PyRadioUpdate(package=package, github_long_description=github_long_description)
-        if args.python2:
-            uni.python2 = True
+        uni = PyRadioUpdate(
+            package=package,
+            github_long_description=github_long_description,
+            python_version_to_use=python_version_to_use
+        )
         uni.install = True
         if not platform.system().lower().startswith('darwin'):
             uni.user = args.user
