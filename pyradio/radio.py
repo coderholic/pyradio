@@ -220,6 +220,10 @@ class PyRadio(object):
 
     _station_rename_from_info = False
 
+
+    _limited_height_mode = False
+    _limited_width_mode = False
+
     detect_if_player_exited = True
 
     def ll(self, msg):
@@ -473,7 +477,7 @@ class PyRadio(object):
 
     @playing.setter
     def playing(self, value):
-        logger.error('-------')
+        # logger.error('-------')
         self._playing = value
         self._update_history_positions_in_list()
 
@@ -574,40 +578,10 @@ class PyRadio(object):
         self.footerWin = curses.newwin(1, self.maxX, self.maxY - 1, 0)
         self.headWin = curses.newwin(1, self.maxX, 0, 0)
 
+        # logger.error('DE maxY = {0}, maxX = {1}'.format(self.maxY, self.maxX))
+        #if self.maxY < 8 or self.maxX < 20:
         if self.maxY < 8:
-            self._limited_height_mode = True
-            if self.maxY == 1:
-                self.bodyWin = self.footerWin
-            else:
-                self.bodyWin = curses.newwin(
-                    self.maxY - 1, self.maxX, 0, 0)
-                self.bodyWin.bkgdset(' ', curses.color_pair(5))
-                self.bodyWin.erase()
-                if self.player.isPlaying():
-                    self.bodyWin.addstr(self.maxY - 2, 0, ' Station: ', curses.color_pair(5))
-                    try:
-                        self.bodyWin.addstr(self._last_played_station[0], curses.color_pair(4))
-                    except:
-                        pass
-                else:
-                    self.bodyWin.addstr(self.maxY - 2, 0, ' Status: ', curses.color_pair(5))
-                    self.bodyWin.addstr('Idle', curses.color_pair(4))
-                if self.maxY - 3 >= 0:
-                    if self._cnf.browsing_station_service:
-                        self.bodyWin.addstr(self.maxY - 3, 0, ' Service: ', curses.color_pair(5))
-                    else:
-                        self.bodyWin.addstr(self.maxY - 3, 0, ' Playlist: ', curses.color_pair(5))
-                    try:
-                        self.bodyWin.addstr(self._cnf.station_title, curses.color_pair(4))
-                    except:
-                        pass
-                if self.maxY - 4 >= 0:
-                    self._cnf.get_pyradio_version(),
-                    self.bodyWin.addstr(self.maxY - 4, 0, 'PyRadio ' + self._cnf.current_pyradio_version, curses.color_pair(4))
-
-                self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
-                self.bodyWin.refresh()
-
+            self._print_limited_info()
         else:
             self.outerBodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
             #self.bodyWin = curses.newwin(self.maxY - 2, self.maxX, 1, 0)
@@ -654,6 +628,46 @@ class PyRadio(object):
         else:
             self.footerWin.refresh()
         curses.doupdate()
+
+    def _print_limited_info(self):
+        self._limited_height_mode = True
+        if self.maxY == 1:
+            self.bodyWin = self.footerWin
+        else:
+            self.bodyWin = curses.newwin(
+                self.maxY - 1, self.maxX, 0, 0)
+            self.bodyWin.bkgdset(' ', curses.color_pair(5))
+            self.bodyWin.erase()
+            if self.player.isPlaying():
+                try:
+                    self.bodyWin.addstr(self.maxY - 2, 0, ' Station: ', curses.color_pair(5))
+                    self.bodyWin.addstr(self._last_played_station[0], curses.color_pair(4))
+                except:
+                    pass
+            else:
+                try:
+                    self.bodyWin.addstr(self.maxY - 2, 0, ' Status: ', curses.color_pair(5))
+                    self.bodyWin.addstr('Idle', curses.color_pair(4))
+                except:
+                    pass
+            if self.maxY - 3 >= 0:
+                try:
+                    if self._cnf.browsing_station_service:
+                        self.bodyWin.addstr(self.maxY - 3, 0, ' Service: ', curses.color_pair(5))
+                    else:
+                        self.bodyWin.addstr(self.maxY - 3, 0, ' Playlist: ', curses.color_pair(5))
+                    self.bodyWin.addstr(self._cnf.station_title, curses.color_pair(4))
+                except:
+                    pass
+            if self.maxY - 4 >= 0:
+                try:
+                    self._cnf.get_pyradio_version(),
+                    self.bodyWin.addstr(self.maxY - 4, 0, 'PyRadio ' + self._cnf.current_pyradio_version, curses.color_pair(4))
+                except:
+                    pass
+
+            self.bodyMaxY, self.bodyMaxX = self.bodyWin.getmaxyx()
+            self.bodyWin.refresh()
 
     def initHead(self, info):
         self.headWin.hline(0, 0, ' ', self.maxX, curses.color_pair(4))
@@ -829,8 +843,11 @@ class PyRadio(object):
                             self.outerBodyWin.addstr(0, n + 2, u'┬'.encode('utf-8', 'replace'), curses.color_pair(5))
                             self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, u'┴'.encode('utf-8', 'replace'), curses.color_pair(5))
                         else:
-                            self.outerBodyWin.addstr(0, n + 2, '┬', curses.color_pair(5))
-                            self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, '┴', curses.color_pair(5))
+                            try:
+                                self.outerBodyWin.addstr(0, n + 2, '┬', curses.color_pair(5))
+                                self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, '┴', curses.color_pair(5))
+                            except:
+                                pass
 
             align = 1
             w_header = self._cnf.station_title
@@ -857,10 +874,13 @@ class PyRadio(object):
                     w_header = ' All registers are empty '
             else:
                 w_header = ' Select playlist to open '
-            self.outerBodyWin.addstr(
-                0, int((self.bodyMaxX - len(w_header)) / 2),
-                w_header, curses.color_pair(4)
-            )
+            try:
+                self.outerBodyWin.addstr(
+                    0, int((self.bodyMaxX - len(w_header)) / 2),
+                    w_header, curses.color_pair(4)
+                )
+            except:
+                pass
 
     def __displayBodyLine(self, lineNum, pad, station, return_line=False):
         col = curses.color_pair(5)
@@ -3929,6 +3949,33 @@ class PyRadio(object):
                 curses.curs_set(0)
             except:
                 pass
+
+        maxY, maxX = self.stdscr.getmaxyx()
+        if maxX < 41:
+            while self.ws.operation_mode not in (
+                self.ws.NORMAL_MODE,
+                self.ws.PLAYLIST_MODE
+            ):
+                self.ws.close_window()
+            ''' close all windows '''
+            self.helpWinContainer = None
+            self.helpWin = None
+            self._config_win = None
+            self._player_select_win = None
+            self._playlist_select_win = None
+            self._station_editor = None
+            self._station_select_win = None
+            self._theme_selector = None
+            self._color_config_win = None
+            self._connection_type_edit = None
+            self._encoding_select_win = None
+            self._encoding_select_win =None
+        if maxX < 20:
+            self._limited_width_mode = True
+            self._limited_height_mode = True
+            self._print_limited_info()
+            return
+        self._limited_width_mode = False
         if self.player.isPlaying():
             self.log.display_help_message = False
         self.setupAndDrawScreen()
@@ -4437,12 +4484,16 @@ class PyRadio(object):
         if char in (ord('#'), curses.KEY_RESIZE):
             self._i_am_resizing = True
             self._normal_mode_resize()
-            if not self._limited_height_mode:
-                self._do_display_notify()
+            if not self._limited_width_mode:
+                if not self._limited_height_mode:
+                    self._do_display_notify()
             self._i_am_resizing = False
             return
 
-        if self._limited_height_mode:
+        # if self._limited_width_mode:
+        #     return
+
+        if self._limited_height_mode or self._limited_width_mode:
             self._handle_limited_height_keys(char)
             return
 

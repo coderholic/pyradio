@@ -49,7 +49,11 @@ a:visited{color: SaddleBrown;}
 <li><a href="#command-line-options">Command line options</a></li>
 <li><a href="#controls">Controls</a></li>
 <li><a href="#html-help">HTML help</a></li>
-<li><a href="#pyradio-modes">PyRadio Modes</a></li>
+<li><a href="#pyradio-modes">PyRadio Modes</a>
+<ul>
+<li><a href="#secondary-modes">Secondary Modes</a></li>
+<li><a href="#tiling-manager-modes">Tiling manager modes</a></li>
+</ul></li>
 <li><a href="#config-file">Config file</a></li>
 <li><a href="#about-playlist-files">About Playlist files</a>
 <ul>
@@ -139,7 +143,9 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre style="height: 200px;">
 
-2021-09-27 s-n-g
+2021-10-06 s-n-g
+    * trying to eliminate crashes when window width gets small
+      (like in tilling managers)
     * last opened playlist will restore station selection or resume playback
     * install.py will always use the requested python version
 
@@ -756,6 +762,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 <li>The <strong>Register Main</strong> mode, which is identical to the “<em>Main</em>” mode, except it displays the content of a <strong>named</strong> register.</p></li>
 <li>The <strong>Listening</strong> mode, which is intended to be used when you want <strong>PyRadio</strong> to just play your favorite station and not take up too much space. It is ideal for tilling window manager use, as the whole TUI can be reduced all the way down to a single line (displaying the “<em>Status Bar</em>”). In this mode, adjusting, muting and saving the volume are the only action available. To get <strong>PyRadio</strong> back to normal operation one would just resize its window to a reasonable size (7 lines vertically, or more).</p></li>
 </ol>
+<h3 id="secondary-modes">Secondary Modes</h3>
 <p>A set of <strong>secondary modes</strong> is also available (a secondary mode works within a primary one):</p>
 <ol type="1">
 <li>The <strong>Extra Commands</strong> mode, which gives you access to extra commands. You can enter this mode by pressing “<strong>\</strong>” (backslash). Then a backslash is displayed at the bottom right corner of the window.</p></li>
@@ -764,6 +771,17 @@ Esc/q/Left/h      -                                                Cancel / clos
 <li>The <strong>Paste</strong> mode, which is available in the <em>Station editor</em> window only. It is designed to help the user paste a URL (and optionally a station’s name). Why you might ask… Well, the <em>Station editor</em> normally treats the “<em>?</em>” and “<em>\</em>” characters as special characters (actually commands). So, if a URL which contains these characters (more frequently the “<em>?</em>” character) is pasted it will be corrupted unless the <strong>Paste</strong> mode is enabled.</p></li>
 </ol>
 <p>The functions available through the <em>secondary modes</em> are content dependent, so you can see what command is available by pressing “<strong>?</strong>” while within a secondary mode. Pressing any other key will exit the secondary mode.</p>
+<h3 id="tiling-manager-modes">Tiling manager modes</h3>
+<p>These modes are specifically designed to be used with tiling window managers, trying to face a rapid reduction of window height or width (or both).</p>
+<ol type="1">
+<li>The <strong>Limited Height</strong> mode, which is automatically enabled when the window height gets below 8 lines.</p>
+<p>In this mode, only a limited information is visible and if playback is on, the volume is the only thing that can be adjusted (or muted) and saved. This is the <strong>Limited display</strong>.</p></li>
+<li>The <strong>Limited Width</strong> mode, which is automatically enabled when the window width get bellow certain limits:</p>
+<ul>
+<li>When the width gets bellow 40 columns, all windows will be closed and the main window will be the only visible one (either displaying stations, playlists or registers).</li>
+<li>When the width gets bellow 20 columns, the <strong>Limited display</strong> will be activated.</li>
+</ul></li>
+</ol>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong>PyRadio</strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong>PyRadio</strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>

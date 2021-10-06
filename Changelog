@@ -1,4 +1,6 @@
-2021-09-27 s-n-g
+2021-10-06 s-n-g
+    * trying to eliminate crashes when window width gets small
+      (like in tilling managers)
     * last opened playlist will restore station selection or resume playback
     * install.py will always use the requested python version
 

@@ -185,10 +185,13 @@ class Log(object):
                     if not self.error_msg:
                         self.counter = None
                         suffix_string = ' Press ? for help'
-                        self.cursesScreen.addstr(
-                            0,
-                            self._active_width - len(suffix_string),
-                            suffix_string)
+                        try:
+                            self.cursesScreen.addstr(
+                                0,
+                                self._active_width - len(suffix_string),
+                                suffix_string)
+                        except:
+                            pass
                         self.cursesScreen.refresh()
                         self.display_help_message = True
                         if self._show_status_updates:

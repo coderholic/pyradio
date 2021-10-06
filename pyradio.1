@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "September 2021" PyRadio
+.TH pyradio 1 "October 2021" PyRadio
 
 .SH Name
 .PP
@@ -165,8 +165,10 @@ The \fBListening\fR mode, which is intended to be used when you want \fBPyRadio\
 
 .RE
 
+
 A set of \fBsecondary modes\fR is also available (a secondary mode works within a primary one):
 
+.RE
 .RS 5
 .IP 1. 3
 The \fBExtra Commands\fR mode, which gives you access to extra commands. You can enter this mode by pressing "\fB\\\fR" (backslash). Then a backslash is displayed at the bottom right corner of the window.
@@ -184,6 +186,28 @@ The \fBPaste\fR mode, which is available in the \fIStation editor\fR window only
 
 The functions availabe through the \fIsecondary modes\fR are content dependant, so you can see what command is available by pressing "\fB?\fR" while within such a mode. Pressing any other key will exit the secondary mode.
 
+\fBTiling manager modes\fR
+
+.RS 5
+
+These modes are specifically designed to be used with tiling window managers, trying to face a rapid reduction of window height or width (or both).
+
+.IP 1. 3
+The \fBLimited Height\fR mode, which is automatically enabled when the window height gets \fIbelow 8 lines\fR.
+
+In this mode, only a limited information is visible and if playback is on, the volume is the only thing that can be adjusted (or muted) and saved. This is the \fBLimited display\fR.
+
+.IP 2. 3
+The \fBLimited Width\fR mode, which is automatically enabled when the window width get bellow certain limits:
+
+.RE
+.RS 8
+.IP a. 3
+When the width gets \fIbellow 40 columns\fR, all windows will be closed and the main window will be the only visible one (either displaying stations, playlists or registers).
+
+.IP b. 3
+When the width gets \fIbellow 20 columns\fR, the \fBLimited display\fR will be activated.
+
 .SH Config File
 \fBPyRadio\fR upon its execution tries to read its configuration file (i.e. \fI~/.config/pyradio/config\fR). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and \fBPyRadio\fR will terminate.
 
@@ -199,7 +223,7 @@ If saving the configuration file fails, \fBPyRadio\fR will create a back up file
 .PP
 \fBPyRadio\fR reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.
 .PP
-Optionally, a third column can be inserted, stating the encoding used by the station (more on this at \fBSPECIFYING STATIONS' ENCODING\fR).
+Optionally, a third column can be inserted, stating the encoding used by the station (more on this at \fBSpecifying Stations' Encoding\fR).
 .PP
 \fBPyRadio\fR will by default load the user's stations file (e.g. \fI~/.config/pyradio/stations.csv\fR). If this file is not found, it will be created and populated with a default set of stations.
 
@@ -904,13 +928,15 @@ Finally, include the file produced in your report.
 
 .SH Files
 .PP
-.I /usr/share/doc/pyradio/README.md
-
 .I /usr/share/doc/pyradio/README.html
 
-.I /usr/share/doc/pyradio/build.md
-
 .I /usr/share/doc/pyradio/build.html
+
+.I /usr/share/doc/pyradio/radio-browser.html
+
+.I /usr/share/doc/pyradio/windows.html
+
+.I /usr/share/doc/pyradio/windows-mplayer.html
 
 .I /usr/share/licenses/pyradio/LICENSE
 

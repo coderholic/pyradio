@@ -16,6 +16,8 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Controls](#controls)
 * [HTML help](#html-help)
 * [PyRadio Modes](#pyradio-modes)
+    * [Secondary Modes](#secondary-modes)
+    * [Tiling manager modes](#tiling-manager-modes)
 * [Config file](#config-file)
 * [About Playlist files](#about-playlist-files)
     * [Integrating new stations](#integrating-new-stations)
@@ -222,6 +224,8 @@ This is just a helper function for windows users who cannot use the man pages, b
 
 5. The **Listening** mode, which is intended to be used when you want **PyRadio** to just play your favorite station and not take up too much space. It is ideal for tilling window manager use, as the whole TUI can be reduced all the way down to a single line (displaying the "*Status Bar*"). In this mode, adjusting, muting and saving the volume are the only action available. To get **PyRadio** back to normal operation one would just resize its window to a reasonable size (7 lines vertically, or more).
 
+### Secondary Modes
+
 A set of **secondary modes** is also available (a secondary mode works within a primary one):
 
 1. The **Extra Commands** mode, which gives you access to extra commands. You can enter this mode by pressing "**\\**" (backslash). Then a backslash is displayed at the bottom right corner of the window.
@@ -233,6 +237,19 @@ A set of **secondary modes** is also available (a secondary mode works within a 
 4. The **Paste** mode, which is available in the *Station editor* window only. It is designed to help the user paste a URL (and optionally a station's name). Why you might ask... Well, the *Station editor* normally treats the "*?*" and "*\\*" characters as special characters (actually commands). So, if a URL which contains these characters (more frequently the "*?*" character) is pasted it will be corrupted unless the **Paste** mode is enabled.
 
 The functions available through the *secondary modes* are content dependent, so you can see what command is available by pressing "**?**" while within a secondary mode. Pressing any other key will exit the secondary mode.
+
+### Tiling manager modes
+
+These modes are specifically designed to be used with tiling window managers, trying to face a rapid reduction of window height or width (or both).
+
+1. The **Limited Height** mode, which is automatically enabled when the window height gets below 8 lines.
+
+    In this mode, only a limited information is visible and if playback is on, the volume is the only thing that can be adjusted (or muted) and saved. This is the **Limited display**.
+
+2. The **Limited Width** mode, which is automatically enabled when the window width get bellow certain limits:
+
+    - When the width gets bellow 40 columns, all windows will be closed and the main window will be the only visible one (either displaying stations, playlists or registers).
+    - When the width gets bellow 20 columns, the **Limited display** will be activated.
 
 ## Config file
 
