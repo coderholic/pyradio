@@ -634,8 +634,13 @@ class PyRadio(object):
         if self.maxY == 1:
             self.bodyWin = self.footerWin
         else:
-            self.bodyWin = curses.newwin(
-                self.maxY - 1, self.maxX, 0, 0)
+            ''' this is so that on windows I will not crash '''
+            try:
+                self.bodyWin = curses.newwin(
+                    self.maxY - 1, self.maxX, 0, 0)
+            except:
+                return
+
             self.bodyWin.bkgdset(' ', curses.color_pair(5))
             self.bodyWin.erase()
             if self.player.isPlaying():

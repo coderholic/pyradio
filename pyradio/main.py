@@ -369,6 +369,12 @@ def shell():
         if args.play == 'False':
             if args.stations == '':
                 args.play = pyradio_config.default_station
+        elif args.play != '':
+            try:
+                check_int = int(args.play)
+            except:
+                print('Error: Invalid parameter (-p ' + args.play + ')')
+                sys.exit(1)
         if args.play == '-1':
             args.play = 'False'
 

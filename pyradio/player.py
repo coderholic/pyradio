@@ -64,7 +64,7 @@ except:
 
         path = path.split(os.pathsep)
 
-        if platform == 'win32':
+        if platform.startswith('win'):
             # The current directory takes precedence on Windows.
             if os.curdir not in path:
                 path.insert(0, os.curdir)
@@ -239,7 +239,7 @@ class Player(object):
         self.config_files = []
         self._get_all_config_files()
         #if self.WIN and self.PLAYER_NAME == 'vlc':
-        if platform == 'win32':
+        if platform.startswith('win'):
             ''' delete old vlc files (vlc_log.*) '''
             from .del_vlc_log import RemoveWinVlcLogFiles
             threading.Thread(target=RemoveWinVlcLogFiles(self.config_dir)).start()
@@ -555,6 +555,7 @@ class Player(object):
                     continue
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
+
                 if self.oldUserInput['Input'] != subsystemOut:
                     if (logger.isEnabledFor(logging.DEBUG)):
                         if version_info < (3, 0):
@@ -562,6 +563,7 @@ class Player(object):
                             logger.debug('User input: {}'.format(disp))
                         else:
                             logger.debug('User input: {}'.format(subsystemOut))
+
                     self.oldUserInput['Input'] = subsystemOut
                     if self.volume_string in subsystemOut:
                         # disable volume for mpv
@@ -695,13 +697,14 @@ class Player(object):
             return
 
         if detect_if_player_exited():
-            if not platform.startswith('win32'):
+            if not platform.startswith('win'):
                 poll = process.poll()
                 if poll is not None:
                     logger.error('----==== player disappeared! ====----')
                     stop_player(from_update_thread=True)
-            logger.error('----==== player disappeared! ====----')
-            stop_player(from_update_thread=True)
+            else:
+                logger.error('----==== player disappeared! ====----')
+                stop_player(from_update_thread=True)
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('updateStatus thread stopped.')
 
@@ -880,6 +883,7 @@ class Player(object):
                                 self.outputStream.write(msg=string_to_show, counter='')
                                 self.threadUpdateTitle()
                     elif self._is_in_playback_token(subsystemOut):
+                        logger.error('DE \n\ntoken = "' + subsystemOut + '"\n\n')
                         if stop():
                             break
                         poll= process.poll()
@@ -2016,7 +2020,21 @@ class VlcPlayer(Player):
         max_volume = 512
 
         ''' When found in station transmission, playback is on '''
-        _playback_token_tuple = ('main audio ', 'Content-Type: audio', ' Segment #' )
+        if platform.startswith('win'):
+            _playback_token_tuple = (
+                # ' successfully opened',
+                # 'main audio ',
+                # 'Content-Type: audio',
+                ' Segment #',
+                'using audio decoder module'
+            )
+        else:
+            _playback_token_tuple = (
+                # 'Content-Type: audio',
+                ' Segment #',
+                'using audio filter module',
+                'using audio decoder module'
+            )
 
         ''' Windows only variables '''
         _vlc_stdout_log_file = ''
@@ -2191,6 +2209,7 @@ class VlcPlayer(Player):
                 otherwise they may not be handled at all...
             '''
             accept_filter = (self.volume_string,
+                             'error',
                              'debug: ',
                              'format: ',
                              'using: ',
@@ -2202,6 +2221,7 @@ class VlcPlayer(Player):
                              )
         else:
             accept_filter = (self.volume_string,
+                             'error',
                              'http stream debug: ',
                              'format: ',
                              ': using',

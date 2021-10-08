@@ -251,6 +251,10 @@ These modes are specifically designed to be used with tiling window managers, tr
     - When the width gets bellow 40 columns, all windows will be closed and the main window will be the only visible one (either displaying stations, playlists or registers).
     - When the width gets bellow 20 columns, the **Limited display** will be activated.
 
+![Pyradio reduced to the "Limited display"](https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg)
+
+**Note:** These two modes do not work on Windows, either 7 or 10. The "*Console*"window will shrink as desired, but will not always notify **PyRadio** about it, so results will vary.
+
 ## Config file
 
 **PyRadio** upon its execution tries to read its configuration file (i.e. *~/.config/pyradio/config*). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and **PyRadio** will terminate.

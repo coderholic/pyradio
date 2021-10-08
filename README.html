@@ -143,11 +143,14 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre style="height: 200px;">
 
-2021-10-06 s-n-g
+2021-10-07 s-n-g
+    * adding check for -p parameter (int)
+    * trying to better VLC start of playback detection
+    * last opened playlist will restore station selection or resume playback
     * trying to eliminate crashes when window width gets small
       (like in tilling managers)
-    * last opened playlist will restore station selection or resume playback
     * install.py will always use the requested python version
+    * updating docs (adding "Limited display" image")
 
 2021-09-14 s-n-g
     * adding last opened playlist support as per (#138)
@@ -782,6 +785,8 @@ Esc/q/Left/h      -                                                Cancel / clos
 <li>When the width gets bellow 20 columns, the <strong>Limited display</strong> will be activated.</li>
 </ul></li>
 </ol>
+<a href="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" alt="Pyradio reduced to the “Limited display”" /></a>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> These two modes do not work on Windows, either 7 or 10. The “<em>Console</em>”window will shrink as desired, but will not always notify <strong>PyRadio</strong> about it, so results will vary.</p>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong>PyRadio</strong> will terminate.</p>
 <p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong>PyRadio</strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
