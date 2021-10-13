@@ -33,7 +33,6 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Specifying stations' encoding](#specifying-stations'-encoding)
     * [Station by station encoding declaration](#station-by-station-encoding-declaration)
     * [Global encoding declaration](#global-encoding-declaration)
-    * [Finding the right encoding](#finding-the-right-encoding)
 * [Player detection / selection](#player-detection-/-selection)
     * [Extra Player Parameters](#extra-player-parameters)
         * [Using the command line](#using-the-command-line)
@@ -482,15 +481,6 @@ Using the **-a** command line option will save you all this trouble, as it will 
 Setting this parameter to a different encoding, will permit **PyRadio** to successfully decode such stations.
 
 This would be useful in the case where most of your stations do not use **utf-8**. Instead of editing the playlist and add the encoding to each and every affected station, you just set it globally.
-
-### Finding the right encoding
-
-A valid encoding list can be found at:
-
-[https://docs.python.org/2.7/library/codecs.html#standard-encodings](https://docs.python.org/2.7/library/codecs.html#standard-encodings)
-
-replacing **2.7** with specific version: **3.0** up to current python version.
-
 
 ## Player detection / selection
 

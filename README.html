@@ -74,7 +74,6 @@ a:visited{color: SaddleBrown;}
 <ul>
 <li><a href="#station-by-station-encoding-declaration">Station by station encoding declaration</a></li>
 <li><a href="#global-encoding-declaration">Global encoding declaration</a></li>
-<li><a href="#finding-the-right-encoding">Finding the right encoding</a></li>
 </ul></li>
 <li><a href="#player-detection-/-selection">Player detection / selection</a>
 <ul>
@@ -143,10 +142,13 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre style="height: 200px;">
 
-2021-10-07 s-n-g
+2021-10-13 s-n-g
     * adding check for -p parameter (int)
+    * keep looking for a station after playback failure when random is on
     * trying to better VLC start of playback detection
     * last opened playlist will restore station selection or resume playback
+    * mplayer on Windows: do not fail to start a station
+      after astop/start command
     * trying to eliminate crashes when window width gets small
       (like in tilling managers)
     * install.py will always use the requested python version
@@ -917,10 +919,6 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p><strong>PyRadio</strong>’s configuration file contains the parameter <strong>default_encoding</strong>, which by default is set to <strong>utf-8</strong>.</p>
 <p>Setting this parameter to a different encoding, will permit <strong>PyRadio</strong> to successfully decode such stations.</p>
 <p>This would be useful in the case where most of your stations do not use <strong>utf-8</strong>. Instead of editing the playlist and add the encoding to each and every affected station, you just set it globally.</p>
-<h3 id="finding-the-right-encoding">Finding the right encoding</h3>
-<p>A valid encoding list can be found at:</p>
-<p><a target="_blank" href="https://docs.python.org/2.7/library/codecs.html#standard-encodings">https://docs.python.org/2.7/library/codecs.html#standard-encodings</a></p>
-<p>replacing <strong>2.7</strong> with specific version: <strong>3.0</strong> up to current python version.</p>
 <h2 id="player-detection-selection">Player detection / selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> is basically built around the existence of a valid media player it can use. Thus, it will auto detect the existence of its supported players upon its execution.</p>
 <p>Currently, it supports MPV, MPlayer and VLC, and it will look for them in that order. If none of them is found, the program will terminate with an error.</p>

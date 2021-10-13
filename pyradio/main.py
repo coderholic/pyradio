@@ -369,7 +369,7 @@ def shell():
         if args.play == 'False':
             if args.stations == '':
                 args.play = pyradio_config.default_station
-        elif args.play != '':
+        elif args.play is not None:
             try:
                 check_int = int(args.play)
             except:

@@ -85,7 +85,7 @@ def is_pyradio_user_installed():
     return True if ret.startswith(home) else False
 
 def isRunning():
-    ctypes.windll.kernel32.SetConsoleTitleW(curdir)
+    ctypes.windll.kernel32.SetConsoleTitleW('PyRadio Installation')
     print('PyRadio is still running. Please terminate it to continue ... ')
     while WindowExists('PyRadio: Your Internet Radio Player') or \
             WindowExists('PyRadio: Your Internet Radio Player (Session Locked)'):

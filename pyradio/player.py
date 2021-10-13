@@ -166,6 +166,7 @@ def info_dict_to_list(info, fix_highlight, max_width):
 class Player(object):
     ''' Media player class. Playing is handled by player sub classes '''
     process = None
+    update_thread = None
 
     icy_title_prefix = 'Title: '
     title_prefix = ''
@@ -532,6 +533,7 @@ class Player(object):
         process = args[1]
         stop_player = args[2]
         detect_if_player_exited = args[3]
+        enable_crash_detection_function = args[4]
         has_error = False
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('updateStatus thread started.')
@@ -586,6 +588,8 @@ class Player(object):
                             self.connection_timeout_thread.join()
                         except:
                             pass
+                        if enable_crash_detection_function:
+                            enable_crash_detection_function()
                         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
                                 logger.info('*** updateStatus(): Start of playback detected ***')
                         #if self.outputStream.last_written_string.startswith('Connecting to'):
@@ -618,6 +622,8 @@ class Player(object):
                         # logger.error('DE 3 {}'.format(self._icy_data))
                     elif self._is_icy_entry(subsystemOut):
                         if not subsystemOut.endswith('Icy-Title=(null)'):
+                            if enable_crash_detection_function:
+                                enable_crash_detection_function()
                             # logger.error('***** icy_entry: "{}"'.format(subsystemOut))
                             title = self._format_title_string(subsystemOut)
                             # logger.error('DE title = "{}"'.format(title))
@@ -668,6 +674,8 @@ class Player(object):
                                     if logger.isEnabledFor(logging.INFO):
                                         logger.info('*** updateStatus(): Start of playback detected (Icy audio token received) ***')
                                 self.playback_is_on = True
+                                if enable_crash_detection_function:
+                                    enable_crash_detection_function()
                                 # logger.error('DE token = "{}"'.format(a_token))
                                 # logger.error('DE icy_audio_tokens[a_token] = "{}"'.format(self.icy_audio_tokens[a_token]))
                                 a_str = subsystemOut.split(a_token)
@@ -694,17 +702,32 @@ class Player(object):
         except:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Error in updateStatus thread.', exc_info=True)
-            return
+            # return
 
-        if detect_if_player_exited():
+        ''' crash detection '''
+        # logger.error('detect_if_player_exited = {0}, stop = {1}'.format(detect_if_player_exited(), stop()))
+
+        if not stop():
             if not platform.startswith('win'):
                 poll = process.poll()
                 if poll is not None:
-                    logger.error('----==== player disappeared! ====----')
-                    stop_player(from_update_thread=True)
+                    if not stop():
+                        if detect_if_player_exited():
+                            if logger.isEnabledFor(logging.INFO):
+                                logger.info('----==== player disappeared! ====----')
+                            stop_player(from_update_thread=True)
+                        else:
+                            if logger.isEnabledFor(logging.INFO):
+                                logger.info('Crash detection is off; waiting to timeout')
             else:
-                logger.error('----==== player disappeared! ====----')
-                stop_player(from_update_thread=True)
+                if not stop():
+                    if detect_if_player_exited():
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('----==== player disappeared! ====----')
+                        stop_player(from_update_thread=True)
+                    else:
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('Crash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('updateStatus thread stopped.')
 
@@ -713,6 +736,7 @@ class Player(object):
         process = args[1]
         stop_player = args[2]
         detect_if_player_exited = args[3]
+        enable_crash_detection_function = args[4]
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('MPV updateStatus thread started.')
 
@@ -726,7 +750,6 @@ class Player(object):
                     if (logger.isEnabledFor(logging.INFO)):
                         logger.info('MPV updateStatus thread stopped (no connection to socket).')
                     return
-                sleep(.25)
         # Send data
         message = b'{ "command": ["observe_property", 1, "metadata"] }\n'
         try:
@@ -767,14 +790,14 @@ class Player(object):
                                                 sock.sendall(self.GET_TITLE)
                                             except:
                                                 break
-                                            ret = self._set_mpv_playback_is_on(stop)
+                                            ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
                                                 break
                                             self._request_mpv_info_data(sock)
                                             self.info_display_handler()
                                         elif d['event'] == 'playback-restart':
                                             if not self.playback_is_on:
-                                                ret = self._set_mpv_playback_is_on(stop)
+                                                ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
                                                 break
                                             self._request_mpv_info_data(sock)
@@ -784,18 +807,34 @@ class Player(object):
                 finally:
                     pass
         sock.close()
+
         if not stop():
             ''' haven't been asked to stop '''
-            # logger.error('DE\n\n NOT ASKED TO STOP\n\n')
-            # poll = process.poll()
-            # logger.error('DE poll = {}'.format(poll))
-            # if poll is not None:
-            logger.error('----==== MPV disappeared! ====----')
-            stop_player(from_update_thread=True)
+            if detect_if_player_exited():
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('----==== MPV disappeared! ====----')
+                stop_player(from_update_thread=True)
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Crash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('MPV updateStatus thread stopped.')
 
     def updateWinVLCStatus(self, *args):
+        def do_crash_detection(detect_if_player_exited, stop):
+            if self.playback_is_on:
+                poll = process.poll()
+                if poll is not None:
+                    if not stop():
+                        if detect_if_player_exited():
+                            if logger.isEnabledFor(logging.INFO):
+                                logger.info('----==== VLC disappeared! ====----')
+                            stop_player(from_update_thread=True)
+                            return True
+                        else:
+                            if logger.isEnabledFor(logging.INFO):
+                                logger.info('Crash detection is off; waiting to timeout')
+            return False
         has_error = False
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('Win VLC updateStatus thread started.')
@@ -805,6 +844,7 @@ class Player(object):
         process = args[3]
         stop_player = args[4]
         detect_if_player_exited = args[5]
+        enable_crash_detection_function = args[6]
         ''' Force volume display even when icy title is not received '''
         self.oldUserInput['Title'] = 'Playing: ' + self.name
         # logger.error('DE ==== {0}\n{1}\n{2}'.format(fn, enc, stop))
@@ -816,11 +856,6 @@ class Player(object):
         while not go_on:
             if stop():
                 break
-            poll= process.poll()
-            if poll is not None:
-                logger.error('----==== vlc disappeared! ====----')
-                stop_player(from_update_thread=True)
-                break
             try:
                 fp = open(fn, mode='rt', encoding=enc, errors='ignore')
                 go_on = True
@@ -830,11 +865,6 @@ class Player(object):
         try:
             while(True):
                 if stop():
-                    break
-                poll= process.poll()
-                if poll is not None:
-                    logger.error('----==== vlc disappeared! ====----')
-                    stop_player(from_update_thread=True)
                     break
                 subsystemOut = fp.readline()
                 subsystemOut = subsystemOut.strip().replace(u'\ufeff', '')
@@ -848,11 +878,6 @@ class Player(object):
                 if self.oldUserInput['Input'] != subsystemOut:
                     if stop():
                         break
-                    poll= process.poll()
-                    if poll is not None:
-                        logger.error('----==== vlc disappeared! ====----')
-                        stop_player(from_update_thread=True)
-                        break
                     if (logger.isEnabledFor(logging.DEBUG)):
                         if version_info < (3, 0):
                             disp = subsystemOut.encode('utf-8', 'replace').strip()
@@ -861,14 +886,9 @@ class Player(object):
                             # logger.debug("User input: {}".format(subsystemOut))
                             pass
                     self.oldUserInput['Input'] = subsystemOut
-                    logger.error('DE subsystemOut = "' + subsystemOut + '"')
+                    # logger.error('DE subsystemOut = "' + subsystemOut + '"')
                     if self.volume_string in subsystemOut:
                         if stop():
-                            break
-                        poll= process.poll()
-                        if poll is not None:
-                            logger.error('----==== vlc disappeared! ====----')
-                            stop_player(from_update_thread=True)
                             break
                         # logger.error("***** volume")
                         if self.oldUserInput['Volume'] != subsystemOut:
@@ -883,19 +903,16 @@ class Player(object):
                                 self.outputStream.write(msg=string_to_show, counter='')
                                 self.threadUpdateTitle()
                     elif self._is_in_playback_token(subsystemOut):
-                        logger.error('DE \n\ntoken = "' + subsystemOut + '"\n\n')
+                        # logger.error('DE \n\ntoken = "' + subsystemOut + '"\n\n')
                         if stop():
-                            break
-                        poll= process.poll()
-                        if poll is not None:
-                            logger.error('----==== vlc disappeared! ====----')
-                            stop_player(from_update_thread=True)
                             break
                         self.stop_timeout_counter_thread = True
                         try:
                             self.connection_timeout_thread.join()
                         except:
                             pass
+                        if enable_crash_detection_function:
+                            enable_crash_detection_function()
                         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
                                 logger.info('*** updateWinVLCStatus(): Start of playback detected ***')
                         #if self.outputStream.last_written_string.startswith('Connecting to'):
@@ -905,6 +922,7 @@ class Player(object):
                             new_input = self.oldUserInput['Title']
                         self.outputStream.write(msg=new_input, counter='')
                         self.playback_is_on = True
+                        self._stop_delay_thread()
                         if 'AO: [' in subsystemOut:
                             with self.status_update_lock:
                                 if version_info > (3, 0):
@@ -916,15 +934,18 @@ class Player(object):
                     elif self._is_icy_entry(subsystemOut):
                         if stop():
                             break
-                        poll= process.poll()
-                        if poll is not None:
-                            logger.error('----==== vlc disappeared! ====----')
-                            stop_player(from_update_thread=True)
-                            break
                         if not self.playback_is_on:
                             if logger.isEnabledFor(logging.INFO):
                                 logger.info('*** updateWinVLCStatus(): Start of playback detected (Icy-Title received) ***')
+                        self.stop_timeout_counter_thread = True
+                        try:
+                            self.connection_timeout_thread.join()
+                        except:
+                            pass
                         self.playback_is_on = True
+                        self._stop_delay_thread()
+                        if enable_crash_detection_function:
+                            enable_crash_detection_function()
 
                         if not subsystemOut.endswith('Icy-Title=(null)'):
                             # logger.error("***** icy_entry")
@@ -955,17 +976,20 @@ class Player(object):
                     else:
                         if stop():
                             break
-                        poll= process.poll()
-                        if poll is not None:
-                            logger.error('----==== vlc disappeared! ====----')
-                            stop_player(from_update_thread=True)
-                            break
                         for a_token in self.icy_audio_tokens.keys():
                             if a_token in subsystemOut:
                                 if not self.playback_is_on:
                                     if logger.isEnabledFor(logging.INFO):
                                         logger.info('*** updateWinVLCStatus(): Start of playback detected (Icy audio token received) ***')
+                                self.stop_timeout_counter_thread = True
+                                try:
+                                    self.connection_timeout_thread.join()
+                                except:
+                                    pass
                                 self.playback_is_on = True
+                                self._stop_delay_thread()
+                                if enable_crash_detection_function:
+                                    enable_crash_detection_function()
                                 # logger.error('DE token = "{}"'.format(a_token))
                                 # logger.error('DE icy_audio_tokens[a_token] = "{}"'.format(self.icy_audio_tokens[a_token]))
                                 a_str = subsystemOut.split(a_token)
@@ -993,10 +1017,8 @@ class Player(object):
             has_error = True
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Error in Win VLC updateStatus thread.', exc_info=True)
-            poll= process.poll()
-            if poll is not None:
-                logger.error('----==== vlc disappeared! ====----')
-                stop_player(from_update_thread=True)
+        if has_error or not stop():
+            do_crash_detection(detect_if_player_exited, stop)
         try:
             fp.close()
         except:
@@ -1067,7 +1089,7 @@ class Player(object):
                     if not self.playback_is_on:
                         if stop():
                             return False
-                        return self._set_mpv_playback_is_on(stop)
+                        return self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                 else:
                     if (logger.isEnabledFor(logging.INFO)):
                         logger.info('Icy-Title is NOT valid')
@@ -1149,12 +1171,13 @@ class Player(object):
         else:
             return False
 
-    def _set_mpv_playback_is_on(self, stop):
+    def _set_mpv_playback_is_on(self, stop, enable_crash_detection_function):
         self.stop_timeout_counter_thread = True
         try:
             self.connection_timeout_thread.join()
         except:
             pass
+        self.detect_if_player_exited = True
         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
                     logger.info('*** _set_mpv_playback_is_on(): Start of playback detected ***')
         new_input = 'Playing: ' + self.name
@@ -1165,6 +1188,7 @@ class Player(object):
         self.playback_is_on = True
         if stop():
             return False
+        enable_crash_detection_function()
         return True
 
     def threadUpdateTitle(self, delay=1):
@@ -1216,7 +1240,14 @@ class Player(object):
     def isPlaying(self):
         return bool(self.process)
 
-    def play(self, name, streamUrl, stop_player, detect_if_player_exited, encoding=''):
+    def play(self,
+             name,
+             streamUrl,
+             stop_player,
+             detect_if_player_exited,
+             enable_crash_detection_function=None,
+             encoding=''
+         ):
         ''' use a multimedia player to play a stream '''
         self.close()
         self.name = name
@@ -1247,25 +1278,32 @@ class Player(object):
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             self.process = subprocess.Popen(opts, shell=False,
                                             startupinfo=startupinfo)
-            t = threading.Thread(target=self.updateWinVLCStatus, args=(
+            self.update_thread = threading.Thread(
+                target=self.updateWinVLCStatus,
+                args=(
                     self._vlc_stdout_log_file,
                     self.config_encoding,
                     lambda: self.stop_win_vlc_status_update_thread,
                     self.process,
                     stop_player,
-                    detect_if_player_exited))
+                    detect_if_player_exited,
+                    enable_crash_detection_function
+                )
+            )
         else:
             if self.PLAYER_NAME == 'mpv' and version_info > (3, 0):
                 self.process = subprocess.Popen(opts, shell=False,
                                                 stdout=subprocess.DEVNULL,
                                                 stdin=subprocess.DEVNULL,
                                                 stderr=subprocess.DEVNULL)
-                t = threading.Thread(
+                self.update_thread = threading.Thread(
                     target=self.updateMPVStatus,
                     args=(lambda: self.stop_mpv_status_update_thread,
                           self.process,
                           stop_player,
-                          detect_if_player_exited)
+                          detect_if_player_exited,
+                          enable_crash_detection_function
+                    )
                 )
             else:
                 self.process = subprocess.Popen(
@@ -1274,13 +1312,17 @@ class Player(object):
                     stdin=subprocess.PIPE,
                     stderr=subprocess.STDOUT
                 )
-                t = threading.Thread(
+                self.update_thread = threading.Thread(
                     target=self.updateStatus,
-                    args=(lambda: self.stop_mpv_status_update_thread,
-                          self.process,
-                          stop_player,
-                          detect_if_player_exited))
-        t.start()
+                    args=(
+                        lambda: self.stop_mpv_status_update_thread,
+                        self.process,
+                        stop_player,
+                        detect_if_player_exited,
+                        enable_crash_detection_function
+                    )
+                )
+        self.update_thread.start()
         if self.PLAYER_NAME == 'vlc':
             self._get_volume()
         # start playback check timer thread
@@ -1304,7 +1346,7 @@ class Player(object):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('playback detection thread not starting (timeout is 0)')
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Player started')
+            logger.info('----==== {} player started ====----'.format(self.PLAYER_NAME))
 
     def _sendCommand(self, command):
         ''' send keystroke command to player '''
@@ -1344,18 +1386,20 @@ class Player(object):
                 try:
                     subprocess.Call(['Taskkill', '/PID', '{}'.format(self.process.pid), '/F', '/T'])
                     logger.error('Taskkill killed PID {}'.format(self.process.pid))
-                    self.process = None
-                    # logger.error('***** self.process = None')
                 except:
                     logger.error('Taskkill failed to kill PID {}'.format(self.process.pid))
             else:
                 try:
                     os.kill(self.process.pid, 15)
-                    self.process.wait()
                 except:
                     # except ProcessLookupError:
                     pass
+            self.process.wait()
             self.process = None
+            try:
+                self.update_thread.join()
+            finally:
+                self.update_thread = None
 
     def _buildStartOpts(self, streamUrl, playList):
         pass
