@@ -1835,7 +1835,7 @@ class PyRadio(object):
                         mode_to_set=self.ws.RADIO_BROWSER_SEARCH_HELP_MODE,
                         caption=' RadioBrowser Search Help ')
 
-    def _show_main_help(self):
+    def _show_main_help(self, from_keyboard=False):
         txt = '''Up|,|j|,|PgUp|,
                  Down|,|k|,|PgDown    |Change station selection.
                  <n>g| / |<n>G      |Jump to first /last or n-th station.
@@ -1860,8 +1860,10 @@ class PyRadio(object):
         self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_2] = self._help_metrics[self.ws.MAIN_HELP_MODE]
         self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_3] = self._help_metrics[self.ws.MAIN_HELP_MODE]
         self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_4] = self._help_metrics[self.ws.MAIN_HELP_MODE]
+        if self._cnf.browsing_station_service and not from_keyboard:
+            self._show_main_help_page_from_browser()
 
-    def _show_main_help_page_2(self):
+    def _show_main_help_page_2(self, from_keyboard=False):
         txt = '''!Playlist editing
                  a| / |A            |Add / append new station.
                  e                |Edit current station.
@@ -1882,7 +1884,7 @@ class PyRadio(object):
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_2,
                         reset_metrics=False)
 
-    def _show_main_help_page_3(self):
+    def _show_main_help_page_3(self, from_keyboard=False):
         txt = '''p                |Paste unnamed register.
                  !Extra Command mode (\\)
                  \\                |Open previous playlist.
@@ -1905,7 +1907,7 @@ class PyRadio(object):
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_3,
                         reset_metrics=False)
 
-    def _show_main_help_page_4(self):
+    def _show_main_help_page_4(self, from_keyboard=False):
         txt = '''!Mouse Support
                  Click            |Change selection.
                  Double click     |Start / stop the player.
@@ -1923,11 +1925,16 @@ class PyRadio(object):
                  \\\\ q Escape      |Close Browser (go back in history).
 
                  |Search history navigation works with normal keys as well
-                 |(|^N| is the same as |n| when not in a line editor).
-                 '''
+                 |(|^N| is the same as |n| when not in a line editor).'''
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_4,
                         reset_metrics=False)
+
+    def _show_main_help_page_from_browser(self):
+        if self._cnf._online_browser.BROWSER_NAME == 'RadioBrowser':
+            self.ws.close_window()
+            self._show_main_help_page_4()
+            self._main_help_id = 3
 
     def _show_playlist_help(self):
         txt = '''Up|,|j|,|PgUp|,
@@ -5985,6 +5992,8 @@ class PyRadio(object):
                             self._show_main_help_page_2,
                             self._show_main_help_page_3,
                             self._show_main_help_page_4)
+                    if self._main_help_id >= len(func):
+                        self._main_help_id = len(func) - 1
                     if char == ord('n'):
                         self._main_help_id += 1
                         if self._main_help_id == len(func):
@@ -5994,7 +6003,7 @@ class PyRadio(object):
                         if self._main_help_id < 0:
                             self._main_help_id = len(func) - 1
                     self.ws.close_window()
-                    func[self._main_help_id]()
+                    func[self._main_help_id](from_keyboard=True)
                     return
             self._handle_passive_windows()
             return

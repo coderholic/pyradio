@@ -204,6 +204,15 @@ def get_github_tag():
     ''' get the name of the latest PyRadio tag on GitHub '''
     return get_github_long_description(only_tag_name=True)
 
+def get_next_release():
+    r = get_github_long_description()
+    print('Descriptyion: {}'.format(r))
+
+    sp = r[1].split('-')
+    print('sp = {}'.format(sp))
+    x = int(sp[1]) + 1
+    return sp[0] + '-r{}'.format(x)
+
 def WindowExists(title):
     try:
         win32ui.FindWindow(None, title)

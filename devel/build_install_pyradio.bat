@@ -32,9 +32,25 @@ IF "%1"=="" (
     CLS
     ECHO Installing / Updating python modules
     pip install windows-curses --upgrade 1>NUL 2>NUL
+    if ERRORLEVEL 1 (
+        set ERRPKG=windows-curses
+        GOTO piperror
+    )
     pip install pywin32 --upgrade 1>NUL 2>NUL
+    if ERRORLEVEL 1 (
+        set ERRPKG=pywin32
+        GOTO piperror
+    )
     pip install requests --upgrade 1>NUL 2>NUL
+    if ERRORLEVEL 1 (
+        set ERRPKG=requests
+        GOTO piperror
+    )
     pip install dnspython --upgrade 1>NUL 2>NUL
+    if ERRORLEVEL 1 (
+        set ERRPKG=dnspython
+        GOTO piperror
+    )
 )
 
 IF '%1'=='ELEV' ( GOTO START ) ELSE ( ECHO Running elevated in a different window)
@@ -116,6 +132,7 @@ ECHO.
 ECHO.
 ECHO ###############################################
 ECHO # The installation has failed!                #
+ECHO #                                             #
 ECHO # This is probably because PyRadio is already #
 ECHO # running, so files canNOT be overwritten.    #
 ECHO # Please terminate PyRadio and try again.     #
@@ -138,6 +155,30 @@ IF NOT EXIST %DESKTOP%\PyRadio.lnk GOTO linkcopy
 ECHO === Dekstop Shortcut already exists
 GOTO toend
 
+:piperror
+CLS
+ECHO  The installation has failed
+ECHO.
+ECHO  One of PyRadio's dependencies has not been found
+ECHO(     package: !ERRPKG!
+ECHO.
+ECHO  This means that packagers have not yet produced a
+ECHO  package for this version of python (it was
+ECHO  probably released recently).
+ECHO.
+ECHO  What can you do?
+ECHO  1. Wait for the package to be updated (which
+ECHO     means you will not be able to use PyRadio
+ECHO     until then), or
+ECHO  2. Uninstall python and then go to
+ECHO           https://www.python.org/downloads/
+ECHO     and download and install the second to
+ECHO     last version.
+ECHO .
+ECHO     Then try installing PyRadio again
+ECHO.
+ECHO.
+GOTO endnopause
 
 :linkcopy
 ECHO *** Installing Dekstop Shortcut
