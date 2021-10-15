@@ -165,8 +165,17 @@ echo "==========================================================================
 
 }
 
+function do_dev(){
+    if [ -z "${NO_DEV}" ]
+    then
+        cp pyradio/config.py pyradio/config.py.dev
+        sed -i "s/git_description = ''/git_description = '$DEVEL'/" pyradio/config.py
+    fi
+}
+
 TO_PYTHON=3
 TO_PYTHON_FROM_X=''
+NO_DEV=''
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -209,6 +218,10 @@ do
             TO_PYTHON_FROM_X=1
             shift
             ;;
+        -no-dev)
+            NO_DEV=1
+            shift
+            ;;
         *)    # unknown option
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
@@ -216,6 +229,14 @@ do
     esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [ -z "$NO_DEV" ]
+then
+    cd pyradio
+    DEVEL=$(python -c 'from install import get_devel_version; print(get_devel_version())')
+    echo "Devel version: $DEVEL"
+    cd ..
+fi
 
 ## check dependencies :)
 #for prog in git sed ;do
@@ -276,7 +297,9 @@ rm sed.$$ 2>/dev/null
 python"${TO_PYTHON}" setup.py build && {
     [ -z "$TO_USER" ] && {
         echo "***** installing..."
+        do_dev
         sudo python"${TO_PYTHON}" setup.py install && {
+            [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py
             gzip -k pyradio.1
             sudo mv -f pyradio.1.gz /usr/share/man/man1 2>/dev/null || sudo mv -f pyradio.1.gz /usr/local/share/man/man1
             gzip -k pyradio_rb.1
@@ -302,7 +325,9 @@ python"${TO_PYTHON}" setup.py build && {
         }
     } || {
         echo "***** installing for user..."
+        do_dev
         python"${TO_PYTHON}" setup.py install --user && {
+            [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py
             gzip -k pyradio.1
             gzip -k pyradio_rb.1
             mkdir -p ~/.local/share/man/man1 2>/dev/null

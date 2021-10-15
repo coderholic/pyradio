@@ -982,7 +982,7 @@ class PyRadio(object):
         else:
             ''' start update detection and notification thread '''
             if CAN_CHECK_FOR_UPDATES and \
-                    not self._cnf.current_pyradio_version.endswith('-devel'):
+                    not self._cnf.current_pyradio_version.endswith('-dev'):
                 if self._cnf.locked:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('(detectUpdateThread): session locked. Not starting!!!')

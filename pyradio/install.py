@@ -213,6 +213,13 @@ def get_next_release():
     x = int(sp[1]) + 1
     return sp[0] + '-r{}'.format(x)
 
+def get_devel_version():
+    long_descpr = get_github_long_description()
+    if long_descpr:
+        return 'PyRadio ' + long_descpr[1].replace('-', '-r', 1) + '-dev'
+    else:
+        return 'PyRadio-dev'
+
 def WindowExists(title):
     try:
         win32ui.FindWindow(None, title)
@@ -500,10 +507,10 @@ class PyRadioUpdate(object):
             ''' install pyradio '''
             if self.user:
                 param += ' --user'
-            ret = subprocess.call('sudo devel/build_install_pyradio -x ' + self._python_exec.python + ' '  + param, shell=True)
+            ret = subprocess.call('sudo devel/build_install_pyradio -no-dev -x ' + self._python_exec.python + ' '  + param, shell=True)
         else:
             ''' uninstall pyradio '''
-            ret = subprocess.call('sudo devel/build_install_pyradio -x ' + self._python_exec.python + ' -R' + param, shell=True)
+            ret = subprocess.call('sudo devel/build_install_pyradio -no-dev -x ' + self._python_exec.python + ' -R' + param, shell=True)
         if ret > 0:
             ret = False
         else:
@@ -684,7 +691,7 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 if __name__ == '__main__':
     print_pyradio_on()
     print_python3() if PY3 else print_python2()
-    # print(get_github_long_description())
+    # print(get_devel_version())
     # sys.exit()
     from argparse import ArgumentParser, SUPPRESS as SUPPRESS
     parser = ArgumentParser(description='PyRadio update / uninstall tool',

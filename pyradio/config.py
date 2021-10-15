@@ -15,6 +15,7 @@ from copy import deepcopy
 from pyradio import version, app_state, stations_updated
 
 from .browser import PyRadioStationsBrowser, probeBrowsers
+from .install import get_github_long_description
 HAS_REQUESTS = True
 try:
     import requests
@@ -1434,11 +1435,9 @@ class PyRadioConfig(PyRadioStations):
             # if revision is not 0
             git_description = ''
             if git_description:
-                if git_description == 'not_from_git':
-                    ret = "RyRadio built from zip file (revision unknown)"
-                elif git_description == 'devel':
-                    self.info = " PyRadio-devel "
-                    ret = "RyRadio built from git (development)"
+                if git_description.endswith('-dev'):
+                    self.info = git_description
+                    ret = self.info + " (development version)"
                 else:
                     git_info = git_description.split('-')
                     if git_info[1] != '0':
