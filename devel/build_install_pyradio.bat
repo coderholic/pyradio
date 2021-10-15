@@ -3,6 +3,10 @@ IF "%1"=="--help" GOTO displayhelp
 IF "%1"=="-h" GOTO displayhelp
 setlocal EnableDelayedExpansion
 
+IF EXIST DEV (SET NO_DEV=0) ELSE (SET NO_DEV=1)
+REM echo(NO_DEV = %NO_DEV%
+REM GOTO endnopause
+
 ::net file to test privileges, 1>NUL redirects output, 2>NUL redirects errors
 :: https://gist.github.com/neremin/3a4020c172053d837ab37945d81986f6
 :: https://stackoverflow.com/questions/13212033/get-windows-version-in-a-batch-file
@@ -121,12 +125,18 @@ SET "PROGRAM=python%arg1%"
 CLS
 FOR /R .\... %%f in (*.pyc) DO DEL /q "%%~ff"
 
-%PROGRAM% SETup.py build
+
+IF "%NO_DEV%" == "1" (
+	CD pyradio
+	%PROGRAM% -c "from install import windows_put_devel_version; windows_put_devel_version()"
+	cd ..
+)
+%PROGRAM% setup.py build
 IF %ERRORLEVEL% == 0 GOTO install
 GOTO endofscript
 
 :install
-%PROGRAM% SETup.py install
+%PROGRAM% setup.py install
 IF %ERRORLEVEL% == 0 GOTO installhtml
 ECHO.
 ECHO.
@@ -140,6 +150,13 @@ ECHO ###############################################
 GOTO endofscript
 
 :installhtml
+IF "%NO_DEV%"=="1" (
+    DEL DEV
+    cd pyradio
+    DELETE config.py
+    RENAME config.py.dev config.py
+    CD ..
+)
 ECHO.
 IF NOT EXIST "%APPDATA%\pyradio\*" MKDIR %APPDATA%\pyradio
 IF NOT EXIST "%APPDATA%\pyradio\help\*" MKDIR %APPDATA%\pyradio\help

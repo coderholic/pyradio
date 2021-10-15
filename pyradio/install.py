@@ -220,6 +220,21 @@ def get_devel_version():
     else:
         return 'PyRadio-dev'
 
+def windows_put_devel_version():
+    long_descr = get_devel_version()
+    from shutil import copyfile
+    cur_dir = os.getcwd()
+    copyfile(os.path.join(cur_dir, 'config.py'), os.path.join(cur_dir, 'config.py.dev'))
+    try:
+        with open(os.path.join(cur_dir, 'config.py'), 'r') as con:
+            lines = con.read()
+        lines = lines.replace("git_description = ''", "git_description = '" + long_descr + "'")
+        with open(os.path.join(cur_dir, 'config.py'), 'w') as con:
+            con.write(lines)
+    except:
+        print('Error: Cannot change downloaded files...\n       Please close all running programs and try again.')
+        sys.exit(1)
+                
 def WindowExists(title):
     try:
         win32ui.FindWindow(None, title)
@@ -503,6 +518,7 @@ class PyRadioUpdate(object):
         self._change_git_discription_in_config_py()
 
         param = ' 2' if self.python2 else ''
+
         if mode == 'update':
             ''' install pyradio '''
             if self.user:
@@ -554,6 +570,8 @@ class PyRadioUpdate(object):
             except:
                 print('Error: PyRadio source code ZIP file is corrupt...\n')
                 sys.exit(1)
+        with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w') as b:
+            pass
 
     def _mkdir(self, name, dir_exist_function=None, _permission_error_function=None):
         if os.path.isdir(name):
