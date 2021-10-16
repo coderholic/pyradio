@@ -1359,11 +1359,11 @@ class PyRadio(object):
         self._update_status_bar_right()
         if self.player.isPlaying():
             self.stopPlayer(show_message=True, from_update_thread=from_update_thread)
-        if from_update_thread and self.ws.operation_mode == self.ws.NORMAL_MODE:
-            with self.log.lock:
-                pass
-                # this one breaks the layout
-                # self._redisplay_stations_and_playlists()
+        # if from_update_thread and self.ws.operation_mode == self.ws.NORMAL_MODE:
+        #     with self.log.lock:
+        #         pass
+        #         # this one breaks the layout
+        #         # self._redisplay_stations_and_playlists()
 
     def stopPlayer(self,
                    show_message=True,

@@ -277,22 +277,6 @@ uninstall 1
     find . -iname "*.egg" -delete 2>/dev/null
 }
 
-# add git repo info to project
-descr=$(git describe --long --tags 2>/dev/null || echo not_from_git)
-
-[ -z "$descr" ] || {
-    echo -n "s/git_description = ''/git_description = '" > sed.$$
-    echo -n "${descr}" >> sed.$$
-    echo "'/" >> sed.$$
-    sed -f sed.$$ pyradio/radio.py > tmp-radio.py && mv -f tmp-radio.py pyradio/radio.py || {
-        # failed... restore radio.py
-        # and build without revision info
-        git checkout pyradio/radio.py
-        descr=''
-    }
-}
-rm sed.$$ 2>/dev/null
-
 # build and install project
 python"${TO_PYTHON}" setup.py build && {
     [ -z "$TO_USER" ] && {
@@ -355,15 +339,6 @@ python"${TO_PYTHON}" setup.py build && {
         }
     }
 }
-
-# restore files to original state
-[ -z "$descr" ] || {
-    echo "s/git_description = '[^']*'/git_description = ''/" > sed.$$
-    sed -f  sed.$$ pyradio/radio.py > tmp-radio.py
-    mv -f tmp-radio.py pyradio/radio.py
-    #git checkout pyradio/radio.py
-}
-rm sed.$$ 2>/dev/null
 
 # remove instasllation directory
 if [ ! -z "$REMOVE_DIR" ];then

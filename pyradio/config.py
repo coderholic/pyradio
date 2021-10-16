@@ -1436,7 +1436,10 @@ class PyRadioConfig(PyRadioStations):
             git_description = ''
             if git_description:
                 if git_description.endswith('-dev'):
-                    self.info = git_description
+                    if 'rdev' in git_description:
+                        ''' failed to get it on linux '''
+                        git_description = 'PyRadio-dev'
+                    self.info = ' ' + git_description
                     ret = self.info + " (development version)"
                 else:
                     git_info = git_description.split('-')

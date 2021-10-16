@@ -112,7 +112,8 @@ def version_string_to_list(this_version):
 def get_github_long_description(
     only_tag_name=False,
     use_sng_repo=False,
-    sng_branch=False
+    sng_branch=False,
+    do_not_exit=False
 ):
     ''' get PyRadio GitHub data
 
@@ -165,18 +166,27 @@ def get_github_long_description(
                 with urlopen(url) as https_response:
                     ret = https_response.read()
             except:
-                print('Error: Cannot contact GitHub!\n       Please make sure your internet connection is up and try again.')
-                sys.exit(1)
+                if do_not_exit:
+                    ret = None
+                else:
+                    print('Error: Cannot contact GitHub!\n       Please make sure your internet connection is up and try again.')
+                    sys.exit(1)
 
         try:
             returns.append(json.loads(ret))
         except:
-            print('Error: Malformed GitHub response!\n       Please make sure your internet connection is up and try again.')
-            sys.exit(1)
+            if do_not_exit:
+                ret = None
+            else:
+                print('Error: Malformed GitHub response!\n       Please make sure your internet connection is up and try again.')
+                sys.exit(1)
 
         # for r in returns:
         #     for n in r:
         #         print(n, '\n\n')
+
+    if ret is None:
+        return 'Pyradio-dev', 'Pyradio-dev'
 
     if only_tag_name:
         return returns[0][0]['name']
@@ -214,11 +224,11 @@ def get_next_release():
     return sp[0] + '-r{}'.format(x)
 
 def get_devel_version():
-    long_descpr = get_github_long_description()
-    if long_descpr:
-        return 'PyRadio ' + long_descpr[1].replace('-', '-r', 1) + '-dev'
-    else:
+    long_descpr = get_github_long_description(do_not_exit=True)
+    if long_descpr == ('PyRadio-dev', 'PyRadio-dev'):
         return 'PyRadio-dev'
+    else:
+        return 'PyRadio ' + long_descpr[1].replace('-', '-r', 1) + '-dev'
 
 def windows_put_devel_version():
     long_descr = get_devel_version()
@@ -234,7 +244,7 @@ def windows_put_devel_version():
     except:
         print('Error: Cannot change downloaded files...\n       Please close all running programs and try again.')
         sys.exit(1)
-                
+
 def WindowExists(title):
     try:
         win32ui.FindWindow(None, title)
@@ -509,11 +519,6 @@ class PyRadioUpdate(object):
         else:
             print('Error: Failed to download PyRadio source code...\n')
             sys.exit(1)
-
-        ''' PROGRAM DEBUG: uncomment this to use the latest
-            build_install_pyradio changes.
-        '''
-        # shutil.copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', '/tmp/tmp-pyradio/pyradio/devel/build_install_pyradio')
 
         self._change_git_discription_in_config_py()
 

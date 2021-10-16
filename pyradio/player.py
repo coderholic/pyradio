@@ -1390,7 +1390,7 @@ class Player(object):
                     logger.error('Taskkill failed to kill PID {}'.format(self.process.pid))
             else:
                 try:
-                    os.kill(self.process.pid, 15)
+                    os.kill(self.process.pid, 9)
                 except:
                     # except ProcessLookupError:
                     pass
