@@ -981,8 +981,7 @@ class PyRadio(object):
                 pass
         else:
             ''' start update detection and notification thread '''
-            if CAN_CHECK_FOR_UPDATES and \
-                    not self._cnf.current_pyradio_version.endswith('-dev'):
+            if CAN_CHECK_FOR_UPDATES:
                 if self._cnf.locked:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('(detectUpdateThread): session locked. Not starting!!!')
@@ -3792,14 +3791,16 @@ class PyRadio(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: Asked to stop. Stoping...')
                 break
-            last_tag = get_github_tag()
+            last_tag = get_github_tag(do_not_exit=True)
             if stop():
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('detectUpdateThread: Asked to stop. Stoping...')
                 break
 
+            logger.error('DE last_tag = "{}"'.format(last_tag))
             if self._force_update:
                 last_tag = self._force_update
+            logger.error('DE last_tag = "{}"'.format(last_tag))
 
             if last_tag:
                 connection_fail_count = 0
@@ -3812,6 +3813,7 @@ class PyRadio(object):
                         logger.info('detectUpdateThread: No update found. Will check again in {} days. Terminating...'.format(check_days))
                     break
                 else:
+                    logger.error('DE 1 this_version = {}'.format(this_version))
                     existing_version = version_string_to_list(this_version)
                     new_version = version_string_to_list(last_tag)
                     if logger.isEnabledFor(logging.DEBUG):

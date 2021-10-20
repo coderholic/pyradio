@@ -31,6 +31,8 @@ except:
 VERSION = ''
 
 PY3 = sys.version[0] == '3'
+# import logging
+# logger = logging.getLogger(__name__)
 
 def print_pyradio_on():
     print('''
@@ -93,7 +95,18 @@ def isRunning():
     print('')
 
 def version_string_to_list(this_version):
-    a_v = this_version.replace('-', '.').lower()
+    # logger.error('DE this_version = "{}"'.format(this_version))
+    poped = False
+    tokens = ('sng', 'dev', 'git')
+    sp = this_version.split('-')
+    while sp[-1] in tokens:
+        p = sp.pop()
+        if p != 'git':
+            poped = True
+    if poped:
+        sp.pop()
+    a_v = '.'.join(sp).lower()
+    # a_v = this_version.replace('-', '.').lower()
     a_l = a_v.split('.')
     while len(a_l) < 4:
         a_l.append('0')
@@ -186,7 +199,10 @@ def get_github_long_description(
         #         print(n, '\n\n')
 
     if ret is None:
-        return 'Pyradio-dev', 'Pyradio-dev'
+        if only_tag_name:
+            return 'PyRadio-git'
+        else:
+            return 'PyRadio-git', 'PyRadio-git'
 
     if only_tag_name:
         return returns[0][0]['name']
@@ -210,9 +226,9 @@ def get_github_long_description(
     # print('this_version = ' + this_version)
     return tag_name, this_version
 
-def get_github_tag():
+def get_github_tag(do_not_exit=False):
     ''' get the name of the latest PyRadio tag on GitHub '''
-    return get_github_long_description(only_tag_name=True)
+    return get_github_long_description(only_tag_name=True, do_not_exit=do_not_exit)
 
 def get_next_release():
     r = get_github_long_description()
@@ -225,10 +241,10 @@ def get_next_release():
 
 def get_devel_version():
     long_descpr = get_github_long_description(do_not_exit=True)
-    if long_descpr == ('PyRadio-dev', 'PyRadio-dev'):
-        return 'PyRadio-dev'
+    if long_descpr == ('PyRadio-git', 'PyRadio-git'):
+        return 'PyRadio-git'
     else:
-        return 'PyRadio ' + long_descpr[1].replace('-', '-r', 1) + '-dev'
+        return 'PyRadio ' + long_descpr[1].replace('-', '-r', 1) + '-git'
 
 def windows_put_devel_version():
     long_descr = get_devel_version()
@@ -773,11 +789,13 @@ if __name__ == '__main__':
         args.force = True
         package = 1
         VERSION, github_long_description = get_github_long_description(use_sng_repo=True, sng_branch=True)
+        github_long_description += '-sng'
     elif args.sng_devel:
         '''' sng devel '''
         args.force = True
         package = 2
         VERSION, github_long_description = get_github_long_description(use_sng_repo=True)
+        github_long_description += '-sng-dev'
     elif args.devel:
         ''' official devel '''
         package = 3

@@ -832,12 +832,13 @@ class PyRadioThemeSelector(object):
             return -1, False
         if char in (ord('e'), ):
             ''' edit theme '''
-            if self._themes[self._selection][1] == '' or \
-                    self._is_theme_read_only(self._themes[self._selection][1]):
-                ''' display question to create theme instead '''
-                return -2, False
-            else:
-                pass
+            pass
+            # if self._themes[self._selection][1] == '' or \
+            #         self._is_theme_read_only(self._themes[self._selection][1]):
+            #     ''' display question to create theme instead '''
+            #     return -2, False
+            # else:
+            #     pass
         elif char in (ord('a'), ):
             ''' new theme '''
             pass
