@@ -556,6 +556,8 @@ class PyRadioUpdate(object):
         return ret
 
     def _change_git_discription_in_config_py(self):
+        # print('\n\n_change_git_discription_in_config_py(): self._github_long_description = "{}"\n\n'.format(self._github_long_description))
+        # logger.error('DE _change_git_discription_in_config_py(): self._github_long_description = "{}"'.format(self._github_long_description))
         ''' change git_discription in pyradio/config.py '''
         if self._github_long_description is not None:
             try:
@@ -593,6 +595,14 @@ class PyRadioUpdate(object):
                 sys.exit(1)
         with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w') as b:
             pass
+        ''' DEBUG
+            get new install.py, copy.py (any py)
+            into downloaded directory
+        '''
+        # from shutil import copyfile
+        # cur_dir = os.getcwd()
+        # copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/install.py', os.path.join(cur_dir, 'install.py'))
+        # copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/config.py', os.path.join(cur_dir, 'config.py'))
 
     def _mkdir(self, name, dir_exist_function=None, _permission_error_function=None):
         if os.path.isdir(name):
@@ -790,12 +800,14 @@ if __name__ == '__main__':
         package = 1
         VERSION, github_long_description = get_github_long_description(use_sng_repo=True, sng_branch=True)
         github_long_description += '-sng'
+        github_long_description = github_long_description.replace('-', '-r', 1)
     elif args.sng_devel:
         '''' sng devel '''
         args.force = True
         package = 2
         VERSION, github_long_description = get_github_long_description(use_sng_repo=True)
         github_long_description += '-sng-dev'
+        github_long_description = github_long_description.replace('-', '-r', 1)
     elif args.devel:
         ''' official devel '''
         package = 3
