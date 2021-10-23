@@ -127,24 +127,33 @@ FOR /R .\... %%f in (*.pyc) DO DEL /q "%%~ff"
 
 
 IF "%NO_DEV%" == "1" (
-	CD pyradio
-	%PROGRAM% -c "from install import windows_put_devel_version; windows_put_devel_version()"
-	cd ..
+    CD pyradio
+    %PROGRAM% -c "from install import windows_put_devel_version; windows_put_devel_version()"
+    cd ..
 )
 %PROGRAM% setup.py build
 IF %ERRORLEVEL% == 0 GOTO install
+ECHO.
+ECHO.
+ECHO ###############################################
+ECHO # The installation has failed!                #
+ECHO #                                             #
+ECHO # Please make sure your internet connection   #
+ECHO # is working and try again.                   #
+ECHO ###############################################
 GOTO endofscript
 
 :install
 %PROGRAM% setup.py install
 IF %ERRORLEVEL% == 0 GOTO installhtml
+:installationerror
 ECHO.
 ECHO.
 ECHO ###############################################
 ECHO # The installation has failed!                #
 ECHO #                                             #
 ECHO # This is probably because PyRadio is already #
-ECHO # running, so files canNOT be overwritten.    #
+ECHO # running, so files cannot be overwritten.    #
 ECHO # Please terminate PyRadio and try again.     #
 ECHO ###############################################
 GOTO endofscript
@@ -152,8 +161,8 @@ GOTO endofscript
 :installhtml
 IF "%NO_DEV%"=="1" (
     DEL DEV
-    cd pyradio
-    DELETE config.py
+    CD pyradio
+    DEL config.py
     RENAME config.py.dev config.py
     CD ..
 )
@@ -176,11 +185,15 @@ GOTO toend
 CLS
 ECHO  The installation has failed
 ECHO.
-ECHO  One of PyRadio's dependencies has not been found
+ECHO This means that either you internet connection
+ECHO has failed (in which case you should fix it and
+ECHO try again), or that
+ECHO.
+ECHO one of PyRadio's dependencies has not been found
 ECHO(     package: !ERRPKG!
 ECHO.
-ECHO  This means that packagers have not yet produced a
-ECHO  package for this version of python (it was
+ECHO  If this is the case, packagers have not yet produced
+ECHO  a package for this version of python (it was
 ECHO  probably released recently).
 ECHO.
 ECHO  What can you do?

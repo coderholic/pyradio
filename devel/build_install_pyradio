@@ -173,6 +173,18 @@ function do_dev(){
     fi
 }
 
+function do_exit(){
+    # remove instasllation directory
+    if [ ! -z "$REMOVE_DIR" ];then
+        if [ "$REMOVE_DIR" = "$HOME/pyradio" ] || \
+                [ "$REMOVE_DIR" = "$HOME/tmp-pyradio" ] || \
+                [ "$REMOVE_DIR" = "/tmp/pyradio" ] || \
+                [ "$REMOVE_DIR" = "/tmp/tmp-pyradio" ];then
+            sudo rm -fr "$REMOVE_DIR"
+        fi
+    fi
+}
+
 TO_PYTHON=3
 TO_PYTHON_FROM_X=''
 NO_DEV=''
@@ -278,11 +290,15 @@ uninstall 1
 }
 
 # build and install project
-python"${TO_PYTHON}" setup.py build && {
+python"${TO_PYTHON}" setup.py build
+if [ $? -eq 0 ]
+then
     [ -z "$TO_USER" ] && {
         echo "***** installing..."
         do_dev
-        sudo python"${TO_PYTHON}" setup.py install && {
+        sudo python"${TO_PYTHON}" setup.py install
+        if [ $? -eq 0 ]
+        then
             [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py
             gzip -k pyradio.1
             sudo mv -f pyradio.1.gz /usr/share/man/man1 2>/dev/null || sudo mv -f pyradio.1.gz /usr/local/share/man/man1
@@ -306,11 +322,16 @@ python"${TO_PYTHON}" setup.py build && {
             else
                 sudo cp LICENCE "$DOC"
             fi
-        }
+        else
+            do_exit
+            exit 1
+        fi
     } || {
         echo "***** installing for user..."
         do_dev
-        python"${TO_PYTHON}" setup.py install --user && {
+        python"${TO_PYTHON}" setup.py install --user
+        if [ $? -eq 0 ]
+        then
             [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py
             gzip -k pyradio.1
             gzip -k pyradio_rb.1
@@ -336,17 +357,15 @@ python"${TO_PYTHON}" setup.py build && {
             else
                 cp LICENCE "$DOC"
             fi
-        }
+        else
+            do_exit
+            exit 1
+        fi
     }
-}
-
-# remove instasllation directory
-if [ ! -z "$REMOVE_DIR" ];then
-    if [ "$REMOVE_DIR" = "$HOME/pyradio" ] || \
-            [ "$REMOVE_DIR" = "$HOME/tmp-pyradio" ] || \
-            [ "$REMOVE_DIR" = "/tmp/pyradio" ] || \
-            [ "$REMOVE_DIR" = "/tmp/tmp-pyradio" ];then
-        sudo rm -fr "$REMOVE_DIR"
-    fi
+else
+    do_exit
+    exit 1
 fi
 
+do_exit
+exit 0

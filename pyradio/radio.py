@@ -3797,10 +3797,10 @@ class PyRadio(object):
                     logger.debug('detectUpdateThread: Asked to stop. Stoping...')
                 break
 
-            logger.error('DE last_tag = "{}"'.format(last_tag))
+            # logger.error('DE last_tag = "{}"'.format(last_tag))
             if self._force_update:
                 last_tag = self._force_update
-            logger.error('DE last_tag = "{}"'.format(last_tag))
+            # logger.error('DE last_tag = "{}"'.format(last_tag))
 
             if last_tag:
                 connection_fail_count = 0
@@ -3813,7 +3813,6 @@ class PyRadio(object):
                         logger.info('detectUpdateThread: No update found. Will check again in {} days. Terminating...'.format(check_days))
                     break
                 else:
-                    logger.error('DE 1 this_version = {}'.format(this_version))
                     existing_version = version_string_to_list(this_version)
                     new_version = version_string_to_list(last_tag)
                     if logger.isEnabledFor(logging.DEBUG):

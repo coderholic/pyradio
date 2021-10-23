@@ -1,4 +1,4 @@
-2021-10-14 s-n-g
+2021-10-20 s-n-g
     * adding check for -p parameter (int)
     * keep looking for a station after playback failure when random is on
     * trying to better VLC start of playback detection
@@ -6,9 +6,12 @@
     * trying to eliminate crashes when window width gets small
       (like in tilling managers)
     * show correct help page when in online browser
+    * disabling theme editing per (#141)
     * mplayer on Windows: do not fail to start a station
       after astop/start command
     * install.py will always use the requested python version
+    * install.py will use special indication per command line
+      (-sng for --sng-master and -sng-dev for --sng-devel)
     * Windows installation will fail if a dependency fails to install
     * updating docs (adding "Limited display" image")
 

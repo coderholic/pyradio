@@ -111,7 +111,8 @@ def version_string_to_list(this_version):
     while len(a_l) < 4:
         a_l.append('0')
     a_n_l = []
-    for n in a_l:
+    # logger.error('DE a_n_l = "{}"'.format(a_n_l))
+    for i, n in enumerate(a_l):
         if 'beta' in n:
             a_n_l.append(-200+int(a_l[-1].replace('beta', '')))
         elif 'rc' in n:
@@ -119,7 +120,12 @@ def version_string_to_list(this_version):
         elif 'r' in n:
             pass
         else:
-            a_n_l.append(int(n))
+            if len(n) < 4 and i > 0:
+                try:
+                    a_n_l.append(int(n))
+                except ValueError:
+                    pass
+        # logger.error('DE a_n_l = "{}"'.format(a_n_l))
     return a_n_l
 
 def get_github_long_description(
@@ -492,7 +498,6 @@ class PyRadioUpdate(object):
             sys.exit(1)
 
         if mode.endswith('-open'):
-            print('---------------------')
             os.startfile(self._dir)
 
     def open_windows_dir(self):
@@ -599,10 +604,20 @@ class PyRadioUpdate(object):
             get new install.py, copy.py (any py)
             into downloaded directory
         '''
-        # from shutil import copyfile
-        # cur_dir = os.getcwd()
-        # copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/install.py', os.path.join(cur_dir, 'install.py'))
-        # copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/config.py', os.path.join(cur_dir, 'config.py'))
+        '''
+        from shutil import copyfile
+        cur_dir = os.getcwd()
+        print('\n\n{}\n\n'.format(os.path.join(self._dir, self.ZIP_DIR[self._package])))
+        print(cur_dir)
+        copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/install.py',
+            os.path.join(cur_dir, 'install.py'))
+        copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', \
+            os.path.join(os.path.join(self._dir, self.ZIP_DIR[self._package],
+                'devel', 'build_install_pyradio'))
+        )
+        # copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/config.py',
+        #    os.path.join(self._dir, self.ZIP_DIR[self._package], 'pyradio', 'config.py'))
+        '''
 
     def _mkdir(self, name, dir_exist_function=None, _permission_error_function=None):
         if os.path.isdir(name):
