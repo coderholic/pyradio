@@ -65,7 +65,12 @@ The installation consists of three steps:
 
 #### Installing Python
 
-If you don't already have **Python**, just get to its [Windows Downloads](https://www.python.org/downloads/windows/) page and download the latest **3.x** release.
+If you don't already have **Python** installed, just get to its [Windows Downloads](https://www.python.org/downloads/windows/) page and download one of the **3.x** releases.
+
+A tip as to which **Python** version to choose is to go to [zephyrproject-rtos
+/windows-curses github page](https://github.com/zephyrproject-rtos/windows-curses) and check the latest supported version.
+
+Here's how you do that: the page contains some folders named py*XY* (*XY* is the python version the folder corresponds to). Make a note of the largest *XY* number; this is the latest **Python** version supported, and this is the one you should download. At the time of writing this, version **3.9** was the latest supported one (folder py*39*), even though Python 3.10 had already been released.
 
 When the download is done, run its setup and select "*Custom Installation*" so that you can "*Add Python to environment variables*". You can refer to the following image to see the relevant setting.
 

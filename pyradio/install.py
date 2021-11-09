@@ -81,7 +81,11 @@ def print_trying_to_install():
 def is_pyradio_user_installed():
     if platform.system().lower().startswith('darwin'):
         return False
-    p = subprocess.Popen('which pyradio', shell=True, stdout=subprocess.PIPE)
+    p = subprocess.Popen('which pyradio',
+                         shell=True,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.DEVNULL
+                         )
     ret = str(p.communicate()[0])
     home = os.path.expanduser('~')
     return True if ret.startswith(home) else False

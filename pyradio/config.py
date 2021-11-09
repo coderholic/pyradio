@@ -1110,6 +1110,8 @@ class PyRadioConfig(PyRadioStations):
     opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
     opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
     opts['auto_save_playlist'] = ['Auto save playlist: ', False]
+    opts['online_header'] = ['Online services', '']
+    opts['radiobrowser'] = ['RadioBrowser', '-']
     opts['requested_player'] = ['', '']
     opts['dirty_config'] = ['', False]
 

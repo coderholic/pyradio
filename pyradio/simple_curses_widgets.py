@@ -12,7 +12,6 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
-
 class DisabledWidget(object):
     '''A dummy class that only returns enabled = False
 
@@ -237,6 +236,90 @@ class SimpleCursesWidget(object):
         '''
         return False
 
+
+class SimpleCursesString(SimpleCursesWidget):
+
+    def __init__(
+        self,
+        Y, X, parent,
+        caption,
+        string,
+        color, color_focused,
+        color_not_focused,
+        color_disabled,
+        right_arrow_selects=True,
+        callback_function_on_activation=None
+    ):
+        self._Y = Y
+        self._X = X
+        self._win = self._parent = parent
+        self._string = string
+        self._caption = caption
+        self._color = color
+        self._color_focused = color_focused
+        self._color_not_focused = color_not_focused
+        self._color_disabled = color_disabled
+        self._right_arrow_selects = right_arrow_selects
+        self._callback_function_on_activation = callback_function_on_activation
+
+    @property
+    def caption(self):
+        return self._caption
+
+    @caption.setter
+    def caption(self, value):
+        self._caption = value
+
+    @property
+    def string(self):
+        return self._string
+
+    @string.setter
+    def string(self, value):
+        self._string = value
+
+    @property
+    def string_len(self):
+        return len(self._string)
+
+    @property
+    def caption_len(self):
+        return len(self._caption)
+
+    @property
+    def string_Y(self):
+        return self._Y
+
+    @property
+    def string_X(self):
+        return self._X + len(self._string)
+
+    def keypress(self, char):
+        ''' SimpleCursesString key press
+            Returns:
+                -1 continue
+                 0 action (select)
+        '''
+        ret = -1
+        if self._right_arrow_selects and char in (
+            ord('l'), ord(' '), ord('\n'), ord('\r'),
+            curses.KEY_RIGHT, curses.KEY_ENTER
+        ):
+            ret = 0
+        elif not self._right_arrow_selects and char in (
+            ord(' '), ord('\n'), ord('\r'),
+            curses.KEY_ENTER
+        ):
+            ret = 0
+        if ret == 0 and self._callback_function_on_activation:
+            self._callback_function_on_activation()
+        return ret
+
+    def show(self, parent=None):
+        if parent:
+            self._win = self_parent = parent
+        self._win.addstr(self._Y, self._X, self._caption, self._color)
+        self._win.addstr(self._string, self._color_not_focused)
 
 class SimpleCursesCounter(SimpleCursesWidget):
     ''' A class to provide a counter
@@ -942,6 +1025,10 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                  align=0,
                  right_arrow_selects=True,
                  on_activate_callback_function=None,
+                 on_up_callback_function=None,
+                 on_down_callback_function=None,
+                 on_left_callback_function=None,
+                 on_right_callback_function=None,
                  ):
         ''' Initialize the widget.
 
@@ -1077,7 +1164,9 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
         self._maxX = self._item_width + 2 * self._margin
         self._maxY = len(self.items)
 
-    def show(self):
+    def show(self, parent=None):
+        if parent:
+            self._win = parent
         for i, n in enumerate(self.items):
             if self._align == self.LEFT:
                 disp_item = ' ' * self._margin + n.ljust(self._item_width) + ' ' * self._margin
@@ -2871,7 +2960,7 @@ class SimpleCursesBoolean(SimpleCursesCounter):
             col = self._color_disabled
         self._win.move(self._Y, self._X)
         if self._prefix:
-            self._win.addstr(self._prefix, self._color)
+            self._win.addstr( self._prefix, self._color)
         self._win.addstr(str(self._value), col)
         if self._suffix:
             self._win.addstr(self._suffix, self._color)

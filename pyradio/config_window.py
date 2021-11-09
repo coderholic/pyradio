@@ -78,6 +78,8 @@ class PyRadioConfigWindow(object):
     _help_text.append(['Specify whether you will be asked to confirm playlist reloading, when the playlist has not been modified within PyRadio.',
     '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to save a modified playlist whenever it needs saving.', '|', 'Default value: False'])
+    _help_text.append(None)
+    _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.', '|', "In order to use RadioBrowser, python's requests module must be installed."])
 
     def __init__(self, parent, config,
                  toggle_transparency_function,
@@ -103,6 +105,8 @@ class PyRadioConfigWindow(object):
         for i, n in enumerate(list(self._config_options.values())):
             if n[1] == '':
                 self._headers.append(i)
+        logger.error('{}'.format(self._config_options))
+        logger.error('self._headers = {}'.format(self._headers))
         self.init_config_win()
         self.refresh_config_win()
         self._old_use_transparency = self._config_options['use_transparency'][1]
@@ -162,7 +166,8 @@ class PyRadioConfigWindow(object):
         min_lines = len(self._config_options)
         if min_lines < self._max_number_of_help_lines:
             min_lines = self._max_number_of_help_lines
-        if self.maxX < 80 or self.maxY < min_lines + 3:
+        # if self.maxX < 80 or self.maxY < min_lines + 3:
+        if self.maxX < 80 or self.maxY < 22:
             self.too_small = True
         else:
             self.too_small = False
@@ -233,7 +238,8 @@ class PyRadioConfigWindow(object):
                                 ''' random station '''
                                 self._win.addstr('{}'.format('Random'), hcol)
                             else:
-                                self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6]), hcol)
+                                if it[1] != '-':
+                                    self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6]), hcol)
         self._win.refresh()
 
     def _get_col_line(self, ind):
@@ -333,10 +339,21 @@ class PyRadioConfigWindow(object):
         curses.doupdate()
 
     def keypress(self, char):
+        ''' Config Window key press
+            Returns:
+                -1  continue
+                 0  save config
+                 1  cancel saving config
+                 2  open online browser config
+        '''
         if self.too_small:
             return 1, []
         val = list(self._config_options.items())[self.selection]
-        if val[0] == 'connection_timeout':
+        if val[0] == 'radiobrowser':
+            if char in (curses.KEY_RIGHT, ord('l'),
+                        ord(' '), curses.KEY_ENTER, ord('\n')):
+                return 2, []
+        elif val[0] == 'connection_timeout':
             if char in (curses.KEY_RIGHT, ord('l')):
                 t = int(val[1][1])
                 if t == 0:
@@ -1801,6 +1818,8 @@ class PyRadioSelectEncodings(object):
         return (self._num_of_rows + 1) * a_column + a_row
 
     def keypress(self, char):
+        ''' Encoding key press
+        '''
         if char in (ord('c'), ):
             self.encoding = self._config_encoding
             self.setEncoding(self.encoding, init=True)

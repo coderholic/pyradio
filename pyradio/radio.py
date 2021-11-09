@@ -40,6 +40,7 @@ from .cjkwrap import cjklen
 from . import player
 from .install import version_string_to_list, get_github_tag
 from .html_help import HtmlHelp
+from .browser import RadioBrowserConfig, RadioBrowserConfigWindow
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -185,6 +186,7 @@ class PyRadio(object):
     theme_forced_selection = []
 
     _config_win = None
+    _browser_config_win = None
 
     _color_config_win = None
 
@@ -841,7 +843,10 @@ class PyRadio(object):
             cur_mode = self.ws.previous_operation_mode
         if cur_mode == self.ws.NORMAL_MODE:
             if self._cnf.browsing_station_service:
-                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_header=True)
+                ticks = None
+                if self._cnf.online_browser:
+                    if self._cnf._online_browser:
+                        ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_header=True)
                 if ticks:
                     for n in ticks:
                         if version_info < (3, 0):
@@ -934,7 +939,8 @@ class PyRadio(object):
             except:
                 pass
         else:
-            if self._cnf.browsing_station_service:
+            if self._cnf.browsing_station_service and \
+                    self._cnf._online_browser:
                 if station:
                     played, line = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.bodyMaxX)
                 else:
@@ -960,7 +966,9 @@ class PyRadio(object):
                 self._change_browser_ticks(lineNum, sep_col)
 
     def _change_browser_ticks(self, lineNum, sep_col):
-        ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
+        ticks = None
+        if self._cnf._online_browser:
+            ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
         if ticks:
             for n in ticks:
                 self.bodyWin.chgat(lineNum, n, 1, sep_col)
@@ -2718,6 +2726,23 @@ class PyRadio(object):
                         prompt=' Press any key ',
                         is_message=True)
 
+    def _print_not_applicable(self):
+        txt = ('_Operation not applicable here_',
+               '___Nope, not here!___'
+        )
+        msg = None
+        for n in txt:
+            if len(n) + 2 < self.bodyMaxX:
+                msg = n
+                break
+        if msg is not None:
+            self._show_notification_with_delay(
+                txt=msg,
+                delay=1.25,
+                mode_to_set=self.ws.operation_mode,
+                callback_function=self.refreshBody
+            )
+
     def _print_service_connection_error(self):
         txt = '''
         Service temporarily unavailable.
@@ -3990,6 +4015,7 @@ class PyRadio(object):
             self.helpWinContainer = None
             self.helpWin = None
             self._config_win = None
+            self._browser_config_win = None
             self._player_select_win = None
             self._playlist_select_win = None
             self._station_editor = None
@@ -4372,12 +4398,34 @@ class PyRadio(object):
     def _browser_server_selection(self):
         self._cnf._online_browser.select_servers()
 
-    def _browser_init_config(self, parent=None, init=False):
-        ''' Show browser config window
+    def _browser_init_config_from_config(self, parent=None, init=False):
+        ''' Show browser config window from config
         '''
         if parent is None:
             parent = self.outerBodyWin
         self._cnf._online_browser.show_config(parent, init)
+
+    def _browser_init_config(self, parent=None, init=False):
+        ''' Show browser config window from online browseer
+        '''
+        if parent is None:
+            parent = self.outerBodyWin
+        if self._cnf._online_browser:
+            self._cnf._online_browser.show_config(parent, init)
+        else:
+            if self._browser_config_win is None:
+                self._show_connect_to_server_message()
+                self._browser_config_win = RadioBrowserConfigWindow(
+                    parent=parent,
+                    stations_dir=self._cnf.stations_dir,
+                    init=init
+                )
+                self.ws.close_window()
+            if self._browser_config_win.urls:
+                self._browser_config_win.show(parent=parent)
+            else:
+                self.ws.close_window()
+                self._print_service_connection_error()
 
     def _browser_init_search(self, parent):
         ''' Start browser search window
@@ -4557,6 +4605,10 @@ class PyRadio(object):
         elif not self._register_open_pressed and char == ord('\'') and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             ''' ' pressed - get into open register mode '''
+            if self._cnf.browsing_station_service:
+                self._update_status_bar_right(reg_open_pressed=False, status_suffix='')
+                self._print_not_applicable()
+                return
             self._update_status_bar_right(reg_open_pressed=True, status_suffix='\'')
             self._do_display_notify()
             self.jumpnr = ''
@@ -4617,9 +4669,12 @@ class PyRadio(object):
 
             elif char == ord('r'):
                 ''' rename playlist '''
+                self._update_status_bar_right(status_suffix='')
+                if self._cnf.browsing_station_service:
+                    self._print_not_applicable()
+                    return
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     self._set_rename_stations()
-                self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE and \
                         self._cnf.dirty_playlist:
                     self._print_playlist_not_saved_error()
@@ -4640,6 +4695,9 @@ class PyRadio(object):
             elif char == ord('n'):
                 ''' create new playlist '''
                 self._update_status_bar_right(status_suffix='')
+                if self._cnf.browsing_station_service:
+                    self._print_not_applicable()
+                    return
                 if not (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
                         self._cnf.open_register_list):
                     ''' do not create playlist from registers list '''
@@ -4876,6 +4934,7 @@ class PyRadio(object):
                 self._encoding_select_win = None
                 self._playlist_select_win = None
                 self._station_select_win = None
+                self._browser_config_win = None
             ret, ret_list = self._config_win.keypress(char)
             if ret == self.ws.SELECT_PLAYER_MODE:
                 ''' Config > Select Player '''
@@ -4944,10 +5003,11 @@ class PyRadio(object):
                 msg = ( 'Error saving config. Press any key to exit...',
                         'Config saved successfully!!!',
                         'Config saved - Restarting playback (parameters changed)')
-                self.ws.close_window()
-                self.bodyWin.box()
-                self._print_body_header()
-                self.refreshBody()
+                if ret != 2:
+                    self.ws.close_window()
+                    self.bodyWin.box()
+                    self._print_body_header()
+                    self.refreshBody()
                 if ret == 0:
                     self.detect_if_player_exited = False
                     self._cnf.backup_player_params[0] = self._cnf.params[self._cnf.PLAYER_NAME][:]
@@ -5013,6 +5073,12 @@ class PyRadio(object):
                                 txt='___Config not modified!!!___',
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
+                elif ret == 2:
+                    ''' open online browser config '''
+                    logger.error('Opening RadioBrowser Config')
+                    self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
+                    self._browser_init_config(init=True)
+                    return
                 else:
                     ''' restore transparency, if necessary '''
                     if self._config_win._config_options['use_transparency'][1] != self._config_win._saved_config_options['use_transparency'][1]:
@@ -5293,9 +5359,13 @@ class PyRadio(object):
                     self.refreshBody()
             return
 
-        elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE:
+        elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE and \
+                char not in self._chars_to_bypass:
             ''' handle browser config '''
-            ret = self._cnf._online_browser.keypress(char)
+            if self._cnf._online_browser:
+                ret = self._cnf._online_browser.keypress(char)
+            else:
+                ret = self._browser_config_win.keypress(char)
             if ret == 0:
                 ''' ok, save browser config '''
                 self.ws.close_window()
@@ -5304,6 +5374,11 @@ class PyRadio(object):
             elif ret == -1:
                 ''' browser config save canceled '''
                 self.ws.close_window()
+                if self._cnf._online_browser:
+                    pass
+                else:
+                    logger.error('DED closing browser config from config')
+                    self._browser_config_win = None
                 self.refreshBody()
 
         elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
@@ -6173,7 +6248,10 @@ class PyRadio(object):
 
                 elif char == ord('p'):
                     self._reset_status_bar_right()
-                    self._paste()
+                    if self._cnf.browsing_station_service:
+                        self._print_not_applicable()
+                    else:
+                        self._paste()
 
                 elif char == ord('V'):
                     self._reset_status_bar_right()
@@ -6228,8 +6306,8 @@ class PyRadio(object):
                     ''' open config '''
                     self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
-                        self._print_not_implemented_yet()
-                        return
+                        # self._print_not_implemented_yet()
+                        # return
                         self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
                         self._browser_init_config(init=True)
                     else:
