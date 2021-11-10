@@ -1527,6 +1527,7 @@ class RadioBrowserConfigWindow(object):
     invalid = False
     _widgets = None
     _params = []
+    _focused = 0
 
     def __init__(
             self,
@@ -1601,6 +1602,31 @@ class RadioBrowserConfigWindow(object):
         if server == '':
             return 'Random'
         return server
+
+    def _focus_next(self):
+        if self._focused == len(self._widgets) - 1:
+            self._focused = 0
+        else:
+            self._focused += 1
+        self._refresh()
+
+    def _focus_previous(self):
+        if self._focused == 0:
+            self._focused = len(self._widgets) - 1
+        else:
+            self._focused -= 1
+        self._refresh()
+
+    def _refresh(self):
+        self._fix_focus()
+        self._win.refresh()
+
+    def _fix_focus(self, show=True):
+        for i, widg in enumerate(self._widgets):
+            widg.focused = True if self._focused == i else False
+        if show:
+            for n in self._widgets:
+                n.show(self._win)
 
     def _init_set_working_params(self,
                                  auto_save,
@@ -1687,41 +1713,48 @@ class RadioBrowserConfigWindow(object):
                     Y=2, X=3,
                     window=self._win,
                     color=curses.color_pair(5),
-                    color_focused=curses.color_pair(9),
+                    color_focused=curses.color_pair(6),
                     color_not_focused=curses.color_pair(4),
                     color_disabled=curses.color_pair(5),
                     value=self._params[0]['auto_save'],
-                    string='Auto save config: {0}'
+                    string='Auto save config: {0}',
+                    full_selection=(2,58)
                 )
             )
+            self._widgets[-1].token = 'auto_save'
 
             self._widgets.append(
                 SimpleCursesCounter(
                     Y=4, X=3,
                     window=self._win,
                     color=curses.color_pair(5),
-                    color_focused=curses.color_pair(9),
+                    color_focused=curses.color_pair(6),
                     color_not_focused=curses.color_pair(4),
                     color_disabled=curses.color_pair(5),
                     minimum=0, maximum=1000,
                     step=1, big_step=10,
                     value=self._params[0]['limit'],
-                    string='Maximum number of results: {0}'
+                    string='Maximum number of results: {0}',
+                    full_selection=(2,58)
                 )
             )
+            self._widgets[-1].token = 'limit'
 
             self._widgets.append(
-               SimpleCursesString(
-                   Y=6, X=3,
-                   parent=self._win,
-                   caption='Default Server: ',
-                   string=self._params[0]['server'],
-                   color=curses.color_pair(5),
-                   color_focused=curses.color_pair(9),
-                   color_not_focused=curses.color_pair(4),
-                   color_disabled=curses.color_pair(5),
-               )
+                SimpleCursesString(
+                    Y=6, X=3,
+                    parent=self._win,
+                    caption='Default Server: ',
+                    string=self._params[0]['server'],
+                    color=curses.color_pair(5),
+                    color_focused=curses.color_pair(6),
+                    color_not_focused=curses.color_pair(4),
+                    color_disabled=curses.color_pair(5),
+                    full_selection=(2,58)
+                )
             )
+            self._widgets[-1].token = 'server'
+            self._fix_focus(show=False)
         logger.error('{}'.format(self._widgets))
         for n in self._widgets:
             n.show(self._win)
@@ -1755,6 +1788,11 @@ class RadioBrowserConfigWindow(object):
             ''' enter on ok button  '''
             ret = self._handle_new_or_existing_search_term()
             return 0 if ret == 1 else ret
+
+        elif char in (ord('\t'), 9):
+            self._focus_next()
+        elif char in (curses.KEY_BTAB, ):
+            self._focus_previous()
 
 class RadioBrowserSearchWindow(object):
 

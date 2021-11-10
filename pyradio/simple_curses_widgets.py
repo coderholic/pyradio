@@ -238,6 +238,32 @@ class SimpleCursesWidget(object):
 
 
 class SimpleCursesString(SimpleCursesWidget):
+    ''' A class to provide a String value
+
+        Parameters
+        ==========
+        Y, X, window
+            Coordinates and parent window
+        caption
+            preffix string
+        string
+            the string to display (variable)
+        color
+            text color
+        color_focused
+            counter color when enabled and focused
+        color_not_focused
+            counter color when enabled but not focused
+        color_disabled
+            counter color when disabled
+        full_slection
+            if not None, it should be a tuple:
+                (go left from self._X, numbder of chars to print)
+            draw selection cursor as a full line
+    '''
+
+
+    _max_string = 0
 
     def __init__(
         self,
@@ -248,12 +274,15 @@ class SimpleCursesString(SimpleCursesWidget):
         color_not_focused,
         color_disabled,
         right_arrow_selects=True,
-        callback_function_on_activation=None
+        callback_function_on_activation=None,
+        full_selection=None
     ):
         self._Y = Y
         self._X = X
         self._win = self._parent = parent
         self._string = string
+        if cjklen(self._string) > self._max_string:
+            self._max_string = cjklen(self._string)
         self._caption = caption
         self._color = color
         self._color_focused = color_focused
@@ -261,6 +290,7 @@ class SimpleCursesString(SimpleCursesWidget):
         self._color_disabled = color_disabled
         self._right_arrow_selects = right_arrow_selects
         self._callback_function_on_activation = callback_function_on_activation
+        self._full_selection = full_selection
 
     @property
     def caption(self):
@@ -277,6 +307,8 @@ class SimpleCursesString(SimpleCursesWidget):
     @string.setter
     def string(self, value):
         self._string = value
+        if cjklen(self._string) > self._max_string:
+            self._max_string = cjklen(self._string)
 
     @property
     def string_len(self):
@@ -315,11 +347,36 @@ class SimpleCursesString(SimpleCursesWidget):
             self._callback_function_on_activation()
         return ret
 
+    def _print_full_line(self, col):
+        tmp = self._full_selection[0] * ' ' + self.caption + self._string
+        self._win.addstr(
+            self._Y,
+            self._X - self._full_selection[0],
+            tmp.ljust(self._full_selection[1]),
+            col
+        )
     def show(self, parent=None):
         if parent:
             self._win = self_parent = parent
-        self._win.addstr(self._Y, self._X, self._caption, self._color)
-        self._win.addstr(self._string, self._color_not_focused)
+        if self._full_selection and self._enabled and self._focused:
+            self._print_full_line(self._color_focused)
+        else:
+            if self._full_selection:
+                self._win.addstr(
+                    self._Y,
+                    self._X - self._full_selection[0],
+                    (self._full_selection[1] ) * ' ',
+                    self._color
+                )
+            if self._enabled:
+                self._win.addstr(self._Y, self._X, self._caption, self._color)
+                if self._focused:
+                    self._win.addstr(self._string.ljust(self._max_string), self._color_focused)
+                else:
+                    self._win.addstr(self._string.ljust(self._max_string), self._color_not_focused)
+            else:
+                self._win.addstr(self._Y, self._X, self._caption, self._color_disabled)
+                self._win.addstr(self._string.ljust(self._max_string), self._color_disabled)
 
 class SimpleCursesCounter(SimpleCursesWidget):
     ''' A class to provide a counter
@@ -344,6 +401,10 @@ class SimpleCursesCounter(SimpleCursesWidget):
             counter color when enabled but not focused
         color_disabled
             counter color when disabled
+        full_slection
+            if not None, it should be a tuple:
+                (go left from self._X, numbder of chars to print)
+            draw selection cursor as a full line
     '''
     def __init__(
         self, Y, X, window,
@@ -352,7 +413,8 @@ class SimpleCursesCounter(SimpleCursesWidget):
         color_disabled,
         minimum=0, maximum=100,
         step=1, big_step=5, value=1,
-        number_length=3, string='{0}'
+        number_length=3, string='{0}',
+        full_selection=None
     ):
         self._Y = Y
         self._X = X
@@ -375,6 +437,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
         self._color_focused = color_focused
         self._color_not_focused = color_not_focused
         self._color_disabled = color_disabled
+        self._full_selection = full_selection
 
     def refresh(self):
         self.show(self._win)
@@ -457,6 +520,15 @@ class SimpleCursesCounter(SimpleCursesWidget):
         if parent:
             self._win = self._parent = parent
 
+    def _print_full_line(self, col):
+        tmp = self._full_selection[0] * ' ' + self._prefix + str(self._value).rjust(self._len) + self._suffix
+        self._win.addstr(
+            self._Y,
+            self._X - self._full_selection[0],
+            tmp.ljust(self._full_selection[1]),
+            col
+        )
+
     def show(self, window, opening=False):
         if window:
             self._win = self._parent = window
@@ -467,14 +539,24 @@ class SimpleCursesCounter(SimpleCursesWidget):
                 col = self._color_not_focused
         else:
             col = self._color_disabled
-        self._win.move(self._Y, self._X)
-        if self._prefix:
-            self._win.addstr(self._prefix, self._color)
-        self._win.addstr(self._number.format(str(self._value).rjust(self._len)), col)
-        if self._suffix:
-            self._win.addstr(self._suffix, self._color)
-        ''' overwrite last self._len characters '''
-        self._win.addstr(' ' * self._len, self._color)
+        if self._full_selection and self._enabled and self._focused:
+            self._print_full_line(col)
+        else:
+            if self._full_selection:
+                self._win.addstr(
+                    self._Y,
+                    self._X - self._full_selection[0],
+                    (self._full_selection[1] ) * ' ',
+                    self._color
+                )
+            self._win.move(self._Y, self._X)
+            if self._prefix:
+                self._win.addstr(self._prefix, self._color)
+            self._win.addstr(self._number.format(str(self._value).rjust(self._len)), col)
+            if self._suffix:
+                self._win.addstr(self._suffix, self._color)
+            ''' overwrite last self._len characters '''
+            self._win.addstr(' ' * self._len, self._color)
         self._showed = True
 
     def keypress(self, char):
@@ -2929,6 +3011,10 @@ class SimpleCursesBoolean(SimpleCursesCounter):
             counter color when enabled but not focused
         color_disabled
             counter color when disabled
+        full_slection
+            if not None, it should be a tuple:
+                (go left from self._X, numbder of chars to print)
+            draw selection cursor as a full line
     '''
 
     def __init__(
@@ -2936,7 +3022,8 @@ class SimpleCursesBoolean(SimpleCursesCounter):
         color, color_focused,
         color_not_focused,
         color_disabled,
-        string='{0}', value=False
+        string='{0}', value=False,
+        full_selection=None
     ):
         self._Y = Y
         self._X = X
@@ -2947,6 +3034,16 @@ class SimpleCursesBoolean(SimpleCursesCounter):
         self._color_focused = color_focused
         self._color_not_focused = color_not_focused
         self._color_disabled = color_disabled
+        self._full_selection = full_selection
+
+    def _print_full_line(self, col):
+        tmp = self._full_selection[0] * ' ' + self._prefix + str(self._value).rjust(5) + self._suffix
+        self._win.addstr(
+            self._Y,
+            self._X - self._full_selection[0],
+            tmp.ljust(self._full_selection[1]),
+            col
+        )
 
     def show(self, window=None):
         if window:
@@ -2958,14 +3055,24 @@ class SimpleCursesBoolean(SimpleCursesCounter):
                 col = self._color_not_focused
         else:
             col = self._color_disabled
-        self._win.move(self._Y, self._X)
-        if self._prefix:
-            self._win.addstr( self._prefix, self._color)
-        self._win.addstr(str(self._value), col)
-        if self._suffix:
-            self._win.addstr(self._suffix, self._color)
-        ''' overwrite last self._len characters '''
-        self._win.addstr(' ' * 2, self._color)
+        if self._full_selection and self._enabled and self._focused:
+            self._print_full_line(col)
+        else:
+            if self._full_selection:
+                self._win.addstr(
+                    self._Y,
+                    self._X - self._full_selection[0],
+                    (self._full_selection[1] ) * ' ',
+                    self._color
+                )
+            self._win.move(self._Y, self._X)
+            if self._prefix:
+                self._win.addstr( self._prefix, self._color)
+            self._win.addstr(str(self._value).ljust(5), col)
+            if self._suffix:
+                self._win.addstr(self._suffix, self._color)
+            ''' overwrite last self._len characters '''
+            self._win.addstr(' ' * 2, self._color)
         self._showed = True
 
     def keypress(self, char):
