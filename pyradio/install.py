@@ -272,6 +272,12 @@ def windows_put_devel_version():
         sys.exit(1)
 
 def WindowExists(title):
+    ''' fixing #145  '''
+    try:
+        import win32api
+        import win32ui
+    except:
+        pass
     try:
         win32ui.FindWindow(None, title)
     except win32ui.error:

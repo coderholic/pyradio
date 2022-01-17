@@ -82,6 +82,7 @@ and much more...
 * python 2.7/3.5+
     - requests
     - dnspython
+    - psutil
 * MPV, MPlayer or VLC installed and in your path
 
 <!-- Changelog -->
@@ -819,8 +820,10 @@ Finally, include the file produced in your report.
 If you are a packager and would like to produce a package for your distribution please do follow this mini guide.
 
 First of all, make sure you declare the pacakges's requirements to the relevant section of your manifest (or whatever) file. These are:
+
 1. requests
 2. dnspython
+3. psutil
 
 After that, you will have to modify some files, because **PyRadio** is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
 

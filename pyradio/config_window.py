@@ -353,6 +353,7 @@ class PyRadioConfigWindow(object):
             if char in (curses.KEY_RIGHT, ord('l'),
                         ord(' '), curses.KEY_ENTER, ord('\n')):
                 return 2, []
+
         elif val[0] == 'connection_timeout':
             if char in (curses.KEY_RIGHT, ord('l')):
                 t = int(val[1][1])

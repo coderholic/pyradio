@@ -20,6 +20,7 @@ from .player import info_dict_to_list
 from .cjkwrap import cjklen, PY3
 from .countries import countries
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString
+from .ping import ping
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -286,7 +287,7 @@ class RadioBrowser(PyRadioStationsBrowser):
     BASE_URL = 'api.radio-browser.info'
     TITLE = 'RadioBrowser '
 
-    browser_config = None
+    browser_config = _config_win = None
 
     _headers = {'User-Agent': 'PyRadio/dev',
                      'Content-Type': 'application/json'}
@@ -325,6 +326,9 @@ class RadioBrowser(PyRadioStationsBrowser):
 
     _default_max_number_of_results = 100
     _default_server = ''
+    _default_ping_count = 1
+    _default_ping_timeout = 1
+    _do_ping = False
 
     keyboard_handler = None
 
@@ -368,6 +372,9 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._message_function = message_function
         self._search_return_function = search_return_function
 
+
+    def reset_dirty_config(self):
+        self.browser_config.dirty = False
 
     def is_config_dirty(self):
         return self.browser_config.dirty if self.browser_config else False
@@ -414,12 +421,17 @@ class RadioBrowser(PyRadioStationsBrowser):
     def save_config(self):
         ''' just an interface to config class save_config
         '''
-        return self.browser_config.save_config(
-            self.AUTO_SAVE_CONFIG,
-            self._search_history,
-            self._default_search_history_index,
-            self._default_server,
-            self._default_max_number_of_results)
+        if self._config_win:
+            return self._config_win.save_config()
+        else:
+            return self.browser_config.save_config(
+                self.AUTO_SAVE_CONFIG,
+                self._search_history,
+                self._default_search_history_index,
+                self._default_server if 'Random' not in self._default_server else '',
+                self._default_ping_count,
+                self._default_ping_timeout,
+                self._default_max_number_of_results)
 
     def url(self, id_in_list):
         ''' Get a station's url using resolved_url
@@ -645,6 +657,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 logger.info('  headers = "{}"'.format(r.request.headers))
             except:
                 pass
+
     def _get_search_elements(self, a_search):
         '''
             get "by search" and "reverse"
@@ -1218,14 +1231,37 @@ class RadioBrowser(PyRadioStationsBrowser):
                 highlight = -1
         return highlight, ((title, columns_separotors, columns[self._output_format]), )
 
-    def select_servers(self):
+    def select_servers(self, with_config=False, return_function=None, init=False):
+        ''' RadioBrowser select servers '''
+        if init:
+            self._server_selection_window = None
         if self._server_selection_window is None:
-            self._server_selection_window = RadioBrowserServersSelect(
-                self.parent, self._dns_info.server_urls, self._server)
+            self._old_server = self._server
+            if with_config:
+                self._server_selection_window = RadioBrowserServersSelect(
+                    self._config_win._win,
+                    self._dns_info.server_urls,
+                    self._config_win._params[0]['server'],
+                    self._config_win._params[0]['ping_count'],
+                    self._config_win._params[0]['ping_timeout'],
+                    Y=11, X=19,
+                    show_random=True,
+                    return_function=return_function)
+            else:
+                self._server_selection_window = RadioBrowserServersSelect(
+                    self.parent,
+                    self._dns_info.server_urls,
+                    self._server,
+                    self._default_ping_count,
+                    self._default_ping_timeout,
+                    return_function=return_function
+                )
         else:
             self._server_selection_window.set_parent(self.parent)
         self.keyboard_handler = self._server_selection_window
+        self.server_window_from_config = with_config
         self._server_selection_window.show()
+        return self._server_selection_window
 
     def sort(self):
         '''
@@ -1242,29 +1278,51 @@ class RadioBrowser(PyRadioStationsBrowser):
         self.keyboard_handler = self._sort
         self._sort.show()
 
+    def _calculate_do_ping(self):
+        if self._default_ping_count == 0 or self._default_ping_timeout == 0:
+            self._do_ping = False
+        else:
+            self._do_ping = True
+        return self._do_ping
+
     def read_config(self):
         ''' RadioBrowser read config '''
         self.browser_config.read_config()
-        random_server = self._dns_info.give_me_a_server_url()
-        # logger.error('DE random_server = {}'.format(random_server))
-        if random_server is None:
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('RadioBrowser: No server is reachable!')
-            return False
-
         self.AUTO_SAVE_CONFIG = self.browser_config.auto_save
         self._default_max_number_of_results = int(self.browser_config.limit)
         self._default_search_history_index = self._search_history_index = self.browser_config.default
         self._search_history = self.browser_config.terms
         self._default_server = self.browser_config.server
+        self._default_ping_count = self.browser_config.ping_count
+        self._default_ping_timeout = self.browser_config.ping_timeout
+        self._calculate_do_ping()
+        self._server = None
         if self._default_server:
-            self._server = self._default_server
             if logger.isEnabledFor(logging.INFO):
-                logger.info('RadioBrowser: server is set by user: ' + self._server)
-        else:
+                logger.info('RadioBrowser: pinging user default server: ' + self._default_server)
+            if self._do_ping:
+                if ping(self._default_server,
+                        count=self._default_ping_count,
+                        timeout_in_seconds=self._default_ping_timeout) == 1:
+                    self._server = self._default_server
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('ping was successful!')
+                        logger.info('RadioBrowser: server is set by user: ' + self._server)
+            else:
+                self._server = self._default_server
+
+        if not self._server:
+            random_server = self._dns_info.give_me_a_server_url()
+            # logger.error('DE random_server = {}'.format(random_server))
+            if random_server is None:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('RadioBrowser: No server is reachable!')
+                return False
+
             self._server = random_server
             if logger.isEnabledFor(logging.INFO):
                 logger.info('RadioBrowser: using random server: ' + self._server)
+
         if logger.isEnabledFor(logging.INFO):
             logger.info('RadioBrowser: result limit = {}'.format(self._default_max_number_of_results))
             logger.info('RadioBrowser: default search term = {}'.format(self._default_search_history_index))
@@ -1282,7 +1340,9 @@ class RadioBrowser(PyRadioStationsBrowser):
                  0: Done, result is in ....
                  1: Continue
         '''
+        # logger.error('DE keyboard handler = {}'.format(self.keyboard_handler))
         ret = self.keyboard_handler.keypress(char)
+        # logger.error('DE online_browser ret = {}'.format(ret))
 
         if ret == 0:
             if self.keyboard_handler == self._sort:
@@ -1318,6 +1378,11 @@ class RadioBrowser(PyRadioStationsBrowser):
 
         return ret
 
+    def line_editor_has_focus(self):
+        if self._search_win:
+            return self._search_win.line_editor_has_focus()
+        return False
+
     def do_search(self, parent=None, init=False):
         if init:
             self._search_win = RadioBrowserSearchWindow(
@@ -1344,6 +1409,8 @@ class RadioBrowser(PyRadioStationsBrowser):
                 current_history=self._search_history,
                 current_history_id=self._default_search_history_index,
                 current_limit=self._default_max_number_of_results,
+                current_ping_count=self._default_ping_count,
+                current_ping_timeout=self._default_ping_timeout,
                 init=init
             )
         self.keyboard_handler = self._config_win
@@ -1353,10 +1420,12 @@ class RadioBrowserConfig(object):
     ''' RadioBrowser config calss
 
         Parameters:
-            auto_save : Boolean
-            server    : string
-            default   : int (id on terms)
-            terms     : list of dicts (the actual search paremeters)
+            auto_save    : Boolean
+            server       : string
+            default      : int (id on terms)
+            ping_timeout : int (ping timeout is seconds)
+            ping_count   : int (number of ping packages)
+            terms        : list of dicts (the actual search paremeters)
     '''
     auto_save = False
     server = ''
@@ -1364,6 +1433,8 @@ class RadioBrowserConfig(object):
     limit = '100'
     terms = []
     dirty = False
+    ping_count = 1
+    ping_timeout = 1
 
     def __init__(self, stations_dir):
         self.config_file = path.join(stations_dir, 'radio-browser-config')
@@ -1377,6 +1448,8 @@ class RadioBrowserConfig(object):
         self.default = 1
         self.auto_save = False
         self.limit = 100
+        self.ping_count = 1
+        self.ping_timeout = 1
         lines = []
         term_str = []
         try:
@@ -1412,6 +1485,16 @@ class RadioBrowserConfig(object):
                             self.limit = '100'
                     elif sp[0] == 'SEARCH_TERM':
                         term_str.append(sp[1])
+                    elif sp[0] == 'PING_COUNT':
+                        try:
+                            self.ping_count = int(sp[1])
+                        except:
+                            self.ping_count = 1
+                    elif sp[0] == 'PING_TIMEOUT':
+                        try:
+                            self.ping_timeout = int(sp[1])
+                        except:
+                            self.ping_timeout = 1
 
         if term_str:
             for n in range(0, len(term_str)):
@@ -1453,14 +1536,16 @@ class RadioBrowserConfig(object):
                     search_history,
                     search_default_history_index,
                     default_server,
+                    default_ping_count,
+                    default_ping_timeout,
                     default_max_number_of_results):
         self.auto_save = auto_save
-        self.server = default_server
+        self.server = default_server if 'Random' not in default_server else ''
         self.default = default_max_number_of_results
         self.terms = deepcopy(search_history)
-        txt = '''########################################
-# RadioBrowser config file for PyRadio #
-########################################
+        txt = '''##############################################################################
+#                    RadioBrowser config file for PyRadio                    #
+##############################################################################
 #
 # Auto save config
 # If True, the config will be automatically saved upon
@@ -1490,6 +1575,21 @@ DEFAULT_LIMIT = '''
 
         txt += '''
 
+# server pinging parameters
+# set any parameter to 0 to disable pinging
+# number of packages to send
+PING_COUNT = '''
+
+        txt += str(default_ping_count)
+
+        txt += '''
+# timeout in seconds
+PING_TIMEOUT = '''
+
+        txt += str(default_ping_timeout)
+
+        txt += '''
+
 # List of "search terms" (queries)
 # An asterisk specifies the default search term (the
 # one activated when RadioBrowser opens up)
@@ -1511,7 +1611,7 @@ DEFAULT_LIMIT = '''
                 cfgfile.write(txt)
         except:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('Saving Online Browser config file filed')
+                logger.error('Saving Online Browser config file failed')
             return False
         self.dirty = False
         if logger.isEnabledFor(logging.INFO):
@@ -1520,14 +1620,22 @@ DEFAULT_LIMIT = '''
 
 class RadioBrowserConfigWindow(object):
 
+    BROWSER_NAME = 'RadioBrowser'
     TITLE = ' RadioBrowser Config '
     _win = _widgets = _config = _history = _dns = None
+    _server_selection_window = None
     _default_history_id = _focus = 0
     _auto_save =_showed = False
     invalid = False
     _widgets = None
     _params = []
     _focused = 0
+    _token = ''
+    server_window_from_config = False
+
+    keyboard_handler = None
+
+    enable_servers = True
 
     def __init__(
             self,
@@ -1536,6 +1644,8 @@ class RadioBrowserConfigWindow(object):
             dns_info=None,
             current_auto_save=False,
             current_server='',
+            current_ping_count=1,
+            current_ping_timeout=1,
             current_history=None,
             current_history_id=-1,
             current_limit=100,
@@ -1547,14 +1657,22 @@ class RadioBrowserConfigWindow(object):
                 1: current in browser window
                 2: from config
         '''
-        for i in range(0, 3):
-            self._params.append(
-                {'auto_save': False,
-                 'server': '',
-                 'default': 1,
-                 'limit': 100,
-                 'terms': []},
-            )
+        if len(self._params) == 0:
+            for i in range(0, 3):
+                self._params.append(
+                    {'auto_save': False,
+                     'server': '',
+                     'default': 1,
+                     'limit': 100,
+                     'ping_count': 1,
+                     'ping_timeout': 1,
+                     'terms': [{
+                         'type': 'topvote',
+                         'term': '100',
+                         'post_data': {'reverse': 'true'}
+                     }]},
+                )
+        # self._print_params()
         self._win = self._parent = parent
         self.maxY, self.maxX = self._parent.getmaxyx()
         if config:
@@ -1566,9 +1684,10 @@ class RadioBrowserConfigWindow(object):
             self._dns_info = dns_info
         else:
             self._dns_info = RadioBrowserDns()
-        self._init_set_config_params()
         self._init_set_working_params(current_auto_save,
                                       current_server,
+                                      current_ping_count,
+                                      current_ping_timeout,
                                       current_limit,
                                       current_history_id,
                                       current_history
@@ -1608,6 +1727,9 @@ class RadioBrowserConfigWindow(object):
             self._focused = 0
         else:
             self._focused += 1
+        while not self._widgets[self._focused].enabled:
+            self._focus_next()
+            return
         self._refresh()
 
     def _focus_previous(self):
@@ -1615,6 +1737,9 @@ class RadioBrowserConfigWindow(object):
             self._focused = len(self._widgets) - 1
         else:
             self._focused -= 1
+        while not self._widgets[self._focused].enabled:
+            self._focus_previous()
+            return
         self._refresh()
 
     def _refresh(self):
@@ -1631,44 +1756,112 @@ class RadioBrowserConfigWindow(object):
     def _init_set_working_params(self,
                                  auto_save,
                                  server,
+                                 ping_count,
+                                 ping_timeout,
                                  limit,
                                  default,
                                  terms
      ):
         if terms is None:
-            self._revert_to_saved_params()
+            self._revert_to_default_params()
+            self._params[0]['auto_save'] = self._config.auto_save
+            self._params[0]['server'] = self._fix_server(self._config.server)
+            self._params[0]['ping_count'] = self._config.ping_count
+            self._params[0]['ping_timeout'] = self._config.ping_timeout
+            self._params[0]['limit'] = self._config.limit
+            self._params[0]['default'] = self._config.default
+            self._params[0]['terms'] = deepcopy(self._config.terms)
         else:
             self._params[0]['auto_save'] = auto_save
             self._params[0]['server'] = self._fix_server(server)
+            self._params[0]['ping_count'] = ping_count
+            self._params[0]['ping_timeout'] = ping_timeout
             self._params[0]['limit'] = limit
             self._params[0]['default'] = default
             self._params[0]['terms'] = deepcopy(terms)
         self._params[1]['auto_save'] = self._params[0]['auto_save']
         self._params[1]['server'] = self._params[0]['server']
+        self._params[1]['ping_count'] = self._params[0]['ping_count']
+        self._params[1]['ping_timeout'] = self._params[0]['ping_timeout']
         self._params[1]['default'] = self._params[0]['default']
         self._params[1]['limit'] = self._params[0]['limit']
         self._params[1]['terms'] = deepcopy(self._params[0]['terms'])
 
-    def _init_set_config_params(self):
-        self._params[2]['auto_save'] = self._config.auto_save
-        self._params[2]['server'] = self._fix_server(self._config.server)
-        self._params[2]['limit'] = self._config.limit
-        self._params[2]['default'] = self._config.default
-        self._params[2]['terms'] = self._config.terms
-        logger.error('DE param2 2: {}'.format(self._params[2]))
-
-    def _revert_to_current_params(self):
+    def _revert_to_saved_params(self):
         self._revert_params(1)
 
-    def _revert_to_saved_params(self):
+    def _revert_to_default_params(self):
         self._revert_params(2)
+
+    def is_config_dirty(self):
+        return self._config.dirty
+
+    def reset_dirty_config(self):
+        self._config.dirty = False
 
     def _revert_params(self, index):
         self._params[0]['auto_save'] = self._params[index]['auto_save']
         self._params[0]['server'] = self._fix_server(self._params[index]['server'])
+        self._params[0]['server'] = self._fix_server(self._params[index]['server'])
+        self._params[0]['ping_count'] = self._params[index]['ping_count']
+        self._params[0]['ping_timeout'] = self._params[index]['ping_timeout']
         self._params[0]['limit'] = self._params[index]['limit']
         self._params[0]['default'] = self._params[index]['default']
         self._params[0]['terms'] = deepcopy(self._params[index]['terms'])
+        ''' set to widgets '''
+        if self._widgets:
+            self._widgets[0].value = self._params[0]['auto_save']
+            self._widgets[1].value = int(self._params[0]['limit'])
+            self._widgets[2].value = int(self._params[0]['ping_count'])
+            self._widgets[3].value = int(self._params[0]['ping_timeout'])
+            self._widgets[4].string = self._params[0]['server'] if self._params[0]['server'] else 'Random'
+            # TODO: set of ping count and timeout
+            self._fix_ping_enable()
+            for n in self._widgets:
+                n.show(self._win)
+            self._win.refresh()
+        # self._print_params()
+
+    def _fix_ping_enable(self):
+        self._widgets[2].enabled = True
+        self._widgets[3].enabled = True
+        if self._widgets[2].value == 0:
+            self._widgets[3].enabled = False
+        elif self._widgets[3].value == 0:
+            self._widgets[2].enabled = False
+
+    def calculate_dirty(self):
+        self._config.dirty = False
+        for n in (
+            'auto_save', 'server',
+            'ping_count', 'ping_timeout',
+            'limit','default', 'terms'
+        ):
+            if self._params[0][n] != self._params[1][n]:
+                self._config.dirty = True
+                break
+        self.print_title()
+
+    def print_title(self):
+        self._win.box()
+        token = ' *' if self._config.dirty else ''
+        if token:
+            title = self.TITLE[1:]
+            self._win.addstr(
+                0,
+                int((self.maxX - len(title)) / 2) - 2,
+                token,
+                curses.color_pair(3))
+            self._win.addstr(
+                title,
+                curses.color_pair(4))
+        else:
+            self._win.addstr(
+                0,
+                int((self.maxX - len(self.TITLE)) / 2),
+                self.TITLE,
+                curses.color_pair(4))
+        self._win.refresh()
 
     def show(self, parent, init=False):
         self._parent = parent
@@ -1690,10 +1883,7 @@ class RadioBrowserConfigWindow(object):
 
         self._win.bkgdset(' ', curses.color_pair(5))
         self._win.erase()
-        self._win.box()
-        self._win.addstr(0, int((self.maxX - len(self.TITLE)) / 2),
-                         self.TITLE,
-                         curses.color_pair(4))
+        self.print_title()
 
         if self._too_small:
             # TODO Print messge
@@ -1718,14 +1908,15 @@ class RadioBrowserConfigWindow(object):
                     color_disabled=curses.color_pair(5),
                     value=self._params[0]['auto_save'],
                     string='Auto save config: {0}',
-                    full_selection=(2,58)
+                    full_selection=(2,59)
                 )
             )
             self._widgets[-1].token = 'auto_save'
+            self._widgets[-1].id = 0
 
             self._widgets.append(
                 SimpleCursesCounter(
-                    Y=4, X=3,
+                    Y=5, X=3,
                     window=self._win,
                     color=curses.color_pair(5),
                     color_focused=curses.color_pair(6),
@@ -1735,14 +1926,53 @@ class RadioBrowserConfigWindow(object):
                     step=1, big_step=10,
                     value=self._params[0]['limit'],
                     string='Maximum number of results: {0}',
-                    full_selection=(2,58)
+                    full_selection=(2,59)
                 )
             )
             self._widgets[-1].token = 'limit'
+            self._widgets[-1].id = 1
+
+            self._widgets.append(
+                SimpleCursesCounter(
+                    Y=7, X=3,
+                    window=self._win,
+                    color=curses.color_pair(5),
+                    color_focused=curses.color_pair(6),
+                    color_not_focused=curses.color_pair(4),
+                    color_disabled=curses.color_pair(5),
+                    minimum=0, maximum=9,
+                    step=1, big_step=5,
+                    number_length=1,
+                    value=self._params[0]['ping_count'],
+                    string='Number of ping packages: {0}',
+                    full_selection=(2,59)
+                )
+            )
+            self._widgets[-1].token = 'ping_count'
+            self._widgets[-1].id = 2
+
+            self._widgets.append(
+                SimpleCursesCounter(
+                    Y=8, X=3,
+                    window=self._win,
+                    color=curses.color_pair(5),
+                    color_focused=curses.color_pair(6),
+                    color_not_focused=curses.color_pair(4),
+                    color_disabled=curses.color_pair(5),
+                    minimum=0, maximum=9,
+                    step=1, big_step=5,
+                    number_length=1,
+                    value=self._params[0]['ping_timeout'],
+                    string='Ping timeout (seconds): {0}',
+                    full_selection=(2,59)
+                )
+            )
+            self._widgets[-1].token = 'ping_timeout'
+            self._widgets[-1].id = 3
 
             self._widgets.append(
                 SimpleCursesString(
-                    Y=6, X=3,
+                    Y=10, X=3,
                     parent=self._win,
                     caption='Default Server: ',
                     string=self._params[0]['server'],
@@ -1750,34 +1980,132 @@ class RadioBrowserConfigWindow(object):
                     color_focused=curses.color_pair(6),
                     color_not_focused=curses.color_pair(4),
                     color_disabled=curses.color_pair(5),
-                    full_selection=(2,58)
+                    full_selection=(2,59)
                 )
             )
             self._widgets[-1].token = 'server'
+            self._widgets[-1].id = 4
+            self._widgets[-1].enabled = self.enable_servers
             self._fix_focus(show=False)
-        logger.error('{}'.format(self._widgets))
         for n in self._widgets:
             n.show(self._win)
 
         self._win.addstr(1, 1, 'General Options', curses.color_pair(4))
         self._win.addstr(3, 5, 'If True, no confirmation will be asked before saving', curses.color_pair(5))
-        self._win.addstr(5, 5, 'A value of -1 will disable return items limiting', curses.color_pair(5))
-        self._win.addstr(7, 5, 'Set to "Random" if you cannot connet to service', curses.color_pair(5))
-        self._win.addstr(8, 1, 'Default Search Term', curses.color_pair(4))
+        self._win.addstr(4, 5, 'the configuration when leaving the search window', curses.color_pair(5))
+        self._win.addstr(6, 5, 'A value of -1 will disable return items limiting', curses.color_pair(5))
+        self._win.addstr(9, 5, 'Set any ping parameter to 0 to disable server pinging', curses.color_pair(5))
+        self._win.addstr(11, 5, 'Set to "Random" if you cannot connet to service', curses.color_pair(5))
+        self._win.addstr(12, 1, 'Default Search Term', curses.color_pair(4))
+        self._win.addstr(13, 5, 'Not implemented yet', curses.color_pair(5))
 
+        self._fix_ping_enable()
         self._win.refresh()
 
         self._showed = True
+        # self._print_params()
+
+    def save_config(self):
+        ''' RadioBrowserConfigWindow save config
+
+            Returns:
+                -2: config saved
+                -3: error saving config
+                -4: config not modified
+        '''
+        if self._config.dirty:
+            ret = self._config.save_config(
+                auto_save=self._params[0]['auto_save'],
+                search_history=self._params[0]['terms'],
+                search_default_history_index=self._params[0]['default'],
+                default_server=self._params[0]['server'] if 'Random' not in self._params[0]['server'] else '',
+                default_ping_count=self._params[0]['ping_count'],
+                default_ping_timeout=self._params[0]['ping_timeout'],
+                default_max_number_of_results=self._params[0]['limit']
+            )
+            if ret:
+                self._config.dirty = False
+                ''' config saved '''
+                return -2
+            else:
+                ''' error saving config '''
+                return -3
+        ''' config not modified '''
+        return -4
+
+    def select_servers(self, with_config=False, return_function=None, init=False):
+        ''' RadioBrowserConfigWindow select servers '''
+        if init:
+            self._server_selection_window = None
+        if self._server_selection_window is None:
+            self._server_selection_window = RadioBrowserServersSelect(
+                self._win,
+                self._dns_info.server_urls,
+                self._params[0]['server'],
+                self._params[0]['ping_count'],
+                self._params[0]['ping_timeout'],
+                Y=11, X=19,
+                show_random=True,
+                return_function=return_function)
+        else:
+            self._server_selection_window.set_parent(self._win)
+        # self.keyboard_handler = self._server_selection_window
+        self._server_selection_window.show()
+        return self._server_selection_window
+
+    def get_server_value(self, a_server=None):
+        if a_server is not None:
+            act_server = a_server if not 'Random' in a_server else ''
+            self._params[0]['server'] = act_server
+            self._widgets[4].string = act_server if act_server != '' else 'Random'
+        else:
+
+            try:
+                self._params[0]['server'] = self._server_selection_window.servers.server
+                logger.error('---=== 1. Server Selection is None ===---')
+                self._server_selection_window = None
+                self._widgets[4].string = self._params[0]['server'] if self._params[0]['server'] else 'Random'
+            except AttributeError:
+                pass
+        self._widgets[4].show(parent=self._win)
+        self._win.refresh()
+
+    def _print_params(self):
+        logger.error('\n\n')
+        for i, n in enumerate(self._params):
+            logger.error('-- id: {}'.format(i))
+            logger.error(n['auto_save'])
+            logger.error(n['server'])
+            logger.error(n['ping_count'])
+            logger.error(n['ping_timeout'])
+            logger.error(n['limit'])
+            logger.error(n['default'])
+            logger.error(n['terms'])
 
     def keypress(self, char):
         ''' RadioBrowserConfigWindow keypress
 
             Returns:
+              -4: config not modified
+              -3: error saving config
+              -2: config saved successfully
               -1: Cancel
                0: Save Config
-               1: Revert to Saved
+               1: Continue
                2: Display help
+               3: Display server selection window
+               4: Return from server selection window
         '''
+        if self._server_selection_window:
+            # ret = self._server_selection_window.keypress(char)
+            if self._server_selection_window.return_value < 1:
+                if self._server_selection_window.return_value == 0:
+                    # logger.error('DE SSW {}'.format(self._params[0]))
+                    self._params[0]['server'] = self._server_selection_window.servers.server
+                    # logger.error('DE SSW {}'.format(self._params[0]))
+                logger.error('---=== Server Selection is None ===---')
+                self._server_selection_window = None
+
         if char in (
             curses.KEY_EXIT, 27, ord('q')
         ):
@@ -1787,12 +2115,67 @@ class RadioBrowserConfigWindow(object):
                       ord('\r')) and self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''
             ret = self._handle_new_or_existing_search_term()
+            # self._print_params()
             return 0 if ret == 1 else ret
+
+        elif char == ord('?'):
+            return 2
 
         elif char in (ord('\t'), 9):
             self._focus_next()
+
         elif char in (curses.KEY_BTAB, ):
             self._focus_previous()
+
+        elif char == ord('s'):
+            return self.save_config()
+
+        elif char == ord('r'):
+            self._revert_to_saved_params()
+            self.calculate_dirty()
+
+        elif char == ord('d'):
+            self._revert_to_default_params()
+            self._config.dirty = False
+            self.calculate_dirty()
+
+        elif char in (curses.KEY_UP, ord('j')) and self._focused < 5:
+            self._focus_previous()
+
+        elif char in (curses.KEY_DOWN, ord('k')) and self._focused < 5:
+            self._focus_next()
+
+        else:
+            if self._focused < 4:
+                ret = self._widgets[self._focused].keypress(char)
+                if ret == 0:
+
+                    if self._focused == 0:
+                        ''' auto save  '''
+                        self._widgets[0].show(self._win)
+                        self._params[0]['auto_save'] = self._widgets[0].value
+                        self.calculate_dirty()
+
+                    else:
+                        ''' limit  '''
+                        self._widgets[self._focused].show(self._win)
+                        self._params[0][self._widgets[self._focused].token] = self._widgets[self._focused].value
+                        if self._focused == 2 or self._focused == 3:
+                            self._fix_ping_enable()
+                    self._win.refresh()
+                    #self._print_params()
+                    self.calculate_dirty()
+
+            elif self._focused == 4:
+                ''' server '''
+                if char in (ord(' '), curses.KEY_ENTER, ord('\n'),
+                            ord('\r'), ord('l'), curses.KEY_RIGHT):
+                    ''' open server selection window '''
+                    return 3
+            else:
+                ''' terms '''
+                pass
+        return 1
 
 class RadioBrowserSearchWindow(object):
 
@@ -1980,11 +2363,7 @@ class RadioBrowserSearchWindow(object):
                 ''' populate the "Search" part '''
                 s_id_list = []
                 for n in a_search['post_data'].items():
-                    # logger.error('DE ===== n = {}'.format(n))
-                    if n[0] in RADIO_BROWSER_SEARCH_TERMS.keys():
-                        if n[1] != -1:
-                            s_id = RADIO_BROWSER_SEARCH_TERMS[n[0]]
-                            # logger.error('DE s_id = {}'.format(s_id))
+                    # logger.error('DE s_id = {}'.format(s_id))
                             if type(self._widgets[s_id]).__name__ == 'SimpleCursesLineEdit':
                                 self._widgets[s_id].string = n[1]
                                 # logger.error('DE n[0] = {0}, string = "{1}"'.format(n[0], n[1]))
@@ -2418,11 +2797,15 @@ class RadioBrowserSearchWindow(object):
         elif self._selected_history_id == self._default_history_id:
                 self._win.addstr(self.maxY - 3, 2, 'Default item', curses.color_pair(4))
 
-        msg = 'History navigation: ^N/^P, Go to template item: ^T'
+        msg = 'History navigation: ^N/^P, HOME,0/END,g,$, PgUp/PgDown'
         thisX = self.maxX - 2 - len(msg)
-        self._win.addstr(self.maxY - 3, thisX, msg)
-        self._carret_chgat(self.maxY-3, thisX, msg)
-        msg = 'Add/Del: ^Y/^X, Make default: ^B, Save history: ^V'
+        self._win.addstr(self.maxY - 3, thisX, msg.split(':')[0] + ':', curses.color_pair(5))
+        msg = msg.split(':')[1]
+        thisX = self.maxX - 3 - len(msg)
+        self._win.addstr(msg, curses.color_pair(4))
+        self._other_chgat(self.maxY - 3, thisX, msg)
+        #self._carret_chgat(self.maxY-3, thisX, msg)
+        msg = 'Add/Del: ^Y/^X, Make default: ^B, Save history: ^W'
         thisX = self.maxX - 2 - len(msg)
         self._win.addstr(self.maxY - 2, thisX, msg)
         self._carret_chgat(self.maxY-2, thisX, msg)
@@ -2430,6 +2813,12 @@ class RadioBrowserSearchWindow(object):
         self._win.addstr(self.maxY - 2, 2 , 'History item: ')
         self._win.addstr('{}'.format(self._selected_history_id), curses.color_pair(4))
         self._win.addstr('/{} '.format(len(self._history)-1))
+
+    def _other_chgat(self, Y, X, a_string):
+        indexes = [i for i, c in enumerate(a_string) if c == '/' or c == ',']
+        logger.error(indexes)
+        for n in indexes:
+            self._win.chgat(Y, X+n+1, 1, curses.color_pair(5))
 
     def _carret_chgat(self, Y, X, a_string):
         indexes = [i for i, c in enumerate(a_string) if c == '^']
@@ -2501,6 +2890,34 @@ class RadioBrowserSearchWindow(object):
 
         return found, index
 
+    def _goto_first_history_item(self):
+        self._handle_new_or_existing_search_term()
+        self._selected_history_id = 0
+        self._print_history_legend()
+        self._activate_search_term(self._history[self._selected_history_id])
+
+    def _goto_last_history_item(self):
+        self._handle_new_or_existing_search_term()
+        self._selected_history_id = len(self._history) - 1
+        self._print_history_legend()
+        self._activate_search_term(self._history[self._selected_history_id])
+
+    def _jump_history_up(self):
+        self._handle_new_or_existing_search_term()
+        self._selected_history_id -= 5
+        if self._selected_history_id < 0:
+            self._selected_history_id = len(self._history) - 1
+        self._print_history_legend()
+        self._activate_search_term(self._history[self._selected_history_id])
+
+    def _jump_history_down(self):
+        self._handle_new_or_existing_search_term()
+        self._selected_history_id += 5
+        if self._selected_history_id >= len(self._history):
+            self._selected_history_id = 0
+        self._print_history_legend()
+        self._activate_search_term(self._history[self._selected_history_id])
+
     def _ctrl_n(self):
         ''' ^N - Next history item '''
         cur_history_id = self._selected_history_id
@@ -2522,7 +2939,7 @@ class RadioBrowserSearchWindow(object):
             self._selected_history_id = cur_history_id
         if len(self._history) > 1:
             self._selected_history_id -= 1
-            if self._selected_history_id <0:
+            if self._selected_history_id < 0:
                 self._selected_history_id = len(self._history) - 1
             self._print_history_legend()
             self._activate_search_term(self._history[self._selected_history_id])
@@ -2551,11 +2968,19 @@ class RadioBrowserSearchWindow(object):
                 self._win.refresh()
             self._cnf.dirty = True
 
-    def _ctrl_t(self):
+    def _ctrl_f(self):
         ''' ^T - Go to template (item 0) '''
         self._selected_history_id = 0
         self._print_history_legend()
         self._activate_search_term(self._history[self._selected_history_id])
+
+    def selected_widget_class_name(self):
+        return type(self._widgets[self._focus]).__name__
+
+    def line_editor_has_focus(self):
+        if self.selected_widget_class_name() == 'SimpleCursesLineEdit':
+            return True
+        return False
 
     def keypress(self, char):
         ''' RadioBrowserSearchWindow keypress
@@ -2584,14 +3009,29 @@ class RadioBrowserSearchWindow(object):
 
         class_name = type(self._widgets[self._focus]).__name__
 
-        if char in (ord('\t'), 9):
+        if char == ord('0'):
+            self._goto_first_history_item()
+
+        elif char == ord('$'):
+            self._goto_last_history_item()
+
+        elif char in (curses.KEY_PPAGE, ) and self._focus != len(self._widgets) -3:
+            self._jump_history_up()
+
+        elif char in (curses.KEY_NPAGE, ) and self._focus != len(self._widgets) -3:
+            self._jump_history_down()
+
+        elif char in (ord('\t'), 9):
             self._focus_next()
+
         elif char in (curses.KEY_BTAB, ):
             self._focus_previous()
+
         elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
                       ord('\r')) and self._focus == len(self._widgets) - 1:
             ''' enter on cancel button  '''
             return -1
+
         elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
                       ord('\r')) and self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''
@@ -2607,8 +3047,8 @@ class RadioBrowserSearchWindow(object):
             ''' ^P - Previous history item '''
             self._ctrl_p()
 
-        elif char in (curses.ascii.SYN, ):
-            ''' ^V - Save search history '''
+        elif char in (curses.ascii.ETB, ):
+            ''' ^W - Save search history '''
             self._handle_new_or_existing_search_term()
             ''' Save search history '''
             return 5
@@ -2625,9 +3065,9 @@ class RadioBrowserSearchWindow(object):
             ''' ^B - Set default item '''
             self._ctrl_b()
 
-        elif char in (curses.ascii.DC4, ):
-            ''' ^T - Go to template (item 0) '''
-            self._ctrl_t()
+        elif char in (curses.ascii.ACK, ):
+            ''' ^F - Go to template (item 0) '''
+            self._ctrl_f()
 
         else:
             if class_name == 'SimpleCursesWidgetColumns':
@@ -2672,7 +3112,18 @@ class RadioBrowserSearchWindow(object):
                 elif ret < 2:
                     return 1
 
-            if char in (ord('n'), ):
+            if char in (ord('s'), ):
+                ''' prerform search '''
+                ret = self._handle_new_or_existing_search_term()
+                return 0 if ret == 1 else ret
+
+            elif char == curses.KEY_HOME:
+                self._goto_first_history_item()
+
+            elif char in (curses.KEY_END, ord('g')):
+                self._goto_last_history_item()
+
+            elif char in (ord('n'), ):
                 ''' ^N - Next history item '''
                 self._ctrl_n()
 
@@ -2680,15 +3131,15 @@ class RadioBrowserSearchWindow(object):
                 ''' ^P - Previous history item '''
                 self._ctrl_p()
 
-            elif char in (ord('v'), ):
-                ''' ^V - Save search history '''
+            elif char in (ord('w'), ):
+                ''' ^W - Save search history '''
                 self._handle_new_or_existing_search_term()
                 ''' Save search history '''
                 return 5
 
-            elif char in (ord('t'), ):
-                ''' ^T - Go to template (item 0) '''
-                self._ctrl_t()
+            elif char in (ord('f'), ):
+                ''' ^F - Go to template (item 0) '''
+                self._ctrl_f()
 
             elif char in (ord('x'), ):
                 ''' ^X - Delete history item '''
@@ -3061,6 +3512,10 @@ class RadioBrowserDns(object):
         pass
 
     @property
+    def connected(self):
+        return self._urls
+
+    @property
     def server_urls(self):
         ''' Returns server urls in a tuple '''
         if self._urls is None:
@@ -3096,6 +3551,8 @@ class RadioBrowserDns(object):
         return self._names_and_urls
 
     def _get_urls(self):
+        # self._urls = None
+        # return
         self._urls = []
         result = None
         try:
@@ -3121,7 +3578,24 @@ class RadioBrowserDns(object):
             self._get_urls()
 
         if self._urls:
-            num = random.randint(0, len(self._urls) - 1)
+            ping_response = [-2] * len(self._urls)
+            start_num = num = random.randint(0, len(self._urls) - 1)
+            while ping_response[num] == -2:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('pinging random server: ' + self._urls[num])
+                ping_response[num] = ping(self._urls[num], count=1, timeout_in_seconds=1)
+                if ping_response[num] == 1:
+                    ''' ping was ok '''
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('ping was successful!')
+                    break
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('ping was unsuccessful!')
+                num += 1
+                if num == len(self._urls):
+                    num = 0
+                if num == start_num:
+                    return None
             return self._urls[num]
         else:
             return None
@@ -3318,13 +3792,18 @@ class RadioBrowserServersSelect(object):
 
     TITLE = ' Server Selection '
 
+    return_value = 1
+
     def __init__(self,
                  parent,
                  servers,
                  current_server,
+                 ping_count,
+                 ping_timeout,
                  Y=None,
                  X=None,
-                 show_random=False):
+                 show_random=False,
+                 return_function=None):
         ''' Server selection Window
             if Y and X are valid (not None)
               keypress just returns 0
@@ -3334,7 +3813,10 @@ class RadioBrowserServersSelect(object):
         self._parent = parent
         self.items = list(servers)
         self.server = current_server
-        self._show_random = show_random
+        self.ping_count = ping_count
+        self.ping_timeout = ping_timeout
+        self._show_random = self.from_config = show_random
+        self._return_function = return_function
 
         self.servers = RadioBrowserServers(
             parent, servers, current_server, show_random
@@ -3343,8 +3825,12 @@ class RadioBrowserServersSelect(object):
         self.maxX = self.servers.maxX + 2
         self._Y = Y
         self._X = X
+        logger.error('DE self._Y ={0}, self._X = {1}'.format(self._Y, self._X))
 
     def show(self, parent=None):
+        if parent:
+            self._parent = parent
+            self.servers._parent = parent
         self._too_small = False
         pY, pX = self._parent.getmaxyx()
         Y, X = self._parent.getbegyx()
@@ -3376,10 +3862,15 @@ class RadioBrowserServersSelect(object):
         else:
             self._win = curses.newwin(
                 self.maxY, self.maxX,
-                self._Y, self,_X
+                self._Y, self._X
             )
         self._win.bkgdset(' ', curses.color_pair(3))
         # self._win.erase()
+        self._box_and_title()
+        self.servers._parent = self._win
+        self.servers.show()
+
+    def _box_and_title(self):
         self._win.box()
         self._win.addstr(
             0, int((self.maxX - len(self.TITLE)) / 2),
@@ -3387,8 +3878,6 @@ class RadioBrowserServersSelect(object):
             curses.color_pair(4)
         )
         self._win.refresh()
-        self.servers._parent = self._win
-        self.servers.show()
 
     def set_parent(self, parent):
         self._parent = parent
@@ -3403,14 +3892,46 @@ class RadioBrowserServersSelect(object):
                  1: Continue
         '''
 
-        ret = self.servers.keypress(char)
+        self.return_value = self.servers.keypress(char)
 
-        if ret == 2:
-            ret = 1
-        if ret == 0 and self._Y is None:
-            self.server = self.servers.server
+        if self.return_value == 2:
+            self.return_value = 1
+        if self.return_value == 0:
+            if self.servers.server:
+                if self.ping_count > 0 and self.ping_timeout > 0:
+                    msg = ' Checking Host '
+                    self._win.addstr(
+                        self.maxY - 1, int((self.maxX - len(msg)) / 2),
+                        msg,
+                        curses.color_pair(3)
+                    )
+                    self._win.refresh()
+                    if ping(self.servers.server,
+                            count=self.ping_count,
+                            timeout_in_seconds=self.ping_timeout) != 1:
+                        ''' ping was not ok '''
+                        msg = ' Host is unreachable '
+                        self._win.addstr(
+                            self.maxY - 1, int((self.maxX - len(msg)) / 2),
+                            msg,
+                            curses.color_pair(3)
+                        )
+                        self._win.refresh()
+                        th = threading.Timer(1, self._box_and_title)
+                        th.start()
+                        th.join()
+                        self.show()
+                        return 1
 
-        return ret
+                if self._Y is None:
+                    self.server = self.servers.server
+            if self._return_function:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('selected server: {}'.format(self.servers.server))
+                self._return_function(self.servers.server)
+                return 2
+
+        return self.return_value
 
 
 class RadioBrowserServers(object):
@@ -3420,11 +3941,13 @@ class RadioBrowserServers(object):
     '''
 
     _too_small = False
+    from_config = False
 
     def __init__(self, parent, servers, current_server, show_random=False):
         self._parent = parent
         self.items = list(servers)
         self.server = current_server
+        self.from_config = show_random
 
         s_max = 0
         for i, n in enumerate(self.items):
@@ -3447,8 +3970,10 @@ class RadioBrowserServers(object):
             self.maxY = len(self.items)
             logger.error('DE items = {}'.format(self.items))
         ''' get selection and active server id '''
-        if show_random and self.server == '':
-            self.active = 0
+        if show_random and (
+            self.server == '' or 'Random' in self.server
+        ):
+            self.active = self.selection = 0
         else:
             for i, n in enumerate(self.items):
                 if self.server in n:
@@ -3508,7 +4033,10 @@ class RadioBrowserServers(object):
         ):
             for i, n in enumerate(self.items):
                 if i == self.selection:
-                    self.server = n.split('(')[1].replace(') ', '')
+                    if 'Random' in n:
+                        self.server = ''
+                    else:
+                        self.server = n.split('(')[1].replace(') ', '')
                     self.active = i
                     break
             return 0

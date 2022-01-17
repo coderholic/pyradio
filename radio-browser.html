@@ -50,10 +50,13 @@ a:visited{color: SaddleBrown;}
 <li><a href="#sorting-stations">Sorting stations</a></li>
 </ul></li>
 <li><a href="#controls">Controls</a></li>
-<li><a href="#configuration">Configuration</a></li>
+<li><a href="#configuration">Configuration</a>
+<ul>
+<li><a href="#server-pinging">Server pinging</a></li>
+</ul></li>
+<li><a href="#server-selection">Server Selection</a></li>
 <li><a href="#station-database-information">Station Database Information</a></li>
 <li><a href="#station-clicking-and-voting">Station clicking and voting</a></li>
-<li><a href="#server-selection">Server Selection</a></li>
 <li><a href="#search-window">Search Window</a>
 <ul>
 <li><a href="#search-term-composition">Search term composition</a></li>
@@ -127,7 +130,61 @@ a:visited{color: SaddleBrown;}
 </table>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> One would get this information using the program’s help (pressing “<strong>?</strong>” and navigating to the last page of it).</p>
 <h2 id="configuration">Configuration <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>This feature has not been implemented yet.</p>
+<p>One can get to <strong>RadioBrowser</strong>’s configuration in any of the following ways:</p>
+<ol type="1">
+<li>From PyRadio <strong>Configuration</strong>, section <strong>Online Services</strong></p></li>
+<li>From within <strong>RadioBrowser</strong> playlist, by pressing “<em>c</em>”</p></li>
+</ol>
+<p>The configuration window presents the following options:</p>
+<ol type="1">
+<li><strong>Auto save config</strong><br />
+If True, no confirmation will be asked before saving the configuration when leaving the search window.<br />
+Default value: <em>False</em></p></li>
+<li><strong>Maximum number of results</strong><br />
+<strong>RadioBrowser</strong>’s database is really huge and some queries will produce too many results. This is the way to limit returned result number.<br />
+Setting this parameter to -1 will disable result limiting.<br />
+Default value: <em>100</em></p></li>
+<li><strong>Number of ping packages</strong><br />
+The number of ping (ICMP) packages to send to a server while checking its availability. More on “<em>Server pinging</em>” later in this section.<br />
+A value of 0 will disable server pinging.<br />
+Default value: <em>1</em></p></li>
+<li><strong>Ping timeout (seconds)</strong><br />
+The number of seconds to wait for a ping command to terminate while checking a server’s availability.<br />
+A value of 0 will disable server pinging.<br />
+Default value: <em>1</em></p></li>
+<li><strong>Default Server</strong><br />
+The default server to connect to when using the service.<br />
+Default value: <em>Random</em></p></li>
+<li><strong>Default Search Term</strong><br />
+Not implemented yet</p></li>
+</ol>
+<h3 id="server-pinging">Server pinging</h3>
+<p><strong>RadioBrowser</strong> currently provides a network of 3 servers to connect to (always kept in sync with each other), in order to limit down time.</p>
+<p>In the rare event an individual server is down, an application can just connect to any of the remaining servers to keep using the service.</p>
+<p><strong>PyRadio</strong> will use the ICMP protocol (ping) to check servers availability before even trying to query a server. The configuration parameters “<em>Number of ping packages</em>” and “<em>Ping timeout (seconds)</em>” will be used to ping the servers. If any of them is set to 0, <strong>server pinging will be disabled.</strong></p>
+<p>When opening the service, <strong>PyRadio</strong> will act depending upon its configured settings.</p>
+<ol type="1">
+<li><strong>No default server is specified and pinging is enabled</strong><br />
+In this case, <strong>PyRadio</strong> will randomly select a server, make sure it’s online (ping it) and then use it to query and display results.<br />
+If no server is available or if the internet connection has failed, a message will be displayed informing the user.</p></li>
+<li><strong>A default server has been specified and pinging is enabled</strong><br />
+<strong>PyRadio</strong> will ping the server and will connect to it if it’s available.<br />
+If the default server is unresponsive, <strong>PyRadio</strong> will try to find and use one that is available.<br />
+If no server is available or if the internet connection has failed, a message will be displayed informing the user.</p></li>
+<li><strong>Pinging is disabled</strong><br />
+No server availability check will occur.<br />
+If the server (default or random) is unavailable or if the internet connection has failed, a message will be displayed informing the user.</p></li>
+</ol>
+<p>When using the “<strong>Server Selection Window</strong>” (either within the configuration window or the playlist):</p>
+<ol type="1">
+<li><strong>If pinging is enabled</strong><br />
+The selected server availability will be checked, and if not responsive, it will not be accepted.</p></li>
+<li><strong>If pinging is disabled</strong><br />
+The server will be accepted regardless of its availability.</p></li>
+</ol>
+<h2 id="server-selection">Server Selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>In addition to the “<em>default server</em>” which can be set at the configuration window, one has the possibility to select a server to connect after opening the service.</p>
+<p>Pressing “<strong>C</strong>” will provide a list of available servers to choose from. This selection will be honored until the service is closed.</p>
 <h2 id="station-database-information">Station Database Information <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>The database information of the selected station can be displayed by pressing “<strong>I</strong>”. Keep in mind that, this is different than the “Station ino” displayed by pressing “<strong>i</strong>” (lowercase “i”), which is still available and presents live data.</p>
 <h2 id="station-clicking-and-voting">Station clicking and voting <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
@@ -136,14 +193,11 @@ a:visited{color: SaddleBrown;}
 <p>For this reason <strong>PyRadio</strong> will in no case adjust the click count presented to the user.</p>
 <p><strong>Voting</strong> for a station is a different thing; the user has to choose to vote for it. In <strong>PyRadio</strong> a “vote request” is sent when “<strong>V</strong>” is pressed. If the vote has been accepted, the vote counter will be increased by one.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Inconsistencies between a voted for station’s local vote counter value and the one reported in a consecutive server response should be expected, since it seems servers’ vote counter sync may take some time to complete.</p>
-<h2 id="server-selection">Server Selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p><strong>RadioBrowser</strong> provides several servers to the public (currently in Germany, France and The Netherlands), which are constantly kept in sync. Its API provides a way to “discover” these servers and then select the one to use.</p>
-<p><strong>PyRadio</strong> will randomly select one of these servers and will display its location in its window title.</p>
-<p>Pressing “<strong>C</strong>” will provide a list of available servers to choose from. This selection will be honored until the service is closed.</p>
 <h2 id="search-window">Search Window <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>The “<strong>Search window</strong>” opens when “<strong>s</strong>” is pressed and loads the “<strong>search term</strong>” that was used to fetch the stations currently presented in the “<strong>RadioBrowser window</strong>”. If this is the first time this window is opened within this session, the search term that’s loaded is the “<strong>default search term</strong>”.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> In case the server returns no results, the window will automatically reopen so that you can redefine the “<strong>search term</strong>”.</p>
 <p>Navigation between the various fields is done using the “<strong>Tab</strong>” (and “<strong>Shift-Tab</strong>”) key, the arrows and <strong>vim keys</strong> (“<strong>j</strong>”, “<strong>k</strong>”, “<strong>h</strong>” and “<strong>l</strong>”), provided that any given key is not already used by one of the on window “widgets”.</p>
+<p>To perform a search (server query) one would just press <strong>Enter</strong> on the “<strong>OK</strong>” button, or “<strong>s</strong>” on any widget other than a <em>Line editor</em>.</p>
 <a href="https://members.hellug.gr/sng/pyradio/radio-browser-search-window.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/radio-browser-search-window.png" alt="RadioBrowser Search Window" /></a>
 <p>This window performs two functions:</p>
 <ol type="1">
@@ -189,8 +243,16 @@ a:visited{color: SaddleBrown;}
 <td>Move to next / previous “<strong>search term</strong>” definition.</td>
 </tr>
 <tr class="even">
-<td><strong>^T</strong></td>
-<td>Move to the “<strong>empty search term</strong>” (history item 0), the <em>template item</em>. This is a quick way to “reset” all settings and start new. Of course, one could just navigate to this history item using <strong>^N</strong> or <strong>^P</strong>, but it’s here just for convenience.</td>
+<td><strong>HOME</strong> or <strong>0</strong></td>
+<td>Move to the “<strong>empty search term</strong>” (history item 0), the <em>template item</em>. This is a quick way to “reset” all settings and start new. Of course, one could just navigate to this history item using <strong>^N</strong> or <strong>^P</strong>, but it’s here just for convenience.<br><br>Pressing <strong>0</strong> works on all widgets; <strong>HOME</strong> does not work on <strong>Line editors</strong>.<br>To inster a <strong>0</strong> on a <strong>Line editor</strong> just type “<strong>\0</strong>”.</td>
+</tr>
+<tr class="odd">
+<td><strong>END</strong> or <strong>g</strong> or <strong>$</strong></td>
+<td>Move to the last <strong>search term</strong>.<br><br>Pressing <strong>$</strong> works on all widgets; <strong>END</strong> and <strong>g</strong> do not work on <strong>Line editors</strong>.<br>To inster a <strong>$</strong> on a <strong>Line editor</strong> just type “<strong>\$</strong>”.</td>
+</tr>
+<tr class="even">
+<td><strong>PgUp</strong> / <strong>PgDown</strong></td>
+<td>Jump up or down within the “<strong>search history</strong>” list.<br>These keys do not work when the “<em>Result limit</em>” counter field is focused.</td>
 </tr>
 <tr class="odd">
 <td><strong>^Y</strong></td>
@@ -205,15 +267,15 @@ a:visited{color: SaddleBrown;}
 <td>Make the current history item the <strong>default</strong> one for <strong>RadioBrowser</strong> and save the history.<br>This means that, next time you open <strong>RadioBrowser</strong> this history item (“<strong>search term</strong>”) will be automatically loaded.</td>
 </tr>
 <tr class="even">
-<td><strong>^V</strong></td>
+<td><strong>^W</strong></td>
 <td>Save the history.</td>
 </tr>
 </tbody>
 </table>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing “<strong>x</strong>” is the same as pressing “<strong>^X</strong>”, ”<strong>v</strong>” is the same as ”<strong>^V</strong>” and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.</p>
-<p>All history navigation actions (<strong>^N</strong>, <strong>^P</strong>, <strong>^T</strong>) will check if the data currently in the “form” fields can create a new <strong>search term</strong> and if so, will add it to the history.</p>
-<p>The <strong>Search Window</strong> actually works on a copy of the <strong>search history</strong> used by the service itself, so any changes made in it (adding and deleting items or changing the default item) are not passed to the service, until “<strong>OK</strong>” is pressed. Pressing “<strong>Cancel</strong>” will make all the changes go away.</p>
-<p>Even when “<strong>OK</strong>” is pressed, and the “<strong>Search Window</strong>” is closed, the “new” history is loaded into the service, but NOT saved to the <em>configuration file</em>.</p>
-<p>To really save the “new” history, press “<strong>^V</strong>” in the <strong>Search Window</strong>, or press “<strong>y</strong>” in the confirmation window upon exiting the service.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing “<strong>x</strong>” is the same as pressing “<strong>^X</strong>”, ”<strong>w</strong>” is the same as ”<strong>^W</strong>” and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.</p>
+<p>All history navigation actions (<strong>^N</strong>, <strong>^P</strong>, <strong>HOME</strong>, <strong>END</strong>, <strong>PgUp</strong>, <strong>PgDown</strong>) will check if the data currently in the “form” fields can create a new <strong>search term</strong> and if so, will add it to the history.</p>
+<p>The <strong>Search Window</strong> actually works on a copy of the <strong>search history</strong> used by the service itself, so any changes made in it (adding and deleting items or changing the default item) are not passed to the service, until “<strong>OK</strong>” is pressed (or “<strong>s</strong>” is typed on any field other than a “<em>Line editor</em>”). Pressing “<strong>Cancel</strong>” will make all the changes go away.</p>
+<p>Even when “<strong>OK</strong>” (or “<strong>s</strong>” is typed on any field other than a “<em>Line editor</em>”) is pressed, and the “<strong>Search Window</strong>” is closed, the “new” history is loaded into the service, but NOT saved to the <em>configuration file</em>.</p>
+<p>To really save the “new” history, press “<strong>^W</strong>” in the <strong>Search Window</strong> (or “<strong>w</strong>” is typed on any field other than a “<em>Line editor</em>”), or press “<strong>y</strong>” in the confirmation window upon exiting the service.</p>
 </body>
 </html>

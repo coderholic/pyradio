@@ -55,6 +55,11 @@ IF "%1"=="" (
         set ERRPKG=dnspython
         GOTO piperror
     )
+    pip install psutil --upgrade 1>NUL 2>NUL
+    if ERRORLEVEL 1 (
+        set ERRPKG=psutil
+        GOTO piperror
+    )
 )
 
 IF '%1'=='ELEV' ( GOTO START ) ELSE ( ECHO Running elevated in a different window)

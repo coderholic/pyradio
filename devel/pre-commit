@@ -111,8 +111,8 @@ do
             -e 's/<.sup>P/^P/' \
             -e 's|N<strong>, </strong>\^P|N</strong>, <strong>^P|' \
             -e 's|<sup>X<strong>|^X</strong>|' \
-            -e 's|<.strong>v<strong>|<strong>v</strong>|' \
-            -e 's|<.strong><.sup>V<.strong>|<strong>^V</strong>|' \
+            -e 's|<.strong>w<strong>|<strong>w</strong>|' \
+            -e 's|<.strong><.sup>W<.strong>|<strong>^W</strong>|' \
             "$out"
     fi
 

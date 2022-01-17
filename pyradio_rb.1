@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio_rb 1 "November 2021" pyradio
+.TH pyradio_rb 1 "January 2022" pyradio
 
 .SH Name
 .PP
@@ -82,14 +82,102 @@ Vote for station
 Close RadioBrowser
 .RE
 
-.RS 5
-.IP \fBNote:\fR
-One would get this information using the program's help (pressing "\fI?\fR" and navigating to the last page of it).
-.RE
-
 .IP \fBConfiguration
 
-This feature has not been implemented yet.
+One can get to \fBRadioBrowser\fR's configuration in any of the following ways:
+
+.RS 11
+.IP \fI1.\fR\ From\ \fBPyRadio\ Configuration\fR,\ section\ \fBOnline\ Services\fR
+
+.IP \fI2.\fR\ From\ within\ \fBRadioBrowser\fR\ playlist,\ by\ pressing\ "\fIc\fR"
+.RE
+
+.RS 7
+The configuration window presents the following options:
+.RE
+.RS 11
+.IP \fI1.\fR\ \fBAuto\ save\ config\fR
+If True, no confirmation will be asked before saving  the configuration when leaving the search window.
+
+Default value: \fIFalse\fR
+.IP \fI2.\fR\ \fBMaximum\ number\ of\ results\fR
+
+\fBRadioBrowser\fR's database is really huge and some queries will produce too many results. This is the way to limit returned result number.
+
+Setting this parameter to \fI-1\fR will disable result limiting.
+
+Default value: \fI100\fR
+
+.IP \fI3.\fR\ \fBNumber\ of\ ping\ packages
+
+The number of ping (ICMP) packages to send to a server while checking its availability. More on \fIServer pinging\fR later in this section.
+
+A value of 0 will disable server pinging.
+
+Default value: \fI1\fR
+.IP \fI4.\fR\ \fBPing\ timeout\ (seconds)
+
+The number of seconds to wait for a ping command to terminate while checking a server's availability.
+
+A value of 0 will disable server pinging.
+
+Default value: \fI1\fR
+.IP \fI5.\fR\ \fBDefault\ Server
+
+The default server to connect to when using the service.
+
+Default value: \fIRandom\fR
+.IP \fI6.\fR\ \fBDefault\ Search\ Term
+
+Not implemented yet
+
+.RE
+
+.RS 7
+\fBServer pinging\fR
+
+\fBRadioBrowser\fR provides several servers to the public (currently in Germany, France and The Netherlands) to connect to (always kept in sync with each other), in order to limit down time.
+
+In the rare event an individual server is down, an application can just connect to any of the remaining servers to keep using the service.
+
+\fBPyRadio\fR will use the ICMP protocol (ping) to check servers availability before even trying to query a server. The configuration parameters "\fINumber of ping packages\fR" and "\fIPing timeout (seconds)\fR" will be used to ping the servers. If any of them is set to 0, server pinging \fBwill be disabled\fR.
+
+When opening the service, \fBPyRadio\fR will act depending upon its configured settings.
+
+.IP \fI1.\ No\ default\ server\ is\ specified\ and\ pinging\ is\ enabled
+In this case, \fBPyRadio\fR will randomly select a server, make sure it's online (ping it) and then use it to query and display results.
+
+If no server is available or if the internet connection has failed, a message will be displayed informing the user.
+.IP \fI2.\ A\ default\ server\ has\ been\ specified\ and\ pinging\ is\ enabled
+\fBPyRadio\fR will ping the server and will connect to it if it's available.
+
+If the default server is unresponsive, \fBPyRadio\fR will try to find and use one that is available.
+
+If no server is available or if the internet connection has failed, a message will be displayed informing the user.
+
+.IP \fI3.\ Pinging\ is\ disabled
+No server availability check will occur.
+
+If the server (default or random) is unavailable or if the internet connection has failed, a message will be displayed informing the user.
+
+.RE
+.RS 7
+When using the "\fBServer Selection Window\fR" (either within the configuration window or the playlist):
+
+.IP \fI1.\ If\ pinging\ is\ enabled
+The selected server availability will be checked, and if not responsive, it will not be accepted.
+
+.IP \fI2.\ If\ pinging\ is\ disabled
+The server will be accepted regardless of its availability.
+.RE
+
+.IP \fBIn\ session\ Server\ Selection
+
+In addition to the \fIdefault server\fR which can be set at the configuration window, one has the possibility to select a server to connect after opening the service.
+
+Pressing "\fIC\fR" will provide a list of available servers to choose from. This selection will be honored until the service is closed.
+
+.RE
 
 .IP \fBStation\ Database\ Information
 
@@ -110,23 +198,18 @@ For this reason \fBPyRadio\fR will in no case adjust the click count presented t
 Inconsistencies between a voted for station's local vote counter value and the one reported in a consecutive server response should be expected, since it seems servers' vote counter sync may take some time to complete.
 .RE
 
-.IP \fBServer\ Selection
-
-\fBRadioBrowser\fR provides several servers to the public (currently in Germany, France and The Netherlands), which are constantly kept in sync. Its API provides a way to "discover" these servers and then select the one to use.
-
-\fBPyRadio\fR will randomly select one of these servers and will display its location in its window title.
-
-Pressing "\fIC\fR" will provide a list of available servers to choose from. This selection will be honored until the service is closed.
-
-.SH The Search Window
+.IP \fBThe\ Search\ Window
 
 The \fBSearch window\fR opens when "\fIs\fR" is pressed and loads the \fIsearch term\fR that was used to fetch the stations currently presented in the \fBRadioBrowser window\fR. If this is the first time this window is opened within this session, the search term that's loaded is the \fIdefault search term\fR.
 
-.IP \fBNote:
+.RS
+.IP \fBNote
 In case the server returns no results, the window will automatically reopen so that you can redefine the \fIsearch term\fR.
 
 .PP
 Navigation between the various fields is done using the "\fBTab\fR" (and "\fBShift-Tab\fR") key, the arrows and vim keys ("\fBj\fR", "\fBk\fR", "\fBh\fR" and "\fBl\fR"), provided that any given key is not already used by one of the on window "widgets".
+
+To perform a search (server query) one would just press \fIEnter\fR on the "\fBOK\fR" button, or "\fIs\fR" on any widget other than a \fBLine editor\fR.
 
 This window performs two functions:
 
@@ -180,8 +263,22 @@ The keys to manage the history are all \fBControl\fR combinations:
 .IP \fI^N\fR\ \fI^P\fR 5
 Move to next / previous \fIsearch term\fR definition.
 
-.IP \fI^T\fR
+.IP \fIHOME\fR\ or\ \fI0\fR
 Move to the \fIempty search term\fR (history item 0), the \fItemplate item\fR. This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using \fI^N\fR or \fI^P\fR, but it's here just for convenience.
+
+Pressing \fI0\fR works on all widgets; \fIHOME\fR does not work on \fBLine editors\fR.
+
+To inster a \fI0\fR on a \fBLine editor\fR just type "\fB\\0\fR".
+
+.IP \fIEND\fR\ or\ \fIg\fR\ or\ \fI$\fR 5
+Move to the last \fIsearch term\fR.
+
+Pressing \fI$\fR works on all widgets; \fIEND\fR and \fIg\fR do not work on \fBLine editors\fR.
+
+To inster a \fI$\fR on a \fBLine editor\fR just type "\fB\\$\fR".
+
+.IP \fIPgUp\fR\ /\ \fIPgDown\fR
+Jump up or down within the \fIsearch history\fR list. Note that these keys do not work when the \fBResult limit\fR counter field is focused.
 
 .IP \fI^Y\fR
 Add current item to history.
@@ -209,23 +306,23 @@ Make the current history item the \fIdefault\fR one for \fBRadioBrowser\fR and s
 
 This means that, next time you open \fBRadioBrowser\fR this history item (\fIsearch term\fR) will be automatically loaded.
 
-.IP \fI^V\fR
+.IP \fI^W\fR
 Save the history.
 
 .RE
 .RS 5
 
 .IP \fBNote\fR
-All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing "\fIx\fR" is the same as pressing "\fI^X\fR", "\fIv\fR" is the same as "\fI^V\fR" and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.
+All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing "\fIx\fR" is the same as pressing "\fI^X\fR", "\fIw\fR" is the same as "\fI^W\fR" and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.
 
 .P
-All history navigation actions (\fI^N\fR, \fI^P\fR, \fI^T\fR) will check if the data currently in the "form" fields can create a new \fBsearch term\fR and if so, will add it to the history.
+All history navigation actions (\fI^N\fR, \fI^P\fR, \fIHOME\fR, \fIEND\fR, \fIPgUp\fR, \fIPgDown\fR) will check if the data currently in the "form" fields can create a new \fBsearch term\fR and if so, will add it to the history.
 
-Tthe \fBSearch Window\fR actually works on a copy of the \fIsearch history\fR used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "\fIOK\fR" is pressed. Pressing "\fICancel\fR" will make all the changes go away.
+The \fBSearch Window\fR actually works on a copy of the \fIsearch history\fR used by the service itself, so any changes made in it (adding and deleting items) are not passed to the service, until "\fIOK\fR" is pressed (or "\fIs\fR" is typed on any field other than a \fBLine editor\fR). Pressing "\fICancel\fR" will make all the changes go away.
 
-Even when "\fIOK\fR" is pressed, and the "\fBSearch Window\fR" is closed, the "new" history is loaded into the service, but \fBNOT\fR saved to the \fIconfiguration file\fR.
+Even when "\fIOK\fR" is pressed (or "\fIs\fR" is typed on any field other than a \fBLine editor\fR), and the \fBSearch Window\fR is closed, the "new" history is loaded into the service, but \fBNOT\fR saved to the \fIconfiguration file\fR.
 
-To really save the "new" history, press "\fI^V\fR" in the \fBSearch Window\fR, or press "\fIy\fR" in the confirmation window upon exiting the service.
+To really save the "new" history, press "\fI^W\fR" in the \fBSearch Window\fR (or type "\fIw\fR" on any field other than a \fBLine editor\fR), or press "\fIy\fR" in the confirmation window upon exiting the service.
 .RE
 
 .SH Reporting Bugs

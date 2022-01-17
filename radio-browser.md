@@ -16,9 +16,10 @@
     * [Sorting stations](#sorting-stations)
 * [Controls](#controls)
 * [Configuration](#configuration)
+    * [Server pinging](#server-pinging)
+* [Server Selection](#server-selection)
 * [Station Database Information](#station-database-information)
 * [Station clicking and voting](#station-clicking-and-voting)
-* [Server Selection](#server-selection)
 * [Search Window](#search-window)
     * [Search term composition](#search-term-composition)
     * [History Management](#history-management)
@@ -84,7 +85,77 @@ These are the **RadioBrowser** specific keys one can use in addition to local pl
 
 ## Configuration
 
-This feature has not been implemented yet.
+One can get to **RadioBrowser**'s configuration in any of the following ways:
+
+1. From PyRadio **Configuration**, section **Online Services**
+
+2. From within **RadioBrowser** playlist, by pressing "*c*"
+
+The configuration window presents the following options:
+
+1. **Auto save config**\
+If True, no confirmation will be asked before saving  the configuration when leaving the search window.\
+Default value: *False*
+
+2. **Maximum number of results**\
+**RadioBrowser**'s database is really huge and some queries will produce too many results. This is the way to limit returned result number.\
+Setting this parameter to -1 will disable result limiting.\
+Default value: *100*
+
+3. **Number of ping packages**\
+The number of ping (ICMP) packages to send to a server while checking its availability. More on "*Server pinging*" later in this section.\
+A value of 0 will disable server pinging.\
+Default value: *1*
+
+4. **Ping timeout (seconds)**\
+The number of seconds to wait for a ping command to terminate while checking a server's availability.\
+A value of 0 will disable server pinging.\
+Default value: *1*
+
+5. **Default Server**\
+The default server to connect to when using the service.\
+Default value: *Random*
+
+6. **Default Search Term**\
+Not implemented yet
+
+### Server pinging
+
+**RadioBrowser** currently provides a network of 3 servers to connect to (always kept in sync with each other), in order to limit down time.
+
+In the rare event an individual server is down, an application can just connect to any of the remaining servers to keep using the service.
+
+**PyRadio** will use the ICMP protocol (ping) to check servers availability before even trying to query a server. The configuration  parameters  "*Number
+of ping packages*" and "*Ping timeout (seconds)*" will be used to ping the servers. If any of them is set to 0, **server pinging will be disabled.**
+
+When opening the service, **PyRadio** will act depending upon its configured settings.
+
+1. **No default server is specified and pinging is enabled**\
+In this case, **PyRadio** will randomly select a server, make sure it's online (ping it) and then use it to query and display results.\
+If no server is available or if the internet connection has failed, a message will be displayed informing the user.
+
+2. **A default server has been specified and pinging is enabled**\
+**PyRadio** will ping the server and will connect to it if it's available.\
+If the default server is unresponsive, **PyRadio** will try to find and use one that is available.\
+If no server is available or if the internet connection has failed, a message will be displayed informing the user.
+
+3. **Pinging is disabled**\
+No server availability check will occur.\
+If the server (default or random) is unavailable or if the internet connection has failed, a message will be displayed informing the user.
+
+When using the "**Server Selection Window**" (either within the configuration window or the playlist):
+
+1. **If pinging is enabled**\
+The selected server availability will be checked, and if not responsive, it will not be accepted.
+
+2. **If pinging is disabled**\
+The server will be accepted regardless of its availability.
+
+## Server Selection
+
+In addition to the "*default server*" which can be set at the configuration window, one has the possibility to select a server to connect after opening the service.
+
+Pressing "**C**" will provide a list of available servers to choose from. This selection will be honored until the service is closed.
 
 ## Station Database Information
 
@@ -102,14 +173,6 @@ For this reason **PyRadio** will in no case adjust the click count presented to 
 
 **Note:** Inconsistencies between a voted for station's local vote counter value and the one reported in a consecutive server response should be expected, since it seems servers' vote counter sync may take some time to complete.
 
-## Server Selection
-
-**RadioBrowser** provides several servers to the public (currently in Germany, France and The Netherlands), which are constantly kept in sync. Its API provides a way to "discover" these servers and then select the one to use.
-
-**PyRadio** will randomly select one of these servers and will display its location in its window title.
-
-Pressing "**C**" will provide a list of available servers to choose from. This selection will be honored until the service is closed.
-
 ## Search Window
 
 The "**Search window**" opens when "**s**" is pressed and loads the "**search term**" that was used to fetch the stations currently presented in the "**RadioBrowser window**". If this is the first time this window is opened within this session, the search term that's loaded is the "**default search term**".
@@ -117,6 +180,8 @@ The "**Search window**" opens when "**s**" is pressed and loads the "**search te
 **Note:** In case the server returns no results, the window will automatically reopen so that you can redefine the "**search term**".
 
 Navigation between the various fields is done using the "**Tab**" (and "**Shift-Tab**") key, the arrows and **vim keys** ("**j**", "**k**", "**h**" and "**l**"), provided that any given key is not already used by one of the on window "widgets".
+
+To perform a search (server query) one would just press **Enter** on the "**OK**" button, or "**s**" on any widget other than a *Line editor*.
 
 ![RadioBrowser Search Window](https://members.hellug.gr/sng/pyradio/radio-browser-search-window.png)
 
@@ -165,18 +230,20 @@ The keys to manage the history are all **Control** combinations:
 |Key            |Action                                                |
 |---------------|------------------------------------------------------|
 |**^N** **^P**  |Move to next / previous "**search term**" definition. |
-|**^T**         |Move to the "**empty search term**" (history item 0), the *template item*. This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using **^N** or **^P**, but it's here just for convenience.|
+|**HOME** or **0**  |Move to the "**empty search term**" (history item 0), the *template item*. This is a quick way to "reset" all settings and start new. Of course, one could just navigate to this history item using **^N** or **^P**, but it's here just for convenience.<br><br>Pressing **0** works on all widgets; **HOME** does not work on **Line editors**.<br>To inster a **0** on a **Line editor** just type "**\0**".|
+|**END** or **g** or **&dollar;**  |Move to the last **search term**.<br><br>Pressing **&dollar;** works on all widgets; **END** and **g** do not work on **Line editors**.<br>To inster a **&dollar;** on a **Line editor** just type "**\\&dollar;**".||
+|**PgUp** / **PgDown**|Jump up or down within the "**search history**" list.<br>These keys do not work when the "*Result limit*" counter field is focused.|
 |**^Y**        |Add current item to history.|
 |**^X**        |Delete the current history item.<br>There is no confirmation and once an item is deleted there's no undo function.<br>These rules apply:<br> 1. The first item (**search term template**) cannot be deleted.<br>2. When the history contains only two items (the **search term template** will always be the first one; the second one is a user defined **search term**), no item deletion is possible.<br>3. When the **default search term** is deleted, the first user defined **search term** becomes the default one.|
 |**^B**        |Make the current history item the **default** one for **RadioBrowser** and save the history.<br>This means that, next time you open **RadioBrowser** this history item ("**search term**") will be automatically loaded.|
-|**^V**        |Save the history.|
+|**^W**        |Save the history.|
 
-**Note:** All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing "**x**" is the same as pressing "**^X**", "**v**" is the same as "**^V**" and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.
+**Note:** All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing "**x**" is the same as pressing "**^X**", "**w**" is the same as "**^W**" and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.
 
-All history navigation actions (**^N**, **^P**, **^T**) will check if the data currently in the "form" fields can create a new **search term** and if so, will add it to the history.
+All history navigation actions (**^N**, **^P**, **HOME**, **END**, **PgUp**, **PgDown**) will check if the data currently in the "form" fields can create a new **search term** and if so, will add it to the history.
 
-The **Search Window** actually works on a copy of the **search history** used by the service itself, so any changes made in it (adding and deleting items or changing the default item) are not passed to the service, until "**OK**" is pressed. Pressing "**Cancel**" will make all the changes go away.
+The **Search Window** actually works on a copy of the **search history** used by the service itself, so any changes made in it (adding and deleting items or changing the default item) are not passed to the service, until "**OK**" is pressed (or "**s**" is typed on any field other than a "*Line editor*"). Pressing "**Cancel**" will make all the changes go away.
 
-Even when "**OK**" is pressed, and the "**Search Window**" is closed, the "new" history is loaded into the service, but NOT saved to the *configuration file*.
+Even when "**OK**" (or "**s**" is typed on any field other than a "*Line editor*") is pressed, and the "**Search Window**" is closed, the "new" history is loaded into the service, but NOT saved to the *configuration file*.
 
-To really save the "new" history, press "**^V**" in the **Search Window**, or press "**y**" in the confirmation window upon exiting the service.
+To really save the "new" history, press "**^W**" in the **Search Window** (or "**w**" is typed on any field other than a "*Line editor*"), or press "**y**" in the confirmation window upon exiting the service.

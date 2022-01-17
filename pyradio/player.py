@@ -11,6 +11,10 @@ from time import sleep
 import collections
 import json
 import socket
+try:
+    import psutil
+except:
+    pass
 
 try:
     from urllib import unquote
@@ -1382,24 +1386,50 @@ class Player(object):
             pass
         self._stop_delay_thread()
         if self.process is not None:
-            if platform.startswith('win'):
-                try:
-                    subprocess.Call(['Taskkill', '/PID', '{}'.format(self.process.pid), '/F', '/T'])
-                    logger.error('Taskkill killed PID {}'.format(self.process.pid))
-                except:
-                    logger.error('Taskkill failed to kill PID {}'.format(self.process.pid))
-            else:
-                try:
-                    os.kill(self.process.pid, 9)
-                except:
-                    # except ProcessLookupError:
-                    pass
+            self._kill_process_tree(self.process.pid)
             self.process.wait()
             self.process = None
             try:
                 self.update_thread.join()
             finally:
                 self.update_thread = None
+
+    def _kill_process_tree(self, pid):
+        if psutil.pid_exists(pid):
+            parent = psutil.Process(pid)
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('PID {} does not exist...'.format(pid))
+            return
+        children = parent.children(recursive=True)
+        try:
+            os.kill(parent.pid, 9)
+        except:
+            pass
+        for child in children:
+            try:
+                os.kill(child.pid, 9)
+            except:
+                pass
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('PID {} (and its children)  killed...'.format(pid))
+
+    def _killall(self, name):
+        if name:
+            try:
+                # iterating through each instance of the process
+                for line in os.popen("ps ax | grep " + name + " | grep -v grep"):
+                    fields = line.split()
+                    if name in fields[4]:
+                        # extracting Process ID from the output
+                        pid = fields[0]
+
+                        # terminating process
+                        # os.kill(int(pid), signal.SIGKILL)
+                        os.kill(int(pid), 9)
+                        # os.kill(int(pid), 15)
+            except:
+                pass
 
     def _buildStartOpts(self, streamUrl, playList):
         pass

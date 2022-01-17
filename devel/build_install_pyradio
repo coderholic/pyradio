@@ -230,7 +230,7 @@ do
             TO_PYTHON_FROM_X=1
             shift
             ;;
-        -no-dev)
+        -n)
             NO_DEV=1
             shift
             ;;

@@ -403,6 +403,15 @@ class PyRadioEditor(object):
             for ed in range(0, 2):
                 self._line_editor[ed].show(self._win, opening=False)
 
+            if self._focus == 1:
+                ''' Tip: Press \p before pasting here '''
+                ''' 123456789012345678901234567890123 '''
+                self._win.addstr(6, self.maxX - 41, 'Tip: ', curses.color_pair(4))
+                self._win.addstr('Press ', curses.color_pair(5))
+                self._win.addstr('\\p', curses.color_pair(4))
+                self._win.addstr(' before pasting a URL here', curses.color_pair(5))
+                self._win.refresh()
+
     def _show_alternative_modes(self):
         lin = ( (1, 8), (4,7))
         disp = 0

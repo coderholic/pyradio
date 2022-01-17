@@ -5,7 +5,7 @@
 # Ben Dowling - 2009 - 2010
 # Kirill Klenov - 2012
 # Peter Stevenson (2E0PGS) - 2018
-# Spiros Georgaras - 2018, 2021
+# Spiros Georgaras - 2018, 2022
 
 import curses
 import curses.ascii
@@ -187,7 +187,7 @@ class PyRadio(object):
 
     _config_win = None
     _browser_config_win = None
-
+    _server_selection_window  = None
     _color_config_win = None
 
     _player_select_win = None
@@ -366,9 +366,14 @@ class PyRadio(object):
                 self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
                 self.ws.BROWSER_OPEN_MODE: self._show_connect_to_server_message,
                 self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
+                self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
                 self.ws.BROWSER_PERFORMING_SEARCH_MODE: self._show_performing_search_message,
-                self.ws.ASK_TO_SAVE_BROWSER_CONFIG: self._ask_to_save_browser_config,
-                self.ws.RADIO_BROWSER_CONFIG_MODE: self._browser_init_config,
+                self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER: self._ask_to_save_browser_config_from_config,
+                self.ws.RADIO_BROWSER_CONFIG_MODE: self._redisplay_browser_config,
+                self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
+                self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG: self._ask_to_save_browser_config_from_config,
+                self.ws.SERVICE_SERVERS_UNREACHABLE: self._print_servers_unreachable,
+                self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT: self._ask_to_save_browser_config_to_exit,
                 }
 
         ''' list of help functions '''
@@ -395,6 +400,8 @@ class PyRadio(object):
                 self.ws.PLAYER_PARAMS_MODE: self._show_config_player_help,
                 self.ws.IN_PLAYER_PARAMS_EDITOR: self._show_params_ediror_help,
                 self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
+                self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
+                self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
         }
 
         ''' search classes
@@ -708,7 +715,11 @@ class PyRadio(object):
         self.outerBodyMaxY, self.outerBodyMaxX = self.outerBodyWin.getmaxyx()
         self.bodyWin.noutrefresh()
         self.outerBodyWin.noutrefresh()
-        if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
+        if not HAVE_PSUTIL:
+            self.ws.operation_mode = self.ws.DEPENDENCY_ERROR
+            self._missing_dependency = 'psutil'
+            self.refreshNoDepencency()
+        elif self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
             if self.requested_player:
                 if self.requested_player in ('mpv', 'mplayer', 'vlc'):
                     atxt = '''PyRadio is not able to use the player you specified.
@@ -814,6 +825,38 @@ class PyRadio(object):
         elif self._cnf.user_param_id == -1:
             self._print_user_parameter_error()
         self._update_history_positions_in_list()
+
+    def refreshNoDepencency(self):
+        col = curses.color_pair(5)
+        self.outerBodyWin.bkgdset(' ', col)
+        self.bodyWin.bkgdset(' ', col)
+        self.outerBodyWin.erase()
+        self.bodyWin.erase()
+        self.outerBodyWin.box()
+        self.bodyWin.addstr(1,1, 'PyRadio ', curses.color_pair(4))
+        self.bodyWin.addstr('has a new dependency: ', curses.color_pair(5))
+        self.bodyWin.addstr(self._missing_dependency, curses.color_pair(4))
+        self.bodyWin.addstr(3,1, 'Please use you distro package manager to install it (named ', curses.color_pair(5))
+        self.bodyWin.addstr('python-psutil', curses.color_pair(4))
+        self.bodyWin.addstr(4,1, 'or ', curses.color_pair(5))
+        self.bodyWin.addstr('python3-psutil', curses.color_pair(4))
+        self.bodyWin.addstr('), or execute:', curses.color_pair(5))
+        self.bodyWin.addstr(6,1, '      pip install ' + self._missing_dependency, curses.color_pair(4))
+        self.bodyWin.addstr(8,1, 'to install it and then try to execute ', curses.color_pair(5))
+        self.bodyWin.addstr('PyRadio ', curses.color_pair(4))
+        self.bodyWin.addstr('again.', curses.color_pair(5))
+        self.bodyWin.addstr(10,1, 'While you are at it, please make sure you have all ', curses.color_pair(5))
+        self.bodyWin.addstr('PyRadio ', curses.color_pair(4))
+        self.bodyWin.addstr('dependencies', curses.color_pair(5))
+        self.bodyWin.addstr(11,1, 'installed:', curses.color_pair(5))
+        self.bodyWin.addstr(12,1, '      1. ', curses.color_pair(5))
+        self.bodyWin.addstr('requests', curses.color_pair(4))
+        self.bodyWin.addstr(13,1, '      2. ', curses.color_pair(5))
+        self.bodyWin.addstr('dnspython', curses.color_pair(4))
+        self.bodyWin.addstr(14,1, '      3. ', curses.color_pair(5))
+        self.bodyWin.addstr('psutil ', curses.color_pair(4))
+        self.outerBodyWin.refresh()
+        self.bodyWin.refresh()
 
     def refreshNoPlayerBody(self, a_string):
         col = curses.color_pair(5)
@@ -975,7 +1018,13 @@ class PyRadio(object):
 
     def run(self):
         self._register_signals_handlers()
-        if self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
+        if self.ws.operation_mode == self.ws.DEPENDENCY_ERROR:
+            self.log.write(msg="Dependency missing. Press any key to exit....", error_msg=True)
+            try:
+                self.bodyWin.getch()
+            except KeyboardInterrupt:
+                pass
+        elif self.ws.operation_mode == self.ws.NO_PLAYER_ERROR_MODE:
             if self.requested_player:
                 if ',' in self.requested_player:
                     self.log.write(msg='None of "{}" players is available. Press any key to exit....'.format(self.requested_player), error_msg=True)
@@ -1831,16 +1880,36 @@ class PyRadio(object):
                  Space            |Toggle check buttons.
                  _________________|Toggle multiple selection.
                  Enter            |Perform search / cancel (on push buttons).
+                 s                |Perform search (not on Line editor).
                  Esc              |Cancel operation.
                  _
-                 |Managing player volume does not work in search mode.
-
                  |Search history navigation works with normal keys as well
                  |(|^N| is the same as |n| when not in a line editor).
+                 %_Player Keys (Not on Line editor)_
+                 -|/|+| or |,|/|.       |Change volume.
+                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
                  '''
         self._show_help(txt,
                         mode_to_set=self.ws.RADIO_BROWSER_SEARCH_HELP_MODE,
                         caption=' RadioBrowser Search Help ')
+
+    def _show_radio_browser_config_help(self):
+        txt = '''Tab| / |Sh-Tab
+                 j|, |Up| / |k|, |Down  |Go to next / previous field.
+                 h|, |Left| / |l|, |Right
+                 _________________|Change |auto save| and |counters| value.
+                 Space|, |Enter     |Toggle |auto save|  value.
+                 _________________|Open |Server Selection| window.
+                 r|, |d             |Revert to |saved| / |default| values.
+                 s                |Save config.
+                 Esc              |Exit without saving.
+                 %_Player Keys_
+                 -|/|+| or |,|/|.       |Change volume.
+                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                 '''
+        self._show_help(txt,
+                        mode_to_set=self.ws.RADIO_BROWSER_CONFIG_HELP_MODE,
+                        caption=' RadioBrowser Config Help ')
 
     def _show_main_help(self, from_keyboard=False):
         txt = '''Up|,|j|,|PgUp|,
@@ -2757,6 +2826,19 @@ class PyRadio(object):
                         prompt=' Press any key ',
                         is_message=True)
 
+    def _print_servers_unreachable(self):
+        txt = '''
+        No server responds to ping.
+
+        You will be able to edit the config file, but
+        you will not be able to select a default server.
+        '''
+        self._show_help(txt,
+                        self.ws.SERVICE_SERVERS_UNREACHABLE,
+                        caption=' Servers Unreachable ',
+                        prompt=' Press any key ',
+                        is_message=True)
+
     def _show_player_changed_in_config(self):
         txt = '''
         |PyRadio| default player has changed from
@@ -2910,6 +2992,31 @@ class PyRadio(object):
         self._show_help(txt,
                         mode_to_set=self.ws.EDIT_STATION_URL_ERROR,
                         caption=' Error ',
+                        prompt=' Press any key ',
+                        is_message=True)
+
+    def _print_browser_config_save_error(self):
+        if platform.startswith('win'):
+            txt = '''
+                ___Saving your configuration has failed!!!___
+
+                ___Please make sure that the configuration file___
+                ___is not opened in another application and that___
+                ___there is enough free space in the drive and ___
+                ___try again.___
+
+                '''
+        else:
+            txt = '''
+                ___Saving your configuration has failed!!!___
+
+                ___Please make sure there is enought free space in___
+                ___the file system and try again.___
+
+                '''
+        self._show_help(txt,
+                        mode_to_set=self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE,
+                        caption=' Config Saving Error ',
                         prompt=' Press any key ',
                         is_message=True)
 
@@ -3245,10 +3352,12 @@ class PyRadio(object):
                         tmp_stations = []
 
                         if not self._cnf._online_browser.initialize():
+                            ''' browser canno be opened '''
                             self._cnf.remove_from_playlist_history()
                             self.ws.close_window()
                             self._print_service_connection_error()
                             self._cnf.browsing_station_service = False
+                            self._cnf.online_browser = None
                             return
 
                         self.ws.close_window()
@@ -3517,15 +3626,6 @@ class PyRadio(object):
                 #    logger.error('DE cur {}'.format(n))
                 # logger.error('DE \n\nselection = {0}, startPos = {1}, playing = {2}\n\n'.format(self.selection, self.startPos, self.playing))
                 ''' check to if online browser config is dirty '''
-                if self._cnf.online_browser:
-                    if self._cnf.online_browser.is_config_dirty():
-                        if logger.isEnabledFor(logging.INFO):
-                            logger.info('Onine Browser config is dirty!')
-                        if self._cnf.online_browser.AUTO_SAVE_CONFIG:
-                            self._cnf.online_browser.save_config()
-                        else:
-                            self._ask_to_save_browser_config()
-                            return False
                 self.stations = self._cnf.stations
                 self._align_stations_and_refresh(self.ws.PLAYLIST_MODE,
                         a_startPos=self.startPos,
@@ -4396,7 +4496,10 @@ class PyRadio(object):
             self._volume_save()
 
     def _browser_server_selection(self):
-        self._cnf._online_browser.select_servers()
+        if self._cnf._online_browser:
+            self._cnf._online_browser.select_servers()
+        else:
+            self._browser_config_win.select_servers()
 
     def _browser_init_config_from_config(self, parent=None, init=False):
         ''' Show browser config window from config
@@ -4405,7 +4508,13 @@ class PyRadio(object):
             parent = self.outerBodyWin
         self._cnf._online_browser.show_config(parent, init)
 
-    def _browser_init_config(self, parent=None, init=False):
+    def _redisplay_browser_config(self):
+        if self._cnf._online_browser:
+            self._cnf._online_browser._config_win.show(parent=self.outerBodyWin)
+        else:
+            self._browser_config_win.show(parent=self.outerBodyWin)
+
+    def _browser_init_config(self, parent=None, init=False, browser_name=None):
         ''' Show browser config window from online browseer
         '''
         if parent is None:
@@ -4421,11 +4530,16 @@ class PyRadio(object):
                     init=init
                 )
                 self.ws.close_window()
+            # if title:
+            #     if self._browser_config_win.BROWSER_NAME == browser_name:
+            #         pass
             if self._browser_config_win.urls:
-                self._browser_config_win.show(parent=parent)
+                self._browser_config_win.enable_servers = True
             else:
-                self.ws.close_window()
-                self._print_service_connection_error()
+                self._browser_config_win.enable_servers = False
+            self._browser_config_win.show(parent=parent)
+            if not self._browser_config_win.enable_servers:
+                self._print_servers_unreachable()
 
     def _browser_init_search(self, parent):
         ''' Start browser search window
@@ -4543,18 +4657,62 @@ class PyRadio(object):
         self.playSelection()
         self.refreshBody()
 
-    def _ask_to_save_browser_config(self):
+    def _ask_to_save_browser_config_to_exit(self):
+        if self._cnf.online_browser:
+            title = self._cnf.online_browser.BROWSER_NAME
+        else:
+            title = self._browser_config_win.BROWSER_NAME
         txt = '''
-                |{}|'s service configuration has been
-                altered but not saved. Do you want to save it now?
+                |{}|'s configuration has been altered
+                but not saved. Do you want to save it now?
+
+                Press |y| to save it or |n| to disregard it.
+            '''
+        self._show_help(txt.format(title),
+                        mode_to_set=self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT,
+                        caption=' Online Browser Config not Saved! ',
+                        prompt='',
+                        is_message=True)
+
+    def _ask_to_save_browser_config_from_config(self):
+        if self._cnf.online_browser:
+            title = self._cnf.online_browser.BROWSER_NAME
+        else:
+            title = self._browser_config_win.BROWSER_NAME
+        txt = '''
+                |{}|'s configuration has been altered
+                but not saved. Do you want to save it now?
+
+                Press |y| to save it or |n| to disregard it.
+            '''
+        self._show_help(txt.format(title),
+                        mode_to_set=self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG,
+                        caption=' Online Browser Config not Saved! ',
+                        prompt='',
+                        is_message=True)
+
+    def _ask_to_save_browser_config_from_browser(self):
+        txt = '''
+                |{}|'s configuration has been altered
+                but not saved. Do you want to save it now?
 
                 Press |y| to save it or |n| to disregard it.
             '''
         self._show_help(txt.format(self._cnf.online_browser.BROWSER_NAME),
-                        mode_to_set=self.ws.ASK_TO_SAVE_BROWSER_CONFIG,
+                        mode_to_set=self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER,
                         caption=' Online Browser Config not Saved! ',
                         prompt='',
                         is_message=True)
+
+    def _return_from_server_selection(self, a_server):
+        self._cnf._online_browser._config_win.get_server_value(a_server)
+        self._cnf._online_browser._config_win.calculate_dirty()
+        #    self._cnf._online_browser.keyboard_handler = None
+        self._cnf._online_browser._config_win._server_selection_window = None
+        self._cnf._online_browser.keyboard_handler = self._cnf._online_browser._config_win
+        self._cnf._online_browser._config_win._widgets[4].show()
+        self.ws.close_window()
+        self.refreshBody()
 
     def keypress(self, char):
         if self._system_asked_to_terminate:
@@ -4580,6 +4738,7 @@ class PyRadio(object):
             return
 
         if self.ws.operation_mode in (
+            self.ws.DEPENDENCY_ERROR,
             self.ws.NO_PLAYER_ERROR_MODE,
             self.ws.CONFIG_SAVE_ERROR_MODE
         ):
@@ -4899,8 +5058,7 @@ class PyRadio(object):
         elif char in (ord('t'), ) and \
                 self.ws.operation_mode not in (self.ws.EDIT_STATION_MODE,
                     self.ws.ADD_STATION_MODE, self.ws.THEME_MODE,
-                    self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE,
-                    self.ws.BROWSER_SEARCH_MODE, self.ws.RADIO_BROWSER_CONFIG_MODE, self.ws.RADIO_BROWSER_CONFIG_FROM_CONFIG_MODE) and \
+                    self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE,) and \
                 self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
                 not self.is_search_mode(self.ws.operation_mode) and \
                 self.ws.window_mode not in (self.ws.CONFIG_MODE, ):
@@ -5074,11 +5232,11 @@ class PyRadio(object):
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
                 elif ret == 2:
-                    ''' open online browser config '''
-                    logger.error('Opening RadioBrowser Config')
+                    ''' open RadioBrowser  browser config '''
                     self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
-                    self._browser_init_config(init=True)
+                    self._browser_init_config(init=True, browser_name='RadioBrowser ')
                     return
+
                 else:
                     ''' restore transparency, if necessary '''
                     if self._config_win._config_options['use_transparency'][1] != self._config_win._saved_config_options['use_transparency'][1]:
@@ -5348,40 +5506,84 @@ class PyRadio(object):
 
         elif self.ws.operation_mode == self.ws.BROWSER_SERVER_SELECTION_MODE and \
                 char not in self._chars_to_bypass:
-            ret = self._cnf._online_browser.keypress(char)
+            if self._server_selection_window:
+                ret = self._server_selection_window.keypress(char)
+            else:
+                ret = self._cnf._online_browser.keypress(char)
+            #logger.error('DE BROWSER_SERVER_SELECTION_MODE ret = {}'.format(ret))
             if ret < 1:
                 self.ws.close_window()
-                if ret == 0:
-                    self.refreshBody()
-                    self._set_active_stations()
-                    self._cnf._online_browser.search(go_back_in_history=False)
+                if self._cnf._online_browser:
+                    ''' server selection from browser '''
+                    if ret == 0:
+                        if self._cnf._online_browser.server_window_from_config:
+                            self._cnf._online_browser._config_win.get_server_value()
+                            self._online_browser._config_win.calculate_dirty()
+                        else:
+                            self.refreshBody()
+                            self._set_active_stations()
+                            self._cnf._online_browser.search(go_back_in_history=False)
+                    else:
+                        self.refreshBody()
+                    self._cnf._online_browser._server_selection_window = None
+                    self._cnf._online_browser.keyboard_handler = self._cnf._online_browser._config_win
                 else:
+                    ''' server selection from config '''
+                    if ret == 0:
+                        self._browser_config_win.get_server_value()
+                        self._browser_config_win.calculate_dirty()
+                    self._server_selection_window = None
                     self.refreshBody()
             return
 
         elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE and \
-                char not in self._chars_to_bypass:
+                char not in self._chars_to_bypass_on_editor:
             ''' handle browser config '''
             if self._cnf._online_browser:
                 ret = self._cnf._online_browser.keypress(char)
             else:
                 ret = self._browser_config_win.keypress(char)
-            if ret == 0:
-                ''' ok, save browser config '''
-                self.ws.close_window()
+            # logger.error('DE <<< RETURN FROM CONFIG ret = {} >>>'.format(ret))
+
+            if ret == 2:
+                self._show_radio_browser_config_help()
+            elif ret == 3:
+                ''' show config server selection window '''
+                self.ws.operation_mode = self.ws.BROWSER_SERVER_SELECTION_MODE
+                if self._cnf._online_browser:
+                    self._cnf._online_browser.select_servers(
+                        with_config=True,
+                        return_function=self._return_from_server_selection,
+                        init=True
+                    )
+                else:
+                    self._server_selection_window = self._browser_config_win.select_servers(init=True)
+
+            elif ret == 4:
+                ''' return from config server selection window '''
+                # self.ws.close_window()
+                self._server_selection_window = None
                 self.refreshBody()
+
+            elif ret == -4:
+                ''' Online browser config not modified '''
+                self._browser_config_not_modified()
+
+            elif ret == -3:
+                ''' Error saving browser config '''
+                self._print_browser_config_save_error()
+
+            elif ret == -2:
+                ''' Online browser config saved '''
+                self._saved_browser_config_and_exit()
 
             elif ret == -1:
                 ''' browser config save canceled '''
-                self.ws.close_window()
-                if self._cnf._online_browser:
-                    pass
-                else:
-                    logger.error('DED closing browser config from config')
-                    self._browser_config_win = None
-                self.refreshBody()
+                self._exit_browser_config()
 
-        elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
+        elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
+                (char not in self._chars_to_bypass_on_editor or \
+                self._cnf._online_browser.line_editor_has_focus()):
 
             ''' handle browser search key press '''
             ret = self._cnf._online_browser.keypress(char)
@@ -5587,32 +5789,88 @@ class PyRadio(object):
                         logger.info('Setting default theme: {}'.format(self._theme_name))
             return
 
-        elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG:
+        elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT:
             if char in (ord('y'), ord('n')):
                 self.ws.close_window()
-                self.stations = self._cnf.stations
-                self._align_stations_and_refresh(self.ws.PLAYLIST_MODE,
-                                                 a_startPos=self.startPos,
-                                                 a_selection=self.selection,
-                                                 force_scan_playlist=True)
-                if self.playing < 0:
-                    self._put_selection_in_the_middle(force=True)
-                self.refreshBody()
                 if char == ord('y'):
-                    if self._cnf._online_browser.save_config():
-                        self._show_notification_with_delay(
-                                txt='___History successfully saved!___',
-                                mode_to_set=self.ws.NORMAL_MODE,
-                                callback_function=self.refreshBody)
+                    ret = self._cnf._online_browser.save_config()
+                    if ret == -2:
+                        ''' save ok  '''
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Online browser config saved!!!')
+                    elif ret == -3:
+                        ''' error '''
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Error saving Online browser config!!!')
+                        self._print_browser_config_save_error()
+                        return
                     else:
-                        self._show_notification_with_delay(
-                                txt='___Error saving History!___',
-                                delay=1.25,
-                                mode_to_set=self.ws.NORMAL_MODE,
-                                callback_function=self.refreshBody)
-                self._cnf.online_browser = None
-                self._cnf.browsing_station_service = False
-                self._normal_mode_resize()
+                        ''' not modified '''
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Online browser config not saved (not modifed)')
+                elif char == ord('n'):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Saving Online browser config canceled!!!')
+                self._open_playlist_from_history()
+                self.refreshBody()
+            return
+
+        elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG:
+            if char in (ord('y'), ord('n')):
+                self.ws.close_window()
+                if char == ord('y'):
+                    ret = self._browser_config_win.save_config()
+                    if ret == -2:
+                        ''' save ok  '''
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Online browser config saved!!!')
+                    elif ret == -3:
+                        ''' error '''
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Error saving Online browser config!!!')
+                        self._print_browser_config_save_error()
+                        return
+                    else:
+                        ''' not modified '''
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Online browser config not saved (not modifed)')
+                elif char == ord('n'):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Saving Online browser config canceled!!!')
+                    self._browser_config_win.reset_dirty_config()
+
+                self._exit_browser_config()
+                self.refreshBody()
+            return
+
+        elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER:
+            logger.error('DE =========================')
+            if char in (ord('y'), ord('n')):
+                self.ws.close_window()
+                if char == ord('y'):
+                    ret = self._cnf._online_browser.save_config()
+                    if ret == -2:
+                        ''' save ok  '''
+                        self._cnf._online_browser.reset_dirty_config()
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Online browser config saved!!!')
+                    elif ret == -3:
+                        ''' error '''
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Error saving Online browser config!!!')
+                        self._print_browser_config_save_error()
+                        return
+                    else:
+                        ''' not modified '''
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Online browser config not saved (not modifed)')
+                elif char == ord('n'):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Saving Online browser config canceled!!!')
+                    self._cnf._online_browser.reset_dirty_config()
+
+                self._exit_browser_config()
+                self.refreshBody()
             return
 
         elif self.ws.operation_mode == self.ws.CLEAR_REGISTER_MODE:
@@ -6146,6 +6404,7 @@ class PyRadio(object):
             if char in (curses.KEY_EXIT, ord('q'), 27) or \
                     (self.ws.operation_mode == self.ws.PLAYLIST_MODE and \
                     char in (ord('h'), curses.KEY_LEFT)):
+                ''' exit program or playlist mode '''
                 self.bodyWin.nodelay(True)
                 char = self.bodyWin.getch()
                 self.bodyWin.nodelay(False)
@@ -6170,10 +6429,17 @@ class PyRadio(object):
                         self.refreshBody()
                         return
                     else:
-                        if self._cnf.is_register or \
-                                self._cnf.browsing_station_service:
+                        if self._cnf.is_register:
                             ''' go back to playlist history '''
                             self._open_playlist_from_history()
+                            return
+                        elif self._cnf.browsing_station_service:
+                            ''' go back to playlist history '''
+                            if self._cnf.online_browser.is_config_dirty():
+                                logger.error('DE \n\nonline config is dirty\n\n')
+                                self._ask_to_save_browser_config_to_exit()
+                            else:
+                                self._open_playlist_from_history()
                             return
                         ''' exit program '''
                         ''' stop updating the status bar '''
@@ -6201,8 +6467,10 @@ class PyRadio(object):
                                 reset_playing=False
                             )
                         self.ctrl_c_handler(0,0)
+                        logger.error('RETURN -1')
                         return -1
                 else:
+                    logger.error('\n\nRETURN\n\n')
                     return
 
             if char in (curses.KEY_DOWN, ord('j')):
@@ -6320,6 +6588,11 @@ class PyRadio(object):
                         self.ws.window_mode = self.ws.CONFIG_MODE
                         if not self.player.isPlaying():
                             self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
+                        if self._cnf.dirty_config:
+                            self._cnf.save_config()
+                            self._cnf.dirty_config = False
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('Config saved before entering Config Window')
                         self._show_config_window()
                     return
 
@@ -6592,6 +6865,57 @@ class PyRadio(object):
 
                 # else:
                 #     self._update_status_bar_right(status_suffix='')
+
+    def _browser_config_not_modified(self):
+        self.ws.close_window()
+        if self._cnf._online_browser:
+            self._cnf._online_browser._config_win = None
+        else:
+            self._browser_config_win = None
+        self.refreshBody()
+        msg = 'Online service Config not modified!!!'
+        if self.player.isPlaying():
+            self.log.write(msg=msg)
+            self.player.threadUpdateTitle()
+        else:
+            self.log.write(msg=msg, help_msg=True, suffix=self._status_suffix)
+
+    def _saved_browser_config_and_exit(self):
+        self.ws.close_window()
+        if self._cnf._online_browser:
+            logger.error('DE <<< READ CONFIG >>>')
+            self._cnf._online_browser.read_config()
+            self._cnf._online_browser._config_win = None
+        else:
+            self._browser_config_win = None
+        self.refreshBody()
+        msg = 'Online service Config saved successfully!!!'
+        if self.player.isPlaying():
+            self.log.write(msg=msg)
+            self.player.threadUpdateTitle()
+        else:
+            self.log.write(msg=msg, help_msg=True, suffix=self._status_suffix)
+
+    def _exit_browser_config(self):
+        if self._cnf.online_browser:
+            if self._cnf.online_browser.is_config_dirty():
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Onine Browser config is dirty!')
+                self._ask_to_save_browser_config_from_browser()
+                return
+        else:
+            if self._browser_config_win.is_config_dirty():
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Onine Browser config is dirty!')
+                self._ask_to_save_browser_config_from_config()
+                return
+
+        self.ws.close_window()
+        if self._cnf._online_browser:
+            self._cnf._online_browser._config_win = None
+        else:
+            self._browser_config_win = None
+        self.refreshBody()
 
     def _show_statiosn_pasted(self):
         self._show_notification_with_delay(
