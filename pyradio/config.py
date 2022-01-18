@@ -30,10 +30,7 @@ except:
 
 logger = logging.getLogger(__name__)
 
-if platform == 'win32':
-    SUPPORTED_PLAYERS = ('mplayer', 'vlc')
-else:
-    SUPPORTED_PLAYERS = ('mpv', 'mplayer', 'vlc')
+SUPPORTED_PLAYERS = ('mpv', 'mplayer', 'vlc')
 
 
 class PyRadioStations(object):
@@ -1604,8 +1601,8 @@ class PyRadioConfig(PyRadioStations):
                 return -2
             if sp[0] == 'player':
                 self.opts['player'][1] = sp[1].lower().strip()
-                if sys.platform.startswith('win'):
-                    self.opts['player'][1] = self.opts['player'][1].replace('mpv,', '')
+                # if sys.platform.startswith('win'):
+                #     self.opts['player'][1] = self.opts['player'][1].replace('mpv,', '')
             elif sp[0] == 'connection_timeout':
                 self.opts['connection_timeout'][1] = sp[1].strip()
                 ''' check integer number and set to 10 if error

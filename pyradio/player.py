@@ -15,6 +15,8 @@ try:
     import psutil
 except:
     pass
+if platform.startswith('win'):
+    import win32pipe, win32file, pywintypes
 
 try:
     from urllib import unquote
@@ -757,24 +759,28 @@ class Player(object):
         # Send data
         message = b'{ "command": ["observe_property", 1, "metadata"] }\n'
         try:
-            sock.sendall(message)
+            if platform.startswith('win'):
+                win32file.WriteFile(sock, message)
+            else:
+                sock.sendall(message)
             go_on = True
         except:
             # logger.error('DE \n\nBroken pipe\n\n')
             go_on = False
-
         if go_on:
             while True:
                 if stop():
                     break
                 try:
-                    data = sock.recvmsg(4096)
-                    if isinstance(data, tuple):
-                        a_data = data[0]
+                    if platform.startswith('win'):
+                        try:
+                            data = win32file.ReadFile(sock, 64*1024)
+                        except pywintypes.error as e:
+                            data = b''
                     else:
-                        a_data = data
+                        data = sock.recvmsg(4096)
+                    a_data = self._fix_returned_data(data)
                     # logger.error('DE Received: "{!r}"'.format(a_data))
-
                     if a_data == b'' or stop():
                         break
 
@@ -791,7 +797,10 @@ class Player(object):
                                     if 'event' in d.keys():
                                         if d['event'] == 'metadata-update':
                                             try:
-                                                sock.sendall(self.GET_TITLE)
+                                                if platform.startswith('win'):
+                                                    win32file.WriteFile(sock, self.GET_TITLE)
+                                                else:
+                                                    sock.sendall(self.GET_TITLE)
                                             except:
                                                 break
                                             ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
@@ -810,7 +819,7 @@ class Player(object):
                                     pass
                 finally:
                     pass
-        sock.close()
+        self._close_pipe(sock)
 
         if not stop():
             ''' haven't been asked to stop '''
@@ -823,6 +832,12 @@ class Player(object):
                     logger.info('Crash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('MPV updateStatus thread stopped.')
+
+    def _close_pipe(self, sock):
+        if platform.startswith('win'):
+            win32file.CloseHandle(sock)
+        else:
+            sock.close()
 
     def updateWinVLCStatus(self, *args):
         def do_crash_detection(detect_if_player_exited, stop):
@@ -1032,10 +1047,16 @@ class Player(object):
         with self.status_update_lock:
             ret = len(self._icy_data)
         if ret == 0:
-            sock.sendall(self.GET_TITLE)
-            sock.sendall(self.GET_AUDIO_FORMAT)
-            sock.sendall(self.GET_AUDIO_CODEC)
-            sock.sendall(self.GET_AUDIO_CODEC_NAME)
+            if platform.startswith('win'):
+                win32file.WriteFile(sock, self.GET_TITLE)
+                win32file.WriteFile(sock, self.GET_AUDIO_FORMAT)
+                win32file.WriteFile(sock, self.GET_AUDIO_CODEC)
+                win32file.WriteFile(sock, self.GET_AUDIO_CODEC_NAME)
+            else:
+                sock.sendall(self.GET_TITLE)
+                sock.sendall(self.GET_AUDIO_FORMAT)
+                sock.sendall(self.GET_AUDIO_CODEC)
+                sock.sendall(self.GET_AUDIO_CODEC_NAME)
 
     def _get_mpv_metadata(self, *args):
         ''' Get MPV metadata
@@ -1373,7 +1394,6 @@ class Player(object):
 
     def close(self):
         ''' kill player instance '''
-
         self._no_mute_on_stop_playback()
 
         ''' First close the subprocess '''
@@ -1529,8 +1549,10 @@ class MpvPlayer(Player):
 
         ''' String to denote volume change '''
         volume_string = 'Volume: '
-
-        mpvsocket = '/tmp/mpvsocket.{}'.format(os.getpid())
+        if platform.startswith('win'):
+            mpvsocket = r'\\.\pipe\mpvsocket.{}'.format(os.getpid())
+        else:
+            mpvsocket = '/tmp/mpvsocket.{}'.format(os.getpid())
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('mpv socket is "{}"'.format(self.mpvsocket))
         if os.path.exists(mpvsocket):
@@ -1653,6 +1675,17 @@ class MpvPlayer(Player):
 
         return opts
 
+
+    def _fix_returned_data(self, data):
+        if isinstance(data, tuple):
+            if 'int' in str(type(data[0])):
+                a_data = data[1]
+            else:
+                a_data = data[0]
+        else:
+            a_data = data
+        return a_data
+
     def _mute(self):
         ''' mute mpv '''
         ret = self._send_mpv_command('mute')
@@ -1664,20 +1697,27 @@ class MpvPlayer(Player):
         while True:
             sock = self._connect_to_socket(self.mpvsocket)
             try:
-                sock.sendall(b'{ "command": ["get_property", "mute"], "request_id": 600 }\n')
+                if platform.startswith('win'):
+                    win32file.WriteFile(sock, b'{ "command": ["get_property", "mute"], "request_id": 600 }\n')
+                else:
+                    sock.sendall(b'{ "command": ["get_property", "mute"], "request_id": 600 }\n')
             except:
-                sock.close()
+                self._close_pipe(sock)
                 return
             # wait for response
+
             try:
-                if version_info < (3, 0):
-                    data = sock.recv(4096)
+                if platform.startswith('win'):
+                    try:
+                        data = win32file.ReadFile(sock, 64*1024)
+                    except pywintypes.error as e:
+                        data = b''
                 else:
-                    data = sock.recvmsg(4096)
-                if isinstance(data, tuple):
-                    a_data = data[0]
-                else:
-                    a_data = data
+                    if version_info < (3, 0):
+                        data = sock.recv(4096)
+                    else:
+                        data = sock.recvmsg(4096)
+                a_data = self._fix_returned_data(data)
                 # logger.error('DE Received: "{!r}"'.format(a_data))
 
                 if a_data:
@@ -1687,12 +1727,13 @@ class MpvPlayer(Player):
                             d = json.loads(n)
                             if d['error'] == 'success':
                                 if isinstance(d['data'], bool):
-                                    sock.close()
+                                    self._close_pipe(sock)
                                     return d['data']
                         except:
                             pass
             finally:
                 pass
+            self._close_pipe(sock)
 
     def pause(self):
         ''' pause streaming (if possible) '''
@@ -1702,7 +1743,8 @@ class MpvPlayer(Player):
         ''' kill mpv instance '''
         self.stop_mpv_status_update_thread = True
         self._send_mpv_command('quit')
-        os.system('rm ' + self.mpvsocket + ' 2>/dev/null');
+        if not platform.startswith('win'):
+            os.system('rm ' + self.mpvsocket + ' 2>/dev/null');
         self._icy_data = {}
 
     def _volume_up(self):
@@ -1724,13 +1766,31 @@ class MpvPlayer(Player):
         return '[' + volume_string[volume_string.find(self.volume_string):].replace('ume', '')+'] '
 
     def _connect_to_socket(self, server_address):
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        try:
-            sock.connect(server_address)
-            return sock
-        except:
-            sock.close()
-            return None
+        if platform.startswith('win'):
+            count = 0
+            # logger.error('\n\n_connect_to_socket: {}\n\n'.format(server_address))
+            try:
+                handle = win32file.CreateFile(
+                    server_address,
+                    win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+                    0,
+                    None,
+                    win32file.OPEN_EXISTING,
+                    0,
+                    None
+                )
+                res = win32pipe.SetNamedPipeHandleState(handle, win32pipe.PIPE_READMODE_MESSAGE, None, None)
+                return handle
+            except pywintypes.error as e:
+                return None
+        else:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            try:
+                sock.connect(server_address)
+                return sock
+            except:
+                self._close_pipe(sock)
+                return None
 
     def _send_mpv_command(self, a_command, return_response=False):
         ''' Send a command to MPV
@@ -1767,29 +1827,41 @@ class MpvPlayer(Player):
 
         # Send data
         try:
-            if a_command in self.commands.keys():
-                sock.sendall(self.commands[a_command])
+            if platform.startswith('win'):
+                if a_command in self.commands.keys():
+                    win32file.WriteFile(sock, self.commands[a_command])
+                else:
+                    win32file.WriteFile(sock, a_command)
             else:
-                sock.sendall(a_command)
+                if a_command in self.commands.keys():
+                    sock.sendall(self.commands[a_command])
+                else:
+                    sock.sendall(a_command)
         except:
-            sock.close()
+            self._close_pipe(sock)
             if return_response:
                 return ''
             else:
                 return False
         # read the response
-        try:
-            if version_info < (3, 0):
-                data = sock.recv(4096)
-            else:
-                data = sock.recvmsg(4096)
-        except sock.error as e:
-            data = ''
+        if platform.startswith('win'):
+            try:
+                data = win32file.ReadFile(sock, 64*1024)
+            except pywintypes.error as e:
+                data = b''
+        else:
+            try:
+                if version_info < (3, 0):
+                    data = sock.recv(4096)
+                else:
+                    data = sock.recvmsg(4096)
+            except sock.error as e:
+                data = ''
         # logger.error('DE data = {}'.format(data))
             #sock.colse()
             #return False
         # logger.error('DE data = "{}"'.format(data))
-        sock.close()
+        self._close_pipe(sock)
         if return_response:
             return data
         else:
@@ -1818,24 +1890,31 @@ class MpvPlayer(Player):
         # Send data
         message = b'{ "command": ["get_property", "volume"] }\n'
         try:
-            sock.sendall(message)
+            if platform.startswith('win'):
+                win32file.WriteFile(sock, message)
+            else:
+                sock.sendall(message)
         except:
-            sock.close()
+            self._close_pipe(sock)
             return
 
         # wait for response
         got_it = True
         while got_it:
             try:
-                if version_info < (3, 0):
-                    data = sock.recv(4096)
+                if platform.startswith('win'):
+                    try:
+                        data = win32file.ReadFile(sock, 64*1024)
+                    except pywintypes.error as e:
+                        data = b''
                 else:
-                    data = sock.recvmsg(4096)
-                if isinstance(data, tuple):
-                    a_data = data[0]
-                else:
-                    a_data = data
+                    if version_info < (3, 0):
+                        data = sock.recv(4096)
+                    else:
+                        data = sock.recvmsg(4096)
+
                 # logger.error('DE Received: "{!r}"'.format(a_data))
+                a_data = self._fix_returned_data(data)
 
                 if a_data == b'':
                     break
@@ -1857,7 +1936,7 @@ class MpvPlayer(Player):
                             pass
             finally:
                 pass
-        sock.close()
+        self._close_pipe(sock)
         if self.oldUserInput['Title']:
             info_string = self._format_title_string(self.oldUserInput['Title'])
         else:

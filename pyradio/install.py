@@ -254,7 +254,10 @@ def get_devel_version():
     if long_descpr == ('PyRadio-git', 'PyRadio-git'):
         return 'PyRadio-git'
     else:
-        return 'PyRadio ' + long_descpr[1].replace('-', '-r', 1) + '-git'
+        if long_descpr[1]:
+            return 'PyRadio ' + long_descpr[1].replace('-', '-r', 1) + '-git'
+        else:
+            return 'PyRadio ' + long_descpr[0] + '-0'
 
 def windows_put_devel_version():
     long_descr = get_devel_version()
@@ -272,7 +275,7 @@ def windows_put_devel_version():
         sys.exit(1)
 
 def WindowExists(title):
-    ''' fixing #145  '''
+    ''' fixing #146  '''
     try:
         import win32api
         import win32ui
@@ -763,6 +766,10 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
 
 if __name__ == '__main__':
+    # l=get_github_long_description()
+    # print(l)
+    # get_devel_version()
+    # sys.exit()
     print_pyradio_on()
     print_python3() if PY3 else print_python2()
     # print(get_devel_version())

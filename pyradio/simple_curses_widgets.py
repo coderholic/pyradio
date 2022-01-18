@@ -1396,6 +1396,9 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         self._X = X
         self._caption = caption
         self._char = char
+        if platform.lower().startswith('win') and \
+                self._char == '✔':
+            self._char = 'X'
         self._checked = checked
         self._focused = focused
         self._highlight_all = highlight_all
