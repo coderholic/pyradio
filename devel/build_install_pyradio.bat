@@ -36,27 +36,27 @@ IF "%1"=="" (
     CLS
     ECHO Installing / Updating python modules
     pip install windows-curses --upgrade 1>NUL 2>NUL
-    if ERRORLEVEL 1 (
+    if %ERRORLEVEL% == 1 (
         set ERRPKG=windows-curses
         GOTO piperror
     )
     pip install pywin32 --upgrade 1>NUL 2>NUL
-    if ERRORLEVEL 1 (
+    if %ERRORLEVEL% == 1 (
         set ERRPKG=pywin32
         GOTO piperror
     )
     pip install requests --upgrade 1>NUL 2>NUL
-    if ERRORLEVEL 1 (
+    if %ERRORLEVEL% == 1 (
         set ERRPKG=requests
         GOTO piperror
     )
     pip install dnspython --upgrade 1>NUL 2>NUL
-    if ERRORLEVEL 1 (
+    if %ERRORLEVEL% == 1 (
         set ERRPKG=dnspython
         GOTO piperror
     )
     pip install psutil --upgrade 1>NUL 2>NUL
-    if ERRORLEVEL 1 (
+    if %ERRORLEVEL% == 1 (
         set ERRPKG=psutil
         GOTO piperror
     )
@@ -190,25 +190,22 @@ GOTO toend
 CLS
 ECHO  The installation has failed
 ECHO.
-ECHO This means that either you internet connection
-ECHO has failed (in which case you should fix it and
-ECHO try again), or that
+ECHO This means that either you internet connection has failed
+ECHO (in which case you should fix it and try again), or that
 ECHO.
 ECHO one of PyRadio's dependencies has not been found
 ECHO(     package: !ERRPKG!
 ECHO.
 ECHO  If this is the case, packagers have not yet produced
-ECHO  a package for this version of python (it was
-ECHO  probably released recently).
+ECHO  a package for this version of python (it was probably
+ECHO  released recently).
 ECHO.
 ECHO  What can you do?
-ECHO  1. Wait for the package to be updated (which
-ECHO     means you will not be able to use PyRadio
-ECHO     until then), or
+ECHO  1. Wait for the package to be updated (which means you
+ECHO     will not be able to use PyRadio until then), or
 ECHO  2. Uninstall python and then go to
 ECHO           https://www.python.org/downloads/
-ECHO     and download and install the second to
-ECHO     last version.
+ECHO     and download and install the second to last version.
 ECHO .
 ECHO     Then try installing PyRadio again
 ECHO.
@@ -244,16 +241,16 @@ GOTO endnopause
 
 :uninstall
 ECHO This may take some time...
-ECHO *********************************************************
+ECHO ***********************************************************
 ECHO.
-ECHO PyRadio will NOT uninstalled MPlayer, Python and/or Git.
+ECHO PyRadio will NOT uninstall NPV, MPlayer, Python and/or Git.
 ECHO You will have to manually uninstall them.
 ECHO.
 ECHO PyRadio user files will be left instact.
 ECHO You can find them at
 ECHO     %APPDATA%\pyradio
 ECHO.
-ECHO *********************************************************
+ECHO ***********************************************************
 ECHO.
 DEL pyremove.bat 2>NUL
 ECHO ECHO Uninstalling PyRadio>>pyremove.bat

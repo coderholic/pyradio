@@ -19,6 +19,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [MPlayer installation](#mplayer-installation)
         * [VLC installation](#vlc-installation)
     * [PyRadio installation](#pyradio-installation)
+            * [Fresh python installation?](#fresh-python-installation?)
         * [Final steps](#final-steps)
         * [Cleaning up](#cleaning-up)
 * [Updating PyRadio](#updating-pyradio)
@@ -138,6 +139,29 @@ Then type:
 
     cd %USERPROFILE%
     python install.py
+
+
+##### Fresh python installation?
+
+If you have just installed **Pyhon**, you will probably end up with the following message and the installation script will terminate.
+
+
+```
+PyRadio has installed all required python modules.
+In order for them to be properly loaded, the installation script
+has to be executed afresh.
+
+Please execute the installation script again, like so:
+
+    python install.py
+
+```
+
+This is perfectly normal; some **Python** modules have been installed, but in order to be used by the installation script, it has to be executed one more time. So you just type (again):
+
+    python install.py
+
+in order to complete the installation.
 
 #### Final steps
 

@@ -7,10 +7,10 @@ import platform
 import json
 from time import sleep
 try:
+    from os.path import curdir
     import ctypes
     import win32api
     import win32ui
-    from os.path import curdir
 except:
     pass
 
@@ -283,6 +283,19 @@ def WindowExists(title):
         pass
     try:
         win32ui.FindWindow(None, title)
+    except UnboundLocalError:
+        os.system('cls')
+        msg = '''PyRadio has installed all required python modules.
+In order for them to be properly loaded, the installation script
+has to be executed afresh.
+
+Please execute the installation script again, like so:
+
+    python install.py
+
+        '''
+        print(msg)
+        sys,exit()
     except win32ui.error:
         return False
     else:
@@ -489,22 +502,38 @@ class PyRadioUpdate(object):
                 b.write('@ECHO OFF\n')
                 b.write('CLS\n')
                 b.write('pip install requests --upgrade 1>NUL 2>NUL\n')
+                b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
+                # b.write('PAUSE\n')
                 if mode.startswith('update'):
                     b.write('COPY "{}" . 1>NUL\n'.format(os.path.abspath(__file__)))
                     if self._package == 0:
                         b.write(self._python_exec.python + ' install.py --do-update\n')
                     else:
                         b.write(self._python_exec.python + ' install.py --do-update ' + params[self._package] + '\n')
+                    b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
                     b.write('devel\\build_install_pyradio.bat -U\n')
+                    b.write('GOTO endofscript\n')
                 else:
                     b.write('COPY "{}" uninstall.py 1>NUL\n'.format(os.path.abspath(__file__)))
                     if self._package == 0:
                         b.write(self._python_exec.python + ' uninstall.py --do-uninstall\n')
                     else:
                         b.write(self._python_exec.python + ' uninstall.py --do-uninstall ' + params[self._package] + '\n')
+                    b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
                     b.write('devel\\build_install_pyradio.bat -u\n')
+                    b.write('GOTO endofscript\n')
+                b.write('ECHO.\n\n')
+                b.write(':downloaderror\n')
+                b.write('CLS\n')
+                b.write('ECHO Error:\tPyRadio cannot connect to GitHub...\n')
+                b.write('ECHO \tPlease make sure that your internet connection is still up and try again\n')
+                b.write('ECHO.\n\n')
+                b.write('PAUSE\n')
+                b.write('exit 1')
+                b.write(':endofscript\n')
+                b.write('exit 0')
         except:
             print('\nCreating the update/uninstall BAT file failed...')
             print('You should probably reboot your machine and try again.\n')
@@ -915,9 +944,37 @@ if __name__ == '__main__':
             if ret == 0:
                 print('PyRadio is already installed.\n')
                 sys.exit(1)
-        subprocess.call('pip install windows-curses --upgrade')
-        subprocess.call('pip install pywin32 --upgrade')
-        subprocess.call('pip install requests --upgrade')
+        for a_module in (
+                'windows-curses',
+                'pywin32',
+                'dnspython',
+                'requests',
+                'psutil',
+        ):
+            print('Checking module: ' + a_module + ' ...')
+            ret = subprocess.call('pip install ' + a_module + ' --upgrade',
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL)
+            if ret != 0:
+                print('\nPyradio cannot install python module: ' + a_module)
+                if a_module == 'windows-curses':
+                    print('''This means that either you internet connection has failed
+(in which case you should fix it and try again), or that
+curses packagers have not yet produced a package for this
+version of python (it was probably released recently).
+
+What can you do?
+1. Wait for the package to be updated (which means you will
+    not be able to use PyRadio until then), or
+2. Uninstall python and then go to
+          https://www.python.org/downloads/
+    and download and install the second to last version.
+.
+Then try installing PyRadio again
+''')
+                else:
+                    print('Please make sure your internet connection is up and try again')
+                sys.exit(1)
         uni = PyRadioUpdateOnWindows(
             package=package,
             github_long_description=github_long_description,
@@ -927,11 +984,11 @@ if __name__ == '__main__':
         while not os.path.isfile(os.path.join(uni._dir, 'update.bat')):
             pass
         os.chdir(uni._dir)
-        subprocess.call('update.bat')
-        print('\n\nNow you can delete the folder:')
-        print('    "{}"'.format(uni._dir))
-        print('and the file:')
-        print('    "{}"'.format(__file__))
+        if subprocess.call('update.bat') == 0:
+            print('\n\nNow you can delete the folder:')
+            print('    "{}"'.format(uni._dir))
+            print('and the file:')
+            print('    "{}"'.format(__file__))
     else:
         if not args.force:
             ret = subprocess.call('pyradio -h 1>/dev/null 2>&1', shell=True)
