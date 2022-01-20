@@ -15,6 +15,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [Installing Python](#installing-python)
         * [Verifying the installation](#verifying-the-installation)
     * [Player installation](#player-installation)
+        * [MPV installation](#mpv-installation)
         * [MPlayer installation](#mplayer-installation)
         * [VLC installation](#vlc-installation)
     * [PyRadio installation](#pyradio-installation)
@@ -43,9 +44,11 @@ This page will guide you through the process of installing, updating and running
 
 First of all, let me tell you that if you are still running Windows XP, you can just stop reading right now; it won't happen...
 
-Then, due to reasons that are of no importance right now, [mpv](https://mpv.io/) is not (yet?) supported. That leaves us with [MPlayer](http://www.mplayerhq.hu/design7/news.html) and [VLC](https://www.videolan.org/vlc/).
+**PyRadio** on *Linux* (its main target platform) can use any of three players [MPV](https://mpv.io/), [MPlayer](http://www.mplayerhq.hu/design7/news.html) and [VLC](https://www.videolan.org/vlc/); and this is also the case on *Windows*!
 
-Installing [MPlayer](http://www.mplayerhq.hu/) takes a couple of extra steps, and you may find that some streams (e.g. m3u8) may not be playable. Furthermore, special care has to be taken in order to be able to save the volume of the player.
+[MPV](https://mpv.io/) is the preferred player for *Windows*. Its installation takes a few extra steps, but once installed, it's super reliable due to its using "*Named Pipes*" (in a client-server paradigm) for its communication with the client application (in this case **PyRadio**.)
+
+Installing [MPlayer](http://www.mplayerhq.hu/) also takes a couple of extra steps, and you may find that some streams (e.g. m3u8) may not be playable. Furthermore, special care has to be taken in order to be able to save the volume of the player.
 
 [VLC](https://www.videolan.org/vlc/) is much easier to install, but song titles' updating may not be 100% consistent (if any). If this is not a deal breaker for you, then just go on and use [VLC](https://www.videolan.org/vlc/) as **PyRadio**'s player.
 
@@ -101,11 +104,15 @@ It's time to decide which player you want to use, either [MPlayer](http://www.mp
 
 This is what you should know before making your decision:
 
-|          | MPlayer                                                        | VLC                                           |
-|----------|----------------------------------------------------------------|-----------------------------------------------|
-| **Pros** | Fully functional                                               | Easy installation<br>Plays almost all streams |
-| **Cons** | Extra steps to install<br>May not play all streams (e.g. m3u8) | Titles update is not consistent (if any)    |
+|          |MPV                               | MPlayer                                                        | VLC                                           |
+|----------|----------------------------------|----------------------------------------------------------------|-----------------------------------------------|
+| **Pros** | Fully functional | Fully functional                                               | Easy installation<br>Plays almost all streams |
+| **Cons** | Extra steps to install | Extra steps to install<br>May not play all streams (e.g. m3u8) | Titles update is not consistent (if any)    |
 
+
+#### MPV installation
+
+If [MPV](https://mpv.io) is your selection, please refer to the [relevant instructions](windows-mpv.md).
 
 #### MPlayer installation
 

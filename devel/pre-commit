@@ -34,7 +34,7 @@ sed -i 's/\t/    /g' Changelog
 
 
 # Create HTML file from md files
-for afile in README.md build.md windows.md windows-mplayer.md radio-browser.md
+for afile in README.md build.md windows.md windows-mplayer.md windows-mpv.md radio-browser.md
 do
 #[ -z "$(git status | grep ${afile})" ] || {
     out=${afile/%.md/.html}
@@ -46,6 +46,8 @@ do
         echo '% PyRadio on Windows' > tmp.md
     elif [ "$afile" = "windows-mplayer.md" ];then
         echo '% MPlayer Installation on Windows' > tmp.md
+    elif [ "$afile" = "windows-mpv.md" ];then
+        echo '% MPV Installation on Windows' > tmp.md
     elif [ "$afile" = "radio-browser.md" ];then
         echo '% PyRadio RadioBrowser Implementation' > tmp.md
     fi
