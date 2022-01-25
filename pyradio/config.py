@@ -1444,16 +1444,16 @@ class PyRadioConfig(PyRadioStations):
                     ret = self.info + " (development version)"
                 else:
                     git_info = git_description.split('-')
-                    if git_info[1] != '0':
-                        try:
+                    try:
+                        if git_info[1] != '0':
                             if 'beta' in git_info[1] or 'rc' in git_info[1].lower():
                                 self.info = " PyRadio {1}-{1}".format(git_info[0], git_info[1])
                                 ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[2])
                             else:
                                 self.info = " PyRadio {0}-r{1} ".format(version, git_info[1])
                                 ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1])
-                        except:
-                            pass
+                    except:
+                        pass
         self.current_pyradio_version = self.info.replace(' PyRadio ', '').replace(' ', '')
         # if self._distro != 'None':
         #     self.info += '({})'.format(self._distro)

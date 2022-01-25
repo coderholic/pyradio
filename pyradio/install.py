@@ -178,22 +178,27 @@ def get_github_long_description(
     returns = []
     for n in points:
         ret = None
-        url = 'https://api.github.com/repos/' + user + '/pyradio/' + n
-        if sys.version_info < (3, 0):
-            try:
-                ret = urlopen(url).read()
-            except:
-                ret = None
+        if n == 'tags':
+            url = 'https://api.github.com/repos/coderholic/pyradio/tags'
         else:
-            try:
+            url = 'https://api.github.com/repos/' + user + '/pyradio/' + n
+            if use_sng_repo and not sng_branch:
+                url += '?sha=devel'
+            else:
+                url += '?sha=master'
+            url += '&per_page=50'
+        try:
+            if sys.version_info < (3, 0):
+                ret = urlopen(url).read()
+            else:
                 with urlopen(url) as https_response:
                     ret = https_response.read()
-            except:
-                if do_not_exit:
-                    ret = None
-                else:
-                    print('Error: Cannot contact GitHub!\n       Please make sure your internet connection is up and try again.')
-                    sys.exit(1)
+        except:
+            if do_not_exit:
+                ret = None
+            else:
+                print('Error: Cannot contact GitHub!\n       Please make sure your internet connection is up and try again.')
+                sys.exit(1)
 
         try:
             returns.append(json.loads(ret))
@@ -210,9 +215,9 @@ def get_github_long_description(
 
     if ret is None:
         if only_tag_name:
-            return 'PyRadio-git'
+            return None
         else:
-            return 'PyRadio-git', 'PyRadio-git'
+            return None, None
 
     if only_tag_name:
         return returns[0][0]['name']
@@ -231,9 +236,17 @@ def get_github_long_description(
     # print(tag_hash)
     # print(revision)
 
-    this_version = tag_name + '-' + str(revision) + '-' + returns[0][0]['sha'][:7] if revision > 0 else None
+    if revision > 0:
+        this_version = tag_name + '-r' + str(revision) + '-' + returns[0][0]['sha'][:7]
+        if use_sng_repo:
+            this_version += '-sng'
+        if not sng_branch:
+            this_version += '-dev'
+    else:
+        this_version = None
 
-    # print('this_version = ' + this_version)
+    # if this_version:
+    #     print('this_version = ' + this_version)
     return tag_name, this_version
 
 def get_github_tag(do_not_exit=False):
@@ -241,25 +254,27 @@ def get_github_tag(do_not_exit=False):
     return get_github_long_description(only_tag_name=True, do_not_exit=do_not_exit)
 
 def get_next_release():
+    ''' not used '''
     r = get_github_long_description()
-    print('Descriptyion: {}'.format(r))
+    print('Description: {}'.format(r))
 
     sp = r[1].split('-')
     print('sp = {}'.format(sp))
     x = int(sp[1]) + 1
-    return sp[0] + '-r{}'.format(x)
+    return sp[0] + '-{}'.format(x)
 
 def get_devel_version():
     long_descpr = get_github_long_description(do_not_exit=True)
-    if long_descpr == ('PyRadio-git', 'PyRadio-git'):
-        return 'PyRadio-git'
-    else:
+    if long_descpr[0]:
         if long_descpr[1]:
-            return 'PyRadio ' + long_descpr[1].replace('-', '-r', 1) + '-git'
+            return 'PyRadio ' + long_descpr[1]
         else:
-            return 'PyRadio ' + long_descpr[0] + '-0'
+            return 'PyRadio ' + long_descpr[0]
+    else:
+        return None
 
 def windows_put_devel_version():
+    ''' not used '''
     long_descr = get_devel_version()
     from shutil import copyfile
     cur_dir = os.getcwd()
@@ -795,10 +810,10 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
 
 if __name__ == '__main__':
-    # l=get_github_long_description()
-    # print(l)
-    # get_devel_version()
-    # sys.exit()
+    l=get_github_long_description(use_sng_repo=True)
+    print(l)
+    print(get_devel_version())
+    sys.exit()
     print_pyradio_on()
     print_python3() if PY3 else print_python2()
     # print(get_devel_version())
@@ -860,15 +875,19 @@ if __name__ == '__main__':
         args.force = True
         package = 1
         VERSION, github_long_description = get_github_long_description(use_sng_repo=True, sng_branch=True)
-        github_long_description += '-sng'
+        if not github_long_description:
+            github_long_description = 'PyRadio'
         github_long_description = github_long_description.replace('-', '-r', 1)
+        # github_long_description += '-sng'
     elif args.sng_devel:
         '''' sng devel '''
         args.force = True
         package = 2
         VERSION, github_long_description = get_github_long_description(use_sng_repo=True)
-        github_long_description += '-sng-dev'
+        if not github_long_description:
+            github_long_description = 'PyRadio'
         github_long_description = github_long_description.replace('-', '-r', 1)
+        # github_long_description += '-sng-dev'
     elif args.devel:
         ''' official devel '''
         package = 3

@@ -69,12 +69,12 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
  - Station editor (add/edit) with [CJK characters support](#cjk-characters-support)
  - Configuration editor
  - Multiple playlist support
- - vi like station ragisters
+ - vi like station registers
  - Search function
  - Theming support
  - [RadioBrowser](radio-browser.md) support
  - Easy installation / updating
- - Runs on Linux. MacOS and Windows
+ - Runs on Linux, MacOS and Windows
 
 and much more...
 

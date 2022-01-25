@@ -4714,6 +4714,12 @@ class PyRadio(object):
         self.ws.close_window()
         self.refreshBody()
 
+    def _can_show_theme_window_in_browser_search(self):
+        if self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
+            return not self._cnf._online_browser.line_editor_has_focus()
+        else:
+            return True
+
     def keypress(self, char):
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
@@ -5061,7 +5067,8 @@ class PyRadio(object):
                     self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE,) and \
                 self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
                 not self.is_search_mode(self.ws.operation_mode) and \
-                self.ws.window_mode not in (self.ws.CONFIG_MODE, ):
+                self.ws.window_mode not in (self.ws.CONFIG_MODE, ) and \
+                self._can_show_theme_window_in_browser_search():
             self._reset_status_bar_right()
             self._config_win = None
             self.theme_forced_selection = None
