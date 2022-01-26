@@ -136,20 +136,20 @@ IF "%NO_DEV%" == "1" (
     %PROGRAM% -c "from install import windows_put_devel_version; windows_put_devel_version()"
     cd ..
 )
-%PROGRAM% setup.py build
-IF %ERRORLEVEL% == 0 GOTO install
-ECHO.
-ECHO.
-ECHO ###############################################
-ECHO # The installation has failed!                #
-ECHO #                                             #
-ECHO # Please make sure your internet connection   #
-ECHO # is working and try again.                   #
-ECHO ###############################################
-GOTO endofscript
+REM %PROGRAM% setup.py build
+REM IF %ERRORLEVEL% == 0 GOTO install
+REM ECHO.
+REM ECHO.
+REM ECHO ###############################################
+REM ECHO # The installation has failed!                #
+REM ECHO #                                             #
+REM ECHO # Please make sure your internet connection   #
+REM ECHO # is working and try again.                   #
+REM ECHO ###############################################
+REM GOTO endofscript
 
 :install
-%PROGRAM% setup.py install
+%PROGRAM% -m pip install . 2>NUL
 IF %ERRORLEVEL% == 0 GOTO installhtml
 :installationerror
 ECHO.
@@ -264,6 +264,7 @@ python -m site --user-site 2>NUL >>dirs
 python devel\windirs.py
 python devel\unreg.py
 ECHO DEL dirs >>pyremove.bat
+ECHO python -m pip uninstall -y pyradio >>pyremove.bat
 ECHO ECHO. >>pyremove.bat
 ECHO ECHO. >>pyremove.bat
 ECHO ECHO PyRadio successfully uninstalled! >>pyremove.bat

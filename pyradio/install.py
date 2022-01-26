@@ -516,7 +516,9 @@ class PyRadioUpdate(object):
             with open(bat, "w") as b:
                 b.write('@ECHO OFF\n')
                 b.write('CLS\n')
-                b.write('pip install requests --upgrade 1>NUL 2>NUL\n')
+                b.write('python -m pip install requests --upgrade 1>NUL 2>NUL\n')
+                b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
+                b.write('python -m pip install wheel --upgrade 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 # b.write('PAUSE\n')
                 if mode.startswith('update'):
@@ -657,7 +659,7 @@ class PyRadioUpdate(object):
                 sys.exit(1)
         with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w') as b:
             pass
-        ''' DEBUG
+        ''' DEBUG on linux
             get new install.py, copy.py (any py)
             into downloaded directory
         '''
@@ -674,6 +676,20 @@ class PyRadioUpdate(object):
         )
         # copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/config.py',
         #    os.path.join(self._dir, self.ZIP_DIR[self._package], 'pyradio', 'config.py'))
+        '''
+        ''' DEBUG on Windows
+            get new install.py, build_install_pyradio.bat (any py)
+            into downloaded directory
+        '''
+        '''
+        from shutil import copyfile
+        cur_dir = os.getcwd()
+        print('\n\n{}\n\n'.format(os.path.join(self._dir, self.ZIP_DIR[self._package])))
+        print(cur_dir)
+        copyfile('C:\\Users\\Spiros\\pyradio\\pyradio\\install.py',
+            os.path.join(cur_dir, 'install.py'))
+        copyfile('C:\\Users\\Spiros\\pyradio\\devel\\build_install_pyradio.bat',
+            os.path.join(self._dir, self.ZIP_DIR[self._package], 'devel', 'build_install_pyradio.bat'))
         '''
 
     def _mkdir(self, name, dir_exist_function=None, _permission_error_function=None):
@@ -969,9 +985,10 @@ if __name__ == '__main__':
                 'dnspython',
                 'requests',
                 'psutil',
+                'wheel',
         ):
             print('Checking module: ' + a_module + ' ...')
-            ret = subprocess.call('pip install ' + a_module + ' --upgrade',
+            ret = subprocess.call('python -m pip install ' + a_module + ' --upgrade',
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL)
             if ret != 0:
