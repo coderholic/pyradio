@@ -810,10 +810,10 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
 
 if __name__ == '__main__':
-    l=get_github_long_description(use_sng_repo=True)
-    print(l)
-    print(get_devel_version())
-    sys.exit()
+    # l=get_github_long_description(use_sng_repo=True)
+    # print(l)
+    # print(get_devel_version())
+    # sys.exit()
     print_pyradio_on()
     print_python3() if PY3 else print_python2()
     # print(get_devel_version())
