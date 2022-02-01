@@ -4514,7 +4514,7 @@ class PyRadio(object):
         else:
             self._browser_config_win.show(parent=self.outerBodyWin)
 
-    def _browser_init_config(self, parent=None, init=False, browser_name=None):
+    def _browser_init_config(self, parent=None, init=False, browser_name=None, distro='None'):
         ''' Show browser config window from online browseer
         '''
         if parent is None:
@@ -4527,7 +4527,8 @@ class PyRadio(object):
                 self._browser_config_win = RadioBrowserConfigWindow(
                     parent=parent,
                     stations_dir=self._cnf.stations_dir,
-                    init=init
+                    init=init,
+                    distro=distro
                 )
                 self.ws.close_window()
             # if title:
@@ -5241,7 +5242,7 @@ class PyRadio(object):
                 elif ret == 2:
                     ''' open RadioBrowser  browser config '''
                     self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
-                    self._browser_init_config(init=True, browser_name='RadioBrowser ')
+                    self._browser_init_config(init=True, browser_name='RadioBrowser ', distro=self._cnf.distro)
                     return
 
                 else:

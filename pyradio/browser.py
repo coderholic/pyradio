@@ -1650,7 +1650,8 @@ class RadioBrowserConfigWindow(object):
             current_history_id=-1,
             current_limit=100,
             init=False,
-            stations_dir=None
+            stations_dir=None,
+            distro=None
     ):
         ''' Parameters
                 0: working
@@ -1684,6 +1685,7 @@ class RadioBrowserConfigWindow(object):
             self._dns_info = dns_info
         else:
             self._dns_info = RadioBrowserDns()
+        self._distro = distro
         self._init_set_working_params(current_auto_save,
                                       current_server,
                                       current_ping_count,
@@ -1998,6 +2000,14 @@ class RadioBrowserConfigWindow(object):
         self._win.addstr(11, 5, 'Set to "Random" if you cannot connet to service', curses.color_pair(5))
         self._win.addstr(12, 1, 'Default Search Term', curses.color_pair(4))
         self._win.addstr(13, 5, 'Not implemented yet', curses.color_pair(5))
+
+        if self._distro != 'None':
+            try:
+                X = int((self.maxX - 20 - len(self._distro) - 1) / 2)
+                self._win.addstr(self.maxY - 1, X, ' Package provided by ', curses.color_pair(5))
+                self._win.addstr(self._distro + ' ', curses.color_pair(4))
+            except:
+                pass
 
         self._fix_ping_enable()
         self._win.refresh()
