@@ -9,7 +9,6 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 <!-- vim-markdown-toc Marked -->
 
 * [MPlayer installation](#mplayer-installation)
-* [Adding MPlayer to the PATH](#adding-mplayer-to-the-path)
 
 <!-- vim-markdown-toc -->
 
@@ -29,21 +28,18 @@ Extract this directory to whatever place you like and **rename** it to **mplayer
 
 Here comes the tricky part...
 
-Move the **mplayer** directory to either on of the following locations:
+Move the **mplayer** directory to either on of the following locations (**PyRadio** will look for it there, when executed):
 
-a. **%USERPROFILE%**
+- **%APPDATA%\\pyradio** \
+This is (or will be) "*PyRadio's configuration directory*". \
+In case the "*pyradio*" directory does not exit, you just go ahead and create it.
 
-    This is actually your "*Home*" directory.
+- **%APPDATA%** \
+This is your "Roaming" folder.
 
-    Please make a note that you will add "**%USERPROFILE%\\mplayer** to PATH.
+- **%USERPROFILE%** \
+This is actually your "*Home*" directory.
 
-b. **%APPDATA%\\pyradio**
-
-    This is (or will be) "*PyRadio's configuration directory*".
-
-    In case the **pyradio** directory does not exit, you just go ahead and create it.
-
-    (Make a note that you will add "**%APPDATA%\\pyradio\\mplayer** to PATH)
 
 In either case, in order to do that, open an **Explorer File Manager** window, and enter at its location field **%USERPROFILE%** or **%APPDATA%**.
 
@@ -52,29 +48,3 @@ If you are unsure on how to do that, please refer to the following image (you ca
 ![Navigating to %APPDATA%](https://members.hellug.gr/sng/pyradio/appdata.jpg)
 
 
-## Adding MPlayer to the PATH
-
-The final step is to add MPlayer to the PATH System Variable.
-
-Now, you already know the **path string** that has to be added (you have made a note of it in the previous step).
-
-There's just one thing to say here: Windows provide a "*User variable for User*" and a "*System variables*" section in the "*Environment Variables*" window.
-
-Add the **path string** to the "*User variables for User*" section.
-
-In order to make the actual addition, please refer to the following image.
-
-![Adding MPlayer to the PATH](https://members.hellug.gr/sng/pyradio/path.jpg)
-
-After applying the changes you should **log off and back on** or **restart the system**, because changes done to the PATH variable will take effect the next time you log into the system.
-
-When you are back on, verify that you can run **MPlayer**; open a console (press the **Win** key, type **cmd** and press **ENTER**) and type "**mplayer**".
-
-If you get something similar to the following snippet, you are all good.
-
-    MPlayer Redxii-SVN-r38119-6.2.0 (x86_64) (C) 2000-2018 MPlayer Team
-    Using FFmpeg N-92801-g7efe84aebd (2018-12-25 00:44:17 +0100)
-    Compiled on 2018-12-25 13:55:17 EST (rev. 1)
-    Usage:   mplayer [options] [url|path/]filename
-
-If **mplayer** was not found, you just have to go through the PATH modification procedure again.

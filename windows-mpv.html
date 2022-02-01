@@ -42,7 +42,6 @@ a:visited{color: SaddleBrown;}
 <!-- vim-markdown-toc Marked -->
 <ul>
 <li><a href="#mpv-installation">MPV installation</a></li>
-<li><a href="#adding-mpv-to-the-path">Adding MPV to the PATH</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p><a href="windows.html">[Back to Build Instructions]</a> <a href="README.html">[Back to README]</a></p>
@@ -52,53 +51,18 @@ a:visited{color: SaddleBrown;}
 <p>You will end up downloading a <a target="_blank" href="https://www.7-zip.org/">7z archive</a>, which contains a directory whose name is similar to <strong>mpv-0.34.-x86_64.7z</strong>.</p>
 <p>Extract this archive to whatever place you like and <strong>rename</strong> it to <strong>mpv</strong>.</p>
 <p>Here comes the tricky part…</p>
-<p>Move the <strong>mpv</strong> directory to either on of the following locations:</p>
-<ol type="a">
-<li><strong>%USERPROFILE%</strong></p>
-<p>This is actually your “<em>Home</em>” directory.</p>
-<p>Please make a note that you will add “<strong>%USERPROFILE%\mpv</strong> to PATH.</p></li>
-<li><strong>%APPDATA%\pyradio</strong></p>
-<p>This is (or will be) “<em>PyRadio’s configuration directory</em>”.</p>
-<p>In case the <strong>pyradio</strong> directory does not exit, you just go ahead and create it.</p>
-<p>(Make a note that you will add “<strong>%APPDATA%\pyradio\mpv</strong> to PATH)</p></li>
-</ol>
+<p>Move the <strong>mpv</strong> directory to either on of the following locations (<strong>PyRadio</strong> will look for it there, when executed):</p>
+<ul>
+<li><strong>%APPDATA%\pyradio</strong><br />
+This is (or will be) “<em>PyRadio’s configuration directory</em>”.<br />
+In case the “<em>pyradio</em>” directory does not exit, you just go ahead and create it.</p></li>
+<li><strong>%APPDATA%</strong><br />
+This is your “Roaming” folder.</p></li>
+<li><strong>%USERPROFILE%</strong><br />
+This is actually your “<em>Home</em>” directory.</p></li>
+</ul>
 <p>In either case, in order to do that, open an <strong>Explorer File Manager</strong> window, and enter at its location field <strong>%USERPROFILE%</strong> or <strong>%APPDATA%</strong>.</p>
 <p>If you are unsure on how to do that, please refer to the following image (you can ENTER <strong>%USERPROFILE%</strong> or <strong>%APPDATA%</strong> or any other Windows System Variable this way).</p>
 <a href="https://members.hellug.gr/sng/pyradio/appdata.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/appdata.jpg" alt="Navigating to %APPDATA%" /></a>
-<h2 id="adding-mpv-to-the-path">Adding MPV to the PATH <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>The final step is to add MPV to the PATH System Variable.</p>
-<p>Now, you already know the <strong>path string</strong> that has to be added (you have made a note of it in the previous step).</p>
-<p>There’s just one thing to say here: Windows provide a “<em>User variable for User</em>” and a “<em>System variables</em>” section in the “<em>Environment Variables</em>” window.</p>
-<p>Add the <strong>path string</strong> to the “<em>User variables for User</em>” section.</p>
-<p>In order to make the actual addition, please refer to the following image.</p>
-<a href="https://members.hellug.gr/sng/pyradio/path.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/path.jpg" alt="Adding MPV to the PATH" /></a>
-<p><strong>Note</strong>: This image is the one used in the relevant <strong>mplayer</strong> page; in this case you just replace <strong>mplayer</strong> with <strong>mpv</strong>.</p>
-<p>After applying the changes you should <strong>log off and back on</strong> or <strong>restart the system</strong>, because changes done to the PATH variable will take effect the next time you log into the system.</p>
-<p>When you are back on, verify that you can run <strong>MPV</strong>; open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>) and type “<strong>mpv</strong>”.</p>
-<p>If you get something similar to the following snippet, you are all good.</p>
-<pre>mpv 0.34.0 Copyright © 2000-2021 mpv/MPlayer/mplayer2 projects
- built on Sun Nov  7 20:16:38 +08 2021
-FFmpeg library versions:
-   libavutil       57.7.100
-   libavcodec      59.12.100
-   libavformat     59.8.100
-   libswscale      6.1.100
-   libavfilter     8.16.101
-   libswresample   4.0.100
-FFmpeg version: git-2021-11-06-1728127e
-
-Usage:   mpv [options] [url|path/]filename
-
-Basic options:
- --start=&lt;time&gt;    seek to given (percent, seconds, or hh:mm:ss) position
- --no-audio        do not play sound
- --no-video        do not play video
- --fs              fullscreen playback
- --sub-file=&lt;file&gt; specify subtitle file to use
- --playlist=&lt;file&gt; specify playlist file
-
- --list-options    list all mpv options
- --h=&lt;string&gt;      print options which contain the given string in their name</pre>
-<p>If <strong>mpv</strong> was not found, you just have to go through the PATH modification procedure again.</p>
 </body>
 </html>

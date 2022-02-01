@@ -3,15 +3,16 @@ function help(){
 if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
     echo "Usage: $0 [2/-u]"
 else
-    echo "Usage: $0 [2/-u/--user]"
+    echo "Usage: $0 [2/-u/--root]"
 fi
 echo "
 Available options:
        2   build using python v. 2.x
-      -R   remove (uninstall) pyradio
-  --user   user install (in ~/.local)
+      -R   remove (uninstall) pyradi
+  --root   system wide installation
 
 If no option is used, will build using Python 3
+and will install in your HOME directory
 
 Checking python availability:"
 
@@ -68,10 +69,10 @@ function uninstall(){
     }
     # keep this sudo as to not break lines
     sudo echo 'Uninstalling PyRadio'
-    user=$(which pyradio | grep '\.local')
+    user=$(which pyradio 2>/dev/null| grep '\.local')
     [ -z "$user" ] && {
         echo -n '** Removing executable ... '
-        sudo rm -f `which pyradio` 2>/dev/null
+        sudo rm -f `which pyradio 2>/dev/null` 2>/dev/null
         if [ -d /usr/share/doc/pyradio ];then
             sudo rm -rf /usr/share/doc/pyradio 2>/dev/null
         else
@@ -84,7 +85,7 @@ function uninstall(){
         echo done
     } || {
         echo -n '** Removing executable ... '
-        rm -f `which pyradio` 2>/dev/null
+        rm -f `which pyradio 2>/dev/null` 2>/dev/null
         echo done
         echo -n '** Removing help files ... '
         if [ -d ~/.local/share/doc/pyradio ];then
@@ -188,6 +189,7 @@ function do_exit(){
 TO_PYTHON=3
 TO_PYTHON_FROM_X=''
 NO_DEV=''
+TO_USER=1
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -204,14 +206,18 @@ do
             uninstall
             exit
             ;;
-        --user)
-            TO_USER=1
-            if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
-                echo "Parameter --user not supported on this OS"
-                exit 1
-            fi
+        --root)
+            unset TO_USER
             shift
             ;;
+        # --user)
+        #     TO_USER=1
+        #     if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
+        #         echo "Parameter --user not supported on this OS"
+        #         exit 1
+        #     fi
+        #     shift
+        #     ;;
         2)
             [ -z "${TO_PYTHON_FROM_X}" ] && TO_PYTHON=2
             shift
@@ -296,7 +302,7 @@ then
     [ -z "$TO_USER" ] && {
         echo "***** installing..."
         do_dev
-        sudo python"${TO_PYTHON}" setup.py install
+        sudo python"${TO_PYTHON}" -m pip install .
         if [ $? -eq 0 ]
         then
             [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py
@@ -329,7 +335,7 @@ then
     } || {
         echo "***** installing for user..."
         do_dev
-        python"${TO_PYTHON}" setup.py install --user
+        python"${TO_PYTHON}" -m pip install .
         if [ $? -eq 0 ]
         then
             [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py

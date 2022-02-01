@@ -42,7 +42,6 @@ a:visited{color: SaddleBrown;}
 <!-- vim-markdown-toc Marked -->
 <ul>
 <li><a href="#mplayer-installation">MPlayer installation</a></li>
-<li><a href="#adding-mplayer-to-the-path">Adding MPlayer to the PATH</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p><a href="windows.html">[Back to Build Instructions]</a> <a href="README.html">[Back to README]</a></p>
@@ -53,33 +52,18 @@ a:visited{color: SaddleBrown;}
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> <em>MPlayer</em> provides CPU type dependent builds. In case you select the wrong <em>mplayer</em> build, you will end up connecting to stations but having no sound. If this is the case, please do go back to the download page and get the right build for your system / CPU.</p>
 <p>Extract this directory to whatever place you like and <strong>rename</strong> it to <strong>mplayer</strong>.</p>
 <p>Here comes the tricky part…</p>
-<p>Move the <strong>mplayer</strong> directory to either on of the following locations:</p>
-<ol type="a">
-<li><strong>%USERPROFILE%</strong></p>
-<p>This is actually your “<em>Home</em>” directory.</p>
-<p>Please make a note that you will add “<strong>%USERPROFILE%\mplayer</strong> to PATH.</p></li>
-<li><strong>%APPDATA%\pyradio</strong></p>
-<p>This is (or will be) “<em>PyRadio’s configuration directory</em>”.</p>
-<p>In case the <strong>pyradio</strong> directory does not exit, you just go ahead and create it.</p>
-<p>(Make a note that you will add “<strong>%APPDATA%\pyradio\mplayer</strong> to PATH)</p></li>
-</ol>
+<p>Move the <strong>mplayer</strong> directory to either on of the following locations (<strong>PyRadio</strong> will look for it there, when executed):</p>
+<ul>
+<li><strong>%APPDATA%\pyradio</strong><br />
+This is (or will be) “<em>PyRadio’s configuration directory</em>”.<br />
+In case the “<em>pyradio</em>” directory does not exit, you just go ahead and create it.</p></li>
+<li><strong>%APPDATA%</strong><br />
+This is your “Roaming” folder.</p></li>
+<li><strong>%USERPROFILE%</strong><br />
+This is actually your “<em>Home</em>” directory.</p></li>
+</ul>
 <p>In either case, in order to do that, open an <strong>Explorer File Manager</strong> window, and enter at its location field <strong>%USERPROFILE%</strong> or <strong>%APPDATA%</strong>.</p>
 <p>If you are unsure on how to do that, please refer to the following image (you can ENTER <strong>%USERPROFILE%</strong> or <strong>%APPDATA%</strong> or any other Windows System Variable this way).</p>
 <a href="https://members.hellug.gr/sng/pyradio/appdata.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/appdata.jpg" alt="Navigating to %APPDATA%" /></a>
-<h2 id="adding-mplayer-to-the-path">Adding MPlayer to the PATH <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
-<p>The final step is to add MPlayer to the PATH System Variable.</p>
-<p>Now, you already know the <strong>path string</strong> that has to be added (you have made a note of it in the previous step).</p>
-<p>There’s just one thing to say here: Windows provide a “<em>User variable for User</em>” and a “<em>System variables</em>” section in the “<em>Environment Variables</em>” window.</p>
-<p>Add the <strong>path string</strong> to the “<em>User variables for User</em>” section.</p>
-<p>In order to make the actual addition, please refer to the following image.</p>
-<a href="https://members.hellug.gr/sng/pyradio/path.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/path.jpg" alt="Adding MPlayer to the PATH" /></a>
-<p>After applying the changes you should <strong>log off and back on</strong> or <strong>restart the system</strong>, because changes done to the PATH variable will take effect the next time you log into the system.</p>
-<p>When you are back on, verify that you can run <strong>MPlayer</strong>; open a console (press the <strong>Win</strong> key, type <strong>cmd</strong> and press <strong>ENTER</strong>) and type “<strong>mplayer</strong>”.</p>
-<p>If you get something similar to the following snippet, you are all good.</p>
-<pre>MPlayer Redxii-SVN-r38119-6.2.0 (x86_64) (C) 2000-2018 MPlayer Team
-Using FFmpeg N-92801-g7efe84aebd (2018-12-25 00:44:17 +0100)
-Compiled on 2018-12-25 13:55:17 EST (rev. 1)
-Usage:   mplayer [options] [url|path/]filename</pre>
-<p>If <strong>mplayer</strong> was not found, you just have to go through the PATH modification procedure again.</p>
 </body>
 </html>

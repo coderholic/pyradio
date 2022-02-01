@@ -120,6 +120,25 @@ def find_vlc_on_windows(config_dir=None):
     #            result.append(os.path.join(root, name))
     #return result
 
+def find_mpv_on_windows():
+    for a_path in (
+        os.path.join(os.getenv('APPDATA'), 'pyradio', 'mpv', 'mpv.exe'),
+        os.path.join(os.getenv('APPDATA'), 'mpv', 'mpv.exe'),
+        os.path.join(expanduser("~"), 'mpv', 'mpv.exe')
+    ):
+        if os.path.exists(a_path):
+            return a_path
+    return 'mpv'
+
+def find_mplayer_on_windows():
+    for a_path in (
+        os.path.join(os.getenv('APPDATA'), 'pyradio', 'mplayer', 'mplayer.exe'),
+        os.path.join(os.getenv('APPDATA'), 'mplayer', 'mplayer.exe'),
+        os.path.join(expanduser("~"), 'mplayer', 'mplayer.exe')
+    ):
+        if os.path.exists(a_path):
+            return a_path
+    return 'mplayer'
 
 def info_dict_to_list(info, fix_highlight, max_width):
     max_len = 0
@@ -1524,6 +1543,11 @@ class MpvPlayer(Player):
 
     PLAYER_NAME = 'mpv'
     PLAYER_CMD = 'mpv'
+    WIN = False
+    if platform.startswith('win'):
+        WIN = True
+    if WIN:
+        PLAYER_CMD = find_mpv_on_windows()
     NEW_PROFILE_STRING = 'volume=50\n\n'
     if pywhich(PLAYER_CMD):
         executable_found = True
@@ -1951,6 +1975,11 @@ class MpPlayer(Player):
 
     PLAYER_NAME = 'mplayer'
     PLAYER_CMD = 'mplayer'
+    WIN = False
+    if platform.startswith('win'):
+        WIN = True
+    if WIN:
+        PLAYER_CMD = find_mplayer_on_windows()
     NEW_PROFILE_STRING = 'softvol=1\nsoftvol-max=300\nvolstep=1\nvolume=50\n\n'
     if pywhich(PLAYER_CMD):
         executable_found = True

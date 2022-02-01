@@ -107,8 +107,8 @@ This is what you should know before making your decision:
 
 |          |MPV                               | MPlayer                                                        | VLC                                           |
 |----------|----------------------------------|----------------------------------------------------------------|-----------------------------------------------|
-| **Pros** | Fully functional | Fully functional                                               | Easy installation<br>Plays almost all streams |
-| **Cons** | Extra steps to install | Extra steps to install<br>May not play all streams (e.g. m3u8) | Titles update is not consistent (if any)    |
+| **Pros** | Fully functional | Fully functional                                               | Plays almost all streams |
+| **Cons** | - | May not play all streams (e.g. m3u8) | Titles update is not consistent (if any)    |
 
 
 #### MPV installation

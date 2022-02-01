@@ -5084,7 +5084,7 @@ class PyRadio(object):
         elif char == ord('P') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
             self._reset_status_bar_right()
-            self._goto_playing_station
+            self._goto_playing_station()
             return
 
         elif self.ws.operation_mode == self.ws.NOT_IMPLEMENTED_YET_MODE:
@@ -6443,7 +6443,6 @@ class PyRadio(object):
                         elif self._cnf.browsing_station_service:
                             ''' go back to playlist history '''
                             if self._cnf.online_browser.is_config_dirty():
-                                logger.error('DE \n\nonline config is dirty\n\n')
                                 self._ask_to_save_browser_config_to_exit()
                             else:
                                 self._open_playlist_from_history()
@@ -6474,10 +6473,8 @@ class PyRadio(object):
                                 reset_playing=False
                             )
                         self.ctrl_c_handler(0,0)
-                        logger.error('RETURN -1')
                         return -1
                 else:
-                    logger.error('\n\nRETURN\n\n')
                     return
 
             if char in (curses.KEY_DOWN, ord('j')):
