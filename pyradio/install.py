@@ -492,7 +492,10 @@ class PyRadioUpdate(object):
                 print('Please report this at http://github.com/coderholic/pyradio/issues\n')
                 sys.exit(1)
 
-    def update_or_uninstall_on_windows(self, mode='update'):
+    def update_or_uninstall_on_windows(self, mode='update', from_pyradio=False):
+        # Params:
+        #       mode:           the type of zip file to download
+        #       from_pyradio:   True if executed by "pyradio -d"
         params = ('', '--sng-master', '--sng-devel', '--devel', '--master')
         isRunning()
         ''' Creates BAT file to update or uninstall PyRadio on Windows'''
@@ -506,10 +509,17 @@ class PyRadioUpdate(object):
         else:
             bat = os.path.join(self._dir, 'uninstall.bat')
             os.system('CLS')
-            # PyRadioUpdateOnWindows.print_uninstall_bat_created()
+            if from_pyradio:
+                PyRadioUpdateOnWindows.print_uninstall_bat_created()
 
         if self._package == 0:
             if self.ZIP_DIR[0].endswith('-'):
+                try:
+                    if VERSION == '':
+                        VERSION = get_github_tag()
+                except:
+                    VERSION = get_github_tag()
+                # print('VERSION = "{}"'.format(VERSION))
                 self.ZIP_URL[0] = self.ZIP_URL[0] + VERSION + '.zip'
                 self.ZIP_DIR[0] += VERSION
         try:
@@ -538,6 +548,9 @@ class PyRadioUpdate(object):
                     else:
                         b.write(self._python_exec.python + ' uninstall.py --do-uninstall ' + params[self._package] + '\n')
                     b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
+                    # print('self._dir = "{}"'.format(self._dir))
+                    # print('self._package = "{}"'.format(self._package))
+                    # print('self.ZIP_DIR = "{}"'.format(self.ZIP_DIR))
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
                     b.write('devel\\build_install_pyradio.bat -u\n')
                     b.write('GOTO endofscript\n')

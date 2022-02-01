@@ -190,7 +190,10 @@ def shell():
                     package=package,
                     python_version_to_use=python_version_to_use
                 )
-                upd.update_or_uninstall_on_windows(mode='update-open')
+                upd.update_or_uninstall_on_windows(
+                    mode='update-open',
+                    from_pyradio=True
+                )
             sys.exit()
 
         if args.uninstall:
@@ -206,7 +209,10 @@ def shell():
                     package=package,
                     python_version_to_use=python_version_to_use
                 )
-                upd.update_or_uninstall_on_windows(mode='uninstall-open')
+                upd.update_or_uninstall_on_windows(
+                    mode='uninstall-open',
+                    from_pyradio=True
+                )
             sys.exit()
 
         ''' check conflicting parameters '''
