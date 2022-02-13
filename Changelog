@@ -1,4 +1,8 @@
-2022-0213 s-n-g
+2022-02-14 s-n-g
+    * version 0.8.9.14 (0.9-beta11)
+    * fixing typo in player.py
+
+2022-02-13 s-n-g
     * version 0.8.9.13 (0.9-beta10)
     * fixing #148
     * fixing a potential psutil crash

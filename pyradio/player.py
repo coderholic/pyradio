@@ -1121,7 +1121,7 @@ class Player(object):
 
         a_data = args[0]
         stop = args[1]
-        enable_crash_detection_function = [2]
+        enable_crash_detection_function = args[2]
         if b'"icy-title":"' in a_data:
             if version_info > (3, 0):
                 title = a_data.split(b'"icy-title":"')[1].split(b'"}')[0]
