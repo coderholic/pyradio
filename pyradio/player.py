@@ -17,13 +17,21 @@ except:
     pass
 if platform.startswith('win'):
     import win32pipe, win32file, pywintypes
-
 try:
     from urllib import unquote
 except:
     from urllib.parse import unquote
-from .cjkwrap import wrap
-from .encodings import get_encodings
+
+''' In case of import from win.py '''
+try:
+    from .cjkwrap import wrap
+except:
+    pass
+''' In case of import from win.py '''
+try:
+    from .encodings import get_encodings
+except:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +128,25 @@ def find_vlc_on_windows(config_dir=None):
     #            result.append(os.path.join(root, name))
     #return result
 
+def find_mpv_on_windows():
+    for a_path in (
+        os.path.join(os.getenv('APPDATA'), 'pyradio', 'mpv', 'mpv.exe'),
+        os.path.join(os.getenv('APPDATA'), 'mpv', 'mpv.exe'),
+        os.path.join(expanduser("~"), 'mpv', 'mpv.exe')
+    ):
+        if os.path.exists(a_path):
+            return a_path
+    return 'mpv'
+
+def find_mplayer_on_windows():
+    for a_path in (
+        os.path.join(os.getenv('APPDATA'), 'pyradio', 'mplayer', 'mplayer.exe'),
+        os.path.join(os.getenv('APPDATA'), 'mplayer', 'mplayer.exe'),
+        os.path.join(expanduser("~"), 'mplayer', 'mplayer.exe')
+    ):
+        if os.path.exists(a_path):
+            return a_path
+    return 'mplayer'
 
 def info_dict_to_list(info, fix_highlight, max_width):
     max_len = 0
@@ -620,7 +647,7 @@ class Player(object):
                                     self.GET_AUDIO_CODEC_NAME):
                                 response = self._send_mpv_command( a_cmd, return_response=True)
                                 if response:
-                                    self._get_mpv_metadata(response, lambda: False)
+                                    self._get_mpv_metadata(response, lambda: False, enable_crash_detection_function)
                                     self.info_display_handler()
                                 else:
                                     if logger.isEnabledFor(logging.INFO):
@@ -787,7 +814,7 @@ class Player(object):
                     if a_data:
                         all_data = a_data.split(b'\n')
                         for n in all_data:
-                            if self._get_mpv_metadata(n, stop):
+                            if self._get_mpv_metadata(n, stop, enable_crash_detection_function):
                                 self._request_mpv_info_data(sock)
                             else:
                                 try:
@@ -1094,7 +1121,7 @@ class Player(object):
 
         a_data = args[0]
         stop = args[1]
-
+        enable_crash_detection_function = [2]
         if b'"icy-title":"' in a_data:
             if version_info > (3, 0):
                 title = a_data.split(b'"icy-title":"')[1].split(b'"}')[0]
@@ -1421,18 +1448,21 @@ class Player(object):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('PID {} does not exist...'.format(pid))
             return
-        children = parent.children(recursive=True)
         try:
-            os.kill(parent.pid, 9)
-        except:
-            pass
-        for child in children:
+            children = parent.children(recursive=True)
             try:
-                os.kill(child.pid, 9)
+                os.kill(parent.pid, 9)
             except:
                 pass
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('PID {} (and its children)  killed...'.format(pid))
+            for child in children:
+                try:
+                    os.kill(child.pid, 9)
+                except:
+                    pass
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('PID {} (and its children)  killed...'.format(pid))
+        except psutil.NoSuchProcess:
+            pass
 
     def _killall(self, name):
         if name:
@@ -1524,6 +1554,11 @@ class MpvPlayer(Player):
 
     PLAYER_NAME = 'mpv'
     PLAYER_CMD = 'mpv'
+    WIN = False
+    if platform.startswith('win'):
+        WIN = True
+    if WIN:
+        PLAYER_CMD = find_mpv_on_windows()
     NEW_PROFILE_STRING = 'volume=50\n\n'
     if pywhich(PLAYER_CMD):
         executable_found = True
@@ -1951,6 +1986,11 @@ class MpPlayer(Player):
 
     PLAYER_NAME = 'mplayer'
     PLAYER_CMD = 'mplayer'
+    WIN = False
+    if platform.startswith('win'):
+        WIN = True
+    if WIN:
+        PLAYER_CMD = find_mplayer_on_windows()
     NEW_PROFILE_STRING = 'softvol=1\nsoftvol-max=300\nvolstep=1\nvolume=50\n\n'
     if pywhich(PLAYER_CMD):
         executable_found = True
