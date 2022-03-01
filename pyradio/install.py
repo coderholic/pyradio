@@ -6,8 +6,9 @@ import zipfile
 import platform
 import json
 from time import sleep
+import site
 try:
-    from os.path import curdir
+    from os.path import curdir, exists
     import ctypes
     import win32api
     import win32ui
@@ -77,6 +78,40 @@ def print_python3():
 
 def print_trying_to_install():
     print('                              trying to install for')
+
+def find_pyradio_win_exe():
+    ''' find pyradio EXE files
+
+        Return (system_exe, user_exe)
+    '''
+    exe = [None, None]
+    for a_path in site.getsitepackages():
+        if a_path.split(os.sep)[-1].startswith('Python'):
+            py_with_ver = a_path.split(os.sep)[-1]
+        an_exe = os.path.join(a_path, 'Scripts' , 'pyradio.exe')
+        if os.path.exists(an_exe):
+            exe[0] = an_exe
+    an_exe = os.path.join(site.getuserbase(), py_with_ver, 'Scripts' , 'pyradio.exe')
+    # print('an_exe: {}'.format(an_exe))
+    if os.path.exists(an_exe):
+        exe[1] = an_exe
+    # print('exe: {}'.format(exe))
+    return exe
+
+def fix_pyradio_win_exe():
+    exe = find_pyradio_win_exe()
+    if exe[0]:
+        a_path = os.getenv('PROGRAMFILES(x86)')
+        if a_path:
+            exe[0] = exe[0].replace(a_path, '%PROGRAMFILES(x86)%')
+        a_path = os.getenv('PROGRAMFILES')
+        if a_path:
+            exe[0] = exe[0].replace(a_path, '%PROGRAMFILES%')
+    if exe[1]:
+        a_path = os.getenv('APPDATA')
+        if a_path:
+            exe[1] = exe[1].replace(a_path, '%APPDATA%')
+    return exe
 
 def is_pyradio_user_installed():
     if platform.system().lower().startswith('darwin'):
@@ -492,7 +527,7 @@ class PyRadioUpdate(object):
                 print('Please report this at http://github.com/coderholic/pyradio/issues\n')
                 sys.exit(1)
 
-    def update_or_uninstall_on_windows(self, mode='update', from_pyradio=False):
+    def update_or_uninstall_on_windows(self, mode='update', from_pyradio=False, first_install=False):
         # Params:
         #       mode:           the type of zip file to download
         #       from_pyradio:   True if executed by "pyradio -d"
@@ -526,9 +561,9 @@ class PyRadioUpdate(object):
             with open(bat, "w") as b:
                 b.write('@ECHO OFF\n')
                 b.write('CLS\n')
-                b.write('python -m pip install requests --upgrade 1>NUL 2>NUL\n')
+                b.write('python -m pip install --upgrade requests 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
-                b.write('python -m pip install wheel --upgrade 1>NUL 2>NUL\n')
+                b.write('python -m pip install --upgrade wheel 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 # b.write('PAUSE\n')
                 if mode.startswith('update'):
@@ -540,6 +575,10 @@ class PyRadioUpdate(object):
                     b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
                     b.write('devel\\build_install_pyradio.bat -U\n')
+                    if first_install:
+                        b.write('CD pyradio\n')
+                        b.write('python -c "from win import download_player; download_player(package=0, do_not_exit=True)"\n')
+                        b.write('CD ..\n')
                     b.write('GOTO endofscript\n')
                 else:
                     b.write('COPY "{}" uninstall.py 1>NUL\n'.format(os.path.abspath(__file__)))
@@ -839,6 +878,9 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
 
 if __name__ == '__main__':
+    exe = find_pyradio_win_exe()
+    print(exe)
+    sys.exit()
     # l=get_github_long_description(use_sng_repo=True)
     # print(l)
     # print(get_devel_version())
@@ -987,21 +1029,28 @@ if __name__ == '__main__':
 
     ''' Installation!!! '''
     if platform.system().lower().startswith('win'):
+        exe = find_pyradio_win_exe()
+        first_install = False
+        if exe == [None, None]:
+            first_install = True
         if not args.force:
+            # is pyradio.exe in PATH
             ret = subprocess.call('pyradio -h 1>NUL 2>NUL', shell=True)
-            if ret == 0:
-                print('PyRadio is already installed.\n')
-                sys.exit(1)
+            if ret == 0 or not first_install:
+                    print('PyRadio is already installed.\n')
+                    sys.exit(1)
         for a_module in (
                 'windows-curses',
                 'pywin32',
                 'dnspython',
                 'requests',
                 'psutil',
+                'patool',
+                'pyunpack',
                 'wheel',
         ):
             print('Checking module: ' + a_module + ' ...')
-            ret = subprocess.call('python -m pip install ' + a_module + ' --upgrade',
+            ret = subprocess.call('python -m pip install --upgrade ' + a_module,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL)
             if ret != 0:
@@ -1024,12 +1073,15 @@ Then try installing PyRadio again
                 else:
                     print('Please make sure your internet connection is up and try again')
                 sys.exit(1)
+
         uni = PyRadioUpdateOnWindows(
             package=package,
             github_long_description=github_long_description,
             python_version_to_use=python_version_to_use
         )
-        uni.update_or_uninstall_on_windows(mode='update-open')
+        uni.update_or_uninstall_on_windows(
+            mode='update-open',
+            first_install=first_install)
         while not os.path.isfile(os.path.join(uni._dir, 'update.bat')):
             pass
         os.chdir(uni._dir)

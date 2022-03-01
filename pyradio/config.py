@@ -1138,6 +1138,12 @@ class PyRadioConfig(PyRadioStations):
     PROGRAM_UPDATE = False
     current_pyradio_version = None
 
+    ''' Windows manage players trigger '''
+    MANAGE_PLAYERS = False
+
+    ''' Windows print EXE location trigger '''
+    PRINT_PATHS = False
+
     def __init__(self):
         self.backup_player_params = None
         self._profile_name = 'pyradio'
@@ -1432,7 +1438,7 @@ class PyRadioConfig(PyRadioStations):
                 if so, revision will be shown along with the version
             '''
             # if revision is not 0
-            git_description = ''
+            git_description = 'PyRadio 0.8.9.14'
             if git_description:
                 if git_description.endswith('-git') or \
                         git_description.endswith('-sng') or \

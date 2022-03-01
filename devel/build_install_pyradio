@@ -1,15 +1,11 @@
 #!/bin/bash
 function help(){
-if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
-    echo "Usage: $0 [2/-u]"
-else
-    echo "Usage: $0 [2/-u/--root]"
-fi
+echo "Usage: $0 [2/-R/--system]"
 echo "
 Available options:
-       2   build using python v. 2.x
-      -R   remove (uninstall) pyradi
-  --root   system wide installation
+         2   build using python v. 2.x
+        -R   remove (uninstall) pyradi
+  --system   system wide installation
 
 If no option is used, will build using Python 3
 and will install in your HOME directory
@@ -59,6 +55,17 @@ done < /tmp/pyradio-delete.$$
 rm -f /tmp/pyradio-uninstall.$$ /tmp/pyradio-delete.$$ 2>/dev/null
 }
 
+
+function remove_pip_install(){
+    if [ -z "$TO_USER" ]; then
+        sudo python -m pip uninstall -y pyradio 2>/dev/null 1>&2
+        sudo python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    else
+        python -m pip uninstall -y pyradio 2>/dev/null 1>&2
+        python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    fi
+}
+
 function uninstall(){
     local user
     [ -z "$1" ] && {
@@ -99,6 +106,7 @@ function uninstall(){
     }
 #set -x
     remove_paths
+    remove_pip_install
     echo "PyRadio successfully uninstalled"
 }
 
@@ -206,18 +214,10 @@ do
             uninstall
             exit
             ;;
-        --root)
+        --system)
             unset TO_USER
             shift
             ;;
-        # --user)
-        #     TO_USER=1
-        #     if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
-        #         echo "Parameter --user not supported on this OS"
-        #         exit 1
-        #     fi
-        #     shift
-        #     ;;
         2)
             [ -z "${TO_PYTHON_FROM_X}" ] && TO_PYTHON=2
             shift

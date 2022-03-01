@@ -38,7 +38,7 @@ from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnec
 from .themes import *
 from .cjkwrap import cjklen
 from . import player
-from .install import version_string_to_list, get_github_tag
+from .install import version_string_to_list, get_github_tag, fix_pyradio_win_exe
 from .html_help import HtmlHelp
 from .browser import RadioBrowserConfig, RadioBrowserConfigWindow
 
@@ -374,6 +374,8 @@ class PyRadio(object):
                 self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG: self._ask_to_save_browser_config_from_config,
                 self.ws.SERVICE_SERVERS_UNREACHABLE: self._print_servers_unreachable,
                 self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT: self._ask_to_save_browser_config_to_exit,
+                self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_manage_players,
+                self.ws.WIN_PRINT_EXE_LOCATION_MODE: self._show_print_exe_paths,
                 }
 
         ''' list of help functions '''
@@ -1871,6 +1873,40 @@ class PyRadio(object):
         #arg[1].release()
         self.refreshBody()
 
+    def _show_manage_players(self):
+        ''' show message on Windows '''
+        txt = '''
+            |Players management |enabled|!
+
+            |You will be able to manage installed players
+            |after you exit |PyRadio|.
+        '''
+        self._show_help(txt,
+                        mode_to_set=self.ws.WIN_MANAGE_PLAYERS_MSG_MODE,
+                        caption=' Players Management ')
+
+    def _show_print_exe_paths(self):
+        ''' show message on Windows '''
+        txt = '''
+            {}
+
+            |Use |Shift| and |Left Mouse Button| to select the path, and
+            |then press |ENTER| to copy it to the clipboard.
+
+            |For your convinience, the path file will also be printed
+            |in the terminal after you exit |PyRadio|.
+        '''
+        exe = fix_pyradio_win_exe()
+        if exe[0] and exe[1]:
+            add_msg = '|PyRadio EXE files:\n__|System:\n____{0}__|User:\n____{1}'.format(exe[0], exe[1])
+        else:
+            add_msg = '|PyRadio EXE file:\n__{}'.format(exo[0] if exe[0] else exe[1])
+
+        self._show_help(txt.format(add_msg),
+                        prompt=' Press q or ESCAPE to hide... ',
+                        mode_to_set=self.ws.WIN_PRINT_EXE_LOCATION_MODE,
+                        caption=' Exe Location ')
+
     def _show_radio_browser_search_help(self):
         txt = '''Tab| / |Sh-Tab     |Go to next / previous field.
                  j|, |Up| / |k|, |Down  |Go to next / previous field vertivally.
@@ -1955,7 +1991,9 @@ class PyRadio(object):
                  <n>^U|,|<n>^D      |Move station |U|p / |D|own.
                  ||_________________|If a |jump tag| exists, move it there.
                  !Searching
-                 /| / |n| / |N        |Search, go to next / previous result.'''
+                 /| / |n| / |N        |Search, go to next / previous result.
+                 !Manage players (Windows)
+                 F8               |Manage players at exit.'''
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_2,
                         reset_metrics=False)
@@ -4740,6 +4778,10 @@ class PyRadio(object):
         # if self._limited_width_mode:
         #     return
 
+        if self.ws.operation_mode == self.ws.WIN_PRINT_EXE_LOCATION_MODE:
+            if char in (ord('q'), curses.KEY_EXIT, 27):
+                self.ws.close_window()
+
         if self._limited_height_mode or self._limited_width_mode:
             self._handle_limited_height_keys(char)
             return
@@ -6495,7 +6537,21 @@ class PyRadio(object):
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if self.player.isPlaying() and char in (curses.ascii.SO, curses.KEY_NEXT):
+                if char == curses.KEY_F8 and platform.startswith('win'):
+                    ''' manage players on Windows
+                        will present them after curses end
+                    '''
+                    self._cnf.MANAGE_PLAYERS = True
+                    self._show_manage_players()
+
+                elif char == curses.KEY_F9 and platform.startswith('win'):
+                    ''' show exe location on Windows
+                        will present them after curses end
+                    '''
+                    self._cnf.PRINT_PATHS = True
+                    self._show_print_exe_paths()
+
+                elif self.player.isPlaying() and char in (curses.ascii.SO, curses.KEY_NEXT):
                     self._reset_status_bar_right()
                     self._play_next_station()
                     return

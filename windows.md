@@ -19,7 +19,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [MPlayer installation](#mplayer-installation)
         * [VLC installation](#vlc-installation)
     * [PyRadio installation](#pyradio-installation)
-            * [Fresh python installation?](#fresh-python-installation?)
+        * [Fresh python installation?](#fresh-python-installation?)
         * [Final steps](#final-steps)
         * [Cleaning up](#cleaning-up)
 * [Updating PyRadio](#updating-pyradio)
@@ -141,7 +141,7 @@ Then type:
     python install.py
 
 
-##### Fresh python installation?
+#### Fresh python installation?
 
 If you have just installed **Pyhon**, you will probably end up with the following message and the installation script will terminate.
 
@@ -165,29 +165,23 @@ in order to complete the installation.
 
 #### Final steps
 
-If the installation is successful, you will get something similar to the following snippet:
+If the installation is successful, you will get something similar to the following image:
 
-    ...
-    Installing pyradio-script.py script to C:\Users\spiros\AppData\Local\Programs\Python\Python37\Scripts
-    Installing pyradio.exe script to C:\Users\spiros\AppData\Local\Programs\Python\Python37\Scripts
+![Installation image](https://members.hellug.gr/sng/pyradio/win-install.jpg)
 
-    Installed c:\users\spiros\appdata\local\programs\python\python37\lib\site-packages\pyradio-0.8.9-py3.7.egg
-    Processing dependencies for pyradio==0.8.9
-    Finished processing dependencies for pyradio==0.8.9
+**PyRadio** has been installed preforming a "*user installation*", which means that the program is available to your current user only.
 
-    *** HTML files copyed to "C:\Users\spiros\AppData\Roaming\pyradio\help"
-    === Player "mplayer" found in "C:\Users\spiros\mplayer"
-    === Player "mplayer" found in PATH
-    *** Installing Dekstop Shortcut
+Furthermore, if the WARNING shown in the previous image has been shown to you, the executable of the program is not in your PATH (you cannot just open a console and type "*pyradio*" to execute it; you have to use the Ison/Shortcut created on your Desktop to do that).
 
+Now, you can just call it a day; you can run **PyRadio** from its Desktop Shortcut.
 
-    Installation successful!
+If you want to be able to run it from a console, you have to add the path shown to you to your PATH variable. To do that, just have a look at the following image:
 
+![aaa](https:/members.hellug.gr/sng/pyradio/path.jpg)
 
-Finally, you can type **pyradio** and enjoy!
+**Note:** If you are having a problem finding the path to add to your PATH variable, just copy the one found after right-clicking on the **PyRadio** icon on your Desktop and selection "**Properties**".
 
-**Note:** For your convenience, the installation batch file has tried to installed a shortcut on your Desktop. You can use it to launch **PyRadio** and optionally modify it (change font size, window dimensions, etc). If it's not there, you can just copy it from the "*help*" directory of the **Explorer File Manager** which will open after executing **pyradio -ocd**.
-
+Finally, please keep in mind that, if you upgrade your **Python** version, you will have to update **PyRadio**'s path in your PATH variable (since you will have to reinstall **PyRadio** anyway).
 
 #### Cleaning up
 
@@ -212,6 +206,7 @@ In any case, you can perform the update at any time, using the command:
 
     pyradio -U
 
+**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **Pyradio**'s icon on your Desktop and copy the command found there. Paste it on a console, add a "*-U*" and you are good to go.
 
 ### Updating a pre 0.8.9 installation
 
@@ -235,6 +230,8 @@ To uninstall **PyRadio** you just have to open a console window and execute the 
 
 You just double click on the batch file (called **uninstall.bat**) to complete the procedure.
 
+**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **Pyradio**'s icon on your Desktop and copy the command found there. Paste it on a console, add a "*-R*" and you are good to go.
+
 ## Reporting bugs
 
 When a bug is found, please do report it by [opening an issue at github](https://github.com/coderholic/pyradio/issues).
@@ -253,4 +250,5 @@ Then try to reproduce the bug and exit **PyRadio**.
 
 Finally, include the file produced in your report.
 
+**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **Pyradio**'s icon on your Desktop and copy the command found there. Paste it on a console, add a "*-d*" and you are good to go.
 

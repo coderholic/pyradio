@@ -92,6 +92,9 @@ def shell():
     parser.add_argument('-lp', '--list-player-parameters', default=None,
                         action='store_true',
                         help='List extra players parameters.')
+    if platform.startswith('win'):
+        parser.add_argument('--exe', action='store_true', default=False,
+                            help='Show EXE file location (Windows only).')
     parser.add_argument('-U', '--update', action='store_true',
                         help='Update PyRadio.')
     if platform.startswith('linux'):
@@ -133,6 +136,11 @@ def shell():
             if pyradio_config.distro != 'None':
                 print('Distribution: {}'.format(pyradio_config.distro))
             sys.exit()
+
+        if platform.startswith('win'):
+            if args.exe:
+                print_exe_paths()
+                sys.exit()
 
         if args.toggle_load_last_playlist:
             if pyradio_config.locked:
@@ -190,10 +198,7 @@ def shell():
                     package=package,
                     python_version_to_use=python_version_to_use
                 )
-                upd.update_or_uninstall_on_windows(
-                    mode='update-open',
-                    from_pyradio=True
-                )
+                upd.update_or_uninstall_on_windows(mode='update-open')
             sys.exit()
 
         if args.uninstall:
@@ -438,7 +443,17 @@ def shell():
 
         ''' curses is off '''
         if pyradio.setup_return_status:
-            if pyradio_config.PROGRAM_UPDATE:
+            if pyradio_config.PRINT_PATHS and platform.startswith('win'):
+                ''' print exe path '''
+                print('')
+                print_exe_paths()
+
+            if pyradio_config.MANAGE_PLAYERS and platform.startswith('win'):
+                ''' manage players'''
+                from .win import install_player
+                install_player()
+
+            elif pyradio_config.PROGRAM_UPDATE:
                 if platform.startswith('win'):
                     upd = PyRadioUpdateOnWindows()
                     upd.update_or_uninstall_on_windows(mode='update-open')
@@ -536,6 +551,25 @@ def get_format_string(stations):
     format_string = '{0:>' + str(num) + '.' + str(num) + 's}. ' + '{1:' + str(len0) + '.' + str(len0) + 's} | {2:' + str(len1) + '.' + str(len1) + 's} | {3}'
     header_format_string = '{0:' + str(len0+num+2) + '.' + str(len0+num+2) + 's} | {1:' + str(len1) + '.' + str(len1) + 's} | {2}'
     return header_format_string, format_string
+
+def print_exe_paths():
+    ''' Windows only
+    '''
+    from .install import fix_pyradio_win_exe
+    exe = fix_pyradio_win_exe()
+    if exe[0] and exe[1]:
+        print('PyRadio EXE files:')
+        print('  System:\n    {}'.format(exe[0]))
+        print('  User:\n    {}'.format(exe[1]))
+    else:
+        print('PyRadio EXE file:')
+        if exe[0]:
+            print('  {}'.format(exe[0]))
+        else:
+            print('  {}'.format(exe[1]))
+    print('\nPress any key to exit...', end='', flush=True)
+    from msvcrt import getwch
+    getwch()
 
 if __name__ == '__main__':
     shell()

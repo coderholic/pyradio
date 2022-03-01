@@ -35,33 +35,48 @@ IF "%version%" == "6.0" ( GOTO win7exit )
 IF "%1"=="" (
     CLS
     ECHO Installing / Updating python modules
-    pip install windows-curses --upgrade 1>NUL 2>NUL
+    pip install --upgrade windows-curses 1>NUL 2>NUL
     if %ERRORLEVEL% == 1 (
         set ERRPKG=windows-curses
         GOTO piperror
     )
-    pip install pywin32 --upgrade 1>NUL 2>NUL
+    pip install --upgrade pywin32 1>NUL 2>NUL
     if %ERRORLEVEL% == 1 (
         set ERRPKG=pywin32
         GOTO piperror
     )
-    pip install requests --upgrade 1>NUL 2>NUL
+    pip install --upgrade requests 1>NUL 2>NUL
     if %ERRORLEVEL% == 1 (
         set ERRPKG=requests
         GOTO piperror
     )
-    pip install dnspython --upgrade 1>NUL 2>NUL
+    pip install --upgrade dnspython 1>NUL 2>NUL
     if %ERRORLEVEL% == 1 (
         set ERRPKG=dnspython
         GOTO piperror
     )
-    pip install psutil --upgrade 1>NUL 2>NUL
+    pip install --upgrade psutil 1>NUL 2>NUL
     if %ERRORLEVEL% == 1 (
         set ERRPKG=psutil
         GOTO piperror
     )
+    pip install --upgrade patool 1>NUL 2>NUL
+    if %ERRORLEVEL% == 1 (
+        set ERRPKG=patool
+        GOTO piperror
+    )
+    pip install --upgrade psutil 1>NUL 2>NUL
+    if %ERRORLEVEL% == 1 (
+        set ERRPKG=pyunpack
+        GOTO piperror
+    )
+    pip install --upgrade wheel 1>NUL 2>NUL
+    if %ERRORLEVEL% == 1 (
+        set ERRPKG=wheel
+        GOTO piperror
+    )
 )
-
+goto START
 IF '%1'=='ELEV' ( GOTO START ) ELSE ( ECHO Running elevated in a different window)
 ECHO >>DOPAUSE
 
@@ -149,7 +164,7 @@ REM ECHO ###############################################
 REM GOTO endofscript
 
 :install
-%PROGRAM% -m pip install . 2>NUL
+%PROGRAM% -m pip install .
 IF %ERRORLEVEL% == 0 GOTO installhtml
 :installationerror
 ECHO.
@@ -165,7 +180,7 @@ GOTO endofscript
 
 :installhtml
 IF "%NO_DEV%"=="1" (
-    DEL DEV
+    DEL DEV 1>NUL 2>NUL
     CD pyradio
     DEL config.py
     RENAME config.py.dev config.py
@@ -181,9 +196,19 @@ python devel\reg.py
 ECHO *** HTML files copyed to "%APPDATA%\pyradio\help"
 
 
+:: Update lnk file
+CD pyradio
+python -c "from win import create_pyradio_link; create_pyradio_link()"
+CD ..
+
 :: Install lnk file
-IF NOT EXIST %DESKTOP%\PyRadio.lnk GOTO linkcopy
-ECHO === Dekstop Shortcut already exists
+ECHO *** Installing Dekstop Shortcut
+COPY /Y %APPDATA%\pyradio\help\*.lnk %DESKTOP% >NUL
+
+:: Clean up
+CD pyradio
+python -c "from win import clean_up; clean_up()"
+CD ..
 GOTO toend
 
 :piperror
@@ -211,12 +236,6 @@ ECHO     Then try installing PyRadio again
 ECHO.
 ECHO.
 GOTO endnopause
-
-:linkcopy
-ECHO *** Installing Dekstop Shortcut
-COPY %APPDATA%\pyradio\help\*.lnk %DESKTOP% >NUL
-GOTO toend
-
 
 :displayhelp
 ECHO Build and install PyRadio
