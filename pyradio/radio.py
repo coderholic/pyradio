@@ -4781,6 +4781,8 @@ class PyRadio(object):
         if self.ws.operation_mode == self.ws.WIN_PRINT_EXE_LOCATION_MODE:
             if char in (ord('q'), curses.KEY_EXIT, 27):
                 self.ws.close_window()
+                self.refreshBody()
+            return
 
         if self._limited_height_mode or self._limited_width_mode:
             self._handle_limited_height_keys(char)

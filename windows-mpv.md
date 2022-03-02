@@ -27,22 +27,15 @@ Extract this archive to whatever place you like and **rename** it to **mpv**.
 Here comes the tricky part...
 
 
-Move the **mpv** directory to either on of the following locations (**PyRadio** will look for it there, when executed):
+Move the **mpv** directory to the following location (**PyRadio** will look for it there, when executed):
 
 - **%APPDATA%\\pyradio** \
 This is (or will be) "*PyRadio's configuration directory*". \
 In case the "*pyradio*" directory does not exit, you just go ahead and create it.
 
-- **%APPDATA%** \
-This is your "Roaming" folder.
+In order to do that, open an **Explorer File Manager** window, and enter "**%APPDATA%" at its location field and press ENTER.
 
-- **%USERPROFILE%** \
-This is actually your "*Home*" directory.
-
-
-In either case, in order to do that, open an **Explorer File Manager** window, and enter at its location field **%USERPROFILE%** or **%APPDATA%**.
-
-If you are unsure on how to do that, please refer to the following image (you can ENTER **%USERPROFILE%** or **%APPDATA%** or any other Windows System Variable this way).
+If you are unsure on how to do that, please refer to the following image (you can ENTER **%APPDATA%** or any other Windows System Variable this way).
 
 ![Navigating to %APPDATA%](https://members.hellug.gr/sng/pyradio/appdata.jpg)
 

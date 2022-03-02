@@ -15,15 +15,16 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [Installing Python](#installing-python)
         * [Verifying the installation](#verifying-the-installation)
     * [Player installation](#player-installation)
-        * [MPV installation](#mpv-installation)
-        * [MPlayer installation](#mplayer-installation)
+        * [MPV or MPlayer installation](#mpv-or-mplayer-installation)
         * [VLC installation](#vlc-installation)
     * [PyRadio installation](#pyradio-installation)
         * [Fresh python installation?](#fresh-python-installation?)
         * [Final steps](#final-steps)
+        * [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe)
         * [Cleaning up](#cleaning-up)
 * [Updating PyRadio](#updating-pyradio)
     * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
+* [Removing an old-style installation](#removing-an-old-style-installation)
 * [Uninstalling PyRadio](#uninstalling-pyradio)
 * [Reporting bugs](#reporting-bugs)
 
@@ -47,9 +48,9 @@ First of all, let me tell you that if you are still running Windows XP, you can 
 
 **PyRadio** on *Linux* (its main target platform) can use any of three players [MPV](https://mpv.io/), [MPlayer](http://www.mplayerhq.hu/design7/news.html) and [VLC](https://www.videolan.org/vlc/); and this is also the case on *Windows*!
 
-[MPV](https://mpv.io/) is the preferred player for *Windows*. Its installation takes a few extra steps, but once installed, it's super reliable due to its using "*Named Pipes*" (in a client-server paradigm) for its communication with the client application (in this case **PyRadio**.)
+[MPV](https://mpv.io/) is the preferred player for *Windows* and will be automatically installed on a fresh **PyRadio** installation.
 
-Installing [MPlayer](http://www.mplayerhq.hu/) also takes a couple of extra steps, and you may find that some streams (e.g. m3u8) may not be playable. Furthermore, special care has to be taken in order to be able to save the volume of the player.
+Installing [MPlayer](http://www.mplayerhq.hu/) takes a couple of extra steps, and you may find that some streams (e.g. m3u8) may not be playable. Furthermore, special care has to be taken in order to be able to save the volume of the player.
 
 [VLC](https://www.videolan.org/vlc/) is much easier to install, but song titles' updating may not be 100% consistent (if any). If this is not a deal breaker for you, then just go on and use [VLC](https://www.videolan.org/vlc/) as **PyRadio**'s player.
 
@@ -101,23 +102,45 @@ If the command could not be found, you have to run the installation again, selec
 
 ### Player installation
 
-It's time to decide which player you want to use, either [MPlayer](http://www.mplayerhq.hu/design7/news.html) or [VLC](https://www.videolan.org/vlc/), or even both of them.
+As already stated [MPV](https://mpv.io) will be automatically installed on a fresh installation.
 
-This is what you should know before making your decision:
+If the user decides to install a different player, he should have the following in mind:
+
 
 |          |MPV                               | MPlayer                                                        | VLC                                           |
 |----------|----------------------------------|----------------------------------------------------------------|-----------------------------------------------|
 | **Pros** | Fully functional | Fully functional                                               | Plays almost all streams |
 | **Cons** | - | May not play all streams (e.g. m3u8) | Titles update is not consistent (if any)    |
 
+#### MPV or MPlayer installation
 
-#### MPV installation
+**PyRadio** provides a helper function to install, update and uninstall [MPV](https://mpv.io) and [MPlayer](http://www.mplayerhq.hu/design7/news.html). To enable this function, just execute **PyRadio** and press "**F8**". Then terminate **PyRadio** and you will be presented with a screen similar to the following one:
 
-If [MPV](https://mpv.io) is your selection, please refer to the [relevant instructions](windows-mpv.md).
+```
+Reading config...
+Reading playlist...
 
-#### MPlayer installation
+Please select an action:
+    1. Update MPV
+    2. Install MPlayer
 
-If [MPlayer](http://www.mplayerhq.hu/) is your selection, please refer to the [relevant instructions](windows-mplayer.md).
+    3. Uninstall MPV
+
+    Note:
+      VLC media player is already installed
+
+Press 1, 2, 3 or q to Cancel:
+```
+
+Press any of the numbers presented to you to execute an action, or press "**q**" to exit.
+
+**Note:** If you already have installed any of these players for a pre **0.8.9.15** installation, you should:
+
+- delete the installed player(s)
+- remove the corresponding entry from your **PATH** variable
+- use only the above funcion to manage players
+
+**Note:** If at some point and for whatever reason you want to perform a manual player installation, just refer to the [relevant instructions for MPV](windows-mpv.md), or the [relevant instructions for MPlayer](windows-mplayer.md).
 
 #### VLC installation
 
@@ -183,6 +206,34 @@ If you want to be able to run it from a console, you have to add the path shown 
 
 Finally, please keep in mind that, if you upgrade your **Python** version, you will have to update **PyRadio**'s path in your PATH variable (since you will have to reinstall **PyRadio** anyway).
 
+
+#### Getting the path to pyradio.exe
+
+In case one has not added the "*Scripts*" path to the **PATH** variable, but has to have the path to the executable of the program (in order to execute it from a console, for example), one can just execute **PyRadio** and press "*F9*". Then the following info will be displayed:
+
+![Pressing F9](https:/members.hellug.gr/sng/pyradio/win-f9.jpg)
+
+After **PyRadio** terminates, the following will be displayed:
+
+```
+Reading config...
+Reading playlist...
+
+PyRadio EXE files:
+  System:
+    %PROGRAMFILES%\Python310\Scripts\pyradio.exe
+  User:
+    %APPDATA%\Python\Python310\Scripts\pyradio.exe
+
+Press any key to exit...
+```
+
+In this example, both a "**System**" and a "**User**" path to **PyRadio** executable is displayed.
+
+This would be the case after installing a version newer than **0.8.9.14** while a version older than **0.8.9.14** is already installed.
+
+If this is your case, please follow the instuctions found in "[Removing an old-style installation](#removing-an-old-style-installation)".
+
 #### Cleaning up
 
 After the installation is completed, there will be some files left on your system, which you may want to remove. These are:
@@ -219,6 +270,22 @@ So, instead of
 do a
 
     python install.py --force
+
+## Removing an old-style installation
+
+If you have an old-style installation (an installation done with a version up to **0.8.9.14**), you should remove the installed files following this procedure.
+
+These files are not used any more, they just clutter your system.
+
+1. Download [delOldInstallation.py](https://raw.githubusercontent.com/coderholic/pyradio/master/devel/delOldInstallation.py) and save it in your HOME directory.
+2. Open an Administrator console window - [example](https://www.windowscentral.com/how-launch-command-prompt-standard-and-admin-windows-10)
+3. Execute the commands:
+
+```
+cd %USERPROFILE%
+python  delOldInstallation.py
+```
+
 
 ## Uninstalling PyRadio
 

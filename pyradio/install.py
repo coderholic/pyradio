@@ -574,6 +574,13 @@ class PyRadioUpdate(object):
                         b.write(self._python_exec.python + ' install.py --do-update ' + params[self._package] + '\n')
                     b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
+
+                    b.write('IF EXIST C:\\Users\\Spiros\\pyradio (\n')
+                    b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\*.py pyradio\n')
+                    b.write('COPY C:\\Users\\Spiros\\pyradio\\devel\\*.bat devel\n')
+                    b.write(')\n')
+
+
                     b.write('devel\\build_install_pyradio.bat -U\n')
                     if first_install:
                         b.write('CD pyradio\n')
@@ -591,7 +598,14 @@ class PyRadioUpdate(object):
                     # print('self._package = "{}"'.format(self._package))
                     # print('self.ZIP_DIR = "{}"'.format(self.ZIP_DIR))
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
+
+                    b.write('IF EXIST C:\\Users\\Spiros\\pyradio (\n')
+                    b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\*.py pyradio\n')
+                    b.write('COPY C:\\Users\\Spiros\\pyradio\\devel\\*.bat devel\n')
+                    b.write(')\n')
+
                     b.write('devel\\build_install_pyradio.bat -u\n')
+                    b.write('PAUSE\n')
                     b.write('GOTO endofscript\n')
                 b.write('ECHO.\n\n')
                 b.write(':downloaderror\n')
@@ -878,15 +892,15 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
 
 if __name__ == '__main__':
-    exe = find_pyradio_win_exe()
-    print(exe)
-    sys.exit()
+    #exe = find_pyradio_win_exe()
+    #print(exe)
+    #sys.exit()
     # l=get_github_long_description(use_sng_repo=True)
     # print(l)
     # print(get_devel_version())
     # sys.exit()
-    print_pyradio_on()
-    print_python3() if PY3 else print_python2()
+    #print_pyradio_on()
+    #print_python3() if PY3 else print_python2()
     # print(get_devel_version())
     # sys.exit()
     from argparse import ArgumentParser, SUPPRESS as SUPPRESS
