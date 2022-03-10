@@ -2666,9 +2666,9 @@ class PyRadio(object):
         txt = '''
             Non-ASCII characters editing is |not supported!|
 
-            You running |PyRadio| on |Python 2|. As a result, the
-            station editor only supports |ASCII characters|, but
-            the station name you are trying to edit contains
+            You are running |PyRadio| on |Python 2|. As a result,
+            the station editor only supports |ASCII characters|,
+            but the station name you are trying to edit contains
             |non-ASCII| characters.
 
             To edit this station, either run |PyRadio| on |Python 3|,

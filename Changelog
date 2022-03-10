@@ -1,6 +1,7 @@
 2022-03-10 s-n-g
     * Windows installation method updated to pip
     * adding F7, F8, F9, F10 functionality for Windows
+    * fixing MacOS layout breakage on RadioBrowser
     * updating docs
 
 2022-02-14 s-n-g
