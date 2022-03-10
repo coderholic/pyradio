@@ -1,7 +1,7 @@
 @ECHO OFF
 IF "%1"=="--help" GOTO displayhelp
 IF "%1"=="-h" GOTO displayhelp
-setlocal EnableDelayedExpansion
+SETLOCAL EnableDelayedExpansion
 
 IF EXIST DEV (SET NO_DEV=0) ELSE (SET NO_DEV=1)
 REM echo(NO_DEV = %NO_DEV%
@@ -11,8 +11,8 @@ REM GOTO endnopause
 :: https://gist.github.com/neremin/3a4020c172053d837ab37945d81986f6
 :: https://stackoverflow.com/questions/13212033/get-windows-version-in-a-batch-file
 net session >nul 2>&1
-IF '%errorlevel%' == '0' ( GOTO START ) ELSE (
-    for /f "tokens=4-5 delims=. " %%i in ('ver') do set VERSION=%%i.%%j
+IF "%errorlevel%" == "0" ( GOTO START ) ELSE (
+    FOR /f "tokens=4-5 delims=. " %%i in ('ver') do SET VERSION=%%i.%%j
     IF "%version%" == "6.1" ( GOTO win7exit )
     IF "%version%" == "6.0" ( GOTO win7exit )
     GOTO getPrivileges
@@ -36,47 +36,47 @@ IF "%1"=="" (
     CLS
     ECHO Installing / Updating python modules
     pip install --upgrade windows-curses 1>NUL 2>NUL
-    if %ERRORLEVEL% == 1 (
-        set ERRPKG=windows-curses
+    IF %ERRORLEVEL% == 1 (
+        SET ERRPKG=windows-curses
         GOTO piperror
     )
     pip install --upgrade pywin32 1>NUL 2>NUL
-    if %ERRORLEVEL% == 1 (
-        set ERRPKG=pywin32
+    IF %ERRORLEVEL% == 1 (
+        SET ERRPKG=pywin32
         GOTO piperror
     )
     pip install --upgrade requests 1>NUL 2>NUL
-    if %ERRORLEVEL% == 1 (
-        set ERRPKG=requests
+    IF %ERRORLEVEL% == 1 (
+        SET ERRPKG=requests
         GOTO piperror
     )
     pip install --upgrade dnspython 1>NUL 2>NUL
-    if %ERRORLEVEL% == 1 (
-        set ERRPKG=dnspython
+    IF %ERRORLEVEL% == 1 (
+        SET ERRPKG=dnspython
         GOTO piperror
     )
     pip install --upgrade psutil 1>NUL 2>NUL
-    if %ERRORLEVEL% == 1 (
-        set ERRPKG=psutil
+    IF %ERRORLEVEL% == 1 (
+        SET ERRPKG=psutil
         GOTO piperror
     )
     pip install --upgrade patool 1>NUL 2>NUL
-    if %ERRORLEVEL% == 1 (
-        set ERRPKG=patool
+    IF %ERRORLEVEL% == 1 (
+        SET ERRPKG=patool
         GOTO piperror
     )
     pip install --upgrade psutil 1>NUL 2>NUL
-    if %ERRORLEVEL% == 1 (
-        set ERRPKG=pyunpack
+    IF %ERRORLEVEL% == 1 (
+        SET ERRPKG=pyunpack
         GOTO piperror
     )
     pip install --upgrade wheel 1>NUL 2>NUL
-    if %ERRORLEVEL% == 1 (
-        set ERRPKG=wheel
+    IF %ERRORLEVEL% == 1 (
+        SET ERRPKG=wheel
         GOTO piperror
     )
 )
-goto START
+GOTO START
 IF '%1'=='ELEV' ( GOTO START ) ELSE ( ECHO Running elevated in a different window)
 ECHO >>DOPAUSE
 
@@ -262,33 +262,56 @@ GOTO endnopause
 ECHO This may take some time...
 ECHO ***********************************************************
 ECHO.
-ECHO PyRadio will NOT uninstall NPV, MPlayer, Python and/or Git.
-ECHO You will have to manually uninstall them.
-ECHO.
-ECHO PyRadio user files will be left instact.
-ECHO You can find them at
-ECHO     %APPDATA%\pyradio
+ECHO PyRadio will NOT uninstall Python and/or Git.
+ECHO You will have to manually uninstall them (IF desired).
 ECHO.
 ECHO ***********************************************************
 ECHO.
 DEL pyremove.bat 2>NUL
 ECHO ECHO Uninstalling PyRadio>>pyremove.bat
-ECHO ECHO ** Gathering information...>>pyremove.bat
-ECHO ECHO ** Removing executable ... done>>pyremove.bat
-ECHO ECHO ** Removing Desktop shortcut ... done >>pyremove.bat
-ECHO IF EXIST "%DESKTOP%\PyRadio.lnk" DEL "%DESKTOP%\PyRadio.lnk" 2>NUL >>pyremove.bat
-python devel\site.py exe 2>NUL >>pyremove.bat
-python devel\site.py 2>NUL >dirs
-python -m site --user-site 2>NUL >>dirs
-python devel\windirs.py
+:: ECHO ECHO ** Gathering information>>pyremove.bat
+:: ECHO ECHO ** Removing executable>>pyremove.bat
+ECHO ECHO ** Removing Desktop shortcut>>pyremove.bat
+ECHO IF EXIST "%DESKTOP%\PyRadio.lnk" DEL "%DESKTOP%\PyRadio.lnk">>pyremove.bat
+:: python devel\site.py exe 2>NUL >>pyremove.bat
+:: python devel\site.py 2>NUL >dirs
+:: python -m site --user-site 2>NUL >>dirs
+:: python devel\windirs.py
 python devel\unreg.py
-ECHO DEL dirs >>pyremove.bat
-ECHO python -m pip uninstall -y pyradio >>pyremove.bat
-ECHO ECHO. >>pyremove.bat
-ECHO ECHO. >>pyremove.bat
-ECHO ECHO PyRadio successfully uninstalled! >>pyremove.bat
-ECHO ECHO. >>pyremove.bat
-:: IF EXIST "DOPAUSE" ( ECHO PAUSE >>pyremove.bat )
+
+SET ANS=""
+:readit
+ECHO User files are under "%APPDATA%\pyradio"
+SET /p ANS="Do you want to remove them (y/n)?: "
+:: ECHO %ANS%
+IF "%ANS%" == "y" GOTO :addtobat
+IF "%ANS%" == "n" GOTO :addtobat
+GOTO :readit
+:addtobat
+
+IF "%ANS%" == "y" (
+    ECHO ECHO ** Removing user files>>pyremove.bat
+    ECHO RD /Q /S "%APPDATA%\pyradio">>pyremove.bat
+) else (
+    ECHO ECHO ** Removing stations.csv>>pyremove.bat
+    ECHO DEL "%APPDATA%\pyradio\stations.csv">>pyremove.bat
+    IF EXIST %APPDATA%\pyradio\mpv (
+        ECHO ECHO ** Removing MPV>>pyremove.bat
+        ECHO RD /Q /S "%APPDATA%\pyradio\mpv">>pyremove.bat
+    )
+    IF EXIST %APPDATA%\pyradio\mplayer (
+        ECHO ECHO ** Removing MPlayer>>pyremove.bat
+        ECHO RD /Q /S "%APPDATA%\pyradio\mplayer">>pyremove.bat
+    )
+)
+
+ECHO IF EXIST dirs DEL dirs >>pyremove.bat
+ECHO python -m pip uninstall -y pyradio>>pyremove.bat
+ECHO ECHO.>>pyremove.bat
+ECHO ECHO.>>pyremove.bat
+:: ECHO ECHO PyRadio successfully uninstalled! >>pyremove.bat
+::ECHO ECHO. >>pyremove.bat
+IF EXIST "DOPAUSE" ( ECHO PAUSE>>pyremove.bat )
 :: PAUSE
 CALL pyremove.bat
 IF %ALL% == 1 ( GOTO noparam )

@@ -443,12 +443,37 @@ def shell():
 
         ''' curses is off '''
         if pyradio.setup_return_status:
-            if pyradio_config.PRINT_PATHS and platform.startswith('win'):
+            if pyradio_config.WIN_UNINSTALL and platform.startswith('win'):
+                from msvcrt import getwch
+                from os import sep
+                import subprocess
+                the_path = __file__.split(sep)
+                the_file = sep.join(the_path[:-1]) + sep + 'install.py'
+                print('\nTo complete the process you will have to execute a batch file.')
+                print('Windows Explorer will open the location of the batch file to run.')
+                print('')
+                print('Please double click')
+                print('')
+                print('    uninstall.bat')
+                print('')
+                print('to remove PyRadio from your system.')
+                print('')
+                print('After you are done, you can delete the folder it resides in.')
+                print('\nPress any key to continue...', end='', flush=True)
+                getwch()
+                #print('\nPress any key to exit...', end='', flush=True)
+                #getwch()
+                subprocess.call('python ' + the_file + ' -R',
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL)
+                sys.exit()
+
+            if pyradio_config.WIN_PRINT_PATHS and platform.startswith('win'):
                 ''' print exe path '''
                 print('')
                 print_exe_paths()
 
-            if pyradio_config.MANAGE_PLAYERS and platform.startswith('win'):
+            if pyradio_config.WIN_MANAGE_PLAYERS and platform.startswith('win'):
                 ''' manage players'''
                 from .win import install_player
                 install_player()

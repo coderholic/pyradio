@@ -1,6 +1,6 @@
 " pyradio -- Console radio player. "
 
-version_info = (0, 8, 9, 14)
+version_info = (0, 8, 9, 15)
 
 # Application state:
 # New stable version:  ''

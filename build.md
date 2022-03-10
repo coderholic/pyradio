@@ -8,6 +8,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 <!-- vim-markdown-toc Marked -->
 
 * [Preparing for the installation](#preparing-for-the-installation)
+    * [Notice for Python 2 users](#notice-for-python-2-users)
     * [Linux](#linux)
     * [macOS](#macos)
     * [Windows](#windows)
@@ -23,11 +24,24 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 Before installing **PyRadio** you have to prepare your system, so that you end up with a working installation. The process depends on the OS you are on.
 
+### Notice for Python 2 users
+
+If you are still using **Python 2**, plase make sure "**pip**" is installed. Execute the following command to verify its existance:
+
+    python[2] -m pip list
+
+If you get a response, you are good to go. Otherwise, use your distro package manager to install it.
+
+If your distro does not provide it (some do not anymore), use the following commands to get it:
+
+    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+    sudo python[2] get-pip.py
+
 ### Linux
 
 Use your distribution method to install
 
-1. *python-setuptools*
+1. *python-wheel*
 2. *python-requests*
 3. *python-dnspython*
 4. *python-psutil*
@@ -41,7 +55,7 @@ When you are done, proceed to  "[Performing the installation](#performing-the-in
 
 First thing you do is install python dependencies (assuming python 3 is installed):
 
-    pip3 install --upgrade requests dnspython psutil
+    pip3 install --upgrade wheel requests dnspython psutil
 
 Everything else you need to install and run **pyradio** is available on [Homebrew](https://github.com/Homebrew/homebrew). If you haven't already downloaded its client, go ahead and do it.
 

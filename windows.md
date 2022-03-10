@@ -138,7 +138,7 @@ Press any of the numbers presented to you to execute an action, or press "**q**"
 
 - delete the installed player(s)
 - remove the corresponding entry from your **PATH** variable
-- use only the above funcion to manage players
+- use only the above function to manage players
 
 **Note:** If at some point and for whatever reason you want to perform a manual player installation, just refer to the [relevant instructions for MPV](windows-mpv.md), or the [relevant instructions for MPlayer](windows-mplayer.md).
 
@@ -198,11 +198,9 @@ Furthermore, if the WARNING shown in the previous image has been shown to you, t
 
 Now, you can just call it a day; you can run **PyRadio** from its Desktop Shortcut.
 
-If you want to be able to run it from a console, you have to add the path shown to you to your PATH variable. To do that, just have a look at the following image:
+If you want to be able to run it from a termina, you have to add the path shown to you to your [PATH variable](https://www.computerhope.com/issues/ch000549.htm).
 
-![aaa](https:/members.hellug.gr/sng/pyradio/path.jpg)
-
-**Note:** If you are having a problem finding the path to add to your PATH variable, just copy the one found after right-clicking on the **PyRadio** icon on your Desktop and selection "**Properties**".
+**Note:** If you are having a problem finding the path to add to your PATH variable, just copy the one found after right-clicking on the **PyRadio** icon on your Desktop and selection "**Properties**", or follow the instructions shown at [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe).
 
 Finally, please keep in mind that, if you upgrade your **Python** version, you will have to update **PyRadio**'s path in your PATH variable (since you will have to reinstall **PyRadio** anyway).
 
@@ -257,7 +255,7 @@ In any case, you can perform the update at any time, using the command:
 
     pyradio -U
 
-**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **Pyradio**'s icon on your Desktop and copy the command found there. Paste it on a console, add a "*-U*" and you are good to go.
+**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **Pyradio**'s icon on your Desktop and copy the command found there, or follow the instructions shown at [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe). Once you have it, paste it on a console, add a "*-U*" and you are good to go.
 
 ### Updating a pre 0.8.9 installation
 
@@ -273,31 +271,20 @@ do a
 
 ## Removing an old-style installation
 
-If you have an old-style installation (an installation done with a version up to **0.8.9.14**), you should remove the installed files following this procedure.
+If you have an old-style installation (an installation done with a version up to **0.8.9.14**), you should remove the installed files which are not used anymore, they just clutter your system.
 
-These files are not used any more, they just clutter your system.
+Just execute **PyRadio** and press "**F7**".
 
-1. Download [delOldInstallation.py](https://raw.githubusercontent.com/coderholic/pyradio/master/devel/delOldInstallation.py) and save it in your HOME directory.
-2. Open an Administrator console window - [example](https://www.windowscentral.com/how-launch-command-prompt-standard-and-admin-windows-10)
-3. Execute the commands:
-
-```
-cd %USERPROFILE%
-python  delOldInstallation.py
-```
-
+**PyRadio** will search you system and put all the files that should be removed in a BAT file, which it will execute. Just make sure no other apps are open at the time.
 
 ## Uninstalling PyRadio
 
-To uninstall **PyRadio** you just have to open a console window and execute the command:
+To uninstall **PyRadio** you just press "**F10**" and confirm the action.
 
-    pyradio -R
+Then **PyRadio** will terminate and an "**Explorer Window**" will open containing a BAT file called **uninstall.bat**.
 
-**PyRadio** create an uninstall batch file and open Windows Explorer to its location.
+Just double-click on it to complete the procedure.
 
-You just double click on the batch file (called **uninstall.bat**) to complete the procedure.
-
-**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **Pyradio**'s icon on your Desktop and copy the command found there. Paste it on a console, add a "*-R*" and you are good to go.
 
 ## Reporting bugs
 
@@ -313,9 +300,11 @@ To create it, enter the following commands in a terminal:
     del pyradio.log
     pyradio -d
 
+**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **Pyradio**'s icon on your Desktop and copy the command found there, or follow the instructions shown at [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe). Once you have it, paste it on a console, add a "*-d*" and you are good to go.
+
+
 Then try to reproduce the bug and exit **PyRadio**.
 
 Finally, include the file produced in your report.
 
-**Note:** If **PyRadio** is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click **Pyradio**'s icon on your Desktop and copy the command found there. Paste it on a console, add a "*-d*" and you are good to go.
 

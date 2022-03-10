@@ -33,7 +33,7 @@ Move the **mpv** directory to the following location (**PyRadio** will look for 
 This is (or will be) "*PyRadio's configuration directory*". \
 In case the "*pyradio*" directory does not exit, you just go ahead and create it.
 
-In order to do that, open an **Explorer File Manager** window, and enter "**%APPDATA%" at its location field and press ENTER.
+In order to do that, open an **Explorer File Manager** window, and enter "**%APPDATA%**" at its location field and press ENTER.
 
 If you are unsure on how to do that, please refer to the following image (you can ENTER **%APPDATA%** or any other Windows System Variable this way).
 

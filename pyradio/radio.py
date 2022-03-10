@@ -293,6 +293,7 @@ class PyRadio(object):
                 self.ws.MAIN_HELP_MODE_PAGE_2: self._show_main_help_page_2,
                 self.ws.MAIN_HELP_MODE_PAGE_3: self._show_main_help_page_3,
                 self.ws.MAIN_HELP_MODE_PAGE_4: self._show_main_help_page_4,
+                self.ws.MAIN_HELP_MODE_PAGE_5: self._show_main_help_page_5,
                 self.ws.PLAYLIST_HELP_MODE: self._show_playlist_help,
                 self.ws.THEME_HELP_MODE: self._show_theme_help,
                 self.ws.CONFIG_HELP_MODE: self._show_config_help,
@@ -374,8 +375,8 @@ class PyRadio(object):
                 self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG: self._ask_to_save_browser_config_from_config,
                 self.ws.SERVICE_SERVERS_UNREACHABLE: self._print_servers_unreachable,
                 self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT: self._ask_to_save_browser_config_to_exit,
-                self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_manage_players,
-                self.ws.WIN_PRINT_EXE_LOCATION_MODE: self._show_print_exe_paths,
+                self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_win_manage_players,
+                self.ws.WIN_PRINT_EXE_LOCATION_MODE: self._show_win_print_exe_paths,
                 }
 
         ''' list of help functions '''
@@ -1595,16 +1596,19 @@ class PyRadio(object):
 
         ''' Display a help, info or question window.  '''
         if mode_to_set == self.ws.MAIN_HELP_MODE:
-            caption = ' Help (1/4) '
+            caption = ' Help (1/5) '
             prompt = ' Press n/p or any other key to hide '
         elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_2:
-            caption = ' Help (2/4) '
+            caption = ' Help (2/5) '
             prompt = ' Press n/p or any other key to hide '
         elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_3:
-            caption = ' Help (3/4) '
+            caption = ' Help (3/5) '
             prompt = ' Press n/p or any other key to hide '
         elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_4:
-            caption = ' Help (4/4) '
+            caption = ' Help (4/5) '
+            prompt = ' Press n/p or any other key to hide '
+        elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_5:
+            caption = ' Help (5/5) '
             prompt = ' Press n/p or any other key to hide '
         self.helpWinContainer = None
         self.helpWin = None
@@ -1873,19 +1877,20 @@ class PyRadio(object):
         #arg[1].release()
         self.refreshBody()
 
-    def _show_manage_players(self):
+    def _show_win_manage_players(self):
         ''' show message on Windows '''
         txt = '''
             |Players management |enabled|!
 
-            |You will be able to manage installed players
-            |after you exit |PyRadio|.
+            PyRadio| will now terminate so that you can
+            |manage installed players.
         '''
         self._show_help(txt,
+                        prompt=' Press any key to exit ',
                         mode_to_set=self.ws.WIN_MANAGE_PLAYERS_MSG_MODE,
                         caption=' Players Management ')
 
-    def _show_print_exe_paths(self):
+    def _show_win_print_exe_paths(self):
         ''' show message on Windows '''
         txt = '''
             {}
@@ -1898,7 +1903,7 @@ class PyRadio(object):
         '''
         exe = fix_pyradio_win_exe()
         if exe[0] and exe[1]:
-            add_msg = '|PyRadio EXE files:\n__|System:\n____{0}__|User:\n____{1}'.format(exe[0], exe[1])
+            add_msg = '|PyRadio EXE files:\n__|System:\n____{0}\n__|User:\n____{1}'.format(exe[0], exe[1])
         else:
             add_msg = '|PyRadio EXE file:\n__{}'.format(exo[0] if exe[0] else exe[1])
 
@@ -1906,6 +1911,28 @@ class PyRadio(object):
                         prompt=' Press q or ESCAPE to hide... ',
                         mode_to_set=self.ws.WIN_PRINT_EXE_LOCATION_MODE,
                         caption=' Exe Location ')
+
+    def _show_win_uninstall(self):
+        ''' show uninstall message on Windows '''
+        txt = '''
+            |Are you sure you want to uninstall |PyRadio|?
+
+            |Please press |y| to confirm or any other key to decline.
+        '''
+        self._show_help(txt,
+                        prompt='',
+                        mode_to_set=self.ws.WIN_UNINSTALL_MODE,
+                        caption=' Uninstall PyRadio ')
+
+    def _show_win_remove_old_installation(self):
+        ''' show old installation removal message '''
+        txt = '''
+            PyRadio| will now try to remove any files found on your
+            |system belonging to a pre |0.8.9.15| installation.
+        '''
+        self._show_help(txt,
+                        mode_to_set=self.ws.WIN_REMOVE_OLD_INSTALLATION_MODE,
+                        caption=' PyRadio ')
 
     def _show_radio_browser_search_help(self):
         txt = '''Tab| / |Sh-Tab     |Go to next / previous field.
@@ -1972,6 +1999,7 @@ class PyRadio(object):
         self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_2] = self._help_metrics[self.ws.MAIN_HELP_MODE]
         self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_3] = self._help_metrics[self.ws.MAIN_HELP_MODE]
         self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_4] = self._help_metrics[self.ws.MAIN_HELP_MODE]
+        self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_5] = self._help_metrics[self.ws.MAIN_HELP_MODE]
         if self._cnf.browsing_station_service and not from_keyboard:
             self._show_main_help_page_from_browser()
 
@@ -1991,9 +2019,7 @@ class PyRadio(object):
                  <n>^U|,|<n>^D      |Move station |U|p / |D|own.
                  ||_________________|If a |jump tag| exists, move it there.
                  !Searching
-                 /| / |n| / |N        |Search, go to next / previous result.
-                 !Manage players (Windows)
-                 F8               |Manage players at exit.'''
+                 /| / |n| / |N        |Search, go to next / previous result.'''
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_2,
                         reset_metrics=False)
@@ -2042,6 +2068,16 @@ class PyRadio(object):
                  |(|^N| is the same as |n| when not in a line editor).'''
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_4,
+                        reset_metrics=False)
+
+    def _show_main_help_page_5(self, from_keyboard=False):
+        txt = '''!Windows Only
+                 F7               |Delete old installation files.
+                 F8               |Players management.
+                 F9               |Show |EXE| location.
+                 F10              |Uninstall |PyRadio|.'''
+        self._show_help(txt,
+                        mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_5,
                         reset_metrics=False)
 
     def _show_main_help_page_from_browser(self):
@@ -4778,10 +4814,33 @@ class PyRadio(object):
         # if self._limited_width_mode:
         #     return
 
+        if self.ws.operation_mode == self.ws.WIN_UNINSTALL_MODE:
+            self.ws.close_window()
+            if char in (ord('y'), ):
+                return -1
+            else:
+                self._cnf.WIN_UNINSTALL = False
+                self.refreshBody()
+            return
+
         if self.ws.operation_mode == self.ws.WIN_PRINT_EXE_LOCATION_MODE:
             if char in (ord('q'), curses.KEY_EXIT, 27):
                 self.ws.close_window()
-                self.refreshBody()
+                curses.ungetch('q')
+                #self.refreshBody()
+            return
+
+        if self.ws.operation_mode == self.ws.WIN_MANAGE_PLAYERS_MSG_MODE:
+            self.ws.close_window()
+            curses.ungetch('q')
+            #self.refreshBody()
+            return
+
+        if self.ws.operation_mode == self.ws.WIN_REMOVE_OLD_INSTALLATION_MODE:
+            self.ws.close_window()
+            self.refreshBody()
+            from .win_del_old_inst import win_del_old_inst
+            win_del_old_inst()
             return
 
         if self._limited_height_mode or self._limited_width_mode:
@@ -6367,17 +6426,19 @@ class PyRadio(object):
 
         elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
             if self.ws.operation_mode in (
-                self.ws.MAIN_HELP_MODE,
-                self.ws.MAIN_HELP_MODE_PAGE_2,
-                self.ws.MAIN_HELP_MODE_PAGE_3,
-                    self.ws.MAIN_HELP_MODE_PAGE_4):
+                    self.ws.MAIN_HELP_MODE,
+                    self.ws.MAIN_HELP_MODE_PAGE_2,
+                    self.ws.MAIN_HELP_MODE_PAGE_3,
+                    self.ws.MAIN_HELP_MODE_PAGE_4,
+                    self.ws.MAIN_HELP_MODE_PAGE_5):
                 if char in (ord('n'), ord('p'), ):
                     self.helpWinContainer = None
                     self.helpWin = None
                     func = (self._show_main_help,
                             self._show_main_help_page_2,
                             self._show_main_help_page_3,
-                            self._show_main_help_page_4)
+                            self._show_main_help_page_4,
+                            self._show_main_help_page_5)
                     if self._main_help_id >= len(func):
                         self._main_help_id = len(func) - 1
                     if char == ord('n'):
@@ -6543,15 +6604,24 @@ class PyRadio(object):
                     ''' manage players on Windows
                         will present them after curses end
                     '''
-                    self._cnf.MANAGE_PLAYERS = True
-                    self._show_manage_players()
+                    self._cnf.WIN_MANAGE_PLAYERS = True
+                    self._show_win_manage_players()
 
                 elif char == curses.KEY_F9 and platform.startswith('win'):
                     ''' show exe location on Windows
                         will present them after curses end
                     '''
-                    self._cnf.PRINT_PATHS = True
-                    self._show_print_exe_paths()
+                    self._cnf.WIN_PRINT_PATHS = True
+                    self._show_win_print_exe_paths()
+
+                elif char == curses.KEY_F10 and platform.startswith('win'):
+                    ''' uninstall on Windows '''
+                    self._cnf.WIN_UNINSTALL = True
+                    self._show_win_uninstall()
+
+                elif char == curses.KEY_F7 and platform.startswith('win'):
+                    ''' uninstall on Windows '''
+                    self._show_win_remove_old_installation()
 
                 elif self.player.isPlaying() and char in (curses.ascii.SO, curses.KEY_NEXT):
                     self._reset_status_bar_right()

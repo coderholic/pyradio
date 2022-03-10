@@ -1139,10 +1139,13 @@ class PyRadioConfig(PyRadioStations):
     current_pyradio_version = None
 
     ''' Windows manage players trigger '''
-    MANAGE_PLAYERS = False
+    WIN_MANAGE_PLAYERS = False
 
     ''' Windows print EXE location trigger '''
-    PRINT_PATHS = False
+    WIN_PRINT_PATHS = False
+
+    ''' Windows Uninstall trigger '''
+    WIN_UNINSTALL = False
 
     def __init__(self):
         self.backup_player_params = None

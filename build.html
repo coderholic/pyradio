@@ -43,6 +43,7 @@ a:visited{color: SaddleBrown;}
 <ul>
 <li><a href="#preparing-for-the-installation">Preparing for the installation</a>
 <ul>
+<li><a href="#notice-for-python-2-users">Notice for Python 2 users</a></li>
 <li><a href="#linux">Linux</a></li>
 <li><a href="#macos">macOS</a></li>
 <li><a href="#windows">Windows</a></li>
@@ -56,10 +57,17 @@ a:visited{color: SaddleBrown;}
 <p><a href="README.html">[Return to main doc]</a></p>
 <h2 id="preparing-for-the-installation">Preparing for the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Before installing <strong>PyRadio</strong> you have to prepare your system, so that you end up with a working installation. The process depends on the OS you are on.</p>
+<h3 id="notice-for-python-2-users">Notice for Python 2 users</h3>
+<p>If you are still using <strong>Python 2</strong>, plase make sure “<strong>pip</strong>” is installed. Execute the following command to verify its existance:</p>
+<pre>python[2] -m pip list</pre>
+<p>If you get a response, you are good to go. Otherwise, use your distro package manager to install it.</p>
+<p>If your distro does not provide it (some do not anymore), use the following commands to get it:</p>
+<pre>curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+sudo python[2] get-pip.py</pre>
 <h3 id="linux">Linux</h3>
 <p>Use your distribution method to install</p>
 <ol type="1">
-<li><em>python-setuptools</em></li>
+<li><em>python-wheel</em></li>
 <li><em>python-requests</em></li>
 <li><em>python-dnspython</em></li>
 <li><em>python-psutil</em></li>
@@ -69,7 +77,7 @@ a:visited{color: SaddleBrown;}
 <p>When you are done, proceed to “<a href="#performing-the-installation">Performing the installation</a>”.</p>
 <h3 id="macos">macOS</h3>
 <p>First thing you do is install python dependencies (assuming python 3 is installed):</p>
-<pre>pip3 install --upgrade requests dnspython psutil</pre>
+<pre>pip3 install --upgrade wheel requests dnspython psutil</pre>
 <p>Everything else you need to install and run <strong>pyradio</strong> is available on <a target="_blank" href="https://github.com/Homebrew/homebrew">Homebrew</a>. If you haven’t already downloaded its client, go ahead and do it.</p>
 <p>Open a <strong>terminal</strong> and type:</p>
 <pre>/usr/bin/ruby -e &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</pre>
