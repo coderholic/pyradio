@@ -110,6 +110,10 @@ CD ..
 :: Install lnk file
 ECHO *** Installing Dekstop Shortcut
 COPY /Y %APPDATA%\pyradio\help\*.lnk %DESKTOP% >NUL
+IF EXIST "%APPDATA%\Microsoft\Windows\Start Menu\Programs" (
+    ECHO *** Installing Start Menu Shortcut
+    COPY /Y %APPDATA%\pyradio\help\*.lnk "%APPDATA%\Microsoft\Windows\Start Menu\Programs" >NUL
+)
 
 :: Clean up
 CD pyradio
@@ -179,6 +183,7 @@ ECHO ECHO Uninstalling PyRadio>>pyremove.bat
 :: ECHO ECHO ** Removing executable>>pyremove.bat
 ECHO ECHO ** Removing Desktop shortcut>>pyremove.bat
 ECHO IF EXIST "%DESKTOP%\PyRadio.lnk" DEL "%DESKTOP%\PyRadio.lnk">>pyremove.bat
+ECHO IF EXIST "%APPDATA%\Microsoft\Windows\Start Menu\Programs"\PyRadio.lnk DEL "%APPDATA%\Microsoft\Windows\Start Menu\Programs"\PyRadio.lnk>>pyremove.bat
 :: python devel\site.py exe 2>NUL >>pyremove.bat
 :: python devel\site.py 2>NUL >dirs
 :: python -m site --user-site 2>NUL >>dirs
