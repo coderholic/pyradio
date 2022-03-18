@@ -80,6 +80,7 @@ and much more...
 
 ## Requirements
 * python 2.7/3.5+
+    - setuptools
     - wheel
     - requests
     - dnspython

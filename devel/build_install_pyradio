@@ -345,6 +345,19 @@ then
     cd ..
 fi
 
+
+if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
+python"${TO_PYTHON}" -m pip install --upgrade setuptools
+cat <<END > requirements.txt
+wheel
+requests
+psutil
+dnspython
+END
+else
+	rm requirements.txt 2>/dev/null
+fi
+
 ## check dependencies :)
 #for prog in git sed ;do
 #    ${prog} --version 2>/dev/null 1>&2 || {
@@ -381,7 +394,13 @@ sudo find . -iname "*.egg" -delete 2>/dev/null
 
 echo "***** installing for user..."
 do_dev
-python"${TO_PYTHON}" -m pip install .
+
+if [ -e requirements.txt ];then
+	python"${TO_PYTHON}" -m pip install -r requirements.txt .
+else
+	python"${TO_PYTHON}" -m pip install .
+fi
+
 if [ $? -eq 0 ]
 then
     [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py

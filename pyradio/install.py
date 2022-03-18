@@ -561,6 +561,8 @@ class PyRadioUpdate(object):
             with open(bat, "w") as b:
                 b.write('@ECHO OFF\n')
                 b.write('CLS\n')
+                b.write('python -m pip install --upgrade setuptools 1>NUL 2>NUL\n')
+                b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade requests 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade wheel 1>NUL 2>NUL\n')
@@ -1083,6 +1085,7 @@ if __name__ == '__main__':
                     print('PyRadio is already installed.\n')
                     sys.exit(1)
         for a_module in (
+                'setuptools',
                 'windows-curses',
                 'pywin32',
                 'dnspython',

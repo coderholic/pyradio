@@ -1,4 +1,5 @@
 @ECHO OFF
+SET PROGRAM=python
 IF "%1"=="--help" GOTO displayhelp
 IF "%1"=="-h" GOTO displayhelp
 SETLOCAL EnableDelayedExpansion
@@ -7,112 +8,27 @@ IF EXIST DEV (SET NO_DEV=0) ELSE (SET NO_DEV=1)
 REM echo(NO_DEV = %NO_DEV%
 REM GOTO endnopause
 
-::net file to test privileges, 1>NUL redirects output, 2>NUL redirects errors
-:: https://gist.github.com/neremin/3a4020c172053d837ab37945d81986f6
-:: https://stackoverflow.com/questions/13212033/get-windows-version-in-a-batch-file
-net session >nul 2>&1
-IF "%errorlevel%" == "0" ( GOTO START ) ELSE (
-    FOR /f "tokens=4-5 delims=. " %%i in ('ver') do SET VERSION=%%i.%%j
-    IF "%version%" == "6.1" ( GOTO win7exit )
-    IF "%version%" == "6.0" ( GOTO win7exit )
-    GOTO getPrivileges
+CLS
+ECHO Installing / Updating setuptools
+%PROGRAM% -m pip install --upgrade setuptools 1>NUL 2>NUL
+IF %ERRORLEVEL% == 1 (
+    SET ERRPKG=windows-curses
+    GOTO piperror
+)
+ECHO Installing / Updating windows-curses
+%PROGRAM% -m pip install --upgrade windows-curses 1>NUL 2>NUL
+IF %ERRORLEVEL% == 1 (
+    SET ERRPKG=windows-curses
+    GOTO piperror
 )
 
-:win7exit
-ECHO.
-ECHO Error: You must have Administrative permissions to run this script.
-ECHO        Please start cmd "As Administrator".
-ECHO.
-ECHO        If that does not work, ask the system administrator to
-ECHO        install PyRadio for you.
-ECHO.
-GOTO endnopause
+echo pywin32 > requirements.txt
+echo requests >> requirements.txt
+echo dnspython >> requirements.txt
+echo psutil >> requirements.txt
+echo wheel >> requirements.txt
+echo pylnk >> requirements.txt
 
-:getPrivileges
-IF "%version%" == "6.1" ( GOTO win7exit )
-IF "%version%" == "6.0" ( GOTO win7exit )
-
-IF "%1"=="" (
-    CLS
-    ECHO Installing / Updating python modules
-    pip install --upgrade windows-curses 1>NUL 2>NUL
-    IF %ERRORLEVEL% == 1 (
-        SET ERRPKG=windows-curses
-        GOTO piperror
-    )
-    pip install --upgrade pywin32 1>NUL 2>NUL
-    IF %ERRORLEVEL% == 1 (
-        SET ERRPKG=pywin32
-        GOTO piperror
-    )
-    pip install --upgrade requests 1>NUL 2>NUL
-    IF %ERRORLEVEL% == 1 (
-        SET ERRPKG=requests
-        GOTO piperror
-    )
-    pip install --upgrade dnspython 1>NUL 2>NUL
-    IF %ERRORLEVEL% == 1 (
-        SET ERRPKG=dnspython
-        GOTO piperror
-    )
-    pip install --upgrade psutil 1>NUL 2>NUL
-    IF %ERRORLEVEL% == 1 (
-        SET ERRPKG=psutil
-        GOTO piperror
-    )
-    pip install --upgrade patool 1>NUL 2>NUL
-    IF %ERRORLEVEL% == 1 (
-        SET ERRPKG=patool
-        GOTO piperror
-    )
-    pip install --upgrade psutil 1>NUL 2>NUL
-    IF %ERRORLEVEL% == 1 (
-        SET ERRPKG=pyunpack
-        GOTO piperror
-    )
-    pip install --upgrade wheel 1>NUL 2>NUL
-    IF %ERRORLEVEL% == 1 (
-        SET ERRPKG=wheel
-        GOTO piperror
-    )
-)
-GOTO START
-IF '%1'=='ELEV' ( GOTO START ) ELSE ( ECHO Running elevated in a different window)
-ECHO >>DOPAUSE
-
-SET "batchPath=%~f0"
-SET "batchArgs=ELEV"
-
-::Add quotes to the batch path, IF needed
-SET "script=%0"
-SET script=%script:"=%
-IF '%0'=='!script!' ( GOTO PathQuotesDone )
-    SET "batchPath=""%batchPath%"""
-:PathQuotesDone
-
-::Add quotes to the arguments, IF needed.
-:ArgLoop
-IF '%1'=='' ( GOTO EndArgLoop ) ELSE ( GOTO AddArg )
-    :AddArg
-    SET "arg=%1"
-    SET arg=%arg:"=%
-    IF '%1'=='!arg!' ( GOTO NoQuotes )
-        SET "batchArgs=%batchArgs% "%1""
-        GOTO QuotesDone
-        :NoQuotes
-        SET "batchArgs=%batchArgs% %1"
-    :QuotesDone
-    SHIFT
-    GOTO ArgLoop
-:EndArgLoop
-
-::Create and run the vb script to elevate the batch file
-ECHO SET UAC = CreateObject^("Shell.Application"^) > "%temp%\OEgetPrivileges.vbs"
-ECHO UAC.ShellExecute "cmd", "/c ""!batchPath! !batchArgs!""", "", "runas", 1 >> "%temp%\OEgetPrivileges.vbs"
-"%temp%\OEgetPrivileges.vbs"
-EXIT /B
-
-:START
 ::Remove the elevation tag and SET the correct working directory
 IF '%1'=='ELEV' ( SHIFT /1 )
 CD /d %~dp0
@@ -121,7 +37,6 @@ CD /d %~dp0
 
 CD ..
 SET arg1=%1
-SET PROGRAM=python
 
 
 :: Get Desktop LINK FILE
@@ -153,7 +68,7 @@ IF "%NO_DEV%" == "1" (
 )
 
 :install
-%PROGRAM% -m pip install .
+%PROGRAM% -m pip install -r requirements.txt .
 IF %ERRORLEVEL% == 0 GOTO installhtml
 :installationerror
 ECHO.
@@ -189,7 +104,7 @@ ECHO *** HTML files copyed to "%APPDATA%\pyradio\help"
 
 :: Update lnk file
 CD pyradio
-python -c "from win import create_pyradio_link; create_pyradio_link()"
+%PROGRAM% -c "from win import create_pyradio_link; create_pyradio_link()"
 CD ..
 
 :: Install lnk file
@@ -198,7 +113,7 @@ COPY /Y %APPDATA%\pyradio\help\*.lnk %DESKTOP% >NUL
 
 :: Clean up
 CD pyradio
-python -c "from win import clean_up; clean_up()"
+%PROGRAM% -c "from win import clean_up; clean_up()"
 CD ..
 GOTO toend
 
@@ -297,7 +212,7 @@ IF "%ANS%" == "y" (
 )
 
 ECHO IF EXIST dirs DEL dirs >>pyremove.bat
-ECHO python -m pip uninstall -y pyradio>>pyremove.bat
+ECHO %PROGRAM% -m pip uninstall -y pyradio>>pyremove.bat
 ECHO ECHO.>>pyremove.bat
 ECHO ECHO.>>pyremove.bat
 :: ECHO ECHO PyRadio successfully uninstalled! >>pyremove.bat
