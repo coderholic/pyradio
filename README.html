@@ -126,13 +126,14 @@ a:visited{color: SaddleBrown;}
 <li>Theming support</li>
 <li><a href="radio-browser.html">RadioBrowser</a> support</li>
 <li>Easy installation / updating</li>
-<li>Runs on Linux, MacOS and Windows</li>
+<li>Runs on Linux, macOS and Windows</li>
 </ul>
 <p>and much more…</p>
 <h2 id="requirements">Requirements <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ul>
 <li>python 2.7/3.5+
 <ul>
+<li>wheel</li>
 <li>requests</li>
 <li>dnspython</li>
 <li>psutil</li>
@@ -143,10 +144,13 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre style="height: 200px;">
 
-2022-03-10 s-n-g
+2022-03-15 s-n-g
+    * version 0.8.9.15 (0.9-beta12)
+    * fixing "0" and "$" insertion on RadioBrowser search window
+    * macOS installation method updated to pip
+    * fixing a macOS RadioBrowser interface breakage
     * Windows installation method updated to pip
     * adding F7, F8, F9, F10 functionality for Windows
-    * fixing MacOS layout breakage on RadioBrowser
     * updating docs
 
 2022-02-14 s-n-g
@@ -636,7 +640,7 @@ a:visited{color: SaddleBrown;}
     * '/' win no longer display help ('?' is still valid)
     * minor errors fixed
     * error_code renamed to operation_mode
-    * build script working on MacOS
+    * build script working on macOS
 
 2018-12-02  s-n-g
 

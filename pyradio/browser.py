@@ -3011,7 +3011,7 @@ class RadioBrowserSearchWindow(object):
             return -1
 
         if char == ord('q') and \
-            type(self._widgets[self._focus]).__name__ != 'SimpleCursesLineEdit':
+                type(self._widgets[self._focus]).__name__ != 'SimpleCursesLineEdit':
             return -1
 
         if self._too_small:
@@ -3019,10 +3019,12 @@ class RadioBrowserSearchWindow(object):
 
         class_name = type(self._widgets[self._focus]).__name__
 
-        if char == ord('0'):
+        if char == ord('0') and \
+                type(self._widgets[self._focus]).__name__ != 'SimpleCursesLineEdit':
             self._goto_first_history_item()
 
-        elif char == ord('$'):
+        elif char == ord('$') and \
+                type(self._widgets[self._focus]).__name__ != 'SimpleCursesLineEdit':
             self._goto_last_history_item()
 
         elif char in (curses.KEY_PPAGE, ) and self._focus != len(self._widgets) -3:

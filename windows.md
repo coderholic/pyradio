@@ -114,7 +114,7 @@ If the user decides to install a different player, he should have the following 
 
 #### MPV or MPlayer installation
 
-**PyRadio** provides a helper function to install, update and uninstall [MPV](https://mpv.io) and [MPlayer](http://www.mplayerhq.hu/design7/news.html). To enable this function, just execute **PyRadio** and press "**F8**". Then terminate **PyRadio** and you will be presented with a screen similar to the following one:
+**PyRadio** provides a helper function to install, update and uninstall [MPV](https://mpv.io) and [MPlayer](http://www.mplayerhq.hu/design7/news.html). To enable this function, just execute **PyRadio** and press "**F8**". Then **PyRadio** will terminate and you will be presented with a screen similar to the following one:
 
 ```
 Reading config...
@@ -166,7 +166,7 @@ Then type:
 
 #### Fresh python installation?
 
-If you have just installed **Pyhon**, you will probably end up with the following message and the installation script will terminate.
+If you have just installed **Python**, you will probably end up with the following message and the installation script will terminate.
 
 
 ```
@@ -194,11 +194,11 @@ If the installation is successful, you will get something similar to the followi
 
 **PyRadio** has been installed preforming a "*user installation*", which means that the program is available to your current user only.
 
-Furthermore, if the WARNING shown in the previous image has been shown to you, the executable of the program is not in your PATH (you cannot just open a console and type "*pyradio*" to execute it; you have to use the Ison/Shortcut created on your Desktop to do that).
+Furthermore, if the WARNING shown in the previous image has been shown to you, the executable of the program is not in your PATH (you cannot just open a console and type "*pyradio*" to execute it; you have to use the Icon/Shortcut created on your Desktop to do that).
 
 Now, you can just call it a day; you can run **PyRadio** from its Desktop Shortcut.
 
-If you want to be able to run it from a termina, you have to add the path shown to you to your [PATH variable](https://www.computerhope.com/issues/ch000549.htm).
+If you want to be able to run it from a terminal, you have to add the path shown to you to your [PATH variable](https://www.computerhope.com/issues/ch000549.htm).
 
 **Note:** If you are having a problem finding the path to add to your PATH variable, just copy the one found after right-clicking on the **PyRadio** icon on your Desktop and selection "**Properties**", or follow the instructions shown at [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe).
 
@@ -230,7 +230,7 @@ In this example, both a "**System**" and a "**User**" path to **PyRadio** execut
 
 This would be the case after installing a version newer than **0.8.9.14** while a version older than **0.8.9.14** is already installed.
 
-If this is your case, please follow the instuctions found in "[Removing an old-style installation](#removing-an-old-style-installation)".
+If this is your case, please follow the instructions found in "[Removing an old-style installation](#removing-an-old-style-installation)".
 
 #### Cleaning up
 

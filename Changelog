@@ -1,7 +1,10 @@
-2022-03-10 s-n-g
+2022-03-15 s-n-g
+    * version 0.8.9.15 (0.9-beta12)
+    * fixing "0" and "$" insertion on RadioBrowser search window
+    * macOS installation method updated to pip
+    * fixing a macOS RadioBrowser interface breakage
     * Windows installation method updated to pip
     * adding F7, F8, F9, F10 functionality for Windows
-    * fixing MacOS layout breakage on RadioBrowser
     * updating docs
 
 2022-02-14 s-n-g
@@ -491,7 +494,7 @@
     * '/' win no longer display help ('?' is still valid)
     * minor errors fixed
     * error_code renamed to operation_mode
-    * build script working on MacOS
+    * build script working on macOS
 
 2018-12-02  s-n-g
 

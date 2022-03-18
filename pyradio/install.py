@@ -456,7 +456,7 @@ class PyRadioUpdate(object):
                 ]
 
     install = False
-    user = False
+    user = True
     python2 = False
 
     _python_exec = None
@@ -465,7 +465,7 @@ class PyRadioUpdate(object):
 
     def __init__(self,
                  package=0,
-                 user=False,
+                 user=True,
                  github_long_description=None,
                  python_version_to_use=3):
         if platform.system().lower().startswith('win'):
@@ -910,11 +910,12 @@ if __name__ == '__main__':
                         help='update PyRadio.')
     parser.add_argument('-f', '--force', action='store_true',
                         help='force installation (even if already installed).')
+    if platform.system().lower().startswith('darwin'):
+        parser.add_argument('--brew', nargs='?', default='False',
+                            help='Create a link to pyradio executable in PATH. [BREW] can be empty (the default will be used in this case: /urs/local/opt). If a different package manager is in use, [BREW] should be the path to the location it installs its packages.')
     if platform.system().lower().startswith('linux'):
-        parser.add_argument('--user', action='store_true',
-                            help='install only for current user (linux only).')
-    parser.add_argument('--python2', action='store_true',
-                        help='install using python 2.')
+        parser.add_argument('--python2', action='store_true',
+                            help='install using python 2.')
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='uninstall PyRadio.')
 
@@ -940,6 +941,34 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     sys.stdout.flush()
+
+    if args.brew != "False":
+        if args.brew is None:
+            param = ' --fix-mac-path'
+        else:
+            param = ' --warning --fix-mac-path "' + args.brew + '"'
+        #### print('parameter: ' + param)
+        try:
+            from urllib.request import urlretrieve
+        except:
+            from urllib import urlretrieve
+        try:
+            r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/build_install_pyradio')
+        except:
+            print('Cannot contact github...')
+            sys.exit(1)
+        if int(r[1]['content-length']) < 1000:
+            print('Cannot contact github...')
+            sys.exit(1)
+        script = r[0]
+        #### print('script:', script)
+        if exists('/Users/Max/pyradio/devel/build_install_pyradio'):
+            script = '/Users/Max/pyradio/devel/build_install_pyradio'
+        #### print('script:', script)
+        # now I can run the script
+        subprocess.call('bash -c "' + script + param + '"', shell=True)
+        os.remove(r[0])
+        sys.exit()
 
     if not PY3 and not args.python2:
         print_trying_to_install()
@@ -1117,6 +1146,6 @@ Then try installing PyRadio again
         )
         uni.install = True
         if not platform.system().lower().startswith('darwin'):
-            uni.user = args.user
+            uni.user = True
         uni.update_pyradio()
 

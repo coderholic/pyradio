@@ -41,29 +41,41 @@ a:visited{color: SaddleBrown;}
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
+<li><a href="#current-state-of-the-project">Current state of the project</a>
+<ul>
+<li><a href="#what-does-it-all-mean-and-why-should-you-care">What does it all mean and why should you care</a></li>
+</ul></li>
 <li><a href="#preparing-for-the-installation">Preparing for the installation</a>
 <ul>
+<li><a href="#linux">Linux</a>
+<ul>
 <li><a href="#notice-for-python-2-users">Notice for Python 2 users</a></li>
-<li><a href="#linux">Linux</a></li>
+</ul></li>
 <li><a href="#macos">macOS</a></li>
 <li><a href="#windows">Windows</a></li>
 </ul></li>
-<li><a href="#performing-the-installation">Performing the installation</a>
+<li><a href="#performing-the-installation">Performing the installation</a> * <a href="#note-for-macos-users">Note for macOS users</a>
 <ul>
 <li><a href="#updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</a></li>
 </ul></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p><a href="README.html">[Return to main doc]</a></p>
+<h2 id="current-state-of-the-project">Current state of the project <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>Starting with version <strong>0.8.9.15</strong>, <strong>PyRadio</strong> has changed its installation method from invoking <em>setup.py</em> directly to <em>pip</em> (i.e. from “<em>python setup.py install</em>” to “<em>python -m pip .</em>”). This is a must for all <strong>Python</strong> projects in order to keep up with the latest developments. For more info, please refer to “<a target="_blank" href="https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html">Why you shouldn’t invoke setup.py directly</a>”.</p>
+<h3 id="what-does-it-all-mean-and-why-should-you-care">What does it all mean and why should you care</h3>
+<p>Moving to the <strong>pip</strong> way of doing things has its implications:</p>
+<ol type="1">
+<li><strong>PyRadio</strong> will be installed as a pip package.</p></li>
+<li><strong>PyRadio</strong> will no longer be installed as a system-wide package.<br />
+<br />
+This means that after installing <strong>PyRadio</strong>, it will only be available to the current user. If another user wants to use it as well, he would have to install it again.<br />
+<br />
+In other words, in order to have a <strong>Pyradio system-wide installation</strong>, your distribution has to provide a package for it.</p></li>
+<li>As I’m starting the procedure to move away from <em>Python 2</em>, <strong>PyRadio</strong> will not be compatible with it on <em>macOs</em> and <em>Windows</em> (but will still be on <em>Linux</em>, at least for the time being).</p></li>
+</ol>
 <h2 id="preparing-for-the-installation">Preparing for the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Before installing <strong>PyRadio</strong> you have to prepare your system, so that you end up with a working installation. The process depends on the OS you are on.</p>
-<h3 id="notice-for-python-2-users">Notice for Python 2 users</h3>
-<p>If you are still using <strong>Python 2</strong>, plase make sure “<strong>pip</strong>” is installed. Execute the following command to verify its existance:</p>
-<pre>python[2] -m pip list</pre>
-<p>If you get a response, you are good to go. Otherwise, use your distro package manager to install it.</p>
-<p>If your distro does not provide it (some do not anymore), use the following commands to get it:</p>
-<pre>curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
-sudo python[2] get-pip.py</pre>
 <h3 id="linux">Linux</h3>
 <p>Use your distribution method to install</p>
 <ol type="1">
@@ -74,6 +86,13 @@ sudo python[2] get-pip.py</pre>
 <li><em>sed</em></li>
 <li>any one of <em>MPV</em>, <em>MPlayer</em> and/or <em>VLC</em>.</li>
 </ol>
+<h4 id="notice-for-python-2-users">Notice for Python 2 users</h4>
+<p>If you are still using <strong>Python 2</strong>, plase make sure “<strong>pip</strong>” is installed. Execute the following command to verify its existance:</p>
+<pre>python[2] -m pip list</pre>
+<p>If you get a response, you are good to go. Otherwise, use your distro package manager to install it.</p>
+<p>If your distro does not provide it (some do not anymore), use the following commands to get it:</p>
+<pre>curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+sudo python[2] get-pip.py</pre>
 <p>When you are done, proceed to “<a href="#performing-the-installation">Performing the installation</a>”.</p>
 <h3 id="macos">macOS</h3>
 <p>First thing you do is install python dependencies (assuming python 3 is installed):</p>
@@ -81,7 +100,7 @@ sudo python[2] get-pip.py</pre>
 <p>Everything else you need to install and run <strong>pyradio</strong> is available on <a target="_blank" href="https://github.com/Homebrew/homebrew">Homebrew</a>. If you haven’t already downloaded its client, go ahead and do it.</p>
 <p>Open a <strong>terminal</strong> and type:</p>
 <pre>/usr/bin/ruby -e &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</pre>
-<p>Depending on your Mac OS version, you may have to install <strong>sed</strong> too:</p>
+<p>Depending on your macOS version, you may have to install <strong>sed</strong> too:</p>
 <pre>brew install gnu-sed --default-names</pre>
 <p>Now it’s time to install a media player. You are free to install any one of them or even more than one…</p>
 <p>1. <strong><em>MPV</em></strong></p>
@@ -114,6 +133,12 @@ curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/inst
 <pre>python3 install.py</pre>
 <p>If for some reason you want a <strong>python 2</strong> installation, execute:</p>
 <pre>python2 install.py</pre>
+<h4 id="note-for-macos-users">Note for macOS users</h4>
+<p>This release of <strong>PyRadio</strong> has been tested on <strong>Catalina</strong> and <strong>Big Sur</strong>.</p>
+<p>On <strong>Catalina</strong> the executable has been placed on a location which is not directly accessible (not in the PATH). <strong>PyRadio</strong> will try to link it to your <strong>bin</strong> folder (creating <em>~/bin/pyradio</em>), and <strong>PyRadio</strong> will be ready yo be executed, provided that this folder is in your PATH and that <strong>Homebrew</strong> default installation folders have been used during the installation of <strong>Python 3</strong>.</p>
+<p>In case a different <strong>Homebrew</strong> location has been used (or a different package manager, for this matter), you can just point the installation to the correct path, using the following command (post installation):</p>
+<pre>python3 install.py --brew /path/to/homebrew/installation</pre>
+<p>so that <strong>PyRadio</strong> can find and link the executable to your <strong>bin</strong> folder.</p>
 <h3 id="updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</h3>
 <p>If you are on a pre 0.8.9 release and want to update <strong>PyRadio</strong>, just follow the instructions above, but add the “<em>–force</em>” command line parameter to the installation command.</p>
 <p>So, instead of</p>

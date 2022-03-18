@@ -7,35 +7,44 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
+* [Current state of the project](#current-state-of-the-project)
+    * [What does it all mean and why should you care](#what-does-it-all-mean-and-why-should-you-care)
 * [Preparing for the installation](#preparing-for-the-installation)
-    * [Notice for Python 2 users](#notice-for-python-2-users)
     * [Linux](#linux)
+        * [Notice for Python 2 users](#notice-for-python-2-users)
     * [macOS](#macos)
     * [Windows](#windows)
 * [Performing the installation](#performing-the-installation)
+        * [Note for macOS users](#note-for-macos-users)
     * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
 
 <!-- vim-markdown-toc -->
 
 [[Return to main doc]](README.md)
 
+## Current state of the project
+
+Starting with version **0.8.9.15**, **PyRadio** has changed its installation method from invoking *setup.py* directly to *pip* (i.e. from "*python setup.py install*" to "*python -m pip .*"). This is a must for all **Python** projects in order to keep up with the latest developments. For more info, please refer to "[Why you shouldn't invoke setup.py directly](https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html)".
+
+### What does it all mean and why should you care
+
+Moving to the **pip** way of doing things has its implications:
+
+1. **PyRadio** will be installed as a pip package.
+
+2. **PyRadio** will no longer be installed as a system-wide package. \
+\
+This means that after installing **PyRadio**, it will only be available to the current user. If another user wants to use it as well, he would have to install it again. \
+\
+In other words, in order to have a **Pyradio system-wide installation**, your distribution has to provide a package for it.
+
+3. As I'm starting the procedure to move away from *Python 2*, **PyRadio** will not be compatible with it on *macOs* and *Windows* (but will still be on *Linux*, at least for the time being).
+
 
 ## Preparing for the installation
 
 Before installing **PyRadio** you have to prepare your system, so that you end up with a working installation. The process depends on the OS you are on.
 
-### Notice for Python 2 users
-
-If you are still using **Python 2**, plase make sure "**pip**" is installed. Execute the following command to verify its existance:
-
-    python[2] -m pip list
-
-If you get a response, you are good to go. Otherwise, use your distro package manager to install it.
-
-If your distro does not provide it (some do not anymore), use the following commands to get it:
-
-    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
-    sudo python[2] get-pip.py
 
 ### Linux
 
@@ -47,6 +56,19 @@ Use your distribution method to install
 4. *python-psutil*
 5. *sed*
 6. any one of *MPV*, *MPlayer* and/or *VLC*.
+
+#### Notice for Python 2 users
+
+If you are still using **Python 2**, plase make sure "**pip**" is installed. Execute the following command to verify its existance:
+
+    python[2] -m pip list
+
+If you get a response, you are good to go. Otherwise, use your distro package manager to install it.
+
+If your distro does not provide it (some do not anymore), use the following commands to get it:
+
+    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+    sudo python[2] get-pip.py
 
 When you are done, proceed to  "[Performing the installation](#performing-the-installation)".
 
@@ -63,7 +85,7 @@ Open a **terminal** and type:
 
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-Depending on your Mac OS version, you may have to install **sed** too:
+Depending on your macOS version, you may have to install **sed** too:
 
     brew install gnu-sed --default-names
 
@@ -125,6 +147,19 @@ On **Debian** based systems you will have to execute:
 If for some reason you want a **python 2** installation, execute:
 
     python2 install.py
+
+
+#### Note for macOS users
+
+This release of **PyRadio** has been tested on **Catalina** and **Big Sur**.
+
+On **Catalina** the executable has been placed on a location which is not directly accessible (not in the PATH). **PyRadio** will try to link it to your **bin** folder (creating *~/bin/pyradio*), and **PyRadio** will be ready yo be executed, provided that this folder is in your PATH and that **Homebrew** default installation folders have been used during the installation of **Python 3**.
+
+In case a different **Homebrew** location has been used (or a different package manager, for this matter), you can just point the installation to the correct path, using the following command (post installation):
+
+    python3 install.py --brew /path/to/homebrew/installation
+
+so that **PyRadio** can find and link the executable to your **bin** folder.
 
 ### Updating a pre 0.8.9 installation
 

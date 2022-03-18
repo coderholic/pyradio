@@ -74,12 +74,13 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
  - Theming support
  - [RadioBrowser](radio-browser.md) support
  - Easy installation / updating
- - Runs on Linux, MacOS and Windows
+ - Runs on Linux, macOS and Windows
 
 and much more...
 
 ## Requirements
 * python 2.7/3.5+
+    - wheel
     - requests
     - dnspython
     - psutil

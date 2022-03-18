@@ -1,11 +1,10 @@
 #!/bin/bash
 function help(){
-echo "Usage: $0 [2/-R/--system]"
+echo "Usage: $0 [2/-R]"
 echo "
 Available options:
-         2   build using python v. 2.x
-        -R   remove (uninstall) pyradi
-  --system   system wide installation
+     2   build using python v. 2.7 (linux only)
+    -R   remove (uninstall) pyradi0
 
 If no option is used, will build using Python 3
 and will install in your HOME directory
@@ -57,13 +56,8 @@ rm -f /tmp/pyradio-uninstall.$$ /tmp/pyradio-delete.$$ 2>/dev/null
 
 
 function remove_pip_install(){
-    if [ -z "$TO_USER" ]; then
-        sudo python -m pip uninstall -y pyradio 2>/dev/null 1>&2
-        sudo python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
-    else
-        python -m pip uninstall -y pyradio 2>/dev/null 1>&2
-        python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
-    fi
+    python -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
 }
 
 function uninstall(){
@@ -76,37 +70,32 @@ function uninstall(){
     }
     # keep this sudo as to not break lines
     sudo echo 'Uninstalling PyRadio'
-    user=$(which pyradio 2>/dev/null| grep '\.local')
-    [ -z "$user" ] && {
-        echo -n '** Removing executable ... '
-        sudo rm -f `which pyradio 2>/dev/null` 2>/dev/null
-        if [ -d /usr/share/doc/pyradio ];then
-            sudo rm -rf /usr/share/doc/pyradio 2>/dev/null
-        else
-            sudo rm -rf /usr/local/share/doc/pyradio 2>/dev/null
-        fi
-        echo done
-        echo -n '** Removing help files ... '
-        sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio.1.gz 2>/dev/null
-        sudo rm -f /usr/share/man/man1/pyradio_rb.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio_rb.1.gz 2>/dev/null
-        echo done
-    } || {
-        echo -n '** Removing executable ... '
-        rm -f `which pyradio 2>/dev/null` 2>/dev/null
-        echo done
-        echo -n '** Removing help files ... '
-        if [ -d ~/.local/share/doc/pyradio ];then
-            rm -rf ~/.local/share/doc/pyradio 2>/dev/null
-        else
-            rm -rf ~/.local/local/share/doc/pyradio 2>/dev/null
-        fi
-        rm -f ~/.local/share/man/man1/pyradio.1.gz 2>/dev/null
-        rm -f ~/.local/share/man/man1/pyradio_rb.1.gz 2>/dev/null
-        echo done
-    }
+    echo -n '  ** Removing executable ... '
+    sudo rm -f `which pyradio 2>/dev/null` 2>/dev/null
+    if [ -d /usr/share/doc/pyradio ];then
+        sudo rm -rf /usr/share/doc/pyradio 2>/dev/null
+    else
+        sudo rm -rf /usr/local/share/doc/pyradio 2>/dev/null
+    fi
+    if [ -d ~/.local/share/doc/pyradio ];then
+        rm -rf ~/.local/share/doc/pyradio 2>/dev/null
+    else
+        rm -rf ~/.local/local/share/doc/pyradio 2>/dev/null
+    fi
+    echo done
+    echo -n '  ** Removing help files ... '
+    sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio.1.gz 2>/dev/null
+    sudo rm -f /usr/share/man/man1/pyradio_rb.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio_rb.1.gz 2>/dev/null
+    rm -f ~/.local/share/man/man1/pyradio.1.gz 2>/dev/null
+    rm -f ~/.local/share/man/man1/pyradio_rb.1.gz 2>/dev/null
+    echo done
 #set -x
     remove_paths
     remove_pip_install
+    if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
+        # delete link on mac
+        [ -h ~/bin/pyradio ] && rm ~/bin/pyradio 2>/dev/null
+    fi
     echo "PyRadio successfully uninstalled"
 }
 
@@ -124,54 +113,6 @@ function get_cur_version(){
     cur_state=$(grep 'app_state = ' pyradio/__init__.py | sed "s/app_state = //;s/'//g")
     [[ -z "$cur_state" ]] || cur_version="$cur_version"-"$cur_state"
     #echo "$cur_version"
-}
-
-function do_debian(){
-get_cur_version
-outfile=pyradio-${cur_version}_all.deb
-create_bdist
-mkdir -p debian/DEBIAN
-cat <<END >debian/DEBIAN/control
-Source: pyradio
-Version: |version|
-Priority: optional
-Build-Depends: debhelper-compat (= 9) python3-setuptools
-Maintainer: Spiros Georgaras <sng@hellug.gr>
-Package: pyradio
-Section: Multimedia
-Architecture: all
-Description: Command line internet radio player
-
-END
-
-
-cd debian
-tar xzf ../dist/*z
-mkdir -p usr/local/share/doc
-cp ../*md usr/local/share/doc
-cp ../*html usr/local/share/doc
-cp ../LICENCE usr/local/share/doc/copyright
-mkdir -p usr/local/share/man/man1
-cp ../pyradio.1 usr/local/share/man/man1/
-cp ../pyradio_rb.1 usr/local/share/man/man1/
-gzip usr/local/share/man/man1/pyradio.1
-gzip usr/local/share/man/man1/pyradio_rb.1
-sed -i "s/|version|/$cur_version/" DEBIAN/control
-cd ..
-
-dpkg-deb -b debian $outfile
-# clean up
-rm -rf build pyradio.egg-info dist debian 2>/dev/null
-echo
-echo "=============================================================================="
-echo "File created: $outfile
-You can install it by executing
-    sudo dpkg -i ./$outfile
-or
-    sudo apt install ./$outfile
-"
-echo "=============================================================================="
-
 }
 
 function do_dev(){
@@ -194,10 +135,128 @@ function do_exit(){
     fi
 }
 
+function put_exec_to_mac_path(){
+echo "Checking executable accessability"
+echo -n "  ** Checking if pyradio is in PATH ... "
+pyradio --version 1>/dev/null 2>&1
+if (( $? == 0 ));then
+    echo "found"
+    exit
+else
+    echo "not found"
+fi
+
+echo -n "  ** Checking if ~/bin is in PATH ... "
+BIN_IN_PATH=$(python${TO_PYTHON} -c "from os import getenv; \
+find_path=getenv('HOME') + '/bin'; \
+path=getenv('PATH'); \
+print('nok') if not find_path in path else print('')")
+#
+# if BIN_IN_PATH is not empty, exit with warning!
+#
+[ -z ${BIN_IB_PATH} ] && echo "found" || echo "not found"
+
+BIN_FOLDER="${HOME}"/bin
+[ -d "${BIN_FOLDER}" ] || mkdir "${BIN_FOLDER}"
+
+# find pyradio
+echo -n "  ** Looking for pyradio executable ... "
+#ver=$(python"${TO_PYTHON}" -c 'from sys import version_info; print("{0}.{1}.{2}".format(version_info.major, version_info.minor, version_info.micro))')
+#FILE=$(find /usr/local -type f -name pyradio | grep ${ver})
+
+#set -x
+cat <<EOF > tmp_$$.py
+import glob
+from os.path import isfile, exists
+from argparse import ArgumentParser
+import subprocess
+import sys
+homebrew='/usr/local/opt'
+parser = ArgumentParser(description='Put PyRadio in PATH on MacOsX')
+parser.add_argument('--brew', default='', help='Homebrew installation path.')
+args = parser.parse_args()
+if args.brew:
+    if exists(str(args.brew)):
+        homebrew = str(args.brew)
+#print('homebrew =', homebrew)
+#sys.exit()
+files=glob.glob(homebrew + '/**/pyradio', recursive=True)
+ver = str(sys.version_info.major) + '.' + str(sys.version_info.minor)
+for f in files:
+    if isfile(f) and ver in f:
+        #print('trying ' + f)
+        ret = subprocess.call(f + ' --version', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        #print('ret ', ret)
+        if ret == 0:
+            print(f)
+            break
+EOF
+#set -x
+if [ -z "${HOMEBREW_TOKEN}" ];then
+    FILE=$(python${TO_PYTHON} tmp_$$.py)
+else
+    FILE=$(python${TO_PYTHON} tmp_$$.py "${HOMEBREW_TOKEN}" "${HOMEBREW}")
+fi
+rm tmp_$$.py
+#set +x
+#exit
+
+#
+# if FILE is empty, exeit with error, point to issues
+#
+[ -z ${FILE} ] && echo "not found" || echo "found"
+
+#echo "FILE = ${FILE}"
+#unset FILE
+if [ -z "${FILE}" ];then
+    echo ""
+    echo "I cannot find pyradio executable file!"
+    echo
+    if [ -z ${WARNING} ];then
+        echo "Try to use the --brew command line parameter"
+        echo "to indicate where Hombrew (or whatever package"
+        echo "manager you are using) installs files."
+    else
+        echo "Try to pass the location where Hombrew (or whatever"
+        echo "package manager you are using) installs files, as"
+        echo "a parameter and try again."
+    fi
+    echo ""
+    echo "If you still cannot make it work, please"
+    echo "fill in a bug report at"
+    echo "    https://github.com/coderholic/pyradio/issues"
+    echo ""
+    exit 1
+fi
+
+echo -n "  ** Linking pyradio to ${BIN_FOLDER} ... "
+ln -s "${FILE}" "${BIN_FOLDER}"/pyradio 2>/dev/null && echo "done" || {
+    echo "error"
+    echo ""
+    echo "  ** Error: I cannot create a link to pyradio"
+    echo "            executable file..."
+    echo "  ** Please execute the following command and check"
+    echo "     its status:"
+    echo "ln -s "${FILE}" "${BIN_FOLDER}"/pyradio"
+    echo ""
+    exit 1
+}
+
+if [ ! -z "${BIN_IN_PATH}" ];then
+    echo ""
+    echo "  ** Error: Your bin folder (${BIN_FOLDER})"
+    echo "            is not in your PATH"
+    echo "  ** PyRadio has already created a link to the"
+    echo "     executable file, but you will have to add"
+    echo "     ${BIN_FOLDER} to your PATH variable, for"
+    echo "     it to work..."
+    echo ""
+fi
+}
+
 TO_PYTHON=3
 TO_PYTHON_FROM_X=''
 NO_DEV=''
-TO_USER=1
 while [[ $# -gt 0 ]]
 do
     key="$1"
@@ -206,17 +265,47 @@ do
             help
             exit
             ;;
-        -d)
-            do_debian
+        --warning)
+            # macos only; execute "put pyradio in PATH" and
+            # display warning (not error) if pyradio executable
+            # is not found
+            #
+            # DO NOT USE IT on any other circumstance
+            #
+            WARNING=1
+            shift
+            ;;
+        --brew)
+            # macos only; put pyradio in PATH
+            #
+            # DO NOT USE IT on any other circumstance
+            #
+            shift
+            [ -z "${1}" ] || {
+                HOMEBREW_TOKEN="--brew"
+                HOMEBREW="${1}"
+                shift
+            }
+            ;;
+        --fix-mac-path)
+            # macos only; put pyradio in PATH (same as above)
+            # but actuall run put_exec_to_mac_path (maybe from
+            # install.py?)
+            #
+            # DO NOT USE IT on any other circumstance
+            #
+            shift
+            #set -x
+            [ -z "$1" ] ||{
+                HOMEBREW_TOKEN="--brew"
+                HOMEBREW="${1}"
+            }
+            put_exec_to_mac_path
             exit
             ;;
         -R)
             uninstall
             exit
-            ;;
-        --system)
-            unset TO_USER
-            shift
             ;;
         2)
             [ -z "${TO_PYTHON_FROM_X}" ] && TO_PYTHON=2
@@ -287,87 +376,43 @@ done
 uninstall 1
 
 # delete any files that were left from previous attempt
-[ -z "$TO_USER" ] && {
-    sudo find . -iname "*.pyc" -delete 2>/dev/null
-    sudo find . -iname "*.egg" -delete 2>/dev/null
-} || {
-    find . -iname "*.pyc" -delete 2>/dev/null
-    find . -iname "*.egg" -delete 2>/dev/null
-}
+sudo find . -iname "*.pyc" -delete 2>/dev/null
+sudo find . -iname "*.egg" -delete 2>/dev/null
 
-# build and install project
-python"${TO_PYTHON}" setup.py build
+echo "***** installing for user..."
+do_dev
+python"${TO_PYTHON}" -m pip install .
 if [ $? -eq 0 ]
 then
-    [ -z "$TO_USER" ] && {
-        echo "***** installing..."
-        do_dev
-        sudo python"${TO_PYTHON}" -m pip install .
-        if [ $? -eq 0 ]
-        then
-            [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py
-            gzip -k pyradio.1
-            sudo mv -f pyradio.1.gz /usr/share/man/man1 2>/dev/null || sudo mv -f pyradio.1.gz /usr/local/share/man/man1
-            gzip -k pyradio_rb.1
-            sudo mv -f pyradio_rb.1.gz /usr/share/man/man1 2>/dev/null || sudo mv -f pyradio_rb.1.gz /usr/local/share/man/man1
-            DOC=/usr/share/doc/pyradio
-            sudo mkdir "$DOC" 2>/dev/null
-            if [ ! -d "$DOC" ];then
-                # Mac OS SIP protects /usr
-                DOC=/usr/local/share/doc/pyradio
-                mkdir "$DOC"
-            fi
-            for n in *.md *.html
-            do
-                sudo cp "$n" "$DOC"
-            done
-            # copy LICENCE
-            if [ "$DOC" = "/usr/share/doc/pyradio" ];then
-                sudo mkdir -p /usr/share/licenses/pyradio 2>/dev/null
-                sudo cp LICENCE /usr/share/licenses/pyradio
-            else
-                sudo cp LICENCE "$DOC"
-            fi
-        else
-            do_exit
-            exit 1
-        fi
-    } || {
-        echo "***** installing for user..."
-        do_dev
-        python"${TO_PYTHON}" -m pip install .
-        if [ $? -eq 0 ]
-        then
-            [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py
-            gzip -k pyradio.1
-            gzip -k pyradio_rb.1
-            mkdir -p ~/.local/share/man/man1 2>/dev/null
-            mv -f pyradio.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio.1.gz ~/.local/local/share/man/man1
-            mv -f pyradio_rb.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio_rb.1.gz ~/.local/local/share/man/man1
-            DOC=~/.local/share/doc/pyradio
-            mkdir -p "$DOC" 2>/dev/null
-            if [ ! -d "$DOC" ];then
-                # Mac OS SIP protects /usr
-                DOC=~/.local/local/share/doc/pyradio
-                mkdir "$DOC"
-            fi
-            for n in *.md *.html
-            do
-                cp "$n" "$DOC"
-            done
-            # copy LICENCE
-            mkdir -p ~/.local/share/licenses 2>/dev/null
-            if [ "$DOC" = "~/.local/share/doc/pyradio" ];then
-                mkdir -p ~/.local/share/licenses/pyradio 2>/dev/null
-                cp LICENCE ~/.local/share/licenses/pyradio
-            else
-                cp LICENCE "$DOC"
-            fi
-        else
-            do_exit
-            exit 1
-        fi
-    }
+    [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py
+    gzip -k pyradio.1
+    gzip -k pyradio_rb.1
+    mkdir -p ~/.local/share/man/man1 2>/dev/null
+    mv -f pyradio.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio.1.gz ~/.local/local/share/man/man1
+    mv -f pyradio_rb.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio_rb.1.gz ~/.local/local/share/man/man1
+    DOC=~/.local/share/doc/pyradio
+    mkdir -p "$DOC" 2>/dev/null
+    if [ ! -d "$DOC" ];then
+        # Mac OS SIP protects /usr
+        DOC=~/.local/local/share/doc/pyradio
+        mkdir "$DOC"
+    fi
+    for n in *.md *.html
+    do
+        cp "$n" "$DOC"
+    done
+    # copy LICENCE
+    mkdir -p ~/.local/share/licenses 2>/dev/null
+    if [ "$DOC" = "~/.local/share/doc/pyradio" ];then
+        mkdir -p ~/.local/share/licenses/pyradio 2>/dev/null
+        cp LICENCE ~/.local/share/licenses/pyradio
+    else
+        cp LICENCE "$DOC"
+    fi
+    if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
+        [ -z "${HOMEBREW}" ] && HOMEBREW=/usr/local/opt
+        put_exec_to_mac_path "${HOMEBREW}"
+    fi
 else
     do_exit
     exit 1

@@ -151,17 +151,6 @@ IF "%NO_DEV%" == "1" (
     %PROGRAM% -c "from install import windows_put_devel_version; windows_put_devel_version()"
     cd ..
 )
-REM %PROGRAM% setup.py build
-REM IF %ERRORLEVEL% == 0 GOTO install
-REM ECHO.
-REM ECHO.
-REM ECHO ###############################################
-REM ECHO # The installation has failed!                #
-REM ECHO #                                             #
-REM ECHO # Please make sure your internet connection   #
-REM ECHO # is working and try again.                   #
-REM ECHO ###############################################
-REM GOTO endofscript
 
 :install
 %PROGRAM% -m pip install .
@@ -182,8 +171,10 @@ GOTO endofscript
 IF "%NO_DEV%"=="1" (
     DEL DEV 1>NUL 2>NUL
     CD pyradio
-    DEL config.py
-    RENAME config.py.dev config.py
+    IF EXIST config.py.dev (
+        DEL config.py
+        RENAME config.py.dev config.py
+    )
     CD ..
 )
 ECHO.
