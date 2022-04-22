@@ -196,8 +196,11 @@ class PyRadioConfigWindow(object):
                 self._old_theme == self._saved_config_options['theme'][1] and \
                     self._old_use_transparency == self._saved_config_options['use_transparency'][1] and not self._cnf.params_changed:
                 dirty_title = '─ '
+                self._cnf.dirty_config = False
             else:
                 dirty_title = ' *'
+                logger.error('>>> setting dirty title')
+                self._cnf.dirty_config = True
         X = int((self.maxX - len(self._title) - 1) / 2)
         try:
             self._win.addstr(0, X, dirty_title, curses.color_pair(3))
@@ -215,6 +218,7 @@ class PyRadioConfigWindow(object):
                 pass
 
     def refresh_selection(self):
+        logger.error('start of refresh_selection, dirty config = {}'.format(self._cnf.dirty_config))
         self._print_title()
         if not self.too_small:
             for i, it in enumerate(list(self._config_options.values())):
@@ -240,6 +244,7 @@ class PyRadioConfigWindow(object):
                             else:
                                 if it[1] != '-':
                                     self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6]), hcol)
+        logger.error('end of refresh_selection, dirty config = {}'.format(self._cnf.dirty_config))
         self._win.refresh()
 
     def _get_col_line(self, ind):
@@ -438,6 +443,7 @@ class PyRadioConfigWindow(object):
             self._win.nodelay(False)
             if char == -1:
                 ''' ESCAPE '''
+                logger.error('dirty config is {}, and ESC pressed'.format(self._cnf.dirty_config))
                 #self._config_options['theme'][1] = self._old_theme
                 self._saved_config_options['theme'][1] = self._old_theme
                 self._cnf.opts['theme'][1] = self._old_theme

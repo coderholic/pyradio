@@ -35,6 +35,11 @@ PY3 = sys.version[0] == '3'
 # import logging
 # logger = logging.getLogger(__name__)
 
+''' This is PyRadio version this
+    install.py was released for
+'''
+PyRadioInstallPyReleaseVersion = '0.8.9.16'
+
 def print_pyradio_on():
     print('''
                      _____       _____           _ _
@@ -167,8 +172,16 @@ def version_string_to_list(this_version):
         # logger.error('DE a_n_l = "{}"'.format(a_n_l))
     return a_n_l
 
+def get_github_long_description_for_script():
+    ret = get_github_long_description()
+    if ret[1]:
+        print(ret[1])
+    else:
+        print('')
+
 def get_github_long_description(
     only_tag_name=False,
+    devel=False,
     use_sng_repo=False,
     sng_branch=False,
     do_not_exit=False
@@ -269,14 +282,25 @@ def get_github_long_description(
 
     # print('\n\n' + tag_name)
     # print(tag_hash)
+    # print(str(use_sng_repo))
+    # revision=15
     # print(revision)
 
     if revision > 0:
-        this_version = tag_name + '-r' + str(revision) + '-' + returns[0][0]['sha'][:7]
+        if devel:
+            ''' coderholic devel branch
+                currently it does not exist
+            '''
+            this_version = tag_name + '-r' + str(revision) + '-' + returns[0][0]['sha'][:8] + '-dev'
+        else:
+            ''' coderholic master branch '''
+            this_version = tag_name + '-' + str(revision) + '-' + returns[0][0]['sha'][:8]
         if use_sng_repo:
-            this_version += '-sng'
-        if not sng_branch:
-            this_version += '-dev'
+            ''' sng repo '''
+            this_version = tag_name + '-r' + str(revision) + '-' + returns[0][0]['sha'][:8] + '-sng'
+            if not sng_branch:
+                ''' sng devel branch '''
+                this_version += '-dev'
     else:
         this_version = None
 
@@ -310,19 +334,20 @@ def get_devel_version():
 
 def windows_put_devel_version():
     ''' not used '''
-    long_descr = get_devel_version()
-    from shutil import copyfile
-    cur_dir = os.getcwd()
-    copyfile(os.path.join(cur_dir, 'config.py'), os.path.join(cur_dir, 'config.py.dev'))
-    try:
-        with open(os.path.join(cur_dir, 'config.py'), 'r') as con:
-            lines = con.read()
-        lines = lines.replace("git_description = ''", "git_description = '" + long_descr + "'")
-        with open(os.path.join(cur_dir, 'config.py'), 'w') as con:
-            con.write(lines)
-    except:
-        print('Error: Cannot change downloaded files...\n       Please close all running programs and try again.')
-        sys.exit(1)
+    long_descr = get_github_long_description()[1]
+    if long_descr:
+        from shutil import copyfile
+        cur_dir = os.getcwd()
+        copyfile(os.path.join(cur_dir, 'config.py'), os.path.join(cur_dir, 'config.py.dev'))
+        try:
+            with open(os.path.join(cur_dir, 'config.py'), 'r') as con:
+                lines = con.read()
+            lines = lines.replace("git_description = ''", "git_description = '" + long_descr + "'")
+            with open(os.path.join(cur_dir, 'config.py'), 'w') as con:
+                con.write(lines)
+        except:
+            print('Error: Cannot change downloaded files...\n       Please close all running programs and try again.')
+            sys.exit(1)
 
 def WindowExists(title):
     ''' fixing #146  '''
@@ -578,7 +603,8 @@ class PyRadioUpdate(object):
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
 
                     b.write('IF EXIST C:\\Users\\Spiros\\pyradio (\n')
-                    b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\*.py pyradio\n')
+                    b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\install.py pyradio\n')
+                    # b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\*.py pyradio\n')
                     b.write('COPY C:\\Users\\Spiros\\pyradio\\devel\\*.bat devel\n')
                     b.write(')\n')
 
@@ -602,7 +628,8 @@ class PyRadioUpdate(object):
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
 
                     b.write('IF EXIST C:\\Users\\Spiros\\pyradio (\n')
-                    b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\*.py pyradio\n')
+                    b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\install.py pyradio\n')
+                    # b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\*.py pyradio\n')
                     b.write('COPY C:\\Users\\Spiros\\pyradio\\devel\\*.bat devel\n')
                     b.write(')\n')
 
@@ -631,8 +658,12 @@ class PyRadioUpdate(object):
         os.startfile(self._dir)
 
     def _no_download_method(self):
-        print('Error: PyRadio has no way to download files...')
-        print('       Please either install python\'s "requests" module and try again.\n')
+        if platform.system().lower().startswith('darwin'):
+            subprocess.call('python3 -m pip install requests', shell=True)
+            print('\n\nPyradio has installed the minimum necessary modules for its execution\nPlease execute the same command again...')
+        else:
+            print('Error: PyRadio has no way to download files...')
+            print('       Please install python\'s "requests" module and try again.\n')
         sys.exit(1)
 
     def _do_it(self, mode='update'):
@@ -640,7 +671,7 @@ class PyRadioUpdate(object):
             self._no_download_method()
 
         ''' Am I root ?'''
-        self._prompt_sudo()
+        #self._prompt_sudo()
 
         '''' get tmp dir '''
         if os.path.isdir('/tmp'):
@@ -676,10 +707,10 @@ class PyRadioUpdate(object):
             ''' install pyradio '''
             if self.user:
                 param += ' --user'
-            ret = subprocess.call('sudo devel/build_install_pyradio -no-dev -x ' + self._python_exec.python + ' '  + param, shell=True)
+            ret = subprocess.call('devel/build_install_pyradio -no-dev -x ' + self._python_exec.python + ' '  + param, shell=True)
         else:
             ''' uninstall pyradio '''
-            ret = subprocess.call('sudo devel/build_install_pyradio -no-dev -x ' + self._python_exec.python + ' -R' + param, shell=True)
+            ret = subprocess.call('devel/build_install_pyradio -no-dev -x ' + self._python_exec.python + ' -R' + param, shell=True)
         if ret > 0:
             ret = False
         else:
@@ -734,14 +765,20 @@ class PyRadioUpdate(object):
         '''
         from shutil import copyfile
         cur_dir = os.getcwd()
-        print('\n\n{}\n\n'.format(os.path.join(self._dir, self.ZIP_DIR[self._package])))
-        print(cur_dir)
-        copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/install.py',
+        copyfile('/Users/max/pyradio/pyradio/install.py',
             os.path.join(cur_dir, 'install.py'))
-        copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', \
-            os.path.join(os.path.join(self._dir, self.ZIP_DIR[self._package],
-                'devel', 'build_install_pyradio'))
-        )
+        #copyfile('/Users/max/pyradio/devel/build_install_pyradio', \
+        #    os.path.join(os.path.join(self._dir, self.ZIP_DIR[self._package],
+        #        'devel', 'build_install_pyradio'))
+        #)
+        #print('\n\n{}\n\n'.format(os.path.join(self._dir, self.ZIP_DIR[self._package])))
+        #print(cur_dir)
+        #copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/install.py',
+        #    os.path.join(cur_dir, 'install.py'))
+        #copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', \
+        #    os.path.join(os.path.join(self._dir, self.ZIP_DIR[self._package],
+        #        'devel', 'build_install_pyradio'))
+        #)
         # copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/config.py',
         #    os.path.join(self._dir, self.ZIP_DIR[self._package], 'pyradio', 'config.py'))
         '''
@@ -897,7 +934,7 @@ if __name__ == '__main__':
     #exe = find_pyradio_win_exe()
     #print(exe)
     #sys.exit()
-    # l=get_github_long_description(use_sng_repo=True)
+    # l=get_github_long_description()
     # print(l)
     # print(get_devel_version())
     # sys.exit()
@@ -947,6 +984,14 @@ if __name__ == '__main__':
     sys.stdout.flush()
 
     if platform.system().lower().startswith('darwin'):
+        ''' get python version '''
+        if sys.version_info < (3, 0):
+            print('Error: Python 2 is not supported any more!')
+            print('       Please install Python 3 and execute the command:')
+            print('\n           python3 install.py')
+            print('\n       to install PyRadio.\n\n')
+            sys.exit(1)
+
         if args.brew != "False":
             if args.brew is None:
                 param = ' --fix-mac-path'
@@ -994,18 +1039,20 @@ if __name__ == '__main__':
         args.force = True
         package = 1
         VERSION, github_long_description = get_github_long_description(use_sng_repo=True, sng_branch=True)
-        if not github_long_description:
-            github_long_description = 'PyRadio'
-        github_long_description = github_long_description.replace('-', '-r', 1)
+        # if not github_long_description:
+        #     github_long_description = 'PyRadio'
+        # if github_long_description:
+        #     github_long_description = github_long_description.replace('-', '-r', 1)
         # github_long_description += '-sng'
     elif args.sng_devel:
         '''' sng devel '''
         args.force = True
         package = 2
         VERSION, github_long_description = get_github_long_description(use_sng_repo=True)
-        if not github_long_description:
-            github_long_description = 'PyRadio'
-        github_long_description = github_long_description.replace('-', '-r', 1)
+        # if not github_long_description:
+        #     github_long_description = 'PyRadio'
+        # id github_long_description:
+        #     github_long_description = github_long_description.replace('-', '-r', 1)
         # github_long_description += '-sng-dev'
     elif args.devel:
         ''' official devel '''
@@ -1021,6 +1068,9 @@ if __name__ == '__main__':
         VERSION, github_long_description = get_github_long_description()
     else:
         VERSION = get_github_tag()
+
+    if VERSION is None:
+        VERSION = PyRadioInstallPyReleaseVersion
 
     if args.uninstall:
         if platform.system().lower().startswith('win'):

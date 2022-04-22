@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import io
+from os.path import exists
 
 """ Theming constants """
 def FOREGROUND(): return 0
@@ -43,4 +45,18 @@ def erase_curses_win(self, Y, X, beginY, beginX, char=' ', color=5):
     empty_win.bkgdset(char, curses.color_pair(color))
     empty_win.erase()
     empty_win.refresh()
+
+def is_rasberrypi():
+    ''' Try to detest rasberry pi '''
+    try:
+        with io.open('/sys/firmware/devicetree/base/model', 'r') as m:
+            if 'raspberry pi' in m.read().lower():
+                return True
+    except Exception:
+        pass
+    return False
+
+    # if exists('/usr/bin/raspi-config'):
+    #     return True
+    # return False
 

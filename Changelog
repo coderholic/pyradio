@@ -1,3 +1,11 @@
+2022-04-29 s-n-g
+    * version 0.8.9.17 (0.9-beta13)
+    * adding Title's Log
+    * changing versioning
+    * fixing user isntallation in build_install_pyradio
+    * fixing python2 main.py crash (#153)
+    * updating docs
+
 2022-03-15 s-n-g
     * version 0.8.9.15 (0.9-beta12)
     * fixing "0" and "$" insertion on RadioBrowser search window

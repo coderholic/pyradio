@@ -12,10 +12,11 @@ from datetime import datetime
 from shutil import copyfile, move
 import threading
 from copy import deepcopy
-from pyradio import version, app_state, stations_updated
+from pyradio import version, stations_updated
 
 from .browser import PyRadioStationsBrowser, probeBrowsers
 from .install import get_github_long_description
+from .common import is_rasberrypi
 HAS_REQUESTS = True
 try:
     import requests
@@ -1085,6 +1086,14 @@ class PyRadioConfig(PyRadioStations):
     theme_has_error = False
     theme_not_supported_notification_shown = False
 
+    log_titles = False
+    log_degub = False
+
+    ''' Titles logging '''
+    _current_log_title = _current_log_station = ''
+    _old_log_title = _old_log_station = ''
+    _last_liked_title = ''
+
     ''' True if lock file exists '''
     locked = False
 
@@ -1182,6 +1191,8 @@ class PyRadioConfig(PyRadioStations):
         self.config_file = path.join(self.stations_dir, 'config')
 
         self.force_to_remove_lock_file = False
+        self.titles_log = PyRadioLog(self)
+        #self.titles_log = PyRadioLog(self.stations_dir)
 
     @property
     def open_last_playlist(self):
@@ -1433,16 +1444,17 @@ class PyRadioConfig(PyRadioStations):
                     The version to use when checking for updates
         '''
         ret = None
-        if app_state:
-            self.info = " PyRadio {0}-{1} ".format(version, app_state)
-        else:
-            self.info = " PyRadio {0} ".format(version)
-            ''' git_description can be set at build time
-                if so, revision will be shown along with the version
-            '''
-            # if revision is not 0
-            git_description = 'PyRadio 0.8.9.14'
-            if git_description:
+        self.info = " PyRadio {0} ".format(version)
+        ''' git_description can be set at build time
+            if so, revision will be shown along with the version
+        '''
+        # if revision is not 0
+        git_description = ''
+        if git_description:
+            git_info = git_description.split('-')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('versrion = {0} - git_info = {1}'.format(version, git_info))
+            if git_info[0] == version:
                 if git_description.endswith('-git') or \
                         git_description.endswith('-sng') or \
                         git_description.endswith('-dev'):
@@ -1452,17 +1464,18 @@ class PyRadioConfig(PyRadioStations):
                     self.info = ' ' + git_description
                     ret = self.info + " (development version)"
                 else:
-                    git_info = git_description.split('-')
                     try:
-                        if git_info[1] != '0':
-                            if 'beta' in git_info[1] or 'rc' in git_info[1].lower():
-                                self.info = " PyRadio {1}-{1}".format(git_info[0], git_info[1])
-                                ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[2])
-                            else:
-                                self.info = " PyRadio {0}-r{1} ".format(version, git_info[1])
-                                ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1])
+                        if git_info[1] == '0':
+                            self.info = " PyRadio {}".format(git_info[0])
+                            ret = 'PyRadio built from git master branch'
+                        else:
+                            self.info = " PyRadio {0}-r{1}".format(git_info[0], git_info[1])
+                            ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1])
                     except:
                         pass
+            else:
+                self.info = " PyRadio {}".format(version)
+                ret = ''
         self.current_pyradio_version = self.info.replace(' PyRadio ', '').replace(' ', '')
         # if self._distro != 'None':
         #     self.info += '({})'.format(self._distro)
@@ -1586,7 +1599,20 @@ class PyRadioConfig(PyRadioStations):
 
         ''' Copy package config into user dir '''
         if not path.exists(user_config_file):
-            copyfile(package_config_file, user_config_file)
+            if is_rasberrypi():
+                self._convert_config_for_rasberrypi(package_config_file, user_config_file)
+            else:
+                copyfile(package_config_file, user_config_file)
+
+    def _convert_config_for_rasberrypi(self, package_config_file, user_config_file):
+        lines = []
+        with open(package_config_file, 'r') as f:
+            lines = [line.strip() for line in f]
+        for i in range(len(lines)):
+            if lines[i].startswith('player'):
+                lines[i] = 'player = mplayer,vlc,mpv'
+        with open(user_config_file, 'w') as f:
+            f.write('\n'.join(lines) + '\n')
 
     def read_config(self):
         lines = []
@@ -2042,6 +2068,9 @@ auto_save_playlist = {12}
             is_last_playlist=is_last_playlist,
             is_register=is_register)
 
+    def can_like_a_station(self):
+        return True if self._current_log_title != self._last_liked_title else False
+
 
 class PyRadioPlaylistStack(object):
 
@@ -2295,3 +2324,85 @@ class PyRadioPlaylistStack(object):
                 self._p[i] = list(new_item[:])
                 ret += 1
         return ret
+
+
+class PyRadioLog(object):
+
+    PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    PATTERN_TITLE = '%(asctime)s | %(message)s'
+
+    log_titles = log_debug = False
+
+    titles_handler = debug_handler = None
+
+    def __init__(self, pyradio_config):
+        self._cnf = pyradio_config
+        self._stations_dir = pyradio_config.stations_dir
+
+    def configure_logger(self, debug=None, titles=None):
+        logger = logging.getLogger('pyradio')
+        logger.setLevel(logging.DEBUG)
+        if debug or titles:
+            if debug and not self.log_debug:
+                # Handler
+                self.debug_handler = logging.FileHandler(path.join(path.expanduser('~'), 'pyradio.log'))
+                self.debug_handler.setLevel(logging.DEBUG)
+
+                # create formatter
+                formatter = logging.Formatter(self.PATTERN)
+
+                # add formatter to ch
+                self.debug_handler.setFormatter(formatter)
+
+                # add ch to logger
+                #l = logging.getLogger()
+                logger.addHandler(self.debug_handler)
+
+                # inform config
+                self.log_degub = True
+
+            if titles and not self.log_titles:
+                self.titles_handler = logging.handlers.RotatingFileHandler(
+                    path.join(
+                        self._stations_dir,
+                        'pyradio-titles.log'),
+                    maxBytes=50000,
+                    backupCount=5)
+                self.titles_handler.setFormatter(logging.Formatter(
+                    fmt=self.PATTERN_TITLE,
+                    datefmt='%b %d (%a) %H:%M')
+                )
+                self.titles_handler.setLevel(logging.CRITICAL)
+                #l = logging.getLogger()
+                logger.addHandler(self.titles_handler)
+                self.log_titles = True
+                logger.critical('=== Logging started')
+
+        if (not titles) and self.log_titles:
+            if self.titles_handler:
+                logger.critical('=== Logging stopped')
+                logger.removeHandler(self.titles_handler)
+                self.log_titles = False
+                self.titles_handler = None
+
+        logging.raiseExceptions = False
+        logging.lastResort = None
+
+    def tag_title(self, the_log):
+        ''' tags a title
+
+            Returns:
+                0: All ok
+                1: Error
+                2: Already tagged
+        '''
+        if self._cnf.can_like_a_station():
+            if logger.isEnabledFor(logging.CRITICAL):
+                try:
+                    the_log._write_title_to_log()
+                except:
+                    return 1
+                return 0
+        return 2
+
+

@@ -54,13 +54,37 @@ done < /tmp/pyradio-delete.$$
 rm -f /tmp/pyradio-uninstall.$$ /tmp/pyradio-delete.$$ 2>/dev/null
 }
 
-
-function remove_pip_install(){
-    python -m pip uninstall -y pyradio 2>/dev/null 1>&2
-    python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
+function remove_pip_sudo_install(){
+    sudo python -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    sudo python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    sudo python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
 }
 
 function uninstall(){
+    echo 'Uninstalling PyRadio'
+    echo -n '  ** Removing python files ... '
+    python -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    echo 'done'
+    echo -n '  ** Removing help files ... '
+    if [ -d ~/.local/share/doc/pyradio ];then
+        rm -rf ~/.local/share/doc/pyradio 2>/dev/null
+    else
+        rm -rf ~/.local/local/share/doc/pyradio 2>/dev/null
+    fi
+    rm -f ~/.local/share/man/man1/pyradio*gz 2>/dev/null
+    echo 'done'
+    if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
+        # delete link on mac
+        echo -n '  ** Removing link to executable ... '
+        [ -h ~/bin/pyradio ] && rm ~/bin/pyradio 2>/dev/null
+        echo 'done'
+    fi
+    echo "PyRadio successfully uninstalled"
+}
+
+function uninstall_sudo(){
     local user
     [ -z "$1" ] && {
         user=$(which pyradio 2>/dev/null) || {
@@ -68,7 +92,6 @@ function uninstall(){
             exit
         }
     }
-    # keep this sudo as to not break lines
     sudo echo 'Uninstalling PyRadio'
     echo -n '  ** Removing executable ... '
     sudo rm -f `which pyradio 2>/dev/null` 2>/dev/null
@@ -77,35 +100,19 @@ function uninstall(){
     else
         sudo rm -rf /usr/local/share/doc/pyradio 2>/dev/null
     fi
-    if [ -d ~/.local/share/doc/pyradio ];then
-        rm -rf ~/.local/share/doc/pyradio 2>/dev/null
-    else
-        rm -rf ~/.local/local/share/doc/pyradio 2>/dev/null
-    fi
     echo done
     echo -n '  ** Removing help files ... '
     sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio.1.gz 2>/dev/null
     sudo rm -f /usr/share/man/man1/pyradio_rb.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio_rb.1.gz 2>/dev/null
-    rm -f ~/.local/share/man/man1/pyradio.1.gz 2>/dev/null
-    rm -f ~/.local/share/man/man1/pyradio_rb.1.gz 2>/dev/null
     echo done
 #set -x
     remove_paths
-    remove_pip_install
+    remove_pip_sudo_install
     if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
         # delete link on mac
         [ -h ~/bin/pyradio ] && rm ~/bin/pyradio 2>/dev/null
     fi
     echo "PyRadio successfully uninstalled"
-}
-
-function create_bdist(){
-    rm -rf build pyradio.egg-info dist debian 2>/dev/null
-    python3 setup.py bdist || {
-        echo "Error creating bdist"
-        exit 1
-    }
-
 }
 
 function get_cur_version(){
@@ -118,8 +125,18 @@ function get_cur_version(){
 function do_dev(){
     if [ -z "${NO_DEV}" ]
     then
-        cp pyradio/config.py pyradio/config.py.dev
-        sed -i "s/git_description = ''/git_description = '$DEVEL'/" pyradio/config.py
+        [ -z "$DEVEL" ] && {
+            rm pyradio/config.pydev 2>/dev/null
+            return
+        }
+        sed -idev "s/git_description = ''/git_description = '$DEVEL'/" pyradio/config.py
+    fi
+}
+
+function do_undev(){
+    if [ -e pyradio/config.pydev ]
+    then
+        mv pyradio/config.pydev pyradio/config.py
     fi
 }
 
@@ -130,7 +147,7 @@ function do_exit(){
                 [ "$REMOVE_DIR" = "$HOME/tmp-pyradio" ] || \
                 [ "$REMOVE_DIR" = "/tmp/pyradio" ] || \
                 [ "$REMOVE_DIR" = "/tmp/tmp-pyradio" ];then
-            sudo rm -fr "$REMOVE_DIR"
+            rm -fr "$REMOVE_DIR"
         fi
     fi
 }
@@ -337,13 +354,14 @@ do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [ -z "$NO_DEV" ]
-then
-    cd pyradio
-    DEVEL=$(python -c 'from install import get_devel_version; print(get_devel_version())')
-    echo "Devel version: $DEVEL"
-    cd ..
-fi
+# if [ -z "$NO_DEV" ]
+# then
+#     cd pyradio
+#     DEVEL=$(python -c 'from install import get_github_long_description_for_script; get_github_long_description_for_script()')
+#     # DEVEL=$(python -c 'from install import get_devel_version; print(get_devel_version())')
+#     echo "Devel version: $DEVEL"
+#     cd ..
+# fi
 
 
 if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
@@ -401,9 +419,11 @@ else
 	python"${TO_PYTHON}" -m pip install .
 fi
 
+do_undev
+
 if [ $? -eq 0 ]
 then
-    [ -z "${NO_DEV}" ] && mv pyradio/config.py.dev pyradio/config.py
+    [ -z "${NO_DEV}" ] && [ -e pyradio/config.py.dev ] && mv pyradio/config.py.dev pyradio/config.py
     gzip -k pyradio.1
     gzip -k pyradio_rb.1
     mkdir -p ~/.local/share/man/man1 2>/dev/null

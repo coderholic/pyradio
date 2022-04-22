@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import curses
-import logging
+import logging, logging.handlers
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 from os import path, getenv, environ
 from sys import platform, version_info
@@ -13,6 +13,7 @@ from .config import PyRadioConfig, SUPPORTED_PLAYERS
 from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed, version_string_to_list, get_github_tag
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+PATTERN_TITLE = '%(asctime)s | %(message)s'
 
 PY3 = sys.version[0] == '3'
 
@@ -34,22 +35,19 @@ def pyradio_config_file():
         except:
             pass
 
-def __configureLogger():
-    logger = logging.getLogger('pyradio')
-    logger.setLevel(logging.DEBUG)
+def __configureLogger(pyradio_config, debug=None, titles=None):
+    if debug or titles:
 
-    # Handler
-    fh = logging.FileHandler(path.join(path.expanduser('~'), 'pyradio.log'))
-    fh.setLevel(logging.DEBUG)
+        if debug and not pyradio_config.log_degub:
+            if platform.startswith('win'):
+                print('Debug mode activated\n  printing messages to file: "{}\pyradio.log"'.format(getenv('USERPROFILE')))
+            else:
+                print('Debug mode activated; printing messages to file: "~/pyradio.log"')
 
-    # create formatter
-    formatter = logging.Formatter(PATTERN)
-
-    # add formatter to ch
-    fh.setFormatter(formatter)
-
-    # add ch to logger
-    logger.addHandler(fh)
+        pyradio_config.titles_log.configure_logger(
+            debug=debug,
+            titles=titles
+        )
 
 def shell():
     version_too_old = False
@@ -104,6 +102,8 @@ def shell():
                         help='Uninstall PyRadio.')
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
+    parser.add_argument('-lt', '--log-titles', action='store_true',
+                        help='Log titles to file.')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Start pyradio in debug mode.')
     parser.add_argument('-V', '--version', action='store_true',
@@ -359,12 +359,13 @@ def shell():
                 print(format_string.format(str(num+1), a_station[0], a_station[1], encoding))
             sys.exit()
 
-        if args.debug:
-            __configureLogger()
-            if platform.startswith('win'):
-                print('Debug mode activated\n  printing messages to file: "{}\pyradio.log"'.format(getenv('USERPROFILE')))
-            else:
-                print('Debug mode activated; printing messages to file: "~/pyradio.log"')
+        #pyradio_config.log.configure_logger(titles=True)
+        if args.debug or args.log_titles:
+            __configureLogger(debug=args.debug,
+                              titles=args.log_titles,
+                              pyradio_config=pyradio_config
+                              )
+            logging.raiseExceptions = False
         else:
             ''' Refer to https://docs.python.org/3.7/howto/logging.html
                 section "What happens if no configuration is provided"
@@ -444,34 +445,17 @@ def shell():
         ''' curses is off '''
         if pyradio.setup_return_status:
             if pyradio_config.WIN_UNINSTALL and platform.startswith('win'):
-                from msvcrt import getwch
-                from os import sep
-                import subprocess
-                the_path = __file__.split(sep)
-                the_file = sep.join(the_path[:-1]) + sep + 'install.py'
-                print('\nTo complete the process you will have to execute a batch file.')
-                print('Windows Explorer will open the location of the batch file to run.')
-                print('')
-                print('Please double click')
-                print('')
-                print('    uninstall.bat')
-                print('')
-                print('to remove PyRadio from your system.')
-                print('')
-                print('After you are done, you can delete the folder it resides in.')
-                print('\nPress any key to continue...', end='', flush=True)
-                getwch()
-                #print('\nPress any key to exit...', end='', flush=True)
-                #getwch()
-                subprocess.call('python ' + the_file + ' -R',
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL)
+                # doing it this way so that pyton2 does not break (#153)
+                from .win import win_press_any_key_to_unintall
+                win_press_any_key_to_unintall()
                 sys.exit()
 
             if pyradio_config.WIN_PRINT_PATHS and platform.startswith('win'):
                 ''' print exe path '''
+                # doing it this way so that pyton2 does not break (#153)
+                from .win import win_print_exe_paths
                 print('')
-                print_exe_paths()
+                win_print_exe_paths()
 
             if pyradio_config.WIN_MANAGE_PLAYERS and platform.startswith('win'):
                 ''' manage players'''
@@ -576,25 +560,6 @@ def get_format_string(stations):
     format_string = '{0:>' + str(num) + '.' + str(num) + 's}. ' + '{1:' + str(len0) + '.' + str(len0) + 's} | {2:' + str(len1) + '.' + str(len1) + 's} | {3}'
     header_format_string = '{0:' + str(len0+num+2) + '.' + str(len0+num+2) + 's} | {1:' + str(len1) + '.' + str(len1) + 's} | {2}'
     return header_format_string, format_string
-
-def print_exe_paths():
-    ''' Windows only
-    '''
-    from .install import fix_pyradio_win_exe
-    exe = fix_pyradio_win_exe()
-    if exe[0] and exe[1]:
-        print('PyRadio EXE files:')
-        print('  System:\n    {}'.format(exe[0]))
-        print('  User:\n    {}'.format(exe[1]))
-    else:
-        print('PyRadio EXE file:')
-        if exe[0]:
-            print('  {}'.format(exe[0]))
-        else:
-            print('  {}'.format(exe[1]))
-    print('\nPress any key to exit...', end='', flush=True)
-    from msvcrt import getwch
-    getwch()
 
 if __name__ == '__main__':
     shell()

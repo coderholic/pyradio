@@ -24,7 +24,7 @@
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
     pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
-    img{display: block; margin-left: auto; margin-right: auto; max-width: 600px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
@@ -50,12 +50,14 @@ a:visited{color: SaddleBrown;}
 <li><a href="#linux">Linux</a>
 <ul>
 <li><a href="#notice-for-python-2-users">Notice for Python 2 users</a></li>
+<li><a href="#rasberry-pi-installation">Rasberry Pi installation</a></li>
 </ul></li>
 <li><a href="#macos">macOS</a></li>
 <li><a href="#windows">Windows</a></li>
 </ul></li>
-<li><a href="#performing-the-installation">Performing the installation</a> * <a href="#note-for-macos-users">Note for macOS users</a>
+<li><a href="#performing-the-installation">Performing the installation</a>
 <ul>
+<li><a href="#note-for-macos-users">Note for macOS users</a></li>
 <li><a href="#updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</a></li>
 </ul></li>
 </ul>
@@ -80,6 +82,7 @@ In other words, in order to have a <strong>Pyradio system-wide installation</str
 <p>Use your distribution method to install</p>
 <ol type="1">
 <li><em>python-wheel</em></li>
+<li><em>python-setuptools</em></li>
 <li><em>python-requests</em></li>
 <li><em>python-dnspython</em></li>
 <li><em>python-psutil</em></li>
@@ -94,9 +97,15 @@ In other words, in order to have a <strong>Pyradio system-wide installation</str
 <pre>curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
 sudo python[2] get-pip.py</pre>
 <p>When you are done, proceed to “<a href="#performing-the-installation">Performing the installation</a>”.</p>
+<h4 id="rasberry-pi-installation">Rasberry Pi installation</h4>
+<p>If installing on a Rasberry Pi, there are a couple of things you should be aware of:</p>
+<ol type="1">
+<li>The default player will be <strong>MPlayer</strong></li>
+<li>If you still want to use <strong>MPV</strong>, please make sure you increase the <em>Connection timeout</em> value to at least 20 (sometimes even 30 for some machines). Even then, your machine may eventually crash, if it’s on the lower end of things and <strong>PyRadio</strong> is left running for hours.</li>
+</ol>
 <h3 id="macos">macOS</h3>
 <p>First thing you do is install python dependencies (assuming python 3 is installed):</p>
-<pre>pip3 install --upgrade wheel requests dnspython psutil</pre>
+<pre>python3 -m pip install --upgrade wheel setuptools requests dnspython psutil</pre>
 <p>Everything else you need to install and run <strong>pyradio</strong> is available on <a target="_blank" href="https://github.com/Homebrew/homebrew">Homebrew</a>. If you haven’t already downloaded its client, go ahead and do it.</p>
 <p>Open a <strong>terminal</strong> and type:</p>
 <pre>/usr/bin/ruby -e &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</pre>
@@ -133,7 +142,7 @@ curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/inst
 <pre>python3 install.py</pre>
 <p>If for some reason you want a <strong>python 2</strong> installation, execute:</p>
 <pre>python2 install.py</pre>
-<h4 id="note-for-macos-users">Note for macOS users</h4>
+<h3 id="note-for-macos-users">Note for macOS users</h3>
 <p>This release of <strong>PyRadio</strong> has been tested on <strong>Catalina</strong> and <strong>Big Sur</strong>.</p>
 <p>On <strong>Catalina</strong> the executable has been placed on a location which is not directly accessible (not in the PATH). <strong>PyRadio</strong> will try to link it to your <strong>bin</strong> folder (creating <em>~/bin/pyradio</em>), and <strong>PyRadio</strong> will be ready yo be executed, provided that this folder is in your PATH and that <strong>Homebrew</strong> default installation folders have been used during the installation of <strong>Python 3</strong>.</p>
 <p>In case a different <strong>Homebrew</strong> location has been used (or a different package manager, for this matter), you can just point the installation to the correct path, using the following command (post installation):</p>

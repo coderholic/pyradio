@@ -27,7 +27,9 @@ class Log(object):
 
     _show_status_updates = False
 
-    def __init__(self):
+
+    def __init__(self, config):
+        self._cnf = config
         self.width = None
 
     def setScreen(self, cursesScreen):
@@ -111,6 +113,7 @@ class Log(object):
                 ''' update main message '''
                 if self.msg:
                     self.cursesScreen.erase()
+                    d_msg = ''
                     try:
                         d_msg = self.msg.strip()[0: self.width].replace('\r', '').replace('\n', '')
                         self.cursesScreen.addstr(0, 1, d_msg)
@@ -122,6 +125,7 @@ class Log(object):
                             pass
                             # if logger.isEnabledFor(logging.ERROR):
                             #     logger.error('Error updating the Status Bar')
+                    self._write_title_to_log(d_msg)
                     if self._show_status_updates:
                         if logger.isEnabledFor(logging.DEBUG):
                             try:
@@ -212,3 +216,40 @@ class Log(object):
 
     def readline(self):
         pass
+
+    def _write_title_to_log(self, msg=None, force=False):
+        if msg is None:
+            d_msg = None
+        else:
+            d_msg = msg.replace('[Muted] ', '')
+        if d_msg is None and self._cnf._current_log_title:
+            try:
+                logger.critical(self._cnf._current_log_title.replace('Title: ', '    ') + ' (LIKED)')
+                self._cnf._last_liked_title = self._cnf._current_log_title
+            except:
+                logger.critical('Error writing LIKED title...')
+        elif d_msg.startswith('Title: '):
+                if logger.isEnabledFor(logging.CRITICAL):
+                    if force or not d_msg in self._cnf._old_log_title:
+                        try:
+                            logger.critical(d_msg.replace('Title: ', '    '))
+                        except:
+                            logger.critical('Error writing title...')
+                        self._cnf._old_log_title = d_msg
+                self._cnf._current_log_title = d_msg
+        elif d_msg.startswith('Playing: '):
+            if logger.isEnabledFor(logging.CRITICAL):
+                if force or not d_msg in self._cnf._old_log_station:
+                    try:
+                        logger.critical(d_msg.replace('Playing: ', '>>> Station: '))
+                    except:
+                        logger.critical('Error writing station name...')
+                    self._cnf._old_log_station = d_msg
+            self._cnf._current_log_station = d_msg
+
+    def write_start_log_station_and_title(self):
+        if self._cnf._current_log_station:
+            self._write_title_to_log(self._cnf._current_log_station, force=True)
+        if self._cnf._current_log_title:
+            self._write_title_to_log(self._cnf._current_log_title, force=True)
+

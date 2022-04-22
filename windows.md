@@ -14,6 +14,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
     * [Python installation](#python-installation)
         * [Installing Python](#installing-python)
         * [Verifying the installation](#verifying-the-installation)
+    * [7zip installation](#7zip-installation)
     * [Player installation](#player-installation)
         * [MPV or MPlayer installation](#mpv-or-mplayer-installation)
         * [VLC installation](#vlc-installation)
@@ -21,6 +22,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [Fresh python installation?](#fresh-python-installation?)
         * [Final steps](#final-steps)
         * [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe)
+        * [Using the Titles Logging feature](#using-the-titles-logging-feature)
         * [Cleaning up](#cleaning-up)
 * [Updating PyRadio](#updating-pyradio)
     * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
@@ -63,8 +65,9 @@ Having said that, let us proceed with the installation.
 The installation consists of three steps:
 
 1. **Python** installation
-2. **Player** installation
-3. **PyRadio** installation
+2. **7Zip** installation
+3. **Player** installation
+4. **PyRadio** installation
 
 ### Python installation
 
@@ -100,6 +103,10 @@ If the command could not be found, you have to run the installation again, selec
 
 **Note:** If you don't have the setup file of the original **Python** installation, you will have to **download** it from [Python's Windows Downloads](https://www.python.org/downloads/windows/). In case you want to upgrade to the latest version, you **must uninstall** the one currently installed, beforehand.
 
+### 7zip installation
+
+Go to [7zip web site](https://www.7-zip.org/) and download and install the latest release that's compatible with your Windows installation. Unless you are still on a 32-bit Windows 7 environment, you just go grub the first link provided.
+
 ### Player installation
 
 As already stated [MPV](https://mpv.io) will be automatically installed on a fresh installation.
@@ -114,7 +121,11 @@ If the user decides to install a different player, he should have the following 
 
 #### MPV or MPlayer installation
 
-**PyRadio** provides a helper function to install, update and uninstall [MPV](https://mpv.io) and [MPlayer](http://www.mplayerhq.hu/design7/news.html). To enable this function, just execute **PyRadio** and press "**F8**". Then **PyRadio** will terminate and you will be presented with a screen similar to the following one:
+**PyRadio** provides a helper function to install, update and uninstall [MPV](https://mpv.io) and [MPlayer](http://www.mplayerhq.hu/design7/news.html).
+
+This function will be part of the installation procedure, when **PyRadio** detects that this is a fresh installation.
+
+After you have installed or updated **PyRadio**, you cas still enable this function, by executing **PyRadio** and pressing "**F8**". Then **PyRadio** will terminate and you will be presented with a screen similar to the following one:
 
 ```
 Reading config...
@@ -231,6 +242,16 @@ In this example, both a "**System**" and a "**User**" path to **PyRadio** execut
 This would be the case after installing a version newer than **0.8.9.14** while a version older than **0.8.9.14** is already installed.
 
 If this is your case, please follow the instructions found in "[Removing an old-style installation](#removing-an-old-style-installation)".
+
+#### Using the Titles Logging feature
+
+If you want to use the [Titles Logging](README.md#titles-logging) feature, and your Country/Region is anything different than **English**, chances are you will have to correctly set your locale for non-unicode applications, which is something you should be doing regardless. Otherwise, the titles' log file may contain unreadable characters.
+
+If you want to go on and set your locale for non-unicode applications, just refer to the following image.
+
+![INTL.CPL](https://members.hellug.gr/sng/pyradio/intl.jpg)
+
+The instructions work for Windows 7 up to 11.
 
 #### Cleaning up
 

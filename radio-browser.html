@@ -24,7 +24,7 @@
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
     pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
-    img{display: block; margin-left: auto; margin-right: auto; max-width: 600px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
@@ -68,6 +68,7 @@ a:visited{color: SaddleBrown;}
 <h2 id="opening-radiobrowser">Opening RadioBrowser <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>To open <strong>RadioBrowser</strong> one would just press “<strong>O</strong>” at the program’s main window. Since at this point this is the only service supported, the service will be activated.</p>
 <a href="https://members.hellug.gr/sng/pyradio/pyradio-radio-browser.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-radio-browser.png" alt="Pyradio’s RadioBrowser interface" /></a>
+
 <p>Upon activation, the <strong>default query</strong> will be preformed and (if successful) its results will be presented to the user. If unsuccessful, a relevant message will be displayed and the program will return to the local playlist that was previously opened.</p>
 <p>By default, <strong>PyRadio</strong> will load the first 100 most voted stations on <strong>RadioBrowser</strong>.</p>
 <h2 id="closing-radiobrowser">Closing RadioBrowser <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
@@ -197,8 +198,10 @@ The server will be accepted regardless of its availability.</p></li>
 <p>The “<strong>Search window</strong>” opens when “<strong>s</strong>” is pressed and loads the “<strong>search term</strong>” that was used to fetch the stations currently presented in the “<strong>RadioBrowser window</strong>”. If this is the first time this window is opened within this session, the search term that’s loaded is the “<strong>default search term</strong>”.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> In case the server returns no results, the window will automatically reopen so that you can redefine the “<strong>search term</strong>”.</p>
 <p>Navigation between the various fields is done using the “<strong>Tab</strong>” (and “<strong>Shift-Tab</strong>”) key, the arrows and <strong>vim keys</strong> (“<strong>j</strong>”, “<strong>k</strong>”, “<strong>h</strong>” and “<strong>l</strong>”), provided that any given key is not already used by one of the on window “widgets”.</p>
+<p>Toggling the state of check boxes is done by pressing <strong>SPACE</strong>. The “<em>Display by</em>” and “<em>Search for</em>” check boxes are mutually exclusive (enabling one disables the other). Each of them will give access to more fields when enabled.</p>
 <p>To perform a search (server query) one would just press <strong>Enter</strong> on the “<strong>OK</strong>” button, or “<strong>s</strong>” on any widget other than a <em>Line editor</em>.</p>
 <a href="https://members.hellug.gr/sng/pyradio/radio-browser-search-window.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/radio-browser-search-window.png" alt="RadioBrowser Search Window" /></a>
+
 <p>This window performs two functions:</p>
 <ol type="1">
 <li>composes a search term to be forwarded to the search function and</li>

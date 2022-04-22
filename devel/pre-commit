@@ -52,7 +52,7 @@ do
         echo '% PyRadio RadioBrowser Implementation' > tmp.md
     fi
     cat ${afile} >> tmp.md
-    pandoc -s -t html tmp.md -o ${out} || {
+    pandoc --wrap=none -s -t html tmp.md -o ${out} || {
         echo "Error: pandoc not found"
         rm tmp.md
         exit 1
@@ -83,7 +83,7 @@ do
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} \
     pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} \
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} \
-    img{display: block; margin-left: auto; margin-right: auto; max-width: 600px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} \
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} \
     </style>' ${out}
     sed -i -e 's/<code>//g' \
         -e 's{</code>{{g' \
@@ -117,7 +117,10 @@ do
             -e 's|<.strong><.sup>W<.strong>|<strong>^W</strong>|' \
             "$out"
     fi
-
+    #sed -i "/^alt=/d" ${out}
+    # sed -i '/<figcaption/d' ${out}
+    # sed -i '/figcaption>/d' ${out}
+    sed -i 's/\.md/.html/' ${out}
 
 
 

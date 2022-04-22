@@ -18,13 +18,11 @@ install_requires = []
 if version_info < (2, 7):
     install_requires.append('argparse')
 
-
 meta = dict(
     name=__project__,
     version=version,
     license=__license__,
     description=read('DESCRIPTION').rstrip(),
-    long_description=read('README.md'),
     platforms=('Any'),
     author='Ben Dowling',
     author_email='ben.m.dowling@gmail.com',

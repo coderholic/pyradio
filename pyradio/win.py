@@ -7,6 +7,9 @@ from time import sleep
 import site
 from shutil import rmtree
 from msvcrt import getwch
+from msvcrt import getwch
+from os import sep
+import subprocess
 
 
 HAVE_PYUNPACK = True
@@ -20,6 +23,51 @@ try:
     from .player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
 except ImportError:
     from player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
+
+def win_press_any_key_to_unintall():
+    the_path = __file__.split(sep)
+    the_file = sep.join(the_path[:-1]) + sep + 'install.py'
+    print('\nTo complete the process you will have to execute a batch file.')
+    print('Windows Explorer will open the location of the batch file to run.')
+    print('')
+    print('Please double click')
+    print('')
+    print('    uninstall.bat')
+    print('')
+    print('to remove PyRadio from your system.')
+    print('')
+    print('After you are done, you can delete the folder it resides in.')
+    from .win import press_any_key_to_continue
+    print('\nPress any key to exit...', end='', flush=True)
+    getwch()
+    #print('\nPress any key to exit...', end='', flush=True)
+    #getwch()
+    subprocess.call('python ' + the_file + ' -R',
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL)
+
+def win_print_exe_paths():
+    from .install import fix_pyradio_win_exe
+    exe = fix_pyradio_win_exe()
+    if exe[0] and exe[1]:
+        print('PyRadio EXE files:')
+        print('  System:\n    {}'.format(exe[0]))
+        print('  User:\n    {}'.format(exe[1]))
+    else:
+        print('PyRadio EXE file:')
+        if exe[0]:
+            print('  {}'.format(exe[0]))
+        else:
+            print('  {}'.format(exe[1]))
+    # doing it this way so that pyton2 does not break (#153)
+    from .win import press_any_key_to_continue
+    print('\nPress any key to exit...', end='', flush=True)
+    getwch()
+
+def press_any_key_to_continue():
+    print('\nPress any key to exit...', end='', flush=True)
+    from msvcrt import getwch
+    getwch()
 
 def install_module(a_module, do_not_exit=False, print_msg=True):
     if print_msg:

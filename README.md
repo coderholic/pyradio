@@ -6,6 +6,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 ![Pyradio](https://members.hellug.gr/sng/pyradio/pyradio.png)
 
+
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
@@ -47,6 +48,8 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [PyRadio Themes](#pyradio-themes)
     * [Using transparency](#using-transparency)
 * [Mouse support](#mouse-support)
+* [Titles logging](#titles-logging)
+    * [Tagging a title](#tagging-a-title)
 * [Online radio directory services](#online-radio-directory-services)
 * [Session Locking](#session-locking)
     * [Session unlocking](#session-unlocking)
@@ -743,6 +746,51 @@ Then, the mouse can be used as follows:
 | **Middle click** | Toggle player muting<br>(does not work with all terminals) |
 | **Wheel**        | Scroll up / down                                           |
 | **Shift-Wheel**  | Adjust volume<br>(does not work with all terminals)        |
+
+## Titles logging
+
+Version **0.8.9.17** adds to **PyRadio** the ability to log the titles displayed at the bottom of its window, in a log file, for refference.
+
+The logger, which works independantly from the "*degub*" function, is actually a [Rotating File Handler](https://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler), configured to write up to 5 files of around 50KB each (parameters **maxBytes=50000** and **backupCount=5**).
+
+The way this works, according to the documenataion, is that one "can use the **maxBytes** and **backupCount** values to allow the file to rollover at a predetermined size. When the size is about to be exceeded, the file is closed and a new file is silently opened for output. Rollover occurs whenever the current log file is nearly **maxBytes** in length… When **backupCount** is non-zero, the system will save old log files by appending the extensions ‘.1’, ‘.2’ etc., to the filename. For example, with a backupCount of 5 and a base file name of **app.log**, you would get *app.log*, *app.log.1*, *app.log.2*, up to *app.log.5*. The file being written to is always **app.log**. When this file is filled, it is closed and renamed to *app.log.1*, and if files *app.log.1*, *app.log.2*, etc. exist, then they are renamed to *app.log.2*, *app.log.3* etc. respectively.
+
+The function can be enabled:
+
+1. using the `-lt` (`--log-titles`) command line parameter, or
+2. by pressing "**W**" while in the **Main**, the **Playlist** or the **Register** mode.
+
+The titles are written in a file called `pyradio-titles.log` which is saved at **PyRadio** configuration directory.
+
+Log file sample:
+
+```
+Apr 18 (Mon) 13:12 | >>> Station: Lounge (Illinois Street Lounge - SomaFM)
+Apr 18 (Mon) 13:12 |     Jack Costanzo - La Cumparsa, Harlem Nocturne
+Apr 18 (Mon) 13:14 |     Don Baker Trio - Third Man Theme
+Apr 18 (Mon) 13:16 |     Gillian Hills - Un Petit Baiser
+```
+
+### Tagging a title
+
+An extra functionality is made possible because of "*titles's logging*": tagging a title (something like liking a song).
+
+The idea is that the user plays a station and hears a song he likes and want to look it up later. With this functionality, he can tag the song (make a note in the log file), so he can refer to it at a later time.
+
+To tag a title, one has to press the "**w**" key.
+
+Then, if titles's logging is already enabled, the log file will have an entry similar to the one shown below:
+
+    Apr 18 (Mon) 13:39 |     Tom Russell - Bus Station
+    Apr 18 (Mon) 13:40 |     Tom Russell - Bus Station (LIKED)
+
+If title's logging is not enabled, it will be turned on, the song will be tagged and logging will be turned off again:
+
+    Apr 18 (Mon) 15:38 | === Logging started
+    Apr 18 (Mon) 15:38 | >>> Station: Folk (Folk Forward - SomaFM)
+    Apr 18 (Mon) 15:38 |     Lord Huron - Lullaby
+    Apr 18 (Mon) 15:38 |     Lord Huron - Lullaby (LIKED)
+    Apr 18 (Mon) 15:38 | === Logging stopped
 
 ## Online radio directory services
 

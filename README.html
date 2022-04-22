@@ -24,7 +24,7 @@
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
     pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
-    img{display: block; margin-left: auto; margin-right: auto; max-width: 600px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
@@ -39,6 +39,7 @@ a:visited{color: SaddleBrown;}
 <p>Command line internet radio player.</p>
 <p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <a href="https://members.hellug.gr/sng/pyradio/pyradio.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio.png" alt="Pyradio" /></a>
+
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
@@ -97,6 +98,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#using-transparency">Using transparency</a></li>
 </ul></li>
 <li><a href="#mouse-support">Mouse support</a></li>
+<li><a href="#titles-logging">Titles logging</a>
+<ul>
+<li><a href="#tagging-a-title">Tagging a title</a></li>
+</ul></li>
 <li><a href="#online-radio-directory-services">Online radio directory services</a></li>
 <li><a href="#session-locking">Session Locking</a>
 <ul>
@@ -144,6 +149,14 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre style="height: 200px;">
+
+2022-04-29 s-n-g
+    * version 0.8.9.17 (0.9-beta13)
+    * adding Title's Log
+    * changing versioning
+    * fixing user isntallation in build_install_pyradio
+    * fixing python2 main.py crash (#153)
+    * updating docs
 
 2022-03-15 s-n-g
     * version 0.8.9.15 (0.9-beta12)
@@ -826,6 +839,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 </ul></li>
 </ol>
 <a href="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" alt="Pyradio reduced to the “Limited display”" /></a>
+
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> These two modes do not work on Windows, either 7 or 10. The “<em>Console</em>”window will shrink as desired, but will not always notify <strong>PyRadio</strong> about it, so results will vary.</p>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong>PyRadio</strong> will terminate.</p>
@@ -924,6 +938,7 @@ $ pyradio -s 5</pre>
 <p>The <em>Line editor</em> supports the insertion of <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs">CJK Unified Ideographs</a>, as described on <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)">CJK Unified Ideographs (Unicode block)</a> also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-point (character), actually take up a 2-character space, when rendered on the terminal.</p>
 <p>A depiction of the editor’s behavior can be seen at this image:</p>
 <a href="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg" alt="CJK Characters on Pyradio" /></a>
+
 <h2 id="moving-stations-around">Moving stations around <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Rearranging the order of the stations in the playlist is another feature <strong>PyRadio</strong> offers.</p>
 <p>All you have to do is specify the <em>source</em> station (the station to be moved) and the position it will be moved to (<em>target</em>).</p>
@@ -1021,6 +1036,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <h4 id="using-the-configuration-window">Using the Configuration Window</h4>
 <p>When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with <strong>PyRadio</strong> and edit its extra parameters.</p>
 <a href="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" alt="PyRadio Player Selectio Window" /></a>
+
 <p>Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).</p>
 <p>The user can add (“<strong>a</strong>”) a new parameter, edit (“<strong>e</strong>”) an existing set and delete (“<strong>x</strong>” or “<strong>DEL</strong>”) one.</p>
 <h3 id="changing-parameters-set">Changing parameters set</h3>
@@ -1071,6 +1087,7 @@ volume=50</pre>
 <p>After a connection to a station has been established (after playback has started), just press “<strong>i</strong>” to display the station’s info.</p>
 <p>The window that appears includes the “<em>Playlist Name</em>” (the station name we have in the playlist) and the “<em>Reported Name</em>” (the name the station transmitted to us) among other fields; an example can bee seen here:</p>
 <a href="https://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg" alt="PyRadio Station Info Window" /></a>
+
 <p>If these two names are not identical, the user can press “<strong>r</strong>” to rename the station in the playlist using the “<em>Reported Name</em>”. This way an unknown station (when only the URL is known) can be correctly identified (after being inserted in a playlist with a dummy station name).</p>
 <h2 id="copying-and-pasting---registers">Copying and pasting - Registers <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> takes the concept of <strong>registers</strong> from <a target="_blank" href="https://www.vim.org">vim</a>, and adapts their function to its own needs. So this is how it all works.</p>
@@ -1131,6 +1148,10 @@ volume=50</pre>
 <p>All one has to do is enable mouse support in the “<em>Config Window</em>” (mouse support is disabled by default) and restart <strong>PyRadio</strong> for the change to take effect.</p>
 <p>Then, the mouse can be used as follows:</p>
 <table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 73%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Action</th>
@@ -1160,6 +1181,34 @@ volume=50</pre>
 </tr>
 </tbody>
 </table>
+<h2 id="titles-logging">Titles logging <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<p>Version <strong>0.8.9.17</strong> adds to <strong>PyRadio</strong> the ability to log the titles displayed at the bottom of its window, in a log file, for refference.</p>
+<p>The logger, which works independantly from the “<em>degub</em>” function, is actually a <a target="_blank" href="https://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler">Rotating File Handler</a>, configured to write up to 5 files of around 50KB each (parameters <strong>maxBytes=50000</strong> and <strong>backupCount=5</strong>).</p>
+<p>The way this works, according to the documenataion, is that one “can use the <strong>maxBytes</strong> and <strong>backupCount</strong> values to allow the file to rollover at a predetermined size. When the size is about to be exceeded, the file is closed and a new file is silently opened for output. Rollover occurs whenever the current log file is nearly <strong>maxBytes</strong> in length… When <strong>backupCount</strong> is non-zero, the system will save old log files by appending the extensions ‘.1’, ‘.2’ etc., to the filename. For example, with a backupCount of 5 and a base file name of <strong>app.log</strong>, you would get <em>app.log</em>, <em>app.log.1</em>, <em>app.log.2</em>, up to <em>app.log.5</em>. The file being written to is always <strong>app.log</strong>. When this file is filled, it is closed and renamed to <em>app.log.1</em>, and if files <em>app.log.1</em>, <em>app.log.2</em>, etc. exist, then they are renamed to <em>app.log.2</em>, <em>app.log.3</em> etc. respectively.</p>
+<p>The function can be enabled:</p>
+<ol type="1">
+<li>using the -lt (--log-titles) command line parameter, or</li>
+<li>by pressing “<strong>W</strong>” while in the <strong>Main</strong>, the <strong>Playlist</strong> or the <strong>Register</strong> mode.</li>
+</ol>
+<p>The titles are written in a file called pyradio-titles.log which is saved at <strong>PyRadio</strong> configuration directory.</p>
+<p>Log file sample:</p>
+<pre>Apr 18 (Mon) 13:12 | &gt;&gt;&gt; Station: Lounge (Illinois Street Lounge - SomaFM)
+Apr 18 (Mon) 13:12 |     Jack Costanzo - La Cumparsa, Harlem Nocturne
+Apr 18 (Mon) 13:14 |     Don Baker Trio - Third Man Theme
+Apr 18 (Mon) 13:16 |     Gillian Hills - Un Petit Baiser</pre>
+<h3 id="tagging-a-title">Tagging a title</h3>
+<p>An extra functionality is made possible because of “<em>titles’s logging</em>”: tagging a title (something like liking a song).</p>
+<p>The idea is that the user plays a station and hears a song he likes and want to look it up later. With this functionality, he can tag the song (make a note in the log file), so he can refer to it at a later time.</p>
+<p>To tag a title, one has to press the “<strong>w</strong>” key.</p>
+<p>Then, if titles’s logging is already enabled, the log file will have an entry similar to the one shown below:</p>
+<pre>Apr 18 (Mon) 13:39 |     Tom Russell - Bus Station
+Apr 18 (Mon) 13:40 |     Tom Russell - Bus Station (LIKED)</pre>
+<p>If title’s logging is not enabled, it will be turned on, the song will be tagged and logging will be turned off again:</p>
+<pre>Apr 18 (Mon) 15:38 | === Logging started
+Apr 18 (Mon) 15:38 | &gt;&gt;&gt; Station: Folk (Folk Forward - SomaFM)
+Apr 18 (Mon) 15:38 |     Lord Huron - Lullaby
+Apr 18 (Mon) 15:38 |     Lord Huron - Lullaby (LIKED)
+Apr 18 (Mon) 15:38 | === Logging stopped</pre>
 <h2 id="online-radio-directory-services">Online radio directory services <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> supports the following <em>Online radio directory services</em>:</p>
 <ul>

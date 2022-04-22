@@ -1135,6 +1135,7 @@ class Player(object):
                         except:
                             self.oldUserInput['Title'] = 'Title: ' + title.decode('utf-8', 'replace')
                         string_to_show = self.title_prefix + self.oldUserInput['Title']
+                        #logger.critical(string_to_show)
                         if stop():
                             return False
                         self.outputStream.write(msg=string_to_show, counter='')
@@ -1434,10 +1435,16 @@ class Player(object):
         self._stop_delay_thread()
         if self.process is not None:
             self._kill_process_tree(self.process.pid)
-            self.process.wait()
-            self.process = None
+            try:
+                self.process.wait()
+            except:
+                pass
+            finally:
+                self.process = None
             try:
                 self.update_thread.join()
+            except:
+                pass
             finally:
                 self.update_thread = None
 
@@ -1560,6 +1567,7 @@ class MpvPlayer(Player):
     if WIN:
         PLAYER_CMD = find_mpv_on_windows()
     NEW_PROFILE_STRING = 'volume=50\n\n'
+
     if pywhich(PLAYER_CMD):
         executable_found = True
     else:

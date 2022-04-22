@@ -1173,7 +1173,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
 
     @property
     def height(self):
-        '''Returns the widget's Y position '''
+        '''Returns the widget's height '''
         return self._maxY
 
     @height.setter
@@ -1182,7 +1182,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
 
     @property
     def width(self):
-        '''Returns the widget's X position '''
+        '''Returns the widget's width '''
         return self._maxX
 
     @width.setter
@@ -1208,9 +1208,19 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
         self._X = val
 
     @property
+    def parent(self):
+        '''Returns the widget's window '''
+        return self._parent
+
+    @parent.setter
+    def parent(self, value):
+        if self._showed:
+            self.show(parent=value)
+
+    @property
     def window(self):
-        '''Returns if the widget is enabled'''
-        return self._enabled
+        '''Returns the widget's window '''
+        return self._win
 
     @window.setter
     def window(self, value):
@@ -1249,7 +1259,8 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
 
     def show(self, parent=None):
         if parent:
-            self._win = parent
+            self._parent = parent
+            self._win = None
         for i, n in enumerate(self.items):
             if self._align == self.LEFT:
                 disp_item = ' ' * self._margin + n.ljust(self._item_width) + ' ' * self._margin

@@ -181,6 +181,8 @@ The "**Search window**" opens when "**s**" is pressed and loads the "**search te
 
 Navigation between the various fields is done using the "**Tab**" (and "**Shift-Tab**") key, the arrows and **vim keys** ("**j**", "**k**", "**h**" and "**l**"), provided that any given key is not already used by one of the on window "widgets".
 
+Toggling the state of check boxes is done by pressing **SPACE**. The "*Display by*" and "*Search for*" check boxes are mutually exclusive (enabling one disables the other). Each of them will give access to more fields when enabled.
+
 To perform a search (server query) one would just press **Enter** on the "**OK**" button, or "**s**" on any widget other than a *Line editor*.
 
 ![RadioBrowser Search Window](https://members.hellug.gr/sng/pyradio/radio-browser-search-window.png)

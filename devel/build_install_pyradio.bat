@@ -49,12 +49,14 @@ FOR /f "delims=" %%i IN ('ECHO %DESKTOP%') DO SET DESKTOP=%%i
 SET ALL=0
 IF "%1"=="-u" GOTO uninstall
 IF "%1"=="-R" GOTO uninstall
+REM Do not run uninstall while installing
 IF "%1"=="-U" (
     SET ALL=1
-    GOTO uninstall
+    REM     GOTO uninstall
 )
 IF "%1"=="" GOTO noparam
-SET "PROGRAM=python%arg1%"
+IF "%arg1%" == "2" SET "PROGRAM=python%arg1%"
+IF "%arg1%" == "3" SET "PROGRAM=python%arg1%"
 
 :noparam
 CLS

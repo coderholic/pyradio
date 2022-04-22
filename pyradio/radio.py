@@ -528,7 +528,7 @@ class PyRadio(object):
         if logger.isEnabledFor(logging.INFO) and rev:
             logger.info(rev)
 
-        self.log = Log()
+        self.log = Log(self._cnf)
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
         try:
             self.player = player.probePlayer(
@@ -2071,7 +2071,10 @@ class PyRadio(object):
                         reset_metrics=False)
 
     def _show_main_help_page_5(self, from_keyboard=False):
-        txt = '''!Windows Only
+        txt = '''!Titles Logger
+                 W                |Toggle Logger on/off
+                 w                |Tag a station as liked
+                 !Windows Only
                  F7               |Delete old installation files.
                  F8               |Players management.
                  F9               |Show |EXE| location.
@@ -4339,7 +4342,7 @@ class PyRadio(object):
                     playlist
                 )
                 if ret == 0:
-                    self._show_statiosn_pasted()
+                    self._show_station_pasted()
                 else:
                     self._show_paste_failed()
         else:
@@ -4811,8 +4814,51 @@ class PyRadio(object):
             self._i_am_resizing = False
             return
 
+        if char in (ord('w'), ) and self.ws.operation_mode in (
+            self.ws.NORMAL_MODE,
+            self.ws.PLAYLIST_MODE
+        ):
+            if self.player.isPlaying():
+                if self._cnf.can_like_a_station():
+                    toggled = False
+                    if self._cnf.titles_log.titles_handler is None:
+                        self.toggle_titles_logging()
+                        self.log.write_start_log_station_and_title()
+                        toggled = True
+                    ret = self._cnf.titles_log.tag_title(self.log)
+                    if toggled:
+                        self.toggle_titles_logging()
+                else:
+                    ret = 2
+
+                if ret == 0:
+                    self._show_delayed_notification('___Title tagged as liked___')
+                elif ret == 1:
+                    self._show_delayed_notification('___Error liking Title___', delay=1.2)
+                else:
+                    self._show_delayed_notification('___Title already tagged as liked___')
+            else:
+                self._show_delayed_notification('___Error: Player not in playback___', delay=1.2)
+            return
+
+        elif char in (ord('W'), ) and self.ws.operation_mode in (
+            self.ws.NORMAL_MODE,
+            self.ws.PLAYLIST_MODE
+        ):
+            self.toggle_titles_logging()
+            self.log.write_start_log_station_and_title()
+            if self._cnf.titles_log.titles_handler:
+                self._show_delayed_notification('___Titles Log Enabled___')
+            else:
+                self._show_delayed_notification('___Titles Log Disabled___')
+            return
         # if self._limited_width_mode:
         #     return
+
+        ''' if small exit '''
+        if self._limited_height_mode or self._limited_width_mode:
+            self._handle_limited_height_keys(char)
+            return
 
         if self.ws.operation_mode == self.ws.WIN_UNINSTALL_MODE:
             self.ws.close_window()
@@ -4841,10 +4887,6 @@ class PyRadio(object):
             self.refreshBody()
             from .win_del_old_inst import win_del_old_inst
             win_del_old_inst()
-            return
-
-        if self._limited_height_mode or self._limited_width_mode:
-            self._handle_limited_height_keys(char)
             return
 
         if self.ws.operation_mode in (
@@ -5838,7 +5880,7 @@ class PyRadio(object):
                     )
                     self.refreshBody()
                     if ret == 0:
-                        self._show_statiosn_pasted()
+                        self._show_station_pasted()
                     else:
                         self._show_paste_failed()
                     self.refreshBody()
@@ -7050,17 +7092,20 @@ class PyRadio(object):
             self._browser_config_win = None
         self.refreshBody()
 
-    def _show_statiosn_pasted(self):
-        self._show_notification_with_delay(
-            txt='___Station pasted!!!___',
-            mode_to_set=self.ws.operation_mode,
-            callback_function=self.refreshBody)
+    def _show_delayed_notification(self, txt, delay=.75):
+        if not (self._limited_height_mode or self._limited_width_mode):
+            self._show_notification_with_delay(
+                txt,
+                delay=delay,
+                mode_to_set=self.ws.operation_mode,
+                callback_function=self.refreshBody
+            )
+
+    def _show_station_pasted(self):
+        self._show_delayed_notification('___Station pasted!!!___')
 
     def _show_nothing_to_paste(self):
-        self._show_notification_with_delay(
-                txt='___Nothing to paste!!!___',
-                mode_to_set=self.ws.operation_mode,
-                callback_function=self.refreshBody)
+        self._show_delayed_notification('___Nothing to paste!!!___')
 
     def _show_paste_failed(self):
         self._show_notification_with_delay(
@@ -7672,6 +7717,9 @@ class PyRadio(object):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Activating parameter No {0} for player "{1}"'.format(a_param_id, self._cnf.PLAYER_NAME))
             return True
+
+    def toggle_titles_logging(self):
+        self._cnf.titles_log.configure_logger(titles=not self._cnf.titles_log.log_titles)
 
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     Windows only section
