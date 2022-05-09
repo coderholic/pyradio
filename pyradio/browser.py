@@ -2815,7 +2815,7 @@ class RadioBrowserSearchWindow(object):
         self._win.addstr(msg, curses.color_pair(4))
         self._other_chgat(self.maxY - 3, thisX, msg)
         #self._carret_chgat(self.maxY-3, thisX, msg)
-        msg = 'Add/Del: ^Y/^X, Make default: ^B, Save history: ^W'
+        msg = 'Add/Del: ^Y/^X, Make default: ^B, Save history: ^E'
         thisX = self.maxX - 2 - len(msg)
         self._win.addstr(self.maxY - 2, thisX, msg)
         self._carret_chgat(self.maxY-2, thisX, msg)
@@ -3052,15 +3052,15 @@ class RadioBrowserSearchWindow(object):
 
         elif char in (curses.ascii.SO, ):
             ''' ^N - Next history item '''
-            logger.error('^N')
             self._ctrl_n()
 
         elif char in (curses.ascii.DLE, ):
             ''' ^P - Previous history item '''
             self._ctrl_p()
 
-        elif char in (curses.ascii.ETB, ):
-            ''' ^W - Save search history '''
+        # elif char in (curses.ascii.ETB, ):
+        elif char in (curses.ascii.ENQ, ):
+            ''' ^E - Save search history '''
             self._handle_new_or_existing_search_term()
             ''' Save search history '''
             return 5
@@ -3143,10 +3143,9 @@ class RadioBrowserSearchWindow(object):
                 ''' ^P - Previous history item '''
                 self._ctrl_p()
 
-            elif char in (ord('w'), ):
-                ''' ^W - Save search history '''
+            elif char in (ord('e'), ):
+                ''' ^E - Save search history '''
                 self._handle_new_or_existing_search_term()
-                ''' Save search history '''
                 return 5
 
             elif char in (ord('f'), ):

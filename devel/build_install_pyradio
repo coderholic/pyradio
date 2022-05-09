@@ -404,13 +404,13 @@ for prog in sed ;do
 done
 
 # uninstall previous versions
-uninstall 1
+# uninstall 1
 
-# delete any files that were left from previous attempt
-sudo find . -iname "*.pyc" -delete 2>/dev/null
-sudo find . -iname "*.egg" -delete 2>/dev/null
+# # delete any files that were left from previous attempt
+# sudo find . -iname "*.pyc" -delete 2>/dev/null
+# sudo find . -iname "*.egg" -delete 2>/dev/null
 
-echo "***** installing for user..."
+# echo "***** installing for user..."
 do_dev
 
 if [ -e requirements.txt ];then

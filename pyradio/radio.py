@@ -168,7 +168,6 @@ class PyRadio(object):
         is onen and focus is not in line editor '''
     _chars_to_bypass_on_editor = (ord('m'), ord('v'), ord('.'),
                                   ord(','), ord('+'), ord('-'))
-
     ''' Number of stations to change with the page up/down keys '''
     pageChange = 5
 
@@ -450,7 +449,6 @@ class PyRadio(object):
                 '.': self._volume_up,
                 '-': self._volume_down,
                 ',': self._volume_down,
-                'm': self._volume_mute,
                 'v': self._volume_save
         }
 
@@ -479,6 +477,20 @@ class PyRadio(object):
             curses.BUTTON_CTRL: 'BUTTON_CTRL',
             curses.BUTTON_SHIFT: 'BUTTON_SHIFT',
         }
+
+        self._global_functions = {
+            'w': self._tag_a_title,
+            'W': self._toggle_titles_logging,
+            'T': self._toggle_transparency,
+            '+': self._volume_up,
+            '=': self._volume_up,
+            '.': self._volume_up,
+            '-': self._volume_down,
+            ',': self._volume_down,
+            'm': self._volume_mute,
+            'v': self._volume_save
+        }
+
 
     def __del__(self):
         self.transientWin = None
@@ -4572,6 +4584,12 @@ class PyRadio(object):
             self._update_status_bar_right()
             self._volume_save()
 
+        elif char in (ord('W'), ):
+            self._toggle_titles_logging()
+
+        elif char in (ord('w'), ):
+            self._tag_a_title()
+
     def _browser_server_selection(self):
         if self._cnf._online_browser:
             self._cnf._online_browser.select_servers()
@@ -4798,6 +4816,37 @@ class PyRadio(object):
         else:
             return True
 
+    def _toggle_titles_logging(self):
+        self.toggle_titles_logging()
+        self.log.write_start_log_station_and_title()
+        if self._cnf.titles_log.titles_handler:
+            self._show_delayed_notification('___Titles Log Enabled___')
+        else:
+            self._show_delayed_notification('___Titles Log Disabled___')
+
+    def _tag_a_title(self):
+        if self.player.isPlaying():
+            if self._cnf.can_like_a_station():
+                toggled = False
+                if self._cnf.titles_log.titles_handler is None:
+                    self.toggle_titles_logging()
+                    self.log.write_start_log_station_and_title()
+                    toggled = True
+                ret = self._cnf.titles_log.tag_title(self.log)
+                if toggled:
+                    self.toggle_titles_logging()
+            else:
+                ret = 2
+
+            if ret == 0:
+                self._show_delayed_notification('___Title tagged as liked___')
+            elif ret == 1:
+                self._show_delayed_notification('___Error liking Title___', delay=1.2)
+            else:
+                self._show_delayed_notification('___Title already tagged as liked___')
+        else:
+            self._show_delayed_notification('___Error: Player not in playback___', delay=1.2)
+
     def keypress(self, char):
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
@@ -4818,42 +4867,15 @@ class PyRadio(object):
             self.ws.NORMAL_MODE,
             self.ws.PLAYLIST_MODE
         ):
-            if self.player.isPlaying():
-                if self._cnf.can_like_a_station():
-                    toggled = False
-                    if self._cnf.titles_log.titles_handler is None:
-                        self.toggle_titles_logging()
-                        self.log.write_start_log_station_and_title()
-                        toggled = True
-                    ret = self._cnf.titles_log.tag_title(self.log)
-                    if toggled:
-                        self.toggle_titles_logging()
-                else:
-                    ret = 2
-
-                if ret == 0:
-                    self._show_delayed_notification('___Title tagged as liked___')
-                elif ret == 1:
-                    self._show_delayed_notification('___Error liking Title___', delay=1.2)
-                else:
-                    self._show_delayed_notification('___Title already tagged as liked___')
-            else:
-                self._show_delayed_notification('___Error: Player not in playback___', delay=1.2)
+            self._tag_a_title()
             return
 
         elif char in (ord('W'), ) and self.ws.operation_mode in (
             self.ws.NORMAL_MODE,
             self.ws.PLAYLIST_MODE
         ):
-            self.toggle_titles_logging()
-            self.log.write_start_log_station_and_title()
-            if self._cnf.titles_log.titles_handler:
-                self._show_delayed_notification('___Titles Log Enabled___')
-            else:
-                self._show_delayed_notification('___Titles Log Disabled___')
+            self._toggle_titles_logging()
             return
-        # if self._limited_width_mode:
-        #     return
 
         ''' if small exit '''
         if self._limited_height_mode or self._limited_width_mode:
@@ -4991,9 +5013,11 @@ class PyRadio(object):
                     self._print_playlist_not_saved_error()
                 else:
                     self._rename_playlist_dialog = PyRadioRenameFile(
-                            self._cnf.station_path if self.ws.operation_mode == self.ws.NORMAL_MODE else self.stations[self.selection][3],
-                            self.outerBodyWin,
-                            opened_from_editor=True if self.ws.operation_mode == self.ws.NORMAL_MODE else False)
+                        self._cnf.station_path if self.ws.operation_mode == self.ws.NORMAL_MODE else self.stations[self.selection][3],
+                        self.outerBodyWin,
+                        opened_from_editor=True if self.ws.operation_mode == self.ws.NORMAL_MODE else False,
+                        global_functions=self._global_functions,
+                    )
                     if self.ws.operation_mode == self.ws.NORMAL_MODE:
                         #self._rename_playlist_dialog.checked_checkbox = (False, False)
                         if self._cnf.is_register:
@@ -5014,10 +5038,12 @@ class PyRadio(object):
                     ''' do not create playlist from registers list '''
                     self._update_status_bar_right(status_suffix='')
                     self._rename_playlist_dialog = PyRadioRenameFile(
-                            self._cnf.station_path,
-                            self.outerBodyWin,
-                            opened_from_editor=False,
-                            create=True)
+                        self._cnf.station_path,
+                        self.outerBodyWin,
+                        opened_from_editor=False,
+                        global_functions=self._global_functions,
+                        create=True
+                    )
                     self._rename_playlist_dialog.title = ' Create Playlist '
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.CREATE_PLAYLIST_MODE
@@ -5498,10 +5524,6 @@ class PyRadio(object):
             ''' In station editor '''
             # logger.error('DE char = {0} - {1}'.format(char, chr(char)))
             restart_player = False
-            if char in self._chars_to_bypass_on_editor and \
-                    self._station_editor.focus > 1:
-                self.volume_functions[chr(char)]()
-                return
             ret = self._station_editor.keypress(char)
             if ret == -3:
                 self._print_editor_url_error()
@@ -5578,10 +5600,6 @@ class PyRadio(object):
 
         elif self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE):
             '''  Rename playlist '''
-            if char in self._chars_to_bypass_on_editor and \
-                    self._rename_playlist_dialog.focus > 0:
-                self.volume_functions[chr(char)]()
-                return
             ret, self.old_filename, self.new_filename, copy, open_file, pl_create = self._rename_playlist_dialog.keypress(char)
             # logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
             if ret not in (0, 2):
@@ -6213,7 +6231,7 @@ class PyRadio(object):
 
         elif char in (ord('+'), ord('='), ord('.'),
                       ord('-'), ord(','), ord('m'),
-                      ord('v')):
+                      ord('v'), ord('W'), ord('w')):
             self._handle_limited_height_keys(char)
             return
 
@@ -6682,7 +6700,8 @@ class PyRadio(object):
                         self.stations,
                         self.selection,
                         self.outerBodyWin,
-                        self._cnf.default_encoding)
+                        self._cnf.default_encoding,
+                        global_functions=self._global_functions)
                     if char == ord('A'):
                         self._station_editor.append = True
                     self._station_editor.show()
@@ -6741,6 +6760,7 @@ class PyRadio(object):
                         self.selection,
                         self.outerBodyWin,
                         self._cnf.default_encoding,
+                        global_functions=self._global_functions,
                         adding=False)
                     self._station_editor.show(self.stations[self.selection])
                     self.ws.operation_mode = self.ws.EDIT_STATION_MODE

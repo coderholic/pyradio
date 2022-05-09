@@ -198,11 +198,14 @@ class PyRadioEditor(object):
     # 3: show all
     _too_small = False
 
+    _global_functions = {}
+
     def __init__(self,
                  stations,
                  selection,
                  parent,
                  config_encoding,
+                 global_functions=None,
                  adding=True):
         self._stations = stations
         self._selection = selection
@@ -213,6 +216,9 @@ class PyRadioEditor(object):
         self._orig_encoding = config_encoding
         self._config_encoding = config_encoding
         self._adding = adding
+        self._global_functions = global_functions
+        if self._global_functions is None:
+            self._global_functions = {}
 
     @property
     def append(self):
@@ -622,6 +628,8 @@ class PyRadioEditor(object):
                     self.new_station = None
                     self._reset_editors_modes()
                     ret = -1
+            elif chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
 
         if self._focus > 1:
             self._reset_editors_modes()
@@ -645,7 +653,9 @@ class PyRadioRenameFile(object):
     """ PyRadio copy file dialog """
 
     def __init__(self, filename, parent, create=False,
-                 open_afterwards=True, title='', opened_from_editor=False):
+                 open_afterwards=True, title='',
+                 opened_from_editor=False,
+                 global_functions=None):
         self._invalid_chars = '<>|:"\\/?*'
         self.maxY = self.maxX = 0
         self._win = self._parent_win = self._line_editor = None
@@ -681,6 +691,9 @@ class PyRadioRenameFile(object):
         self._open_afterwards = open_afterwards
         self._title = title if title else ' Rename Playlist '
         self._opened_from_editor = opened_from_editor
+        self._global_functions = global_functions
+        if self._global_functions is None:
+            self._global_functions = {}
 
     def __del__(self):
         try:
@@ -1135,6 +1148,8 @@ class PyRadioRenameFile(object):
                     # cancel
                     self._widgets[0].string = ''
                     ret = -1
+            elif chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
         #self._show_title()
         #self.show()
         return self._get_result(ret)
