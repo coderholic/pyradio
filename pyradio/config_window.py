@@ -21,6 +21,14 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
+def set_global_functions(global_functions):
+    ret = {}
+    if global_functions is not None:
+        ret = dict(global_functions)
+        if 't' in ret.keys():
+            del ret['t']
+        del ret['T']
+    return ret
 
 class PyRadioConfigWindow(object):
     n_u = Window_Stack_Constants
@@ -85,13 +93,14 @@ class PyRadioConfigWindow(object):
                  toggle_transparency_function,
                  show_theme_selector_function,
                  save_parameters_function,
-                 reset_parameters_function
-                 ):
+                 reset_parameters_function,
+                 global_functions=None):
         self.parent = parent
         self._cnf = config
         self._toggle_transparency_function = toggle_transparency_function
         self._show_theme_selector_function = show_theme_selector_function
         self._save_parameters_function = save_parameters_function
+        self._global_functions = set_global_functions(global_functions)
         self._reset_parameters_function = reset_parameters_function
         self._saved_config_options = deepcopy(config.opts)
         self._config_options = deepcopy(config.opts)
@@ -354,7 +363,9 @@ class PyRadioConfigWindow(object):
         if self.too_small:
             return 1, []
         val = list(self._config_options.items())[self.selection]
-        if val[0] == 'radiobrowser':
+        if chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+        elif val[0] == 'radiobrowser':
             if char in (curses.KEY_RIGHT, ord('l'),
                         ord(' '), curses.KEY_ENTER, ord('\n')):
                 return 2, []
@@ -518,7 +529,8 @@ class PyRadioExtraParams(object):
 
     def __init__(self,
                  config,
-                 parent):
+                 parent,
+                 global_functions=None):
         ''' setting editing to 0 so that help functions work '''
         self.editing = 0
         self._max_lines = 16
@@ -532,6 +544,7 @@ class PyRadioExtraParams(object):
         self._title = ' Player Extra Parameters '
         self._too_small_str = 'Window too small'
         self._cnf.get_player_params_from_backup(param_type=1)
+        self._global_functions = global_functions
         self._redisplay()
 
     @property
@@ -547,7 +560,9 @@ class PyRadioExtraParams(object):
         self._redisplay()
 
     def _redisplay(self):
+        logger.error('_redisplay()')
         pY, pX = self._parent.getmaxyx()
+        logger.error('pY = {0}, pX = {1}'.format(pY, pX))
         if pY < self._max_lines + 2 or pX < 30:
             self._too_small = True
             self._win = curses.newwin(
@@ -559,6 +574,8 @@ class PyRadioExtraParams(object):
         else:
             self._too_small = False
             self.maxX = pX - 2 if pX < 40 else 40
+            logger.error('maxX = {}'.format(self.maxX))
+            logger.error('max_lines = {}'.format(self._max_lines))
             self._win = curses.newwin(
                 self._max_lines, self.maxX,
                 int((pY - self._max_lines) / 2) + 2,
@@ -573,10 +590,12 @@ class PyRadioExtraParams(object):
                 self._cnf.PLAYER_NAME,
                 self._win,
                 lambda: True,
-                from_config=False
+                from_config=False,
+                global_functions=self._global_functions
             )
 
     def show(self):
+        logger.error('show()')
         self._win.bkgdset(' ', curses.color_pair(3))
         self._win.erase()
         self._win.box()
@@ -612,13 +631,15 @@ class ExtraParametersEditor(object):
     def __init__(self,
                  parent,
                  config,
-                 string=''):
+                 string='',
+                 global_functions=None):
         self._parent = parent
         self._cnf = config
         self.edit_string = string
         self._caption = ' Parameter value '
         self._string = self._orig_string = string
 
+        self._global_functions = set_global_functions(global_functions)
         self.Y, self.X = self._parent.getbegyx()
         self.Y += 1
         self.X += 1
@@ -771,7 +792,10 @@ class ExtraParametersEditor(object):
                 2: Display line editor help
         '''
         ret = 1
-        if char == ord('?') and self._focus > 0:
+        if chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+            return 1
+        elif char == ord('?') and self._focus > 0:
             return 2
         elif char in (curses.KEY_EXIT, 27, ord('q')) and \
                 self._focus > 0:
@@ -864,9 +888,11 @@ class ExtraParameters(object):
                  startY=1,
                  startX=1,
                  max_lines=11,
-                 from_config=True):
+                 from_config=True,
+                 global_functions=None):
         self._cnf = config
         self._orig_params = deepcopy(self._cnf.saved_params)
+        self._global_functions = set_global_functions(global_functions)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('original parameters = {}'.format(self._orig_params))
         self._orig_player = player
@@ -1138,7 +1164,10 @@ class ExtraParameters(object):
                  5 - add parameter
                  6 - line editor help
         '''
-        if char in (
+        if chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+            return -1
+        elif char in (
             curses.KEY_ENTER, ord('\n'),
             ord('\r'), ord(' '), ord('l'),
                 curses.KEY_RIGHT, ord('s')):
@@ -1253,7 +1282,8 @@ class PyRadioSelectPlayer(object):
     '''
     mlength = 13
 
-    def __init__(self, config, parent, player):
+    def __init__(self, config, parent, player,
+                 global_functions=None):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('current players = {}'.format(player))
         self._cnf = config
@@ -1261,6 +1291,7 @@ class PyRadioSelectPlayer(object):
         self._parent_maxY, self._parent_maxX = parent.getmaxyx()
         self.player = player
         self._orig_player = player
+        self._global_functions = set_global_functions(global_functions)
         self.focus = True
 
         ''' Is editor active?
@@ -1432,7 +1463,9 @@ class PyRadioSelectPlayer(object):
                3 - Editor is visible
                4 - Editor exited
         '''
-        if self.editing == 0:
+        if chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+        elif self.editing == 0:
             ''' focus on players '''
             if char in (9, ):
                 if self._players[self.selection][1]:
@@ -1598,7 +1631,8 @@ class PyRadioSelectEncodings(object):
 
     _invalid = []
 
-    def __init__(self, maxY, maxX, encoding, config_encoding):
+    def __init__(self, maxY, maxX, encoding, config_encoding,
+                 global_functions=None):
         self._parent_maxY = maxY
         self._parent_maxX = maxX
         self.encoding = encoding
@@ -1608,6 +1642,12 @@ class PyRadioSelectEncodings(object):
         self._encodings = get_encodings()
         self._num_of_rows = int(len(self._encodings) / self._num_of_columns)
         self.init_window()
+
+    def set_global_functions(self, global_functions):
+        self._global_functions = global_functions
+
+    def set_reduced_global_functions(self, global_functions):
+        self._global_functions = set_global_functions(global_functions)
 
     def init_window(self, set_encoding=True):
         self._win = None
@@ -1827,7 +1867,10 @@ class PyRadioSelectEncodings(object):
     def keypress(self, char):
         ''' Encoding key press
         '''
-        if char in (ord('c'), ):
+        if chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+
+        elif char in (ord('c'), ):
             self.encoding = self._config_encoding
             self.setEncoding(self.encoding, init=True)
 
@@ -1951,7 +1994,8 @@ class PyRadioSelectPlaylist(object):
                  parent,
                  config_path,
                  default_playlist,
-                 include_registers=False):
+                 include_registers=False,
+                 global_functions=None):
         ''' Select a playlist from a list
 
         include_registers changes its behavior
@@ -1980,6 +2024,7 @@ class PyRadioSelectPlaylist(object):
         if self._include_registers:
             self._title = ' Paste: Select target '
             self._playlist_in_editor = self._selected_playlist
+        self._global_functions = set_global_functions(global_functions)
         self.init_window()
 
     def __del__(self):
@@ -2221,7 +2266,10 @@ class PyRadioSelectPlaylist(object):
          0, station path    - selected station path (for paste window)
          1, ''              - Cancel
         '''
-        if self._select_playlist_error == -1 or \
+        if chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+
+        elif self._select_playlist_error == -1 or \
                 self._select_playlist_error == 0:
             self._error_win = None
             self._select_playlist_error = -2
@@ -2350,12 +2398,14 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
 
     _default_playlist = ''
 
-    def __init__(self, parent, config_path, default_playlist, default_station):
+    def __init__(self, parent, config_path, default_playlist, default_station,
+                 global_functions=None):
         self._default_playlist = default_playlist
         self._orig_default_playlist = default_playlist
         if logger.isEnabledFor(logging.INFO):
             logger.info('displaying stations from: "{}"'.format(default_playlist))
         PyRadioSelectPlaylist.__init__(self, parent, config_path, default_station)
+        self._global_functions = set_global_functions(global_functions)
         self._title = ' Station Selection '
         ''' adding 2 to padding calculation
             (i.e. no selection and random selection
@@ -2454,6 +2504,10 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
     def keypress(self, char):
         if char in (ord('r'), ):
             self.setStation(self._orig_playlist)
+            return -1, ''
+
+        elif chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
             return -1, ''
 
         return PyRadioSelectPlaylist.keypress(self, char)

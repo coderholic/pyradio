@@ -157,9 +157,10 @@ class PyRadio(object):
 
     ''' Characters to be "ignored" by windows, so that certain
         functions still work (like changing volume) '''
-    _chars_to_bypass = (ord('m'), ord('v'), ord('.'),
-                        ord(','), ord('+'), ord('-'),
-                        ord('?'), ord('#'), curses.KEY_RESIZE)
+    # _chars_to_bypass = (ord('m'), ord('v'), ord('.'),
+    #                     ord(','), ord('+'), ord('-'),
+    #                     ord('?'), ord('#'), curses.KEY_RESIZE)
+    _chars_to_bypass = (ord('?'), )
 
     ''' Characters to be "ignored" by windows that support search'''
     _chars_to_bypass_for_search = (ord('/'), ord('n'), ord('N'))
@@ -1565,6 +1566,12 @@ class PyRadio(object):
 
     def _show_theme_selector(self, changed_from_config=False):
         self._update_status_bar_right()
+        if not changed_from_config:
+            if self._theme_selector is not None:
+                ''' if theme selector already exists
+                    use the same changed_from_config
+                '''
+                changed_from_config = self._theme_selector.changed_from_config
         self._theme_selector = None
         #if logger.isEnabledFor(logging.ERROR):
         #    logger.error('DE\n\nself._theme = {0}\nself._theme_name = {1}\nself._cnf.theme = {2}\n\n'.format(self._theme, self._theme_name, self._cnf.theme))
@@ -1580,6 +1587,7 @@ class PyRadio(object):
             #'/home/spiros/edit.log')
         self._theme_selector.changed_from_config = changed_from_config
         self._theme_selector.show()
+        self._theme_selector.set_global_gunctions(self._global_functions)
 
     def _get_message_width_from_list(self, lines):
         mwidth = 0
@@ -3877,7 +3885,8 @@ class PyRadio(object):
                 self._toggle_transparency,
                 self._show_theme_selector_from_config,
                 self._save_parameters,
-                self._reset_parameters
+                self._reset_parameters,
+                global_functions=self._global_functions
             )
         else:
             self._config_win.parent = self.outerBodyWin
@@ -5060,7 +5069,8 @@ class PyRadio(object):
                             self.bodyWin,
                             self._cnf.stations_dir,
                             self._cnf.station_title,
-                            include_registers=True
+                            include_registers=True,
+                            global_functions=self._global_functions
                         )
                         self._playlist_select_win.init_window()
                         self._playlist_select_win.refresh_win()
@@ -5280,7 +5290,9 @@ class PyRadio(object):
                     self._player_select_win = PyRadioSelectPlayer(
                         self._cnf,
                         self.outerBodyWin,
-                        self._config_win._config_options['player'][1])
+                        self._config_win._config_options['player'][1],
+                        global_functions=self._global_functions
+                    )
                 else:
                     self._player_select_win._parent = self.outerBodyWin
                     self._player_select_win._parent_maxY, self._player_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
@@ -5298,6 +5310,7 @@ class PyRadio(object):
                             self.outerBodyMaxX,
                             self._cnf.default_encoding,
                             self._cnf.default_encoding)
+                    self._encoding_select_win.set_reduced_global_functions(self._global_functions)
                 else:
                     self._encoding_select_win._parent_maxY, self._encoding_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
                 self._encoding_select_win.init_window()
@@ -5311,7 +5324,8 @@ class PyRadio(object):
                     self._playlist_select_win = PyRadioSelectPlaylist(
                         self.bodyWin,
                         self._cnf.stations_dir,
-                        self._config_win._config_options['default_playlist'][1]
+                        self._config_win._config_options['default_playlist'][1],
+                        global_functions=self._global_functions
                     )
                 else:
                     self._playlist_select_win._parent_maxY, self._playlist_select_win._parent_maxX = self.bodyWin.getmaxyx()
@@ -5327,7 +5341,8 @@ class PyRadio(object):
                         self.bodyWin,
                         self._cnf.stations_dir,
                         self._config_win._config_options['default_playlist'][1],
-                        self._config_win._config_options['default_station'][1]
+                        self._config_win._config_options['default_station'][1],
+                        global_functions=self._global_functions
                     )
                 else:
                     self._station_select_win._parent_maxY, self._station_select_win._parent_maxX = self.outerBodyWin.getmaxyx()
@@ -5443,9 +5458,9 @@ class PyRadio(object):
                 self._config_win = None
             return
 
-        elif (self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE and \
-                char not in self._chars_to_bypass) or \
-                self.ws.operation_mode == self.ws.IN_PLAYER_PARAMS_EDITOR:
+        elif (self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE  and \
+              char not in self._chars_to_bypass) or \
+              self.ws.operation_mode == self.ws.IN_PLAYER_PARAMS_EDITOR:
 
             ret = self._player_select_win.keypress(char)
             if ret >= 0:
@@ -5484,40 +5499,39 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE and \
-                char not in self._chars_to_bypass:
+                 char not in self._chars_to_bypass:
             ''' select station's encoding from main window '''
-            if char not in self._chars_to_bypass:
-                restart_player = False
-                ret, ret_encoding = self._encoding_select_win.keypress(char)
-                if ret >= 0:
-                    if ret == 0:
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('new station encoding = {}'.format(ret_encoding))
-                        ''' save encoding and playlist '''
-                        if self._old_station_encoding == self._cnf.default_encoding:
-                            self._old_station_encoding = ''
-                        if ret_encoding == self._cnf.default_encoding:
-                            ret_encoding = ''
-                        if self._old_station_encoding != ret_encoding:
-                            self._cnf.dirty_playlist = True
-                            logger.info('self.stations[self.selection] = {}'.format(self.stations[self.selection]))
-                            self.stations[self.selection][2] = ret_encoding
-                            self.selections[0][3] = self.stations
-                            if self.selection == self.playing:
-                                self._last_played_station = self.stations[self.selection]
-                            if self._cnf.browsing_station_service:
-                                self._cnf.dirty_playlist = False
-                                self._cnf.online_browser.set_encoding(self.selection, ret_encoding)
-                            if self.player.isPlaying():
-                                restart_player = True
-                        #self._config_win._config_options['default_encoding'][1] = ret_encoding
-                    self.ws.close_window()
-                    self.refreshBody()
-                    self._encoding_select_win = None
-                    self.player.config_encoding = self._cnf.default_encoding
-                    if restart_player:
-                        self.restartPlayer('*** Restarting playback due to encoding change ***')
-                return
+            restart_player = False
+            ret, ret_encoding = self._encoding_select_win.keypress(char)
+            if ret >= 0:
+                if ret == 0:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('new station encoding = {}'.format(ret_encoding))
+                    ''' save encoding and playlist '''
+                    if self._old_station_encoding == self._cnf.default_encoding:
+                        self._old_station_encoding = ''
+                    if ret_encoding == self._cnf.default_encoding:
+                        ret_encoding = ''
+                    if self._old_station_encoding != ret_encoding:
+                        self._cnf.dirty_playlist = True
+                        logger.info('self.stations[self.selection] = {}'.format(self.stations[self.selection]))
+                        self.stations[self.selection][2] = ret_encoding
+                        self.selections[0][3] = self.stations
+                        if self.selection == self.playing:
+                            self._last_played_station = self.stations[self.selection]
+                        if self._cnf.browsing_station_service:
+                            self._cnf.dirty_playlist = False
+                            self._cnf.online_browser.set_encoding(self.selection, ret_encoding)
+                        if self.player.isPlaying():
+                            restart_player = True
+                    #self._config_win._config_options['default_encoding'][1] = ret_encoding
+                self.ws.close_window()
+                self.refreshBody()
+                self._encoding_select_win = None
+                self.player.config_encoding = self._cnf.default_encoding
+                if restart_player:
+                    self.restartPlayer('*** Restarting playback due to encoding change ***')
+            return
 
         elif self.ws.operation_mode in \
                 (self.ws.ADD_STATION_MODE, self.ws.EDIT_STATION_MODE):
@@ -5593,6 +5607,7 @@ class PyRadio(object):
                 self.ws.operation_mode = self.ws.EDIT_STATION_ENCODING_MODE
                 self._encoding_select_win = PyRadioSelectEncodings(self.outerBodyMaxY,
                         self.outerBodyMaxX, self._station_editor._encoding, self._cnf.default_encoding)
+                self._encoding_select_win.set_reduced_global_functions(self._global_functions)
                 self._encoding_select_win.init_window()
                 self._encoding_select_win.refresh_win()
                 self._encoding_select_win.setEncoding(self._station_editor._encoding)
@@ -6229,11 +6244,12 @@ class PyRadio(object):
             self._toggle_transparency()
             return
 
-        elif char in (ord('+'), ord('='), ord('.'),
-                      ord('-'), ord(','), ord('m'),
-                      ord('v'), ord('W'), ord('w')):
-            self._handle_limited_height_keys(char)
-            return
+        # elif char in (ord('+'), ord('='), ord('.'),
+        #               ord('-'), ord(','), ord('m'),
+        #               ord('v'), ord('W'), ord('w')):
+        #     self._handle_limited_height_keys(char)
+        #     logger.error('\n\nhere\n\n')
+        #     return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_SCAN_ERROR_MODE:
             ''' exit due to scan error '''
@@ -6805,6 +6821,7 @@ class PyRadio(object):
                         self._old_station_encoding,
                         self._cnf.default_encoding
                     )
+                    self._encoding_select_win.set_reduced_global_functions(self._global_functions)
                     self._encoding_select_win.init_window()
                     self._encoding_select_win.refresh_win()
                     self._encoding_select_win.setEncoding(self._old_station_encoding)
@@ -6917,7 +6934,9 @@ class PyRadio(object):
                     self.ws.operation_mode = self.ws.CONNECTION_MODE
                     self._connection_type_edit = PyRadioConnectionType(
                         parent=self.outerBodyWin,
-                        connection_type=self.player.force_http)
+                        connection_type=self.player.force_http,
+                        global_functions=self._global_functions
+                    )
                     self._connection_type_edit.show()
                     return
 
@@ -6926,7 +6945,8 @@ class PyRadio(object):
                     self.ws.operation_mode = self.ws.PLAYER_PARAMS_MODE
                     self._player_select_win = PyRadioExtraParams(
                         self._cnf,
-                        self.bodyWin
+                        self.bodyWin,
+                        global_functions=self._global_functions
                     )
                     self._player_select_win.show()
                     return
@@ -7613,7 +7633,7 @@ class PyRadio(object):
             if not self._config_win.too_small:
                 self._player_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
         else:
-            self._player_select_win.set_parrent(self.outerBodyWin)
+            self._player_select_win.set_parrent(self.bodyWin)
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):
         if not self._config_win.too_small:
@@ -7627,12 +7647,15 @@ class PyRadio(object):
             self._playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):
-        if not self._config_win.too_small:
+        if self._config_win:
+            if not self._config_win.too_small:
+                self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
+        else:
             self._encoding_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
 
     def _redisplay_station_select_win_refresh_and_resize(self):
         if not self._config_win.too_small:
-            self._station_select_win.refresh_and_resize(self.outerBodyWin.getmaxyx())
+            self._station_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
 
     def _redisplay_print_save_modified_playlist(self):
         self._print_save_modified_playlist(self.ws.operation_mode)

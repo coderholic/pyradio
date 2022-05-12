@@ -1163,15 +1163,18 @@ class PyRadioConnectionType(object):
     _note_text = ' Note '
     _max_lines = 14
 
-    def __init__(self, parent, connection_type):
+    def __init__(self, parent, connection_type, global_functions=None):
         self._parent = parent
+        self._global_functions = global_functions
+        if self._global_functions is None:
+            self._global_functions = {}
         self.connection_type = connection_type
 
     def show(self, parent=None):
         if parent:
             self._parent = parent
         y, x = self._parent.getmaxyx()
-        new_y = int((y - self._max_lines) / 2) + 2
+        new_y = int((y - self._max_lines) / 2) + 1
         new_x = int((x - len(self._text) - 9 - 4) / 2)
         self.MaxX = len(self._text) + 9 + 4
         self._win = None
@@ -1231,7 +1234,10 @@ class PyRadioConnectionType(object):
                  0: go on
                  1: Ok
         """
-        if char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord('s')):
+        if chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord('s')):
             return 1
 
         elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):

@@ -468,6 +468,15 @@ class PyRadioThemeSelector(object):
 
         self._themes = []
 
+    def set_global_gunctions(self, global_functions):
+        self._global_functions = {}
+        if global_functions is not None:
+            self._global_functions = dict(global_functions)
+            if 't' in self._global_functions.keys():
+                del self._global_functions['t']
+            if self.changed_from_config:
+                del self._global_functions['T']
+
     def show(self):
         self._themes = [['dark', 'dark']]
         #if curses.COLORS >= 16:
@@ -830,6 +839,9 @@ class PyRadioThemeSelector(object):
         """
         if  self._too_small:
             return -1, False
+        if chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+            return -3, False
         if char in (ord('e'), ):
             ''' edit theme '''
             pass
