@@ -309,14 +309,14 @@ Make the current history item the \fIdefault\fR one for \fBRadioBrowser\fR and s
 
 This means that, next time you open \fBRadioBrowser\fR this history item (\fIsearch term\fR) will be automatically loaded.
 
-.IP \fI^W\fR
+.IP \fI^E\fR
 Save the history.
 
 .RE
 .RS 5
 
 .IP \fBNote\fR
-All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing "\fIx\fR" is the same as pressing "\fI^X\fR", "\fIw\fR" is the same as "\fI^W\fR" and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.
+All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing "\fIx\fR" is the same as pressing "\fI^X\fR", "\fIe\fR" is the same as "\fI^E\fR" and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.
 
 .P
 All history navigation actions (\fI^N\fR, \fI^P\fR, \fIHOME\fR, \fIEND\fR, \fIPgUp\fR, \fIPgDown\fR) will check if the data currently in the "form" fields can create a new \fBsearch term\fR and if so, will add it to the history.
@@ -325,7 +325,7 @@ The \fBSearch Window\fR actually works on a copy of the \fIsearch history\fR use
 
 Even when "\fIOK\fR" is pressed (or "\fIs\fR" is typed on any field other than a \fBLine editor\fR), and the \fBSearch Window\fR is closed, the "new" history is loaded into the service, but \fBNOT\fR saved to the \fIconfiguration file\fR.
 
-To really save the "new" history, press "\fI^W\fR" in the \fBSearch Window\fR (or type "\fIw\fR" on any field other than a \fBLine editor\fR), or press "\fIy\fR" in the confirmation window upon exiting the service.
+To really save the "new" history, press "\fI^E\fR" in the \fBSearch Window\fR (or type "\fIe\fR" on any field other than a \fBLine editor\fR), or press "\fIy\fR" in the confirmation window upon exiting the service.
 .RE
 
 .SH Reporting Bugs

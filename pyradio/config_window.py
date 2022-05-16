@@ -560,7 +560,6 @@ class PyRadioExtraParams(object):
         self._redisplay()
 
     def _redisplay(self):
-        logger.error('_redisplay()')
         pY, pX = self._parent.getmaxyx()
         logger.error('pY = {0}, pX = {1}'.format(pY, pX))
         if pY < self._max_lines + 2 or pX < 30:
@@ -595,7 +594,6 @@ class PyRadioExtraParams(object):
             )
 
     def show(self):
-        logger.error('show()')
         self._win.bkgdset(' ', curses.color_pair(3))
         self._win.erase()
         self._win.box()

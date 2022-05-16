@@ -238,9 +238,9 @@ The keys to manage the history are all **Control** combinations:
 |**^Y**        |Add current item to history.|
 |**^X**        |Delete the current history item.<br>There is no confirmation and once an item is deleted there's no undo function.<br>These rules apply:<br> 1. The first item (**search term template**) cannot be deleted.<br>2. When the history contains only two items (the **search term template** will always be the first one; the second one is a user defined **search term**), no item deletion is possible.<br>3. When the **default search term** is deleted, the first user defined **search term** becomes the default one.|
 |**^B**        |Make the current history item the **default** one for **RadioBrowser** and save the history.<br>This means that, next time you open **RadioBrowser** this history item ("**search term**") will be automatically loaded.|
-|**^W**        |Save the history.|
+|**^E**        |Save the history.|
 
-**Note:** All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing "**x**" is the same as pressing "**^X**", "**w**" is the same as "**^W**" and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.
+**Note:** All keys can also be used without pressing the Control key, provided that a line editor does not have the focus. For example, pressing "**x**" is the same as pressing "**^X**", "**e**" is the same as "**^E**" and so on. This feature is provided for tiling window manager users who may have already assigned actions to any of these Contol-key combinations.
 
 All history navigation actions (**^N**, **^P**, **HOME**, **END**, **PgUp**, **PgDown**) will check if the data currently in the "form" fields can create a new **search term** and if so, will add it to the history.
 
@@ -248,4 +248,4 @@ The **Search Window** actually works on a copy of the **search history** used by
 
 Even when "**OK**" (or "**s**" is typed on any field other than a "*Line editor*") is pressed, and the "**Search Window**" is closed, the "new" history is loaded into the service, but NOT saved to the *configuration file*.
 
-To really save the "new" history, press "**^W**" in the **Search Window** (or "**w**" is typed on any field other than a "*Line editor*"), or press "**y**" in the confirmation window upon exiting the service.
+To really save the "new" history, press "**^E**" in the **Search Window** (or "**e**" is typed on any field other than a "*Line editor*"), or press "**y**" in the confirmation window upon exiting the service.

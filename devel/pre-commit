@@ -113,8 +113,8 @@ do
             -e 's/<.sup>P/^P/' \
             -e 's|N<strong>, </strong>\^P|N</strong>, <strong>^P|' \
             -e 's|<sup>X<strong>|^X</strong>|' \
-            -e 's|<.strong>w<strong>|<strong>w</strong>|' \
-            -e 's|<.strong><.sup>W<.strong>|<strong>^W</strong>|' \
+            -e 's|<.strong>e<strong>|<strong>e</strong>|' \
+            -e 's|<.strong><.sup>E<.strong>|<strong>^E</strong>|' \
             "$out"
     fi
     #sed -i "/^alt=/d" ${out}

@@ -1231,7 +1231,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 highlight = -1
         return highlight, ((title, columns_separotors, columns[self._output_format]), )
 
-    def select_servers(self, with_config=False, return_function=None, init=False):
+    def select_servers(self, with_config=False, return_function=None, init=False, global_functions=None):
         ''' RadioBrowser select servers '''
         if init:
             self._server_selection_window = None
@@ -1246,7 +1246,9 @@ class RadioBrowser(PyRadioStationsBrowser):
                     self._config_win._params[0]['ping_timeout'],
                     Y=11, X=19,
                     show_random=True,
-                    return_function=return_function)
+                    return_function=return_function,
+                    global_functions=global_functions
+                )
             else:
                 self._server_selection_window = RadioBrowserServersSelect(
                     self.parent,
@@ -1254,7 +1256,8 @@ class RadioBrowser(PyRadioStationsBrowser):
                     self._server,
                     self._default_ping_count,
                     self._default_ping_timeout,
-                    return_function=return_function
+                    return_function=return_function,
+                    global_functions=global_functions
                 )
         else:
             self._server_selection_window.set_parent(self.parent)
@@ -2043,7 +2046,7 @@ class RadioBrowserConfigWindow(object):
         ''' config not modified '''
         return -4
 
-    def select_servers(self, with_config=False, return_function=None, init=False):
+    def select_servers(self, with_config=False, return_function=None, init=False, global_functions=None):
         ''' RadioBrowserConfigWindow select servers '''
         if init:
             self._server_selection_window = None
@@ -2056,7 +2059,9 @@ class RadioBrowserConfigWindow(object):
                 self._params[0]['ping_timeout'],
                 Y=11, X=19,
                 show_random=True,
-                return_function=return_function)
+                return_function=return_function,
+                global_functions=global_functions
+            )
         else:
             self._server_selection_window.set_parent(self._win)
         # self.keyboard_handler = self._server_selection_window
@@ -3814,7 +3819,8 @@ class RadioBrowserServersSelect(object):
                  Y=None,
                  X=None,
                  show_random=False,
-                 return_function=None):
+                 return_function=None,
+                 global_functions=None):
         ''' Server selection Window
             if Y and X are valid (not None)
               keypress just returns 0
@@ -3830,7 +3836,7 @@ class RadioBrowserServersSelect(object):
         self._return_function = return_function
 
         self.servers = RadioBrowserServers(
-            parent, servers, current_server, show_random
+            parent, servers, current_server, show_random, global_functions
         )
         self.maxY = self.servers.maxY + 2
         self.maxX = self.servers.maxX + 2
@@ -3954,7 +3960,7 @@ class RadioBrowserServers(object):
     _too_small = False
     from_config = False
 
-    def __init__(self, parent, servers, current_server, show_random=False):
+    def __init__(self, parent, servers, current_server, show_random=False, global_functions=None):
         self._parent = parent
         self.items = list(servers)
         self.server = current_server
@@ -3973,6 +3979,12 @@ class RadioBrowserServers(object):
                 self.items[i] = self.items[i].replace('(', ' ' * (s_max - len(self.items[i])) + '(')
         self.maxY = len(self.items)
         self.maxX = len(self.items[0])
+        self._global_functions = {}
+        # if global_functions is not None:
+        #     logger.error('\n\n{}\n\n'.format(global_functions))
+        #     self._global_functions = deepcopy(global_functions)
+        #     if 't' in self._global_functions.keys():
+        #             del self._global_functions['t']
 
         if show_random:
             self.items.reverse()
@@ -4032,7 +4044,10 @@ class RadioBrowserServers(object):
         if self._too_small:
             return 1
 
-        if char in (
+        if chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+            return 1
+        elif char in (
             curses.KEY_EXIT, ord('q'), 27,
             ord('h'), curses.KEY_LEFT
         ):

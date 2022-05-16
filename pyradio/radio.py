@@ -1603,6 +1603,33 @@ class PyRadio(object):
         lines = [item.strip() for item in st_lines]
         return self._get_message_width_from_list(lines)
 
+    def _show_msg(self, txt,
+                   mode_to_set=0,
+                   caption=' Help ',
+                   prompt=' Press any key to hide ',
+                   too_small_msg='Window too small to show message',
+                   is_message=False,
+                   reset_metrics=True):
+        txt_col = curses.color_pair(5)
+        box_col = curses.color_pair(3)
+        caption_col = curses.color_pair(4)
+        lines = txt.split('\n')
+        st_lines = [item.replace('\r', '') for item in lines]
+        lines = [item.strip() for item in st_lines]
+        inner_height = len(lines) + 2
+        inner_width = self._get_message_width_from_list(lines) + 4
+        outer_height = inner_height + 2
+        outer_width = inner_width + 2
+        if outer_width + 2 < self.bodyMaxX and outer_height + 2 < self.bodyMaxY:
+            win = curses.newwin(inner_height,inner_width,int((self.maxY-inner_height)/2),int((self.maxX-inner_width)/2))
+            win.bkgdset(' ', box_col)
+            win.erase()
+            win.box()
+            for i, a_line in enumerate(lines):
+                #a_line = self._replace_starting_undesscore(n)
+                win.addstr(i + 1, inner_width-cjklen(a_line[1:]) - 1, a_line[1:].replace('_', ' ').replace('¸', '_'), txt_col)
+        win.refresh()
+
     def _show_help(self, txt,
                    mode_to_set=0,
                    caption=' Help ',
@@ -4325,7 +4352,7 @@ class PyRadio(object):
                                       callback_function,
                                       delay=.75,
                                       reset_metrics=True):
-        self._show_help(txt, mode_to_set, caption='',
+        self._show_msg(txt, mode_to_set, caption='',
                         prompt='', is_message=True,
                         reset_metrics=reset_metrics)
         th = threading.Timer(delay, callback_function)
@@ -4597,6 +4624,7 @@ class PyRadio(object):
             self._toggle_titles_logging()
 
         elif char in (ord('w'), ):
+            logger.error('==== w!')
             self._tag_a_title()
 
     def _browser_server_selection(self):
@@ -4855,6 +4883,9 @@ class PyRadio(object):
                 self._show_delayed_notification('___Title already tagged as liked___')
         else:
             self._show_delayed_notification('___Error: Player not in playback___', delay=1.2)
+            # if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
+            #     self.ws.close_window()
+            #     self.refreshBody()
 
     def keypress(self, char):
         if self._system_asked_to_terminate:
@@ -4901,23 +4932,31 @@ class PyRadio(object):
             return
 
         if self.ws.operation_mode == self.ws.WIN_PRINT_EXE_LOCATION_MODE:
-            if char in (ord('q'), curses.KEY_EXIT, 27):
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            elif char in (ord('q'), curses.KEY_EXIT, 27):
                 self.ws.close_window()
                 curses.ungetch('q')
                 #self.refreshBody()
             return
 
         if self.ws.operation_mode == self.ws.WIN_MANAGE_PLAYERS_MSG_MODE:
-            self.ws.close_window()
-            curses.ungetch('q')
-            #self.refreshBody()
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            else:
+                self.ws.close_window()
+                curses.ungetch('q')
+                #self.refreshBody()
             return
 
         if self.ws.operation_mode == self.ws.WIN_REMOVE_OLD_INSTALLATION_MODE:
-            self.ws.close_window()
-            self.refreshBody()
-            from .win_del_old_inst import win_del_old_inst
-            win_del_old_inst()
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            else:
+                self.ws.close_window()
+                self.refreshBody()
+                from .win_del_old_inst import win_del_old_inst
+                win_del_old_inst()
             return
 
         if self.ws.operation_mode in (
@@ -5692,6 +5731,9 @@ class PyRadio(object):
 
         elif self.ws.operation_mode == self.ws.BROWSER_SERVER_SELECTION_MODE and \
                 char not in self._chars_to_bypass:
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+                return
             if self._server_selection_window:
                 ret = self._server_selection_window.keypress(char)
             else:
@@ -5740,7 +5782,8 @@ class PyRadio(object):
                     self._cnf._online_browser.select_servers(
                         with_config=True,
                         return_function=self._return_from_server_selection,
-                        init=True
+                        init=True,
+                        global_functions=self._global_functions
                     )
                 else:
                     self._server_selection_window = self._browser_config_win.select_servers(init=True)
@@ -5873,6 +5916,9 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_CREATE_NEW_THEME_MODE:
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+                return
             if self.theme_forced_selection:
                 self._theme_selector.set_theme(self.theme_forced_selection)
             if char in (ord('y'), ):
@@ -5892,7 +5938,7 @@ class PyRadio(object):
                 self.ws.close_window()
                 self.refreshBody()
                 ''' Do this here to properly resize '''
-                return
+            return
 
         elif self.ws.operation_mode == self.ws.PASTE_MODE:
             ''' Return from station selection window for pasting '''
@@ -5976,7 +6022,9 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT:
-            if char in (ord('y'), ord('n')):
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            elif char in (ord('y'), ord('n')):
                 self.ws.close_window()
                 if char == ord('y'):
                     ret = self._cnf._online_browser.save_config()
@@ -6002,7 +6050,9 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG:
-            if char in (ord('y'), ord('n')):
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            elif char in (ord('y'), ord('n')):
                 self.ws.close_window()
                 if char == ord('y'):
                     ret = self._browser_config_win.save_config()
@@ -6031,7 +6081,9 @@ class PyRadio(object):
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER:
             logger.error('DE =========================')
-            if char in (ord('y'), ord('n')):
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            elif char in (ord('y'), ord('n')):
                 self.ws.close_window()
                 if char == ord('y'):
                     ret = self._cnf._online_browser.save_config()
@@ -6265,7 +6317,9 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:
-            if char in (ord('y'), ord('Y')):
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            elif char in (ord('y'), ord('Y')):
                 self.ws.close_window()
                 if not self._cnf.locked and char == ord('Y'):
                     self._cnf.auto_save_playlist = True
@@ -6303,31 +6357,36 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE:
-            self.ws.close_window()
-            if char in (ord('y'), ord('Y')):
-                if not self._cnf.locked and char == ord('Y'):
-                    self._cnf.auto_save_playlist = True
-                ret = self.saveCurrentPlaylist()
-                if ret == 0:
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            else:
+                self.ws.close_window()
+                if char in (ord('y'), ord('Y')):
+                    if not self._cnf.locked and char == ord('Y'):
+                        self._cnf.auto_save_playlist = True
+                    ret = self.saveCurrentPlaylist()
+                    if ret == 0:
+                        self._open_playlist()
+                    else:
+                        if self._cnf.browsing_station_service:
+                            self._cnf.removed_playlist_history_item()
+                elif char in (ord('n'), ):
                     self._open_playlist()
-                else:
-                    if self._cnf.browsing_station_service:
-                        self._cnf.removed_playlist_history_item()
-            elif char in (ord('n'), ):
-                self._open_playlist()
-            elif char in (curses.KEY_EXIT, ord('q'), 27):
-                self.bodyWin.nodelay(True)
-                char = self.bodyWin.getch()
-                self.bodyWin.nodelay(False)
-                if char == -1:
-                    ''' ESCAPE '''
-                    if self._cnf.browsing_station_service:
-                        self._cnf.removed_playlist_history_item()
-                    self.refreshBody()
+                elif char in (curses.KEY_EXIT, ord('q'), 27):
+                    self.bodyWin.nodelay(True)
+                    char = self.bodyWin.getch()
+                    self.bodyWin.nodelay(False)
+                    if char == -1:
+                        ''' ESCAPE '''
+                        if self._cnf.browsing_station_service:
+                            self._cnf.removed_playlist_history_item()
+                        self.refreshBody()
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
-            if char in (ord('y'), ord('Y')):
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            elif char in (ord('y'), ord('Y')):
                 if not self._cnf.locked and char == ord('Y'):
                     self._cnf.confirm_playlist_reload = False
                 self.ws.close_window()
@@ -6342,6 +6401,9 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_RELOAD_CONFIRM_MODE:
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+                return
             if char in (ord('y'), ord('Y')):
                 if not self._cnf.locked and char == ord('Y'):
                     self._cnf.confirm_playlist_reload = False
@@ -6358,6 +6420,9 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.REMOVE_STATION_MODE:
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+                return
             if char in (ord('y'), ord('Y')):
                 self._set_active_stations()
                 deleted_station, self.number_of_items = self._cnf.remove_station(self.selection)
@@ -6388,7 +6453,9 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.FOREIGN_PLAYLIST_ASK_MODE:
-            if char in (ord('y'), ):
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            elif char in (ord('y'), ):
                 ret = self._cnf.copy_playlist_to_config_dir()
                 if ret == 0:
                     ind = self._cnf.current_playlist_index()
@@ -6479,7 +6546,9 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.STATIONS_ASK_TO_INTEGRATE_MODE:
-            if char == ord('y'):
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            elif char == ord('y'):
                 self._cnf._integrate_stations = False
                 self.ws.close_window()
                 self._cnf.integrate_playlists()
@@ -6501,6 +6570,10 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
+            logger.error('--- PASSIVE_WINDOWS ----')
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+                return
             if self.ws.operation_mode in (
                     self.ws.MAIN_HELP_MODE,
                     self.ws.MAIN_HELP_MODE_PAGE_2,
