@@ -1587,7 +1587,7 @@ class PyRadio(object):
             #'/home/spiros/edit.log')
         self._theme_selector.changed_from_config = changed_from_config
         self._theme_selector.show()
-        self._theme_selector.set_global_gunctions(self._global_functions)
+        self._theme_selector.set_global_functions(self._global_functions)
 
     def _get_message_width_from_list(self, lines):
         mwidth = 0
@@ -3473,6 +3473,7 @@ class PyRadio(object):
                         pass
                     # logger.error('DE online browser = {}'.format(self._cnf._online_browser))
                     if self._cnf.online_browser:
+                        self._cnf.online_browser.set_global_functions(self._global_functions)
                         tmp_stations = []
 
                         if not self._cnf._online_browser.initialize():
@@ -4660,7 +4661,8 @@ class PyRadio(object):
                     parent=parent,
                     stations_dir=self._cnf.stations_dir,
                     init=init,
-                    distro=distro
+                    distro=distro,
+                    global_functions=self._global_functions
                 )
                 self.ws.close_window()
             # if title:
@@ -5764,8 +5766,7 @@ class PyRadio(object):
                     self.refreshBody()
             return
 
-        elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE and \
-                char not in self._chars_to_bypass_on_editor:
+        elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE:
             ''' handle browser config '''
             if self._cnf._online_browser:
                 ret = self._cnf._online_browser.keypress(char)

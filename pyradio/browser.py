@@ -395,6 +395,15 @@ class RadioBrowser(PyRadioStationsBrowser):
     def _get_title(self):
         self.TITLE = 'RadioBrowser ({})'.format(country_from_server(self._server))
 
+    def set_global_functions(self, global_functions):
+        self._global_functions = {}
+        if global_functions is not None:
+            self._global_functions = dict(global_functions)
+            if 't' in self._global_functions.keys():
+                del self._global_functions['t']
+            if 'T' in self._global_functions.keys():
+                del self._global_functions['T']
+
     def stations(self, playlist_format=1):
         ''' Return stations' list (in PyRadio playlist format)
 
@@ -1414,7 +1423,8 @@ class RadioBrowser(PyRadioStationsBrowser):
                 current_limit=self._default_max_number_of_results,
                 current_ping_count=self._default_ping_count,
                 current_ping_timeout=self._default_ping_timeout,
-                init=init
+                init=init,
+                global_functions=self._global_functions
             )
         self.keyboard_handler = self._config_win
         self._config_win.show(parent=parent)
@@ -1654,7 +1664,8 @@ class RadioBrowserConfigWindow(object):
             current_limit=100,
             init=False,
             stations_dir=None,
-            distro=None
+            distro=None,
+            global_functions=None
     ):
         ''' Parameters
                 0: working
@@ -1697,6 +1708,11 @@ class RadioBrowserConfigWindow(object):
                                       current_history_id,
                                       current_history
                                       )
+        self._global_functions = {}
+        if global_functions is not None:
+            self._global_functions = global_functions.copy()
+            if 't' in self._global_functions.keys():
+                del self._global_functions['t']
 
     @property
     def urls(self):
@@ -2121,6 +2137,9 @@ class RadioBrowserConfigWindow(object):
                 logger.error('---=== Server Selection is None ===---')
                 self._server_selection_window = None
 
+        if chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+            return 1
         if char in (
             curses.KEY_EXIT, 27, ord('q')
         ):

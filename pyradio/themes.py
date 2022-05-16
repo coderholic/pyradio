@@ -468,13 +468,13 @@ class PyRadioThemeSelector(object):
 
         self._themes = []
 
-    def set_global_gunctions(self, global_functions):
+    def set_global_functions(self, global_functions):
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = dict(global_functions)
             if 't' in self._global_functions.keys():
                 del self._global_functions['t']
-            if self.changed_from_config:
+            if 'T' in self._global_functions.keys():
                 del self._global_functions['T']
 
     def show(self):
