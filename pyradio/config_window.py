@@ -27,7 +27,6 @@ def set_global_functions(global_functions):
         ret = dict(global_functions)
         if 't' in ret.keys():
             del ret['t']
-        del ret['T']
     return ret
 
 class PyRadioConfigWindow(object):
@@ -669,12 +668,15 @@ class ExtraParametersEditor(object):
             edit_color=curses.color_pair(9),
             cursor_color=curses.color_pair(8),
             unfocused_color=curses.color_pair(5),
-            string_changed_handler=self._string_changed)
+            string_changed_handler=self._string_changed
+        )
         self._widgets[0].string = string
         self._widgets[0].bracket = False
         self._widgets[0]._use_paste_mode = True
+        self._widgets[0]._mode_changed = self._show_alternative_modes
+        self._widgets[0].set_global_functions(self._global_functions)
         ''' enables direct insersion of ? and \ '''
-        self._widgets[0]._paste_mode = True
+        self._widgets[0]._paste_mode = False
         self._line_editor = self._widgets[0]
 
         ''' add horizontal push buttons '''
@@ -690,6 +692,27 @@ class ExtraParametersEditor(object):
 
         if not self._orig_string:
             self._widgets[1].enabled = False
+
+    def _show_alternative_modes(self):
+        if self._line_editor._paste_mode:
+            """ print paste mode is on on editor """
+            self._win.addstr(0, 18, '[', curses.color_pair(5))
+            self._win.addstr('Paste mode', curses.color_pair(4))
+            self._win.addstr(']    ', curses.color_pair(5))
+        else:
+            if self._line_editor.backslash_pressed:
+                """ print editor's flag """
+                # fix for python 2
+                #self._win.addstr(*lin[i], '[', curses.color_pair(5))
+                self._win.addstr(0, 18, '[', curses.color_pair(5))
+                self._win.addstr('Extra mode', curses.color_pair(4))
+                self._win.addstr(']', curses.color_pair(5))
+            else:
+                """ print cleared editor's flag """
+                # fix for python 2
+                #self._win.addstr(*lin[i], 15 * ' ', curses.color_pair(5))
+                self._win.addstr(0, 18, 15 * ' ', curses.color_pair(5))
+        self._win.refresh()
 
     def _string_changed(self):
         pass
@@ -741,6 +764,7 @@ class ExtraParametersEditor(object):
 
         self._win.addstr(10 + step, 5, '?', curses.color_pair(4))
         self._win.addstr(10 + step, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
+        self._show_alternative_modes()
         self._win.refresh()
         self.refresh_win()
 
@@ -790,10 +814,7 @@ class ExtraParametersEditor(object):
                 2: Display line editor help
         '''
         ret = 1
-        if chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
-            return 1
-        elif char == ord('?') and self._focus > 0:
+        if char == ord('?') and self._focus > 0:
             return 2
         elif char in (curses.KEY_EXIT, 27, ord('q')) and \
                 self._focus > 0:
@@ -846,6 +867,9 @@ class ExtraParametersEditor(object):
                 ''' cancel '''
                 self.edit_string = ''
                 ret = 0
+        elif chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+            return 1
 
         if ret == 1:
             self._update_focus()
@@ -1461,11 +1485,11 @@ class PyRadioSelectPlayer(object):
                3 - Editor is visible
                4 - Editor exited
         '''
-        if chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
-        elif self.editing == 0:
+        if self.editing == 0:
             ''' focus on players '''
-            if char in (9, ):
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            elif char in (9, ):
                 if self._players[self.selection][1]:
                     self._switch_column()
                     self.refresh_selection()
@@ -1558,14 +1582,18 @@ class PyRadioSelectPlayer(object):
                     self._parameter_editor = ExtraParametersEditor(
                         self._win,
                         self._cnf,
-                        string=self._extra._items[self._extra.selection])
+                        string=self._extra._items[self._extra.selection],
+                        global_functions=self._global_functions
+                    )
                     self.refresh_win()
                     return 3
                 elif ret == 5:
                     ''' add parameter '''
                     self._parameter_editor = ExtraParametersEditor(
                         self._win,
-                        self._cnf)
+                        self._cnf,
+                        global_functions=self._global_functions
+                    )
                     self.editing = 1
                     self.refresh_win()
                     return 3

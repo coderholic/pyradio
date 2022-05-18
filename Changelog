@@ -1,10 +1,23 @@
+2022-05-18 s-n-g
+    * version 0.8.9.18 (0.9-beta15)
+    * changing shortcut w and ^W to e and ^E on the RadioBrowser
+      Search Window
+    * implementing global functions
+    * fixing a couple of bugs and crashes
+    * updating docs
+
 2022-04-29 s-n-g
-    * version 0.8.9.17 (0.9-beta13)
+    * version 0.8.9.17 (0.9-beta14)
     * adding Title's Log
     * changing versioning
-    * fixing user isntallation in build_install_pyradio
+    * fixing user installation in build_install_pyradio
     * fixing python2 main.py crash (#153)
     * updating docs
+
+2022-03-18 s-n-g (0.9-beta13)
+    * version 0.8.9.16 (0.9-beta13)
+    * fixing install.py script
+    * installing Start Menu Shortcut on Windows
 
 2022-03-15 s-n-g
     * version 0.8.9.15 (0.9-beta12)

@@ -135,13 +135,36 @@ Quit
 The same logic applies to all \fBPyRadio\fR windows.
 
 .IP \fBNote:
-All windows - except the \fISearch window\fR - support changing the volume and muting / unmuting the player (provided that \fBPyRadio\fR is actually connected to a station).
-
-.IP \fBNote:
 When inserting numbers (either to jump to a station or to move a station), the number will be displayed at the right bottom corner of the window, suffixed by a "\fIG\fR", i.e. pressing \fI35\fR will display \fI[35G]\fR.
 
 .IP \fBNote:
 When tagging a station position for a move action (by pressing "\fBJ\fR"), the position will be displayed at the right bottom corner of the window, suffixed by a "\fIJ\fR", i.e. pressing "\fIJ\fR" on position \fI35\fR will display \fI[35J]\fR.
+
+.IP \fBGlobal\ shortcuts\fR
+
+Some of the functions provided by \fBpyradio\fR will always be available to the user. These functions are:
+
+
+.RS 10
+
+.IP \fB+\fR/\fB-\fR\ and\ \fB,\fR/\fB.\fR
+adjust volume
+.IP \fBm\fR
+mute player
+.IP \fBv\fR
+save volume
+.IP \fBT\fR
+toggle transparency
+.IP \fBW\fR
+toggle titles logging
+.IP \fBw\fR
+like a station
+
+.RE
+.RS 7
+Every window in \fBpyradio\fR will respect these shotrcuts, even the ones with a “\fIPress any key to…\fR” message.
+
+When focus is on a \fBLine editor\fR, all shortcuts will work when preceded by a "\fI\\\fR".
 
 .SH Pyradio's Modes
 

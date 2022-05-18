@@ -48,7 +48,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#changelog">Changelog</a></li>
 <li><a href="#installation">Installation</a></li>
 <li><a href="#command-line-options">Command line options</a></li>
-<li><a href="#controls">Controls</a></li>
+<li><a href="#controls">Controls</a>
+<ul>
+<li><a href="#global-shortcuts">Global shortcuts</a></li>
+</ul></li>
 <li><a href="#html-help">HTML help</a></li>
 <li><a href="#pyradio-modes">PyRadio Modes</a>
 <ul>
@@ -150,13 +153,26 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre style="height: 200px;">
 
+2022-05-18 s-n-g
+    * version 0.8.9.18 (0.9-beta15)
+    * changing shortcut w and ^W to e and ^E on the RadioBrowser
+      Search Window
+    * implementing global functions
+    * fixing a couple of bugs and crashes
+    * updating docs
+
 2022-04-29 s-n-g
-    * version 0.8.9.17 (0.9-beta13)
+    * version 0.8.9.17 (0.9-beta14)
     * adding Title's Log
     * changing versioning
-    * fixing user isntallation in build_install_pyradio
+    * fixing user installation in build_install_pyradio
     * fixing python2 main.py crash (#153)
     * updating docs
+
+2022-03-18 s-n-g (0.9-beta13)
+    * version 0.8.9.16 (0.9-beta13)
+    * fixing install.py script
+    * installing Start Menu Shortcut on Windows
 
 2022-03-15 s-n-g
     * version 0.8.9.15 (0.9-beta12)
@@ -803,9 +819,46 @@ Z                 Display the &quot;Extra Player Parameter&quot; window      -  
 Esc/q             Quit                                             -                                  -
 Esc/q/Left/h      -                                                Cancel / close window              Cancel / close window</pre>
 <p>The same logic applies to all <strong>PyRadio</strong> windows.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All windows - except the <em>Search window</em> - support changing the volume and muting / unmuting the player (provided that <strong>PyRadio</strong> is actually connected to a station).</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When inserting numbers (either to jump to a station or to move a station), the number will be displayed at the right bottom corner of the window, suffixed by a “<em>G</em>”, i.e. pressing <em>35</em> will display <em>[35G]</em>.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When tagging a station position for a move action (by pressing “<strong>J</strong>”), the position will be displayed at the right bottom corner of the window, suffixed by a “<em>J</em>”, i.e. pressing “<em>J</em>” on position <em>35</em> will display <em>[35J]</em>.</p>
+<h3 id="global-shortcuts">Global shortcuts</h3>
+<p>Some of the functions provided by <strong>PyRadio</strong> will always be available to the user. These functions are:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Shortcut</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>+</strong>/<strong>-</strong> and <strong>,</strong>/<strong>.</strong></td>
+<td>adjust volume</td>
+</tr>
+<tr class="even">
+<td><strong>m</strong></td>
+<td>mute player</td>
+</tr>
+<tr class="odd">
+<td><strong>v</strong></td>
+<td>save volume</td>
+</tr>
+<tr class="even">
+<td><strong>T</strong></td>
+<td>toggle transparency</td>
+</tr>
+<tr class="odd">
+<td><strong>W</strong></td>
+<td>toggle titles logging</td>
+</tr>
+<tr class="even">
+<td><strong>w</strong></td>
+<td>like a station</td>
+</tr>
+</tbody>
+</table>
+<p>Every window in <strong>PyRadio</strong> will respect these shotrcuts, even the ones with a “<em>Press any key to…</em>” message.</p>
+<p>When focus is on a “<em>Line editor</em>”, all shortcuts will work when preceded by a “<strong>\</strong>”.</p>
 <h2 id="html-help">HTML help <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>While in <strong>PyRadio</strong> main window, one can open the HTML (offline) help using “<strong>\h</strong>”.</p>
 <p>This is just a helper function for windows users who cannot use the man pages, but is still available for all platforms.</p>

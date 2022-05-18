@@ -1995,10 +1995,10 @@ class PyRadio(object):
                  _
                  |Search history navigation works with normal keys as well
                  |(|^N| is the same as |n| when not in a line editor).
-                 %_Player Keys (Not on Line editor)_
+                 %_Global functions (with \ on Line editor)_
                  -|/|+| or |,|/|.       |Change volume.
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 '''
+                 W| / |w            |Toggle titles log / like a station'''
         self._show_help(txt,
                         mode_to_set=self.ws.RADIO_BROWSER_SEARCH_HELP_MODE,
                         caption=' RadioBrowser Search Help ')
@@ -2013,10 +2013,10 @@ class PyRadio(object):
                  r|, |d             |Revert to |saved| / |default| values.
                  s                |Save config.
                  Esc              |Exit without saving.
-                 %_Player Keys_
+                 %_Global functions (with \ on Line editor)_
                  -|/|+| or |,|/|.       |Change volume.
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 '''
+                 W| / |w            |Toggle titles log / like a station.'''
         self._show_help(txt,
                         mode_to_set=self.ws.RADIO_BROWSER_CONFIG_HELP_MODE,
                         caption=' RadioBrowser Config Help ')
@@ -2147,9 +2147,10 @@ class PyRadio(object):
                  /| / |n| / |N        |Search, go to next / previous result.
                  \\                |Enter |Extra Commands| mode.
                  Esc|,|q|,|Left|,|h     |Cancel.
-                 %_Player Keys_
+                 %_Global functions (with \ on Line editor)_
                  -|/|+| or |,|/|.       |Change volume.
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                 W| / |w            |Toggle titles log / like a station.
                  %_Other Keys_
                  t| / |T            |Load |t|heme / |T|oggle transparency.'''
         if self._cnf.open_register_list:
@@ -2171,9 +2172,10 @@ class PyRadio(object):
                      T                |Toggle theme transparency.
                      /| / |n| / |N        |Search, go to next / previous result.
                      Esc|,|q|,|Left|,|h     |Close window.
-                     %_Player Keys_
+                     %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.       |Change volume.
-                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).'''
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                     W| / |w            |Toggle titles log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.THEME_HELP_MODE,
                             caption=' Themes Help ')
@@ -2190,7 +2192,7 @@ class PyRadio(object):
             \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
             Enter| / |Esc         |Perform / cancel search.
 
-            |Managing player volume does not work in search mode.
+            |Global functions work when preceded with a "|\|".
             '''
         else:
             txt = '''Left| / |Right        |Move to next / previous character.
@@ -2204,7 +2206,7 @@ class PyRadio(object):
             \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
             Enter| / |Esc         |Perform / cancel search.
 
-            |Managing player volume does not work in search mode.
+            |Global functions work when preceded with a "|\|".
             '''
             if platform.startswith('win'):
                 txt = txt.replace('M-', 'A-')
@@ -2224,7 +2226,7 @@ class PyRadio(object):
             \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
             Esc                 |Cancel operation.
 
-            |Managing player volume does not work in editing mode.
+            |Global functions work when preceded with a "|\|".
             '''
         else:
             txt = '''Left| / |Right        |Move to next / previous character.
@@ -2238,7 +2240,7 @@ class PyRadio(object):
             \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
             Esc                 |Cancel operation.
 
-            |Managing player volume does not work in editing mode.
+            |Global functions work when preceded with a "|\|".
             '''
             if platform.startswith('win'):
                 txt = txt.replace('M-', 'A-')
@@ -2260,7 +2262,7 @@ class PyRadio(object):
                 \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
                 Esc                 |Cancel operation.
 
-                |Managing player volume does not work in editing mode.
+                |Global functions work when preceded with a "|\|".
                 '''
             else:
                 txt = '''Left| / |Right        |Move to next / previous character.
@@ -2274,7 +2276,7 @@ class PyRadio(object):
                 \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
                 Esc                 |Cancel operation.
 
-                |Managing player volume does not work in editing mode.
+                |Global functions work when preceded with a "|\|".
                 '''
         else:
             if platform.lower().startswith('darwin'):
@@ -2290,7 +2292,7 @@ class PyRadio(object):
                 ____________________|URLs (and stations' names).
                 Esc                 |Cancel operation.
 
-                |Managing player volume does not work in editing mode.
+                |Global functions work when preceded with a "|\|".
                 '''
             else:
                 txt = '''Left| / |Right        |Move to next / previous character.
@@ -2306,7 +2308,7 @@ class PyRadio(object):
                 ____________________|URLs (and stations' names).
                 Esc                 |Cancel operation.
 
-                |Managing player volume does not work in editing mode.
+                |Global functions work when preceded with a "|\|".
                 '''
             if platform.startswith('win'):
                 txt = txt.replace('M-', 'A-')
@@ -2323,9 +2325,10 @@ class PyRadio(object):
                      d                      |Load default values.
                      s                      |Save config.
                      Esc|,|q|,|Left|,|h           |Cancel.
-                     %_Player Keys_
+                     %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.             |Change volume.
-                     m| / |v                  ||M|ute player / Save |v|olume (not in vlc).'''
+                     m| / |v                  ||M|ute player / Save |v|olume (not in vlc).
+                     W| / |w                  |Toggle titles log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.CONFIG_HELP_MODE,
                             caption=' Configuration Help ')
@@ -2342,9 +2345,10 @@ class PyRadio(object):
                      r                |Revert to saved values.
                      s                |Save players (selection and parameters).
                      Esc|,|q|,|Left|,|h     |Cancel.
-                     %_Player Keys_
+                     %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.       |Change volume.
-                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).'''
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                     W| / |w            |Toggle titles log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.SELECT_PLAYER_HELP_MODE,
                             caption=' Player Selection Help ')
@@ -2360,9 +2364,10 @@ class PyRadio(object):
                          r                |Revert to saved values.
                          s                |Save players (selection and parameters).
                          Esc|,|q|,|Left|,|h     |Cancel.
-                         %_Player Keys_
+                         %_Global functions (with \ on Line editor)_
                          -|/|+| or |,|/|.       |Change volume.
-                         m| / |v            ||M|ute player / Save |v|olume (not in vlc).'''
+                         m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                         W| / |w            |Toggle titles log / like a station.'''
             else:
                 txt = '''Up|,|j|,|Down|,|k
                          PgUp|, |PgDn       |Change selection.
@@ -2370,9 +2375,10 @@ class PyRadio(object):
                          Enter|,|Space
                          Right|,|l          |Activate current selection.
                          Esc|,|q|,|Left|,|h     |Cancel.
-                         %_Player Keys_
+                         %_Global functions (with \ on Line editor)_
                          -|/|+| or |,|/|.       |Change volume.
-                         m| / |v            ||M|ute player / Save |v|olume (not in vlc).'''
+                         m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                         W| / |w            |Toggle titles log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.SELECT_PLAYER_HELP_MODE,
                             caption=' Player Extra Parameters Help ')
@@ -2386,9 +2392,10 @@ class PyRadio(object):
                      /| / |n| / |N        |Search, go to next / previous result.
                      r                |Revert to saved value.
                      Esc|,|q|,|Left|,|h     |Canel.
-                     %_Player Keys_
+                     %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.       |Change volume.
-                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).'''
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                     W| / |w            |Toggle titles log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.SELECT_PLAYLIST_HELP_MODE,
                             caption=' Playlist Selection Help ')
@@ -2403,9 +2410,10 @@ class PyRadio(object):
                      /| / |n| / |N        |Search, go to next / previous result.
                      r                |Revert to saved value.
                      Esc|,|q|,|Left|,|h     |Canel.
-                     %_Player Keys_
+                     %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.       |Change volume.
-                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).'''
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                     W| / |w            |Toggle titles log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.SELECT_STATION_HELP_MODE,
                             caption=' Station Selection Help ')
@@ -2416,9 +2424,10 @@ class PyRadio(object):
                      Enter|,|Space|,|s    |Save encoding.
                      r c              |Revert to station / |c|onfig value.
                      Esc|,|q            |Cancel.
-                     %_Player Keys_
+                     %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.       |Change volume.
-                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).'''
+                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                     W| / |w            |Toggle titles log / like a station.'''
             if self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE:
                 txt = txt.replace('r c              |Revert to station / |c|onfig value.', 'r                |Revert to saved value.')
             self._show_help(txt,
@@ -4925,12 +4934,15 @@ class PyRadio(object):
             return
 
         if self.ws.operation_mode == self.ws.WIN_UNINSTALL_MODE:
-            self.ws.close_window()
-            if char in (ord('y'), ):
-                return -1
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
             else:
-                self._cnf.WIN_UNINSTALL = False
-                self.refreshBody()
+                self.ws.close_window()
+                if char in (ord('y'), ):
+                    return -1
+                else:
+                    self._cnf.WIN_UNINSTALL = False
+                    self.refreshBody()
             return
 
         if self.ws.operation_mode == self.ws.WIN_PRINT_EXE_LOCATION_MODE:
@@ -5311,8 +5323,11 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.NOT_IMPLEMENTED_YET_MODE:
-            self.ws.close_window()
-            self.refreshBody()
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            else:
+                self.ws.close_window()
+                self.refreshBody()
             return
 
         elif self.ws.operation_mode == self.ws.CONFIG_MODE and \
@@ -5857,8 +5872,10 @@ class PyRadio(object):
                             callback_function=self.refreshBody)
             return
 
-        elif self.ws.operation_mode == self.ws.BROWSER_SORT_MODE and \
-                char not in self._chars_to_bypass:
+        elif self.ws.operation_mode == self.ws.BROWSER_SORT_MODE:
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+                return
             ret = self._cnf._online_browser.keypress(char)
             if ret < 1:
                 self.ws.close_window()
@@ -6121,7 +6138,9 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.CLEAR_ALL_REGISTERS_MODE:
-            if char in (ord('y'), ord('n')):
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            elif char in (ord('y'), ord('n')):
                 self.ws.close_window()
                 if char == ord('y'):
                     self._clear_all_register_files()
@@ -6137,17 +6156,23 @@ class PyRadio(object):
             return
 
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_MODE:
-            with self._update_notify_lock:
-                self._update_version = ''
-            self.ws.close_window()
-            if char == ord('y'):
-                self._print_update_ok_notification()
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
             else:
-                self._print_update_nok_notification()
-            self.refreshBody()
+                with self._update_notify_lock:
+                    self._update_version = ''
+                self.ws.close_window()
+                if char == ord('y'):
+                    self._print_update_ok_notification()
+                else:
+                    self._print_update_nok_notification()
+                self.refreshBody()
             return
 
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_OK_MODE:
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+                return
             # ok
             self.detect_if_player_exited = False
             self._cnf.PROGRAM_UPDATE = True
@@ -6164,10 +6189,13 @@ class PyRadio(object):
             return -1
 
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_NOK_MODE:
-            self.helpWinContainer = None
-            self.helpWin = None
-            self.ws.close_window()
-            self.refreshBody()
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            else:
+                self.helpWinContainer = None
+                self.helpWin = None
+                self.ws.close_window()
+                self.refreshBody()
             return
 
         elif char in (ord('n'), ) and \
@@ -6312,9 +6340,12 @@ class PyRadio(object):
             return -1
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_RECOVERY_ERROR_MODE:
-            self._cnf.playlist_recovery_result = 0
-            self.ws.close_window()
-            self.refreshBody()
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+            else:
+                self._cnf.playlist_recovery_result = 0
+                self.ws.close_window()
+                self.refreshBody()
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE:

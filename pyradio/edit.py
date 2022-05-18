@@ -302,6 +302,7 @@ class PyRadioEditor(object):
                 self._line_editor[ed].bracket = False
                 self._line_editor[ed]._mode_changed = self._show_alternative_modes
                 self._line_editor[ed].use_paste_mode = True
+                self._line_editor[ed].set_global_functions(self._global_functions)
 
     def show(self, item=None):
         self._win = None
@@ -808,6 +809,7 @@ class PyRadioRenameFile(object):
                 unfocused_color=curses.color_pair(5),
                 string_changed_handler=self._string_changed)
             self._widgets[0].bracket = False
+            self._widgets[0].set_global_functions(self._global_functions)
         self._line_editor = self._widgets[0]
         # add copy checkbox
         if self._widgets[1] is None:

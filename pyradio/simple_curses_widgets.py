@@ -1811,10 +1811,12 @@ class SimpleCursesLineEdit(object):
 
     ''' windows '''
     _parent_win = None
-    _caption_win = None      # contains box and caption
-    _edit_win = None         # contains the "input box"
-    _use_paste_mode = False  # paste mode is off by default
-    _paste_mode = False      # enables direct insersion of ? and \
+    _caption_win = None             # contains box and caption
+    _edit_win = None                # contains the "input box"
+    _use_paste_mode = False         # paste mode is off by default
+    _paste_mode = False             # enables direct insersion of ? and \
+    _disable_paste_mode = False     # if True, disable paste mode
+    _paste_mode_always_on = False   # set paste mode and never disable it
 
     ''' Default value for string length '''
     _max_chars_to_display = 0
@@ -1889,6 +1891,8 @@ class SimpleCursesLineEdit(object):
 
     _mode_changed = None
 
+    _global_functions = {}
+
     def __init__(self, parent, width, begin_y, begin_x, **kwargs):
 
         self._parent_win = parent
@@ -1953,6 +1957,10 @@ class SimpleCursesLineEdit(object):
                 elif key == 'string_changed_handler':
                     ''' callback function for KEY_STAB '''
                     self._string_changed_handler = value
+                elif key == 'paste_mode_always_on':
+                    ''' set paste mode and never disable it '''
+                    self._paste_mode_always_on = True
+                    self._paste_mode = True
 
         if self._has_history:
             self._input_history = SimpleCursesLineEditHistory()
@@ -2073,6 +2081,15 @@ class SimpleCursesLineEdit(object):
 
     def getmaxyx(self):
         return self._caption_win.getmaxyx()
+
+    def set_global_functions(self, global_functions):
+        self._global_functions = {}
+        if global_functions is not None:
+            self._global_functions = dict(global_functions)
+            if 't' in self._global_functions.keys():
+                del self._global_functions['t']
+            # if 'T' in self._global_functions.keys():
+            #     del self._global_functions['T']
 
     def _calculate_window_metrics(self):
         if self._caption:
@@ -2565,6 +2582,10 @@ class SimpleCursesLineEdit(object):
                 self.refreshEditWindow()
                 if self._string_changed_handler:
                     self._string_changed_handler()
+                if self._use_paste_mode and self._paste_mode:
+                    self._paste_mode = self._disable_paste_mode = False
+                    if self._mode_changed:
+                        self._mode_changed()
                 return 1
             elif char == 422:
                 ''' A-F, move to next word '''
@@ -2573,6 +2594,12 @@ class SimpleCursesLineEdit(object):
                         logger.debug('action: next-word')
                     self._next_word()
                     self.refreshEditWindow()
+
+                    if not self._paste_mode_always_on:
+                        if self._use_paste_mode and self._paste_mode:
+                            self._paste_mode = self._disable_paste_mode = False
+                            if self._mode_changed:
+                                self._mode_changed()
                 return 1
             elif char == 418:
                 ''' A-B, move to previous word '''
@@ -2580,6 +2607,11 @@ class SimpleCursesLineEdit(object):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('action: previous-word')
                     self._previous_word()
+                    if not self._paste_mode_always_on:
+                        if self._use_paste_mode and self._paste_mode:
+                            self._paste_mode = self._disable_paste_mode = False
+                            if self._mode_changed:
+                                self._mode_changed()
                 return 1
 
         if char == 92 and not self._backslash_pressed and not self._paste_mode:
@@ -2596,6 +2628,11 @@ class SimpleCursesLineEdit(object):
             self._backslash_pressed = False
             if self._mode_changed:
                 self._mode_changed()
+            if not self._paste_mode_always_on:
+                if self._use_paste_mode and self._paste_mode:
+                    self._paste_mode = self._disable_paste_mode = False
+                    if self._mode_changed:
+                        self._mode_changed()
             return 2
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
@@ -2605,6 +2642,11 @@ class SimpleCursesLineEdit(object):
                 logger.debug('action: enter')
             if self._has_history:
                 self._input_history.add_to_history(self._string)
+            if not self._paste_mode_always_on:
+                if self._use_paste_mode and self._paste_mode:
+                    self._paste_mode = self._disable_paste_mode = False
+                    if self._mode_changed:
+                        self._mode_changed()
             return 0
 
         elif char in (curses.KEY_EXIT, 27):
@@ -2616,6 +2658,9 @@ class SimpleCursesLineEdit(object):
             if self.log is not None:
                 self.log('   *** char = {}\n'.format(char))
             self._edit_win.nodelay(False)
+            if not self._paste_mode_always_on:
+                if self._use_paste_mode and self._paste_mode:
+                    self._disable_paste_mode = True
             if char == -1:
                 ''' ESCAPE '''
                 if logger.isEnabledFor(logging.DEBUG):
@@ -2624,6 +2669,11 @@ class SimpleCursesLineEdit(object):
                 self._curs_pos = 0
                 if self._input_history:
                     self._input_history.reset_index()
+                if not self._paste_mode_always_on:
+                    if self._use_paste_mode and self._paste_mode:
+                        self._paste_mode = self._disable_paste_mode = False
+                        if self._mode_changed:
+                            self._mode_changed()
                 return -1
             else:
                 if self.log is not None:
@@ -2649,6 +2699,11 @@ class SimpleCursesLineEdit(object):
                             logger.debug('action: previous-word')
                         self._previous_word()
                 else:
+                    if not self._paste_mode_always_on:
+                        if self._use_paste_mode and self._paste_mode:
+                            self._paste_mode = self._disable_paste_mode = False
+                            if self._mode_changed:
+                                self._mode_changed()
                     return 1
 
         elif char in (curses.KEY_RIGHT, ):
@@ -2658,6 +2713,8 @@ class SimpleCursesLineEdit(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: RIGHT')
             self._go_right()
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.KEY_LEFT, ):
             ''' KEY_LEFT '''
@@ -2666,6 +2723,8 @@ class SimpleCursesLineEdit(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: LEFT')
                 self._go_left()
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.KEY_HOME, curses.ascii.SOH):
             ''' KEY_HOME, ^A '''
@@ -2674,6 +2733,8 @@ class SimpleCursesLineEdit(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: HOME')
                 self._go_to_start()
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.KEY_END, curses.ascii.ENQ):
             ''' KEY_END, ^E '''
@@ -2682,6 +2743,8 @@ class SimpleCursesLineEdit(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('action: END')
                 self._go_to_end()
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.ascii.ETB, ):
             ''' ^W, clear to start of line '''
@@ -2692,6 +2755,8 @@ class SimpleCursesLineEdit(object):
                 self._clear_to_start_of_line()
                 if self._string_changed_handler:
                     self._string_changed_handler()
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.ascii.VT, ):
             ''' Ctrl-K - clear to end of line '''
@@ -2702,6 +2767,8 @@ class SimpleCursesLineEdit(object):
                 self._clear_to_end_of_line()
                 if self._string_changed_handler:
                     self._string_changed_handler()
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.ascii.NAK, ):
             ''' ^U, clear line '''
@@ -2713,6 +2780,8 @@ class SimpleCursesLineEdit(object):
             self._is_cjk()
             if self._string_changed_handler:
                 self._string_changed_handler()
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.KEY_DC, curses.ascii.EOT):
             ''' DEL key, ^D '''
@@ -2723,6 +2792,8 @@ class SimpleCursesLineEdit(object):
                 self._delete_char()
                 if self._string_changed_handler:
                     self._string_changed_handler()
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.KEY_BACKSPACE, curses.ascii.BS, 127):
             ''' KEY_BACKSPACE '''
@@ -2733,6 +2804,8 @@ class SimpleCursesLineEdit(object):
                 self._backspace_char()
                 if self._string_changed_handler:
                     self._string_changed_handler()
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.KEY_UP, curses.ascii.DLE):
             ''' KEY_UP, ^N '''
@@ -2745,6 +2818,8 @@ class SimpleCursesLineEdit(object):
             else:
                 if self._ungetch_unbound_keys:
                     curses.ungetch(char)
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.KEY_DOWN, curses.ascii.SO):
             ''' KEY_DOWN, ^P '''
@@ -2757,6 +2832,8 @@ class SimpleCursesLineEdit(object):
             else:
                 if self._ungetch_unbound_keys:
                     curses.ungetch(char)
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.KEY_NPAGE, ):
             ''' PgDn '''
@@ -2769,6 +2846,8 @@ class SimpleCursesLineEdit(object):
             else:
                 if self._ungetch_unbound_keys:
                     curses.ungetch(char)
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.KEY_PPAGE, ):
             ''' PgUp '''
@@ -2778,6 +2857,8 @@ class SimpleCursesLineEdit(object):
                     self._key_pgup_function_handler()
                 except:
                     pass
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (9, ):
             ''' TAB '''
@@ -2790,6 +2871,8 @@ class SimpleCursesLineEdit(object):
             else:
                 if self._ungetch_unbound_keys:
                     curses.ungetch(char)
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif char in (curses.KEY_BTAB, ):
             ''' Shift-TAB '''
@@ -2802,6 +2885,8 @@ class SimpleCursesLineEdit(object):
             else:
                 if self._ungetch_unbound_keys:
                     curses.ungetch(char)
+            if self._use_paste_mode and self._paste_mode:
+                self._disable_paste_mode = True
 
         elif 0 <= char <= 31:
             ''' do not accept any other control characters '''
@@ -2811,9 +2896,20 @@ class SimpleCursesLineEdit(object):
                 and self._use_paste_mode:
             ''' toggle paste mode '''
             self._backslash_pressed = False
-            self._paste_mode = not self._paste_mode
+            self._paste_mode = True
+            self._disable_paste_mode = False
             if self._mode_changed:
                 self._mode_changed()
+
+        elif chr(char) in self._global_functions.keys() and \
+                self._backslash_pressed:
+            ''' toggle paste mode '''
+            self._backslash_pressed = False
+            if not self._paste_mode_always_on:
+                self._paste_mode = False
+                if self._mode_changed:
+                    self._mode_changed()
+            self._global_functions[chr(char)]()
 
         else:
             self._backslash_pressed = False
@@ -2877,8 +2973,12 @@ class SimpleCursesLineEdit(object):
             if self._string_changed_handler:
                 self._string_changed_handler()
         self.refreshEditWindow()
-        if self._mode_changed:
-            self._mode_changed()
+        # logger.error('self._disable_paste_mode = {}'.format(self._disable_paste_mode))
+        if not self._paste_mode_always_on:
+            if self._disable_paste_mode:
+                self._paste_mode = self._disable_paste_mode = False
+            if self._mode_changed:
+                self._mode_changed()
         return 1
 
     def _get_char(self, win, char):

@@ -401,8 +401,8 @@ class RadioBrowser(PyRadioStationsBrowser):
             self._global_functions = dict(global_functions)
             if 't' in self._global_functions.keys():
                 del self._global_functions['t']
-            if 'T' in self._global_functions.keys():
-                del self._global_functions['T']
+            # if 'T' in self._global_functions.keys():
+            #     del self._global_functions['T']
 
     def stations(self, playlist_format=1):
         ''' Return stations' list (in PyRadio playlist format)
@@ -1401,7 +1401,8 @@ class RadioBrowser(PyRadioStationsBrowser):
                 parent=parent,
                 config=self.browser_config,
                 limit=self._default_max_number_of_results,
-                init=init
+                init=init,
+                global_functions=self._global_functions
             )
         self._search_win.set_search_history(
             self._default_search_history_index,
@@ -2284,11 +2285,14 @@ class RadioBrowserSearchWindow(object):
     _history_id = _selected_history_id = _default_history_id = 1
     _history = []
 
+    _global_functions = {}
+
     def __init__(self,
                  parent,
                  config,
                  limit=100,
-                 init=False
+                 init=False,
+                 global_functions=None
                  ):
         self._parent = parent
         self._cnf = config
@@ -2305,6 +2309,11 @@ class RadioBrowserSearchWindow(object):
         '''
         self._half_width = 0
         self._widgets = [ None ]
+
+        if global_functions is not None:
+            self._global_functions = dict(global_functions)
+            if 't' in self._global_functions.keys():
+                del self._global_functions['t']
 
     def __del__(self):
         for a_widget in self._widgets:
@@ -2689,6 +2698,7 @@ class RadioBrowserSearchWindow(object):
                     key_down_function_handler=self._focus_down))
                 self._widgets[-1].bracket = False
                 self._widgets[-1].use_paste_mode = True
+                self._widgets[-1].set_global_functions(self._global_functions)
                 #self._widgets[-1].string = self.captions[n]
 
             ''' limit - index = -3 '''

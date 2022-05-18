@@ -15,6 +15,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Installation](#installation)
 * [Command line options](#command-line-options)
 * [Controls](#controls)
+    * [Global shortcuts](#global-shortcuts)
 * [HTML help](#html-help)
 * [PyRadio Modes](#pyradio-modes)
     * [Secondary Modes](#secondary-modes)
@@ -202,12 +203,27 @@ The following options can also be set in **PyRadio**'s [configuration file](#con
 
 The same logic applies to all **PyRadio** windows.
 
-**Note:** All windows - except the *Search window* - support changing the volume and muting / unmuting the player (provided that **PyRadio** is actually connected to a station).
-
 **Note:** When inserting numbers (either to jump to a station or to move a station), the number will be displayed at the right bottom corner of the window, suffixed by a "*G*", i.e. pressing *35* will display *[35G]*.
 
 **Note:** When tagging a station position for a move action (by pressing "**J**"), the position will be displayed at the right bottom corner of the window, suffixed by a "*J*", i.e. pressing "*J*" on position *35* will display *[35J]*.
 
+
+### Global shortcuts
+
+Some of the functions provided by **PyRadio** will always be available to the user. These functions are:
+
+| Shortcut                       |   Function            |
+|--------------------------------|-----------------------|
+| **\+**/**\-** and **,**/**\.** | adjust volume         |
+| **m**                          | mute player           |
+| **v**                          | save volume           |
+| **T**                          | toggle transparency   |
+| **W**                          | toggle titles logging |
+| **w**                          | like a station        |
+
+Every window in **PyRadio** will respect these shotrcuts, even the ones with a "*Press any key to...*" message.
+
+When focus is on a "*Line editor*", all shortcuts will work when preceded by a "**\\**".
 
 ## HTML help
 
