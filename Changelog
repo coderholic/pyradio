@@ -1,3 +1,8 @@
+2022-05-19 s-n-g
+    * version 0.8.9.19 (0.9-beta16)
+    * fixing main window galobal shortcuts
+    * fixing RadioBrowser  Search Window global shortcuts
+
 2022-05-18 s-n-g
     * version 0.8.9.18 (0.9-beta15)
     * changing shortcut w and ^W to e and ^E on the RadioBrowser

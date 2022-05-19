@@ -5830,6 +5830,10 @@ class PyRadio(object):
                 (char not in self._chars_to_bypass_on_editor or \
                 self._cnf._online_browser.line_editor_has_focus()):
 
+            if chr(char) in self._global_functions.keys():
+                self._global_functions[chr(char)]()
+                return
+
             ''' handle browser search key press '''
             ret = self._cnf._online_browser.keypress(char)
             if ret == 0:
@@ -6325,6 +6329,9 @@ class PyRadio(object):
             self._toggle_transparency()
             return
 
+        elif chr(char) in self._global_functions.keys():
+            self._global_functions[chr(char)]()
+            return
         # elif char in (ord('+'), ord('='), ord('.'),
         #               ord('-'), ord(','), ord('m'),
         #               ord('v'), ord('W'), ord('w')):
