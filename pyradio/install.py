@@ -634,7 +634,7 @@ class PyRadioUpdate(object):
                     b.write(')\n')
 
                     b.write('devel\\build_install_pyradio.bat -u\n')
-                    b.write('PAUSE\n')
+                    # b.write('PAUSE\n')
                     b.write('GOTO endofscript\n')
                 b.write('ECHO.\n\n')
                 b.write(':downloaderror\n')

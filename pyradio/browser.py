@@ -399,8 +399,8 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = dict(global_functions)
-            if 't' in self._global_functions.keys():
-                del self._global_functions['t']
+            if ord('t') in self._global_functions.keys():
+                del self._global_functions[ord('t')]
             # if 'T' in self._global_functions.keys():
             #     del self._global_functions['T']
 
@@ -1712,8 +1712,8 @@ class RadioBrowserConfigWindow(object):
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = global_functions.copy()
-            if 't' in self._global_functions.keys():
-                del self._global_functions['t']
+            if ord('t') in self._global_functions.keys():
+                del self._global_functions[ord('t')]
 
     @property
     def urls(self):
@@ -2138,8 +2138,8 @@ class RadioBrowserConfigWindow(object):
                 logger.error('---=== Server Selection is None ===---')
                 self._server_selection_window = None
 
-        if chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
             return 1
         if char in (
             curses.KEY_EXIT, 27, ord('q')
@@ -2312,8 +2312,8 @@ class RadioBrowserSearchWindow(object):
 
         if global_functions is not None:
             self._global_functions = dict(global_functions)
-            if 't' in self._global_functions.keys():
-                del self._global_functions['t']
+            if ord('t') in self._global_functions.keys():
+                del self._global_functions[ord('t')]
 
     def __del__(self):
         for a_widget in self._widgets:
@@ -4012,8 +4012,8 @@ class RadioBrowserServers(object):
         # if global_functions is not None:
         #     logger.error('\n\n{}\n\n'.format(global_functions))
         #     self._global_functions = deepcopy(global_functions)
-        #     if 't' in self._global_functions.keys():
-        #             del self._global_functions['t']
+        #     if ord('t') in self._global_functions.keys():
+        #             del self._global_functions[ord('t')]
 
         if show_random:
             self.items.reverse()
@@ -4073,8 +4073,8 @@ class RadioBrowserServers(object):
         if self._too_small:
             return 1
 
-        if chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
             return 1
         elif char in (
             curses.KEY_EXIT, ord('q'), 27,

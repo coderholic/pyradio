@@ -1,6 +1,12 @@
+2022-05-22 s-n-g
+    * version 0.8.9.20 (0.9-beta-17)
+    * going back to history will ask to save a modified playlist
+    * fixing #157 (python2 only)
+    * other minor changes
+
 2022-05-19 s-n-g
     * version 0.8.9.19 (0.9-beta16)
-    * fixing main window galobal shortcuts
+    * fixing main window galobal shortcuts ( #156 )
     * fixing RadioBrowser  Search Window global shortcuts
 
 2022-05-18 s-n-g

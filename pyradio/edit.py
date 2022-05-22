@@ -383,7 +383,7 @@ class PyRadioEditor(object):
                 self._win.addstr(17 + step, 5, '─' * (self.maxX - 10), curses.color_pair(3))
             except:
                 self._win.addstr(17 + step, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(3))
-            self._win.addstr(17 + step, int((self.maxX - 33) / 2), ' Player Keys (Not in Line Editor) ', curses.color_pair(4))
+            self._win.addstr(17 + step, int((self.maxX - 42) / 2), ' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
 
             self._win.addstr(18 + step, 5, '-', curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
@@ -400,6 +400,14 @@ class PyRadioEditor(object):
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
             self._win.addstr('olume (not in vlc).', curses.color_pair(5))
+            if step + 21 < self.maxY:
+                self._win.addstr(20 + step, 5, 'W', curses.color_pair(4))
+                self._win.addstr(' / ', curses.color_pair(5))
+                self._win.addstr('w', curses.color_pair(4))
+                self._win.addstr(20 + step, 23, 'Toggle titles log / like a station', curses.color_pair(5))
+            if step + 22 < self.maxY:
+                self._win.addstr(21 + step, 5, 'T', curses.color_pair(4))
+                self._win.addstr(21 + step, 23, 'Toggle transparency', curses.color_pair(5))
 
         if item:
             self._set_item(item)
@@ -629,8 +637,8 @@ class PyRadioEditor(object):
                     self.new_station = None
                     self._reset_editors_modes()
                     ret = -1
-            elif chr(char) in self._global_functions.keys():
-                self._global_functions[chr(char)]()
+            elif char in self._global_functions.keys():
+                self._global_functions[char]()
 
         if self._focus > 1:
             self._reset_editors_modes()
@@ -958,7 +966,7 @@ class PyRadioRenameFile(object):
                 self._win.addstr(18 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(3))
             except:
                 self._win.addstr(18 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(3))
-            self._win.addstr(18 + adjust_line_Y, int((self.maxX - 33) / 2), ' Player Keys (Not in Line Editor) ', curses.color_pair(4))
+            self._win.addstr(18 + adjust_line_Y, int((self.maxX - 42) / 2), ' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
 
             self._win.addstr(19 + adjust_line_Y, 5, '-', curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
@@ -975,6 +983,14 @@ class PyRadioRenameFile(object):
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
             self._win.addstr('olume (not in vlc).', curses.color_pair(5))
+            if adjust_line_Y + 22 < self.maxY:
+                self._win.addstr(21 + adjust_line_Y, 5, 'W', curses.color_pair(4))
+                self._win.addstr(' / ', curses.color_pair(5))
+                self._win.addstr('w', curses.color_pair(4))
+                self._win.addstr(21 + adjust_line_Y, 23, 'Toggle titles log / like a station', curses.color_pair(5))
+            if adjust_line_Y + 23 < self.maxY:
+                self._win.addstr(22 + adjust_line_Y, 5, 'T', curses.color_pair(4))
+                self._win.addstr(22 + adjust_line_Y, 23, 'Toggle transparency', curses.color_pair(5))
 
         self._win.refresh()
         self._update_focus()
@@ -1150,8 +1166,8 @@ class PyRadioRenameFile(object):
                     # cancel
                     self._widgets[0].string = ''
                     ret = -1
-            elif chr(char) in self._global_functions.keys():
-                self._global_functions[chr(char)]()
+            elif char in self._global_functions.keys():
+                self._global_functions[char]()
         #self._show_title()
         #self.show()
         return self._get_result(ret)
@@ -1236,8 +1252,8 @@ class PyRadioConnectionType(object):
                  0: go on
                  1: Ok
         """
-        if chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
 
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord('s')):
             return 1

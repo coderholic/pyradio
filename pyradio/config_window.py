@@ -25,8 +25,8 @@ def set_global_functions(global_functions):
     ret = {}
     if global_functions is not None:
         ret = dict(global_functions)
-        if 't' in ret.keys():
-            del ret['t']
+        if ord('t') in ret.keys():
+            del ret[ord('t')]
     return ret
 
 class PyRadioConfigWindow(object):
@@ -362,8 +362,8 @@ class PyRadioConfigWindow(object):
         if self.too_small:
             return 1, []
         val = list(self._config_options.items())[self.selection]
-        if chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
         elif val[0] == 'radiobrowser':
             if char in (curses.KEY_RIGHT, ord('l'),
                         ord(' '), curses.KEY_ENTER, ord('\n')):
@@ -867,8 +867,8 @@ class ExtraParametersEditor(object):
                 ''' cancel '''
                 self.edit_string = ''
                 ret = 0
-        elif chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
+        elif char in self._global_functions.keys():
+            self._global_functions[char]()
             return 1
 
         if ret == 1:
@@ -1186,8 +1186,8 @@ class ExtraParameters(object):
                  5 - add parameter
                  6 - line editor help
         '''
-        if chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
             return -1
         elif char in (
             curses.KEY_ENTER, ord('\n'),
@@ -1487,8 +1487,8 @@ class PyRadioSelectPlayer(object):
         '''
         if self.editing == 0:
             ''' focus on players '''
-            if chr(char) in self._global_functions.keys():
-                self._global_functions[chr(char)]()
+            if char in self._global_functions.keys():
+                self._global_functions[char]()
             elif char in (9, ):
                 if self._players[self.selection][1]:
                     self._switch_column()
@@ -1893,8 +1893,8 @@ class PyRadioSelectEncodings(object):
     def keypress(self, char):
         ''' Encoding key press
         '''
-        if chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
 
         elif char in (ord('c'), ):
             self.encoding = self._config_encoding
@@ -2292,8 +2292,8 @@ class PyRadioSelectPlaylist(object):
          0, station path    - selected station path (for paste window)
          1, ''              - Cancel
         '''
-        if chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
 
         elif self._select_playlist_error == -1 or \
                 self._select_playlist_error == 0:
@@ -2532,8 +2532,8 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
             self.setStation(self._orig_playlist)
             return -1, ''
 
-        elif chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
+        elif char in self._global_functions.keys():
+            self._global_functions[char]()
             return -1, ''
 
         return PyRadioSelectPlaylist.keypress(self, char)

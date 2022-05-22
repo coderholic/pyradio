@@ -472,10 +472,10 @@ class PyRadioThemeSelector(object):
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = dict(global_functions)
-            if 't' in self._global_functions.keys():
-                del self._global_functions['t']
-            if 'T' in self._global_functions.keys():
-                del self._global_functions['T']
+            if ord('t') in self._global_functions.keys():
+                del self._global_functions[ord('t')]
+            if ord('T') in self._global_functions.keys():
+                del self._global_functions[ord('T')]
 
     def show(self):
         self._themes = [['dark', 'dark']]
@@ -839,8 +839,8 @@ class PyRadioThemeSelector(object):
         """
         if  self._too_small:
             return -1, False
-        if chr(char) in self._global_functions.keys():
-            self._global_functions[chr(char)]()
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
             return -3, False
         if char in (ord('e'), ):
             ''' edit theme '''

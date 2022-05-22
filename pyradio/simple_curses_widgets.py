@@ -2086,8 +2086,8 @@ class SimpleCursesLineEdit(object):
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = dict(global_functions)
-            if 't' in self._global_functions.keys():
-                del self._global_functions['t']
+            if ord('t') in self._global_functions.keys():
+                del self._global_functions[ord('t')]
             # if 'T' in self._global_functions.keys():
             #     del self._global_functions['T']
 
@@ -2909,7 +2909,7 @@ class SimpleCursesLineEdit(object):
                 self._paste_mode = False
                 if self._mode_changed:
                     self._mode_changed()
-            self._global_functions[chr(char)]()
+            self._global_functions[char]()
 
         else:
             self._backslash_pressed = False
