@@ -594,6 +594,12 @@ class PyRadio(object):
         # self.ll('setup')
         self.run()
 
+    def _redraw(self):
+        self.footerWin.noutrefresh()
+        self.outerBodyWin.noutrefresh()
+        self.bodyWin.noutrefresh()
+        # self.txtWin.noutrefresh()
+
     def setupAndDrawScreen(self, init_from_setup=False):
         self._limited_height_mode = False
         self.maxY, self.maxX = self.stdscr.getmaxyx()
@@ -654,6 +660,8 @@ class PyRadio(object):
                 self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
         else:
             self.footerWin.refresh()
+        # self._redraw()
+        # logger.error('1 redraw')
         curses.doupdate()
 
     def _print_limited_info(self):
@@ -1582,7 +1590,6 @@ class PyRadio(object):
             self._cnf,
             self._theme,
             self._theme_name,
-            self._theme._applied_theme_max_colors,
             self._cnf.theme,
             4, 3, 4, 5, 6, 9,
             self._theme.getTransparency())
@@ -1915,6 +1922,8 @@ class PyRadio(object):
             self._theme_not_supported_notification_duration,
             self.closeThemeNotSupportedNotification)
         self._theme_not_supported_thread.start()
+        self._redraw()
+        logger.error('2 redraw')
         curses.doupdate()
         self._theme_not_supported_thread.join()
 
@@ -1954,7 +1963,7 @@ class PyRadio(object):
         if exe[0] and exe[1]:
             add_msg = '|PyRadio EXE files:\n__|System:\n____{0}\n__|User:\n____{1}'.format(exe[0], exe[1])
         else:
-            add_msg = '|PyRadio EXE file:\n__{}'.format(exo[0] if exe[0] else exe[1])
+            add_msg = '|PyRadio EXE file:\n__{}'.format(exe[0] if exe[0] else exe[1])
 
         self._show_help(txt.format(add_msg),
                         prompt=' Press q or ESCAPE to hide... ',
@@ -3180,6 +3189,8 @@ class PyRadio(object):
                         caption=' New Stations available ',
                         prompt=' ',
                         is_message=True)
+        self._redraw()
+        logger.error('3 redraw')
         curses.doupdate()
 
     def _print_integrated(self):
@@ -5477,6 +5488,8 @@ class PyRadio(object):
                             self._theme_name = ret_theme_name
                             self._cnf.theme_has_error = True if ret == -1 else False
                             self._cnf.theme_not_supported = True
+                        self._redraw()
+                        logger.error('4 redraw')
                         curses.doupdate()
                     ''' make sure config is not saved '''
                     self._config_win._saved_config_options['dirty_config'][1] = False
@@ -6005,6 +6018,8 @@ class PyRadio(object):
                     self._cnf.theme_not_supported_notification_shown = False
                     self._show_theme_not_supported()
                 #self.refreshBody()
+                self._redraw()
+                logger.error('4 redraw')
                 curses.doupdate()
                 ''' update config window '''
                 if self._config_win:

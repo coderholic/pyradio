@@ -17,6 +17,17 @@ If foreground == 0, color can be edited
 If > 0, get color from list item referred to by number
 Same for the background
 """
+_param_to_color_id = {
+    'Extra Func': (12, ),
+    'PyRadio URL': (11, ),
+    'Messages Border': (10, ),
+    'Status Bar': (8, 9),
+    'Stations': (1, 2),
+    'Active Station': (3, ),
+    'Active Cursor': (6, 7),
+    'Normal Cursor': (4, 5),
+}
+
 THEME_ITEMS = (
     ('PyRadio URL', 2, 0, 3),
     ('Messages Border', 3, 0, 3),
@@ -59,4 +70,20 @@ def is_rasberrypi():
     # if exists('/usr/bin/raspi-config'):
     #     return True
     # return False
+
+def hex_to_rgb(hexadecimal):
+    n = hexadecimal.lstrip('#')
+    return tuple(int(n[i:i+2], 16) for i in (0, 2, 4))
+
+def rgb_to_hex(rgb):
+    return '#%02x%02x%02x' % rgb
+
+def curses_rgb_to_hex(rgb):
+    return rgb_to_hex(tuple(int(y * 255 / 1000) for y in rgb))
+
+def rgb_to_curses_rgb(rgb):
+    return tuple(int(y / 255 * 1000) for y in rgb)
+
+
+
 
