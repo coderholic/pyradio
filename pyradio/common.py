@@ -82,7 +82,7 @@ def curses_rgb_to_hex(rgb):
     return rgb_to_hex(tuple(int(y * 255 / 1000) for y in rgb))
 
 def rgb_to_curses_rgb(rgb):
-    return tuple(int(y / 255 * 1000) for y in rgb)
+    return tuple(int(y *1000 / 255) for y in rgb)
 
 
 

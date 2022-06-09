@@ -42,7 +42,7 @@ class PyRadioTheme(object):
         else:
             transp = self._transparent
             # transp = self._transparent if self._cnf.use_transparency else False
-        logger.error('transp = {}'.format(transp))
+        # logger.error('transp = {}'.format(transp))
         if transp:
             colors = {
                 1: (12, -1),
@@ -114,13 +114,11 @@ class PyRadioTheme(object):
             transp = True
         elif use_transparency:
             self._transparent = transp = True
-        logger.error(' 0 self._transparent = {}'.format(self._transparent))
         self._do_init_pairs(transparency=transp)
 
 
 
         self._read_colors = deepcopy(self._colors)
-        logger.error('\n\ncolors\n{0}\n\nactive\n{1}\n\n'.format(self._colors, self._active_colors))
         return result, self.applied_theme_name
 
     def _load_default_theme(self, a_theme):
@@ -137,7 +135,6 @@ class PyRadioTheme(object):
         self._update_colors()
 
     def _update_colors(self):
-        logger.error('\n\ncolors\n{}\n\n'.format(self._colors))
         for k in self._colors['data'].keys():
             curse_rgb = rgb_to_curses_rgb(self._colors['data'][k])
             curses.init_color(
@@ -151,15 +148,6 @@ class PyRadioTheme(object):
                 Using an unused key....
             '''
             curses.ungetch(ord('!'))
-
-        # logger.error('\n\nactive_colors\n{}\n\n'.format(self._active_colors))
-        # for k in self._active_colors['data'].keys():
-        #     curses.init_color(
-        #         k,
-        #         self._active_colors['data'][k][0],
-        #         self._active_colors['data'][k][1],
-        #         self._active_colors['data'][k][2]
-        #     )
 
     def open_theme(self, a_theme='', a_path=''):
         """ Read a theme and place it in _colors
@@ -234,34 +222,7 @@ class PyRadioTheme(object):
                     return -1
 
         self.applied_theme_name = self._colors['Name']
-        logger.error('\n\nread self._colors = {}\n\n'.format(self._colors))
-        self._cols()
         return ret
-
-    def _cols(self):
-        for k in self._colors.items():
-            try:
-                logger.error('{0}: {1}, {2} - {3} {4}'.format(
-                    k[0],
-                    k[1][0], k[1][1],
-                    curses_rgb_to_hex(curses.color_content(k[1][0])),
-                    curses_rgb_to_hex(curses.color_content(k[1][1]))
-                ))
-            except:
-                pass
-        logger.error('\n')
-        for k in self._colors.items():
-            try:
-                logger.error('{0}: {1} {2}'.format(
-                    k[0],
-                    curses.color_content(k[1][0]),
-                    curses.color_content(k[1][1])
-                ))
-            except:
-                pass
-        logger.error('\n')
-
-
 
     def _get_theme_path(self, a_theme):
         #self.root_path = path.join(path.dirname(__file__), 'stations.csv')
@@ -282,8 +243,8 @@ class PyRadioTheme(object):
             force_value will set transparency if True or False,
             or toggle transparency if None
         """
-        logger.error(' 1 self._transparent = {}'.format(self._transparent))
-        logger.error(' 1 force_value = {}'.format(force_value))
+        # logger.error(' 1 self._transparent = {}'.format(self._transparent))
+        # logger.error(' 1 force_value = {}'.format(force_value))
         if force_value is None:
             self._transparent = not self._transparent
         else:
@@ -341,11 +302,9 @@ class PyRadioThemeReadWrite(object):
         except:
             logger.error('read_theme(): read error on: {}'.format(theme_path))
             return 3, None
-        self._temp_colors = {}
 
         names = {}
         for line in lines:
-            logger.error('line = "{}"'.format(line))
             if ',' in line:
                 ''' old theme format '''
                 # return 5
@@ -358,8 +317,8 @@ class PyRadioThemeReadWrite(object):
                 if i.strip() == '':
                     ''' corrupt '''
                     return 4, None
-            logger.error('line = {}'.format(line))
-            logger.error('sp = {}'.format(sp))
+            # logger.error('line = {}'.format(line))
+            # logger.error('sp = {}'.format(sp))
 
             names[sp[0].strip()] = sp[1:]
             for k in names.keys():
@@ -369,18 +328,13 @@ class PyRadioThemeReadWrite(object):
                     except IndexError:
                         pass
 
-        self._temp_colors = { 'data': {} }
-        logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
+        self._temp_colors = { 'data': {}, 'css': {}}
         for name in names.keys():
-            # print('==', name)
-            logger.error('name = {}'.format(name))
-            logger.error('names = {}'.format(names))
+            self._temp_colors['css'][self._param_to_color_id[name][0]] = names[name][0]
             self._temp_colors['data'][self._param_to_color_id[name][0]] = hex_to_rgb(names[name][0])
             if len(self._param_to_color_id[name]) == 2:
-                # print('--', names[name])
-                # print('**', self._param_to_color_id[name][1])
+                self._temp_colors['css'][self._param_to_color_id[name][1]] = names[name][1]
                 self._temp_colors['data'][self._param_to_color_id[name][1]] = hex_to_rgb(names[name][1])
-
 
         if self._theme_is_incomplete():
             logger.error('read_theme(): file is incomplete: {}'.format(theme_path))
@@ -391,7 +345,7 @@ class PyRadioThemeReadWrite(object):
         self._theme_path = theme_path
         self._temp_colors['Name'] = theme_name
         self._temp_colors['Path'] = theme_path
-        logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
+        # logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
         return 0, self._temp_colors
 
     def _theme_is_incomplete(self):
