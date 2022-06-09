@@ -69,13 +69,13 @@ class PyRadioTheme(object):
             }
         for k in colors.keys():
             curses.init_pair(k, colors[k][0], colors[k][1])
-        curses.start_color()
+        # curses.start_color()
 
     def restoreActiveTheme(self):
         self._active_colors = deepcopy(self._read_colors)
         self._do_init_pairs()
         self._update_colors()
-        curses.start_color()
+        # curses.start_color()
 
     def readAndApplyTheme(self, a_theme, **kwargs):
         """ Read a theme and apply it

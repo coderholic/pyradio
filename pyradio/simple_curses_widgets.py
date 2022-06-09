@@ -3248,8 +3248,8 @@ logger.setLevel(logging.DEBUG)
 
 def main(stdscr):
     __configureLogger()
-    curses.start_color()
-    curses.use_default_colors()
+    # curses.start_color()
+    # curses.use_default_colors()
     #stdscr.addstr('Number of colors: {0}, number of pairs: {1}\n'.format(curses.COLORS, curses.COLOR_PAIRS), curses.color_pair(0))
     #stdscr.getch()
 

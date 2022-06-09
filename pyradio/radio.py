@@ -228,6 +228,7 @@ class PyRadio(object):
 
     detect_if_player_exited = True
 
+    _saved_colors = {}
 
     def ll(self, msg):
         logger.error('DE ==========')
@@ -508,7 +509,22 @@ class PyRadio(object):
         self._playing = value
         self._update_history_positions_in_list()
 
+    def _save_colors(self):
+        for i in range(0, 16):
+            self._saved_colors[i] = curses.color_content(i)
+
+    def restore_colors(self):
+        for i in range(0,16):
+            curses.init_color(
+                i,
+                self._saved_colors[i][0],
+                self._saved_colors[i][1],
+                self._saved_colors[i][2]
+            )
+
     def setup(self, stdscr):
+        curses.start_color()
+        self._save_colors()
         # curses.savetty()
         self.setup_return_status = True
         if not curses.has_colors():
@@ -1186,6 +1202,7 @@ class PyRadio(object):
                     self._cnf.online_browser.save_config()
                 self._cnf.online_browser = None
         self._wait_for_threads()
+        self.restore_colors()
 
     def _wait_for_threads(self):
         if self._update_notification_thread:
