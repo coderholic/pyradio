@@ -1,34 +1,34 @@
 # Main foreground and background
-Stations            #c0c0c0 #000000
+Stations             #504945 #bdae93
 
 # Playing station text color
 # (background color will come from Stations)
-Active Station      #af0000
+Active Station      #1b6939
 
 # Status bar foreground and background
-Status Bar          #000000 #80a2be
+Status Bar          #dadada #b57614
 
 # Normal cursor foreground and background
-Normal Cursor       #000000 #80a2be
+Normal Cursor       #bdae93 #504945
 
 # Cursor foreground and background
 # when cursor on playing station
-Active Cursor       #000000 #af0000
-
-# Cursor foreground and background
-# This is the Line Editor cursor
-Edit Cursor         #c0c0c0 #80a2be
+Active Cursor       #dadada #b57614
 
 # Text color for extra function indication
 # and jump numbers within the status bar
 # (background color will come from Stations)
-Extra Func          #80a2be
+Extra Func          #504945
 
 # Text color for URL
 # (background color will come from Stations)
-PyRadio URL         #000000
+PyRadio URL         #c23827
 
 # Message window borser foreground
 # (background color will come from Stations)
-Messages Border     #ffffff
+Messages Border     #1b6939
+Messages Border     #c23827
 
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         #ffffff #000000
