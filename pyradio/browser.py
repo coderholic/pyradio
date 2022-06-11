@@ -2407,6 +2407,10 @@ class RadioBrowserSearchWindow(object):
                 s_id_list = []
                 for n in a_search['post_data'].items():
                     # logger.error('DE s_id = {}'.format(s_id))
+                    if n[0] in RADIO_BROWSER_SEARCH_TERMS.keys():
+                        if n[1] != -1:
+                            s_id = RADIO_BROWSER_SEARCH_TERMS[n[0]]
+                            # logger.error('DE s_id = {}'.format(s_id))
                             if type(self._widgets[s_id]).__name__ == 'SimpleCursesLineEdit':
                                 self._widgets[s_id].string = n[1]
                                 # logger.error('DE n[0] = {0}, string = "{1}"'.format(n[0], n[1]))
