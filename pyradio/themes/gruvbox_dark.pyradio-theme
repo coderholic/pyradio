@@ -30,4 +30,4 @@ Messages Border     #5f8700
 
 # Cursor foreground and background
 # This is the Line Editor cursor
-Edit Cursor         #00000 #ffffff
+Edit Cursor         #000000 #ffffff

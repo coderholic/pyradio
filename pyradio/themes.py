@@ -158,6 +158,7 @@ class PyRadioTheme(object):
                 0: all ok
                 """
         ret = 0
+        is_internal = True
         if not a_theme.strip():
             a_theme = 'dark'
 
@@ -205,6 +206,7 @@ class PyRadioTheme(object):
             self._colors['data'] = {1: (158, 158, 158), 2: (38, 38, 38), 3: (238, 238, 238), 8: (28, 28, 28), 9: (218, 218, 218), 4: (38, 38, 38), 5: (158, 158, 158), 6: (38, 38, 38), 7: (218, 218, 218), 12: (218, 218, 218), 11: (138, 138, 138), 10: (158, 158, 158), 14: (38, 38, 38), 13: (238, 238, 238)}
 
         else:
+            is_internal = False
             if a_path == '':
                 a_path = self._get_theme_path(a_theme)
             if a_path == '':
@@ -220,6 +222,11 @@ class PyRadioTheme(object):
                 else:
                     #self._load_default_theme(self.applied_theme_name)
                     return -1
+
+        if is_internal:
+            self._colors['css'] = {}
+            for k in self._colors['data'].keys():
+                self._colors['css'][k] = rgb_to_hex(self._colors['data'][k])
 
         self.applied_theme_name = self._colors['Name']
         return ret
@@ -307,18 +314,32 @@ class PyRadioThemeReadWrite(object):
         for line in lines:
             if ',' in line:
                 ''' old theme format '''
-                # return 5
+                # return 5, None
+                logger.error('read_theme(): old format theme: {}'.format(theme_path))
                 return 4, None
-            sp = line.split('#')
-            if len(sp) > 3:
-                ''' corrupt '''
+            raw = line.split(' ')
+            if raw[-1].startswith('#') and len(raw[-1]) != 7:
+                ''' corrupt: not valid color '''
+                logger.error('read_theme(): {0} - invalid color in line: ""{1}: - value: {2}'.format(theme_path, line, raw[-1]))
                 return 4, None
-            for i in sp:
-                if i.strip() == '':
+            sp = [raw[-1]]
+            raw.pop()
+            try:
+                if raw[-1]:
+                    if raw[-1].startswith('#') and len(raw[-1]) != 7:
+                        ''' corrupt: not valid color '''
+                        logger.error('read_theme(): {0} - invalid color in line: ""{1}: - value: {2}'.format(theme_path, line, raw[-1]))
+                        return 4, None
+                    sp.append(raw[-1])
+                    raw.pop()
+                sp.append(' '.join(raw).strip())
+                if len(sp) > 3:
                     ''' corrupt '''
                     return 4, None
-            # logger.error('line = {}'.format(line))
-            # logger.error('sp = {}'.format(sp))
+                sp.reverse()
+            except IndexError:
+                logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
+                return 4, None
 
             names[sp[0].strip()] = sp[1:]
             for k in names.keys():
@@ -330,7 +351,11 @@ class PyRadioThemeReadWrite(object):
 
         self._temp_colors = { 'data': {}, 'css': {}}
         for name in names.keys():
-            self._temp_colors['css'][self._param_to_color_id[name][0]] = names[name][0]
+            try:
+                self._temp_colors['css'][self._param_to_color_id[name][0]] = names[name][0]
+            except KeyError:
+                logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
+                return 4, None
             self._temp_colors['data'][self._param_to_color_id[name][0]] = hex_to_rgb(names[name][0])
             if len(self._param_to_color_id[name]) == 2:
                 self._temp_colors['css'][self._param_to_color_id[name][1]] = names[name][1]
@@ -345,7 +370,7 @@ class PyRadioThemeReadWrite(object):
         self._theme_path = theme_path
         self._temp_colors['Name'] = theme_name
         self._temp_colors['Path'] = theme_path
-        # logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
+        logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
         return 0, self._temp_colors
 
     def _theme_is_incomplete(self):
