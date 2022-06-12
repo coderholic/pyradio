@@ -1,9 +1,9 @@
 # Main foreground and background
-Stations            #c0c0c0 #000000
+Stations            #c0c0c0 #1e1f21
 
 # Playing station text color
 # (background color will come from Stations)
-Active Station      #af0000
+Active Station      #cd5c5c
 
 # Status bar foreground and background
 Status Bar          #000000 #80a2be
@@ -13,7 +13,7 @@ Normal Cursor       #000000 #80a2be
 
 # Cursor foreground and background
 # when cursor on playing station
-Active Cursor       #000000 #af0000
+Active Cursor       #000000 #cd5c5c
 
 # Cursor foreground and background
 # This is the Line Editor cursor
@@ -30,5 +30,5 @@ PyRadio URL         #000000
 
 # Message window borser foreground
 # (background color will come from Stations)
-Messages Border     #ffffff
+Messages Border     #b3b4b6
 
