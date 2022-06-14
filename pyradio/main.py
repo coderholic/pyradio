@@ -51,13 +51,16 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
 
 def shell():
     if not sys.platform.startswith('win'):
-        term = getenv('TERM')
         if not sys.platform.startswith('win'):
+            term = getenv('TERM')
             print('TERM = {}'.format(term))
             if term is None:
                 print('== Warning: TERM is not set. Using xterm-256color')
                 environ['TERM'] = 'xterm-256color'
-            if term == 'xterm' or term.startswith('screen'):
+            if term == 'xterm' \
+                    or term.startswith('screen') \
+                    or term.startswith('tmux'):
+                print('== Warning: TERM is {}. Using xterm-256color'.format(term))
                 environ['TERM'] = 'xterm-256color'
     version_too_old = False
     if sys.version_info[0] == 2:

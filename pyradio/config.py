@@ -1120,6 +1120,11 @@ class PyRadioConfig(PyRadioStations):
     opts['radiobrowser'] = ['RadioBrowser', '-']
     opts['requested_player'] = ['', '']
     opts['dirty_config'] = ['', False]
+    if platform == 'win32':
+        th_path = path.join(getenv('APPDATA'), 'pyradio', 'themes', 'auto.pyradio-themes')
+    else:
+        th_path = path.join(getenv('HOME', '~'), ',config', 'pyradio', 'themes', 'auto.pyradio-themes')
+    opts['is_theme_watched'] = ['', '']
 
     original_mousemask = (0, 0)
 
@@ -1415,7 +1420,21 @@ class PyRadioConfig(PyRadioStations):
 
     @theme.setter
     def theme(self, val):
-        self.opts['theme'][1] = val
+        if val.startswith('*'):
+            self.opts['theme'][1] = val[1:]
+            self.opts['is_theme_watched'][1] = val[1:]
+        else:
+            self.opts['theme'][1] = val
+            self.opts['is_theme_watched'][1] = ''
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def is_theme_watched(self):
+        return self.opts['is_theme_watched'][1]
+
+    @is_theme_watched.setter
+    def is_theme_watched(self, val):
+        self.opts['is_theme_watched'][1] = val.strip('*')
         self.opts['dirty_config'][1] = True
 
     @property
@@ -1648,6 +1667,11 @@ class PyRadioConfig(PyRadioStations):
                 self.opts['default_encoding'][1] = sp[1].strip()
             elif sp[0] == 'theme':
                 self.opts['theme'][1] = sp[1].strip()
+                if self.opts['theme'][1].startswith('*'):
+                    self.opts['theme'][1] = self.opts['theme'][1][1:]
+                    self.opts['is_theme_watched'][1] = self.opts['theme'][1]
+                else:
+                    self.opts['is_theme_watched'][1] = ''
             elif sp[0] == 'default_playlist':
                 self.opts['default_playlist'][1] = sp[1].strip()
             elif sp[0] == 'default_station':
@@ -1951,6 +1975,8 @@ force_http = {7}
 #   light_16_colors (16 colors light theme alternative)
 #   black_on_white (bow) (256 colors)
 #   white_on_black (wob) (256 colors)
+# If theme is watched for changes, prepend its name
+# with an asterisk (i.e. '*dark')
 # Default value = 'dark'
 theme = {8}
 
@@ -2000,7 +2026,7 @@ auto_save_playlist = {12}
                     self.opts['enable_mouse'][1],
                     self.opts['connection_timeout'][1],
                     self.opts['force_http'][1],
-                    self.opts['theme'][1],
+                    self.opts['theme'][1] if not self.opts['is_theme_watched'][1] else '*' + self.opts['theme'][1],
                     self.opts['use_transparency'][1],
                     self.opts['confirm_station_deletion'][1],
                     self.opts['confirm_playlist_reload'][1],

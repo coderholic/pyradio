@@ -109,12 +109,12 @@ class PyRadioConfigWindow(object):
                 logger.info('Saved options loaded')
             else:
                 logger.info('Altered options loaded')
-        self.number_of_items = len(self._config_options) - 2
+        self.number_of_items = len(self._config_options) - 3
         for i, n in enumerate(list(self._config_options.values())):
             if n[1] == '':
                 self._headers.append(i)
-        logger.error('{}'.format(self._config_options))
-        logger.error('self._headers = {}'.format(self._headers))
+        # logger.error('{}'.format(self._config_options))
+        # logger.error('self._headers = {}'.format(self._headers))
         self.init_config_win()
         self.refresh_config_win()
         self._old_use_transparency = self._config_options['use_transparency'][1]

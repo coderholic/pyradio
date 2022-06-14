@@ -143,11 +143,6 @@ class PyRadioTheme(object):
                 curse_rgb[1],
                 curse_rgb[2],
             )
-            ''' xterm based terminal seem to want  key pressed
-                to update the colors...
-                Using an unused key....
-            '''
-            curses.ungetch(ord('!'))
 
     def open_theme(self, a_theme='', a_path=''):
         """ Read a theme and place it in _colors
@@ -420,7 +415,7 @@ class PyRadioThemeSelector(object):
                  title_color_pair, box_color_pair,
                  applied_color_pair, normal_color_pair,
                  cursor_color_pair, applied_cursor_color_pair,
-                 is_transparent, log_file=''):
+                 is_transparent, is_watched, a_lock, log_file=''):
         self.parent = parent
         self._cnf = config
         self._theme = theme
@@ -433,6 +428,9 @@ class PyRadioThemeSelector(object):
         self._applied_color_pair = applied_color_pair
         self._normal_color_pair = normal_color_pair
         self._transparent = is_transparent
+        self._is_watched = is_watched
+        self._a_lock = a_lock
+        a_lock.acquire()
         if log_file:
             self._log_file = log_file
             self.log = self._log
@@ -816,13 +814,17 @@ class PyRadioThemeSelector(object):
             #    self._config_theme_name = self._themes[self._selection][0]
             self.refresh()
             return self._selection, False
-        elif char in (ord(' '), ord('s')):
+        elif char in (ord(' '), ord('s'), ord('c'), ord('C')):
             self._applied_theme = self._selection
             self._applied_theme_name = self._themes[self._selection][0]
             if not self.changed_from_config:
                 self._config_theme = self._selection
                 self._config_theme_name = self._themes[self._selection][0]
-            if char == ord('s'):
+            if char in (ord('c'), ord('C')):
+                self._applied_theme_is_watched = self._config_theme_is_watched = self._themes[self._selection][0]
+            else:
+                self._applied_theme_is_watched = self._config_theme_is_watched = ''
+            if char in (ord('s'), ord('C')):
                 ''' close window '''
                 curses.ungetch('q')
             else:

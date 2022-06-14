@@ -200,8 +200,9 @@ class PyRadio(object):
     ''' update notification '''
     _update_version = ''
     _update_version_do_display = ''
-    _update_notification_thread = None
-    stop_update_notification_thread = False
+    _watch_theme_thread = _update_notification_thread = None
+    stop_watch_theme_thread = stop_update_notification_thread = False
+    _watch_theme_lock = threading.Lock()
     _update_notify_lock = threading.Lock()
 
     ''' editor class '''
@@ -1058,7 +1059,71 @@ class PyRadio(object):
             for n in ticks:
                 self.bodyWin.chgat(lineNum, n, 1, sep_col)
 
+    def _watch_theme(self):
+        self._watch_theme_thread = threading.Thread(
+            target=self._wait_for_theme_to_change,
+            # args=(self._cnf,
+            args=(path.join(self._cnf.stations_dir, 'themes', 'auto.pyradio-theme'),
+                  self._watch_theme_lock,
+                  lambda: self.stop_watch_theme_thread,
+                  self._auto_update_theme))
+        self._watch_theme_thread.start()
+
+    def _auto_update_theme(self):
+        logger.error('_auto_update_theme(): triggered!')
+        ret, ret_theme_name = self._theme.readAndApplyTheme('auto')
+        if ret == 0:
+            self._theme_name = self._cnf.theme
+        else:
+            self._theme_name = ret_theme_name
+            self._cnf.theme_has_error = True if ret == -1 else False
+            self._cnf.theme_not_supported = True
+        self._redraw()
+        curses.doupdate()
+
+    def _wait_for_theme_to_change(self, file, a_lock, stop, func):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('File watch thread started on: {}'.format(file))
+        st_time = cur_time = getmtime(file)
+        st_size = cur_size = getsize(file)
+        while True:
+            if path.exists(file):
+                for n in range(0, 5):
+                    sleep(.15)
+                    if stop():
+                        break
+                cur_time = getmtime(file)
+                if st_time != cur_time:
+                    if stop():
+                        break
+                    st_time = cur_time = getmtime(file)
+                    st_size = cur_size = getsize(file)
+                    with a_lock:
+                        func()
+                if stop():
+                    break
+                cur_size = getsize(file)
+                if st_size != cur_size:
+                    if stop():
+                        break
+                    st_time = cur_time = getmtime(file)
+                    st_size = cur_size = getsize(file)
+                    with a_lock:
+                        func()
+                if stop():
+                    break
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('File watched does not exist: {}'.format(file))
+                for n in range(0, 5):
+                    sleep(.15)
+                    if stop():
+                        break
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('File watch thread stopped on: {}'.format(file))
+
     def run(self):
+        self._watch_theme()
         self._register_signals_handlers()
         if self.ws.operation_mode == self.ws.DEPENDENCY_ERROR:
             self.log.write(msg="Dependency missing. Press any key to exit....", error_msg=True)
@@ -1205,6 +1270,8 @@ class PyRadio(object):
         self.restore_colors()
 
     def _wait_for_threads(self):
+        self.stop_watch_theme_thread = True
+        self._watch_theme_thread.join()
         if self._update_notification_thread:
             if self._update_notification_thread.is_alive():
                 self.stop_update_notification_thread = True
@@ -1609,7 +1676,10 @@ class PyRadio(object):
             self._theme_name,
             self._cnf.theme,
             4, 3, 4, 5, 6, 9,
-            self._theme.getTransparency())
+            self._theme.getTransparency(),
+            self._cnf.is_theme_watched,
+            self._watch_theme_lock
+        )
             #'/home/spiros/edit.log')
         self._theme_selector.changed_from_config = changed_from_config
         self._theme_selector.show()
@@ -6009,6 +6079,10 @@ class PyRadio(object):
                 self.ws.close_window()
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     self.selection, self.startPos, self.playing, self.stations = self.selections[self.ws.operation_mode]
+                try:
+                    self._watch_theme_lock.release()
+                except:
+                    pass
                 self.refreshBody()
 
             elif theme_id == -2:
@@ -6048,6 +6122,10 @@ class PyRadio(object):
                     self._cnf.theme = self._theme_name
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Setting default theme: {}'.format(self._theme_name))
+                try:
+                    self._watch_theme_lock.release()
+                except:
+                    pass
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT:
