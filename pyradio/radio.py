@@ -1084,6 +1084,14 @@ class PyRadio(object):
     def _wait_for_theme_to_change(self, file, a_lock, stop, func):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('File watch thread started on: {}'.format(file))
+        while not path.exists(file):
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Waiting for watched file to appear: {}'.format(file))
+            for n in range(0, 5):
+                sleep(.15)
+                if stop():
+                    break
+
         st_time = cur_time = getmtime(file)
         st_size = cur_size = getsize(file)
         while True:
