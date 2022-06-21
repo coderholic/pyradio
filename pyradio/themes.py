@@ -407,6 +407,8 @@ class PyRadioThemeSelector(object):
     transparent = False
     _transparent = False
 
+    _showed = False
+
     changed_from_config = False
 
     def __init__(self, parent, config, theme,
@@ -436,6 +438,12 @@ class PyRadioThemeSelector(object):
             self.log = self._log
 
         self._themes = []
+        logger.error('\n\n========== Theme Window')
+        logger.error('theme\n{}'.format(theme))
+        logger.error('is_watched\n{}'.format(is_watched))
+        logger.error('applied_theme_name\n{}'.format(applied_theme_name))
+        logger.error('config_theme_name\n{}'.format(config_theme_name))
+        logger.error('========== Theme Window End\n\n')
 
     def set_global_functions(self, global_functions):
         self._global_functions = {}
@@ -485,9 +493,8 @@ class PyRadioThemeSelector(object):
             if files:
                 tmp_themes = []
                 for a_file in files:
-                     theme_name, ret = self._can_use_theme(a_file)
-                     if ret:
-                         tmp_themes.append([theme_name, a_file])
+                     theme_name = a_file.split(dir_sep)[-1].replace('.pyradio-theme', '')
+                     tmp_themes.append([theme_name, a_file])
                 if tmp_themes:
                     tmp_themes.sort()
                     tmp_themes.reverse()
@@ -497,6 +504,7 @@ class PyRadioThemeSelector(object):
                         tmp_themes.append(['User Themes', '-'])
                     tmp_themes.reverse()
                     out_themes.extend(tmp_themes)
+        logger.error('\n\n_scan_for_theme_files()\n{}\n\n'.format(out_themes))
         return out_themes
 
     def _get_titles_ids(self):
@@ -504,25 +512,6 @@ class PyRadioThemeSelector(object):
         for i, a_theme in enumerate(self._themes):
             if a_theme[1] == '-':
                 self._title_ids.append(i)
-
-    def _can_use_theme(self, a_theme):
-        """ Check if theme name contains number of colors.
-            If so, check if the theme can be used on this terminal
-            If not, return True"""
-        a_theme_name = a_theme.split(dir_sep)[-1].replace('.pyradio-theme', '')
-        checks = ('_8', '_16', '_256')
-        for a_check in checks:
-            if a_theme_name.endswith(a_check):
-                try:
-                    num_of_colors = int(a_check[1:])
-                    if num_of_colors <= curses.COLORS:
-                        return a_theme_name, True
-                        #return a_theme_name.replace(a_check, ''), True
-                    else:
-                        return '', False
-                except:
-                    return a_theme_name, True
-        return a_theme_name, True
 
     def theme_name(self, val):
         if val < len(self._themes):
@@ -674,6 +663,17 @@ class PyRadioThemeSelector(object):
             self.log('======================\n')
             self.log('{}\n'.format(self._themes))
         self._draw_box()
+        logger.error('start pos = {}'.format(self._start_pos))
+        if not self._showed:
+            active_height = self._height - 2
+            logger.error('  == active height = {}'.format(active_height))
+            logger.error('items = {}'.format(self._items))
+            logger.error('selection = {}'.format(self._selection))
+            if self._items > active_height:
+                if self._selection > active_height:
+                    self._start_pos = self._selection - 1
+                    logger.error('start pos = {}'.format(self._start_pos))
+
         for i in range(0, self._height - 2):
             an_item = i + self._start_pos
             token = ' '
@@ -692,7 +692,11 @@ class PyRadioThemeSelector(object):
                     col = curses.color_pair(self._normal_color_pair)
             self._win.hline(i + 1, 1, ' ', self._max_title_width + 2, col)
             if an_item == self._config_theme:
-                token = '*'
+                logger.error('\n\nself._config_theme = {0}, self._applied_theme = {1}'.format(self._config_theme, self._applied_theme))
+                if self._is_watched == self._themes[an_item][0]:
+                    token = '+'
+                else:
+                    token = '*'
             if an_item in self._title_ids:
                 self._win.move(i + 1, 0)
                 try:
@@ -729,6 +733,7 @@ class PyRadioThemeSelector(object):
                 self._win.addstr(self._height-1, self._width - 4, '───'.encode('utf-8'), curses.color_pair(self._box_color_pair))
         self._win.refresh()
         curses.doupdate()
+        self._showed = True
 
     def _draw_box(self):
         self._win.box()
@@ -821,7 +826,8 @@ class PyRadioThemeSelector(object):
                 self._config_theme = self._selection
                 self._config_theme_name = self._themes[self._selection][0]
             if char in (ord('c'), ord('C')):
-                self._applied_theme_is_watched = self._config_theme_is_watched = self._themes[self._selection][0]
+                if self._themes[self._selection][1]:
+                    self._applied_theme_is_watched = self._config_theme_is_watched = self._themes[self._selection][0]
             else:
                 self._applied_theme_is_watched = self._config_theme_is_watched = ''
             if char in (ord('s'), ord('C')):

@@ -1124,7 +1124,7 @@ class PyRadioConfig(PyRadioStations):
         th_path = path.join(getenv('APPDATA'), 'pyradio', 'themes', 'auto.pyradio-themes')
     else:
         th_path = path.join(getenv('HOME', '~'), ',config', 'pyradio', 'themes', 'auto.pyradio-themes')
-    opts['is_theme_watched'] = ['', '']
+    opts['auto_update_theme'] = ['',  False]
 
     original_mousemask = (0, 0)
 
@@ -1422,19 +1422,19 @@ class PyRadioConfig(PyRadioStations):
     def theme(self, val):
         if val.startswith('*'):
             self.opts['theme'][1] = val[1:]
-            self.opts['is_theme_watched'][1] = val[1:]
+            self.opts['auto_update_theme'][1] = True
         else:
             self.opts['theme'][1] = val
-            self.opts['is_theme_watched'][1] = ''
+            self.opts['auto_update_theme'][1] = False
         self.opts['dirty_config'][1] = True
 
     @property
-    def is_theme_watched(self):
-        return self.opts['is_theme_watched'][1]
+    def auto_update_theme(self):
+        return self.opts['auto_update_theme'][1]
 
-    @is_theme_watched.setter
-    def is_theme_watched(self, val):
-        self.opts['is_theme_watched'][1] = val.strip('*')
+    @auto_update_theme.setter
+    def auto_update_theme(self, val):
+        self.opts['auto_update_theme'][1] = val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -1669,9 +1669,9 @@ class PyRadioConfig(PyRadioStations):
                 self.opts['theme'][1] = sp[1].strip()
                 if self.opts['theme'][1].startswith('*'):
                     self.opts['theme'][1] = self.opts['theme'][1][1:]
-                    self.opts['is_theme_watched'][1] = self.opts['theme'][1]
+                    self.opts['auto_update_theme'][1] = True
                 else:
-                    self.opts['is_theme_watched'][1] = ''
+                    self.opts['auto_update_theme'][1] = False
             elif sp[0] == 'default_playlist':
                 self.opts['default_playlist'][1] = sp[1].strip()
             elif sp[0] == 'default_station':
@@ -1761,6 +1761,8 @@ class PyRadioConfig(PyRadioStations):
                     logger.info('Default playlist "({}") does not exist; reverting to "stations"'.format(self.opts['default_station'][1]))
                 self.opts['default_playlist'][1] = 'stations'
                 self.opts['default_station'][1] = 'False'
+        for n in self.opts.keys():
+            logger.error('  {0}: {1} '.format(n, self.opts[n]))
         return 0
 
     def get_last_playlist(self):
@@ -2026,7 +2028,7 @@ auto_save_playlist = {12}
                     self.opts['enable_mouse'][1],
                     self.opts['connection_timeout'][1],
                     self.opts['force_http'][1],
-                    self.opts['theme'][1] if not self.opts['is_theme_watched'][1] else '*' + self.opts['theme'][1],
+                    self.opts['theme'][1] if not self.opts['auto_update_theme'][1] else '*' + self.opts['theme'][1],
                     self.opts['use_transparency'][1],
                     self.opts['confirm_station_deletion'][1],
                     self.opts['confirm_playlist_reload'][1],

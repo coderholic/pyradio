@@ -747,7 +747,7 @@ class PyRadio(object):
                 self.headWin.addstr(' ', curses.color_pair(4))
         except:
             pass
-        self.headWin.bkgd(' ', curses.color_pair(7))
+        self.headWin.bkgd(' ', curses.color_pair(5))
         self.headWin.noutrefresh()
 
     def initBody(self):
@@ -1090,7 +1090,9 @@ class PyRadio(object):
             for n in range(0, 5):
                 sleep(.15)
                 if stop():
-                    break
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('File watch thread stopped on: {}'.format(file))
+                    return
 
         st_time = cur_time = getmtime(file)
         st_size = cur_size = getsize(file)
@@ -1126,7 +1128,9 @@ class PyRadio(object):
                 for n in range(0, 5):
                     sleep(.15)
                     if stop():
-                        break
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('File watch thread stopped on: {}'.format(file))
+                        return
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('File watch thread stopped on: {}'.format(file))
 
@@ -1685,7 +1689,7 @@ class PyRadio(object):
             self._cnf.theme,
             4, 3, 4, 5, 6, 9,
             self._theme.getTransparency(),
-            self._cnf.is_theme_watched,
+            self._cnf.auto_update_theme,
             self._watch_theme_lock
         )
             #'/home/spiros/edit.log')
