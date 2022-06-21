@@ -37,39 +37,40 @@ class PyRadioTheme(object):
         self._temp_colors = None
 
     def _do_init_pairs(self, transparency=None):
-        if transparency is not None:
-            transp = transparency
-        else:
-            transp = self._transparent
-            # transp = self._transparent if self._cnf.use_transparency else False
-        # logger.error('transp = {}'.format(transp))
-        if transp:
-            colors = {
-                1: (12, -1),
-                2: (11, -1),
-                3: (10, -1),
-                4: (3, -1),
-                5: (1, -1),
-                6: (4, 5),
-                7: (8, 9),
-                8: (13, 14),
-                9: (6, 7)
-            }
-        else:
-            colors = {
-                1: (12, 2),
-                2: (11, 2),
-                3: (10, 2),
-                4: (3, 2),
-                5: (1, 2),
-                6: (4, 5),
-                7: (8, 9),
-                8: (13, 14),
-                9: (6, 7)
-            }
-        for k in colors.keys():
-            curses.init_pair(k, colors[k][0], colors[k][1])
-        # curses.start_color()
+        if curses.can_change_color():
+            if transparency is not None:
+                transp = transparency
+            else:
+                transp = self._transparent
+                # transp = self._transparent if self._cnf.use_transparency else False
+            # logger.error('transp = {}'.format(transp))
+            if transp:
+                colors = {
+                    1: (12, -1),
+                    2: (11, -1),
+                    3: (10, -1),
+                    4: (3, -1),
+                    5: (1, -1),
+                    6: (4, 5),
+                    7: (8, 9),
+                    8: (13, 14),
+                    9: (6, 7)
+                }
+            else:
+                colors = {
+                    1: (12, 2),
+                    2: (11, 2),
+                    3: (10, 2),
+                    4: (3, 2),
+                    5: (1, 2),
+                    6: (4, 5),
+                    7: (8, 9),
+                    8: (13, 14),
+                    9: (6, 7)
+                }
+            for k in colors.keys():
+                curses.init_pair(k, colors[k][0], colors[k][1])
+            # curses.start_color()
 
     def restoreActiveTheme(self):
         self._active_colors = deepcopy(self._read_colors)
@@ -135,14 +136,17 @@ class PyRadioTheme(object):
         self._update_colors()
 
     def _update_colors(self):
-        for k in self._colors['data'].keys():
-            curse_rgb = rgb_to_curses_rgb(self._colors['data'][k])
-            curses.init_color(
-                k,
-                curse_rgb[0],
-                curse_rgb[1],
-                curse_rgb[2],
-            )
+        if curses.can_change_color():
+            for k in self._colors['data'].keys():
+                with open('/home/spiros/r.log', 'a') as f:
+                    f.write('setting color: {}\n'.format(k))
+                curse_rgb = rgb_to_curses_rgb(self._colors['data'][k])
+                curses.init_color(
+                    int(k),
+                    curse_rgb[0],
+                    curse_rgb[1],
+                    curse_rgb[2],
+                )
 
     def open_theme(self, a_theme='', a_path=''):
         """ Read a theme and place it in _colors

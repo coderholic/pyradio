@@ -511,26 +511,43 @@ class PyRadio(object):
         self._update_history_positions_in_list()
 
     def _save_colors(self):
-        for i in range(0, 16):
-            self._saved_colors[i] = curses.color_content(i)
+        if curses.can_change_color():
+            for i in range(0, 16):
+                self._saved_colors[i] = curses.color_content(i)
 
     def restore_colors(self):
-        for i in range(0,16):
-            curses.init_color(
-                i,
-                self._saved_colors[i][0],
-                self._saved_colors[i][1],
-                self._saved_colors[i][2]
-            )
+        if curses.can_change_color():
+            for i in range(0,16):
+                curses.init_color(
+                    i,
+                    self._saved_colors[i][0],
+                    self._saved_colors[i][1],
+                    self._saved_colors[i][2]
+                )
 
     def setup(self, stdscr):
         curses.start_color()
+        curses.use_default_colors()
         self._save_colors()
         # curses.savetty()
         self.setup_return_status = True
+        # if not curses.has_colors() or not curses.can_change_color():
         if not curses.has_colors():
             self.setup_return_status = False
             return
+        if not curses.can_change_color():
+            curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+            curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
+            curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+            curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
+            curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            curses.init_pair(6, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
+            curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_GREEN)
+            curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
+            self._cnf.opts['use_transparency'][1] = False
+            self._cnf.opts['theme'][1] = 'dark'
+            self._cnf.opts['auto_update_theme'][1] = False
         if logger.isEnabledFor(logging.INFO):
             logger.info('<<<===---  Program start  ---===>>>')
             if self._cnf.distro == 'None':
@@ -545,16 +562,17 @@ class PyRadio(object):
         except:
             pass
 
-        curses.use_default_colors()
-        self._theme._transparent = self._cnf.use_transparency
-        self._theme.config_dir = self._cnf.stations_dir
-        ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name)
-        if ret == 0:
-            self._theme_name = self._theme.applied_theme_name
-        else:
-            self._theme_name = ret_theme_name
-            self._cnf.theme_not_supported = True
-            self._cnf.theme_has_error = True if ret == -1 else False
+        if curses.can_change_color():
+            self._theme._transparent = self._cnf.use_transparency
+            self._theme.config_dir = self._cnf.stations_dir
+            logger.error('========= HERE =======')
+            ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name)
+            if ret == 0:
+                self._theme_name = self._theme.applied_theme_name
+            else:
+                self._theme_name = ret_theme_name
+                self._cnf.theme_not_supported = True
+                self._cnf.theme_has_error = True if ret == -1 else False
 
         rev = self._cnf.get_pyradio_version()
         if logger.isEnabledFor(logging.INFO) and rev:
@@ -1663,6 +1681,10 @@ class PyRadio(object):
         return num_of_playlists, playing
 
     def _show_theme_selector_from_config(self):
+        if not curses.can_change_color():
+            # TODO show msg
+            self._show_colors_cannot_change()
+            return
         self._theme_name = self._config_win._config_options['theme'][1]
         # if logger.isEnabledFor(logging.ERROR):
         #     logger.error('DE\n\nreseting self._theme_name = {}\n\n'.format(self._theme_name))
@@ -1735,7 +1757,7 @@ class PyRadio(object):
             win.box()
             for i, a_line in enumerate(lines):
                 #a_line = self._replace_starting_undesscore(n)
-                win.addstr(i + 1, inner_width-cjklen(a_line[1:]) - 1, a_line[1:].replace('_', ' ').replace('¸', '_'), txt_col)
+                win.addstr(i + 1, 1, a_line.replace('_', ' ').replace('¸', '_'), txt_col)
         win.refresh()
 
     def _show_help(self, txt,
@@ -4002,6 +4024,10 @@ class PyRadio(object):
         '''
         if self.ws.window_mode == self.ws.CONFIG_MODE and not changed_from_config_window:
             return
+        if not curses.can_change_color():
+            # TODO show msg
+            self._show_colors_cannot_change()
+            return
         self._theme.toggleTransparency(force_value)
         self._cnf.use_transparency = self._theme.getTransparency()
         if self.ws.operation_mode == self.ws.THEME_MODE:
@@ -4406,6 +4432,13 @@ class PyRadio(object):
         self._register_assign_pressed = reg_y_pressed
         self._register_open_pressed = reg_open_pressed
         self.log.write(suffix=self._status_suffix)
+
+    def _show_colors_cannot_change(self):
+        self._show_notification_with_delay(
+                txt='______Curses cannot change__\n____the colors of this window.__\n__Default colors are being used!',
+                delay=1.5,
+                mode_to_set=self.ws.operation_mode,
+                callback_function=self.refreshBody)
 
     def _clear_register_file(self):
         '''Clear the contents of a register
@@ -5392,6 +5425,10 @@ class PyRadio(object):
             self._reset_status_bar_right()
             self._config_win = None
             self.theme_forced_selection = None
+            if not curses.can_change_color():
+                # TODO show msg
+                self._show_colors_cannot_change()
+                return
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self.stations]
                 # self.ll('t')

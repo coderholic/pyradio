@@ -428,21 +428,22 @@ class PyRadioConfigWindow(object):
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Default options loaded')
         elif char in (ord('r'), ):
-            old_theme = self._config_options['theme'][1]
-            old_transparency = self._config_options['use_transparency'][1]
-            self._config_options = deepcopy(self._saved_config_options)
-            ''' Transparency '''
-            self._config_options['use_transparency'][1] = self._old_use_transparency
-            self._toggle_transparency_function(
-                changed_from_config_window=True,
-                force_value=self._old_use_transparency)
-            ''' Theme
-                Put it after applying transparency, so that saved color_pairs
-                do not get loaded instead of active ones
-            '''
-            self._config_options['theme'][1] = self._old_theme
-            self._saved_config_options['theme'][1] = self._old_theme
-            self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
+            if curses.can_change_color():
+                old_theme = self._config_options['theme'][1]
+                old_transparency = self._config_options['use_transparency'][1]
+                self._config_options = deepcopy(self._saved_config_options)
+                ''' Transparency '''
+                self._config_options['use_transparency'][1] = self._old_use_transparency
+                self._toggle_transparency_function(
+                    changed_from_config_window=True,
+                    force_value=self._old_use_transparency)
+                ''' Theme
+                    Put it after applying transparency, so that saved color_pairs
+                    do not get loaded instead of active ones
+                '''
+                self._config_options['theme'][1] = self._old_theme
+                self._saved_config_options['theme'][1] = self._old_theme
+                self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
             self._reset_parameters_function()
             self.refresh_selection()
             if logger.isEnabledFor(logging.INFO):
@@ -491,9 +492,10 @@ class PyRadioConfigWindow(object):
             elif sel == 'default_encoding':
                 return self.n_u.SELECT_ENCODING_MODE, []
             elif sel == 'theme':
-                self._cnf.theme = self._old_theme
-                if logger.isEnabledFor(logging.ERROR):
-                    logger.error('DE\n\nshowing theme self._cnf.theme = {}\n\n'.format(self._cnf.theme))
+                if curses.can_change_color():
+                    self._cnf.theme = self._old_theme
+                    if logger.isEnabledFor(logging.ERROR):
+                        logger.error('DE\n\nshowing theme self._cnf.theme = {}\n\n'.format(self._cnf.theme))
                 self._show_theme_selector_function()
             elif sel == 'default_playlist':
                 return self.n_u.SELECT_PLAYLIST_MODE, []
