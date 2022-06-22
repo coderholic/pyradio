@@ -138,8 +138,6 @@ class PyRadioTheme(object):
     def _update_colors(self):
         if curses.can_change_color():
             for k in self._colors['data'].keys():
-                with open('/home/spiros/r.log', 'a') as f:
-                    f.write('setting color: {}\n'.format(k))
                 curse_rgb = rgb_to_curses_rgb(self._colors['data'][k])
                 curses.init_color(
                     int(k),
@@ -221,6 +219,7 @@ class PyRadioTheme(object):
                 else:
                     #self._load_default_theme(self.applied_theme_name)
                     return -1
+            self._colors['Name'] = a_theme
 
         if is_internal:
             self._colors['css'] = {}
