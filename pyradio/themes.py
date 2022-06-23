@@ -458,7 +458,7 @@ class PyRadioThemeSelector(object):
                 del self._global_functions[ord('T')]
 
     def show(self):
-        self._themes = [['dark', 'dark']]
+        self._themes = [['dark', '']]
         self._themes.append(['dark_16_colors', ''])
         self._items += 1
         self._themes.append(['light', ''])
@@ -666,19 +666,27 @@ class PyRadioThemeSelector(object):
             self.log('======================\n')
             self.log('{}\n'.format(self._themes))
         self._draw_box()
-        logger.error('start pos = {}'.format(self._start_pos))
+        logger.error('==============\nstart pos = {}'.format(self._start_pos))
         if not self._showed:
-            active_height = self._height - 2
-            logger.error('  == active height = {}'.format(active_height))
+            logger.error('\n\nnot _showed\n\n')
+            number_of_items = len(self._themes)
+            logger.error('  == active height = {}'.format(number_of_items))
             logger.error('items = {}'.format(self._items))
             logger.error('selection = {}'.format(self._selection))
-            if self._items > active_height:
-                if self._selection > active_height:
-                    self._start_pos = self._selection - 1
+            logger.error('_themes = {}'.format(self._themes))
+            if self._items < number_of_items:
+                if self._selection >= self._items:
+                    if self._selection >= number_of_items - self._items:
+                        self._start_pos = number_of_items - self._items
+                        logger.error('==== set {}'.format(self._start_pos))
+                    else:
+                        self._start_pos = self._selection - int(self._items / 2)
+                        logger.error('==== set2 {}'.format(self._start_pos))
                     logger.error('start pos = {}'.format(self._start_pos))
 
         for i in range(0, self._height - 2):
             an_item = i + self._start_pos
+            logger.error('an_item = {}'.format(an_item))
             token = ' '
             if an_item in self._title_ids:
                 col = curses.color_pair(self._title_color_pair)
@@ -749,6 +757,7 @@ class PyRadioThemeSelector(object):
             self._selection -= 1
         if self._selection < 0:
             self.selection = len(self._themes) - 1
+            self._start_pos = len(self._themes) - self._items
         if self._selection < self._start_pos:
             self._start_pos = self.selection
         self.refresh()
@@ -759,8 +768,13 @@ class PyRadioThemeSelector(object):
             self._selection += 1
         if self._selection == len(self._themes):
             self.selection = 0
-        if self._selection >= self._height - 2:
-            self._start_pos = self.selection - self._height + 3
+            self._start_pos = 0
+        if self._start_pos + self._items <= self._selection:
+            self._start_pos = self._selection
+            if self._start_pos + self._items > len(self._themes):
+                self._start_pos = len(self._themes) - self._items
+            if self._start_pos - 1 in self._title_ids and self._start_pos > 0:
+                self._start_pos -= 1
         self.refresh()
 
     def _go_home(self):

@@ -1102,9 +1102,11 @@ class PyRadio(object):
     def _wait_for_theme_to_change(self, file, a_lock, stop, func):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('File watch thread started on: {}'.format(file))
+        showed = False
         while not path.exists(file):
-            if logger.isEnabledFor(logging.DEBUG):
+            if logger.isEnabledFor(logging.DEBUG) and not showed:
                 logger.debug('Waiting for watched file to appear: {}'.format(file))
+                showed = True
             for n in range(0, 5):
                 sleep(.15)
                 if stop():
@@ -1112,6 +1114,9 @@ class PyRadio(object):
                         logger.debug('File watch thread stopped on: {}'.format(file))
                     return
 
+        if logger.isEnabledFor(logging.DEBUG) and showed:
+            logger.debug('Watched file appeared: {}'.format(file))
+            showed = False
         st_time = cur_time = getmtime(file)
         st_size = cur_size = getsize(file)
         while True:
@@ -1120,17 +1125,35 @@ class PyRadio(object):
                     sleep(.15)
                     if stop():
                         break
-                cur_time = getmtime(file)
+                try:
+                    cur_time = getmtime(file)
+                    showed = False
+                except:
+                    if logger.isEnabledFor(logging.DEBUG) and not showed:
+                        logger.debug('Watched file disappeared: {}'.format(file))
+                        showed = True
                 if st_time != cur_time:
                     if stop():
                         break
-                    st_time = cur_time = getmtime(file)
-                    st_size = cur_size = getsize(file)
+                    try:
+                        st_time = cur_time = getmtime(file)
+                        st_size = cur_size = getsize(file)
+                        showed = False
+                    except:
+                        if logger.isEnabledFor(logging.DEBUG) and not showed:
+                            logger.debug('Watched file disappeared: {}'.format(file))
+                            showed = True
                     with a_lock:
                         func()
                 if stop():
                     break
-                cur_size = getsize(file)
+                try:
+                    cur_size = getsize(file)
+                    showed = False
+                except:
+                    if logger.isEnabledFor(logging.DEBUG) and not showed:
+                        logger.debug('Watched file disappeared: {}'.format(file))
+                        showed = True
                 if st_size != cur_size:
                     if stop():
                         break
@@ -1141,8 +1164,9 @@ class PyRadio(object):
                 if stop():
                     break
             else:
-                if logger.isEnabledFor(logging.DEBUG):
+                if logger.isEnabledFor(logging.DEBUG) and not showed:
                     logger.debug('File watched does not exist: {}'.format(file))
+                    showed = True
                 for n in range(0, 5):
                     sleep(.15)
                     if stop():
