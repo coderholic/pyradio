@@ -7938,6 +7938,10 @@ class PyRadio(object):
                 self._config_win.too_small:
             return
         self._theme_selector.parent = self.outerBodyWin
+        self._theme_selector._showed = False
+        self._theme_selector._start_pos = 0
+        self._theme_selector.show(touch_selection=False)
+        return
         self._show_theme_selector()
         if self.theme_forced_selection:
             self._theme_selector.set_theme(self.theme_forced_selection)

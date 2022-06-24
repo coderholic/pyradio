@@ -442,10 +442,10 @@ class PyRadioThemeSelector(object):
 
         self._themes = []
         logger.error('\n\n========== Theme Window')
-        logger.error('theme\n{}'.format(theme))
-        logger.error('is_watched\n{}'.format(is_watched))
-        logger.error('applied_theme_name\n{}'.format(applied_theme_name))
-        logger.error('config_theme_name\n{}'.format(config_theme_name))
+        logger.error('theme = {}'.format(theme))
+        logger.error('is_watched = {}'.format(is_watched))
+        logger.error('applied_theme_name = {}'.format(applied_theme_name))
+        logger.error('config_theme_name = {}'.format(config_theme_name))
         logger.error('========== Theme Window End\n\n')
 
     def set_global_functions(self, global_functions):
@@ -457,7 +457,7 @@ class PyRadioThemeSelector(object):
             if ord('T') in self._global_functions.keys():
                 del self._global_functions[ord('T')]
 
-    def show(self):
+    def show(self, touch_selection=True):
         self._themes = [['dark', '']]
         self._themes.append(['dark_16_colors', ''])
         self._items += 1
@@ -481,7 +481,7 @@ class PyRadioThemeSelector(object):
 
         if self.log:
             self.log('max_title_width = {}\n'.format(self._max_title_width))
-        self._get_config_and_applied_theme()
+        self._get_config_and_applied_theme(touch_selection)
         self._get_metrics()
 
     def _scan_for_theme_files(self, cnf_path, user_themes_first=False):
@@ -507,7 +507,6 @@ class PyRadioThemeSelector(object):
                         tmp_themes.append(['User Themes', '-'])
                     tmp_themes.reverse()
                     out_themes.extend(tmp_themes)
-        logger.error('\n\n_scan_for_theme_files()\n{}\n\n'.format(out_themes))
         return out_themes
 
     def _get_titles_ids(self):
@@ -533,7 +532,7 @@ class PyRadioThemeSelector(object):
             return 'white_on_black'
         return a_theme_name
 
-    def _get_config_and_applied_theme(self):
+    def _get_config_and_applied_theme(self, touch_selection=True):
         self._config_theme_name = self._short_to_normal_theme_name(self._config_theme_name)
         self._applied_theme_name = self._short_to_normal_theme_name(self._applied_theme_name)
         if self.log:
@@ -553,10 +552,11 @@ class PyRadioThemeSelector(object):
 
         if self.log:
             self.log('config theme = {0}, applied theme = {1}\n'.format(self._config_theme, self._applied_theme))
-        if self._applied_theme == -1:
-            self._selection = 0
-        else:
-            self._selection = self._applied_theme
+        if touch_selection:
+            if self._applied_theme == -1:
+                self._selection = 0
+            else:
+                self._selection = self._applied_theme
 
     def _get_metrics(self):
         maxY, maxX = self.parent.getmaxyx()
@@ -606,6 +606,7 @@ class PyRadioThemeSelector(object):
             #self._win.erase()
             self._draw_box()
             self.refresh()
+
 
     def getmaxyx(self):
         return self._width, self._height
@@ -666,27 +667,17 @@ class PyRadioThemeSelector(object):
             self.log('======================\n')
             self.log('{}\n'.format(self._themes))
         self._draw_box()
-        logger.error('==============\nstart pos = {}'.format(self._start_pos))
         if not self._showed:
-            logger.error('\n\nnot _showed\n\n')
             number_of_items = len(self._themes)
-            logger.error('  == active height = {}'.format(number_of_items))
-            logger.error('items = {}'.format(self._items))
-            logger.error('selection = {}'.format(self._selection))
-            logger.error('_themes = {}'.format(self._themes))
             if self._items < number_of_items:
                 if self._selection >= self._items:
                     if self._selection >= number_of_items - self._items:
                         self._start_pos = number_of_items - self._items
-                        logger.error('==== set {}'.format(self._start_pos))
                     else:
                         self._start_pos = self._selection - int(self._items / 2)
-                        logger.error('==== set2 {}'.format(self._start_pos))
-                    logger.error('start pos = {}'.format(self._start_pos))
 
         for i in range(0, self._height - 2):
             an_item = i + self._start_pos
-            logger.error('an_item = {}'.format(an_item))
             token = ' '
             if an_item in self._title_ids:
                 col = curses.color_pair(self._title_color_pair)
@@ -703,7 +694,6 @@ class PyRadioThemeSelector(object):
                     col = curses.color_pair(self._normal_color_pair)
             self._win.hline(i + 1, 1, ' ', self._max_title_width + 2, col)
             if an_item == self._config_theme:
-                logger.error('\n\nself._config_theme = {0}, self._applied_theme = {1}'.format(self._config_theme, self._applied_theme))
                 if self._is_watched == self._themes[an_item][0]:
                     token = '+'
                 else:
