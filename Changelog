@@ -1,5 +1,12 @@
+2022-06-26 s-n-g
+    * version 0.8.9.21 (0.9-beta18)
+    * Theme Selection window partly rewritten
+    * Converting themes to using CSS colors
+    * Themes updated and new themes added
+    * Updated docs
+
 2022-05-22 s-n-g
-    * version 0.8.9.20 (0.9-beta-17)
+    * version 0.8.9.20 (0.9-beta17)
     * going back to history will ask to save a modified playlist
     * fixing #157 (python2 only)
     * other minor changes

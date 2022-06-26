@@ -511,12 +511,12 @@ class PyRadio(object):
         self._update_history_positions_in_list()
 
     def _save_colors(self):
-        if curses.can_change_color():
+        if curses.can_change_color() and curses.COLORS >= 16:
             for i in range(0, 16):
                 self._saved_colors[i] = curses.color_content(i)
 
     def restore_colors(self):
-        if curses.can_change_color():
+        if curses.can_change_color() and curses.COLORS >= 16:
             for i in range(0,16):
                 curses.init_color(
                     i,
@@ -531,11 +531,10 @@ class PyRadio(object):
         self._save_colors()
         # curses.savetty()
         self.setup_return_status = True
-        # if not curses.has_colors() or not curses.can_change_color():
         if not curses.has_colors():
             self.setup_return_status = False
             return
-        if not curses.can_change_color():
+        if not curses.can_change_color() or curses.COLORS < 16:
             curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
             curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
             curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
@@ -562,10 +561,9 @@ class PyRadio(object):
         except:
             pass
 
-        if curses.can_change_color():
+        if curses.can_change_color() and curses.COLORS >= 16:
             self._theme._transparent = self._cnf.use_transparency
             self._theme.config_dir = self._cnf.stations_dir
-            logger.error('========= HERE =======')
             ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name)
             if ret == 0:
                 self._theme_name = self._theme.applied_theme_name
@@ -1177,7 +1175,7 @@ class PyRadio(object):
             logger.debug('File watch thread stopped on: {}'.format(file))
 
     def run(self):
-        self._watch_theme()
+        # self._watch_theme()
         self._register_signals_handlers()
         if self.ws.operation_mode == self.ws.DEPENDENCY_ERROR:
             self.log.write(msg="Dependency missing. Press any key to exit....", error_msg=True)
@@ -1324,8 +1322,9 @@ class PyRadio(object):
         self.restore_colors()
 
     def _wait_for_threads(self):
-        self.stop_watch_theme_thread = True
-        self._watch_theme_thread.join()
+        if self._watch_theme_thread:
+            self.stop_watch_theme_thread = True
+            self._watch_theme_thread.join()
         if self._update_notification_thread:
             if self._update_notification_thread.is_alive():
                 self.stop_update_notification_thread = True
@@ -1705,7 +1704,7 @@ class PyRadio(object):
         return num_of_playlists, playing
 
     def _show_theme_selector_from_config(self):
-        if not curses.can_change_color():
+        if not curses.can_change_color() or curses.COLORS < 16:
             # TODO show msg
             self._show_colors_cannot_change()
             return
@@ -4048,7 +4047,7 @@ class PyRadio(object):
         '''
         if self.ws.window_mode == self.ws.CONFIG_MODE and not changed_from_config_window:
             return
-        if not curses.can_change_color():
+        if not curses.can_change_color() or curses.COLORS < 16:
             # TODO show msg
             self._show_colors_cannot_change()
             return
@@ -5449,7 +5448,7 @@ class PyRadio(object):
             self._reset_status_bar_right()
             self._config_win = None
             self.theme_forced_selection = None
-            if not curses.can_change_color():
+            if not curses.can_change_color() or curses.COLORS < 16:
                 # TODO show msg
                 self._show_colors_cannot_change()
                 return

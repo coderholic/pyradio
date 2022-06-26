@@ -98,6 +98,11 @@ a:visited{color: SaddleBrown;}
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
 <li><a href="#pyradio-themes">PyRadio Themes</a>
 <ul>
+<li><a href="#css-color-themes-restrictions">CSS color themes restrictions</a></li>
+<li><a href="#user-themes">User themes</a>
+<ul>
+<li><a href="#converting-old-themes">Converting old themes</a></li>
+</ul></li>
 <li><a href="#using-transparency">Using transparency</a></li>
 </ul></li>
 <li><a href="#mouse-support">Mouse support</a></li>
@@ -153,8 +158,15 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre style="height: 200px;">
 
+2022-06-26 s-n-g
+    * version 0.8.9.21 (0.9-beta18)
+    * Theme Selection window partly rewritten
+    * Converting themes to using CSS colors
+    * Themes updated and new themes added
+    * Updated docs
+
 2022-05-22 s-n-g
-    * version 0.8.9.20 (0.9-beta-17)
+    * version 0.8.9.20 (0.9-beta17)
     * going back to history will ask to save a modified playlist
     * fixing #157 (python2 only)
     * other minor changes
@@ -1182,29 +1194,100 @@ volume=50</pre>
 <h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p><strong>PyRadio</strong> comes with 6 preconfigured (hard coded) themes:</p>
 <ol type="1">
-<li><strong>dark</strong> (8 color theme). This is the appearance <strong>PyRadio</strong> has always had. Enabled by default.</li>
-<li><strong>light</strong> (8 color theme). A theme for light terminal background settings.</li>
-<li><strong>dark_16_colors</strong> (16 color theme). “<strong>dark</strong>” theme alternative.</li>
-<li><strong>light_16_colors</strong> (16 color theme). “<strong>light</strong>” them alternative.</li>
-<li><strong>white_on_black</strong> or <strong>wob</strong> (256 color b&amp;w theme). A theme for dark terminal background settings.</li>
-<li><strong>black_on_white</strong> or <strong>bow</strong> (256 color b&amp;w theme). A theme for light terminal background settings.</li>
+<li><strong>dark</strong> (8 color theme).<br />
+This is the appearance <strong>PyRadio</strong> has always had. Enabled by default.</li>
+<li><strong>light</strong><br />
+A theme for light terminal background settings.</li>
+<li><strong>dark_16_colors</strong><br />
+“<strong>dark</strong>” theme alternative.</li>
+<li><strong>light_16_colors</strong><br />
+“<strong>light</strong>” them alternative.</li>
+<li><strong>white_on_black</strong> or <strong>wob</strong> (b&amp;w theme).<br />
+A theme for dark terminal background settings.</li>
+<li><strong>black_on_white</strong> or <strong>bow</strong> (b&amp;w theme).<br />
+A theme for light terminal background settings.</li>
 </ol>
-<p>Furthermore, three 256-color system themes (these are actual files saved in the <strong>themes</strong> installation directory) are also available:</p>
-<ol type="1">
-<li><strong>brown_by_sng</strong></li>
-<li><strong>pink_by_sng</strong></li>
-<li><strong>purple_by_sng</strong></li>
-</ol>
-<p>The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)</p>
+<p>Furthermore, a number of themes (these are actual files saved in the <strong>themes</strong> installation directory) are also available:</p>
+<ul>
+<li><strong>classic_by_obsdg</strong><br />
+A clasic theme by <a target="_blank" href="https://github.com/OpenBSDGuy">The OpenBSD Guy</a>, originally created on <a target="_blank" href="https://www.openbsd.org/">OpenBSD</a>.</li>
+<li><strong>cupcake_by_edunfelt</strong> and <strong>fairyflossy_by_edunfelt</strong><br />
+Two themes by <a target="_blank" href="https://github.com/edunfelt">edunfelt</a> inspired by the <a target="_blank" href="https://github.com/base16-project">base16</a> project.</li>
+<li><strong>gruvbox_dark_by_sng</strong> and <strong>gruvbox_light_by_sng</strong><br />
+Two themes based on the <a target="_blank" href="https://github.com/morhetz/gruvbox">gruvbox</a> theme.</li>
+<li><strong>pastel_based_by_sng</strong><br />
+A dim but colorful theme.</li>
+</ul>
+<p>Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual CSS colors can now be defined.</p>
+<p>Theme sample / template:</p>
+<pre># Main foreground and background
+Stations            #8b8198 #fbf1f2
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      #d57e85
+
+# Status bar foreground and background
+Status Bar          #fbf1f2 #d57e85
+
+# Normal cursor foreground and background
+Normal Cursor       #fbf1f2 #dcb16c
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       #fbf1f2 #d57e85
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         #fbf1f2 #bfb9c6
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          #69a9a7
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         #a3b367
+
+# Message window borser foreground
+# (background color will come from Stations)
+Messages Border     #a3b367</pre>
 <p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Themes that use more colors than those supported by the terminal in use, will not be present in the <em>Theme selection window</em>. Furthermore, if a such at theme is set as default (or requested using the “<strong>-t</strong>” command line option), <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme (or the “<strong>light</strong>” theme, if the terminal supports 8 colors and default theme is set to “<em>light_16_colors</em>”), and will display a relevant message at program startup.</p>
-<p>The <em>Theme selection window</em> will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
-<p>The use of custom themes and theme editing is not implemented yet; these are features for future releases.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the theme selected in the “<em>Theme selection window</em>”, (or requested using the “<strong>-t</strong>” command line option), is in any way invalid, or is of the old format, <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme and will display a relevant message.</p>
+<p>The “<em>Theme selection window</em>” will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
+<h3 id="css-color-themes-restrictions">CSS color themes restrictions</h3>
+<p>Using CSS colors imposes a couple of restrictions on the type of terminals <strong>PyRadio</strong> will be able to run:</p>
+<ol type="1">
+<li>The TERM variable must be set <em>(Linux and MacOs only)</em>.<br />
+<br />
+<strong>PyRadio</strong> will set it to “<em>xterm-256color</em>” if not set.<br />
+<br />
+Furthermore, if TERM is set to anything like “<strong>xterm</strong><em>”, ”<strong>screen</strong></em>” or “<strong>tmux</strong><em>“, <strong>PyRadio</strong> will set it to”</em>xterm-256color*” as well.</p></li>
+<li>Terminals that do not support at least 16 colors will not be able to display any of the new themes. The same goes for terminals that do not support changing their colors (through the <strong>curses</strong> library).<br />
+<br />
+These terminal will default to the old “<strong>dark</strong>” theme, displaying whatever colors the active palette dictates.</p></li>
+<li>There are a couple of terminals (that I know of) which will permit changing their colors but will not be able to present the changed color on the fly.<br />
+<br />
+This means that, in order for a theme change to take full effect, <strong>PyRadio</strong> will have to be restarted.</p></li>
+</ol>
+<h3 id="user-themes">User themes</h3>
+<p>Users can easiliy create their own themes, using for example <a target="_blank" href="https://www.cssportal.com/css3-color-names/">CSS color names</a> as a resource, and</p>
+<ol type="1">
+<li>Save the theme provided as a template above in their themes folder using any (short) file name and a “<strong>.pyradio-theme</strong>” file extension.<br />
+<br />
+For this reason, a folder called “<strong>themes</strong>” will probably have to be created in <strong>PyRadio</strong> config directory (<strong>~/.config/pyradio</strong> or **%APPDATA* on Windows)</p></li>
+<li>Customize it as desired</p></li>
+<li>Load it from the “<em>Theme selection window</em>” (it will be found under “<strong>User Themes</strong>”).</p></li>
+</ol>
+<h4 id="converting-old-themes">Converting old themes</h4>
+<p>An old theme (using the old format) can be asily converted to the new format, using the script found at <a target="_blank" href="https://gist.github.com/s-n-g/65aa6ae12e135481bf3a503ece4e92d2">this gist</a>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> In order to get the color intended to be used, the same palette as the one used when the original theme was created, must be used.</p>
 <h3 id="using-transparency">Using transparency</h3>
 <p><strong>PyRadio</strong> themes are able to be used with a transparent background.</p>
 <p>Pressing “<strong>T</strong>” will toggle the transparency setting and save this state in <strong>PyRadio</strong>’s configuration file (transparency is off by default).</p>
 <p>Setting transparency on, will actually force <strong>PyRadio</strong> to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
-<p>When the <em>Theme selection window</em> is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that transparency is <em>on</em>.</p>
+<p>When the “<em>Theme selection window</em>” is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that transparency is <em>on</em>.</p>
 <h2 id="mouse-support">Mouse support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Being a console application, <strong>PyRadio</strong> was never intended to work with a mouse.</p>
 <p>Furthermore, when using the mouse on a console application, the result is highly dependent on the terminal used and the way it implements mouse support.</p>

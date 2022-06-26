@@ -26,7 +26,7 @@ Extra Func          #80a2be
 
 # Text color for URL
 # (background color will come from Stations)
-PyRadio URL         #000000
+PyRadio URL         #80a2be
 
 # Message window borser foreground
 # (background color will come from Stations)

@@ -53,7 +53,7 @@ def shell():
     if not sys.platform.startswith('win'):
         if not sys.platform.startswith('win'):
             term = getenv('TERM')
-            print('TERM = {}'.format(term))
+            # print('TERM = {}'.format(term))
             if term is None:
                 print('== Warning: TERM is not set. Using xterm-256color')
                 environ['TERM'] = 'xterm-256color'

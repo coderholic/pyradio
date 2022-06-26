@@ -47,6 +47,9 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
 * [PyRadio Themes](#pyradio-themes)
+    * [CSS color themes restrictions](#css-color-themes-restrictions)
+    * [User themes](#user-themes)
+        * [Converting old themes](#converting-old-themes)
     * [Using transparency](#using-transparency)
 * [Mouse support](#mouse-support)
 * [Titles logging](#titles-logging)
@@ -710,28 +713,113 @@ To **paste** the *unnamed* register to a playlist or register, one would press:
 
 **PyRadio** comes with 6 preconfigured (hard coded) themes:
 
-1. **dark** (8 color theme). This is the appearance **PyRadio** has always had. Enabled by default.
-2. **light** (8 color theme). A theme for light terminal background settings.
-3. **dark_16_colors** (16 color theme). "**dark**" theme alternative.
-4. **light_16_colors** (16 color theme). "**light**" them alternative.
-5. **white_on_black** or **wob** (256 color b&w theme). A theme for dark terminal background settings.
-6. **black_on_white** or **bow** (256 color b&w theme). A theme for light terminal background settings.
+1. **dark** (8 color theme). \
+This is the appearance **PyRadio** has always had. Enabled by default.
+2. **light** \
+A theme for light terminal background settings.
+3. **dark_16_colors** \
+"**dark**" theme alternative.
+4. **light_16_colors** \
+"**light**" them alternative.
+5. **white_on_black** or **wob** (b&w theme). \
+A theme for dark terminal background settings.
+6. **black_on_white** or **bow** (b&w theme). \
+A theme for light terminal background settings.
 
-Furthermore, three 256-color system themes (these are actual files saved in the **themes** installation directory) are also available:
+Furthermore, a number of themes (these are actual files saved in the **themes** installation directory) are also available:
 
-1. **brown_by_sng**
-2. **pink_by_sng**
-3. **purple_by_sng**
+- **classic_by_obsdg** \
+A clasic theme by [The OpenBSD Guy](https://github.com/OpenBSDGuy), originally created on [OpenBSD](https://www.openbsd.org/).
+- **cupcake_by_edunfelt** and  **fairyflossy_by_edunfelt** \
+Two themes by [edunfelt](https://github.com/edunfelt) inspired by the [base16](https://github.com/base16-project) project.
+- **gruvbox_dark_by_sng** and **gruvbox_light_by_sng** \
+Two themes based on the [gruvbox](https://github.com/morhetz/gruvbox) theme.
+- **pastel_based_by_sng** \
+A dim but colorful theme.
 
-The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)
+Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual CSS colors can now be defined.
+
+Theme sample / template:
+
+```
+# Main foreground and background
+Stations            #8b8198 #fbf1f2
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      #d57e85
+
+# Status bar foreground and background
+Status Bar          #fbf1f2 #d57e85
+
+# Normal cursor foreground and background
+Normal Cursor       #fbf1f2 #dcb16c
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       #fbf1f2 #d57e85
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         #fbf1f2 #bfb9c6
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          #69a9a7
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         #a3b367
+
+# Message window borser foreground
+# (background color will come from Stations)
+Messages Border     #a3b367
+```
 
 Pressing "**t**" will bring up the *Theme selection window*, which can be used to activate a theme and set the default one.
 
-**Note:** Themes that use more colors than those supported by the terminal in use, will not be present in the *Theme selection window*. Furthermore, if a such at theme is set as default (or requested using the "**-t**" command line option), **PyRadio** will fall-back to the "**dark**" theme (or the "**light**" theme, if the terminal supports 8 colors and default theme is set to "*light_16_colors*"), and will display a relevant message at program startup.
+**Note:** If the theme selected in the "*Theme selection window*", (or requested using the "**-t**" command line option), is in any way invalid, or is of the old format, **PyRadio** will fall-back to the "**dark**" theme and will display a relevant message.
 
-The  *Theme selection window* will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "**q**" or any other relevant key - pressing "**?**" will bring up its help).
+The "*Theme selection window*" will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "**q**" or any other relevant key - pressing "**?**" will bring up its help).
 
-The use of custom themes and theme editing is not implemented yet; these are features for future releases.
+### CSS color themes restrictions
+
+Using CSS colors imposes a couple of restrictions on the type of terminals **PyRadio** will be able to run:
+
+1. The TERM variable must be set *(Linux and MacOs only)*. \
+\
+**PyRadio** will set it to "*xterm-256color*" if not set. \
+\
+Furthermore, if TERM is set to anything like "**xterm***", "**screen***" or "**tmux***", **PyRadio** will set it to "*xterm-256color*" as well.
+
+2. Terminals that do not support at least 16 colors will not be able to display any of the new themes. The same goes for terminals that do not support changing their colors (through the **curses** library). \
+\
+These terminal will default to the old "**dark**" theme, displaying whatever colors the active palette dictates.
+
+3. There are a couple of terminals (that I know of) which will permit changing their colors but will not be able to present the changed color on the fly. \
+\
+This means that, in order for a theme change to take full effect, **PyRadio** will have to be restarted.
+
+### User themes
+
+Users can easiliy create their own themes, using for example [CSS color names](https://www.cssportal.com/css3-color-names/) as a resource, and
+
+1. Save the theme provided as a template above in their themes folder using any (short) file name and a "**.pyradio-theme**" file extension. \
+\
+For this reason, a folder called "**themes**" will probably have to be created in **PyRadio** config directory (**~/.config/pyradio** or **%APPDATA\pyradio** on Windows)
+
+
+2. Customize it as desired
+
+3. Load it from the "*Theme selection window*" (it will be found under "**User Themes**").
+
+
+#### Converting old themes
+
+An old theme (using the old format) can be asily converted to the new format, using the script found at [this gist](https://gist.github.com/s-n-g/65aa6ae12e135481bf3a503ece4e92d2).
+
+**Note:** In order to get the color intended to be used, the same palette as the one used when the original theme was created, must be used.
 
 ### Using transparency
 
@@ -741,7 +829,7 @@ Pressing "**T**"  will toggle the transparency setting and save this state in **
 
 Setting transparency on, will actually force **PyRadio** to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency).  The visual result depends on terminal settings and whether a compositor is running.
 
-When the *Theme selection window* is visible, a "**[T]**" string displayed  at  its  bottom right corner will indicate that transparency is *on*.
+When the "*Theme selection window*" is visible, a "**[T]**" string displayed  at  its  bottom right corner will indicate that transparency is *on*.
 
 ## Mouse support
 

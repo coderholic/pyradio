@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "May 2022" PyRadio
+.TH pyradio 1 "June 2022" PyRadio
 
 .SH Name
 .PP
@@ -801,6 +801,7 @@ To \fBpaste\fR the \fIunnamed\fR register to a playlist or register, one would p
 
 \fBPyRadio\fR comes with 6 preconfigured (hard coded) themes:
 
+.RS 5
 .IP \fBdark\fR\ (8\ color\ theme)
 This is the appearance \fBPyRadio\fR has always had. Enabled by default.
 .IP \fBlight\fR\ (8\ color\ theme)
@@ -814,21 +815,95 @@ A theme for dark terminal background settings.
 .IP \fBblack_on_white\fR\ or\ \fBbow\fR\ (256\ color\ b&w\ theme)
 A theme for light terminal background settings.
 
+.RE
 .PP
-Furthermore, three 256-color system themes (these are actual files saved in the \fIthemes\fR installation directory) are also available: \fBbrown_by_sng\fR, \fBpink_by_sng\fR and \fBpurple_by_sng\fR.
+Furthermore, a number of \fISystem Themes\fR (these are actual files saved in the \fIthemes\fR installation directory) are also available:
 
+.RS 5
+.IP \fBclassic_by_obsdg\fR
+A clasic theme by \fBThe OpenBSD Guy\fR (\fIhttps://github.com/OpenBSDGuy\fR), originally created on \fBOpenBSD\fR (\fIhttps://www.openbsd.org/\fR).
+.IP \fBcupcake_by_edunfelt\fR and  \fBfairyflossy_by_edunfelt\fR
+Two themes by \fBedunfelt\fR (\fIhttps://github.com/edunfelt\fR) inspired by the \fBbase16\fR (\fIhttps://github.com/base16-project\fR) project.
+.IP \fBgruvbox_dark_by_sng\fR and \fBgruvbox_light_by_sng\fR
+Two themes based on the \fBgruvbox\fR (\fIhttps://github.com/morhetz/gruvbox\fR) theme.
+.IP \fBpastel_based_by_sng\fR
+A dim but colorful theme.
+
+.RE
 .PP
-The visual result of an applied theme greatly depends on the terminal settings (e.g. foreground and background color settings, palette used, number of colors supported, real or pseudo-transparency support, etc.)
+Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual \fICSS colors\fR can now be defined.
 
 Pressing "\fBt\fR" will bring up the \fITheme selection window\fR, which can be used to activate a theme and set the default one.
 
 .IP \fBNote\fR
-Themes that use more colors than those supported by the terminal in use, will not be present in the \fITheme selection window\fR. Furthermore, if a such a theme is set as default (or requested using the "\fB-t\fR" command line option), \fBPyRadio\fR will fall-back to the "\fBdark\fR" theme, (or the "\fBlight\fR" theme, if the terminal supports 8 colors and default theme is set to "\fIlight_16_colors\fR"), and will display a relevant messages at program startup.
+If the theme selected in the \fITheme selection window\fR, (or requested using the "\fB-t\fR" command line option), is in any way invalid, or is of the old format, **PyRadio** will fall-back to the "\fBdark\fR" theme and will display a relevant message.
 
 .PP
 The \fITheme selection window\fR will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "\fBq\fR" or any other relevant key - pressing "\fB?\fR" will bring up its help).
 
-The use of custom themes and theme editing is not implemented yet; theses are features for future releases.
+.PP
+\fBCSS color themes restrictions\fR
+
+Using CSS colors imposes a couple of restrictions on the type of terminals \fBpyradio\fR will be able to run:
+
+.RS 5
+.IP 1. 3
+The TERM variable must be set (\fILinux and MacOs only\fR).
+
+\fBpyradio\fR will set it to "\fIxterm-256color\fR" if not set.
+
+Furthermore, if TERM is set to anything like "\fIxterm*\fR", "\fIscreen*\fR" or "\fItmux*\fR", \fBpyradio\fR will set it to "\fIxterm-256color\fR" as well.
+
+.IP 2. 3
+Terminals that do not support at least 16 colors will not be able to display any of the new themes. The same goes for terminals that do not support changing their colors (through the \fBcurses\fR library).
+
+These terminal will default to the old "\fBdark\fR" theme, displaying whatever colors the active palette dictates.
+
+.IP 3. 3
+There are a couple of terminals (that I know of) which will permit changing their colors but will not be able to present the changed color on the fly.
+
+This means that, in order for a theme change to take full effect, \fBpyradio\fR will have to be restarted.
+
+.RE
+.PP
+\fBUser themes\fR
+
+Users can easiliy create their own themes, using for example \fBCSS color names\fR (\fIhttps://www.cssportal.com/css3-color-names/\fR) as a resource, and
+
+.RS 5
+.IP 1. 3
+Copy (and rename) one of the \fISystem Themes\fR to the user's \fBthemes\fR folder. This folder may not already exist; it must be created in \fBpyradio\fR config directory (\fI~/.config/pyradio\fR).
+
+To gain access to the \fISystem Themes\fR, execute the following commands
+
+\fIcd `python -c 'import site; print(site.getusersitepackages())'`\fR
+.BR
+\fIcd pyradio/themes\fR
+
+(you may have to use \fIpython2\fR or \fIpython3\fR instead of plain \fIpython\fR, depending on your OS and distribution).
+
+.IP 2. 3
+Customize it as desired
+
+.IP 3. 3
+Load it from the \fITheme selection window\fR (it will be found under "\fBUser Themes\fR").
+
+.RE
+.PP
+\fBConverting old themes\fR
+
+An old theme (using the old format) can be asily converted to the new format, using the script found at \fBthis gist\fR (\fIhttps://gist.github.com/s-n-g/65aa6ae12e135481bf3a503ece4e92d2\fR).
+
+.IP \fBNote:
+In order to get the color intended to be used, the same palette as the one used when the original theme was created, must be used.
+
+
+
+
+
+
+
+
 
 .PP
 \fBUsing Transparency\fR
