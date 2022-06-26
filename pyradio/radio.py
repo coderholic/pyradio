@@ -1175,7 +1175,7 @@ class PyRadio(object):
             logger.debug('File watch thread stopped on: {}'.format(file))
 
     def run(self):
-        # self._watch_theme()
+        self._watch_theme()
         self._register_signals_handlers()
         if self.ws.operation_mode == self.ws.DEPENDENCY_ERROR:
             self.log.write(msg="Dependency missing. Press any key to exit....", error_msg=True)
