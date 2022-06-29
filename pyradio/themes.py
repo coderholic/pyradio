@@ -433,7 +433,7 @@ class PyRadioThemeSelector(object):
         self._applied_color_pair = applied_color_pair
         self._normal_color_pair = normal_color_pair
         self._transparent = is_transparent
-        self._is_watched = is_watched
+        self._theme_is_watched = is_watched
         self._a_lock = a_lock
         a_lock.acquire()
         if log_file:
@@ -447,6 +447,12 @@ class PyRadioThemeSelector(object):
         logger.error('applied_theme_name = {}'.format(applied_theme_name))
         logger.error('config_theme_name = {}'.format(config_theme_name))
         logger.error('========== Theme Window End\n\n')
+        for n in self._cnf.opts.keys():
+            logger.error('{0}: {1}'.format(n, self._cnf.opts[n]))
+
+    @property
+    def theme_is_watched(self):
+        return self._theme_is_watched
 
     def set_global_functions(self, global_functions):
         self._global_functions = {}
@@ -474,6 +480,12 @@ class PyRadioThemeSelector(object):
             self._themes.extend(themes_to_add)
             self._items = len(self._themes)
             self._get_titles_ids()
+        self._first_theme_to_watch = 0
+        for i, n in enumerate(self._themes):
+            if 'User Themes' in n[0]:
+                self._first_theme_to_watch = i
+        if self._first_theme_to_watch == 0:
+            self._first_theme_to_watch = len(self._themes)
 
         for a_theme in self._themes:
             if len(a_theme[0]) > self._max_title_width:
@@ -694,7 +706,7 @@ class PyRadioThemeSelector(object):
                     col = curses.color_pair(self._normal_color_pair)
             self._win.hline(i + 1, 1, ' ', self._max_title_width + 2, col)
             if an_item == self._config_theme:
-                if self._is_watched == self._themes[an_item][0]:
+                if self._theme_is_watched:
                     token = '+'
                 else:
                     token = '*'
@@ -832,16 +844,17 @@ class PyRadioThemeSelector(object):
             if not self.changed_from_config:
                 self._config_theme = self._selection
                 self._config_theme_name = self._themes[self._selection][0]
-            if char in (ord('c'), ord('C')):
-                if self._themes[self._selection][1]:
-                    self._applied_theme_is_watched = self._config_theme_is_watched = self._themes[self._selection][0]
+            self._theme_is_watched = False
+            if char == ord('c'):
+                if self._selection > self._first_theme_to_watch and \
+                        self._themes[self._selection][1]:
+                    logger.error('first = {0}, selection = {1}'.format(self._first_theme_to_watch, self._selection))
+                    self._theme_is_watched = True
+                else:
+                    self._theme_is_watched = False
             else:
-                self._applied_theme_is_watched = self._config_theme_is_watched = ''
-            if char in (ord('s'), ord('C')):
-                ''' close window '''
-                curses.ungetch('q')
-            else:
-                self.refresh()
+                self._theme_is_watched = False
+            self.refresh()
             return self._selection, True
         elif char in (curses.KEY_UP, ord('k')):
             self.jumpnr = ''

@@ -1429,6 +1429,10 @@ class PyRadioConfig(PyRadioStations):
         self.opts['dirty_config'][1] = True
 
     @property
+    def theme_path(self):
+        return path.join(self.stations_dir, 'themes', self.opts['theme'][1] + '.pyradio-theme')
+
+    @property
     def auto_update_theme(self):
         return self.opts['auto_update_theme'][1]
 
