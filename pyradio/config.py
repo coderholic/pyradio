@@ -1429,6 +1429,10 @@ class PyRadioConfig(PyRadioStations):
         self.opts['dirty_config'][1] = True
 
     @property
+    def theme_path(self):
+        return path.join(self.stations_dir, 'themes', self.opts['theme'][1] + '.pyradio-theme')
+
+    @property
     def auto_update_theme(self):
         return self.opts['auto_update_theme'][1]
 
@@ -1978,7 +1982,8 @@ force_http = {7}
 #   black_on_white (bow) (256 colors)
 #   white_on_black (wob) (256 colors)
 # If theme is watched for changes, prepend its name
-# with an asterisk (i.e. '*dark')
+# with an asterisk (i.e. '*my_theme')
+# This is applicable for user themes only!
 # Default value = 'dark'
 theme = {8}
 

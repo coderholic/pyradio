@@ -1,3 +1,10 @@
+2022-07-03 s-n-g
+    * version 0.8.9.22 (0.9-beta19)
+    * themes can declare transparency hint
+    * theme auto update implemented
+    * themes updated (1 added)
+    * updating docs
+
 2022-06-26 s-n-g
     * version 0.8.9.21 (0.9-beta18)
     * Theme Selection window partly rewritten

@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "June 2022" PyRadio
+.TH pyradio 1 "July 2022" PyRadio
 
 .SH Name
 .PP
@@ -826,6 +826,9 @@ A clasic theme by \fBThe OpenBSD Guy\fR (\fIhttps://github.com/OpenBSDGuy\fR), o
 Two themes by \fBedunfelt\fR (\fIhttps://github.com/edunfelt\fR) inspired by the \fBbase16\fR (\fIhttps://github.com/base16-project\fR) project.
 .IP \fBgruvbox_dark_by_sng\fR and \fBgruvbox_light_by_sng\fR
 Two themes based on the \fBgruvbox\fR (\fIhttps://github.com/morhetz/gruvbox\fR) theme.
+.IP \fBminima_by_ben_chile\fR \
+A theme by \fBben_chile\fR (\fIhttps://forum.maboxlinux.org/u/ben_chile\fR) created on the \fBMabox Linux\fR Forum (https://maboxlinux.org).
+
 .IP \fBpastel_based_by_sng\fR
 A dim but colorful theme.
 
@@ -840,6 +843,10 @@ If the theme selected in the \fITheme selection window\fR, (or requested using t
 
 .PP
 The \fITheme selection window\fR will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "\fBq\fR" or any other relevant key - pressing "\fB?\fR" will bring up its help).
+
+.PP
+
+Pressing "\fISPACE\fR", will apply the theme and make it default, and pressing "\fIc\fR" will apply the theme and make it default and start a file watch function on the file, so that if the file changes, \fBpyradio\fR will automatically update itself.
 
 .PP
 \fBCSS color themes restrictions\fR
@@ -898,23 +905,45 @@ An old theme (using the old format) can be asily converted to the new format, us
 In order to get the color intended to be used, the same palette as the one used when the original theme was created, must be used.
 
 
-
-
-
-
-
-
-
 .PP
 \fBUsing Transparency\fR
 
-\fBPyRadio\fR themes are able to be used with a transparent background.
+For \fBpyradio\fR, transparency means that a theme's background actually disappears, effectively making it to display whatever is on the terminal (color/picture/transparency).  The visual result depends on terminal settings and whether a compositor is running.
 
-Pressing "\fBT\fR"  will toggle the transparency setting (it is \fIoff\fR by default) and save this state in \fBPyRadio\fR's configuration file.
+Not all themes look good when transparency is ON, so themes can now declare whether they want to use transparency or not. This is the "\fBtransparency\fR" variable of the theme, which can have these values:
 
-Setting transparency on, will actually force \fBPyRadio\fR to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.
+.RS 5
+.IP \fI0\fR 3
+means that the theme looks better with no transparency (default)
+
+.IP \fI1\fR 3
+means that the theme looks better when transparency in ON
+
+.IP \fI2\fR 3
+means that the theme looks good either way, and the global transparency setting (defined in \fBpyrRadio\fR config file) can be used.
+
+.RE
+.PP
+Please notice that this is just a hint; themes will obey the rules above, but transparency can still be toggled using "\fIT\fR" (capital "\fIt\fR").
 
 When the \fITheme selection window\fR is visible, a "\fI[T]\fR" string displayed at its bottom right corner will indicate that transparency is \fIon\fR.
+
+.SH Updating themes automatically
+
+Terminal users have been using all kind of software to change / update / adapt their terminal colors and palettes, such as i\fBbASE16\fR (\fIhttps://github.com/chriskempson/base16\fR), \fBpywal\fR (\fIhttps://github.com/dylanaraps/pywal\fR), \fBwpgtk\fR (\fIhttps://github.com/deviantfero/wpgtk\fR), \fBtheme.sh\fR (\fIhttps://github.com/lemnos/theme.sh\fR), to name a few.
+
+\fBpyradio\fR is now able to "watch" a given theme for changes and update its colors whenever the theme changes.
+
+To set up a theme for auto update, one would just open the "\fITheme Selection\fR window, navigate to a theme under \fBUser Themes\fR and press "\fBc\fR". To create a \fIuser theme\fR just follow the procedure described in section \fBUser themes\fR.
+
+Consecuently, the default theme name will be preceded by:
+
+.RS 5
+.IP \fB*\fR 3
+if the theme is the default one (the way it has always been).
+
+.IP \fB-\fR 3
+if the theme is the default one, and \fBpyradio\fR will watch it for changes.
 
 .SH Mouse Support
 

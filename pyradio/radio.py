@@ -1075,19 +1075,35 @@ class PyRadio(object):
             for n in ticks:
                 self.bodyWin.chgat(lineNum, n, 1, sep_col)
 
-    def _watch_theme(self):
+    def _watch_theme(self, theme_path=None):
+        ''' watch a file for changes
+
+            Parameters
+            =========
+            path    the path to the file
+                    if it's None, the thread is terminated
+        '''
+        if self._watch_theme_thread:
+            self.stop_watch_theme_thread = True
+            self._watch_theme_thread.join()
+            self._watch_theme_thread = None
+            self.stop_watch_theme_thread = False
+        if theme_path is None:
+            return
+        else:
+            path = theme_path
         self._watch_theme_thread = threading.Thread(
             target=self._wait_for_theme_to_change,
             # args=(self._cnf,
-            args=(path.join(self._cnf.stations_dir, 'themes', 'auto.pyradio-theme'),
+            args=(path,
                   self._watch_theme_lock,
                   lambda: self.stop_watch_theme_thread,
                   self._auto_update_theme))
         self._watch_theme_thread.start()
 
     def _auto_update_theme(self):
-        logger.error('_auto_update_theme(): triggered!')
-        ret, ret_theme_name = self._theme.readAndApplyTheme('auto')
+        logger.error('_auto_update_theme(): triggered! - updating theme: ' + self._cnf.theme)
+        ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.theme)
         if ret == 0:
             self._theme_name = self._cnf.theme
         else:
@@ -1175,7 +1191,7 @@ class PyRadio(object):
             logger.debug('File watch thread stopped on: {}'.format(file))
 
     def run(self):
-        self._watch_theme()
+        # self._watch_theme()
         self._register_signals_handlers()
         if self.ws.operation_mode == self.ws.DEPENDENCY_ERROR:
             self.log.write(msg="Dependency missing. Press any key to exit....", error_msg=True)
@@ -1252,6 +1268,9 @@ class PyRadio(object):
 
             self._cnf.setup_mouse()
 
+            ''' start theme file thread  '''
+            if self._cnf.auto_update_theme:
+                self._watch_theme(self._cnf.theme_path)
             while True:
                 try:
                     c = self.bodyWin.getch()
@@ -2323,8 +2342,10 @@ class PyRadio(object):
                      g| / |<n>G         |Jump to first or n-th / last theme.
                      Enter|,|Right|,|l    |Apply selected theme.
                      Space            |Apply theme and make it default.
-                     s                |Make theme default and close window.
+                     c                |Make theme default and watch it for
+                     |                 changes (|User Themes| only).
                      T                |Toggle theme transparency.
+                     r                |Rescan disk for user themes.
                      /| / |n| / |N        |Search, go to next / previous result.
                      Esc|,|q|,|Left|,|h     |Close window.
                      %_Global functions (with \ on Line editor)_
@@ -6142,7 +6163,9 @@ class PyRadio(object):
 
             #if self._cnf.theme_not_supported:
             #    self._show_theme_not_supported()
-            if theme_id == -1:
+            if theme_id == -4:
+                self.refreshBody()
+            elif theme_id == -1:
                 ''' cancel or hide '''
                 self._theme_name = self._theme_selector._applied_theme_name
                 if self._config_win:
@@ -6185,8 +6208,9 @@ class PyRadio(object):
                 # logger.error('4 redraw')
                 curses.doupdate()
                 ''' update config window '''
-                if self._config_win:
-                    self._config_win._config_options['theme'][1] = self._theme_name
+                if self._theme_selector.theme_path(theme_id):
+                    if self._config_win:
+                        self._config_win._config_options['theme'][1] = self._theme_name
                 if self.ws.window_mode == self.ws.CONFIG_MODE:
                     save_theme = True
                 # make default
@@ -6194,6 +6218,13 @@ class PyRadio(object):
                     self._cnf.theme = self._theme_name
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Setting default theme: {}'.format(self._theme_name))
+                    if self._theme_selector.theme_is_watched:
+                        self._cnf.opts['auto_update_theme'][1] = True
+                        self._watch_theme(self._theme_selector.theme_path(theme_id))
+                    else:
+                        self._cnf.opts['auto_update_theme'][1] = False
+                        self._watch_theme()
+
                 try:
                     self._watch_theme_lock.release()
                 except:

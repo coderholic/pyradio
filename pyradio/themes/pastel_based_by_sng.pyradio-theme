@@ -61,3 +61,9 @@ Messages Border     #ffcfb3
 #Messages Border     #9b86bf
 Messages Border     #8ceb76
 
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0
