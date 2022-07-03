@@ -51,6 +51,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
     * [User themes](#user-themes)
         * [Converting old themes](#converting-old-themes)
     * [Using transparency](#using-transparency)
+    * [Updating themes automatically](#updating-themes-automatically)
 * [Mouse support](#mouse-support)
 * [Titles logging](#titles-logging)
     * [Tagging a title](#tagging-a-title)
@@ -734,6 +735,8 @@ A clasic theme by [The OpenBSD Guy](https://github.com/OpenBSDGuy), originally c
 Two themes by [edunfelt](https://github.com/edunfelt) inspired by the [base16](https://github.com/base16-project) project.
 - **gruvbox_dark_by_sng** and **gruvbox_light_by_sng** \
 Two themes based on the [gruvbox](https://github.com/morhetz/gruvbox) theme.
+- **minima_by_ben_chile** \
+A theme by user [ben_chile](https://forum.maboxlinux.org/u/ben_chile) created on the [Mabox Linux](https://maboxlinux.org) Forum.
 - **pastel_based_by_sng** \
 A dim but colorful theme.
 
@@ -775,6 +778,13 @@ PyRadio URL         #a3b367
 # Message window borser foreground
 # (background color will come from Stations)
 Messages Border     #a3b367
+
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0
 ```
 
 Pressing "**t**" will bring up the *Theme selection window*, which can be used to activate a theme and set the default one.
@@ -782,6 +792,8 @@ Pressing "**t**" will bring up the *Theme selection window*, which can be used t
 **Note:** If the theme selected in the "*Theme selection window*", (or requested using the "**-t**" command line option), is in any way invalid, or is of the old format, **PyRadio** will fall-back to the "**dark**" theme and will display a relevant message.
 
 The "*Theme selection window*" will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "**q**" or any other relevant key - pressing "**?**" will bring up its help).
+
+Pressing "**SPACE**", will apply the theme and make it default, and pressing "**c**" will apply the theme and make it default and start a file watch function on the file, so that if the file changes, **PyRadio** will automatically update itself.
 
 ### CSS color themes restrictions
 
@@ -807,7 +819,7 @@ Users can easiliy create their own themes, using for example [CSS color names](h
 
 1. Save the theme provided as a template above in their themes folder using any (short) file name and a "**.pyradio-theme**" file extension. \
 \
-For this reason, a folder called "**themes**" will probably have to be created in **PyRadio** config directory (**~/.config/pyradio** or **%APPDATA\pyradio** on Windows)
+For this reason, a folder called "**themes**" will probably have to be created in **PyRadio** config directory (**~/.config/pyradio** or **%APPDATA%\\pyradio** on Windows)
 
 
 2. Customize it as desired
@@ -823,13 +835,31 @@ An old theme (using the old format) can be asily converted to the new format, us
 
 ### Using transparency
 
-**PyRadio** themes are able to be used with a transparent background.
+For **PyRadio**, transparency means that a theme's background actually disappears, effectively making it to display whatever is on the terminal (color/picture/transparency).  The visual result depends on terminal settings and whether a compositor is running.
 
-Pressing "**T**"  will toggle the transparency setting and save this state in **PyRadio**'s configuration file (transparency is off by default).
+Not all themes look good when transparency is ON, so themes can now declare whether they want to use transparency or not. This is the "**transparency**" variable of the theme, which can have these values:
 
-Setting transparency on, will actually force **PyRadio** to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency).  The visual result depends on terminal settings and whether a compositor is running.
+- 0 means that the theme looks better with no transparency (default)
+- 1 means that the theme looks better when transparency in ON
+- 2 means that the theme looks good either way, and the global transparency setting (defined in **PyRadio** config file) can be used.
+
+Please notice that this is just a hint; themes will obey the rules above, but transparency can still be toggled using "**T**" (capital "**t**").
 
 When the "*Theme selection window*" is visible, a "**[T]**" string displayed  at  its  bottom right corner will indicate that transparency is *on*.
+
+### Updating themes automatically
+
+Terminal users have been using all kind of software to change / update / adapt their terminal colors and palettes, such as [bASE16](https://github.com/chriskempson/base16), [pywal](https://github.com/dylanaraps/pywal), [wpgtk](https://github.com/deviantfero/wpgtk), [theme.sh](https://github.com/lemnos/theme.sh), to name a few.
+
+**PyRadio** is now able to "watch" a given theme for changes and update its colors whenever the theme changes.
+
+To set up a theme for auto update, one would just open the "*Theme Selection*" window, navigate to a theme under "**User Themes**" and press "**c**". To create a **user theme** just follow the procedure described in section [User themes](#user-themes).
+
+Consecuently, the default theme name will be preceded by:
+
+- "**\***" if the theme is the default one (the way it has always been).
+- "**+**" if the theme is the default one, and **PyRadio** will watch it for changes.
+
 
 ## Mouse support
 

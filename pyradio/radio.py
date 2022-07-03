@@ -1102,8 +1102,8 @@ class PyRadio(object):
         self._watch_theme_thread.start()
 
     def _auto_update_theme(self):
-        logger.error('_auto_update_theme(): triggered!')
-        ret, ret_theme_name = self._theme.readAndApplyTheme('auto')
+        logger.error('_auto_update_theme(): triggered! - updating theme: ' + self._cnf.theme)
+        ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.theme)
         if ret == 0:
             self._theme_name = self._cnf.theme
         else:
@@ -2341,8 +2341,10 @@ class PyRadio(object):
                      g| / |<n>G         |Jump to first or n-th / last theme.
                      Enter|,|Right|,|l    |Apply selected theme.
                      Space            |Apply theme and make it default.
-                     s                |Make theme default and close window.
+                     c                |Make theme default and watch it for
+                     |                 changes (|User Themes| only).
                      T                |Toggle theme transparency.
+                     r                |Rescan disk for user themes.
                      /| / |n| / |N        |Search, go to next / previous result.
                      Esc|,|q|,|Left|,|h     |Close window.
                      %_Global functions (with \ on Line editor)_
@@ -6160,7 +6162,9 @@ class PyRadio(object):
 
             #if self._cnf.theme_not_supported:
             #    self._show_theme_not_supported()
-            if theme_id == -1:
+            if theme_id == -4:
+                self.refreshBody()
+            elif theme_id == -1:
                 ''' cancel or hide '''
                 self._theme_name = self._theme_selector._applied_theme_name
                 if self._config_win:

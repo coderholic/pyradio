@@ -1982,7 +1982,8 @@ force_http = {7}
 #   black_on_white (bow) (256 colors)
 #   white_on_black (wob) (256 colors)
 # If theme is watched for changes, prepend its name
-# with an asterisk (i.e. '*dark')
+# with an asterisk (i.e. '*my_theme')
+# This is applicable for user themes only!
 # Default value = 'dark'
 theme = {8}
 

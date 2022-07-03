@@ -32,3 +32,9 @@ Messages Border     #c23827
 # Cursor foreground and background
 # This is the Line Editor cursor
 Edit Cursor         #ffffff #000000
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0

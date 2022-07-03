@@ -104,6 +104,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#converting-old-themes">Converting old themes</a></li>
 </ul></li>
 <li><a href="#using-transparency">Using transparency</a></li>
+<li><a href="#updating-themes-automatically">Updating themes automatically</a></li>
 </ul></li>
 <li><a href="#mouse-support">Mouse support</a></li>
 <li><a href="#titles-logging">Titles logging</a>
@@ -157,6 +158,13 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre style="height: 200px;">
+
+2022-07-03 s-n-g
+    * version 0.8.9.22 (0.9-beta19)
+    * themes can declare transparency hint
+    * theme auto update implemented
+    * themes updated (1 added)
+    * updating docs
 
 2022-06-26 s-n-g
     * version 0.8.9.21 (0.9-beta18)
@@ -1215,6 +1223,8 @@ A clasic theme by <a target="_blank" href="https://github.com/OpenBSDGuy">The Op
 Two themes by <a target="_blank" href="https://github.com/edunfelt">edunfelt</a> inspired by the <a target="_blank" href="https://github.com/base16-project">base16</a> project.</li>
 <li><strong>gruvbox_dark_by_sng</strong> and <strong>gruvbox_light_by_sng</strong><br />
 Two themes based on the <a target="_blank" href="https://github.com/morhetz/gruvbox">gruvbox</a> theme.</li>
+<li><strong>minima_by_ben_chile</strong><br />
+A theme by user <a target="_blank" href="https://forum.maboxlinux.org/u/ben_chile">ben_chile</a> created on the <a target="_blank" href="https://maboxlinux.org">Mabox Linux</a> Forum.</li>
 <li><strong>pastel_based_by_sng</strong><br />
 A dim but colorful theme.</li>
 </ul>
@@ -1252,10 +1262,18 @@ PyRadio URL         #a3b367
 
 # Message window borser foreground
 # (background color will come from Stations)
-Messages Border     #a3b367</pre>
+Messages Border     #a3b367
+
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0</pre>
 <p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the theme selected in the “<em>Theme selection window</em>”, (or requested using the “<strong>-t</strong>” command line option), is in any way invalid, or is of the old format, <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme and will display a relevant message.</p>
 <p>The “<em>Theme selection window</em>” will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
+<p>Pressing “<strong>SPACE</strong>”, will apply the theme and make it default, and pressing “<strong>c</strong>” will apply the theme and make it default and start a file watch function on the file, so that if the file changes, <strong>PyRadio</strong> will automatically update itself.</p>
 <h3 id="css-color-themes-restrictions">CSS color themes restrictions</h3>
 <p>Using CSS colors imposes a couple of restrictions on the type of terminals <strong>PyRadio</strong> will be able to run:</p>
 <ol type="1">
@@ -1276,7 +1294,7 @@ This means that, in order for a theme change to take full effect, <strong>PyRadi
 <ol type="1">
 <li>Save the theme provided as a template above in their themes folder using any (short) file name and a “<strong>.pyradio-theme</strong>” file extension.<br />
 <br />
-For this reason, a folder called “<strong>themes</strong>” will probably have to be created in <strong>PyRadio</strong> config directory (<strong>~/.config/pyradio</strong> or **%APPDATA* on Windows)</p></li>
+For this reason, a folder called “<strong>themes</strong>” will probably have to be created in <strong>PyRadio</strong> config directory (<strong>~/.config/pyradio</strong> or <strong>%APPDATA%\pyradio</strong> on Windows)</p></li>
 <li>Customize it as desired</p></li>
 <li>Load it from the “<em>Theme selection window</em>” (it will be found under “<strong>User Themes</strong>”).</p></li>
 </ol>
@@ -1284,10 +1302,24 @@ For this reason, a folder called “<strong>themes</strong>” will probably hav
 <p>An old theme (using the old format) can be asily converted to the new format, using the script found at <a target="_blank" href="https://gist.github.com/s-n-g/65aa6ae12e135481bf3a503ece4e92d2">this gist</a>.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> In order to get the color intended to be used, the same palette as the one used when the original theme was created, must be used.</p>
 <h3 id="using-transparency">Using transparency</h3>
-<p><strong>PyRadio</strong> themes are able to be used with a transparent background.</p>
-<p>Pressing “<strong>T</strong>” will toggle the transparency setting and save this state in <strong>PyRadio</strong>’s configuration file (transparency is off by default).</p>
-<p>Setting transparency on, will actually force <strong>PyRadio</strong> to not use its own background color, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
+<p>For <strong>PyRadio</strong>, transparency means that a theme’s background actually disappears, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
+<p>Not all themes look good when transparency is ON, so themes can now declare whether they want to use transparency or not. This is the “<strong>transparency</strong>” variable of the theme, which can have these values:</p>
+<ul>
+<li>0 means that the theme looks better with no transparency (default)</li>
+<li>1 means that the theme looks better when transparency in ON</li>
+<li>2 means that the theme looks good either way, and the global transparency setting (defined in <strong>PyRadio</strong> config file) can be used.</li>
+</ul>
+<p>Please notice that this is just a hint; themes will obey the rules above, but transparency can still be toggled using “<strong>T</strong>” (capital “<strong>t</strong>”).</p>
 <p>When the “<em>Theme selection window</em>” is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that transparency is <em>on</em>.</p>
+<h3 id="updating-themes-automatically">Updating themes automatically</h3>
+<p>Terminal users have been using all kind of software to change / update / adapt their terminal colors and palettes, such as <a target="_blank" href="https://github.com/chriskempson/base16">bASE16</a>, <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a>, <a target="_blank" href="https://github.com/deviantfero/wpgtk">wpgtk</a>, <a target="_blank" href="https://github.com/lemnos/theme.sh">theme.sh</a>, to name a few.</p>
+<p><strong>PyRadio</strong> is now able to “watch” a given theme for changes and update its colors whenever the theme changes.</p>
+<p>To set up a theme for auto update, one would just open the “<em>Theme Selection</em>” window, navigate to a theme under “<strong>User Themes</strong>” and press “<strong>c</strong>”. To create a <strong>user theme</strong> just follow the procedure described in section <a href="#user-themes">User themes</a>.</p>
+<p>Consecuently, the default theme name will be preceded by:</p>
+<ul>
+<li>“<strong>*</strong>” if the theme is the default one (the way it has always been).</li>
+<li>“<strong>+</strong>” if the theme is the default one, and <strong>PyRadio</strong> will watch it for changes.</li>
+</ul>
 <h2 id="mouse-support">Mouse support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Being a console application, <strong>PyRadio</strong> was never intended to work with a mouse.</p>
 <p>Furthermore, when using the mouse on a console application, the result is highly dependent on the terminal used and the way it implements mouse support.</p>

@@ -74,6 +74,9 @@ force_http = False
 #   light_16_colors (16 colors light theme alternative)
 #   black_on_white (bow) (256 colors)
 #   white_on_black (wob) (256 colors)
+# If theme is watched for changes, prepend its name
+# with an asterisk (i.e. '*my_theme')
+# This is applicable for user themes only!
 # Default value = 'dark'
 theme = dark
 

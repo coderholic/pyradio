@@ -36,7 +36,7 @@ class PyRadioTheme(object):
         self._read_colors = None
         self._temp_colors = None
 
-    def _do_init_pairs(self, transparency=None):
+    def _do_init_colors(self, transparency=None):
         if curses.can_change_color():
             if transparency is not None:
                 transp = transparency
@@ -74,7 +74,7 @@ class PyRadioTheme(object):
 
     def restoreActiveTheme(self):
         self._active_colors = deepcopy(self._read_colors)
-        self._do_init_pairs()
+        self._do_init_colors()
         self._update_colors()
         # curses.start_color()
 
@@ -99,6 +99,7 @@ class PyRadioTheme(object):
                 theme_path = value
         ret = self.open_theme(a_theme, theme_path)
         if ret < 0:
+            logger.error('self.applied_theme_name = {}'.format(self.applied_theme_name))
             self._load_default_theme(self.applied_theme_name)
             result = -1, self.applied_theme_name
         # elif self._applied_theme_max_colors > curses.COLORS:
@@ -111,13 +112,17 @@ class PyRadioTheme(object):
         self._active_colors = None
         self._active_colors = deepcopy(self._colors)
         transp = False
-        if use_transparency is None and self._transparent:
+        if self._colors['transparency'] == 0:
+            transp = False
+        elif self._colors['transparency'] == 1:
             transp = True
-        elif use_transparency:
-            self._transparent = transp = True
-        self._do_init_pairs(transparency=transp)
-
-
+        else:
+            if use_transparency is None and \
+                    self._transparent:
+                transp = True
+            elif use_transparency:
+                self._transparent = transp = True
+        self._do_init_colors(transparency=transp)
 
         self._read_colors = deepcopy(self._colors)
         return result, self.applied_theme_name
@@ -160,6 +165,7 @@ class PyRadioTheme(object):
             a_theme = 'dark'
 
         if a_theme == 'dark' or a_theme == 'default':
+            self._colors['transparency'] = 2
             self._colors['data'] = {1: (192, 192, 192), 2: (0, 0, 0), 3: (0, 128, 0), 4: (0, 0, 0), 5: (135, 0, 135), 6: (0, 0, 0), 7: (0, 128, 0), 8: (0, 0, 0), 9: (0, 128, 0), 10: (128, 128, 0), 11: (95, 135, 255), 12: (0, 255, 255), 13: (192, 192, 192), 14: (0, 0, 0)}
 
             ''' info '''
@@ -169,6 +175,7 @@ class PyRadioTheme(object):
 
         elif a_theme == 'dark_16_colors':
             ''' info '''
+            self._colors['transparency'] = 2
             self._colors['Name'] = 'dark_16_colors'
             self._colors['Path'] = ''
             self.applied_theme_name = 'dark_16_colors'
@@ -177,6 +184,7 @@ class PyRadioTheme(object):
         elif a_theme == 'light':
             ''' info '''
             self._colors['Name'] = 'light'
+            self._colors['transparency'] = 0
             self._colors['Path'] = ''
             self.applied_theme_name = 'light'
             self._colors['data'] = {1: (0, 0, 0), 2: (255,255, 255), 3: (128, 0, 0), 8: (192, 192, 192), 9: (0, 0, 128), 4: (192, 192, 192), 5: (128, 0, 128), 6: (192, 192, 192), 7: (0, 0, 128), 12: (0, 255, 255), 11: (0, 0, 128), 10: (128, 0, 128), 13: (255, 255, 255), 14: (128, 0, 0)}
@@ -184,6 +192,7 @@ class PyRadioTheme(object):
         elif a_theme == 'light_16_colors':
             ''' info '''
             self._colors['Name'] = 'light_16_colors'
+            self._colors['transparency'] = 0
             self._colors['Path'] = ''
             self.applied_theme_name = 'light_16_colors'
             self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (255, 0, 0), 8: (255, 255, 255), 9: (0, 0, 255), 4: (255, 255, 255), 5: (255, 0, 255), 6: (255, 255, 255), 7: (0, 0, 255), 12: (0, 255, 255), 11: (0, 0, 255), 10: (255, 0, 255), 13: (255, 255,255), 14: (255, 0, 0)}
@@ -191,6 +200,7 @@ class PyRadioTheme(object):
         elif a_theme == 'black_on_white' or a_theme == 'bow':
             ''' info '''
             self._colors['Name'] = 'black_on_white'
+            self._colors['transparency'] = 0
             self._colors['Path'] = ''
             self.applied_theme_name = 'black_on_white'
             self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (0, 0, 0), 8: (255, 255, 255), 9: (138, 138, 138), 4: (255, 255, 255), 5: (128, 128, 128), 6: (0, 0, 0), 7: (128, 128, 128), 12: (0, 255, 255), 11: (138, 138, 138), 10: (138, 138, 138), 13: (128, 128, 128), 14: (255, 255, 255)}
@@ -198,6 +208,7 @@ class PyRadioTheme(object):
         elif a_theme == 'white_on_black' or a_theme == 'wob':
             ''' info '''
             self._colors['Name'] = 'white_on_black'
+            self._colors['transparency'] = 2
             self._colors['Path'] = ''
             self.applied_theme_name = 'white_on_black'
             self._colors['data'] = {1: (158, 158, 158), 2: (38, 38, 38), 3: (238, 238, 238), 8: (28, 28, 28), 9: (218, 218, 218), 4: (38, 38, 38), 5: (158, 158, 158), 6: (38, 38, 38), 7: (218, 218, 218), 12: (218, 218, 218), 11: (138, 138, 138), 10: (158, 158, 158), 14: (38, 38, 38), 13: (238, 238, 238)}
@@ -347,17 +358,25 @@ class PyRadioThemeReadWrite(object):
                     except IndexError:
                         pass
 
-        self._temp_colors = { 'data': {}, 'css': {}}
+        self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 0}
         for name in names.keys():
-            try:
-                self._temp_colors['css'][self._param_to_color_id[name][0]] = names[name][0]
-            except KeyError:
-                logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
-                return 4, None
-            self._temp_colors['data'][self._param_to_color_id[name][0]] = hex_to_rgb(names[name][0])
-            if len(self._param_to_color_id[name]) == 2:
-                self._temp_colors['css'][self._param_to_color_id[name][1]] = names[name][1]
-                self._temp_colors['data'][self._param_to_color_id[name][1]] = hex_to_rgb(names[name][1])
+            if name != 'transparency':
+                try:
+                    self._temp_colors['css'][self._param_to_color_id[name][0]] = names[name][0]
+                except KeyError:
+                    logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
+                    return 4, None
+                self._temp_colors['data'][self._param_to_color_id[name][0]] = hex_to_rgb(names[name][0])
+                if len(self._param_to_color_id[name]) == 2:
+                    self._temp_colors['css'][self._param_to_color_id[name][1]] = names[name][1]
+                    self._temp_colors['data'][self._param_to_color_id[name][1]] = hex_to_rgb(names[name][1])
+            else:
+                try:
+                    self._temp_colors['transparency'] = int(names[name][0])
+                    if not self._temp_colors['transparency'] in range(0,3):
+                        self._temp_colors['transparency'] = 0
+                except ValueError:
+                    pass
 
         if self._theme_is_incomplete():
             logger.error('read_theme(): file is incomplete: {}'.format(theme_path))
@@ -368,7 +387,7 @@ class PyRadioThemeReadWrite(object):
         self._theme_path = theme_path
         self._temp_colors['Name'] = theme_name
         self._temp_colors['Path'] = theme_path
-        logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
+        # logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
         return 0, self._temp_colors
 
     def _theme_is_incomplete(self):
@@ -434,21 +453,21 @@ class PyRadioThemeSelector(object):
         self._normal_color_pair = normal_color_pair
         self._transparent = is_transparent
         self._theme_is_watched = is_watched
-        self._a_lock = a_lock
-        a_lock.acquire()
+        self._watch_theme_lock = a_lock
+        self._watch_theme_lock.acquire()
         if log_file:
             self._log_file = log_file
             self.log = self._log
 
         self._themes = []
-        logger.error('\n\n========== Theme Window')
-        logger.error('theme = {}'.format(theme))
-        logger.error('is_watched = {}'.format(is_watched))
-        logger.error('applied_theme_name = {}'.format(applied_theme_name))
-        logger.error('config_theme_name = {}'.format(config_theme_name))
-        logger.error('========== Theme Window End\n\n')
-        for n in self._cnf.opts.keys():
-            logger.error('{0}: {1}'.format(n, self._cnf.opts[n]))
+        # logger.error('\n\n========== Theme Window')
+        # logger.error('theme = {}'.format(theme))
+        # logger.error('is_watched = {}'.format(is_watched))
+        # logger.error('applied_theme_name = {}'.format(applied_theme_name))
+        # logger.error('config_theme_name = {}'.format(config_theme_name))
+        # logger.error('========== Theme Window End\n\n')
+        # for n in self._cnf.opts.keys():
+        #     logger.error('{0}: {1}'.format(n, self._cnf.opts[n]))
 
     @property
     def theme_is_watched(self):
@@ -565,10 +584,17 @@ class PyRadioThemeSelector(object):
         if self.log:
             self.log('config theme = {0}, applied theme = {1}\n'.format(self._config_theme, self._applied_theme))
         if touch_selection:
-            if self._applied_theme == -1:
+            if self._applied_theme == -1 or \
+                    self._selection >= len(self._themes):
                 self._selection = 0
             else:
                 self._selection = self._applied_theme
+        ''' make sure selection is valid
+            for example when a user theme is selected
+            and user themes are deleted and 'r' pressed
+        '''
+        if self._selection >= len(self._themes):
+            self._selection = 0
 
     def _get_metrics(self):
         maxY, maxX = self.parent.getmaxyx()
@@ -807,6 +833,7 @@ class PyRadioThemeSelector(object):
               -1    : end or canel
               -2    : ask to create a new theme
               -3    : go no
+              -4    : redisplay (scan for themes)
             save_them
               True  : theme is to be saved in config
               False : theme is not to be saved in config
@@ -828,6 +855,8 @@ class PyRadioThemeSelector(object):
         elif char in (ord('a'), ):
             ''' new theme '''
             pass
+        elif char in (ord('r'), ):
+            return -4, False
         elif char in (curses.KEY_ENTER, ord('\n'),
                       ord('\r'), ord('l'),
                       curses.KEY_RIGHT):

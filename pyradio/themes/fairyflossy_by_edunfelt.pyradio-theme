@@ -32,3 +32,9 @@ PyRadio URL         #b8a2ce
 # (background color will come from Stations)
 Messages Border     #9673d3
 
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0
