@@ -231,6 +231,11 @@ class PyRadio(object):
 
     _saved_colors = {}
 
+    ''' It is False before running setupAndDrawScreen
+        fir the first time. Then it is True...
+    '''
+    _screen_ready = False
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -564,13 +569,25 @@ class PyRadio(object):
         if curses.can_change_color() and curses.COLORS >= 16:
             self._theme._transparent = self._cnf.use_transparency
             self._theme.config_dir = self._cnf.stations_dir
-            ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name)
+            logger.error('1 - ok')
+            ''' In case we have to download a theme, and it takes too long  '''
+            if self._cnf.is_project_theme:
+                stdscr.addstr(0, 0, 'Downloading default theme...', curses.color_pair(0))
+                stdscr.refresh()
+            ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name, print_errors=stdscr)
             if ret == 0:
                 self._theme_name = self._theme.applied_theme_name
             else:
                 self._theme_name = ret_theme_name
                 self._cnf.theme_not_supported = True
                 self._cnf.theme_has_error = True if ret == -1 else False
+                logger.error('==== ret = {}'.format(ret))
+                logger.error('==== ret_theme_name = {}'.format(ret_theme_name))
+                logger.error('==== not supported = {0}, has error = {1}'.format(self._cnf.theme_not_supported, self._cnf.theme_has_error))
+                if self._cnf.is_project_theme:
+                    stdscr.addstr('\nTheme download failed...', curses.color_pair(0))
+                    stdscr.refresh()
+                    sleep(1)
 
         rev = self._cnf.get_pyradio_version()
         if logger.isEnabledFor(logging.INFO) and rev:
@@ -606,6 +623,7 @@ class PyRadio(object):
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen(init_from_setup=True)
+        self._screen_ready = True
 
         ''' position playlist in window '''
         try:
@@ -871,6 +889,7 @@ class PyRadio(object):
                 logger.debug('Redisplaying RadioBrowser Search Window!!!')
             self._browser_search()
 
+        logger.error('self._cnf.theme_download_failed = {}'.format(self._cnf.theme_download_failed))
         if self._cnf.integrate_stations and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             ''' display ask to integrate stations '''
@@ -878,11 +897,17 @@ class PyRadio(object):
         elif self._cnf.playlist_recovery_result == -1:
             ''' display playlist recovered '''
             self._show_playlist_recovered()
+        # elif not self._cnf.theme_download_failed:
+        #     self._cnf.theme_not_supported = False
+        #     self._cnf.theme_has_error = False
+        #     self._cnf.theme_not_supported_notification_shown = False
+        #     self._print_theme_download_error()
         elif self._cnf.theme_not_supported:
             ''' display theme not supported '''
             self._show_theme_not_supported()
         elif self._cnf.user_param_id == -1:
             self._print_user_parameter_error()
+
         self._update_history_positions_in_list()
 
     def refreshNoDepencency(self):
@@ -1091,18 +1116,26 @@ class PyRadio(object):
         if theme_path is None:
             return
         else:
-            path = theme_path
+            a_path = theme_path
+            logger.error('_watch_theme(): ' + a_path)
+            logger.error('config theme: {}'.format(self._cnf.theme))
+            logger.error('config theme: {}'.format(self._cnf.theme_path))
         self._watch_theme_thread = threading.Thread(
             target=self._wait_for_theme_to_change,
             # args=(self._cnf,
-            args=(path,
+            # args=(path.basename(a_path).replace('.pyradio-theme', ''),
+            #       a_path,
+            args=(self._cnf.theme,
+                  self._cnf.theme_path,
                   self._watch_theme_lock,
                   lambda: self.stop_watch_theme_thread,
-                  self._auto_update_theme))
+                  self._auto_update_theme,
+                  self._cnf))
         self._watch_theme_thread.start()
 
     def _auto_update_theme(self):
         logger.error('_auto_update_theme(): triggered! - updating theme: ' + self._cnf.theme)
+        logger.error('2')
         ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.theme)
         if ret == 0:
             self._theme_name = self._cnf.theme
@@ -1112,83 +1145,104 @@ class PyRadio(object):
             self._cnf.theme_not_supported = True
         self._redraw()
         curses.doupdate()
+        if self._cnf.theme_download_failed:
+            logger.info('_print_theme_download_error 1')
+            self._print_theme_download_error()
 
-    def _wait_for_theme_to_change(self, file, a_lock, stop, func):
+    def _wait_for_theme_to_change(self, theme, file, a_lock, stop, func, config):
+        is_project_theme = False
+        a_file = file
+        logger.error('checking: ' + theme)
+        ret, ret_ind = config.is_project_theme(theme)
+        if ret is not None:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Watching project theme: ' + theme)
+            is_project_theme = True
+            a_file = ret.check_file
+            ret.theme_id = ret_ind
+        else:
+            logger.error('not a project theme!')
+
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('File watch thread started on: {}'.format(file))
+            logger.debug('File watch thread started on: {}'.format(a_file))
+
         showed = False
-        while not path.exists(file):
+        while not path.exists(a_file):
             if logger.isEnabledFor(logging.DEBUG) and not showed:
-                logger.debug('Waiting for watched file to appear: {}'.format(file))
+                logger.debug('Waiting for watched file to appear: {}'.format(a_file))
                 showed = True
             for n in range(0, 5):
                 sleep(.15)
                 if stop():
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('File watch thread stopped on: {}'.format(file))
+                        logger.debug('File watch thread stopped on: {}'.format(a_file))
                     return
 
         if logger.isEnabledFor(logging.DEBUG) and showed:
-            logger.debug('Watched file appeared: {}'.format(file))
+            logger.debug('Watched file appeared: {}'.format(a_file))
             showed = False
-        st_time = cur_time = getmtime(file)
-        st_size = cur_size = getsize(file)
+        st_time = cur_time = getmtime(a_file)
+        st_size = cur_size = getsize(a_file)
         while True:
-            if path.exists(file):
+            if path.exists(a_file):
                 for n in range(0, 5):
                     sleep(.15)
                     if stop():
                         break
                 try:
-                    cur_time = getmtime(file)
+                    cur_time = getmtime(a_file)
                     showed = False
                 except:
                     if logger.isEnabledFor(logging.DEBUG) and not showed:
-                        logger.debug('Watched file disappeared: {}'.format(file))
+                        logger.debug('Watched file disappeared: {}'.format(a_file))
                         showed = True
                 if st_time != cur_time:
                     if stop():
                         break
                     try:
-                        st_time = cur_time = getmtime(file)
-                        st_size = cur_size = getsize(file)
+                        st_time = cur_time = getmtime(a_file)
+                        st_size = cur_size = getsize(a_file)
                         showed = False
                     except:
                         if logger.isEnabledFor(logging.DEBUG) and not showed:
-                            logger.debug('Watched file disappeared: {}'.format(file))
+                            logger.debug('Watched file disappeared: {}'.format(a_file))
                             showed = True
+                    if stop():
+                        break
                     with a_lock:
                         func()
                 if stop():
                     break
                 try:
-                    cur_size = getsize(file)
+                    cur_size = getsize(a_file)
                     showed = False
                 except:
                     if logger.isEnabledFor(logging.DEBUG) and not showed:
-                        logger.debug('Watched file disappeared: {}'.format(file))
+                        logger.debug('Watched file disappeared: {}'.format(a_file))
                         showed = True
                 if st_size != cur_size:
                     if stop():
                         break
-                    st_time = cur_time = getmtime(file)
-                    st_size = cur_size = getsize(file)
+                    st_time = cur_time = getmtime(a_file)
+                    st_size = cur_size = getsize(a_file)
+                    if stop():
+                        break
                     with a_lock:
                         func()
                 if stop():
                     break
             else:
                 if logger.isEnabledFor(logging.DEBUG) and not showed:
-                    logger.debug('File watched does not exist: {}'.format(file))
+                    logger.debug('File watched does not exist: {}'.format(a_file))
                     showed = True
                 for n in range(0, 5):
                     sleep(.15)
                     if stop():
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('File watch thread stopped on: {}'.format(file))
+                            logger.debug('File watch thread stopped on: {}'.format(a_file))
                         return
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('File watch thread stopped on: {}'.format(file))
+            logger.debug('File watch thread stopped on: {}'.format(a_file))
 
     def run(self):
         # self._watch_theme()
@@ -1268,6 +1322,11 @@ class PyRadio(object):
 
             self._cnf.setup_mouse()
 
+
+            if self._cnf.theme_has_error:
+                self._show_theme_not_supported()
+            if self._cnf.theme_download_failed:
+                self._print_theme_download_error()
             ''' start theme file thread  '''
             if self._cnf.auto_update_theme:
                 self._watch_theme(self._cnf.theme_path)
@@ -2058,20 +2117,22 @@ class PyRadio(object):
         self.refreshBody()
 
     def _show_theme_not_supported(self):
-        if self._cnf.theme_not_supported_notification_shown:
+        if self._cnf.theme_not_supported_notification_shown \
+                or not self._screen_ready:
             return
-        if self._cnf.theme_has_error:
-            txt = '|Error loading selected theme!|\n____Using |fallback| theme.'
-        else:
-            tmp = ['', '', '']
-            tmp[0] = '|Theme not supported!|'
-            tmp[1] = 'This terminal supports up to |{}| colors...'.format(curses.COLORS)
-            tmp[2] = 'Using |fallback| theme.'
-            while len(tmp[0]) < len(tmp[1]) - 2:
-                tmp[0] = '_' + tmp[0] + '_'
-            while len(tmp[2]) < len(tmp[1]):
-                tmp[2] = '_' + tmp[2] + '_'
-            txt = '\n'.join(tmp)
+        txt = '|Error loading selected theme!|\n____Using |fallback| theme.'
+        # if self._cnf.theme_has_error:
+        #     txt = '|Error loading selected theme!|\n____Using |fallback| theme.'
+        # else:
+        #     tmp = ['', '', '']
+        #     tmp[0] = '|Theme not supported!|'
+        #     tmp[1] = 'This terminal supports up to |{}| colors...'.format(curses.COLORS)
+        #     tmp[2] = 'Using |fallback| theme.'
+        #     while len(tmp[0]) < len(tmp[1]) - 2:
+        #         tmp[0] = '_' + tmp[0] + '_'
+        #     while len(tmp[2]) < len(tmp[1]):
+        #         tmp[2] = '_' + tmp[2] + '_'
+        #     txt = '\n'.join(tmp)
         self._show_help(txt,
                         mode_to_set=self.ws.operation_mode,
                         caption='',
@@ -2093,6 +2154,8 @@ class PyRadio(object):
     def closeThemeNotSupportedNotification(self, *arg, **karg):
         #arg[1].acquire()
         self._cnf.theme_not_supported = False
+        self._cnf.theme_has_error = False
+        self._cnf.theme_download_failed = False
         self._cnf.theme_not_supported_notification_shown = True
         self._theme_not_supported_notification_duration = 0.75
         #arg[1].release()
@@ -3103,6 +3166,22 @@ class PyRadio(object):
                         caption=' Unknown Service ',
                         prompt=' Press any key ',
                         is_message=True)
+
+    def _print_theme_download_error(self):
+        if self._screen_ready:
+            self._cnf.theme_not_supported = False
+            self._cnf.theme_has_error = False
+            self._cnf.theme_download_failed = False
+            self._cnf.theme_not_supported_notification_shown = False
+            txt='____|Theme download failed!!!|____\n______Loading |default| theme..._____'
+
+            self._show_help(txt,
+                            mode_to_set=self.ws.operation_mode,
+                            caption='',
+                            prompt='', is_message=True)
+            a_thread = threading.Timer(1.75, self.refreshBody)
+            a_thread.start()
+            a_thread.join()
 
     def _print_not_applicable(self):
         txt = ('_Operation not applicable here_',
@@ -5661,6 +5740,7 @@ class PyRadio(object):
                     ''' restore theme, if necessary '''
                     if self._cnf.opts['theme'][1] != self._config_win._config_options['theme'][1]:
                         #self._config_win._apply_a_theme(self._cnf.opts['theme'][1])
+                        logger.error('3')
                         ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.opts['theme'][1])
                         if ret == 0:
                             self._theme_name = self._cnf.theme
@@ -5671,6 +5751,9 @@ class PyRadio(object):
                         self._redraw()
                         # logger.error('4 redraw')
                         curses.doupdate()
+                        if self._cnf.theme_download_failed:
+                            logger.info('_print_theme_download_error 2')
+                            self._print_theme_download_error()
                     ''' make sure config is not saved '''
                     self._config_win._saved_config_options['dirty_config'][1] = False
                     self._cnf.dirty_config = False
@@ -6193,12 +6276,21 @@ class PyRadio(object):
                     self._config_win._saved_config_options['theme'][1] = self._theme_name
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Activating theme: {}'.format(self._theme_name))
-                ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name,
-                        theme_path=self._theme_selector._themes[theme_id][1])
+                logger.error('4')
+                ret, ret_theme_name = self._theme.readAndApplyTheme(
+                    self._theme_name,
+                    theme_path=self._theme_selector._themes[theme_id][1]
+                )
+                logger.error('ret = {}'.format(ret))
+                logger.error('ret_theme_name = {}'.format(ret_theme_name))
                 if isinstance(ret, tuple):
                     ret = ret[0]
+                logger.error('self._theme_name: "{}"'.format(self._theme_name))
                 if ret < 0:
-                    self._theme_name = ret_theme_name
+                    ch_ret, _ = self._cnf.is_project_theme(self._theme_name)
+                    if ch_ret is None and \
+                            not self._cnf.auto_update_theme:
+                        self._theme_name = ret_theme_name
                     self._cnf.theme_not_supported = True
                     self._cnf.theme_has_error = True if ret == -1 else False
                     self._cnf.theme_not_supported_notification_shown = False
@@ -6207,10 +6299,11 @@ class PyRadio(object):
                 self._redraw()
                 # logger.error('4 redraw')
                 curses.doupdate()
+                # if self._cnf.theme_download_failed:
+                #     self._print_theme_download_error()
+                #     logger.info('_print_theme_download_error 3')
                 ''' update config window '''
-                if self._theme_selector.theme_path(theme_id):
-                    if self._config_win:
-                        self._config_win._config_options['theme'][1] = self._theme_name
+                logger.error('self._theme_name: "{}"'.format(self._theme_name))
                 if self.ws.window_mode == self.ws.CONFIG_MODE:
                     save_theme = True
                 # make default

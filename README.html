@@ -105,6 +105,14 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#using-transparency">Using transparency</a></li>
 <li><a href="#updating-themes-automatically">Updating themes automatically</a></li>
+<li><a href="#using-project-themes">Using Project Themes</a>
+<ul>
+<li><a href="#1.-base16">1. base16</a>
+<ul>
+<li><a href="#using-the-themes-without-base16">Using the themes without base16</a></li>
+</ul></li>
+<li><a href="#2.-pywal">2. pywal</a></li>
+</ul></li>
 </ul></li>
 <li><a href="#mouse-support">Mouse support</a></li>
 <li><a href="#titles-logging">Titles logging</a>
@@ -126,6 +134,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#packaging-pyradio">Packaging PyRadio</a></li>
 <li><a href="#todo">TODO</a></li>
 <li><a href="#acknowledgment">Acknowledgment</a></li>
+<li><a href="#special-thanks">Special thanks</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <h2 id="features">Features <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
@@ -1320,6 +1329,21 @@ For this reason, a folder called “<strong>themes</strong>” will probably hav
 <li>“<strong>*</strong>” if the theme is the default one (the way it has always been).</li>
 <li>“<strong>+</strong>” if the theme is the default one, and <strong>PyRadio</strong> will watch it for changes.</li>
 </ul>
+<h3 id="using-project-themes">Using Project Themes</h3>
+<p><strong>PyRadio</strong> is able to use (and watch) the output of certain projects that modify terminal colors.</p>
+<p><strong>PyRadio</strong> will detect theses projects (programs installed and initialized), and will add them under the “<strong>Ext. Themes Projects</strong>” section of the “<em>Themes Selection Window</em>.”</p>
+<p>If loading any of these themes fails, the default <strong>dark</strong> theme will be loaded, but contrary to a local theme being invalid, the selection will persist (so that the theme gets loaded wheneve it is available).</p>
+<p>Currently, the following projects are supported:</p>
+<h4 id="base16">1. <a target="_blank" href="https://github.com/base16-project">base16</a></h4>
+<p>Thanks to the wonderful work by user <a target="_blank" href="https://github.com/edunfelt">edunfelt</a>, there is now a <strong>PyRadio</strong> base16 template in place, and themes have been produced based on the project (there are more than 900 themes available).</p>
+<p>This implementation will add four entries in the theme selection menu (with alternative and variant forms of the main theme).</p>
+<p>Then, any of the themes can either be activated or watched; in which case <strong>PyRadio</strong> will download and apply the corresponding theme.</p>
+<h5 id="using-the-themes-without-base16">Using the themes without base16</h5>
+<p>In case one wants to use any of these themes, but not install or use <a target="_blank" href="https://github.com/base16-project">base16</a>, one can get them <a target="_blank" href="https://github.com/edunfelt/base16-pyradio">from this repo</a>, and use the “<em>cycle_themes.py</em>” and “<em>install_themes.py</em>” scripts to inspect and install them.</p>
+<h4 id="pywal">2. <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a></h4>
+<p>When detected, two themes will be added to the menu; the main and the alternative form.</p>
+<p>Since these themes are generated on the fly, as the wallpaper changes, there is no way to use them if <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a> is not in use.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a> themes are activated but not watched, the theme will be corrupted when the wallpaper changes, and will have to be manually reloaded. So, it’s better to just always watch these themes.</p>
 <h2 id="mouse-support">Mouse support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Being a console application, <strong>PyRadio</strong> was never intended to work with a mouse.</p>
 <p>Furthermore, when using the mouse on a console application, the result is highly dependent on the terminal used and the way it implements mouse support.</p>
@@ -1468,6 +1492,10 @@ New player selection configuration window (<a target="_blank" href="https://gith
 <li><a target="_blank" href="https://gitlab.com/fgallaire/cjkwrap">CJKwrap</a> by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.</p></li>
 <li><a target="_blank" href="https://ranger.github.io/">ranger</a> - A console file manager with VI key bindings.</p></li>
 <li><a target="_blank" href="https://vifm.info/">Vifm</a> - A file manager with curses interface, which provides a Vi[m]-like environment.</p></li>
+</ol>
+<h2 id="special-thanks">Special thanks <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<ol type="1">
+<li><strong>PyRadio</strong> user <a target="_blank" href="https://github.com/edunfelt">edunfelt</a>, for her wonderful work on <a href="%5Bedunfelt%5D(https://github.com/edunfelt)">base16</a> themes, and ideas regarding theming and such.</li>
 </ol>
 </body>
 </html>

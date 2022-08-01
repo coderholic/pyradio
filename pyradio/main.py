@@ -333,6 +333,7 @@ def shell():
             if last_playlist:
                 args.stations = last_playlist
                 is_last_playlist = True
+
         ret = pyradio_config.read_playlist_file(
             stationFile=args.stations,
             is_last_playlist=is_last_playlist)

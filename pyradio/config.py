@@ -5,9 +5,10 @@ import logging
 import glob
 import curses
 import collections
-from os import path, getenv, makedirs, remove, rename
+import json
+from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR
 from sys import platform
-from time import ctime
+from time import ctime, sleep
 from datetime import datetime
 from shutil import copyfile, move
 import threading
@@ -17,6 +18,7 @@ from pyradio import version, stations_updated
 from .browser import PyRadioStationsBrowser, probeBrowsers
 from .install import get_github_long_description
 from .common import is_rasberrypi
+from .player import pywhich
 HAS_REQUESTS = True
 try:
     import requests
@@ -121,6 +123,15 @@ class PyRadioStations(object):
                     print('Error: Cannot create config directory: "{}"'.format(a_dir))
                     sys.exit(1)
         self.root_path = path.join(path.dirname(__file__), 'stations.csv')
+
+        self.themes_dir = path.join(self.stations_dir, 'themes')
+        try:
+            makedirs(self.themes_dir, exist_ok = True)
+        except:
+            try:
+                makedirs(self.themes_dir)
+            except:
+                pass
 
         self._ps = PyRadioPlaylistStack()
 
@@ -1084,6 +1095,7 @@ class PyRadioConfig(PyRadioStations):
 
     theme_not_supported = False
     theme_has_error = False
+    theme_download_failed = False
     theme_not_supported_notification_shown = False
 
     log_titles = False
@@ -1198,6 +1210,14 @@ class PyRadioConfig(PyRadioStations):
         self.force_to_remove_lock_file = False
         self.titles_log = PyRadioLog(self)
         #self.titles_log = PyRadioLog(self.stations_dir)
+
+        ''' auto update programs
+            Currently, base16 only
+        '''
+        self.base16_themes = PyRadioBase16Themes(self)
+        self.pywal_themes = PyRadioPyWalThemes(self)
+        self.theme_sh_themes = PyRadioThemesShThemes(self)
+        self.auto_update_frameworks = ( self.base16_themes, self.pywal_themes, self.theme_sh_themes)
 
     @property
     def open_last_playlist(self):
@@ -1456,6 +1476,25 @@ class PyRadioConfig(PyRadioStations):
     @session_lock_file.setter
     def session_lock_file(self, val):
         return
+
+    def is_project_theme(self, a_theme_name):
+        ''' Check if a theme name is in auto_update_frameworks
+            If it is, return
+                classe's instance, the index in THEME
+            Else, return
+                None, -1
+        '''
+        for n in self.auto_update_frameworks:
+            if a_theme_name in n.THEME:
+                logger.error('checking: ' + a_theme_name)
+                return n, n.THEME.index(a_theme_name)
+        return None, -1
+
+    def is_default_file(self, a_theme_name):
+        for n in self.auto_update_frameworks:
+            if a_theme_name == n._deault_filename_only:
+                return True
+        return False
 
     def get_pyradio_version(self):
         ''' reads pyradio version from installed files
@@ -2438,4 +2477,613 @@ class PyRadioLog(object):
                 return 0
         return 2
 
+class PyRadioBase16Themes(object):
 
+    NAME = 'Base16 Project'
+    ''' theme name to be found in themes window '''
+    THEME = (
+        'base16-pyradio-default',
+        'base16-pyradio-default-alt',
+        'base16-pyradio-variation',
+        'base16-pyradio-variation-alt'
+    )
+    ''' To be used in get_url (along with theme_id) '''
+    URL_PART = (
+        'default',
+        'default-alt',
+        'variation',
+        'variation-alt'
+    )
+    ''' last used theme name (no "base16-", no extension) '''
+    _last_used_theme = None
+    '''  link to last used base16 theme '''
+    _ln = path.join(getenv('HOME', '~'), '.config/base16-project/base16_shell_theme')
+    ''' pyradio base16 file for auto download '''
+    _default_theme_file = None
+    ''' the default base16 file, without path and extension '''
+    _deault_filename_only = 'base16-pyradio'
+    ''' pyradio base16 them for download '''
+    _custom_theme_file = None
+
+    ''' working parameters'''
+    ''' applied name
+        to be used by download()
+    '''
+    theme_id = 0
+    ''' applied theme filename (if autoloaed, = _default_theme_file)
+        to be used by download()
+    '''
+    theme_file_name = _default_theme_file
+    # applied theme url
+    theme_url = None
+
+
+    def __init__(self, config):
+        self._cnf = config
+        self._themes_dir = config.themes_dir
+        ''' base16 autoload filename '''
+        self._custom_theme_file = path.join(self._themes_dir, self.THEME[self.theme_id] + '.pyradio-theme')
+        self._default_theme_file = path.join(self._themes_dir, 'base16-pyradio.pyradio-theme')
+
+    @property
+    def check_file(self):
+        return self._ln
+
+    @property
+    def default_theme_path(self):
+        return self._default_theme_file
+
+    @property
+    def theme_path(self):
+        return self._custom_theme_file
+
+    @property
+    def can_auto_update(self):
+        if platform.startswith('win'):
+            ''' base16 does not work on windows '''
+            return False
+        return True if path.exists(self._ln) else False
+
+    @property
+    def last_used_theme(self):
+        if path.exists(self._ln):
+            try:
+                self._last_used_theme = path.basename(readlink(self._ln)[7:-3])
+            except:
+                self._last_used_theme = None
+        else:
+            self._last_used_theme = None
+        return self._last_used_theme
+
+    def get_url(self, a_theme=None):
+        base_url = 'https://raw.githubusercontent.com/edunfelt/base16-pyradio/master/themes'
+        w_theme = self.last_used_theme if a_theme is None else a_theme
+        # if self._last_used_theme is None:
+        #     return None
+        if not w_theme.startswith('base16-'):
+            w_theme = 'base16-' + w_theme
+        if not w_theme.endswith('.pyradio-theme'):
+            w_theme += '.pyradio-theme'
+        # logger.error('get_url(): url = {}'.format(base_url + '/' + self.URL_PART[self.theme_id] + '/' + w_theme))
+        return base_url + '/' + self.URL_PART[self.theme_id] + '/' + w_theme
+
+    def download(self, a_theme=None, a_path=None, print_errors=None):
+        ''' download a theme
+            return False if failed...
+            delete downloaded file if failed
+
+            Parameters
+            ==========
+            a_theme
+                the theme name (no path, no extension)
+                if None, use self.check_file content
+            a_path
+                full path to save the theme to
+                if None, use self._custom_theme_file
+        '''
+        if a_theme is None:
+            try:
+                if self.can_auto_update:
+                    # w_theme = path.basename(readlink(self._ln)[:-3]) + '.pyradio-theme'
+                    w_theme = path.basename(readlink(self._ln))[7:-3]
+                else:
+                    return False, None
+            except:
+                return False, None
+        else:
+            w_theme = a_theme
+        w_path = self._default_theme_file if a_path is None else a_path
+
+        url = self.get_url(w_theme)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Project theme URL: "{}"'.format(url))
+
+        ret = False
+        # logger.error('w_path = {}'.format(w_path))
+        requests_response = None
+        written = False
+        line_num = 1
+        for n in range(0,5):
+            try:
+                requests_response = requests.get(url, timeout=1)
+                requests_response.raise_for_status()
+                try:
+                    with open(w_path, 'w') as f:
+                        pass
+                        f.write(requests_response.text)
+                    written = True
+                except:
+                    pass
+                    logger.error('cannot write file')
+                    if print_errors is not None:
+                        print_errors.addstr(n + 1, 0, '  download failed, retrying...', curses.color_pair(0))
+                        print_errors.refresh()
+            except requests.exceptions.RequestException as e:
+                if print_errors is not None:
+                    print_errors.addstr(n + 1, 0, '  download failed, retrying...', curses.color_pair(0))
+                    print_errors.refresh()
+                logger.error('requests through an exception')
+                sleep(.15)
+            if requests_response.status_code == 200 and written:
+                break
+
+        self.theme = self._last_used_theme
+        self.theme_file_name = w_path
+        self.theme_url = url
+        self.status = requests_response.status_code
+
+        ret = requests_response.status_code == 200 and written
+        logger.error('download(): ret = {}'.format(ret))
+        if not ret:
+            try:
+               remove(w_path)
+            except:
+                pass
+        return ret, w_path
+
+
+class PyRadioPyWalThemes(PyRadioBase16Themes):
+    NAME = 'PyWal Project'
+    ''' theme name to be found in themes window '''
+    THEME = (
+        'pywal-pyradio-default',
+        'pywal-pyradio-default-alt',
+    )
+    ''' To be used in get_url (along with theme_id) '''
+    URL_PART = (
+        'default',
+        'default-alt',
+    )
+    '''  link to last used base16 theme '''
+    _ln = path.join(getenv('HOME', '~'), '.cache/wal/colors.json')
+
+    def __init__(self, config):
+        self._cnf = config
+        self._themes_dir = config.themes_dir
+        self._custom_theme_file = path.join(self._themes_dir, self.THEME[self.theme_id] + '.pyradio-theme')
+        self._default_theme_file = path.join(self._themes_dir, 'pywal-pyradio.pyradio-theme')
+
+    def download(self, a_theme=None, a_path=None, print_errors=None):
+        ''' download a theme
+            return False if failed...
+            delete downloaded file if failed
+
+            Parameters
+            ==========
+            a_theme
+                the theme name (no path, no extension)
+                if None, use self.check_file content
+            a_path
+                full path to save the theme to
+                if None, use self._custom_theme_file
+        '''
+        logger.error('here I am')
+        templates = ('''# Main foreground and background
+Stations            {color15} {color0}
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      {color1}
+
+# Status bar foreground and background
+Status Bar          {color0} {color3}
+
+# Normal cursor foreground and background
+Normal Cursor       {color0} {color3}
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       {color0} {color1}
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         {color15} {color5}
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          {color7}
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         {color2}
+
+# Message window borser foreground
+# (background color will come from Stations)
+Messages Border     {color4}
+
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0
+''', '''# Main foreground and background
+Stations            {color15} {color0}
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      {color3}
+
+# Status bar foreground and background
+Status Bar          {color0} {color6}
+
+# Normal cursor foreground and background
+Normal Cursor       {color0} {color6}
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       {color0} {color3}
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         {color15} {color5}
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          {color7}
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         {color4}
+
+# Message window borser foreground
+# (background color will come from Stations)
+Messages Border     {color2}
+
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0
+'''
+        )
+        logger.error('here I am again')
+        if a_theme is None:
+            try:
+                if not self.can_auto_update:
+                    logger.error('return from 1')
+                    return False, None
+            except:
+                logger.error('return from 2')
+                return False, None
+        else:
+            w_theme = a_theme
+        w_path = self._default_theme_file if a_path is None else a_path
+        logger.error('w_path =' + w_path)
+
+        with open(self._ln, 'r') as jfile:
+            jdata = json.load(jfile)
+
+        lines = templates[self.theme_id].split('\n')
+        logger.error(templates[self.theme_id])
+        logger.error('\n\n')
+        logger.error(lines)
+        logger.error('\n\n')
+        for k in jdata['colors'].keys():
+            for i in range(0, len(lines)):
+                lines[i] = lines[i].replace('{' + k + '}', jdata['colors'][k])
+
+        ret = True
+        logger.error(lines)
+        try:
+            with open(w_path, 'w') as out_file:
+                for n in lines:
+                    out_file.write(n + '\n')
+        except:
+            ret = False
+
+        if ret:
+            return True, w_path
+        else:
+            try:
+                remove(w_path)
+            except:
+                pass
+            return False, None
+
+
+class PyRadioThemesShThemes(PyRadioBase16Themes):
+    NAME = 'PyWal Project'
+    ''' theme name to be found in themes window '''
+    THEME = (
+        'theme_sh-pyradio-default',
+        'theme_sh-pyradio-default-alt',
+        'theme_sh-pyradio-variation',
+        'theme_sh-pyradio-variation-alt',
+    )
+    ''' To be used in get_url (along with theme_id) '''
+    URL_PART = (
+        'default',
+        'default-alt',
+        'variation',
+        'variation-alt',
+    )
+    '''  link to last used base16 theme '''
+
+    def __init__(self, config):
+        self._cnf = config
+        self._themes_dir = config.themes_dir
+        self._custom_theme_file = path.join(self._themes_dir, self.THEME[self.theme_id] + '.pyradio-theme')
+        self._default_theme_file = path.join(self._themes_dir, 'pywal-pyradio.pyradio-theme')
+        self._theme_sh_executable = pywhich('theme.sh')
+
+        xdg = getenv('XDG_CONFIG_HOME')
+        if xdg:
+            self._ln = path.join(xdg, '.theme_history')
+        else:
+            self._ln = path.join(getenv('HOME', '~'), '.theme_history')
+
+    @property
+    def can_auto_update(self):
+        if platform.startswith('win'):
+            ''' base16 does not work on windows '''
+            return False
+
+        if not path.exists(self._ln):
+            return False
+
+        if self._theme_sh_executable is None:
+            return False
+        return True
+
+    def download(self, a_theme=None, a_path=None, print_errors=None):
+        ''' read theme name from self._ln
+            read theme data from self._theme_sh_executable
+            return False if failed...
+            delete downloaded file if failed
+
+            Parameters
+            ==========
+            a_theme
+                the theme name (no path, no extension)
+                if None, use self.check_file content
+            a_path
+                full path to save the theme to
+                if None, use self._custom_theme_file
+        '''
+        theme_name = self._read_last_line_from_ln()
+        w_path = self._default_theme_file if a_path is None else a_path
+        logger.error('actual theme name:' + theme_name)
+        theme_data = self._read_theme_sh(theme_name)
+        logger.error(theme_data)
+        templates = ('''# Main foreground and background
+Stations            {foreground} {background}
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      {color1}
+
+# Status bar foreground and background
+Status Bar          {background} {color4}
+
+# Normal cursor foreground and background
+Normal Cursor       {background} {color4}
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       {background} {color1}
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         {background} {foreground}
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          {color1}
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         {color2}
+
+# Message window borser foreground
+# (background color will come from Stations)
+Messages Border     {color8}
+
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0
+''', '''# Main foreground and background
+Stations            {foreground} {background}
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      {color4}
+
+# Status bar foreground and background
+Status Bar          {background} {color1}
+
+# Normal cursor foreground and background
+Normal Cursor       {background} {color1}
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       {background} {color4}
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         {background} {foreground}
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          {color4}
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         {color2}
+
+# Message window borser foreground
+# (background color will come from Stations)
+Messages Border     {color8}
+
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency       0
+''', '''# Main foreground and background
+Stations            {foreground} {background}
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      {color1}
+
+# Status bar foreground and background
+Status Bar          {background} {color2}
+
+# Normal cursor foreground and background
+Normal Cursor       {background} {color2}
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       {background} {color1}
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         {background} {foreground}
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          {color1}
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         {foreground}
+
+# Message window borser foreground
+# (background color will come from Stations)
+Messages Border     {color8}
+
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0
+''', '''# Main foreground and background
+Stations            {foreground} {background}
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      {color2}
+
+# Status bar foreground and background
+Status Bar          {background} {color1}
+
+# Normal cursor foreground and background
+Normal Cursor       {background} {color1}
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       {background} {color2}
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         {background} {foreground}
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          {color2}
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         {foreground}
+
+# Message window borser foreground
+# (background color will come from Stations)
+Messages Border     {color8}
+
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0
+'''
+        )
+        lines = templates[self.theme_id].split('\n')
+        logger.error('here I am again')
+        for k in 'foreground', 'background':
+            for i in range(0, len(lines)):
+                lines[i] = lines[i].replace('{' + k + '}', theme_data[k])
+
+        for k in range(15, -1, -1):
+            token = '{color' + str(k) + '}'
+            for i in range(0, len(lines)):
+                lines[i] = lines[i].replace(token, theme_data[str(k)])
+
+        ret = True
+        for n in lines:
+            logger.error(n)
+        try:
+            with open(w_path, 'w') as out_file:
+                for n in lines:
+                    out_file.write(n + '\n')
+        except:
+            ret = False
+
+        if ret:
+            return True, w_path
+        else:
+            try:
+                remove(w_path)
+            except:
+                pass
+            return False, None
+
+
+    def _read_last_line_from_ln(self):
+        last_line = ''
+        with open(self._ln, "rb") as file:
+            try:
+                file.seek(-2, SEEK_END)
+                while file.read(1) != b'\n':
+                    file.seek(-2, SEEK_CUR)
+            except:
+                file.seek(0)
+            last_line = file.readline().decode()
+        return last_line.replace('\n', '')
+
+    def _read_theme_sh(self, theme_name):
+        lines = {}
+        in_theme = False
+        with open(self._theme_sh_executable, 'r') as f:
+            for line in f:
+                if in_theme:
+                    l = line.replace('\n', '').split(': ')
+                    lines[l[0]] = l[1]
+                    if l[0].startswith('cursor'):
+                        break
+                if line.startswith(theme_name):
+                    in_theme = True
+        return lines

@@ -289,8 +289,10 @@ class RadioBrowser(PyRadioStationsBrowser):
 
     browser_config = _config_win = None
 
-    _headers = {'User-Agent': 'PyRadio/dev',
-                     'Content-Type': 'application/json'}
+    _headers = {
+        'User-Agent': 'PyRadio/dev',
+        'Content-Type': 'application/json'
+    }
 
     _raw_stations = []
 

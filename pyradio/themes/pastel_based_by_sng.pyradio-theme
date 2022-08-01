@@ -1,44 +1,18 @@
 # Main foreground and background
-Stations            #b3b3b3 #fffce0
 Stations            #919191 #fffce0
 
 # Playing station text color
 # (background color will come from Stations)
-Active Station      #85996b
-Active Station      #829963
-# Active Station      #8b9979
-Active Station      #8f9982
-Active Station      #a8eb99
-Active Station      #ffcfb3
-Active Station      #ffc7a6
 Active Station      #ffae80
 
 # Status bar foreground and background
-Status Bar          #999999 #ffd7bf
-Status Bar          #fffce0 #ffd7bf
-Status Bar          #f3ffbf #ffd7bf
-Status Bar          #e8ff80 #ffd7bf
-Status Bar          #ffffff #ffd7bf
-Status Bar          #ffffff #ffcfb3
 Status Bar          #fdff80 #ffae80
 
 # Normal cursor foreground and background
-Normal Cursor       #909090 #b4eba7
-Normal Cursor       #fffce0 #b4eba7
-Normal Cursor       #f3ffbf #b4eba7
-Normal Cursor       #ffffff #b4eba7
-Normal Cursor       #fdff80 #8ceb76
-Normal Cursor       #fdff00 #8ceb76
 Normal Cursor       #ffffff #8ceb76
 
 # Cursor foreground and background
 # when cursor on playing station
-Active Cursor       #909090 #ffd7bf
-Active Cursor       #909090 #ffd7bf
-Active Cursor       #fffce0 #ffd7bf
-Active Cursor       #f3ffbf #ffd7bf
-Active Cursor       #ffffff #ffd7bf
-Active Cursor       #ffffff #ffcfb3
 Active Cursor       #fdff80 #ffae80
 
 # Cursor foreground and background
@@ -53,12 +27,9 @@ Extra Func          #97a683
 # Text color for URL
 # (background color will come from Stations)
 PyRadio URL         #ada2bf
-PyRadio URL         #ada2bf
 
 # Message window borser foreground
 # (background color will come from Stations)
-Messages Border     #ffcfb3
-#Messages Border     #9b86bf
 Messages Border     #8ceb76
 
 # Theme Transparency

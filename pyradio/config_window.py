@@ -347,6 +347,7 @@ class PyRadioConfigWindow(object):
 
     def _apply_a_theme(self, a_theme, use_transparency=None):
         theme = PyRadioTheme(self._cnf)
+        logger.error('5')
         theme.readAndApplyTheme(a_theme, use_transparency=use_transparency)
         theme = None
         curses.doupdate()

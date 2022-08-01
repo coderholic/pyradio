@@ -52,6 +52,10 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [Converting old themes](#converting-old-themes)
     * [Using transparency](#using-transparency)
     * [Updating themes automatically](#updating-themes-automatically)
+    * [Using Project Themes](#using-project-themes)
+        * [1. base16](#1.-base16)
+            * [Using the themes without base16](#using-the-themes-without-base16)
+        * [2. pywal](#2.-pywal)
 * [Mouse support](#mouse-support)
 * [Titles logging](#titles-logging)
     * [Tagging a title](#tagging-a-title)
@@ -66,6 +70,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Packaging PyRadio](#packaging-pyradio)
 * [TODO](#todo)
 * [Acknowledgment](#acknowledgment)
+* [Special thanks](#special-thanks)
 
 <!-- vim-markdown-toc -->
 
@@ -860,6 +865,35 @@ Consecuently, the default theme name will be preceded by:
 - "**\***" if the theme is the default one (the way it has always been).
 - "**+**" if the theme is the default one, and **PyRadio** will watch it for changes.
 
+### Using Project Themes
+
+**PyRadio** is able to use (and watch) the output of certain projects that modify terminal colors.
+
+**PyRadio** will detect theses projects (programs installed and initialized), and will add them under the "**Ext. Themes Projects**" section of the "*Themes Selection Window*."
+
+If loading any of these themes fails, the default **dark** theme will be loaded, but contrary to a local theme being invalid, the selection will persist (so that the theme gets loaded wheneve it is available).
+
+Currently, the following projects are supported:
+
+#### 1. [base16](https://github.com/base16-project)
+
+Thanks to the wonderful work by user [edunfelt](https://github.com/edunfelt), there is now a **PyRadio** base16 template in place, and themes have been produced based on the project (there are more than 900 themes available).
+
+This implementation will add four entries in the theme selection menu (with alternative and variant forms of the main theme).
+
+Then, any of the themes can either be activated or watched; in which case **PyRadio** will download and apply the corresponding theme.
+
+##### Using the themes without base16
+
+In case one wants to use any of these themes, but not install or use [base16](https://github.com/base16-project), one can get them [from this repo](https://github.com/edunfelt/base16-pyradio), and use the "*cycle_themes.py*" and "*install_themes.py*" scripts to inspect and install them.
+
+#### 2. [pywal](https://github.com/dylanaraps/pywal)
+
+When detected, two themes will be added to the menu; the main and the alternative form.
+
+Since these themes are generated on the fly, as the wallpaper changes, there is no way to use them if [pywal](https://github.com/dylanaraps/pywal) is not in use.
+
+**Note:** If [pywal](https://github.com/dylanaraps/pywal) themes are activated but not watched, the theme will be corrupted when the wallpaper changes, and will have to be manually reloaded. So, it's better to just always watch these themes.
 
 ## Mouse support
 
@@ -1046,3 +1080,7 @@ Having said that, if you are not packaging for a specific distribution, please d
 2. [ranger](https://ranger.github.io/) - A console file manager with VI key bindings.
 
 3. [Vifm](https://vifm.info/) -  A file manager with curses interface, which provides a Vi[m]-like environment.
+
+## Special thanks
+
+1. **PyRadio** user [edunfelt](https://github.com/edunfelt), for her wonderful work on [base16]([edunfelt](https://github.com/edunfelt)) themes, and ideas regarding theming and such.
