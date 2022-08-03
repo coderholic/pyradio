@@ -126,7 +126,6 @@ class PyRadioTheme(object):
         self._do_init_colors(transparency=transp)
 
         self._read_colors = deepcopy(self._colors)
-        logger.error('**** result = {0}, applied name = {1}'.format(result[0], result[1]))
         return result
 
     def _load_default_theme(self, a_theme):
@@ -217,15 +216,15 @@ class PyRadioTheme(object):
 
         else:
             ret, ret_ind = self._cnf.is_project_theme(a_theme)
-            logger.error('is_project theme: ret = {0}, ret_ind = {1}'.format(ret, ret_ind))
             if ret is not None:
                 ''' this is a project theme! '''
                 a_path = ret.default_theme_path
                 ret.theme_id = ret_ind
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Project theme file name: "{}")'.format(a_path))
+                    logger.debug('Project theme file name: {}'.format(a_path))
                 if ret.download(print_errors=print_errors)[0]:
-                    if logger.isEnabledFor(logging.DEBUG):
+                    if logger.isEnabledFor(logging.DEBUG) and \
+                            not self._cnf.locked:
                         logger.debug('Theme downloaded successfully!')
                 else:
                     if logger.isEnabledFor(logging.ERROR):
@@ -501,6 +500,10 @@ class PyRadioThemeSelector(object):
                 del self._global_functions[ord('T')]
 
     def show(self, touch_selection=True):
+        if self._cnf.locked:
+            self._too_small = False
+            self._get_metrics()
+            return
         self._themes = [['dark', '']]
         self._themes.append(['dark_16_colors', ''])
         self._items += 1
@@ -520,7 +523,6 @@ class PyRadioThemeSelector(object):
         for i, n in enumerate(self._themes):
             if n[0] in ('User Themes', 'Ext. Themes Projects'):
                 self._first_theme_to_watch = i
-                logger.error('first user theme = {}'.format(self._first_theme_to_watch))
                 break
         if self._first_theme_to_watch == 0:
             self._first_theme_to_watch = len(self._themes)
@@ -661,16 +663,24 @@ class PyRadioThemeSelector(object):
 
         """ check if too small """
         maxY, maxX = self.parent.getmaxyx()
-        if self._height < 5 or self._width >= maxX - 2:
-            txt = ' Window too small '
-            self._win = curses.newwin(3, len(txt) + 2, int(maxY / 2), int((maxX - len(txt)) / 2))
+        if self._height < 5 or self._width >= maxX - 2 or self._cnf.locked:
+            if self._cnf.locked:
+                txt = '  Sorry, you cannot change themes  '
+                self._win = curses.newwin(4, len(txt) + 2, int(maxY / 2), int((maxX - len(txt)) / 2))
+            else:
+                txt = ' Window too small '
+                self._win = curses.newwin(3, len(txt) + 2, int(maxY / 2), int((maxX - len(txt)) / 2))
+                self._too_small = True
             self._win.bkgdset(' ', curses.color_pair(3))
             self._win.erase()
             self._win.box()
-            self._win.addstr(1, 1, txt, curses.color_pair(4))
+            if self._cnf.locked:
+                self._win.addstr(1, 1, txt, curses.color_pair(4))
+                self._win.addstr(2, 1, '   when the session is locked... ', curses.color_pair(4))
+            else:
+                self._win.addstr(1, 1, txt, curses.color_pair(4))
             self._win.refresh()
             self._win.refresh()
-            self._too_small = True
         else:
             self._too_small = False
 
@@ -840,14 +850,6 @@ class PyRadioThemeSelector(object):
             self._start_pos = 0
         while self._start_pos + self._items <= self._selection:
             self._start_pos += 1
-        # if self._start_pos + self._items <= self._selection:
-        #     self._start_pos = self._selection
-        #     if self._start_pos + self._items > len(self._themes):
-        #         logger.error('2')
-        #         self._start_pos = len(self._themes) - self._items
-        #     if self._start_pos in self._title_ids and self._start_pos > 0:
-        #         logger.error('3')
-        #         self._start_pos -= 1
         self.refresh()
 
     def _go_home(self):
@@ -883,7 +885,7 @@ class PyRadioThemeSelector(object):
               True  : theme is to be saved in config
               False : theme is not to be saved in config
         """
-        if  self._too_small:
+        if  self._too_small or self._cnf.locked:
             return -1, False
         if char in self._global_functions.keys():
             self._global_functions[char]()
@@ -990,7 +992,6 @@ class PyRadioThemeSelector(object):
                     if self._applied_theme_name != self._config_theme_name:
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('Restoring saved theme: {}'.format(self._config_theme_name))
-                        logger.error('6')
                         ret, ret_theme_name = self._theme.readAndApplyTheme(self._config_theme_name)
                         self._applied_theme = self._config_theme
                         if ret == 0:

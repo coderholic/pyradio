@@ -13,8 +13,10 @@
     body {max-width: 750px; margin: auto;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
     h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
-    h4 {margin-top: 2em; color: SaddleBrown;} 
-    h4:before {content: "# "; font-size: 200%; font-weight: bold; vertical-align: middle;} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 150%;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 120%;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
     STRONG {color: SaddleBrown;} 
     dl {margin: 2em;} 
     dd {margin: 1em;} 
@@ -107,11 +109,12 @@ a:visited{color: SaddleBrown;}
 <li><a href="#updating-themes-automatically">Updating themes automatically</a></li>
 <li><a href="#using-project-themes">Using Project Themes</a>
 <ul>
-<li><a href="#1.-base16">1. base16</a>
+<li><a href="#base16">base16</a>
 <ul>
 <li><a href="#using-the-themes-without-base16">Using the themes without base16</a></li>
 </ul></li>
-<li><a href="#2.-pywal">2. pywal</a></li>
+<li><a href="#pywal">pywal</a></li>
+<li><a href="#theme.sh">theme.sh</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#mouse-support">Mouse support</a></li>
@@ -167,6 +170,14 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <pre style="height: 200px;">
+
+2022-08-03 s-n-g
+    * version 0.8.9.23 (0.9-beta20)
+    * pyradio can now sync with themes created by base16, pywal and theme.sh
+    * if session is locked, the theme selection window will not be available
+    * if session is locked, do not create / download (watched) theme; wait
+      for main instance to do it instead, then just load it
+    * docs updated
 
 2022-07-03 s-n-g
     * version 0.8.9.22 (0.9-beta19)
@@ -1334,16 +1345,20 @@ For this reason, a folder called “<strong>themes</strong>” will probably hav
 <p><strong>PyRadio</strong> will detect theses projects (programs installed and initialized), and will add them under the “<strong>Ext. Themes Projects</strong>” section of the “<em>Themes Selection Window</em>.”</p>
 <p>If loading any of these themes fails, the default <strong>dark</strong> theme will be loaded, but contrary to a local theme being invalid, the selection will persist (so that the theme gets loaded wheneve it is available).</p>
 <p>Currently, the following projects are supported:</p>
-<h4 id="base16">1. <a target="_blank" href="https://github.com/base16-project">base16</a></h4>
-<p>Thanks to the wonderful work by user <a target="_blank" href="https://github.com/edunfelt">edunfelt</a>, there is now a <strong>PyRadio</strong> base16 template in place, and themes have been produced based on the project (there are more than 900 themes available).</p>
+<h4 id="base16">base16</h4>
+<p>Thanks to the wonderful work by user <a target="_blank" href="https://github.com/edunfelt">edunfelt</a>, there is now a <strong>PyRadio</strong> <a target="_blank" href="https://github.com/base16-project">base16</a> template in place, and themes have been produced based on the project (there are more than 900 themes available).</p>
 <p>This implementation will add four entries in the theme selection menu (with alternative and variant forms of the main theme).</p>
 <p>Then, any of the themes can either be activated or watched; in which case <strong>PyRadio</strong> will download and apply the corresponding theme.</p>
 <h5 id="using-the-themes-without-base16">Using the themes without base16</h5>
 <p>In case one wants to use any of these themes, but not install or use <a target="_blank" href="https://github.com/base16-project">base16</a>, one can get them <a target="_blank" href="https://github.com/edunfelt/base16-pyradio">from this repo</a>, and use the “<em>cycle_themes.py</em>” and “<em>install_themes.py</em>” scripts to inspect and install them.</p>
-<h4 id="pywal">2. <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a></h4>
+<p>For Windows users, this is the only way to use any of these “<em>Project Themes</em>”, since their generation works on non-windows platforms only.</p>
+<h4 id="pywal">pywal</h4>
 <p>When detected, two themes will be added to the menu; the main and the alternative form.</p>
 <p>Since these themes are generated on the fly, as the wallpaper changes, there is no way to use them if <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a> is not in use.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a> themes are activated but not watched, the theme will be corrupted when the wallpaper changes, and will have to be manually reloaded. So, it’s better to just always watch these themes.</p>
+<h4 id="theme.sh">theme.sh</h4>
+<p>When detected, four themes will be added to the menu; the main and the alternative forms (there are 400 plus themes available, which makes a stuggering number of around 1700 plus themes for <strong>PyRadio</strong>!)</p>
+<p>Since these themes are generated on the fly, there is no way to use them if <a target="_blank" href="https://github.com/lemnos/theme.sh">theme.sh</a> is not in use.</p>
 <h2 id="mouse-support">Mouse support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Being a console application, <strong>PyRadio</strong> was never intended to work with a mouse.</p>
 <p>Furthermore, when using the mouse on a console application, the result is highly dependent on the terminal used and the way it implements mouse support.</p>
@@ -1495,7 +1510,7 @@ New player selection configuration window (<a target="_blank" href="https://gith
 </ol>
 <h2 id="special-thanks">Special thanks <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <ol type="1">
-<li><strong>PyRadio</strong> user <a target="_blank" href="https://github.com/edunfelt">edunfelt</a>, for her wonderful work on <a href="%5Bedunfelt%5D(https://github.com/edunfelt)">base16</a> themes, and ideas regarding theming and such.</li>
+<li><a target="_blank" href="https://github.com/edunfelt">edunfelt</a>, for her wonderful work on <a target="_blank" href="https://github.com/edunfelt/base16-pyradio">base16 themes</a>, and ideas regarding theming and such.</li>
 </ol>
 </body>
 </html>

@@ -569,10 +569,12 @@ class PyRadio(object):
         if curses.can_change_color() and curses.COLORS >= 16:
             self._theme._transparent = self._cnf.use_transparency
             self._theme.config_dir = self._cnf.stations_dir
-            logger.error('1 - ok')
             ''' In case we have to download a theme, and it takes too long  '''
             if self._cnf.is_project_theme:
                 stdscr.addstr(0, 0, 'Downloading default theme...', curses.color_pair(0))
+                if self._cnf.locked:
+                    stdscr.addstr(1, 0, 'Waiting for main instance to update the theme...', curses.color_pair(0))
+
                 stdscr.refresh()
             ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name, print_errors=stdscr)
             if ret == 0:
@@ -581,9 +583,6 @@ class PyRadio(object):
                 self._theme_name = ret_theme_name
                 self._cnf.theme_not_supported = True
                 self._cnf.theme_has_error = True if ret == -1 else False
-                logger.error('==== ret = {}'.format(ret))
-                logger.error('==== ret_theme_name = {}'.format(ret_theme_name))
-                logger.error('==== not supported = {0}, has error = {1}'.format(self._cnf.theme_not_supported, self._cnf.theme_has_error))
                 if self._cnf.is_project_theme:
                     stdscr.addstr('\nTheme download failed...', curses.color_pair(0))
                     stdscr.refresh()
@@ -868,7 +867,7 @@ class PyRadio(object):
                 #     logger.debug('refreshBody(): start = {}'.format(start))
         for n in range(start, end):
             if n == 1:
-                if self._theme_selector:
+                if self._theme_selector and not self._cnf.locked:
                     self.theme_forced_selection = self._theme_selector._themes[self._theme_selector.selection]
             display = True
             if n != len(self._redisplay_list) - 1 and self._redisplay_list[n][0] == self.ws.NORMAL_MODE:
@@ -889,7 +888,6 @@ class PyRadio(object):
                 logger.debug('Redisplaying RadioBrowser Search Window!!!')
             self._browser_search()
 
-        logger.error('self._cnf.theme_download_failed = {}'.format(self._cnf.theme_download_failed))
         if self._cnf.integrate_stations and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             ''' display ask to integrate stations '''
@@ -897,11 +895,6 @@ class PyRadio(object):
         elif self._cnf.playlist_recovery_result == -1:
             ''' display playlist recovered '''
             self._show_playlist_recovered()
-        # elif not self._cnf.theme_download_failed:
-        #     self._cnf.theme_not_supported = False
-        #     self._cnf.theme_has_error = False
-        #     self._cnf.theme_not_supported_notification_shown = False
-        #     self._print_theme_download_error()
         elif self._cnf.theme_not_supported:
             ''' display theme not supported '''
             self._show_theme_not_supported()
@@ -1117,9 +1110,6 @@ class PyRadio(object):
             return
         else:
             a_path = theme_path
-            logger.error('_watch_theme(): ' + a_path)
-            logger.error('config theme: {}'.format(self._cnf.theme))
-            logger.error('config theme: {}'.format(self._cnf.theme_path))
         self._watch_theme_thread = threading.Thread(
             target=self._wait_for_theme_to_change,
             # args=(self._cnf,
@@ -1135,7 +1125,6 @@ class PyRadio(object):
 
     def _auto_update_theme(self):
         logger.error('_auto_update_theme(): triggered! - updating theme: ' + self._cnf.theme)
-        logger.error('2')
         ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.theme)
         if ret == 0:
             self._theme_name = self._cnf.theme
@@ -1152,7 +1141,6 @@ class PyRadio(object):
     def _wait_for_theme_to_change(self, theme, file, a_lock, stop, func, config):
         is_project_theme = False
         a_file = file
-        logger.error('checking: ' + theme)
         ret, ret_ind = config.is_project_theme(theme)
         if ret is not None:
             if logger.isEnabledFor(logging.DEBUG):
@@ -1161,7 +1149,8 @@ class PyRadio(object):
             a_file = ret.check_file
             ret.theme_id = ret_ind
         else:
-            logger.error('not a project theme!')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Wathcing a non project theme: ' + theme)
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('File watch thread started on: {}'.format(a_file))
@@ -1209,8 +1198,9 @@ class PyRadio(object):
                             showed = True
                     if stop():
                         break
-                    with a_lock:
-                        func()
+                    # with a_lock:
+                    #     func()
+                    func()
                 if stop():
                     break
                 try:
@@ -1227,8 +1217,9 @@ class PyRadio(object):
                     st_size = cur_size = getsize(a_file)
                     if stop():
                         break
-                    with a_lock:
-                        func()
+                    # with a_lock:
+                    #     func()
+                    func()
                 if stop():
                     break
             else:
@@ -5740,7 +5731,6 @@ class PyRadio(object):
                     ''' restore theme, if necessary '''
                     if self._cnf.opts['theme'][1] != self._config_win._config_options['theme'][1]:
                         #self._config_win._apply_a_theme(self._cnf.opts['theme'][1])
-                        logger.error('3')
                         ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.opts['theme'][1])
                         if ret == 0:
                             self._theme_name = self._cnf.theme
@@ -6276,16 +6266,12 @@ class PyRadio(object):
                     self._config_win._saved_config_options['theme'][1] = self._theme_name
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Activating theme: {}'.format(self._theme_name))
-                logger.error('4')
                 ret, ret_theme_name = self._theme.readAndApplyTheme(
                     self._theme_name,
                     theme_path=self._theme_selector._themes[theme_id][1]
                 )
-                logger.error('ret = {}'.format(ret))
-                logger.error('ret_theme_name = {}'.format(ret_theme_name))
                 if isinstance(ret, tuple):
                     ret = ret[0]
-                logger.error('self._theme_name: "{}"'.format(self._theme_name))
                 if ret < 0:
                     ch_ret, _ = self._cnf.is_project_theme(self._theme_name)
                     if ch_ret is None and \
@@ -6303,7 +6289,6 @@ class PyRadio(object):
                 #     self._print_theme_download_error()
                 #     logger.info('_print_theme_download_error 3')
                 ''' update config window '''
-                logger.error('self._theme_name: "{}"'.format(self._theme_name))
                 if self.ws.window_mode == self.ws.CONFIG_MODE:
                     save_theme = True
                 # make default
@@ -8060,6 +8045,10 @@ class PyRadio(object):
         if self.ws.window_mode == self.ws.CONFIG_MODE and \
                 self._config_win.too_small:
             return
+        # if self._cnf.locked:
+        #     self._theme_selector = None
+        #     self.ws.close_window()
+        #     return
         self._theme_selector.parent = self.outerBodyWin
         self._theme_selector._showed = False
         self._theme_selector._start_pos = 0

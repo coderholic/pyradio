@@ -72,8 +72,10 @@ do
     body {max-width: 750px; margin: auto;} \
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} \
     h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} \
-    h4 {margin-top: 2em; color: SaddleBrown;} \
-    h4:before {content: "# "; font-size: 200%; font-weight: bold; vertical-align: middle;} \
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 150%;} \
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} \
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 120%;} \
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} \
     STRONG {color: SaddleBrown;} \
     dl {margin: 2em;} \
     dd {margin: 1em;} \

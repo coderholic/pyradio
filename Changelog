@@ -1,3 +1,11 @@
+2022-08-03 s-n-g
+    * version 0.8.9.23 (0.9-beta20)
+    * pyradio can now sync with themes created by base16, pywal and theme.sh
+    * if session is locked, the theme selection window will not be available
+    * if session is locked, do not create / download (watched) theme; wait
+      for main instance to do it instead, then just load it
+    * docs updated
+
 2022-07-03 s-n-g
     * version 0.8.9.22 (0.9-beta19)
     * themes can declare transparency hint

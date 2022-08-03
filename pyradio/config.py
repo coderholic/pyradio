@@ -1486,7 +1486,8 @@ class PyRadioConfig(PyRadioStations):
         '''
         for n in self.auto_update_frameworks:
             if a_theme_name in n.THEME:
-                logger.error('checking: ' + a_theme_name)
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Checking theme: ' + a_theme_name)
                 return n, n.THEME.index(a_theme_name)
         return None, -1
 
@@ -2581,64 +2582,69 @@ class PyRadioBase16Themes(object):
                 full path to save the theme to
                 if None, use self._custom_theme_file
         '''
-        if a_theme is None:
-            try:
-                if self.can_auto_update:
-                    # w_theme = path.basename(readlink(self._ln)[:-3]) + '.pyradio-theme'
-                    w_theme = path.basename(readlink(self._ln))[7:-3]
-                else:
-                    return False, None
-            except:
-                return False, None
-        else:
-            w_theme = a_theme
         w_path = self._default_theme_file if a_path is None else a_path
-
-        url = self.get_url(w_theme)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Project theme URL: "{}"'.format(url))
-
-        ret = False
-        # logger.error('w_path = {}'.format(w_path))
-        requests_response = None
-        written = False
-        line_num = 1
-        for n in range(0,5):
-            try:
-                requests_response = requests.get(url, timeout=1)
-                requests_response.raise_for_status()
+        if self._cnf.locked:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(' Theme creation inhibited (session if locked)... Waiting for 2 seconds...')
+            ret = True
+            sleep(2)
+        else:
+            if a_theme is None:
                 try:
-                    with open(w_path, 'w') as f:
-                        pass
-                        f.write(requests_response.text)
-                    written = True
+                    if self.can_auto_update:
+                        # w_theme = path.basename(readlink(self._ln)[:-3]) + '.pyradio-theme'
+                        w_theme = path.basename(readlink(self._ln))[7:-3]
+                    else:
+                        return False, None
                 except:
-                    pass
-                    logger.error('cannot write file')
+                    return False, None
+            else:
+                w_theme = a_theme
+
+            url = self.get_url(w_theme)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Project theme URL: "{}"'.format(url))
+
+            ret = False
+            # logger.error('w_path = {}'.format(w_path))
+            requests_response = None
+            written = False
+            line_num = 1
+            for n in range(0,5):
+                try:
+                    requests_response = requests.get(url, timeout=1)
+                    requests_response.raise_for_status()
+                    try:
+                        with open(w_path, 'w') as f:
+                            pass
+                            f.write(requests_response.text)
+                        written = True
+                    except:
+                        pass
+                        logger.error('cannot write file')
+                        if print_errors is not None:
+                            print_errors.addstr(n + 1, 0, '  download failed, retrying...', curses.color_pair(0))
+                            print_errors.refresh()
+                except requests.exceptions.RequestException as e:
                     if print_errors is not None:
                         print_errors.addstr(n + 1, 0, '  download failed, retrying...', curses.color_pair(0))
                         print_errors.refresh()
-            except requests.exceptions.RequestException as e:
-                if print_errors is not None:
-                    print_errors.addstr(n + 1, 0, '  download failed, retrying...', curses.color_pair(0))
-                    print_errors.refresh()
-                logger.error('requests through an exception')
-                sleep(.15)
-            if requests_response.status_code == 200 and written:
-                break
+                    logger.error('requests through an exception')
+                    sleep(.15)
+                if requests_response.status_code == 200 and written:
+                    break
 
-        self.theme = self._last_used_theme
-        self.theme_file_name = w_path
-        self.theme_url = url
-        self.status = requests_response.status_code
+            self.theme = self._last_used_theme
+            self.theme_file_name = w_path
+            self.theme_url = url
+            self.status = requests_response.status_code
 
-        ret = requests_response.status_code == 200 and written
-        logger.error('download(): ret = {}'.format(ret))
-        if not ret:
-            try:
-               remove(w_path)
-            except:
-                pass
+            ret = requests_response.status_code == 200 and written
+            if not ret:
+                try:
+                   remove(w_path)
+                except:
+                    pass
         return ret, w_path
 
 
@@ -2648,11 +2654,6 @@ class PyRadioPyWalThemes(PyRadioBase16Themes):
     THEME = (
         'pywal-pyradio-default',
         'pywal-pyradio-default-alt',
-    )
-    ''' To be used in get_url (along with theme_id) '''
-    URL_PART = (
-        'default',
-        'default-alt',
     )
     '''  link to last used base16 theme '''
     _ln = path.join(getenv('HOME', '~'), '.cache/wal/colors.json')
@@ -2677,8 +2678,14 @@ class PyRadioPyWalThemes(PyRadioBase16Themes):
                 full path to save the theme to
                 if None, use self._custom_theme_file
         '''
-        logger.error('here I am')
-        templates = ('''# Main foreground and background
+        w_path = self._default_theme_file if a_path is None else a_path
+        if self._cnf.locked:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(' Theme creation inhibited (session if locked)... Waiting for 1 second...')
+            ret = True
+            sleep(1)
+        else:
+            templates = ('''# Main foreground and background
 Stations            {color15} {color0}
 
 # Playing station text color
@@ -2759,41 +2766,31 @@ Messages Border     {color2}
 #   2: Obey config setting
 transparency        0
 '''
-        )
-        logger.error('here I am again')
-        if a_theme is None:
-            try:
-                if not self.can_auto_update:
-                    logger.error('return from 1')
+            )
+            if a_theme is None:
+                try:
+                    if not self.can_auto_update:
+                        return False, None
+                except:
                     return False, None
+            else:
+                w_theme = a_theme
+
+            with open(self._ln, 'r') as jfile:
+                jdata = json.load(jfile)
+
+            lines = templates[self.theme_id].split('\n')
+            for k in jdata['colors'].keys():
+                for i in range(0, len(lines)):
+                    lines[i] = lines[i].replace('{' + k + '}', jdata['colors'][k])
+
+            ret = True
+            try:
+                with open(w_path, 'w') as out_file:
+                    for n in lines:
+                        out_file.write(n + '\n')
             except:
-                logger.error('return from 2')
-                return False, None
-        else:
-            w_theme = a_theme
-        w_path = self._default_theme_file if a_path is None else a_path
-        logger.error('w_path =' + w_path)
-
-        with open(self._ln, 'r') as jfile:
-            jdata = json.load(jfile)
-
-        lines = templates[self.theme_id].split('\n')
-        logger.error(templates[self.theme_id])
-        logger.error('\n\n')
-        logger.error(lines)
-        logger.error('\n\n')
-        for k in jdata['colors'].keys():
-            for i in range(0, len(lines)):
-                lines[i] = lines[i].replace('{' + k + '}', jdata['colors'][k])
-
-        ret = True
-        logger.error(lines)
-        try:
-            with open(w_path, 'w') as out_file:
-                for n in lines:
-                    out_file.write(n + '\n')
-        except:
-            ret = False
+                ret = False
 
         if ret:
             return True, w_path
@@ -2815,12 +2812,6 @@ class PyRadioThemesShThemes(PyRadioBase16Themes):
         'theme_sh-pyradio-variation-alt',
     )
     ''' To be used in get_url (along with theme_id) '''
-    URL_PART = (
-        'default',
-        'default-alt',
-        'variation',
-        'variation-alt',
-    )
     '''  link to last used base16 theme '''
 
     def __init__(self, config):
@@ -2839,7 +2830,7 @@ class PyRadioThemesShThemes(PyRadioBase16Themes):
     @property
     def can_auto_update(self):
         if platform.startswith('win'):
-            ''' base16 does not work on windows '''
+            ''' theme.sh does not work on windows '''
             return False
 
         if not path.exists(self._ln):
@@ -2864,12 +2855,18 @@ class PyRadioThemesShThemes(PyRadioBase16Themes):
                 full path to save the theme to
                 if None, use self._custom_theme_file
         '''
-        theme_name = self._read_last_line_from_ln()
         w_path = self._default_theme_file if a_path is None else a_path
-        logger.error('actual theme name:' + theme_name)
-        theme_data = self._read_theme_sh(theme_name)
-        logger.error(theme_data)
-        templates = ('''# Main foreground and background
+        if self._cnf.locked:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(' Theme creation inhibited (session if locked)... Waiting for 1 second...')
+            ret = True
+            sleep(1)
+        else:
+            theme_name = self._read_last_line_from_ln()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Actual theme name: ' + theme_name)
+            theme_data = self._read_theme_sh(theme_name)
+            templates = ('''# Main foreground and background
 Stations            {foreground} {background}
 
 # Playing station text color
@@ -3030,27 +3027,27 @@ Messages Border     {color8}
 #   2: Obey config setting
 transparency        0
 '''
-        )
-        lines = templates[self.theme_id].split('\n')
-        logger.error('here I am again')
-        for k in 'foreground', 'background':
-            for i in range(0, len(lines)):
-                lines[i] = lines[i].replace('{' + k + '}', theme_data[k])
+            )
+            lines = templates[self.theme_id].split('\n')
+            for k in 'foreground', 'background':
+                for i in range(0, len(lines)):
+                    lines[i] = lines[i].replace('{' + k + '}', theme_data[k])
 
-        for k in range(15, -1, -1):
-            token = '{color' + str(k) + '}'
-            for i in range(0, len(lines)):
-                lines[i] = lines[i].replace(token, theme_data[str(k)])
+            for k in range(15, -1, -1):
+                token = '{color' + str(k) + '}'
+                for i in range(0, len(lines)):
+                    lines[i] = lines[i].replace(token, theme_data[str(k)])
 
-        ret = True
-        for n in lines:
-            logger.error(n)
-        try:
-            with open(w_path, 'w') as out_file:
-                for n in lines:
-                    out_file.write(n + '\n')
-        except:
-            ret = False
+            ret = True
+            # enable this to see the contents of the theme
+            # for n in lines:
+            #     logger.error(n)
+            try:
+                with open(w_path, 'w') as out_file:
+                    for n in lines:
+                        out_file.write(n + '\n')
+            except:
+                ret = False
 
         if ret:
             return True, w_path

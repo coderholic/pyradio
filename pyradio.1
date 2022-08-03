@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "July 2022" PyRadio
+.TH pyradio 1 "August 2022" PyRadio
 
 .SH Name
 .PP
@@ -945,6 +945,58 @@ if the theme is the default one (the way it has always been).
 .IP \fB-\fR 3
 if the theme is the default one, and \fBpyradio\fR will watch it for changes.
 
+.RE
+
+\fBUsing Project Themes\fR
+
+\fBpyradio\fR is able to use (and watch) the output of certain projects that modify terminal colors.
+
+\fBpyradio\fR will detect theses projects (programs installed and initialized), and will add them under the \fBExt. Themes Projects\fR section of the \fIThemes Selection Window\fR.
+
+If loading any of these themes fails, the default \FBdark\fR theme will be loaded, but contrary to a local theme being invalid, the selection will persist (so that the theme gets loaded wheneve it is available).
+
+Currently, the following projects are supported:
+
+\fB1.\ base16\fR
+
+.RS 3
+
+Thanks to the wonderful work by user \fBedunfelt\fR (\fIhttps://github.com/edunfelt\fR), there is now a \fBpyradio base16\fR (\fIhttps://github.com/base16-project\fR) \fBtemplate\fR in place, and themes have been produced based on the project (there are more than 900 themes available).
+
+This implementation will add four entries in the theme selection menu (with alternative and variant forms of the main theme).
+
+Then, any of the themes can either be activated or watched; in which case \fBpyradio\fR will download and apply the corresponding theme.
+
+\fBUsing the themes without base16\fR
+
+.RS 4
+
+In case one wants to use any of these themes, but not install or use \fBbase16\fR (\fIhttps://github.com/base16-project\fR), one can get them \fIfrom this repo\fR (\fIhttps://github.com/edunfelt/base16-pyradio\fR), and use the \fBcycle_themes.py\fR and \fBinstall_themes.py\fR scripts to inspect and install them.
+
+.RE
+.RE
+
+\fB2.\ pywal\fR
+
+.RS 3
+
+When detected, two themes will be added to the menu; the main and the alternative form.
+
+Since these themes are generated on the fly, as the wallpaper changes, there is no way to use them if \fBpywal\fR (\fIhttps://github.com/dylanaraps/pywal\fR) is not in use.
+
+.IP \fBNote:
+If \fBpywal\fR (\fIhttps://github.com/dylanaraps/pywal\fR) themes are activated but not watched, the theme will be corrupted when the wallpaper changes, and will have to be manually reloaded. So, it's better to just always watch these themes.
+
+.RE
+
+\fB3.\ theme.sh\fR
+
+.RS 3
+
+When detected, four themes will be added to the menu; the main and the alternative forms (there are 400 plus themes available, which makes a stuggering number of around 1700 plus themes for \fBpyradio\fR!)
+
+Since these themes are generated on the fly, there is no way to use them if \fBtheme.sh\fR (\fIhttps://github.com/lemnos/theme.sh\fR) is not in use.
+
 .SH Mouse Support
 
 Being a console application, \fBPyRadio\fR was never intended to work with a mouse.
@@ -1145,10 +1197,15 @@ On \fBMac OS\fR, these file may be installed in \fI/usr/local/share/doc/pyradio\
 .PP
 \fBPeter Stevenson (2E0PGS)\fR\ \<\fIhttps://github.com/2E0PGS\fR\>,\ (2018)
 .PP
-\fBSpiros Georgaras\fR\ \<\fIhttps://github.com/s-n-g\fR\>,\ (2018-2021)
+\fBSpiros Georgaras\fR\ \<\fIhttps://github.com/s-n-g\fR\>,\ (2018-2022)
 .PP
 You can see a complete list of contributors at
-  https://github.com/coderholic/pyradio/graphs/contributors
+   \fIhttps://github.com/coderholic/pyradio/graphs/contributors\fR
+
+.SH Special thanks
+
+.IP \fI1. 3
+\fBedunfelt\fR (\fIhttps://github.com/edunfelt\fR), for her wonderful work on \fBbase16 themes\fR (\fIhttps://github.com/edunfelt/base16-pyradio\fR), and ideas regarding theming and such.
 
 .SH See also
 

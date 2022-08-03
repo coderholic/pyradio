@@ -51,17 +51,16 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
 
 def shell():
     if not sys.platform.startswith('win'):
-        if not sys.platform.startswith('win'):
-            term = getenv('TERM')
-            # print('TERM = {}'.format(term))
-            if term is None:
-                print('== Warning: TERM is not set. Using xterm-256color')
-                environ['TERM'] = 'xterm-256color'
-            if term == 'xterm' \
-                    or term.startswith('screen') \
-                    or term.startswith('tmux'):
-                print('== Warning: TERM is {}. Using xterm-256color'.format(term))
-                environ['TERM'] = 'xterm-256color'
+        term = getenv('TERM')
+        # print('TERM = {}'.format(term))
+        if term is None:
+            print('== Warning: TERM is not set. Using xterm-256color')
+            environ['TERM'] = 'xterm-256color'
+        if term == 'xterm' \
+                or term.startswith('screen') \
+                or term.startswith('tmux'):
+            print('== Warning: TERM is {}. Using xterm-256color'.format(term))
+            environ['TERM'] = 'xterm-256color'
     version_too_old = False
     if sys.version_info[0] == 2:
         if sys.version_info < (2, 7):
@@ -107,9 +106,9 @@ def shell():
                             help='Show EXE file location (Windows only).')
     parser.add_argument('-U', '--update', action='store_true',
                         help='Update PyRadio.')
-    if platform.startswith('linux'):
+    if not platform.startswith('win'):
         parser.add_argument('--user', action='store_true', default=False,
-                            help='Install only for current user (linux only).')
+                            help='Install only for current user (not on Windows).')
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='Uninstall PyRadio.')
     parser.add_argument('--unlock', action='store_true',
@@ -202,7 +201,7 @@ def shell():
                     package=package,
                     python_version_to_use=python_version_to_use
                 )
-                if platform.startswith('linux'):
+                if not platform.startswith('win'):
                     upd.user = args.user
                 upd.update_pyradio()
             except RuntimeError:

@@ -384,7 +384,7 @@ class PythonExecutable(object):
 
     def __init__(self, requested_python_version):
         self.requested_python_version = requested_python_version
-        if platform.system().lower().startswith('linux'):
+        if not platform.system().lower().startswith('win'):
             self._check_if_is_debian_based()
         self._get_pythons()
 
@@ -952,7 +952,7 @@ if __name__ == '__main__':
     if platform.system().lower().startswith('darwin'):
         parser.add_argument('--brew', nargs='?', default='False',
                             help='Create a link to pyradio executable in PATH. [BREW] can be empty (the default will be used in this case: /urs/local/opt). If a different package manager is in use, [BREW] should be the path to the location it installs its packages.')
-    if platform.system().lower().startswith('linux'):
+    if not platform.system().lower().startswith('win'):
         parser.add_argument('--python2', action='store_true',
                             help='install using python 2.')
     else:
