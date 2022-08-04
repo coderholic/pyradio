@@ -2611,6 +2611,7 @@ class PyRadioBase16Themes(object):
             written = False
             line_num = 1
             for n in range(0,5):
+                requests_response = None
                 try:
                     requests_response = requests.get(url, timeout=1)
                     requests_response.raise_for_status()
@@ -2620,7 +2621,6 @@ class PyRadioBase16Themes(object):
                             f.write(requests_response.text)
                         written = True
                     except:
-                        pass
                         logger.error('cannot write file')
                         if print_errors is not None:
                             print_errors.addstr(n + 1, 0, '  download failed, retrying...', curses.color_pair(0))
@@ -2631,8 +2631,9 @@ class PyRadioBase16Themes(object):
                         print_errors.refresh()
                     logger.error('requests through an exception')
                     sleep(.15)
-                if requests_response.status_code == 200 and written:
-                    break
+                if requests_response is not None:
+                    if requests_response.status_code == 200 and written:
+                        break
 
             self.theme = self._last_used_theme
             self.theme_file_name = w_path
