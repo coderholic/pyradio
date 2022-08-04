@@ -152,6 +152,26 @@ class PyRadioTheme(object):
                     curse_rgb[2],
                 )
 
+    def create_theme_from_theme(self, theme_name):
+        ''' Create a theme in theme's directory
+            based on an internal or system theme
+        '''
+        th_name = theme_name if theme_name else 'dark'
+        if not th_name in (
+            'dark', 'light', 'dark_16_colors',
+            'light_16_colors', 'black_on_white', 'bow',
+            'white_on_black', 'wob', 'classic_by_obsdg',
+            'cupcake_by_edunfelt', 'fairyfloss_by_edunfelt',
+            'gruvbox_dark_by_sng', 'gruvbox_light_by_sng',
+            'minima_by_ben_chile', 'pastel_based_by_sng',
+        ):
+            th_name = 'dark'
+        ret = self.open_theme(th_name)
+        if ret < 0:
+            self.open_theme('dark')
+        self._active_colors = None
+        self._active_colors = deepcopy(self._colors)
+
     def open_theme(self, a_theme='', a_path='', print_errors=None):
         """ Read a theme and place it in _colors
             a_theme: theme name
@@ -404,14 +424,43 @@ class PyRadioThemeReadWrite(object):
         self._theme_path = theme_path
         self._temp_colors['Name'] = theme_name
         self._temp_colors['Path'] = theme_path
-        # logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
+        logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
         return 0, self._temp_colors
 
-    def _theme_is_incomplete(self):
+    def _theme_is_incomplete(self, some_colors=None):
+        colors = self._temp_colors if some_colors is None else some_colors
         for i in range(1, 15):
-            if i not in self._temp_colors['data'].keys():
+            if i not in colors['data'].keys():
                 return True
         return False
+
+    def write_theme(self, out_theme, base_theme=None, colors=None):
+        ''' write a theme
+
+            Parameters
+            ==========
+            out_theme
+                output theme name
+            base_theme
+                read colors from this theme name
+            colors
+                colors to write
+
+            Return
+            ======
+               -2   error writing file
+               -1   colors are incomplete
+                0   all ok
+        '''
+        if colors is None:
+            if base_theme is not None:
+                pass
+            else:
+                return -1
+        else:
+            if self._theme_is_incomplete(colors):
+                return -1
+
 
 class PyRadioThemeSelector(object):
     """ Theme Selector Window """

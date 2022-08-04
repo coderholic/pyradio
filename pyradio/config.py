@@ -1493,7 +1493,7 @@ class PyRadioConfig(PyRadioStations):
 
     def is_default_file(self, a_theme_name):
         for n in self.auto_update_frameworks:
-            if a_theme_name == n._deault_filename_only:
+            if a_theme_name == n.deault_filename_only:
                 return True
         return False
 
@@ -2502,7 +2502,7 @@ class PyRadioBase16Themes(object):
     ''' pyradio base16 file for auto download '''
     _default_theme_file = None
     ''' the default base16 file, without path and extension '''
-    _deault_filename_only = 'base16-pyradio'
+    deault_filename_only = 'base16-pyradio'
     ''' pyradio base16 them for download '''
     _custom_theme_file = None
 
@@ -2663,6 +2663,8 @@ class PyRadioPyWalThemes(PyRadioBase16Themes):
         self._themes_dir = config.themes_dir
         self._custom_theme_file = path.join(self._themes_dir, self.THEME[self.theme_id] + '.pyradio-theme')
         self._default_theme_file = path.join(self._themes_dir, 'pywal-pyradio.pyradio-theme')
+        ''' the default pywal file, without path and extension '''
+        self.deault_filename_only = 'pywal-pyradio'
 
     def download(self, a_theme=None, a_path=None, print_errors=None):
         ''' download a theme
@@ -2806,10 +2808,10 @@ class PyRadioThemesShThemes(PyRadioBase16Themes):
     NAME = 'PyWal Project'
     ''' theme name to be found in themes window '''
     THEME = (
-        'theme_sh-pyradio-default',
-        'theme_sh-pyradio-default-alt',
-        'theme_sh-pyradio-variation',
-        'theme_sh-pyradio-variation-alt',
+        'theme-sh-pyradio-default',
+        'theme-sh-pyradio-default-alt',
+        'theme-sh-pyradio-variation',
+        'theme-sh-pyradio-variation-alt',
     )
     ''' To be used in get_url (along with theme_id) '''
     '''  link to last used base16 theme '''
@@ -2818,8 +2820,10 @@ class PyRadioThemesShThemes(PyRadioBase16Themes):
         self._cnf = config
         self._themes_dir = config.themes_dir
         self._custom_theme_file = path.join(self._themes_dir, self.THEME[self.theme_id] + '.pyradio-theme')
-        self._default_theme_file = path.join(self._themes_dir, 'pywal-pyradio.pyradio-theme')
+        self._default_theme_file = path.join(self._themes_dir, 'theme-sh-pyradio.pyradio-theme')
         self._theme_sh_executable = pywhich('theme.sh')
+        ''' the default theme.sh file, without path and extension '''
+        self.deault_filename_only = 'theme-sh-pyradio'
 
         xdg = getenv('XDG_CONFIG_HOME')
         if xdg:
@@ -3034,10 +3038,15 @@ transparency        0
                     lines[i] = lines[i].replace('{' + k + '}', theme_data[k])
 
             for k in range(15, -1, -1):
+                if k == 8 and \
+                        theme_data[str(8)] == theme_data['background']:
+                    ''' fix border color when it's equal to background '''
+                    color_data = theme_data[str(5 + (self.theme_id % 2))]
+                else:
+                    color_data = theme_data[str(k)]
                 token = '{color' + str(k) + '}'
                 for i in range(0, len(lines)):
-                    lines[i] = lines[i].replace(token, theme_data[str(k)])
-
+                    lines[i] = lines[i].replace(token, color_data)
             ret = True
             # enable this to see the contents of the theme
             # for n in lines:
