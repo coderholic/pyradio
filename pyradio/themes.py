@@ -152,25 +152,35 @@ class PyRadioTheme(object):
                     curse_rgb[2],
                 )
 
-    def create_theme_from_theme(self, theme_name):
+    def create_theme_from_theme(self, theme_name, out_theme_name):
         ''' Create a theme in theme's directory
             based on an internal or system theme
         '''
+        out_them = path.join(self._cnf.themes_dir, out_theme_name + '.pyradio-theme')
+        if exists(out_theme):
+            print('Theme "{}" already exists...'.format(out_theme_name))
+            sys.exit(1)
         th_name = theme_name if theme_name else 'dark'
-        if not th_name in (
-            'dark', 'light', 'dark_16_colors',
-            'light_16_colors', 'black_on_white', 'bow',
-            'white_on_black', 'wob', 'classic_by_obsdg',
-            'cupcake_by_edunfelt', 'fairyfloss_by_edunfelt',
-            'gruvbox_dark_by_sng', 'gruvbox_light_by_sng',
-            'minima_by_ben_chile', 'pastel_based_by_sng',
-        ):
+        if theme_name not in self._cnf.internal_themes and \
+                theme_name not in self._cnf.system_themes:
             th_name = 'dark'
-        ret = self.open_theme(th_name)
-        if ret < 0:
-            self.open_theme('dark')
-        self._active_colors = None
-        self._active_colors = deepcopy(self._colors)
+        if th_name in self._cnf.internal_themes:
+            ''' create theme file '''
+            ret = self.open_theme(th_name)
+            if ret < 0:
+                self.open_theme('dark')
+            self._active_colors = None
+            self._active_colors = deepcopy(self._colors)
+        else:
+            ''' copy theme file '''
+            in_file = path.join(os.path.basename(__file__), 'themes', out_theme_name + '.pyradio-theme')
+            try:
+                shutil.copy(in_file, out_file)
+                print('Theme created: "{}"'.format(out_theme_name))
+                sys.exit()
+            except:
+                print('Error creating theme file: "{}"'.format(out_theme_name))
+                sys.exit(1)
 
     def open_theme(self, a_theme='', a_path='', print_errors=None):
         """ Read a theme and place it in _colors

@@ -89,6 +89,8 @@ def shell():
     parser.add_argument('-l', '--list', action='store_true',
                         help='List of available stations in a playlist.')
     parser.add_argument('-t', '--theme', default='', help='Use specified theme.')
+    parser.add_argument('--show-themes', action='store_true',
+                       help='Show internal and system themes names.')
     parser.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
                         help='Toggle autoload last opened playlist.')
     parser.add_argument('-scd', '--show-config-dir', action='store_true',
@@ -146,6 +148,17 @@ def shell():
             pyradio_config.read_config()
             if pyradio_config.distro != 'None':
                 print('Distribution: {}'.format(pyradio_config.distro))
+            sys.exit()
+
+        if args.show_themes:
+            pyradio_config.read_config()
+            print('Internal Themes')
+            for n in pyradio_config.internal_themes:
+                if n not in ('bow', 'wob'):
+                    print('  ', n)
+            print('System Themes')
+            for n in pyradio_config.system_themes:
+                print('  ', n)
             sys.exit()
 
         if platform.startswith('win'):

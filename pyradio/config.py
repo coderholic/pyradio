@@ -1173,6 +1173,13 @@ class PyRadioConfig(PyRadioStations):
     ''' Windows Uninstall trigger '''
     WIN_UNINSTALL = False
 
+
+    internal_themes = (
+        'dark', 'light', 'dark_16_colors',
+        'light_16_colors', 'black_on_white', 'bow',
+        'white_on_black', 'wob'
+    )
+
     def __init__(self):
         self.backup_player_params = None
         self._profile_name = 'pyradio'
@@ -1476,6 +1483,10 @@ class PyRadioConfig(PyRadioStations):
     @session_lock_file.setter
     def session_lock_file(self, val):
         return
+
+    @property
+    def system_themes(self):
+        return tuple(sorted([path.basename(x).replace('.pyradio-theme', '') for x in glob.glob(path.join(path.dirname(__file__), 'themes', '*.pyradio-theme'), recursive = False)]))
 
     def is_project_theme(self, a_theme_name):
         ''' Check if a theme name is in auto_update_frameworks
