@@ -39,12 +39,12 @@ class PyRadioTheme(object):
     def _do_init_colors(self, transparency=None):
         if curses.can_change_color():
             if transparency is not None:
-                transp = transparency
+                self._cnf.use_transparency = transparency
             else:
-                transp = self._transparent
+                self._cnf.use_transparency = self._transparent
                 # transp = self._transparent if self._cnf.use_transparency else False
             # logger.error('transp = {}'.format(transp))
-            if transp:
+            if self._cnf.use_transparency:
                 colors = {
                     1: (12, -1),
                     2: (11, -1),
@@ -126,6 +126,7 @@ class PyRadioTheme(object):
         self._do_init_colors(transparency=transp)
 
         self._read_colors = deepcopy(self._colors)
+        # logger.error('colors\n{}'.format(self._read_colors))
         return result
 
     def _load_default_theme(self, a_theme):
@@ -156,10 +157,9 @@ class PyRadioTheme(object):
         ''' Create a theme in theme's directory
             based on an internal or system theme
         '''
-        out_them = path.join(self._cnf.themes_dir, out_theme_name + '.pyradio-theme')
-        if exists(out_theme):
-            print('Theme "{}" already exists...'.format(out_theme_name))
-            sys.exit(1)
+        out_file = path.join(self._cnf.themes_dir, out_theme_name + '.pyradio-theme')
+        if exists(out_file):
+            return False, 'Theme "{}" already exists...'.format(out_theme_name)
         th_name = theme_name if theme_name else 'dark'
         if theme_name not in self._cnf.internal_themes and \
                 theme_name not in self._cnf.system_themes:
@@ -171,16 +171,21 @@ class PyRadioTheme(object):
                 self.open_theme('dark')
             self._active_colors = None
             self._active_colors = deepcopy(self._colors)
+            save_theme = PyRadioThemeReadWrite()
+            ret = save_theme.write_theme(out_file, colors=self._colors)
+            # print(self._colors)
+            if ret == 0:
+                return True, 'Theme created: "{}"'.format(out_theme_name)
+            elif ret == -2:
+                return False, 'Error writing theme file: {}'.format(out_theme_name)
         else:
             ''' copy theme file '''
-            in_file = path.join(os.path.basename(__file__), 'themes', out_theme_name + '.pyradio-theme')
+            in_file = path.join(path.dirname(__file__), 'themes', theme_name + '.pyradio-theme')
             try:
-                shutil.copy(in_file, out_file)
-                print('Theme created: "{}"'.format(out_theme_name))
-                sys.exit()
+                copyfile(in_file, out_file)
+                return True, 'Theme created: "{}"'.format(out_theme_name)
             except:
-                print('Error creating theme file: "{}"'.format(out_theme_name))
-                sys.exit(1)
+                return False, 'Error creating file for theme: "{}"'.format(out_theme_name)
 
     def open_theme(self, a_theme='', a_path='', print_errors=None):
         """ Read a theme and place it in _colors
@@ -434,7 +439,7 @@ class PyRadioThemeReadWrite(object):
         self._theme_path = theme_path
         self._temp_colors['Name'] = theme_name
         self._temp_colors['Path'] = theme_path
-        logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
+        # logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
         return 0, self._temp_colors
 
     def _theme_is_incomplete(self, some_colors=None):
@@ -450,26 +455,98 @@ class PyRadioThemeReadWrite(object):
             Parameters
             ==========
             out_theme
-                output theme name
+                output theme file name
             base_theme
-                read colors from this theme name
+                read colors from this theme file name
             colors
                 colors to write
 
             Return
             ======
+               -4   output file already exists
+               -3   input file does not exist
                -2   error writing file
                -1   colors are incomplete
                 0   all ok
         '''
+        if exists(out_theme):
+            return -4
         if colors is None:
             if base_theme is not None:
-                pass
+                if not exists(base_theme):
+                    return -3
+                try:
+                    copyfile(base_theme, out_theme)
+                    return 0
+                except:
+                    return -2
             else:
                 return -1
         else:
             if self._theme_is_incomplete(colors):
                 return -1
+            msg = '''# Main foreground and background
+Stations            {0} {1}
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      {2}
+
+# Status bar foreground and background
+Status Bar          {3} {4}
+
+# Normal cursor foreground and background
+Normal Cursor       {5} {6}
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       {7} {8}
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         {9} {10}
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          {11}
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         {12}
+
+# Message window borser foreground
+# (background color will come from Stations)
+Messages Border     {13}
+
+# Theme Transparency
+# Values are:
+#   0: No transparency (default)
+#   1: Theme is transparent
+#   2: Obey config setting
+transparency        0
+'''
+            with open(out_theme, 'w') as f:
+                f.write(
+                   msg.format(
+                       colors['css'][1],
+                       colors['css'][2],
+                       colors['css'][3],
+                       colors['css'][8],
+                       colors['css'][9],
+                       colors['css'][4],
+                       colors['css'][5],
+                       colors['css'][6],
+                       colors['css'][7],
+                       colors['css'][13],
+                       colors['css'][14],
+                       colors['css'][12],
+                       colors['css'][11],
+                       colors['css'][10]
+                   )
+                )
+            return 0
+
 
 
 class PyRadioThemeSelector(object):

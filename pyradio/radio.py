@@ -6589,8 +6589,6 @@ class PyRadio(object):
                 return
 
         elif char in (ord('T'), ):
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('=== Coming into themes')
             self._update_status_bar_right()
             self._toggle_transparency()
             return

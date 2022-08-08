@@ -1195,6 +1195,7 @@ class PyRadioConfig(PyRadioStations):
         self.connection_timeout = '10'
         self.theme = 'dark'
         self.use_transparency = False
+        self.active_transparency = False
         self._distro = 'None'
 
         if self.params_changed:
@@ -2817,7 +2818,7 @@ transparency        0
 
 
 class PyRadioThemesShThemes(PyRadioBase16Themes):
-    NAME = 'PyWal Project'
+    NAME = 'Theme.sh Project'
     ''' theme name to be found in themes window '''
     THEME = (
         'theme-sh-pyradio-default',
@@ -3105,3 +3106,5 @@ transparency        0
                 if line.startswith(theme_name):
                     in_theme = True
         return lines
+
+

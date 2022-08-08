@@ -91,6 +91,8 @@ def shell():
     parser.add_argument('-t', '--theme', default='', help='Use specified theme.')
     parser.add_argument('--show-themes', action='store_true',
                        help='Show internal and system themes names.')
+    parser.add_argument('--write-theme', nargs=2, metavar=('IN_THEME', 'OUT_THEME,'),
+                        help='Write an Internal or System Theme to themes directory.')
     parser.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
                         help='Toggle autoload last opened playlist.')
     parser.add_argument('-scd', '--show-config-dir', action='store_true',
@@ -141,6 +143,18 @@ def shell():
 
     with pyradio_config_file() as pyradio_config:
 
+        if args.write_theme:
+            if args.write_theme[0]:
+                from .themes import PyRadioTheme
+                read_config(pyradio_config)
+                theme = PyRadioTheme(pyradio_config)
+                ret, msg = theme.create_theme_from_theme(
+                    args.write_theme[0],
+                    args.write_theme[1]
+                )
+                print(msg)
+                sys.exit()
+
         if args.version:
             pyradio_config.get_pyradio_version()
             print('PyRadio version: {}'.format(pyradio_config.current_pyradio_version))
@@ -159,6 +173,13 @@ def shell():
             print('System Themes')
             for n in pyradio_config.system_themes:
                 print('  ', n)
+            # print('Ext. Projects Themes')
+            # for n in pyradio_config.auto_update_frameworks:
+
+            #     print('  {0} {1}'.format(n.NAME, '  (Supported) ' if n.can_auto_update else '  (Not supported)'))
+            #     if n.can_auto_update:
+            #         for k in n.THEME:
+            #             print('    ', k)
             sys.exit()
 
         if platform.startswith('win'):
