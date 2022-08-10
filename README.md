@@ -57,6 +57,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
             * [Using the themes without base16](#using-the-themes-without-base16)
         * [pywal](#pywal)
         * [theme.sh](#theme.sh)
+            * [Using the themes without theme.sh](#using-the-themes-without-theme.sh)
 * [Mouse support](#mouse-support)
 * [Titles logging](#titles-logging)
     * [Tagging a title](#tagging-a-title)
@@ -900,9 +901,13 @@ Since these themes are generated on the fly, as the wallpaper changes, there is 
 
 #### theme.sh
 
-When detected, four themes will be added to the menu; the main and the alternative forms (there are 400 plus themes available, which makes a stuggering number of around 1700 plus themes for **PyRadio**!)
+When detected, four themes will be added to the menu; the main and the alternative forms (there are 400 plus themes available, which makes a stuggering number of around 1800 themes for **PyRadio**!)
 
-Since these themes are generated on the fly, there is no way to use them if [theme.sh](https://github.com/lemnos/theme.sh) is not in use.
+##### Using the themes without theme.sh
+
+In case one wants to use any of these themes, but not install or use [theme.sh](https://github.com/lemnos/theme.sh), one can download [this repo](https://github.com/s-n-g/theme-sh-pyradio), and use the "*create_themes.py*" script to create the themes, and "*cycle_themes.py*" and "*install_themes.py*" scripts to inspect and install them.
+
+For Windows users, this is the only way to use any of these "*Project Themes*", since their generation works on non-windows platforms only.
 
 ## Mouse support
 

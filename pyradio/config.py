@@ -2894,11 +2894,11 @@ Active Station      {color1}
 Status Bar          {background} {color4}
 
 # Normal cursor foreground and background
-Normal Cursor       {background} {color4}
+Normal Cursor       {background} {color1}
 
 # Cursor foreground and background
 # when cursor on playing station
-Active Cursor       {background} {color1}
+Active Cursor       {background} {color4}
 
 # Cursor foreground and background
 # This is the Line Editor cursor
@@ -2934,11 +2934,11 @@ Active Station      {color4}
 Status Bar          {background} {color1}
 
 # Normal cursor foreground and background
-Normal Cursor       {background} {color1}
+Normal Cursor       {background} {color4}
 
 # Cursor foreground and background
 # when cursor on playing station
-Active Cursor       {background} {color4}
+Active Cursor       {background} {color1}
 
 # Cursor foreground and background
 # This is the Line Editor cursor
@@ -2974,11 +2974,11 @@ Active Station      {color1}
 Status Bar          {background} {color2}
 
 # Normal cursor foreground and background
-Normal Cursor       {background} {color2}
+Normal Cursor       {background} {color1}
 
 # Cursor foreground and background
 # when cursor on playing station
-Active Cursor       {background} {color1}
+Active Cursor       {background} {color2}
 
 # Cursor foreground and background
 # This is the Line Editor cursor
@@ -3014,11 +3014,11 @@ Active Station      {color2}
 Status Bar          {background} {color1}
 
 # Normal cursor foreground and background
-Normal Cursor       {background} {color1}
+Normal Cursor       {background} {color2}
 
 # Cursor foreground and background
 # when cursor on playing station
-Active Cursor       {background} {color2}
+Active Cursor       {background} {color1}
 
 # Cursor foreground and background
 # This is the Line Editor cursor
@@ -3045,6 +3045,7 @@ Messages Border     {color8}
 transparency        0
 '''
             )
+
             lines = templates[self.theme_id].split('\n')
             for k in 'foreground', 'background':
                 for i in range(0, len(lines)):

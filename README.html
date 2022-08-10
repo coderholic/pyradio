@@ -114,7 +114,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#using-the-themes-without-base16">Using the themes without base16</a></li>
 </ul></li>
 <li><a href="#pywal">pywal</a></li>
-<li><a href="#theme.sh">theme.sh</a></li>
+<li><a href="#theme.sh">theme.sh</a>
+<ul>
+<li><a href="#using-the-themes-without-theme.sh">Using the themes without theme.sh</a></li>
+</ul></li>
 </ul></li>
 </ul></li>
 <li><a href="#mouse-support">Mouse support</a></li>
@@ -1357,8 +1360,10 @@ For this reason, a folder called “<strong>themes</strong>” will probably hav
 <p>Since these themes are generated on the fly, as the wallpaper changes, there is no way to use them if <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a> is not in use.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a> themes are activated but not watched, the theme will be corrupted when the wallpaper changes, and will have to be manually reloaded. So, it’s better to just always watch these themes.</p>
 <h4 id="theme.sh">theme.sh</h4>
-<p>When detected, four themes will be added to the menu; the main and the alternative forms (there are 400 plus themes available, which makes a stuggering number of around 1700 plus themes for <strong>PyRadio</strong>!)</p>
-<p>Since these themes are generated on the fly, there is no way to use them if <a target="_blank" href="https://github.com/lemnos/theme.sh">theme.sh</a> is not in use.</p>
+<p>When detected, four themes will be added to the menu; the main and the alternative forms (there are 400 plus themes available, which makes a stuggering number of around 1800 themes for <strong>PyRadio</strong>!)</p>
+<h5 id="using-the-themes-without-theme.sh">Using the themes without theme.sh</h5>
+<p>In case one wants to use any of these themes, but not install or use <a target="_blank" href="https://github.com/lemnos/theme.sh">theme.sh</a>, one can download <a target="_blank" href="https://github.com/s-n-g/theme-sh-pyradio">this repo</a>, and use the “<em>create_themes.py</em>” script to create the themes, and “<em>cycle_themes.py</em>” and “<em>install_themes.py</em>” scripts to inspect and install them.</p>
+<p>For Windows users, this is the only way to use any of these “<em>Project Themes</em>”, since their generation works on non-windows platforms only.</p>
 <h2 id="mouse-support">Mouse support <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
 <p>Being a console application, <strong>PyRadio</strong> was never intended to work with a mouse.</p>
 <p>Furthermore, when using the mouse on a console application, the result is highly dependent on the terminal used and the way it implements mouse support.</p>
