@@ -112,59 +112,67 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 
 ## Command line options
 
-    $ pyradio -h
+```
+$ pyradio -h
 
-    usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-                   [-t THEME] [-scd] [-ocd] [-ep EXTRA_PLAYER_PARAMETERS]
-                   [-ap ACTIVE_PLAYER_PARAM_ID] [-lp] [--unlock] [-d]
+usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
+               [-t THEME] [--show-themes] [--write-theme IN_THEME OUT_THEME,]
+               [-tlp] [-scd] [-ocd] [-ep EXTRA_PLAYER_PARAMETERS]
+               [-ap ACTIVE_PLAYER_PARAM_ID] [-lp] [-U] [--user] [-R]
+               [--unlock] [-lt] [-d] [-V]
 
-    Curses based Internet radio player
+Curses based Internet radio player
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      -s STATIONS, --stations STATIONS
-                            Use specified station CSV file.
-      -p [PLAY], --play [PLAY]
-                            Start and play.The value is num station or empty for
-                            random.
-      -u USE_PLAYER, --use-player USE_PLAYER
-                            Use specified player. A comma-separated list can be
-                            used to specify detection order. Supported players:
-                            mpv, mplayer, vlc.
-      -a, --add             Add station to list.
-      -ls, --list-playlists
-                            List of available playlists in config dir.
-      -l, --list            List of available stations in a playlist.
-      -t THEME, --theme THEME
-                            Use specified theme.
-      -tlp, --toggle-load-last-playlist
-                              Toggle autoload last opened playlist.
-      -scd, --show-config-dir
-                            Print config directory [CONFIG DIR] location and exit.
-      -ocd, --open-config-dir
-                            Open config directory [CONFIG DIR] with default file
-                            manager.
-      -ep EXTRA_PLAYER_PARAMETERS, --extra-player_parameters EXTRA_PLAYER_PARAMETERS
-                            Provide extra player parameters as a string. The
-                            parameter is saved in the configuration file and is
-                            activated for the current session. The string's format
-                            is [player_name:parameters]. player_name can be 'mpv',
-                            'mplayer' or 'vlc'. Alternative format to pass a
-                            profile: [player_name:profile:profile_name]. In this
-                            case, the profile_name must be a valid profile defined
-                            in the player's config file (not for VLC).
-      -ap ACTIVE_PLAYER_PARAM_ID, --active-player-param-id ACTIVE_PLAYER_PARAM_ID
-                            Specify the extra player parameter set to be used with
-                            the default player. ACTIVE_PLAYER_PARAM_ID is 1-11
-                            (refer to the output of the -lp option)
-      -lp, --list-player-parameters
-                            List extra players parameters.
-      -U, --update          Update PyRadio.
-      --user                Install only for current user (linux only).
-      -R, --uninstall       Uninstall PyRadio.
-      --unlock              Remove sessions' lock file.
-      -d, --debug           Start pyradio in debug mode.
-
+options:
+  -h, --help            show this help message and exit
+  -s STATIONS, --stations STATIONS
+                        Use specified station CSV file.
+  -p [PLAY], --play [PLAY]
+                        Start and play.The value is num station or empty for
+                        random.
+  -u USE_PLAYER, --use-player USE_PLAYER
+                        Use specified player. A comma-separated list can be
+                        used to specify detection order. Supported players:
+                        mpv, mplayer, vlc.
+  -a, --add             Add station to list.
+  -ls, --list-playlists
+                        List of available playlists in config dir.
+  -l, --list            List of available stations in a playlist.
+  -t THEME, --theme THEME
+                        Use specified theme.
+  --show-themes         Show Internal and System Themes names.
+  --write-theme IN_THEME OUT_THEME,
+                        Write an Internal or System Theme to themes directory.
+  -tlp, --toggle-load-last-playlist
+                        Toggle autoload last opened playlist.
+  -scd, --show-config-dir
+                        Print config directory [CONFIG DIR] location and exit.
+  -ocd, --open-config-dir
+                        Open config directory [CONFIG DIR] with default file
+                        manager.
+  -ep EXTRA_PLAYER_PARAMETERS, --extra-player_parameters EXTRA_PLAYER_PARAMETERS
+                        Provide extra player parameters as a string. The
+                        parameter is saved in the configuration file and is
+                        activated for the current session. The string's format
+                        is [player_name:parameters]. player_name can be 'mpv',
+                        'mplayer' or 'vlc'. Alternative format to pass a
+                        profile: [player_name:profile:profile_name]. In this
+                        case, the profile_name must be a valid profile defined
+                        in the player's config file (not for VLC).
+  -ap ACTIVE_PLAYER_PARAM_ID, --active-player-param-id ACTIVE_PLAYER_PARAM_ID
+                        Specify the extra player parameter set to be used with
+                        the default player. ACTIVE_PLAYER_PARAM_ID is 1-11
+                        (refer to the output of the -lp option)
+  -lp, --list-player-parameters
+                        List extra players parameters.
+  -U, --update          Update PyRadio.
+  --user                Install only for current user (not on Windows).
+  -R, --uninstall       Uninstall PyRadio.
+  --unlock              Remove sessions' lock file.
+  -lt, --log-titles     Log titles to file.
+  -d, --debug           Start pyradio in debug mode.
+  -V, --version         Display version information.
+```
 
 The following options can also be set in **PyRadio**'s [configuration file](#config-file):
 

@@ -90,7 +90,7 @@ def shell():
                         help='List of available stations in a playlist.')
     parser.add_argument('-t', '--theme', default='', help='Use specified theme.')
     parser.add_argument('--show-themes', action='store_true',
-                       help='Show internal and system themes names.')
+                       help='Show Internal and System Themes names.')
     parser.add_argument('--write-theme', nargs=2, metavar=('IN_THEME', 'OUT_THEME,'),
                         help='Write an Internal or System Theme to themes directory.')
     parser.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',

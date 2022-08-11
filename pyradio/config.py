@@ -2711,11 +2711,11 @@ Active Station      {color1}
 Status Bar          {color0} {color3}
 
 # Normal cursor foreground and background
-Normal Cursor       {color0} {color3}
+Normal Cursor       {color0} {color1}
 
 # Cursor foreground and background
 # when cursor on playing station
-Active Cursor       {color0} {color1}
+Active Cursor       {color0} {color3}
 
 # Cursor foreground and background
 # This is the Line Editor cursor
@@ -2751,11 +2751,11 @@ Active Station      {color3}
 Status Bar          {color0} {color6}
 
 # Normal cursor foreground and background
-Normal Cursor       {color0} {color6}
+Normal Cursor       {color0} {color3}
 
 # Cursor foreground and background
 # when cursor on playing station
-Active Cursor       {color0} {color3}
+Active Cursor       {color0} {color6}
 
 # Cursor foreground and background
 # This is the Line Editor cursor
