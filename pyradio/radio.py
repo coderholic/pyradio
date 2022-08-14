@@ -6067,11 +6067,13 @@ class PyRadio(object):
                 ''' browser config save canceled '''
                 self._exit_browser_config()
 
-        elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
-                (char not in self._chars_to_bypass_on_editor or \
-                self._cnf._online_browser.line_editor_has_focus()):
+        # elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
+        #         (char not in self._chars_to_bypass_on_editor or \
+        #         self._cnf._online_browser.line_editor_has_focus()):
+        elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
 
-            if char in self._global_functions.keys():
+            if char in self._global_functions.keys() and \
+                    not self._cnf._online_browser.line_editor_has_focus():
                 self._global_functions[char]()
                 return
 

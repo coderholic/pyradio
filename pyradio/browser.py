@@ -1529,6 +1529,9 @@ class RadioBrowserConfig(object):
                     except:
                         if logger.isEnabledFor(logging.ERROR):
                             logger.error('RadioBrowser: error inserting serch item id {}'.format(n))
+                if 'limit' in self.terms[-1]['post_data'].keys():
+                    if self.terms[-1]['post_data']['limit'] == str(self.limit):
+                        self.terms[-1]['post_data'].pop('limit')
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('RadioBrowser: no search terms found, reverting to defaults')
@@ -2289,6 +2292,8 @@ class RadioBrowserSearchWindow(object):
 
     _global_functions = {}
 
+    _backslash_pressed = False
+
     def __init__(self,
                  parent,
                  config,
@@ -2502,6 +2507,8 @@ class RadioBrowserSearchWindow(object):
             ''' get limit (term)'''
             if self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value != self._default_limit:
                 ret['post_data']['limit'] = str(self._widgets[-self.NUMBER_OF_WIDGETS_AFTER_SEARCH_SECTION].value)
+            # else:
+            #     ret['post_data']['limit'] = str(self._default_limit)
 
         ''' get order '''
         self._order_to_term(ret)
@@ -2917,17 +2924,17 @@ class RadioBrowserSearchWindow(object):
         ''' search for a search term in history
 
             if found            return True, index
-            if not found      return False, len(self._history) - 1
-                and append the search term in the history
+            if not found        return False, len(self._history) - 1
+                                and append the search term in the history
         '''
         found = False
         for a_search_term_index, a_search_term in enumerate(self._history):
             if new_search_term == a_search_term:
                 # self._history_id = self._selected_history_id
-                index = a_search_term_index
+                ret_index = a_search_term_index
                 found = True
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('New search term already in history, id = {}'.format(self._selected_history_id))
+                    logger.debug('New search term already in history, id = {}'.format(ret_index))
                 break
 
         if not found:
@@ -2935,10 +2942,10 @@ class RadioBrowserSearchWindow(object):
                 logger.debug('Adding new search term to history, id = {}'.format(len(self._history)))
             self._history.append(new_search_term)
             # self._history_id = self._selected_history_id = len(self._history) - 1
-            index = len(self._history) - 1
+            ret_index = len(self._history) - 1
             self._cnf.dirty = True
 
-        return found, index
+        return found, ret_index
 
     def _goto_first_history_item(self):
         self._handle_new_or_existing_search_term()
@@ -2971,6 +2978,7 @@ class RadioBrowserSearchWindow(object):
     def _ctrl_n(self):
         ''' ^N - Next history item '''
         cur_history_id = self._selected_history_id
+        logger.error('cur_history_id = {}'.format(cur_history_id))
         self._handle_new_or_existing_search_term()
         if abs(self._selected_history_id - cur_history_id) > 1:
             self._selected_history_id = cur_history_id
@@ -3055,6 +3063,7 @@ class RadioBrowserSearchWindow(object):
             return -1
 
         if self._too_small:
+            self._backslash_pressed = False
             return 1
 
         class_name = type(self._widgets[self._focus]).__name__
@@ -3062,22 +3071,28 @@ class RadioBrowserSearchWindow(object):
         if char == ord('0') and \
                 type(self._widgets[self._focus]).__name__ != 'SimpleCursesLineEdit':
             self._goto_first_history_item()
+            self._backslash_pressed = False
 
         elif char == ord('$') and \
                 type(self._widgets[self._focus]).__name__ != 'SimpleCursesLineEdit':
             self._goto_last_history_item()
+            self._backslash_pressed = False
 
         elif char in (curses.KEY_PPAGE, ) and self._focus != len(self._widgets) -3:
             self._jump_history_up()
+            self._backslash_pressed = False
 
         elif char in (curses.KEY_NPAGE, ) and self._focus != len(self._widgets) -3:
             self._jump_history_down()
+            self._backslash_pressed = False
 
         elif char in (ord('\t'), 9):
             self._focus_next()
+            self._backslash_pressed = False
 
         elif char in (curses.KEY_BTAB, ):
             self._focus_previous()
+            self._backslash_pressed = False
 
         elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
                       ord('\r')) and self._focus == len(self._widgets) - 1:
@@ -3087,20 +3102,24 @@ class RadioBrowserSearchWindow(object):
         elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
                       ord('\r')) and self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''
+            self._backslash_pressed = False
             ret = self._handle_new_or_existing_search_term()
             return 0 if ret == 1 else ret
 
         elif char in (curses.ascii.SO, ):
             ''' ^N - Next history item '''
             self._ctrl_n()
+            self._backslash_pressed = False
 
         elif char in (curses.ascii.DLE, ):
             ''' ^P - Previous history item '''
             self._ctrl_p()
+            self._backslash_pressed = False
 
         # elif char in (curses.ascii.ETB, ):
         elif char in (curses.ascii.ENQ, ):
             ''' ^E - Save search history '''
+            self._backslash_pressed = False
             self._handle_new_or_existing_search_term()
             ''' Save search history '''
             return 5
@@ -3108,18 +3127,22 @@ class RadioBrowserSearchWindow(object):
         elif char in (curses.ascii.EM, ):
             ''' ^Y - Add history item '''
             self._handle_new_or_existing_search_term()
+            self._backslash_pressed = False
 
         elif char in (curses.ascii.CAN, ):
             ''' ^X - Delete history item '''
             self._ctrl_x()
+            self._backslash_pressed = False
 
         elif char in (curses.ascii.STX, ):
             ''' ^B - Set default item '''
             self._ctrl_b()
+            self._backslash_pressed = False
 
         elif char in (curses.ascii.ACK, ):
             ''' ^F - Go to template (item 0) '''
             self._ctrl_f()
+            self._backslash_pressed = False
 
         else:
             if class_name == 'SimpleCursesWidgetColumns':
@@ -3130,8 +3153,10 @@ class RadioBrowserSearchWindow(object):
                 elif ret == 2:
                     # cursor moved
                     self._win.refresh()
+                self._backslash_pressed = False
 
             elif self._focus in self._checkbox_to_enable_widgets:
+                self._backslash_pressed = False
                 ret = self._widgets[self._focus].keypress(char)
                 if not ret:
                     tp = list(self._checkbox_to_enable_widgets)
@@ -3143,17 +3168,37 @@ class RadioBrowserSearchWindow(object):
                     return 1
 
             elif class_name == 'SimpleCursesCheckBox':
+                self._backslash_pressed = False
                 ret = self._widgets[self._focus].keypress(char)
                 if not ret:
                     return 1
 
             elif class_name == 'SimpleCursesCounter':
+                self._backslash_pressed = False
                 ret = self._widgets[self._focus].keypress(char)
                 if ret == 0:
                     self._win.refresh()
                     return 1
 
             elif class_name == 'SimpleCursesLineEdit':
+                if char == ord('\\'):
+                    self._backslash_pressed = True
+                    # return 1
+
+                if self._backslash_pressed:
+                    if char in self._global_functions.keys():
+                        self._backslash_pressed = False
+                        self._global_functions[char]()
+                        return 1
+                    elif char == ord('0'):
+                        self._backslash_pressed = False
+                        self._goto_first_history_item()
+                        return 1
+                    elif char == ord('$'):
+                        self._backslash_pressed = False
+                        self._goto_last_history_item()
+                        return 1
+
                 ret = self._widgets[self._focus].keypress(self._win, char)
                 if ret == -1:
                     # Cancel
@@ -3164,6 +3209,7 @@ class RadioBrowserSearchWindow(object):
                 elif ret < 2:
                     return 1
 
+            self._backslash_pressed = False
             if char in (ord('s'), ):
                 ''' prerform search '''
                 ret = self._handle_new_or_existing_search_term()
@@ -3243,7 +3289,7 @@ class RadioBrowserSearchWindow(object):
         return 1
 
     def _handle_new_or_existing_search_term(self):
-        ''' read alla widgets and create a search term
+        ''' read all widgets and create a search term
             if it  does not exist add it to history
         '''
         test_search_term = self._widgets_to_search_term()
