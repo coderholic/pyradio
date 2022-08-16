@@ -1061,9 +1061,11 @@ If you are a packager and would like to produce a package for your distribution 
 
 First of all, make sure you declare the pacakges's requirements to the relevant section of your manifest (or whatever) file. These are:
 
-1. requests
-2. dnspython
-3. psutil
+1. setuptools
+2. wheel
+3. requests
+4. dnspython
+5. psutil
 
 After that, you will have to modify some files, because **PyRadio** is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
 

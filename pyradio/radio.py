@@ -284,6 +284,13 @@ class PyRadio(object):
         self.number_of_items = len(self._cnf.stations)
         self._playlist_in_editor = self._cnf.station_path
 
+        self._cnf.set_station_history(
+            execute_funct=self._load_playlist_and_station_from_station_history,
+            no_items_funct=self._show_no_station_history_notification,
+            pass_first_item_funct=self._show_first_station_history_notification,
+            pass_last_item_funct=self._show_last_station_history_notification
+        )
+
         ''' list of functions to open for entering
             or redisplaying a mode '''
         self._redisplay = {
@@ -601,7 +608,8 @@ class PyRadio(object):
                     self.log,
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
-                    self._show_station_info_from_thread)
+                    self._show_station_info_from_thread,
+                    self._add_station_to_stations_history)
         except:
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
@@ -760,8 +768,7 @@ class PyRadio(object):
             self.bodyWin.refresh()
 
     def initHead(self, info):
-        self.headWin.hline(0, 0, ' ', self.maxX, curses.color_pair(4))
-        rightStr = " www.coderholic.com/pyradio"
+        self.headWin.hline(0, 0, ' ', self.maxX, curses.color_pair(5))
         rightStr = " https://github.com/coderholic/pyradio"
         try:
             self.headWin.addstr(
@@ -780,7 +787,7 @@ class PyRadio(object):
                 self.headWin.addstr(' ', curses.color_pair(4))
         except:
             pass
-        self.headWin.bkgd(' ', curses.color_pair(5))
+        # self.headWin.bkgd(' ', curses.color_pair(5))
         self.headWin.noutrefresh()
 
     def initBody(self):
@@ -1626,6 +1633,7 @@ class PyRadio(object):
             logger.info('*** Start of playback NOT detected!!! ***')
         self.player.stop_mpv_status_update_thread = True
         self.log.write(msg='Failed to connect to: ' + self._last_played_station[0])
+        self.player.connecting = False
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
             if logger.isEnabledFor(logging.INFO):
@@ -1665,6 +1673,7 @@ class PyRadio(object):
         except:
             pass
         finally:
+            self.player.connecting = False
             self._last_played_station_id = self.playing
             #self.selections[0][2] = -1
             if reset_playing:
@@ -5133,6 +5142,17 @@ class PyRadio(object):
             #     self.ws.close_window()
             #     self.refreshBody()
 
+    def _show_stations_history_notification(self, msg_id):
+        msg = (
+            '___Operation not suported!!!___\n____Connection timeout is 0 ',
+            '___Pelase wait for the player___\n__________to settle'
+        )
+        self._show_notification_with_delay(
+            txt=msg[msg_id],
+            mode_to_set=self.ws.NORMAL_MODE,
+            callback_function=self.refreshBody
+        )
+
     def keypress(self, char):
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
@@ -7054,7 +7074,25 @@ class PyRadio(object):
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char == curses.KEY_F8 and platform.startswith('win'):
+                if char == ord('<'):
+                    if int(self._cnf.connection_timeout_int) == 0:
+                        self._show_stations_history_notification(0)
+                    else:
+                        if self.player.connecting:
+                            self._show_stations_history_notification(1)
+                        else:
+                            self._cnf.play_from_history = True
+                            self._cnf.stations_history.play_previous()
+                elif char == ord('>'):
+                    if int(self._cnf.connection_timeout_int) == 0:
+                        self._show_stations_history_notification(0)
+                    else:
+                        if self.player.connecting:
+                            self._show_stations_history_notification(1)
+                        else:
+                            self._cnf.play_from_history = True
+                            self._cnf.stations_history.play_next()
+                elif char == curses.KEY_F8 and platform.startswith('win'):
                     ''' manage players on Windows
                         will present them after curses end
                     '''
@@ -7518,6 +7556,15 @@ class PyRadio(object):
                 mode_to_set=self.ws.operation_mode,
                 callback_function=self.refreshBody
             )
+
+    def _show_no_station_history_notification(self):
+        self._show_delayed_notification('___History is empty!!!___')
+
+    def _show_first_station_history_notification(self):
+        self._show_delayed_notification('___Already at first item!!!___')
+
+    def _show_last_station_history_notification(self):
+        self._show_delayed_notification('___Already at last item!!!___')
 
     def _show_station_pasted(self):
         self._show_delayed_notification('___Station pasted!!!___')
@@ -8285,5 +8332,32 @@ class PyRadio(object):
             except:
                 pass
         return False
+
+    def _add_station_to_stations_history(self):
+        playlist = self._cnf.station_title
+        station = self.stations[self.selection]
+        sel = self.selection
+        self._cnf.stations_history.add(self._cnf.station_title, self.stations[self.selection][0], self.selection)
+
+    def _load_playlist_and_station_from_station_history(self, old_h_item, h_item):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('activating history item: {}'.format(h_item))
+
+        if self.stations[h_item[-1]][0] == h_item[1]:
+            ''' station found '''
+            logger.error('station found')
+            self.setStation(h_item[-1])
+            if self.number_of_items > 0:
+                self.playSelection()
+                self._goto_playing_station(changing_playlist=False)
+            self.refreshBody()
+            self.selections[self.ws.NORMAL_MODE] = [self.selection,
+                                                    self.startPos,
+                                                    self.playing,
+                                                    self.stations]
+        else:
+            ''' I have to scan the playlist'''
+            logger.error('have to scan playlist')
+            pass
 
 # pymode:lint_ignore=W901

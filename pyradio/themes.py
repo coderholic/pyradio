@@ -45,6 +45,8 @@ class PyRadioTheme(object):
                 # transp = self._transparent if self._cnf.use_transparency else False
             # logger.error('transp = {}'.format(transp))
             if self._cnf.use_transparency:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('--> transparency: ON')
                 colors = {
                     1: (12, -1),
                     2: (11, -1),
@@ -57,6 +59,8 @@ class PyRadioTheme(object):
                     9: (6, 7)
                 }
             else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('--> transparency: OFF')
                 colors = {
                     1: (12, 2),
                     2: (11, 2),

@@ -230,7 +230,7 @@ class Player(object):
     icy_tokens = ()
     icy_audio_tokens = {}
 
-    playback_is_on = False
+    playback_is_on = connecting = False
 
     _station_encoding = 'utf-8'
 
@@ -255,9 +255,11 @@ class Player(object):
                  outputStream,
                  playback_timeout_counter,
                  playback_timeout_handler,
-                 info_display_handler):
+                 info_display_handler,
+                 history_add_function):
         self.outputStream = outputStream
         self._cnf = config
+        self.stations_history_add_function = history_add_function
         self.config_encoding = self._cnf.default_encoding
         self.config_dir = self._cnf.stations_dir
         try:
@@ -632,7 +634,9 @@ class Player(object):
                             new_input = self.oldUserInput['Title']
                         self.outputStream.write(msg=new_input, counter='')
                         self.playback_is_on = True
+                        self.connecting = False
                         self._stop_delay_thread()
+                        self.stations_history_add_function()
                         if 'AO: [' in subsystemOut:
                             with self.status_update_lock:
                                 if version_info > (3, 0):
@@ -665,6 +669,8 @@ class Player(object):
                                 if logger.isEnabledFor(logging.INFO):
                                     logger.info('*** updateStatus(): Start of playback detected (Icy-Title received) ***')
                             self.playback_is_on = True
+                            self.connecting = False
+                            self.stations_history_add_function()
                             ''' detect empty Icy-Title '''
                             title_without_prefix = title[len(self.icy_title_prefix):].strip()
                             # logger.error('DE title_without_prefix = "{}"'.format(title_without_prefix))
@@ -707,6 +713,8 @@ class Player(object):
                                     if logger.isEnabledFor(logging.INFO):
                                         logger.info('*** updateStatus(): Start of playback detected (Icy audio token received) ***')
                                 self.playback_is_on = True
+                                self.connecting = False
+                                self.stations_history_add_function()
                                 if enable_crash_detection_function:
                                     enable_crash_detection_function()
                                 # logger.error('DE token = "{}"'.format(a_token))
@@ -968,7 +976,9 @@ class Player(object):
                             new_input = self.oldUserInput['Title']
                         self.outputStream.write(msg=new_input, counter='')
                         self.playback_is_on = True
+                        self.connecting = False
                         self._stop_delay_thread()
+                        self.stations_history_add_function()
                         if 'AO: [' in subsystemOut:
                             with self.status_update_lock:
                                 if version_info > (3, 0):
@@ -989,7 +999,9 @@ class Player(object):
                         except:
                             pass
                         self.playback_is_on = True
+                        self.connecting = False
                         self._stop_delay_thread()
+                        self.stations_history_add_function()
                         if enable_crash_detection_function:
                             enable_crash_detection_function()
 
@@ -1033,7 +1045,9 @@ class Player(object):
                                 except:
                                     pass
                                 self.playback_is_on = True
+                                self.connecting = False
                                 self._stop_delay_thread()
+                                self.stations_history_add_function()
                                 if enable_crash_detection_function:
                                     enable_crash_detection_function()
                                 # logger.error('DE token = "{}"'.format(a_token))
@@ -1233,12 +1247,14 @@ class Player(object):
         self.detect_if_player_exited = True
         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
                     logger.info('*** _set_mpv_playback_is_on(): Start of playback detected ***')
+        self.stations_history_add_function()
         new_input = 'Playing: ' + self.name
         self.outputStream.write(msg=new_input, counter='')
         if self.oldUserInput['Title'] == '':
             self.oldUserInput['Input'] = new_input
         self.oldUserInput['Title'] = new_input
         self.playback_is_on = True
+        self.connecting = False
         if stop():
             return False
         enable_crash_detection_function()
@@ -1381,6 +1397,10 @@ class Player(object):
         # start playback check timer thread
         self.stop_timeout_counter_thread = False
         if self.playback_timeout > 0:
+            ''' set connecting here insead of Player.play()
+                so that we do not use it when timeout = 0
+            '''
+            self.connecting = True
             try:
                 self.connection_timeout_thread = threading.Thread(
                     target=self.playback_timeout_counter,
@@ -1392,10 +1412,12 @@ class Player(object):
                 if (logger.isEnabledFor(logging.DEBUG)):
                     logger.debug('playback detection thread started')
             except:
+                self.connecting = False
                 self.connection_timeout_thread = None
                 if (logger.isEnabledFor(logging.ERROR)):
                     logger.error('playback detection thread failed to start')
         else:
+            self.connecting = False
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('playback detection thread not starting (timeout is 0)')
         if logger.isEnabledFor(logging.INFO):
@@ -1614,14 +1636,16 @@ class MpvPlayer(Player):
                  outputStream,
                  playback_timeout_counter,
                  playback_timeout_handler,
-                 info_display_handler):
+                 info_display_handler,
+                 history_add_function):
         config.PLAYER_NAME = 'mpv'
         super(MpvPlayer, self).__init__(
             config,
             outputStream,
             playback_timeout_counter,
             playback_timeout_handler,
-            info_display_handler
+            info_display_handler,
+            history_add_function
         )
         self.config_files = self.all_config_files['mpv']
 
@@ -2039,14 +2063,16 @@ class MpPlayer(Player):
                  outputStream,
                  playback_timeout_counter,
                  playback_timeout_handler,
-                 info_display_handler):
+                 info_display_handler,
+                 history_add_function):
         config.PLAYER_NAME = 'mplayer'
         super(MpPlayer, self).__init__(
             config,
             outputStream,
             playback_timeout_counter,
             playback_timeout_handler,
-            info_display_handler
+            info_display_handler,
+            history_add_function
         )
         self.config_files = self.all_config_files['mplayer']
 
@@ -2247,14 +2273,16 @@ class VlcPlayer(Player):
                  outputStream,
                  playback_timeout_counter,
                  playback_timeout_handler,
-                 info_display_handler):
+                 info_display_handler,
+                 history_add_function):
         config.PLAYER_NAME = 'vlc'
         super(VlcPlayer, self).__init__(
             config,
             outputStream,
             playback_timeout_counter,
             playback_timeout_handler,
-            info_display_handler
+            info_display_handler,
+            history_add_function
         )
         # self.config_files = self.all_config_files['vlc']
 

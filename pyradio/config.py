@@ -104,6 +104,9 @@ class PyRadioStations(object):
     ''' last opened playlist splitted on , '''
     last_playlist_to_open = []
 
+    station_history = None
+    play_from_history = False
+
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -291,6 +294,18 @@ class PyRadioStations(object):
     @can_go_back_in_time.setter
     def can_go_back_in_time(self, value):
         raise ValueError('property is read only')
+
+    def set_station_history(self,
+                            execute_funct,
+                            pass_first_item_funct,
+                            pass_last_item_funct,
+                            no_items_funct):
+        self.stations_history = PyRadioStationsStack(
+            execute_function=execute_funct,
+            pass_first_item_function=pass_first_item_funct,
+            pass_last_item_function=pass_last_item_funct,
+            no_items_function=no_items_funct
+        )
 
     def save_last_playlist(self, sel):
         lp = path.join(self.stations_dir, 'last_playlist')
@@ -2409,6 +2424,77 @@ class PyRadioPlaylistStack(object):
                 self._p[i] = list(new_item[:])
                 ret += 1
         return ret
+
+
+class PyRadioStationsStack(object):
+    pass_first_item_func=None
+    pass_last_item_func=None
+    no_items_func=None
+
+    def __init__(
+        self,
+        execute_function,
+        pass_first_item_function=None,
+        pass_last_item_function=None,
+        no_items_function=None
+    ):
+        self.items = []
+        self.item = -1
+        self.execute_func = execute_function
+        self.pass_first_item_func = pass_first_item_function
+        self.pass_last_item_func = pass_last_item_function
+        self.no_items_func = no_items_function
+
+    def add(self, a_playlist, a_station, a_station_id):
+        if a_playlist and a_station:
+            if self.item == -1:
+                self.items.append((a_playlist, a_station, a_station_id))
+                self.item = 0
+            else:
+                if not self.play_from_history and \
+                        (self.items[-1][0] != a_playlist \
+                        or self.items[-1][1] != a_station) and \
+                        (self.items[self.item][0] != a_playlist \
+                         or self.items[self.item][1] != a_station):
+                    self.items.append((a_playlist, a_station, a_station_id))
+                    logger.error('adding item...')
+                    self.item = len(self.items) - 1
+            self.play_from_history = False
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('>>> Stations history')
+            for n in self.items:
+                logger.debug('   {}'.format(n))
+            logger.debug('   item = {}'.format(self.item))
+
+    def _get(self):
+        if self.item == -1:
+            if self.no_items_func is not None:
+                self.no_items_func()
+        return tuple(self.items[self.item])
+
+    def play_previous(self):
+        if self.item == -1:
+            if self.no_items_func is not None:
+                self.no_items_func()
+        elif self.item == 0:
+            if self.pass_first_item_func is not None:
+                self.pass_first_item_func()
+        else:
+            old_item = self._get()
+            self.item -= 1
+            self.execute_func(old_item, self._get())
+
+    def play_next(self):
+        if self.item == -1:
+            if self.no_items_func is not None:
+                self.no_items_func()
+        elif self.item == len(self.items) - 1:
+            if self.pass_last_item_func is not None:
+                self.pass_last_item_func()
+        else:
+            old_item = self._get()
+            self.item += 1
+            self.execute_func(old_item, self._get())
 
 
 class PyRadioLog(object):
