@@ -3725,6 +3725,7 @@ class PyRadio(object):
         self._set_active_stations()
         self._update_status_bar_right()
         if self._cnf.browsing_station_service:
+            logger.error('1')
             # TODO
             if HAS_REQUESTS:
                 if HAS_DNSPYTHON:
@@ -3768,6 +3769,7 @@ class PyRadio(object):
                 self._print_requests_not_installed_error()
                 self._cnf.browsing_station_service = False
         elif self._cnf.register_to_open:
+            logger.error('2')
             ''' open a register '''
             self._playlist_in_editor = self._cnf.register_to_open
             if logger.isEnabledFor(logging.DEBUG):
@@ -3797,6 +3799,7 @@ class PyRadio(object):
             self._cnf.register_to_open = None
             # self.ll('opening a register')
         else:
+            logger.error('3')
             ''' Open list of playlists or registers '''
             #if self._cnf._open_register_list:
             #    txt = '''Reading registers. Please wait...'''
@@ -8337,27 +8340,67 @@ class PyRadio(object):
         playlist = self._cnf.station_title
         station = self.stations[self.selection]
         sel = self.selection
-        self._cnf.stations_history.add(self._cnf.station_title, self.stations[self.selection][0], self.selection)
+        self._cnf.stations_history.add(self._cnf.station_file_name[:-4], self.stations[self.playing][0], self.playing)
 
     def _load_playlist_and_station_from_station_history(self, old_h_item, h_item):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('activating history item: {}'.format(h_item))
+            logger.debug('Activating history item: {}'.format(h_item))
 
         if self.stations[h_item[-1]][0] == h_item[1]:
             ''' station found '''
-            logger.error('station found')
-            self.setStation(h_item[-1])
-            if self.number_of_items > 0:
-                self.playSelection()
-                self._goto_playing_station(changing_playlist=False)
-            self.refreshBody()
-            self.selections[self.ws.NORMAL_MODE] = [self.selection,
-                                                    self.startPos,
-                                                    self.playing,
-                                                    self.stations]
+            num = h_item[-1]
         else:
             ''' I have to scan the playlist'''
-            logger.error('have to scan playlist')
-            pass
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.error('Scanning playlist...')
+            up = down = 0
+            num = -1
+            for i in range(h_item[-1], -1, -1):
+                up = i + 1
+                down = i - 1
+                if down > -1 :
+                    if self.stations[down][0] == h_item[1]:
+                        num = down
+                        break
+                if up < self._cnf.number_of_stations:
+                    if self.stations[up][0] == h_item[1]:
+                        num = up
+                        break
+            up += 1
+            down -= 1
+            if num == -1 and down > -1:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Station not found... Scanning to top...')
+                for i in range(down, -1, -1):
+                    if self.stations[i][0] == h_item[1]:
+                        num = i
+                        break
+
+            if num == -1 and up < self._cnf.number_of_stations:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Station not found... Scanning to bottom...')
+                for i in range(up, self._cnf.number_of_stations - 1):
+                    if self.stations[i][0] == h_item[1]:
+                        num = i
+                        break
+
+            if num == -1:
+                ''' station not found  '''
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Station "{}" not found!'.format(h_item[1]))
+                return
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Station "{0}" found at {1}'.format(h_item[1], num))
+        self.setStation(num)
+        if self.number_of_items > 0:
+            self.playSelection()
+            #self._goto_playing_station(changing_playlist=False)
+            self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
+        self.refreshBody()
+        self.selections[self.ws.NORMAL_MODE] = [self.selection,
+                                                self.startPos,
+                                                self.playing,
+                                                self.stations]
 
 # pymode:lint_ignore=W901

@@ -2451,7 +2451,8 @@ class PyRadioStationsStack(object):
                 self.items.append((a_playlist, a_station, a_station_id))
                 self.item = 0
             else:
-                if not self.play_from_history and \
+                if (not self.play_from_history) and \
+                        (not a_playlist.startswith('register_')) and \
                         (self.items[-1][0] != a_playlist \
                         or self.items[-1][1] != a_station) and \
                         (self.items[self.item][0] != a_playlist \
