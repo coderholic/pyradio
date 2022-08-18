@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
@@ -26,7 +26,7 @@
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
     pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
-    img{display: block; margin-left: auto; margin-right: auto; max-width: 750; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
@@ -37,10 +37,10 @@ a:visited{color: SaddleBrown;}
 <body>
 <header id="title-block-header">
 </header>
-<h1 style="color: SaddleBrown"id="pyradio-build-instructions">PyRadio Build Instructions</h1>
+<h1 style="color: SaddleBrown" id="pyradio-build-instructions">PyRadio Build Instructions</h1>
 <p><strong>PyRadio</strong>: Command line internet radio player.</p>
 <p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
-<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
 <li><a href="#current-state-of-the-project">Current state of the project</a>
@@ -65,20 +65,20 @@ a:visited{color: SaddleBrown;}
 </ul>
 <!-- vim-markdown-toc -->
 <p><a href="README.html">[Return to main doc]</a></p>
-<h2 id="current-state-of-the-project">Current state of the project <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="current-state-of-the-project">Current state of the project <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Starting with version <strong>0.8.9.15</strong>, <strong>PyRadio</strong> has changed its installation method from invoking <em>setup.py</em> directly to <em>pip</em> (i.e. from “<em>python setup.py install</em>” to “<em>python -m pip .</em>”). This is a must for all <strong>Python</strong> projects in order to keep up with the latest developments. For more info, please refer to “<a target="_blank" href="https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html">Why you shouldn’t invoke setup.py directly</a>”.</p>
 <h3 id="what-does-it-all-mean-and-why-should-you-care">What does it all mean and why should you care</h3>
 <p>Moving to the <strong>pip</strong> way of doing things has its implications:</p>
 <ol type="1">
-<li><strong>PyRadio</strong> will be installed as a pip package.</p></li>
-<li><strong>PyRadio</strong> will no longer be installed as a system-wide package.<br />
+<li><p><strong>PyRadio</strong> will be installed as a pip package.</p></li>
+<li><p><strong>PyRadio</strong> will no longer be installed as a system-wide package.<br />
 <br />
 This means that after installing <strong>PyRadio</strong>, it will only be available to the current user. If another user wants to use it as well, he would have to install it again.<br />
 <br />
 In other words, in order to have a <strong>Pyradio system-wide installation</strong>, your distribution has to provide a package for it.</p></li>
-<li>As I’m starting the procedure to move away from <em>Python 2</em>, <strong>PyRadio</strong> will not be compatible with it on <em>macOs</em> and <em>Windows</em> (but will still be on <em>Linux</em>, at least for the time being).</p></li>
+<li><p>As I’m starting the procedure to move away from <em>Python 2</em>, <strong>PyRadio</strong> will not be compatible with it on <em>macOs</em> and <em>Windows</em> (but will still be on <em>Linux</em>, at least for the time being).</p></li>
 </ol>
-<h2 id="preparing-for-the-installation">Preparing for the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="preparing-for-the-installation">Preparing for the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Before installing <strong>PyRadio</strong> you have to prepare your system, so that you end up with a working installation. The process depends on the OS you are on.</p>
 <h3 id="linux">Linux</h3>
 <p>Use your distribution method to install</p>
@@ -130,7 +130,7 @@ sudo ln -s /usr/local/bin/vlc /usr/local/bin/cvlc</pre>
 <p>Your system is ready now for <strong>pyradio</strong> to be installed. You can follow the instructions given at “<a href="#performing-the-installation">Performing the installation</a>”.</p>
 <h3 id="windows">Windows</h3>
 <p>Windows installation is presented in its <a href="windows.html">own page</a>.</p>
-<h2 id="performing-the-installation">Performing the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="performing-the-installation">Performing the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>First thing you do is get the installation script. Open a <strong>terminal</strong> and type:</p>
 <pre>cd
 wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py</pre>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
@@ -26,7 +26,7 @@
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
     pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
-    img{display: block; margin-left: auto; margin-right: auto; max-width: 750; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
@@ -37,10 +37,10 @@ a:visited{color: SaddleBrown;}
 <body>
 <header id="title-block-header">
 </header>
-<h1 style="color: SaddleBrown"id="pyradio-on-windows">PyRadio on Windows</h1>
+<h1 style="color: SaddleBrown" id="pyradio-on-windows">PyRadio on Windows</h1>
 <p><strong>PyRadio</strong>: Command line internet radio player.</p>
 <p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
-<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
 <li><a href="#running-pyradio-on-windows">Running PyRadio on Windows</a></li>
@@ -77,12 +77,12 @@ a:visited{color: SaddleBrown;}
 </ul>
 <!-- vim-markdown-toc -->
 <p>[<a href="build.html">Back to Build Instructions</a>] | [<a href="README.html">Back to README</a>]</p>
-<h2 id="running-pyradio-on-windows">Running PyRadio on Windows <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="running-pyradio-on-windows">Running PyRadio on Windows <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>What? A linux console application on Windows?</p>
 <p>Yes, sure. Why not?</p>
 <p><strong>PyRadio</strong> is a <em>python</em> script after all, and <em>python</em> does run on Windows. So, with a little bit of tweaking of the code, it is possible.</p>
 <p>This page will guide you through the process of installing, updating and running <strong>PyRadio</strong> on Windows.</p>
-<h2 id="how-it-all-works">How it all works <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="how-it-all-works">How it all works <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>First of all, let me tell you that if you are still running Windows XP, you can just stop reading right now; it won’t happen…</p>
 <p><strong>PyRadio</strong> on <em>Linux</em> (its main target platform) can use any of three players <a target="_blank" href="https://mpv.io/">MPV</a>, <a target="_blank" href="http://www.mplayerhq.hu/design7/news.html">MPlayer</a> and <a target="_blank" href="https://www.videolan.org/vlc/">VLC</a>; and this is also the case on <em>Windows</em>!</p>
 <p><a target="_blank" href="https://mpv.io/">MPV</a> is the preferred player for <em>Windows</em> and will be automatically installed on a fresh <strong>PyRadio</strong> installation.</p>
@@ -90,7 +90,7 @@ a:visited{color: SaddleBrown;}
 <p><a target="_blank" href="https://www.videolan.org/vlc/">VLC</a> is much easier to install, but song titles’ updating may not be 100% consistent (if any). If this is not a deal breaker for you, then just go on and use <a target="_blank" href="https://www.videolan.org/vlc/">VLC</a> as <strong>PyRadio</strong>’s player.</p>
 <p>Other than that, you will have a fully functional <strong>PyRadio</strong> installation.</p>
 <p>Having said that, let us proceed with the installation.</p>
-<h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>The installation consists of three steps:</p>
 <ol type="1">
 <li><strong>Python</strong> installation</li>
@@ -98,7 +98,7 @@ a:visited{color: SaddleBrown;}
 <li><strong>Player</strong> installation</li>
 <li><strong>PyRadio</strong> installation</li>
 </ol>
-<h3 id="python-installation">Python installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h3 id="python-installation">Python installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h3>
 <h4 id="installing-python">Installing Python</h4>
 <p>If you don’t already have <strong>Python</strong> installed, just get to its <a target="_blank" href="https://www.python.org/downloads/windows/">Windows Downloads</a> page and download one of the <strong>3.x</strong> releases.</p>
 <p>A tip as to which <strong>Python</strong> version to choose is to go to <a target="_blank" href="https://github.com/zephyrproject-rtos/windows-curses">zephyrproject-rtos /windows-curses github page</a> and check the latest supported version.</p>
@@ -117,9 +117,9 @@ Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;licen
 <a href="https://members.hellug.gr/sng/pyradio/python2.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/python2.jpg" alt="Python Installation Modification" /></a>
 
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If you don’t have the setup file of the original <strong>Python</strong> installation, you will have to <strong>download</strong> it from <a target="_blank" href="https://www.python.org/downloads/windows/">Python’s Windows Downloads</a>. In case you want to upgrade to the latest version, you <strong>must uninstall</strong> the one currently installed, beforehand.</p>
-<h3 id="zip-installation">7zip installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h3 id="zip-installation">7zip installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h3>
 <p>Go to <a target="_blank" href="https://www.7-zip.org/">7zip web site</a> and download and install the latest release that’s compatible with your Windows installation. Unless you are still on a 32-bit Windows 7 environment, you just go grub the first link provided.</p>
-<h3 id="player-installation">Player installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h3 id="player-installation">Player installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h3>
 <p>As already stated <a target="_blank" href="https://mpv.io">MPV</a> will be automatically installed on a fresh installation.</p>
 <p>If the user decides to install a different player, he should have the following in mind:</p>
 <table>
@@ -180,7 +180,7 @@ Press 1, 2, 3 or q to Cancel:</pre>
 <h4 id="vlc-installation">VLC installation</h4>
 <p>If <a target="_blank" href="https://www.videolan.org/vlc/">VLC</a> is your selection, just go and get it and install it as any other Windows program.</p>
 <p>As long as you install it to its default location (e.g “<em>C:\Program Files\VideoLAN\VLC</em>” or “<em>C:\Program Files (x86)\VideoLAN\VLC</em>”) <strong>Pyradio</strong> will be able to detect and use it.</p>
-<h3 id="pyradio-installation">PyRadio installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h3 id="pyradio-installation">PyRadio installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h3>
 <p>At last!</p>
 <p>You are ready to install <strong>PyRadio</strong>!</p>
 <p>So here’s how you do it: Right click on <a target="_blank" href="https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py">this link</a> and use your browser “<strong>Save as</strong>” menu entry to save the file in your home folder as <strong>install.py</strong>.</p>
@@ -243,28 +243,28 @@ Press any key to exit...</pre>
 </ol>
 <p>You can safely delete these files.</p>
 <p>If you need to have <strong>PyRadio</strong>’s sources, you can just get them from the “<em>tmp-pyradio</em>” folder.</p>
-<h2 id="updating-pyradio">Updating PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="updating-pyradio">Updating PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> will inform you when a new release is available and ask you to go on with the update.</p>
 <p>If you answer “<em>y</em>” to the question asked, <strong>PyRadio</strong> will terminate after creating an update batch file and opening Windows Explorer to its location.</p>
 <p>You just double click on the batch file (called <strong>update.bat</strong>) to go on with the update.</p>
 <p>In any case, you can perform the update at any time, using the command:</p>
 <pre>pyradio -U</pre>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If <strong>PyRadio</strong> is not in your PATH, you will have to use the full path to it to execute the previous command. Just right-click <strong>Pyradio</strong>’s icon on your Desktop and copy the command found there, or follow the instructions shown at <a href="#getting-the-path-to-pyradio.exe">Getting the path to pyradio.exe</a>. Once you have it, paste it on a console, add a “<em>-U</em>” and you are good to go.</p>
-<h3 id="updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h3>
+<h3 id="updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h3>
 <p>If you are on a pre 0.8.9 release and want to update <strong>PyRadio</strong>, just follow the <a href="#pyradio-installation">installation instructions</a>, but add the “<em>–force</em>” command line parameter to the installation command.</p>
 <p>So, instead of</p>
 <pre>python install.py</pre>
 <p>do a</p>
 <pre>python install.py --force</pre>
-<h2 id="removing-an-old-style-installation">Removing an old-style installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="removing-an-old-style-installation">Removing an old-style installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>If you have an old-style installation (an installation done with a version up to <strong>0.8.9.14</strong>), you should remove the installed files which are not used anymore, they just clutter your system.</p>
 <p>Just execute <strong>PyRadio</strong> and press “<strong>F7</strong>”.</p>
 <p><strong>PyRadio</strong> will search you system and put all the files that should be removed in a BAT file, which it will execute. Just make sure no other apps are open at the time.</p>
-<h2 id="uninstalling-pyradio">Uninstalling PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="uninstalling-pyradio">Uninstalling PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>To uninstall <strong>PyRadio</strong> you just press “<strong>F10</strong>” and confirm the action.</p>
 <p>Then <strong>PyRadio</strong> will terminate and an “<strong>Explorer Window</strong>” will open containing a BAT file called <strong>uninstall.bat</strong>.</p>
 <p>Just double-click on it to complete the procedure.</p>
-<h2 id="reporting-bugs">Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="reporting-bugs">Reporting bugs <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>When a bug is found, please do report it by <a target="_blank" href="https://github.com/coderholic/pyradio/issues">opening an issue at github</a>.</p>
 <p>In you report you should, at the very least, state your <strong>pyradio version</strong> and <strong>python version</strong>.</p>
 <p>It would be really useful to include <strong>%USERPROFILE%/pyradio.log</strong> in your report.</p>

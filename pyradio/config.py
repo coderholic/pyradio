@@ -515,9 +515,11 @@ class PyRadioStations(object):
 
         ret = 0
         if self._register_to_open:
+            logger.error('register_to_open = {}'.format(self._register_to_open))
             stationFile, ret = self._get_register_filename_from_register()
             self._is_register = True
         else:
+            logger.error('stationFile = {}'.format(stationFile))
             stationFile, ret = self._get_playlist_abspath_from_data(stationFile=stationFile)
             self._is_register = False
         read_file = True
@@ -2483,7 +2485,7 @@ class PyRadioStationsStack(object):
         else:
             old_item = self._get()
             self.item -= 1
-            self.execute_func(old_item, self._get())
+            self.execute_func(self._get(), self.play_previous)
 
     def play_next(self):
         if self.item == -1:
@@ -2495,7 +2497,7 @@ class PyRadioStationsStack(object):
         else:
             old_item = self._get()
             self.item += 1
-            self.execute_func(old_item, self._get())
+            self.execute_func(self._get(), self.play_next)
 
 
 class PyRadioLog(object):

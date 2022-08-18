@@ -284,11 +284,12 @@ These modes are specifically designed to be used with tiling window managers, tr
 
 1. The **Limited Height** mode, which is automatically enabled when the window height gets below 8 lines.
 
-    In this mode, only a limited information is visible and if playback is on, the volume is the only thing that can be adjusted (or muted) and saved. This is the **Limited display**.
+    - In this mode, only a limited information is visible and if playback is on, the volume is the only thing that can be adjusted (or muted) and saved. This is the **Limited display**.
 
 2. The **Limited Width** mode, which is automatically enabled when the window width get bellow certain limits:
 
     - When the width gets bellow 40 columns, all windows will be closed and the main window will be the only visible one (either displaying stations, playlists or registers).
+
     - When the width gets bellow 20 columns, the **Limited display** will be activated.
 
 ![Pyradio reduced to the "Limited display"](https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg)

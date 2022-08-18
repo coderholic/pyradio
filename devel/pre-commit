@@ -85,26 +85,25 @@ do
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} \
     pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} \
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} \
-    img{display: block; margin-left: auto; margin-right: auto; max-width: 750; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} \
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} \
     </style>' ${out}
     sed -i -e 's/<code>//g' \
         -e 's{</code>{{g' \
         -e 's{<a href="#pyradio">pyradio</a>{[pyradio]{' \
+        -e '/^<html/s/lang=""/lang="en"/g' \
         -e 's/<p><strong>Tip:/<p style="margin: 1.5em 4em 0 4em; text-indent: -2em;"><strong>Tip:/' \
         -e 's/<p><strong>Note:/<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:/' \
-        -e 's/<li><p>/<li>/g' \
-        -e 's{</</p></li>{</li>{g' \
         -e 's/\.md">/.html">/g' \
         -e '/h1 class="title"/d' \
         -e 's/<a href="http/<a target="_blank" href="http/g' \
-        -e 's{</h2>{ <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style>&{' \
+        -e 's{</h2>{ <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span>&{' \
         -e 's|<.style>$|a{ color: SaddleBrown;}\na:visited{color: SaddleBrown;}\n</style>|' \
-        -e 's/<h1 /<h1 style="color: SaddleBrown"/' \
+        -e 's/<h1 /<h1 style="color: SaddleBrown" /' \
         ${out}
     rm tmp.md
     if [ "$out" = "windows.html" ] || [ "$out" = "windows-mplayer.html" ];then
         sed -i -e 's/h3 {margin-top: 2em; color: SaddleBrown;}/h3 {margin-top: 2.5em; color: SaddleBrown; border-bottom:1px solid SaddleBrown;}/' \
-            -e 's{</h3>{ <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style>&{' \
+            -e 's{</h3>{ <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span>&{' \
             "$out"
     fi
     #
@@ -119,11 +118,9 @@ do
             -e 's|<.strong><.sup>E<.strong>|<strong>^E</strong>|' \
             "$out"
     fi
-    #sed -i "/^alt=/d" ${out}
-    # sed -i '/<figcaption/d' ${out}
-    # sed -i '/figcaption>/d' ${out}
     sed -i 's/\.md/.html/' ${out}
-
+    # sed -i 's|^<li>\(.*\)</p>$|<li>\1</li>|' ${out}
+    # sed -i 's|^<li><p>\(.*\)</p>$|<li>\1</li>|' ${out}
 
 
     git add ${out}
@@ -131,7 +128,7 @@ done
 
 # insert changelog to README.htm
 cat << STOP_HERE > pre
-<h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
 STOP_HERE

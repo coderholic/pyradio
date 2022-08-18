@@ -1824,8 +1824,12 @@ class PyRadio(object):
         mwidth = 0
         for n in lines:
             llen = cjklen(n.replace('|', ''))
+            logger.error('123456789|123456789|123456789|123456789|')
+            logger.error(n)
+            logger.error('llen = {}'.format(llen))
             if llen > mwidth:
                 mwidth = llen
+                logger.error('mwidth = {}'.format(mwidth))
         return mwidth
 
     def _get_message_width_from_string(self, txt):
@@ -1852,7 +1856,7 @@ class PyRadio(object):
         outer_height = inner_height + 2
         outer_width = inner_width + 2
         if outer_width + 2 < self.bodyMaxX and outer_height + 2 < self.bodyMaxY:
-            win = curses.newwin(inner_height,inner_width,int((self.maxY-inner_height)/2),int((self.maxX-inner_width)/2))
+            win = curses.newwin(inner_height,inner_width - 2,int((self.maxY-inner_height)/2),int((self.maxX-inner_width)/2))
             win.bkgdset(' ', box_col)
             win.erase()
             win.box()
@@ -3725,7 +3729,8 @@ class PyRadio(object):
         self._set_active_stations()
         self._update_status_bar_right()
         if self._cnf.browsing_station_service:
-            logger.error('1')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Opening RadioBrowser...')
             # TODO
             if HAS_REQUESTS:
                 if HAS_DNSPYTHON:
@@ -3769,7 +3774,8 @@ class PyRadio(object):
                 self._print_requests_not_installed_error()
                 self._cnf.browsing_station_service = False
         elif self._cnf.register_to_open:
-            logger.error('2')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Opening a playlist or a register...')
             ''' open a register '''
             self._playlist_in_editor = self._cnf.register_to_open
             if logger.isEnabledFor(logging.DEBUG):
@@ -3799,7 +3805,8 @@ class PyRadio(object):
             self._cnf.register_to_open = None
             # self.ll('opening a register')
         else:
-            logger.error('3')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Opening list of playlists or registers...')
             ''' Open list of playlists or registers '''
             #if self._cnf._open_register_list:
             #    txt = '''Reading registers. Please wait...'''
@@ -8337,70 +8344,105 @@ class PyRadio(object):
         return False
 
     def _add_station_to_stations_history(self):
+        # TODO: Do I need it?
+        # TODO: Do I set it?
+        self._register_to_open = ''
         playlist = self._cnf.station_title
         station = self.stations[self.selection]
         sel = self.selection
         self._cnf.stations_history.add(self._cnf.station_file_name[:-4], self.stations[self.playing][0], self.playing)
 
-    def _load_playlist_and_station_from_station_history(self, old_h_item, h_item):
+    def _load_playlist_and_station_from_station_history(self, h_item, func):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Activating history item: {}'.format(h_item))
 
-        if self.stations[h_item[-1]][0] == h_item[1]:
-            ''' station found '''
-            num = h_item[-1]
-        else:
-            ''' I have to scan the playlist'''
+        current_playlist = self._cnf.station_file_name[:-4]
+        if current_playlist == h_item[0]:
+            ''' I am moving within the loaded playlist '''
+            if self.stations[h_item[-1]][0] == h_item[1]:
+                ''' station found '''
+                num = h_item[-1]
+            else:
+                ''' I have to scan the playlist'''
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.error('Scanning playlist...')
+                up = down = 0
+                num = -1
+                for i in range(h_item[-1], -1, -1):
+                    up = i + 1
+                    down = i - 1
+                    if down > -1 :
+                        if self.stations[down][0] == h_item[1]:
+                            num = down
+                            break
+                    if up < self._cnf.number_of_stations:
+                        if self.stations[up][0] == h_item[1]:
+                            num = up
+                            break
+                up += 1
+                down -= 1
+                if num == -1 and down > -1:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Station not found... Scanning to top...')
+                    for i in range(down, -1, -1):
+                        if self.stations[i][0] == h_item[1]:
+                            num = i
+                            break
+
+                if num == -1 and up < self._cnf.number_of_stations:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Station not found... Scanning to bottom...')
+                    for i in range(up, self._cnf.number_of_stations - 1):
+                        if self.stations[i][0] == h_item[1]:
+                            num = i
+                            break
+
+                if num == -1:
+                    ''' station not found  '''
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Station "{}" not found!'.format(h_item[1]))
+                        ''' Continue going through history items '''
+                        func()
+                    return
+
             if logger.isEnabledFor(logging.DEBUG):
-                logger.error('Scanning playlist...')
-            up = down = 0
-            num = -1
-            for i in range(h_item[-1], -1, -1):
-                up = i + 1
-                down = i - 1
-                if down > -1 :
-                    if self.stations[down][0] == h_item[1]:
-                        num = down
-                        break
-                if up < self._cnf.number_of_stations:
-                    if self.stations[up][0] == h_item[1]:
-                        num = up
-                        break
-            up += 1
-            down -= 1
-            if num == -1 and down > -1:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Station not found... Scanning to top...')
-                for i in range(down, -1, -1):
-                    if self.stations[i][0] == h_item[1]:
-                        num = i
-                        break
-
-            if num == -1 and up < self._cnf.number_of_stations:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Station not found... Scanning to bottom...')
-                for i in range(up, self._cnf.number_of_stations - 1):
-                    if self.stations[i][0] == h_item[1]:
-                        num = i
-                        break
-
-            if num == -1:
-                ''' station not found  '''
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Station "{}" not found!'.format(h_item[1]))
+                logger.debug('Station "{0}" found at {1}'.format(h_item[1], num))
+            self.setStation(num)
+            if self.number_of_items > 0:
+                self.playSelection()
+                #self._goto_playing_station(changing_playlist=False)
+                self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
+            self.refreshBody()
+            self.selections[self.ws.NORMAL_MODE] = [
+                self.selection,
+                self.startPos,
+                self.playing,
+                self.stations
+            ]
+        else:
+            ''' I have to load a new playlist '''
+            if self._cnf.dirty_playlist:
+                self._show_notification_with_delay(
+                        txt='____Playlist has been modified____\n___Please save it and try again___',
+                        delay=1.5,
+                        mode_to_set=self.ws.operation_mode,
+                        callback_function=self.refreshBody)
                 return
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Station "{0}" found at {1}'.format(h_item[1], num))
-        self.setStation(num)
-        if self.number_of_items > 0:
-            self.playSelection()
-            #self._goto_playing_station(changing_playlist=False)
-            self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
-        self.refreshBody()
-        self.selections[self.ws.NORMAL_MODE] = [self.selection,
-                                                self.startPos,
-                                                self.playing,
-                                                self.stations]
+            ret = 0
+            if self._register_to_open:
+                logger.error('register_to_open = {}'.format(self._register_to_open))
+                stationFile, ret = self._get_register_filename_from_register()
+                self._is_register = True
+            else:
+                stationFile, ret = self._get_playlist_abspath_from_data(stationFile=h_item[0])
+                logger.error('stationFile = {}'.format(stationFile))
+                self._is_register = False
+            if ret > 0:
+                ''' Continue going through history items '''
+                func()
+                return
+
+            ''' playlist loaded and validated '''
 
 # pymode:lint_ignore=W901

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
@@ -26,7 +26,7 @@
     TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
     pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
-    img{display: block; margin-left: auto; margin-right: auto; max-width: 750; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
@@ -37,11 +37,11 @@ a:visited{color: SaddleBrown;}
 <body>
 <header id="title-block-header">
 </header>
-<h1 style="color: SaddleBrown"id="pyradio-radiobrowser-implementation">PyRadio RadioBrowser Implementation</h1>
+<h1 style="color: SaddleBrown" id="pyradio-radiobrowser-implementation">PyRadio RadioBrowser Implementation</h1>
 <p><a target="_blank" href="https://www.radio-browser.info/">RadioBrowser</a> is “a community driven effort (like wikipedia) with the aim of collecting as many internet radio and TV stations as possible.”</p>
 <p><strong>PyRadio</strong> uses the API provided to integrate it and provide its users the possibility to enjoy this great project.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> As of the writing of this, the implementation is not yet complete, but it is usable (accessing and querying the service is up and running). Whenever a feature is not implemented yet, it will be explicitly marked as such.</p>
-<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
 <li><a href="#opening-radiobrowser">Opening RadioBrowser</a></li>
@@ -67,15 +67,15 @@ a:visited{color: SaddleBrown;}
 </ul>
 <!-- vim-markdown-toc -->
 <p><a href="README.html">[Return to main doc]</a></p>
-<h2 id="opening-radiobrowser">Opening RadioBrowser <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="opening-radiobrowser">Opening RadioBrowser <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>To open <strong>RadioBrowser</strong> one would just press “<strong>O</strong>” at the program’s main window. Since at this point this is the only service supported, the service will be activated.</p>
 <a href="https://members.hellug.gr/sng/pyradio/pyradio-radio-browser.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-radio-browser.png" alt="Pyradio’s RadioBrowser interface" /></a>
 
 <p>Upon activation, the <strong>default query</strong> will be preformed and (if successful) its results will be presented to the user. If unsuccessful, a relevant message will be displayed and the program will return to the local playlist that was previously opened.</p>
 <p>By default, <strong>PyRadio</strong> will load the first 100 most voted stations on <strong>RadioBrowser</strong>.</p>
-<h2 id="closing-radiobrowser">Closing RadioBrowser <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="closing-radiobrowser">Closing RadioBrowser <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> treats the service as a special kind of a playlist, thus to close the service it is enough to “<em>go back to playlist history</em>”, pressing “<strong>\\</strong>” (double backslash), in addition to the normal way (“<strong>q</strong>” or <strong>Escape</strong>).</p>
-<h2 id="how-it-works">How it works <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="how-it-works">How it works <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>The implementation uses a list structure (we’ll call it “<strong>search history</strong>” from now on) to keep user specified queries (we’ll call them “<strong>search terms</strong>”).</p>
 <p>The first item in the “<strong>search history</strong>” is the “<strong>empty search term</strong>” (or “<strong>empty item</strong>”), which cannot be deleted and cannot be used to actually query <strong>RadioBrowser</strong>; it is there to provide a “<strong>search term template</strong>” for user inserted search terms.</p>
 <p>Upon activation, the “<strong>default search term</strong>” is used to automatically query a randomly selected <strong>RadioBrowser</strong> server and display stations’ results.</p>
@@ -87,7 +87,7 @@ a:visited{color: SaddleBrown;}
 <h3 id="sorting-stations">Sorting stations</h3>
 <p>Pressing “<strong>S</strong>” will present the user with a sorting list. Selecting one of the items will sort the stations based on it; selecting it again will reverse sorting order.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This sorting function is different than the query sorting criterion which can be selected in the <a href="#search-window">Search window</a>. This one just sorts a query result set, the one in the “<strong>Search window</strong>” affects the actual stations that will be in the result set.</p>
-<h2 id="controls">Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="controls">Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>These are the <strong>RadioBrowser</strong> specific keys one can use in addition to local playlist keys (if applicable).</p>
 <table>
 <thead>
@@ -132,33 +132,33 @@ a:visited{color: SaddleBrown;}
 </tbody>
 </table>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> One would get this information using the program’s help (pressing “<strong>?</strong>” and navigating to the last page of it).</p>
-<h2 id="configuration">Configuration <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="configuration">Configuration <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>One can get to <strong>RadioBrowser</strong>’s configuration in any of the following ways:</p>
 <ol type="1">
-<li>From PyRadio <strong>Configuration</strong>, section <strong>Online Services</strong></p></li>
-<li>From within <strong>RadioBrowser</strong> playlist, by pressing “<em>c</em>”</p></li>
+<li><p>From PyRadio <strong>Configuration</strong>, section <strong>Online Services</strong></p></li>
+<li><p>From within <strong>RadioBrowser</strong> playlist, by pressing “<em>c</em>”</p></li>
 </ol>
 <p>The configuration window presents the following options:</p>
 <ol type="1">
-<li><strong>Auto save config</strong><br />
+<li><p><strong>Auto save config</strong><br />
 If True, no confirmation will be asked before saving the configuration when leaving the search window.<br />
 Default value: <em>False</em></p></li>
-<li><strong>Maximum number of results</strong><br />
+<li><p><strong>Maximum number of results</strong><br />
 <strong>RadioBrowser</strong>’s database is really huge and some queries will produce too many results. This is the way to limit returned result number.<br />
 Setting this parameter to -1 will disable result limiting.<br />
 Default value: <em>100</em></p></li>
-<li><strong>Number of ping packages</strong><br />
+<li><p><strong>Number of ping packages</strong><br />
 The number of ping (ICMP) packages to send to a server while checking its availability. More on “<em>Server pinging</em>” later in this section.<br />
 A value of 0 will disable server pinging.<br />
 Default value: <em>1</em></p></li>
-<li><strong>Ping timeout (seconds)</strong><br />
+<li><p><strong>Ping timeout (seconds)</strong><br />
 The number of seconds to wait for a ping command to terminate while checking a server’s availability.<br />
 A value of 0 will disable server pinging.<br />
 Default value: <em>1</em></p></li>
-<li><strong>Default Server</strong><br />
+<li><p><strong>Default Server</strong><br />
 The default server to connect to when using the service.<br />
 Default value: <em>Random</em></p></li>
-<li><strong>Default Search Term</strong><br />
+<li><p><strong>Default Search Term</strong><br />
 Not implemented yet</p></li>
 </ol>
 <h3 id="server-pinging">Server pinging</h3>
@@ -167,36 +167,36 @@ Not implemented yet</p></li>
 <p><strong>PyRadio</strong> will use the ICMP protocol (ping) to check servers availability before even trying to query a server. The configuration parameters “<em>Number of ping packages</em>” and “<em>Ping timeout (seconds)</em>” will be used to ping the servers. If any of them is set to 0, <strong>server pinging will be disabled.</strong></p>
 <p>When opening the service, <strong>PyRadio</strong> will act depending upon its configured settings.</p>
 <ol type="1">
-<li><strong>No default server is specified and pinging is enabled</strong><br />
+<li><p><strong>No default server is specified and pinging is enabled</strong><br />
 In this case, <strong>PyRadio</strong> will randomly select a server, make sure it’s online (ping it) and then use it to query and display results.<br />
 If no server is available or if the internet connection has failed, a message will be displayed informing the user.</p></li>
-<li><strong>A default server has been specified and pinging is enabled</strong><br />
+<li><p><strong>A default server has been specified and pinging is enabled</strong><br />
 <strong>PyRadio</strong> will ping the server and will connect to it if it’s available.<br />
 If the default server is unresponsive, <strong>PyRadio</strong> will try to find and use one that is available.<br />
 If no server is available or if the internet connection has failed, a message will be displayed informing the user.</p></li>
-<li><strong>Pinging is disabled</strong><br />
+<li><p><strong>Pinging is disabled</strong><br />
 No server availability check will occur.<br />
 If the server (default or random) is unavailable or if the internet connection has failed, a message will be displayed informing the user.</p></li>
 </ol>
 <p>When using the “<strong>Server Selection Window</strong>” (either within the configuration window or the playlist):</p>
 <ol type="1">
-<li><strong>If pinging is enabled</strong><br />
+<li><p><strong>If pinging is enabled</strong><br />
 The selected server availability will be checked, and if not responsive, it will not be accepted.</p></li>
-<li><strong>If pinging is disabled</strong><br />
+<li><p><strong>If pinging is disabled</strong><br />
 The server will be accepted regardless of its availability.</p></li>
 </ol>
-<h2 id="server-selection">Server Selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="server-selection">Server Selection <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>In addition to the “<em>default server</em>” which can be set at the configuration window, one has the possibility to select a server to connect after opening the service.</p>
 <p>Pressing “<strong>C</strong>” will provide a list of available servers to choose from. This selection will be honored until the service is closed.</p>
-<h2 id="station-database-information">Station Database Information <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="station-database-information">Station Database Information <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>The database information of the selected station can be displayed by pressing “<strong>I</strong>”. Keep in mind that, this is different than the “Station ino” displayed by pressing “<strong>i</strong>” (lowercase “i”), which is still available and presents live data.</p>
-<h2 id="station-clicking-and-voting">Station clicking and voting <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="station-clicking-and-voting">Station clicking and voting <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>RadioBrowser</strong> provides two ways to measure a station’s popularity: voting and clicking.</p>
 <p><strong>Clicking</strong> a station means that the station has been listened to; <strong>PyRadio</strong> will send a “click request” any time the user starts playback of a station; <strong>RadioBrowser</strong> will either reject or accept the action, and either ignore or increase click count for the station based on several criteria (time between consecutive clicks, possibly IP, etc.)</p>
 <p>For this reason <strong>PyRadio</strong> will in no case adjust the click count presented to the user.</p>
 <p><strong>Voting</strong> for a station is a different thing; the user has to choose to vote for it. In <strong>PyRadio</strong> a “vote request” is sent when “<strong>V</strong>” is pressed. If the vote has been accepted, the vote counter will be increased by one.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Inconsistencies between a voted for station’s local vote counter value and the one reported in a consecutive server response should be expected, since it seems servers’ vote counter sync may take some time to complete.</p>
-<h2 id="search-window">Search Window <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style></h2>
+<h2 id="search-window">Search Window <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>The “<strong>Search window</strong>” opens when “<strong>s</strong>” is pressed and loads the “<strong>search term</strong>” that was used to fetch the stations currently presented in the “<strong>RadioBrowser window</strong>”. If this is the first time this window is opened within this session, the search term that’s loaded is the “<strong>default search term</strong>”.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> In case the server returns no results, the window will automatically reopen so that you can redefine the “<strong>search term</strong>”.</p>
 <p>Navigation between the various fields is done using the “<strong>Tab</strong>” (and “<strong>Shift-Tab</strong>”) key, the arrows and <strong>vim keys</strong> (“<strong>j</strong>”, “<strong>k</strong>”, “<strong>h</strong>” and “<strong>l</strong>”), provided that any given key is not already used by one of the on window “widgets”.</p>
@@ -212,19 +212,19 @@ The server will be accepted regardless of its availability.</p></li>
 <h3 id="search-term-composition">Search term composition</h3>
 <p>The “<strong>Search window</strong>” can be divided in four parts:</p>
 <ul>
-<li>The “<strong>Display</strong>” part</p>
+<li><p>The “<strong>Display</strong>” part</p>
 <p>In this part one would select to fetch a list of stations based on a single criterion such as their vote count, click count, etc.</p></li>
-<li>The “<strong>Search</strong>” part</p>
+<li><p>The “<strong>Search</strong>” part</p>
 <p>In this part, the user would insert a search string to one or more of the available fields.</p>
 <p>Each of the fields has an “<strong>Exact</strong>” checkbox. If checked, an exact match will be returned, hopefully.</p>
 <p>In the “<strong>Country</strong>” field one could either provide the name of a country or its two-letter code (based on <a target="_blank" href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">ISO 3166</a>). For example, to get a list of Greek stations, you would either insert “<em>greece</em>” or the country code, which is “<em>gr</em>”.</p></li>
 </ul>
 <p>These two parts are mutually exclusive, since when one is activated through its corresponding checkbox, the other one gets disabled.</p>
 <ul>
-<li>The “<strong>Sort</strong>” part</p>
+<li><p>The “<strong>Sort</strong>” part</p>
 <p>This part affects both previous parts.</p>
 <p>It provides the server with the sorting criteria upon which the results will be returned.</p></li>
-<li>The “<strong>Limit</strong>” part</p>
+<li><p>The “<strong>Limit</strong>” part</p>
 <p>In this part the maximum number or returned stations is specified. The default value is 100 stations (0 means no limit).</p>
 <p>The value can be changed using the left and right arrows or “<strong>h</strong>”, “<strong>l</strong>” and “<strong>PgUp</strong>”, “<strong>PgDn</strong>” for a step of 10.</p></li>
 </ul>
