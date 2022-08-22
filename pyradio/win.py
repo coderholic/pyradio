@@ -2,7 +2,7 @@ import sys
 import requests
 import subprocess
 from os.path import join, exists, isdir
-from os import environ, makedirs, listdir, replace, remove, sep
+from os import environ, makedirs, listdir, replace, remove, sep, getenv
 from time import sleep
 import site
 from shutil import rmtree
@@ -10,7 +10,7 @@ from msvcrt import getwch
 from msvcrt import getwch
 from os import sep
 import subprocess
-
+from urllib.request import urlretrieve
 
 HAVE_PYUNPACK = True
 try:
@@ -19,10 +19,10 @@ except ModuleNotFoundError:
     HAVE_PYUNPACK = False
 
 ''' This is also to be able to execute it manually'''
-try:
-    from .player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
-except ImportError:
-    from player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
+#try:
+#    from .player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
+#except ImportError:
+#    from player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
 
 def win_press_any_key_to_unintall():
     the_path = __file__.split(sep)
@@ -134,7 +134,6 @@ def _is_player_in_path(a_player):
     return in_path
 
 def _get_output_folder(package, output_folder=None, do_not_exit=False):
-
     if output_folder is None:
         a_path = _is_player_in_path(package)
         if a_path:
@@ -162,6 +161,35 @@ def _get_out_file(output_folder):
         else:
             break
     return join(output_folder, out_file)
+
+def download_seven_zip(output_folder):
+    PR = (
+        join(getenv('PROGRAMFILES'), '7-Zip', '7z.exe'),
+        join(getenv('PROGRAMFILES') + ' (x86)', '7-Zip', '7z.exe')
+    )
+    if exists(PR[0]) or exists(PR[1]):
+        return
+
+    url = 'https://sourceforge.net/projects/sevenzip/files/latest/download'
+
+    out_file = join(output_folder, '7-Zip_latest.exe')
+
+    print('7-Zip not found...\nDownloading...')
+    try:
+        urlretrieve(url, filename=out_file)
+    except:
+        print('Failed to download 7-Zip...')
+        print('Please check your internet connection and try again...')
+        print('\nIn case you want to install 7-Zip manually,')
+        print('go to https://www.7-zip.org/ to get it...')
+        sys.exit(1)
+
+    subprocess.call(
+        out_file,
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
 
 def download_player(output_folder=None, package=1, do_not_exit=False):
     # Parameters
@@ -211,6 +239,9 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
         sys.exit(1)
 
     print('Extracting archive...')
+    if package == 0:
+        download_seven_zip()
+
     if not HAVE_PYUNPACK:
         for a_module in ('pyunpack', 'patool'):
             install_module(a_module, print_msg=False)

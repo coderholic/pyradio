@@ -14,7 +14,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
     * [Python installation](#python-installation)
         * [Installing Python](#installing-python)
         * [Verifying the installation](#verifying-the-installation)
-    * [7zip installation](#7zip-installation)
+    * [7-Zip installation](#7-zip-installation)
     * [Player installation](#player-installation)
         * [MPV or MPlayer installation](#mpv-or-mplayer-installation)
         * [VLC installation](#vlc-installation)
@@ -103,9 +103,9 @@ If the command could not be found, you have to run the installation again, selec
 
 **Note:** If you don't have the setup file of the original **Python** installation, you will have to **download** it from [Python's Windows Downloads](https://www.python.org/downloads/windows/). In case you want to upgrade to the latest version, you **must uninstall** the one currently installed, beforehand.
 
-### 7zip installation
+### 7-Zip installation
 
-Go to [7zip web site](https://www.7-zip.org/) and download and install the latest release that's compatible with your Windows installation. Unless you are still on a 32-bit Windows 7 environment, you just go grub the first link provided.
+[7-Zip](https://www.7-zip.org/) Windows archiver is needed for MPV's installation. **PyRadio** will try to download and run the installation, if [7-Zip](https://www.7-zip.org/) is not already installed.
 
 ### Player installation
 

@@ -113,9 +113,10 @@ except:
 
 def find_vlc_on_windows(config_dir=None):
     PLAYER_CMD = ''
-    for path in ('C:\\Program Files\\VideoLAN\\VLC\\vlc.exe',
-                'C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe'
-                ):
+    for path in (
+        os.path.join(os.getenv('PROGRAMFILES'), 'VideoLAN', 'VLC', 'vlc.exe'),
+        os.path.join(os.getenv('PROGRAMFILES') + ' (x86)', 'VideoLAN', 'VLC', 'vlc.exe'),
+    ):
         if os.path.exists(path):
             PLAYER_CMD = path
             break
