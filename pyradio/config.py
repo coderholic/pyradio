@@ -1197,6 +1197,9 @@ class PyRadioConfig(PyRadioStations):
         'white_on_black', 'wob'
     )
 
+    use_calculated_colors = False
+    has_border_background  = False
+
     def __init__(self):
         self.backup_player_params = None
         self._profile_name = 'pyradio'
@@ -2819,8 +2822,11 @@ Extra Func          {color7}
 # (background color will come from Stations)
 PyRadio URL         {color2}
 
-# Message window borser foreground
-# (background color will come from Stations)
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#calculated_colors
+#
 Messages Border     {color4}
 
 # Theme Transparency
@@ -2859,8 +2865,11 @@ Extra Func          {color7}
 # (background color will come from Stations)
 PyRadio URL         {color4}
 
-# Message window borser foreground
-# (background color will come from Stations)
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#calculated_colors
+#
 Messages Border     {color2}
 
 # Theme Transparency
@@ -3002,8 +3011,11 @@ Extra Func          {color1}
 # (background color will come from Stations)
 PyRadio URL         {color2}
 
-# Message window borser foreground
-# (background color will come from Stations)
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#calculated_colors
+#
 Messages Border     {color8}
 
 # Theme Transparency
@@ -3042,8 +3054,11 @@ Extra Func          {color4}
 # (background color will come from Stations)
 PyRadio URL         {color2}
 
-# Message window borser foreground
-# (background color will come from Stations)
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#calculated_colors
+#
 Messages Border     {color8}
 
 # Theme Transparency
@@ -3082,8 +3097,11 @@ Extra Func          {color1}
 # (background color will come from Stations)
 PyRadio URL         {foreground}
 
-# Message window borser foreground
-# (background color will come from Stations)
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#calculated_colors
+#
 Messages Border     {color8}
 
 # Theme Transparency
@@ -3122,8 +3140,11 @@ Extra Func          {color2}
 # (background color will come from Stations)
 PyRadio URL         {foreground}
 
-# Message window borser foreground
-# (background color will come from Stations)
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#calculated_colors
+#
 Messages Border     {color8}
 
 # Theme Transparency

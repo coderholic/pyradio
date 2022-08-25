@@ -28,8 +28,11 @@ Extra Func          #69a9a7
 # (background color will come from Stations)
 PyRadio URL         #1AA085
 
-# Message window borser foreground
-# (background color will come from Stations)
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#calculated_colors
+#
 Messages Border     #1AA085
 
 # Theme Transparency

@@ -505,7 +505,8 @@ class PyRadio(object):
             ord('-'): self._volume_down,
             ord(','): self._volume_down,
             ord('m'): self._volume_mute,
-            ord('v'): self._volume_save
+            ord('v'): self._volume_save,
+            ord('~'): self._toggle_claculated_colors,
         }
 
 
@@ -1810,7 +1811,7 @@ class PyRadio(object):
             self._theme,
             self._theme_name,
             self._cnf.theme,
-            4, 3, 4, 5, 6, 9,
+            11, 3, 11, 10, 6, 9,
             self._theme.getTransparency(),
             self._cnf.auto_update_theme,
             self._watch_theme_lock
@@ -1845,9 +1846,9 @@ class PyRadio(object):
                    too_small_msg='Window too small to show message',
                    is_message=False,
                    reset_metrics=True):
-        txt_col = curses.color_pair(5)
+        txt_col = curses.color_pair(10)
         box_col = curses.color_pair(3)
-        caption_col = curses.color_pair(4)
+        caption_col = curses.color_pair(11)
         lines = txt.split('\n')
         st_lines = [item.replace('\r', '') for item in lines]
         lines = [item.strip() for item in st_lines]
@@ -1895,9 +1896,9 @@ class PyRadio(object):
         self.helpWinContainer = None
         self.helpWin = None
         self.ws.operation_mode = mode_to_set
-        txt_col = curses.color_pair(5)
+        txt_col = curses.color_pair(10)
         box_col = curses.color_pair(3)
-        caption_col = curses.color_pair(4)
+        caption_col = curses.color_pair(11)
         lines = txt.split('\n')
         st_lines = [item.replace('\r', '') for item in lines]
         lines = [item.strip() for item in st_lines]
@@ -4166,6 +4167,7 @@ class PyRadio(object):
         if self.ws.operation_mode == self.ws.THEME_MODE:
             self._theme_selector.transparent = self._cnf.use_transparency
         self.headWin.refresh()
+        self.outerBodyWin.refresh()
         self.bodyWin.refresh()
         self.footerWin.refresh()
         if self._config_win:
@@ -4173,6 +4175,15 @@ class PyRadio(object):
             if not changed_from_config_window:
                 self._config_win._saved_config_options['use_transparency'][1] = self._cnf.use_transparency
                 self._config_win._old_use_transparency = self._cnf.use_transparency
+
+    def _toggle_claculated_colors(self):
+        self._cnf.use_calculated_colors = not self._cnf.use_calculated_colors
+        self._theme._do_init_pairs()
+        self._theme._update_colors()
+        self.headWin.refresh()
+        self.outerBodyWin.refresh()
+        self.bodyWin.refresh()
+        self.footerWin.refresh()
 
     def _save_parameters(self):
         if self._player_select_win is not None:

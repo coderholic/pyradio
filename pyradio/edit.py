@@ -310,7 +310,7 @@ class PyRadioEditor(object):
 
         self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
         self._add_editors()
-        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.bkgdset(' ', curses.color_pair(12))
         self._win.erase()
         self._win.box()
 
@@ -322,7 +322,7 @@ class PyRadioEditor(object):
                                       len(txt) + 2,
                                       int(self.maxY / 2) - 1,
                                       int((self.maxX - len(txt)) / 2))
-            error_win.bkgdset(' ', curses.color_pair(3))
+            error_win.bkgdset(' ', curses.color_pair(12))
             error_win.erase()
             error_win.box()
             error_win.addstr(1, 1, txt, curses.color_pair(4))
@@ -345,9 +345,9 @@ class PyRadioEditor(object):
 
         if self.maxY > 18 and self.maxX > 76:
             try:
-                self._win.addstr(10, 3, '─' * (self.maxX - 6), curses.color_pair(3))
+                self._win.addstr(10, 3, '─' * (self.maxX - 6), curses.color_pair(12))
             except:
-                self._win.addstr(10, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+                self._win.addstr(10, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(12))
             self._win.addstr(10, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
             self._win.addstr(11, 5, 'TAB', curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
@@ -380,9 +380,9 @@ class PyRadioEditor(object):
 
         if self.maxY > 21 and self.maxX > 76:
             try:
-                self._win.addstr(17 + step, 5, '─' * (self.maxX - 10), curses.color_pair(3))
+                self._win.addstr(17 + step, 5, '─' * (self.maxX - 10), curses.color_pair(12))
             except:
-                self._win.addstr(17 + step, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(3))
+                self._win.addstr(17 + step, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
             self._win.addstr(17 + step, int((self.maxX - 42) / 2), ' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
 
             self._win.addstr(18 + step, 5, '-', curses.color_pair(4))
@@ -497,9 +497,9 @@ class PyRadioEditor(object):
         except:
             self._win.addstr(0, x, title.encode('utf-8'), curses.color_pair(4))
         if token:
-            self._win.chgat(0, x, 4, curses.color_pair(3))
+            self._win.chgat(0, x, 4, curses.color_pair(12))
         else:
-            self._win.chgat(0, x, 2, curses.color_pair(3))
+            self._win.chgat(0, x, 2, curses.color_pair(12))
         self._win.refresh()
 
     def _show_buttons(self):
@@ -796,7 +796,7 @@ class PyRadioRenameFile(object):
             self._win = None
             self._win = curses.newwin(parent_maxY, parent_maxX, 1, 0)
             self.maxY, self.maxX = (parent_maxY, parent_maxX)
-        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.bkgdset(' ', curses.color_pair(12))
         self._win.erase()
         self._win.box()
 
@@ -885,7 +885,7 @@ class PyRadioRenameFile(object):
             if self.maxY < 11 or self.maxX < 44:
                 txt = ' Window too small to display content '
                 error_win = curses.newwin(3, len(txt) + 2, int(self.maxY / 2) - 1, int((self.maxX - len(txt)) / 2))
-                error_win.bkgdset(' ', curses.color_pair(3))
+                error_win.bkgdset(' ', curses.color_pair(12))
                 error_win.erase()
                 error_win.box()
                 error_win.addstr(1, 1, txt, curses.color_pair(4))
@@ -926,9 +926,9 @@ class PyRadioRenameFile(object):
 
         if self.maxY > 18 + adjust_line_Y and self.maxX > 76:
             try:
-                self._win.addstr(10 + adjust_line_Y, 3, '─' * (self.maxX - 6), curses.color_pair(3))
+                self._win.addstr(10 + adjust_line_Y, 3, '─' * (self.maxX - 6), curses.color_pair(12))
             except:
-                self._win.addstr(10 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+                self._win.addstr(10 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(12))
             self._win.addstr(10 + adjust_line_Y, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
             self._win.addstr(11 + adjust_line_Y, 5, 'TAB', curses.color_pair(4))
             self._win.addstr(', ', curses.color_pair(5))
@@ -963,9 +963,9 @@ class PyRadioRenameFile(object):
 
         if self.maxY > 21 + adjust_line_Y and self.maxX > 76:
             try:
-                self._win.addstr(18 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(3))
+                self._win.addstr(18 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(12))
             except:
-                self._win.addstr(18 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(3))
+                self._win.addstr(18 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
             self._win.addstr(18 + adjust_line_Y, int((self.maxX - 42) / 2), ' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
 
             self._win.addstr(19 + adjust_line_Y, 5, '-', curses.color_pair(4))

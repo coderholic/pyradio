@@ -3778,7 +3778,7 @@ class RadioBrowserSort(object):
             self._win.box()
             try:
                 self._win.addstr( 1, 1, msg,
-                                 curses.color_pair(5))
+                                 curses.color_pair(10))
             except:
                 pass
             self._win.refresh()
@@ -3794,18 +3794,18 @@ class RadioBrowserSort(object):
         self._win.box()
         self._win.addstr(0, 1,
                          self.TITLE,
-                         curses.color_pair(4))
+                         curses.color_pair(11))
         self._refresh()
 
     def _refresh(self):
         for i, n in enumerate(self.items.keys()):
-            col = 5
+            col = 10
             if i == self.active == self.selection:
                 col = 9
             elif i == self.selection:
                 col = 6
             elif i == self.active:
-                col = 4
+                col = 11
 
             self._win.addstr(i + 1, 1,
                              ' {}'.format(n.ljust(self.maxX - 3)),
@@ -3945,7 +3945,7 @@ class RadioBrowserServersSelect(object):
             self._win.box()
             try:
                 self._win.addstr( 1, 1, msg,
-                                 curses.color_pair(5))
+                                 curses.color_pair(10))
             except:
                 pass
             self._win.refresh()
@@ -3973,7 +3973,7 @@ class RadioBrowserServersSelect(object):
         self._win.addstr(
             0, int((self.maxX - len(self.TITLE)) / 2),
             self.TITLE,
-            curses.color_pair(4)
+            curses.color_pair(11)
         )
         self._win.refresh()
 
@@ -4099,13 +4099,13 @@ class RadioBrowserServers(object):
                 Y + 1, X + 1
             )
             for i, n in enumerate(self.items):
-                col = 5
+                col = 10
                 if i == self.active == self.selection:
                     col = 9
                 elif i == self.selection:
                     col = 6
                 elif i == self.active:
-                    col = 4
+                    col = 11
                 try:
                     self._win.addstr(i, 0 , n, curses.color_pair(col))
                 except:

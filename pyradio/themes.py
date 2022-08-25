@@ -7,6 +7,8 @@ from sys import version_info
 from os import path, getenv, makedirs, remove, sep as dir_sep, access, R_OK
 from shutil import copyfile, move
 from copy import deepcopy
+from math import sqrt
+import colorsys
 from .log import Log
 from .common import *
 
@@ -36,7 +38,7 @@ class PyRadioTheme(object):
         self._read_colors = None
         self._temp_colors = None
 
-    def _do_init_colors(self, transparency=None):
+    def _do_init_pairs(self, transparency=None):
         if curses.can_change_color():
             if transparency is not None:
                 self._cnf.use_transparency = transparency
@@ -44,41 +46,84 @@ class PyRadioTheme(object):
                 self._cnf.use_transparency = self._transparent
                 # transp = self._transparent if self._cnf.use_transparency else False
             # logger.error('transp = {}'.format(transp))
-            if self._cnf.use_transparency:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('--> transparency: ON')
-                colors = {
-                    1: (12, -1),
-                    2: (11, -1),
-                    3: (10, -1),
-                    4: (3, -1),
-                    5: (1, -1),
-                    6: (4, 5),
-                    7: (8, 9),
-                    8: (13, 14),
-                    9: (6, 7)
-                }
+            if self._cnf.use_calculated_colors or \
+                   self._cnf.has_border_background:
+                if self._cnf.use_transparency:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('--> transparency: ON')
+                    colors = {
+                        1: (12, -1),
+                        2: (11, -1),
+                        3: (10, -1),
+                        4: (3, -1),
+                        5: (1, -1),
+                        6: (4, 5),
+                        7: (8, 9),
+                        8: (13, 14),
+                        9: (6, 7),
+                        10: (1, -1),
+                        11: (3, -1),
+                        12: (10, -1)
+                    }
+                else:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('--> transparency: OFF')
+                    colors = {
+                        1: (12, 2),
+                        2: (11, 2),
+                        3: (10, 15),
+                        4: (3, 2),
+                        5: (1, 2),
+                        6: (4, 5),
+                        7: (8, 9),
+                        8: (13, 14),
+                        9: (6, 7),
+                        10: (1, 15),
+                        11: (3, 15),
+                        12: (10, 2)
+                    }
             else:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('--> transparency: OFF')
-                colors = {
-                    1: (12, 2),
-                    2: (11, 2),
-                    3: (10, 2),
-                    4: (3, 2),
-                    5: (1, 2),
-                    6: (4, 5),
-                    7: (8, 9),
-                    8: (13, 14),
-                    9: (6, 7)
-                }
+                if self._cnf.use_transparency:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('--> transparency: ON')
+                    colors = {
+                        1: (12, -1),
+                        2: (11, -1),
+                        3: (10, -1),
+                        4: (3, -1),
+                        5: (1, -1),
+                        6: (4, 5),
+                        7: (8, 9),
+                        8: (13, 14),
+                        9: (6, 7),
+                        10: (1, -1),
+                        11: (3, -1),
+                        12: (10, -1)
+                    }
+                else:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('--> transparency: OFF')
+                    colors = {
+                        1: (12, 2),
+                        2: (11, 2),
+                        3: (10, 2),
+                        4: (3, 2),
+                        5: (1, 2),
+                        6: (4, 5),
+                        7: (8, 9),
+                        8: (13, 14),
+                        9: (6, 7),
+                        10: (1, 2),
+                        11: (3, 2),
+                        12: (10, 2)
+                    }
             for k in colors.keys():
                 curses.init_pair(k, colors[k][0], colors[k][1])
             # curses.start_color()
 
     def restoreActiveTheme(self):
         self._active_colors = deepcopy(self._read_colors)
-        self._do_init_colors()
+        self._do_init_pairs()
         self._update_colors()
         # curses.start_color()
 
@@ -127,7 +172,7 @@ class PyRadioTheme(object):
                 transp = True
             elif use_transparency:
                 self._transparent = transp = True
-        self._do_init_colors(transparency=transp)
+        self._do_init_pairs(transparency=transp)
 
         self._read_colors = deepcopy(self._colors)
         # logger.error('colors\n{}'.format(self._read_colors))
@@ -175,7 +220,7 @@ class PyRadioTheme(object):
                 self.open_theme('dark')
             self._active_colors = None
             self._active_colors = deepcopy(self._colors)
-            save_theme = PyRadioThemeReadWrite()
+            save_theme = PyRadioThemeReadWrite(self._cnf)
             ret = save_theme.write_theme(out_file, colors=self._colors)
             # print(self._colors)
             if ret == 0:
@@ -206,7 +251,8 @@ class PyRadioTheme(object):
 
         if a_theme == 'dark' or a_theme == 'default':
             self._colors['transparency'] = 2
-            self._colors['data'] = {1: (192, 192, 192), 2: (0, 0, 0), 3: (0, 128, 0), 4: (0, 0, 0), 5: (135, 0, 135), 6: (0, 0, 0), 7: (0, 128, 0), 8: (0, 0, 0), 9: (0, 128, 0), 10: (128, 128, 0), 11: (95, 135, 255), 12: (0, 255, 255), 14: (192, 192, 192), 13: (0, 0, 0)}
+            self._colors['data'] = {1: (192, 192, 192), 2: (0, 0, 0), 3: (0, 128, 0), 4: (0, 0, 0), 5: (135, 0, 135), 6: (0, 0, 0), 7: (0, 128, 0), 8: (0, 0, 0), 9: (0, 128, 0), 10: (128, 128, 0), 11: (95, 135, 255), 12: (0, 255, 255), 14: (192, 192, 192), 13: (0, 0, 0), 15: (26, 26, 26)}
+            self._cnf.has_border_background = True
 
             ''' info '''
             self._colors['Name'] = 'dark'
@@ -219,7 +265,8 @@ class PyRadioTheme(object):
             self._colors['Name'] = 'dark_16_colors'
             self._colors['Path'] = ''
             self.applied_theme_name = 'dark_16_colors'
-            self._colors['data'] = {1: (255, 255, 255), 2: (128, 128, 128), 3: (0, 255, 0), 8: (0, 0, 0), 9: (0, 255, 0), 4: (0, 0, 0), 5: (255, 0, 255), 6: (0, 0, 0), 7: (0, 255, 0), 12: (0, 255, 255), 11: (0, 0, 255), 10: (255, 255, 0), 13: (255, 255, 255), 13: (128, 128, 128)}
+            self._colors['data'] = {1: (255, 255, 255), 2: (128, 128, 128), 3: (0, 255, 0), 8: (0, 0, 0), 9: (0, 255, 0), 4: (0, 0, 0), 5: (255, 0, 255), 6: (0, 0, 0), 7: (0, 255, 0), 12: (0, 255, 255), 11: (0, 0, 255), 10: (255, 255, 0), 13: (255, 255, 255), 13: (128, 128, 128), 15: (154, 154, 154)}
+            self._cnf.has_border_background = True
 
         elif a_theme == 'light':
             ''' info '''
@@ -227,7 +274,8 @@ class PyRadioTheme(object):
             self._colors['transparency'] = 0
             self._colors['Path'] = ''
             self.applied_theme_name = 'light'
-            self._colors['data'] = {1: (0, 0, 0), 2: (255,255, 255), 3: (128, 0, 0), 8: (192, 192, 192), 9: (0, 0, 128), 4: (192, 192, 192), 5: (128, 0, 128), 6: (192, 192, 192), 7: (0, 0, 128), 12: (0, 0, 128), 11: (0, 0, 128), 10: (128, 0, 128), 13: (255, 255, 255), 14: (128, 0, 0)}
+            self._colors['data'] = {1: (0, 0, 0), 2: (255,255, 255), 3: (128, 0, 0), 8: (192, 192, 192), 9: (0, 0, 128), 4: (192, 192, 192), 5: (128, 0, 128), 6: (192, 192, 192), 7: (0, 0, 128), 12: (0, 0, 128), 11: (0, 0, 128), 10: (128, 0, 128), 13: (255, 255, 255), 14: (128, 0, 0), 15: (230, 230, 230)}
+            self._cnf.has_border_background = True
 
         elif a_theme == 'light_16_colors':
             ''' info '''
@@ -235,7 +283,8 @@ class PyRadioTheme(object):
             self._colors['transparency'] = 0
             self._colors['Path'] = ''
             self.applied_theme_name = 'light_16_colors'
-            self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (255, 0, 0), 8: (255, 255, 255), 9: (0, 0, 255), 4: (255, 255, 255), 5: (255, 0, 255), 6: (255, 255, 255), 7: (0, 0, 255), 12: (0, 0, 255), 11: (0, 0, 255), 10: (255, 0, 255), 13: (255, 255,255), 14: (255, 0, 0)}
+            self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (255, 0, 0), 8: (255, 255, 255), 9: (0, 0, 255), 4: (255, 255, 255), 5: (255, 0, 255), 6: (255, 255, 255), 7: (0, 0, 255), 12: (0, 0, 255), 11: (0, 0, 255), 10: (255, 0, 255), 13: (255, 255,255), 14: (255, 0, 0), 15: (230, 230, 230)}
+            self._cnf.has_border_background = True
 
         elif a_theme == 'black_on_white' or a_theme == 'bow':
             ''' info '''
@@ -243,7 +292,8 @@ class PyRadioTheme(object):
             self._colors['transparency'] = 0
             self._colors['Path'] = ''
             self.applied_theme_name = 'black_on_white'
-            self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (0, 0, 0), 8: (255, 255, 255), 9: (138, 138, 138), 4: (255, 255, 255), 5: (128, 128, 128), 6: (0, 0, 0), 7: (128, 128, 128), 12: (0, 255, 255), 11: (138, 138, 138), 10: (138, 138, 138), 14: (0, 0, 0), 13: (255, 255, 255)}
+            self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (0, 0, 0), 8: (255, 255, 255), 9: (138, 138, 138), 4: (255, 255, 255), 5: (128, 128, 128), 6: (0, 0, 0), 7: (128, 128, 128), 12: (0, 255, 255), 11: (138, 138, 138), 10: (138, 138, 138), 14: (0, 0, 0), 13: (255, 255, 255), 15: (229, 229, 229)}
+            self._cnf.has_border_background = True
 
         elif a_theme == 'white_on_black' or a_theme == 'wob':
             ''' info '''
@@ -251,7 +301,8 @@ class PyRadioTheme(object):
             self._colors['transparency'] = 2
             self._colors['Path'] = ''
             self.applied_theme_name = 'white_on_black'
-            self._colors['data'] = {1: (158, 158, 158), 2: (38, 38, 38), 3: (238, 238, 238), 8: (28, 28, 28), 9: (218, 218, 218), 4: (38, 38, 38), 5: (158, 158, 158), 6: (38, 38, 38), 7: (218, 218, 218), 12: (218, 218, 218), 11: (138, 138, 138), 10: (158, 158, 158), 13: (0, 0, 0), 14: (169, 169, 169)}
+            self._colors['data'] = {1: (158, 158, 158), 2: (38, 38, 38), 3: (238, 238, 238), 8: (28, 28, 28), 9: (218, 218, 218), 4: (38, 38, 38), 5: (158, 158, 158), 6: (38, 38, 38), 7: (218, 218, 218), 12: (218, 218, 218), 11: (138, 138, 138), 10: (158, 158, 158), 13: (0, 0, 0), 14: (169, 169, 169), 15: (52, 52, 52)}
+            self._cnf.has_border_background = True
 
         else:
             ret, ret_ind = self._cnf.is_project_theme(a_theme)
@@ -278,7 +329,7 @@ class PyRadioTheme(object):
                 ret = -1
             else:
                 ''' read theme from disk '''
-                att = PyRadioThemeReadWrite()
+                att = PyRadioThemeReadWrite(self._cnf)
                 ret, self._temp_colors = att.read_theme(a_theme, a_path)
                 if ret == 0:
                     self._colors = deepcopy(self._temp_colors)
@@ -343,8 +394,8 @@ class PyRadioThemeReadWrite(object):
         'Edit Cursor': (13, 14)
     }
 
-    def __init__(self):
-        pass
+    def __init__(self, config):
+        self._cnf = config
 
     def read_theme(self, theme_name, theme_path):
         """ Opens a theme file and return its contents in self._temp_colors
@@ -388,7 +439,9 @@ class PyRadioThemeReadWrite(object):
                 logger.error('read_theme(): {0} - invalid color in line: ""{1}: - value: {2}'.format(theme_path, line, raw[-1]))
                 return 4, None
             sp = [raw[-1]]
+            logger.error('sp = {}'.format(sp))
             raw.pop()
+            logger.error('raw = {}'.format(raw))
             try:
                 if raw[-1]:
                     if raw[-1].startswith('#') and len(raw[-1]) != 7:
@@ -405,7 +458,8 @@ class PyRadioThemeReadWrite(object):
             except IndexError:
                 logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
                 return 4, None
-
+            # logger.error('sp = {}'.format(sp))
+            # logger.error('names = {}'.format(names))
             names[sp[0].strip()] = sp[1:]
             for k in names.keys():
                 for n in (0, 1):
@@ -413,6 +467,8 @@ class PyRadioThemeReadWrite(object):
                         names[k][n] = names[k][n].strip()
                     except IndexError:
                         pass
+
+        # logger.error('\n\nnames = {}\n\n'.format(names))
 
         self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 0}
         for name in names.keys():
@@ -439,12 +495,105 @@ class PyRadioThemeReadWrite(object):
             return 4, None
             return 5, None
 
+        if len(names['Messages Border']) == 2:
+            self._temp_colors['css'][15] = names['Messages Border'][-1]
+            self._temp_colors['data'][15] = hex_to_rgb(self._temp_colors['css'][15])
+            self._cnf.has_border_background = True
+            logger.error('read_theme(): color15 = {}'.format(self._temp_colors['css'][15]))
+        else:
+            self._cnf.has_border_background = False
+            self._calculate_fifteenth_color()
+            self._temp_colors['css'][15] = rgb_to_hex(tuple(self._temp_colors['data'][15]))
+            logger.error('read_theme(): calculated color15 = {}'.format(self._temp_colors['css'][15]))
+
         self._theme_name = theme_name
         self._theme_path = theme_path
         self._temp_colors['Name'] = theme_name
         self._temp_colors['Path'] = theme_path
-        # logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
+        logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
         return 0, self._temp_colors
+
+
+    def isLightOrDark(self, rgbColor=[0,128,255]):
+        [r,g,b]=rgbColor
+        '''
+        https://stackoverflow.com/questions/22603510/is-this-possible-to-detect-a-colour-is-a-light-or-dark-colour
+        '''
+        #hsp = sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
+        #if (hsp>127.5):
+        #    return True
+        #    return 'light'
+        #else:
+        #    return False
+        #    return 'dark'
+
+        '''        https://stackoverflow.com/questions/12043187/how-to-check-if-hex-color-is-too-black
+        '''
+        hsp = sqrt(0.241 * (r * r) + 0.691 * (g * g) + 0.068 * (b * b))
+        logger.error('hsp = {}'.format(hsp))
+
+        if (hsp>130):
+            return True
+            return 'light'
+        else:
+            return False
+            return 'dark'
+
+    def _calculate_fifteenth_color(self):
+        amount = .03
+        amount = .1
+        logger.error('color2 = {}'.format(self._temp_colors['data'][2]))
+        x = list(colorsys.rgb_to_hls(
+            self._temp_colors['data'][2][0] / 255,
+            self._temp_colors['data'][2][1] / 255,
+            self._temp_colors['data'][2][2] / 255
+        ))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('backbround color: {}'.format(x))
+        #logger.error('x = {}'.format(x))
+
+        start_x1 = x[1]
+        action = x[1] < .5
+
+        luma = 0.2126 * self._temp_colors['data'][2][0] + 0.7152 * self._temp_colors['data'][2][1] + 0.0722 * self._temp_colors['data'][2][2]
+        logger.error('luma = {}'.format(luma))
+
+        action = not self.isLightOrDark(self._temp_colors['data'][2])
+        logger.error('action = {}'.format(action))
+        count = 0
+        for count in range(0, 15):
+            logger.error('count = {}'.format(count))
+            if action:
+                x[1] += amount
+            else:
+                x[1] -= amount
+
+            if 0 < x[1] < 1:
+                # x[1] = amount * (1 - x[1])
+                logger.error('   x = {}'.format(x))
+
+                y = list(colorsys.hls_to_rgb(x[0], x[1], x[2]))
+                logger.error('   y = {}'.format(y))
+
+                if abs(y[0] - self._temp_colors['data'][10][0]) > 15 and \
+                        abs(y[1] - self._temp_colors['data'][11][1]) > 15 and \
+                        abs(y[2] - self._temp_colors['data'][12][2]) > 15 :
+                    break
+
+                if count == 8:
+                    action = not action
+                    x[1] = start_x1
+            else:
+                break
+
+        #logger.error('y = {}'.format(y))
+        for n in range(0,3):
+            y[n] = round(y[n] * 255)
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('calculated backbround color: {}'.format(y))
+        self._temp_colors['data'][15] = tuple(y)
+        # self._temp_colors['css'][15] = rgb_to_hex(y)
 
     def _theme_is_incomplete(self, some_colors=None):
         colors = self._temp_colors if some_colors is None else some_colors
@@ -519,8 +668,11 @@ Extra Func          {11}
 # (background color will come from Stations)
 PyRadio URL         {12}
 
-# Message window borser foreground
-# (background color will come from Stations)
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#calculated_colors
+#
 Messages Border     {13}
 
 # Theme Transparency
@@ -1168,3 +1320,4 @@ class PyRadioThemeEditor(object):
 
     def keypress(self, char):
         pass
+

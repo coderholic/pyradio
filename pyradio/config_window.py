@@ -163,7 +163,7 @@ class PyRadioConfigWindow(object):
         self._populate_help_lines()
 
     def refresh_config_win(self):
-        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.bkgdset(' ', curses.color_pair(12))
         self._win.erase()
         self._win.box()
         self._print_title()
@@ -213,9 +213,9 @@ class PyRadioConfigWindow(object):
             self._cnf.dirty_config = True
         X = int((self.maxX - len(self._title) - 1) / 2)
         try:
-            self._win.addstr(0, X, dirty_title, curses.color_pair(3))
+            self._win.addstr(0, X, dirty_title, curses.color_pair(12))
         except:
-            self._win.addstr(0, X, dirty_title.encode('utf-8'), curses.color_pair(3))
+            self._win.addstr(0, X, dirty_title.encode('utf-8'), curses.color_pair(12))
         self._win.addstr(self._title + ' ', curses.color_pair(4))
 
         if self._cnf.distro != 'None':
@@ -600,13 +600,13 @@ class PyRadioExtraParams(object):
         self._win.box()
         if self._too_small:
             self._win.addstr(1, 1, self._too_small_str,
-                             curses.color_pair(5))
+                             curses.color_pair(10))
             self._win.refresh()
         else:
             self._win.addstr(
                 0, int((self.maxX - len(self._title)) / 2),
                 self._title,
-                curses.color_pair(4))
+                curses.color_pair(11))
             ''' show note '''
             try:
                 self._win.addstr(12, 2, '─' * (self.maxX - 4), curses.color_pair(3))
@@ -614,8 +614,8 @@ class PyRadioExtraParams(object):
                 self._win.addstr(12, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
             self._win.addstr(12, int((self.maxX - len(self._note_text))/2), self._note_text, curses.color_pair(3))
 
-            self._win.addstr(13, int((self.maxX - len(self._note_line1)) / 2), self._note_line1, curses.color_pair(5))
-            self._win.addstr(14, int((self.maxX - len(self._note_line2)) / 2), self._note_line2, curses.color_pair(5))
+            self._win.addstr(13, int((self.maxX - len(self._note_line1)) / 2), self._note_line1, curses.color_pair(10))
+            self._win.addstr(14, int((self.maxX - len(self._note_line2)) / 2), self._note_line2, curses.color_pair(10))
 
             self._extra.refresh_win()
 
@@ -666,10 +666,10 @@ class ExtraParametersEditor(object):
             has_history=False,
             caption='',
             box_color=curses.color_pair(9),
-            caption_color=curses.color_pair(4),
+            caption_color=curses.color_pair(11),
             edit_color=curses.color_pair(9),
             cursor_color=curses.color_pair(8),
-            unfocused_color=curses.color_pair(5),
+            unfocused_color=curses.color_pair(10),
             string_changed_handler=self._string_changed
         )
         self._widgets[0].string = string
@@ -685,8 +685,8 @@ class ExtraParametersEditor(object):
         self._h_buttons = SimpleCursesHorizontalPushButtons(
                 Y=3, captions=('OK', 'Cancel'),
                 color_focused=curses.color_pair(9),
-                color=curses.color_pair(4),
-                bracket_color=curses.color_pair(5),
+                color=curses.color_pair(11),
+                bracket_color=curses.color_pair(10),
                 parent=self._win)
         self._h_buttons.calculate_buttons_position()
         self._widgets[1], self._widgets[2] = self._h_buttons.buttons
@@ -698,22 +698,22 @@ class ExtraParametersEditor(object):
     def _show_alternative_modes(self):
         if self._line_editor._paste_mode:
             """ print paste mode is on on editor """
-            self._win.addstr(0, 18, '[', curses.color_pair(5))
-            self._win.addstr('Paste mode', curses.color_pair(4))
-            self._win.addstr(']    ', curses.color_pair(5))
+            self._win.addstr(0, 18, '[', curses.color_pair(10))
+            self._win.addstr('Paste mode', curses.color_pair(11))
+            self._win.addstr(']    ', curses.color_pair(10))
         else:
             if self._line_editor.backslash_pressed:
                 """ print editor's flag """
                 # fix for python 2
-                #self._win.addstr(*lin[i], '[', curses.color_pair(5))
-                self._win.addstr(0, 18, '[', curses.color_pair(5))
-                self._win.addstr('Extra mode', curses.color_pair(4))
-                self._win.addstr(']', curses.color_pair(5))
+                #self._win.addstr(*lin[i], '[', curses.color_pair(10))
+                self._win.addstr(0, 18, '[', curses.color_pair(10))
+                self._win.addstr('Extra mode', curses.color_pair(11))
+                self._win.addstr(']', curses.color_pair(10))
             else:
                 """ print cleared editor's flag """
                 # fix for python 2
-                #self._win.addstr(*lin[i], 15 * ' ', curses.color_pair(5))
-                self._win.addstr(0, 18, 15 * ' ', curses.color_pair(5))
+                #self._win.addstr(*lin[i], 15 * ' ', curses.color_pair(10))
+                self._win.addstr(0, 18, 15 * ' ', curses.color_pair(10))
         self._win.refresh()
 
     def _string_changed(self):
@@ -731,41 +731,41 @@ class ExtraParametersEditor(object):
         self.refresh_win()
 
     def show(self):
-        self._win.addstr(0, 0, self._caption, curses.color_pair(5))
+        self._win.addstr(0, 0, self._caption, curses.color_pair(10))
         try:
             self._win.addstr(5, 3, '─' * (self.maxX - 6), curses.color_pair(3))
         except:
             self._win.addstr(5, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
-        self._win.addstr(5, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
+        self._win.addstr(5, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(11))
 
 
-        self._win.addstr(6, 5, 'TAB', curses.color_pair(4))
-        self._win.addstr(', ', curses.color_pair(5))
-        self._win.addstr('Down', curses.color_pair(4))
-        self._win.addstr(' / ', curses.color_pair(5))
-        self._win.addstr('Up', curses.color_pair(4))
-        self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
-        self._win.addstr(7, 5, 'ENTER', curses.color_pair(4))
-        self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
+        self._win.addstr(6, 5, 'TAB', curses.color_pair(11))
+        self._win.addstr(', ', curses.color_pair(10))
+        self._win.addstr('Down', curses.color_pair(11))
+        self._win.addstr(' / ', curses.color_pair(10))
+        self._win.addstr('Up', curses.color_pair(11))
+        self._win.addstr('    Go to next / previous field.', curses.color_pair(10))
+        self._win.addstr(7, 5, 'ENTER', curses.color_pair(11))
+        self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(10))
         step = 0
         if self._orig_string:
-            self._win.addstr(8, 5, 'r', curses.color_pair(4))
-            self._win.addstr(', ', curses.color_pair(5))
-            self._win.addstr('^R', curses.color_pair(4))
-            self._win.addstr(8, 23, 'Revert to saved values (', curses.color_pair(5))
-            self._win.addstr('^R', curses.color_pair(4))
-            self._win.addstr(' in Line Editor).', curses.color_pair(5))
+            self._win.addstr(8, 5, 'r', curses.color_pair(11))
+            self._win.addstr(', ', curses.color_pair(10))
+            self._win.addstr('^R', curses.color_pair(11))
+            self._win.addstr(8, 23, 'Revert to saved values (', curses.color_pair(10))
+            self._win.addstr('^R', curses.color_pair(11))
+            self._win.addstr(' in Line Editor).', curses.color_pair(10))
             step = 1
-        self._win.addstr(8 + step, 5, 'Esc', curses.color_pair(4))
-        self._win.addstr(8 + step, 23, 'Cancel operation.', curses.color_pair(5))
+        self._win.addstr(8 + step, 5, 'Esc', curses.color_pair(11))
+        self._win.addstr(8 + step, 23, 'Cancel operation.', curses.color_pair(10))
 
-        self._win.addstr(9 + step, 5, 's', curses.color_pair(4))
-        self._win.addstr(' / ', curses.color_pair(5))
-        self._win.addstr('q', curses.color_pair(4))
-        self._win.addstr(9 + step , 23, 'Save / Cancel (not in Line Editor).', curses.color_pair(5))
+        self._win.addstr(9 + step, 5, 's', curses.color_pair(11))
+        self._win.addstr(' / ', curses.color_pair(10))
+        self._win.addstr('q', curses.color_pair(11))
+        self._win.addstr(9 + step , 23, 'Save / Cancel (not in Line Editor).', curses.color_pair(10))
 
-        self._win.addstr(10 + step, 5, '?', curses.color_pair(4))
-        self._win.addstr(10 + step, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
+        self._win.addstr(10 + step, 5, '?', curses.color_pair(11))
+        self._win.addstr(10 + step, 23, 'Line editor help (in Line Editor).', curses.color_pair(10))
         self._show_alternative_modes()
         self._win.refresh()
         self.refresh_win()
@@ -1063,7 +1063,7 @@ class ExtraParameters(object):
                 self.startY + a_line,
                 self.startX,
                 d_str,
-                curses.color_pair(4)
+                curses.color_pair(11)
             )
         for a_line in range(0, len(self._items)):
             if a_line == len(self._items):
@@ -1086,18 +1086,18 @@ class ExtraParameters(object):
         self._win.refresh()
 
     def _get_color(self, a_line):
-        col = curses.color_pair(5)
+        col = curses.color_pair(10)
         if self._focus():
             if a_line == self.active:
                 if a_line == self.selection:
                     col = curses.color_pair(9)
                 else:
-                    col = curses.color_pair(4)
+                    col = curses.color_pair(11)
             elif a_line == self.selection:
                 col = curses.color_pair(6)
         else:
             if a_line == self.active:
-                col = curses.color_pair(4)
+                col = curses.color_pair(11)
         return col
 
     def set_player(self, a_player):
@@ -1113,7 +1113,7 @@ class ExtraParameters(object):
                     self._win.addstr(self.startY + a_line,
                                      self.startX,
                                      empty_str,
-                                     curses.color_pair(5))
+                                     curses.color_pair(10))
             self.refresh_win()
 
     def resize(self, window, startY=None, startX=None):
@@ -1258,7 +1258,7 @@ class ExtraParameters(object):
                         self.startY + len(self._items) - 1,
                         self.startX,
                         ' ' * (self._width + 1),
-                        curses.color_pair(5)
+                        curses.color_pair(10)
                     )
                     if self.active == self.selection or self.selection > len(self._items):
                         self.active = 0
@@ -1410,10 +1410,10 @@ class PyRadioSelectPlayer(object):
             self._win.addstr(
                 0, int((self.maxX - len(self._title)) / 2),
                 self._title,
-                curses.color_pair(4))
-            self._win.addstr(1, 2, 'Supported Players', curses.color_pair(4))
-            self._win.addstr(1, self.mlength + 11, 'Extra Player Parameters', curses.color_pair(4))
-            #self._win.addstr(1, int(self.maxX / 2 + 2), 'Active' , curses.color_pair(4))
+                curses.color_pair(11))
+            self._win.addstr(1, 2, 'Supported Players', curses.color_pair(11))
+            self._win.addstr(1, self.mlength + 11, 'Extra Player Parameters', curses.color_pair(11))
+            #self._win.addstr(1, int(self.maxX / 2 + 2), 'Active' , curses.color_pair(11))
             self.refresh_selection()
             if do_params:
                 self._extra.set_player(self.selected_player_name())
@@ -1424,7 +1424,7 @@ class PyRadioSelectPlayer(object):
                 title = ' Edit player paremeter '
             self._win.addstr(
                 0, int((self.maxX - len(title)) / 2),
-                title, curses.color_pair(4))
+                title, curses.color_pair(11))
             self._win.refresh()
             self._parameter_editor.show()
 
@@ -1436,11 +1436,11 @@ class PyRadioSelectPlayer(object):
                 if self.selection == i:
                     col = curses.color_pair(6)
                 else:
-                    col = curses.color_pair(5)
+                    col = curses.color_pair(10)
             else:
-                col = curses.color_pair(5)
+                col = curses.color_pair(10)
                 if self.selection == i:
-                    col = curses.color_pair(4)
+                    col = curses.color_pair(11)
                     '''
                         first_char = '>'
                         last_char = '<'
@@ -1452,7 +1452,7 @@ class PyRadioSelectPlayer(object):
                 pad * ' ' + last_char,
                 col
             )
-            # self._win.hline(i+2, 1, ' ', self.maxX - 2, curses.color_pair(5))
+            # self._win.hline(i+2, 1, ' ', self.maxX - 2, curses.color_pair(10))
         self._win.refresh()
         return
 
@@ -1724,7 +1724,7 @@ class PyRadioSelectEncodings(object):
         self._win.addstr(
             0, int((self.maxX - len(self._title)) / 2),
             self._title,
-            curses.color_pair(4))
+            curses.color_pair(11))
         for i in range(1, self.maxX - 1):
             try:
                 self._win.addch(self.maxY - 4,  i, '─', curses.color_pair(3))
@@ -1750,7 +1750,7 @@ class PyRadioSelectEncodings(object):
             msg = 'Window too small to display content!'
             if self.maxX - 2 < len(msg):
                 msg = 'Window too small!'
-            self._win.hline(self.maxY - 4, 1, ' ', self.maxX - 2, curses.color_pair(5))
+            self._win.hline(self.maxY - 4, 1, ' ', self.maxX - 2, curses.color_pair(10))
             try:
                 self._win.addch(self.maxY - 4, 0, '│', curses.color_pair(3))
                 self._win.addch(self.maxY - 4, self.maxX - 1, '│', curses.color_pair(3))
@@ -1760,11 +1760,11 @@ class PyRadioSelectEncodings(object):
             self._win.addstr(
                 int(self.maxY / 2),
                 int((self.maxX - len(msg)) / 2),
-                msg, curses.color_pair(5))
+                msg, curses.color_pair(10))
 
         else:
-            self._win.hline(self.maxY - 3, 1, ' ', self.maxX - 2, curses.color_pair(5))
-            self._win.hline(self.maxY - 2, 1, ' ', self.maxX - 2, curses.color_pair(5))
+            self._win.hline(self.maxY - 3, 1, ' ', self.maxX - 2, curses.color_pair(10))
+            self._win.hline(self.maxY - 2, 1, ' ', self.maxX - 2, curses.color_pair(10))
 
             self._set_startPos()
             for i in range(0, self._num_of_columns):
@@ -1779,17 +1779,17 @@ class PyRadioSelectEncodings(object):
                             col = curses.color_pair(9)
                         else:
                             col = curses.color_pair(6)
-                        self._win.addstr(self.maxY - 3, 1, ' ' * (self.maxX - 2), curses.color_pair(4))
-                        self._win.addstr(self.maxY - 3, 2, '   Alias: ', curses.color_pair(4))
-                        self._win.addstr(self._encodings[pos][1][:self.maxX - 14], curses.color_pair(5))
-                        self._win.addstr(self.maxY - 2, 1, ' ' * (self.maxX - 2), curses.color_pair(4))
-                        self._win.addstr(self.maxY - 2, 2, 'Language: ', curses.color_pair(4))
-                        self._win.addstr(self._encodings[pos][2][:self.maxX - 14], curses.color_pair(5))
+                        self._win.addstr(self.maxY - 3, 1, ' ' * (self.maxX - 2), curses.color_pair(11))
+                        self._win.addstr(self.maxY - 3, 2, '   Alias: ', curses.color_pair(11))
+                        self._win.addstr(self._encodings[pos][1][:self.maxX - 14], curses.color_pair(10))
+                        self._win.addstr(self.maxY - 2, 1, ' ' * (self.maxX - 2), curses.color_pair(11))
+                        self._win.addstr(self.maxY - 2, 2, 'Language: ', curses.color_pair(11))
+                        self._win.addstr(self._encodings[pos][2][:self.maxX - 14], curses.color_pair(10))
                     else:
-                        col = curses.color_pair(5)
+                        col = curses.color_pair(10)
                         if pos < len(self._encodings):
                             if self._encodings[pos][0] == self._orig_encoding:
-                                col = curses.color_pair(4)
+                                col = curses.color_pair(11)
                     self._win.addstr(yy, xx - 1,
                                      ' ' * (self.max_enc_len + 2),
                                      col)
@@ -2091,7 +2091,7 @@ class PyRadioSelectPlaylist(object):
         self._win.addstr(
             0, int((self.maxX - len(self._title)) / 2),
             self._title,
-            curses.color_pair(4)
+            curses.color_pair(11)
         )
         if resizing:
             self._resize()
@@ -2121,12 +2121,12 @@ class PyRadioSelectPlaylist(object):
             self._fix_startPos()
 
     def _get_color(self, i):
-        col = curses.color_pair(5)
+        col = curses.color_pair(10)
         if self._items[i + self.startPos] == self._orig_playlist:
             if i + self.startPos == self._selected_playlist_id:
                 col = curses.color_pair(9)
             else:
-                col = curses.color_pair(4)
+                col = curses.color_pair(11)
         elif i + self.startPos == self._selected_playlist_id:
             col = curses.color_pair(6)
         return col
@@ -2260,13 +2260,13 @@ class PyRadioSelectPlaylist(object):
                 5, 38,
                 int((self._parent_maxY - 5) / 2) + 1,
                 int((self._parent_maxX - 38) / 2))
-            self._error_win.bkgdset(' ', curses.color_pair(3))
+            self._error_win.bkgdset(' ', curses.color_pair(12))
             self._error_win.erase()
             self._error_win.box()
-            self._error_win.addstr(0, 16, ' Error ', curses.color_pair(4))
-            self._error_win.addstr(1, 2, msg, curses.color_pair(5))
-            self._error_win.addstr(2, 2, 'Please select another playlist...', curses.color_pair(5))
-            self._error_win.addstr(4, 14, ' Press any key to hide ', curses.color_pair(3))
+            self._error_win.addstr(0, 16, ' Error ', curses.color_pair(11))
+            self._error_win.addstr(1, 2, msg, curses.color_pair(10))
+            self._error_win.addstr(2, 2, 'Please select another playlist...', curses.color_pair(10))
+            self._error_win.addstr(4, 14, ' Press any key to hide ', curses.color_pair(12))
             self._error_win.refresh()
 
     def _fix_startPos(self):
@@ -2508,12 +2508,12 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                 self._orig_playlist == 'Random' or \
                 self._orig_playlist is None:
             or_pl = 0
-        col = curses.color_pair(5)
+        col = curses.color_pair(10)
         if i + self.startPos == int(or_pl) + 1:
             if i + self.startPos == self._selected_playlist_id:
                 col = curses.color_pair(9)
             else:
-                col = curses.color_pair(4)
+                col = curses.color_pair(11)
         elif i + self.startPos == self._selected_playlist_id:
             col = curses.color_pair(6)
         return col
