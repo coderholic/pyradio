@@ -5753,6 +5753,7 @@ class PyRadio(object):
                         if self._config_win.mouse_support_option_changed:
                             self._print_mouse_restart_info()
                         if self._config_win.need_to_update_theme:
+                            self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
                             self._theme.recalculate_theme()
                     elif ret == 1:
                         ''' config not modified '''
