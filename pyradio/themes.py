@@ -14,6 +14,88 @@ from .common import *
 
 logger = logging.getLogger(__name__)
 
+def isLightOrDark(rgbColor=[0,128,255]):
+    [r,g,b]=rgbColor
+    '''
+    https://stackoverflow.com/questions/22603510/is-this-possible-to-detect-a-colour-is-a-light-or-dark-colour
+    '''
+    #hsp = sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
+    #if (hsp>127.5):
+    #    return True
+    #    return 'light'
+    #else:
+    #    return False
+    #    return 'dark'
+
+    '''        https://stackoverflow.com/questions/12043187/how-to-check-if-hex-color-is-too-black
+    '''
+    hsp = sqrt(0.241 * (r * r) + 0.691 * (g * g) + 0.068 * (b * b))
+    logger.error('hsp = {}'.format(hsp))
+
+    if (hsp>130):
+        return True
+        return 'light'
+    else:
+        return False
+        return 'dark'
+
+def calculate_fifteenth_color(colors, an_amount):
+    if an_amount == '0':
+        return colors[2]
+
+    amount = round(float(an_amount) ,2)
+    logger.error('color2 = {}'.format(colors[2]))
+    x = list(colorsys.rgb_to_hls(
+        colors[2][0] / 255,
+        colors[2][1] / 255,
+        colors[2][2] / 255
+    ))
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('backbround color: {}'.format(x))
+    #logger.error('x = {}'.format(x))
+
+    start_x1 = x[1]
+    action = x[1] < .5
+
+    # luma = 0.2126 * colors[2][0] + 0.7152 * colors[2][1] + 0.0722 * colors[2][2]
+    # logger.error('luma = {}'.format(luma))
+
+    action = not isLightOrDark(colors[2])
+    logger.error('action = {}'.format(action))
+    count = 0
+    for count in range(0, 15):
+        logger.error('count = {}'.format(count))
+        if action:
+            x[1] += amount
+        else:
+            x[1] -= amount
+
+        if 0 < x[1] < 1:
+            # x[1] = amount * (1 - x[1])
+            logger.error('   x = {}'.format(x))
+
+            y = list(colorsys.hls_to_rgb(x[0], x[1], x[2]))
+            logger.error('   y = {}'.format(y))
+
+            if abs(y[0] - colors[10][0]) > 15 and \
+                    abs(y[1] - colors[11][1]) > 15 and \
+                    abs(y[2] - colors[12][2]) > 15 :
+                break
+
+            if count == 8:
+                action = not action
+                x[1] = start_x1
+        else:
+            break
+
+    #logger.error('y = {}'.format(y))
+    for n in range(0,3):
+        y[n] = round(y[n] * 255)
+
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('calculated backbround color: {}'.format(y))
+    return tuple(y)
+
 class PyRadioTheme(object):
     _colors = {}
     _active_colors = {}
@@ -201,6 +283,14 @@ class PyRadioTheme(object):
                     curse_rgb[1],
                     curse_rgb[2],
                 )
+
+    def recalculate_theme(self):
+        self._colors['data'][15] = calculate_fifteenth_color(
+            self._colors['data'], self._cnf.opts['calculated_color_factor'][1]
+        )
+        self._colors['css'][15] = rgb_to_hex(tuple(self._colors['data'][15]))
+        self._do_init_pairs()
+        self._update_colors()
 
     def create_theme_from_theme(self, theme_name, out_theme_name):
         ''' Create a theme in theme's directory
@@ -503,7 +593,6 @@ class PyRadioThemeReadWrite(object):
         else:
             self._cnf.has_border_background = False
             self._calculate_fifteenth_color()
-            self._temp_colors['css'][15] = rgb_to_hex(tuple(self._temp_colors['data'][15]))
             logger.error('read_theme(): calculated color15 = {}'.format(self._temp_colors['css'][15]))
 
         self._theme_name = theme_name
@@ -513,87 +602,9 @@ class PyRadioThemeReadWrite(object):
         logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
         return 0, self._temp_colors
 
-
-    def isLightOrDark(self, rgbColor=[0,128,255]):
-        [r,g,b]=rgbColor
-        '''
-        https://stackoverflow.com/questions/22603510/is-this-possible-to-detect-a-colour-is-a-light-or-dark-colour
-        '''
-        #hsp = sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
-        #if (hsp>127.5):
-        #    return True
-        #    return 'light'
-        #else:
-        #    return False
-        #    return 'dark'
-
-        '''        https://stackoverflow.com/questions/12043187/how-to-check-if-hex-color-is-too-black
-        '''
-        hsp = sqrt(0.241 * (r * r) + 0.691 * (g * g) + 0.068 * (b * b))
-        logger.error('hsp = {}'.format(hsp))
-
-        if (hsp>130):
-            return True
-            return 'light'
-        else:
-            return False
-            return 'dark'
-
     def _calculate_fifteenth_color(self):
-        amount = .03
-        amount = .1
-        logger.error('color2 = {}'.format(self._temp_colors['data'][2]))
-        x = list(colorsys.rgb_to_hls(
-            self._temp_colors['data'][2][0] / 255,
-            self._temp_colors['data'][2][1] / 255,
-            self._temp_colors['data'][2][2] / 255
-        ))
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('backbround color: {}'.format(x))
-        #logger.error('x = {}'.format(x))
-
-        start_x1 = x[1]
-        action = x[1] < .5
-
-        luma = 0.2126 * self._temp_colors['data'][2][0] + 0.7152 * self._temp_colors['data'][2][1] + 0.0722 * self._temp_colors['data'][2][2]
-        logger.error('luma = {}'.format(luma))
-
-        action = not self.isLightOrDark(self._temp_colors['data'][2])
-        logger.error('action = {}'.format(action))
-        count = 0
-        for count in range(0, 15):
-            logger.error('count = {}'.format(count))
-            if action:
-                x[1] += amount
-            else:
-                x[1] -= amount
-
-            if 0 < x[1] < 1:
-                # x[1] = amount * (1 - x[1])
-                logger.error('   x = {}'.format(x))
-
-                y = list(colorsys.hls_to_rgb(x[0], x[1], x[2]))
-                logger.error('   y = {}'.format(y))
-
-                if abs(y[0] - self._temp_colors['data'][10][0]) > 15 and \
-                        abs(y[1] - self._temp_colors['data'][11][1]) > 15 and \
-                        abs(y[2] - self._temp_colors['data'][12][2]) > 15 :
-                    break
-
-                if count == 8:
-                    action = not action
-                    x[1] = start_x1
-            else:
-                break
-
-        #logger.error('y = {}'.format(y))
-        for n in range(0,3):
-            y[n] = round(y[n] * 255)
-
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('calculated backbround color: {}'.format(y))
-        self._temp_colors['data'][15] = tuple(y)
-        # self._temp_colors['css'][15] = rgb_to_hex(y)
+        self._temp_colors['data'][15] = calculate_fifteenth_color(self._temp_colors['data'], self._cnf.opts['calculated_color_factor'][1])
+        self._temp_colors['css'][15] = rgb_to_hex(tuple(self._temp_colors['data'][15]))
 
     def _theme_is_incomplete(self, some_colors=None):
         colors = self._temp_colors if some_colors is None else some_colors

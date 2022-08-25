@@ -794,7 +794,7 @@ PyRadio URL         #a3b367
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated_colors
+# https://github.com/coderholic/pyradio#calculated-colors
 #
 Messages Border     #a3b367
 

@@ -2280,7 +2280,7 @@ class PyRadio(object):
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
                  !Misc
                  o| / |s| / |R        ||O|pen / |S|ave / |R|eload playlist.
-                 t| / |T            |Load |t|heme / |T|oggle transparency.
+                 t| / |T| / |~        |Change |t|heme / |T|ransparency / Calc. Background.
                  c                |Open Configuration window.'''
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE,
@@ -5752,6 +5752,8 @@ class PyRadio(object):
                         self.player.playback_timeout = int(self._cnf.connection_timeout)
                         if self._config_win.mouse_support_option_changed:
                             self._print_mouse_restart_info()
+                        if self._config_win.need_to_update_theme:
+                            self._theme.recalculate_theme()
                     elif ret == 1:
                         ''' config not modified '''
                         self._show_notification_with_delay(
@@ -8410,7 +8412,6 @@ class PyRadio(object):
                 self._is_register = True
             else:
                 stationFile, ret = self._cnf._get_playlist_abspath_from_data(stationFile=h_item[0])
-                logger.error('stationFile = {}'.format(stationFile))
                 self._is_register = False
             if ret > 0:
                 ''' Continue going through history items '''

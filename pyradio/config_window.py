@@ -79,6 +79,7 @@ class PyRadioConfigWindow(object):
     '|', 'Default value = dark'])
     _help_text.append(['If False, theme colors will be used.', '|',
     "If True and a compositor is running, the stations' window background will be transparent.", '|', "If True and a compositor is not running, the terminal's background color will be used.", '|', 'Default value: False'])
+    _help_text.append(['Pyradio can calculate and use an alternative color for secondary windows.', '|', 'This option will determine if this color will be used (value > 0) or not (value = 0), provided that the theme used does not already provide it.', '|', 'The value of this option is actually the factor to darken or lighten the main (stations) background color.', '|', 'You can get more info on this at https://github.com/coderholic/pyradio#calculated-colors' , '|', 'Valid Values: 0-0.2', 'Default value: 0'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.',
     '|', 'Default value: True'])
@@ -324,6 +325,7 @@ class PyRadioConfigWindow(object):
         ''' Transparency '''
         #self._old_use_transparency = self._config_options['use_transparency'][1]
         self._config_options['use_transparency'][1] = False
+        self._config_options['calculated_color_factor'][1] = '0'
         self._config_options['force_http'][1] = False
         self._toggle_transparency_function(changed_from_config_window=True, force_value=False)
         self._config_options['playlist_manngement_title'][1] = ''
@@ -362,12 +364,54 @@ class PyRadioConfigWindow(object):
         if self.too_small:
             return 1, []
         val = list(self._config_options.items())[self.selection]
+        logger.error('val = {}'.format(val))
         if char in self._global_functions.keys():
             self._global_functions[char]()
         elif val[0] == 'radiobrowser':
             if char in (curses.KEY_RIGHT, ord('l'),
                         ord(' '), curses.KEY_ENTER, ord('\n')):
                 return 2, []
+
+        elif val[0] == 'calculated_color_factor':
+            if char in (curses.KEY_RIGHT, ord('l')):
+                t = float(val[1][1])
+                if t < .2:
+                    t = round(t + .01, 2)
+                    logger.error('t = {}'.format(t))
+                    s_t = str(t)[:4]
+                    if s_t == '0.0':
+                        s_t = '0'
+                    logger.error('s_t = ' + s_t)
+                    self._config_options[val[0]][1] = s_t
+                    self._win.addstr(
+                        self.selection+1,
+                        3 + len(val[1][0]),
+                        s_t + '     ', curses.color_pair(6))
+                    self._print_title()
+                    self._win.refresh()
+                    # att = PyRadioThemeReadWrite(self._cnf)
+                    # att._calculate_fifteenth_color()
+                return -1, []
+
+            elif char in (curses.KEY_LEFT, ord('h')):
+                t = float(val[1][1])
+                if t > 0:
+                    t = round(t - .01, 2)
+                    logger.error('t = {}'.format(t))
+                    s_t = str(t)[:4]
+                    if s_t == '0.0':
+                        s_t = '0'
+                    logger.error('s_t = ' + s_t)
+                    self._config_options[val[0]][1] = s_t
+                    self._win.addstr(
+                        self.selection+1,
+                        3 + len(val[1][0]),
+                        s_t + '     ', curses.color_pair(6))
+                    self._print_title()
+                    self._win.refresh()
+                    # att = PyRadioThemeReadWrite(self._cnf)
+                    # att._calculate_fifteenth_color()
+                return -1, []
 
         elif val[0] == 'connection_timeout':
             if char in (curses.KEY_RIGHT, ord('l')):
@@ -467,6 +511,10 @@ class PyRadioConfigWindow(object):
                 self.mouse_support_option_changed = False
             else:
                 self.mouse_support_option_changed = True
+            if self._saved_config_options['calculated_color_factor'][1] == self._config_options['calculated_color_factor'][1]:
+                self.need_to_update_theme = False
+            else:
+                self.need_to_update_theme = True
             self._saved_config_options = deepcopy(self._config_options)
             if self._cnf.opts != self._saved_config_options:
                 ''' check if player has changed '''

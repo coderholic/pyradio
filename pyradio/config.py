@@ -515,11 +515,9 @@ class PyRadioStations(object):
 
         ret = 0
         if self._register_to_open:
-            logger.error('register_to_open = {}'.format(self._register_to_open))
             stationFile, ret = self._get_register_filename_from_register()
             self._is_register = True
         else:
-            logger.error('stationFile = {}'.format(stationFile))
             stationFile, ret = self._get_playlist_abspath_from_data(stationFile=stationFile)
             self._is_register = False
         read_file = True
@@ -1141,6 +1139,7 @@ class PyRadioConfig(PyRadioStations):
     opts['theme_title'] = ['Theme Options', '']
     opts['theme'] = ['Theme: ', 'dark']
     opts['use_transparency'] = ['Use transparency: ', False]
+    opts['calculated_color_factor'] = ['Calculated color: ', '0']
     opts['playlist_manngement_title'] = ['Playlist Management Options', '']
     opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
     opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
@@ -1375,6 +1374,19 @@ class PyRadioConfig(PyRadioStations):
     @use_transparency.setter
     def use_transparency(self, val):
         self.opts['use_transparency'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def calculated_color_factor(self):
+        return float(self.opts['calculated_color_factor'][1])
+
+    @calculated_color_factor.setter
+    def calculated_color_factor(self, value):
+        try:
+            test = float(str(value))
+            self.opts['calculated_color_factor'][1] = str(value)
+        except (ValueError, TypeError, NameError):
+            self.opts['calculated_color_factor'][1] = '0'
         self.opts['dirty_config'][1] = True
 
     @property
@@ -1788,6 +1800,16 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['use_transparency'][1] = True
                 else:
                     self.opts['use_transparency'][1] = False
+            elif sp[0] == 'calculated_color_factor':
+                try:
+                    t = round(float(sp[1]), 2)
+                    s_t = str(t)[:4]
+                    if s_t == '0.0':
+                        s_t = '0'
+                    self.opts['calculated_color_factor'][1] = s_t
+                except (ValueError, TypeError):
+                    self.opts['calculated_color_factor'][1] = '0'
+                self.use_calculated_colors = False if self.opts['calculated_color_factor'][1] == '0' else True
             elif sp[0] == 'force_http':
                 if sp[1].lower() == 'true':
                     self.opts['force_http'][1] = True
@@ -2068,6 +2090,10 @@ theme = {8}
 # Default value: False
 use_transparency = {9}
 
+# Calculated color factor
+# Valid values: 0-0.2
+# Default value: 0
+calculated_color_factor = {10}
 
 # Playlist management
 #
@@ -2075,20 +2101,20 @@ use_transparency = {9}
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {10}
+confirm_station_deletion = {11}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within PyRadio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {11}
+confirm_playlist_reload = {12}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {12}
+auto_save_playlist = {13}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
@@ -2107,6 +2133,7 @@ auto_save_playlist = {12}
                     self.opts['force_http'][1],
                     self.opts['theme'][1] if not self.opts['auto_update_theme'][1] else '*' + self.opts['theme'][1],
                     self.opts['use_transparency'][1],
+                    self.opts['calculated_color_factor'][1],
                     self.opts['confirm_station_deletion'][1],
                     self.opts['confirm_playlist_reload'][1],
                     self.opts['auto_save_playlist'][1]))
@@ -2825,7 +2852,7 @@ PyRadio URL         {color2}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated_colors
+# https://github.com/coderholic/pyradio#calculated-colors
 #
 Messages Border     {color4}
 
@@ -2868,7 +2895,7 @@ PyRadio URL         {color4}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated_colors
+# https://github.com/coderholic/pyradio#calculated-colors
 #
 Messages Border     {color2}
 
@@ -3014,7 +3041,7 @@ PyRadio URL         {color2}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated_colors
+# https://github.com/coderholic/pyradio#calculated-colors
 #
 Messages Border     {color8}
 
@@ -3057,7 +3084,7 @@ PyRadio URL         {color2}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated_colors
+# https://github.com/coderholic/pyradio#calculated-colors
 #
 Messages Border     {color8}
 
@@ -3100,7 +3127,7 @@ PyRadio URL         {foreground}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated_colors
+# https://github.com/coderholic/pyradio#calculated-colors
 #
 Messages Border     {color8}
 
@@ -3143,7 +3170,7 @@ PyRadio URL         {foreground}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated_colors
+# https://github.com/coderholic/pyradio#calculated-colors
 #
 Messages Border     {color8}
 
