@@ -2852,7 +2852,7 @@ PyRadio URL         {color2}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated-colors
+# https://github.com/coderholic/pyradio#secondary-windows-background
 #
 Messages Border     {color4}
 
@@ -2895,7 +2895,7 @@ PyRadio URL         {color4}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated-colors
+# https://github.com/coderholic/pyradio#secondary-windows-background
 #
 Messages Border     {color2}
 
@@ -3041,7 +3041,7 @@ PyRadio URL         {color2}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated-colors
+# https://github.com/coderholic/pyradio#secondary-windows-background
 #
 Messages Border     {color8}
 
@@ -3084,7 +3084,7 @@ PyRadio URL         {color2}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated-colors
+# https://github.com/coderholic/pyradio#secondary-windows-background
 #
 Messages Border     {color8}
 
@@ -3127,7 +3127,7 @@ PyRadio URL         {foreground}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated-colors
+# https://github.com/coderholic/pyradio#secondary-windows-background
 #
 Messages Border     {color8}
 
@@ -3170,7 +3170,7 @@ PyRadio URL         {foreground}
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated-colors
+# https://github.com/coderholic/pyradio#secondary-windows-background
 #
 Messages Border     {color8}
 

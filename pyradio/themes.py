@@ -27,10 +27,11 @@ def isLightOrDark(rgbColor=[0,128,255]):
     #    return False
     #    return 'dark'
 
-    '''        https://stackoverflow.com/questions/12043187/how-to-check-if-hex-color-is-too-black
+    '''
+    https://stackoverflow.com/questions/12043187/how-to-check-if-hex-color-is-too-black
     '''
     hsp = sqrt(0.241 * (r * r) + 0.691 * (g * g) + 0.068 * (b * b))
-    logger.error('hsp = {}'.format(hsp))
+    # logger.error('hsp = {}'.format(hsp))
 
     if (hsp>130):
         return True
@@ -39,19 +40,29 @@ def isLightOrDark(rgbColor=[0,128,255]):
         return False
         return 'dark'
 
-def calculate_fifteenth_color(colors, an_amount):
-    if an_amount == '0':
+def calculate_fifteenth_color(colors, an_amount, inhibit_if_color15_exists=True):
+    if an_amount == '0' or \
+            (15 in colors.keys() and \
+             inhibit_if_color15_exists
+            ):
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Cannot calculating color15...')
         return colors[2]
 
+    if logger.isEnabledFor(logging.INFO):
+        logger.info('Calculating color15...')
     amount = round(float(an_amount) ,2)
-    logger.error('color2 = {}'.format(colors[2]))
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('Luminance color factor = {}'.format(amount))
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('color2: {}'.format(colors[2]))
     x = list(colorsys.rgb_to_hls(
-        colors[2][0] / 255,
-        colors[2][1] / 255,
-        colors[2][2] / 255
+        float(colors[2][0] / 255.0),
+        float(colors[2][1] / 255.0),
+        float(colors[2][2] / 255.0)
     ))
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug('backbround color: {}'.format(x))
+        logger.debug('hls: {}'.format(x))
     #logger.error('x = {}'.format(x))
 
     start_x1 = x[1]
@@ -61,10 +72,17 @@ def calculate_fifteenth_color(colors, an_amount):
     # logger.error('luma = {}'.format(luma))
 
     action = not isLightOrDark(colors[2])
-    logger.error('action = {}'.format(action))
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('color is dark = {}'.format(action))
     count = 0
+
+    y = list(x)
+    if action:
+        y = list(colorsys.hls_to_rgb(x[0], x[1] + amount, x[2]))
+    else:
+        y = list(colorsys.hls_to_rgb(x[0], x[1] - amount, x[2]))
+
     for count in range(0, 15):
-        logger.error('count = {}'.format(count))
         if action:
             x[1] += amount
         else:
@@ -72,10 +90,10 @@ def calculate_fifteenth_color(colors, an_amount):
 
         if 0 < x[1] < 1:
             # x[1] = amount * (1 - x[1])
-            logger.error('   x = {}'.format(x))
 
             y = list(colorsys.hls_to_rgb(x[0], x[1], x[2]))
-            logger.error('   y = {}'.format(y))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('  luminance {0}: {1}'.format(count, x[1]))
 
             if abs(y[0] - colors[10][0]) > 15 and \
                     abs(y[1] - colors[11][1]) > 15 and \
@@ -84,6 +102,8 @@ def calculate_fifteenth_color(colors, an_amount):
 
             if count == 8:
                 action = not action
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('flipping algorithm...')
                 x[1] = start_x1
         else:
             break
@@ -93,7 +113,7 @@ def calculate_fifteenth_color(colors, an_amount):
         y[n] = round(y[n] * 255)
 
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug('calculated backbround color: {}'.format(y))
+        logger.debug('color15: {}'.format(y))
     return tuple(y)
 
 class PyRadioTheme(object):
@@ -131,8 +151,8 @@ class PyRadioTheme(object):
             if self._cnf.use_calculated_colors or \
                    self._cnf.has_border_background:
                 if self._cnf.use_transparency:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('--> transparency: ON')
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('--> transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
                         1: (12, -1),
                         2: (11, -1),
@@ -148,8 +168,8 @@ class PyRadioTheme(object):
                         12: (10, -1)
                     }
                 else:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('--> transparency: OFF')
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('--> transparency: OFF (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
                         1: (12, 2),
                         2: (11, 2),
@@ -166,8 +186,8 @@ class PyRadioTheme(object):
                     }
             else:
                 if self._cnf.use_transparency:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('--> transparency: ON')
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('--> transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
                         1: (12, -1),
                         2: (11, -1),
@@ -183,8 +203,8 @@ class PyRadioTheme(object):
                         12: (10, -1)
                     }
                 else:
-                    if logger.isEnabledFor(logging.INFO):
-                        logger.info('--> transparency: OFF')
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('--> transparency: OFF (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
                         1: (12, 2),
                         2: (11, 2),
@@ -207,6 +227,9 @@ class PyRadioTheme(object):
         self._active_colors = deepcopy(self._read_colors)
         self._do_init_pairs()
         self._update_colors()
+        self.outerBodyWin.refresh()
+        self.bodyWin.refresh()
+        self.footerWin.refresh()
         # curses.start_color()
 
     def readAndApplyTheme(self, a_theme, print_errors=None, **kwargs):
@@ -272,6 +295,9 @@ class PyRadioTheme(object):
             logger.info('Applying fallback theme: "{0}" instead of: "{1}"'.format(self.applied_theme_name, a_theme))
         self.open_theme(self.applied_theme_name)
         self._update_colors()
+        self.outerBodyWin.refresh()
+        self.bodyWin.refresh()
+        self.footerWin.refresh()
 
     def _update_colors(self):
         if curses.can_change_color():
@@ -284,9 +310,15 @@ class PyRadioTheme(object):
                     curse_rgb[2],
                 )
 
-    def recalculate_theme(self):
+    def recalculate_theme(self, inhibit_if_color15_exists=True):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Recalculating color15...')
+            logger.debug('Stations background color: {}'.format(self._colors['css'][2]))
+        self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
         self._colors['data'][15] = calculate_fifteenth_color(
-            self._colors['data'], self._cnf.opts['calculated_color_factor'][1]
+            self._colors['data'],
+            self._cnf.opts['calculated_color_factor'][1],
+            inhibit_if_color15_exists
         )
         self._colors['css'][15] = rgb_to_hex(tuple(self._colors['data'][15]))
         self._do_init_pairs()
@@ -502,10 +534,12 @@ class PyRadioThemeReadWrite(object):
         # logger.error('read_theme(): theme_name = "{0}", theme_path = "{1}"'.format(theme_name, theme_path))
         self._temp_colors = None
         if not path.isfile(theme_path):
-            logger.error('read_theme(): file not found: {}'.format(theme_path))
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('read_theme(): file not found: {}'.format(theme_path))
             return 1, None
         if not access(theme_path, R_OK):
-            logger.error('read_theme(): file not readable: {}'.format(theme_path))
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('read_theme(): file not readable: {}'.format(theme_path))
             return 2, None
 
         try:
@@ -513,7 +547,8 @@ class PyRadioThemeReadWrite(object):
                 lines = [line.strip() for line in thmfile if line.strip() and not line.startswith('#')]
 
         except:
-            logger.error('read_theme(): read error on: {}'.format(theme_path))
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('read_theme(): read error on: {}'.format(theme_path))
             return 3, None
 
         names = {}
@@ -521,22 +556,23 @@ class PyRadioThemeReadWrite(object):
             if ',' in line:
                 ''' old theme format '''
                 # return 5, None
-                logger.error('read_theme(): old format theme: {}'.format(theme_path))
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('read_theme(): old format theme: {}'.format(theme_path))
                 return 4, None
             raw = line.split(' ')
             if raw[-1].startswith('#') and len(raw[-1]) != 7:
                 ''' corrupt: not valid color '''
-                logger.error('read_theme(): {0} - invalid color in line: ""{1}: - value: {2}'.format(theme_path, line, raw[-1]))
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('read_theme(): {0} - invalid color in line: ""{1}: - value: {2}'.format(theme_path, line, raw[-1]))
                 return 4, None
             sp = [raw[-1]]
-            logger.error('sp = {}'.format(sp))
             raw.pop()
-            logger.error('raw = {}'.format(raw))
             try:
                 if raw[-1]:
                     if raw[-1].startswith('#') and len(raw[-1]) != 7:
                         ''' corrupt: not valid color '''
-                        logger.error('read_theme(): {0} - invalid color in line: ""{1}: - value: {2}'.format(theme_path, line, raw[-1]))
+                        if logger.isEnabledFor(logging.ERROR):
+                            logger.error('read_theme(): {0} - invalid color in line: ""{1}: - value: {2}'.format(theme_path, line, raw[-1]))
                         return 4, None
                     sp.append(raw[-1])
                     raw.pop()
@@ -546,7 +582,8 @@ class PyRadioThemeReadWrite(object):
                     return 4, None
                 sp.reverse()
             except IndexError:
-                logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
                 return 4, None
             # logger.error('sp = {}'.format(sp))
             # logger.error('names = {}'.format(names))
@@ -566,7 +603,8 @@ class PyRadioThemeReadWrite(object):
                 try:
                     self._temp_colors['css'][self._param_to_color_id[name][0]] = names[name][0]
                 except KeyError:
-                    logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
+                    if logger.isEnabledFor(logging.ERROR):
+                        logger.error('read_theme(): file is corrupt: {}'.format(theme_path))
                     return 4, None
                 self._temp_colors['data'][self._param_to_color_id[name][0]] = hex_to_rgb(names[name][0])
                 if len(self._param_to_color_id[name]) == 2:
@@ -581,7 +619,8 @@ class PyRadioThemeReadWrite(object):
                     pass
 
         if self._theme_is_incomplete():
-            logger.error('read_theme(): file is incomplete: {}'.format(theme_path))
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('read_theme(): file is incomplete: {}'.format(theme_path))
             return 4, None
             return 5, None
 
@@ -589,20 +628,23 @@ class PyRadioThemeReadWrite(object):
             self._temp_colors['css'][15] = names['Messages Border'][-1]
             self._temp_colors['data'][15] = hex_to_rgb(self._temp_colors['css'][15])
             self._cnf.has_border_background = True
-            logger.error('read_theme(): color15 = {}'.format(self._temp_colors['css'][15]))
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('read_theme(): color15 = {}'.format(self._temp_colors['css'][15]))
         else:
             self._cnf.has_border_background = False
             self._calculate_fifteenth_color()
-            logger.error('read_theme(): calculated color15 = {}'.format(self._temp_colors['css'][15]))
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('read_theme(): calculated color15 = {}'.format(self._temp_colors['css'][15]))
 
         self._theme_name = theme_name
         self._theme_path = theme_path
         self._temp_colors['Name'] = theme_name
         self._temp_colors['Path'] = theme_path
-        logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
+        # logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
         return 0, self._temp_colors
 
     def _calculate_fifteenth_color(self):
+        logger.debug('Stations background color: {}'.format(self._temp_colors['css'][2]))
         self._temp_colors['data'][15] = calculate_fifteenth_color(self._temp_colors['data'], self._cnf.opts['calculated_color_factor'][1])
         self._temp_colors['css'][15] = rgb_to_hex(tuple(self._temp_colors['data'][15]))
 
@@ -1299,6 +1341,8 @@ class PyRadioThemeSelector(object):
                         self._applied_theme = self._config_theme
                         if ret == 0:
                             self._applied_theme_name = self._config_theme_name
+                            self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+                            self._cnf.update_calculated_colors()
                         else:
                             self._applied_theme_name = ret_theme_name
                             self._cnf.theme_not_supported = True

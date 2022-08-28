@@ -79,7 +79,7 @@ class PyRadioConfigWindow(object):
     '|', 'Default value = dark'])
     _help_text.append(['If False, theme colors will be used.', '|',
     "If True and a compositor is running, the stations' window background will be transparent.", '|', "If True and a compositor is not running, the terminal's background color will be used.", '|', 'Default value: False'])
-    _help_text.append(['Pyradio can calculate and use an alternative color for secondary windows.', '|', 'This option will determine if this color will be used (value > 0) or not (value = 0), provided that the theme used does not already provide it.', '|', 'The value of this option is actually the factor to darken or lighten the main (stations) background color.', '|', 'You can get more info on this at https://github.com/coderholic/pyradio#calculated-colors' , '|', 'Valid Values: 0-0.2', 'Default value: 0'])
+    _help_text.append(['Pyradio can calculate and use an alternative color for secondary windows.', '|', 'This option will determine if this color will be used (value > 0) or not (value = 0), provided that the theme used does not already provide it.', '|', 'The value of this option is actually the factor to darken or lighten the main (stations) background color.', '|', 'You can get more info on this at https://github.com/coderholic/pyradio#secondary-windows-background', '|', 'Valid Values: 0-0.2', 'Default value: 0'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.',
     '|', 'Default value: True'])
@@ -350,6 +350,8 @@ class PyRadioConfigWindow(object):
     def _apply_a_theme(self, a_theme, use_transparency=None):
         theme = PyRadioTheme(self._cnf)
         theme.readAndApplyTheme(a_theme, use_transparency=use_transparency)
+        self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+        self._cnf.update_calculated_colors()
         theme = None
         curses.doupdate()
 

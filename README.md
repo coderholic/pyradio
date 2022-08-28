@@ -48,6 +48,9 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
 * [PyRadio Themes](#pyradio-themes)
     * [CSS color themes restrictions](#css-color-themes-restrictions)
+    * [Secondary windows background](#secondary-windows-background)
+        * [Theme defined secondary windows color](#theme-defined-secondary-windows-color)
+        * [Calculated secondary windows color](#calculated-secondary-windows-color)
     * [User themes](#user-themes)
         * [Converting old themes](#converting-old-themes)
     * [Using transparency](#using-transparency)
@@ -794,7 +797,7 @@ PyRadio URL         #a3b367
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated-colors
+# https://github.com/coderholic/pyradio#secondary-windows-background
 #
 Messages Border     #a3b367
 
@@ -831,6 +834,79 @@ These terminal will default to the old "**dark**" theme, displaying whatever col
 3. There are a couple of terminals (that I know of) which will permit changing their colors but will not be able to present the changed color on the fly. \
 \
 This means that, in order for a theme change to take full effect, **PyRadio** will have to be restarted.
+
+### Secondary windows background
+
+Secondary windows (such as messages, questions, the "*Theme Selection window*" the "*Encoding Selection window*", etc.) originally use the same background color as the "*Main window*".
+
+It is now possible to use a different background color for these windows, to get better visual result.
+
+There are two way to do that:
+
+1. Defined in a theme
+
+2. Using a calculated color
+
+#### Theme defined secondary windows color
+
+Themes have the following entry
+
+```
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#secondary-windows-background
+#
+Messages Border     #a3b367
+```
+
+It is possible to define a background color as well, like so
+
+
+```
+Messages Border     #a3b367 #F5DBDE
+```
+
+In this case, this color will be used as the Secondary Windows background color.
+
+Although one can use any color here, it is recommended to follow these guidelines for best visual result:
+
+1. The color should be 1-20% lighter or darker than the "*Stations Background*" color setting of the theme. \
+\
+One can use [this page](http://www.workwithcolor.com/hsl-color-picker-01.htm) (or a similar one) to insert the base color and adjust the "*L*" component as needed. \
+\
+A terminal alternative is [pastel](https://github.com/sharkdp/pastel), which can be used like so:
+
+```
+pastel color '#fbf1f2'              # show color info
+pastel lighten .1 '#fbf1f2'         # color lightened by 10%
+pastel darken .1 '#fbf1f2'          # color darkened by 10%
+```
+
+
+2. If the "*Stations Background*" color is dark, create a lighter version of it; if it's light, create a darker version of it. \
+\
+This is just a recomenration, though; just get a color that combines well with existing ones (border foreground, stations foreground and active station).
+
+This information is actually relevant to creating a new **PyRadio** theme, but it's very important in order to understand how the calculated background color works.
+
+#### Calculated secondary windows color
+
+**PyRadio** will use the same background color for all windows by default, provided that the theme used does not define a "*Messages Border*" background color.
+
+In order to use a "*Messages Border*" background color different than the "*Stations background*" color, when "*Messages Border*" background color is not defined in the selected theme, a config option is available; "**Calculated color**".
+
+This config option takes a value that's between 0 and 0.2.
+
+If it is 0, no color change will occur.
+
+Otherwise, the value acts as a percentage (a **factor**), which indicates how much the luminance of the "*Stations background*" color will change to produce the new background color.
+
+This is how this works: **PyRadio** will calculate the "*Stations background*" color perceived brightness, which will indicate whether the color is dark or light. Then depending on that, will add or subtract **factor** percent from its luminance value.
+
+Finally, a check will be made to see if this color is close to "*Messages Border*" foreground color, and re-adjusted as possible.
+
+**Note:** When a calculated background color is used, pressing "**~**" (**tilde**) will toggle it on and off. This setting will be valid until **PyRadio** terminates, or a new theme is loaded.
 
 ### User themes
 

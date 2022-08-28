@@ -101,6 +101,11 @@ a:visited{color: SaddleBrown;}
 <li><a href="#pyradio-themes">PyRadio Themes</a>
 <ul>
 <li><a href="#css-color-themes-restrictions">CSS color themes restrictions</a></li>
+<li><a href="#secondary-windows-background">Secondary windows background</a>
+<ul>
+<li><a href="#theme-defined-secondary-windows-color">Theme defined secondary windows color</a></li>
+<li><a href="#calculated-secondary-windows-color">Calculated secondary windows color</a></li>
+</ul></li>
 <li><a href="#user-themes">User themes</a>
 <ul>
 <li><a href="#converting-old-themes">Converting old themes</a></li>
@@ -174,8 +179,10 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
-2022-08-14 s-n-g
+2022-08-28 s-n-g
     * version 0.8.9.26 (0.9-beta23)
+    * adding calculated messages windows color
+    * adding "Calculated Color" config option
     * Windows installation will try to install 7-Zip, if not
       already installed
 
@@ -1314,7 +1321,7 @@ PyRadio URL         #a3b367
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#calculated-colors
+# https://github.com/coderholic/pyradio#secondary-windows-background
 #
 Messages Border     #a3b367
 
@@ -1343,6 +1350,51 @@ These terminal will default to the old “<strong>dark</strong>” theme, displa
 <br />
 This means that, in order for a theme change to take full effect, <strong>PyRadio</strong> will have to be restarted.</p></li>
 </ol>
+<h3 id="secondary-windows-background">Secondary windows background</h3>
+<p>Secondary windows (such as messages, questions, the “<em>Theme Selection window</em>” the “<em>Encoding Selection window</em>”, etc.) originally use the same background color as the “<em>Main window</em>”.</p>
+<p>It is now possible to use a different background color for these windows, to get better visual result.</p>
+<p>There are two way to do that:</p>
+<ol type="1">
+<li><p>Defined in a theme</p></li>
+<li><p>Using a calculated color</p></li>
+</ol>
+<h4 id="theme-defined-secondary-windows-color">Theme defined secondary windows color</h4>
+<p>Themes have the following entry</p>
+<pre># Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#secondary-windows-background
+#
+Messages Border     #a3b367</pre>
+<p>It is possible to define a background color as well, like so</p>
+<pre>Messages Border     #a3b367 #F5DBDE</pre>
+<p>In this case, this color will be used as the Secondary Windows background color.</p>
+<p>Although one can use any color here, it is recommended to follow these guidelines for best visual result:</p>
+<ol type="1">
+<li>The color should be 1-20% lighter or darker than the “<em>Stations Background</em>” color setting of the theme.<br />
+<br />
+One can use <a target="_blank" href="http://www.workwithcolor.com/hsl-color-picker-01.htm">this page</a> (or a similar one) to insert the base color and adjust the “<em>L</em>” component as needed.<br />
+<br />
+A terminal alternative is <a target="_blank" href="https://github.com/sharkdp/pastel">pastel</a>, which can be used like so:</li>
+</ol>
+<pre>pastel color &#39;#fbf1f2&#39;              # show color info
+pastel lighten .1 &#39;#fbf1f2&#39;         # color lightened by 10%
+pastel darken .1 &#39;#fbf1f2&#39;          # color darkened by 10%</pre>
+<ol start="2" type="1">
+<li>If the “<em>Stations Background</em>” color is dark, create a lighter version of it; if it’s light, create a darker version of it.<br />
+<br />
+This is just a recomenration, though; just get a color that combines well with existing ones (border foreground, stations foreground and active station).</li>
+</ol>
+<p>This information is actually relevant to creating a new <strong>PyRadio</strong> theme, but it’s very important in order to understand how the calculated background color works.</p>
+<h4 id="calculated-secondary-windows-color">Calculated secondary windows color</h4>
+<p><strong>PyRadio</strong> will use the same background color for all windows by default, provided that the theme used does not define a “<em>Messages Border</em>” background color.</p>
+<p>In order to use a “<em>Messages Border</em>” background color different than the “<em>Stations background</em>” color, when “<em>Messages Border</em>” background color is not defined in the selected theme, a config option is available; “<strong>Calculated color</strong>”.</p>
+<p>This config option takes a value that’s between 0 and 0.2.</p>
+<p>If it is 0, no color change will occur.</p>
+<p>Otherwise, the value acts as a percentage (a <strong>factor</strong>), which indicates how much the luminance of the “<em>Stations background</em>” color will change to produce the new background color.</p>
+<p>This is how this works: <strong>PyRadio</strong> will calculate the “<em>Stations background</em>” color perceived brightness, which will indicate whether the color is dark or light. Then depending on that, will add or subtract <strong>factor</strong> percent from its luminance value.</p>
+<p>Finally, a check will be made to see if this color is close to “<em>Messages Border</em>” foreground color, and re-adjusted as possible.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a calculated background color is used, pressing “<strong>~</strong>” (<strong>tilde</strong>) will toggle it on and off. This setting will be valid until <strong>PyRadio</strong> terminates, or a new theme is loaded.</p>
 <h3 id="user-themes">User themes</h3>
 <p>Users can easiliy create their own themes, using for example <a target="_blank" href="https://www.cssportal.com/css3-color-names/">CSS color names</a> as a resource, and</p>
 <ol type="1">

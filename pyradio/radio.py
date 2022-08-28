@@ -258,6 +258,7 @@ class PyRadio(object):
         self._force_print_all_lines = False
         self._system_asked_to_terminate = False
         self._cnf = pyradio_config
+        self._cnf.update_calculated_colors = self._update_calculated_colors
         self._theme = PyRadioTheme(self._cnf)
         self._force_update = force_update
         if theme:
@@ -587,6 +588,8 @@ class PyRadio(object):
             ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name, print_errors=stdscr)
             if ret == 0:
                 self._theme_name = self._theme.applied_theme_name
+                self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+                self._update_calculated_colors()
             else:
                 self._theme_name = ret_theme_name
                 self._cnf.theme_not_supported = True
@@ -1136,6 +1139,8 @@ class PyRadio(object):
         ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.theme)
         if ret == 0:
             self._theme_name = self._cnf.theme
+            self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+            self._update_calculated_colors()
         else:
             self._theme_name = ret_theme_name
             self._cnf.theme_has_error = True if ret == -1 else False
@@ -4178,12 +4183,18 @@ class PyRadio(object):
 
     def _toggle_claculated_colors(self):
         self._cnf.use_calculated_colors = not self._cnf.use_calculated_colors
+        self._update_calculated_colors()
+
+    def _update_calculated_colors(self):
         self._theme._do_init_pairs()
         self._theme._update_colors()
-        self.headWin.refresh()
-        self.outerBodyWin.refresh()
-        self.bodyWin.refresh()
-        self.footerWin.refresh()
+        try:
+            self.headWin.refresh()
+            self.outerBodyWin.refresh()
+            self.bodyWin.refresh()
+            self.footerWin.refresh()
+        except AttributeError:
+            pass
 
     def _save_parameters(self):
         if self._player_select_win is not None:
@@ -5753,8 +5764,7 @@ class PyRadio(object):
                         if self._config_win.mouse_support_option_changed:
                             self._print_mouse_restart_info()
                         if self._config_win.need_to_update_theme:
-                            self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
-                            self._theme.recalculate_theme()
+                            self._theme.recalculate_theme(False)
                     elif ret == 1:
                         ''' config not modified '''
                         self._show_notification_with_delay(
@@ -5778,6 +5788,8 @@ class PyRadio(object):
                         ret, ret_theme_name = self._theme.readAndApplyTheme(self._cnf.opts['theme'][1])
                         if ret == 0:
                             self._theme_name = self._cnf.theme
+                            self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+                            self._update_calculated_colors()
                         else:
                             self._theme_name = ret_theme_name
                             self._cnf.theme_has_error = True if ret == -1 else False
@@ -6318,7 +6330,10 @@ class PyRadio(object):
                 )
                 if isinstance(ret, tuple):
                     ret = ret[0]
-                if ret < 0:
+                if ret == 0:
+                    self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+                    self._update_calculated_colors()
+                elif ret < 0:
                     ch_ret, _ = self._cnf.is_project_theme(self._theme_name)
                     if ch_ret is None and \
                             not self._cnf.auto_update_theme:
@@ -7099,6 +7114,7 @@ class PyRadio(object):
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == ord('<'):
+                    return
                     self._update_status_bar_right(status_suffix='')
                     if int(self._cnf.connection_timeout_int) == 0:
                         self._show_stations_history_notification(0)
@@ -7109,6 +7125,7 @@ class PyRadio(object):
                             self._cnf.play_from_history = True
                             self._cnf.stations_history.play_previous()
                 elif char == ord('>'):
+                    return
                     self._update_status_bar_right(status_suffix='')
                     if int(self._cnf.connection_timeout_int) == 0:
                         self._show_stations_history_notification(0)
