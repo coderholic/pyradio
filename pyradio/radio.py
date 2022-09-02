@@ -4167,10 +4167,14 @@ class PyRadio(object):
             # TODO show msg
             self._show_colors_cannot_change()
             return
+        logger.error('\n==========================\nself._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
+        logger.error('force_value = {}'.format(force_value))
         self._theme.toggleTransparency(force_value)
         self._cnf.use_transparency = self._theme.getTransparency()
+        logger.error('self._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
         if self.ws.operation_mode == self.ws.THEME_MODE:
             self._theme_selector.transparent = self._cnf.use_transparency
+            logger.error('self._theme_selector.transparent = {}\n=========================='.format(self._theme_selector.transparent))
         self.headWin.refresh()
         self.outerBodyWin.refresh()
         self.bodyWin.refresh()
@@ -5595,6 +5599,14 @@ class PyRadio(object):
                 # TODO show msg
                 self._show_colors_cannot_change()
                 return
+            if self._cnf.dirty_config:
+                self._show_notification_with_delay(
+                        txt='__Sorry, you cannot change themes__\n___when the session is locked...',
+                        delay=1.5,
+                        mode_to_set=self.ws.operation_mode,
+                        callback_function=self.refreshBody)
+                return
+
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 self.selections[self.ws.operation_mode] = [self.selection, self.startPos, self.playing, self.stations]
                 # self.ll('t')
@@ -5771,13 +5783,17 @@ class PyRadio(object):
                                 txt='___Config not modified!!!___',
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
-                elif ret == 2:
+                elif ret == 3:
                     ''' open RadioBrowser  browser config '''
                     self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
                     self._browser_init_config(init=True, browser_name='RadioBrowser ', distro=self._cnf.distro)
                     return
 
+                # elif ret ==2:
+                #     ''' cancel a dirty config '''
+
                 else:
+                    logger.error('\n\nexiting config\n\n')
                     ''' restore transparency, if necessary '''
                     if self._config_win._config_options['use_transparency'][1] != self._config_win._saved_config_options['use_transparency'][1]:
                         self._toggle_transparency(changed_from_config_window=False,
@@ -6651,7 +6667,11 @@ class PyRadio(object):
 
         elif char in (ord('T'), ):
             self._update_status_bar_right()
-            self._toggle_transparency()
+            if self.ws.operation_mode == self.ws.SESSION_LOCKED_MODE:
+                self.ws.close_window()
+                self.refreshBody()
+            else:
+                self._toggle_transparency()
             return
 
         elif char in self._global_functions.keys():

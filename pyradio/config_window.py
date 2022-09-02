@@ -361,7 +361,8 @@ class PyRadioConfigWindow(object):
                 -1  continue
                  0  save config
                  1  cancel saving config
-                 2  open online browser config
+                 2  cancel a dirty config (not active currently)
+                 3  open online browser config
         '''
         if self.too_small:
             return 1, []
@@ -372,7 +373,7 @@ class PyRadioConfigWindow(object):
         elif val[0] == 'radiobrowser':
             if char in (curses.KEY_RIGHT, ord('l'),
                         ord(' '), curses.KEY_ENTER, ord('\n')):
-                return 2, []
+                return 3, []
 
         elif val[0] == 'calculated_color_factor':
             if char in (curses.KEY_RIGHT, ord('l')):
@@ -501,10 +502,11 @@ class PyRadioConfigWindow(object):
             if char == -1:
                 ''' ESCAPE '''
                 logger.error('dirty config is {}, and ESC pressed'.format(self._cnf.dirty_config))
-                #self._config_options['theme'][1] = self._old_theme
                 self._saved_config_options['theme'][1] = self._old_theme
                 self._cnf.opts['theme'][1] = self._old_theme
                 self._cnf.theme = self._old_theme
+                # if self._cnf.dirty_config:
+                #     return 2, []
                 return 1, []
         elif char in (ord('s'), ):
             ''' save and exit '''

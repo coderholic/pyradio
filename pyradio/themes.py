@@ -143,8 +143,12 @@ class PyRadioTheme(object):
     def _do_init_pairs(self, transparency=None):
         if curses.can_change_color():
             if transparency is not None:
+                logger.error('before self._cnf.use_transparency = {}'.format( self._cnf.use_transparency ))
                 self._cnf.use_transparency = transparency
+                logger.error('after self._cnf.use_transparency = {}'.format( self._cnf.use_transparency ))
             else:
+                logger.error('self._transparent = {}'.format(self._transparent))
+                logger.error('self._cnf.use_transparency = {}'.format( self._cnf.use_transparency ))
                 self._cnf.use_transparency = self._transparent
                 # transp = self._transparent if self._cnf.use_transparency else False
             # logger.error('transp = {}'.format(transp))
@@ -152,7 +156,7 @@ class PyRadioTheme(object):
                    self._cnf.has_border_background:
                 if self._cnf.use_transparency:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('--> transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
+                        logger.debug('--> 1 transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
                         1: (12, -1),
                         2: (11, -1),
@@ -169,7 +173,7 @@ class PyRadioTheme(object):
                     }
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('--> transparency: OFF (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
+                        logger.debug('--> 1 transparency: OFF (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
                         1: (12, 2),
                         2: (11, 2),
@@ -187,7 +191,7 @@ class PyRadioTheme(object):
             else:
                 if self._cnf.use_transparency:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('--> transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
+                        logger.debug('--> 2 transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
                         1: (12, -1),
                         2: (11, -1),
@@ -204,7 +208,7 @@ class PyRadioTheme(object):
                     }
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('--> transparency: OFF (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
+                        logger.debug('--> 2 transparency: OFF (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
                         1: (12, 2),
                         2: (11, 2),
@@ -227,10 +231,13 @@ class PyRadioTheme(object):
         self._active_colors = deepcopy(self._read_colors)
         self._do_init_pairs()
         self._update_colors()
-        self.outerBodyWin.refresh()
-        self.bodyWin.refresh()
-        self.footerWin.refresh()
-        # curses.start_color()
+        try:
+            self.outerBodyWin.refresh()
+            self.bodyWin.refresh()
+            self.footerWin.refresh()
+            # curses.start_color()
+        except AttributeError:
+            pass
 
     def readAndApplyTheme(self, a_theme, print_errors=None, **kwargs):
         """ Read a theme and apply it
@@ -493,7 +500,9 @@ class PyRadioTheme(object):
             self._transparent = not self._transparent
         else:
             self._transparent = force_value
+        logger.error('=== restoring active theme')
         self.restoreActiveTheme()
+        return True
 
     def getTransparency(self):
         return self._transparent
@@ -1009,22 +1018,13 @@ class PyRadioThemeSelector(object):
         """ check if too small """
         maxY, maxX = self.parent.getmaxyx()
         if self._height < 5 or self._width >= maxX - 2 or self._cnf.locked:
-            if self._cnf.locked:
-                txt = '  Sorry, you cannot change themes  '
-                self._win = curses.newwin(4, len(txt) + 2, int(maxY / 2), int((maxX - len(txt)) / 2))
-            else:
-                txt = ' Window too small '
-                self._win = curses.newwin(3, len(txt) + 2, int(maxY / 2), int((maxX - len(txt)) / 2))
-                self._too_small = True
+            txt = ' Window too small '
+            self._win = curses.newwin(3, len(txt) + 2, int(maxY / 2), int((maxX - len(txt)) / 2))
+            self._too_small = True
             self._win.bkgdset(' ', curses.color_pair(3))
             self._win.erase()
             self._win.box()
-            if self._cnf.locked:
-                self._win.addstr(1, 1, txt, curses.color_pair(4))
-                self._win.addstr(2, 1, '   when the session is locked... ', curses.color_pair(4))
-            else:
-                self._win.addstr(1, 1, txt, curses.color_pair(4))
-            self._win.refresh()
+            self._win.addstr(1, 1, txt, curses.color_pair(4))
             self._win.refresh()
         else:
             self._too_small = False

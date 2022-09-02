@@ -2091,6 +2091,11 @@ theme = {8}
 use_transparency = {9}
 
 # Calculated color factor
+# This is to produce Secondary Windows background color
+# A value of 0 dissables it, otherwise it is the factor
+# to change (lighten or darken) the base color.
+# For more info, please refer to
+# https://github.com/coderholic/pyradio#secondary-windows-background
 # Valid values: 0-0.2
 # Default value: 0
 calculated_color_factor = {10}
