@@ -579,12 +579,10 @@ class PyRadio(object):
             self._theme._transparent = self._cnf.use_transparency
             self._theme.config_dir = self._cnf.stations_dir
             ''' In case we have to download a theme, and it takes too long  '''
-            if self._cnf.is_project_theme:
-                stdscr.addstr(0, 0, 'Downloading default theme...', curses.color_pair(0))
-                if self._cnf.locked:
-                    stdscr.addstr(1, 0, 'Waiting for main instance to update the theme...', curses.color_pair(0))
-
-                stdscr.refresh()
+            if not self._cnf.locked:
+                if self._cnf.is_project_theme:
+                    stdscr.addstr(0, 0, 'Downloading default theme...', curses.color_pair(0))
+                    stdscr.refresh()
             ret, ret_theme_name = self._theme.readAndApplyTheme(self._theme_name, print_errors=stdscr)
             if ret == 0:
                 self._theme_name = self._theme.applied_theme_name

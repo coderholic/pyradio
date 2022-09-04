@@ -302,9 +302,12 @@ class PyRadioTheme(object):
             logger.info('Applying fallback theme: "{0}" instead of: "{1}"'.format(self.applied_theme_name, a_theme))
         self.open_theme(self.applied_theme_name)
         self._update_colors()
-        self.outerBodyWin.refresh()
-        self.bodyWin.refresh()
-        self.footerWin.refresh()
+        try:
+            self.outerBodyWin.refresh()
+            self.bodyWin.refresh()
+            self.footerWin.refresh()
+        except AttributeError:
+            pass
 
     def _update_colors(self):
         if curses.can_change_color():
@@ -441,14 +444,18 @@ class PyRadioTheme(object):
                 ret.theme_id = ret_ind
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Project theme file name: {}'.format(a_path))
-                if ret.download(print_errors=print_errors)[0]:
-                    if logger.isEnabledFor(logging.DEBUG) and \
-                            not self._cnf.locked:
-                        logger.debug('Theme downloaded successfully!')
+                if not self._cnf.locked:
+                    if ret.download(print_errors=print_errors)[0]:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Theme downloaded successfully!')
+                    else:
+                        if logger.isEnabledFor(logging.ERROR):
+                            logger.error('Theme download failed!')
+                        self._cnf.theme_download_failed = True
                 else:
-                    if logger.isEnabledFor(logging.ERROR):
-                        logger.error('Theme download failed!')
-                    self._cnf.theme_download_failed = True
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Theme downloaded by main instance!')
+                    self._cnf.theme_download_failed = False
             is_internal = False
             if a_path == '':
                 a_path = self._get_theme_path(a_theme)
