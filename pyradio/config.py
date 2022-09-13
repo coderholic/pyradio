@@ -572,16 +572,8 @@ class PyRadioStations(object):
 
         self.stations = list(self._reading_stations)
         # logger.error('DE stations\n{}\n\n'.format(self.stations))
-        self._reading_stations = []
-        self._ps.add(is_register=self._open_register_list or is_register)
-        self._set_playlist_elements(stationFile)
-        self.previous_station_path = prev_file
-        self._is_playlist_in_config_dir()
+        self.set_playlist_data(stationFile, prev_file, is_register)
         self.number_of_stations = len(self.stations)
-        self.dirty_playlist = False
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('read_playlist_file: Playlist version: {}'.format(self._playlist_version_to_string[self._playlist_version]))
-        self.jump_tag = -1
 
         ''' check for package's stations.csv change '''
         delete_ver_files = False
@@ -614,6 +606,21 @@ class PyRadioStations(object):
                 pass
 
         return self.number_of_stations
+
+    def set_playlist_data(self, stationFile, prev_file, is_register = False):
+        ''' used to be part of read_playlist_file
+            moved here so it can be used with station history
+            when opening a playlit
+        '''
+        self._reading_stations = []
+        self._ps.add(is_register=self._open_register_list or is_register)
+        self._set_playlist_elements(stationFile)
+        self.previous_station_path = prev_file
+        self._is_playlist_in_config_dir()
+        self.dirty_playlist = False
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('read_playlist_file: Playlist version: {}'.format(self._playlist_version_to_string[self._playlist_version]))
+        self.jump_tag = -1
 
     def _recover_backed_up_playlist(self, stationFile):
         ''' If a playlist backup file exists (.txt file), try to
@@ -2467,6 +2474,7 @@ class PyRadioStationsStack(object):
     pass_first_item_func=None
     pass_last_item_func=None
     no_items_func=None
+    play_from_history = False
 
     def __init__(
         self,
@@ -2477,6 +2485,15 @@ class PyRadioStationsStack(object):
     ):
         self.items = []
         self.item = -1
+
+        self.items = [
+            ['reversed', 'WKHR', 1],
+            ['reversed', 'Jazz (Sonic Universe - SomaFM)', 11],
+            ['stations', 'Celtic (ThistleRadio - SomaFM)', 3]
+        ]
+        self.item = 0
+        self.play_from_history = True
+
         self.execute_func = execute_function
         self.pass_first_item_func = pass_first_item_function
         self.pass_last_item_func = pass_last_item_function
@@ -2485,16 +2502,17 @@ class PyRadioStationsStack(object):
     def add(self, a_playlist, a_station, a_station_id):
         if a_playlist and a_station:
             if self.item == -1:
-                self.items.append((a_playlist, a_station, a_station_id))
+                self.items.append([a_playlist, a_station, a_station_id])
                 self.item = 0
             else:
-                if (not self.play_from_history) and \
+                if not a_station.startswith('register_') and \
+                        (not self.play_from_history) and \
                         (not a_playlist.startswith('register_')) and \
                         (self.items[-1][0] != a_playlist \
                         or self.items[-1][1] != a_station) and \
                         (self.items[self.item][0] != a_playlist \
                          or self.items[self.item][1] != a_station):
-                    self.items.append((a_playlist, a_station, a_station_id))
+                    self.items.append([a_playlist, a_station, a_station_id])
                     logger.error('adding item...')
                     self.item = len(self.items) - 1
             self.play_from_history = False

@@ -231,13 +231,6 @@ class PyRadioTheme(object):
         self._active_colors = deepcopy(self._read_colors)
         self._do_init_pairs()
         self._update_colors()
-        try:
-            self.outerBodyWin.refresh()
-            self.bodyWin.refresh()
-            self.footerWin.refresh()
-            # curses.start_color()
-        except AttributeError:
-            pass
 
     def readAndApplyTheme(self, a_theme, print_errors=None, **kwargs):
         """ Read a theme and apply it
