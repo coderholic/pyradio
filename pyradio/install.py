@@ -370,7 +370,7 @@ Please execute the installation script again, like so:
 
         '''
         print(msg)
-        sys,exit()
+        sys.exit()
     except win32ui.error:
         return False
     else:

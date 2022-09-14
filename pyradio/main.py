@@ -468,7 +468,7 @@ def shell():
         ''' set window title '''
         try:
             if pyradio_config.locked:
-                win_title = 'Your Internet Radio Player (Session Locked)'
+                win_title = ' (Session Locked)'
             else:
                 win_title = None
             Log.set_win_title(win_title)

@@ -14,6 +14,7 @@ class Log(object):
     ''' Log class that outputs text to a curses screen '''
 
     old_window_title = None
+    locked = False
 
     msg = suffix = counter = cursesScreen = None
 
@@ -121,16 +122,15 @@ class Log(object):
                     try:
                         d_msg = self.msg.strip()[0: self.width].replace('\r', '').replace('\n', '')
                         self.cursesScreen.addstr(0, 1, d_msg)
-                        self.set_win_title(d_msg)
                     except:
                         try:
                             d_msg = self.msg.encode('utf-8', 'replace').strip()[0: self.width].replace('\r', '').replace('\n', '')
                             self.cursesScreen.addstr(0, 1, d_msg)
-                            self.set_win_title(d_msg)
                         except:
                             pass
                             # if logger.isEnabledFor(logging.ERROR):
                             #     logger.error('Error updating the Status Bar')
+                    self.set_win_title(d_msg)
                     self._write_title_to_log(d_msg)
                     if self._show_status_updates:
                         if logger.isEnabledFor(logging.DEBUG):
@@ -287,7 +287,7 @@ class Log(object):
     def set_win_title(msg=None):
         default = 'Your Internet Radio Player'
         do_not_update = (
-            ' Playback stopped',
+            ': Playback stopped',
             'Selected ',
             'Failed to connect to: ',
             'Connecting to: ',
@@ -297,42 +297,52 @@ class Log(object):
         )
         token_id = 1
         tokens = ('PyRadio: ', 'PyRadio - ')
-        logger.error('\n\n')
-        logger.error('msg = "' + msg + '"')
+        if logger.isEnabledFor(logging.DEBUG):
+            if msg is None:
+                logger.debug('set_win_title(): msg is None')
+            else:
+                logger.debug('set_win_title(): msg = "' + msg + '"')
         if msg is None:
-            logger.error('d_msg = default')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('set_win_title(): d_msg = default')
             d_msg = default
             token_id = 0
         else:
-            d_msg = msg
-            logger.error('d_msg = msg = "' + d_msg + '"')
-            if d_msg.startswith('['):
+            if msg.startswith('['):
                 return
-            for a_stop_token in do_not_update:
-                if a_stop_token in d_msg:
-                    logger.error('d_msg = default')
-                    d_msg = default
-                    token_id = 0
-                    break
-
-            # if not token_id:
-            #     logger.error('final d_msg = "' + d_msg + '"')
-            #     if d_msg.startswith('Title: '):
-            #         d_msg = d_msg.replace('Title:', '--- ') + ' ---'
-            #     elif d_msg.startswith('Playing: '):
-            #         d_msg = d_msg.replace('Playing:', '*** ') + ' ***'
-
-            if Log.old_window_title is not None:
-                ''' fix for python2 '''
-                logger.error('Log.old_window_title is "' + Log.old_window_title+ '"')
-                if Log.old_window_title == d_msg:
-                    logger.error('same thing... return')
-                    return
-                Log.old_window_title = d_msg
+            d_msg = msg
+            if d_msg.endswith(' (Session Locked)'):
+                token_id = 0
+                Log.locked = True
+                d_msg = default
             else:
-                logger.error('Log.old_window_title is None')
-                Log.old_window_title = d_msg
-                logger.error('Log.old_window_title is "' + Log.old_window_title+ '"')
+                # if stopped...
+                for a_stop_token in do_not_update:
+                    if a_stop_token in msg:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('set_win_title(): d_msg = default')
+                        d_msg = default
+                        token_id = 0
+                        break
+
+                if Log.old_window_title is not None:
+                    ''' fix for python2 '''
+                    logger.debug('set_win_title(): Old title is "' + Log.old_window_title+ '"')
+                    if Log.old_window_title == d_msg:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('set_win_title(): same title... return')
+                        return
+                    Log.old_window_title = d_msg
+                else:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('set_win_title(): set_win_title(): Old title is None')
+                    Log.old_window_title = d_msg
+
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('set_win_title(): d_msg = "' + d_msg + '"')
+
+        if token_id == 0 and Log.locked:
+            d_msg += '(Session Locked)'
 
         if platform.lower().startswith('win'):
             ctypes.windll.kernel32.SetConsoleTitleW('● ' + tokens[token_id] + d_msg)
