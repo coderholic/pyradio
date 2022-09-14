@@ -2486,24 +2486,39 @@ class PyRadioStationsStack(object):
         self.items = []
         self.item = -1
 
-        self.items = [
-            ['reversed', 'WKHR', 1],
-            ['reversed', 'Jazz (Sonic Universe - SomaFM)', 11],
-            ['stations', 'Celtic (ThistleRadio - SomaFM)', 3]
-        ]
-        self.item = 0
-        self.play_from_history = True
+        ######## DEBUG START
+        #self.items = [
+        #    ['reversed', 'WKHR', 1],
+        #    ['reversed', 'Jazz (Sonic Universe - SomaFM)', 11],
+        #    ['stations', 'Celtic (ThistleRadio - SomaFM)', 3]
+        #]
+        #self.item = 0
+        #self.play_from_history = True
+        #self.clear()
+        ######## DEBUG END
 
         self.execute_func = execute_function
         self.pass_first_item_func = pass_first_item_function
         self.pass_last_item_func = pass_last_item_function
         self.no_items_func = no_items_function
 
+    def _show_station_history_debug(self):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('>>> Stations history')
+            if self.items:
+                for n in self.items:
+                    logger.debug('   {}'.format(n))
+                logger.debug('   item was = {}'.format(self.item))
+            else:
+                logger.debug('   No items in list')
+                logger.debug('   item = {}'.format(self.item))
+
     def add(self, a_playlist, a_station, a_station_id):
         if a_playlist and a_station:
             if self.item == -1:
                 self.items.append([a_playlist, a_station, a_station_id])
                 self.item = 0
+                self._show_station_history_debug()
             else:
                 if not a_station.startswith('register_') and \
                         (not self.play_from_history) and \
@@ -2512,15 +2527,17 @@ class PyRadioStationsStack(object):
                         or self.items[-1][1] != a_station) and \
                         (self.items[self.item][0] != a_playlist \
                          or self.items[self.item][1] != a_station):
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Adding station history item...')
                     self.items.append([a_playlist, a_station, a_station_id])
-                    logger.error('adding item...')
                     self.item = len(self.items) - 1
+                    self._show_station_history_debug()
             self.play_from_history = False
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('>>> Stations history')
-            for n in self.items:
-                logger.debug('   {}'.format(n))
-            logger.debug('   item = {}'.format(self.item))
+
+    def clear(self):
+        self.items = []
+        self.item = -1
+        self.play_from_history = False
 
     def _get(self):
         if self.item == -1:
@@ -2529,27 +2546,35 @@ class PyRadioStationsStack(object):
         return tuple(self.items[self.item])
 
     def play_previous(self):
+        self._show_station_history_debug()
         if self.item == -1:
             if self.no_items_func is not None:
                 self.no_items_func()
         elif self.item == 0:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('   Already on first item')
             if self.pass_first_item_func is not None:
                 self.pass_first_item_func()
         else:
-            old_item = self._get()
             self.item -= 1
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('   item is  = {}'.format(self.item))
             self.execute_func(self._get(), self.play_previous)
 
     def play_next(self):
+        self._show_station_history_debug()
         if self.item == -1:
             if self.no_items_func is not None:
                 self.no_items_func()
         elif self.item == len(self.items) - 1:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('   Already on last item')
             if self.pass_last_item_func is not None:
                 self.pass_last_item_func()
         else:
-            old_item = self._get()
             self.item += 1
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('   item is  = {}'.format(self.item))
             self.execute_func(self._get(), self.play_next)
 
 

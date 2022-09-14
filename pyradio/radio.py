@@ -15,7 +15,7 @@ import os
 import random
 import signal
 from copy import deepcopy
-from sys import version as python_version, version_info, platform
+from sys import version as python_version, version_info, platform, stdout
 from os.path import join, basename, getmtime, getsize
 from os import remove
 from platform import system
@@ -1638,6 +1638,9 @@ class PyRadio(object):
             logger.info('*** Start of playback NOT detected!!! ***')
         self.player.stop_mpv_status_update_thread = True
         self.log.write(msg='Failed to connect to: ' + self._last_played_station[0])
+        # stdout.write("\x1b]2;test\x07")
+        stdout.buffer.write(b'\33]0;title you want\a')
+        stdout.buffer.flush()
         self.player.connecting = False
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -1829,12 +1832,8 @@ class PyRadio(object):
         mwidth = 0
         for n in lines:
             llen = cjklen(n.replace('|', ''))
-            logger.error('123456789|123456789|123456789|123456789|')
-            logger.error(n)
-            logger.error('llen = {}'.format(llen))
             if llen > mwidth:
                 mwidth = llen
-                logger.error('mwidth = {}'.format(mwidth))
         return mwidth
 
     def _get_message_width_from_string(self, txt):
@@ -4117,7 +4116,7 @@ class PyRadio(object):
                     self.active_stations = [
                             ['', self.selection],
                             ['', -1]]
-        logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
+        # logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
 
     def _set_rename_stations(self):
         if self.stations:
@@ -4135,7 +4134,6 @@ class PyRadio(object):
                     self.rename_stations = [
                             ['', self.selection],
                             ['', -1]]
-        logger.error('DE rename_stations = \n\n{}\n\n'.format(self.rename_stations))
 
     def get_active_encoding(self, an_encoding):
         if an_encoding:
@@ -5296,6 +5294,7 @@ class PyRadio(object):
             if char == ord('\''):
                 self._set_active_stations()
                 self.saved_active_stations = self.active_stations[:]
+                logger.error('self.saved_active_stations = {}'.format(self.saved_active_stations))
                 self._status_suffix = "'"
                 self._update_status_bar_right(status_suffix="'")
                 self._cnf.open_register_list = True
@@ -7508,6 +7507,7 @@ class PyRadio(object):
                             if self.saved_active_stations != [['', 0], ['', -1]]:
                                 self.active_stations = self.saved_active_stations[:]
                                 self.saved_active_stations = [['', 0], ['', -1]]
+                            logger.error('self.saved_active_stations = {}'.format(self.saved_active_stations))
                             self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
                             self._set_active_stations()
                             self._give_me_a_search_class(self.ws.operation_mode)
@@ -8420,17 +8420,16 @@ class PyRadio(object):
             func()
             return
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Activating history item: {}'.format(h_item))
+            logger.debug('Activating station history item: {}'.format(h_item))
 
         num = -1
-        logger.error('h_item = {}'.format(h_item))
         current_playlist = self._cnf.station_file_name[:-4]
         if current_playlist == h_item[0]:
             ''' I am moving within the loaded playlist '''
             if self.stations[h_item[-1]][0] == h_item[1]:
                 ''' station found '''
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('history item found in current playlist at: {}'.format(num))
+                    logger.debug('Station history item found in current playlist at: {}'.format(num))
                 num = h_item[-1]
                 if num >= self.number_of_items:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -8439,7 +8438,7 @@ class PyRadio(object):
                     return
             else:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('scanning other playlist for history item: {}'.format(num))
+                    logger.debug('Scanning other playlist for station history item: {}'.format(num))
                 ''' I have to scan the playlist'''
                 num = self._scan_playlist_for_station(self.stations, h_item[-1], h_item[1])
                 if num == -1:
@@ -8462,7 +8461,7 @@ class PyRadio(object):
 
             ret = 0
             if self._register_to_open:
-                logger.error('register_to_open = {}'.format(self._register_to_open))
+                # logger.error('register_to_open = {}'.format(self._register_to_open))
                 stationFile, ret = self._cnf._get_register_filename_from_register()
                 self._is_register = True
             else:
@@ -8486,9 +8485,6 @@ class PyRadio(object):
             self._playlist_in_editor = stationFile
             self.number_of_items = len(self.stations)
             self.selection = self.playing = num
-            self.ll('brefore 1')
-            logger.error('num = {}'.format(num))
-            logger.error('self.active_stations = {}'.format(self.active_stations))
             self.active_stations[0][0] = h_item[1]
             self.active_stations[0][1] = num
             self.active_stations[1][0] = h_item[1]
@@ -8504,20 +8500,12 @@ class PyRadio(object):
             self.outerBodyWin.refresh()
             self.playSelection()
             self._set_active_stations()
-            self.ll('after 1')
-            logger.error('self.selections\n{}'.format(self.selections))
-            logger.error('self.active_stations = {}'.format(self.active_stations))
-            # self._give_me_a_search_class(self.ws.operation_mode)
-            logger.error('num = {}'.format(num))
             self._get_playlists_data_from_playlist_name(h_item[0])
+            self.saved_active_stations = [['', 0], ['', -1]]
             return
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Station "{0}" found at {1}'.format(h_item[1], num))
-        # self.active_stations[0][0] = h_item[1]
-        # self.active_stations[0][1] = num
-        # self.active_stations[1][0] = h_item[1]
-        # self.active_stations[1][1] = num
         self.setStation(num)
         if self.number_of_items > 0:
             self.playSelection()
@@ -8530,31 +8518,28 @@ class PyRadio(object):
             self.playing,
             self.stations
         ]
+        self.saved_active_stations = [['', 0], ['', -1]]
 
     def _get_playlists_data_from_playlist_name(self, a_playlist):
         change_regs_too = False
         if self.selections[1][-1][0] == self.selections[2][-1][0]:
             change_regs_too = True
-        logger.error('Looking for: {}'.format(a_playlist))
-        logger.error('change_regs_too = {}'.format(change_regs_too))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Looking for playlist: {}'.format(a_playlist))
         found = -1
         for i, n in enumerate(self.selections[1][-1]):
-            logger.error('n = {}'.format(n))
             if n[0] == a_playlist:
-                logger.error('found at {}'.format(i))
+                logger.error('Playlist found at {}'.format(i))
                 found = i
                 break
         if found > -1:
             self.selections[1][0] = self.selections[1][2] = found
             if found < self.bodyMaxY:
                 self.selections[1][1] = 0
-                logger.error('0n 0')
             elif found > self.number_of_items - self.bodyMaxY:
                 self.selections[1][1] = len(self.selections[1][-1]) - self.bodyMaxY
-                logger.error('on 1')
             else:
                 self.selections[1][1] = found - int(self.bodyMaxY / 2)
-                logger.error('on 2')
 
             if change_regs_too:
                 self.selections[2][0] = self.selections[2][2] = found
@@ -8563,7 +8548,9 @@ class PyRadio(object):
             self.playlist_selections[1][0] = self.selections[1][0]
             self.playlist_selections[1][1] = self.selections[1][1]
             self.playlist_selections[1][2] = self.selections[1][2]
-            self.ll('changed!')
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Playlist not found!')
 
 
     def _scan_playlist_for_station(self, stations, start, station_to_find):
