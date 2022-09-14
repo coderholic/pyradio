@@ -15,7 +15,7 @@ import os
 import random
 import signal
 from copy import deepcopy
-from sys import version as python_version, version_info, platform, stdout
+from sys import version as python_version, version_info, platform
 from os.path import join, basename, getmtime, getsize
 from os import remove
 from platform import system
@@ -1638,9 +1638,6 @@ class PyRadio(object):
             logger.info('*** Start of playback NOT detected!!! ***')
         self.player.stop_mpv_status_update_thread = True
         self.log.write(msg='Failed to connect to: ' + self._last_played_station[0])
-        # stdout.write("\x1b]2;test\x07")
-        stdout.buffer.write(b'\33]0;title you want\a')
-        stdout.buffer.flush()
         self.player.connecting = False
         if self._random_requested and \
                 self.ws.operation_mode == self.ws.NORMAL_MODE:

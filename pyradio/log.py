@@ -1,15 +1,19 @@
 # '''- coding: utf-8 -*- '''
 import curses
-from sys import version_info
+from sys import version_info, platform, stdout
 import logging
 import threading
 from .common import player_start_stop_token
 
 logger = logging.getLogger(__name__)
 
+if platform.lower().startswith('win'):
+    import ctypes
 
 class Log(object):
     ''' Log class that outputs text to a curses screen '''
+
+    old_window_title = None
 
     msg = suffix = counter = cursesScreen = None
 
@@ -117,10 +121,12 @@ class Log(object):
                     try:
                         d_msg = self.msg.strip()[0: self.width].replace('\r', '').replace('\n', '')
                         self.cursesScreen.addstr(0, 1, d_msg)
+                        self.set_win_title(d_msg)
                     except:
                         try:
                             d_msg = self.msg.encode('utf-8', 'replace').strip()[0: self.width].replace('\r', '').replace('\n', '')
                             self.cursesScreen.addstr(0, 1, d_msg)
+                            self.set_win_title(d_msg)
                         except:
                             pass
                             # if logger.isEnabledFor(logging.ERROR):
@@ -252,4 +258,42 @@ class Log(object):
             self._write_title_to_log(self._cnf._current_log_station, force=True)
         if self._cnf._current_log_title:
             self._write_title_to_log(self._cnf._current_log_title, force=True)
+
+    @staticmethod
+    def set_win_title(msg=None):
+        default = 'Your Internet Radio Player'
+        do_not_update = (
+            ' Playback stopped',
+            'Selected ',
+            'Failed to connect to: ',
+            'Connecting to: ',
+            'Initialization: ',
+            'Station: ',
+            'abnormally',
+        )
+        if msg is None:
+            d_msg = default
+        else:
+            d_msg = msg
+            if d_msg.startswith('['):
+                return
+            for a_stop_token in do_not_update:
+                if a_stop_token in d_msg:
+                    d_msg = default
+
+            if d_msg.startswith('Title: '):
+                d_msg = d_msg.replace('Title:', '--- ') + ' ---'
+            elif d_msg.startswith('Playing: '):
+                d_msg = d_msg.replace('Playing:', '*** ') + ' ***'
+
+            if Log.old_window_title == d_msg:
+                return
+            else:
+                Log.old_window_title = d_msg
+
+        if platform.lower().startswith('win'):
+            ctypes.windll.kernel32.SetConsoleTitleW('● PyRadio: ' + d_msg)
+        else:
+            stdout.write('\33]0;' + 'PyRadio: ' + d_msg + '\a')
+            stdout.flush()
 

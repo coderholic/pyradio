@@ -11,6 +11,7 @@ from platform import system
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
 from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed, version_string_to_list, get_github_tag
+from .log import Log
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 PATTERN_TITLE = '%(asctime)s | %(message)s'
@@ -465,25 +466,14 @@ def shell():
         environ.setdefault('ESCDELAY', '25')
 
         ''' set window title '''
-        if platform.startswith('win'):
-            import ctypes
-            try:
-                if pyradio_config.locked:
-                    win_title = 'PyRadio: Your Internet Radio Player (Session Locked)'
-                else:
-                    win_title = 'PyRadio: Your Internet Radio Player'
-                ctypes.windll.kernel32.SetConsoleTitleW(win_title)
-            except:
-                pass
-        else:
-            try:
-                if pyradio_config.locked:
-                    sys.stdout.write('\x1b]2;PyRadio: Your Internet Radio Player (Session Locked)\x07')
-                else:
-                    sys.stdout.write('\x1b]2;PyRadio: Your Internet Radio Player\x07')
-            except:
-                pass
-        sys.stdout.flush()
+        try:
+            if pyradio_config.locked:
+                win_title = 'Your Internet Radio Player (Session Locked)'
+            else:
+                win_title = None
+            Log.set_win_title(win_title)
+        except:
+            pass
 
         ''' curses wrapper '''
         curses.wrapper(pyradio.setup)
