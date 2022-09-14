@@ -236,21 +236,45 @@ class Log(object):
                 logger.critical('Error writing LIKED title...')
         elif d_msg.startswith('Title: '):
                 if logger.isEnabledFor(logging.CRITICAL):
-                    if force or not d_msg in self._cnf._old_log_title:
+                    try:
+                        if force or not d_msg in self._cnf._old_log_title:
+                            try:
+                                logger.critical(d_msg.replace('Title: ', '    '))
+                            except:
+                                logger.critical('Error writing title...')
+                            self._cnf._old_log_title = d_msg
+                    except UnicodeDecodeError:
+                        ''' try to handle it for python2 '''
                         try:
-                            logger.critical(d_msg.replace('Title: ', '    '))
+                            if force or not d_msg.decode('utf-8', 'replace') in self._cnf._old_log_title.decode('utf-8', 'replace'):
+                                try:
+                                    logger.critical(d_msg.replace('Title: ', '    '))
+                                except:
+                                    logger.critical('Error writing title...')
+                                self._cnf._old_log_title = d_msg
                         except:
                             logger.critical('Error writing title...')
-                        self._cnf._old_log_title = d_msg
                 self._cnf._current_log_title = d_msg
         elif d_msg.startswith('Playing: '):
             if logger.isEnabledFor(logging.CRITICAL):
-                if force or not d_msg in self._cnf._old_log_station:
+                try:
+                    if force or not d_msg in self._cnf._old_log_station:
+                        try:
+                            logger.critical(d_msg.replace('Playing: ', '>>> Station: '))
+                        except:
+                            logger.critical('Error writing station name...')
+                        self._cnf._old_log_station = d_msg
+                except UnicodeDecodeError:
+                    ''' try to handle it for python2 '''
                     try:
-                        logger.critical(d_msg.replace('Playing: ', '>>> Station: '))
+                        if force or not d_msg.decode('utf-8', 'replace') in self._cnf._old_log_title.decode('utf-8', 'replace'):
+                            try:
+                                logger.critical(d_msg.replace('Playing: ', '>>> Station: '))
+                            except:
+                                logger.critical('Error writing station name...')
+                            self._cnf._old_log_station = d_msg
                     except:
                         logger.critical('Error writing station name...')
-                    self._cnf._old_log_station = d_msg
             self._cnf._current_log_station = d_msg
 
     def write_start_log_station_and_title(self):
@@ -271,29 +295,48 @@ class Log(object):
             'Station: ',
             'abnormally',
         )
+        token_id = 1
+        tokens = ('PyRadio: ', 'PyRadio - ')
+        logger.error('\n\n')
+        logger.error('msg = "' + msg + '"')
         if msg is None:
+            logger.error('d_msg = default')
             d_msg = default
+            token_id = 0
         else:
             d_msg = msg
+            logger.error('d_msg = msg = "' + d_msg + '"')
             if d_msg.startswith('['):
                 return
             for a_stop_token in do_not_update:
                 if a_stop_token in d_msg:
+                    logger.error('d_msg = default')
                     d_msg = default
+                    token_id = 0
+                    break
 
-            if d_msg.startswith('Title: '):
-                d_msg = d_msg.replace('Title:', '--- ') + ' ---'
-            elif d_msg.startswith('Playing: '):
-                d_msg = d_msg.replace('Playing:', '*** ') + ' ***'
+            # if not token_id:
+            #     logger.error('final d_msg = "' + d_msg + '"')
+            #     if d_msg.startswith('Title: '):
+            #         d_msg = d_msg.replace('Title:', '--- ') + ' ---'
+            #     elif d_msg.startswith('Playing: '):
+            #         d_msg = d_msg.replace('Playing:', '*** ') + ' ***'
 
-            if Log.old_window_title == d_msg:
-                return
-            else:
+            if Log.old_window_title is not None:
+                ''' fix for python2 '''
+                logger.error('Log.old_window_title is "' + Log.old_window_title+ '"')
+                if Log.old_window_title == d_msg:
+                    logger.error('same thing... return')
+                    return
                 Log.old_window_title = d_msg
+            else:
+                logger.error('Log.old_window_title is None')
+                Log.old_window_title = d_msg
+                logger.error('Log.old_window_title is "' + Log.old_window_title+ '"')
 
         if platform.lower().startswith('win'):
-            ctypes.windll.kernel32.SetConsoleTitleW('● PyRadio: ' + d_msg)
+            ctypes.windll.kernel32.SetConsoleTitleW('● ' + tokens[token_id] + d_msg)
         else:
-            stdout.write('\33]0;' + 'PyRadio: ' + d_msg + '\a')
+            stdout.write('\33]0;' + tokens[token_id] + d_msg + '\a')
             stdout.flush()
 
