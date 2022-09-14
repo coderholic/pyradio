@@ -790,6 +790,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             break "term to widgets" assignment
         '''
         a_search_copy = deepcopy(a_search)
+        logger.error('_format_url(): a_search_copy = {}'.format(a_search_copy))
         if a_search_copy['type'] in RADIO_BROWSER_DISPLAY_TERMS.keys():
             url = 'http://{0}{1}'.format(
                 self._server,
@@ -2481,7 +2482,8 @@ class RadioBrowserSearchWindow(object):
                         ret['type'] = n [0]
                         logger.error('DE type = {}'.format(ret['type']))
                         break
-                if self._widgets[what_type[0] - 1].checked:
+                if self._widgets[what_type[0] - 1].checked and \
+                        not ret['type'].endswith('exact'):
                     ret['type'] += 'exact'
                 ret['term'] = self._widgets[what_type[0]].string
             else:
