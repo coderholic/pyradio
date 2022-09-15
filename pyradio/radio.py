@@ -6006,8 +6006,8 @@ class PyRadio(object):
                 last_history[2] = path.basename(self.new_filename).replace('.csv', '')
                 ''' not a register, no online browser '''
                 last_history[-2:] = False, False
-                # logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
-                # logger.error('DE last_history = {}'.format(last_history))
+                logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
+                logger.error('DE last_history = {}'.format(last_history))
                 # logger.error('DE last_history = {}'.format(last_history))
                 if self.ws.window_mode == self.ws.NORMAL_MODE:
                         ''' rename the playlist on editor '''
@@ -7690,14 +7690,20 @@ class PyRadio(object):
         self.playing = it
         if not open_file:
             self.refreshBody()
-        logger.error('DE replace_playlist_in_history = {}'.format(replace_playlist_in_history))
+        # logger.error('DE replace_playlist_in_history = {}'.format(replace_playlist_in_history))
+        # logger.error('replace_playlist_in_history = {}'.format(replace_playlist_in_history))
         if replace_playlist_in_history:
             self._cnf.replace_playlist_history_items(
                     replace_playlist_in_history,
-                    last_history)
+                    last_history
+            )
+            self._cnf.stations_history.rename_playlist(
+                os.path.basename(replace_playlist_in_history)[:-4],
+                last_history[2]
+            )
         # self.ll('after')
-        logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
-        logger.error('DE self._playlist_in_editor = {}'.format(self._playlist_in_editor))
+        # logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
+        # logger.error('DE self._playlist_in_editor = {}'.format(self._playlist_in_editor))
         if open_file:
             ret_it, ret_id, rev_ret_id = self._cnf.find_history_by_station_path(self.new_filename)
             logger.error('DE ret_it = {0}, ret_id = {1}, rev_ret_id = {2}'.format(ret_it, ret_id, rev_ret_id))
@@ -7842,6 +7848,10 @@ class PyRadio(object):
             self._cnf.replace_playlist_history_items(
                     self.old_filename,
                     last_history)
+            self._cnf.stations_history.rename_playlist(
+                os.path.basename(self.old_filename)[:-4],
+                last_history[2]
+            )
         # logger.error('DE\n\n **** ps.p {}\n\n'.format(self._cnf._ps._p))
 
         self.refreshBody()

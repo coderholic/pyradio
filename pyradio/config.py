@@ -2539,6 +2539,13 @@ class PyRadioStationsStack(object):
         self.item = -1
         self.play_from_history = False
 
+    def rename_playlist(self, orig, new):
+        self._show_station_history_debug()
+        for i in range(0, len(self.items)):
+            if self.items[i][0] == orig:
+                self.items[i][0] = new
+        self._show_station_history_debug()
+
     def _get(self):
         if self.item == -1:
             if self.no_items_func is not None:

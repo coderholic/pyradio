@@ -345,7 +345,8 @@ class Log(object):
             d_msg += '(Session Locked)'
 
         if platform.lower().startswith('win'):
-            ctypes.windll.kernel32.SetConsoleTitleW('● ' + tokens[token_id] + d_msg)
+            # ctypes.windll.kernel32.SetConsoleTitleW('● ' + tokens[token_id] + d_msg)
+            ctypes.windll.kernel32.SetConsoleTitleW(tokens[token_id] + d_msg)
         else:
             stdout.write('\33]0;' + tokens[token_id] + d_msg + '\a')
             stdout.flush()
