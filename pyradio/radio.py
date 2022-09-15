@@ -8459,6 +8459,7 @@ class PyRadio(object):
         else:
             ''' I have to load a new playlist '''
             if self._cnf.dirty_playlist:
+                self._cnf.stations_history.restore_index(func)
                 self._show_notification_with_delay(
                         txt='____Playlist has been modified____\n___Please save it and try again___',
                         delay=1.5,

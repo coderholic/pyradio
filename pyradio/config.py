@@ -2584,6 +2584,11 @@ class PyRadioStationsStack(object):
                 logger.debug('   item is  = {}'.format(self.item))
             self.execute_func(self._get(), self.play_next)
 
+    def restore_index(self, a_func):
+        if a_func == self.play_next:
+            self.item -= 1
+        else:
+            self.item += 1
 
 class PyRadioLog(object):
 
