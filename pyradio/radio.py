@@ -1062,6 +1062,9 @@ class PyRadio(object):
         #        self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
         #            self.ws.operation_mode == self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE:
 
+        column_num = 0
+        column_text = None
+        ticks = None
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
             line = self._format_playlist_line(lineNum, pad, station)
             try:
@@ -1071,9 +1074,14 @@ class PyRadio(object):
         else:
             if self._cnf.browsing_station_service and \
                     self._cnf._online_browser:
+                if ticks is None:
+                    ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
+                    if ticks:
+                        column_num = ticks[0] - 3
                 if station:
-                    played, line = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.bodyMaxX)
+                    line, column_text = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.bodyMaxX)
                 else:
+                    column_num = 0
                     played, line = self._cnf.online_browser.format_empty_line(self.bodyMaxX)
             else:
                 if station:
@@ -1089,16 +1097,20 @@ class PyRadio(object):
             try:
                 # logger.error('line: "{}"'.format(line))
                 self.bodyWin.addstr(lineNum, 0, line, col)
+                if column_num > 0:
+                    self.bodyWin.addstr(lineNum, column_num, column_text, col)
             except:
                 pass
 
             if station and self._cnf.browsing_station_service and sep_col:
-                self._change_browser_ticks(lineNum, sep_col)
+                self._change_browser_ticks(lineNum, sep_col, all_ticks=ticks)
 
-    def _change_browser_ticks(self, lineNum, sep_col):
-        ticks = None
+    def _change_browser_ticks(self, lineNum, sep_col, all_ticks=None):
+        ticks = all_ticks
         if self._cnf._online_browser:
-            ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
+            if ticks is None:
+                ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
+            logger.info('ticks = {}'.format(ticks))
         if ticks:
             for n in ticks:
                 self.bodyWin.chgat(lineNum, n, 1, sep_col)

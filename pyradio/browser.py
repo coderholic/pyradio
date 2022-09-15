@@ -973,21 +973,10 @@ class RadioBrowser(PyRadioStationsBrowser):
                 str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2]
             )
 
-        name_width = width-len(out[0])-cjklen(out[2])
-        # logger.error('width-len(out[0])-len(out[2]) - {0}-{1}-{2} = {3}'.format(width, len(out[0]), len(out[2]), name_width))
-        out[1] = self._fix_cjk_string_width(self._raw_stations[id_in_list]['name'].ljust(name_width)[:name_width], name_width)
         if PY3:
-            # if pl == '╞':
-            #    out[2] += '╡'
-            return (self._raw_stations[id_in_list]['played'],
-                    '{0}{1}{2}'.format(*out))
+            return out[0] + self._raw_stations[id_in_list]['name'], ' ' + out[2]
         else:
-            # on python 2, strings are already in utf-8
-            return (self._raw_stations[id_in_list]['played'],
-                    '{0}{1}{2}'.format(
-                    out[0].encode('utf-8', 'replace'),
-                    out[1].encode('utf-8', 'replace'),
-                    out[2].encode('utf-8', 'replace')))
+            return out[0] + self._raw_stations[id_in_list]['name'].encode('utf-8', 'replace'), out[2].encode('utf-8', 'replace')
 
     def set_encoding(self, id_in_list, new_encoding):
         if id_in_list < len(self._raw_stations):
