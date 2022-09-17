@@ -5939,7 +5939,11 @@ class PyRadio(object):
                             restart_player = True
 
                     if self.stations[self.selection] != self._station_editor.new_station:
-                        self._cnf.stations_history.rename_station(self.stations[self.selection], self._station_editor.new_station)
+                        self._cnf.stations_history.rename_station(
+                            self._cnf.station_title,
+                            self.stations[self.selection][0],
+                            self._station_editor.new_station[0]
+                        )
                         self._cnf.dirty_playlist = True
                     self.stations[self.selection] = self._station_editor.new_station
                     if self.selection == self.playing:
@@ -6874,7 +6878,11 @@ class PyRadio(object):
             self._update_status_bar_right()
             icy_data_name = self.player.icy_data('icy-name')
             if char == ord('r') and self.stations[self.playing][0] != icy_data_name:
-                self._cnf.stations_history.rename_station(self.stations[self.playing][0], icy_data_name)
+                self._cnf.stations_history.rename_station(
+                    self._cnf.station_title,
+                    self.stations[self.playing][0],
+                    icy_data_name
+                )
                 self.stations[self.playing][0] = icy_data_name
                 self._cnf.dirty_playlist = True
                 self._last_played_station = self.stations[self.playing]

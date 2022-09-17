@@ -2556,29 +2556,18 @@ class PyRadioStationsStack(object):
             self.item = len(self.items) - 1
         self._show_station_history_debug()
 
-    def rename_station(self, orig, new):
-        self.remove_station(orig[0])
-        # return
-        # ''' makes a copy of the item and inserts it back to the
-        #     list, so that the station will be there regardless
-        #     of saving or not saving the playlist
-        # '''
-        # logger.error('orig = "{}"'.format(orig))
-        # logger.error('new = "{}"'.format(new))
-        # self._show_station_history_debug()
-        # for i in range(len(self.items) - 1, -1, -1):
-        #     if self.items[i][1] == orig:
-        #         logger.error('item = {}'.format(self.items[i]))
-        #         an_item = self.items[i][:]
-        #         logger.error('an_item = {}'.format(an_item))
-        #         self.items[i][1] = new
-        #         logger.error('item = {}'.format(self.items[i]))
-        #         self.items.insert(i, an_item)
-        #         if i == self.item:
-        #             self.item += 1
-        #             if logger.isEnabledFor(logging.DEBUG):
-        #                 logger.debug('   item is  = {}'.format(self.item))
-        # self._show_station_history_debug()
+    def rename_station(self, playlist, orig_station, new_station):
+         # logger.error('playlist = "{}"'.format(playlist))
+         # logger.error('orig_station = "{}"'.format(orig_station))
+         # logger.error('new_station = "{}"'.format(new_station))
+         self._show_station_history_debug()
+         for i in range(len(self.items) - 1, -1, -1):
+             if self.items[i][0] == playlist and \
+                     self.items[i][1] == orig_station:
+                 logger.error('item = {}'.format(self.items[i]))
+                 self.items[i][1] = new_station
+                 logger.error('item = {}'.format(self.items[i]))
+         self._show_station_history_debug()
 
     def rename_playlist(self, orig, new):
         self._show_station_history_debug()
@@ -2874,7 +2863,7 @@ class PyRadioBase16Themes(object):
             self.theme_url = url
             self.status = requests_response.status_code
 
-            ret = requests_response.status_code == 201 and written
+            ret = requests_response.status_code == 200 and written
             if not ret:
                 try:
                    remove(w_path)
