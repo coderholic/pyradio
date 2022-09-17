@@ -2476,6 +2476,13 @@ class PyRadioStationsStack(object):
     no_items_func=None
     play_from_history = False
 
+    ''' items: list of lists
+        [
+            [playlist name, station name, station id],
+            ...
+        ]
+    '''
+
     def __init__(
         self,
         execute_function,
@@ -2515,6 +2522,8 @@ class PyRadioStationsStack(object):
 
     def add(self, a_playlist, a_station, a_station_id):
         if a_playlist and a_station:
+            if a_playlist == a_station:
+                return
             if self.item == -1:
                 self.items.append([a_playlist, a_station, a_station_id])
                 self.item = 0
@@ -2538,6 +2547,38 @@ class PyRadioStationsStack(object):
         self.items = []
         self.item = -1
         self.play_from_history = False
+
+    def remove_station(self, a_station):
+        for i in range(len(self.items) - 1, -1, -1):
+            if self.items[i][1] == a_station:
+                self.items.pop(i)
+        if self.item >= len(self.items):
+            self.item = len(self.items) - 1
+        self._show_station_history_debug()
+
+    def rename_station(self, orig, new):
+        self.remove_station(orig[0])
+        # return
+        # ''' makes a copy of the item and inserts it back to the
+        #     list, so that the station will be there regardless
+        #     of saving or not saving the playlist
+        # '''
+        # logger.error('orig = "{}"'.format(orig))
+        # logger.error('new = "{}"'.format(new))
+        # self._show_station_history_debug()
+        # for i in range(len(self.items) - 1, -1, -1):
+        #     if self.items[i][1] == orig:
+        #         logger.error('item = {}'.format(self.items[i]))
+        #         an_item = self.items[i][:]
+        #         logger.error('an_item = {}'.format(an_item))
+        #         self.items[i][1] = new
+        #         logger.error('item = {}'.format(self.items[i]))
+        #         self.items.insert(i, an_item)
+        #         if i == self.item:
+        #             self.item += 1
+        #             if logger.isEnabledFor(logging.DEBUG):
+        #                 logger.debug('   item is  = {}'.format(self.item))
+        # self._show_station_history_debug()
 
     def rename_playlist(self, orig, new):
         self._show_station_history_debug()
@@ -2589,6 +2630,8 @@ class PyRadioStationsStack(object):
             self.item -= 1
         else:
             self.item += 1
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('   item restored  = {}'.format(self.item))
 
 class PyRadioLog(object):
 
@@ -2831,7 +2874,7 @@ class PyRadioBase16Themes(object):
             self.theme_url = url
             self.status = requests_response.status_code
 
-            ret = requests_response.status_code == 200 and written
+            ret = requests_response.status_code == 201 and written
             if not ret:
                 try:
                    remove(w_path)

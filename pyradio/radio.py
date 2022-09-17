@@ -1078,6 +1078,8 @@ class PyRadio(object):
                     ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
                     if ticks:
                         column_num = ticks[0] - 3
+                        if len(ticks) == 1:
+                            column_num += 1
                 if station:
                     line, column_text = self._cnf.online_browser.format_station_line(lineNum + self.startPos, pad, self.bodyMaxX)
                 else:
@@ -5937,6 +5939,7 @@ class PyRadio(object):
                             restart_player = True
 
                     if self.stations[self.selection] != self._station_editor.new_station:
+                        self._cnf.stations_history.rename_station(self.stations[self.selection], self._station_editor.new_station)
                         self._cnf.dirty_playlist = True
                     self.stations[self.selection] = self._station_editor.new_station
                     if self.selection == self.playing:
@@ -6824,6 +6827,7 @@ class PyRadio(object):
                 self._align_stations_and_refresh(self.ws.REMOVE_STATION_MODE)
                 if not self._cnf.locked and char == ord('Y'):
                     self._cnf.confirm_station_deletion = False
+                self._cnf.stations_history.remove_station(deleted_station[0])
 
                 ''' auto save register file '''
                 if self._cnf.is_register:
@@ -6870,6 +6874,7 @@ class PyRadio(object):
             self._update_status_bar_right()
             icy_data_name = self.player.icy_data('icy-name')
             if char == ord('r') and self.stations[self.playing][0] != icy_data_name:
+                self._cnf.stations_history.rename_station(self.stations[self.playing][0], icy_data_name)
                 self.stations[self.playing][0] = icy_data_name
                 self._cnf.dirty_playlist = True
                 self._last_played_station = self.stations[self.playing]
