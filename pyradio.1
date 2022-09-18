@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "August 2022" PyRadio
+.TH pyradio 1 "September 2022" PyRadio
 
 .SH Name
 .PP
@@ -116,6 +116,10 @@ Edit current station
 Change current station's encoding
 .IP \fBDEL\fR,\fBx
 Delete selected station
+.IP \fBO\fR
+Open \fIRadio Browser\fR
+.IP \fB<\fR\ /\ \fB>\fR
+Browse the \fIStations history\fR list
 .IP \fBJ
 Create a \fIJump tag
 .IP \fI<n>\fB^U\fR,\fI<n>\fB^D
@@ -391,6 +395,16 @@ Playlist History
 In order to go back to the previous playlist, the user just has to press "\fI\\\\\fR" (double backslash). To get to the first playlist "\fI\\]\fR" (backslash - closing square bracket) can be used.
 
 Going forward in history is not supported.
+
+.SH Stations history
+
+Playing several stations, sometimes among different playlists, and returning to them is sometimes a tedious operation.
+
+This problem is addressed with the \fBStation history\fR functionality, which is actually a list of stations which have been played back.
+
+The user can go back and forth in this list using the "\fI<\fR" and "\fI>\fR" keys.
+
+The list is not saved between sessions (restarting the program will lead to an empty list). When an \fBonline service\fR is used (e.g. \fIRadio Browser\fR) the list is reseted with every search that is performed.
 
 .SH Search Function
 

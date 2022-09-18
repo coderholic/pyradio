@@ -28,6 +28,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
     * [Managing playlists (within PyRadio)](#managing-playlists-(within-pyradio))
     * [Managing "foreign" playlists](#managing-"foreign"-playlists)
     * [Playlist history](#playlist-history)
+* [Stations history](#stations-history)
 * [Search function](#search-function)
 * [Line editor](#line-editor)
     * [CJK characters support](#cjk-characters-support)
@@ -209,6 +210,7 @@ The following options can also be set in **PyRadio**'s [configuration file](#con
     E                 Change station's encoding                        -                                  -
     DEL,x             Delete selected station                          -                                  -
     O                 Open RadioBrowser                                -                                  -
+    < >               Browse the Stations history list                 -                                  -
     t T               Load theme / Toggle transparency                 [Valid]                            [Valid]
     c                 Open Configuration window.                       -                                  -
     / n N             Search, go to next / previous result             [Valid]                            [Valid]
@@ -420,6 +422,16 @@ If a playlist of the same name already exists in the configuration directory, th
 In order to go back to the previous playlist, the user just has to press "**\\\\**" (double backslash). To get to the first playlist "**\\]**" (backslash - closing square bracket) can be used.
 
 Going forward in history is not supported.
+
+## Stations history
+
+Playing several stations, sometimes among different playlists, and returning to them is sometimes a tedious operation.
+
+This problem is addressed with the "**Station history**" functionality, which is actually a list of stations which have been played back.
+
+The user can go back and forth in this list using the "**<**" and "**>**" keys.
+
+The list is not saved between sessions (restarting the program will lead to an empty list). When an "**online service** is used (e.g. **Radio Browser**) the list is reseted with every search that is performed.
 
 ## Search function
 

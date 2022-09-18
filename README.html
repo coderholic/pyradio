@@ -70,6 +70,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#managing-%22foreign%22-playlists">Managing “foreign” playlists</a></li>
 <li><a href="#playlist-history">Playlist history</a></li>
 </ul></li>
+<li><a href="#stations-history">Stations history</a></li>
 <li><a href="#search-function">Search function</a></li>
 <li><a href="#line-editor">Line editor</a>
 <ul>
@@ -178,6 +179,16 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
+
+2022-09-18 s-n-g
+    * version 0.8.9.27 (0.9-beta24)
+    * Implementing Stations History as per #161
+    * Station encoding will be checked before used
+    * Fixing several crashes
+    * Fixing several Python 2 errors
+    * Fixing station paste to playlist
+    * Fixing RadioBrowser columns when CJK characters are
+      present, on Windows
 
 2022-08-28 s-n-g
     * version 0.8.9.26 (0.9-beta23)
@@ -892,6 +903,7 @@ e                 Edit current station                             -            
 E                 Change station&#39;s encoding                        -                                  -
 DEL,x             Delete selected station                          -                                  -
 O                 Open RadioBrowser                                -                                  -
+&lt; &gt;               Browse the Stations history list                 -                                  -
 t T               Load theme / Toggle transparency                 [Valid]                            [Valid]
 c                 Open Configuration window.                       -                                  -
 / n N             Search, go to next / previous result             [Valid]                            [Valid]
@@ -1053,6 +1065,11 @@ $ pyradio -s 5</pre>
 <p><strong>PyRadio</strong> will keep a history of all the playlists opened (within a given session), so that navigating between them is made easy.</p>
 <p>In order to go back to the previous playlist, the user just has to press “<strong>\\</strong>” (double backslash). To get to the first playlist “<strong>\]</strong>” (backslash - closing square bracket) can be used.</p>
 <p>Going forward in history is not supported.</p>
+<h2 id="stations-history">Stations history <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Playing several stations, sometimes among different playlists, and returning to them is sometimes a tedious operation.</p>
+<p>This problem is addressed with the “<strong>Station history</strong>” functionality, which is actually a list of stations which have been played back.</p>
+<p>The user can go back and forth in this list using the “<strong>&lt;</strong>” and “<strong>&gt;</strong>” keys.</p>
+<p>The list is not saved between sessions (restarting the program will lead to an empty list). When an “<strong>online service</strong> is used (e.g. <strong>Radio Browser</strong>) the list is reseted with every search that is performed.</p>
 <h2 id="search-function">Search function <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>On any window presenting a list of items (stations, playlists, themes) a <strong>search function</strong> is available by pressing “<strong>/</strong>”.</p>
 <p>The <em>Search Window</em> supports normal and extend editing and in session history.</p>

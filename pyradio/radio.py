@@ -110,6 +110,13 @@ def no_modifiers(event):
 def multi_modifiers(event):
     return not no_modifiers(event)
 
+def invalid_encoding(enc):
+    try:
+        'aaa'.encode(enc, 'replace')
+    except LookupError:
+        return True
+    return False
+
 class PyRadio(object):
     player = None
     ws = Window_Stack()
@@ -394,6 +401,7 @@ class PyRadio(object):
                 self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT: self._ask_to_save_browser_config_to_exit,
                 self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_win_manage_players,
                 self.ws.WIN_PRINT_EXE_LOCATION_MODE: self._show_win_print_exe_paths,
+                self.ws.UNKNOWN_BROWSER_SERVICE_ERROR: self._print_unknown_browser_service,
                 }
 
         ''' list of help functions '''
@@ -1112,7 +1120,6 @@ class PyRadio(object):
         if self._cnf._online_browser:
             if ticks is None:
                 ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
-            logger.info('ticks = {}'.format(ticks))
         if ticks:
             for n in ticks:
                 self.bodyWin.chgat(lineNum, n, 1, sep_col)
@@ -1536,56 +1543,59 @@ class PyRadio(object):
         '''
         # logger.error('DE \n\n\nplaying = {}'.format(self.playing))
         self._station_rename_from_info = False
-        if self.stations[self.selection][3]:
-            self.playSelectionBrowser()
-        else:
-            # logger.error('DE \n\nselection = {0}, playing = {1}\nlast played = {2}\n\n'.format(self.selection, self.playing, self._last_played_station))
-            # logger.error('DE \n\nselection = {}'.format(self.selections))
-            stream_url = ''
-            self.log.display_help_message = False
-            if restart:
-                stream_url = self._last_played_station[1]
-                enc = self._last_played_station[2]
-                # logger.error('setting playing to {}'.format(self._last_played_station_id))
-                self.playing = self._last_played_station_id
-            else:
-                # if self._cnf.browsing_station_service:
-                #     if self._cnf.online_browser.have_to_retrieve_url:
-                #         self.log.display_help_message = False
-                #         self.log.write(msg='Station: ' + self._last_played_station[0] + ' - Retrieving URL...')
-                #         stream_url = self._cnf.online_browser.url(self.selection)
-                self._last_played_station = self.stations[self.selection]
-                self._last_played_station_id = self.selection
-                # logger.error('setting playing to {}'.format(self.selection))
-                self.playing = self.selection
-                if not stream_url:
-                    stream_url = self.stations[self.selection][1]
-                try:
-                    enc = self.stations[self.selection][2].strip()
-                except:
-                    enc = ''
+        # logger.info('\n\nselected station\n{}\n\n'.format(self.stations[self.selection]))
 
-            ''' start player '''
-            self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0])
-            # logger.error('DE \n\nself.detect_if_player_exited = {}\n\n'.format(self.detect_if_player_exited))
-            if self._random_requested:
-                self.detect_if_player_exited = False
+        # logger.error('DE \n\nselection = {0}, playing = {1}\nlast played = {2}\n\n'.format(self.selection, self.playing, self._last_played_station))
+        # logger.error('DE \n\nselection = {}'.format(self.selections))
+        stream_url = ''
+        self.log.display_help_message = False
+        if restart:
+            stream_url = self._last_played_station[1]
+            enc = self._last_played_station[2]
+            if invalid_encoding(enc):
+                enc = ''
+            # logger.error('setting playing to {}'.format(self._last_played_station_id))
+            self.playing = self._last_played_station_id
+        else:
+            # if self._cnf.browsing_station_service:
+            #     if self._cnf.online_browser.have_to_retrieve_url:
+            #         self.log.display_help_message = False
+            #         self.log.write(msg='Station: ' + self._last_played_station[0] + ' - Retrieving URL...')
+            #         stream_url = self._cnf.online_browser.url(self.selection)
+            self._last_played_station = self.stations[self.selection]
+            self._last_played_station_id = self.selection
+            # logger.error('setting playing to {}'.format(self.selection))
+            self.playing = self.selection
+            if not stream_url:
+                stream_url = self.stations[self.selection][1]
             try:
-                self.player.play(name=self._last_played_station[0],
-                                 streamUrl=stream_url,
-                                 stop_player=self.stopPlayerFromKeyboard,
-                                 detect_if_player_exited=lambda: self.detect_if_player_exited,
-                                 enable_crash_detection_function=self._enable_player_crash_detection,
-                                 encoding=self.get_active_encoding(enc)
-                                 )
-            except OSError:
-                self.log.write(msg='Error starting player.'
-                               'Are you sure a supported player is installed?')
-                # logger.error('setting playing to 0')
-                self.playing = -1
-                return
-            self._set_active_stations()
-            self.selections[0][2] = self.playing
+                enc = self.stations[self.selection][2].strip()
+                if invalid_encoding(end):
+                    enc = ''
+            except:
+                enc = ''
+
+        ''' start player '''
+        self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0])
+        # logger.error('DE \n\nself.detect_if_player_exited = {}\n\n'.format(self.detect_if_player_exited))
+        if self._random_requested:
+            self.detect_if_player_exited = False
+        try:
+            self.player.play(name=self._last_played_station[0],
+                             streamUrl=stream_url,
+                             stop_player=self.stopPlayerFromKeyboard,
+                             detect_if_player_exited=lambda: self.detect_if_player_exited,
+                             enable_crash_detection_function=self._enable_player_crash_detection,
+                             encoding=self.get_active_encoding(enc)
+                             )
+        except OSError:
+            self.log.write(msg='Error starting player.'
+                           'Are you sure a supported player is installed?')
+            # logger.error('setting playing to 0')
+            self.playing = -1
+            return
+        self._set_active_stations()
+        self.selections[0][2] = self.playing
         self._do_display_notify()
         try:
             self.playback_timeout = int(self._cnf.connection_timeout_int)
@@ -2322,7 +2332,9 @@ class PyRadio(object):
                  <n>^U|,|<n>^D      |Move station |U|p / |D|own.
                  ||_________________|If a |jump tag| exists, move it there.
                  !Searching
-                 /| / |n| / |N        |Search, go to next / previous result.'''
+                 /| / |n| / |N        |Search, go to next / previous result.
+                 !Stations' history
+                 < |/| >            |Move to previous / next station.'''
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_2,
                         reset_metrics=False)
@@ -3762,14 +3774,21 @@ class PyRadio(object):
                     if self._cnf.online_browser:
                         self._cnf.online_browser.set_global_functions(self._global_functions)
                         tmp_stations = []
+                        self._cnf.stations_history = self._cnf.online_browser.set_station_history(
+                            execute_funct=self._load_playlist_and_station_from_station_history,
+                            no_items_funct=self._show_no_station_history_notification,
+                            pass_first_item_funct=self._show_first_station_history_notification,
+                            pass_last_item_funct=self._show_last_station_history_notification
+                        )
 
                         if not self._cnf._online_browser.initialize():
-                            ''' browser canno be opened '''
+                            ''' browser cannot be opened '''
                             self._cnf.remove_from_playlist_history()
                             self.ws.close_window()
                             self._print_service_connection_error()
                             self._cnf.browsing_station_service = False
                             self._cnf.online_browser = None
+                            self._cnf.stations_history = self._cnf.normal_stations_history
                             return
 
                         self.ws.close_window()
@@ -3780,6 +3799,7 @@ class PyRadio(object):
                         self._cnf.remove_from_playlist_history()
                         self._print_unknown_browser_service()
                         self._cnf.browsing_station_service = False
+                        self._cnf.online_browser = None
                 else:
                     self._cnf.remove_from_playlist_history()
                     self._print_dnspython_not_installed_error()
@@ -3893,6 +3913,7 @@ class PyRadio(object):
             self._cnf.stations = tmp_stations[:]
             self.stations = self._cnf.stations
             self._cnf._online_browser.vote_callback = self._print_vote_result
+            self._cnf.online_browser.stations_history.clear()
             self._cnf.number_of_stations = len(self.stations)
             self._cnf.dirty_playlist = False
             #self._cnf.add_to_playlist_history(self._cnf.online_browser.BASE_URL, '', self._cnf.online_browser.TITLE, browsing_station_service=True)
@@ -4032,6 +4053,8 @@ class PyRadio(object):
                     self.playing = removed_playlist_history_item[-2]
                     self.selection = removed_playlist_history_item[-3]
                     self.startPos = removed_playlist_history_item[-4]
+                    self._cnf.online_browser = None
+                    self._cnf.stations_history = self._cnf.normal_stations_history
                 else:
                     ''' coming back from local playlist '''
                     self.selection = self._cnf.history_selection
@@ -4055,6 +4078,7 @@ class PyRadio(object):
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('Closing online browser!')
                     self._cnf.online_browser = None
+                    self._cnf.stations_history = self._cnf.normal_stations_history
                     self._cnf.browsing_station_service = False
                 ''' check if browsing_station_service has changed '''
                 if not self._cnf.browsing_station_service and \
@@ -5802,7 +5826,6 @@ class PyRadio(object):
                 #     ''' cancel a dirty config '''
 
                 else:
-                    logger.error('\n\nexiting config\n\n')
                     ''' restore transparency, if necessary '''
                     if self._config_win._config_options['use_transparency'][1] != self._config_win._saved_config_options['use_transparency'][1]:
                         self._toggle_transparency(changed_from_config_window=False,
@@ -7009,7 +7032,6 @@ class PyRadio(object):
             return
 
         else:
-
             self._current_selection = self.selection
             # if logger.isEnabledFor(logging.DEBUG):
             #     logger.debug('current selection = {}'.format(self._current_selection))
@@ -7354,6 +7376,7 @@ class PyRadio(object):
                     self.log.counter = None
                     self._update_status_bar_right()
                     if self.number_of_items > 0:
+                        logger.info('playSelection!')
                         self.playSelection()
                         self.refreshBody()
                     self._do_display_notify()
@@ -8456,7 +8479,8 @@ class PyRadio(object):
 
         num = -1
         current_playlist = self._cnf.station_file_name[:-4]
-        if current_playlist == h_item[0]:
+        if current_playlist == h_item[0] or \
+                    h_item[0] == 'Online Browser':
             ''' I am moving within the loaded playlist '''
             if self.stations[h_item[-1]][0] == h_item[1]:
                 ''' station found '''
@@ -8537,8 +8561,13 @@ class PyRadio(object):
             self.saved_active_stations = [['', 0], ['', -1]]
             return
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Station "{0}" found at {1}'.format(h_item[1], num))
+        try:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Station "{0}" found at {1}'.format(h_item[1], num))
+        except UnicodeEncodeError:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Station found at {}'.format(num))
+
         self.setStation(num)
         if self.number_of_items > 0:
             self.playSelection()

@@ -1,3 +1,13 @@
+2022-09-18 s-n-g
+    * version 0.8.9.27 (0.9-beta24)
+    * Implementing Stations History as per #161
+    * Station encoding will be checked before used
+    * Fixing several crashes
+    * Fixing several Python 2 errors
+    * Fixing station paste to playlist
+    * Fixing RadioBrowser columns when CJK characters are
+      present, on Windows
+
 2022-08-28 s-n-g
     * version 0.8.9.26 (0.9-beta23)
     * adding calculated messages windows color

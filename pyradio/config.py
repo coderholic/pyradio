@@ -107,6 +107,8 @@ class PyRadioStations(object):
     station_history = None
     play_from_history = False
 
+    normal_stations_history = None
+
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -300,12 +302,13 @@ class PyRadioStations(object):
                             pass_first_item_funct,
                             pass_last_item_funct,
                             no_items_funct):
-        self.stations_history = PyRadioStationsStack(
+        self.normal_stations_history = PyRadioStationsStack(
             execute_function=execute_funct,
             pass_first_item_function=pass_first_item_funct,
             pass_last_item_function=pass_last_item_funct,
             no_items_function=no_items_funct
         )
+        self.stations_history = self.normal_stations_history
 
     def save_last_playlist(self, sel):
         lp = path.join(self.stations_dir, 'last_playlist')
@@ -905,7 +908,7 @@ class PyRadioStations(object):
                 w_str = w_str[:-1]
             try:
                 with open(a_playlist, 'a') as f:
-                    f.write(w_str)
+                    f.write('\n' + w_str)
                 return 0
             except:
                 return -5

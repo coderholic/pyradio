@@ -397,6 +397,19 @@ class RadioBrowser(PyRadioStationsBrowser):
     def _get_title(self):
         self.TITLE = 'RadioBrowser ({})'.format(country_from_server(self._server))
 
+    def set_station_history(self,
+                            execute_funct,
+                            pass_first_item_funct,
+                            pass_last_item_funct,
+                            no_items_funct):
+        self.stations_history = RadioBrowserStationsStack(
+            execute_function=execute_funct,
+            pass_first_item_function=pass_first_item_funct,
+            pass_last_item_function=pass_last_item_funct,
+            no_items_function=no_items_funct
+        )
+        return self.stations_history
+
     def set_global_functions(self, global_functions):
         self._global_functions = {}
         if global_functions is not None:
@@ -976,7 +989,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         if PY3:
             return out[0] + self._raw_stations[id_in_list]['name'], ' ' + out[2]
         else:
-            return out[0] + self._raw_stations[id_in_list]['name'].encode('utf-8', 'replace'), out[2].encode('utf-8', 'replace')
+            return out[0] + self._raw_stations[id_in_list]['name'].encode('utf-8', 'replace'), ' ' + out[2].encode('utf-8', 'replace')
 
     def set_encoding(self, id_in_list, new_encoding):
         if id_in_list < len(self._raw_stations):
@@ -4182,6 +4195,138 @@ class RadioBrowserServers(object):
 
         return 1
 
+class RadioBrowserStationsStack(object):
+    pass_first_item_func=None
+    pass_last_item_func=None
+    no_items_func=None
+    play_from_history = False
+
+    ''' items: list of lists
+        [
+            [name, station name, station id],
+            ...
+        ]
+    '''
+
+    def __init__(
+        self,
+        execute_function,
+        pass_first_item_function=None,
+        pass_last_item_function=None,
+        no_items_function=None
+    ):
+        self.items = []
+        self.item = -1
+
+        ######## DEBUG START
+        #self.items = [
+        #    ['reversed', 'WKHR', 1],
+        #    ['reversed', 'Jazz (Sonic Universe - SomaFM)', 11],
+        #    ['stations', 'Celtic (ThistleRadio - SomaFM)', 3]
+        #]
+        #self.item = 0
+        #self.play_from_history = True
+        #self.clear()
+        ######## DEBUG END
+
+        self.execute_func = execute_function
+        self.pass_first_item_func = pass_first_item_function
+        self.pass_last_item_func = pass_last_item_function
+        self.no_items_func = no_items_function
+
+    def _show_station_history_debug(self):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('>>> Online browser stations history')
+            if self.items:
+                for n in self.items:
+                    logger.debug('   {}'.format(n))
+                logger.debug('   item was = {}'.format(self.item))
+            else:
+                logger.debug('   No items in list')
+                logger.debug('   item = {}'.format(self.item))
+
+    def add(self, a_playlist, a_station, a_station_id):
+        a_playlist = 'Online Browser'
+        if self.item == -1:
+            self.items.append([a_playlist, a_station, a_station_id])
+            self.item = 0
+            self._show_station_history_debug()
+        else:
+            if not a_station.startswith('register_') and \
+                    (not self.play_from_history) and \
+                     self.items[self.item][1] != a_station:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Adding station history item...')
+                self.items.append([a_playlist, a_station, a_station_id])
+                self.item = len(self.items) - 1
+                self._show_station_history_debug()
+            #else:
+            #    if logger.isEnabledFor(logging.DEBUG):
+            #        logger.debug('Not adding station history item...')
+        self.play_from_history = False
+
+    def clear(self):
+        self.items = []
+        self.item = -1
+        self.play_from_history = False
+
+    def remove_station(self, a_station):
+        for i in range(len(self.items) - 1, -1, -1):
+            if self.items[i][1] == a_station:
+                self.items.pop(i)
+        if self.item >= len(self.items):
+            self.item = len(self.items) - 1
+        self._show_station_history_debug()
+
+    def rename_station(self, playlist, orig_station, new_station):
+         # logger.error('playlist = "{}"'.format(playlist))
+         # logger.error('orig_station = "{}"'.format(orig_station))
+         # logger.error('new_station = "{}"'.format(new_station))
+         self._show_station_history_debug()
+         for i in range(len(self.items) - 1, -1, -1):
+             if self.items[i][1] == orig_station:
+                 logger.error('item = {}'.format(self.items[i]))
+                 self.items[i][1] = new_station
+                 logger.error('item = {}'.format(self.items[i]))
+         self._show_station_history_debug()
+
+    def _get(self):
+        if self.item == -1:
+            if self.no_items_func is not None:
+                self.no_items_func()
+        return tuple(self.items[self.item])
+
+    def play_previous(self):
+        self._show_station_history_debug()
+        if self.item == -1:
+            if self.no_items_func is not None:
+                self.no_items_func()
+        elif self.item == 0:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('   Already on first item')
+            if self.pass_first_item_func is not None:
+                self.pass_first_item_func()
+        else:
+            self.item -= 1
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('   item is  = {}'.format(self.item))
+            self.execute_func(self._get(), self.play_previous)
+
+    def play_next(self):
+        self._show_station_history_debug()
+        if self.item == -1:
+            if self.no_items_func is not None:
+                self.no_items_func()
+        elif self.item == len(self.items) - 1:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('   Already on last item')
+            if self.pass_last_item_func is not None:
+                self.pass_last_item_func()
+        else:
+            self.item += 1
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('   item is  = {}'.format(self.item))
+            self.execute_func(self._get(), self.play_next)
 
 def probeBrowsers(a_browser_url):
     base_url = a_browser_url.split('/')[2]

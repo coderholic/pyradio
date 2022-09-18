@@ -4,6 +4,10 @@ from sys import version_info, platform, stdout
 import logging
 import threading
 from .common import player_start_stop_token
+from .cjkwrap import cjklen, PY3
+if not PY3:
+    import warnings
+    warnings.simplefilter("ignore")
 
 logger = logging.getLogger(__name__)
 
@@ -325,19 +329,11 @@ class Log(object):
                         token_id = 0
                         break
 
-                if Log.old_window_title is not None:
-                    ''' fix for python2 '''
+                if Log.old_window_title == d_msg:
                     # if logger.isEnabledFor(logging.DEBUG):
-                    #     logger.debug('set_win_title(): Old title is "' + Log.old_window_title+ '"')
-                    if Log.old_window_title == d_msg:
-                        # if logger.isEnabledFor(logging.DEBUG):
-                        #     logger.debug('set_win_title(): same title... return')
-                        return
-                    Log.old_window_title = d_msg
-                else:
-                    # if logger.isEnabledFor(logging.DEBUG):
-                    #     logger.debug('set_win_title(): set_win_title(): Old title is None')
-                    Log.old_window_title = d_msg
+                    #     logger.debug('set_win_title(): same title... return')
+                    return
+                Log.old_window_title = d_msg
 
                 # if logger.isEnabledFor(logging.DEBUG):
                 #     logger.debug('set_win_title(): d_msg = "' + d_msg + '"')
