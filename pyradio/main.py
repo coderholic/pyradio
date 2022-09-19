@@ -11,6 +11,7 @@ from platform import system
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
 from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed, version_string_to_list, get_github_tag
+from .cjkwrap import cjklen, cjkslices, fill
 from .log import Log
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -394,7 +395,7 @@ def shell():
             sys.exit()
 
         if args.list:
-            header_format_string, format_string = get_format_string(pyradio_config.stations)
+            m_len, header_format_string, format_string = get_format_string(pyradio_config.stations)
             header_string = header_format_string.format('[Name]','[URL]','[Encoding]')
             print(header_string)
             print(len(header_string) * '-')
@@ -403,7 +404,8 @@ def shell():
                     encoding = a_station[2]
                 else:
                     encoding = pyradio_config.default_encoding
-                print(format_string.format(str(num+1), a_station[0], a_station[1], encoding))
+                station_name = pad_string(a_station[0], m_len)
+                print(format_string.format(str(num+1), station_name, a_station[1], encoding))
             sys.exit()
 
         #pyradio_config.log.configure_logger(titles=True)
@@ -588,14 +590,22 @@ def open_conf_dir(cnf):
 def get_format_string(stations):
     len0 = len1 = 0
     for n in stations:
-        if len(n[0]) > len0:
-            len0 = len(n[0])
-        if len(n[1]) > len1:
-            len1 = len(n[1])
-    num = len(str(len(stations)))
-    format_string = '{0:>' + str(num) + '.' + str(num) + 's}. ' + '{1:' + str(len0) + '.' + str(len0) + 's} | {2:' + str(len1) + '.' + str(len1) + 's} | {3}'
+        if cjklen(n[0]) > len0:
+            len0 = cjklen(n[0])
+        if cjklen(n[1]) > len1:
+            len1 = cjklen(n[1])
+    num = cjklen(str(cjklen(stations)))
+    # format_string = '{0:>' + str(num) + '.' + str(num) + 's}. ' + '{1:' + str(len0) + '.' + str(len0) + 's} | {2:' + str(len1) + '.' + str(len1) + 's} | {3}'
+    format_string = '{0:>' + str(num) + '.' + str(num) + 's}. ' + '{1} | {2:' + str(len1) + '.' + str(len1) + 's} | {3}'
     header_format_string = '{0:' + str(len0+num+2) + '.' + str(len0+num+2) + 's} | {1:' + str(len1) + '.' + str(len1) + 's} | {2}'
-    return header_format_string, format_string
+    return len0, header_format_string, format_string
+
+def pad_string(a_string, width):
+    st_len = cjklen(a_string)
+    if st_len > width:
+        return cjkslices(a_string, width)
+    diff = width - st_len
+    return a_string + ' ' * diff
 
 if __name__ == '__main__':
     shell()
