@@ -339,7 +339,7 @@ class Log(object):
                 #     logger.debug('set_win_title(): d_msg = "' + d_msg + '"')
 
         if token_id == 0 and Log.locked:
-            d_msg += '(Session Locked)'
+            d_msg += ' (Session Locked)'
 
         if platform.lower().startswith('win'):
             # ctypes.windll.kernel32.SetConsoleTitleW('● ' + tokens[token_id] + d_msg)

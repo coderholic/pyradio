@@ -790,7 +790,7 @@ class PyRadio(object):
         try:
             self.headWin.addstr(0, 0, info, curses.color_pair(4))
             if self._cnf.locked:
-                self.headWin.addstr('[', curses.color_pair(5))
+                self.headWin.addstr(' [', curses.color_pair(5))
                 self.headWin.addstr('Session Locked', curses.color_pair(4))
                 self.headWin.addstr('] ', curses.color_pair(5))
             else:
