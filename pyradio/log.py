@@ -293,6 +293,11 @@ class Log(object):
         just_return = (
             'Config saved',
             'Online service Config',
+            'Error saving config',
+            'Already at',
+            'History is empty',
+            'Operation not supported',
+            'Please wait for the player to settle',
         )
         do_not_update = (
             ': Playback stopped',

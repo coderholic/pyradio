@@ -2497,13 +2497,13 @@ class PyRadioStationsStack(object):
         self.item = -1
 
         ######## DEBUG START
-        #self.items = [
-        #    ['reversed', 'WKHR', 1],
-        #    ['reversed', 'Jazz (Sonic Universe - SomaFM)', 11],
-        #    ['stations', 'Celtic (ThistleRadio - SomaFM)', 3]
-        #]
-        #self.item = 0
-        #self.play_from_history = True
+        self.items = [
+            ['reversed', 'Lounge (Illinois Street Lounge - SomaFM)', 10],
+            ['reversed', 'Folk (Folk Forward - SomaFM)', 17],
+            ['Κέρκυρα', 'Ράδιο Επτάνησα 98,8', 11]
+        ]
+        self.item = 0
+        self.play_from_history = True
         #self.clear()
         ######## DEBUG END
 

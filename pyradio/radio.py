@@ -516,6 +516,8 @@ class PyRadio(object):
             ord('m'): self._volume_mute,
             ord('v'): self._volume_save,
             ord('~'): self._toggle_claculated_colors,
+            ord('<'): self._stations_history_previous,
+            ord('>'): self._stations_history_next,
         }
 
 
@@ -5228,6 +5230,28 @@ class PyRadio(object):
                 callback_function=self.refreshBody
             )
 
+    def _stations_history_previous(self):
+            self._update_status_bar_right(status_suffix='')
+            if int(self._cnf.connection_timeout_int) == 0:
+                self._show_stations_history_notification(0)
+            else:
+                if self.player.connecting:
+                    self._show_stations_history_notification(1)
+                else:
+                    self._cnf.play_from_history = True
+                    self._cnf.stations_history.play_previous()
+
+    def _stations_history_next(self):
+        self._update_status_bar_right(status_suffix='')
+        if int(self._cnf.connection_timeout_int) == 0:
+            self._show_stations_history_notification(0)
+        else:
+            if self.player.connecting:
+                self._show_stations_history_notification(1)
+            else:
+                self._cnf.play_from_history = True
+                self._cnf.stations_history.play_next()
+
     def keypress(self, char):
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
@@ -7182,27 +7206,7 @@ class PyRadio(object):
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char == ord('<'):
-                    self._update_status_bar_right(status_suffix='')
-                    if int(self._cnf.connection_timeout_int) == 0:
-                        self._show_stations_history_notification(0)
-                    else:
-                        if self.player.connecting:
-                            self._show_stations_history_notification(1)
-                        else:
-                            self._cnf.play_from_history = True
-                            self._cnf.stations_history.play_previous()
-                elif char == ord('>'):
-                    self._update_status_bar_right(status_suffix='')
-                    if int(self._cnf.connection_timeout_int) == 0:
-                        self._show_stations_history_notification(0)
-                    else:
-                        if self.player.connecting:
-                            self._show_stations_history_notification(1)
-                        else:
-                            self._cnf.play_from_history = True
-                            self._cnf.stations_history.play_next()
-                elif char == curses.KEY_F8 and platform.startswith('win'):
+                if char == curses.KEY_F8 and platform.startswith('win'):
                     ''' manage players on Windows
                         will present them after curses end
                     '''
@@ -8482,10 +8486,12 @@ class PyRadio(object):
         self._cnf.stations_history.add(self._cnf.station_file_name[:-4], self.stations[self.playing][0], self.playing)
 
     def _load_playlist_and_station_from_station_history(self, h_item, func):
+        num = -1
+        current_playlist = self._cnf.station_file_name[:-4]
         if h_item[0] == h_item[1] or \
                 h_item[1].startswith('register_') or \
                 h_item[-1] < 0 or \
-                h_item[-1] >= self.number_of_items:
+                (h_item[-1] >= self.number_of_items and current_playlist == h_item[0]):
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('\n===============\nInvalid h_item: "{0}"\nNumber of stations = {1}\n==============='.format(h_item, self.number_of_items))
             func()
@@ -8493,8 +8499,6 @@ class PyRadio(object):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Activating station history item: {}'.format(h_item))
 
-        num = -1
-        current_playlist = self._cnf.station_file_name[:-4]
         if current_playlist == h_item[0] or \
                     h_item[0] == 'Online Browser':
             ''' I am moving within the loaded playlist '''
@@ -8568,13 +8572,18 @@ class PyRadio(object):
             self._playlist_in_editor = self._cnf.station_path
             self._playlist_error_message = ''
             ''' update station header on top of window '''
-            self.outerBodyWin.box()
-            self._print_body_header()
-            self.outerBodyWin.refresh()
+            if not (self._limited_height_mode or self._limited_width_mode):
+                logger.error('==== update outer Body!')
+                self.outerBodyWin.box()
+                self._print_body_header()
+                self.outerBodyWin.refresh()
             self.playSelection()
             self._set_active_stations()
             self._get_playlists_data_from_playlist_name(h_item[0])
             self.saved_active_stations = [['', 0], ['', -1]]
+            if self._limited_height_mode or self._limited_width_mode:
+                logger.error('==== update body')
+                self._print_limited_info()
             return
 
         try:
@@ -8597,6 +8606,9 @@ class PyRadio(object):
             self.stations
         ]
         self.saved_active_stations = [['', 0], ['', -1]]
+        if self._limited_height_mode or self._limited_width_mode:
+            logger.error('==== update body')
+            self._print_limited_info()
 
     def _get_playlists_data_from_playlist_name(self, a_playlist):
         change_regs_too = False
@@ -8636,14 +8648,22 @@ class PyRadio(object):
             logger.error('Scanning playlist...')
         up = down = 0
         num = -1
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('  checking start={0}: "{1}"'.format(start, stations[start]))
+        if stations[start][0] == station_to_find:
+            return start
         for i in range(start, -1, -1):
             up = i + 1
             down = i - 1
             if down > -1 :
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('  checking down={0}: "{1}"'.format(down, stations[down]))
                 if stations[down][0] == station_to_find:
                     num = down
                     break
             if up < self._cnf.number_of_stations:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('  checking up={0}: "{1}"'.format(up, stations[up]))
                 if stations[up][0] == station_to_find:
                     num = up
                     break
@@ -8653,6 +8673,8 @@ class PyRadio(object):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Station not found... Scanning to top...')
             for i in range(down, -1, -1):
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('  checking {0}: "{1}"'.format(i, stations[i]))
                 if stations[i][0] == station_to_find:
                     num = i
                     break
@@ -8661,6 +8683,8 @@ class PyRadio(object):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Station not found... Scanning to bottom...')
             for i in range(up, self._cnf.number_of_stations - 1):
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('  checking {0}: "{1}"'.format(i, stations[i]))
                 if stations[i][0] == station_to_find:
                     num = i
                     break
