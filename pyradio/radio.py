@@ -790,7 +790,7 @@ class PyRadio(object):
         try:
             self.headWin.addstr(0, 0, info, curses.color_pair(4))
             if self._cnf.locked:
-                self.headWin.addstr(' [', curses.color_pair(5))
+                self.headWin.addstr('[', curses.color_pair(5))
                 self.headWin.addstr('Session Locked', curses.color_pair(4))
                 self.headWin.addstr('] ', curses.color_pair(5))
             else:
@@ -5211,15 +5211,22 @@ class PyRadio(object):
             #     self.refreshBody()
 
     def _show_stations_history_notification(self, msg_id):
-        msg = (
-            '___Operation not suported!!!___\n____Connection timeout is 0 ',
-            '___Pelase wait for the player___\n__________to settle'
-        )
-        self._show_notification_with_delay(
-            txt=msg[msg_id],
-            mode_to_set=self.ws.NORMAL_MODE,
-            callback_function=self.refreshBody
-        )
+        if self._limited_height_mode or self._limited_width_mode:
+            msg = (
+                'Operation not supported',
+                'Please wait for the player to settle...'
+            )
+            self.log.write(msg=msg[msg_id], help_msg=True, suffix=self._status_suffix)
+        else:
+            msg = (
+                '___Operation not suported!!!___\n____Connection timeout is 0 ',
+                '___Please wait for the player___\n__________to settle'
+            )
+            self._show_notification_with_delay(
+                txt=msg[msg_id],
+                mode_to_set=self.ws.NORMAL_MODE,
+                callback_function=self.refreshBody
+            )
 
     def keypress(self, char):
         if self._system_asked_to_terminate:
@@ -7671,13 +7678,22 @@ class PyRadio(object):
             )
 
     def _show_no_station_history_notification(self):
-        self._show_delayed_notification('___History is empty!!!___')
+        if self._limited_height_mode or self._limited_width_mode:
+            self.log.write(msg='History is empty!!!', help_msg=True, suffix=self._status_suffix)
+        else:
+            self._show_delayed_notification('___History is empty!!!___')
 
     def _show_first_station_history_notification(self):
-        self._show_delayed_notification('___Already at first item!!!___')
+        if self._limited_height_mode or self._limited_width_mode:
+            self.log.write(msg='Already at first item!!!', help_msg=True, suffix=self._status_suffix)
+        else:
+            self._show_delayed_notification('___Already at first item!!!___')
 
     def _show_last_station_history_notification(self):
-        self._show_delayed_notification('___Already at last item!!!___')
+        if self._limited_height_mode or self._limited_width_mode:
+            self.log.write(msg='Already at last item!!!', help_msg=True, suffix=self._status_suffix)
+        else:
+            self._show_delayed_notification('___Already at last item!!!___')
 
     def _show_station_pasted(self):
         self._show_delayed_notification('___Station pasted!!!___')

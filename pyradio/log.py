@@ -290,6 +290,10 @@ class Log(object):
     @staticmethod
     def set_win_title(msg=None):
         default = 'Your Internet Radio Player'
+        just_return = (
+            'Config saved',
+            'Online service Config',
+        )
         do_not_update = (
             ': Playback stopped',
             'Selected ',
@@ -320,6 +324,10 @@ class Log(object):
                 Log.locked = True
                 d_msg = default
             else:
+                # no update
+                for a_return_token in just_return:
+                    if a_return_token in msg:
+                        return
                 # if stopped...
                 for a_stop_token in do_not_update:
                     if a_stop_token in msg:
