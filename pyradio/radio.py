@@ -5218,7 +5218,11 @@ class PyRadio(object):
                 'Operation not supported',
                 'Please wait for the player to settle...'
             )
-            self.log.write(msg=msg[msg_id], help_msg=True, suffix=self._status_suffix)
+            if self.player.isPlaying():
+                self.log.write(msg=msg[msg_id])
+                self.player.threadUpdateTitle()
+            else:
+                self.log.write(msg=msg[msg_id], help_msg=True, suffix=self._status_suffix)
         else:
             msg = (
                 '___Operation not suported!!!___\n____Connection timeout is 0 ',
@@ -7681,21 +7685,51 @@ class PyRadio(object):
                 callback_function=self.refreshBody
             )
 
+    def _show_stations_history_playlist_modified(self):
+        if self._limited_height_mode or self._limited_width_mode:
+            msg= 'Playlist has been modified, cannot close it...'
+            if self.player.isPlaying():
+                self.log.write(msg=msg)
+                self.player.threadUpdateTitle()
+            else:
+                self.log.write(msg=mgd, help_msg=True, suffix=self._status_suffix)
+        else:
+            self._show_notification_with_delay(
+                    txt='____Playlist has been modified____\n___Please save it and try again___',
+                    delay=1.5,
+                    mode_to_set=self.ws.operation_mode,
+                    callback_function=self.refreshBody)
+
     def _show_no_station_history_notification(self):
         if self._limited_height_mode or self._limited_width_mode:
-            self.log.write(msg='History is empty!!!', help_msg=True, suffix=self._status_suffix)
+            msg= 'History is empty!!!'
+            if self.player.isPlaying():
+                self.log.write(msg=msg)
+                self.player.threadUpdateTitle()
+            else:
+                self.log.write(msg=mgd, help_msg=True, suffix=self._status_suffix)
         else:
             self._show_delayed_notification('___History is empty!!!___')
 
     def _show_first_station_history_notification(self):
         if self._limited_height_mode or self._limited_width_mode:
-            self.log.write(msg='Already at first item!!!', help_msg=True, suffix=self._status_suffix)
+            msg = 'Already at first item!!!'
+            if self.player.isPlaying():
+                self.log.write(msg=msg)
+                self.player.threadUpdateTitle()
+            else:
+                self.log.write(msg=msg, help_msg=True, suffix=self._status_suffix)
         else:
             self._show_delayed_notification('___Already at first item!!!___')
 
     def _show_last_station_history_notification(self):
         if self._limited_height_mode or self._limited_width_mode:
-            self.log.write(msg='Already at last item!!!', help_msg=True, suffix=self._status_suffix)
+            msg = 'Already at last item!!!'
+            if self.player.isPlaying():
+                self.log.write(msg=msg)
+                self.player.threadUpdateTitle()
+            else:
+                self.log.write(msg=msg, help_msg=True, suffix=self._status_suffix)
         else:
             self._show_delayed_notification('___Already at last item!!!___')
 
@@ -8529,11 +8563,7 @@ class PyRadio(object):
             ''' I have to load a new playlist '''
             if self._cnf.dirty_playlist:
                 self._cnf.stations_history.restore_index(func)
-                self._show_notification_with_delay(
-                        txt='____Playlist has been modified____\n___Please save it and try again___',
-                        delay=1.5,
-                        mode_to_set=self.ws.operation_mode,
-                        callback_function=self.refreshBody)
+                self._show_stations_history_playlist_modified()
                 return
 
             ret = 0
@@ -8582,7 +8612,6 @@ class PyRadio(object):
             self._get_playlists_data_from_playlist_name(h_item[0])
             self.saved_active_stations = [['', 0], ['', -1]]
             if self._limited_height_mode or self._limited_width_mode:
-                logger.error('==== update body')
                 self._print_limited_info()
             return
 
