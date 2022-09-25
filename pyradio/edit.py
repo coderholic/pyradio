@@ -623,6 +623,7 @@ class PyRadioEditor(object):
                     0: exit edit mode, string isvalid
                    -1: cancel
                 """
+                logger.error('>> line editort key press')
                 ret = self._line_editor[self._focus].keypress(self._win, char)
                 if ret == 1:
                     # get next char
@@ -638,6 +639,7 @@ class PyRadioEditor(object):
                     self._reset_editors_modes()
                     ret = -1
             elif char in self._global_functions.keys():
+                logger.error('>> global functions')
                 self._global_functions[char]()
 
         if self._focus > 1:
@@ -1201,7 +1203,7 @@ class PyRadioConnectionType(object):
             self._win.bkgdset(' ', curses.color_pair(3))
             self._win.erase()
             self._win.box()
-            self._win.addstr(1, 2, 'Window too small', curses.color_pair(5))
+            self._win.addstr(1, 2, 'Window too small', curses.color_pair(10))
         else:
 
             self._win = curses.newwin(self._max_lines, self.MaxX, new_y, new_x)
@@ -1211,11 +1213,11 @@ class PyRadioConnectionType(object):
 
             # show title
             x = int((self.MaxX - len(self._title)) / 2)
-            self._win.addstr(0, x, self._title, curses.color_pair(4))
+            self._win.addstr(0, x, self._title, curses.color_pair(11))
 
             # show content
-            self._win.addstr(2, 4, self._text, curses.color_pair(5))
-            self._win.addstr('{}'.format(self.connection_type), curses.color_pair(4))
+            self._win.addstr(2, 4, self._text, curses.color_pair(10))
+            self._win.addstr('{}'.format(self.connection_type), curses.color_pair(11))
 
             # show help
             try:
@@ -1226,13 +1228,13 @@ class PyRadioConnectionType(object):
 
 
 
-            self._win.addstr(5, 2, 'j k l SPACE', curses.color_pair(4))
-            self._win.addstr(6, 2, 'RIGHT UP DOWN', curses.color_pair(4))
-            self._win.addstr('    Toggle parameter', curses.color_pair(5))
-            self._win.addstr(7, 2, 'ENTER s', curses.color_pair(4))
-            self._win.addstr('          Accept parameter', curses.color_pair(5))
-            self._win.addstr(8, 2, 'Esc q h RIGHT', curses.color_pair(4))
-            self._win.addstr('    Cancel operation', curses.color_pair(5))
+            self._win.addstr(5, 2, 'j k l SPACE', curses.color_pair(11))
+            self._win.addstr(6, 2, 'RIGHT UP DOWN', curses.color_pair(11))
+            self._win.addstr('    Toggle parameter', curses.color_pair(10))
+            self._win.addstr(7, 2, 'ENTER s', curses.color_pair(11))
+            self._win.addstr('          Accept parameter', curses.color_pair(10))
+            self._win.addstr(8, 2, 'Esc q h RIGHT', curses.color_pair(11))
+            self._win.addstr('    Cancel operation', curses.color_pair(10))
 
             # show note
             try:
@@ -1241,8 +1243,8 @@ class PyRadioConnectionType(object):
                 self._win.addstr(10, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
             self._win.addstr(10, int((self.MaxX - len(self._note_text))/2), self._note_text, curses.color_pair(3))
 
-            self._win.addstr(11, 4, 'Changes made here will not be', curses.color_pair(5))
-            self._win.addstr(12, 3, 'saved in the configuration file', curses.color_pair(5))
+            self._win.addstr(11, 4, 'Changes made here will not be', curses.color_pair(10))
+            self._win.addstr(12, 3, 'saved in the configuration file', curses.color_pair(10))
 
         self._win.refresh()
 

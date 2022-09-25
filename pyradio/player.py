@@ -624,6 +624,7 @@ class Player(object):
                             self.connection_timeout_thread.join()
                         except:
                             pass
+                        self.connecting = False
                         if enable_crash_detection_function:
                             enable_crash_detection_function()
                         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):

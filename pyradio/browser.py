@@ -3062,23 +3062,23 @@ class RadioBrowserSearchWindow(object):
         ):
             return -1
 
+        class_name = type(self._widgets[self._focus]).__name__
+
         if char == ord('q') and \
-                type(self._widgets[self._focus]).__name__ != 'SimpleCursesLineEdit':
+                class_name != 'SimpleCursesLineEdit':
             return -1
 
         if self._too_small:
             self._backslash_pressed = False
             return 1
 
-        class_name = type(self._widgets[self._focus]).__name__
-
         if char == ord('0') and \
-                type(self._widgets[self._focus]).__name__ != 'SimpleCursesLineEdit':
+                class_name != 'SimpleCursesLineEdit':
             self._goto_first_history_item()
             self._backslash_pressed = False
 
         elif char == ord('$') and \
-                type(self._widgets[self._focus]).__name__ != 'SimpleCursesLineEdit':
+                class_name != 'SimpleCursesLineEdit':
             self._goto_last_history_item()
             self._backslash_pressed = False
 

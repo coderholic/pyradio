@@ -518,6 +518,10 @@ class PyRadio(object):
             ord('~'): self._toggle_claculated_colors,
             ord('<'): self._stations_history_previous,
             ord('>'): self._stations_history_next,
+            curses.ascii.DLE: self._play_previous_station,
+            curses.KEY_PREVIOUS: self._play_previous_station,
+            curses.ascii.SO: self._play_next_station,
+            curses.KEY_NEXT: self._play_next_station,
         }
 
 
@@ -874,6 +878,9 @@ class PyRadio(object):
 
     def refreshBody(self, start=0):
         if self.player.ctrl_c_pressed:
+            return
+        if self._limited_height_mode or self._limited_width_mode:
+            self._print_limited_info()
             return
         self._update_redisplay_list()
         end = len(self._redisplay_list)
@@ -1709,6 +1716,7 @@ class PyRadio(object):
             #self.selections[0][2] = -1
             if reset_playing:
                 self.playing = -1
+            self.player.process = None
             if show_message:
                 self._show_player_is_stopped(from_update_thread)
 
@@ -3726,7 +3734,10 @@ class PyRadio(object):
         else:
             self.selections[self.ws.NORMAL_MODE] = [self.selection, self.startPos, self.playing, self._cnf.stations]
         # self.ll('_align_stations_and_refresh')
-        self.refreshBody()
+        if self.ws.operation_mode == self.ws.NORMAL_MODE:
+            self.refreshBody()
+        else:
+            logger.error('\n\n2 not refreshing\n\n')
 
     def _show_connect_to_server_message(self):
         ''' display a passive message telling the user
@@ -3814,6 +3825,7 @@ class PyRadio(object):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Opening a playlist or a register...')
             ''' open a register '''
+            self.ws.window_mode = self.ws.PLAYLIST_MODE
             self._playlist_in_editor = self._cnf.register_to_open
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('opening register: ' + self._cnf.register_to_open)
@@ -5104,16 +5116,32 @@ class PyRadio(object):
             self._handle_cursor_move_down()
 
     def _play_next_station(self):
-        self.selection = self.playing
-        self._move_cursor_one_down()
-        self.playSelection()
-        self.refreshBody()
+        self._reset_status_bar_right()
+        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            self._show_stations_history_notification(2)
+        elif not self.player.isPlaying():
+            self._show_stations_history_notification(3)
+        elif self.player.connecting:
+            self._show_stations_history_notification(1)
+        else:
+            self.selection = self.playing
+            self._move_cursor_one_down()
+            self.playSelection()
+            self.refreshBody()
 
     def _play_previous_station(self):
-        self.selection = self.playing
-        self._move_cursor_one_up()
-        self.playSelection()
-        self.refreshBody()
+        self._reset_status_bar_right()
+        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            self._show_stations_history_notification(2)
+        elif not self.player.isPlaying():
+            self._show_stations_history_notification(3)
+        elif self.player.connecting:
+            self._show_stations_history_notification(1)
+        else:
+            self.selection = self.playing
+            self._move_cursor_one_up()
+            self.playSelection()
+            self.refreshBody()
 
     def _ask_to_save_browser_config_to_exit(self):
         if self._cnf.online_browser:
@@ -5216,7 +5244,9 @@ class PyRadio(object):
         if self._limited_height_mode or self._limited_width_mode:
             msg = (
                 'Operation not supported',
-                'Please wait for the player to settle...'
+                'Please wait for the player to settle...',
+                'Operation supported in stations mode only...'
+                'Player not playing...'
             )
             if self.player.isPlaying():
                 self.log.write(msg=msg[msg_id])
@@ -5226,7 +5256,9 @@ class PyRadio(object):
         else:
             msg = (
                 '___Operation not suported!!!___\n____Connection timeout is 0 ',
-                '___Please wait for the player___\n__________to settle'
+                '___Please wait for the player___\n__________to settle',
+                '___Operation supported in___\n_____station mode only___',
+                '___Player not playing...___'
             )
             self._show_notification_with_delay(
                 txt=msg[msg_id],
@@ -5235,20 +5267,24 @@ class PyRadio(object):
             )
 
     def _stations_history_previous(self):
-            self._update_status_bar_right(status_suffix='')
-            if int(self._cnf.connection_timeout_int) == 0:
-                self._show_stations_history_notification(0)
+        self._update_status_bar_right(status_suffix='')
+        if int(self._cnf.connection_timeout_int) == 0:
+            self._show_stations_history_notification(0)
+        elif self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            self._show_stations_history_notification(2)
+        else:
+            if self.player.connecting:
+                self._show_stations_history_notification(1)
             else:
-                if self.player.connecting:
-                    self._show_stations_history_notification(1)
-                else:
-                    self._cnf.play_from_history = True
-                    self._cnf.stations_history.play_previous()
+                self._cnf.play_from_history = True
+                self._cnf.stations_history.play_previous()
 
     def _stations_history_next(self):
         self._update_status_bar_right(status_suffix='')
         if int(self._cnf.connection_timeout_int) == 0:
             self._show_stations_history_notification(0)
+        elif self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            self._show_stations_history_notification(2)
         else:
             if self.player.connecting:
                 self._show_stations_history_notification(1)
@@ -6211,9 +6247,6 @@ class PyRadio(object):
                 ''' browser config save canceled '''
                 self._exit_browser_config()
 
-        # elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE and \
-        #         (char not in self._chars_to_bypass_on_editor or \
-        #         self._cnf._online_browser.line_editor_has_focus()):
         elif self.ws.operation_mode == self.ws.BROWSER_SEARCH_MODE:
 
             if char in self._global_functions.keys() and \
@@ -7232,16 +7265,6 @@ class PyRadio(object):
                 elif char == curses.KEY_F7 and platform.startswith('win'):
                     ''' uninstall on Windows '''
                     self._show_win_remove_old_installation()
-
-                elif self.player.isPlaying() and char in (curses.ascii.SO, curses.KEY_NEXT):
-                    self._reset_status_bar_right()
-                    self._play_next_station()
-                    return
-
-                elif self.player.isPlaying() and char in (curses.ascii.DLE, curses.KEY_PREVIOUS):
-                    self._reset_status_bar_right()
-                    self._play_previous_station()
-                    return
 
                 elif char in (ord('a'), ord('A')):
                     self._reset_status_bar_right()
@@ -8606,13 +8629,20 @@ class PyRadio(object):
                 logger.error('==== update outer Body!')
                 self.outerBodyWin.box()
                 self._print_body_header()
-                self.outerBodyWin.refresh()
+                # self.outerBodyWin.refresh()
             self.playSelection()
             self._set_active_stations()
             self._get_playlists_data_from_playlist_name(h_item[0])
             self.saved_active_stations = [['', 0], ['', -1]]
-            if self._limited_height_mode or self._limited_width_mode:
-                self._print_limited_info()
+            # if self._limited_height_mode or self._limited_width_mode:
+            #     self._print_limited_info()
+            # else:
+            #     #if self.ws.operation_mode == self.ws.NORMAL_MODE:
+            #     #    self.refreshBody()
+            #     #else:
+            #     #    logger.error('\n\n1 not refreshing\n\n')
+            #     self.refreshBody()
+            self.refreshBody()
             return
 
         try:

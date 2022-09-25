@@ -2573,6 +2573,17 @@ class SimpleCursesLineEdit(object):
         if self.log is not None:
             self.log('char = {}\n'.format(char))
 
+        if char in self._global_functions.keys() and \
+                self._backslash_pressed:
+            ''' toggle paste mode '''
+            self._backslash_pressed = False
+            if not self._paste_mode_always_on:
+                self._paste_mode = False
+                if self._mode_changed:
+                    self._mode_changed()
+            self._global_functions[char]()
+            return 1
+
         if platform.startswith('win'):
             if char == 420:
                 ''' A-D, clear to end of line '''
@@ -2900,16 +2911,6 @@ class SimpleCursesLineEdit(object):
             self._disable_paste_mode = False
             if self._mode_changed:
                 self._mode_changed()
-
-        elif chr(char) in self._global_functions.keys() and \
-                self._backslash_pressed:
-            ''' toggle paste mode '''
-            self._backslash_pressed = False
-            if not self._paste_mode_always_on:
-                self._paste_mode = False
-                if self._mode_changed:
-                    self._mode_changed()
-            self._global_functions[char]()
 
         else:
             self._backslash_pressed = False
