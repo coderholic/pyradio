@@ -2295,8 +2295,6 @@ class RadioBrowserSearchWindow(object):
 
     _global_functions = {}
 
-    _backslash_pressed = False
-
     def __init__(self,
                  parent,
                  config,
@@ -2716,6 +2714,8 @@ class RadioBrowserSearchWindow(object):
                 self._widgets[-1].bracket = False
                 self._widgets[-1].use_paste_mode = True
                 self._widgets[-1].set_global_functions(self._global_functions)
+                self._widgets[-1]._global_functions[ord('0')] = self._goto_first_history_item
+                self._widgets[-1]._global_functions[ord('$')] = self._goto_last_history_item
                 #self._widgets[-1].string = self.captions[n]
 
             ''' limit - index = -3 '''
@@ -3069,34 +3069,27 @@ class RadioBrowserSearchWindow(object):
             return -1
 
         if self._too_small:
-            self._backslash_pressed = False
             return 1
 
         if char == ord('0') and \
                 class_name != 'SimpleCursesLineEdit':
             self._goto_first_history_item()
-            self._backslash_pressed = False
 
         elif char == ord('$') and \
                 class_name != 'SimpleCursesLineEdit':
             self._goto_last_history_item()
-            self._backslash_pressed = False
 
         elif char in (curses.KEY_PPAGE, ) and self._focus != len(self._widgets) -3:
             self._jump_history_up()
-            self._backslash_pressed = False
 
         elif char in (curses.KEY_NPAGE, ) and self._focus != len(self._widgets) -3:
             self._jump_history_down()
-            self._backslash_pressed = False
 
         elif char in (ord('\t'), 9):
             self._focus_next()
-            self._backslash_pressed = False
 
         elif char in (curses.KEY_BTAB, ):
             self._focus_previous()
-            self._backslash_pressed = False
 
         elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
                       ord('\r')) and self._focus == len(self._widgets) - 1:
@@ -3106,24 +3099,20 @@ class RadioBrowserSearchWindow(object):
         elif char in (ord(' '), curses.KEY_ENTER, ord('\n'),
                       ord('\r')) and self._focus == len(self._widgets) - 2:
             ''' enter on ok button  '''
-            self._backslash_pressed = False
             ret = self._handle_new_or_existing_search_term()
             return 0 if ret == 1 else ret
 
         elif char in (curses.ascii.SO, ):
             ''' ^N - Next history item '''
             self._ctrl_n()
-            self._backslash_pressed = False
 
         elif char in (curses.ascii.DLE, ):
             ''' ^P - Previous history item '''
             self._ctrl_p()
-            self._backslash_pressed = False
 
         # elif char in (curses.ascii.ETB, ):
         elif char in (curses.ascii.ENQ, ):
             ''' ^E - Save search history '''
-            self._backslash_pressed = False
             self._handle_new_or_existing_search_term()
             ''' Save search history '''
             return 5
@@ -3131,22 +3120,18 @@ class RadioBrowserSearchWindow(object):
         elif char in (curses.ascii.EM, ):
             ''' ^Y - Add history item '''
             self._handle_new_or_existing_search_term()
-            self._backslash_pressed = False
 
         elif char in (curses.ascii.CAN, ):
             ''' ^X - Delete history item '''
             self._ctrl_x()
-            self._backslash_pressed = False
 
         elif char in (curses.ascii.STX, ):
             ''' ^B - Set default item '''
             self._ctrl_b()
-            self._backslash_pressed = False
 
         elif char in (curses.ascii.ACK, ):
             ''' ^F - Go to template (item 0) '''
             self._ctrl_f()
-            self._backslash_pressed = False
 
         else:
             if class_name == 'SimpleCursesWidgetColumns':
@@ -3157,10 +3142,8 @@ class RadioBrowserSearchWindow(object):
                 elif ret == 2:
                     # cursor moved
                     self._win.refresh()
-                self._backslash_pressed = False
 
             elif self._focus in self._checkbox_to_enable_widgets:
-                self._backslash_pressed = False
                 ret = self._widgets[self._focus].keypress(char)
                 if not ret:
                     tp = list(self._checkbox_to_enable_widgets)
@@ -3172,37 +3155,17 @@ class RadioBrowserSearchWindow(object):
                     return 1
 
             elif class_name == 'SimpleCursesCheckBox':
-                self._backslash_pressed = False
                 ret = self._widgets[self._focus].keypress(char)
                 if not ret:
                     return 1
 
             elif class_name == 'SimpleCursesCounter':
-                self._backslash_pressed = False
                 ret = self._widgets[self._focus].keypress(char)
                 if ret == 0:
                     self._win.refresh()
                     return 1
 
             elif class_name == 'SimpleCursesLineEdit':
-                if char == ord('\\'):
-                    self._backslash_pressed = True
-                    # return 1
-
-                if self._backslash_pressed:
-                    if char in self._global_functions.keys():
-                        self._backslash_pressed = False
-                        self._global_functions[char]()
-                        return 1
-                    elif char == ord('0'):
-                        self._backslash_pressed = False
-                        self._goto_first_history_item()
-                        return 1
-                    elif char == ord('$'):
-                        self._backslash_pressed = False
-                        self._goto_last_history_item()
-                        return 1
-
                 ret = self._widgets[self._focus].keypress(self._win, char)
                 if ret == -1:
                     # Cancel
@@ -3213,7 +3176,6 @@ class RadioBrowserSearchWindow(object):
                 elif ret < 2:
                     return 1
 
-            self._backslash_pressed = False
             if char in (ord('s'), ):
                 ''' prerform search '''
                 ret = self._handle_new_or_existing_search_term()
