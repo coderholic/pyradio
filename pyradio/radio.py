@@ -5037,6 +5037,11 @@ class PyRadio(object):
 
     def _handle_cursor_move_up(self):
         # logger.error('DE selection = {}, start pos = {}, current selection = {}, b_start = {}, b_end = {}, maxY = {}, maxX = {}'.format(self.selection, self.startPos, self._current_selection, self.bodyWinStartY, self.bodyWinEndY, self.bodyMaxY, self.maxX))
+        if self._limited_height_mode or self._limited_width_mode:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('_handle_cursor_move_up(): Not touching window, it\'s small')
+            self._force_print_all_lines = False
+            return
         if self._force_print_all_lines:
             self._force_print_all_lines = False
         else:
@@ -5051,6 +5056,11 @@ class PyRadio(object):
 
     def _handle_cursor_move_down(self):
         # logger.error('DE selection = {}, start pos = {}, current selection = {}, b_start = {}, b_end = {}, maxY = {}, maxX = {}'.format(self.selection, self.startPos, self._current_selection, self.bodyWinStartY, self.bodyWinEndY, self.bodyMaxY, self.maxX))
+        if self._limited_height_mode or self._limited_width_mode:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('_handle_cursor_move_down(): Not touching window, it\'s small')
+            self._force_print_all_lines = False
+            return
         if self._force_print_all_lines:
             self._force_print_all_lines = False
         else:
@@ -5119,12 +5129,13 @@ class PyRadio(object):
         self._reset_status_bar_right()
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
             self._show_stations_history_notification(2)
-        elif not self.player.isPlaying():
-            self._show_stations_history_notification(3)
+        # elif not self.player.isPlaying():
+        #     self._show_stations_history_notification(3)
         elif self.player.connecting:
             self._show_stations_history_notification(1)
         else:
-            self.selection = self.playing
+            # if self.playing > -1:
+            #     self.selection = self.playing
             self._move_cursor_one_down()
             self.playSelection()
             self.refreshBody()
@@ -5133,12 +5144,13 @@ class PyRadio(object):
         self._reset_status_bar_right()
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
             self._show_stations_history_notification(2)
-        elif not self.player.isPlaying():
-            self._show_stations_history_notification(3)
+        # elif not self.player.isPlaying():
+        #     self._show_stations_history_notification(3)
         elif self.player.connecting:
             self._show_stations_history_notification(1)
         else:
-            self.selection = self.playing
+            # if self.playing > -1:
+            #     self.selection = self.playing
             self._move_cursor_one_up()
             self.playSelection()
             self.refreshBody()
@@ -5245,7 +5257,7 @@ class PyRadio(object):
             msg = (
                 'Operation not supported',
                 'Please wait for the player to settle...',
-                'Operation supported in stations mode only...'
+                'Operation supported in stations mode only...',
                 'Player not playing...'
             )
             if self.player.isPlaying():
@@ -5253,6 +5265,7 @@ class PyRadio(object):
                 self.player.threadUpdateTitle()
             else:
                 self.log.write(msg=msg[msg_id], help_msg=True, suffix=self._status_suffix)
+                self.player.threadUpdateTitle()
         else:
             msg = (
                 '___Operation not suported!!!___\n____Connection timeout is 0 ',
