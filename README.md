@@ -197,7 +197,6 @@ The following options can also be set in **PyRadio**'s [configuration file](#con
     P                 Jump to playing station                          Jump to playing playlist           -
     Enter/Right/l     Play selected station                            Open selected playlist             Apply selected theme
     ^N / ^P           Play next/previous station                       -                                  -
-                        (if already in playback)
     r                 Select and play a random station                 Re-read playlists from disk        -
     Space/Left/h      Stop/start playing selected station              -                                  -
     Space             -                                                -                                  Apply theme and make it default
@@ -236,18 +235,22 @@ The same logic applies to all **PyRadio** windows.
 
 Some of the functions provided by **PyRadio** will always be available to the user. These functions are:
 
-| Shortcut                       |   Function            |
-|--------------------------------|-----------------------|
-| **\+**/**\-** and **,**/**\.** | adjust volume         |
-| **m**                          | mute player           |
-| **v**                          | save volume           |
-| **T**                          | toggle transparency   |
-| **W**                          | toggle titles logging |
-| **w**                          | like a station        |
+| Shortcut                       |   Function            |Shortcut                       |   Function            |
+|--------------------------------|-----------------------|-------------------------------|-----------------------|
+| **\+** / **\-** and **,** / **\.** | adjust volume         |**W**                          | toggle titles logging |
+| **m**                          | mute player           |**w**                          | like a station        |
+| **v**                          | save volume           |**^N** / **^P** [1] [2]|play next / previous station|
+| **T**                          | toggle transparency   |**<** / **>** [1]             | play next / previous station history entry|
 
-Every window in **PyRadio** will respect these shotrcuts, even the ones with a "*Press any key to...*" message.
+Every window in **PyRadio** will respect these shortcuts, even the ones with a "*Press any key to...*" message.
 
 When focus is on a "*Line editor*", all shortcuts will work when preceded by a "**\\**".
+
+**Notes**
+
+[1] Function not available when in **Playlist** and **Registers** mode. More info on *PyRadio's modes* below.
+
+[2] Function not available in the **Radio Browser** Search window.
 
 ## HTML help
 

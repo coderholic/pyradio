@@ -171,12 +171,26 @@ toggle transparency
 toggle titles logging
 .IP \fBw\fR
 like a station
+.IP \fB^N\fR\//\fB^P\fR\ [\fI1\fR]\ [\fI2\fR]
+play next / previous station
+.IP \fB<\fR\//\fB>\fR\ [\fI1\fR]
+play next / previous station history entry
 
 .RE
 .RS 7
-Every window in \fBpyradio\fR will respect these shotrcuts, even the ones with a “\fIPress any key to…\fR” message.
+Every window in \fBpyradio\fR will respect these shortcuts, even the ones with a “\fIPress any key to…\fR” message.
 
 When focus is on a \fBLine editor\fR, all shortcuts will work when preceded by a "\fI\\\fR".
+
+\fBNotes\fR
+
+.RS 3
+.IP [\fI1\fR]
+Function not available when in \fBPlaylist\fR and \fBRegisters\fR mode. More info on \fBpyradio's modes\fR below.
+
+.IP [\fI2\fR]
+Function not available in the \fBRadio Browser\fR Search window.
+.RE
 
 .SH Pyradio's Modes
 

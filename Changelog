@@ -1,3 +1,12 @@
+2022-09-27 s-n-g
+    * version 0.8.9.28 (0.9-beta25)
+    * adding play next/previous station to global functions
+    * fixing Connection Type window colors
+    * fixing line editor blobal function handler
+    * fixing a couple of stations history bugs
+    * fixing station listing for CJL characters
+    * updating docs
+
 2022-09-18 s-n-g
     * version 0.8.9.27 (0.9-beta24)
     * Implementing Stations History as per #161

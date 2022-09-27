@@ -27,6 +27,7 @@
     pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
     .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
     img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
     a{ color: SaddleBrown;}
 a:visited{color: SaddleBrown;}
 </style>
@@ -179,6 +180,15 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
+
+2022-09-27 s-n-g
+    * version 0.8.9.28 (0.9-beta25)
+    * adding play next/previous station to global functions
+    * fixing Connection Type window colors
+    * fixing line editor blobal function handler
+    * fixing a couple of stations history bugs
+    * fixing station listing for CJL characters
+    * updating docs
 
 2022-09-18 s-n-g
     * version 0.8.9.27 (0.9-beta24)
@@ -890,7 +900,6 @@ H M L             Jump to the top / middle bottom of the list      [Valid]      
 P                 Jump to playing station                          Jump to playing playlist           -
 Enter/Right/l     Play selected station                            Open selected playlist             Apply selected theme
 ^N / ^P           Play next/previous station                       -                                  -
-                    (if already in playback)
 r                 Select and play a random station                 Re-read playlists from disk        -
 Space/Left/h      Stop/start playing selected station              -                                  -
 Space             -                                                -                                  Apply theme and make it default
@@ -922,42 +931,53 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When tagging a station position for a move action (by pressing “<strong>J</strong>”), the position will be displayed at the right bottom corner of the window, suffixed by a “<em>J</em>”, i.e. pressing “<em>J</em>” on position <em>35</em> will display <em>[35J]</em>.</p>
 <h3 id="global-shortcuts">Global shortcuts</h3>
 <p>Some of the functions provided by <strong>PyRadio</strong> will always be available to the user. These functions are:</p>
-<table>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 21%" />
+<col style="width: 28%" />
+<col style="width: 21%" />
+</colgroup>
 <thead>
 <tr class="header">
+<th>Shortcut</th>
+<th>Function</th>
 <th>Shortcut</th>
 <th>Function</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong>+</strong>/<strong>-</strong> and <strong>,</strong>/<strong>.</strong></td>
+<td><strong>+</strong> / <strong>-</strong> and <strong>,</strong> / <strong>.</strong></td>
 <td>adjust volume</td>
-</tr>
-<tr class="even">
-<td><strong>m</strong></td>
-<td>mute player</td>
-</tr>
-<tr class="odd">
-<td><strong>v</strong></td>
-<td>save volume</td>
-</tr>
-<tr class="even">
-<td><strong>T</strong></td>
-<td>toggle transparency</td>
-</tr>
-<tr class="odd">
 <td><strong>W</strong></td>
 <td>toggle titles logging</td>
 </tr>
 <tr class="even">
+<td><strong>m</strong></td>
+<td>mute player</td>
 <td><strong>w</strong></td>
 <td>like a station</td>
 </tr>
+<tr class="odd">
+<td><strong>v</strong></td>
+<td>save volume</td>
+<td><strong>^N</strong> / <strong>^P</strong> [1] [2]</td>
+<td>play next / previous station</td>
+</tr>
+<tr class="even">
+<td><strong>T</strong></td>
+<td>toggle transparency</td>
+<td><strong>&lt;</strong> / <strong>&gt;</strong> [1]</td>
+<td>play next / previous station history entry</td>
+</tr>
 </tbody>
 </table>
-<p>Every window in <strong>PyRadio</strong> will respect these shotrcuts, even the ones with a “<em>Press any key to…</em>” message.</p>
+<p>Every window in <strong>PyRadio</strong> will respect these shortcuts, even the ones with a “<em>Press any key to…</em>” message.</p>
 <p>When focus is on a “<em>Line editor</em>”, all shortcuts will work when preceded by a “<strong>\</strong>”.</p>
+<p><strong>Notes</strong></p>
+<p class="indented">[1] Function not available when in <strong>Playlist</strong> and <strong>Registers</strong> mode. More info on <em>PyRadio’s modes</em> below.</p>
+<p class="indented">[2] Function not available in the <strong>Radio Browser</strong> Search window.</p>
 <h2 id="html-help">HTML help <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>While in <strong>PyRadio</strong> main window, one can open the HTML (offline) help using “<strong>\h</strong>”.</p>
 <p>This is just a helper function for windows users who cannot use the man pages, but is still available for all platforms.</p>
