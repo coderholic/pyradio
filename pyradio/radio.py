@@ -402,6 +402,8 @@ class PyRadio(object):
                 self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_win_manage_players,
                 self.ws.WIN_PRINT_EXE_LOCATION_MODE: self._show_win_print_exe_paths,
                 self.ws.UNKNOWN_BROWSER_SERVICE_ERROR: self._print_unknown_browser_service,
+                self.ws.SCHEDULE_PLAYER_STOP_MODE: self._show_schedule_player_stop,
+                self.ws.SCHEDULE_PLAYER_STOP_HELP_MODE: self._show_schedule_player_stop_help,
                 }
 
         ''' list of help functions '''
@@ -522,6 +524,7 @@ class PyRadio(object):
             curses.KEY_PREVIOUS: self._play_previous_station,
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
+            ord('b'): self._show_schedule_player_stop,
         }
 
 
@@ -1703,7 +1706,9 @@ class PyRadio(object):
                    show_message=True,
                    from_update_thread=False,
                    reset_playing=True):
-        ''' stop player '''
+        ''' stop player
+            it is ready for any mode
+        '''
         if from_update_thread:
             self.detect_if_player_exited = True
         try:
@@ -1712,9 +1717,18 @@ class PyRadio(object):
             pass
         finally:
             self.player.connecting = False
-            self._last_played_station_id = self.playing
-            #self.selections[0][2] = -1
-            if reset_playing:
+            if self.ws.window_mode == self.ws.PLAYLIST_MODE:
+                self._last_played_station_id = self.selections[0][2]
+            else:
+                self._last_played_station_id = self.playing
+            self.selections[0][2] = -1
+            logger.error('self.selection = {}'.format(self.selection))
+            logger.error('self.playing = {}'.format(self.playing))
+            logger.error('self.selections = {}'.format(self.selections[0][:3]))
+            logger.error('self._last_played_station = {}'.format(self._last_played_station))
+            logger.error('self._last_played_station_id = {}'.format(self._last_played_station_id))
+            if reset_playing \
+                    and self.ws.window_mode != self.ws.PLAYLIST_MODE:
                 self.playing = -1
             self.player.process = None
             if show_message:
@@ -4165,7 +4179,7 @@ class PyRadio(object):
                     self.active_stations = [
                             ['', self.selection],
                             ['', -1]]
-        # logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
+        logger.error('DE active_stations = \n\n{}\n\n'.format(self.active_stations))
 
     def _set_rename_stations(self):
         if self.stations:
@@ -5155,6 +5169,13 @@ class PyRadio(object):
             self.playSelection()
             self.refreshBody()
 
+    def _show_schedule_player_stop(self):
+        logger.error('_show_schedule_player_stop() !!!')
+        pass
+
+    def _show_schedule_player_stop_help(self):
+        pass
+
     def _ask_to_save_browser_config_to_exit(self):
         if self._cnf.online_browser:
             title = self._cnf.online_browser.BROWSER_NAME
@@ -5323,7 +5344,11 @@ class PyRadio(object):
 
         ''' if small exit '''
         if self._limited_height_mode or self._limited_width_mode:
-            if char in self._global_functions.keys():
+            if char == ord(' ') \
+                    and self.player.isPlaying():
+                self.stopPlayer()
+                self.refreshBody()
+            elif char in self._global_functions.keys():
                 self._global_functions[char]()
             return
 
@@ -7427,7 +7452,6 @@ class PyRadio(object):
                     self.log.counter = None
                     self._update_status_bar_right()
                     if self.number_of_items > 0:
-                        logger.info('playSelection!')
                         self.playSelection()
                         self.refreshBody()
                     self._do_display_notify()
@@ -7551,6 +7575,9 @@ class PyRadio(object):
 
             elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
                 self._random_requested = False
+
+                if char == ord(' '):
+                    self.stopPlayer()
 
                 # logger.error('DE pl 1 active_stations = \n\n{}\n\n'.format(self.active_stations))
                 if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),

@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 import curses
 import curses.ascii
+from datetime import date, time, datetime, timedelta
 import logging
 from sys import version_info, platform, version
 try:
     from .cjkwrap import PY3, is_wide, cjklen
+    from .schedule import PyRadioTime
 except:
     from cjkwrap import PY3, is_wide, cjklen
+    from schedule import PyRadioTime
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -355,6 +358,7 @@ class SimpleCursesString(SimpleCursesWidget):
             tmp.ljust(self._full_selection[1]),
             col
         )
+
     def show(self, parent=None):
         if parent:
             self._win = self_parent = parent
@@ -378,6 +382,207 @@ class SimpleCursesString(SimpleCursesWidget):
                 self._win.addstr(self._Y, self._X, self._caption, self._color_disabled)
                 self._win.addstr(self._string.ljust(self._max_string), self._color_disabled)
 
+
+class SimpleCursesTime(SimpleCursesWidget):
+    ''' A class to provide a time insertion widget
+
+        Parameters
+        ==========
+        Y, X, window
+            Coordinates and parent window
+        string
+            Time string
+                format is XX:XX [AM/PM]
+                          XX:XX:XX [AM/PM]
+        time_format
+            The format to use to display the time
+            It is PyRadioTime.NO_AM_PM_FORMAT, or
+                  PyRadioTime.AM_FORMAT, or
+                  PyRadioTime.PM_FORMAT
+        color
+            text color
+        color_focused
+            counter color when enabled and focused
+        next_widget_func
+            Function to call when going from seconds
+            field to next widget. If set to None, go
+            to hours fields
+        previous_widget_func
+        Function to call when going from hours field
+        to previous widget. If set to None, go to
+        seconds field
+    '''
+    def __init__(
+        self, Y, X, window,
+        color, color_focused,
+        string=None,
+        time_format=PyRadioTime.NO_AM_PM_FORMAT,
+        next_widget_func=None,
+        previous_widget_func=None
+    ):
+        self._Y = Y
+        self._X = X
+        self._win = self._parent = window
+        self._color = color
+        self._color_focused = color_focused
+        self.time = PyRadioTime.string_to_pyradio_time(string)
+        self.date = None
+        self.datetime = None
+        self.time_format = time_format
+        self._next_func = next_widget_func
+        self._previous_func = previous_widget_func
+
+        '''
+        Values for the hour part of self._num
+        '''
+        self._hour_formats = [
+            [0, 0, 23, 1, 3],
+            [0, 1, 12, 1, 3]
+        ]
+        '''
+        Time contents
+        Format is: value, min, max, step, big step
+        '''
+        self._num = [
+            [0, 0, 23, 1, 3],
+            [self.time[1], 0, 60, 1, 10],
+            [self.time[2], 0, 60, 1, 10]
+        ]
+
+        if self.time_format == PyRadioTime.NO_AM_PM_FORMAT:
+            self._num[0] = self._hour_formats[0][:]
+            self._num[0][0] = self.time[0]
+        else:
+            self._num[0] = self._hour_formats[1][:]
+            logger.error('time = {}'.format(self.time))
+            logger.error('_num = {}'.format(self._num))
+            self._num[0][0] = self.time[0]
+            if self.time_format == PyRadioTime.PM_FORMAT:
+                self._num[0][0] = self.time[0] - 12
+                if self._num[0][0] == 0:
+                    self._num[0][0] = 12
+            else:
+                self._num[0][0] = self.time[0]
+            logger.error('_num = {}'.format(self._num))
+
+        logger.error('DE num = {}'.format(self._num))
+
+        self.selected = 0
+
+    def get_time(self):
+        '''
+        Return the time
+        returns [pyradio time], [string time]
+        '''
+        t_time = (
+            self._num[0][0],
+            self._num[1][0],
+            self._num[2][0],
+            self.time_format
+        )
+        return t_time, PyRadioTime.pyradio_time_to_string(t_time)
+
+    def show(self, window=None):
+        if window:
+            self._win = self._parent = window
+        if self._enabled:
+            h = str(self._num[0][0]).zfill(2)
+            m = str(self._num[1][0]).zfill(2)
+            s = str(self._num[2][0]).zfill(2)
+            if self._focused:
+                col = self.color_focused if self.selected == 0 else self.color
+                self._win.addstr(
+                    self._Y, self._X, h,
+                    curses.color_pair(col)
+                )
+                self._win.addstr(':', self.color)
+                col = self.color_focused if self.selected == 1 else self.color
+                self._win.addstr(m, curses.color_pair(col))
+                self._win.addstr(':', self.color)
+                col = self.color_focused if self.selected == 2 else self.color
+                self._win.addstr(s, curses.color_pair(col))
+            else:
+                self._win.addstr(
+                    self._Y, self._X,
+                    '{0}:{1}:{2}'.format(h, m ,s),
+                    curses.color_pair(self.color)
+                )
+        else:
+            self._win.addstr(self._Y, self._X, '==:==:==', curses.color_pair(self.color))
+
+        self._win.refresh()
+
+    def keypress(self, char):
+        '''
+        SimpleCursesTime keypress
+        Returns:
+            -1: Cancel
+             0: Continue
+             1: Show help
+        '''
+        if char in (curses.KEY_EXIT, ord('q'), 27):
+            return -1
+
+        # elif char in (ord('f'), ):
+        #     self.focused = not self.focused
+        #     self.show()
+
+        # elif char in (ord('e'), ):
+        #     self.enabled = not self.enabled
+        #     self.show()
+
+        elif char == ord('?'):
+            return 1
+
+        elif char in (curses.KEY_NPAGE, ):
+            self._num[self.selected][0] -= self._num[self.selected][4]
+            if self._num[self.selected][0] < self._num[self.selected][1]:
+                self._num[self.selected][0] = self._num[self.selected][2]
+            self.show()
+
+        elif char in (curses.KEY_PPAGE, ):
+            self._num[self.selected][0] += self._num[self.selected][4]
+            if self._num[self.selected][0] > self._num[self.selected][2]:
+                self._num[self.selected][0] = self._num[self.selected][1]
+            self.show()
+
+        elif char in (ord('h'), curses.KEY_LEFT):
+            self._num[self.selected][0] -= self._num[self.selected][3]
+            if self._num[self.selected][0] < self._num[self.selected][1]:
+                self._num[self.selected][0] = self._num[self.selected][2]
+            self.show()
+
+        elif char in (ord('l'), curses.KEY_RIGHT):
+            self._num[self.selected][0] += self._num[self.selected][3]
+            if self._num[self.selected][0] > self._num[self.selected][2]:
+                self._num[self.selected][0] = self._num[self.selected][1]
+            self.show()
+
+        elif char in (9, ):
+            ''' TAB '''
+            if self._next_func and self.selected == 2:
+                self._next_func()
+                self._focused = False
+            else:
+                self.selected += 1
+                if self.selected > 2:
+                    self.selected = 0
+            self.show()
+
+        elif char in (curses.KEY_BTAB, ):
+            ''' Shift-TAB '''
+            if self._previous_func and self.selected == 0:
+                self._previous_func()
+                self._focused = False
+            else:
+                self.selected -= 1
+                if self.selected < 0:
+                    self.selected = 2
+            self.show()
+
+        return 0
+
+
 class SimpleCursesCounter(SimpleCursesWidget):
     ''' A class to provide a counter
 
@@ -393,6 +598,11 @@ class SimpleCursesCounter(SimpleCursesWidget):
             minimum length of number when displayed
             the number is right alligned, i.e. a value of 11
             with a number_length of 4, will display '  11'
+        pad
+            left pad numbers with 0
+            This is the length of the string,
+              including current value
+            A value of 0 disables it
         color
             text color
         color_focused
@@ -412,7 +622,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
         color_not_focused,
         color_disabled,
         minimum=0, maximum=100,
-        step=1, big_step=5, value=1,
+        step=1, big_step=5, value=1, pad=0,
         number_length=3, string='{0}',
         full_selection=None
     ):
@@ -424,6 +634,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
         self._step = step
         self._big_step = big_step
         self._value = int(value)
+        self._pad = pad
         if self._value < self._min:
             self._value = self.min
         if self._value > self._max:
@@ -553,7 +764,7 @@ class SimpleCursesCounter(SimpleCursesWidget):
             self._win.move(self._Y, self._X)
             if self._prefix:
                 self._win.addstr(self._prefix, self._color)
-            self._win.addstr(self._number.format(str(self._value).rjust(self._len)), col)
+            self._win.addstr(self._number.format(str(self._value).zfill(self._pad).rjust(self._len)), col)
             if self._suffix:
                 self._win.addstr(self._suffix, self._color)
             ''' overwrite last self._len characters '''
@@ -3249,8 +3460,8 @@ logger.setLevel(logging.DEBUG)
 
 def main(stdscr):
     __configureLogger()
-    # curses.start_color()
-    # curses.use_default_colors()
+    curses.start_color()
+    curses.use_default_colors()
     #stdscr.addstr('Number of colors: {0}, number of pairs: {1}\n'.format(curses.COLORS, curses.COLOR_PAIRS), curses.color_pair(0))
     #stdscr.getch()
 
@@ -3265,56 +3476,20 @@ def main(stdscr):
     #for n in range(3,13):
     #    stdscr.addstr(n,1,str(n),curses.color_pair(1))
 
-    stdscr.bkgdset(' ', curses.color_pair(3))
-    stdscr.erase()
-    stdscr.refresh()
-    search_by_items = (
-        'Votes',
-        'Clicks',
-        'Recent click',
-        'Recently changed',
-        'Item 1',
-        'Item 2',
-        'Item 3',
-        'Item 4',
-        'Item 5',
-        'Item 6',
+    x = SimpleCursesTime(
+        1, 2, stdscr,
+        5, 9,
+        time_format=PyRadioTime.PM_FORMAT
     )
-
-    a_widget = SimpleCursesWidgetColumns(
-        Y=2, X=3, window=stdscr,
-        selection=0,
-        active=0,
-        items=search_by_items,
-        color=curses.color_pair(5),
-        color_active=curses.color_pair(4),
-        color_cursor_selection=curses.color_pair(6),
-        color_cursor_active=curses.color_pair(9),
-        margin=1,
-        max_width=65,
-        on_up_callback_function=up,
-        on_down_callback_function=down,
-        on_left_callback_function=left,
-        on_right_callback_function=right
-    )
-    # a_widget.show()
-
-    a_widget = SimpleCursesBoolean(
-        Y=2, X=3, window=stdscr,
-        color=curses.color_pair(5),
-        color_focused=curses.color_pair(9),
-        color_not_focused=curses.color_pair(4),
-        color_disabled=curses.color_pair(5),
-        string='The valued is: {0}'
-    )
-    a_widget.focused = True
-    a_widget.show(window=stdscr)
+    #x.enabled = True
+    x.focused = True
+    x.show()
 
     while True:
         try:
             c = stdscr.getch()
             # logger.error('DE pressed "{0} - {1}"'.format(c, chr(c)))
-            ret = a_widget.keypress(c)
+            ret = x.keypress(c)
             if (ret == -1):
                 return
         except KeyboardInterrupt:
@@ -3352,4 +3527,18 @@ def __configureLogger():
 
 if __name__ == "__main__":
     curses.wrapper(main)
+    # # curses.wrapper(main)
+    # print(SimpleCursesTime.string_to_pyradio_time('2:35:15 aM'))
+    # print(SimpleCursesTime.string_to_pyradio_time(''))
+
+    # a = SimpleCursesTime.string_to_pyradio_time('1:35:15 aM')
+    # print(SimpleCursesTime.pyradio_time_to_string(a))
+    # print(SimpleCursesTime._to_time_datetime(a))
+    # a = SimpleCursesTime.string_to_pyradio_time('')
+    # print(SimpleCursesTime.pyradio_time_to_string(a))
+
+    # print(SimpleCursesTime.pyradio_time_to_string(
+    #     SimpleCursesTime.to_24_format([4, 23, 12, 2])
+    # ))
+    # print(SimpleCursesTime.to_24_format([4, 23, 12, 2]))
 
