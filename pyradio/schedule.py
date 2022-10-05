@@ -2,7 +2,6 @@ from sys import exit
 from datetime import date, datetime, timedelta
 from calendar import monthrange
 
-
 class PyRadioTime(object):
     ''' A class to provide PyRadio time and date
 
@@ -221,6 +220,8 @@ class PyRadioTime(object):
         '''
         return PyRadioTime.pyradio_time_to_seconds(e_time) - \
             PyRadioTime.pyradio_time_to_seconds(s_time)
+
+
 
 if __name__ == '__main__':
 

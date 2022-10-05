@@ -2627,7 +2627,7 @@ class PyRadioStationsStack(object):
 
 class PyRadioLog(object):
 
-    PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    PATTERN = '%(asctime)s - %(name)s:%(funcName)s():%(lineno)d - %(levelname)s:\n\t%(message)s'
     PATTERN_TITLE = '%(asctime)s | %(message)s'
 
     log_titles = log_debug = False

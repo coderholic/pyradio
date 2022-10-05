@@ -41,7 +41,7 @@ from . import player
 from .install import version_string_to_list, get_github_tag, fix_pyradio_win_exe
 from .html_help import HtmlHelp
 from .browser import RadioBrowserConfig, RadioBrowserConfigWindow
-
+from .schedule_win import PyRadioSimpleScheduleWindow
 CAN_CHECK_FOR_UPDATES = True
 try:
     from urllib.request import urlopen
@@ -201,7 +201,7 @@ class PyRadio(object):
     _encoding_select_win = None
     _playlist_select_win = None
     _station_select_win = None
-
+    _simple_schedule = None
     _old_config_encoding = ''
 
     ''' update notification '''
@@ -5171,7 +5171,27 @@ class PyRadio(object):
 
     def _show_schedule_player_stop(self):
         logger.error('_show_schedule_player_stop() !!!')
-        pass
+        logger.error(self._last_played_station)
+        if self.player.isPlaying():
+            station = None
+        else:
+            if self.ws.window_mode != self.ws.NORMAL_MODE:
+                station = self._last_played_station[0]
+            else:
+                station = self.stations[self.selection][0]
+
+        if self._simple_schedule is None:
+            self._simple_schedule = PyRadioSimpleScheduleWindow(
+                parent=self.outerBodyWin,
+                playlist=self._cnf.station_title,
+                station=station,
+                global_functions=self._global_functions
+            )
+            self.ws.operation_mode = self.ws.SCHEDULE_PLAYER_STOP_MODE
+            self._simple_schedule.show()
+        else:
+            logger.error('with parent')
+            self._simple_schedule.show(parent=self.outerBodyWin)
 
     def _show_schedule_player_stop_help(self):
         pass
@@ -5771,6 +5791,13 @@ class PyRadio(object):
                 self.ws.close_window()
                 self.refreshBody()
             return
+
+        elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYER_STOP_MODE:
+            ret = self._simple_schedule.keypress(char)
+            if ret == -1:
+                self._simple_schedule = None
+                self.ws.close_window()
+                self.refreshBody()
 
         elif self.ws.operation_mode == self.ws.CONFIG_MODE and \
                 char not in self._chars_to_bypass:

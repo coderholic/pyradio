@@ -20,6 +20,7 @@ class DisabledWidget(object):
 
     To be used in complex dialogs
     '''
+    Y = X = width = height = 0
     _enabled = False
     focus = False
     checked = False
@@ -35,7 +36,7 @@ class DisabledWidget(object):
     def enabled(self, value):
         pass
 
-    def show(self):
+    def show(self, parent=None):
         pass
 
 class SimpleCursesWidget(object):
@@ -399,27 +400,37 @@ class SimpleCursesTime(SimpleCursesWidget):
             It is PyRadioTime.NO_AM_PM_FORMAT, or
                   PyRadioTime.AM_FORMAT, or
                   PyRadioTime.PM_FORMAT
+        show_am_pm
+            True or false to show or hide AM/PM check boxes
         color
             text color
         color_focused
             counter color when enabled and focused
+        time_format_changed_func
+            Function to call whenever we go from
+            AM to PM (or vice-versa)
         next_widget_func
             Function to call when going from seconds
             field to next widget. If set to None, go
             to hours fields
         previous_widget_func
-        Function to call when going from hours field
-        to previous widget. If set to None, go to
-        seconds field
+            Function to call when going from hours field
+            to previous widget. If set to None, go to
+            seconds field
     '''
     def __init__(
         self, Y, X, window,
         color, color_focused,
         string=None,
+        show_am_pm=False,
+        check_box_char='✔',
         time_format=PyRadioTime.NO_AM_PM_FORMAT,
+        time_format_changed_func=None,
         next_widget_func=None,
-        previous_widget_func=None
+        previous_widget_func=None,
+        global_functions=None
     ):
+        # logger.error('   ---===***===---   ')
         self._Y = Y
         self._X = X
         self._win = self._parent = window
@@ -429,9 +440,26 @@ class SimpleCursesTime(SimpleCursesWidget):
         self.date = None
         self.datetime = None
         self.time_format = time_format
+        self._time_format_changed_func = time_format_changed_func
         self._next_func = next_widget_func
         self._previous_func = previous_widget_func
+        self._show_am_pm = show_am_pm
+        self._global_functions = global_functions
+        if self._global_functions is None:
+            self._global_functions = {}
+        if self._show_am_pm:
+            self._max_selection = 4
+            self._width = 20
+        else:
+            self._max_selection = 2
+            self._width = 8
+        # logger.error('time = {}'.format(self.time))
+        # logger.error('timeformat = {}'.format(self.time_format))
 
+        self._char = check_box_char
+        if platform.lower().startswith('win') and \
+                self._char == '✔':
+            self._char = 'X'
         '''
         Values for the hour part of self._num
         '''
@@ -449,25 +477,26 @@ class SimpleCursesTime(SimpleCursesWidget):
             [self.time[2], 0, 60, 1, 10]
         ]
 
-        if self.time_format == PyRadioTime.NO_AM_PM_FORMAT:
-            self._num[0] = self._hour_formats[0][:]
-            self._num[0][0] = self.time[0]
-        else:
-            self._num[0] = self._hour_formats[1][:]
-            logger.error('time = {}'.format(self.time))
-            logger.error('_num = {}'.format(self._num))
-            self._num[0][0] = self.time[0]
-            if self.time_format == PyRadioTime.PM_FORMAT:
-                self._num[0][0] = self.time[0] - 12
-                if self._num[0][0] == 0:
-                    self._num[0][0] = 12
-            else:
-                self._num[0][0] = self.time[0]
-            logger.error('_num = {}'.format(self._num))
+        self._apply_time_format()
 
-        logger.error('DE num = {}'.format(self._num))
+        # logger.error('DE num = {}'.format(self._num))
 
         self.selected = 0
+        self._showed = False
+
+    @property
+    def show_am_pm(self):
+        return self._show_am_pm
+
+    def set_time_string(self, time_string):
+        self.time = PyRadioTime.string_to_pyradio_time(time_string)
+        if self._showed:
+            self.show()
+
+    def set_time_pyradio_time(self, t_time):
+        self.time = t_time
+        if self._showed:
+            self.show()
 
     def get_time(self):
         '''
@@ -482,6 +511,85 @@ class SimpleCursesTime(SimpleCursesWidget):
         )
         return t_time, PyRadioTime.pyradio_time_to_string(t_time)
 
+    def toggle_time_format(self):
+        # logger.info('1 num[0] = {}'.format(self._num[0]))
+        old_time_format = self.time_format
+        if self.time_format == PyRadioTime.NO_AM_PM_FORMAT:
+            if self._num[0][0] > 12:
+                self.time_format = PyRadioTime.PM_FORMAT
+                # self._num[0][0] -= 12
+            else:
+                self.time_format = PyRadioTime.AM_FORMAT
+            if self._num[0][0] == 0:
+                self._num[0][0] = 12
+        else:
+            self.time_format = PyRadioTime.NO_AM_PM_FORMAT
+        # logger.info('2 num[0] = {}'.format(self._num[0]))
+        self._time_format_changed(old_time_format)
+        # logger.info('3 num[0] = {}'.format(self._num[0]))
+        if self._showed:
+            self.show()
+        # logger.info('4 num[0] = {0}\ntime format = {1}'.format(self._num[0], self.time_format))
+
+
+    def set_time_format(self, t_time_format):
+        old_time_format = self.time_format
+        self.time_format = t_time_format
+        self._time_format_changed(old_time_format)
+        if self._showed:
+            self.show()
+
+    def _apply_time_format(self):
+        if self.time_format == PyRadioTime.NO_AM_PM_FORMAT:
+            logger.error('1')
+            self._num[0] = self._hour_formats[0][:]
+            self._num[0][0] = self.time[0]
+        else:
+            logger.error('2')
+            self._num[0] = self._hour_formats[1][:]
+            # logger.error('time = {}'.format(self.time))
+            # logger.error('_num = {}'.format(self._num))
+            if self.time[0] > 12:
+                self.time_format = PyRadioTime.PM_FORMAT
+                self._num[0][0] = self.time[0] - 12
+                if self._time_format_changed_func:
+                    self._time_format_changed_func()
+            else:
+                self._num[0][0] = self.time[0]
+            if self._num[0][0] == 0:
+                logger.error('4')
+                self._num[0][0] = 12
+        # logger.error('_num = {}'.format(self._num))
+
+    def _time_format_changed(self, old_time_format):
+        if self.time_format == old_time_format:
+            return
+        if self.time_format == PyRadioTime.NO_AM_PM_FORMAT:
+            if old_time_format == PyRadioTime.NO_AM_PM_FORMAT:
+                return
+            self._num[0][1:] = self._hour_formats[0][1:][:]
+            if old_time_format == PyRadioTime.PM_FORMAT:
+                self._num[0][0] += 12
+            if self._num[0][0] == 24:
+                self._num[0][0] = 0
+        else:
+            if old_time_format in (
+                PyRadioTime.AM_FORMAT,
+                PyRadioTime.PM_FORMAT
+            ):
+                return
+            self._num[0][1:] = self._hour_formats[1][1:][:]
+            if self._num[0][0] > 12:
+                self._num[0][0] -= 12
+            if self._num[0][0] == 0:
+                self._num[0][0] = 12
+
+    def move(self, new_Y=None, new_X=None):
+        if new_Y:
+            self._Y = new_Y
+        if new_X:
+            self._X = new_X
+
     def show(self, window=None):
         if window:
             self._win = self._parent = window
@@ -493,24 +601,64 @@ class SimpleCursesTime(SimpleCursesWidget):
                 col = self.color_focused if self.selected == 0 else self.color
                 self._win.addstr(
                     self._Y, self._X, h,
-                    curses.color_pair(col)
+                    col
                 )
                 self._win.addstr(':', self.color)
                 col = self.color_focused if self.selected == 1 else self.color
-                self._win.addstr(m, curses.color_pair(col))
+                self._win.addstr(m, col)
                 self._win.addstr(':', self.color)
                 col = self.color_focused if self.selected == 2 else self.color
-                self._win.addstr(s, curses.color_pair(col))
+                self._win.addstr(s, col)
             else:
                 self._win.addstr(
                     self._Y, self._X,
                     '{0}:{1}:{2}'.format(h, m ,s),
-                    curses.color_pair(self.color)
+                    self.color
                 )
         else:
-            self._win.addstr(self._Y, self._X, '==:==:==', curses.color_pair(self.color))
+            self._win.addstr(self._Y, self._X, '==:==:==', self.color)
 
+        if self._show_am_pm:
+            if self._enabled:
+                self._win.addstr(' [', self.color)
+                col = self.color_focused if self.selected == 3 else self.color
+                tok = self._calculate_token(3)
+                self._win.addstr(tok, col)
+                self._win.addstr(']AM [', self.color)
+                col = self.color_focused if self.selected == 4 else self.color
+                tok = self._calculate_token(4)
+                self._win.addstr(tok, col)
+                self._win.addstr(']PM', self.color)
+            else:
+                self._win.addstr(' [ ]== [ ]==', self.color)
         self._win.refresh()
+        self._showed = True
+
+    def _check_time_format(self, old_hours):
+        '''
+        Adjust self.time_format when using the keyboard
+        '''
+        if self.selected == 0 and \
+                self.time_format != PyRadioTime.NO_AM_PM_FORMAT:
+            if old_hours + self._num[0][0] == 23:
+                if self.time_format == PyRadioTime.PM_FORMAT:
+                    self.time_format = PyRadioTime.AM_FORMAT
+                else:
+                    self.time_format = PyRadioTime.PM_FORMAT
+                if self._time_format_changed_func:
+                    self._time_format_changed_func()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('time format changed to: {}'.format(self.time_format))
+
+    def _calculate_token(self, chbox_id):
+        if self._show_am_pm:
+            if self.time_format == PyRadioTime.AM_FORMAT:
+                return self._char if chbox_id == 3 else ' '
+            elif self.time_format == PyRadioTime.PM_FORMAT:
+                return self._char if chbox_id == 4 else ' '
+            else:
+                return ' '
+        return ''
 
     def keypress(self, char):
         '''
@@ -520,56 +668,93 @@ class SimpleCursesTime(SimpleCursesWidget):
              0: Continue
              1: Show help
         '''
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
+            return 0
+
+        if char == ord('t'):
+            self._enabled = not self._enabled
+            self.show()
+            return 0
+
         if char in (curses.KEY_EXIT, ord('q'), 27):
             return -1
 
-        # elif char in (ord('f'), ):
-        #     self.focused = not self.focused
-        #     self.show()
-
-        # elif char in (ord('e'), ):
-        #     self.enabled = not self.enabled
-        #     self.show()
+        elif char in (ord('f'), ):
+            self.set_time_format(PyRadioTime.NO_AM_PM_FORMAT)
 
         elif char == ord('?'):
             return 1
 
+        elif self.selected in (3, 4) and \
+                char in (curses.KEY_LEFT, curses.KEY_RIGHT,
+                         curses.KEY_ENTER, ord('\n'), ord('\r'),
+                         ord(' '), ord('h'), ord('l')
+                ):
+            old_time_format = self.time_format
+            if self.selected == 3:
+                '''' change AM check box  '''
+                if self.time_format == PyRadioTime.AM_FORMAT:
+                    self.time_format = PyRadioTime.NO_AM_PM_FORMAT
+                elif self.time_format == PyRadioTime.PM_FORMAT:
+                    self.time_format = PyRadioTime.AM_FORMAT
+                else:
+                    self.time_format = PyRadioTime.AM_FORMAT
+            else:
+                '''' change PM check box  '''
+                if self.time_format == PyRadioTime.PM_FORMAT:
+                    self.time_format = PyRadioTime.NO_AM_PM_FORMAT
+                elif self.time_format == PyRadioTime.AM_FORMAT:
+                    self.time_format = PyRadioTime.PM_FORMAT
+                else:
+                    self.time_format = PyRadioTime.PM_FORMAT
+            self._time_format_changed(old_time_format)
+            self.show()
+
         elif char in (curses.KEY_NPAGE, ):
+            old_hours = self._num[0][0]
             self._num[self.selected][0] -= self._num[self.selected][4]
             if self._num[self.selected][0] < self._num[self.selected][1]:
                 self._num[self.selected][0] = self._num[self.selected][2]
+            self._check_time_format(old_hours)
             self.show()
 
         elif char in (curses.KEY_PPAGE, ):
+            old_hours = self._num[0][0]
             self._num[self.selected][0] += self._num[self.selected][4]
             if self._num[self.selected][0] > self._num[self.selected][2]:
                 self._num[self.selected][0] = self._num[self.selected][1]
+            self._check_time_format(old_hours)
             self.show()
 
         elif char in (ord('h'), curses.KEY_LEFT):
+            old_hours = self._num[0][0]
             self._num[self.selected][0] -= self._num[self.selected][3]
             if self._num[self.selected][0] < self._num[self.selected][1]:
                 self._num[self.selected][0] = self._num[self.selected][2]
+            self._check_time_format(old_hours)
             self.show()
 
         elif char in (ord('l'), curses.KEY_RIGHT):
+            old_hours = self._num[0][0]
             self._num[self.selected][0] += self._num[self.selected][3]
             if self._num[self.selected][0] > self._num[self.selected][2]:
                 self._num[self.selected][0] = self._num[self.selected][1]
+            self._check_time_format(old_hours)
             self.show()
 
-        elif char in (9, ):
+        elif char in (9, ord('L')):
             ''' TAB '''
-            if self._next_func and self.selected == 2:
+            if self._next_func and self.selected == self._max_selection:
                 self._next_func()
                 self._focused = False
             else:
                 self.selected += 1
-                if self.selected > 2:
+                if self.selected > self._max_selection:
                     self.selected = 0
             self.show()
 
-        elif char in (curses.KEY_BTAB, ):
+        elif char in (curses.KEY_BTAB, ord('H')):
             ''' Shift-TAB '''
             if self._previous_func and self.selected == 0:
                 self._previous_func()
@@ -577,7 +762,7 @@ class SimpleCursesTime(SimpleCursesWidget):
             else:
                 self.selected -= 1
                 if self.selected < 0:
-                    self.selected = 2
+                    self.selected = self._max_selection
             self.show()
 
         return 0
@@ -1684,7 +1869,7 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
         if self._win:
             self._win.mvwin(self._Y, self._X)
 
-    def show(self):
+    def show(self, parent=None):
         '''Put the widget on the screen'''
         if self._win:
             self._win.bkgdset(' ', self._color)
@@ -1808,6 +1993,17 @@ class SimpleCursesPushButton(SimpleCursesWidget):
     def constant_width(self, value):
         raise ValueError('parameter is read only')
 
+    @property
+    def X(self):
+        return self._X
+
+    @X.setter
+    def X(self, value):
+        logger.info('new X = {}'.format(value))
+        if value != self._X:
+            self._X = value
+            self._win = curses.newwin(1, self._width, self._Y, self._X)
+
     def resize(self):
         old_width = self._width
         self._display_caption = self._caption
@@ -1824,7 +2020,15 @@ class SimpleCursesPushButton(SimpleCursesWidget):
             self._win = None
             self._win = curses.newwin(1, self._width, self._Y, self._X)
 
-    def show(self):
+    def move(self, new_Y=None, new_X=None):
+        if new_Y:
+            self._Y = new_Y
+        if new_X:
+            self._X = new_X
+        if self._win:
+            self._win.mvwin(self._Y, self._X)
+
+    def show(self, parent=None):
         '''Put the widget on the screen'''
         if self._win:
             self._win.bkgdset(' ', self._color)
@@ -3469,19 +3673,25 @@ def main(stdscr):
     #stdscr.getch()
 
     curses.init_pair(4,curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(5,curses.COLOR_WHITE,curses.COLOR_BLACK)
+    curses.init_pair(5,curses.COLOR_BLACK,curses.COLOR_GREEN)
     curses.init_pair(6,curses.COLOR_BLACK,curses.COLOR_RED)
-    curses.init_pair(9,curses.COLOR_BLACK,curses.COLOR_WHITE)
+    curses.init_pair(9,curses.COLOR_RED,curses.COLOR_WHITE)
     #curses.init_pair(1,237,248)
     #for n in range(3,13):
     #    stdscr.addstr(n,1,str(n),curses.color_pair(1))
 
+    stdscr.bkgdset(' ', curses.color_pair(5))
+    # stdscr.bkgdset(' ', 5)
+    stdscr.erase()
+    stdscr.touchwin()
+    #stdscr.refresh()
     x = SimpleCursesTime(
         1, 2, stdscr,
         5, 9,
-        time_format=PyRadioTime.PM_FORMAT
+        show_am_pm=True,
+        time_format=PyRadioTime.AM_FORMAT
     )
-    #x.enabled = True
+    x.enabled = False
     x.focused = True
     x.show()
 
