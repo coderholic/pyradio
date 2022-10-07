@@ -36,6 +36,7 @@ class PyRadioSimpleScheduleWindow(object):
             self._maxY = 11
         self._global_functions = global_functions
         self._get_parent(parent)
+        self._focus = 9
 
     def _move_widgets(self):
         if not self._stop_only:
@@ -129,6 +130,8 @@ class PyRadioSimpleScheduleWindow(object):
                         color=curses.color_pair(10),
                         show_am_pm=True,
                         color_focused=curses.color_pair(9),
+                        next_widget_func=self._next_widget,
+                        previous_widget_func=self._previous_widget,
                         global_functions=self._global_functions
                     )
                 )
@@ -151,6 +154,8 @@ class PyRadioSimpleScheduleWindow(object):
                         window=self._win,
                         color=curses.color_pair(10),
                         color_focused=curses.color_pair(9),
+                        next_widget_func=self._next_widget,
+                        previous_widget_func=self._previous_widget,
                         global_functions=self._global_functions,
                         string='00:00:00'
                     )
@@ -184,6 +189,8 @@ class PyRadioSimpleScheduleWindow(object):
                     show_am_pm=True,
                     color=curses.color_pair(10),
                     color_focused=curses.color_pair(9),
+                    next_widget_func=self._next_widget,
+                    previous_widget_func=self._previous_widget,
                     global_functions=self._global_functions
                 )
             )
@@ -207,6 +214,8 @@ class PyRadioSimpleScheduleWindow(object):
                     window=self._win,
                     color=curses.color_pair(10),
                     color_focused=curses.color_pair(9),
+                    next_widget_func=self._next_widget,
+                    previous_widget_func=self._previous_widget,
                     global_functions=self._global_functions,
                     string='01:00:00'
                 )
@@ -260,8 +269,8 @@ class PyRadioSimpleScheduleWindow(object):
         else:
             self._win.addstr(2, 2, 'Stop playback', curses.color_pair(10))
         self._win.refresh()
-        self._focus = 9
         if self._widgets:
+            self._dummy_enable()
             self._fix_focus()
             for n, i in enumerate(self._widgets):
                 try:
@@ -270,6 +279,17 @@ class PyRadioSimpleScheduleWindow(object):
                     i.show()
         self._showed = True
 
+    def _dummy_enable(self):
+        self._widgets[0].checked = True
+        self._widgets[1].checked = True
+        self._widgets[4].enabled = False
+
+        self._widgets[5].checked = True
+        self._widgets[8].checked = True
+        self._widgets[7].enabled = False
+
+        self._widgets[10].enabled = False
+
     def _fix_focus(self):
         for i in range(0, len(self._widgets)):
             if self._focus == i:
@@ -277,6 +297,31 @@ class PyRadioSimpleScheduleWindow(object):
                 logger.info('focused: {}'.format(self._widgets[i].w_id))
             else:
                 self._widgets[i].focused = False
+
+    def _next_widget(self):
+        old_focus = self._focus
+        self._focus += 1
+        if self._focus >= len(self._widgets):
+            self._focus = 0
+
+        while(not self._widgets[self._focus].enabled):
+            self._focus += 1
+
+        if self._widgets[self._focus].w_id in (2, 4, 7, 9):
+            self._widgets[self._focus].reset_selection()
+        self.show()
+
+    def _previous_widget(self):
+        self._focus -= 1
+        if self._focus < 0:
+            self._focus = len(self._widgets) - 1
+
+        while(not self._widgets[self._focus].enabled):
+            self._focus -= 1
+
+        if self._widgets[self._focus].w_id in (2, 4, 7, 9):
+            self._widgets[self._focus].reset_selection(last=True)
+        self.show()
 
     def keypress(self, char):
         '''
@@ -296,8 +341,19 @@ class PyRadioSimpleScheduleWindow(object):
         elif char in (curses.KEY_EXIT, ord('q'), 27):
             return -1
 
-        return 0
+        elif char in (9, ord('L')):
+            if self._widgets[self._focus].w_id in (2, 4, 7, 9):
+                self._widgets[self._focus].keypress(char)
+            else:
+                self._next_widget()
 
+        elif char in (curses.KEY_STAB, ord('H')):
+            if self._widgets[self._focus].w_id in (2, 4, 7, 9):
+                self._widgets[self._focus].keypress(char)
+            else:
+                self._previous_widget()
+
+        return 0
 
 if __name__ == '__main__':
 

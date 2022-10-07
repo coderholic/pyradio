@@ -22,7 +22,7 @@ class DisabledWidget(object):
     '''
     Y = X = width = height = 0
     _enabled = False
-    focus = False
+    focus = focused = False
     checked = False
 
     def __init__(self):
@@ -590,6 +590,12 @@ class SimpleCursesTime(SimpleCursesWidget):
         if new_X:
             self._X = new_X
 
+    def reset_selection(self, last=False):
+        if last:
+            self.selected = self._max_selection
+        else:
+            self.selected = 0
+
     def show(self, window=None):
         if window:
             self._win = self._parent = window
@@ -621,11 +627,17 @@ class SimpleCursesTime(SimpleCursesWidget):
         if self._show_am_pm:
             if self._enabled:
                 self._win.addstr(' [', self.color)
-                col = self.color_focused if self.selected == 3 else self.color
+                if self._focused:
+                    col = self.color_focused if self.selected == 3 else self.color
+                else:
+                    col = self.color
                 tok = self._calculate_token(3)
                 self._win.addstr(tok, col)
                 self._win.addstr(']AM [', self.color)
-                col = self.color_focused if self.selected == 4 else self.color
+                if self._focused:
+                    col = self.color_focused if self.selected == 4 else self.color
+                else:
+                    col = self.color
                 tok = self._calculate_token(4)
                 self._win.addstr(tok, col)
                 self._win.addstr(']PM', self.color)
@@ -745,10 +757,12 @@ class SimpleCursesTime(SimpleCursesWidget):
 
         elif char in (9, ord('L')):
             ''' TAB '''
+            logger.info('here')
             if self._next_func and self.selected == self._max_selection:
                 self._next_func()
                 self._focused = False
             else:
+                logger.info('here 1')
                 self.selected += 1
                 if self.selected > self._max_selection:
                     self.selected = 0
