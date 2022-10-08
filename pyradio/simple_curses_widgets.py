@@ -2077,7 +2077,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
                     ord('\r'), curses.KEY_ENTER) and \
                 self._focused:
             if self._callback_function:
-                self._callback_function(self._parent)
+                self._callback_function(self._parent, w_id=None)
                 return True
         return False
 

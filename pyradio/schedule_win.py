@@ -24,12 +24,12 @@ class PyRadioSimpleScheduleWindow(object):
         'Enable absolute time to start playback.',
         'Absolute time to start playback.',
         'Enable relative time to start playback.',
-        'Start playback XX:XX:XX after the time "OK" is clicked',
+        'Start playback XX:XX:XX after the time "OK" is pressed',
         'Enable Stop Timer (time to stop playback).',
         'Enable absolute time to stop playback.',
         'Absolute time to stop playback.',
         'Enable relative time to stop playback.',
-        'Stop playback XX:XX:XX after the time "OK" is clicked.',
+        'Stop playback XX:XX:XX after the time "OK" is pressed.',
         'Remove this schedule.',
         'Save this schedule.',
         'Cancel this schedule.'
@@ -290,13 +290,14 @@ class PyRadioSimpleScheduleWindow(object):
         disp_msg = self._tips[self._focus]
         if self._focus in (4, 9) and \
                 not self._stop_only:
-            disp_msg = self._tips[self._focus].replace('the time "OK" is clicked.', 'starting playback.')
+            disp_msg = self._tips[self._focus].replace('the time "OK" is pressed.', 'starting playback.')
         self._win.addstr(self._maxY-2, 2, disp_msg.ljust(self._maxX-4), curses.color_pair(10))
 
 
         self._win.refresh()
         if self._widgets:
-            self._dummy_enable()
+            if not self._showed:
+                self._dummy_enable()
             self._fix_focus()
             for n, i in enumerate(self._widgets):
                 try:
@@ -317,6 +318,17 @@ class PyRadioSimpleScheduleWindow(object):
         self._widgets[10].enabled = False
 
     def _fix_focus(self):
+        if not self._stop_only:
+            for i in (0, 5):
+                for k in range(1, 5):
+                    self._widgets[i+k].enabled = self._widgets[i].checked
+
+                self._widgets[-2].enabled = self._widgets[0].checked or self._widgets[5].checked
+
+        for i in (1, 3, 6, 8):
+            if self._widgets[i].enabled:
+                self._widgets[i+1].enabled = self._widgets[i].checked
+
         for i in range(0, len(self._widgets)):
             if self._focus == i:
                 self._widgets[i].focused = True
@@ -406,9 +418,26 @@ class PyRadioSimpleScheduleWindow(object):
 
             else:
                 ''' Check Boxes '''
-                if not ret:
-                    pass
+                if self._widgets[self._focus].checked:
+                    if self._focus == 1:
+                        self._widgets[3].checked = False
+                    elif self._focus == 3:
+                        self._widgets[1].checked = False
+                    elif self._focus == 6:
+                        self._widgets[8].checked = False
+                    elif self._focus == 8:
+                        self._widgets[6].checked = False
+                else:
+                    if self._focus == 1:
+                        self._widgets[3].checked = True
+                    elif self._focus == 3:
+                        self._widgets[1].checked = True
+                    elif self._focus == 6:
+                        self._widgets[8].checked = True
+                    elif self._focus == 8:
+                        self._widgets[6].checked = True
 
+        self.show()
         return 0
 
 if __name__ == '__main__':
