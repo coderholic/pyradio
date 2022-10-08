@@ -473,8 +473,8 @@ class SimpleCursesTime(SimpleCursesWidget):
         '''
         self._num = [
             [0, 0, 23, 1, 3],
-            [self.time[1], 0, 60, 1, 10],
-            [self.time[2], 0, 60, 1, 10]
+            [self.time[1], 0, 59, 1, 10],
+            [self.time[2], 0, 59, 1, 10]
         ]
 
         self._apply_time_format()
@@ -541,11 +541,9 @@ class SimpleCursesTime(SimpleCursesWidget):
 
     def _apply_time_format(self):
         if self.time_format == PyRadioTime.NO_AM_PM_FORMAT:
-            logger.error('1')
             self._num[0] = self._hour_formats[0][:]
             self._num[0][0] = self.time[0]
         else:
-            logger.error('2')
             self._num[0] = self._hour_formats[1][:]
             # logger.error('time = {}'.format(self.time))
             # logger.error('_num = {}'.format(self._num))
@@ -557,7 +555,6 @@ class SimpleCursesTime(SimpleCursesWidget):
             else:
                 self._num[0][0] = self.time[0]
             if self._num[0][0] == 0:
-                logger.error('4')
                 self._num[0][0] = 12
         # logger.error('_num = {}'.format(self._num))
 
@@ -757,12 +754,10 @@ class SimpleCursesTime(SimpleCursesWidget):
 
         elif char in (9, ord('L')):
             ''' TAB '''
-            logger.info('here')
             if self._next_func and self.selected == self._max_selection:
                 self._next_func()
                 self._focused = False
             else:
-                logger.info('here 1')
                 self.selected += 1
                 if self.selected > self._max_selection:
                     self.selected = 0

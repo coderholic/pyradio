@@ -19,6 +19,21 @@ class PyRadioSimpleScheduleWindow(object):
     _global_functions = {}
     _showed = False
 
+    _tips = (
+        'Enable Start Timer (time to start playback).',
+        'Enable absolute time to start playback.',
+        'Absolute time to start playback.',
+        'Enable relative time to start playback.',
+        'Start playback XX:XX:XX after the time "OK" is clicked',
+        'Enable Stop Timer (time to stop playback).',
+        'Enable absolute time to stop playback.',
+        'Absolute time to stop playback.',
+        'Enable relative time to stop playback.',
+        'Stop playback XX:XX:XX after the time "OK" is clicked.',
+        'Remove this schedule.',
+        'Save this schedule.',
+        'Cancel this schedule.'
+    )
     def __init__(
             self, parent,
             playlist=None, station=None,
@@ -26,14 +41,15 @@ class PyRadioSimpleScheduleWindow(object):
     ):
         self._playlist = playlist
         self._station = station
+        self._maxX = 60
         if station is None or playlist is None:
             self._stop_only = True
             self._displacement = -1
-            self._maxY = 7
+            self._maxY = 10
         else:
             self._stop_only = False
             self._displacement = 3
-            self._maxY = 11
+            self._maxY = 14
         self._global_functions = global_functions
         self._get_parent(parent)
         self._focus = 9
@@ -57,7 +73,6 @@ class PyRadioSimpleScheduleWindow(object):
     def _get_parent(self, parent):
         self._parent = parent
         self._parent_maxY, self._parent_maxX = parent.getmaxyx()
-        self._maxX = 60
         new_Y = int((self._parent_maxY - self._maxY) / 2) + 1
         new_X = int((self._parent_maxX - self._maxX) / 2)
         if self._Y != new_Y or self._X != new_X:
@@ -89,7 +104,6 @@ class PyRadioSimpleScheduleWindow(object):
 
     def show(self, parent=None):
         if parent:
-            logger.error('got parent')
             self._get_parent(parent)
             if self._showed:
                 self._move_widgets()
@@ -233,7 +247,6 @@ class PyRadioSimpleScheduleWindow(object):
                 bracket_color=curses.color_pair(10),
                 parent=self._parent))
             self._widgets[-1].w_id = 10
-            logger.error('maxX = {0}, Y={1} , X={2}'.format(self._maxX, self._widgets[-1].Y, self._widgets[-1].X))
 
             ''' id 11 ok button '''
             cap = 'OK'
@@ -246,6 +259,7 @@ class PyRadioSimpleScheduleWindow(object):
                 bracket_color=curses.color_pair(10),
                 parent=self._parent))
             self._widgets[-1].w_id = 11
+
             ''' id 12 cancel button '''
             cap = 'Cancel'
             self._widgets.append(SimpleCursesPushButton(
@@ -268,6 +282,18 @@ class PyRadioSimpleScheduleWindow(object):
             self._win.addstr(disp_station, curses.color_pair(11))
         else:
             self._win.addstr(2, 2, 'Stop playback', curses.color_pair(10))
+        try:
+            self._win.addstr(self._maxY-3, 2, '─' * (self._maxX - 4), curses.color_pair(3))
+        except:
+            self._win.addstr(self._maxY-3, 2, '─'.encode('utf-8') * (self._maxX - 4), curses.color_pair(3))
+        self._win.addstr(self._maxY-3, 3, ' Tip ', curses.color_pair(11))
+        disp_msg = self._tips[self._focus]
+        if self._focus in (4, 9) and \
+                not self._stop_only:
+            disp_msg = self._tips[self._focus].replace('the time "OK" is clicked.', 'starting playback.')
+        self._win.addstr(self._maxY-2, 2, disp_msg.ljust(self._maxX-4), curses.color_pair(10))
+
+
         self._win.refresh()
         if self._widgets:
             self._dummy_enable()
@@ -294,7 +320,6 @@ class PyRadioSimpleScheduleWindow(object):
         for i in range(0, len(self._widgets)):
             if self._focus == i:
                 self._widgets[i].focused = True
-                logger.info('focused: {}'.format(self._widgets[i].w_id))
             else:
                 self._widgets[i].focused = False
 
@@ -332,11 +357,15 @@ class PyRadioSimpleScheduleWindow(object):
             -1: Cancel
              0: Continue
              1: Get result
+             2: Remove Schedule
              2: Show Help
         '''
         if char in self._global_functions.keys():
             self._global_functions[char]()
             return 0
+
+        elif char == ord('?'):
+            return 2
 
         elif char in (curses.KEY_EXIT, ord('q'), 27):
             return -1
@@ -347,11 +376,38 @@ class PyRadioSimpleScheduleWindow(object):
             else:
                 self._next_widget()
 
-        elif char in (curses.KEY_STAB, ord('H')):
+        elif char in (curses.KEY_BTAB, ord('H')):
             if self._widgets[self._focus].w_id in (2, 4, 7, 9):
                 self._widgets[self._focus].keypress(char)
             else:
                 self._previous_widget()
+
+        else:
+            ret = self._widgets[self._focus].keypress(char)
+            if self._widgets[self._focus].w_id == 12 \
+                    and not ret:
+                ''' Cancel '''
+                return -1
+            elif self._widgets[self._focus].w_id == 11 \
+                    and not ret:
+                ''' OK '''
+                return 1
+            elif self._widgets[self._focus].w_id == 10 \
+                    and not ret:
+                ''' Remove schedule '''
+                return 2
+            elif self._widgets[self._focus].w_id in (2, 4, 7, 9):
+                ''' Time
+                      -1: Cancel
+                       0: Continue
+                       1: Show help
+                '''
+                pass
+
+            else:
+                ''' Check Boxes '''
+                if not ret:
+                    pass
 
         return 0
 
