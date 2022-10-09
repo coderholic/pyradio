@@ -1,6 +1,12 @@
 from sys import version_info as python_version
-from datetime import date, datetime, timedelta
+from datetime import date as ddate, datetime, timedelta
 from calendar import monthrange
+import logging
+
+import locale
+locale.setlocale(locale.LC_ALL, '')    # set your locale
+
+logger = logging.getLogger(__name__)
 
 class PyRadioScheduleItem(object):
     '''
@@ -8,8 +14,9 @@ class PyRadioScheduleItem(object):
 
     Items Format:
         type:
-            "B" or "E"
+            "B" "S" or "E"
                 "B": Item has both a start and an end time
+                "S": Item has only a start time
                 "E": Item has only an end time
                      Start time is the time the Item was created
 
@@ -34,9 +41,9 @@ class PyRadioScheduleItem(object):
         end type
             "A" or "I"
                 "A": Date and Time is absolute
-                 "I": Date and Time is relative
-                      In this case, the field becomes "IXX:XX:XX"
-                      and the end date is the creation date
+                "I": Date and Time is relative
+                     In this case, the field becomes "IXX:XX:XX"
+                     and the end date is the creation date
             This gives a hint for the presenting window
 
         playlist
@@ -59,66 +66,66 @@ class PyRadioScheduleItem(object):
         self._start_duration = ''
         self._end_duration = ''
 
-        @property
-        def type (self):
-            return self._type
+    @property
+    def type (self):
+        return self._type
 
-        @type.setter
-        def type(self, value):
-            if value in ('S', 'B'):
-                self._type = value
+    @type.setter
+    def type(self, value):
+        if value in ('S', 'E', 'B'):
+            self._type = value
 
-        @property
-        def start_date (self):
-            return self._start_date
+    @property
+    def start_date (self):
+        return self._start_date
 
-        @property
-        def start_time(self):
-            return self._start_time
+    @property
+    def start_time(self):
+        return self._start_time
 
-        @property
-        def start_type (self):
-            return self._start_type
+    @property
+    def start_type (self):
+        return self._start_type
 
-        @start_type.setter
-        def start_type(self, value):
-            if value in ('A', 'I'):
-                self._start__type = value
-                if value[0] == "I":
-                    self._start_type = "I"
-                    self._start_duration = value[1:]
-                else:
-                    self._start_duration = ''
+    @start_type.setter
+    def start_type(self, value):
+        if value in ('A', 'I'):
+            self._start__type = value
+            if value[0] == "I":
+                self._start_type = "I"
+                self._start_duration = value[1:]
+            else:
+                self._start_duration = ''
 
-        @property
-        def end_date(self):
-            return self._end_date
+    @property
+    def end_date(self):
+        return self._end_date
 
-        @property
-        def end_time(self):
-            return self._end_time
+    @property
+    def end_time(self):
+        return self._end_time
 
-        @property
-        def end_type (self):
-            return self._end_type
+    @property
+    def end_type (self):
+        return self._end_type
 
-        @end_type.setter
-        def end_type(self, value):
-            if value in ('A', 'I'):
-                self._end__type = value
-                if value[0] == "I":
-                    self._end_type = "I"
-                    self._end_duration = value[1:]
-                else:
-                    self._end_duration = ''
+    @end_type.setter
+    def end_type(self, value):
+        if value in ('A', 'I'):
+            self._end__type = value
+            if value[0] == "I":
+                self._end_type = "I"
+                self._end_duration = value[1:]
+            else:
+                self._end_duration = ''
 
-        @property
-        def playlist(self):
-            return self._playlist
+    @property
+    def playlist(self):
+        return self._playlist
 
-        @property
-        def station(self):
-            return self._station
+    @property
+    def station(self):
+        return self._station
 
     def __str__(self):
         if self._start_date is None and \
@@ -127,17 +134,17 @@ class PyRadioScheduleItem(object):
         return '{0}`|`{1}`|`{2}`|`{3}`|`{4}`|`{5}`|`{6}'.format(
             self._type,
             self._format_date_string(self._start_date, self._start_time),
-            self._start_type,
+            self._start_type + self._start_duration,
             self._format_date_string(self._end_date, self._end_time),
-            self._end_type,
+            self._end_type + self._end_duration,
             self._playlist,
             self._station
         )
 
     def set_item(self, a_string):
         sp = a_string.split('`|`')
-        # if logger.isEnabledFor(logging.DEBUG):
-        #     logger.debug('new item = "{}"'.format(sp))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('new item = "{}"'.format(sp))
         if len(sp) != 7:
             raise ValueError
             return
@@ -267,13 +274,16 @@ class PyRadioTime(object):
             self.set_time(sp[1])
 
     def set_date(self, a_date_string):
-        if python_version[0] == 2:
-            sp = a_date_string.split('-')
-            for i in range(0, len(sp)):
-                sp[i] = int(sp[i])
-            self.date = date(sp[0], sp[1], sp[2])
+        if a_date_string:
+            if python_version[0] == 2:
+                sp = a_date_string.split('-')
+                for i in range(0, len(sp)):
+                    sp[i] = int(sp[i])
+                self.date = ddate(sp[0], sp[1], sp[2])
+            else:
+                self.date = ddate.fromisoformat(a_date_string)
         else:
-            self.date = date.fromisoformat(a_date_string)
+            self.date = ddate.today()
 
     def set_time(self, a_time_string):
         valid = True
@@ -497,4 +507,5 @@ class PyRadioTime(object):
 if __name__ == '__main__':
     a= PyRadioScheduleItem()
     a.set_item('B`|`2022-10-15 23:15:12`|`A`|`2021-08-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation')
+    # a.set_item('B`|`2022-10-15 23:15:12`|`A`|``|`I02:15:11`|`myplaylist`|`mystation')
     print(a)

@@ -4,12 +4,14 @@ import curses.ascii
 from datetime import date, time, datetime, timedelta
 import logging
 from sys import version_info, platform, version
-try:
-    from .cjkwrap import PY3, is_wide, cjklen
-    from .schedule import PyRadioTime
-except:
-    from cjkwrap import PY3, is_wide, cjklen
-    from schedule import PyRadioTime
+# try:
+#     from .cjkwrap import PY3, is_wide, cjklen
+#     from .schedule import PyRadioTime
+# except:
+#     from cjkwrap import PY3, is_wide, cjklen
+#     from schedule import PyRadioTime
+from .cjkwrap import PY3, is_wide, cjklen
+from .schedule import PyRadioTime
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
@@ -2062,10 +2064,10 @@ class SimpleCursesPushButton(SimpleCursesWidget):
                 except:
                     pass
             else:
-                self._win.addstr(0, 0, '[', self._color)
+                self._win.addstr(0, 0, '[', self._bracket_color)
                 self._win.addstr(' ' + self._display_caption + ' ', self._bracket_color)
                 try:
-                    self._win.addstr(']', self._color)
+                    self._win.addstr(']', self._bracket_color)
                 except:
                     pass
 

@@ -6,6 +6,7 @@ import logging
 
 from .simple_curses_widgets import DisabledWidget, SimpleCursesCheckBox, SimpleCursesPushButton, SimpleCursesTime
 from .cjkwrap import cjklen, cjkslices
+from .schedule import PyRadioScheduleItem, PyRadioTime
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -19,6 +20,9 @@ class PyRadioSimpleScheduleWindow(object):
     _global_functions = {}
     _showed = False
 
+    _up = (10, 0, 7, 11, 12, 1, 5, 2, 3, 4, 6, 8, 9)
+    _down = (1, 5, 7, 8, 9, 6, 10, 2, 11, 12, 0, 3, 4)
+
     _tips = (
         'Enable Start Timer (time to start playback).',
         'Enable absolute time to start playback.',
@@ -31,12 +35,13 @@ class PyRadioSimpleScheduleWindow(object):
         'Enable relative time to stop playback.',
         'Stop playback XX:XX:XX after the time "OK" is pressed.',
         'Remove this schedule.',
-        'Save this schedule.',
-        'Cancel this schedule.'
+        'Save changes to this schedule item.',
+        'Cancel changes to this schedule item.'
     )
     def __init__(
             self, parent,
             playlist=None, station=None,
+            schedule_item=None,
             global_functions={}
     ):
         self._playlist = playlist
@@ -53,6 +58,28 @@ class PyRadioSimpleScheduleWindow(object):
         self._global_functions = global_functions
         self._get_parent(parent)
         self._focus = 9
+        if schedule_item is None:
+            pl = self._playlist
+            if pl is None:
+                pl = ''
+            st = self._station
+            if st is None:
+                st = ''
+            ''' create a schedule item '''
+            a_date = datetime.now() + timedelta(hours=1)
+            a_date_str = a_date.strftime('%Y-%m-%d %H:%M:%S')
+            logger.error('a_date_str = "{}"'.format(a_date_str))
+            it_str = 'E`|`' + a_date_str + '`|`A`|`' + a_date_str + '`|`A`|`'  + pl + '`|`' + st
+            logger.error('{}'.format(it_str))
+            self._schedule_item = PyRadioScheduleItem()
+            self._schedule_item.set_item(it_str)
+            self._focus = 6
+            self._remove_enabled = False
+        else:
+            self._schedule_item = schedule_item
+            self._remove_enabled = True
+
+        ''' parse and assign values '''
 
     def _move_widgets(self):
         if not self._stop_only:
@@ -205,7 +232,8 @@ class PyRadioSimpleScheduleWindow(object):
                     color_focused=curses.color_pair(9),
                     next_widget_func=self._next_widget,
                     previous_widget_func=self._previous_widget,
-                    global_functions=self._global_functions
+                    global_functions=self._global_functions,
+                    string=PyRadioTime.pyradio_time_to_string(self._schedule_item.end_time)
                 )
             )
             self._widgets[-1].w_id = 7
@@ -307,15 +335,24 @@ class PyRadioSimpleScheduleWindow(object):
         self._showed = True
 
     def _dummy_enable(self):
-        self._widgets[0].checked = True
-        self._widgets[1].checked = True
-        self._widgets[4].enabled = False
+        if self._schedule_item.type == 'E':
+            if self._schedule_item.end_type == 'A':
+                self._widgets[6].checked = True
+            else:
+                self._widgets[9].checked = True
+            for i in range(0, 6):
+                self._widgets[i].enabled = False
+            self._widgets[10].enabled = self._remove_enabled
+        else:
+            self._widgets[0].checked = True
+            self._widgets[1].checked = True
+            self._widgets[4].enabled = False
 
-        self._widgets[5].checked = True
-        self._widgets[8].checked = True
-        self._widgets[7].enabled = False
+            self._widgets[5].checked = True
+            self._widgets[8].checked = True
+            self._widgets[7].enabled = False
 
-        self._widgets[10].enabled = False
+            self._widgets[10].enabled = False
 
     def _fix_focus(self):
         if not self._stop_only:
@@ -344,7 +381,7 @@ class PyRadioSimpleScheduleWindow(object):
         while(not self._widgets[self._focus].enabled):
             self._focus += 1
 
-        if self._widgets[self._focus].w_id in (2, 4, 7, 9):
+        if self._focus in (2, 4, 7, 9):
             self._widgets[self._focus].reset_selection()
         self.show()
 
@@ -355,8 +392,10 @@ class PyRadioSimpleScheduleWindow(object):
 
         while(not self._widgets[self._focus].enabled):
             self._focus -= 1
+            if self._focus == -1:
+                self._focus = len(self._widgets) -1
 
-        if self._widgets[self._focus].w_id in (2, 4, 7, 9):
+        if self._focus in (2, 4, 7, 9):
             self._widgets[self._focus].reset_selection(last=True)
         self.show()
 
@@ -381,6 +420,20 @@ class PyRadioSimpleScheduleWindow(object):
 
         elif char in (curses.KEY_EXIT, ord('q'), 27):
             return -1
+
+        elif char in (ord('j'), curses.KEY_UP):
+            self._focus = self._up[self._focus]
+            while not self._widgets[self._focus].enabled:
+                self._focus = self._up[self._focus]
+            if self._focus in (2, 4, 7, 9):
+                self._widgets[self._focus].reset_selection()
+
+        elif char in (ord('k'), curses.KEY_DOWN):
+            self._focus = self._down[self._focus]
+            while not self._widgets[self._focus].enabled:
+                self._focus = self._down[self._focus]
+            if self._focus in (2, 4, 7, 9):
+                self._widgets[self._focus].reset_selection()
 
         elif char in (9, ord('L')):
             if self._widgets[self._focus].w_id in (2, 4, 7, 9):
