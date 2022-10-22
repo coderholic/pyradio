@@ -158,70 +158,70 @@ class PyRadioTheme(object):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('--> 1 transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
-                        1: (12, -1),
-                        2: (11, -1),
-                        3: (10, -1),
-                        4: (3, -1),
-                        5: (1, -1),
-                        6: (4, 5),
-                        7: (8, 9),
-                        8: (13, 14),
-                        9: (6, 7),
-                        10: (1, -1),
-                        11: (3, -1),
-                        12: (10, -1)
+                        1: (12 + self._cnf.start_colors_at, -1),
+                        2: (11 + self._cnf.start_colors_at, -1),
+                        3: (10 + self._cnf.start_colors_at, -1),
+                        4: (3 + self._cnf.start_colors_at, -1),
+                        5: (1 + self._cnf.start_colors_at, -1),
+                        6: (4 + self._cnf.start_colors_at, 5 + self._cnf.start_colors_at),
+                        7: (8 + self._cnf.start_colors_at, 9 + self._cnf.start_colors_at),
+                        8: (13 + self._cnf.start_colors_at, 14 + self._cnf.start_colors_at),
+                        9: (6 + self._cnf.start_colors_at, 7 + self._cnf.start_colors_at),
+                        10: (1 + self._cnf.start_colors_at, -1),
+                        11: (3 + self._cnf.start_colors_at, -1),
+                        12: (10 + self._cnf.start_colors_at, -1)
                     }
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('--> 1 transparency: OFF (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
-                        1: (12, 2),
-                        2: (11, 2),
-                        3: (10, 15),
-                        4: (3, 2),
-                        5: (1, 2),
-                        6: (4, 5),
-                        7: (8, 9),
-                        8: (13, 14),
-                        9: (6, 7),
-                        10: (1, 15),
-                        11: (3, 15),
-                        12: (10, 2)
+                        1: (12 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        2: (11 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        3: (10 + self._cnf.start_colors_at, 15 + self._cnf.start_colors_at),
+                        4: (3 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        5: (1 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        6: (4 + self._cnf.start_colors_at, 5 + self._cnf.start_colors_at),
+                        7: (8 + self._cnf.start_colors_at, 9 + self._cnf.start_colors_at),
+                        8: (13 + self._cnf.start_colors_at, 14 + self._cnf.start_colors_at),
+                        9: (6 + self._cnf.start_colors_at, 7 + self._cnf.start_colors_at),
+                        10: (1 + self._cnf.start_colors_at, 15 + self._cnf.start_colors_at),
+                        11: (3 + self._cnf.start_colors_at, 15 + self._cnf.start_colors_at),
+                        12: (10 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
                     }
             else:
                 if self._cnf.use_transparency:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('--> 2 transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
-                        1: (12, -1),
-                        2: (11, -1),
-                        3: (10, -1),
-                        4: (3, -1),
-                        5: (1, -1),
-                        6: (4, 5),
-                        7: (8, 9),
-                        8: (13, 14),
-                        9: (6, 7),
-                        10: (1, -1),
-                        11: (3, -1),
-                        12: (10, -1)
+                        1: (12 + self._cnf.start_colors_at, -1),
+                        2: (11 + self._cnf.start_colors_at, -1),
+                        3: (10 + self._cnf.start_colors_at, -1),
+                        4: (3 + self._cnf.start_colors_at, -1),
+                        5: (1 + self._cnf.start_colors_at, -1),
+                        6: (4 + self._cnf.start_colors_at, 5 + self._cnf.start_colors_at),
+                        7: (8 + self._cnf.start_colors_at, 9 + self._cnf.start_colors_at),
+                        8: (13 + self._cnf.start_colors_at, 14 + self._cnf.start_colors_at),
+                        9: (6 + self._cnf.start_colors_at, 7 + self._cnf.start_colors_at),
+                        10: (1 + self._cnf.start_colors_at, -1),
+                        11: (3 + self._cnf.start_colors_at, -1),
+                        12: (10 + self._cnf.start_colors_at, -1)
                     }
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('--> 2 transparency: OFF (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
-                        1: (12, 2),
-                        2: (11, 2),
-                        3: (10, 2),
-                        4: (3, 2),
-                        5: (1, 2),
-                        6: (4, 5),
-                        7: (8, 9),
-                        8: (13, 14),
-                        9: (6, 7),
-                        10: (1, 2),
-                        11: (3, 2),
-                        12: (10, 2)
+                        1: (12 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        2: (11 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        3: (10 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        4: (3 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        5: (1 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        6: (4 + self._cnf.start_colors_at, 5 + self._cnf.start_colors_at),
+                        7: (8 + self._cnf.start_colors_at, 9 + self._cnf.start_colors_at),
+                        8: (13 + self._cnf.start_colors_at, 14 + self._cnf.start_colors_at),
+                        9: (6 + self._cnf.start_colors_at, 7 + self._cnf.start_colors_at),
+                        10: (1 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        11: (3 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        12: (10 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
                     }
             for k in colors.keys():
                 curses.init_pair(k, colors[k][0], colors[k][1])
@@ -308,7 +308,7 @@ class PyRadioTheme(object):
             for k in self._colors['data'].keys():
                 curse_rgb = rgb_to_curses_rgb(self._colors['data'][k])
                 curses.init_color(
-                    int(k),
+                    int(k) + self._cnf.start_colors_at,
                     curse_rgb[0],
                     curse_rgb[1],
                     curse_rgb[2],

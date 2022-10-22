@@ -578,13 +578,16 @@ class PyRadio(object):
             self._cnf.opts['use_transparency'][1] = False
             self._cnf.opts['theme'][1] = 'dark'
             self._cnf.opts['auto_update_theme'][1] = False
+        else:
+            if curses.COLORS > 32:
+                self._cnf.start_colors_at = 15
         if logger.isEnabledFor(logging.INFO):
             logger.info('<<<===---  Program start  ---===>>>')
             if self._cnf.distro == 'None':
                 logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), system()))
             else:
                 logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), self._cnf.distro))
-            logger.info('Terminal supports {} colors'.format(curses.COLORS))
+            logger.info('Terminal supports {0} colors (first color to define = {1})'.format(curses.COLORS, self._cnf.start_colors_at))
         self.stdscr = stdscr
 
         try:

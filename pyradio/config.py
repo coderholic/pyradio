@@ -1209,6 +1209,8 @@ class PyRadioConfig(PyRadioStations):
     use_calculated_colors = False
     has_border_background  = False
 
+    start_colors_at = 0
+
     def __init__(self):
         self.backup_player_params = None
         self._profile_name = 'pyradio'
