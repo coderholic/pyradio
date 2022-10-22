@@ -67,6 +67,73 @@ class PyRadioScheduleItem(object):
         self._end_duration = ''
 
     @property
+    def active_start(self):
+        '''
+        return a datetime representing the starting date-time
+        '''
+        if self.start_type == 'A':
+            return datetime(
+                self.start_date.year,
+                self.start_date.month,
+                self.start_date.day
+            ) + timedelta(
+                hours=self.start_time[0],
+                minutes=self.start_time[1],
+                seconds=self.start_time[2]
+            )
+        else:
+            date_out = datetime(
+                self.start_date.year,
+                self.start_date.month,
+                self.start_date.day
+            ) + timedelta(
+                hours=self.start_time[0],
+                minutes=self.start_time[1],
+                seconds=self.start_time[2]
+            )
+            time_out = PyRadioTime()
+            time_out.set_time(self._start_duration)
+            return date_out + timedelta(
+                hours=time_out.time[0],
+                minutes=time_out.time[1],
+                seconds=time_out.time[2]
+            )
+
+
+    @property
+    def active_end(self):
+        '''
+        return a datetime representing the ending date-time
+        '''
+        if self.end_type == 'A':
+            return datetime(
+                self.end_date.year,
+                self.end_date.month,
+                self.end_date.day
+            ) + timedelta(
+                hours=self.end_time[0],
+                minutes=self.end_time[1],
+                seconds=self.end_time[2]
+            )
+        else:
+            date_out = datetime(
+                self.start_date.year,
+                self.start_date.month,
+                self.start_date.day
+            ) + timedelta(
+                hours=self.start_time[0],
+                minutes=self.start_time[1],
+                seconds=self.start_time[2]
+            )
+            time_out = PyRadioTime()
+            time_out.set_time(self._end_duration)
+            return date_out + timedelta(
+                hours=time_out.time[0],
+                minutes=time_out.time[1],
+                seconds=time_out.time[2]
+            )
+
+    @property
     def type (self):
         return self._type
 
@@ -506,6 +573,15 @@ class PyRadioTime(object):
 
 if __name__ == '__main__':
     a= PyRadioScheduleItem()
-    a.set_item('B`|`2022-10-15 23:15:12`|`A`|`2021-08-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation')
+    print('B`|`2022-10-15 11:15:12 PM`|`A`|`2021-08-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation')
+    a.set_item('B`|`2022-10-15 11:15:12 PM`|`A`|`2021-08-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation')
     # a.set_item('B`|`2022-10-15 23:15:12`|`A`|``|`I02:15:11`|`myplaylist`|`mystation')
     print(a)
+    print(a.active_start)
+    print(a.active_end)
+    print('======')
+    a._end_duration = '3:5:10'
+    print(a.active_start)
+    print(a.active_end)
+    print(a)
+

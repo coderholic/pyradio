@@ -1,0 +1,214 @@
+#!/bin/bash
+function help(){
+echo "Usage: $(basename $0) [-t TERMINAL]"
+echo "
+This script is part of PyRadio
+
+It will update the local Dekstop File, so that it uses a suitable terminal for
+the execution of PyRadio.
+
+Suitable terminals are:
+   gnome-terminal, mate-terminal, xfce4-terminal, lxterminal, terminator,
+   termite, termit, kitty, alacritty, sakura, roxterm, tilix, lilyterm,
+   st, xst, rxvt, uxterm, xterm
+Please make sure that one of them is installed.
+
+Available options:
+    -t   TERMINAL
+         Use this terminal for Desktop file instead of the auto-detected one.
+         Use \"auto\" to reset to the auto-detected one.
+
+For passing the command parameter, the script will use \"-e\" for all terminals,
+so that an executable line will be constracted.
+Example:
+    kitty -e pyradio
+
+If your terminal of choise uses a different way to accept the command, please
+include it in the TERMINAL value. For example, if the command parameter for
+the terminal \"my_term\" is \"-S\", execute as follows:
+
+    ./fix_desktop_file -t 'my_term -S'
+"
+}
+
+function get_terminal(){
+    # look for a valid terminal
+    for n in  \
+        gnome-terminal \
+        mate-terminal \
+        xfce4-terminal \
+        lxterminal \
+        terminator \
+        termite \
+        termit \
+        kitty \
+        alacritty \
+        sakura \
+        roxterm \
+        tilix \
+        lilyterm \
+        st \
+        xst \
+        rxvt \
+        uxterm \
+        xterm
+    do
+        "$n" -v 2>/dev/null 1>&2 && {
+            REQ_TERMINAL="$n"
+            COMMAND='-e'
+            if [ "$REQ_TERMINAL" = "gnome-terminal" ]; then COMMAND='--';fi
+            break
+        }
+    done
+
+    if [ ! -z "${REQ_TERMINAL}" ];then
+        REQ_TERMINAL=${REQ_TERMINAL}" $COMMAND"
+    fi
+}
+
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        -h|--help)
+            help
+            exit
+            ;;
+        -t)
+            shift
+            if [ -z "$1" ];then
+                echo "Error: No terminal specified..."
+                echo
+                exit 1
+            fi
+            REQ_TERMINAL="$1"
+            shift
+            ;;
+        *)    # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+IN_FILE="$1"
+OUT_FILE="$2"
+
+if [ -z "${IN_FILE}" ] || [ -z "${OUT_FILE}" ];then
+    IN_FILE=/usr/share/applications/pyradio.desktop
+    OUT_FILE=~/.local/share/applications/pyradio.desktop
+
+    if [ ! -e "${IN_FILE}" ] && [ ! -e "${OUT_FILE}" ]; then
+        echo "Error: No PyRadio Desktop File found..."
+        echo "       Are you sure PyRadio is already installed?"
+        echo
+        exit 1
+    fi
+
+    if [ ! -e "${IN_FILE}" ] && [ -e "${OUT_FILE}" ]; then
+        cp "${OUT_FILE}" "$PWD"/tmp.$$
+        IN_FILE="$PWD"/tmp.$$
+    fi
+else
+    FROM_INSTALL=1
+fi
+
+
+mkdir -p "$(dirname ${OUT_FILE})"
+
+# only do this if not a distro install
+sed -e "s{TryExec=.*{TryExec=/home/$USER/.local/bin/pyradio{" \
+    -e "s{Exec=.*{Exec=/home/$USER/.local/bin/pyradio{" \
+    -e "s|Icon=.*|Icon=/home/$USER/.config/pyradio.png|" \
+    "${IN_FILE}" > "${OUT_FILE}"
+# fix for incopatible terminals
+# first: check for KDE
+# set -x
+if [ "${REQ_TERMINAL}" = "auto" ];then
+    unset REQ_TERMINAL
+fi
+if [ "${XDG_CURRENT_DESKTOP}" = "KDE" ] || \
+    [ "${DG_SESSION_DESKTOP}" = "KDE" ] || \
+    [ "${DESKTOP_SESSION}" = "plasma" ]; then
+        if [ -z "$REQ_TERMINAL" ];then
+            FIX_NEEDED=1
+            get_terminal
+            [ -z "$REQ_TERMINAL" ] || unset FIX_NEEDED
+        fi
+fi
+# second: check for Deepin
+if [ ! -z "$REQ_TERMINAL" ];then
+
+    # check for terminals
+    for n in \
+        konsole \
+        deepin-terminal
+    do
+        if [[ "${REQ_TERMINAL}" == *"$n"* ]];then
+            FIX_NEEDED=1
+            get_terminal
+            [ -z "$REQ_TERMINAL" ] || unset FIX_NEEDED
+        fi
+    done
+fi
+set +x
+#unset REQ_TERMINAL
+if [ -z "${REQ_TERMINAL}" ]; then
+    cat <<END
+
+!!
+!! NOTICE
+!!
+!! Your default terminal application will probably not
+!! display colors correctly.
+!!
+!! PyRadio has tried to detect a different terminal to
+!! use as default in the Desktop File, but failed.
+!!
+!! Please install any of the following terminals
+!!   gnome-terminal, mate-terminal, xfce4-terminal,
+!!   lxterminal, terminator, termite, termit,
+!!   kitty, alacritty, sakura, roxterm, tilix,
+!!   lilyterm, st, xst, rxvt, uxterm, xterm
+END
+
+if [ -z "${FROM_INSTALL}" ];then
+cat <<END
+!!
+!! Then download the file from this URL
+!!
+!! and execute it
+!!   chmod +x fix_desktop_file
+!!   ./fix_desktop_file
+!!
+
+END
+else
+cat <<END
+!!
+!! Then download the file from this URL
+!!
+!! and execute it
+!!   chmod +x fix_desktop_file
+!!   ./fix_desktop_file
+!!
+
+END
+fi
+else
+    if [ ! -z "${FROM_INSTALL}" ];then
+        echo "  Desktop File Terminal: \"$(echo ${REQ_TERMINAL/ */})\""
+    else
+        echo "Desktop File Terminal: \"$(echo ${REQ_TERMINAL/ */})\""
+    fi
+    if [[ "${REQ_TERMINAL}" != *" "* ]]; then
+        REQ_TERMINAL="${REQ_TERMINAL}"' -e'
+    fi
+    sed -i -e "s|^Exec=|Exec=${REQ_TERMINAL} |" \
+        -e 's/Terminal=true/Terminal=false/' \
+        "${OUT_FILE}"
+fi
+rm "$PWD"/tmp.$$ 2>/dev/null
+# mkdir -p ~/.local/share/icons
+# cp devel/pyradio.png ~/.local/share/icons

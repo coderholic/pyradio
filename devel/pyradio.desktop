@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PyRadio
+GenericName=Radio Player for the Terminal
+Comment=Curses based Radio Player
+TryExec=pyradio
+Exec=pyradio
+Icon=pyradio
+Terminal=true
+Categories=Network

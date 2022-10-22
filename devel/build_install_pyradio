@@ -4,7 +4,8 @@ echo "Usage: $0 [2/-R]"
 echo "
 Available options:
      2   build using python v. 2.7 (linux only)
-    -R   remove (uninstall) pyradi0
+    -R   remove (uninstall) pyradio
+    -t   Use this terminal for Desktop file
 
 If no option is used, will build using Python 3
 and will install in your HOME directory
@@ -74,6 +75,7 @@ function uninstall(){
         rm -rf ~/.local/local/share/doc/pyradio 2>/dev/null
     fi
     rm -f ~/.local/share/man/man1/pyradio*gz 2>/dev/null
+    rm -f ~/.local/share/applications/pyradio.desktop 2>/dev/null
     echo 'done'
     if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
         # delete link on mac
@@ -282,6 +284,16 @@ do
             help
             exit
             ;;
+        -t)
+            shift
+            if [ -z "$1" ];then
+                echo "Error: No terminal specified..."
+                echo
+                exit 1
+            fi
+            REQ_TERMINAL="$1"
+            shift
+            ;;
         --warning)
             # macos only; execute "put pyradio in PATH" and
             # display warning (not error) if pyradio executable
@@ -451,6 +463,35 @@ then
     if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
         [ -z "${HOMEBREW}" ] && HOMEBREW=/usr/local/opt
         put_exec_to_mac_path "${HOMEBREW}"
+    else
+        if [ ! -z "$(grep 'distro = None' pyradio/config)" ];then
+            echo
+            echo "Installing Desktop File"
+            if [ -z "${REQ_TERMINAL}" ];then
+                # do I already have a value
+                if [ -e ~/.local/share/applications/pyradio.desktop ];then
+                    OLD_COMMAND=$(grep '^Exec=' ~/.local/share/applications/pyradio.desktop | sed 's/Exec=//')
+                    T=${OLD_COMMAND/ */}
+                    if [[ "${T}" != "/home/"* ]] && [ "${T}" != "pyradio" ];then
+                        REQ_TERMINAL="${T}"
+                        P=${OLD_COMMAND/* /}
+                        if [[ "${P}" != "/home/"* ]] && [ "${P}" != "pyradio" ];then
+                            REQ_TERMINAL="${REQ_TERMINAL} ${P}"
+                        fi
+                    fi
+                fi
+                if [ ! -z "${REQ_TERMINAL}" ];then
+                    echo "  Previously used Desktop File Terminal: \"${REQ_TERMINAL}\""
+                fi
+            fi
+            if [ -z "${REQ_TERMINAL}" ];then
+                ./devel/fix_desktop_file "$PWD"/devel/pyradio.desktop ~/.local/share/applications/pyradio.desktop
+            else
+                ./devel/fix_desktop_file -t "${REQ_TERMINAL}" "$PWD"/devel/pyradio.desktop ~/.local/share/applications/pyradio.desktop
+            fi
+            mkdir -p ~/.config/pyradio
+            cp devel/pyradio.png ~/.config/pyradio
+        fi
     fi
 else
     do_exit
