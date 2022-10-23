@@ -791,14 +791,6 @@ class PyRadio(object):
 
     def initHead(self, info):
         self.headWin.hline(0, 0, ' ', self.maxX, curses.color_pair(5))
-        rightStr = " https://github.com/coderholic/pyradio"
-        try:
-            self.headWin.addstr(
-                0, self.maxX - len(rightStr) -1,
-                rightStr, curses.color_pair(2)
-            )
-        except:
-            pass
         try:
             self.headWin.addstr(0, 0, info, curses.color_pair(4))
             if self._cnf.locked:
@@ -809,6 +801,17 @@ class PyRadio(object):
                 self.headWin.addstr(' ', curses.color_pair(4))
         except:
             pass
+        # if self.maxX - len() > len(rightStr)
+        _, curX = self.headWin.getyx()
+        rightStr = " https://github.com/coderholic/pyradio"
+        if self.maxX - curX > len(rightStr) + 3:
+            try:
+                self.headWin.addstr(
+                    0, self.maxX - len(rightStr) -1,
+                    rightStr, curses.color_pair(2)
+                )
+            except:
+                pass
         # self.headWin.bkgd(' ', curses.color_pair(5))
         self.headWin.noutrefresh()
 
