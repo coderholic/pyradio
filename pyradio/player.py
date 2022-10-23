@@ -815,7 +815,10 @@ class Player(object):
                         except pywintypes.error as e:
                             data = b''
                     else:
-                        data = sock.recvmsg(4096)
+                        try:
+                            data = sock.recvmsg(4096)
+                        except:
+                            data = b''
                     a_data = self._fix_returned_data(data)
                     # logger.error('DE Received: "{!r}"'.format(a_data))
                     if a_data == b'' or stop():
