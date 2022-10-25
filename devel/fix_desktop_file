@@ -34,27 +34,27 @@ the terminal \"my_term\" is \"-S\", execute as follows:
 function get_terminal(){
     # look for a valid terminal
     for n in  \
-        gnome-terminal \
-        mate-terminal \
-        xfce4-terminal \
-        lxterminal \
-        terminator \
-        termite \
-        termit \
-        kitty \
-        alacritty \
-        sakura \
-        roxterm \
-        tilix \
-        lilyterm \
-        st \
-        xst \
-        rxvt \
-        uxterm \
-        xterm
+        'gnome-terminal --help' \
+        'mate-terminal --help' \
+        'xfce4-terminal -V' \
+        'lxterminal -v' \
+        'terminator -v' \
+        'termite -v' \
+        'kitty -v' \
+        'alacritty -V' \
+        'sakura -v' \
+        'roxterm --help' \
+        'tilix -v' \
+        'lilyterm -v' \
+        'st -v' \
+        'xst -v' \
+        'rxvt  -v'\
+        'urxvt  -v'\
+        'uxterm -v' \
+        'xterm -v'
     do
-        "$n" -v 2>/dev/null 1>&2 && {
-            REQ_TERMINAL="$n"
+        "$n" 2>/dev/null 1>&2 && {
+            REQ_TERMINAL="${n/ */}"
             COMMAND='-e'
             if [ "$REQ_TERMINAL" = "gnome-terminal" ]; then COMMAND='--';fi
             break
@@ -168,15 +168,16 @@ if [ -z "${REQ_TERMINAL}" ]; then
 !!
 !! Please install any of the following terminals
 !!   gnome-terminal, mate-terminal, xfce4-terminal,
-!!   lxterminal, terminator, termite, termit,
-!!   kitty, alacritty, sakura, roxterm, tilix,
-!!   lilyterm, st, xst, rxvt, uxterm, xterm
+!!   lxterminal, terminator, termite, kitty,
+!!   alacritty, sakura, roxterm, tilix, lilyterm,
+!!   st, xst, urxvt, uxterm, xterm
 END
 
 if [ -z "${FROM_INSTALL}" ];then
 cat <<END
 !!
 !! Then download the file from this URL
+!!    https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_desktop_file
 !!
 !! and execute it
 !!   chmod +x fix_desktop_file
@@ -188,6 +189,7 @@ else
 cat <<END
 !!
 !! Then download the file from this URL
+!!    https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_desktop_file
 !!
 !! and execute it
 !!   chmod +x fix_desktop_file
