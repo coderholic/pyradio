@@ -93,6 +93,8 @@ def shell():
     parser.add_argument('-t', '--theme', default='', help='Use specified theme.')
     parser.add_argument('--show-themes', action='store_true',
                        help='Show Internal and System Themes names.')
+    parser.add_argument('--no-themes', action='store_true',
+                       help='Disable themes (use default theme).')
     parser.add_argument('--write-theme', nargs=2, metavar=('IN_THEME', 'OUT_THEME,'),
                         help='Write an Internal or System Theme to themes directory.')
     parser.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
@@ -355,6 +357,9 @@ def shell():
         if not config_already_read:
             read_config(pyradio_config)
             config_already_read = True
+
+        if args.no_themes:
+            pyradio_config.use_themes = False
 
         if args.use_player != '':
             requested_player = args.use_player

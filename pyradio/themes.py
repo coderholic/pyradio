@@ -141,7 +141,7 @@ class PyRadioTheme(object):
         self._temp_colors = None
 
     def _do_init_pairs(self, transparency=None):
-        if curses.can_change_color():
+        if self._cnf.use_themes:
             if transparency is not None:
                 logger.error('before self._cnf.use_transparency = {}'.format( self._cnf.use_transparency ))
                 self._cnf.use_transparency = transparency
@@ -304,7 +304,7 @@ class PyRadioTheme(object):
             pass
 
     def _update_colors(self):
-        if curses.can_change_color():
+        if self._cnf.use_themes:
             for k in self._colors['data'].keys():
                 curse_rgb = rgb_to_curses_rgb(self._colors['data'][k])
                 curses.init_color(

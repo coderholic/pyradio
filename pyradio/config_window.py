@@ -377,43 +377,49 @@ class PyRadioConfigWindow(object):
 
         elif val[0] == 'calculated_color_factor':
             if char in (curses.KEY_RIGHT, ord('l')):
-                t = float(val[1][1])
-                if t < .2:
-                    t = round(t + .01, 2)
-                    logger.error('t = {}'.format(t))
-                    s_t = str(t)[:4]
-                    if s_t == '0.0':
-                        s_t = '0'
-                    logger.error('s_t = ' + s_t)
-                    self._config_options[val[0]][1] = s_t
-                    self._win.addstr(
-                        self.selection+1,
-                        3 + len(val[1][0]),
-                        s_t + '     ', curses.color_pair(6))
-                    self._print_title()
-                    self._win.refresh()
-                    # att = PyRadioThemeReadWrite(self._cnf)
-                    # att._calculate_fifteenth_color()
+                if self._cnf.use_themes:
+                    t = float(val[1][1])
+                    if t < .2:
+                        t = round(t + .01, 2)
+                        logger.error('t = {}'.format(t))
+                        s_t = str(t)[:4]
+                        if s_t == '0.0':
+                            s_t = '0'
+                        logger.error('s_t = ' + s_t)
+                        self._config_options[val[0]][1] = s_t
+                        self._win.addstr(
+                            self.selection+1,
+                            3 + len(val[1][0]),
+                            s_t + '     ', curses.color_pair(6))
+                        self._print_title()
+                        self._win.refresh()
+                        # att = PyRadioThemeReadWrite(self._cnf)
+                        # att._calculate_fifteenth_color()
+                else:
+                    self._cnf._show_colors_cannot_change()
                 return -1, []
 
             elif char in (curses.KEY_LEFT, ord('h')):
-                t = float(val[1][1])
-                if t > 0:
-                    t = round(t - .01, 2)
-                    logger.error('t = {}'.format(t))
-                    s_t = str(t)[:4]
-                    if s_t == '0.0':
-                        s_t = '0'
-                    logger.error('s_t = ' + s_t)
-                    self._config_options[val[0]][1] = s_t
-                    self._win.addstr(
-                        self.selection+1,
-                        3 + len(val[1][0]),
-                        s_t + '     ', curses.color_pair(6))
-                    self._print_title()
-                    self._win.refresh()
-                    # att = PyRadioThemeReadWrite(self._cnf)
-                    # att._calculate_fifteenth_color()
+                if self._cnf.use_themes:
+                    t = float(val[1][1])
+                    if t > 0:
+                        t = round(t - .01, 2)
+                        logger.error('t = {}'.format(t))
+                        s_t = str(t)[:4]
+                        if s_t == '0.0':
+                            s_t = '0'
+                        logger.error('s_t = ' + s_t)
+                        self._config_options[val[0]][1] = s_t
+                        self._win.addstr(
+                            self.selection+1,
+                            3 + len(val[1][0]),
+                            s_t + '     ', curses.color_pair(6))
+                        self._print_title()
+                        self._win.refresh()
+                        # att = PyRadioThemeReadWrite(self._cnf)
+                        # att._calculate_fifteenth_color()
+                else:
+                    self._cnf._show_colors_cannot_change()
                 return -1, []
 
         elif val[0] == 'connection_timeout':
@@ -475,7 +481,7 @@ class PyRadioConfigWindow(object):
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Default options loaded')
         elif char in (ord('r'), ):
-            if curses.can_change_color():
+            if self._cnf.use_themes:
                 old_theme = self._config_options['theme'][1]
                 old_transparency = self._config_options['use_transparency'][1]
                 self._config_options = deepcopy(self._saved_config_options)
@@ -544,7 +550,7 @@ class PyRadioConfigWindow(object):
             elif sel == 'default_encoding':
                 return self.n_u.SELECT_ENCODING_MODE, []
             elif sel == 'theme':
-                if curses.can_change_color():
+                if self._cnf.use_themes:
                     self._cnf.theme = self._old_theme
                     if logger.isEnabledFor(logging.ERROR):
                         logger.error('DE\n\nshowing theme self._cnf.theme = {}\n\n'.format(self._cnf.theme))

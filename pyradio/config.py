@@ -6,7 +6,7 @@ import glob
 import curses
 import collections
 import json
-from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR
+from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ
 from sys import platform
 from time import ctime, sleep
 from datetime import datetime
@@ -1117,6 +1117,7 @@ class PyRadioConfig(PyRadioStations):
     command_line_params_not_ready = None
 
     fallback_theme = ''
+    use_themes = True
 
     theme_not_supported = False
     theme_has_error = False
@@ -1158,6 +1159,12 @@ class PyRadioConfig(PyRadioStations):
     opts['radiobrowser'] = ['RadioBrowser', '-']
     opts['requested_player'] = ['', '']
     opts['dirty_config'] = ['', False]
+
+    '''
+    Keep several config options when no themes mode is enabled
+    '''
+    bck_opts = {}
+
     if platform == 'win32':
         th_path = path.join(getenv('APPDATA'), 'pyradio', 'themes', 'auto.pyradio-themes')
     else:
@@ -1703,6 +1710,35 @@ class PyRadioConfig(PyRadioStations):
                     logger.info('Lock file not found...')
                 return -1, self._session_lock_file
 
+    def change_to_no_theme_mode(self, show_colors_cannot_change):
+        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+        curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(6, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
+        curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_GREEN)
+        curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
+        curses.init_pair(10, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(11, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(13, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(14, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(15, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        ''' Theme values backup '''
+        self.bck_opts['use_transparency'] = self.opts['use_transparency'][1]
+        self.bck_opts['theme'] = self.opts['theme'][1]
+        self.bck_opts['auto_update_theme'] = self.opts['auto_update_theme'][1]
+        self.bck_opts['calculated_color_factor'] = self.opts['calculated_color_factor'][1]
+        ''' No theme values '''
+        self.opts['use_transparency'][1] = False
+        self.opts['theme'][1] = 'dark'
+        self.opts['auto_update_theme'][1] = False
+        self.opts['calculated_color_factor'][1] = "0"
+        self._show_colors_cannot_change = show_colors_cannot_change
+        logger.error('bck_opts = {}'.format(self.bck_opts))
+
     def _check_config_file(self, usr):
         ''' Make sure a config file exists in the config dir '''
         package_config_file = path.join(path.dirname(__file__), 'config')
@@ -2137,6 +2173,16 @@ auto_save_playlist = {13}
         copyfile(self.config_file, self.config_file + '.restore')
         if self.opts['default_station'][1] is None:
             self.opts['default_station'][1] = '-1'
+
+        if self.use_themes:
+            theme = self.opts['theme'][1] if not self.opts['auto_update_theme'][1] else '*' + self.opts['theme'][1]
+            trnsp = self.opts['use_transparency'][1]
+            calcf = self.opts['calculated_color_factor'][1]
+        else:
+            theme = self.bck_opts['theme'] if not self.bck_opts['auto_update_theme'] else '*' + self.bck_opts['theme']
+            trnsp = self.bck_opts['use_transparency']
+            calcf = self.bck_opts['calculated_color_factor']
+
         try:
             with open(self.config_file, 'w') as cfgfile:
                 cfgfile.write(txt.format(
@@ -2148,9 +2194,9 @@ auto_save_playlist = {13}
                     self.opts['enable_mouse'][1],
                     self.opts['connection_timeout'][1],
                     self.opts['force_http'][1],
-                    self.opts['theme'][1] if not self.opts['auto_update_theme'][1] else '*' + self.opts['theme'][1],
-                    self.opts['use_transparency'][1],
-                    self.opts['calculated_color_factor'][1],
+                    theme,
+                    trnsp,
+                    calcf,
                     self.opts['confirm_station_deletion'][1],
                     self.opts['confirm_playlist_reload'][1],
                     self.opts['auto_save_playlist'][1]))
@@ -2219,6 +2265,17 @@ auto_save_playlist = {13}
 
     def can_like_a_station(self):
         return True if self._current_log_title != self._last_liked_title else False
+
+    def is_blacklisted_terminal(self):
+        ch = (
+            'KONSOLE',
+            'DEEPIN'
+        )
+        for par in environ.keys():
+            for chs in ch:
+                if par.startswith(chs):
+                    return True
+        return False
 
 
 class PyRadioPlaylistStack(object):

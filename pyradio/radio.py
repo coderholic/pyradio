@@ -117,6 +117,17 @@ def invalid_encoding(enc):
         return True
     return False
 
+def calc_can_change_colors(config):
+    '''
+    check if current terminal is "blacklisted"
+    i.e. cannot display colors correctly
+    '''
+    ret = True
+    if curses.can_change_color() and curses.COLORS > 16:
+        if config.is_blacklisted_terminal():
+            ret = False
+    return ret
+
 class PyRadio(object):
     player = None
     ws = Window_Stack()
@@ -542,12 +553,12 @@ class PyRadio(object):
         self._update_history_positions_in_list()
 
     def _save_colors(self):
-        if curses.can_change_color() and curses.COLORS >= 16:
+        if self._cnf.use_themes:
             for i in range(0, 16):
                 self._saved_colors[i] = curses.color_content(i)
 
     def restore_colors(self):
-        if curses.can_change_color() and curses.COLORS >= 16:
+        if self._cnf.use_themes:
             for i in range(0,16):
                 curses.init_color(
                     i,
@@ -559,25 +570,16 @@ class PyRadio(object):
     def setup(self, stdscr):
         curses.start_color()
         curses.use_default_colors()
+        if self._cnf.use_themes:
+            self._cnf.use_themes = calc_can_change_colors(self._cnf)
         self._save_colors()
         # curses.savetty()
         self.setup_return_status = True
         if not curses.has_colors():
             self.setup_return_status = False
             return
-        if not curses.can_change_color() or curses.COLORS < 16:
-            curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-            curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
-            curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-            curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
-            curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLACK)
-            curses.init_pair(6, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
-            curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_GREEN)
-            curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLACK)
-            curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
-            self._cnf.opts['use_transparency'][1] = False
-            self._cnf.opts['theme'][1] = 'dark'
-            self._cnf.opts['auto_update_theme'][1] = False
+        if not self._cnf.use_themes:
+            self._cnf.change_to_no_theme_mode(self._show_colors_cannot_change)
         else:
             if curses.COLORS > 32:
                 self._cnf.start_colors_at = 15
@@ -595,7 +597,7 @@ class PyRadio(object):
         except:
             pass
 
-        if curses.can_change_color() and curses.COLORS >= 16:
+        if self._cnf.use_themes:
             self._theme._transparent = self._cnf.use_transparency
             self._theme.config_dir = self._cnf.stations_dir
             ''' In case we have to download a theme, and it takes too long  '''
@@ -1841,7 +1843,7 @@ class PyRadio(object):
         return num_of_playlists, playing
 
     def _show_theme_selector_from_config(self):
-        if not curses.can_change_color() or curses.COLORS < 16:
+        if not self._cnf.use_themes:
             # TODO show msg
             self._show_colors_cannot_change()
             return
@@ -4229,7 +4231,7 @@ class PyRadio(object):
         '''
         if self.ws.window_mode == self.ws.CONFIG_MODE and not changed_from_config_window:
             return
-        if not curses.can_change_color() or curses.COLORS < 16:
+        if not self._cnf.use_themes:
             # TODO show msg
             self._show_colors_cannot_change()
             return
@@ -5763,7 +5765,7 @@ class PyRadio(object):
             self._reset_status_bar_right()
             self._config_win = None
             self.theme_forced_selection = None
-            if not curses.can_change_color() or curses.COLORS < 16:
+            if not self._cnf.use_themes:
                 # TODO show msg
                 self._show_colors_cannot_change()
                 return
