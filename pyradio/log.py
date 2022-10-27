@@ -37,6 +37,7 @@ class Log(object):
 
     _show_status_updates = False
 
+    _startup_title = None
 
     def __init__(self, config):
         self._cnf = config
@@ -293,21 +294,20 @@ class Log(object):
             self._write_title_to_log(self._cnf._current_log_title, force=True)
 
     def _get_startup_window_title(self):
-        if platform.lower().startswith('win'):
-            self._startup_title = ctypes.windll.kernel32.GetConsoleTitleW()
-        else:
+        if not platform.lower().startswith('win'):
             user = getenv('USER')
             host = getenv('HOSTNAME')
             pwd = getenv('PWD')
             if user and host:
                 self._startup_title = user + '@' + host
             else:
-                self._startup_title = '[' + pwd + ']'
+                if user:
+                    self._startup_title = '-= ' user + ' - ' + pwd + ' =-'
+                else:
+                    self._startup_title = '-= ' + pwd + ' =-'
 
     def _restore_startup_window_title(self):
-        if platform.lower().startswith('win'):
-            ctypes.windll.kernel32.SetConsoleTitleW(self._startup_title)
-        else:
+        if self._startup_title is not None:
             stdout.write('\33]0;' + self._startup_title + '\a')
             stdout.flush()
 
