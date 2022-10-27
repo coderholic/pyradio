@@ -122,6 +122,8 @@ def calc_can_change_colors(config):
     check if current terminal is "blacklisted"
     i.e. cannot display colors correctly
     '''
+    if not curses.can_change_color()):
+        return False
     ret = True
     if curses.can_change_color() and curses.COLORS > 16:
         if config.is_blacklisted_terminal():
@@ -568,16 +570,16 @@ class PyRadio(object):
                 )
 
     def setup(self, stdscr):
+        self.setup_return_status = True
+        if not curses.has_colors():
+            self.setup_return_status = False
+            return
         curses.start_color()
         curses.use_default_colors()
         if self._cnf.use_themes:
             self._cnf.use_themes = calc_can_change_colors(self._cnf)
         self._save_colors()
         # curses.savetty()
-        self.setup_return_status = True
-        if not curses.has_colors():
-            self.setup_return_status = False
-            return
         if not self._cnf.use_themes:
             self._cnf.change_to_no_theme_mode(self._show_colors_cannot_change)
         else:

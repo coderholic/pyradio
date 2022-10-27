@@ -2267,13 +2267,25 @@ auto_save_playlist = {13}
         return True if self._current_log_title != self._last_liked_title else False
 
     def is_blacklisted_terminal(self):
+        ''' konsole '''
         ch = (
             'KONSOLE',
-            'DEEPIN'
         )
         for par in environ.keys():
             for chs in ch:
                 if par.startswith(chs):
+                    return True
+        ''' terminal desktop files '''
+        ch = (
+            'konsole.desktop',
+            'deepin-terminal.desktop',
+            'qterminal.desktop',
+            'terminology',
+            'pangoterm.desktop'
+        )
+        for par in environ.values():
+            for a_desk in ch:
+                if a_desk in par:
                     return True
         return False
 

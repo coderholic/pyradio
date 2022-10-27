@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 function help(){
 echo "Usage: $(basename $0) [-t TERMINAL]"
 echo "
@@ -34,26 +35,26 @@ the terminal \"my_term\" is \"-S\", execute as follows:
 function get_terminal(){
     # look for a valid terminal
     for n in  \
-        'gnome-terminal --help' \
-        'mate-terminal --help' \
-        'xfce4-terminal -V' \
-        'lxterminal -v' \
-        'terminator -v' \
-        'termite -v' \
-        'kitty -v' \
-        'alacritty -V' \
-        'sakura -v' \
-        'roxterm --help' \
-        'tilix -v' \
-        'lilyterm -v' \
-        'st -v' \
-        'xst -v' \
-        'rxvt  -v'\
-        'urxvt  -v'\
-        'uxterm -v' \
-        'xterm -v'
+        "gnome-terminal --help" \
+        "mate-terminal --help" \
+        "xfce4-terminal -V" \
+        "lxterminal -v" \
+        "terminator -v" \
+        "termite -v" \
+        "kitty -v" \
+        "alacritty -V" \
+        "sakura -v" \
+        "roxterm --help" \
+        "tilix -v" \
+        "lilyterm -v" \
+        "st -v" \
+        "xst -v" \
+        "rxvt  -v"\
+        "urxvt  -v"\
+        "uxterm -v" \
+        "xterm -v"
     do
-        "$n" 2>/dev/null 1>&2 && {
+        $n 2>/dev/null 1>&2 && {
             REQ_TERMINAL="${n/ */}"
             COMMAND='-e'
             if [ "$REQ_TERMINAL" = "gnome-terminal" ]; then COMMAND='--';fi
@@ -92,6 +93,8 @@ do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+get_terminal
+exit
 IN_FILE="$1"
 OUT_FILE="$2"
 
@@ -113,7 +116,6 @@ if [ -z "${IN_FILE}" ] || [ -z "${OUT_FILE}" ];then
 else
     FROM_INSTALL=1
 fi
-
 
 mkdir -p "$(dirname ${OUT_FILE})"
 
@@ -152,7 +154,7 @@ if [ ! -z "$REQ_TERMINAL" ];then
         fi
     done
 fi
-set +x
+
 #unset REQ_TERMINAL
 if [ -z "${REQ_TERMINAL}" ]; then
     cat <<END

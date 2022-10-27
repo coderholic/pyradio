@@ -1,5 +1,6 @@
 # '''- coding: utf-8 -*- '''
 import curses
+from os import getenv
 from sys import version_info, platform, stdout
 import logging
 import threading
@@ -40,6 +41,10 @@ class Log(object):
     def __init__(self, config):
         self._cnf = config
         self.width = None
+        self._get_startup_window_title()
+
+    def __del__(self):
+        self._restore_startup_window_title()
 
     def setScreen(self, cursesScreen):
         self.cursesScreen = cursesScreen
@@ -287,6 +292,25 @@ class Log(object):
         if self._cnf._current_log_title:
             self._write_title_to_log(self._cnf._current_log_title, force=True)
 
+    def _get_startup_window_title(self):
+        if platform.lower().startswith('win'):
+            self._startup_title = ctypes.windll.kernel32.GetConsoleTitleW()
+        else:
+            user = getenv('USER')
+            host = getenv('HOSTNAME')
+            pwd = getenv('PWD')
+            if user and host:
+                self._startup_title = user + '@' + host
+            else:
+                self._startup_title = '[' + pwd + ']'
+
+    def _restore_startup_window_title(self):
+        if platform.lower().startswith('win'):
+            ctypes.windll.kernel32.SetConsoleTitleW(self._startup_title)
+        else:
+            stdout.write('\33]0;' + self._startup_title + '\a')
+            stdout.flush()
+
     @staticmethod
     def set_win_title(msg=None):
         default = 'Your Internet Radio Player'
@@ -355,7 +379,6 @@ class Log(object):
             d_msg += ' (Session Locked)'
 
         if platform.lower().startswith('win'):
-            # ctypes.windll.kernel32.SetConsoleTitleW('● ' + tokens[token_id] + d_msg)
             ctypes.windll.kernel32.SetConsoleTitleW(tokens[token_id] + d_msg)
         else:
             stdout.write('\33]0;' + tokens[token_id] + d_msg + '\a')
