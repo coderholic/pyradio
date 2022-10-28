@@ -6,7 +6,7 @@ import glob
 import curses
 import collections
 import json
-from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ
+from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ, getpid
 from sys import platform
 from time import ctime, sleep
 from datetime import datetime
@@ -30,6 +30,11 @@ try:
     from dns import resolver
 except:
     HAS_DNSPYTHON = False
+HAS_PSUTIL = True
+try:
+    import psutil
+except:
+    HAS_PSUTIL = False
 
 logger = logging.getLogger(__name__)
 
@@ -2267,27 +2272,59 @@ auto_save_playlist = {13}
         return True if self._current_log_title != self._last_liked_title else False
 
     def is_blacklisted_terminal(self):
-        ''' konsole '''
-        ch = (
-            'KONSOLE',
-        )
-        for par in environ.keys():
-            for chs in ch:
-                if par.startswith(chs):
-                    return True
-        ''' terminal desktop files '''
-        ch = (
-            'konsole.desktop',
-            'deepin-terminal.desktop',
-            'qterminal.desktop',
-            'terminology',
-            'pangoterm.desktop'
-        )
-        for par in environ.values():
-            for a_desk in ch:
-                if a_desk in par:
-                    return True
+        if HAS_PSUTIL:
+            pid = getpid()
+            try:
+                parents = psutil.Process(pid).parents()
+            except AttributeError:
+                parents = self._get_parents(pid)
+            if parents is not None:
+                ''' blacklisted terminals '''
+                terminals = [
+                    'konsole',
+                    'qterminal',
+                    'terminology',
+                    'deepin-terminal',
+                    'pangoterm'
+                ]
+                '''
+                read ~/.config/pyradio/terminals
+                if it exists, and append it to terminals
+                '''
+                term_file = path.join(self.stations_dir, 'terminals')
+                if path.exists(term_file):
+                    try:
+                        with open(term_file, 'r') as term:
+                            for line in term:
+                                terminals.append(line.replace('\n', ''))
+                    except:
+                        pass
+                for a_terminal in terminals:
+                    for parent in parents:
+                        if parent.name() == a_terminal:
+                            return True
         return False
+
+    def _get_parents(self, pid):
+        '''
+        get pid parents, when psutil.Process.parents() does not exist
+        '''
+        procs = []
+        out = []
+        for proc in psutil.process_iter(['pid', 'ppid', 'name', 'username']):
+            procs.append(proc)
+            if proc.pid == pid:
+                par = proc.parent()
+                if par:
+                    ppid = par.pid
+        while ppid > 100:
+            for proc in procs:
+                if proc.pid == ppid:
+                    out.append(proc)
+                    par = proc.parent()
+                    if par:
+                        ppid = par.pid
+        return out
 
 
 class PyRadioPlaylistStack(object):

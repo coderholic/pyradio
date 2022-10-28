@@ -122,7 +122,7 @@ def calc_can_change_colors(config):
     check if current terminal is "blacklisted"
     i.e. cannot display colors correctly
     '''
-    if not curses.can_change_color()):
+    if not curses.can_change_color():
         return False
     ret = True
     if curses.can_change_color() and curses.COLORS > 16:

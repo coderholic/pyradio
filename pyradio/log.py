@@ -302,7 +302,7 @@ class Log(object):
                 self._startup_title = user + '@' + host
             else:
                 if user:
-                    self._startup_title = '-= ' user + ' - ' + pwd + ' =-'
+                    self._startup_title = '-= ' + user + ' - ' + pwd + ' =-'
                 else:
                     self._startup_title = '-= ' + pwd + ' =-'
 
