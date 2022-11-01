@@ -1123,6 +1123,9 @@ class PyRadioConfig(PyRadioStations):
 
     fallback_theme = ''
     use_themes = True
+    terminal_is_blacklisted = False
+    no_themes_notification_shown = False
+    no_themes_from_command_line = False
 
     theme_not_supported = False
     theme_has_error = False
@@ -1726,7 +1729,7 @@ class PyRadioConfig(PyRadioStations):
         curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
         curses.init_pair(10, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(11, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(11, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(13, curses.COLOR_WHITE, curses.COLOR_BLACK)
         curses.init_pair(14, curses.COLOR_WHITE, curses.COLOR_BLACK)
@@ -2272,13 +2275,36 @@ auto_save_playlist = {13}
         return True if self._current_log_title != self._last_liked_title else False
 
     def is_blacklisted_terminal(self):
+        self.terminal_is_blacklisted = False
         if HAS_PSUTIL:
             pid = getpid()
             try:
                 parents = psutil.Process(pid).parents()
             except AttributeError:
                 parents = self._get_parents(pid)
+
             if parents is not None:
+                '''
+                read ~/.config/pyradio/no-themes-terminals
+                '''
+                term_file = path.join(self.stations_dir, 'no-themes-terminals')
+                user_terminal = []
+                if path.exists(term_file):
+                    try:
+                        with open(term_file, 'r') as term:
+                            user_terminals = term.read().splitlines()
+                    except:
+                        pass
+                    if user_terminals:
+                        if parent.name() in user_terminals:
+                            '''
+                            set this to not display notification because
+                            user has customized no-themes-terminals
+                            '''
+                            self.no_themes_from_command_line = True
+                            self.terminal_is_blacklisted = True
+                            return True
+
                 ''' blacklisted terminals '''
                 terminals = [
                     'konsole',
@@ -2287,22 +2313,11 @@ auto_save_playlist = {13}
                     'deepin-terminal',
                     'pangoterm'
                 ]
-                '''
-                read ~/.config/pyradio/terminals
-                if it exists, and append it to terminals
-                '''
-                term_file = path.join(self.stations_dir, 'terminals')
-                if path.exists(term_file):
-                    try:
-                        with open(term_file, 'r') as term:
-                            for line in term:
-                                terminals.append(line.replace('\n', ''))
-                    except:
-                        pass
-                for a_terminal in terminals:
-                    for parent in parents:
-                        if parent.name() == a_terminal:
-                            return True
+                for parent in parents:
+                    if parent.name() in terminals:
+                        ''' auto detected terminal; display notification '''
+                        self.terminal_is_blacklisted = True
+                        return True
         return False
 
     def _get_parents(self, pid):
@@ -2317,12 +2332,14 @@ auto_save_playlist = {13}
                 par = proc.parent()
                 if par:
                     ppid = par.pid
-        while ppid > 100:
+        old_ppid = 0
+        while ppid > 100 or old_ppid == ppid:
             for proc in procs:
                 if proc.pid == ppid:
                     out.append(proc)
                     par = proc.parent()
                     if par:
+                        old_ppid = ppid
                         ppid = par.pid
         return out
 
@@ -2735,7 +2752,7 @@ class PyRadioStationsStack(object):
 
 class PyRadioLog(object):
 
-    PATTERN = '%(asctime)s - %(name)s:%(funcName)s():%(lineno)d - %(levelname)s:\n\t%(message)s'
+    PATTERN = '%(asctime)s - %(name)s:%(funcName)s():%(lineno)d - %(levelname)s: %(message)s'
     PATTERN_TITLE = '%(asctime)s | %(message)s'
 
     log_titles = log_debug = False

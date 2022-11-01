@@ -417,6 +417,7 @@ class PyRadio(object):
                 self.ws.UNKNOWN_BROWSER_SERVICE_ERROR: self._print_unknown_browser_service,
                 self.ws.SCHEDULE_PLAYER_STOP_MODE: self._show_schedule_player_stop,
                 self.ws.SCHEDULE_PLAYER_STOP_HELP_MODE: self._show_schedule_player_stop_help,
+                self.ws.NO_THEMES_MODE: self._show_no_themes,
                 }
 
         ''' list of help functions '''
@@ -578,6 +579,7 @@ class PyRadio(object):
         curses.use_default_colors()
         if self._cnf.use_themes:
             self._cnf.use_themes = calc_can_change_colors(self._cnf)
+        #self._cnf.use_themes = False
         self._save_colors()
         # curses.savetty()
         if not self._cnf.use_themes:
@@ -940,6 +942,8 @@ class PyRadio(object):
             self._show_theme_not_supported()
         elif self._cnf.user_param_id == -1:
             self._print_user_parameter_error()
+        # elif not self._cnf.use_themes:
+        #     self._show_no_themes()
 
         self._update_history_positions_in_list()
 
@@ -1368,10 +1372,13 @@ class PyRadio(object):
 
             self._cnf.setup_mouse()
 
-
-            if self._cnf.theme_has_error:
+            if not self._cnf.use_themes \
+                    and not self._cnf.no_themes_notification_shown \
+                    and not self._cnf.no_themes_from_command_line:
+                self._show_no_themes()
+            elif self._cnf.theme_has_error:
                 self._show_theme_not_supported()
-            if self._cnf.theme_download_failed:
+            elif self._cnf.theme_download_failed:
                 self._print_theme_download_error()
             ''' start theme file thread  '''
             if self._cnf.auto_update_theme:
@@ -2980,6 +2987,32 @@ class PyRadio(object):
                         caption=' Error ',
                         prompt=' Press any key ',
                         is_message=True)
+
+    def _show_no_themes(self):
+        if not curses.can_change_color():
+            txt = '''|This terminal reports to |Curses| (the library
+                     |this program is based on), that it |cannot
+                     ||change colors| while running.
+
+                     |Therefore, using |themes is disabled| and the
+                     ||default theme| is used.
+                  '''
+            caption = ' Themes Disabled '
+        else:
+            txt = '''||Curses| (the library this program is based on), will
+                     ||not| display colors |correctly| (after they have been
+                     |changed by |PyRadio|), in this terminal.
+
+                     |For more info, please refer to:
+                     ||  https://githug.com/coderholic/pyradio/#terminal
+
+                     |Therefore, using |themes is disabled| and the |default|
+                     ||theme| is used.
+                  '''
+            caption = ' Themes Disabled '
+
+        self._show_help(txt, mode_to_set=self.ws.NO_THEMES_MODE, caption=caption)
+        self._cnf.no_themes_notification_shown = True
 
     def _print_playlist_not_found_error(self):
         if self._playlist_error_message:

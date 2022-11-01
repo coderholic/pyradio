@@ -129,6 +129,7 @@ class Window_Stack_Constants(object):
     UPDATE_NOTIFICATION_NOK_MODE = 1002
     SESSION_LOCKED_MODE = 1003
     NOT_IMPLEMENTED_YET_MODE = 1004
+    NO_THEMES_MODE = 1005
 
     MODE_NAMES = {
         DEPENDENCY_ERROR: 'DEPENDENCY_ERROR',
@@ -248,6 +249,7 @@ class Window_Stack_Constants(object):
         WIN_REMOVE_OLD_INSTALLATION_MODE: 'WIN_REMOVE_OLD_INSTALLATION_MODE',
         SCHEDULE_PLAYER_STOP_MODE: 'SCHEDULE_PLAYER_STOP_MODE',
         SCHEDULE_PLAYER_STOP_HELP_MODE: 'SCHEDULE_PLAYER_STOP_HELP_MODE',
+        NO_THEMES_MODE: 'NO_THEMES_MODE',
     }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -325,6 +327,7 @@ class Window_Stack_Constants(object):
         BROWSER_CONFIG_SAVE_ERROR_MODE,
         SERVICE_SERVERS_UNREACHABLE,
         SELECT_PLAYLIST_HELP_MODE,
+        NO_THEMES_MODE,
     )
 
     def __init__(self):

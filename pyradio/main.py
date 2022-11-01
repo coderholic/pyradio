@@ -360,6 +360,7 @@ def shell():
 
         if args.no_themes:
             pyradio_config.use_themes = False
+            pyradio_config.no_themes_from_command_line = True
 
         if args.use_player != '':
             requested_player = args.use_player

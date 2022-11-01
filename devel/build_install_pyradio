@@ -23,6 +23,15 @@ Checking python availability:"
             echo
 }
 
+function pip_error(){
+cat <<END
+Your installation is missing python's package manager (pip)
+Please install it and try again...
+
+END
+exit 1
+}
+
 function find_paths(){
 local APATH
 # Fix for MacOs Catalina python 3
@@ -56,7 +65,7 @@ rm -f /tmp/pyradio-uninstall.$$ /tmp/pyradio-delete.$$ 2>/dev/null
 }
 
 function remove_pip_sudo_install(){
-    sudo python -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    sudo python -m pip uninstall -y pyradio 2>/dev/null 1>&2 || pip_error
     sudo python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
     sudo python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
 }
@@ -64,7 +73,7 @@ function remove_pip_sudo_install(){
 function uninstall(){
     echo 'Uninstalling PyRadio'
     echo -n '  ** Removing python files ... '
-    python -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    python -m pip uninstall -y pyradio 2>/dev/null 1>&2 || pip_error
     python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
     python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
     echo 'done'
@@ -377,7 +386,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 
 if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
-python"${TO_PYTHON}" -m pip install --upgrade setuptools
+python"${TO_PYTHON}" -m pip install --upgrade setuptools || pip_error
 cat <<END > requirements.txt
 wheel
 requests
@@ -426,9 +435,9 @@ done
 do_dev
 
 if [ -e requirements.txt ];then
-	python"${TO_PYTHON}" -m pip install -r requirements.txt .
+	python"${TO_PYTHON}" -m pip install -r requirements.txt . || pip_error
 else
-	python"${TO_PYTHON}" -m pip install .
+	python"${TO_PYTHON}" -m pip install . || pip_error
 fi
 
 do_undev
