@@ -75,7 +75,12 @@ GenericName=Radio Player for the Terminal
 Comment=Curses based Radio Player" > "${DESKTOP_FILE}"
 
     echo "TryExec=${PROGRAM}" >> "${DESKTOP_FILE}"
-    echo "Exec=${REQ_TERMINAL}${PROGRAM}" | sed 's/Exec= /Exec=/' >> "${DESKTOP_FILE}"
+    if [ -z "${PARAM}" ]
+    then
+        echo "Exec=${REQ_TERMINAL}${PROGRAM}" | sed 's/Exec= /Exec=/' >> "${DESKTOP_FILE}"
+    else
+        echo "Exec=${REQ_TERMINAL}${PROGRAM} ${PARAM}" | sed 's/Exec= /Exec=/' >> "${DESKTOP_FILE}"
+    fi
     echo "Icon=/home/${USER}/.config/pyradio/pyradio.png" >> "${DESKTOP_FILE}"
     echo "${TERMINAL_LINE}" >> "${DESKTOP_FILE}"
     echo "Categories=Network" >> "${DESKTOP_FILE}"
@@ -239,6 +244,15 @@ do
                     fi
                 fi
             fi
+            shift
+            ;;
+        -p)
+            shift
+            PARAM="$1"
+            [ -z "${PARAM}" ] && {
+                echo "Error: No parameter specified..."
+                exit
+            }
             shift
             ;;
         --install|-i)
