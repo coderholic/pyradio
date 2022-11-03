@@ -474,29 +474,10 @@ then
         put_exec_to_mac_path "${HOMEBREW}"
     else
         if [ ! -z "$(grep 'distro = None' pyradio/config)" ];then
-            echo
-            echo "Installing Desktop File"
             if [ -z "${REQ_TERMINAL}" ];then
-                # do I already have a value
-                if [ -e ~/.local/share/applications/pyradio.desktop ];then
-                    OLD_COMMAND=$(grep '^Exec=' ~/.local/share/applications/pyradio.desktop | sed 's/Exec=//')
-                    T=${OLD_COMMAND/ */}
-                    if [[ "${T}" != "/home/"* ]] && [ "${T}" != "pyradio" ];then
-                        REQ_TERMINAL="${T}"
-                        P=${OLD_COMMAND/* /}
-                        if [[ "${P}" != "/home/"* ]] && [ "${P}" != "pyradio" ];then
-                            REQ_TERMINAL="${REQ_TERMINAL} ${P}"
-                        fi
-                    fi
-                fi
-                if [ ! -z "${REQ_TERMINAL}" ];then
-                    echo "  Previously used Desktop File Terminal: \"${REQ_TERMINAL}\""
-                fi
-            fi
-            if [ -z "${REQ_TERMINAL}" ];then
-                ./devel/fix_desktop_file "$PWD"/devel/pyradio.desktop ~/.local/share/applications/pyradio.desktop
+                ./devel/fix_pyradio_desktop_file -i
             else
-                ./devel/fix_desktop_file -t "${REQ_TERMINAL}" "$PWD"/devel/pyradio.desktop ~/.local/share/applications/pyradio.desktop
+                ./devel/fix_pyradio_desktop_file -i -t "${REQ_TERMINAL}"
             fi
             mkdir -p ~/.config/pyradio
             cp devel/pyradio.png ~/.config/pyradio

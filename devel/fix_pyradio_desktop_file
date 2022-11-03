@@ -1,0 +1,256 @@
+#!/bin/bash
+function help_terminal(){
+echo "Suitable terminals are:
+   gnome-terminal, mate-terminal, xfce4-terminal, lxterminal, terminator,
+   termite, termit, kitty, alacritty, sakura, roxterm, tilix, lilyterm,
+   st, xst, rxvt, uxterm, xterm
+Please make sure that one of them is installed."
+}
+
+function help(){
+echo "Usage: $(basename $0) [-t TERMINAL]"
+echo "
+This script is part of PyRadio
+
+It will update the local Dekstop File, so that it uses a suitable terminal for
+the execution of PyRadio.
+"
+
+help_terminal
+
+echo "
+Available options:
+    -t   TERMINAL
+         Use this terminal for Desktop file instead of the auto-detected one.
+         Use \"default\" to reset to the default terminal.
+         Use \"auto\" to reset to the auto-detected one.
+    -p   PARAMETER
+         PyRadio parameter (for example \"-p\")
+
+For passing the command parameter, the script will use \"-e\" for all terminals,
+so that an executable line will be constracted.
+Example:
+    kitty -e pyradio
+
+If your terminal of choise uses a different way to accept the command, please
+include it in the TERMINAL value. For example, if the command parameter for
+the terminal \"my_term\" is \"-S\", execute as follows:
+
+    ./fix_pyradio_desktop_file -t 'my_term -S'
+"
+}
+
+function install(){
+    # run this from installation script only
+    #
+    # use REQ_TERMINAL if it exists, outerwise
+    # use no terminal
+    #
+    # if REQ_TERMINAL is not specified, ans the
+    # desktop file already exists, use the terminal
+    # from it (or none if none is specified)
+
+    echo "Installing Desktop file ...   "
+    DESKTOP_FILE=~/.local/share/applications/pyradio.desktop
+    # set -x
+    get_req_terminal
+    get_program
+    write_desktop_file
+}
+
+function write_desktop_file(){
+    if [ -z "${REQ_TERMINAL}" ]
+    then
+        TERMINAL_LINE="Terminal=true"
+    else
+        REQ_TERMINAL="${REQ_TERMINAL}"' '
+        TERMINAL_LINE="Terminal=false"
+    fi
+
+echo "[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PyRadio
+GenericName=Radio Player for the Terminal
+Comment=Curses based Radio Player" > "${DESKTOP_FILE}"
+
+    echo "TryExec=${PROGRAM}" >> "${DESKTOP_FILE}"
+    echo "Exec=${REQ_TERMINAL}${PROGRAM}" | sed 's/Exec= /Exec=/' >> "${DESKTOP_FILE}"
+    echo "Icon=/home/${USER}/.config/pyradio/pyradio.png" >> "${DESKTOP_FILE}"
+    echo "${TERMINAL_LINE}" >> "${DESKTOP_FILE}"
+    echo "Categories=Network" >> "${DESKTOP_FILE}"
+
+    if [ -e /usr/share/applications/pyradio.desktop ]
+    then
+        sed -i 's/Name=PyRadio/& - Local/' "${DESKTOP_FILE}"
+    fi
+}
+
+function get_terminal_from_desktop_file(){
+    # try to get terminal from a desktop file
+    # passed as $1
+    unset DET_TERMINAL
+    unset DET_COMMAND
+    if [ -e "$1" ]
+    then
+        if [[ ! -z $(grep 'Terminal=false' "$1") ]]
+        then
+            line=$(sed -n '/^Exec=/p' "$1")
+            line="${line/Exec=/}"
+            OFS="${IFS}"
+            IFS=' '
+            read -ra newarr <<< "$line"
+            IFS="${OFS}"
+            if (( ${#newarr[@]} > 1 ))
+            then
+                # I have a terminal
+                DET_TERMINAL="${newarr[0]}"
+                DET_COMMAND="${newarr[1]}"
+            fi
+        fi
+    fi
+    [ -z "${DET_TERMINAL}" ] || echo "  Last used terminal: ${DET_TERMINAL}"
+}
+
+function get_req_terminal(){
+    if [ -z "${REQ_TERMINAL}" ]
+    then
+        get_terminal_from_desktop_file ~/.local/share/applications/pyradio.desktop
+        LOCAL_TERMINAL="${DET_TERMINAL}"
+        LOCAL_COMMAND="${DET_COMMAND}"
+        if [ ! -z "${LOCAL_TERMINAL}" ]
+        then
+            REQ_TERMINAL="${LOCAL_TERMINAL}"
+            REQ_COMMAND="${LOCAL_COMMAND}"
+        fi
+        if [ -z "${REQ_TERMINAL}" ]
+        then
+            get_terminal_from_desktop_file usr/share/applications/pyradio.desktop
+            SYSTEM_TERMINAL="${DET_TERMINAL}"
+            SYSTEM_COMMAND="${DET_COMMAND}"
+            if [ ! -z "${SYSTEM_TERMINAL}" ]
+            then
+                REQ_TERMINAL="${SYSTEM_TERMINAL}"
+                REQ_COMMAND="${SYSTEM_COMMAND}"
+            fi
+        fi
+
+        if [ ! -z "${REQ_TERMINAL}" ]
+        then
+            REQ_TERMINAL="${REQ_TERMINAL} ${REQ_COMMAND}"
+        fi
+    fi
+    if [ "${REQ_TERMINAL}" == "default" ]
+    then
+        unset REQ_TERMINAL
+    fi
+}
+
+function get_program(){
+    if [ -e ~/.local/bin/pyradio ]
+    then
+        if [[ "${PATH}" == *'~/.local/bin'* ]] | \
+            [[ "${PATH}" == *"/home/${USER}/.local/bin"* ]]
+        then
+            PROGRAM=pyradio
+        else
+            PROGRAM=/home/"${USER}/.local/bin/pyradio"
+        fi
+    fi
+
+}
+
+function get_terminal(){
+    # look for a valid terminal
+    for n in  \
+        "gnome-terminal --help" \
+        "mate-terminal --help" \
+        "xfce4-terminal -V" \
+        "lxterminal -v" \
+        "terminator -v" \
+        "termite -v" \
+        "kitty -v" \
+        "alacritty -V" \
+        "sakura -v" \
+        "roxterm --help" \
+        "tilix -v" \
+        "lilyterm -v" \
+        "st -v" \
+        "xst -v" \
+        "rxvt  -v"\
+        "urxvt  -v"\
+        "uxterm -v" \
+        "xterm -v"
+    do
+        $n 2>/dev/null 1>&2 && {
+            REQ_TERMINAL="${n/ */}"
+            COMMAND='-e'
+            if [ "$REQ_TERMINAL" = "gnome-terminal" ]; then COMMAND='--';fi
+            break
+        }
+    done
+
+    if [ ! -z "${REQ_TERMINAL}" ];then
+        REQ_TERMINAL=${REQ_TERMINAL}" $COMMAND"
+    fi
+}
+
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        -h|--help)
+            help
+            exit
+            ;;
+        -t)
+            shift
+            if [ -z "$1" ];then
+                echo "Error: No terminal specified..."
+                echo
+                exit 1
+            fi
+            REQ_TERMINAL="$1"
+            if [ "${REQ_TERMINAL}" = "auto" ]
+            then
+                echo "Auto-detecting terminal..."
+                get_terminal
+                if [ -z "${REQ_TERMINAL}" ]
+                then
+                    echo "No suitable terminal can be detected in this system..."
+                    echo
+                    help_terminal
+                    echo
+                    exit 1
+                else
+                    echo "  Auto-detectet terminal: ${REQ_TERMINAL/ */}"
+                fi
+            else
+                if [ "${REQ_TERMINAL}" != "default" ]
+                then
+                    if [[ "${REQ_TERMINAL}" != *" "*  ]]
+                    then
+                        if [ "${REQ_TERMINAL}" = "gnome-terminal" ]
+                        then
+                            REQ_TERMINAL="${REQ_TERMINAL} --"
+                        else
+                            REQ_TERMINAL="${REQ_TERMINAL} -e"
+                        fi
+                    fi
+                fi
+            fi
+            shift
+            ;;
+        --install|-i)
+            INSTALL=1
+            shift
+            ;;
+        *)    # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+install

@@ -97,6 +97,12 @@ def shell():
                        help='Disable themes (use default theme).')
     parser.add_argument('--write-theme', nargs=2, metavar=('IN_THEME', 'OUT_THEME,'),
                         help='Write an Internal or System Theme to themes directory.')
+
+    if not system().lower().startswith('darwin') and \
+            not system().lower().startswith('win'):
+        parser.add_argument('--terminal', help='Use this terminal for Desktop file instead of the auto-detected one. Use "default" to reset to the default terminal. Use "auto" to reset to the auto-detected one.')
+        parser.add_argument('--terminal-param', help='Use this as PyRadio parameter in the Desktop File. Example: "-p 3".')
+
     parser.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
                         help='Toggle autoload last opened playlist.')
     parser.add_argument('-scd', '--show-config-dir', action='store_true',
@@ -146,6 +152,29 @@ def shell():
     config_already_read = False
 
     with pyradio_config_file() as pyradio_config:
+
+        if args.terminal and \
+                not system().lower().startswith('darwin') and \
+                not system().lower().startswith('win'):
+            try:
+                from urllib.request import urlretrieve
+            except:
+                from urllib import urlretrieve
+            try:
+                r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_pyradio_desktop_file')
+            except:
+                print('Cannot contact github...')
+                sys.exit(1)
+            if int(r[1]['content-length']) < 1000:
+                print('Cannot contact github...')
+                sys.exit(1)
+            script = r[0]
+            if args.terminal_param:
+                subprocess.call('bash -c "' + script + ' ' + args.terminal + "'" + args.terminal_param + '"' +  '"', shell=True)
+            else:
+                subprocess.call('bash -c "' + script + ' ' + args.terminal + '"', shell=True)
+            os.remove(r[0])
+            sys.exit()
 
         if args.write_theme:
             if args.write_theme[0]:
