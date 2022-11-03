@@ -25,7 +25,7 @@ Available options:
          Use \"default\" to reset to the default terminal.
          Use \"auto\" to reset to the auto-detected one.
     -p   PARAMETER
-         PyRadio parameter (for example \"-p\")
+         PyRadio parameter (for example \"p 2\")
 
 For passing the command parameter, the script will use \"-e\" for all terminals,
 so that an executable line will be constracted.
