@@ -66,6 +66,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Titles logging](#titles-logging)
     * [Tagging a title](#tagging-a-title)
 * [Online radio directory services](#online-radio-directory-services)
+* [Desktop Notifications](#desktop-notifications)
 * [Session Locking](#session-locking)
     * [Session unlocking](#session-unlocking)
 * [Update notification](#update-notification)
@@ -1089,6 +1090,21 @@ If title's logging is not enabled, it will be turned on, the song will be tagged
 
 To access supported services, just press "**O**" (capital "*o*") at the program's main window.
 
+## Desktop Notifications
+
+**PyRadio** can provide Desktop Notifications when a notification daemon is already present (on Linux and BSD), or throught **Windows Notification Service** (**WNS**).
+
+If enabled, **PyRadio** will display:
+
+1. Song info (as provided by the radio station) \
+That means that if the radio station does not provide any info, no notification will be issued.
+2. Connection failure messages.
+3. Player crash messages.
+
+To find out more about configuring this feature, please refer to [Desktop Notification](desktop-notification.md).
+
+**Note:** If Desktop Notification is enabled by default (in the case of a distro package) users can disable it by creating an empty **~/.config/pyradio/notification** file.
+
 ## Session Locking
 
 **PyRadio** uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.
@@ -1184,6 +1200,7 @@ Having said that, if you are not packaging for a specific distribution, please d
 
 - [ ] Any user request I find interesting :)
 - [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
+- [ ] Use some OPML service, [https://opml.radiotime.com](https://opml.radiotime.com) for example
 - [x] Notify the user that the package's stations.csv has changed -v 0.8.9
 - [x] Update / uninstall using command line parameters (-U / -R) - v. 0.8.9
 - [x] Basic mouse support ([#119](https://github.com/coderholic/pyradio/issues/119)) - v. 0.8.8.3

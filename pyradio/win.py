@@ -19,10 +19,10 @@ except ModuleNotFoundError:
     HAVE_PYUNPACK = False
 
 ''' This is also to be able to execute it manually'''
-#try:
-#    from .player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
-#except ImportError:
-#    from player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
+try:
+    from .player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
+except ImportError:
+    from player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
 
 def win_press_any_key_to_unintall():
     the_path = __file__.split(sep)
@@ -240,7 +240,7 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
 
     print('Extracting archive...')
     if package == 0:
-        download_seven_zip()
+        download_seven_zip(output_folder)
 
     if not HAVE_PYUNPACK:
         for a_module in ('pyunpack', 'patool'):

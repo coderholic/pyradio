@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 function help_terminal(){
 echo "Suitable terminals are:
    gnome-terminal, mate-terminal, xfce4-terminal, lxterminal, terminator,
@@ -25,7 +25,8 @@ Available options:
          Use \"default\" to reset to the default terminal.
          Use \"auto\" to reset to the auto-detected one.
     -p   PARAMETER
-         PyRadio parameter (for example \"p 2\")
+         PyRadio parameter. Please replace hyphens with underscores.
+         So, \"-p 2 -t light\" would be passed as \"_p 2 _t light\").
 
 For passing the command parameter, the script will use \"-e\" for all terminals,
 so that an executable line will be constracted.
@@ -71,7 +72,7 @@ echo "[Desktop Entry]
 Version=1.0
 Type=Application
 Name=PyRadio
-GenericName=Radio Player for the Terminal
+GenericName=Terminal Radio Player
 Comment=Curses based Radio Player" > "${DESKTOP_FILE}"
 
     echo "TryExec=${PROGRAM}" >> "${DESKTOP_FILE}"
@@ -79,7 +80,8 @@ Comment=Curses based Radio Player" > "${DESKTOP_FILE}"
     then
         echo "Exec=${REQ_TERMINAL}${PROGRAM}" | sed 's/Exec= /Exec=/' >> "${DESKTOP_FILE}"
     else
-        echo "Exec=${REQ_TERMINAL}${PROGRAM} -${PARAM}" | sed 's/Exec= /Exec=/' >> "${DESKTOP_FILE}"
+        PARAM=" ${PARAM//_/-}"
+        echo "Exec=${REQ_TERMINAL}${PROGRAM} ${PARAM}" | sed 's/Exec= /Exec=/' >> "${DESKTOP_FILE}"
     fi
     echo "Icon=/home/${USER}/.config/pyradio/pyradio.png" >> "${DESKTOP_FILE}"
     echo "${TERMINAL_LINE}" >> "${DESKTOP_FILE}"

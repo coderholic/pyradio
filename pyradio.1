@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "September 2022" PyRadio
+.TH pyradio 1 "November 2022" PyRadio
 
 .SH Name
 .PP
@@ -1247,6 +1247,90 @@ For more information please refer to the relevant man page: \fIpyradio_rb(1)\fR.
 
 .PP
 To access supported services, just press "\fIO\fR" at the program's main window.
+
+
+.SH Desktop Notifications
+
+\fBPyRadio\fR can provide Desktop Notifications when a notification daemon is already present (on Linux and BSD).
+
+If enabled, \fBPyRadio\fR will display:
+
+.RS 3
+.IP 1. 3
+Song info (as provided by the radio station). That means that if the radio station does not provide any info, no notification will be issued.
+.IP 2. 3
+Connection failure messages.
+.IP 3. 3
+Player crash messages.
+.RE
+
+.P
+\fBNote for MacOS\fR
+
+.RS 5
+
+MacOS Maverick (and later) provides a standardized way to display notifications, so it's much more easier to enable them for \fBPyRadio\fR.
+
+Just create a non-empty \fI~/.config/pyradio/notification\fR file:
+
+.RS 4
+\fIecho YES > ~/.config/pyradio/notification\fR
+.RE
+
+To disable notifications, just make it empty:
+
+.RS 4
+\fIecho > ~/.config/pyradio/notification\fR
+.RE
+.RE
+
+.P
+On the other hand, on linux such a standardization is impossible. Most linux systems will use the \fBnotify-send\fR command to send notifications to the daemon from the command line. This command (or whatever is available in the system at hand) will be used by \fBPyRadio\fR as well.
+
+So, the way to proceed is to construct a notification using the command you system provides. I will use \fInotify-send\fR to demonstrate this here.
+
+After checking the command's help, I got the following:
+
+.RS 5
+\fInotify-send -i ~/.config/pyradio/pyradio.png -t 6000 TITLE MSG\fR
+.RE
+
+
+This command will:
+
+.RS 3
+.IP - 3
+display an icon (\fI-i\fR); the icon is already in \fBPyRadio\fR config folder; just use the full path to it.
+.IP - 3
+display the notification for 6 seconds (\fI-t\fR)
+.RE
+
+.P
+The \fITITLE\fR and \fIMSG\fR tokens are just placeholders; \fBPyRadio\fR will replace them with real data when issuing the notification.
+
+When the command is ready, we just write it to \fI~/.config/pyradio/notification\fR, like so:
+
+.RS 5
+\fIecho "notify-send -i ~/.config/pyradio/pyradio.png -t 6000 TITLE MSG" > ~/.config/pyradio/notification\fR
+.RE
+
+Next time \fBPyRadio\fR is executed, it will read the above file, and start issuing notifications.
+
+\fBDisabling notifications\fR
+
+.RS 5
+In case Desktop Notifications are enabled by default (when using a distro package, for example), individual users can disable them, by creating an empty \fI~/.config/pyradio/notification\fR file.
+.RE
+
+\fBPackagers info\fR
+
+.RS 5
+Since Desktop Notifications are not enabled by default, packages will have to populate the \fInotification\fR file manually (which is originally an empty file in the \fIpyradio\fR directory), using the procedure described above.
+
+.IP \fBNote:
+The icon will probable by in \fI/usr/share/icons\fR.
+
+.RE
 
 
 .SH Session Locking

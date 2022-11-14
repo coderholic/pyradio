@@ -53,6 +53,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#linux">Linux</a>
 <ul>
 <li><a href="#notice-for-python-2-users">Notice for Python 2 users</a></li>
+<li><a href="#installation-on-the-bsds">Installation on the BSDs</a></li>
 <li><a href="#rasberry-pi-installation">Rasberry Pi installation</a></li>
 </ul></li>
 <li><a href="#macos">macOS</a></li>
@@ -84,8 +85,9 @@ In other words, in order to have a <strong>Pyradio system-wide installation</str
 <h3 id="linux">Linux</h3>
 <p>Use your distribution method to install</p>
 <ol type="1">
-<li><em>python-wheel</em></li>
+<li><em>python-pip</em></li>
 <li><em>python-setuptools</em></li>
+<li><em>python-wheel</em></li>
 <li><em>python-requests</em></li>
 <li><em>python-dnspython</em></li>
 <li><em>python-psutil</em></li>
@@ -99,7 +101,12 @@ In other words, in order to have a <strong>Pyradio system-wide installation</str
 <p>If your distro does not provide it (some do not anymore), use the following commands to get it:</p>
 <pre>curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
 sudo python[2] get-pip.py</pre>
+<p>or</p>
+<pre>wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
+sudo python[2] get-pip.py</pre>
 <p>When you are done, proceed to “<a href="#performing-the-installation">Performing the installation</a>”.</p>
+<h4 id="installation-on-the-bsds">Installation on the BSDs</h4>
+<p>If you are on any of the BSDs, please do install <strong>bash</strong> beforehand.</p>
 <h4 id="rasberry-pi-installation">Rasberry Pi installation</h4>
 <p>If installing on a Rasberry Pi, there are a couple of things you should be aware of:</p>
 <ol type="1">
@@ -108,7 +115,7 @@ sudo python[2] get-pip.py</pre>
 </ol>
 <h3 id="macos">macOS</h3>
 <p>First thing you do is install python dependencies (assuming python 3 is installed):</p>
-<pre>python3 -m pip install --upgrade wheel setuptools requests dnspython psutil</pre>
+<pre>python3 -m pip install --upgrade pip wheel setuptools requests dnspython psutil</pre>
 <p>Everything else you need to install and run <strong>pyradio</strong> is available on <a target="_blank" href="https://github.com/Homebrew/homebrew">Homebrew</a>. If you haven’t already downloaded its client, go ahead and do it.</p>
 <p>Open a <strong>terminal</strong> and type:</p>
 <pre>/usr/bin/ruby -e &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</pre>

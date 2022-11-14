@@ -102,7 +102,7 @@ def shell():
     if not system().lower().startswith('darwin') and \
             not system().lower().startswith('win'):
         parser.add_argument('--terminal', help='Use this terminal for Desktop file instead of the auto-detected one. Use "default" to reset to the default terminal. Use "auto" to reset to the auto-detected one.')
-        parser.add_argument('--terminal-param', help='Use this as PyRadio parameter in the Desktop File. Please ommit the leading hyphen when passing the parameter, for example: --terminal-param "p 3 -t light" (which will result to "pyradio -p 3 -t light").')
+        parser.add_argument('--terminal-param', help='Use this as PyRadio parameter in the Desktop File. Please replace hyphens with underscores when passing the parameter, for example: --terminal-param "_p 3 _t light" (which will result to "pyradio -p 3 -t light").')
 
     parser.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
                         help='Toggle autoload last opened playlist.')
@@ -152,34 +152,34 @@ def shell():
 
     config_already_read = False
 
-    if args.terminal and \
-            not system().lower().startswith('darwin') and \
+    if not system().lower().startswith('darwin') and \
             not system().lower().startswith('win'):
-        try:
-            from urllib.request import urlretrieve
-        except:
-            from urllib import urlretrieve
-        try:
-            #r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_pyradio_desktop_file')
-            r = urlretrieve('https://raw.githubusercontent.com/s-n-g/pyradio/devel/devel/fix_pyradio_desktop_file')
-            print(r)
-        except:
-            print('Cannot contact github...')
-            sys.exit(1)
-        if int(r[1]['content-length']) < 1000:
-            print('Cannot contact github...')
-            sys.exit(1)
-        script = r[0]
-        chmod(script , 0o766)
-        if args.terminal_param:
-            command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '-" + args.terminal_param + "'" + '"'
-            command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '" + args.terminal_param.replace('\\', '') + "'" + '"'
-            print(command)
-            subprocess.call(command, shell=True)
-        else:
-            subprocess.call('bash -c "' + script + ' -t ' + args.terminal + '"', shell=True)
-        remove(r[0])
-        sys.exit()
+        if args.terminal:
+            try:
+                from urllib.request import urlretrieve
+            except:
+                from urllib import urlretrieve
+            try:
+                #r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_pyradio_desktop_file')
+                r = urlretrieve('https://raw.githubusercontent.com/s-n-g/pyradio/devel/devel/fix_pyradio_desktop_file')
+                print(r)
+            except:
+                print('Cannot contact github...')
+                sys.exit(1)
+            if int(r[1]['content-length']) < 1000:
+                print('Cannot contact github...')
+                sys.exit(1)
+            script = r[0]
+            chmod(script , 0o766)
+            if args.terminal_param:
+                command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '-" + args.terminal_param + "'" + '"'
+                command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '" + args.terminal_param.replace('\\', '') + "'" + '"'
+                print(command)
+                subprocess.call(command, shell=True)
+            else:
+                subprocess.call('bash -c "' + script + ' -t ' + args.terminal + '"', shell=True)
+            remove(r[0])
+            sys.exit()
 
     with pyradio_config_file() as pyradio_config:
 

@@ -1,2 +1,2 @@
-#!/bin/bash
+#!/usr/bin/env bash
 sed -n '1,/^$/p' Changelog | sed -e 1d -e 's/^ *\*/-/'

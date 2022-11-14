@@ -34,9 +34,8 @@ def linux_ping(server, count=1, timeout_in_seconds=1):
              0: server is not alive (False)
             -1: error
     '''
-    timeout_token = '-t' if platform.startswith('win') else '-w'
     try:
-        r=subprocess.Popen(['ping', '-c', str(count), timeout_token, str(timeout_in_seconds), server ], stdout=subprocess.PIPE).stdout.read()
+        r=subprocess.Popen(['ping', '-c', str(count), '-t', str(timeout_in_seconds), server ], stdout=subprocess.PIPE).stdout.read()
         # print(r)
         return 0 if '100%' in str(r) else 1
     except:

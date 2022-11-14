@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 function help(){
 echo "Usage: $0 [2/-R]"
 echo "

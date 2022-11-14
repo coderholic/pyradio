@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Name=PyRadio
-GenericName=Radio Player for the Terminal
+GenericName=Terminal Radio Player
 Comment=Curses based Radio Player
 TryExec=pyradio
 Exec=pyradio

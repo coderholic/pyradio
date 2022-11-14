@@ -3882,7 +3882,7 @@ class PyRadio(object):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Opening a playlist or a register...')
             ''' open a register '''
-            self.ws.window_mode = self.ws.PLAYLIST_MODE
+            # self.ws.window_mode = self.ws.PLAYLIST_MODE
             self._playlist_in_editor = self._cnf.register_to_open
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('opening register: ' + self._cnf.register_to_open)
@@ -3896,7 +3896,7 @@ class PyRadio(object):
             self._cnf.station_path = path.join(self._cnf.registers_dir, 'register_' + self._cnf.register_to_open + '.csv')
             self._cnf.station_file_name = path.basename(self._cnf.station_path)
             self._cnf.station_title = 'Register: ' + self._cnf.register_to_open
-            if self.playing < 0:
+            if self.playing < 0 or self.selection < 0:
                 self._put_selection_in_the_middle(force=True)
                 self.refreshBody()
             if not path.exists(self._cnf.station_path):

@@ -1139,6 +1139,8 @@ class PyRadioConfig(PyRadioStations):
     _current_log_title = _current_log_station = ''
     _old_log_title = _old_log_station = ''
     _last_liked_title = ''
+    _current_notification_message = ''
+    _notify_send = ''
 
     ''' True if lock file exists '''
     locked = False
@@ -1272,6 +1274,8 @@ class PyRadioConfig(PyRadioStations):
         self.pywal_themes = PyRadioPyWalThemes(self)
         self.theme_sh_themes = PyRadioThemesShThemes(self)
         self.auto_update_frameworks = ( self.base16_themes, self.pywal_themes, self.theme_sh_themes)
+
+        self._read_notify_send()
 
     @property
     def open_last_playlist(self):
@@ -1567,6 +1571,30 @@ class PyRadioConfig(PyRadioStations):
             if a_theme_name == n.deault_filename_only:
                 return True
         return False
+
+    def _read_notify_send(self):
+        if platform == 'win32':
+            return
+        ns = (
+            path.join(self.stations_dir, 'notification'),
+            path.join(path.basename(__file__), 'notification')
+        )
+        line = ''
+        for i, n in enumerate(ns):
+            if path.exists(n):
+                try:
+                    with open(n, 'r') as f:
+                        line = f.readline()
+                    line = line.replace('\n', '').strip()
+                    if i == 0 or line:
+                        '''
+                        if i ==  0, notification is
+                        disabled by the user
+                        '''
+                        self._notify_send = line
+                        return
+                except:
+                    pass
 
     def get_pyradio_version(self):
         ''' reads pyradio version from installed files

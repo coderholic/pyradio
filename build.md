@@ -12,6 +12,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Preparing for the installation](#preparing-for-the-installation)
     * [Linux](#linux)
         * [Notice for Python 2 users](#notice-for-python-2-users)
+        * [Installation on the BSDs](#installation-on-the-bsds)
         * [Rasberry Pi installation](#rasberry-pi-installation)
     * [macOS](#macos)
     * [Windows](#windows)
@@ -51,13 +52,14 @@ Before installing **PyRadio** you have to prepare your system, so that you end u
 
 Use your distribution method to install
 
-1. *python-wheel*
-1. *python-setuptools*
-2. *python-requests*
-3. *python-dnspython*
-4. *python-psutil*
-5. *sed*
-6. any one of *MPV*, *MPlayer* and/or *VLC*.
+1. *python-pip*
+2. *python-setuptools*
+3. *python-wheel*
+4. *python-requests*
+5. *python-dnspython*
+6. *python-psutil*
+7. *sed*
+8. any one of *MPV*, *MPlayer* and/or *VLC*.
 
 #### Notice for Python 2 users
 
@@ -72,7 +74,17 @@ If your distro does not provide it (some do not anymore), use the following comm
     curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
     sudo python[2] get-pip.py
 
+or
+
+    wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
+    sudo python[2] get-pip.py
+
 When you are done, proceed to  "[Performing the installation](#performing-the-installation)".
+
+#### Installation on the BSDs
+
+If you are on any of the BSDs, please do install **bash** beforehand.
+
 
 #### Rasberry Pi installation
 
@@ -81,11 +93,12 @@ If installing on a Rasberry Pi, there are a couple of things you should be aware
 1. The default player will be **MPlayer**
 3. If you still want to use **MPV**, please make sure you increase the *Connection timeout* value to at least 20 (sometimes even 30 for some machines). Even then, your machine may eventually crash, if it's on the lower end of things and **PyRadio** is left running for hours.
 
+
 ### macOS
 
 First thing you do is install python dependencies (assuming python 3 is installed):
 
-    python3 -m pip install --upgrade wheel setuptools requests dnspython psutil
+    python3 -m pip install --upgrade pip wheel setuptools requests dnspython psutil
 
 Everything else you need to install and run **pyradio** is available on [Homebrew](https://github.com/Homebrew/homebrew). If you haven't already downloaded its client, go ahead and do it.
 

@@ -1,11 +1,23 @@
 # '''- coding: utf-8 -*- '''
 import curses
 from os import getenv
+from os.path import join
 from sys import version_info, platform, stdout
+from platform import system as platform_system
 import logging
 import threading
+import subprocess
 from .common import player_start_stop_token
 from .cjkwrap import cjklen, PY3
+
+HAS_WIN10TOAST = True
+try:
+    from win10toast import ToastNotifier
+    toaster = ToastNotifier()
+    # from winotify import Notification
+except ModuleNotFoundError:
+    HAS_WIN10TOAST = False
+
 if not PY3:
     import warnings
     warnings.simplefilter("ignore")
@@ -38,6 +50,8 @@ class Log(object):
     _show_status_updates = False
 
     _startup_title = None
+
+    _notification_command = None
 
     def __init__(self, config):
         self._cnf = config
@@ -142,6 +156,7 @@ class Log(object):
                             #     logger.error('Error updating the Status Bar')
                     self.set_win_title(d_msg)
                     self._write_title_to_log(d_msg)
+                    self._show_notification(msg)
                     if self._show_status_updates:
                         if logger.isEnabledFor(logging.DEBUG):
                             try:
@@ -232,6 +247,83 @@ class Log(object):
 
     def readline(self):
         pass
+
+    def _show_notification(self, msg):
+        go_on = False
+        if platform.lower().startswith('win'):
+            if msg and HAS_WIN10TOAST:
+                go_on = True
+                if msg.startswith('Title: '):
+                    d_msg = msg.replace('Title: ', '')
+                    d_title = 'Now playing'
+                elif 'abnormally' in msg:
+                    d_title = 'Player Crash'
+                    d_msg = msg
+                elif msg.startswith('Failed to connect'):
+                    sp = msg.split(':')
+                    d_title = sp[0]
+                    d_msg = sp[1]
+                else:
+                    return
+
+                if self._cnf._current_notification_message != d_msg:
+                    # toast = Notification(app_id="PyRadio",
+                    #                      title=d_title,
+                    #                      msg=d_msg,
+                    #                      icon="C:\\Users\\spiros\\AppData\\Roaming\\pyradio\\help\\pyradio.ico")
+
+                    # toast.show()
+                    try:
+                        toaster.show_toast(
+                            d_title, d_msg, threaded=True,
+                            icon_path=join(getenv('APPDATA'), 'pyradio', 'help', 'pyradio.ico')
+                        )
+                    except:
+                        return
+                    self._cnf._current_notification_message = d_msg
+
+        else:
+            if msg and self._cnf._notify_send:
+                go_on = True
+                d_title = 'PyRadio'
+                if msg.startswith('Title: '):
+                    d_msg = msg.replace('Title: ', '')
+                    d_title = 'Now playing'
+                elif 'abnormally' in msg:
+                    d_msg = msg
+                elif msg.startswith('Failed to connect'):
+                    sp = msg.split(':')
+                    d_title = 'PyRadio - ' + sp[0]
+                    d_msg = sp[1]
+                else:
+                    return
+
+                if self._cnf._current_notification_message != d_msg:
+                    if self._notification_command is None:
+                        if platform_system().lower() == 'darwin':
+                            self._notification_command = [
+                                'osascript', '-e',
+                                'display notification "MSG" with title "TITLE"'
+                            ]
+                        else:
+                            self._notification_command = self._cnf._notify_send.replace('~', getenv('HOME')).split(' ')
+
+                    for i in range(0, len(self._notification_command)):
+                        if 'TITLE' in self._notification_command[i]:
+                            self._notification_command[i] = self._notification_command[i].replace('TITLE', d_title)
+                        if 'MSG' in self._notification_command[i]:
+                            self._notification_command[i] = self._notification_command[i].replace('MSG', d_msg)
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Notification string = "{}"'.format(self._cnf._notify_send))
+                    try:
+                        subprocess.Popen(
+                            self._notification_command,
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL
+                        )
+                    except:
+                        return
+                    self._cnf._current_notification_message = d_msg
 
     def _write_title_to_log(self, msg=None, force=False):
         if msg is None:

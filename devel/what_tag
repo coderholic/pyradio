@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 cReset="[0m"
 cBold="[1m"
 colorGreen=2
