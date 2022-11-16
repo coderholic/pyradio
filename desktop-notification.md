@@ -13,6 +13,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [On MacOS](#on-macos)
 * [On Windows](#on-windows)
     * [Configuring notifications](#configuring-notifications)
+* [On Windows 7](#on-windows-7)
 
 <!-- vim-markdown-toc -->
 
@@ -33,9 +34,9 @@ That means that if the radio station does not provide any info, no notification 
 
 ## On Linux
 
-On Linux (and the BSDs), **PyRadio** uses the *notification daemon* that's already present, using whatever command it provides to send notifications to the daemon.
-
 ![Linux notification](https://members.hellug.gr/sng/pyradio/pyradio-notif.jpg)
+
+On Linux (and the BSDs), **PyRadio** uses the *notification daemon* that's already present, using whatever command it provides to send notifications to the daemon.
 
 On my linux box, this is done using the **notify-send** command (as it would be with most distros).
 
@@ -101,6 +102,8 @@ Since Desktop Notifications are not enabled by default, packages will have to po
 
 ## On MacOS
 
+![MacOS notification](https://members.hellug.gr/sng/pyradio/mac-notif.jpg)
+
 MacOS Maverick (and later) provides a standardized way to display notifications, so it's much more easier to enable them for **PyRadio**.
 
 Just create a non-empty **~/.config/pyradio/notification** file:
@@ -117,9 +120,9 @@ echo > ~/.config/pyradio/notification
 
 ## On Windows
 
-As already stated **PyRadio** will display notifications throught **Windows Notification Service** (**WNS**).
-
 ![Windows notification](https://members.hellug.gr/sng/pyradio/win-notif.jpg)
+
+As already stated **PyRadio** will display notifications throught **Windows Notification Service** (**WNS**).
 
 All that you have to do in install one package, and you are done.
 
@@ -138,7 +141,7 @@ That's all.
 
 ### Configuring notifications
 
-Window will display the program the notification comes from, which in this case is **Python**, not .
+Window will display the program the notification comes from, which in this case is **Python**, not **PyRadio**.
 
 By default, a sound is played when a notification is displayed, which is very annoying when using **PyRadio** to listen to music and such.
 
@@ -155,3 +158,15 @@ Click on "*Go to notification settings*" to open the window that's shown below.
 ![Windows notification properties](https://members.hellug.gr/sng/pyradio/win-python-props.jpg)
 
 Please replicate the settings you see in the image above, and enjoy!
+
+## On Windows 7
+
+![Windows 7 notification](https://members.hellug.gr/sng/pyradio/win7-notif.jpg)
+
+If you are on **Windows 7**, you will have a differently looking notification (shown above).
+
+If you click on the little tool-like "icon" next to the "X", you get to the "**Notification Area Icons**", the notifications configuration window. A couple of options are available, and again, I do not know how easy it will be to enable the notification if disabled once.
+
+![Windows 7 Nontification Icons](https://members.hellug.gr/sng/pyradio/win7-icons.jpg)
+
+Again, Window considers that the program sending the notifications is **Python**, not **PyRadio**, so that's what you will be changing.

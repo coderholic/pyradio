@@ -1140,7 +1140,7 @@ class PyRadioConfig(PyRadioStations):
     _old_log_title = _old_log_station = ''
     _last_liked_title = ''
     _current_notification_message = ''
-    _notify_send = ''
+    _notification_command = None
 
     ''' True if lock file exists '''
     locked = False
@@ -1275,7 +1275,7 @@ class PyRadioConfig(PyRadioStations):
         self.theme_sh_themes = PyRadioThemesShThemes(self)
         self.auto_update_frameworks = ( self.base16_themes, self.pywal_themes, self.theme_sh_themes)
 
-        self._read_notify_send()
+        self._read_notification_command()
 
     @property
     def open_last_playlist(self):
@@ -1572,29 +1572,41 @@ class PyRadioConfig(PyRadioStations):
                 return True
         return False
 
-    def _read_notify_send(self):
+    def _read_notification_command(self):
+        self._notification_command = []
         if platform == 'win32':
             return
         ns = (
             path.join(self.stations_dir, 'notification'),
             path.join(path.basename(__file__), 'notification')
         )
-        line = ''
         for i, n in enumerate(ns):
             if path.exists(n):
                 try:
                     with open(n, 'r') as f:
-                        line = f.readline()
-                    line = line.replace('\n', '').strip()
-                    if i == 0 or line:
-                        '''
-                        if i ==  0, notification is
-                        disabled by the user
-                        '''
-                        self._notify_send = line
-                        return
+                        for line in f:
+                            self._notification_command.append(line.replace('\n', '').strip())
                 except:
-                    pass
+                    self._notification_command = []
+            if self._notification_command:
+                if self._notification_command[0] == "YES":
+                    # set default commands
+                    if platform.lower().startswith('darwin'):
+                        self._notification_command = [
+                            'osascript', '-e',
+                            'display notification "MSG" with title "TITLE"'
+                        ]
+                        break
+                    else:
+                        self._notification_command = [
+                            'notify-send', '-i',
+                            'ICON', 'TITLE', 'MSG'
+                        ]
+                        break
+            if i == 0 and self._notification_command:
+                break
+        if self._notification_command[0] == "NO":
+            self._notification_command = []
 
     def get_pyradio_version(self):
         ''' reads pyradio version from installed files

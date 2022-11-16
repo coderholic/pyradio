@@ -1,9 +1,10 @@
 # '''- coding: utf-8 -*- '''
 import curses
 from os import getenv
-from os.path import join
+from os.path import join, exists
 from sys import version_info, platform, stdout
 from platform import system as platform_system
+from copy import deepcopy
 import logging
 import threading
 import subprocess
@@ -47,16 +48,17 @@ class Log(object):
 
     _player_stopped = 0
 
-    _show_status_updates = False
+    _show_status_updates = _station_sent = False
 
     _startup_title = None
 
-    _notification_command = None
+    icon_path = None
 
     def __init__(self, config):
         self._cnf = config
         self.width = None
         self._get_startup_window_title()
+        self._get_path()
 
     def __del__(self):
         self._restore_startup_window_title()
@@ -248,82 +250,106 @@ class Log(object):
     def readline(self):
         pass
 
+    def _get_path(self):
+        self.icon_path = None
+        if platform_system().lower().startswith('win'):
+            self.icon_path=join(getenv('APPDATA'), 'pyradio', 'help', 'pyradio.ico')
+        else:
+            the_path = (
+                join(self._cnf.stations_dir, 'pyradio.png'),
+                '/usr/share/icon/pyradio.png',
+                '/usr/local/share/icon/pyradio.png'
+            )
+            for n in the_path:
+                if exists(n):
+                    self.icon_path = n
+                    break
+
     def _show_notification(self, msg):
-        go_on = False
+        if msg:
+            if msg.startswith('mpv: ') or \
+                    msg.startswith('mplayer: ') or \
+                    msg.startswith('vlc: ') or \
+                    msg.startswith('Station: ') or \
+                    msg.startswith('Init'):
+                self._cnf._current_notification_message = ''
+                self._station_sent = False
         if platform.lower().startswith('win'):
             if msg and HAS_WIN10TOAST:
-                go_on = True
-                if msg.startswith('Title: '):
-                    d_msg = msg.replace('Title: ', '')
-                    d_title = 'Now playing'
-                elif 'abnormally' in msg:
-                    d_title = 'Player Crash'
-                    d_msg = msg
-                elif msg.startswith('Failed to connect'):
-                    sp = msg.split(':')
-                    d_title = sp[0]
-                    d_msg = sp[1]
-                else:
-                    return
+                d_title, d_msg = self._get_desktop_notification_data(msg)
+                if d_msg:
+                    if self._cnf._current_notification_message != d_msg:
+                        # toast = Notification(app_id="PyRadio",
+                        #                      title=d_title,
+                        #                      msg=d_msg,
+                        #                      icon="C:\\Users\\spiros\\AppData\\Roaming\\pyradio\\help\\pyradio.ico")
 
-                if self._cnf._current_notification_message != d_msg:
-                    # toast = Notification(app_id="PyRadio",
-                    #                      title=d_title,
-                    #                      msg=d_msg,
-                    #                      icon="C:\\Users\\spiros\\AppData\\Roaming\\pyradio\\help\\pyradio.ico")
-
-                    # toast.show()
-                    try:
-                        toaster.show_toast(
-                            d_title, d_msg, threaded=True,
-                            icon_path=join(getenv('APPDATA'), 'pyradio', 'help', 'pyradio.ico')
-                        )
-                    except:
-                        return
-                    self._cnf._current_notification_message = d_msg
+                        # toast.show()
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Sending Desktop Notification: [{0}, {1}, {2}]'.format(d_title, d_msg, self.icon_path))
+                        try:
+                            toaster.show_toast(
+                                d_title, d_msg, threaded=True,
+                                icon_path=self.icon_path
+                            )
+                        except:
+                            if logger.isEnabledFor(logging.ERROR):
+                                logger.error('Failure sending Desktop Notification!')
+                            return
+                        if d_title == 'Station':
+                            self._station_sent = True
+                        self._cnf._current_notification_message = d_msg
 
         else:
-            if msg and self._cnf._notify_send:
-                go_on = True
-                d_title = 'PyRadio'
-                if msg.startswith('Title: '):
-                    d_msg = msg.replace('Title: ', '')
-                    d_title = 'Now playing'
-                elif 'abnormally' in msg:
-                    d_msg = msg
-                elif msg.startswith('Failed to connect'):
-                    sp = msg.split(':')
-                    d_title = 'PyRadio - ' + sp[0]
-                    d_msg = sp[1]
-                else:
-                    return
+            if msg and self._cnf._notification_command:
+                d_title, d_msg = self._get_desktop_notification_data(msg)
+                if d_msg:
+                    if self._cnf._current_notification_message != d_msg:
+                        notification_command = deepcopy(self._cnf._notification_command)
+                        for i in range(0, len(notification_command)):
+                            if 'TITLE' in notification_command[i]:
+                                notification_command[i] = notification_command[i].replace('TITLE', d_title)
+                            if 'MSG' in notification_command[i]:
+                                notification_command[i] = notification_command[i].replace('MSG', d_msg)
+                            if 'ICON' in notification_command[i]:
+                                notification_command[i] = notification_command[i].replace('ICON', self.icon_path)
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Sending Desktop Notification: {}'.format(notification_command))
+                        try:
+                            subprocess.Popen(
+                                notification_command,
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL
+                            )
+                        except:
+                            if logger.isEnabledFor(logging.ERROR):
+                                logger.error('Failure sending Desktop Notification!')
+                            return
+                        if d_title == 'Station':
+                            self._station_sent = True
+                        self._cnf._current_notification_message = d_msg
 
-                if self._cnf._current_notification_message != d_msg:
-                    if self._notification_command is None:
-                        if platform_system().lower() == 'darwin':
-                            self._notification_command = [
-                                'osascript', '-e',
-                                'display notification "MSG" with title "TITLE"'
-                            ]
-                        else:
-                            self._notification_command = self._cnf._notify_send.replace('~', getenv('HOME')).split(' ')
-
-                    for i in range(0, len(self._notification_command)):
-                        if 'TITLE' in self._notification_command[i]:
-                            self._notification_command[i] = self._notification_command[i].replace('TITLE', d_title)
-                        if 'MSG' in self._notification_command[i]:
-                            self._notification_command[i] = self._notification_command[i].replace('MSG', d_msg)
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Notification string = "{}"'.format(self._cnf._notify_send))
-                    try:
-                        subprocess.Popen(
-                            self._notification_command,
-                            stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL
-                        )
-                    except:
-                        return
-                    self._cnf._current_notification_message = d_msg
+    def _get_desktop_notification_data(self, msg):
+        if msg.startswith('Title: '):
+            d_msg = msg.replace('Title: ', '')
+            d_title = 'Now playing'
+        elif msg.startswith('Playing: '):
+            if self._station_sent:
+                return None, None
+            d_title = 'Station'
+            d_msg = msg.replace('Playing: ', '')
+        elif 'abnormally' in msg:
+            d_title = 'Player Crash'
+            d_msg = msg
+            self._station_sent = False
+        elif msg.startswith('Failed to connect'):
+            sp = msg.split(':')
+            d_title = sp[0]
+            d_msg = sp[1]
+            self._station_sent = False
+        else:
+            return None, None
+        return d_title, d_msg
 
     def _write_title_to_log(self, msg=None, force=False):
         if msg is None:

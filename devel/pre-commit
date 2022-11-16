@@ -128,8 +128,11 @@ do
 
     if [ "$out" = "desktop-notification.html" ];then
         sed -i -e '/pyradio-notif.jpg/s/src=/style="width: 411px" src=/' "$out"
+        sed -i -e '/mac-notif.jpg/s/src=/style="width: 411px" src=/' "$out"
         sed -i -e '/win-notif/s/src=/style="width: 411px" src=/' "$out"
+        sed -i -e '/win7-notif/s/src=/style="width: 411px" src=/' "$out"
         sed -i -e '/win-python-props/s/src=/style="width: 574px" src=/' "$out"
+        sed -i -e '/win7-icons.jpg/s/src=/style="width: 574px" src=/' "$out"
     fi
 
     sed -i '/^<[Aa]/s|.*|<p>&</p>|' "$out"
