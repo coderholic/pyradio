@@ -1154,6 +1154,7 @@ class PyRadioConfig(PyRadioStations):
     opts['default_station'] = ['Def. station: ', 'False']
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
     opts['enable_mouse'] = ['Enable mouse support: ', False]
+    opts['enable_notifications'] = ['Enable notifications', '-1']
     opts['conn_title'] = ['Connection Options: ', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
@@ -1381,6 +1382,15 @@ class PyRadioConfig(PyRadioStations):
         self.opts['dirty_config'][1] = True
 
     @property
+    def enable_notifications(self):
+        return self.opts['enable_notifications'][1]
+
+    @enable_notifications.setter
+    def enable_notifications(self, val):
+        self.opts['enable_notifications'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
     def player(self):
         return self.opts['player'][1]
 
@@ -1578,7 +1588,7 @@ class PyRadioConfig(PyRadioStations):
             return
         ns = (
             path.join(self.stations_dir, 'notification'),
-            path.join(path.basename(__file__), 'notification')
+            path.join(path.dirname(__file__), 'notification')
         )
         for i, n in enumerate(ns):
             if path.exists(n):
@@ -1876,6 +1886,13 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['enable_mouse'][1] = False
                 else:
                     self.opts['enable_mouse'][1] = True
+            elif sp[0] == 'enable_notifications':
+                if not (sp[1] in ('0', '-1')):
+                    try:
+                        t = int(int(sp[1]) / 30)
+                        self.opts['enable_notifications'][1] = str(t * 30)
+                    except (ValueError, TypeError):
+                        self.opts['enable_notifications'][1] = '-1'
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False
@@ -2142,6 +2159,19 @@ default_encoding = {4}
 # Default value: False
 enable_mouse = {5}
 
+# Desktop notifications
+# If this option is enabled, a Desktop notification will be
+# displayed using the notification daemon / service.
+# If enabled but no notification is displayed, please refer to
+# https://github.com/coderholic/pyradio/desktop-notification.md
+# Valid values are:
+#      -1: disabled
+#       0: enabled (no repetition)
+#    n*30: enabled and repeat every n*30 seconds
+#
+# Default value: -1
+enable_notifications = {6}
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server
 # message indicating that playback has actually started.
@@ -2152,7 +2182,7 @@ enable_mouse = {5}
 #
 # Valid values: 5 - 60, 0 disables check
 # Default value: 10
-connection_timeout = {6}
+connection_timeout = {7}
 
 # Force http connections
 # Most radio stations use plain old http protocol to broadcast, but
@@ -2161,7 +2191,7 @@ connection_timeout = {6}
 #
 # Valid values: True, true, False, false
 # Default value: False
-force_http = {7}
+force_http = {8}
 
 # Default theme
 # Hardcooded themes:
@@ -2175,7 +2205,7 @@ force_http = {7}
 # with an asterisk (i.e. '*my_theme')
 # This is applicable for user themes only!
 # Default value = 'dark'
-theme = {8}
+theme = {9}
 
 # Transparency setting
 # If False, theme colors will be used.
@@ -2184,7 +2214,7 @@ theme = {8}
 # not running, the terminal's background color will be used.
 # Valid values: True, true, False, false
 # Default value: False
-use_transparency = {9}
+use_transparency = {10}
 
 # Calculated color factor
 # This is to produce Secondary Windows background color
@@ -2194,7 +2224,7 @@ use_transparency = {9}
 # https://github.com/coderholic/pyradio#secondary-windows-background
 # Valid values: 0-0.2
 # Default value: 0
-calculated_color_factor = {10}
+calculated_color_factor = {11}
 
 # Playlist management
 #
@@ -2202,20 +2232,20 @@ calculated_color_factor = {10}
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {11}
+confirm_station_deletion = {12}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within PyRadio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {12}
+confirm_playlist_reload = {13}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {13}
+auto_save_playlist = {14}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
@@ -2240,6 +2270,7 @@ auto_save_playlist = {13}
                     self.opts['default_station'][1],
                     self.opts['default_encoding'][1],
                     self.opts['enable_mouse'][1],
+                    self.opts['enable_notifications'][1],
                     self.opts['connection_timeout'][1],
                     self.opts['force_http'][1],
                     theme,
