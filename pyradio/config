@@ -51,9 +51,9 @@ enable_mouse = False
 # If enabled but no notification is displayed, please refer to
 # https://github.com/coderholic/pyradio/desktop-notification.md
 # Valid values are:
-#      -1: disabled
-#       0: enabled (no repetition)
-#    n*30: enabled and repeat every n*30 seconds
+#   -1: disabled
+#    0: enabled (no repetition)
+#    x: enabled and repeat every x seconds
 #
 # Default value: -1
 enable_notifications = -1

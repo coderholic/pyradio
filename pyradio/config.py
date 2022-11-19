@@ -1154,7 +1154,7 @@ class PyRadioConfig(PyRadioStations):
     opts['default_station'] = ['Def. station: ', 'False']
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
     opts['enable_mouse'] = ['Enable mouse support: ', False]
-    opts['enable_notifications'] = ['Enable notifications', '-1']
+    opts['enable_notifications'] = ['Enable notifications: ', '-1']
     opts['conn_title'] = ['Connection Options: ', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
@@ -2160,14 +2160,14 @@ default_encoding = {4}
 enable_mouse = {5}
 
 # Desktop notifications
-# If this option is enabled, a Desktop notification will be
+# If this option is enabled, a Desktop Notification will be
 # displayed using the notification daemon / service.
 # If enabled but no notification is displayed, please refer to
 # https://github.com/coderholic/pyradio/desktop-notification.md
 # Valid values are:
-#      -1: disabled
-#       0: enabled (no repetition)
-#    n*30: enabled and repeat every n*30 seconds
+#    -1: disabled
+#     0: enabled (no repetition)
+#     x: enabled and repeat every x seconds
 #
 # Default value: -1
 enable_notifications = {6}

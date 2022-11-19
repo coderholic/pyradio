@@ -66,6 +66,7 @@ class PyRadioConfigWindow(object):
     'If changed, playback must be restarted so that changes take effect.',
     '|', 'Default value: utf-8'])
     _help_text.append(['If this options is enabled, the mouse can be used to scroll the playlist, start, stop and mute the player, adjust its volume etc.', '|', 'Mouse support is highly terminal dependent, that\'s why it is disabled by default.', '|', 'Default value: False'])
+    _help_text.append(['If this options is enabled, a Desktop Notification will be displayed using the notification daemon / service.', '|', 'If enabled but no notification is displayed, please refer to', 'https://github.com/coderholic/pyradio/desktop-notification.md', '|', 'Valid values are:', '   -1: disabled ', '    0: enabled (no repetition) ', '    x: repeat every x seconds ', '|', 'Default value: -1'])
     _help_text.append(None)
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
@@ -95,6 +96,7 @@ class PyRadioConfigWindow(object):
                  save_parameters_function,
                  reset_parameters_function,
                  global_functions=None):
+        self._start = 0
         self.parent = parent
         self._cnf = config
         self._toggle_transparency_function = toggle_transparency_function
@@ -159,6 +161,7 @@ class PyRadioConfigWindow(object):
     def init_config_win(self):
         self._win = None
         self.maxY, self.maxX = self.__parent.getmaxyx()
+        logger.error('\n\nmaxY = {}\n\n'.format(self.maxY))
         self._second_column = int(self.maxX / 2)
         self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
         self._populate_help_lines()
@@ -231,8 +234,13 @@ class PyRadioConfigWindow(object):
     def refresh_selection(self):
         self._print_title()
         if not self.too_small:
-            for i, it in enumerate(list(self._config_options.values())):
-                if i < self.number_of_items:
+            it_list = list(self._config_options.values())
+            for i in range(self._start, len(it_list)):
+                it = it_list[i]
+                logger.error('selecyion = {}'.format(self.selection))
+                # if i < self.number_of_items:
+                if i < self.maxY-2:
+                    logger.error('i = {}'.format(i))
                     if i == self.__selection:
                         col = hcol = curses.color_pair(6)
                         self._print_options_help()
@@ -240,7 +248,10 @@ class PyRadioConfigWindow(object):
                         col = curses.color_pair(5)
                         hcol = curses.color_pair(4)
                     hline_width = self._second_column - 2
-                    self._win.hline(i+1, 1, ' ', hline_width, col)
+                    try:
+                        self._win.hline(i+1, 1, ' ', hline_width, col)
+                    except:
+                        logger.error('===== ERROR: {}'.format(i+1))
                     if i in self._headers:
                         self._win.addstr(i+1, 1, it[0], curses.color_pair(4))
                     else:
@@ -254,6 +265,8 @@ class PyRadioConfigWindow(object):
                             else:
                                 if it[1] != '-':
                                     self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6]), hcol)
+                else:
+                    break
         self._win.refresh()
 
     def _get_col_line(self, ind):
@@ -374,6 +387,42 @@ class PyRadioConfigWindow(object):
             if char in (curses.KEY_RIGHT, ord('l'),
                         ord(' '), curses.KEY_ENTER, ord('\n')):
                 return 3, []
+
+        elif val[0] == 'enable_notifications':
+            if char in (curses.KEY_RIGHT, ord('l')):
+                t = int(val[1][1])
+                if t == -1:
+                    t = 0
+                elif t == 0:
+                    t = 30
+                else:
+                    t += 30
+                    if t > 300:
+                        t =300
+                val[1][1] = str(t)
+                self._win.addstr(
+                    self.selection+1,
+                    3 + len(val[1][0]),
+                    val[1][1] + '     ', curses.color_pair(6))
+                self._print_title()
+                self._win.refresh()
+                return -1, []
+            elif char in (curses.KEY_LEFT, ord('h')):
+                t = int(val[1][1])
+                if t == -1:
+                    t = -1
+                elif t == 0:
+                    t = -1
+                else:
+                    t -= 30
+                val[1][1] = str(t)
+                self._win.addstr(
+                    self.selection+1,
+                    3 + len(val[1][0]),
+                    val[1][1] + '     ', curses.color_pair(6))
+                self._print_title()
+                self._win.refresh()
+                return -1, []
 
         elif val[0] == 'calculated_color_factor':
             if char in (curses.KEY_RIGHT, ord('l')):
