@@ -1453,6 +1453,7 @@ class PyRadio(object):
         self.restore_colors()
 
     def _wait_for_threads(self):
+        self.log._stop_desktop_notification_thread = True
         if self._watch_theme_thread:
             self.stop_watch_theme_thread = True
             self._watch_theme_thread.join()
@@ -8580,6 +8581,7 @@ class PyRadio(object):
 
     def _linux_signal_handler(self, a_signal, a_frame):
         logger.error('DE ----==== _linux_signal_handler  ====----')
+        self.log._stop_desktop_notification_thread = True
         if self._system_asked_to_terminate:
             return
         self._system_asked_to_terminate = True
@@ -8616,6 +8618,7 @@ class PyRadio(object):
         ''' windows signal handler
             https://danielkaes.wordpress.com/2009/06/04/how-to-catch-kill-events-with-python/
         '''
+        self.log._stop_desktop_notification_thread = True
         import win32con, win32api
         if event in (win32con.CTRL_C_EVENT,
                      win32con.CTRL_LOGOFF_EVENT,
