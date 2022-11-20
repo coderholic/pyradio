@@ -8,8 +8,8 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 <!-- vim-markdown-toc Marked -->
 
 * [Introduction](#introduction)
+    * [Configuration](#configuration)
 * [On Linux](#on-linux)
-    * [Packagers info](#packagers-info)
 * [On MacOS](#on-macos)
 * [On Windows](#on-windows)
     * [Configuring notifications](#configuring-notifications)
@@ -21,102 +21,111 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 ## Introduction
 
-**PyRadio** can provide Desktop Notifications when a notification daemon is already present (on Linux and BSD), or throught **Windows Notification Service** (**WNS**).
+**PyRadio** can provide Desktop Notifications when a notification daemon is already present (on Linux and BSD), or through **Windows Notification Service** (**WNS**).
+
+The behavior and presentation of notifications greatly depends on the daemon/service and command line utility used to trigger a notification.
 
 If enabled, **PyRadio** will display:
 
-1. Song info (as provided by the radio station) \
-That means that if the radio station does not provide any info, no notification will be issued.
+1. The playlist name, when playback starts.
+1. Song info (as provided by the radio station).
 2. Connection failure messages.
 3. Player crash messages.
 
-**Note:** If Desktop Notification is enabled by default (in the case of a distro package) users can disable it by creating an empty **~/.config/pyradio/notification** file (Linux only).
+Desktop Notifications are disabled by default.
+
+
+### Configuration
+
+Desktop Notifications are disabled by default. To enable them, go to **PyRadio** config window and customize the "*Enable notifications*" option.
+
+Available values are:
+```
+   -1: disabled (deault)
+    0: enabled (no repetition)
+    x: enabled and repeat every x seconds
+```
+
+**PyRadio** supports notifications repetition, so that even when used with `quake` or `yakuake` and the like, you still have some info on what's going on with it.
+
+Notifications can be set to repeat every "*x*" seconds, with "*x*" ranging from 30 to 300 (30 seconds to 5 minutes), in 30 seconds steps.
 
 ## On Linux
 
 ![Linux notification](https://members.hellug.gr/sng/pyradio/pyradio-notif.jpg)
 
-On Linux (and the BSDs), **PyRadio** uses the *notification daemon* that's already present, using whatever command it provides to send notifications to the daemon.
+On Linux (and the BSDs), **PyRadio** uses the *notification daemon* that's already present and whatever command line helper program it provides to send notifications to the daemon.
 
-On my linux box, this is done using the **notify-send** command (as it would be with most distros).
-
-This is its help screen.
+By default, **PyRadio** uses the following command to issue notifications:
 
 ```
-# notify-send --help
-
-Usage:
-  notify-send [OPTION…] <SUMMARY> [BODY] - create a notification
-
-Help Options:
-  -?, --help                        Show help options
-
-Application Options:
-  -u, --urgency=LEVEL               Specifies the urgency level (low, normal, critical).
-  -t, --expire-time=TIME            Specifies the timeout in milliseconds at which to expire the notification.
-  -a, --app-name=APP_NAME           Specifies the app name for the icon
-  -i, --icon=ICON                   Specifies an icon filename or stock icon to display.
-  -c, --category=TYPE[,TYPE...]     Specifies the notification category.
-  -e, --transient                   Create a transient notification
-  -h, --hint=TYPE:NAME:VALUE        Specifies basic extra data to pass. Valid types are boolean, int, double, string, byte and variant.
-  -p, --print-id                    Print the notification ID.
-  -r, --replace-id=REPLACE_ID       The ID of the notification to replace.
-  -w, --wait                        Wait for the notification to be closed before exiting.
-  -A, --action=[NAME=]Text...       Specifies the actions to display to the user. Implies --wait to wait for user input. May be set multiple times. The name of the action is output to stdout. If NAME is not specified, the numerical index of the option is used (starting with 0).
-  -v, --version                     Version of the package.
-```
-
-In order to make **PyRadio** use it, we wil use this help screen to create a valid command, for example:
-
-```
-notify-send -i ~/.config/pyradio/pyradio.png -t 6000 TITLE MSG
+notify-send -i ICON TITLE MSG
 ```
 
 This command will:
 
-- display an icon (-i) \
-The icon is already in **PyRadio** config folder; just use the full path to it.
-- display the notification for 6 seconds (-t)
+- display the title "**TITLE**" and message "**MSG**".
+- display an icon (**-i**).
 
-The **TITLE** and **MSG** tokens are just placeholders; **PyRadio** will replace them with real data when issuing the notification.
+The "**ICON**", "**TITLE**" and "**MSG**" tokens are just placeholders; **PyRadio** will replace them with real data when issuing the notification.
 
-When the command is ready, we just write it to **~/.config/pyradio/notification**, like so:
+If that does not work for you, or you want to customize the output, this is what to do:
+
+1. put together a valid command that can be executed on a terminal and produce the desired notification.
+2. create a file called **notification** in **PyRadio** configuration directory.
+3. write the above command in that file and put each field in a different line.
+
+**Example:**
+
+I have this custom command:
 
 ```
-echo "notify-send -i ~/.config/pyradio/pyradio.png -t 6000 TITLE MSG" > ~/.config/pyradio/notification
+notify-send -i ICON -t 6000 TITLE MSG
 ```
 
-Next time **PyRadio** is executed, it will read the above file, and start issuing notifications.
+The file I wrote is **~/.config/pyradio/notification**:
 
-That was just an example to demonstrate the procedure one would follow to enable **PyRadio** Desktop Notifications.
-
-Users can populate the **~/.config/pyradio/notification** files as needed and in accordance with their notification daemon / command.
-
-### Packagers info
-
-Since Desktop Notifications are not enabled by default, packages will have to populate the **notification** file manually (which is originally an empty file in the **pyradio** directory), using the procedure described above.
-
-**Note:** The icon will probable by in **/usr/share/icons**.
-
-**Note:** Individual users can disable the Desktop Notifications enabled by the installed packaged, by creating an empty **~/.config/pyradio/notification** file.
+```
+notify-send
+-i
+ICON
+-t
+6000
+TITLE
+MSG
+```
 
 ## On MacOS
 
 ![MacOS notification](https://members.hellug.gr/sng/pyradio/mac-notif.jpg)
 
-MacOS Maverick (and later) provides a standardized way to display notifications, so it's much more easier to enable them for **PyRadio**.
+MacOS Maverick (and later) provides a scripting service to issue notifications from the command line.
 
-Just create a non-empty **~/.config/pyradio/notification** file:
-
-```
-echo YES > ~/.config/pyradio/notification
-```
-
-To disable notifications, just make it empty:
+The command **PyRadio** uses is:
 
 ```
-echo > ~/.config/pyradio/notification
+osascript -e 'display notification "MSG" with title "TITLE"'
+
 ```
+
+If that does not work for you, or you want to display the icon as well, just install `terminal-notifier`:
+
+```
+brew install terminal-notifier
+```
+After it is installed, write the following in **~/.config/pyradio/notification**:
+
+```
+terminal-notifier
+-message
+MSG
+-title
+TITLE
+-appIcon
+ICON
+```
+
+and you are done!
 
 ## On Windows
 
@@ -124,20 +133,7 @@ echo > ~/.config/pyradio/notification
 
 As already stated **PyRadio** will display notifications throught **Windows Notification Service** (**WNS**).
 
-All that you have to do in install one package, and you are done.
-
-```
-python -m pip install win10toast
-```
-
-
-If you wanto to disable Desktop Notification, just uninstall the package.
-
-```
-python -m pip uninstall win10toast
-```
-
-That's all.
+All that you have to do is enable the notifications in the config window.
 
 ### Configuring notifications
 
@@ -170,3 +166,4 @@ If you click on the little tool-like "icon" next to the "X", you get to the "**N
 ![Windows 7 Nontification Icons](https://members.hellug.gr/sng/pyradio/win7-icons.jpg)
 
 Again, Window considers that the program sending the notifications is **Python**, not **PyRadio**, so that's what you will be changing.
+

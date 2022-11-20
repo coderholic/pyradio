@@ -1598,25 +1598,21 @@ class PyRadioConfig(PyRadioStations):
                             self._notification_command.append(line.replace('\n', '').strip())
                 except:
                     self._notification_command = []
-            if self._notification_command:
-                if self._notification_command[0] == "YES":
-                    # set default commands
-                    if platform.lower().startswith('darwin'):
-                        self._notification_command = [
-                            'osascript', '-e',
-                            'display notification "MSG" with title "TITLE"'
-                        ]
-                        break
-                    else:
-                        self._notification_command = [
-                            'notify-send', '-i',
-                            'ICON', 'TITLE', 'MSG'
-                        ]
-                        break
             if i == 0 and self._notification_command:
                 break
-        if self._notification_command[0] == "NO":
-            self._notification_command = []
+
+        if self._notification_command == []:
+            # set default commands
+            if platform.lower().startswith('darwin'):
+                self._notification_command = [
+                    'osascript', '-e',
+                    'display notification "MSG" with title "TITLE"'
+                ]
+            else:
+                self._notification_command = [
+                    'notify-send', '-i',
+                    'ICON', 'TITLE', 'MSG'
+                ]
 
     def get_pyradio_version(self):
         ''' reads pyradio version from installed files
