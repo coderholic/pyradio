@@ -9,6 +9,12 @@ REM echo(NO_DEV = %NO_DEV%
 REM GOTO endnopause
 
 CLS
+ECHO Installing / Updating wheel
+%PROGRAM% -m pip install --upgrade wheel 1>NUL 2>NUL
+IF %ERRORLEVEL% == 1 (
+    SET ERRPKG=windows-curses
+    GOTO piperror
+)
 ECHO Installing / Updating setuptools
 %PROGRAM% -m pip install --upgrade setuptools 1>NUL 2>NUL
 IF %ERRORLEVEL% == 1 (
@@ -28,6 +34,7 @@ echo dnspython >> requirements.txt
 echo psutil >> requirements.txt
 echo wheel >> requirements.txt
 echo pylnk >> requirements.txt
+echo win10toast >> requirements.txt
 
 ::Remove the elevation tag and SET the correct working directory
 IF '%1'=='ELEV' ( SHIFT /1 )
@@ -82,7 +89,8 @@ ECHO # This is probably because PyRadio is already #
 ECHO # running, so files cannot be overwritten.    #
 ECHO # Please terminate PyRadio and try again.     #
 ECHO ###############################################
-GOTO endofscript
+IF EXIST "DOPAUSE" ( GOTO endofscript )
+GOTO endnopause
 
 :installhtml
 IF "%NO_DEV%"=="1" (
@@ -198,7 +206,10 @@ ECHO User files are under "%APPDATA%\pyradio"
 SET /p ANS="Do you want to remove them (y/n)?: "
 :: ECHO %ANS%
 IF "%ANS%" == "y" GOTO :addtobat
-IF "%ANS%" == "n" GOTO :addtobat
+IF "%ANS%" == "n" (
+    IF EXIST "DOPAUSE" ( GOTO endofscript )
+    GOTO endnopause
+)
 GOTO :readit
 :addtobat
 

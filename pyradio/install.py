@@ -586,11 +586,13 @@ class PyRadioUpdate(object):
             with open(bat, "w") as b:
                 b.write('@ECHO OFF\n')
                 b.write('CLS\n')
+                b.write('python -m pip install --upgrade wheel 1>NUL 2>NUL\n')
+                b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade setuptools 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade requests 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
-                b.write('python -m pip install --upgrade wheel 1>NUL 2>NUL\n')
+                b.write('python -m pip install --upgrade win10toast 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 # b.write('PAUSE\n')
                 if mode.startswith('update'):
@@ -1147,6 +1149,7 @@ if __name__ == '__main__':
                 'patool',
                 'pyunpack',
                 'wheel',
+                'win10toast',
         ):
             print('Checking module: ' + a_module + ' ...')
             ret = subprocess.call('python -m pip install --upgrade ' + a_module,

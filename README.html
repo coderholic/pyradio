@@ -1565,13 +1565,12 @@ Apr 18 (Mon) 15:38 | === Logging stopped</pre>
 <p><strong>PyRadio</strong> can provide Desktop Notifications when a notification daemon is already present (on Linux and BSD), or throught <strong>Windows Notification Service</strong> (<strong>WNS</strong>).</p>
 <p>If enabled, <strong>PyRadio</strong> will display:</p>
 <ol type="1">
-<li>Song info (as provided by the radio station)<br />
-That means that if the radio station does not provide any info, no notification will be issued.</li>
+<li>The playlist name, when playback starts.</li>
+<li>Song info (as provided by the radio station).</li>
 <li>Connection failure messages.</li>
 <li>Player crash messages.</li>
 </ol>
 <p>To find out more about configuring this feature, please refer to <a href="desktop-notification.html">Desktop Notification</a>.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If Desktop Notification is enabled by default (in the case of a distro package) users can disable it by creating an empty <strong>~/.config/pyradio/notification</strong> file.</p>
 <h2 id="session-locking">Session Locking <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.</p>
 <p>Subsequent instances will be “<em>locked</em>”. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will <strong>not</strong> be recorded in the configuration file.</p>

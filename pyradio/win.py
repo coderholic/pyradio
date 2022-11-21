@@ -392,8 +392,6 @@ Please select an action:
 
             print(msg.format(to_do[2]))
 
-
-
             while x not in opts:
                 print(prompt,  end='', flush=True)
                 x = getwch()

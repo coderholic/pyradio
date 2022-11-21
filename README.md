@@ -1096,14 +1096,12 @@ To access supported services, just press "**O**" (capital "*o*") at the program'
 
 If enabled, **PyRadio** will display:
 
-1. Song info (as provided by the radio station) \
-That means that if the radio station does not provide any info, no notification will be issued.
-2. Connection failure messages.
-3. Player crash messages.
+1. The playlist name, when playback starts.
+2. Song info (as provided by the radio station).
+3. Connection failure messages.
+4. Player crash messages.
 
 To find out more about configuring this feature, please refer to [Desktop Notification](desktop-notification.md).
-
-**Note:** If Desktop Notification is enabled by default (in the case of a distro package) users can disable it by creating an empty **~/.config/pyradio/notification** file.
 
 ## Session Locking
 

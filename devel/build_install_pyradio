@@ -479,10 +479,10 @@ then
             else
                 ./devel/fix_pyradio_desktop_file -i -t "${REQ_TERMINAL}"
             fi
-            mkdir -p ~/.config/pyradio
-            cp devel/pyradio.png ~/.config/pyradio
         fi
     fi
+    mkdir -p ~/.config/pyradio
+    cp devel/pyradio.png ~/.config/pyradio
 else
     do_exit
     exit 1

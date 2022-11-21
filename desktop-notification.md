@@ -28,9 +28,9 @@ The behavior and presentation of notifications greatly depends on the daemon/ser
 If enabled, **PyRadio** will display:
 
 1. The playlist name, when playback starts.
-1. Song info (as provided by the radio station).
-2. Connection failure messages.
-3. Player crash messages.
+2. Song info (as provided by the radio station).
+3. Connection failure messages.
+4. Player crash messages.
 
 Desktop Notifications are disabled by default.
 
