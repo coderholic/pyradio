@@ -3001,14 +3001,15 @@ class PyRadio(object):
             caption = ' Themes Disabled '
         else:
             txt = '''||Curses| (the library this program is based on), will
-                     ||not| display colors |correctly| (after they have been
-                     |changed by |PyRadio|), in this terminal.
-
-                     |For more info, please refer to:
-                     ||  https://githug.com/coderholic/pyradio/#terminal
+                     ||not| display colors |correctly| in this terminal,
+                     |(after they have been |changed by |PyRadio|).
 
                      |Therefore, using |themes is disabled| and the |default|
                      ||theme| is used.
+
+                     |For more info, please refer to:
+                     ||  https://githug.com/coderholic/pyradio/
+                     |Section |Virtual terminal restrictions
                   '''
             caption = ' Themes Disabled '
 

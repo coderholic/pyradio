@@ -53,17 +53,6 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
         )
 
 def shell():
-    if not sys.platform.startswith('win'):
-        term = getenv('TERM')
-        # print('TERM = {}'.format(term))
-        if term is None:
-            print('== Warning: TERM is not set. Using xterm-256color')
-            environ['TERM'] = 'xterm-256color'
-        if term == 'xterm' \
-                or term.startswith('screen') \
-                or term.startswith('tmux'):
-            print('== Warning: TERM is {}. Using xterm-256color'.format(term))
-            environ['TERM'] = 'xterm-256color'
     version_too_old = False
     if sys.version_info[0] == 2:
         if sys.version_info < (2, 7):
@@ -101,7 +90,7 @@ def shell():
 
     if not system().lower().startswith('darwin') and \
             not system().lower().startswith('win'):
-        parser.add_argument('--terminal', help='Use this terminal for Desktop file instead of the auto-detected one. Use "default" to reset to the default terminal. Use "auto" to reset to the auto-detected one.')
+        parser.add_argument('--terminal', help='Use this terminal for Desktop file instead of the auto-detected one. Use "none" to reset to the default terminal or "auto" to reset to the auto-detected one.')
         parser.add_argument('--terminal-param', help='Use this as PyRadio parameter in the Desktop File. Please replace hyphens with underscores when passing the parameter, for example: --terminal-param "_p 3 _t light" (which will result to "pyradio -p 3 -t light").')
 
     parser.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
@@ -160,9 +149,7 @@ def shell():
             except:
                 from urllib import urlretrieve
             try:
-                #r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_pyradio_desktop_file')
-                r = urlretrieve('https://raw.githubusercontent.com/s-n-g/pyradio/devel/devel/fix_pyradio_desktop_file')
-                print(r)
+                r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_pyradio_desktop_file')
             except:
                 print('Cannot contact github...')
                 sys.exit(1)
@@ -182,7 +169,6 @@ def shell():
             sys.exit()
 
     with pyradio_config_file() as pyradio_config:
-
         if args.write_theme:
             if args.write_theme[0]:
                 from .themes import PyRadioTheme
@@ -496,6 +482,22 @@ def shell():
             theme_to_use = pyradio_config.theme
 
         # Starts the radio TUI.
+        if not sys.platform.startswith('win'):
+            term = getenv('TERM')
+            # print('TERM = {}'.format(term))
+            if term is None:
+                print('== Warning: TERM is not set. Using "xterm-256color"')
+                environ['TERM'] = 'xterm-256color'
+            elif term == 'xterm' \
+                    or term.startswith('screen') \
+                    or term.startswith('tmux'):
+                print('== Warning: TERM is set to "{}". Using "xterm-256color"'.format(term))
+                environ['TERM'] = 'xterm-256color'
+        # this is for linux console (i.e. init 3)
+        if term == 'linux':
+            pyradio_config.use_themes = False
+            pyradio_config.no_themes_from_command_line = True
+
         pyradio = PyRadio(
             pyradio_config,
             play=args.play,

@@ -22,7 +22,7 @@ echo "
 Available options:
     -t   TERMINAL
          Use this terminal for Desktop file instead of the auto-detected one.
-         Use \"default\" to reset to the default terminal.
+         Use \"none\" to reset to the default terminal.
          Use \"auto\" to reset to the auto-detected one.
     -p   PARAMETER
          PyRadio parameter. Please replace hyphens with underscores.
@@ -39,24 +39,6 @@ the terminal \"my_term\" is \"-S\", execute as follows:
 
     ./fix_pyradio_desktop_file -t 'my_term -S'
 "
-}
-
-function install(){
-    # run this from installation script only
-    #
-    # use REQ_TERMINAL if it exists, outerwise
-    # use no terminal
-    #
-    # if REQ_TERMINAL is not specified, ans the
-    # desktop file already exists, use the terminal
-    # from it (or none if none is specified)
-
-    echo "Installing Desktop file ...   "
-    DESKTOP_FILE=~/.local/share/applications/pyradio.desktop
-    # set -x
-    get_req_terminal
-    get_program
-    write_desktop_file
 }
 
 function write_desktop_file(){
@@ -78,16 +60,16 @@ Comment=Curses based Radio Player" > "${DESKTOP_FILE}"
     echo "TryExec=${PROGRAM}" >> "${DESKTOP_FILE}"
     if [ -z "${PARAM}" ]
     then
-        echo "Exec=${REQ_TERMINAL}${PROGRAM}" | sed 's/Exec= /Exec=/' >> "${DESKTOP_FILE}"
+        echo "Exec=${REQ_TERMINAL}${PROGRAM}" | sed -e 's/Exec= /Exec=/' -e 's/  / /g' >> "${DESKTOP_FILE}"
     else
         PARAM=" ${PARAM//_/-}"
-        echo "Exec=${REQ_TERMINAL}${PROGRAM} ${PARAM}" | sed 's/Exec= /Exec=/' >> "${DESKTOP_FILE}"
+        echo "Exec=${REQ_TERMINAL}${PROGRAM} ${PARAM}" | sed -e 's/Exec= /Exec=/' -e 's/  / /g' >> "${DESKTOP_FILE}"
     fi
     echo "Icon=/home/${USER}/.config/pyradio/pyradio.png" >> "${DESKTOP_FILE}"
     echo "${TERMINAL_LINE}" >> "${DESKTOP_FILE}"
     echo "Categories=Network" >> "${DESKTOP_FILE}"
 
-    if [ -e /usr/share/applications/pyradio.desktop ]
+    if [ -e /usr/share/applications/pyradio.desktop ] || [ -e /usr/loacal/share/applications/pyradio.desktop ]
     then
         sed -i 's/Name=PyRadio/& - Local/' "${DESKTOP_FILE}"
     fi
@@ -147,7 +129,7 @@ function get_req_terminal(){
             REQ_TERMINAL="${REQ_TERMINAL} ${REQ_COMMAND}"
         fi
     fi
-    if [ "${REQ_TERMINAL}" == "default" ]
+    if [ "${REQ_TERMINAL}" == "none" ]
     then
         unset REQ_TERMINAL
     fi
@@ -221,7 +203,7 @@ do
             if [ "${REQ_TERMINAL}" = "auto" ]
             then
                 echo "Auto-detecting terminal..."
-                get_terminal
+                [ -z "${TERMINAL}" ] && get_terminal || REQ_TERMINAL="${TERMINAL}"
                 if [ -z "${REQ_TERMINAL}" ]
                 then
                     echo "No suitable terminal can be detected in this system..."
@@ -230,10 +212,10 @@ do
                     echo
                     exit 1
                 else
-                    echo "  Auto-detectet terminal: ${REQ_TERMINAL/ */}"
+                    echo "  Auto-detecteted terminal: ${REQ_TERMINAL/ */}"
                 fi
             else
-                if [ "${REQ_TERMINAL}" != "default" ]
+                if [ "${REQ_TERMINAL}" != "none" ]
                 then
                     if [[ "${REQ_TERMINAL}" != *" "*  ]]
                     then
@@ -257,10 +239,6 @@ do
             }
             shift
             ;;
-        --install|-i)
-            INSTALL=1
-            shift
-            ;;
         *)    # unknown option
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
@@ -269,4 +247,10 @@ do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-install
+echo "Installing Desktop file ...   "
+DESKTOP_FILE=~/.local/share/applications/pyradio.desktop
+# set -x
+get_req_terminal
+get_program
+write_desktop_file
+

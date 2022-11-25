@@ -102,6 +102,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
 <li><a href="#pyradio-themes">PyRadio Themes</a>
 <ul>
+<li><a href="#virtual-terminal-restrictions">Virtual terminal restrictions</a></li>
 <li><a href="#css-color-themes-restrictions">CSS color themes restrictions</a></li>
 <li><a href="#secondary-windows-background">Secondary windows background</a>
 <ul>
@@ -134,6 +135,13 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#online-radio-directory-services">Online radio directory services</a></li>
 <li><a href="#desktop-notifications">Desktop Notifications</a></li>
+<li><a href="#desktop-file">Desktop File</a>
+<ul>
+<li><a href="#specifying-the-terminal-to-use">Specifying the terminal to use</a>
+<ul>
+<li><a href="#specifying-pyradio-parameters">Specifying PyRadio parameters</a></li>
+</ul></li>
+</ul></li>
 <li><a href="#session-locking">Session Locking</a>
 <ul>
 <li><a href="#session-unlocking">Session unlocking</a></li>
@@ -827,10 +835,11 @@ a:visited{color: SaddleBrown;}
 <pre>$ pyradio -h
 
 usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-               [-t THEME] [--show-themes] [--write-theme IN_THEME OUT_THEME,]
-               [-tlp] [-scd] [-ocd] [-ep EXTRA_PLAYER_PARAMETERS]
-               [-ap ACTIVE_PLAYER_PARAM_ID] [-lp] [-U] [--user] [-R]
-               [--unlock] [-lt] [-d] [-V]
+               [-t THEME] [--show-themes] [--no-themes]
+               [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
+               [--terminal-param TERMINAL_PARAM] [-tlp] [-scd] [-ocd]
+               [-ep EXTRA_PLAYER_PARAMETERS] [-ap ACTIVE_PLAYER_PARAM_ID]
+               [-lp] [-U] [--user] [-R] [--unlock] [-lt] [-d] [-V]
 
 Curses based Internet radio player
 
@@ -852,8 +861,17 @@ options:
   -t THEME, --theme THEME
                         Use specified theme.
   --show-themes         Show Internal and System Themes names.
+  --no-themes           Disable themes (use default theme).
   --write-theme IN_THEME OUT_THEME,
                         Write an Internal or System Theme to themes directory.
+  --terminal TERMINAL   Use this terminal for Desktop file instead of the
+                        auto-detected one. Use &quot;none&quot; to reset to the default
+                        terminal or &quot;auto&quot; to reset to the auto-detected one.
+  --terminal-param TERMINAL_PARAM
+                        Use this as PyRadio parameter in the Desktop File.
+                        Please replace hyphens with underscores when passing
+                        the parameter, for example: --terminal-param &quot;_p 3 _t
+                        light&quot; (which will result to &quot;pyradio -p 3 -t light&quot;).
   -tlp, --toggle-load-last-playlist
                         Toggle autoload last opened playlist.
   -scd, --show-config-dir
@@ -1163,7 +1181,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>will instruct <strong>PyRadio</strong> to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.</p>
 <p>The default player to use can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>, parameter <strong>player</strong> (default value is <strong>mpv, mplayer, vlc</strong>), using the “<em>Configuration Window</em>”, through which <strong>extra player parameters</strong> can be set.</p>
 <h3 id="extra-player-parameters">Extra Player Parameters</h3>
-<p>All three supported players can accept a significant number of “<em>command line parameters</em>”, which are well documented and accessible through man pages (on linux and macOs) or the documentation (on Windows).</p>
+<p>All three supported players can accept a significant number of “<em>command line options</em>”, which are well documented and accessible through man pages (on linux and macOs) or the documentation (on Windows).</p>
 <p><strong>PyRadio</strong> uses some of these parameters in order to execute and communicate with the players. In particular, the following parameters are in use <strong>by default</strong>:</p>
 <table>
 <colgroup>
@@ -1192,10 +1210,10 @@ Station2,Station2_URL,iso-8859-7</pre>
 </tbody>
 </table>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The user should not use or change the above player parameters. Failing to do so, may render the player <strong><em>unusable</em></strong>.</p>
-<p><strong>PyRadio</strong> provides a way for the user to add extra parameters to the player, either by a command line parameter, or the “<em>Configuration Window</em>” (under “<em>Player:</em>”).</p>
+<p><strong>PyRadio</strong> provides a way for the user to add extra parameters to the player, either by a command line option, or the “<em>Configuration Window</em>” (under “<em>Player:</em>”).</p>
 <p>This way, 10 sets of parameters can be inserted and made available for selection.</p>
 <h4 id="using-the-command-line">Using the command line</h4>
-<p>When the command line parameter (<strong>-ep</strong> or <strong>–extra_player_parameters</strong>) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.</p>
+<p>When the command line option (<strong>-ep</strong> or <strong>–extra_player_parameters</strong>) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.</p>
 <p>The format of the parameter is the following: <strong>[player_name:parameters]</strong></p>
 <p>Where:</p>
 <ul>
@@ -1220,7 +1238,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).</p>
 <p>The user can add (“<strong>a</strong>”) a new parameter, edit (“<strong>e</strong>”) an existing set and delete (“<strong>x</strong>” or “<strong>DEL</strong>”) one.</p>
 <h3 id="changing-parameters-set">Changing parameters set</h3>
-<p>When all desired parameter sets are already defined, using the <strong>-ap</strong> (<strong>–active-player-param-id</strong>) command line parameter can activate the set that corresponds to the number specified. The number to use for any given set can be retrieved using the <strong>-lp</strong> (<strong>–list-player-parameters</strong>) command line parameter.</p>
+<p>When all desired parameter sets are already defined, using the <strong>-ap</strong> (<strong>–active-player-param-id</strong>) command line option can activate the set that corresponds to the number specified. The number to use for any given set can be retrieved using the <strong>-lp</strong> (<strong>–list-player-parameters</strong>) command line option.</p>
 <p>While <strong>PyRadio</strong> is running, the user can change the parameters set used by the player using the “<em>Player Extra Parameters</em>” window, by pressing “<strong>Z</strong>”.</p>
 <p>If playback is on, changing the player’s parameters will make the player restart the playback so that the new parameters get used.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Any changes made this way will not be saved but will be in effect until <strong>PyRadio</strong> terminates.</p>
@@ -1373,6 +1391,12 @@ transparency        0</pre>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the theme selected in the “<em>Theme selection window</em>”, (or requested using the “<strong>-t</strong>” command line option), is in any way invalid, or is of the old format, <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme and will display a relevant message.</p>
 <p>The “<em>Theme selection window</em>” will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
 <p>Pressing “<strong>SPACE</strong>”, will apply the theme and make it default, and pressing “<strong>c</strong>” will apply the theme and make it default and start a file watch function on the file, so that if the file changes, <strong>PyRadio</strong> will automatically update itself.</p>
+<h3 id="virtual-terminal-restrictions">Virtual terminal restrictions</h3>
+<p>After introducing CSS color themes, it has come to my attention that <strong>PyRadio</strong> will not display colors correctly when executed within specific terminals, <em>konsole</em>, <em>yakuake</em>, <em>deepin-teminal</em>, <em>qterminal</em> and <em>terminology</em>, just to name a few.</p>
+<p>Now, I do not know whether this is because of the terminals themselves, python curses implementation or whatever, but that’s that.</p>
+<p><strong>PyRadio</strong> will try to detect these terminals and disable themes (after displaying a relative message). Then the default theme will be used.</p>
+<p>Some of the terminals that work ok, are: <em>gnome-terminal</em>, <em>mate-terminal</em>, <em>xfce4-terminal</em>, <em>lxterminal</em>, <em>terminator</em>, <em>termite</em>, <em>kitty</em>, <em>alacritty</em>, <em>sakura</em>, <em>roxterm</em>, <em>tilix</em>, <em>lilyterm</em>, <em>st</em>, <em>xst</em>, <em>rxvt</em>, <em>urxvt</em>, <em>uxterm</em>, <em>xterm</em>.</p>
+<p>If you want to make <strong>PyRadio</strong> start in one of these terminal, just follow the instructions given at <a href="#specifying-the-terminal-to-use">Desktop File: Specifying the terminal to use</a>.</p>
 <h3 id="css-color-themes-restrictions">CSS color themes restrictions</h3>
 <p>Using CSS colors imposes a couple of restrictions on the type of terminals <strong>PyRadio</strong> will be able to run:</p>
 <ol type="1">
@@ -1380,7 +1404,7 @@ transparency        0</pre>
 <br />
 <strong>PyRadio</strong> will set it to “<em>xterm-256color</em>” if not set.<br />
 <br />
-Furthermore, if TERM is set to anything like “<strong>xterm</strong><em>”, ”<strong>screen</strong></em>” or “<strong>tmux</strong><em>“, <strong>PyRadio</strong> will set it to”</em>xterm-256color*” as well.</p></li>
+Furthermore, if TERM is set to anything like “<strong>xterm</strong>”, “<strong>screen</strong>” or “<strong>tmux</strong>”, <strong>PyRadio</strong> will set it to “<em>xterm-256color</em>” as well.</p></li>
 <li><p>Terminals that do not support at least 16 colors will not be able to display any of the new themes. The same goes for terminals that do not support changing their colors (through the <strong>curses</strong> library).<br />
 <br />
 These terminal will default to the old “<strong>dark</strong>” theme, displaying whatever colors the active palette dictates.</p></li>
@@ -1531,7 +1555,7 @@ For this reason, a folder called “<strong>themes</strong>” will probably hav
 <p>The way this works, according to the documenataion, is that one “can use the <strong>maxBytes</strong> and <strong>backupCount</strong> values to allow the file to rollover at a predetermined size. When the size is about to be exceeded, the file is closed and a new file is silently opened for output. Rollover occurs whenever the current log file is nearly <strong>maxBytes</strong> in length… When <strong>backupCount</strong> is non-zero, the system will save old log files by appending the extensions ‘.1’, ‘.2’ etc., to the filename. For example, with a backupCount of 5 and a base file name of <strong>app.log</strong>, you would get <em>app.log</em>, <em>app.log.1</em>, <em>app.log.2</em>, up to <em>app.log.5</em>. The file being written to is always <strong>app.log</strong>. When this file is filled, it is closed and renamed to <em>app.log.1</em>, and if files <em>app.log.1</em>, <em>app.log.2</em>, etc. exist, then they are renamed to <em>app.log.2</em>, <em>app.log.3</em> etc. respectively.</p>
 <p>The function can be enabled:</p>
 <ol type="1">
-<li>using the -lt (--log-titles) command line parameter, or</li>
+<li>using the -lt (--log-titles) command line option, or</li>
 <li>by pressing “<strong>W</strong>” while in the <strong>Main</strong>, the <strong>Playlist</strong> or the <strong>Register</strong> mode.</li>
 </ol>
 <p>The titles are written in a file called pyradio-titles.log which is saved at <strong>PyRadio</strong> configuration directory.</p>
@@ -1571,11 +1595,30 @@ Apr 18 (Mon) 15:38 | === Logging stopped</pre>
 <li>Player crash messages.</li>
 </ol>
 <p>To find out more about configuring this feature, please refer to <a href="desktop-notification.html">Desktop Notification</a>.</p>
+<h2 id="desktop-file">Desktop File <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p><strong>PyRadio</strong> will install a Desktop File under <strong>~/.local/share/applications</strong>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The system wide Desktop File will probably be under <strong>/usr/share/applications</strong> or <strong>/usr/local/share/applications</strong>.</p>
+<p>By default, this Desktop File will add a “<strong>PyRadio</strong>” entry under the “<strong>Internet</strong>” category (or menu), and will execute <strong>PyRadio</strong> no matter if the directory it resides in is the PATH or not, using the <strong>default</strong> terminal that the system uses.</p>
+<p>In case of a local installation, when a system wide installation also exists, the entry will display “<strong>PyRadio - Local</strong>” to distinguish itself from the system wide “<strong>PyRadio</strong>” one.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the TERMINAL variable is set, the Desktop File will use that instead.</p>
+<h3 id="specifying-the-terminal-to-use">Specifying the terminal to use</h3>
+<p>If a specific terminal has to be used, using the <strong>–terminal</strong> command line option is the way to go:</p>
+<pre>pyradio --terminal kitty</pre>
+<p>This command will set the terminal in the Desktop file, so that:</p>
+<pre>Exec=kitty -e pyradio</pre>
+<p>To have <strong>PyRadio</strong> try to find a suitable terminal, execute:</p>
+<pre>pyraio --terminal auto</pre>
+<p>To restore the original functionality (specifying no terminal):</p>
+<pre>pyradio --terminal none</pre>
+<h4 id="specifying-pyradio-parameters">Specifying PyRadio parameters</h4>
+<p>If a <strong>PyRadio</strong> parameter has to be present in the Desktop File, use the <strong>–terminal-param</strong> command line option:</p>
+<pre>pyradio --terminal none --terminal-param &quot;_p 2&quot;</pre>
+<p>This command will use no specific terminal and will pass the “<strong>-p 2</strong>” (play station No 2 automatically) parameter to <strong>PyRadio</strong>. To pass such a parameter, substitute all hyphens with underscores.</p>
 <h2 id="session-locking">Session Locking <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> uses session locking, which actually means that only the first instance executed within a given session will be able to write to the configuration file.</p>
 <p>Subsequent instances will be “<em>locked</em>”. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will <strong>not</strong> be recorded in the configuration file.</p>
 <h3 id="session-unlocking">Session unlocking</h3>
-<p>If for any reason <strong>PyRadio</strong> always starts in “<em>locked mode</em>”, one can <strong>unlock</strong> the session, using the “<em>–unlock</em>” command line parameter.</p>
+<p>If for any reason <strong>PyRadio</strong> always starts in “<em>locked mode</em>”, one can <strong>unlock</strong> the session, using the “<em>–unlock</em>” command line option.</p>
 <h2 id="update-notification">Update notification <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> will periodically (once every 10 days) check whether a new version has been released.</p>
 <p>If so, a notification message will be displayed, informing the user about it and asking to proceed with updating the program (provided this is not a distribution package).</p>
@@ -1590,7 +1633,7 @@ curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/inst
 <p>Finally, execute the command:</p>
 <pre>python install.py --force</pre>
 <h2 id="cleaning-up">Cleaning up <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><strong>PyRadio</strong> will uninstall all previously installed versions when updated (using the <strong>-U</strong> command line parameter), so no extra steps are needed any more to house keep your system.</p>
+<p><strong>PyRadio</strong> will uninstall all previously installed versions when updated (using the <strong>-U</strong> command line option), so no extra steps are needed any more to house keep your system.</p>
 <h2 id="debug-mode">Debug mode <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Adding the “<strong>-d</strong>” option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a target="_blank" href="https://github.com/coderholic/pyradio/issues">open at github</a>.</p>
@@ -1628,7 +1671,7 @@ $ pyradio -d</pre>
 <li><input type="checkbox" disabled="" />Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>)</li>
 <li><input type="checkbox" disabled="" />Use some OPML service, <a target="_blank" href="https://opml.radiotime.com">https://opml.radiotime.com</a> for example</li>
 <li><input type="checkbox" disabled="" checked="" />Notify the user that the package’s stations.csv has changed -v 0.8.9</li>
-<li><input type="checkbox" disabled="" checked="" />Update / uninstall using command line parameters (-U / -R) - v. 0.8.9</li>
+<li><input type="checkbox" disabled="" checked="" />Update / uninstall using command line options (-U / -R) - v. 0.8.9</li>
 <li><input type="checkbox" disabled="" checked="" />Basic mouse support (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/119">#119</a>) - v. 0.8.8.3</li>
 <li><input type="checkbox" disabled="" checked="" />Players extra parameters (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
 <li><input type="checkbox" disabled="" checked="" />New player selection configuration window (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>

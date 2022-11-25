@@ -18,7 +18,7 @@ class HtmlHelp(object):
         _paths = (
             '/usr/share/doc/pyradio',
             '/usr/local/share/doc/pyradio',
-            path.join(path.expanduser('~'), '.local/share/doc')
+            path.join(path.expanduser('~'), '.local/share/doc/pyradio')
         )
 
     def __init__(self):
