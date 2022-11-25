@@ -5215,6 +5215,7 @@ class PyRadio(object):
             self.refreshBody()
 
     def _show_schedule_player_stop(self):
+        return
         logger.error('_show_schedule_player_stop() !!!')
         logger.error(self._last_played_station)
         if self.player.isPlaying():
