@@ -1258,6 +1258,21 @@ The distro name you insert here will appear in **PyRadio**'s "*Configuration Win
 
 Having said that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using "*xxx*" will do the job, but provides no useful information).
 
+Then, if you want to enable **Desktop Notifications**, do a
+
+    sed -i 's/enable_notifications = -1/enable_notifications = 0/' pyradio/config
+
+or
+
+    sed -i 's/enable_notifications = -1/enable_notifications = 60/' pyradio/config
+
+to have notifications every 60 seconds, for example. You can use any value here, starting from 30 to 300 (meaning every 30 seconds up to 5 minutes), using a step of 30.
+
+Finally, make sure you install:
+
+- `devel/pyradio.png` to `/usr/share/icons` or `/usr/local/share/icons` or any other suitable location.
+- `devel/pyradio.desktop` to `/usr/share/applications` or `/usr/local/share/applications` or any other suitable location.
+
 ## TODO
 
 - [ ] Any user request I find interesting :)

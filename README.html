@@ -1684,6 +1684,16 @@ $ pyradio -d</pre>
 <pre>sed -i &#39;s/distro = None/distro = Arch Linux/&#39; pyradio/config</pre>
 <p>The distro name you insert here will appear in <strong>PyRadio</strong>’s “<em>Configuration Window</em>”. In addition to that it will appear in the log file, so that I know where the package came from while debugging.</p>
 <p>Having said that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using “<em>xxx</em>” will do the job, but provides no useful information).</p>
+<p>Then, if you want to enable <strong>Desktop Notifications</strong>, do a</p>
+<pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 0/&#39; pyradio/config</pre>
+<p>or</p>
+<pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 60/&#39; pyradio/config</pre>
+<p>to have notifications every 60 seconds, for example. You can use any value here, starting from 30 to 300 (meaning every 30 seconds up to 5 minutes), using a step of 30.</p>
+<p>Finally, make sure you install:</p>
+<ul>
+<li>devel/pyradio.png to /usr/share/icons or /usr/local/share/icons or any other suitable location.</li>
+<li>devel/pyradio.desktop to /usr/share/applications or /usr/local/share/applications or any other suitable location.</li>
+</ul>
 <h2 id="todo">TODO <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <ul class="task-list">
 <li><input type="checkbox" disabled="" />Any user request I find interesting :)</li>

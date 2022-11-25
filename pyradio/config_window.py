@@ -90,6 +90,8 @@ class PyRadioConfigWindow(object):
     _help_text.append(None)
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.', '|', "In order to use RadioBrowser, python's requests module must be installed."])
 
+    _config_options = None
+
     def __init__(self, parent, config,
                  toggle_transparency_function,
                  show_theme_selector_function,
@@ -161,10 +163,18 @@ class PyRadioConfigWindow(object):
     def init_config_win(self):
         self._win = None
         self.maxY, self.maxX = self.__parent.getmaxyx()
-        logger.error('\n\nmaxY = {}\n\n'.format(self.maxY))
+        # logger.error('\n\nmaxY = {}\n\n'.format(self.maxY))
         self._second_column = int(self.maxX / 2)
         self._win = curses.newwin(self.maxY, self.maxX, 1, 0)
         self._populate_help_lines()
+
+        if self._config_options:
+            self._max_start =  len(self._config_options) - 1 - self.maxY
+            # logger.error('max_start = {}'.format(self._max_start))
+            if self._max_start < 0:
+                self._start = 0
+            else:
+                self._put_cursor(0)
 
     def refresh_config_win(self):
         self._win.bkgdset(' ', curses.color_pair(12))
@@ -240,11 +250,11 @@ class PyRadioConfigWindow(object):
             for i in range(len(it_list)-1, 0, -1):
                 if it_list[i][0] == '':
                     it_list.pop()
-            logger.error(it_list)
-            if self.__selection < self.maxY -2:
-                self._start = 0
-            else:
-                self._start += 1
+            # logger.error(it_list)
+            # if self.__selection < self.maxY -2:
+            #     self._start = 0
+            # else:
+            #     self._start += 1
             # logger.error('self._start = {}'.format(self._start))
             # for i in range(self._start, len(it_list)):
             for i in range(self._start, self._start + self.maxY - 2):
@@ -292,17 +302,35 @@ class PyRadioConfigWindow(object):
             self._line = ind - self._headers + 2
 
     def _put_cursor(self, jump):
+        old_start = self._start
         self.__selection += jump
-        if jump > 0:
+        if jump >= 0:
             if self.__selection in self._headers:
                 self.__selection += 1
             if self.__selection >= self.number_of_items:
                 self.__selection = 1
+            # logger.error('selection = {0}, jump = {1}, max = {2}'.format(self.__selection, jump, self.maxY - 2))
+            if self.__selection <= 1:
+                self._start = 0
+                # self.refresh_selection()
+                # logger.error('1: {0}->{1}'.format(old_start, self._start))
+            elif self.__selection >= self.maxY - 2:
+                self._start += 1
+                if self._start > self._max_start:
+                    self._start = self._max_start
+                # logger.error('2: {0}->{1}'.format(old_start, self._start))
         else:
             if self.__selection in self._headers:
                 self.__selection -= 1
             if self.__selection < 1:
                 self.__selection = self.number_of_items - 1
+            #logger.error('selection = {0}, jump = {1}, max = {2}'.format(self.__selection, jump, self.maxY - 2))
+            if self.__selection >= self.maxY - 2:
+                self._start += 1
+                if self._start > self._max_start:
+                    self._start = self._max_start
+                # self.refresh_selection()
+                logger.error('3: {0}->{1}'.format(old_start, self._start))
 
     def _populate_help_lines(self):
         self._help_lines = []
@@ -393,6 +421,9 @@ class PyRadioConfigWindow(object):
         '''
         if self.too_small:
             return 1, []
+        # logger.error('max = {0}, len = {1}'.format(self.maxY, len(self._config_options)))
+        self._max_start =  len(self._config_options) -1 - self.maxY
+        # logger.error('mas_start = {}'.format(self._max_start))
         val = list(self._config_options.items())[self.selection]
         logger.error('val = {}'.format(val))
         if char in self._global_functions.keys():
@@ -537,6 +568,7 @@ class PyRadioConfigWindow(object):
             self.refresh_selection()
         elif char in (ord('G'), curses.KEY_END):
             self.__selection = self.number_of_items - 1
+            self._put_cursor(0)
             self.refresh_selection()
         elif char in (ord('d'), ):
             self._load_default_values()
