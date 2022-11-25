@@ -266,8 +266,8 @@ class Log(object):
         else:
             the_path = (
                 join(self._cnf.stations_dir, 'pyradio.png'),
-                '/usr/share/icon/pyradio.png',
-                '/usr/local/share/icon/pyradio.png'
+                '/usr/share/icons/pyradio.png',
+                '/usr/local/share/icons/pyradio.png'
             )
             for n in the_path:
                 if exists(n):

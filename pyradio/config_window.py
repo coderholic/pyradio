@@ -234,13 +234,27 @@ class PyRadioConfigWindow(object):
     def refresh_selection(self):
         self._print_title()
         if not self.too_small:
+            # logger.error('\n\n================\nself._start = {}'.format(self._start))
+            # logger.error(self._config_options)
             it_list = list(self._config_options.values())
-            for i in range(self._start, len(it_list)):
-                it = it_list[i]
-                logger.error('selecyion = {}'.format(self.selection))
+            for i in range(len(it_list)-1, 0, -1):
+                if it_list[i][0] == '':
+                    it_list.pop()
+            logger.error(it_list)
+            if self.__selection < self.maxY -2:
+                self._start = 0
+            else:
+                self._start += 1
+            # logger.error('self._start = {}'.format(self._start))
+            # for i in range(self._start, len(it_list)):
+            for i in range(self._start, self._start + self.maxY - 2):
+                try:
+                    it = it_list[i]
+                except IndexError:
+                    break
+                # logger.error('selection = {0}, i = {1}, max = {2}'.format(self.selection, i, self.maxY))
                 # if i < self.number_of_items:
-                if i < self.maxY-2:
-                    logger.error('i = {}'.format(i))
+                if i <= self.maxY-2:
                     if i == self.__selection:
                         col = hcol = curses.color_pair(6)
                         self._print_options_help()
@@ -249,13 +263,13 @@ class PyRadioConfigWindow(object):
                         hcol = curses.color_pair(4)
                     hline_width = self._second_column - 2
                     try:
-                        self._win.hline(i+1, 1, ' ', hline_width, col)
+                        self._win.hline(i+1-self._start, 1, ' ', hline_width, col)
                     except:
                         logger.error('===== ERROR: {}'.format(i+1))
                     if i in self._headers:
-                        self._win.addstr(i+1, 1, it[0], curses.color_pair(4))
+                        self._win.addstr(i+1-self._start, 1, it[0], curses.color_pair(4))
                     else:
-                        self._win.addstr(i+1, 3, it[0], col)
+                        self._win.addstr(i+1-self._start, 1, '  ' + it[0], col)
                         if isinstance(it[1], bool):
                             self._win.addstr('{}'.format(it[1]), hcol)
                         else:
