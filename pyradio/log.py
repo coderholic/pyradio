@@ -290,7 +290,8 @@ class Log(object):
                     msg.startswith('mplayer: ') or \
                     msg.startswith('vlc: ') or \
                     msg.startswith('Station: ') or \
-                    msg.startswith('Init'):
+                    msg.startswith('Init') or \
+                    msg.startswith('[Muted] '):
                 self._cnf._current_notification_message = ''
                 self._station_sent = False
                 self._stop_desktop_notification_thread = True
@@ -397,6 +398,10 @@ class Log(object):
                 return None, None
             d_title = 'Station'
             d_msg = msg.replace('Playing: ', '')
+        elif msg.startswith('[Muted] '):
+            d_title = 'Player muted!'
+            d_msg = msg.replace('[Muted] ', '')
+            self._station_sent = False
         elif 'abnormally' in msg:
             d_title = 'Player Crash'
             d_msg = msg

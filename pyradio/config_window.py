@@ -302,7 +302,6 @@ class PyRadioConfigWindow(object):
             self._line = ind - self._headers + 2
 
     def _put_cursor(self, jump):
-        old_start = self._start
         self.__selection += jump
         if jump >= 0:
             if self.__selection in self._headers:
@@ -330,7 +329,7 @@ class PyRadioConfigWindow(object):
                 if self._start > self._max_start:
                     self._start = self._max_start
                 # self.refresh_selection()
-                logger.error('3: {0}->{1}'.format(old_start, self._start))
+                # logger.error('3: {0}->{1}'.format(old_start, self._start))
 
     def _populate_help_lines(self):
         self._help_lines = []
