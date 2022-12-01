@@ -25,7 +25,6 @@ def windows_ping(server, count=1, timeout_in_miliseconds=1000):
             ['ping', '-n', str(count), '-w',
              str(timeout_in_miliseconds), server ],
             stdout=subprocess.PIPE).stdout.read()
-        # print(r)
         return 0 if '100%' in str(r) else 1
     except:
         return -1
@@ -40,12 +39,14 @@ def linux_ping(server, count=1, timeout_in_seconds=1):
     try:
         if version_info[0] < 3:
             return 1
-            # r=subprocess.Popen(
-            #     ['ping', '-c', str(count), '-w',
-            #      str(timeout_in_seconds), server],
-            # ).stdout.read()
-            # # print(r)
-            # return 0 if '100%' in str(r) else 1
+            r=subprocess.Popen(
+                ['ping', '-c', str(count), '-w',
+                 str(timeout_in_seconds), server],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT
+            )
+            out = r.communicate()
+            return 0 if '100%' in out[0] else 1
         else:
             r=subprocess.Popen(
                 ['ping', '-c', str(count), '-w',
@@ -53,7 +54,6 @@ def linux_ping(server, count=1, timeout_in_seconds=1):
                 stderr=subprocess.DEVNULL,
                 stdout=subprocess.PIPE
             ).stdout.read()
-            # print(r)
             return 0 if '100%' in str(r) else 1
     except:
         return -1

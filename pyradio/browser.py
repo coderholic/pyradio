@@ -1659,6 +1659,8 @@ class RadioBrowserConfigWindow(object):
 
     enable_servers = True
 
+    _wleft = (2, 5, 7, 8, 10)
+
     def __init__(
             self,
             parent,
@@ -1699,6 +1701,22 @@ class RadioBrowserConfigWindow(object):
         # self._print_params()
         self._win = self._parent = parent
         self.maxY, self.maxX = self._parent.getmaxyx()
+
+        '''
+        static messages
+            Y, X, message, color_pair
+        '''
+        self._static_msg = [
+            [1, 0, 'General Options', 4],
+            [3, 4, 'If True, no confirmation will be asked before saving', 5],
+            [4, 4, 'the configuration when leaving the search window', 5],
+            [6, 4, 'A value of -1 will disable return items limiting', 5],
+            [9, 4, 'Set any ping parameter to 0 to disable server pinging', 5],
+            [11, 4, 'Set to "Random" if you cannot connet to service', 5],
+            [12, 0, 'Default Search Term', 4],
+            [13, 4, 'Not implemented yet', 5],
+        ]
+        self._calculate_left_margin()
         if config:
             self._config = config
         else:
@@ -1782,6 +1800,11 @@ class RadioBrowserConfigWindow(object):
         if show:
             for n in self._widgets:
                 n.show(self._win)
+
+    def _calculate_left_margin(self):
+        self._left = max([len(x[2]) for x in self._static_msg])
+        self._left = self.maxX - self._left
+        self._left = int(self._left / 2) - 2
 
     def _init_set_working_params(self,
                                  auto_save,
@@ -1925,12 +1948,13 @@ class RadioBrowserConfigWindow(object):
             self._win.refresh()
             return
 
+        self._calculate_left_margin()
         if self._widgets is None:
             self._widgets = []
 
             self._widgets.append(
                 SimpleCursesBoolean(
-                    Y=2, X=3,
+                    Y=2, X=2+self._left,
                     window=self._win,
                     color=curses.color_pair(5),
                     color_focused=curses.color_pair(6),
@@ -1946,7 +1970,7 @@ class RadioBrowserConfigWindow(object):
 
             self._widgets.append(
                 SimpleCursesCounter(
-                    Y=5, X=3,
+                    Y=5, X=2+self._left,
                     window=self._win,
                     color=curses.color_pair(5),
                     color_focused=curses.color_pair(6),
@@ -1964,7 +1988,7 @@ class RadioBrowserConfigWindow(object):
 
             self._widgets.append(
                 SimpleCursesCounter(
-                    Y=7, X=3,
+                    Y=7, X=2+self._left,
                     window=self._win,
                     color=curses.color_pair(5),
                     color_focused=curses.color_pair(6),
@@ -1983,7 +2007,7 @@ class RadioBrowserConfigWindow(object):
 
             self._widgets.append(
                 SimpleCursesCounter(
-                    Y=8, X=3,
+                    Y=8, X=2+self._left,
                     window=self._win,
                     color=curses.color_pair(5),
                     color_focused=curses.color_pair(6),
@@ -2002,7 +2026,7 @@ class RadioBrowserConfigWindow(object):
 
             self._widgets.append(
                 SimpleCursesString(
-                    Y=10, X=3,
+                    Y=10, X=2+self._left,
                     parent=self._win,
                     caption='Default Server: ',
                     string=self._params[0]['server'],
@@ -2017,17 +2041,22 @@ class RadioBrowserConfigWindow(object):
             self._widgets[-1].id = 4
             self._widgets[-1].enabled = self.enable_servers
             self._fix_focus(show=False)
+        else:
+            for i in range(0, len(self._widgets)):
+                self._widgets[i].move(self._wleft[i], 2+self._left)
         for n in self._widgets:
             n.show(self._win)
 
-        self._win.addstr(1, 1, 'General Options', curses.color_pair(4))
-        self._win.addstr(3, 5, 'If True, no confirmation will be asked before saving', curses.color_pair(5))
-        self._win.addstr(4, 5, 'the configuration when leaving the search window', curses.color_pair(5))
-        self._win.addstr(6, 5, 'A value of -1 will disable return items limiting', curses.color_pair(5))
-        self._win.addstr(9, 5, 'Set any ping parameter to 0 to disable server pinging', curses.color_pair(5))
-        self._win.addstr(11, 5, 'Set to "Random" if you cannot connet to service', curses.color_pair(5))
-        self._win.addstr(12, 1, 'Default Search Term', curses.color_pair(4))
-        self._win.addstr(13, 5, 'Not implemented yet', curses.color_pair(5))
+        for i in self._static_msg:
+            self._win.addstr(i[0], i[1] + self._left, i[2], curses.color_pair(i[-1]))
+        # self._win.addstr(1, 1, 'General Options', curses.color_pair(4))
+        # self._win.addstr(3, 5, 'If True, no confirmation will be asked before saving', curses.color_pair(5))
+        # self._win.addstr(4, 5, 'the configuration when leaving the search window', curses.color_pair(5))
+        # self._win.addstr(6, 5, 'A value of -1 will disable return items limiting', curses.color_pair(5))
+        # self._win.addstr(9, 5, 'Set any ping parameter to 0 to disable server pinging', curses.color_pair(5))
+        # self._win.addstr(11, 5, 'Set to "Random" if you cannot connet to service', curses.color_pair(5))
+        # self._win.addstr(12, 1, 'Default Search Term', curses.color_pair(4))
+        # self._win.addstr(13, 5, 'Not implemented yet', curses.color_pair(5))
 
         if self._distro != 'None':
             try:

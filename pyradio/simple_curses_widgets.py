@@ -332,6 +332,14 @@ class SimpleCursesString(SimpleCursesWidget):
     def string_X(self):
         return self._X + len(self._string)
 
+    def move(self, newY=-1, newX=-1, parent=None):
+        if newY > 0:
+            self._Y = newY
+        if newX > 0:
+            self._X = newX
+        if parent:
+            self._win = self._parent = parent
+
     def keypress(self, char):
         ''' SimpleCursesString key press
             Returns:
@@ -1501,24 +1509,40 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
     RIGHT = 1
     CENTER = 2      # not implemented
 
+    _selection = _start_pos = 0
+    _global_functions = _local_functions = {}
+    _can_add_items = _can_delete_items = False
+
     def __init__(self,
                  Y, X,
-                 window,
+                 parent,
                  items,
                  color,
                  color_active,
                  color_cursor_selection,
                  color_cursor_active,
+                 mode=-1,
                  selection=0,
                  active=-1,
+                 height=0,
+                 width=0,
                  margin=0,
                  align=0,
+                 has_captions = False,
+                 color_captions = None,
+                 captions = None,
+                 display_count = False,
                  right_arrow_selects=True,
+                 can_add_items=False,
+                 can_delete_items=False,
                  on_activate_callback_function=None,
                  on_up_callback_function=None,
                  on_down_callback_function=None,
                  on_left_callback_function=None,
                  on_right_callback_function=None,
+                 global_functions=None,
+                 local_functions=None,
+                 external_keypress__function=None
                  ):
         ''' Initialize the widget.
 
@@ -1526,11 +1550,33 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             ----------
             Y, X
                 Y, X position of widget in its parent (int)
-            window
+            parent
                 The window to print items into. It must already exist
                 (this widget will not create a window)
             items
-                A list or tuple containing the menu items
+                A list containing the menu items
+            mode
+                The way to display the widget.
+                If mode = -1:
+                    Captions will start with a "-" on margin=0
+                    Items will obey margin
+                If mode = x:
+                    Captions will obey margin, no indicator.
+                    Items will be margin + x
+            color_captions
+                The color to show captions in
+            has_captions
+                Set True to enable captions
+                A caption item starts with a '-' and cannot be
+                selected. It is displayed in color_captions color
+                or color_active if that is not defined
+            captions
+                A list to indicate captions items. Set true to
+                corresponding item id to turn it into a caption.
+                Will be calculated from items if None
+            display_count
+                If True, display itme id + 1 before item data
+                If True, captions will not be displayed
             color
                 The normal color of the non-selected items
             color_active
@@ -1543,6 +1589,12 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 The id of the currently selected item
             active
                 The id of the active item
+            height
+                The maximum number of lines to display
+                If 0, use parent's height - 2
+            width
+                The maximum line length to display
+                If 0, use parent's width - 2
             margin
                 Number of spaces to add before and after each item caption
             align
@@ -1551,32 +1603,109 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 If True (default) right arrow and "l" selects the new
                 active item (for example a menu). Set it to False if
                 the widget is part of a composite widget.
+            can_add_items
+            can_delete_items
+                Set either to True, to enable item addition or deletion
             on_activate_callback_function
                 A function to execute when new active item selected
+            global_functions
+                A dict with functions to execute when keys pressed,
+                before handling keys internally
+                    Format: {ord('key'): function}
+                    Example: {ord('R'): self._reload}
+                return is 1 (continue) in the widget
+            local_functions
+                A dict with functions to execute when keys pressed,
+                after handling keys internally
+                    Format: {ord('key'): function}
+                    Example: {ord('R'): self._reload}
+                return is 1 (continue) in the widget
+            external_keypress_function
+                An external keypress function to call, after handling
+                all other key handling routines.
+                The function will be called as
+                    external_keypress_function(char)
+                and must return:
+                   -1 - Cancel
+                    1 - Continue
+                    2 - Display help
         '''
+        self._items = []
         self._Y = Y
         self._X = X
-        self._win = window
-        self.items = items
+        self._win = parent
         self._color = color
         self._color_active = color_active
         self._color_cursor_active = color_cursor_active
         self._color_cursor_selection = color_cursor_selection
+        self._maxY = height
+        self._maxX = width
         self._margin = margin
         self._align = align
+        self._has_captions = has_captions
+        if captions:
+            self._captions = captions
+        else:
+            self._captions = []
+        self._color_captions = color_captions
+        self._display_count = display_count
+        if self._display_count:
+            self._caption = None
+            self._has_captions = False
+        self._can_add_items = can_add_items
+        self._can_delete_items = can_delete_items
         self._right_arrow_selects = right_arrow_selects
         self._on_activate_callback_function = on_activate_callback_function
         self._on_up_callback_function = on_up_callback_function
         self._on_down_callback_function = on_down_callback_function
         self._on_left_callback_function = on_left_callback_function
         self._on_right_callback_function = on_right_callback_function
-        self.selection = selection
+        self._selection = selection
+        if global_functions is not None:
+            self._global_functions = global_functions
+        if local_functions is not None:
+            self._local_functions = local_functions
+        self._external_keypress__function = external_keypress__function
         self.active = active
         self._focused = True
         self._enabled = True
         self._showed = False
+        if color_captions:
+            self._color_captions = color_captions
+        else:
+            self._color_captions = self._color_active
 
-        self.set_items()
+        self.set_items(
+            items=items,
+            captions=self._captions,
+            has_captions=self._has_captions,
+            can_add_items=self._can_add_items,
+            can_delete_items=self._can_delete_items
+        )
+        self._calculate_height_width()
+        self._verify_selection_not_on_caption()
+
+    @property
+    def string(self):
+        '''Returns the widget's active string '''
+        return self._items[self.active]
+
+    @property
+    def current_string(self):
+        '''Returns the widget's seldcted string '''
+        return self._items[self._selection]
+
+    @property
+    def selection(self):
+        '''Returns the widget's height '''
+        return self._selection
+
+    @selection.setter
+    def selection(self, value):
+        if 0 <= value < len(self._items):
+            self._set_selection(value)
+        else:
+            raise ValueError('selection out of bounds!')
 
     @property
     def height(self):
@@ -1586,6 +1715,8 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
     @height.setter
     def height(self, value):
         self._maxY = val
+        self._calculate_height_width()
+        self._showed = False
 
     @property
     def width(self):
@@ -1595,45 +1726,19 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
     @width.setter
     def width(self, value):
         self._maxX = val
-
-    @property
-    def Y(self):
-        '''Returns the widget's Y position '''
-        return self._Y
-
-    @Y.setter
-    def Y(self, value):
-        self._Y = val
-
-    @property
-    def X(self):
-        '''Returns the widget's X position '''
-        return self._X
-
-    @X.setter
-    def X(self, value):
-        self._X = val
+        self._calculate_height_width()
+        self._showed = False
 
     @property
     def parent(self):
         '''Returns the widget's window '''
-        return self._parent
+        return self._win
 
     @parent.setter
     def parent(self, value):
-        if self._showed:
-            self.show(parent=value)
-
-    @property
-    def window(self):
-        '''Returns the widget's window '''
-        return self._win
-
-    @window.setter
-    def window(self, value):
         self._win = value
-        if self._showed:
-            self.show()
+        self._showed = False
+        self._calculate_height_width()
 
     @property
     def enabled(self):
@@ -1643,8 +1748,6 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
     @enabled.setter
     def enabled(self, value):
         self._enabled = value
-        if self._showed:
-            self.show()
 
     @property
     def focused(self):
@@ -1654,41 +1757,292 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
     @focused.setter
     def focused(self, value):
         self._focused = value
-        if self._showed:
-            self.show()
 
-    def set_items(self, items=None):
-        if items:
-            self.items = tuple(items[:])
-        self._item_width = len(max(self.items, key=len))
-        self._maxX = self._item_width + 2 * self._margin
-        self._maxY = len(self.items)
+    @property
+    def count(self):
+        '''Returns number of items'''
+        return len(self._items)
 
-    def show(self, parent=None):
-        if parent:
-            self._parent = parent
-            self._win = None
-        for i, n in enumerate(self.items):
-            if self._align == self.LEFT:
-                disp_item = ' ' * self._margin + n.ljust(self._item_width) + ' ' * self._margin
-            elif self._align == self.RIGHT:
-                disp_item = ' ' * self._margin + n.rjust(self._item_width) + ' ' * self._margin
-            if self._focused and self._enabled:
-                col = self._color
-                if i == self.selection == self.active:
-                    col = self._color_active
-                elif i == self.selection:
-                    col =self._color_cursor_selection
-                elif i == self.active:
-                    col = self._color_cursor_active
-            elif self._enabled:
-                col = self._color
-                if i == self.active:
-                    col = self._color_active
+    def _set_selection(self, a_sel):
+        if a_sel >= 0 and a_sel < len(self._items):
+            self._old_selection = self._selection
+            self._old_start_pos = self._start_pos
+
+            self._selection = a_sel
+            self._verify_selection_not_on_caption()
+
+            log_it('last line = {}'.format(self._start_pos + self._maxY))
+            if a_sel < self._start_pos or a_sel >= self._start_pos + self._maxY:
+                self._start_pos = self._selection - int(self._maxY / 2) + 1
+                self.show()
             else:
-                col = self._color
+                self._toggle_selected_item()
+
+    def _get_item_id(self, item=None):
+        ''' returns item id in visible window
+            if item is not visible, return -1
+        '''
+        if item is None:
+            item = self._selection
+        ret = item - self._start_pos
+        log_it(f'== ret = {ret}')
+        if ret < 0 or ret >= self._maxY:
+            return -1
+        return ret
+
+    def _calculate_height_width(self):
+        Y, X = self._win.getmaxyx()
+        if self._maxY == 0:
+            self._maxY = Y - 2
+        if self._maxX == 0:
+            self._maxX = X - 2
+
+    def set_items(
+        self,
+        items=None,
+        captions=None,
+        has_captions=False,
+        can_add_items=False,
+        can_delete_items=False
+    ):
+        if items:
+            if has_captions:
+                if captions:
+                    self._items = items
+                    self._captions = captions
+                else:
+                    cap = []
+                    itms = []
+                    for n in range(0, len(items)):
+                        if n.starts_with('-'):
+                            itms.append(items[n][1:])
+                            cap.append(n)
+                        else:
+                            itms.append(items[n])
+                    self._items = itms
+                    self._captions = cap
+            else:
+                self._items = items
+                self._captions = []
+            self._showed = False
+        self._scroll = True if len(self._items) > self._maxY else False
+
+    def show(self, parent=None, height=-1, width=-1):
+        ''' show the widget
+
+            Paramters
+            =========
+            parent
+                the window to print output
+            height
+                the widget's height
+                If set to 0, set to parent's height - 2
+                the window to print output
+            width
+                the widget's width
+                If set to 0, set to parent's width - 2
+        '''
+        # log_it('show')
+        if parent:
+            self._win = parent
+            self._calculate_height_width()
+
+        if height != -1:
+            self._maxY = height
+            self._calculate_height_width()
+
+        if width != -1:
+            self._maxX = width
+            self._calculate_height_width()
+
+        if len(self._items) == 0:
+            self._win.hline(self._Y, self._X, ' ', self._maxX, self._color)
+            self._win.refresh()
+            return
+        # calculate start item
+        # TODO: calculate start_pos
+
+        self._item_width = len(max(self._items, key=len))
+        active_item_length = self._maxX - 2 * self._margin
+        for i in range(0, self._maxY):
+            cap = False
+            #print('i=',i)
+            item_id = i + self._start_pos
+            if item_id < len(self._items):
+                if self._has_captions and not self._display_count:
+                    if item_id in self._captions:
+                        cap = True
+                if cap:
+                    disp_item = '─ ' + self._items[item_id][:active_item_length-2] + ' ─'
+                    self._win.addstr(i + self._Y, self._X, disp_item, self._color_captions)
+                    continue
+                elif self._display_count:
+                    if self._scroll:
+                        count_len = len(str(self._start_pos + self._maxY))
+                        # log_it('scroll count_len = {0}, start_pos = {1}'.format(count_len, self._start_pos))
+                    else:
+                        count_len = len(str(len(self._items)))
+                        # log_it('count_len = {}'.format(count_len))
+                    disp_item_pref = '{}. '.format(str(item_id+1).rjust(count_len))
+                    disp_item_suf = self._items[item_id][:active_item_length-len(disp_item_pref)]
+                    disp_item = ' ' * self._margin + disp_item_pref + disp_item_suf + ' ' * self._margin
+                else:
+                    #print('item_id = {}'.format(item_id))
+                    item = self._items[item_id][:active_item_length]
+                    if self._align == self.LEFT:
+                        disp_item = ' ' * self._margin + item.ljust(active_item_length) + ' ' * self._margin
+                    elif self._align == self.RIGHT:
+                        disp_item = ' ' * self._margin + item.rjust(active_item_length) + ' ' * self._margin
+                    else:
+                        disp_item = ' ' * self._margin + item.center(active_item_length) + ' ' * self._margin
+            else:
+                # create empty lines
+                disp_item = ' ' * self._maxX
+
+            col = self._get_item_color(item_id)
             self._win.addstr(i + self._Y, self._X, disp_item, col)
         self._showed = True
+
+        self._win.refresh()
+
+    def _get_item_color(self, item_id):
+        # log_it('--- START ---')
+        # log_it(f'  _get_item_color: item_id = {item_id}, selection = {self._selection}')
+        if self._focused and self._enabled:
+            col = self._color
+            # log_it('  color: color (default)')
+            if item_id == self._selection == self.active:
+                col = self._color_cursor_active
+                # log_it('  color: color cursor active')
+            elif item_id == self._selection:
+                col =self._color_cursor_selection
+                # log_it('  color: color cursor selection')
+            elif item_id == self.active:
+                col = self._color_active
+                # log_it('  color: color active')
+        elif self._enabled:
+            col = self._color
+            if item_id == self.active:
+                col = self._color_active
+        else:
+            col = self._color
+            # log_it('  color: color (else)')
+        # log_it('--- END ---')
+        return col
+
+    def _make_sure_selection_is_visible(self):
+        if len(self._items) <= self._maxY:
+            self._start_pos = 0
+            return
+        meso = int(self._maxY / 2)
+        st = old_st = self._start_pos
+        en = st + self._maxY - 1
+        log_it('old_st = st = {0}, sel = {1}, en = {2}'.format(st, self._selection, en))
+        # if not (st <= self._selection <= en):
+        if st < self._selection:
+            log_it('I am at 1')
+            st = self._selection - self._maxY + 1
+            if st < 0:
+                st = 0
+
+        elif en < self._selection:
+            log_it('I am at 2')
+            st = self._selection - self._maxY
+            log_it('(){0} + {1}): {2} >= {3}'.format(st, meso, st + meso, self._maxY))
+            if st < 0:
+                st = 0
+            elif st + meso >= self._maxY:
+                st = len(self._items) - self._maxY
+        if st > self._selection:
+            st = self._selection
+        self._start_pos = st
+        # self._verify_selection_not_on_caption()
+        log_it('old_st = {0} , st = {1}, sel = {2}, en = {3}'.format(old_st, st, self._selection, en))
+        return old_st == st
+
+    def _verify_selection_not_on_caption(self, movement=1):
+        log_it('\n\n1 mov = {0}, sel = {1}, items = {2}'.format(movement, self._selection, len(self._items)))
+        if len(self._items) == 0:
+            return
+        if self._selection < 0 and movement != -1:
+            self._selection = 0
+        elif self._selection >= len(self._items):
+            self._selection = len(self._items) - 1
+        if self._has_captions:
+            if len(self._items) == len(self._captions):
+                self._selection = -1
+                return
+            while self._selection in self._captions:
+                self._selection += movement
+                if self._selection == len(self._items):
+                    self._selection = 0
+                elif self._selection < 0:
+                    self._selection = len(self._items) - 1
+        log_it('\n\n2 mov = {0}, sel = {1}, items = {2}'.format(movement, self._selection, len(self._items)))
+
+    def delete_item(self, target):
+        d = deque(self._items)
+        d.rotate(-target)
+        ret = d.popleft()
+        d.rotate(target)
+        self._items = list(d)
+        log_it('=======> id = {0}, captions = {1}'.format(target, self._captions))
+        if self._has_captions:
+            for i in range(0, len(self._captions)):
+                if target < self._captions[i]:
+                    self._captions[i] -= 1
+
+        log_it('-------> id = {0}, captions = {1}'.format(target, self._captions))
+
+        mov = 1
+        if self._selection >= len(self._items):
+            self._selection -= 1
+            mov = -1
+        if self.active > target:
+            self.active -= 1
+        elif self.active == target:
+            self.active = -1
+
+        self._verify_selection_not_on_caption(mov)
+        if not self._make_sure_selection_is_visible():
+            self.show()
+
+        return len(self._items)
+
+    def _toggle_selected_item(self):
+        log_it('_toggle_selected_item')
+        update = False
+        old_selection_id = self._get_item_id(self._old_selection)
+        if old_selection_id > -1:
+            self._win.chgat(self._Y + old_selection_id, self._X, self._maxX, self._get_item_color(self._old_selection))
+            log_it('_toggle_selection_item: changing old selection: {0}, line: {1}'.format(old_selection_id, self._Y + old_selection_id))
+            update = True
+        else:
+            log_it('_toggle_selection_item: NOT changing old selection: {0}, line: {1}'.format(old_selection_id, self._Y + old_selection_id))
+            log_it(f'                        start: {self._start_pos}')
+            log_it(f'                        selection: {self._selection}')
+            log_it(f'                        old_selection: {self._old_selection}')
+        selection_id = self._get_item_id(self._selection)
+        if selection_id > -1:
+            self._win.chgat(self._Y + selection_id, self._X, self._maxX, self._get_item_color(self._selection))
+            log_it('_toggle_selection_item: setting new selection: {0}, line: {1}'.format(selection_id, self._Y + selection_id))
+            update = True
+        if update:
+            self._win.refresh()
+            return True
+        return False
+
+    def _toggle_active_item(self):
+        self._old_active = self.active
+        self.active = self._selection
+        old_active_id = self._get_item_id(self._old_active)
+        if old_active_id > -1:
+            self._win.chgat(self._Y + old_active_id, self._X, self._maxX, self._color)
+            log_it('_toggle_active_item: changind old active: {0}, line: {1}'.format(old_active_id, self._Y + old_active_id))
+        active_id = self._get_item_id(self.active)
+        self._win.chgat(self._Y + active_id, self._X, self._maxX, self._color_cursor_active)
+        log_it('_toggle_active_item: setting new active: {0}, line: {1}'.format(active_id, self._Y + active_id))
+        self._win.refresh()
 
     def keypress(self, char):
         ''' SimpleCursesMenuEntries keypress
@@ -1700,10 +2054,32 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 1 - Continue
                 2 - Display help
         '''
+
+        if char == ord('z'):
+            self.selection = 10
+            return 1
+
+        if char == ord('d'):
+            self.selection = 50
+            return 1
+
+        if char == ord('c'):
+            self.selection = 100
+            return 1
+
+
+
         if (not self._focused) or (not self._enabled):
             return 1
 
-        if char in (
+        self._old_selection = self._selection
+        self._old_start_pos = self._start_pos
+        log_it('  == old_sel = {0}, start = {1}'.format(self._old_selection, self._old_start_pos))
+
+        if char in self._global_functions.keys():
+            self._global_functions(char)
+
+        elif char in (
             curses.KEY_EXIT, ord('q'), 27,
             ord('h'), curses.KEY_LEFT
         ):
@@ -1712,14 +2088,25 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
         elif char == ord('?'):
             return 2
 
+        elif self._can_delete_items and \
+                char in (ord('x'), curses.KEY_DC):
+            if len(self._items) == 0:
+                return 0
+            if self._has_captions:
+                if len(self._items) == len(self._captions) + 1:
+                    return 0
+            self.delete_item(self._selection)
+            self.show()
+            return 0
+
         elif self._right_arrow_selects and char in (
             ord('l'), ord(' '), ord('\n'), ord('\r'),
             curses.KEY_RIGHT, curses.KEY_ENTER
         ):
-            self.active = self.selection
             ''' Do not refresh the widget, it will
                 probably be hidden next
             '''
+            self._toggle_active_item()
             if self._on_activate_callback_function:
                 self._on_activate_callback_function()
             return 0
@@ -1728,49 +2115,163 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             ord(' '), ord('\n'), ord('\r'),
             curses.KEY_ENTER
         ):
-            self.active = self.selection
-            self.show()
+            self._toggle_active_item()
             return 0
 
         elif char in (ord('g'), curses.KEY_HOME):
-            self.selection = 0
-            self.show()
+            if len(self._items) == 0:
+                return
+            self._selection = 0
+            self._verify_selection_not_on_caption()
+            if self._start_pos == 0:
+                self._toggle_selected_item()
+            else:
+                self._start_pos = 0
+                self.show()
 
         elif char in (ord('G'), curses.KEY_END):
-            self.selection = len(self.items) - 1
-            self.show()
+            if len(self._items) == 0:
+                return
+            self._selection = len(self._items) - 1
+            self._verify_selection_not_on_caption(-1)
+            log_it('\n\n=====> max = {0}, items = {1}\n\n'.format(self._maxY, len(self._items)))
+            if len(self._items) >= self._maxY:
+                if self._start_pos > self._selection - self._maxY:
+                    self._start_pos = self._selection - self._maxY + 1
+                    self._toggle_selected_item()
+                else:
+                    self._start_pos = self._selection - self._maxY + 1
+                    self.show()
+            else:
+                self._start_pos = 0
+                self.show()
+
+        elif char == ord('H'):
+            if len(self._items) == 0:
+                return
+            self._selection = self._start_pos
+            self._verify_selection_not_on_caption()
+            self._toggle_selected_item()
+
+        elif char == ord('M'):
+            if len(self._items) == 0:
+                return
+            self._selection = self._start_pos + int(self._maxY /2) - 1
+            self._verify_selection_not_on_caption()
+            self._toggle_selected_item()
+
+        elif char == ord('L'):
+            if len(self._items) == 0:
+                return
+            self._selection = self._start_pos + self._maxY - 1
+            self._verify_selection_not_on_caption()
+            self._toggle_selected_item()
 
         elif char in (curses.KEY_PPAGE, ):
-            if self.selection == 0:
-                self.selection = len(self.items) - 1
+            if len(self._items) == 0:
+                return
+            if self._selection == 0:
+                self._selection = len(self._items) - 1
+                self._verify_selection_not_on_caption()
+                if self._scroll:
+                    self._start_pos = self._selection - self._maxY + 1
+                    self.show()
+                    return
             else:
-                self.selection -= 5
-                if self.selection < 0:
-                    self.selection = 0
-            self.show()
+                self._selection -= 5
+                self._verify_selection_not_on_caption()
+                if self._selection < self._start_pos:
+                    self._start_pos = self._selection
+                    self.show()
+                    return
+            if not self._toggle_selected_item():
+                self.show()
 
         elif char in (curses.KEY_NPAGE, ):
-            if self.selection == len(self.items) - 1:
-                self.selection = 0
+            if len(self._items) == 0:
+                return
+            if self._selection == len(self._items) - 1:
+                self._selection = 0
+                self._verify_selection_not_on_caption()
+                self._start_pos = 0
+                if self._scroll:
+                    self.show()
+                    return
             else:
-                self.selection += 5
-                if self.selection >= len(self.items):
-                    self.selection = len(self.items) - 1
-            self.show()
+                self._selection += 5
+                self._verify_selection_not_on_caption()
+                if self._selection >= len(self._items):
+                    self._selection = len(self._items) - 1
+                    self._verify_selection_not_on_caption(-1)
+                if self._scroll:
+                    log_it(f'sel = {self._selection}, start = {self._start_pos}')
+                    if self._selection - self._start_pos > self._maxY - 1:
+                        self._start_pos = self._selection - self._maxY + 1
+                        self.show()
+                        return
+            if not self._toggle_selected_item():
+                self.show()
 
         elif char in (ord('k'), curses.KEY_UP):
-            self.selection -= 1
-            if self.selection < 0:
-                self.selection = len(self.items) - 1
-            self.show()
+            if len(self._items) == 0:
+                return
+            self._selection -= 1
+            self._verify_selection_not_on_caption(-1)
+            if self._selection < 0:
+                self._selection = len(self._items) - 1
+                self._verify_selection_not_on_caption(-1)
+                self._start_pos = 0
+                if self._scroll:
+                    self._start_pos = self._selection - self._maxY + 1
+                    self.show()
+                    return
+            if self._scroll:
+                # we have scrolling items
+                if self._selection < self._start_pos:
+                    # we need to scroll!
+                    self._start_pos -= 1
+                    log_it(f'We need to scroll: start: {self._start_pos}, selection: {self._selection}')
+                    self.show()
+                    return
+            log_it(f'going from {self._old_selection} to {self._selection}, start at {self._start_pos}')
+            if not self._toggle_selected_item():
+                log_it('self.show')
+                self.show()
 
         elif char in (ord('j'), curses.KEY_DOWN):
-            self.selection += 1
-            if self.selection == len(self.items):
-                self.selection = 0
-            self.show()
+            if len(self._items) == 0:
+                return
+            self._selection += 1
+            if self._has_captions:
+                if self._selection in self._captions:
+                    self._selection += 1
+            if self._selection == len(self._items):
+                self._selection = 0
+                self._verify_selection_not_on_caption()
+                self._start_pos = 0
+                if self._scroll:
+                    self.show()
+                    return
+            if self._scroll:
+                # we have scrolling items
+                if self._selection >= self._start_pos + self._maxY:
+                    # we need to scroll!
+                    self._start_pos = self._selection - self._maxY + 1
+                    log_it(f'We need to scroll: start: {self._start_pos}, selection: {self._selection}')
+                    self.show()
+                    return
+
+            if not self._toggle_selected_item():
+                self.show()
+
+        elif char in self._local_functions.keys():
+            self._local_functions(char)
+
+        elif self._external_keypress__function:
+            return self._external_keypress__function(char)
 
         return 1
+
 
 
 class SimpleCursesCheckBox(SimpleCursesWidget):
