@@ -1258,7 +1258,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                     self._config_win._params[0]['server'],
                     self._config_win._params[0]['ping_count'],
                     self._config_win._params[0]['ping_timeout'],
-                    Y=11, X=19,
+                    Y=12, X=self._config_win._left+7,
                     show_random=True,
                     return_function=return_function,
                     global_functions=global_functions
@@ -1275,6 +1275,11 @@ class RadioBrowser(PyRadioStationsBrowser):
                 )
         else:
             self._server_selection_window.set_parent(self.parent)
+            if with_config:
+                self._server_selection_window.move(12, self._left + 7)
+            else:
+                self._server_selection_window.move(12, self._config_win._left + 7)
+            logger.error('\n\nSetting Y\n\n')
         self.keyboard_handler = self._server_selection_window
         self.server_window_from_config = with_config
         self._server_selection_window.show()
@@ -1840,6 +1845,13 @@ class RadioBrowserConfigWindow(object):
         self._params[1]['limit'] = self._params[0]['limit']
         self._params[1]['terms'] = deepcopy(self._params[0]['terms'])
 
+        for n in self._params[0].keys():
+            if n == 'terms':
+                for i, k in enumerate(self._params[0][n]):
+                    logger.error('term {0}: {1}'.format(i, k))
+            else:
+                logger.error('{0}: {1}'.format(n, self._params[0][n]))
+
     def _revert_to_saved_params(self):
         self._revert_params(1)
 
@@ -2111,13 +2123,15 @@ class RadioBrowserConfigWindow(object):
                 self._params[0]['server'],
                 self._params[0]['ping_count'],
                 self._params[0]['ping_timeout'],
-                Y=11, X=19,
+                Y=12, X=self._left+7,
                 show_random=True,
                 return_function=return_function,
                 global_functions=global_functions
             )
         else:
-            self._server_selection_window.set_parent(self._win)
+            self._server_selection_window.move(12, self._left+7, self._win)
+            # self._server_selection_window.X = self._left + 18
+            # self._server_selection_window.set_parent(self._win)
         # self.keyboard_handler = self._server_selection_window
         self._server_selection_window.show()
         return self._server_selection_window
@@ -3919,6 +3933,15 @@ class RadioBrowserServersSelect(object):
         self._Y = Y
         self._X = X
         logger.error('DE self._Y ={0}, self._X = {1}'.format(self._Y, self._X))
+
+    def move(self, Y, X, parent=None):
+        self._Y = Y
+        self._X = X
+        self._win = curses.newwin(
+            self.maxY, self.maxX,
+            self._Y, self._X
+        )
+        self.show(parent)
 
     def show(self, parent=None):
         if parent:
