@@ -1,3 +1,14 @@
+2022-12-09 s-n-g
+    * version 0.8.9.32 (0.9-beta29)
+    * Making it possible to disable the no themes start
+      up notification
+    * Fixing Config Window scrolling
+    * Fixing ping for python2 and the BSDs (again)
+    * Desktop Notification will stop when player is muted
+    * RadioBrowser config will be centered on screen
+    * RadioBrowser config will return to Config Window
+    * Started working on remote controlling PyRadio
+
 2022-11-25 s-n-g
     * version 0.8.9.31 (0.9-beta28)
     * fixing icon installation and discovery

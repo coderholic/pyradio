@@ -327,7 +327,6 @@ class Window_Stack_Constants(object):
         BROWSER_CONFIG_SAVE_ERROR_MODE,
         SERVICE_SERVERS_UNREACHABLE,
         SELECT_PLAYLIST_HELP_MODE,
-        NO_THEMES_MODE,
     )
 
     def __init__(self):

@@ -62,6 +62,7 @@ class Log(object):
     _desktop_notification_lock = threading.Lock()
 
     def __init__(self, config):
+        self._muted = False
         self._cnf = config
         self.width = None
         self._get_startup_window_title()
@@ -290,104 +291,112 @@ class Log(object):
                     msg.startswith('mplayer: ') or \
                     msg.startswith('vlc: ') or \
                     msg.startswith('Station: ') or \
-                    msg.startswith('Init') or \
-                    msg.startswith('[Muted] '):
+                    msg.startswith('Init'):
                 self._cnf._current_notification_message = ''
                 self._station_sent = False
                 self._stop_desktop_notification_thread = True
                 self._desktop_notification_thread = None
-        if platform.lower().startswith('win'):
-            if msg and HAS_WIN10TOAST:
-                d_title, d_msg = self._get_desktop_notification_data(msg)
-                if d_msg:
-                    if self._cnf._current_notification_message != d_msg:
-                        # toast = Notification(app_id="PyRadio",
-                        #                      title=d_title,
-                        #                      msg=d_msg,
-                        #                      icon="C:\\Users\\spiros\\AppData\\Roaming\\pyradio\\help\\pyradio.ico")
+                return
 
-                        # toast.show()
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('Sending Desktop Notification: [{0}, {1}, {2}]'.format(d_title, d_msg, self.icon_path))
-                        self._desktop_notification_message = d_msg
-                        self._desktop_notification_title = d_title
-                        try:
-                            with self._desktop_notification_lock:
-                                toaster.show_toast(
-                                    d_title, d_msg, threaded=True,
-                                    icon_path=self.icon_path
-                                )
-                        except:
-                            if logger.isEnabledFor(logging.ERROR):
-                                logger.error('Failure sending Desktop Notification!')
-                            return
-                        if d_title == 'Station':
-                            self._station_sent = True
-                        self._cnf._current_notification_message = d_msg
-                        if self._desktop_notification_thread is None:
-                            if self._enable_notifications > 0:
-                                self._desktop_notification_thread = threading.Thread(
-                                    target=self._repeat_notification._desktop_notification_handler,
-                                    args=(lambda: self._desktop_notification_title,
-                                          lambda: self._desktop_notification_message,
-                                          lambda: self._stop_desktop_notification_thread,
-                                          lambda: self._enable_notifications,
-                                          None, self._desktop_notification_lock
-                                          )
-                                )
-                                self._desktop_notification_thread.start()
-                        else:
-                            self._repeat_notification.reset_timer()
+            if msg.startswith('[Muted] '):
+                self._cnf._current_notification_message = ''
+                self._station_sent = True
+                self._stop_desktop_notification_thread = True
+                self._desktop_notification_thread = None
+                return
 
-        else:
-            if msg and self._cnf._notification_command:
-                d_title, d_msg = self._get_desktop_notification_data(msg)
-                if d_msg:
-                    if self._cnf._current_notification_message != d_msg:
-                        notification_command = self._repeat_notification._populate_notification_command(self._cnf._notification_command, d_title, d_msg)
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('Sending Desktop Notification: {}'.format(notification_command))
-                        self._desktop_notification_message = d_msg
-                        self._desktop_notification_title = d_title
-                        try:
-                            with self._desktop_notification_lock:
-                                subprocess.Popen(
-                                    notification_command,
-                                    stdout=subprocess.DEVNULL,
-                                    stderr=subprocess.DEVNULL
-                                )
-                        except:
-                            # for python 2
+            if platform.lower().startswith('win'):
+                if HAS_WIN10TOAST:
+                    d_title, d_msg = self._get_desktop_notification_data(msg)
+                    if d_msg:
+                        if self._cnf._current_notification_message != d_msg:
+                            # toast = Notification(app_id="PyRadio",
+                            #                      title=d_title,
+                            #                      msg=d_msg,
+                            #                      icon="C:\\Users\\spiros\\AppData\\Roaming\\pyradio\\help\\pyradio.ico")
+
+                            # toast.show()
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('Sending Desktop Notification: [{0}, {1}, {2}]'.format(d_title, d_msg, self.icon_path))
+                            self._desktop_notification_message = d_msg
+                            self._desktop_notification_title = d_title
                             try:
                                 with self._desktop_notification_lock:
-                                    subprocess.Popen(
-                                        notification_command
+                                    toaster.show_toast(
+                                        d_title, d_msg, threaded=True,
+                                        icon_path=self.icon_path
                                     )
-                                pass
                             except:
                                 if logger.isEnabledFor(logging.ERROR):
                                     logger.error('Failure sending Desktop Notification!')
                                 return
-                        if d_title == 'Station':
-                            self._station_sent = True
-                        self._cnf._current_notification_message = d_msg
-                        if self._desktop_notification_thread is None:
-                            if self._enable_notifications > 0:
-                                self._desktop_notification_thread = threading.Thread(
-                                    target=self._repeat_notification._desktop_notification_handler,
-                                    args=(lambda: self._desktop_notification_title,
-                                          lambda: self._desktop_notification_message,
-                                          lambda: self._stop_desktop_notification_thread,
-                                          lambda: self._enable_notifications,
-                                          self._cnf._notification_command,
-                                          self._desktop_notification_lock
-                                          )
-                                )
-                                self._desktop_notification_thread.start()
+                            if d_title == 'Station':
+                                self._station_sent = True
+                            self._cnf._current_notification_message = d_msg
+                            if self._desktop_notification_thread is None:
+                                if self._enable_notifications > 0:
+                                    self._desktop_notification_thread = threading.Thread(
+                                        target=self._repeat_notification._desktop_notification_handler,
+                                        args=(lambda: self._desktop_notification_title,
+                                              lambda: self._desktop_notification_message,
+                                              lambda: self._stop_desktop_notification_thread,
+                                              lambda: self._enable_notifications,
+                                              None, self._desktop_notification_lock
+                                              )
+                                    )
+                                    self._desktop_notification_thread.start()
                             else:
-                                logger.error('Not starting Desktop Notification Thread!!! thread = {0}, enable_notifications = {1}'.format(self._desktop_notification_thread, self._enable_notifications))
-                        else:
-                            self._repeat_notification.reset_timer()
+                                self._repeat_notification.reset_timer()
+
+            else:
+                if self._cnf._notification_command:
+                    d_title, d_msg = self._get_desktop_notification_data(msg)
+                    if d_msg:
+                        if self._cnf._current_notification_message != d_msg:
+                            notification_command = self._repeat_notification._populate_notification_command(self._cnf._notification_command, d_title, d_msg)
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('Sending Desktop Notification: {}'.format(notification_command))
+                            self._desktop_notification_message = d_msg
+                            self._desktop_notification_title = d_title
+                            try:
+                                with self._desktop_notification_lock:
+                                    subprocess.Popen(
+                                        notification_command,
+                                        stdout=subprocess.DEVNULL,
+                                        stderr=subprocess.DEVNULL
+                                    )
+                            except:
+                                # for python 2
+                                try:
+                                    with self._desktop_notification_lock:
+                                        subprocess.Popen(
+                                            notification_command
+                                        )
+                                    pass
+                                except:
+                                    if logger.isEnabledFor(logging.ERROR):
+                                        logger.error('Failure sending Desktop Notification!')
+                                    return
+                            if d_title == 'Station':
+                                self._station_sent = True
+                            self._cnf._current_notification_message = d_msg
+                            if self._desktop_notification_thread is None:
+                                if self._enable_notifications > 0:
+                                    self._desktop_notification_thread = threading.Thread(
+                                        target=self._repeat_notification._desktop_notification_handler,
+                                        args=(lambda: self._desktop_notification_title,
+                                              lambda: self._desktop_notification_message,
+                                              lambda: self._stop_desktop_notification_thread,
+                                              lambda: self._enable_notifications,
+                                              self._cnf._notification_command,
+                                              self._desktop_notification_lock
+                                              )
+                                    )
+                                    self._desktop_notification_thread.start()
+                                else:
+                                    logger.error('Not starting Desktop Notification Thread!!! thread = {0}, enable_notifications = {1}'.format(self._desktop_notification_thread, self._enable_notifications))
+                            else:
+                                self._repeat_notification.reset_timer()
 
     def _get_desktop_notification_data(self, msg):
         if msg.startswith('Title: '):

@@ -19,7 +19,7 @@ import logging
 from .player import info_dict_to_list
 from .cjkwrap import cjklen, PY3
 from .countries import countries
-from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString
+from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString, SimpleCursesMenuEntries
 from .ping import ping
 
 import locale
@@ -1279,7 +1279,6 @@ class RadioBrowser(PyRadioStationsBrowser):
                 self._server_selection_window.move(12, self._left + 7)
             else:
                 self._server_selection_window.move(12, self._config_win._left + 7)
-            logger.error('\n\nSetting Y\n\n')
         self.keyboard_handler = self._server_selection_window
         self.server_window_from_config = with_config
         self._server_selection_window.show()
@@ -2052,6 +2051,17 @@ class RadioBrowserConfigWindow(object):
             self._widgets[-1].token = 'server'
             self._widgets[-1].id = 4
             self._widgets[-1].enabled = self.enable_servers
+
+            # self._widgets.append(
+            #     SimpleCursesMenuEntries(
+            #     )
+            # )
+            # self._widgets[-1].token = 'terms'
+            # self._widgets[-1].id = 5
+            # self._widgets[-1].enabled = True
+
+
+
             self._fix_focus(show=False)
         else:
             for i in range(0, len(self._widgets)):
@@ -2080,6 +2090,9 @@ class RadioBrowserConfigWindow(object):
 
         self._fix_ping_enable()
         self._win.refresh()
+
+        # for n in self._widgets:
+        #     logger.error(n)
 
         self._showed = True
         # self._print_params()

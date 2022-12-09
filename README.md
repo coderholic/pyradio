@@ -627,7 +627,7 @@ Example:
 
 When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with **PyRadio** and edit its extra parameters.
 
-![PyRadio Player Selectio Window](https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg)
+![PyRadio Player Selection Window](https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg)
 
 Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).
 
@@ -1153,7 +1153,7 @@ This command will set the terminal in the Desktop file, so that:
 
 To have **PyRadio** try to find a suitable terminal, execute:
 
-    pyraio --terminal auto
+    pyradio --terminal auto
 
 To restore the original functionality (specifying no terminal):
 

@@ -1790,6 +1790,9 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             return -1
         return ret
 
+    def toSrt(self, a_str):
+        return a_str
+
     def _calculate_height_width(self):
         Y, X = self._win.getmaxyx()
         if self._maxY == 0:

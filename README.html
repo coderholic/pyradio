@@ -190,6 +190,17 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
+2022-12-09 s-n-g
+    * version 0.8.9.32 (0.9-beta29)
+    * Making it possible to disable the no themes start
+      up notification
+    * Fixing Config Window scrolling
+    * Fixing ping for python2 and the BSDs (again)
+    * Desktop Notification will stop when player is muted
+    * RadioBrowser config will be centered on screen
+    * RadioBrowser config will return to Config Window
+    * Started working on remote controlling PyRadio
+
 2022-11-25 s-n-g
     * version 0.8.9.31 (0.9-beta28)
     * fixing icon installation and discovery
@@ -1252,7 +1263,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <pre>pyradio -ep &quot;mpv:profile:second_sound_card&quot;</pre>
 <h4 id="using-the-configuration-window">Using the Configuration Window</h4>
 <p>When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with <strong>PyRadio</strong> and edit its extra parameters.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" alt="PyRadio Player Selectio Window" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" alt="PyRadio Player Selection Window" /></a></p>
 
 <p>Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).</p>
 <p>The user can add (“<strong>a</strong>”) a new parameter, edit (“<strong>e</strong>”) an existing set and delete (“<strong>x</strong>” or “<strong>DEL</strong>”) one.</p>
@@ -1626,7 +1637,7 @@ Apr 18 (Mon) 15:38 | === Logging stopped</pre>
 <p>This command will set the terminal in the Desktop file, so that:</p>
 <pre>Exec=kitty -e pyradio</pre>
 <p>To have <strong>PyRadio</strong> try to find a suitable terminal, execute:</p>
-<pre>pyraio --terminal auto</pre>
+<pre>pyradio --terminal auto</pre>
 <p>To restore the original functionality (specifying no terminal):</p>
 <pre>pyradio --terminal none</pre>
 <h4 id="specifying-pyradio-parameters">Specifying PyRadio parameters</h4>

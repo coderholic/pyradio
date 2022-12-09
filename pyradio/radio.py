@@ -56,6 +56,8 @@ logger = logging.getLogger(__name__)
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
+# from .server import PyRadioServer
+
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
 
@@ -538,8 +540,12 @@ class PyRadio(object):
             curses.KEY_PREVIOUS: self._play_previous_station,
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
-            ord('b'): self._show_schedule_player_stop,
+            # ord('d'): self._start_server,
+            # ord('D'): self._stop_server,
+            # ord('d'): self._show_schedule_player_stop,
         }
+
+        self._remote_server = self._remote_server_thread = None
 
 
     def __del__(self):
@@ -677,7 +683,7 @@ class PyRadio(object):
         except:
             self.selections[self.ws.PLAYLIST_MODE][1] = 0
         self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
-        # self.ll('setup')
+        self.ll('setup')
         self.run()
 
     def _redraw(self):
@@ -1450,6 +1456,8 @@ class PyRadio(object):
                     self._cnf.online_browser.save_config()
                 self._cnf.online_browser = None
         self._wait_for_threads()
+        if self._remote_server:
+            self._remote_server.close_server()
         self.restore_colors()
 
     def _wait_for_threads(self):
@@ -2990,31 +2998,32 @@ class PyRadio(object):
                         is_message=True)
 
     def _show_no_themes(self):
-        if not curses.can_change_color():
-            txt = '''|This terminal reports to |Curses| (the library
-                     |this program is based on), that it |cannot
-                     ||change colors| while running.
+        if self._cnf.show_no_themes_message:
+            if not curses.can_change_color():
+                txt = '''|This terminal reports to |Curses| (the library
+                         |this program is based on), that it |cannot
+                         ||change colors| while running.
 
-                     |Therefore, using |themes is disabled| and the
-                     ||default theme| is used.
-                  '''
-            caption = ' Themes Disabled '
-        else:
-            txt = '''||Curses| (the library this program is based on), will
-                     ||not| display colors |correctly| in this terminal,
-                     |(after they have been |changed by |PyRadio|).
+                         |Therefore, using |themes is disabled| and the
+                         ||default theme| is used.
+                      '''
+                caption = ' Themes Disabled '
+            else:
+                txt = '''||Curses| (the library this program is based on), will not display
+                         |colors |correctly| in this terminal, (after they have been |changed by
+                         |PyRadio.
 
-                     |Therefore, using |themes is disabled| and the |default|
-                     ||theme| is used.
+                         |Therefore, using |themes is disabled| and the |default theme| is used.
 
-                     |For more info, please refer to:
-                     ||  https://githug.com/coderholic/pyradio/
-                     |Section |Virtual terminal restrictions
-                  '''
-            caption = ' Themes Disabled '
+                         |For more info, please refer to:
+                         ||https://github.com/coderholic/pyradio/#virtual-terminal-restrictions
 
-        self._show_help(txt, mode_to_set=self.ws.NO_THEMES_MODE, caption=caption)
-        self._cnf.no_themes_notification_shown = True
+                         |Press "|x|" to never display this message in the future, or
+                      '''
+                caption = ' Themes Disabled '
+
+            self._show_help(txt, mode_to_set=self.ws.NO_THEMES_MODE, caption=caption)
+            self._cnf.no_themes_notification_shown = True
 
     def _print_playlist_not_found_error(self):
         if self._playlist_error_message:
@@ -4699,7 +4708,7 @@ class PyRadio(object):
 
     def _show_colors_cannot_change(self):
         self._show_notification_with_delay(
-                txt='______Curses cannot change__\n____the colors of this window.__\n__Default colors are being used!',
+                txt='______Curses cannot change__\n____the colors of this window.__\n__Default colors are being used!___',
                 delay=1.5,
                 mode_to_set=self.ws.operation_mode,
                 callback_function=self.refreshBody)
@@ -5215,7 +5224,7 @@ class PyRadio(object):
             self.refreshBody()
 
     def _show_schedule_player_stop(self):
-        return
+        # return
         logger.error('_show_schedule_player_stop() !!!')
         logger.error(self._last_played_station)
         if self.player.isPlaying():
@@ -5416,6 +5425,15 @@ class PyRadio(object):
                 self.refreshBody()
             elif char in self._global_functions.keys():
                 self._global_functions[char]()
+            return
+
+        if self.ws.operation_mode == self.ws.NO_THEMES_MODE:
+            if char == ord('x'):
+                self._cnf.show_no_themes_message = False
+                self._cnf.dirty_config = True
+                self._cnf.save_config()
+            self.ws.close_window()
+            self.refreshBody()
             return
 
         if self.ws.operation_mode == self.ws.WIN_UNINSTALL_MODE:
@@ -5926,7 +5944,7 @@ class PyRadio(object):
                 msg = ( 'Error saving config. Press any key to exit...',
                         'Config saved successfully!!!',
                         'Config saved - Restarting playback (parameters changed)')
-                if ret != 2:
+                if ret not in (2, 3):
                     self.ws.close_window()
                     self.bodyWin.box()
                     self._print_body_header()
@@ -7229,26 +7247,9 @@ class PyRadio(object):
                 return
 
             if char in (ord('G'), ord('g')):
-                self._random_requested = False
-                if self.number_of_items > 0:
-                    if self.jumpnr == '':
-                        if char == ord('G'):
-                            self.setStation(-1)
-                        else:
-                            self.setStation(0)
-                    else:
-                        force_center = False
-                        jumpto = min(int(self.jumpnr) - 1, len(self.stations) - 1)
-                        jumpto = max(0, jumpto)
-                        if jumpto < self.startPos - 1 or \
-                                jumpto > self.startPos + self.bodyMaxY:
-                            force_center = True
-                        self.setStation(jumpto)
-                        self._put_selection_in_the_middle(force=force_center)
-                        self.jumpnr = ''
-                    self.refreshBody()
+                self._jump_to_jumpnr(char)
+                self.refreshBody()
                 self._reset_status_bar_right()
-                self._do_display_notify()
                 return
 
             if char in map(ord, map(str, range(0, 10))):
@@ -7521,26 +7522,12 @@ class PyRadio(object):
                 elif char in (curses.KEY_ENTER,
                               ord('\n'), ord('\r'),
                               curses.KEY_RIGHT, ord('l')):
-                    self._reset_status_bar_right()
-                    self.log.counter = None
-                    self._update_status_bar_right()
-                    if self.number_of_items > 0:
-                        self.playSelection()
-                        self.refreshBody()
+                    self._start_player()
                     self._do_display_notify()
                     return
 
                 elif char in (ord(' '), curses.KEY_LEFT, ord('h')):
-                    self._reset_status_bar_right()
-                    self.log.counter = None
-                    self._update_status_bar_right()
-                    if self.number_of_items > 0:
-                        if self.player.isPlaying():
-                            self.stopPlayer(show_message=True)
-                        else:
-                            self.detect_if_player_exited = True
-                            self.playSelection()
-                        self.refreshBody()
+                    self._stop_player()
                     return
 
                 elif char in (ord('x'), curses.KEY_DC):
@@ -7761,6 +7748,52 @@ class PyRadio(object):
                 # else:
                 #     self._update_status_bar_right(status_suffix='')
 
+    def _jump_and_play_selection(self, jumpnr=None):
+        self._jump_to_jumpnr('', jumpnr)
+        self.playSelection()
+        self.refreshBody()
+        self._reset_status_bar_right()
+
+    def _jump_to_jumpnr(self, char='', jumpnr=None):
+        if jumpnr is not None:
+            self.jumpnr = jumpnr
+        self._random_requested = False
+        if self.number_of_items > 0:
+            if self.jumpnr == '':
+                if char == ord('G'):
+                    self.setStation(-1)
+                else:
+                    self.setStation(0)
+            else:
+                force_center = False
+                jumpto = min(int(self.jumpnr) - 1, len(self.stations) - 1)
+                jumpto = max(0, jumpto)
+                if jumpto < self.startPos - 1 or \
+                        jumpto > self.startPos + self.bodyMaxY:
+                    force_center = True
+                self.setStation(jumpto)
+                self._put_selection_in_the_middle(force=force_center)
+                self.jumpnr = ''
+
+    def _start_player(self):
+        self._reset_status_bar_right()
+        self.log.counter = None
+        self._update_status_bar_right()
+        if self.number_of_items > 0:
+            self.playSelection()
+            self.refreshBody()
+
+    def _stop_player(self):
+        self._reset_status_bar_right()
+        self.log.counter = None
+        self._update_status_bar_right()
+        if self.number_of_items > 0:
+            if self.player.isPlaying():
+                self.stopPlayer(show_message=True)
+            else:
+                self.detect_if_player_exited = True
+                self.playSelection()
+            self.refreshBody()
     def _browser_config_not_modified(self):
         self.ws.close_window()
         if self._cnf._online_browser:
@@ -8150,8 +8183,11 @@ class PyRadio(object):
                 logger.info('Volume adjustment inhibited because playback is off')
 
     def _volume_mute(self):
+        logger.error('here')
         if self.player.isPlaying():
+            logger.error('here 1')
             if self.player.playback_is_on:
+                logger.error('here 2')
                 self.player.toggleMute()
         else:
             if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
@@ -8896,5 +8932,42 @@ class PyRadio(object):
 
 
         return self._scan_playlist_for_station(self._reading_stations, start, station_to_find)
+
+    def _start_server(self):
+        self._remote_server = PyRadioServer(
+            bind_ip=self._cnf.server_ip,
+            bind_port=self._cnf.server_port,
+            commands={
+                '/volumeup': self._volume_up,
+                '/volumedown': self._volume_down,
+                '/mute': self._volume_mute,
+                '/histprev': self._stations_history_previous,
+                '/histnext': self._stations_history_next,
+                '/previous': self._play_previous_station,
+                '/next': self._play_next_station,
+                '/stop': self._stop_player,
+                '/start': self._start_player,
+                '/jump': self._jump_and_play_selection,
+            }
+        )
+        self._remote_server_thread = threading.Thread(
+            target=self._remote_server.start_server,
+            args=(
+                lambda: self._cnf,
+                lambda: self.selections,
+                lambda: (self.selection, self.playing),
+                lambda: self._playlist_in_editor,
+            )
+        )
+        self._remote_server_thread.start()
+
+    def _stop_server(self):
+        if self._server:
+            ret = self._server.close_server()
+            while not ret:
+                sleep(.15)
+                ret = self._server.close_server()
+        self._remote_server = self._remote_server_thread = None
+
 
 # pymode:lint_ignore=W901

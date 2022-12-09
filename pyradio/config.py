@@ -114,6 +114,11 @@ class PyRadioStations(object):
 
     normal_stations_history = None
 
+    show_no_themes_message = True
+
+    server_ip = '127.0.0.1'
+    server_port = 9998
+
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -504,6 +509,13 @@ class PyRadioStations(object):
                 self.added_stations += 1
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Added: {0} - {1}'.format(self.added_stations, a_pkg_station))
+
+    def read_playlist_for_server(self, stationFile):
+        out = []
+        with open(self._construct_playlist_path(stationFile), 'r') as cfgfile:
+            for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
+                out.append(row[0])
+        return out
 
     def read_playlist_file(
         self,
@@ -1582,6 +1594,9 @@ class PyRadioConfig(PyRadioStations):
                 return True
         return False
 
+    def _construct_playlist_path(self, a_playlist):
+        return path.join(self.stations_dir, a_playlist + '.csv')
+
     def _read_notification_command(self):
         self._notification_command = []
         if platform == 'win32':
@@ -1843,7 +1858,13 @@ class PyRadioConfig(PyRadioStations):
                 return -2
             if sp[1] == '':
                 return -2
-            if sp[0] == 'player':
+            if sp[0] == 'show_no_themes_message':
+                self.show_no_themes_message = True
+                st = sp[1].strip()
+                if st.lower() == 'false':
+                    self.show_no_themes_message = False
+
+            elif sp[0] == 'player':
                 self.opts['player'][1] = sp[1].lower().strip()
                 # if sys.platform.startswith('win'):
                 #     self.opts['player'][1] = self.opts['player'][1].replace('mpv,', '')
@@ -2243,6 +2264,13 @@ confirm_playlist_reload = {13}
 # Default value: False
 auto_save_playlist = {14}
 
+# When PyRadio determines that a restricted
+# terminal is used, it will display a message
+# every time it is lounched. To disable this
+# message, change the value to False.
+# Default value: True
+show_no_themes_message = {15}
+
 '''
         copyfile(self.config_file, self.config_file + '.restore')
         if self.opts['default_station'][1] is None:
@@ -2274,7 +2302,8 @@ auto_save_playlist = {14}
                     calcf,
                     self.opts['confirm_station_deletion'][1],
                     self.opts['confirm_playlist_reload'][1],
-                    self.opts['auto_save_playlist'][1]))
+                    self.opts['auto_save_playlist'][1],
+                    self.show_no_themes_message))
 
                 ''' write extra player parameters to file '''
                 first_param = True
