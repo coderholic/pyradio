@@ -1826,8 +1826,10 @@ class MpvPlayer(Player):
 
     def _volume_down(self):
         ''' decrease mpv's volume '''
-        self._send_mpv_command('volume_down')
-        self._display_mpv_volume_value()
+        self.get_volume()
+        if self.volume > 0:
+            self._send_mpv_command('volume_down')
+            self._display_mpv_volume_value()
 
     def _format_title_string(self, title_string):
         ''' format mpv's title '''
@@ -1939,7 +1941,7 @@ class MpvPlayer(Player):
         else:
             return True
 
-    def _display_mpv_volume_value(self):
+    def get_volume(self):
         ''' Display volume for MPV
 
             Currently working with python 2 and 3
@@ -2009,14 +2011,22 @@ class MpvPlayer(Player):
             finally:
                 pass
         self._close_pipe(sock)
+        self.volume = vol
+
+    def _display_mpv_volume_value(self):
+        ''' Display volume for MPV
+
+            Calling _get_volume
+        '''
+
+        self.get_volume()
         if self.oldUserInput['Title']:
             info_string = self._format_title_string(self.oldUserInput['Title'])
         else:
             info_string = self._format_title_string(self.oldUserInput['Input'])
-        string_to_show = self._format_volume_string('Volume: ' + str(vol) + '%') + info_string
+        string_to_show = self._format_volume_string('Volume: ' + str(self.volume) + '%') + info_string
         self.outputStream.write(msg=string_to_show, counter='')
         self.threadUpdateTitle()
-        self.volume = vol
 
 class MpPlayer(Player):
     '''Implementation of Player object for MPlayer'''

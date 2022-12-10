@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
-# from .server import PyRadioServer
+from .server import PyRadioServer
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -540,8 +540,8 @@ class PyRadio(object):
             curses.KEY_PREVIOUS: self._play_previous_station,
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
-            # ord('d'): self._start_server,
-            # ord('D'): self._stop_server,
+            ord('d'): self._start_server,
+            ord('D'): self._stop_server,
             # ord('d'): self._show_schedule_player_stop,
         }
 

@@ -1785,7 +1785,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
         if item is None:
             item = self._selection
         ret = item - self._start_pos
-        log_it(f'== ret = {ret}')
+        log_it('== ret = {}'.format(ret))
         if ret < 0 or ret >= self._maxY:
             return -1
         return ret
@@ -2022,9 +2022,9 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             update = True
         else:
             log_it('_toggle_selection_item: NOT changing old selection: {0}, line: {1}'.format(old_selection_id, self._Y + old_selection_id))
-            log_it(f'                        start: {self._start_pos}')
-            log_it(f'                        selection: {self._selection}')
-            log_it(f'                        old_selection: {self._old_selection}')
+            log_it('                        start: {}'.format(self._start_pos))
+            log_it('                        selection: {}'.format(self._selection))
+            log_it('                        old_selection: {}'.format(self._old_selection))
         selection_id = self._get_item_id(self._selection)
         if selection_id > -1:
             self._win.chgat(self._Y + selection_id, self._X, self._maxX, self._get_item_color(self._selection))
@@ -2207,7 +2207,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                     self._selection = len(self._items) - 1
                     self._verify_selection_not_on_caption(-1)
                 if self._scroll:
-                    log_it(f'sel = {self._selection}, start = {self._start_pos}')
+                    log_it('sel = {1}, start = {1}'.format(self._selection, self._start_pos))
                     if self._selection - self._start_pos > self._maxY - 1:
                         self._start_pos = self._selection - self._maxY + 1
                         self.show()
@@ -2233,10 +2233,10 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 if self._selection < self._start_pos:
                     # we need to scroll!
                     self._start_pos -= 1
-                    log_it(f'We need to scroll: start: {self._start_pos}, selection: {self._selection}')
+                    log_it('We need to scroll: start: {0}, selection = {1}'.format(self._start_pos,self._selection))
                     self.show()
                     return
-            log_it(f'going from {self._old_selection} to {self._selection}, start at {self._start_pos}')
+            log_it('going from {0} to {1}, start at {2}'.format(self._old_selection, self._selection, self._start_pos))
             if not self._toggle_selected_item():
                 log_it('self.show')
                 self.show()
@@ -2260,7 +2260,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 if self._selection >= self._start_pos + self._maxY:
                     # we need to scroll!
                     self._start_pos = self._selection - self._maxY + 1
-                    log_it(f'We need to scroll: start: {self._start_pos}, selection: {self._selection}')
+                    log_it('We need to scroll: start: {0}, selection {1}'.format(self._start_pos, self._selection))
                     self.show()
                     return
 
