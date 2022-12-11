@@ -512,13 +512,14 @@ class PyRadioStations(object):
 
     def read_playlist_for_server(self, stationFile):
         out = []
+        in_file = self._construct_playlist_path(stationFile)
         try:
-            with open(self._construct_playlist_path(stationFile), 'r') as cfgfile:
+            with open(in_file, 'r') as cfgfile:
                 for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                     out.append(row[0])
         except:
-            return []
-        return out
+            return None, []
+        return in_file, out
 
     def read_playlist_file(
         self,

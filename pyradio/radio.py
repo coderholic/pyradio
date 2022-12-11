@@ -8754,46 +8754,10 @@ class PyRadio(object):
                 return
 
             ''' playlist loaded and validated '''
-            num = self._open_and_check_station_in_playlist(stationFile, h_item[-1], h_item[1])
+            num = self._open_playlist_and_station_from_station_history(stationFile, h_item)
             if num == -1:
                 ''' Continue going through history items '''
                 func()
-                return
-            self._set_rename_stations()
-            self._cnf.stations = list(self._reading_stations)
-            self._reading_stations = []
-            self.stations = self._cnf.stations
-            self._playlist_in_editor = stationFile
-            self.number_of_items = len(self.stations)
-            self.selection = self.playing = num
-            self.active_stations[0][0] = h_item[1]
-            self.active_stations[0][1] = num
-            self.active_stations[1][0] = h_item[1]
-            self.active_stations[1][1] = num
-            self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
-            ''' set active playlist in config '''
-            self._cnf.set_playlist_data(stationFile ,self._cnf.station_path)
-            self._playlist_in_editor = self._cnf.station_path
-            self._playlist_error_message = ''
-            ''' update station header on top of window '''
-            if not (self._limited_height_mode or self._limited_width_mode):
-                logger.error('==== update outer Body!')
-                self.outerBodyWin.box()
-                self._print_body_header()
-                # self.outerBodyWin.refresh()
-            self.playSelection()
-            self._set_active_stations()
-            self._get_playlists_data_from_playlist_name(h_item[0])
-            self.saved_active_stations = [['', 0], ['', -1]]
-            # if self._limited_height_mode or self._limited_width_mode:
-            #     self._print_limited_info()
-            # else:
-            #     #if self.ws.operation_mode == self.ws.NORMAL_MODE:
-            #     #    self.refreshBody()
-            #     #else:
-            #     #    logger.error('\n\n1 not refreshing\n\n')
-            #     self.refreshBody()
-            self.refreshBody()
             return
 
         try:
@@ -8948,6 +8912,7 @@ class PyRadio(object):
                 '/stop': self._stop_player,
                 '/start': self._start_player,
                 '/jump': self._jump_and_play_selection,
+                'open_history': self._open_playlist_and_station_from_station_history,
             }
         )
         self._remote_server_thread = threading.Thread(
@@ -8968,6 +8933,49 @@ class PyRadio(object):
                 sleep(.15)
                 ret = self._server.close_server()
         self._remote_server = self._remote_server_thread = None
+
+    def _open_playlist_and_station_from_station_history(self, stationFile, h_item):
+        num = self._open_and_check_station_in_playlist(stationFile, h_item[-1], h_item[1])
+        if num == -1:
+            ''' Continue going through history items '''
+            func()
+            return
+        self._set_rename_stations()
+        self._cnf.stations = list(self._reading_stations)
+        self._reading_stations = []
+        self.stations = self._cnf.stations
+        self._playlist_in_editor = stationFile
+        self.number_of_items = len(self.stations)
+        self.selection = self.playing = num
+        self.active_stations[0][0] = h_item[1]
+        self.active_stations[0][1] = num
+        self.active_stations[1][0] = h_item[1]
+        self.active_stations[1][1] = num
+        self._align_stations_and_refresh(self.ws.PLAYLIST_MODE)
+        ''' set active playlist in config '''
+        self._cnf.set_playlist_data(stationFile ,self._cnf.station_path)
+        self._playlist_in_editor = self._cnf.station_path
+        self._playlist_error_message = ''
+        ''' update station header on top of window '''
+        if not (self._limited_height_mode or self._limited_width_mode):
+            logger.error('==== update outer Body!')
+            self.outerBodyWin.box()
+            self._print_body_header()
+            # self.outerBodyWin.refresh()
+        self.playSelection()
+        self._set_active_stations()
+        self._get_playlists_data_from_playlist_name(h_item[0])
+        self.saved_active_stations = [['', 0], ['', -1]]
+        # if self._limited_height_mode or self._limited_width_mode:
+        #     self._print_limited_info()
+        # else:
+        #     #if self.ws.operation_mode == self.ws.NORMAL_MODE:
+        #     #    self.refreshBody()
+        #     #else:
+        #     #    logger.error('\n\n1 not refreshing\n\n')
+        #     self.refreshBody()
+        self.refreshBody()
+        return num
 
 
 # pymode:lint_ignore=W901
