@@ -131,6 +131,15 @@ confirm_playlist_reload = True
 # Valid values: True, true, False, false
 auto_save_playlist = False
 
+# Remote Control server
+# A simple http server that can accept remote
+# connections and pass commands to PyRadio
+# Default value: localhost:9998
+#                no auto start
+remote_control_server_ip = localhost
+remote_control_server_port = 9998
+remote_control_server_auto_start = False
+
 # The name of the distribution providing the package.
 # If this parameter is set to anything other than "None"
 # PyRadio will not permit updating (-U command line

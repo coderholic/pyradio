@@ -88,6 +88,11 @@ class PyRadioConfigWindow(object):
     '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to save a modified playlist whenever it needs saving.', '|', 'Default value: False'])
     _help_text.append(None)
+    _help_text.append(['This is the IP for the Remote Control Server.', '|', 'Available options:', '- localhost', '  PyRadio will be accessible from within the current system only.', '- LAN', '  PyRadio will be accessible from any computer in the local network.', '|', 'One can see the active IP using the "\s" command from the Main program window.', '|', 'Use "h", "l", "LEFT", "RIGTH" to change the value.','|', 'Default value: localhost'])
+    _help_text.append(
+        ['This is the port used by the Remote Control Server (the port the server is listening to).', '|', 'Please make sure that a "free" port is specified here, to avoid any conflicts with existing services and daemons.', '|', 'To adjust the value, use:', '  F1, F2   - to adjust by 1', '  F3, F4   - to adjust by 10', '  F5, F6   - to adjust by 100', '  F7, F8   - to adjust by 1000', '  F9, F10  - to adjust by 10000', '|', 'Valid values: 1025-65535', 'Default value: 9998'])
+    _help_text.append(['If set to True, the Server wiil be automatically started when PyRadio starts.', 'If set to False, one can start the Server using the "\s" command from the Main program window.', '|', 'Default value: False'])
+    _help_text.append(None)
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.', '|', "In order to use RadioBrowser, python's requests module must be installed."])
 
     _config_options = None
@@ -515,6 +520,87 @@ class PyRadioConfigWindow(object):
                     self._cnf._show_colors_cannot_change()
                 return -1, []
 
+        elif val[0] == 'remote_control_server_ip':
+            if char in (curses.KEY_RIGHT, ord('l')):
+                if self._config_options[val[0]][1] == 'localhost':
+                    self._config_options[val[0]][1] = 'LAN'
+                    disp = 'LAN      '
+                else:
+                    self._config_options[val[0]][1] = 'localhost'
+                    disp = 'localhost'
+                self._win.addstr(
+                    self.selection+1,
+                    3 + len(val[1][0]),
+                    disp,
+                    curses.color_pair(6)
+                )
+                self._print_title()
+                self._win.refresh()
+                return -1, []
+            elif char in (curses.KEY_LEFT, ord('h')):
+                if self._config_options[val[0]][1] == 'localhost':
+                    self._config_options[val[0]][1] = 'LAN'
+                    disp = 'LAN      '
+                else:
+                    self._config_options[val[0]][1] = 'localhost'
+                    disp = 'localhost'
+                self._win.addstr(
+                    self.selection+1,
+                    3 + len(val[1][0]),
+                    disp,
+                    curses.color_pair(6)
+                )
+                self._print_title()
+                self._win.refresh()
+                return -1, []
+
+        elif val[0] == 'remote_control_server_port':
+            got_it = False
+            port = int(self._config_options[val[0]][1])
+            if char in (curses.KEY_F2, ):
+                port += 1
+                got_it = True
+            elif char in (curses.KEY_F1, ):
+                port -= 1
+                got_it = True
+            elif char in (curses.KEY_F4, ):
+                port += 10
+                got_it = True
+            elif char in (curses.KEY_F3, ):
+                port -= 10
+                got_it = True
+            elif char in (curses.KEY_F6, ):
+                port += 100
+                got_it = True
+            elif char in (curses.KEY_F5, ):
+                port -= 100
+                got_it = True
+            elif char in (curses.KEY_F8, ):
+                port += 1000
+                got_it = True
+            elif char in (curses.KEY_F7, ):
+                port -= 1000
+                got_it = True
+            elif char in (curses.KEY_F10, ):
+                port += 10000
+                got_it = True
+            elif char in (curses.KEY_F9, ):
+                port -= 10000
+                got_it = True
+            if got_it:
+                if port < 1025:
+                    port = 65535
+                elif port > 65534:
+                    port = 1025
+                self._config_options[val[0]][1] = str(port)
+                self._win.addstr(
+                    self.selection+1,
+                    3 + len(val[1][0]),
+                    str(port) + '    ', curses.color_pair(6))
+                self._print_title()
+                self._win.refresh()
+                return -1, []
+
         elif val[0] == 'connection_timeout':
             if char in (curses.KEY_RIGHT, ord('l')):
                 t = int(val[1][1])
@@ -658,7 +744,8 @@ class PyRadioConfigWindow(object):
                     sel == 'confirm_playlist_reload' or \
                     sel == 'enable_mouse' or \
                     sel == 'auto_save_playlist' or \
-                    sel == 'force_http':
+                    sel == 'force_http' or \
+                    sel == 'remote_control_server_auto_start':
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':
                 # #     if self._config_options[sel][1]:
@@ -2691,5 +2778,16 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
             return -1, ''
 
         return PyRadioSelectPlaylist.keypress(self, char)
+
+class PyRadioServerConfig(object):
+
+    def __init__(self):
+        pass
+
+    def show(self):
+        pass
+
+    def keypress(self, char):
+        pass
 
 # pymode:lint_ignore=W901

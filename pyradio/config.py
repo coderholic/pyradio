@@ -516,6 +516,8 @@ class PyRadioStations(object):
         try:
             with open(in_file, 'r') as cfgfile:
                 for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
+                    if not row:
+                        continue
                     out.append(row[0])
         except:
             return None, []
@@ -1182,6 +1184,10 @@ class PyRadioConfig(PyRadioStations):
     opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
     opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
     opts['auto_save_playlist'] = ['Auto save playlist: ', False]
+    opts['remote'] = ['Remote Control Server', '']
+    opts['remote_control_server_ip'] = ['Server IP: ', 'localhost']
+    opts['remote_control_server_port'] = ['Server Port: ', '9998']
+    opts['remote_control_server_auto_start'] = ['Auto-start Server: ', False]
     opts['online_header'] = ['Online services', '']
     opts['radiobrowser'] = ['RadioBrowser', '-']
     opts['requested_player'] = ['', '']
@@ -1592,6 +1598,18 @@ class PyRadioConfig(PyRadioStations):
                 return n, n.THEME.index(a_theme_name)
         return None, -1
 
+    @property
+    def remote_control_server_ip(self):
+        return self.opts['remote_control_server_ip'][1]
+
+    @property
+    def remote_control_server_port(self):
+        return self.opts['remote_control_server_port'][1]
+
+    @property
+    def remote_control_server_auto_start(self):
+        return self.opts['remote_control_server_auto_start'][1]
+
     def is_default_file(self, a_theme_name):
         for n in self.auto_update_frameworks:
             if a_theme_name == n.deault_filename_only:
@@ -1842,6 +1860,33 @@ class PyRadioConfig(PyRadioStations):
         with open(user_config_file, 'w') as f:
             f.write('\n'.join(lines) + '\n')
 
+    def _validate_remote_control_server_ip(self, val):
+        '''
+        validate a config remote_server string
+        Return
+            input    if valid
+            default  if invalid
+        '''
+        hosts = ('localhost', 'LAN', 'lan')
+        default_remote_server = 'localhost:9998'
+        if ':' in val:
+            sp = val.split(':')
+            ''' is server valid '''
+            if sp[0].startswith('*'):
+                sp[0] = sp[0][1:]
+                auto = True
+            x = [r for r in hosts if r == sp[0]]
+            if not x:
+                return default_remote_server
+            ''' server is valid, is port valid? '''
+            try:
+                x = int(sp[1])
+            except (ValueError, IndexError):
+                return default_remote_server
+        else:
+            return default_remote_server
+        return val
+
     def read_config(self):
         lines = []
         try:
@@ -1867,7 +1912,6 @@ class PyRadioConfig(PyRadioStations):
                 st = sp[1].strip()
                 if st.lower() == 'false':
                     self.show_no_themes_message = False
-
             elif sp[0] == 'player':
                 self.opts['player'][1] = sp[1].lower().strip()
                 # if sys.platform.startswith('win'):
@@ -1953,6 +1997,25 @@ class PyRadioConfig(PyRadioStations):
                            'mplayer_parameter',
                            'vlc_parameter'):
                 self._config_to_params(sp)
+            elif sp[0] == 'remote_control_server_ip':
+                hosts = ('localhost', 'LAN', 'lan')
+                sp[1] = sp[1].strip()
+                x = [r for r in hosts if r == sp[1]]
+                if x:
+                    self.opts['remote_control_server_ip'][1] = x[0]
+                else:
+                    self.opts['remote_control_server_ip'][1] = 'localhost'
+            elif sp[0] == 'remote_control_server_port':
+                try:
+                     x = int(sp[1])
+                except (ValueError, TypeError):
+                    x = 9998
+                self.opts['remote_control_server_port'][1] = str(x)
+            elif sp[0] == 'remote_control_server_auto_start':
+                if sp[1].lower() == 'true':
+                    self.opts['remote_control_server_auto_start'][1] = True
+                else:
+                    self.opts['remote_control_server_auto_start'][1] = False
             elif sp[0] == 'distro':
                 ''' mark as dirty to force saving config to remove setting '''
                 # self.dirty_config = True
@@ -2275,6 +2338,15 @@ auto_save_playlist = {14}
 # Default value: True
 show_no_themes_message = {15}
 
+# Remote Control server
+# A simple http server that can accept remote
+# connections and pass commands to PyRadio
+# Default value: localhost:9998
+#                no auto start
+remote_control_server_ip = {16}
+remote_control_server_port = {17}
+remote_control_server_auto_start = {18}
+
 '''
         copyfile(self.config_file, self.config_file + '.restore')
         if self.opts['default_station'][1] is None:
@@ -2307,7 +2379,11 @@ show_no_themes_message = {15}
                     self.opts['confirm_station_deletion'][1],
                     self.opts['confirm_playlist_reload'][1],
                     self.opts['auto_save_playlist'][1],
-                    self.show_no_themes_message))
+                    self.show_no_themes_message,
+                    self.remote_control_server_ip,
+                    self.remote_control_server_port,
+                    self.remote_control_server_auto_start
+                ))
 
                 ''' write extra player parameters to file '''
                 first_param = True
@@ -2729,7 +2805,7 @@ class PyRadioStationsStack(object):
         ]
         self.item = 0
         self.play_from_history = True
-        self.clear()
+        # self.clear()
         ######## DEBUG END
 
         self.execute_func = execute_function

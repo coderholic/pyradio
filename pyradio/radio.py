@@ -420,6 +420,8 @@ class PyRadio(object):
                 self.ws.SCHEDULE_PLAYER_STOP_MODE: self._show_schedule_player_stop,
                 self.ws.SCHEDULE_PLAYER_STOP_HELP_MODE: self._show_schedule_player_stop_help,
                 self.ws.NO_THEMES_MODE: self._show_no_themes,
+                self.ws.SERVER_START_ERROR_MODE: self._print_server_error,
+                self.ws.SERVER_DEAD_ERROR_MODE: self._print_server_dead
                 }
 
         ''' list of help functions '''
@@ -1748,11 +1750,11 @@ class PyRadio(object):
             else:
                 self._last_played_station_id = self.playing
             self.selections[0][2] = -1
-            logger.error('self.selection = {}'.format(self.selection))
-            logger.error('self.playing = {}'.format(self.playing))
-            logger.error('self.selections = {}'.format(self.selections[0][:3]))
-            logger.error('self._last_played_station = {}'.format(self._last_played_station))
-            logger.error('self._last_played_station_id = {}'.format(self._last_played_station_id))
+            # logger.error('self.selection = {}'.format(self.selection))
+            # logger.error('self.playing = {}'.format(self.playing))
+            # logger.error('self.selections = {}'.format(self.selections[0][:3]))
+            # logger.error('self._last_played_station = {}'.format(self._last_played_station))
+            # logger.error('self._last_played_station_id = {}'.format(self._last_played_station_id))
             if reset_playing \
                     and self.ws.window_mode != self.ws.PLAYLIST_MODE:
                 self.playing = -1
@@ -2913,6 +2915,41 @@ class PyRadio(object):
                         caption=' Session Locked ',
                         prompt=' Press any key... ',
                         is_message=True)
+
+    def _print_server_error(self, msg=None):
+        if msg:
+            self._server_error_msg = str(msg)
+        txt = '''
+            The Remote Control Server |failed| to start!
+            The error message is:
+            __|{}
+
+            This is probably because another (|PyRadio?|) process
+            is already using the requested |Server Port|.
+
+            Close this window, press "|\s|", select a |different
+            |port| and try to start the |Server| again.
+        '''.format(self._server_error_msg)
+        self._show_help(txt, self.ws.SERVER_START_ERROR_MODE,
+                        caption=' Server Error ',
+                        prompt=' Press any key... ',
+                        is_message=True)
+        self._remote_server = self._remote_server_thread = None
+
+    def _print_server_dead(self, msg=None):
+        if msg:
+            self._server_dead_msg = str(msg)
+        txt = '''
+            The Remote Control Server |terminated| with
+            message:
+            __|{}
+
+        '''.format(self._server_dead_msg)
+        self._show_help(txt, self.ws.SERVER_DEAD_ERROR_MODE,
+                        caption=' Server Error ',
+                        prompt=' Press any key... ',
+                        is_message=True)
+        self._remote_server = self._remote_server_thread = None
 
     def _print_not_implemented_yet(self):
         txt = '''
@@ -5560,7 +5597,13 @@ class PyRadio(object):
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
 
-            if char in (ord('h'), ):
+            if char == ord('s') and \
+                    self.ws.operation_mode == self.ws.NORMAL_MODE:
+                ''' open remote control '''
+                self._update_status_bar_right(status_suffix='')
+                self._start_server()
+
+            elif char in (ord('h'), ):
                 ''' open html help '''
                 self._update_status_bar_right(status_suffix='')
                 html = HtmlHelp()
@@ -8183,11 +8226,8 @@ class PyRadio(object):
                 logger.info('Volume adjustment inhibited because playback is off')
 
     def _volume_mute(self):
-        logger.error('here')
         if self.player.isPlaying():
-            logger.error('here 1')
             if self.player.playback_is_on:
-                logger.error('here 2')
                 self.player.toggleMute()
         else:
             if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
@@ -8897,6 +8937,14 @@ class PyRadio(object):
 
         return self._scan_playlist_for_station(self._reading_stations, start, station_to_find)
 
+    def _can_receive_remote_command(self):
+        if self.ws.window_mode in (
+            self.ws.NORMAL_MODE,
+        ):
+            return True
+        else:
+            return False
+
     def _start_server(self):
         self._remote_server = PyRadioServer(
             bind_ip=self._cnf.server_ip,
@@ -8922,16 +8970,19 @@ class PyRadio(object):
                 lambda: self.selections,
                 lambda: (self.selection, self.playing),
                 lambda: self._playlist_in_editor,
+                self._can_receive_remote_command,
+                self._print_server_error,
+                self._print_server_dead
             )
         )
         self._remote_server_thread.start()
 
     def _stop_server(self):
-        if self._server:
-            ret = self._server.close_server()
+        if self._remote_server:
+            ret = self._remote_server.close_server()
             while not ret:
                 sleep(.15)
-                ret = self._server.close_server()
+                ret = self._remote_server.close_server()
         self._remote_server = self._remote_server_thread = None
 
     def _open_playlist_and_station_from_station_history(self, stationFile, h_item):
