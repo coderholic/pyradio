@@ -317,7 +317,8 @@ class PyRadioConfigWindow(object):
                 self.__selection += 1
             if self.__selection >= self.number_of_items:
                 self.__selection = self.number_of_items -1
-                self._start = self.number_of_items - visible_items - 1
+                if self.number_of_items > visible_items:
+                    self._start = self.number_of_items - visible_items - 1
             else:
                 if self.__selection <= 1:
                     self._start = 0
@@ -332,7 +333,8 @@ class PyRadioConfigWindow(object):
                 self.__selection -= 1
             if self.__selection < 1:
                 self.__selection = self.number_of_items - 1
-                self._start = self.__selection - visible_items
+                if self.number_of_items > visible_items:
+                    self._start = self.__selection - visible_items
             else:
                 if self.__selection < self._start:
                     self._start = self.__selection

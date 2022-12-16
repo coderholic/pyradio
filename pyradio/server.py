@@ -108,6 +108,8 @@ Long             Short      Description
 /volumeup        /vu        increase volume
 /volumedown      /vd        decrease volume
 /mute            /m         toggle mute
+/log             /g         toggle stations logging
+/like            /l         tag (like) station
 
 Restricted Commands
 --------------------------------------------------------------------
@@ -142,6 +144,8 @@ Restricted Commands
         '/idle': 'Player is idle; operation not applicable...',
         '/error': 'Error in parameter',
         '/perm': 'Operation not permited (not in normal mode)',
+        '/log': 'Stations logging toggled',
+        '/tag': 'Station tagged (liked)',
     }
 
     def __init__(self, bind_ip, bind_port, commands):
@@ -243,7 +247,16 @@ Restricted Commands
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Remote command: "{}"'.format(self._path))
 
-        if self._path in ('/mute', '/m'):
+        if self._path in ('/tag', '/g'):
+            self._commands['/tag']()
+            self._send_text(client_socket, self._text['/tag'])
+        elif self._path in ('/like', '/l'):
+            if self.sel()[1] > -1:
+                self._commands['/like']()
+                self._send_text(client_socket, self._text['/like'])
+            else:
+                self._send_text(client_socket, self._text['/idle'])
+        elif self._path in ('/mute', '/m'):
             if self.sel()[1] > -1:
                 self._commands['/mute']()
                 self._send_text(client_socket, self._text['/mute'])

@@ -420,8 +420,9 @@ class PyRadio(object):
                 self.ws.SCHEDULE_PLAYER_STOP_MODE: self._show_schedule_player_stop,
                 self.ws.SCHEDULE_PLAYER_STOP_HELP_MODE: self._show_schedule_player_stop_help,
                 self.ws.NO_THEMES_MODE: self._show_no_themes,
-                self.ws.SERVER_START_ERROR_MODE: self._print_server_error,
-                self.ws.SERVER_DEAD_ERROR_MODE: self._print_server_dead
+                self.ws.REMOTE_CONTROL_SERVER_START_ERROR_MODE: self._print_remote_control_server_error,
+                self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE: self._print_remote_control_server_dead_error,
+                self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
                 }
 
         ''' list of help functions '''
@@ -450,6 +451,7 @@ class PyRadio(object):
                 self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
                 self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
                 self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
+                self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
         }
 
         ''' search classes
@@ -542,9 +544,6 @@ class PyRadio(object):
             curses.KEY_PREVIOUS: self._play_previous_station,
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
-            ord('d'): self._start_remote_control_server,
-            ord('D'): self._stop_remote_control_server,
-            # ord('d'): self._show_schedule_player_stop,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -2918,7 +2917,7 @@ class PyRadio(object):
                         prompt=' Press any key... ',
                         is_message=True)
 
-    def _print_server_error(self, msg=None):
+    def _print_remote_control_server_error(self, msg=None):
         if msg:
             self._server_error_msg = str(msg)
         txt = '''
@@ -2932,13 +2931,13 @@ class PyRadio(object):
             Close this window, press "|\s|", select a |different
             |port| and try to start the |Server| again.
         '''.format(self._server_error_msg)
-        self._show_help(txt, self.ws.SERVER_START_ERROR_MODE,
+        self._show_help(txt, self.ws.REMOTE_CONTROL_SERVER_START_ERROR_MODE,
                         caption=' Server Error ',
                         prompt=' Press any key... ',
                         is_message=True)
         self._remote_control_server = self._remote_control_server_thread = None
 
-    def _print_server_dead(self, msg=None):
+    def _print_remote_control_server_dead_error(self, msg=None):
         if msg:
             self._server_dead_msg = str(msg)
         txt = '''
@@ -2947,7 +2946,7 @@ class PyRadio(object):
             __|{}
 
         '''.format(self._server_dead_msg)
-        self._show_help(txt, self.ws.SERVER_DEAD_ERROR_MODE,
+        self._show_help(txt, self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE,
                         caption=' Server Error ',
                         prompt=' Press any key... ',
                         is_message=True)
@@ -5440,6 +5439,25 @@ class PyRadio(object):
                 self._cnf.play_from_history = True
                 self._cnf.stations_history.play_next()
 
+    def _show_remote_control_server_active(self):
+        txt = '''
+               |PyRadio Remote Control Server| is active!
+
+               ||_____Server IP: |{}
+
+               ||Press "|s|" to stop it, or'''.format(
+            self._remote_control_server.ip + \
+            '|:|' + str(
+                self._cnf.active_remote_control_server_port
+            )
+        )
+        self._show_help(
+            txt,
+            self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE,
+            caption=' Remote Control Enabled ',
+            is_message=True
+        )
+
     def keypress(self, char):
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
@@ -5603,7 +5621,10 @@ class PyRadio(object):
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
                 ''' open remote control '''
                 self._update_status_bar_right(status_suffix='')
-                self._start_remote_control_server()
+                if self._remote_control_server_thread:
+                    self._show_remote_control_server_active()
+                else:
+                    self.ws.operation_mode = self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE
 
             elif char in (ord('h'), ):
                 ''' open html help '''
@@ -5821,6 +5842,15 @@ class PyRadio(object):
             else:
                 self._handle_mouse(main_window=False)
             return
+
+        elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:
+            if char == ord('s'):
+                self._stop_remote_control_server()
+            self.ws.close_window()
+            self.refreshBody()
+
+        elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE:
+            self.ws.close_window()
 
         elif char == ord('H') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
@@ -8966,6 +8996,8 @@ class PyRadio(object):
                 '/start': self._start_player,
                 '/jump': self._jump_and_play_selection,
                 'open_history': self._open_playlist_and_station_from_station_history,
+                '/log': self._toggle_titles_logging,
+                '/like': self._tag_a_title,
             }
         )
         self._remote_control_server_thread = threading.Thread(
@@ -8976,8 +9008,8 @@ class PyRadio(object):
                 lambda: (self.selection, self.playing),
                 lambda: self._playlist_in_editor,
                 self._can_receive_remote_command,
-                self._print_server_error,
-                self._print_server_dead
+                self._print_remote_control_server_error,
+                self._print_remote_control_server_dead_error
             )
         )
         self._remote_control_server_thread.start()
