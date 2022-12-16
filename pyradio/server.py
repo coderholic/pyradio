@@ -162,7 +162,7 @@ Restricted Commands
     def port(self):
         return self._bind_port
 
-    def start_server(
+    def start_remote_control_server(
             self,
             config,
             lists,
@@ -659,4 +659,4 @@ Server: PyRadio
 
 if __name__ == '__main__':
     x = PyRadioServer('192.168.122.4', 9998)
-    x.start_server(lambda: False)
+    x.start_remote_control_server(lambda: False)

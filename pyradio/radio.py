@@ -542,13 +542,12 @@ class PyRadio(object):
             curses.KEY_PREVIOUS: self._play_previous_station,
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
-            ord('d'): self._start_server,
-            ord('D'): self._stop_server,
+            ord('d'): self._start_remote_control_server,
+            ord('D'): self._stop_remote_control_server,
             # ord('d'): self._show_schedule_player_stop,
         }
 
-        self._remote_server = self._remote_server_thread = None
-
+        self._remote_control_server = self._remote_control_server_thread = None
 
     def __del__(self):
         self.transientWin = None
@@ -663,6 +662,9 @@ class PyRadio(object):
                     self._cnf.user_param_id = 0
                 else:
                     self._cnf.user_param_id = -1
+
+            if self._cnf.remote_control_server_auto_start:
+                self._start_remote_control_server()
 
         self.stdscr.nodelay(0)
         self.setupAndDrawScreen(init_from_setup=True)
@@ -1458,8 +1460,8 @@ class PyRadio(object):
                     self._cnf.online_browser.save_config()
                 self._cnf.online_browser = None
         self._wait_for_threads()
-        if self._remote_server:
-            self._remote_server.close_server()
+        if self._remote_control_server:
+            self._remote_control_server.close_server()
         self.restore_colors()
 
     def _wait_for_threads(self):
@@ -2934,7 +2936,7 @@ class PyRadio(object):
                         caption=' Server Error ',
                         prompt=' Press any key... ',
                         is_message=True)
-        self._remote_server = self._remote_server_thread = None
+        self._remote_control_server = self._remote_control_server_thread = None
 
     def _print_server_dead(self, msg=None):
         if msg:
@@ -2949,7 +2951,7 @@ class PyRadio(object):
                         caption=' Server Error ',
                         prompt=' Press any key... ',
                         is_message=True)
-        self._remote_server = self._remote_server_thread = None
+        self._remote_control_server = self._remote_control_server_thread = None
 
     def _print_not_implemented_yet(self):
         txt = '''
@@ -5601,7 +5603,7 @@ class PyRadio(object):
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
                 ''' open remote control '''
                 self._update_status_bar_right(status_suffix='')
-                self._start_server()
+                self._start_remote_control_server()
 
             elif char in (ord('h'), ):
                 ''' open html help '''
@@ -6053,6 +6055,9 @@ class PyRadio(object):
                             self._print_mouse_restart_info()
                         if self._config_win.need_to_update_theme:
                             self._theme.recalculate_theme(False)
+                        if self._cnf.active_remote_control_server_ip != self._cnf.remote_control_server_ip or \
+                                self._cnf.active_remote_control_server_port != self._cnf.remote_control_server_port:
+                            self._restart_remote_control_server()
                     elif ret == 1:
                         ''' config not modified '''
                         self._show_notification_with_delay(
@@ -8945,10 +8950,10 @@ class PyRadio(object):
         else:
             return False
 
-    def _start_server(self):
-        self._remote_server = PyRadioServer(
-            bind_ip=self._cnf.remote_control_server_ip,
-            bind_port=int(self._cnf.remote_control_server_port),
+    def _start_remote_control_server(self):
+        self._remote_control_server = PyRadioServer(
+            bind_ip=self._cnf.active_remote_control_server_ip,
+            bind_port=int(self._cnf.active_remote_control_server_port),
             commands={
                 '/volumeup': self._volume_up,
                 '/volumedown': self._volume_down,
@@ -8963,8 +8968,8 @@ class PyRadio(object):
                 'open_history': self._open_playlist_and_station_from_station_history,
             }
         )
-        self._remote_server_thread = threading.Thread(
-            target=self._remote_server.start_server,
+        self._remote_control_server_thread = threading.Thread(
+            target=self._remote_control_server.start_remote_control_server,
             args=(
                 lambda: self._cnf,
                 lambda: self.selections,
@@ -8975,15 +8980,22 @@ class PyRadio(object):
                 self._print_server_dead
             )
         )
-        self._remote_server_thread.start()
+        self._remote_control_server_thread.start()
 
-    def _stop_server(self):
-        if self._remote_server:
-            ret = self._remote_server.close_server()
+    def _stop_remote_control_server(self):
+        if self._remote_control_server:
+            ret = self._remote_control_server.close_server()
             while not ret:
                 sleep(.15)
-                ret = self._remote_server.close_server()
-        self._remote_server = self._remote_server_thread = None
+                ret = self._remote_control_server.close_server()
+        self._remote_control_server = self._remote_control_server_thread = None
+
+    def _restart_remote_control_server(self):
+        self._stop_remote_control_server()
+        self._cnf._remote_control_server = self._cnf._remote_control_server_thread = None
+        self._cnf.active_remote_control_server_ip = self._cnf.remote_control_server_ip
+        self._cnf.active_remote_control_server_port = self._cnf.remote_control_server_port
+        self._start_remote_control_server()
 
     def _open_playlist_and_station_from_station_history(self, stationFile, h_item):
         num = self._open_and_check_station_in_playlist(stationFile, h_item[-1], h_item[1])

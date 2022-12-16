@@ -498,6 +498,8 @@ def shell():
                 pyradio_config.use_themes = False
                 pyradio_config.no_themes_from_command_line = True
 
+        pyradio_config.active_remote_control_server_ip = pyradio_config.remote_control_server_ip
+        pyradio_config.active_remote_control_server_port = pyradio_config.remote_control_server_port
         pyradio = PyRadio(
             pyradio_config,
             play=args.play,

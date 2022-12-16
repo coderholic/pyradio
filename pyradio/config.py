@@ -1859,13 +1859,13 @@ class PyRadioConfig(PyRadioStations):
 
     def _validate_remote_control_server_ip(self, val):
         '''
-        validate a config remote_server string
+        validate a config remote_control_server string
         Return
             input    if valid
             default  if invalid
         '''
         hosts = ('localhost', 'LAN', 'lan')
-        default_remote_server = 'localhost:9998'
+        default_remote_control_server = 'localhost:9998'
         if ':' in val:
             sp = val.split(':')
             ''' is server valid '''
@@ -1874,14 +1874,14 @@ class PyRadioConfig(PyRadioStations):
                 auto = True
             x = [r for r in hosts if r == sp[0]]
             if not x:
-                return default_remote_server
+                return default_remote_control_server
             ''' server is valid, is port valid? '''
             try:
                 x = int(sp[1])
             except (ValueError, IndexError):
-                return default_remote_server
+                return default_remote_control_server
         else:
-            return default_remote_server
+            return default_remote_control_server
         return val
 
     def read_config(self):
