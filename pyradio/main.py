@@ -493,10 +493,10 @@ def shell():
                     or term.startswith('tmux'):
                 print('== Warning: TERM is set to "{}". Using "xterm-256color"'.format(term))
                 environ['TERM'] = 'xterm-256color'
-        # this is for linux console (i.e. init 3)
-        if term == 'linux':
-            pyradio_config.use_themes = False
-            pyradio_config.no_themes_from_command_line = True
+            # this is for linux console (i.e. init 3)
+            if term == 'linux':
+                pyradio_config.use_themes = False
+                pyradio_config.no_themes_from_command_line = True
 
         pyradio = PyRadio(
             pyradio_config,

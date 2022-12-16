@@ -116,9 +116,6 @@ class PyRadioStations(object):
 
     show_no_themes_message = True
 
-    server_ip = '127.0.0.1'
-    server_port = 9998
-
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1

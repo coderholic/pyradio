@@ -2,13 +2,88 @@
 import socket
 import logging
 from os.path import basename
-from sys import version_info
+from sys import platform, version_info
+import requests
 
 PY2 = version_info[0] == 2
 logger = logging.getLogger(__name__)
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
+
+if not platform.lower().startswith('win'):
+    import netifaces
+
+class IPs(object):
+    def __init__(self, fetch_public_ip=False):
+        self._fetch_public_ip = fetch_public_ip
+        self._IPs = []
+
+    @property
+    def fetch_public_ip(self):
+        return self._fetch_public_ip
+
+    @fetch_public_ip.setter
+    def fetch_public_ip(self, value):
+        old_value = self._fetch_public_ip
+        self._fetch_public_ip = value
+        if old_value != self._fetch_public_ip:
+            self._IPs = self._get_all_ips()
+
+    @property
+    def IPs(self):
+        if not self._IPs or not self._fetch_public_ip:
+            self._get_all_ips()
+        return self._IPs
+
+    def _get_all_ips(self):
+        ''' get local IPs '''
+        if not platform.lower().startswith('win'):
+            self._IPs = self._get_linux_ips()
+        else:
+            self._IPs = self._get_win_ips()
+        ''' get public IP '''
+        if self._fetch_public_ip:
+            ip = self._get_public_ip()
+            if ip:
+                self._IPs.append(ip)
+
+    def _get_public_ip(self):
+        try:
+            ip = requests.get('https://api.ipify.org').text
+        except requests.exceptions.RequestException:
+            return None
+        if version_info[0] < 3:
+            ip = ip.encode('utf-8')
+        return ip
+
+    def _get_linux_ips(self):
+        out = ['127.0.0.1']
+        interfaces = netifaces.interfaces()
+        for n in interfaces:
+            iface=netifaces.ifaddresses(n).get(netifaces.AF_INET)
+            if iface:
+                # dirty way to get real interfaces
+                if 'broadcast' in str(iface):
+                    if version_info[0] > 2:
+                        out.append(iface[0]['addr'])
+                    else:
+                        out.append(iface[0]['addr'].encode('utf-8'))
+        return out
+
+    def _get_win_ips(self):
+        out = ['127.0.0.1']
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0)
+        try:
+            # doesn't even have to be reachable
+            s.connect(('10.254.254.254', 1))
+            out.append(s.getsockname()[0])
+        except Exception:
+            pass
+        finally:
+            s.close()
+        return out
 
 
 class PyRadioServer(object):
@@ -71,8 +146,21 @@ Restricted Commands
 
     def __init__(self, bind_ip, bind_port, commands):
         self._bind_ip = bind_ip
+        if bind_ip.lower() == 'localhost':
+            self._bind_ip = '127.0.0.1'
+        elif bind_ip.lower() == 'lan':
+            sys_ip = IPs()
+            self._bind_ip = sys_ip.IPs[1]
         self._bind_port = bind_port
         self._commands = commands
+
+    @property
+    def ip(self):
+        return self._bind_ip
+
+    @property
+    def port(self):
+        return self._bind_port
 
     def start_server(
             self,

@@ -268,34 +268,30 @@ class PyRadioConfigWindow(object):
                 except IndexError:
                     break
                 # logger.error('selection = {0}, i = {1}, max = {2}'.format(self.selection, i, self.maxY))
-                # if i < self.number_of_items:
-                if i <= self.maxY-2:
-                    if i == self.__selection:
-                        col = hcol = curses.color_pair(6)
-                        self._print_options_help()
-                    else:
-                        col = curses.color_pair(5)
-                        hcol = curses.color_pair(4)
-                    hline_width = self._second_column - 2
-                    try:
-                        self._win.hline(i+1-self._start, 1, ' ', hline_width, col)
-                    except:
-                        logger.error('===== ERROR: {}'.format(i+1))
-                    if i in self._headers:
-                        self._win.addstr(i+1-self._start, 1, it[0], curses.color_pair(4))
-                    else:
-                        self._win.addstr(i+1-self._start, 1, '  ' + it[0], col)
-                        if isinstance(it[1], bool):
-                            self._win.addstr('{}'.format(it[1]), hcol)
-                        else:
-                            if it[1] is None:
-                                ''' random station '''
-                                self._win.addstr('{}'.format('Random'), hcol)
-                            else:
-                                if it[1] != '-':
-                                    self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6]), hcol)
+                if i == self.__selection:
+                    col = hcol = curses.color_pair(6)
+                    self._print_options_help()
                 else:
-                    break
+                    col = curses.color_pair(5)
+                    hcol = curses.color_pair(4)
+                hline_width = self._second_column - 2
+                try:
+                    self._win.hline(i+1-self._start, 1, ' ', hline_width, col)
+                except:
+                    logger.error('===== ERROR: {}'.format(i+1))
+                if i in self._headers:
+                    self._win.addstr(i+1-self._start, 1, it[0], curses.color_pair(4))
+                else:
+                    self._win.addstr(i+1-self._start, 1, '  ' + it[0], col)
+                    if isinstance(it[1], bool):
+                        self._win.addstr('{}'.format(it[1]), hcol)
+                    else:
+                        if it[1] is None:
+                            ''' random station '''
+                            self._win.addstr('{}'.format('Random'), hcol)
+                        else:
+                            if it[1] != '-':
+                                self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6]), hcol)
         self._win.refresh()
 
     def _get_col_line(self, ind):
@@ -307,34 +303,39 @@ class PyRadioConfigWindow(object):
             self._line = ind - self._headers + 2
 
     def _put_cursor(self, jump):
+        if self.__selection == self.number_of_items - 1 and jump > 0:
+            self.__selection = 1
+            self._start = 0
+            return
+        visible_items = self.maxY - 3
+        last_item = self._start + visible_items
+        old_selection = self.__selection
+        old_start = self._start
         self.__selection += jump
         if jump >= 0:
             if self.__selection in self._headers:
                 self.__selection += 1
             if self.__selection >= self.number_of_items:
-                self.__selection = 1
-            # logger.error('selection = {0}, jump = {1}, max = {2}'.format(self.__selection, jump, self.maxY - 2))
-            if self.__selection <= 1:
-                self._start = 0
-                # self.refresh_selection()
-                # logger.error('1: {0}->{1}'.format(old_start, self._start))
-            elif self.__selection >= self.maxY - 2:
-                self._start += 1
-                if self._start > self._max_start:
-                    self._start = self._max_start
-                # logger.error('2: {0}->{1}'.format(old_start, self._start))
+                self.__selection = self.number_of_items -1
+                self._start = self.number_of_items - visible_items - 1
+            else:
+                if self.__selection <= 1:
+                    self._start = 0
+                elif self.__selection > last_item:
+                    self._start += 1
+                    if self._start + visible_items in self._headers:
+                        self._start += 1
+                    if self.__selection - self._start > visible_items:
+                        self._start = self.__selection - self._start - visible_items + 1
         else:
             if self.__selection in self._headers:
                 self.__selection -= 1
             if self.__selection < 1:
                 self.__selection = self.number_of_items - 1
-            #logger.error('selection = {0}, jump = {1}, max = {2}'.format(self.__selection, jump, self.maxY - 2))
-            if self.__selection >= self.maxY - 2:
-                self._start += 1
-                if self._start > self._max_start:
-                    self._start = self._max_start
-                # self.refresh_selection()
-                # logger.error('3: {0}->{1}'.format(old_start, self._start))
+                self._start = self.__selection - visible_items
+            else:
+                if self.__selection < self._start:
+                    self._start = self.__selection
 
     def _populate_help_lines(self):
         self._help_lines = []
@@ -430,6 +431,7 @@ class PyRadioConfigWindow(object):
         # logger.error('mas_start = {}'.format(self._max_start))
         val = list(self._config_options.items())[self.selection]
         logger.error('val = {}'.format(val))
+        Y = self.selection - self._start + 1
         if char in self._global_functions.keys():
             self._global_functions[char]()
         elif val[0] == 'radiobrowser':
@@ -450,8 +452,7 @@ class PyRadioConfigWindow(object):
                         t =300
                 val[1][1] = str(t)
                 self._win.addstr(
-                    self.selection+1,
-                    3 + len(val[1][0]),
+                    Y, 3 + len(val[1][0]),
                     val[1][1] + '     ', curses.color_pair(6))
                 self._print_title()
                 self._win.refresh()
@@ -466,8 +467,7 @@ class PyRadioConfigWindow(object):
                     t -= 30
                 val[1][1] = str(t)
                 self._win.addstr(
-                    self.selection+1,
-                    3 + len(val[1][0]),
+                    Y, 3 + len(val[1][0]),
                     val[1][1] + '     ', curses.color_pair(6))
                 self._print_title()
                 self._win.refresh()
@@ -486,8 +486,7 @@ class PyRadioConfigWindow(object):
                         logger.error('s_t = ' + s_t)
                         self._config_options[val[0]][1] = s_t
                         self._win.addstr(
-                            self.selection+1,
-                            3 + len(val[1][0]),
+                            Y, 3 + len(val[1][0]),
                             s_t + '     ', curses.color_pair(6))
                         self._print_title()
                         self._win.refresh()
@@ -509,8 +508,7 @@ class PyRadioConfigWindow(object):
                         logger.error('s_t = ' + s_t)
                         self._config_options[val[0]][1] = s_t
                         self._win.addstr(
-                            self.selection+1,
-                            3 + len(val[1][0]),
+                            Y, 3 + len(val[1][0]),
                             s_t + '     ', curses.color_pair(6))
                         self._print_title()
                         self._win.refresh()
@@ -529,10 +527,8 @@ class PyRadioConfigWindow(object):
                     self._config_options[val[0]][1] = 'localhost'
                     disp = 'localhost'
                 self._win.addstr(
-                    self.selection+1,
-                    3 + len(val[1][0]),
-                    disp,
-                    curses.color_pair(6)
+                    Y, 3 + len(val[1][0]),
+                    disp, curses.color_pair(6)
                 )
                 self._print_title()
                 self._win.refresh()
@@ -545,10 +541,8 @@ class PyRadioConfigWindow(object):
                     self._config_options[val[0]][1] = 'localhost'
                     disp = 'localhost'
                 self._win.addstr(
-                    self.selection+1,
-                    3 + len(val[1][0]),
-                    disp,
-                    curses.color_pair(6)
+                    Y, 3 + len(val[1][0]),
+                    disp, curses.color_pair(6)
                 )
                 self._print_title()
                 self._win.refresh()
@@ -594,8 +588,7 @@ class PyRadioConfigWindow(object):
                     port = 1025
                 self._config_options[val[0]][1] = str(port)
                 self._win.addstr(
-                    self.selection+1,
-                    3 + len(val[1][0]),
+                    Y, 3 + len(val[1][0]),
                     str(port) + '    ', curses.color_pair(6))
                 self._print_title()
                 self._win.refresh()
@@ -610,8 +603,7 @@ class PyRadioConfigWindow(object):
                     t += 1
                     self._config_options[val[0]][1] = str(t)
                     self._win.addstr(
-                        self.selection+1,
-                        3 + len(val[1][0]),
+                        Y, 3 + len(val[1][0]),
                         str(t) + ' ', curses.color_pair(6))
                     self._print_title()
                     self._win.refresh()
@@ -625,8 +617,7 @@ class PyRadioConfigWindow(object):
                     t = 0
                 self._config_options[val[0]][1] = str(t)
                 self._win.addstr(
-                    self.selection+1,
-                    3 + len(val[1][0]),
+                    Y, 3 + len(val[1][0]),
                     str(t) + ' ', curses.color_pair(6))
                 self._print_title()
                 self._win.refresh()
@@ -638,21 +629,18 @@ class PyRadioConfigWindow(object):
             self._put_cursor(1)
             self.refresh_selection()
         elif char in (curses.KEY_NPAGE, ):
-            if self.__selection + 4 >= self.number_of_items and \
-                    self.__selection < self.number_of_items - 1:
-                self.__selection = self.number_of_items - 5
-            self._put_cursor(4)
+            self._put_cursor(5)
             self.refresh_selection()
         elif char in (curses.KEY_PPAGE, ):
-            if self.__selection - 4 < 1 and self.__selection > 1:
-                self.__selection = 5
-            self._put_cursor(-4)
+            self._put_cursor(-5)
             self.refresh_selection()
         elif char in (ord('g'), curses.KEY_HOME):
+            self._start = 0
             self.__selection = 1
             self.refresh_selection()
         elif char in (ord('G'), curses.KEY_END):
             self.__selection = self.number_of_items - 1
+            self._start = self.__selection - self.maxY + 2
             self._put_cursor(0)
             self.refresh_selection()
         elif char in (ord('d'), ):

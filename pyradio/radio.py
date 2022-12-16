@@ -8947,8 +8947,8 @@ class PyRadio(object):
 
     def _start_server(self):
         self._remote_server = PyRadioServer(
-            bind_ip=self._cnf.server_ip,
-            bind_port=self._cnf.server_port,
+            bind_ip=self._cnf.remote_control_server_ip,
+            bind_port=int(self._cnf.remote_control_server_port),
             commands={
                 '/volumeup': self._volume_up,
                 '/volumedown': self._volume_down,
