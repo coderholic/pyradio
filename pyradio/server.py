@@ -88,14 +88,72 @@ class IPs(object):
 
 class PyRadioServer(object):
 
-    _html = '''HTTP/1.1 200 OK
-Content-Type: text/html
+    _html = '''<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>PyRadio Remote Control</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+        <style>
+html, body, td, a, a:hover, a:visited{color: #333333;}
+.btn {margin: 1px; width: 80px;}
+        </style>
+    </head>
+    <body class="container-fluid">
 
-<!DOCTYPE html><html lang="en"><head><title>PyRadio Web Service</title><meta charset="utf-8"><title></title></head><body><pre>
 
-{}
+        <div class="row text-center" style="background: green; color: white; padding-bottom: 15px;">
+            <h2>PyRadio Remote Control</h2>
+        </div>
+        <div class="row" style="margin-top: 20px;">
+            <div class="col-xs-4 col-lg-3">
+                <div class="text-center">
+                    <button onclick="window.location.href='http://|IP|/html/vu';" type="button" class="btn btn-primary">Volume<br>Up</button>
+                    <button onclick="window.location.href='http://|IP|/html/vd';" type="button" class="btn btn-primary">Vulume<br>Down</button>
+                    <button onclick="window.location.href='http://|IP|/html/m';" type="button" class="btn btn-danger">Mute<br>Player</button>
+                </div>
+            </div>
+            <div class="col-xs-4 col-lg-5">
+                <div class="text-center">
+                    <button onclick="window.location.href='http://|IP|/html/n';" type="button" class="btn btn-warning">Play<br>Next</button>
+                    <button onclick="window.location.href='http://|IP|/html/p';" type="button" class="btn btn-warning">Play<br>Previous</button>
+                    <button onclick="window.location.href='http://|IP|/html/hn';" type="button" class="btn btn-success">Play Hist.<br> Next</button>
+                    <button onclick="window.location.href='http://|IP|/html/hp';" type="button" class="btn btn-success">Play Hist.<br>Previous</button>
+                    <button onclick="window.location.href='http://|IP|/html/t';" type="button" class="btn btn-danger">Toggle<br>Playback</button>
+                </div>
+            </div>
+            <div class="col-xs-4 col-lg-4">
+                <div class="text-center">
+                    <button onclick="window.location.href='http://|IP|/html/st';" type="button" class="btn btn-success">Stations<br>List</button>
+                    <button onclick="window.location.href='http://|IP|/html/pl';" type="button" class="btn btn-primary">Show<br>Playlists</button>
+                    <button onclick="window.location.href='http://|IP|/html/i';" type="button" class="btn btn-danger">System<br>Info</button>
+                    <button onclick="window.location.href='http://|IP|/html/g';" type="button" class="btn btn-warning">Toggle<br>Titles Log</button>
+                    <button onclick="window.location.href='http://|IP|/html/l';" type="button" class="btn btn-info">Like<br>Title</button>
+                </div>
+            </div>
+        </div>
 
-</pre></body></html>
+
+        <div class="row" style="margin-top: 40px;">
+            <div class="col-lg-2">
+            </div>
+            <div class="col-lg-8 col-xs-12">
+
+                <div class="alert |ALERT_TYPE|">
+                    |ALERT|
+                </div>
+                <div>
+                    |CONTENT|
+                </div>
+            </div>
+            <div class="col-lg-2">
+            </div>
+        </div>
+    </body>
+</html>
 '''
 
     _text = {
@@ -145,7 +203,7 @@ Restricted Commands
         '/error': 'Error in parameter',
         '/perm': 'Operation not permited (not in normal mode)',
         '/log': 'Stations logging toggled',
-        '/tag': 'Station tagged (liked)',
+        '/like': 'Station tagged (liked)',
     }
 
     def __init__(self, bind_ip, bind_port, commands):
@@ -157,6 +215,12 @@ Restricted Commands
             self._bind_ip = sys_ip.IPs[1]
         self._bind_port = bind_port
         self._commands = commands
+        self._html_data = {
+            '|ALERT|': '',
+            '|ALERT_TYPE|': '',
+            '|CONTENT|': '',
+            '|IP|': '{0}:{1}'.format(self._bind_ip, self._bind_port)
+        }
 
     @property
     def ip(self):
@@ -190,7 +254,8 @@ Restricted Commands
             server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             server.bind((self._bind_ip, self._bind_port))
         except (OSError, socket.error) as e:
-            logger.error('Remote Control Server start error: "{}"'.format(e))
+            if logger.isEnabledFor(logger.ERROR):
+                logger.error('Remote Control Server start error: "{}"'.format(e))
             server.close()
             error_func(e)
             return
@@ -200,7 +265,8 @@ Restricted Commands
             else:
                 server.listen()  # max backlog of connections
         except (OSError, socket.error) as e:
-            logger.error('Remote Control Server error: "{}"'.format(e))
+            if logger.isEnabledFor(logger.ERROR):
+                logger.error('Remote Control Server error: "{}"'.format(e))
             server.close()
             error_func(e)
             return
@@ -212,7 +278,8 @@ Restricted Commands
                 client_sock, address = server.accept()
                 request = client_sock.recv(1024)
             except socket.error as e:
-                logger.error('Server accept error: "{}"'.format(e))
+                if logger.isEnabledFor(logger.ERROR):
+                    logger.error('Server accept error: "{}"'.format(e))
                 dead_func(e)
                 break
             if logger.isEnabledFor(logging.DEBUG):
@@ -247,37 +314,53 @@ Restricted Commands
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Remote command: "{}"'.format(self._path))
 
-        if self._path in ('/tag', '/g'):
-            self._commands['/tag']()
-            self._send_text(client_socket, self._text['/tag'])
+        self._is_html = True if self._path.startswith('/html') else False
+        logger.error('path = {}'.format(self._path))
+        if self._path.startswith('/html'):
+            self._is_html = True
+            self._path = self._path[5:]
+        else:
+            self._is_html = False
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('URL path = {}'.format(self._path))
+        if self._path == '/favicon.ico':
+            pass
+            #self._html_data['|ALERT|'] = ''
+            #self._html_data['|ALERT_TYPE|'] = ''
+            #self._html_data['|CONTENT|'] = ''
+            #logger.error('html_data = {}'.format(self._html_data))
+            #self._send_html(client_socket)
+        elif self._path in ('/like', '/g'):
+            self._commands['/like']()
+            self._send_text(client_socket, self._text['/like'], alert_type='alert-success')
         elif self._path in ('/like', '/l'):
             if self.sel()[1] > -1:
                 self._commands['/like']()
-                self._send_text(client_socket, self._text['/like'])
+                self._send_text(client_socket, self._text['/like'], alert_type='alert-success')
             else:
                 self._send_text(client_socket, self._text['/idle'])
         elif self._path in ('/mute', '/m'):
             if self.sel()[1] > -1:
                 self._commands['/mute']()
-                self._send_text(client_socket, self._text['/mute'])
+                self._send_text(client_socket, self._text['/mute'], alert_type='alert-success')
             else:
                 self._send_text(client_socket, self._text['/idle'])
         elif self._path in ('/volumeup', '/vu'):
             if self.sel()[1] > -1:
                 self._commands['/volumeup']()
-                self._send_text(client_socket, self._text['/volumeup'])
+                self._send_text(client_socket, self._text['/volumeup'], alert_type='alert-success')
             else:
                 self._send_text(client_socket, self._text['/idle'])
         elif self._path in ('/volumedown', '/vd'):
             if self.sel()[1] > -1:
                 self._commands['/volumedown']()
-                self._send_text(client_socket, self._text['/volumedown'])
+                self._send_text(client_socket, self._text['/volumedown'], alert_type='alert-success')
             else:
                 self._send_text(client_socket, self._text['/idle'])
         elif self._path == '/quit':
             self._send_text(client_socket, self._text['/quit'])
         elif self._path == '/':
-            self._send_text(client_socket, self._text['/'])
+            self._send_text(client_socket, self._text['/'], alert_type='')
         elif self._path in ('/i', '/info'):
             if self.can_send_command():
                 self._send_text(client_socket, self._info())
@@ -286,13 +369,13 @@ Restricted Commands
         elif self._path in ('/next', '/n'):
             if self.can_send_command():
                 self._commands['/next']()
-                self._send_text(client_socket, self._text['/next'])
+                self._send_text(client_socket, self._text['/next'], alert_type='alert-success')
             else:
                 self._send_text(client_socket, self._text['/perm'])
         elif self._path in ('/previous', '/p'):
             if self.can_send_command():
                 self._commands['/previous']()
-                self._send_text(client_socket, self._text['/previous'])
+                self._send_text(client_socket, self._text['/previous'], alert_type='alert-success')
             else:
                 self._send_text(client_socket, self._text['/perm'])
         elif self._path in ('/histnext', '/hn'):
@@ -301,12 +384,12 @@ Restricted Commands
                 llen = len(self.config().stations_history.items)
                 l_item = self.config().stations_history.item
                 if l_item == -1 or llen == 0:
-                    self._send_text(client_socket, 'No items in history!')
+                    self._send_text(client_socket, 'No items in history!', alert_type='alert-danger')
                 elif l_item + 1 < llen:
                     go_on = True
                 if go_on:
                     self._commands['/histnext']()
-                    self._send_text(client_socket, self._text['/histnext'])
+                    self._send_text(client_socket, self._text['/histnext'], alert_type='alert-success')
                 else:
                     self._send_text(client_socket, 'Already at last history item!')
             else:
@@ -316,9 +399,8 @@ Restricted Commands
                 go_on = True
                 llen = len(self.config().stations_history.items)
                 l_item = self.config().stations_history.item
-                logger.error('\n\nitems = {0}, item = {1}\n\n'.format(llen, l_item))
                 if l_item == -1 or llen == 0:
-                    self._send_text(client_socket, 'No items in history!')
+                    self._send_text(client_socket, 'No items in history!', alert_type='alert-danger')
                     go_on = False
                 elif l_item == 0:
                     go_on = False
@@ -333,10 +415,10 @@ Restricted Commands
             if self.can_send_command():
                 if self.sel()[1] > -1:
                     self._commands['/stop']()
-                    self._send_text(client_socket, self._text['/stop'])
+                    self._send_text(client_socket, self._text['/stop'], alert_type='alert-success')
                 else:
                     self._commands['/start']()
-                    self._send_text(client_socket, self._text['/start'])
+                    self._send_text(client_socket, self._text['/start'], alert_type='alert-success')
             else:
                 self._send_text(client_socket, self._text['/perm'])
         elif self._path.startswith('/st/') or \
@@ -344,23 +426,38 @@ Restricted Commands
             if self.can_send_command():
                 ret = self._parse()
                 if ret is None:
-                    self._send_text(client_socket, self._text['/error'])
+                    self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
                 else:
                     has_error = False
                     if ret == '/stations':
-                        self._send_text(client_socket, self._list_stations())
+                        if self._is_html:
+                            self._send_text(
+                                client_socket,
+                                msg='',
+                                alert_type='',
+                                content=self._format_html_table(
+                                    self._list_stations(html=True), 0,
+                                    sel=self.sel()[1]
+                                ),
+                                put_script=True
+                            )
+                        else:
+                            self._send_text(client_socket, self._list_stations())
                     else:
                         try:
                             ret = int(ret)
                         except (ValueError, TypeError):
-                            self._send_text(client_socket, self._text['/error'])
+                            self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
                             has_error = True
                         if not has_error:
                             # ret = ret -1 if ret > 0 else 0
                             if ret < 0:
                                 ret = 0
                             self._commands['/jump'](ret)
-                            self._send_text(client_socket, ' Playing station Id: {}'.format(ret))
+                            if self._is_html:
+                                self._send_text(client_socket, ' Playing station: <b>{}</b>'.format(self.lists()[0][-1][ret-1][0]))
+                            else:
+                                self._send_text(client_socket, ' Playing station: {}'.format(self.lists()[0][-1][ret-1][0]))
                     has_error = False
             else:
                 self._send_text(client_socket, self._text['/perm'])
@@ -371,15 +468,15 @@ Restricted Commands
             if  ',' in self._path:
                 sp = self._path.split('/')
                 if ',' not in sp [-1]:
-                    self._send_text(client_socket, self._text['/error'])
+                    self._send_text(client_socket, self._text['/error'], alert-danger)
                 else:
                     if sp[1] not in ('playlists', 'pl'):
-                        self._send_text(client_socket, self._text['/error'])
+                        self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
                     else:
                         # get the numbers
                         pl, st = self._get_numbers(sp[-1])
                         if pl is None:
-                            self._send_text(client_socket, self._text['/error'])
+                            self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
                         else:
                             go_on = True
                             try:
@@ -392,15 +489,24 @@ Restricted Commands
                                 if p_name == playlist_name:
                                     # play station from current playlist
                                     self._commands['/jump'](st+1)
-                                    self._send_text(
-                                        client_socket,
-                                        'Playing station "{0}" (id={1}) from playlist "{2}" (id={3})'.format(
-                                            self.lists()[0][-1][st][0],
-                                            st+1,
-                                            p_name,
-                                            pl+1
+                                    if self._is_html:
+                                        self._send_text(
+                                            client_socket,
+                                            'Playing station <b>{0}</b> from playlist <i>{1}</i>'.format(
+                                                self.lists()[0][-1][st][0],
+                                                p_name
+                                            )
                                         )
-                                    )
+                                    else:
+                                        self._send_text(
+                                            client_socket,
+                                            'Playing station "{0}" (id={1}) from playlist "{2}" (id={3})'.format(
+                                                self.lists()[0][-1][st][0],
+                                                st+1,
+                                                p_name,
+                                                pl+1
+                                            )
+                                        )
                                 else:
                                     # need to load a new playlist
                                     if self.config().dirty_playlist:
@@ -417,15 +523,24 @@ Restricted Commands
                                                     logger.debug('item = {}'.format(item))
                                                 # radio.py 8762
                                                 self._commands['open_history'](in_file, item)
-                                                self._send_text(
-                                                    client_socket,
-                                                    'Playing station "{0}" (id={1}) from playlist "{2}" (id={3})'.format(
-                                                        playlist_stations[st],
-                                                        st+1,
-                                                        playlist_name,
-                                                        pl+1
+                                                if self._is_html:
+                                                    self._send_text(
+                                                        client_socket,
+                                                        'Playing station <b>{0}</b> from playlist <i>{1}</i>'.format(
+                                                            playlist_stations[st],
+                                                            playlist_name
+                                                        )
                                                     )
-                                                )
+                                                else:
+                                                    self._send_text(
+                                                        client_socket,
+                                                        'Playing station "{0}" (id={1}) from playlist "{2}" (id={3})'.format(
+                                                            playlist_stations[st],
+                                                            st+1,
+                                                            playlist_name,
+                                                            pl+1
+                                                        )
+                                                    )
                                             else:
                                                 self._send_text(
                                                     client_socket,
@@ -444,12 +559,36 @@ Restricted Commands
             else:
                 ret = self._parse()
                 if ret is None:
-                    self._send_text(client_socket, self._text['/error'])
+                    self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
                 elif ret.startswith('/'):
                     if ret == '/stations':
-                        self._send_text(client_socket, self._list_stations())
+                        if self._is_html:
+                            self._send_text(
+                                client_socket,
+                                msg='',
+                                alert_type='',
+                                content=self._format_html_table(
+                                    self._list_stations(html=True), 0,
+                                    sel=self.sel()[1]
+                                ),
+                                put_script=True
+                            )
+                        else:
+                            self._send_text(client_socket, self._list_stations())
                     elif ret == '/playlists':
-                        self._send_text(client_socket, self._list_playlists())
+                        if self._is_html:
+                            self._send_text(
+                                client_socket,
+                                msg='',
+                                alert_type='',
+                                content=self._format_html_table(
+                                    self._list_playlists(html=True), 1,
+                                    sel=self._get_playlist_id(basename(self.playlist_in_editor()[:-4]))
+                                ),
+                                put_script=True
+                            )
+                        else:
+                            self._send_text(client_socket, self._list_playlists())
                     else:
                         self._send_text(client_socket, self._text[ret])
 
@@ -459,27 +598,42 @@ Restricted Commands
                         ret = int(ret) - 1
                     except (ValueError, TypeError):
                         go_on = False
-                        self._send_text(client_socket, self._text['/error'])
+                        self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
                     if go_on:
                         try:
                             playlist_name = self.lists()[2][-1][ret][0]
                         except IndexError:
-                            self._send_text(client_socket, 'Error: Playlist not found (id={})'.format(ret+1))
+                            self._send_text(client_socket, 'Error: Playlist not found (id={})'.format(ret+1), alert_type='alert-danger')
                             go_on = False
                         if go_on:
                             in_file, out = self.config().read_playlist_for_server(
                                 playlist_name
                             )
                             if out:
-                                self._send_text(
-                                    client_socket,
-                                    self._list_stations(playlist_name, out)
-                                )
-
+                                if self._is_html:
+                                    self._send_text(
+                                        client_socket,
+                                        msg='',
+                                        alert_type='',
+                                        content=self._format_html_table(
+                                            self._list_stations(stations=out, html=True),
+                                            index=2,
+                                            playlist_index=ret,
+                                        ),
+                                        put_script=True
+                                    )
+                                else:
+                                    self._send_text(
+                                        client_socket,
+                                        self._list_stations(playlist_name, out)
+                                    )
                             else:
-                                self._send_text(client_socket, 'Error reading playlist: "{}"'.format(playlist_name))
+                                if self._is_html:
+                                    self._send_text(client_socket, 'Error reading playlist: <b>{}</b>'.format(playlist_name), alert_type='alert-danger')
+                                else:
+                                    self._send_text(client_socket, 'Error reading playlist: "{}"'.format(playlist_name), alert_type='alert-danger')
         else:
-            self._send_text(client_socket, self._text['/error'])
+            self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
 
         # if self._path == '/quit':
         #     _send_html(client_socket, 'Server has shut down!!!')
@@ -488,7 +642,16 @@ Restricted Commands
         client_socket.close()
         return True
 
-    def _send_text(self, client_socket, msg):
+    def _send_text(self, client_socket,
+                   msg, alert_type='alert-info',
+                   content='', put_script=False
+    ):
+        if self._is_html:
+            self._html_data['|ALERT|'] = msg
+            self._html_data['|ALERT_TYPE|'] = alert_type
+            self._html_data['|CONTENT|'] = content
+            self._send_html(client_socket, put_script=put_script)
+            return
         f_msg = msg + '\n'
         if PY2:
             b_msg = f_msg
@@ -511,10 +674,32 @@ Server: PyRadio
         except socket.error as e:
             self.error = e
 
-    def _send_html(self, client_socket, msg):
-        client_socket.send(
-            self._html.format(msg).encode('utf-8')
-        )
+    def _send_html(self, client_socket, msg=None, put_script=False):
+        f_msg = self._html + '\n'
+        for n in self._html_data.keys():
+            f_msg = f_msg.replace(n, self._html_data[n])
+        if put_script:
+            f_msg = self._insert_html_script(f_msg)
+        if PY2:
+            b_msg = f_msg
+            txt = '''HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+Content-Length: {}
+Server: PyRadio
+
+'''.format(len(b_msg))
+        else:
+            b_msg = f_msg.encode('utf-8')
+            txt = '''HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+Content-Length: {}
+Server: PyRadio
+
+'''.format(len(b_msg)).encode('utf-8')
+        try:
+            client_socket.sendall(txt + b_msg)
+        except socket.error as e:
+            self.error = e
 
     def _get_numbers(self, comma):
         if logger.isEnabledFor(logging.DEBUG):
@@ -575,6 +760,12 @@ Server: PyRadio
         else:
             return None
 
+    def _get_playlist_id(self, a_playlist):
+        try:
+            return [x[0] for x in self.lists()[1][-1]].index(a_playlist)
+        except ValueError:
+            return -1
+
     def close_server(self):
         # create socket
         try:
@@ -603,7 +794,8 @@ Server: PyRadio
     def _list_stations(
         self,
         playlist_name=None,
-        stations=None
+        stations=None,
+        html=False
     ):
         out = []
         if stations is None:
@@ -613,6 +805,9 @@ Server: PyRadio
         else:
             out = stations
             p_name = playlist_name
+        if html:
+            return out
+
         pad = len(str(len(out)))
         pad_str = '{:' + str(pad) + '}. '
 
@@ -636,12 +831,15 @@ Server: PyRadio
         else:
             return 'Stations List for Playlist: "' + p_name + '"\n' +  '\n'.join(out)
 
-    def _list_playlists(self):
+    def _list_playlists(self, html=False):
         # logger.error('playlist_in_editor = "{}"'.format(self.playlist_in_editor()))
         pl = basename(self.playlist_in_editor()[:-4])
         out = []
         for n in self.lists()[1][-1]:
             out.append(n[0])
+        if html:
+            return out
+
         pad = len(str(len(out)))
         pad_str = '{:' + str(pad) + '}. '
 
@@ -655,21 +853,95 @@ Server: PyRadio
 
     def _info(self):
         out = []
-        out.append('Playlist: "' + basename(self.playlist_in_editor()[:-4]) + '"')
+        if self._is_html:
+            out.append('<b>Playlist:</b> ' + basename(self.playlist_in_editor()[:-4]) + '')
+        else:
+            out.append('Playlist: "' + basename(self.playlist_in_editor()[:-4]) + '"')
         selection = self.sel()[0]
         playing = self.sel()[1]
         if playing == -1:
-            out.append('Player: ' + 'Idle')
+            if self._is_html:
+                out.append('<b>Player:</b> ' + 'Idle')
+            else:
+                out.append('Player: ' + 'Idle')
         else:
-            out.append('Player: ' + 'In playback')
-            out.append('  Station (id={0}): "{1}"'.format(playing+1, self.lists()[0][-1][playing][0]))
-        out.append('Selection (id={0}): "{1}"'.format(selection, self.lists()[0][-1][selection][0]))
+            if self._is_html:
+                out.append('<b>Player:</b> ' + 'In playback')
+                out.append('<b>  Station:</b> {}'.format(self.lists()[0][-1][playing][0]))
+            else:
+                out.append('Player: ' + 'In playback')
+                out.append('  Station (id={0}): "{1}"'.format(playing+1, self.lists()[0][-1][playing][0]))
+        if self._is_html:
+            out.append('<b>Selection:</b> {}'.format(self.lists()[0][-1][selection][0]))
+            for i in range(0, len(out)):
+                out[i] += '<br>'
+        else:
+            out.append('Selection (id={0}): "{1}"'.format(selection, self.lists()[0][-1][selection][0]))
 
         return '\n'.join(out)
 
+    def _insert_html_script(self, msg):
+        script = '''        <script>
+            $(document).ready(function(){
+                $("#myInput").on("keyup", function() {
+                    var value = $(this).val().toLowerCase();
+                    $("#myTable tr").filter(function() {
+                        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                    });
+                });
+            });
+        </script>
+    </body>'''
+        return msg.replace('</body>', script)
+
+    def _format_html_table(
+            self, in_list, index,
+            playlist_index=None, sel=-1
+        ):
+        '''
+        format html table for |CONTENT|
+
+        Parameters
+        ==========
+        in_list         list of items
+        self            selected item
+        index           type of output (stations / playlist) and URL formatter
+        playlist_index  playist index (only valid if index == 2)
+        '''
+        head_captions = (
+            'Stations (current playlist)',
+            'List of Playlists',
+            'Stations from Playlist: "{}"'.format(self.lists()[1][-1][playlist_index][0]) if playlist_index else ''
+        )
+        url = ['/html/st/{}', '/html/pl/{}', '/html/pl/{0},{1}']
+        head = '''                    <h5>Search field</h5>
+                    <input class="form-control" id="myInput" type="text" placeholder="Type to search for a station...">
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr class="btn-success">
+                                <td colspan="2" style="color: white; font-weight: bolder;">{}</td>
+                            </tr>
+                        </thead>
+                        <tbody id="myTable">
+'''.format(head_captions[index])
+        out = []
+        for i, n in enumerate(in_list):
+            if sel == i:
+                out.append('                            <tr class="btn-warning">')
+            else:
+                out.append('                            <tr>')
+            out.append('                                <td class="text-right">{}</td>'.format(i+1))
+            if index < 2:
+                t_url = 'http://|IP|' + url[index].format(i+1)
+            else:
+                t_url = 'http://|IP|' + url[2].format(playlist_index+1, i+1)
+            out.append('                           <td id="' + str(i+1) + '"><a href="' + t_url + '">' + n + '</a>')
+            out.append('                                </td>')
+            out.append('                            </tr>')
+        out.append('                        </tbody>')
+        out.append('                    </table>')
+        return head + '\n' + '\n'.join(out)
+
     def _read_playlist(self, a_playlist):
         pass
-
-if __name__ == '__main__':
-    x = PyRadioServer('192.168.122.4', 9998)
-    x.start_remote_control_server(lambda: False)
