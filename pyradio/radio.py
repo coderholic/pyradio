@@ -566,6 +566,15 @@ class PyRadio(object):
             for i in range(0, 16):
                 self._saved_colors[i] = curses.color_content(i)
 
+    def song_title(self):
+        title = self.log.song_title
+        if title:
+            return '<b>' + self.log.song_title + '</b>'
+        elif not self.player.isPlaying():
+            return '<b>Player is stopped!</b>'
+        else:
+            return '<b>No Title</b>'
+
     def restore_colors(self):
         if self._cnf.use_themes:
             for i in range(0,16):
@@ -8998,6 +9007,7 @@ class PyRadio(object):
                 'open_history': self._open_playlist_and_station_from_station_history,
                 '/log': self._toggle_titles_logging,
                 '/like': self._tag_a_title,
+                '/title': self.song_title,
             }
         )
         self._remote_control_server_thread = threading.Thread(
@@ -9007,6 +9017,7 @@ class PyRadio(object):
                 lambda: self.selections,
                 lambda: (self.selection, self.playing),
                 lambda: self._playlist_in_editor,
+                lambda: self.player.muted,
                 self._can_receive_remote_command,
                 self._print_remote_control_server_error,
                 self._print_remote_control_server_dead_error

@@ -60,6 +60,8 @@ class Log(object):
     _desktop_notification_thread = None
     _stop_desktop_notification_thread = False
     _desktop_notification_lock = threading.Lock()
+    _song_title_lock = threading.Lock()
+    _song_title = ''
 
     def __init__(self, config):
         self._muted = False
@@ -72,6 +74,11 @@ class Log(object):
     def __del__(self):
         self._stop_desktop_notification_thread = True
         self._restore_startup_window_title()
+
+    @property
+    def song_title(self):
+        with self._song_title_lock:
+            return self._song_title
 
     def setScreen(self, cursesScreen):
         self.cursesScreen = cursesScreen
@@ -166,6 +173,16 @@ class Log(object):
                             pass
                             # if logger.isEnabledFor(logging.ERROR):
                             #     logger.error('Error updating the Status Bar')
+
+                    with self._song_title_lock:
+                        if d_msg.startswith('Title: '):
+                            self._song_title = d_msg.replace('Title: ', '')
+                        elif 'Title: ' in d_msg:
+                            x = d_msg.index('Title: ')
+                            self._song_title = d_msg[x+7:]
+                        else:
+                            self._song_title = ''
+
                     self.set_win_title(d_msg)
                     self._write_title_to_log(d_msg)
                     self._show_notification(msg)

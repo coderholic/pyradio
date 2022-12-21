@@ -101,12 +101,25 @@ class PyRadioServer(object):
 html, body, td, a, a:hover, a:visited{color: #333333;}
 .btn {margin: 1px; width: 80px;}
         </style>
+    <link rel="shortcut icon" href="https://raw.githubusercontent.com/coderholic/pyradio/master/devel/pyradio.ico"
     </head>
     <body class="container-fluid">
 
 
-        <div class="row text-center" style="background: green; color: white; padding-bottom: 15px;">
+        <div class="row text-center" style="background: green; color: white; padding-bottom: 15px; display: none;">
             <h2>PyRadio Remote Control</h2>
+        </div>
+        <div id="title_container" class="row" style="margin-top: 40px;">
+            <div class="col-lg-2">
+            </div>
+            <div class="col-lg-8 col-xs-12">
+                <div id="song_title" class="alert alert-info text-center">
+                </div>
+                <div>
+                </div>
+            </div>
+            <div class="col-lg-2">
+            </div>
         </div>
         <div class="row" style="margin-top: 20px;">
             <div class="col-xs-4 col-lg-3">
@@ -114,6 +127,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
                     <button onclick="window.location.href='http://|IP|/html/vu';" type="button" class="btn btn-primary">Volume<br>Up</button>
                     <button onclick="window.location.href='http://|IP|/html/vd';" type="button" class="btn btn-primary">Vulume<br>Down</button>
                     <button onclick="window.location.href='http://|IP|/html/m';" type="button" class="btn btn-danger">Mute<br>Player</button>
+                    <!--<button onclick="title_on_off();" type="button" class="btn btn-default">Title<br>On / Off</button>-->
                 </div>
             </div>
             <div class="col-xs-4 col-lg-5">
@@ -137,7 +151,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
         </div>
 
 
-        <div class="row" style="margin-top: 40px;">
+        <div id="message" class="row" style="margin-top: 40px;">
             <div class="col-lg-2">
             </div>
             <div class="col-lg-8 col-xs-12">
@@ -152,6 +166,35 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
             <div class="col-lg-2">
             </div>
         </div>
+
+
+    <script>
+    var tit_counter = 0;
+    function title_on_off() {
+        var element = document.getElementById("title_container");
+        if ( element.style.display == "none"){
+            refresh();
+            tit_counter = setInterval(refresh, 1000);
+            element.style.display = "block";
+        } else {
+            element.style.display = "none";
+            clearInterval(tit_counter);
+        }
+    }
+
+    function refresh() {
+        $.get('/html/title', function(result) {
+        $("#song_title").html(result);
+    });
+    }
+
+    function refresh_handler() {
+        refresh();
+        tit_counter = setInterval(refresh, 1000);
+    }
+
+    // $(document).ready(refresh_handler);
+    </script>
     </body>
 </html>
 '''
@@ -188,7 +231,6 @@ Restricted Commands
         '/volumedown': 'Volume decreased!',
         '/start': 'Playback started!',
         '/stop': 'Playback stopped!',
-        '/mute': 'Player mute toggled!',
         '/stations' : 'Listing stations!',
         '/next': 'Playing next station',
         '/histnext': 'Playing next station from history',
@@ -236,6 +278,7 @@ Restricted Commands
             lists,
             sel,
             playlist_in_editor,
+            muted,
             can_send_command,
             error_func,
             dead_func,
@@ -249,6 +292,7 @@ Restricted Commands
         sel = (self.selection, self.playing)
         '''
         self.sel = sel
+        self.muted = muted
         try:
             server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -323,7 +367,10 @@ Restricted Commands
             self._is_html = False
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('URL path = {}'.format(self._path))
-        if self._path == '/favicon.ico':
+        if self._path == '/title':
+            title = self._commands['/title']()
+            self._send_raw(client_socket, title)
+        elif self._path == '/favicon.ico':
             pass
             #self._html_data['|ALERT|'] = ''
             #self._html_data['|ALERT_TYPE|'] = ''
@@ -342,25 +389,37 @@ Restricted Commands
         elif self._path in ('/mute', '/m'):
             if self.sel()[1] > -1:
                 self._commands['/mute']()
-                self._send_text(client_socket, self._text['/mute'], alert_type='alert-success')
+                if self.muted():
+                    self._send_text(client_socket, 'Player muted!', alert_type='alert-success')
+                else:
+                    self._send_text(client_socket, 'Player unmuted!', alert_type='alert-success')
             else:
                 self._send_text(client_socket, self._text['/idle'])
         elif self._path in ('/volumeup', '/vu'):
             if self.sel()[1] > -1:
-                self._commands['/volumeup']()
-                self._send_text(client_socket, self._text['/volumeup'], alert_type='alert-success')
+                if self.muted():
+                    self._send_text(client_socket, 'Player is muted!', alert_type='alert-danger')
+                else:
+                    self._commands['/volumeup']()
+                    self._send_text(client_socket, self._text['/volumeup'], alert_type='alert-success')
             else:
                 self._send_text(client_socket, self._text['/idle'])
         elif self._path in ('/volumedown', '/vd'):
             if self.sel()[1] > -1:
-                self._commands['/volumedown']()
-                self._send_text(client_socket, self._text['/volumedown'], alert_type='alert-success')
+                if self.muted():
+                    self._send_text(client_socket, 'Player is muted!', alert_type='alert-danger')
+                else:
+                    self._commands['/volumedown']()
+                    self._send_text(client_socket, self._text['/volumedown'], alert_type='alert-success')
             else:
                 self._send_text(client_socket, self._text['/idle'])
         elif self._path == '/quit':
             self._send_text(client_socket, self._text['/quit'])
-        elif self._path == '/':
-            self._send_text(client_socket, self._text['/'], alert_type='')
+        elif self._path in  ('', '/'):
+            if self._is_html:
+                self._send_text(client_socket, '', alert_type='')
+            else:
+                self._send_text(client_socket, self._text['/'], alert_type='')
         elif self._path in ('/i', '/info'):
             if self.can_send_command():
                 self._send_text(client_socket, self._info())
@@ -642,6 +701,29 @@ Restricted Commands
         client_socket.close()
         return True
 
+    def _send_raw(self, client_socket, msg):
+        f_msg = msg + '\n'
+        if PY2:
+            b_msg = f_msg
+            txt = '''HTTP/1.1 200 OK
+Content-Type: text/txt; charset=utf-8
+Content-Length: {}
+Server: PyRadio
+
+'''.format(len(b_msg))
+        else:
+            b_msg = f_msg.encode('utf-8')
+            txt = '''HTTP/1.1 200 OK
+Content-Type: text/txt; charset=UTF-8
+Content-Length: {}
+Server: PyRadio
+
+'''.format(len(b_msg)).encode('utf-8')
+        try:
+            client_socket.sendall(txt + b_msg)
+        except socket.error as e:
+            self.error = e
+
     def _send_text(self, client_socket,
                    msg, alert_type='alert-info',
                    content='', put_script=False
@@ -865,11 +947,12 @@ Server: PyRadio
             else:
                 out.append('Player: ' + 'Idle')
         else:
+            mut = ' (muted)' if self.muted() else ''
             if self._is_html:
-                out.append('<b>Player:</b> ' + 'In playback')
-                out.append('<b>  Station:</b> {}'.format(self.lists()[0][-1][playing][0]))
+                out.append('<b>Player:</b> ' + 'In playback' + mut)
+                out.append('<span style="padding-left: 1em; font-weight: bold;">  Station:</span> {}'.format(self.lists()[0][-1][playing][0]))
             else:
-                out.append('Player: ' + 'In playback')
+                out.append('Player: ' + 'In playback' + mut)
                 out.append('  Station (id={0}): "{1}"'.format(playing+1, self.lists()[0][-1][playing][0]))
         if self._is_html:
             out.append('<b>Selection:</b> {}'.format(self.lists()[0][-1][selection][0]))
