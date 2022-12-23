@@ -181,6 +181,10 @@ class Log(object):
                         elif 'Title: ' in d_msg:
                             x = d_msg.index('Title: ')
                             self._song_title = d_msg[x+7:]
+                        elif d_msg.startswith('mpv: ') or \
+                            d_msg.startswith('mplayer: ') or \
+                            d_msg.startswith('vlc: '):
+                            self._song_title = 'Player is stopped!'
                         else:
                             self._song_title = ''
 
@@ -282,21 +286,35 @@ class Log(object):
     def _set_web_title(self, msg):
         if msg:
             if msg.startswith('[V') or \
-                    msg.startswith('[M') or \
                     msg.startswith('retry: '):
                 return
+            old_song_title = ''
             server = self._get_web_song_title()
             if server:
                 ''' remote control server running '''
                 title = None
-                if msg.startswith('Playing: '):
-                    # title = msg.replace('Playing: ', '')
+                if msg.startswith('Playing: ') or \
+                        msg.startswith('Connecting to: ') or \
+                        'abnormal' in msg:
                     title = msg
+                elif msg.startswith('Failed to'):
+                    title = msg
+                    with self._song_title_lock:
+                        old_song_title = self._song_title
+                        self._song_title = title
                 elif 'Title: ' in msg:
                     x = msg.index('Title: ')
                     title = msg[x+7:]
+                else:
+                    with self._song_title_lock:
+                        if self._song_title:
+                            title = self._song_title
                 if title:
                     server.send_song_title(title)
+                    if old_song_title:
+                        with self._song_title_lock:
+                            self._song_title = old_song_title
+
 
     def _get_icon_path(self):
         self.icon_path = None

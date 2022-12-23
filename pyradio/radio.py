@@ -8386,10 +8386,7 @@ class PyRadio(object):
         if self.player.isPlaying() and \
                 self.player.playback_is_on:
             self.player.toggleMute()
-            if self.player.muted:
-                return '<div class="alert alert-success">Player is <b>muted!</b></div>'
-            else:
-                return '<div class="alert alert-success">Player is <b>unmuted!</b></div>'
+            return '<div class="alert alert-success">Player muted state <b>toggled!</b></div>'
         else:
             return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
@@ -9172,7 +9169,8 @@ class PyRadio(object):
                 lambda: self.player.muted,
                 self._can_receive_remote_command,
                 self._print_remote_control_server_error,
-                self._print_remote_control_server_dead_error
+                self._print_remote_control_server_dead_error,
+                lambda: self.log.song_title,
             )
         )
         self._remote_control_server_thread.start()

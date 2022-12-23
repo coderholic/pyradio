@@ -112,7 +112,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
         <div id="title_container" class="row" style="margin: 3px; margin-top: 15px;>
             <div class="col-xs-12">
                 <div id="song_title" class="alert alert-info text-center">
-                <b>Player is stopped!</b>
+                <b>No data!</b>
                 </div>
             </div>
         </div>
@@ -131,7 +131,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
                     <button onclick="js_send_simple_command('/html/volumeup', 500);" type="button" class="btn btn-primary">Volume<br>Up</button>
                     <button onclick="js_send_simple_command('/html/volumedown', 500);" type="button" class="btn btn-primary">Vulume<br>Down</button>
                     <button onclick="js_send_simple_command('/html/volumesave', 1500);" type="button" class="btn btn-success">Save<br>Volume</button>
-                    <button onclick="js_send_simple_command('/html/mute', 1500);" type="button" class="btn btn-danger">Mute<br>Player</button>
+                    <button id="mute" onclick="js_send_simple_command('/html/mute', 500);" type="button" class="btn btn-warning">Mute<br>Player</button>
                 </div>
             </div>
             <div class="col-xs-4 col-lg-4">
@@ -156,65 +156,50 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
         </div>
 
     <script>
+    var error_count = 0;
+    var msg_timeout = 0;
 
+    ////////////////////////////////////////////////////////////////////
+    //                     SSE implementation                         //
+    ////////////////////////////////////////////////////////////////////
 
     let eventSource = new EventSource("/html/title");
-
-    var error_count = 0;
-    eventSource.onerror = function(m) {
-        error_count++;
-        if ( error_count > 10 ) {
-            $("#song_title").html("<b>Connection to Server lost!</b>");
-            var element = document.getElementById("all_buttons");
-            element.style.display = "none";
-            eventSource.close();
-        }
-    };
-
 
     eventSource.addEventListener("/html/title", (event) => {
         $("#song_title").html(event.data);
         error_count = 0;
     });
 
-    var tit_counter = 0;
-    var msg_timeout = 0;
-    function js_title_on_off() {
-        var element = document.getElementById("title_container");
-        if ( element.style.display == "none"){
-            refresh();
-            //tit_counter = setInterval(refresh, 1000);
-            element.style.display = "block";
-        } else {
-            element.style.display = "none";
-            clearInterval(tit_counter);
+    eventSource.onerror = function(m) {
+        error_count++;
+        if ( error_count > 10 ) {
+            $("#song_title").html("<b>Connection to Server lost!</b>");
+            js_hide_element("all_buttons");
+            js_hide_element("msg");
+            eventSource.close();
         }
-    }
+    };
 
-    function refresh() {
-        $.get('/html/title', function(result) {
-            $("#song_title").html(result);
-        });
-    }
-
-    function refresh_handler() {
-        refresh();
-        //tit_counter = setInterval(refresh, 1000);
-    }
-    function disable_handler() {
-        clearInterval(tit_counter);
-    }
+    ////////////////////////////////////////////////////////////////////
 
     function js_send_simple_command(the_command, the_timeout){
         $.get(the_command, function(result){
+            console.log(the_command, result, typeof result);
+            //
+            //  Check for html to display
+            //
             if ( result.length < 5 ) {
                 // console.log("Rejected: " + result)
                 return;
             }
             if ( result.startsWith("retry: ") ) {
                 // if a title reply gets here,
-                // it is from the unmute button
-                result = '<div class="alert alert-success">Player is <b>unmuted!</b></div>'
+                // I have to see where it came from
+                if ( the_command == "/html/toggle" ) {
+                    result = '<div class="alert alert-success">Player is <b>stopped!</b></div>'
+                } else {
+                    result = '<div class="alert alert-success">Player mute state <b>toggled!</b></div>'
+                }
                 // console.log("Rejected: " + result)
             }
             // console.log('Accepted: ' + result)
@@ -225,10 +210,32 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
             if (the_timeout > 0){
                 msg_timeout = setTimeout(js_hide_msg, the_timeout);
             }
+            if ( the_command == "/html/mute" ) {
+                js_fix_muted();
+            }
         });
     }
 
-    function js_hide_msg(){
+    function js_fix_muted(){
+        const getData = async () => {
+            const response = await fetch("/html/is_muted")
+            const data = await response.text()
+
+            console.log("async:", data);
+            var element = document.getElementById("mute");
+            if ( data == 0 ){
+                element.className = "btn btn-danger";
+                element.innerHTML = "Unmute<br>Player"
+            } else {
+                element.className = "btn btn-warning";
+                element.innerHTML = "Mute<br>Player"
+            }
+        }
+        getData();
+
+    }
+
+function js_hide_msg(){
         var element = document.getElementById("msg");
         element.style.display = "none";
     }
@@ -239,6 +246,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
     }
 
     // $(document).ready(refresh_handler);
+    $(document).ready(js_fix_muted);
     </script>
     </body>
 </html>
@@ -328,12 +336,14 @@ Restricted Commands
             can_send_command,
             error_func,
             dead_func,
+            song_title,
     ):
         self._path = ''
         self.config = config
         self.lists = lists
         self.playlist_in_editor = playlist_in_editor
         self.can_send_command = can_send_command
+        self.song_title = song_title
         '''
         sel = (self.selection, self.playing)
         '''
@@ -415,11 +425,14 @@ Restricted Commands
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('URL path = {}'.format(self._path))
         if self._path == '/title':
-            # received = self._commands['/title']()
-            # self._send_raw('')
-            self.send_song_title('')
+            self.send_song_title(self.song_title())
         elif self._path == '/favicon.ico':
             pass
+        elif self._path == '/is_muted' and self._is_html:
+            if self.muted():
+                self._send_raw('0')
+            else:
+                self._send_raw('1')
         elif self._path in ('/log', '/g'):
             if self._is_html:
                 received = self._commands['/html_log']()
@@ -504,6 +517,7 @@ Restricted Commands
         elif self._path in  ('', '/'):
             if self._is_html:
                 self._send_text('', alert_type='')
+                self.send_song_title(self.song_title())
             else:
                 self._send_text(self._text['/'], alert_type='')
         elif self._path in ('/i', '/info'):
