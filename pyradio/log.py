@@ -63,7 +63,8 @@ class Log(object):
     _song_title_lock = threading.Lock()
     _song_title = ''
 
-    def __init__(self, config):
+    def __init__(self, config, get_web_song_title):
+        self._get_web_song_title = get_web_song_title
         self._muted = False
         self._cnf = config
         self.width = None
@@ -186,6 +187,7 @@ class Log(object):
                     self.set_win_title(d_msg)
                     self._write_title_to_log(d_msg)
                     self._show_notification(msg)
+                    self._set_web_title(msg)
                     if self._show_status_updates:
                         if logger.isEnabledFor(logging.DEBUG):
                             try:
@@ -276,6 +278,25 @@ class Log(object):
 
     def readline(self):
         pass
+
+    def _set_web_title(self, msg):
+        if msg:
+            if msg.startswith('[V') or \
+                    msg.startswith('[M') or \
+                    msg.startswith('retry: '):
+                return
+            server = self._get_web_song_title()
+            if server:
+                ''' remote control server running '''
+                title = None
+                if msg.startswith('Playing: '):
+                    # title = msg.replace('Playing: ', '')
+                    title = msg
+                elif 'Title: ' in msg:
+                    x = msg.index('Title: ')
+                    title = msg[x+7:]
+                if title:
+                    server.send_song_title(title)
 
     def _get_icon_path(self):
         self.icon_path = None

@@ -258,6 +258,8 @@ class PyRadio(object):
     '''
     _screen_ready = False
 
+    _last_html_song_title = ''
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -544,6 +546,7 @@ class PyRadio(object):
             curses.KEY_PREVIOUS: self._play_previous_station,
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
+            ord('d'): self._html_song_title,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -566,14 +569,31 @@ class PyRadio(object):
             for i in range(0, 16):
                 self._saved_colors[i] = curses.color_content(i)
 
-    def song_title(self):
+    def _html_info(self):
+        out = []
+        out.append('<div class="alert alert-info">')
+        out.append('<b>PyRadio {}</b><br>'.format(self._cnf.current_pyradio_version))
+        out.append('<span style="padding-left: 1em;">Player: <b>{}</b></span><br>'.format(self.player.PLAYER_NAME))
+        out.append('<span style="padding-left: 1em;">Playlist: <b>{}</b></span><br>'.format(basename(self._playlist_in_editor)[:-4]))
+        if self.player.isPlaying():
+            out.append('<span style="padding-left: 1em;">Status: <b>In playback {}</b></span><br>'.format('(muted)' if self.player.muted else ''))
+            out.append('<span style="padding-left: 1em;">Station: <b>{}</b></span><br>'.format(self.stations[self.playing][0]))
+        else:
+            out.append('<span style="padding-left: 1em;">Status: <b>Idle</b></span><br>')
+            out.append('<span style="padding-left: 1em;">Selection: <b>{}</b></span><br>'.format(self.stations[self.selection][0]))
+        out.append('</div>')
+        return '\n'.join(out)
+
+    def _html_song_title(self):
         title = self.log.song_title
         if title:
-            return '<b>' + self.log.song_title + '</b>'
+            title = '<b>' + title + '</b>'
         elif not self.player.isPlaying():
-            return '<b>Player is stopped!</b>'
+            title =  '<b>Player is stopped!</b>'
         else:
-            return '<b>No Title</b>'
+            title = '<b>No Title</b>'
+        # return title
+        self._remote_control_server.send_song_title(title)
 
     def restore_colors(self):
         if self._cnf.use_themes:
@@ -642,7 +662,7 @@ class PyRadio(object):
         if logger.isEnabledFor(logging.INFO) and rev:
             logger.info(rev)
 
-        self.log = Log(self._cnf)
+        self.log = Log(self._cnf, lambda: self._remote_control_server)
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
         try:
             self.player = player.probePlayer(
@@ -5240,6 +5260,18 @@ class PyRadio(object):
             self.setStation(self.selection + 1)
             self._handle_cursor_move_down()
 
+    def _html_play_next_station(self):
+        self._reset_status_bar_right()
+        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            return '<div class="alert alert-success">Operation not permited (not in normal mode)</div>'
+        elif self.player.connecting:
+            return '<div class="alert alert-success">Please wait for the player to settle...</div>'
+        else:
+            self._move_cursor_one_down()
+            self.playSelection()
+            self.refreshBody()
+            return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
+
     def _play_next_station(self):
         self._reset_status_bar_right()
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
@@ -5254,6 +5286,18 @@ class PyRadio(object):
             self._move_cursor_one_down()
             self.playSelection()
             self.refreshBody()
+
+    def _html_play_previous_station(self):
+        self._reset_status_bar_right()
+        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            return '<div class="alert alert-success">Operation not permited (not in normal mode)</div>'
+        elif self.player.connecting:
+            return '<div class="alert alert-success">Please wait for the player to settle...</div>'
+        else:
+            self._move_cursor_one_up()
+            self.playSelection()
+            self.refreshBody()
+            return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
 
     def _play_previous_station(self):
         self._reset_status_bar_right()
@@ -5361,6 +5405,14 @@ class PyRadio(object):
         else:
             return True
 
+    def _html_toggle_titles_logging(self):
+        self.toggle_titles_logging()
+        self.log.write_start_log_station_and_title()
+        if self._cnf.titles_log.titles_handler:
+            return '<div class="alert alert-success">Titles Log <b>Enabled</b></div>'
+        else:
+            return '<div class="alert alert-success">Titles Log <b>Disabled</b></div>'
+
     def _toggle_titles_logging(self):
         self.toggle_titles_logging()
         self.log.write_start_log_station_and_title()
@@ -5422,6 +5474,20 @@ class PyRadio(object):
                 callback_function=self.refreshBody
             )
 
+    def _html_stations_history_previous(self):
+        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            return '<div class="alert alert-danger">Operation not permited (not in normal mode)</div>'
+        elif self.player.connecting:
+            return '<div class="alert alert-danger">Please wait for the player to settle...</div>'
+        else:
+            if self._cnf.stations_history.item == -1:
+                return '<div class="alert alert-danger">History is <b>empty</b>!</div>'
+            elif self._cnf.stations_history.item == 0:
+                return '<div class="alert alert-danger">Already at <b>first</b> item!</div>'
+            self._cnf.play_from_history = True
+            self._cnf.stations_history.play_previous()
+            return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
+
     def _stations_history_previous(self):
         self._update_status_bar_right(status_suffix='')
         if int(self._cnf.connection_timeout_int) == 0:
@@ -5434,6 +5500,20 @@ class PyRadio(object):
             else:
                 self._cnf.play_from_history = True
                 self._cnf.stations_history.play_previous()
+
+    def _html_stations_history_next(self):
+        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            return '<div class="alert alert-danger">Operation not permited (not in normal mode)</div>'
+        elif self.player.connecting:
+            return '<div class="alert alert-danger">Please wait for the player to settle...</div>'
+        else:
+            if self._cnf.stations_history.item == -1:
+                return '<div class="alert alert-danger">History is <b>empty</b>!</div>'
+            elif self._cnf.stations_history.item == len(self._cnf.stations_history.items) - 1:
+                return '<div class="alert alert-danger">Already at <b>last</b> item!</div>'
+            self._cnf.play_from_history = True
+            self._cnf.stations_history.play_next()
+            return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
 
     def _stations_history_next(self):
         self._update_status_bar_right(status_suffix='')
@@ -7862,6 +7942,12 @@ class PyRadio(object):
                 self._put_selection_in_the_middle(force=force_center)
                 self.jumpnr = ''
 
+    def _html_start_player(self):
+        if self.number_of_items > 0:
+            self._start_player()
+            return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
+        return '<div class="alert alert-danger"><b>No stations in Playlist!</b>!</div>'
+
     def _start_player(self):
         self._reset_status_bar_right()
         self.log.counter = None
@@ -7869,6 +7955,10 @@ class PyRadio(object):
         if self.number_of_items > 0:
             self.playSelection()
             self.refreshBody()
+
+    def _html_stop_player(self):
+        self._stop_player()
+        return '<div class="alert alert-success">Player <b>stopped</b>!</div>'
 
     def _stop_player(self):
         self._reset_status_bar_right()
@@ -7881,6 +7971,7 @@ class PyRadio(object):
                 self.detect_if_player_exited = True
                 self.playSelection()
             self.refreshBody()
+
     def _browser_config_not_modified(self):
         self.ws.close_window()
         if self._cnf._online_browser:
@@ -8247,6 +8338,17 @@ class PyRadio(object):
                 or self._cnf.open_register_list):
             self.refreshBody()
 
+    def _html_volume_up(self):
+        if self.player.isPlaying() and \
+                self.player.playback_is_on:
+            if self.player.muted:
+                return '<div class="alert alert-danger">Player is <b>muted</b>; command not applicable</div>'
+            else:
+                self.player.volumeUp()
+                return '<div class="alert alert-success">Volume <b>increased</b>!</div>'
+        else:
+            return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
+
     def _volume_up(self):
         if self.player.isPlaying():
             if self.player.playback_is_on:
@@ -8257,6 +8359,17 @@ class PyRadio(object):
                 self.refreshBody()
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Volume adjustment inhibited because playback is off')
+
+    def _html_volume_down(self):
+        if self.player.isPlaying() and \
+                self.player.playback_is_on:
+            if self.player.muted:
+                return '<div class="alert alert-danger">Player is <b>muted</b>; command not applicable</div>'
+            else:
+                self.player.volumeDown()
+                return '<div class="alert alert-success">Volume <b>decreased</b>!</div>'
+        else:
+            return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
     def _volume_down(self):
         if self.player.isPlaying():
@@ -8269,6 +8382,17 @@ class PyRadio(object):
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Volume adjustment inhibited because playback is off')
 
+    def _html_volume_mute(self):
+        if self.player.isPlaying() and \
+                self.player.playback_is_on:
+            self.player.toggleMute()
+            if self.player.muted:
+                return '<div class="alert alert-success">Player is <b>muted!</b></div>'
+            else:
+                return '<div class="alert alert-success">Player is <b>unmuted!</b></div>'
+        else:
+            return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
+
     def _volume_mute(self):
         if self.player.isPlaying():
             if self.player.playback_is_on:
@@ -8279,6 +8403,21 @@ class PyRadio(object):
                 self.refreshBody()
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Muting inhibited because playback is off')
+
+    def _html_volume_save(self):
+        if self.player.isPlaying() and \
+                self.player.playback_is_on:
+            if self.player.muted:
+                return '<div class="alert alert-danger">Player is <b>muted!</b></div>'
+            else:
+                ret_string = self.player.save_volume()
+                if ret_string:
+                    self.log.write(msg=ret_string)
+                    self.player.threadUpdateTitle()
+                    return '<div class="alert alert-success">Volume <b>saved!</b></div>'
+                return '<div class="alert alert-danger">Volume <b>not saved!</b></div>'
+        else:
+            return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
     def _volume_save(self):
         if self.player.isPlaying():
@@ -8994,20 +9133,33 @@ class PyRadio(object):
             bind_ip=self._cnf.active_remote_control_server_ip,
             bind_port=int(self._cnf.active_remote_control_server_port),
             commands={
+                '/volumesave': self._volume_save,
+                '/html_volumesave': self._html_volume_save,
                 '/volumeup': self._volume_up,
+                '/html_volumeup': self._html_volume_up,
                 '/volumedown': self._volume_down,
+                '/html_volumedown': self._html_volume_down,
                 '/mute': self._volume_mute,
+                '/html_mute': self._html_volume_mute,
                 '/histprev': self._stations_history_previous,
+                '/html_histprev': self._html_stations_history_previous,
                 '/histnext': self._stations_history_next,
+                '/html_histnext': self._html_stations_history_next,
                 '/previous': self._play_previous_station,
+                '/html_previous': self._html_play_previous_station,
                 '/next': self._play_next_station,
+                '/html_next': self._html_play_next_station,
                 '/stop': self._stop_player,
+                '/html_stop': self._html_stop_player,
                 '/start': self._start_player,
+                '/html_start': self._html_start_player,
                 '/jump': self._jump_and_play_selection,
                 'open_history': self._open_playlist_and_station_from_station_history,
                 '/log': self._toggle_titles_logging,
+                '/html_log': self._html_toggle_titles_logging,
                 '/like': self._tag_a_title,
-                '/title': self.song_title,
+                '/title': self._html_song_title,
+                '/html_info': self._html_info,
             }
         )
         self._remote_control_server_thread = threading.Thread(

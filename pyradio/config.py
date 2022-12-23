@@ -2802,7 +2802,7 @@ class PyRadioStationsStack(object):
         ]
         self.item = 0
         self.play_from_history = True
-        # self.clear()
+        self.clear()
         ######## DEBUG END
 
         self.execute_func = execute_function

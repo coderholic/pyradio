@@ -106,75 +106,84 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
     <body class="container-fluid">
 
 
-        <div class="row text-center" style="background: green; color: white; padding-bottom: 15px; display: none;">
+        <div class="row text-center" style="background: green; color: white; padding-bottom: 15px;">
             <h2>PyRadio Remote Control</h2>
         </div>
-        <div id="title_container" class="row" style="margin-top: 40px;">
-            <div class="col-lg-2">
-            </div>
-            <div class="col-lg-8 col-xs-12">
+        <div id="title_container" class="row" style="margin: 3px; margin-top: 15px;>
+            <div class="col-xs-12">
                 <div id="song_title" class="alert alert-info text-center">
+                <b>Player is stopped!</b>
                 </div>
-                <div>
-                </div>
-            </div>
-            <div class="col-lg-2">
             </div>
         </div>
-        <div class="row" style="margin-top: 20px;">
-            <div class="col-xs-4 col-lg-3">
+        <div id="all_buttons" class="row">
+            <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
-                    <button onclick="window.location.href='http://|IP|/html/vu';" type="button" class="btn btn-primary">Volume<br>Up</button>
-                    <button onclick="window.location.href='http://|IP|/html/vd';" type="button" class="btn btn-primary">Vulume<br>Down</button>
-                    <button onclick="window.location.href='http://|IP|/html/m';" type="button" class="btn btn-danger">Mute<br>Player</button>
-                    <!--<button onclick="title_on_off();" type="button" class="btn btn-default">Title<br>On / Off</button>-->
+                    <button onclick="js_send_simple_command('/html/next', 1500);" type="button" class="btn btn-warning">Play<br>Next</button>
+                    <button onclick="js_send_simple_command('/html/previous', 1500);" type="button" class="btn btn-warning">Play<br>Previous</button>
+                    <button onclick="js_send_simple_command('/html/histnext', 1500);" type="button" class="btn btn-success">Play Hist.<br> Next</button>
+                    <button onclick="js_send_simple_command('/html/histprev', 1500);" type="button" class="btn btn-success">Play Hist.<br>Previous</button>
+                    <button onclick="js_send_simple_command('/html/toggle', 1500);" type="button" class="btn btn-danger">Toggle<br>Playback</button>
                 </div>
             </div>
-            <div class="col-xs-4 col-lg-5">
+            <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
-                    <button onclick="window.location.href='http://|IP|/html/n';" type="button" class="btn btn-warning">Play<br>Next</button>
-                    <button onclick="window.location.href='http://|IP|/html/p';" type="button" class="btn btn-warning">Play<br>Previous</button>
-                    <button onclick="window.location.href='http://|IP|/html/hn';" type="button" class="btn btn-success">Play Hist.<br> Next</button>
-                    <button onclick="window.location.href='http://|IP|/html/hp';" type="button" class="btn btn-success">Play Hist.<br>Previous</button>
-                    <button onclick="window.location.href='http://|IP|/html/t';" type="button" class="btn btn-danger">Toggle<br>Playback</button>
+                    <button onclick="js_send_simple_command('/html/volumeup', 500);" type="button" class="btn btn-primary">Volume<br>Up</button>
+                    <button onclick="js_send_simple_command('/html/volumedown', 500);" type="button" class="btn btn-primary">Vulume<br>Down</button>
+                    <button onclick="js_send_simple_command('/html/volumesave', 1500);" type="button" class="btn btn-success">Save<br>Volume</button>
+                    <button onclick="js_send_simple_command('/html/mute', 1500);" type="button" class="btn btn-danger">Mute<br>Player</button>
                 </div>
             </div>
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
                     <button onclick="window.location.href='http://|IP|/html/st';" type="button" class="btn btn-success">Stations<br>List</button>
                     <button onclick="window.location.href='http://|IP|/html/pl';" type="button" class="btn btn-primary">Show<br>Playlists</button>
-                    <button onclick="window.location.href='http://|IP|/html/i';" type="button" class="btn btn-danger">System<br>Info</button>
-                    <button onclick="window.location.href='http://|IP|/html/g';" type="button" class="btn btn-warning">Toggle<br>Titles Log</button>
-                    <button onclick="window.location.href='http://|IP|/html/l';" type="button" class="btn btn-info">Like<br>Title</button>
+                    <button onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
+                    <button onclick="js_send_simple_command('/html/log', 1500);" type="button" class="btn btn-warning">Toggle<br>Titles Log</button>
+                    <button onclick="js_send_simple_command('/html/like', 1500);" type="button" class="btn btn-info">Like<br>Title</button>
                 </div>
             </div>
         </div>
 
 
-        <div id="message" class="row" style="margin-top: 40px;">
+        <div id="msg" class="row" style="margin-top: 40px;">
             <div class="col-lg-2">
             </div>
-            <div class="col-lg-8 col-xs-12">
-
-                <div class="alert |ALERT_TYPE|">
-                    |ALERT|
-                </div>
-                <div>
-                    |CONTENT|
-                </div>
+            <div id="msg_text" class="col-lg-8 col-xs-12">
             </div>
             <div class="col-lg-2">
             </div>
         </div>
-
 
     <script>
+
+
+    let eventSource = new EventSource("/html/title");
+
+    var error_count = 0;
+    eventSource.onerror = function(m) {
+        error_count++;
+        if ( error_count > 10 ) {
+            $("#song_title").html("<b>Connection to Server lost!</b>");
+            var element = document.getElementById("all_buttons");
+            element.style.display = "none";
+            eventSource.close();
+        }
+    };
+
+
+    eventSource.addEventListener("/html/title", (event) => {
+        $("#song_title").html(event.data);
+        error_count = 0;
+    });
+
     var tit_counter = 0;
-    function title_on_off() {
+    var msg_timeout = 0;
+    function js_title_on_off() {
         var element = document.getElementById("title_container");
         if ( element.style.display == "none"){
             refresh();
-            tit_counter = setInterval(refresh, 1000);
+            //tit_counter = setInterval(refresh, 1000);
             element.style.display = "block";
         } else {
             element.style.display = "none";
@@ -184,13 +193,49 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
 
     function refresh() {
         $.get('/html/title', function(result) {
-        $("#song_title").html(result);
-    });
+            $("#song_title").html(result);
+        });
     }
 
     function refresh_handler() {
         refresh();
-        tit_counter = setInterval(refresh, 1000);
+        //tit_counter = setInterval(refresh, 1000);
+    }
+    function disable_handler() {
+        clearInterval(tit_counter);
+    }
+
+    function js_send_simple_command(the_command, the_timeout){
+        $.get(the_command, function(result){
+            if ( result.length < 5 ) {
+                // console.log("Rejected: " + result)
+                return;
+            }
+            if ( result.startsWith("retry: ") ) {
+                // if a title reply gets here,
+                // it is from the unmute button
+                result = '<div class="alert alert-success">Player is <b>unmuted!</b></div>'
+                // console.log("Rejected: " + result)
+            }
+            // console.log('Accepted: ' + result)
+            clearTimeout(msg_timeout);
+            $("#msg_text").html(result);
+            var element = document.getElementById("msg");
+            element.style.display = "block";
+            if (the_timeout > 0){
+                msg_timeout = setTimeout(js_hide_msg, the_timeout);
+            }
+        });
+    }
+
+    function js_hide_msg(){
+        var element = document.getElementById("msg");
+        element.style.display = "none";
+    }
+
+    function js_hide_element(the_element){
+        var element = document.getElementById(the_element);
+        element.style.display = "none";
     }
 
     // $(document).ready(refresh_handler);
@@ -208,6 +253,7 @@ Long             Short      Description
 /info            /i         display PyRadio info
 /volumeup        /vu        increase volume
 /volumedown      /vd        decrease volume
+/vulumesave      /vs        save volume
 /mute            /m         toggle mute
 /log             /g         toggle stations logging
 /like            /l         tag (like) station
@@ -319,8 +365,8 @@ Restricted Commands
 
         while True:
             try:
-                client_sock, address = server.accept()
-                request = client_sock.recv(1024)
+                self.client_socket, address = server.accept()
+                request = self.client_socket.recv(1024)
             except socket.error as e:
                 if logger.isEnabledFor(logger.ERROR):
                     logger.error('Server accept error: "{}"'.format(e))
@@ -329,25 +375,26 @@ Restricted Commands
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Accepted connection from {}:{}'.format(address[0], address[1]))
             self.error = None
-            self._handle_client_connection(client_sock, request)
+            self._handle_client_connection(request)
             if self.error is not None:
-                client_sock.close()
+                self.client_socket.close()
                 dead_func(self.error)
                 break
             if self._path == '/quit':
-                client_sock.close()
+                self.send_song_title('Server is now down!')
+                self.client_socket.close()
                 break
         server.close()
         if logger.isEnabledFor(logging.INFO):
             logger.info('Remote Control Server exiting...')
 
-    def _handle_client_connection(self, client_socket, request):
+    def _handle_client_connection(self, request):
         # logger.error ('Received {}'.format(request))
         # logger.error ('\n\nReceived {}'.format(request.decode('utf-8', 'replace')))
         try:
             rcv = request.decode('utf-8')
         except (OSError, socket.error) as e:
-            client_socket.close()
+            # self.client_socket.close()
             self.error = e
             return False
         except:
@@ -368,130 +415,203 @@ Restricted Commands
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('URL path = {}'.format(self._path))
         if self._path == '/title':
-            title = self._commands['/title']()
-            self._send_raw(client_socket, title)
+            # received = self._commands['/title']()
+            # self._send_raw('')
+            self.send_song_title('')
         elif self._path == '/favicon.ico':
             pass
-            #self._html_data['|ALERT|'] = ''
-            #self._html_data['|ALERT_TYPE|'] = ''
-            #self._html_data['|CONTENT|'] = ''
-            #logger.error('html_data = {}'.format(self._html_data))
-            #self._send_html(client_socket)
-        elif self._path in ('/like', '/g'):
-            self._commands['/like']()
-            self._send_text(client_socket, self._text['/like'], alert_type='alert-success')
-        elif self._path in ('/like', '/l'):
-            if self.sel()[1] > -1:
+        elif self._path in ('/log', '/g'):
+            if self._is_html:
+                received = self._commands['/html_log']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
+            else:
                 self._commands['/like']()
-                self._send_text(client_socket, self._text['/like'], alert_type='alert-success')
+                self._send_text(self._text['/log'], alert_type='alert-success')
+        elif self._path in ('/like', '/l'):
+            if self._is_html:
+                received = self._commands['/html_like']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
             else:
-                self._send_text(client_socket, self._text['/idle'])
+                if self.sel()[1] > -1:
+                    self._commands['/like']()
+                    self._send_text(self._text['/like'], alert_type='alert-success')
+                else:
+                    self._send_text(self._text['/idle'])
         elif self._path in ('/mute', '/m'):
-            if self.sel()[1] > -1:
-                self._commands['/mute']()
-                if self.muted():
-                    self._send_text(client_socket, 'Player muted!', alert_type='alert-success')
-                else:
-                    self._send_text(client_socket, 'Player unmuted!', alert_type='alert-success')
+            if self._is_html:
+                received = self._commands['/html_mute']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
             else:
-                self._send_text(client_socket, self._text['/idle'])
+                if self.sel()[1] > -1:
+                    self._commands['/mute']()
+                    if self.muted():
+                        self._send_text('Player muted!', alert_type='alert-success')
+                    else:
+                        self._send_text('Player unmuted!', alert_type='alert-success')
+                else:
+                    self._send_text(self._text['/idle'])
+        elif self._path in ('/volumesave', '/vs'):
+            if self._is_html:
+                received = self._commands['/html_volumesave']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
+            else:
+                if self.sel()[1] > -1:
+                    if self.muted():
+                        self._send_text('Player is muted!', alert_type='alert-danger')
+                    else:
+                        out = self._commands['/volumesave']()
+                        if out:
+                            self._send_text('Volume saved', alert_type='alert-success')
+                        else:
+                            self._send_text('Volume not saved', alert_type='alert-success')
+                else:
+                    self._send_text(self._text['/idle'])
         elif self._path in ('/volumeup', '/vu'):
-            if self.sel()[1] > -1:
-                if self.muted():
-                    self._send_text(client_socket, 'Player is muted!', alert_type='alert-danger')
-                else:
-                    self._commands['/volumeup']()
-                    self._send_text(client_socket, self._text['/volumeup'], alert_type='alert-success')
+            if self._is_html:
+                received = self._commands['/html_volumeup']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
             else:
-                self._send_text(client_socket, self._text['/idle'])
+                if self.sel()[1] > -1:
+                    if self.muted():
+                        self._send_text('Player is muted!', alert_type='alert-danger')
+                    else:
+                        self._commands['/volumeup']()
+                        self._send_text(self._text['/volumeup'], alert_type='alert-success')
+                else:
+                    self._send_text(self._text['/idle'])
         elif self._path in ('/volumedown', '/vd'):
-            if self.sel()[1] > -1:
-                if self.muted():
-                    self._send_text(client_socket, 'Player is muted!', alert_type='alert-danger')
-                else:
-                    self._commands['/volumedown']()
-                    self._send_text(client_socket, self._text['/volumedown'], alert_type='alert-success')
+            if self._is_html:
+                received = self._commands['/html_volumedown']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
             else:
-                self._send_text(client_socket, self._text['/idle'])
+                if self.sel()[1] > -1:
+                    if self.muted():
+                        self._send_text('Player is muted!', alert_type='alert-danger')
+                    else:
+                        self._commands['/volumedown']()
+                        self._send_text(self._text['/volumedown'], alert_type='alert-success')
+                else:
+                    self._send_text(self._text['/idle'])
         elif self._path == '/quit':
-            self._send_text(client_socket, self._text['/quit'])
+            if not self._is_html:
+                self._send_text(self._text['/quit'])
         elif self._path in  ('', '/'):
             if self._is_html:
-                self._send_text(client_socket, '', alert_type='')
+                self._send_text('', alert_type='')
             else:
-                self._send_text(client_socket, self._text['/'], alert_type='')
+                self._send_text(self._text['/'], alert_type='')
         elif self._path in ('/i', '/info'):
-            if self.can_send_command():
-                self._send_text(client_socket, self._info())
+            if self._is_html:
+                received = self._commands['/html_info']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
             else:
-                self._send_text(client_socket, self._text['/perm'])
+                if self.can_send_command():
+                    self._send_text(self._info())
+                else:
+                    self._send_text(self._text['/perm'])
         elif self._path in ('/next', '/n'):
-            if self.can_send_command():
-                self._commands['/next']()
-                self._send_text(client_socket, self._text['/next'], alert_type='alert-success')
+            if self._is_html:
+                received = self._commands['/html_next']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
             else:
-                self._send_text(client_socket, self._text['/perm'])
+                if self.can_send_command():
+                    self._commands['/next']()
+                    self._send_text(self._text['/next'], alert_type='alert-success')
+                else:
+                    self._send_text(self._text['/perm'])
         elif self._path in ('/previous', '/p'):
-            if self.can_send_command():
-                self._commands['/previous']()
-                self._send_text(client_socket, self._text['/previous'], alert_type='alert-success')
+            if self._is_html:
+                received = self._commands['/html_previous']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
             else:
-                self._send_text(client_socket, self._text['/perm'])
+                if self.can_send_command():
+                    self._commands['/previous']()
+                    self._send_text(self._text['/previous'], alert_type='alert-success')
+                else:
+                    self._send_text(self._text['/perm'])
         elif self._path in ('/histnext', '/hn'):
-            if self.can_send_command():
-                go_on = False
-                llen = len(self.config().stations_history.items)
-                l_item = self.config().stations_history.item
-                if l_item == -1 or llen == 0:
-                    self._send_text(client_socket, 'No items in history!', alert_type='alert-danger')
-                elif l_item + 1 < llen:
-                    go_on = True
-                if go_on:
-                    self._commands['/histnext']()
-                    self._send_text(client_socket, self._text['/histnext'], alert_type='alert-success')
-                else:
-                    self._send_text(client_socket, 'Already at last history item!')
+            if self._is_html:
+                received = self._commands['/html_histnext']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
             else:
-                self._send_text(client_socket, self._text['/perm'])
+                if self.can_send_command():
+                    go_on = False
+                    llen = len(self.config().stations_history.items)
+                    l_item = self.config().stations_history.item
+                    if l_item == -1 or llen == 0:
+                        self._send_text('No items in history!', alert_type='alert-danger')
+                    elif l_item + 1 < llen:
+                        go_on = True
+                    if go_on:
+                        self._commands['/histnext']()
+                        self._send_text(self._text['/histnext'], alert_type='alert-success')
+                    else:
+                        self._send_text('Already at last history item!')
+                else:
+                    self._send_text(self._text['/perm'])
         elif self._path in ('/histprev', '/hp'):
-            if self.can_send_command():
-                go_on = True
-                llen = len(self.config().stations_history.items)
-                l_item = self.config().stations_history.item
-                if l_item == -1 or llen == 0:
-                    self._send_text(client_socket, 'No items in history!', alert_type='alert-danger')
-                    go_on = False
-                elif l_item == 0:
-                    go_on = False
-                if go_on:
-                    self._commands['/histprev']()
-                    self._send_text(client_socket, self._text['/histprev'])
-                else:
-                    self._send_text(client_socket, 'Already at first history item!')
+            if self._is_html:
+                received = self._commands['/html_histprev']()
+                logger.error('received = "{}"'.format(received))
+                self._send_raw(received)
             else:
-                self._send_text(client_socket, self._text['/perm'])
+                if self.can_send_command():
+                    go_on = True
+                    llen = len(self.config().stations_history.items)
+                    l_item = self.config().stations_history.item
+                    if l_item == -1 or llen == 0:
+                        self._send_text('No items in history!', alert_type='alert-danger')
+                        go_on = False
+                    elif l_item == 0:
+                        go_on = False
+                    if go_on:
+                        self._commands['/histprev']()
+                        self._send_text(self._text['/histprev'])
+                    else:
+                        self._send_text('Already at first history item!')
+                else:
+                    self._send_text(self._text['/perm'])
         elif self._path in ('/toggle', '/t'):
-            if self.can_send_command():
+            if self._is_html:
                 if self.sel()[1] > -1:
-                    self._commands['/stop']()
-                    self._send_text(client_socket, self._text['/stop'], alert_type='alert-success')
+                    received = self._commands['/html_stop']()
+                    logger.error('received = "{}"'.format(received))
+                    self._send_raw(received)
                 else:
-                    self._commands['/start']()
-                    self._send_text(client_socket, self._text['/start'], alert_type='alert-success')
+                    received = self._commands['/html_start']()
+                    logger.error('received = "{}"'.format(received))
+                    self._send_raw(received)
             else:
-                self._send_text(client_socket, self._text['/perm'])
+                if self.can_send_command():
+                    if self.sel()[1] > -1:
+                        self._commands['/stop']()
+                        self._send_text(self._text['/stop'], alert_type='alert-success')
+                    else:
+                        self._commands['/start']()
+                        self._send_text(self._text['/start'], alert_type='alert-success')
+                else:
+                    self._send_text(self._text['/perm'])
         elif self._path.startswith('/st/') or \
                 self._path.startswith('/stations/'):
             if self.can_send_command():
                 ret = self._parse()
                 if ret is None:
-                    self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
+                    self._send_text(self._text['/error'], alert_type='alert-danger')
                 else:
                     has_error = False
                     if ret == '/stations':
                         if self._is_html:
                             self._send_text(
-                                client_socket,
                                 msg='',
                                 alert_type='',
                                 content=self._format_html_table(
@@ -501,12 +621,12 @@ Restricted Commands
                                 put_script=True
                             )
                         else:
-                            self._send_text(client_socket, self._list_stations())
+                            self._send_text(self._list_stations())
                     else:
                         try:
                             ret = int(ret)
                         except (ValueError, TypeError):
-                            self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
+                            self._send_text(self._text['/error'], alert_type='alert-danger')
                             has_error = True
                         if not has_error:
                             # ret = ret -1 if ret > 0 else 0
@@ -514,12 +634,12 @@ Restricted Commands
                                 ret = 0
                             self._commands['/jump'](ret)
                             if self._is_html:
-                                self._send_text(client_socket, ' Playing station: <b>{}</b>'.format(self.lists()[0][-1][ret-1][0]))
+                                self._send_text(' Playing station: <b>{}</b>'.format(self.lists()[0][-1][ret-1][0]))
                             else:
-                                self._send_text(client_socket, ' Playing station: {}'.format(self.lists()[0][-1][ret-1][0]))
+                                self._send_text(' Playing station: {}'.format(self.lists()[0][-1][ret-1][0]))
                     has_error = False
             else:
-                self._send_text(client_socket, self._text['/perm'])
+                self._send_text(self._text['/perm'])
         elif self._path.startswith('/playlists') or \
                 self._path.startswith('/pl') or \
                 self._path == '/stations' or \
@@ -527,21 +647,21 @@ Restricted Commands
             if  ',' in self._path:
                 sp = self._path.split('/')
                 if ',' not in sp [-1]:
-                    self._send_text(client_socket, self._text['/error'], alert-danger)
+                    self._send_text(self._text['/error'], alert-danger)
                 else:
                     if sp[1] not in ('playlists', 'pl'):
-                        self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
+                        self._send_text(self._text['/error'], alert_type='alert-danger')
                     else:
                         # get the numbers
                         pl, st = self._get_numbers(sp[-1])
                         if pl is None:
-                            self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
+                            self._send_text(self._text['/error'], alert_type='alert-danger')
                         else:
                             go_on = True
                             try:
                                 playlist_name = self.lists()[1][-1][pl][0]
                             except IndexError:
-                                self._send_text(client_socket, 'Error: Playlist not found (id={})'.format(pl+1))
+                                self._send_text('Error: Playlist not found (id={})'.format(pl+1))
                                 go_on = False
                             if go_on:
                                 p_name = basename(self.playlist_in_editor()[:-4])
@@ -550,7 +670,6 @@ Restricted Commands
                                     self._commands['/jump'](st+1)
                                     if self._is_html:
                                         self._send_text(
-                                            client_socket,
                                             'Playing station <b>{0}</b> from playlist <i>{1}</i>'.format(
                                                 self.lists()[0][-1][st][0],
                                                 p_name
@@ -558,7 +677,6 @@ Restricted Commands
                                         )
                                     else:
                                         self._send_text(
-                                            client_socket,
                                             'Playing station "{0}" (id={1}) from playlist "{2}" (id={3})'.format(
                                                 self.lists()[0][-1][st][0],
                                                 st+1,
@@ -570,7 +688,6 @@ Restricted Commands
                                     # need to load a new playlist
                                     if self.config().dirty_playlist:
                                         self._send_text(
-                                            client_socket,
                                             'Current playlist not saved; cannot load other playlist...'
                                         )
                                     else:
@@ -584,7 +701,6 @@ Restricted Commands
                                                 self._commands['open_history'](in_file, item)
                                                 if self._is_html:
                                                     self._send_text(
-                                                        client_socket,
                                                         'Playing station <b>{0}</b> from playlist <i>{1}</i>'.format(
                                                             playlist_stations[st],
                                                             playlist_name
@@ -592,7 +708,6 @@ Restricted Commands
                                                     )
                                                 else:
                                                     self._send_text(
-                                                        client_socket,
                                                         'Playing station "{0}" (id={1}) from playlist "{2}" (id={3})'.format(
                                                             playlist_stations[st],
                                                             st+1,
@@ -602,14 +717,12 @@ Restricted Commands
                                                     )
                                             else:
                                                 self._send_text(
-                                                    client_socket,
                                                     'Error: Requested station (id={0}) not found in playlist "{1}" (id={2})'.format(
                                                         st+1, playlist_name, pl+1,
                                                     )
                                                 )
                                         else:
                                             self._send_text(
-                                                client_socket,
                                                 'Error opening playlist "{0}" (id={1})'.format(
                                                     playlist_name, pl+1
                                                 )
@@ -618,12 +731,11 @@ Restricted Commands
             else:
                 ret = self._parse()
                 if ret is None:
-                    self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
+                    self._send_text(self._text['/error'], alert_type='alert-danger')
                 elif ret.startswith('/'):
                     if ret == '/stations':
                         if self._is_html:
                             self._send_text(
-                                client_socket,
                                 msg='',
                                 alert_type='',
                                 content=self._format_html_table(
@@ -633,11 +745,10 @@ Restricted Commands
                                 put_script=True
                             )
                         else:
-                            self._send_text(client_socket, self._list_stations())
+                            self._send_text(self._list_stations())
                     elif ret == '/playlists':
                         if self._is_html:
                             self._send_text(
-                                client_socket,
                                 msg='',
                                 alert_type='',
                                 content=self._format_html_table(
@@ -647,9 +758,9 @@ Restricted Commands
                                 put_script=True
                             )
                         else:
-                            self._send_text(client_socket, self._list_playlists())
+                            self._send_text(self._list_playlists())
                     else:
-                        self._send_text(client_socket, self._text[ret])
+                        self._send_text(self._text[ret])
 
                 else:
                     go_on = True
@@ -657,12 +768,12 @@ Restricted Commands
                         ret = int(ret) - 1
                     except (ValueError, TypeError):
                         go_on = False
-                        self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
+                        self._send_text(self._text['/error'], alert_type='alert-danger')
                     if go_on:
                         try:
                             playlist_name = self.lists()[2][-1][ret][0]
                         except IndexError:
-                            self._send_text(client_socket, 'Error: Playlist not found (id={})'.format(ret+1), alert_type='alert-danger')
+                            self._send_text('Error: Playlist not found (id={})'.format(ret+1), alert_type='alert-danger')
                             go_on = False
                         if go_on:
                             in_file, out = self.config().read_playlist_for_server(
@@ -671,7 +782,6 @@ Restricted Commands
                             if out:
                                 if self._is_html:
                                     self._send_text(
-                                        client_socket,
                                         msg='',
                                         alert_type='',
                                         content=self._format_html_table(
@@ -683,80 +793,113 @@ Restricted Commands
                                     )
                                 else:
                                     self._send_text(
-                                        client_socket,
                                         self._list_stations(playlist_name, out)
                                     )
                             else:
                                 if self._is_html:
-                                    self._send_text(client_socket, 'Error reading playlist: <b>{}</b>'.format(playlist_name), alert_type='alert-danger')
+                                    self._send_text('Error reading playlist: <b>{}</b>'.format(playlist_name), alert_type='alert-danger')
                                 else:
-                                    self._send_text(client_socket, 'Error reading playlist: "{}"'.format(playlist_name), alert_type='alert-danger')
+                                    self._send_text('Error reading playlist: "{}"'.format(playlist_name), alert_type='alert-danger')
         else:
-            self._send_text(client_socket, self._text['/error'], alert_type='alert-danger')
+            self._send_text(self._text['/error'], alert_type='alert-danger')
 
-        # if self._path == '/quit':
-        #     _send_html(client_socket, 'Server has shut down!!!')
-        # else:
-        #     _send_html(client_socket, 'path: {}\n\nYES!!!'.format(self._path))
-        client_socket.close()
         return True
 
-    def _send_raw(self, client_socket, msg):
+    def send_song_title(self, msg=None):
+        if not msg:
+            return
+        f_msg = 'retry: 150\nevent: /html/title\ndata: <b>' + msg + '</b>\n\n'
+        if PY2:
+            b_msg = f_msg
+            txt = '''HTTP/1.1 200 OK
+Content-Type: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive, Keep-Alive
+Keep-Alive: timeout=9000, max=1000
+Content-Length: {}
+
+'''.format(len(b_msg))
+        else:
+            b_msg = f_msg.encode('utf-8')
+            txt = '''HTTP/1.1 200 OK
+Content-Type: text/event-stream; charset=UTF-8
+Cache-Control: no-cache
+Connection: keep-alive, Keep-Alive
+Keep-Alive: timeout=9000, max=1000
+Content-Length: {}
+
+'''.format(len(b_msg)).encode('utf-8')
+        try:
+            self.client_socket.sendall(txt + b_msg)
+        except socket.error as e:
+            self.error = e
+        except AttributeError:
+            pass
+
+    def _send_raw(self, msg):
+        if msg.startswith('retry: '):
+            return
         f_msg = msg + '\n'
         if PY2:
             b_msg = f_msg
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=utf-8
+Connection: keep-alive, Keep-Alive
+Keep-Alive: timeout=9000, max=1000
 Content-Length: {}
-Server: PyRadio
 
 '''.format(len(b_msg))
         else:
             b_msg = f_msg.encode('utf-8')
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=UTF-8
+Connection: keep-alive, Keep-Alive
+Keep-Alive: timeout=9000, max=1000
 Content-Length: {}
-Server: PyRadio
 
 '''.format(len(b_msg)).encode('utf-8')
         try:
-            client_socket.sendall(txt + b_msg)
+            self.client_socket.sendall(txt + b_msg)
         except socket.error as e:
             self.error = e
 
-    def _send_text(self, client_socket,
+    def _send_text(self,
                    msg, alert_type='alert-info',
                    content='', put_script=False
     ):
+        if msg.startswith('retry: '):
+            return
         if self._is_html:
             self._html_data['|ALERT|'] = msg
             self._html_data['|ALERT_TYPE|'] = alert_type
             self._html_data['|CONTENT|'] = content
-            self._send_html(client_socket, put_script=put_script)
+            self._send_html(put_script=put_script)
             return
         f_msg = msg + '\n'
         if PY2:
             b_msg = f_msg
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=UTF-8
+Connection: keep-alive, Keep-Alive
+Keep-Alive: timeout=9000, max=1000
 Content-Length: {}
-Server: PyRadio
 
 '''.format(len(b_msg))
         else:
             b_msg = f_msg.encode('utf-8')
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=UTF-8
+Connection: keep-alive, Keep-Alive
+Keep-Alive: timeout=9000, max=1000
 Content-Length: {}
-Server: PyRadio
 
 '''.format(len(b_msg)).encode('utf-8')
         try:
-            client_socket.sendall(txt + b_msg)
+            self.client_socket.sendall(txt + b_msg)
         except socket.error as e:
             self.error = e
 
-    def _send_html(self, client_socket, msg=None, put_script=False):
+    def _send_html(self, msg=None, put_script=False):
         f_msg = self._html + '\n'
         for n in self._html_data.keys():
             f_msg = f_msg.replace(n, self._html_data[n])
@@ -766,20 +909,22 @@ Server: PyRadio
             b_msg = f_msg
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/html; charset=UTF-8
+Connection: keep-alive, Keep-Alive
+Keep-Alive: timeout=9000, max=1000
 Content-Length: {}
-Server: PyRadio
 
 '''.format(len(b_msg))
         else:
             b_msg = f_msg.encode('utf-8')
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/html; charset=UTF-8
+Connection: keep-alive, Keep-Alive
+Keep-Alive: timeout=9000, max=1000
 Content-Length: {}
-Server: PyRadio
 
 '''.format(len(b_msg)).encode('utf-8')
         try:
-            client_socket.sendall(txt + b_msg)
+            self.client_socket.sendall(txt + b_msg)
         except socket.error as e:
             self.error = e
 
