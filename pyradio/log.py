@@ -295,6 +295,7 @@ class Log(object):
                 title = None
                 if msg.startswith('Playing: ') or \
                         msg.startswith('Connecting to: ') or \
+                        msg.startswith('Initialization: ') or \
                         'abnormal' in msg:
                     title = msg
                 elif msg.startswith('Failed to'):
@@ -310,6 +311,7 @@ class Log(object):
                         if self._song_title:
                             title = self._song_title
                 if title:
+                    title = title.replace('Initialization', 'Connecting to')
                     server.send_song_title(title)
                     if old_song_title:
                         with self._song_title_lock:

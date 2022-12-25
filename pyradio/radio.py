@@ -5263,7 +5263,7 @@ class PyRadio(object):
     def _html_play_next_station(self):
         self._reset_status_bar_right()
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            return '<div class="alert alert-success">Operation not permited (not in normal mode)</div>'
+            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
         elif self.player.connecting:
             return '<div class="alert alert-success">Please wait for the player to settle...</div>'
         else:
@@ -5290,7 +5290,7 @@ class PyRadio(object):
     def _html_play_previous_station(self):
         self._reset_status_bar_right()
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            return '<div class="alert alert-success">Operation not permited (not in normal mode)</div>'
+            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
         elif self.player.connecting:
             return '<div class="alert alert-success">Please wait for the player to settle...</div>'
         else:
@@ -5421,7 +5421,10 @@ class PyRadio(object):
         else:
             self._show_delayed_notification('___Titles Log Disabled___')
 
-    def _tag_a_title(self):
+    def _html_tag_a_title(self):
+        return self._tag_a_title(html=True)
+
+    def _tag_a_title(self, html=False):
         if self.player.isPlaying():
             if self._cnf.can_like_a_station():
                 toggled = False
@@ -5434,18 +5437,26 @@ class PyRadio(object):
                     self.toggle_titles_logging()
             else:
                 ret = 2
-
             if ret == 0:
-                self._show_delayed_notification('___Title tagged as liked___')
+                if html:
+                    return '<div class="alert alert-success">Title <b>tagged</b> as liked!</div>'
+                else:
+                    self._show_delayed_notification('___Title tagged as liked___')
             elif ret == 1:
-                self._show_delayed_notification('___Error liking Title___', delay=1.2)
+                if html:
+                    return '<div class="alert alert-danger"><b>Error</b> liking Title</div>'
+                else:
+                    self._show_delayed_notification('___Error liking Title___', delay=1.2)
             else:
-                self._show_delayed_notification('___Title already tagged as liked___')
+                if html:
+                    return '<div class="alert alert-info">Title <b>already tagged</b> as liked!</div>'
+                else:
+                    self._show_delayed_notification('___Title already tagged as liked___')
         else:
-            self._show_delayed_notification('___Error: Player not in playback___', delay=1.2)
-            # if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
-            #     self.ws.close_window()
-            #     self.refreshBody()
+            if html:
+                return '<div class="alert alert-danger">Player is <b>stopped!</b></div>'
+            else:
+                self._show_delayed_notification('___Error: Player not in playback___', delay=1.2)
 
     def _show_stations_history_notification(self, msg_id):
         if self._limited_height_mode or self._limited_width_mode:
@@ -5476,7 +5487,7 @@ class PyRadio(object):
 
     def _html_stations_history_previous(self):
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            return '<div class="alert alert-danger">Operation not permited (not in normal mode)</div>'
+            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
         elif self.player.connecting:
             return '<div class="alert alert-danger">Please wait for the player to settle...</div>'
         else:
@@ -5501,9 +5512,15 @@ class PyRadio(object):
                 self._cnf.play_from_history = True
                 self._cnf.stations_history.play_previous()
 
+    def _html_is_player_stopped(self):
+        if self.player.isPlaying() and \
+                self.player.playback_is_on:
+            return '1'
+        return '0'
+
     def _html_stations_history_next(self):
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            return '<div class="alert alert-danger">Operation not permited (not in normal mode)</div>'
+            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
         elif self.player.connecting:
             return '<div class="alert alert-danger">Please wait for the player to settle...</div>'
         else:
@@ -9155,8 +9172,10 @@ class PyRadio(object):
                 '/log': self._toggle_titles_logging,
                 '/html_log': self._html_toggle_titles_logging,
                 '/like': self._tag_a_title,
+                '/html_like': self._html_tag_a_title,
                 '/title': self._html_song_title,
                 '/html_info': self._html_info,
+                '/html_is_stopped': self._html_is_player_stopped,
             }
         )
         self._remote_control_server_thread = threading.Thread(

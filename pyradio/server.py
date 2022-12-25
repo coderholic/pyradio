@@ -87,6 +87,18 @@ class IPs(object):
 
 
 class PyRadioServer(object):
+    _filter_string = '''
+                    <script>
+                    $(document).ready(function(){
+                      $("#myInput").on("keyup", function() {
+                          var value = $(this).val().toLowerCase();
+                          $("#myTable tr").filter(function() {
+                                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                              });
+                        });
+                    });
+                    </script>
+'''
 
     _html = '''<!DOCTYPE html>
 <html lang="en">
@@ -99,13 +111,25 @@ class PyRadioServer(object):
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
         <style>
 html, body, td, a, a:hover, a:visited{color: #333333;}
-.btn {margin: 1px; width: 80px;}
+.btn {margin: 1px; width: 80px; border-radius: 6px;}
+#the_blocking_box {
+    position: absolute;
+    top: 0;
+    left:0;
+    z-index: 9998;
+    width: 100%;
+    height: 100%;
+    overflow: hiddden;
+    display: none;
+    }
         </style>
     <link rel="shortcut icon" href="https://raw.githubusercontent.com/coderholic/pyradio/master/devel/pyradio.ico"
     </head>
     <body class="container-fluid">
-
-
+        <!--
+        <div id="the_blocking_box">
+        </div>
+        -->
         <div class="row text-center" style="background: green; color: white; padding-bottom: 15px;">
             <h2>PyRadio Remote Control</h2>
         </div>
@@ -128,19 +152,19 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
             </div>
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
-                    <button onclick="js_send_simple_command('/html/volumeup', 500);" type="button" class="btn btn-primary">Volume<br>Up</button>
-                    <button onclick="js_send_simple_command('/html/volumedown', 500);" type="button" class="btn btn-primary">Vulume<br>Down</button>
-                    <button onclick="js_send_simple_command('/html/volumesave', 1500);" type="button" class="btn btn-success">Save<br>Volume</button>
+                    <button id="vu" onclick="js_send_simple_command('/html/volumeup', 500);" type="button" class="btn btn-primary">Volume<br>Up</button>
+                    <button id="vd" onclick="js_send_simple_command('/html/volumedown', 500);" type="button" class="btn btn-primary">Vulume<br>Down</button>
+                    <button id="vs" onclick="js_send_simple_command('/html/volumesave', 1500);" type="button" class="btn btn-success">Save<br>Volume</button>
                     <button id="mute" onclick="js_send_simple_command('/html/mute', 500);" type="button" class="btn btn-warning">Mute<br>Player</button>
                 </div>
             </div>
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
-                    <button onclick="window.location.href='http://|IP|/html/st';" type="button" class="btn btn-success">Stations<br>List</button>
-                    <button onclick="window.location.href='http://|IP|/html/pl';" type="button" class="btn btn-primary">Show<br>Playlists</button>
+                    <button onclick="js_send_simple_command('/html/st', 0);" type="button" class="btn btn-success">Stations<br>List</button>
+                    <button onclick="js_send_simple_command('/html/pl', 0);" type="button" class="btn btn-primary">Show<br>Playlists</button>
                     <button onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
                     <button onclick="js_send_simple_command('/html/log', 1500);" type="button" class="btn btn-warning">Toggle<br>Titles Log</button>
-                    <button onclick="js_send_simple_command('/html/like', 1500);" type="button" class="btn btn-info">Like<br>Title</button>
+                    <button id="like" onclick="js_send_simple_command('/html/like', 1500);" type="button" class="btn btn-info">Like<br>Title</button>
                 </div>
             </div>
         </div>
@@ -166,28 +190,39 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
     let eventSource = new EventSource("/html/title");
 
     eventSource.addEventListener("/html/title", (event) => {
+        console.log("event.data:", event.data);
         $("#song_title").html(event.data);
         error_count = 0;
+        if ( event.data.includes("Player is stopped!") || event.data.includes("Connecting to: ") || event.data.includes("Failed to connect to: ") || event.data.includes("Player terminated abnormally") ){
+            js_enable_buttons_on_stopped(true);
+        } else {
+            js_enable_buttons_on_stopped(false);
+        }
     });
 
     eventSource.onerror = function(m) {
         error_count++;
-        if ( error_count > 10 ) {
-            $("#song_title").html("<b>Connection to Server lost!</b>");
-            js_hide_element("all_buttons");
-            js_hide_element("msg");
-            eventSource.close();
+        if ( error_count > 5 ) {
+            js_close_sse();
         }
     };
+
+    function js_close_sse(){
+        $("#song_title").html("<b>Connection to Server lost!</b>");
+        js_hide_element("all_buttons");
+        js_hide_element("msg");
+        eventSource.close();
+    }
 
     ////////////////////////////////////////////////////////////////////
 
     function js_send_simple_command(the_command, the_timeout){
         $.get(the_command, function(result){
-            console.log(the_command, result, typeof result);
+            // console.log(the_command, result, typeof result);
             //
             //  Check for html to display
             //
+            console.log("result:", result);
             if ( result.length < 5 ) {
                 // console.log("Rejected: " + result)
                 return;
@@ -196,32 +231,72 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
                 // if a title reply gets here,
                 // I have to see where it came from
                 if ( the_command == "/html/toggle" ) {
-                    result = '<div class="alert alert-success">Player is <b>stopped!</b></div>'
-                } else {
+                    result = '<div class="alert alert-success">Playback <b>toggled!</b></div>'
+                } else if ( the_command == "/html/mute"  ) {
                     result = '<div class="alert alert-success">Player mute state <b>toggled!</b></div>'
+                } else {
+                    //console.log("next or previous command!");
+                    var x = result.indexOf("Connecting");
+                    //console.log("x:", x);
+                    if ( x > -1 ){
+                        var st = result.slice(x, result.length-1);
+                        result = st.replace("Connecting to:", '<div class="alert alert-success">Playing <b>') + "</div>";
+                        //console.log("st:", st);
+                        //console.log("result:", result);
+                    } else {
+                        return;
+                    }
                 }
                 // console.log("Rejected: " + result)
             }
             // console.log('Accepted: ' + result)
             clearTimeout(msg_timeout);
             $("#msg_text").html(result);
-            var element = document.getElementById("msg");
-            element.style.display = "block";
+            js_show_element("msg");
             if (the_timeout > 0){
                 msg_timeout = setTimeout(js_hide_msg, the_timeout);
             }
             if ( the_command == "/html/mute" ) {
                 js_fix_muted();
             }
+            console.log("the_command:", the_command)
         });
     }
 
-    function js_fix_muted(){
-        const getData = async () => {
-            const response = await fetch("/html/is_muted")
-            const data = await response.text()
+    function js_fix_stopped(){
+        const getStopped = async () => {
+            const response = await fetch("/html/is_stopped");
+            const data = await response.text();
 
-            console.log("async:", data);
+
+            let b_id = ["vu", "vd", "vs", "mute", "like"];
+            for (let i in b_id) {
+                // console.log("async:", data);
+                if ( data == 0 ){
+                    js_enable_buttons_on_stopped(true);
+                } else {
+                    js_enable_buttons_on_stopped(false);
+                }
+            }
+        }
+        getStopped();
+    }
+
+    function js_enable_buttons_on_stopped(enable){
+        let b_id = ["vu", "vd", "vs", "mute", "like"];
+        for (let i in b_id) {
+            var element = document.getElementById(b_id[i]);
+            // console.log("async:", data);
+            element.disabled = enable;
+        }
+    }
+
+    function js_fix_muted(){
+        const getMuted = async () => {
+            const response = await fetch("/html/is_muted");
+            const data = await response.text();
+
+            // console.log("async:", data);
             var element = document.getElementById("mute");
             if ( data == 0 ){
                 element.className = "btn btn-danger";
@@ -231,13 +306,17 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
                 element.innerHTML = "Mute<br>Player"
             }
         }
-        getData();
-
+        getMuted();
     }
 
-function js_hide_msg(){
+    function js_hide_msg(){
         var element = document.getElementById("msg");
         element.style.display = "none";
+    }
+
+    function js_show_element(the_element){
+        var element = document.getElementById(the_element);
+        element.style.display = "block";
     }
 
     function js_hide_element(the_element){
@@ -245,8 +324,12 @@ function js_hide_msg(){
         element.style.display = "none";
     }
 
-    // $(document).ready(refresh_handler);
-    $(document).ready(js_fix_muted);
+    function js_init(){
+        js_fix_muted();
+        js_fix_stopped();
+    }
+
+    $(document).ready(js_init);
     </script>
     </body>
 </html>
@@ -297,7 +380,7 @@ Restricted Commands
         '/list': 'Listing stations from playlist',
         '/idle': 'Player is idle; operation not applicable...',
         '/error': 'Error in parameter',
-        '/perm': 'Operation not permited (not in normal mode)',
+        '/perm': 'Operation not permitted (not in normal mode)',
         '/log': 'Stations logging toggled',
         '/like': 'Station tagged (liked)',
     }
@@ -391,7 +474,6 @@ Restricted Commands
                 dead_func(self.error)
                 break
             if self._path == '/quit':
-                self.send_song_title('Server is now down!')
                 self.client_socket.close()
                 break
         server.close()
@@ -428,6 +510,10 @@ Restricted Commands
             self.send_song_title(self.song_title())
         elif self._path == '/favicon.ico':
             pass
+        elif self._path == '/is_stopped' and self._is_html:
+            received = self._commands['/html_is_stopped']()
+            logger.error('received = "{}"'.format(received))
+            self._send_raw(received)
         elif self._path == '/is_muted' and self._is_html:
             if self.muted():
                 self._send_raw('0')
@@ -625,14 +711,11 @@ Restricted Commands
                     has_error = False
                     if ret == '/stations':
                         if self._is_html:
-                            self._send_text(
-                                msg='',
-                                alert_type='',
-                                content=self._format_html_table(
-                                    self._list_stations(html=True), 0,
-                                    sel=self.sel()[1]
-                                ),
-                                put_script=True
+                            self._send_raw(
+                                self._format_html_table(
+                                self._list_stations(html=True), 0,
+                                sel=self.sel()[1]
+                                )
                             )
                         else:
                             self._send_text(self._list_stations())
@@ -648,7 +731,7 @@ Restricted Commands
                                 ret = 0
                             self._commands['/jump'](ret)
                             if self._is_html:
-                                self._send_text(' Playing station: <b>{}</b>'.format(self.lists()[0][-1][ret-1][0]))
+                                self._send_raw('<div class="alert alert-success">Playing <b>{}</b></div>'.format(self.lists()[0][-1][ret-1][0]))
                             else:
                                 self._send_text(' Playing station: {}'.format(self.lists()[0][-1][ret-1][0]))
                     has_error = False
@@ -683,8 +766,8 @@ Restricted Commands
                                     # play station from current playlist
                                     self._commands['/jump'](st+1)
                                     if self._is_html:
-                                        self._send_text(
-                                            'Playing station <b>{0}</b> from playlist <i>{1}</i>'.format(
+                                        self._send_raw(
+                                            '<div class="alert alert-success">Playing station <b>{0}</b> from playlist <i>{1}</i></b>'.format(
                                                 self.lists()[0][-1][st][0],
                                                 p_name
                                             )
@@ -714,8 +797,8 @@ Restricted Commands
                                                 # radio.py 8762
                                                 self._commands['open_history'](in_file, item)
                                                 if self._is_html:
-                                                    self._send_text(
-                                                        'Playing station <b>{0}</b> from playlist <i>{1}</i>'.format(
+                                                    self._send_raw(
+                                                        '<div class="alert alert-success">Playing station <b>{0}</b> from playlist <i>{1}</i></div>'.format(
                                                             playlist_stations[st],
                                                             playlist_name
                                                         )
@@ -749,27 +832,21 @@ Restricted Commands
                 elif ret.startswith('/'):
                     if ret == '/stations':
                         if self._is_html:
-                            self._send_text(
-                                msg='',
-                                alert_type='',
-                                content=self._format_html_table(
+                            self._send_raw(
+                                self._format_html_table(
                                     self._list_stations(html=True), 0,
                                     sel=self.sel()[1]
-                                ),
-                                put_script=True
+                                )
                             )
                         else:
                             self._send_text(self._list_stations())
                     elif ret == '/playlists':
                         if self._is_html:
-                            self._send_text(
-                                msg='',
-                                alert_type='',
-                                content=self._format_html_table(
+                            self._send_raw(
+                                self._format_html_table(
                                     self._list_playlists(html=True), 1,
                                     sel=self._get_playlist_id(basename(self.playlist_in_editor()[:-4]))
-                                ),
-                                put_script=True
+                                )
                             )
                         else:
                             self._send_text(self._list_playlists())
@@ -795,15 +872,12 @@ Restricted Commands
                             )
                             if out:
                                 if self._is_html:
-                                    self._send_text(
-                                        msg='',
-                                        alert_type='',
-                                        content=self._format_html_table(
+                                    self._send_raw(
+                                        self._format_html_table(
                                             self._list_stations(stations=out, html=True),
                                             index=2,
-                                            playlist_index=ret,
-                                        ),
-                                        put_script=True
+                                            playlist_index=ret
+                                        )
                                     )
                                 else:
                                     self._send_text(
@@ -1150,12 +1224,14 @@ Content-Length: {}
         index           type of output (stations / playlist) and URL formatter
         playlist_index  playist index (only valid if index == 2)
         '''
-        head_captions = (
+        logger.error('\n\nindex = {0}, playlist_index = {1}\n\n'.format(index, playlist_index))
+        head_captions = [
             'Stations (current playlist)',
             'List of Playlists',
             'Stations from Playlist: "{}"'.format(self.lists()[1][-1][playlist_index][0]) if playlist_index else ''
-        )
+        ]
         url = ['/html/st/{}', '/html/pl/{}', '/html/pl/{0},{1}']
+        timeout = ('1500', '0', '1500')
         head = '''                    <h5>Search field</h5>
                     <input class="form-control" id="myInput" type="text" placeholder="Type to search for a station...">
                     <br>
@@ -1175,15 +1251,15 @@ Content-Length: {}
                 out.append('                            <tr>')
             out.append('                                <td class="text-right">{}</td>'.format(i+1))
             if index < 2:
-                t_url = 'http://|IP|' + url[index].format(i+1)
+                t_url = url[index].format(i+1)
             else:
-                t_url = 'http://|IP|' + url[2].format(playlist_index+1, i+1)
-            out.append('                           <td id="' + str(i+1) + '"><a href="' + t_url + '">' + n + '</a>')
-            out.append('                                </td>')
+                t_url = url[2].format(playlist_index+1, i+1)
+            out.append('                               <td id="' + str(i+1) + '"><a href="#" onclick="js_send_simple_command(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
             out.append('                            </tr>')
         out.append('                        </tbody>')
         out.append('                    </table>')
-        return head + '\n' + '\n'.join(out)
+        return head + '\n' + '\n'.join(out) + self._filter_string
 
     def _read_playlist(self, a_playlist):
         pass
+
