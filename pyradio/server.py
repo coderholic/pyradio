@@ -171,11 +171,11 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
 
 
         <div id="msg" class="row" style="margin-top: 40px;">
-            <div class="col-lg-2">
+            <div class="col-lg-4">
             </div>
-            <div id="msg_text" class="col-lg-8 col-xs-12">
+            <div id="msg_text" class="col-lg-4 col-xs-12">
             </div>
-            <div class="col-lg-2">
+            <div class="col-lg-4">
             </div>
         </div>
 
