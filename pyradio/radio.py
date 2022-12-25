@@ -584,14 +584,20 @@ class PyRadio(object):
         out.append('</div>')
         return '\n'.join(out)
 
+    def _html_init_song_title(self):
+        self._html_song_title()
+
     def _html_song_title(self):
         title = self.log.song_title
-        if title:
-            title = '<b>' + title + '</b>'
-        elif not self.player.isPlaying():
-            title =  '<b>Player is stopped!</b>'
-        else:
-            title = '<b>No Title</b>'
+        if not title:
+            title = self.log.station_that_is_playing_now
+            if title:
+                title = 'Playing: ' + title
+        if not title:
+            if not self.player.isPlaying():
+                title =  'Player is stopped!'
+            else:
+                title = 'No Title'
         # return title
         self._remote_control_server.send_song_title(title)
 
@@ -9176,6 +9182,7 @@ class PyRadio(object):
                 '/title': self._html_song_title,
                 '/html_info': self._html_info,
                 '/html_is_stopped': self._html_is_player_stopped,
+                '/html_init': self._html_init_song_title,
             }
         )
         self._remote_control_server_thread = threading.Thread(

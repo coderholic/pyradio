@@ -62,6 +62,7 @@ class Log(object):
     _desktop_notification_lock = threading.Lock()
     _song_title_lock = threading.Lock()
     _song_title = ''
+    _station_that_is_playing_now = ''
 
     def __init__(self, config, get_web_song_title):
         self._get_web_song_title = get_web_song_title
@@ -80,6 +81,11 @@ class Log(object):
     def song_title(self):
         with self._song_title_lock:
             return self._song_title
+
+    @property
+    def station_that_is_playing_now(self):
+        with self._song_title_lock:
+            return self._station_that_is_playing_now
 
     def setScreen(self, cursesScreen):
         self.cursesScreen = cursesScreen
@@ -185,8 +191,11 @@ class Log(object):
                             d_msg.startswith('mplayer: ') or \
                             d_msg.startswith('vlc: '):
                             self._song_title = 'Player is stopped!'
+                            self._station_that_is_playing_now = ''
                         else:
                             self._song_title = ''
+                            if d_msg.startswith('Playing: '):
+                                self._station_that_is_playing_now = d_msg[9:]
 
                     self.set_win_title(d_msg)
                     self._write_title_to_log(d_msg)

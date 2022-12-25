@@ -130,7 +130,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
         <div id="the_blocking_box">
         </div>
         -->
-        <div class="row text-center" style="background: green; color: white; padding-bottom: 15px;">
+        <div class="row text-center" onclick="js_refresh_page();" style="background: green; color: white; padding-bottom: 15px;">
             <h2>PyRadio Remote Control</h2>
         </div>
         <div id="title_container" class="row" style="margin: 3px; margin-top: 15px;>
@@ -182,6 +182,13 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
     <script>
     var error_count = 0;
     var msg_timeout = 0;
+    var url_to_reload = "";
+
+    function js_refresh_page(){
+        // console.log(window.location.href);
+        // console.log(url_to_reload);
+        window.location.href = url_to_reload;
+    }
 
     ////////////////////////////////////////////////////////////////////
     //                     SSE implementation                         //
@@ -194,9 +201,9 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
         $("#song_title").html(event.data);
         error_count = 0;
         if ( event.data.includes("Player is stopped!") || event.data.includes("Connecting to: ") || event.data.includes("Failed to connect to: ") || event.data.includes("Player terminated abnormally") ){
-            js_enable_buttons_on_stopped(true);
+            js_disable_buttons_on_stopped(true);
         } else {
-            js_enable_buttons_on_stopped(false);
+            js_disable_buttons_on_stopped(false);
         }
     });
 
@@ -230,7 +237,12 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
             if ( result.startsWith("retry: ") ) {
                 // if a title reply gets here,
                 // I have to see where it came from
-                if ( the_command == "/html/toggle" ) {
+                if ( the_command == "/html/init" ) {
+                    var x = result.indexOf("<b>");
+                    var title = result.slice(x, result.length-1);
+                    $("#song_title").html(title);
+                    return;
+                } else if ( the_command == "/html/toggle" ) {
                     result = '<div class="alert alert-success">Playback <b>toggled!</b></div>'
                 } else if ( the_command == "/html/mute"  ) {
                     result = '<div class="alert alert-success">Player mute state <b>toggled!</b></div>'
@@ -273,16 +285,16 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
             for (let i in b_id) {
                 // console.log("async:", data);
                 if ( data == 0 ){
-                    js_enable_buttons_on_stopped(true);
+                    js_disable_buttons_on_stopped(true);
                 } else {
-                    js_enable_buttons_on_stopped(false);
+                    js_disable_buttons_on_stopped(false);
                 }
             }
         }
         getStopped();
     }
 
-    function js_enable_buttons_on_stopped(enable){
+    function js_disable_buttons_on_stopped(enable){
         let b_id = ["vu", "vd", "vs", "mute", "like"];
         for (let i in b_id) {
             var element = document.getElementById(b_id[i]);
@@ -325,8 +337,14 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
     }
 
     function js_init(){
+        url_to_reload = window.location.href;
         js_fix_muted();
         js_fix_stopped();
+        setTimeout(js_init_title, 2000);
+    }
+
+    function js_init_title(){
+        js_send_simple_command("/html/init",0);
     }
 
     $(document).ready(js_init);
@@ -506,7 +524,9 @@ Restricted Commands
             self._is_html = False
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('URL path = {}'.format(self._path))
-        if self._path == '/title':
+        if self._path == '/init':
+            self._commands['/html_init']()
+        elif self._path == '/title':\
             self.send_song_title(self.song_title())
         elif self._path == '/favicon.ico':
             pass
