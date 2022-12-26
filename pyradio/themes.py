@@ -152,6 +152,7 @@ class PyRadioTheme(object):
                 self._cnf.use_transparency = self._transparent
                 # transp = self._transparent if self._cnf.use_transparency else False
             # logger.error('transp = {}'.format(transp))
+            border_color = 16  if curses.COLORS > 16 else 1
             if self._cnf.use_calculated_colors or \
                    self._cnf.has_border_background:
                 if self._cnf.use_transparency:
@@ -169,7 +170,8 @@ class PyRadioTheme(object):
                         9: (6 + self._cnf.start_colors_at, 7 + self._cnf.start_colors_at),
                         10: (1 + self._cnf.start_colors_at, -1),
                         11: (3 + self._cnf.start_colors_at, -1),
-                        12: (10 + self._cnf.start_colors_at, -1)
+                        12: (10 + self._cnf.start_colors_at, -1),
+                        13: (border_color + self._cnf.start_colors_at, -1)
                     }
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -186,7 +188,8 @@ class PyRadioTheme(object):
                         9: (6 + self._cnf.start_colors_at, 7 + self._cnf.start_colors_at),
                         10: (1 + self._cnf.start_colors_at, 15 + self._cnf.start_colors_at),
                         11: (3 + self._cnf.start_colors_at, 15 + self._cnf.start_colors_at),
-                        12: (10 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
+                        12: (10 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        13: (border_color + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
                     }
             else:
                 if self._cnf.use_transparency:
@@ -204,7 +207,8 @@ class PyRadioTheme(object):
                         9: (6 + self._cnf.start_colors_at, 7 + self._cnf.start_colors_at),
                         10: (1 + self._cnf.start_colors_at, -1),
                         11: (3 + self._cnf.start_colors_at, -1),
-                        12: (10 + self._cnf.start_colors_at, -1)
+                        12: (10 + self._cnf.start_colors_at, -1),
+                        13: (border_color + self._cnf.start_colors_at, -1)
                     }
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -221,7 +225,8 @@ class PyRadioTheme(object):
                         9: (6 + self._cnf.start_colors_at, 7 + self._cnf.start_colors_at),
                         10: (1 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
                         11: (3 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
-                        12: (10 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
+                        12: (10 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        13: (border_color + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
                     }
             for k in colors.keys():
                 curses.init_pair(k, colors[k][0], colors[k][1])
@@ -523,7 +528,8 @@ class PyRadioThemeReadWrite(object):
         'Active Station': (3, ),
         'Active Cursor': (6, 7),
         'Normal Cursor': (4, 5),
-        'Edit Cursor': (13, 14)
+        'Edit Cursor': (13, 14),
+        'Border': (16, )
     }
 
     def __init__(self, config):
@@ -605,7 +611,9 @@ class PyRadioThemeReadWrite(object):
                     except IndexError:
                         pass
 
-        # logger.error('\n\nnames = {}\n\n'.format(names))
+        if curses.COLORS > 16 and \
+                'Border' not in names.keys():
+            names['Border'] = [names['Stations'][0]]
 
         self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 0}
         for name in names.keys():

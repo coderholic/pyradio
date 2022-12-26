@@ -221,6 +221,7 @@ class PyRadioConfigWindow(object):
                 self._old_use_transparency == self._saved_config_options['use_transparency'][1] and not self._cnf.params_changed:
             dirty_title = '─ '
             self._cnf.dirty_config = False
+            col = 12
         else:
             dirty_title = ' *'
             # logger.error('config_options = {}'.format(self._config_options))
@@ -230,11 +231,13 @@ class PyRadioConfigWindow(object):
             # logger.error('params_changed = {}'.format(self._cnf.params_changed))
             # logger.error('>>>')
             self._cnf.dirty_config = True
+            col = 12
         X = int((self.maxX - len(self._title) - 1) / 2)
-        try:
-            self._win.addstr(0, X, dirty_title, curses.color_pair(12))
-        except:
-            self._win.addstr(0, X, dirty_title.encode('utf-8'), curses.color_pair(12))
+        for i, n in enumerate(dirty_title):
+            try:
+                self._win.addstr(0, X+i, n, curses.color_pair(col))
+            except:
+                self._win.addstr(0, X+1, n.encode('utf-8'), curses.color_pair(col))
         self._win.addstr(self._title + ' ', curses.color_pair(4))
 
         if self._cnf.distro != 'None':

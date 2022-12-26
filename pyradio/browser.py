@@ -1434,6 +1434,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 current_ping_count=self._default_ping_count,
                 current_ping_timeout=self._default_ping_timeout,
                 init=init,
+                with_browser=True,
                 global_functions=self._global_functions
             )
         self.keyboard_handler = self._config_win
@@ -1680,7 +1681,8 @@ class RadioBrowserConfigWindow(object):
             init=False,
             stations_dir=None,
             distro=None,
-            global_functions=None
+            global_functions=None,
+            with_browser=False
     ):
         ''' Parameters
                 0: working
@@ -1720,6 +1722,7 @@ class RadioBrowserConfigWindow(object):
             [12, 0, 'Default Search Term', 4],
             [13, 4, 'Not implemented yet', 5],
         ]
+        self._with_browser = with_browser
         self._calculate_left_margin()
         if config:
             self._config = config
@@ -1945,7 +1948,10 @@ class RadioBrowserConfigWindow(object):
         else:
             self._too_small = False
 
-        self._win.bkgdset(' ', curses.color_pair(5))
+        if self._with_browser:
+            self._win.bkgdset(' ', curses.color_pair(13))
+        else:
+            self._win.bkgdset(' ', curses.color_pair(12))
         self._win.erase()
         self.print_title()
 
@@ -2661,7 +2667,7 @@ class RadioBrowserSearchWindow(object):
         else:
             self._too_small = False
 
-        self._win.bkgdset(' ', curses.color_pair(5))
+        self._win.bkgdset(' ', curses.color_pair(13))
         self._win.erase()
         self._win.box()
         self._win.addstr(0, int((self.maxX - len(self.TITLE)) / 2),

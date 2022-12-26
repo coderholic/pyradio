@@ -48,6 +48,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
 * [PyRadio Themes](#pyradio-themes)
+        * [Alternative Main Window border color](#alternative-main-window-border-color)
     * [Virtual terminal restrictions](#virtual-terminal-restrictions)
     * [CSS color themes restrictions](#css-color-themes-restrictions)
     * [Secondary windows background](#secondary-windows-background)
@@ -846,6 +847,20 @@ Pressing "**t**" will bring up the *Theme selection window*, which can be used t
 The "*Theme selection window*" will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "**q**" or any other relevant key - pressing "**?**" will bring up its help).
 
 Pressing "**SPACE**", will apply the theme and make it default, and pressing "**c**" will apply the theme and make it default and start a file watch function on the file, so that if the file changes, **PyRadio** will automatically update itself.
+
+#### Alternative Main Window border color
+
+It is also possible to change the **Main Window** border color. This is a feature that has been requested and implemented, but not used by default.
+
+To provide an alternative border color, one would just add the following to a themeu file:
+
+```
+# Border color for the Main Window
+# (background color will come from Stations)
+Border              #69a9a7
+```
+
+**Note:** This color will be used **only** when the trerminal supports more than 16 colors. This is because **Pyradio** already uses colors 0-15, and this borser color will be declaread as color No 16.
 
 ### Virtual terminal restrictions
 

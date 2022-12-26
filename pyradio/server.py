@@ -526,7 +526,7 @@ Restricted Commands
             logger.debug('URL path = {}'.format(self._path))
         if self._path == '/init':
             self._commands['/html_init']()
-        elif self._path == '/title':\
+        elif self._path == '/title':
             self.send_song_title(self.song_title())
         elif self._path == '/favicon.ico':
             pass

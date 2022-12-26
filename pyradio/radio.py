@@ -773,9 +773,9 @@ class PyRadio(object):
                 self.initHead(self._cnf.info)
             ''' for light color scheme '''
             # TODO
-            self.outerBodyWin.bkgdset(' ', curses.color_pair(5))
+            self.outerBodyWin.bkgdset(' ', curses.color_pair(13))
             self.outerBodyWin.erase()
-            self.bodyWin.bkgdset(' ', curses.color_pair(5))
+            self.bodyWin.bkgdset(' ', curses.color_pair(13))
             self.initBody()
 
         #self.stdscr.timeout(100)
@@ -844,9 +844,9 @@ class PyRadio(object):
         try:
             self.headWin.addstr(0, 0, info, curses.color_pair(4))
             if self._cnf.locked:
-                self.headWin.addstr('[', curses.color_pair(5))
+                self.headWin.addstr('[', curses.color_pair(4))
                 self.headWin.addstr('Session Locked', curses.color_pair(4))
-                self.headWin.addstr('] ', curses.color_pair(5))
+                self.headWin.addstr('] ', curses.color_pair(4))
             else:
                 self.headWin.addstr(' ', curses.color_pair(4))
         except:
@@ -992,7 +992,7 @@ class PyRadio(object):
         self._update_history_positions_in_list()
 
     def refreshNoDepencency(self):
-        col = curses.color_pair(5)
+        col = curses.color_pair(13)
         self.outerBodyWin.bkgdset(' ', col)
         self.bodyWin.bkgdset(' ', col)
         self.outerBodyWin.erase()
@@ -1024,7 +1024,7 @@ class PyRadio(object):
         self.bodyWin.refresh()
 
     def refreshNoPlayerBody(self, a_string):
-        col = curses.color_pair(5)
+        col = curses.color_pair(13)
         self.outerBodyWin.bkgdset(' ', col)
         self.bodyWin.bkgdset(' ', col)
         self.outerBodyWin.erase()
@@ -1058,12 +1058,12 @@ class PyRadio(object):
                 if ticks:
                     for n in ticks:
                         if version_info < (3, 0):
-                            self.outerBodyWin.addstr(0, n + 2, u'┬'.encode('utf-8', 'replace'), curses.color_pair(5))
-                            self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, u'┴'.encode('utf-8', 'replace'), curses.color_pair(5))
+                            self.outerBodyWin.addstr(0, n + 2, u'┬'.encode('utf-8', 'replace'), curses.color_pair(13))
+                            self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, u'┴'.encode('utf-8', 'replace'), curses.color_pair(13))
                         else:
                             try:
-                                self.outerBodyWin.addstr(0, n + 2, '┬', curses.color_pair(5))
-                                self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, '┴', curses.color_pair(5))
+                                self.outerBodyWin.addstr(0, n + 2, '┬', curses.color_pair(13))
+                                self.outerBodyWin.addstr(self.outerBodyMaxY - 1, n + 2, '┴', curses.color_pair(13))
                             except:
                                 pass
 
@@ -1077,9 +1077,9 @@ class PyRadio(object):
             self.outerBodyWin.addstr(
                 0,
                 int((self.bodyMaxX - len(w_header)) / 2) - align, '[',
-                curses.color_pair(5))
+                curses.color_pair(13))
             self.outerBodyWin.addstr(w_header, curses.color_pair(4))
-            self.outerBodyWin.addstr(']', curses.color_pair(5))
+            self.outerBodyWin.addstr(']', curses.color_pair(13))
 
         elif cur_mode == self.ws.PLAYLIST_MODE or \
                 self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
@@ -1119,16 +1119,16 @@ class PyRadio(object):
                         self.selection == self.playing:
                     col = curses.color_pair(9)
                     ''' initialize col_sep here to have separated cursor '''
-                    sep_col = curses.color_pair(5)
+                    sep_col = curses.color_pair(13)
                     # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
                 elif lineNum + self.startPos == self.selection:
                     col = curses.color_pair(6)
                     ''' initialize col_sep here to have separated cursor '''
-                    sep_col = curses.color_pair(5)
+                    sep_col = curses.color_pair(13)
                     # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
                 elif lineNum + self.startPos == self.playing:
                     col = curses.color_pair(4)
-                    sep_col = curses.color_pair(5)
+                    sep_col = curses.color_pair(13)
                     # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
             else:
                 ''' this is only for a browser service '''
@@ -1181,6 +1181,11 @@ class PyRadio(object):
                     self.bodyWin.addstr(lineNum, column_num, column_text, col)
             except:
                 pass
+            if column_num > 0:
+                if ticks is None:
+                    ticks = self._cnf.online_browser.get_columns_separators(self.bodyMaxX, adjust_for_body=True)
+                for n in ticks:
+                    self.bodyWin.chgat(lineNum, n, 1, curses.color_pair(13))
 
             if station and self._cnf.browsing_station_service and sep_col:
                 self._change_browser_ticks(lineNum, sep_col, all_ticks=ticks)
@@ -5224,14 +5229,14 @@ class PyRadio(object):
         col = 9 if a_line == self.playing else 6
         # if logger.isEnabledFor(logging.DEBUG):
         #     logger.debug('selecting line {}, color {}'.format(a_line - self.startPos, col))
-        ''' chgat also touches the libe '''
+        ''' chgat also touches the line '''
         try:
             self.bodyWin.chgat(a_line - self.startPos, 0, -1, curses.color_pair(col))
         except:
             pass
         if self._cnf.browsing_station_service:
             try:
-                self._change_browser_ticks(a_line - self.startPos, curses.color_pair(5))
+                self._change_browser_ticks(a_line - self.startPos, curses.color_pair(13))
             except:
                 pass
 
@@ -5243,14 +5248,14 @@ class PyRadio(object):
         col = 4 if a_line == self.playing else 5
         # if logger.isEnabledFor(logging.DEBUG):
         #     logger.debug('unselecting line {}, color {}'.format(a_line - self.startPos, col))
-        ''' chgat also touches the libe '''
+        ''' chgat also touches the line '''
         try:
             self.bodyWin.chgat(a_line - self.startPos, 0, -1, curses.color_pair(col))
         except:
             pass
         if self._cnf.browsing_station_service:
             try:
-                self._change_browser_ticks(a_line - self.startPos, curses.color_pair(5))
+                self._change_browser_ticks(a_line - self.startPos, curses.color_pair(13))
             except:
                 pass
 
@@ -8625,9 +8630,9 @@ class PyRadio(object):
                         pass
                     for j, col in enumerate(column_separator):
                         if version_info < (3, 0):
-                            self.outerBodyWin.addstr(i + 1, col + 2, u'│'.encode('utf-8', 'replace'), curses.color_pair(5))
+                            self.outerBodyWin.addstr(i + 1, col + 2, u'│'.encode('utf-8', 'replace'), curses.color_pair(13))
                         else:
-                            self.outerBodyWin.addstr(i + 1, col + 2, '│', curses.color_pair(5))
+                            self.outerBodyWin.addstr(i + 1, col + 2, '│', curses.color_pair(13))
                         try:
                             if j == highlight:
                                 self.outerBodyWin.addstr(column_name[j], curses.color_pair(sort_column_color))

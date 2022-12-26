@@ -144,7 +144,7 @@ class Log(object):
 
                 first_print = True
                 if msg is not None:
-                    self.msg = msg
+                    self.msg = msg.strip()
                 if suffix is not None:
                     self.suffix = suffix
                 if counter is not None:

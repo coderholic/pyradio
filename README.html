@@ -100,7 +100,7 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
-<li><a href="#pyradio-themes">PyRadio Themes</a>
+<li><a href="#pyradio-themes">PyRadio Themes</a> * <a href="#alternative-main-window-border-color">Alternative Main Window border color</a>
 <ul>
 <li><a href="#virtual-terminal-restrictions">Virtual terminal restrictions</a></li>
 <li><a href="#css-color-themes-restrictions">CSS color themes restrictions</a></li>
@@ -1421,6 +1421,13 @@ transparency        0</pre>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the theme selected in the “<em>Theme selection window</em>”, (or requested using the “<strong>-t</strong>” command line option), is in any way invalid, or is of the old format, <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme and will display a relevant message.</p>
 <p>The “<em>Theme selection window</em>” will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
 <p>Pressing “<strong>SPACE</strong>”, will apply the theme and make it default, and pressing “<strong>c</strong>” will apply the theme and make it default and start a file watch function on the file, so that if the file changes, <strong>PyRadio</strong> will automatically update itself.</p>
+<h4 id="alternative-main-window-border-color">Alternative Main Window border color</h4>
+<p>It is also possible to change the <strong>Main Window</strong> border color. This is a feature that has been requested and implemented, but not used by default.</p>
+<p>To provide an alternative border color, one would just add the following to a themeu file:</p>
+<pre># Border color for the Main Window
+# (background color will come from Stations)
+Border              #69a9a7</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This color will be used <strong>only</strong> when the trerminal supports more than 16 colors. This is because <strong>Pyradio</strong> already uses colors 0-15, and this borser color will be declaread as color No 16.</p>
 <h3 id="virtual-terminal-restrictions">Virtual terminal restrictions</h3>
 <p>After introducing CSS color themes, it has come to my attention that <strong>PyRadio</strong> will not display colors correctly when executed within specific terminals, <em>konsole</em>, <em>yakuake</em>, <em>deepin-teminal</em>, <em>qterminal</em> and <em>terminology</em>, just to name a few.</p>
 <p>Now, I do not know whether this is because of the terminals themselves, python curses implementation or whatever, but that’s that.</p>

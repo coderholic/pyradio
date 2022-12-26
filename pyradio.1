@@ -886,6 +886,29 @@ The \fITheme selection window\fR will remain open after activating a theme, so t
 Pressing "\fISPACE\fR", will apply the theme and make it default, and pressing "\fIc\fR" will apply the theme and make it default and start a file watch function on the file, so that if the file changes, \fBpyradio\fR will automatically update itself.
 
 .PP
+\fBAlternative Main Window border color\fR
+
+.RS 5
+
+It is also possible to change the \fIMain Window\fR border color. This is a feature that has been requested and implemented, but not used by default.
+
+To provide an alternative border color, one would just add the following to a themeu file:
+
+.RS 5
+\fI# Border color for the Main Window
+.br
+\fI# (background color will come from Stations)
+.br
+\fIBorder              #69a9a7\fR
+.RE
+
+.IP \fBNote\fR
+This color will be used \fBonly\fR when the trerminal supports more than 16 colors. This is because \fBpyradio\fR already uses colors 0-15, and this borser color will be declaread as color No 16.
+
+.RE
+
+
+.PP
 \fBVirtual terminal restrictions\fR
 
 .RS 5
