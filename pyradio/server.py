@@ -262,7 +262,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
             }
             // console.log('Accepted: ' + result)
             clearTimeout(msg_timeout);
-            js_set_title("#msg_text", result);
+            js_set_title("#msg_text", result, the_command);
             js_show_element("msg");
             if (the_timeout > 0){
                 msg_timeout = setTimeout(js_hide_msg, the_timeout);
@@ -274,7 +274,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
         });
     }
 
-    function js_set_title(a_tag, a_title){
+    function js_set_title(a_tag, a_title, the_command=''){
         // console.log("    ", last_title);
         // console.log("a_title.length < last_title.length :", a_title.length < last_title.length);
         // console.log("last_title.includes(a_title) :", last_title.includes(a_title));
@@ -284,7 +284,9 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
                 return;
             }
         } else if ( a_tag === "#msg_text" ){
-            a_title = a_title.replace("alert ", "text-center alert ");
+            if ( the_command !== "" && the_command != "/html/info" ) {
+                a_title = a_title.replace("alert ", "text-center alert ");
+            }
         }
 
         // console.log("++++", a_title)
@@ -663,8 +665,8 @@ Restricted Commands
                 self._send_raw(received)
             else:
                 if self.can_send_command():
-                    self._commands['/next']()
                     self._send_text(self._text['/next'], alert_type='alert-success')
+                    self._commands['/next']()
                 else:
                     self._send_text(self._text['/perm'])
         elif self._path in ('/previous', '/p'):
@@ -674,8 +676,8 @@ Restricted Commands
                 self._send_raw(received)
             else:
                 if self.can_send_command():
-                    self._commands['/previous']()
                     self._send_text(self._text['/previous'], alert_type='alert-success')
+                    self._commands['/previous']()
                 else:
                     self._send_text(self._text['/perm'])
         elif self._path in ('/histnext', '/hn'):
@@ -693,8 +695,8 @@ Restricted Commands
                     elif l_item + 1 < llen:
                         go_on = True
                     if go_on:
-                        self._commands['/histnext']()
                         self._send_text(self._text['/histnext'], alert_type='alert-success')
+                        self._commands['/histnext']()
                     else:
                         self._send_text('Already at last history item!')
                 else:
@@ -715,8 +717,8 @@ Restricted Commands
                     elif l_item == 0:
                         go_on = False
                     if go_on:
-                        self._commands['/histprev']()
                         self._send_text(self._text['/histprev'])
+                        self._commands['/histprev']()
                     else:
                         self._send_text('Already at first history item!')
                 else:
