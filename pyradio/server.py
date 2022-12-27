@@ -280,10 +280,13 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
         // console.log("last_title.includes(a_title) :", last_title.includes(a_title));
         if ( a_tag === "#song_title" ){
             if ( a_title.length < last_title.length && last_title.includes(a_title.substring(0, a_title.length - 4)) ){
-                console.log("----", a_title)
+                // console.log("----", a_title)
                 return;
             }
+        } else if ( a_tag === "#msg_text" ){
+            a_title = a_title.replace("alert ", "text-center alert ");
         }
+
         // console.log("++++", a_title)
         $(a_tag).html(a_title);
         if ( a_tag === "#song_title" ){
@@ -1261,18 +1264,17 @@ Content-Length: {}
         index           type of output (stations / playlist) and URL formatter
         playlist_index  playist index (only valid if index == 2)
         '''
-        logger.error('\n\nindex = {0}, playlist_index = {1}\n\n'.format(index, playlist_index))
         head_captions = [
             'Stations (current playlist)',
             'List of Playlists',
-            'Stations from Playlist: "{}"'.format(self.lists()[1][-1][playlist_index][0]) if playlist_index else ''
+            'Stations from Playlist: "{}"'.format(self.lists()[1][-1][playlist_index][0]) if playlist_index is not None else ''
         ]
         url = ['/html/st/{}', '/html/pl/{}', '/html/pl/{0},{1}']
         timeout = ('1500', '0', '1500')
         head = '''                    <h5>Search field</h5>
                     <input class="form-control" id="myInput" type="text" placeholder="Type to search for a station...">
                     <br>
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered">
                         <thead>
                             <tr class="btn-success">
                                 <td colspan="2" style="color: white; font-weight: bolder;">{}</td>
@@ -1283,15 +1285,21 @@ Content-Length: {}
         out = []
         for i, n in enumerate(in_list):
             if sel == i:
-                out.append('                            <tr class="btn-warning">')
+                out.append('                            <tr class="btn-success">')
             else:
                 out.append('                            <tr>')
-            out.append('                                <td class="text-right">{}</td>'.format(i+1))
+            if sel == i:
+                out.append('                                <td class="text-right" style="color: white;">{}</td>'.format(i+1))
+            else:
+                out.append('                                <td class="text-right">{}</td>'.format(i+1))
             if index < 2:
                 t_url = url[index].format(i+1)
             else:
                 t_url = url[2].format(playlist_index+1, i+1)
-            out.append('                               <td id="' + str(i+1) + '"><a href="#" onclick="js_send_simple_command(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
+            if sel == i:
+                out.append('                               <td id="' + str(i+1) + '"><a style="color: white;" href="#" onclick="js_send_simple_command(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
+            else:
+                out.append('                               <td id="' + str(i+1) + '"><a href="#" onclick="js_send_simple_command(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
             out.append('                            </tr>')
         out.append('                        </tbody>')
         out.append('                    </table>')

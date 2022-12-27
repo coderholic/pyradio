@@ -182,23 +182,24 @@ class Log(object):
                             #     logger.error('Error updating the Status Bar')
 
                     with self._song_title_lock:
-                        if d_msg.startswith('Title: '):
-                            self._song_title = d_msg.replace('Title: ', '')
-                        elif 'Title: ' in d_msg:
-                            x = d_msg.index('Title: ')
-                            self._song_title = d_msg[x+7:]
-                        elif d_msg.startswith('mpv: ') or \
-                            d_msg.startswith('mplayer: ') or \
-                            d_msg.startswith('vlc: '):
-                            self._song_title = 'Player is stopped!'
-                            self._station_that_is_playing_now = ''
-                        else:
-                            self._song_title = ''
-                            if d_msg.startswith('Playing: '):
-                                self._station_that_is_playing_now = d_msg[9:]
+                        if msg:
+                            if msg.startswith('Title: '):
+                                self._song_title = msg.replace('Title: ', '')
+                            elif 'Title: ' in msg:
+                                x = msg.index('Title: ')
+                                self._song_title = msg[x+7:]
+                            elif msg.startswith('mpv: ') or \
+                                msg.startswith('mplayer: ') or \
+                                msg.startswith('vlc: '):
+                                self._song_title = 'Player is stopped!'
+                                self._station_that_is_playing_now = ''
+                            else:
+                                self._song_title = ''
+                                if msg.startswith('Playing: '):
+                                    self._station_that_is_playing_now = msg[9:]
 
-                    self.set_win_title(d_msg)
-                    self._write_title_to_log(d_msg)
+                    self.set_win_title(msg)
+                    self._write_title_to_log(msg)
                     self._show_notification(msg)
                     self._set_web_title(msg)
                     if self._show_status_updates:
