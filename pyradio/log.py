@@ -503,48 +503,50 @@ class Log(object):
                 self._cnf._last_liked_title = self._cnf._current_log_title
             except:
                 logger.critical('Error writing LIKED title...')
-        elif d_msg.startswith('Title: '):
-                if logger.isEnabledFor(logging.CRITICAL):
-                    try:
-                        if force or not d_msg in self._cnf._old_log_title:
+        else:
+            if d_msg:
+                if d_msg.startswith('Title: '):
+                        if logger.isEnabledFor(logging.CRITICAL):
                             try:
-                                logger.critical(d_msg.replace('Title: ', '    '))
-                            except:
-                                logger.critical('Error writing title...')
-                            self._cnf._old_log_title = d_msg
-                    except UnicodeDecodeError:
-                        ''' try to handle it for python2 '''
-                        try:
-                            if force or not d_msg.decode('utf-8', 'replace') in self._cnf._old_log_title.decode('utf-8', 'replace'):
+                                if force or not d_msg in self._cnf._old_log_title:
+                                    try:
+                                        logger.critical(d_msg.replace('Title: ', '    '))
+                                    except:
+                                        logger.critical('Error writing title...')
+                                    self._cnf._old_log_title = d_msg
+                            except UnicodeDecodeError:
+                                ''' try to handle it for python2 '''
                                 try:
-                                    logger.critical(d_msg.replace('Title: ', '    '))
+                                    if force or not d_msg.decode('utf-8', 'replace') in self._cnf._old_log_title.decode('utf-8', 'replace'):
+                                        try:
+                                            logger.critical(d_msg.replace('Title: ', '    '))
+                                        except:
+                                            logger.critical('Error writing title...')
+                                        self._cnf._old_log_title = d_msg
                                 except:
                                     logger.critical('Error writing title...')
-                                self._cnf._old_log_title = d_msg
-                        except:
-                            logger.critical('Error writing title...')
-                self._cnf._current_log_title = d_msg
-        elif d_msg.startswith('Playing: '):
-            if logger.isEnabledFor(logging.CRITICAL):
-                try:
-                    if force or not d_msg in self._cnf._old_log_station:
+                        self._cnf._current_log_title = d_msg
+                elif d_msg.startswith('Playing: '):
+                    if logger.isEnabledFor(logging.CRITICAL):
                         try:
-                            logger.critical(d_msg.replace('Playing: ', '>>> Station: '))
-                        except:
-                            logger.critical('Error writing station name...')
-                        self._cnf._old_log_station = d_msg
-                except UnicodeDecodeError:
-                    ''' try to handle it for python2 '''
-                    try:
-                        if force or not d_msg.decode('utf-8', 'replace') in self._cnf._old_log_title.decode('utf-8', 'replace'):
+                            if force or not d_msg in self._cnf._old_log_station:
+                                try:
+                                    logger.critical(d_msg.replace('Playing: ', '>>> Station: '))
+                                except:
+                                    logger.critical('Error writing station name...')
+                                self._cnf._old_log_station = d_msg
+                        except UnicodeDecodeError:
+                            ''' try to handle it for python2 '''
                             try:
-                                logger.critical(d_msg.replace('Playing: ', '>>> Station: '))
+                                if force or not d_msg.decode('utf-8', 'replace') in self._cnf._old_log_title.decode('utf-8', 'replace'):
+                                    try:
+                                        logger.critical(d_msg.replace('Playing: ', '>>> Station: '))
+                                    except:
+                                        logger.critical('Error writing station name...')
+                                    self._cnf._old_log_station = d_msg
                             except:
                                 logger.critical('Error writing station name...')
-                            self._cnf._old_log_station = d_msg
-                    except:
-                        logger.critical('Error writing station name...')
-            self._cnf._current_log_station = d_msg
+                    self._cnf._current_log_station = d_msg
 
     def write_start_log_station_and_title(self):
         if self._cnf._current_log_station:

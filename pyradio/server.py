@@ -4,6 +4,7 @@ import logging
 from os.path import basename
 from sys import platform, version_info
 import requests
+from time import sleep
 
 PY2 = version_info[0] == 2
 logger = logging.getLogger(__name__)
@@ -587,11 +588,8 @@ Restricted Commands
                 self._send_raw(received)
             else:
                 if self.sel()[1] > -1:
+                    self._send_text('Player mute toggled!', alert_type='alert-success')
                     self._commands['/mute']()
-                    if self.muted():
-                        self._send_text('Player muted!', alert_type='alert-success')
-                    else:
-                        self._send_text('Player unmuted!', alert_type='alert-success')
                 else:
                     self._send_text(self._text['/idle'])
         elif self._path in ('/volumesave', '/vs'):
@@ -736,11 +734,11 @@ Restricted Commands
             else:
                 if self.can_send_command():
                     if self.sel()[1] > -1:
-                        self._commands['/stop']()
                         self._send_text(self._text['/stop'], alert_type='alert-success')
+                        self._commands['/stop']()
                     else:
-                        self._commands['/start']()
                         self._send_text(self._text['/start'], alert_type='alert-success')
+                        self._commands['/start']()
                 else:
                     self._send_text(self._text['/perm'])
         elif self._path.startswith('/st/') or \
@@ -771,11 +769,12 @@ Restricted Commands
                             # ret = ret -1 if ret > 0 else 0
                             if ret < 0:
                                 ret = 0
-                            self._commands['/jump'](ret)
                             if self._is_html:
+                                self._commands['/jump'](ret)
                                 self._send_raw('<div class="alert alert-success">Playing <b>{}</b></div>'.format(self.lists()[0][-1][ret-1][0]))
                             else:
                                 self._send_text(' Playing station: {}'.format(self.lists()[0][-1][ret-1][0]))
+                                self._commands['/jump'](ret)
                     has_error = False
             else:
                 self._send_text(self._text['/perm'])
@@ -837,8 +836,8 @@ Restricted Commands
                                                 if logger.isEnabledFor(logging.DEBUG):
                                                     logger.debug('item = {}'.format(item))
                                                 # radio.py 8762
-                                                self._commands['open_history'](in_file, item)
                                                 if self._is_html:
+                                                    self._commands['open_history'](in_file, item)
                                                     self._send_raw(
                                                         '<div class="alert alert-success">Playing station <b>{0}</b> from playlist <i>{1}</i></div>'.format(
                                                             playlist_stations[st],
@@ -854,6 +853,8 @@ Restricted Commands
                                                             pl+1
                                                         )
                                                     )
+                                                    sleep(1)
+                                                    self._commands['open_history'](in_file, item)
                                             else:
                                                 self._send_text(
                                                     'Error: Requested station (id={0}) not found in playlist "{1}" (id={2})'.format(
