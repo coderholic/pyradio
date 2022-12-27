@@ -852,7 +852,7 @@ Pressing "**SPACE**", will apply the theme and make it default, and pressing "**
 
 It is also possible to change the **Main Window** border color. This is a feature that has been requested and implemented, but not used by default.
 
-To provide an alternative border color, one would just add the following to a themeu file:
+To provide an alternative border color, one would just add the following to a theme file:
 
 ```
 # Border color for the Main Window
@@ -860,7 +860,7 @@ To provide an alternative border color, one would just add the following to a th
 Border              #69a9a7
 ```
 
-**Note:** This color will be used **only** when the trerminal supports more than 16 colors. This is because **Pyradio** already uses colors 0-15, and this borser color will be declaread as color No 16.
+**Note:** This color will be used **only** when the trerminal supports more than 16 colors. This is because **Pyradio** already uses colors 0-15, and this border color will be declaread as color No 16.
 
 ### Virtual terminal restrictions
 

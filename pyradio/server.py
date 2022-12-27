@@ -183,10 +183,9 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
     var error_count = 0;
     var msg_timeout = 0;
     var url_to_reload = "";
+    var last_title = "";
 
     function js_refresh_page(){
-        // console.log(window.location.href);
-        // console.log(url_to_reload);
         window.location.href = url_to_reload;
     }
 
@@ -197,8 +196,8 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
     let eventSource = new EventSource("/html/title");
 
     eventSource.addEventListener("/html/title", (event) => {
-        console.log("event.data:", event.data);
-        $("#song_title").html(event.data);
+        // console.log("event.data:", event.data);
+        js_set_title("#song_title", event.data);
         error_count = 0;
         if ( event.data.includes("Player is stopped!") || event.data.includes("Connecting to: ") || event.data.includes("Failed to connect to: ") || event.data.includes("Player terminated abnormally") ){
             js_disable_buttons_on_stopped(true);
@@ -229,7 +228,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
             //
             //  Check for html to display
             //
-            console.log("result:", result);
+            // console.log("result:", result);
             if ( result.length < 5 ) {
                 // console.log("Rejected: " + result)
                 return;
@@ -240,7 +239,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
                 if ( the_command == "/html/init" ) {
                     var x = result.indexOf("<b>");
                     var title = result.slice(x, result.length-1);
-                    $("#song_title").html(title);
+                    js_set_title("#song_title", title);
                     return;
                 } else if ( the_command == "/html/toggle" ) {
                     result = '<div class="alert alert-success">Playback <b>toggled!</b></div>'
@@ -263,7 +262,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
             }
             // console.log('Accepted: ' + result)
             clearTimeout(msg_timeout);
-            $("#msg_text").html(result);
+            js_set_title("#msg_text", result);
             js_show_element("msg");
             if (the_timeout > 0){
                 msg_timeout = setTimeout(js_hide_msg, the_timeout);
@@ -271,8 +270,26 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
             if ( the_command == "/html/mute" ) {
                 js_fix_muted();
             }
-            console.log("the_command:", the_command)
+            // console.log("the_command:", the_command)
         });
+    }
+
+    function js_set_title(a_tag, a_title){
+        // console.log("    ", last_title);
+        // console.log("a_title.length < last_title.length :", a_title.length < last_title.length);
+        // console.log("last_title.includes(a_title) :", last_title.includes(a_title));
+        if ( a_tag === "#song_title" ){
+            if ( a_title.length < last_title.length && last_title.includes(a_title.substring(0, a_title.length - 4)) ){
+                console.log("----", a_title)
+                return;
+            }
+        }
+        // console.log("++++", a_title)
+        $(a_tag).html(a_title);
+        if ( a_tag === "#song_title" ){
+            last_title = a_title;
+            // console.log("set ", last_title)
+        }
     }
 
     function js_fix_stopped(){
