@@ -568,7 +568,7 @@ Restricted Commands
                 logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
-                self._commands['/like']()
+                self._commands['/log']()
                 self._send_text(self._text['/log'], alert_type='alert-success')
         elif self._path in ('/like', '/l'):
             if self._is_html:
