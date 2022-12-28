@@ -777,160 +777,175 @@ Restricted Commands
                                 self._commands['/jump'](ret)
                     has_error = False
             else:
-                self._send_text(self._text['/perm'])
+                if self._is_html:
+                    self._send_raw('<div class="alert alert-danger">' + self._text['/perm'] + '</div>')
+                else:
+                    self._send_text(self._text['/perm'])
         elif self._path.startswith('/playlists') or \
                 self._path.startswith('/pl') or \
                 self._path == '/stations' or \
                 self._path == '/st':
             if  ',' in self._path:
-                sp = self._path.split('/')
-                if ',' not in sp [-1]:
-                    self._send_text(self._text['/error'], alert-danger)
-                else:
-                    if sp[1] not in ('playlists', 'pl'):
-                        self._send_text(self._text['/error'], alert_type='alert-danger')
+                if not self.can_send_command():
+                    if self._is_html:
+                        self._send_raw('<div class="alert alert-danger">' + self._text['/perm'] + '</div>')
                     else:
-                        # get the numbers
-                        pl, st = self._get_numbers(sp[-1])
-                        if pl is None:
+                        self._send_text(self._text['/perm'])
+                else:
+                    sp = self._path.split('/')
+                    if ',' not in sp [-1]:
+                        self._send_text(self._text['/error'], alert-danger)
+                    else:
+                        if sp[1] not in ('playlists', 'pl'):
                             self._send_text(self._text['/error'], alert_type='alert-danger')
                         else:
-                            go_on = True
-                            try:
-                                playlist_name = self.lists()[1][-1][pl][0]
-                            except IndexError:
-                                self._send_text('Error: Playlist not found (id={})'.format(pl+1))
-                                go_on = False
-                            if go_on:
-                                p_name = basename(self.playlist_in_editor()[:-4])
-                                if p_name == playlist_name:
-                                    # play station from current playlist
-                                    self._commands['/jump'](st+1)
-                                    if self._is_html:
-                                        self._send_raw(
-                                            '<div class="alert alert-success">Playing station <b>{0}</b> from playlist <i>{1}</i></b>'.format(
-                                                self.lists()[0][-1][st][0],
-                                                p_name
-                                            )
-                                        )
-                                    else:
-                                        self._send_text(
-                                            'Playing station "{0}" (id={1}) from playlist "{2}" (id={3})'.format(
-                                                self.lists()[0][-1][st][0],
-                                                st+1,
-                                                p_name,
-                                                pl+1
-                                            )
-                                        )
-                                else:
-                                    # need to load a new playlist
-                                    if self.config().dirty_playlist:
-                                        self._send_text(
-                                            'Current playlist not saved; cannot load other playlist...'
-                                        )
-                                    else:
-                                        in_file, playlist_stations = self.config().read_playlist_for_server(playlist_name)
-                                        if playlist_stations:
-                                            if st < len(playlist_stations):
-                                                item = [playlist_name, playlist_stations[st], st]
-                                                if logger.isEnabledFor(logging.DEBUG):
-                                                    logger.debug('item = {}'.format(item))
-                                                # radio.py 8762
-                                                if self._is_html:
-                                                    self._commands['open_history'](in_file, item)
-                                                    self._send_raw(
-                                                        '<div class="alert alert-success">Playing station <b>{0}</b> from playlist <i>{1}</i></div>'.format(
-                                                            playlist_stations[st],
-                                                            playlist_name
-                                                        )
-                                                    )
-                                                else:
-                                                    self._send_text(
-                                                        'Playing station "{0}" (id={1}) from playlist "{2}" (id={3})'.format(
-                                                            playlist_stations[st],
-                                                            st+1,
-                                                            playlist_name,
-                                                            pl+1
-                                                        )
-                                                    )
-                                                    sleep(1)
-                                                    self._commands['open_history'](in_file, item)
-                                            else:
-                                                self._send_text(
-                                                    'Error: Requested station (id={0}) not found in playlist "{1}" (id={2})'.format(
-                                                        st+1, playlist_name, pl+1,
-                                                    )
+                            # get the numbers
+                            pl, st = self._get_numbers(sp[-1])
+                            if pl is None:
+                                self._send_text(self._text['/error'], alert_type='alert-danger')
+                            else:
+                                go_on = True
+                                try:
+                                    playlist_name = self.lists()[1][-1][pl][0]
+                                except IndexError:
+                                    self._send_text('Error: Playlist not found (id={})'.format(pl+1))
+                                    go_on = False
+                                if go_on:
+                                    p_name = basename(self.playlist_in_editor()[:-4])
+                                    if p_name == playlist_name:
+                                        # play station from current playlist
+                                        self._commands['/jump'](st+1)
+                                        if self._is_html:
+                                            self._send_raw(
+                                                '<div class="alert alert-success">Playing station <b>{0}</b> from playlist <i>{1}</i></b>'.format(
+                                                    self.lists()[0][-1][st][0],
+                                                    p_name
                                                 )
+                                            )
                                         else:
                                             self._send_text(
-                                                'Error opening playlist "{0}" (id={1})'.format(
-                                                    playlist_name, pl+1
+                                                'Playing station "{0}" (id={1}) from playlist "{2}" (id={3})'.format(
+                                                    self.lists()[0][-1][st][0],
+                                                    st+1,
+                                                    p_name,
+                                                    pl+1
                                                 )
                                             )
+                                    else:
+                                        # need to load a new playlist
+                                        if self.config().dirty_playlist:
+                                            self._send_text(
+                                                'Current playlist not saved; cannot load other playlist...'
+                                            )
+                                        else:
+                                            in_file, playlist_stations = self.config().read_playlist_for_server(playlist_name)
+                                            if playlist_stations:
+                                                if st < len(playlist_stations):
+                                                    item = [playlist_name, playlist_stations[st], st]
+                                                    if logger.isEnabledFor(logging.DEBUG):
+                                                        logger.debug('item = {}'.format(item))
+                                                    # radio.py 8762
+                                                    if self._is_html:
+                                                        self._commands['open_history'](in_file, item)
+                                                        self._send_raw(
+                                                            '<div class="alert alert-success">Playing station <b>{0}</b> from playlist <i>{1}</i></div>'.format(
+                                                                playlist_stations[st],
+                                                                playlist_name
+                                                            )
+                                                        )
+                                                    else:
+                                                        self._send_text(
+                                                            'Playing station "{0}" (id={1}) from playlist "{2}" (id={3})'.format(
+                                                                playlist_stations[st],
+                                                                st+1,
+                                                                playlist_name,
+                                                                pl+1
+                                                            )
+                                                        )
+                                                        sleep(1)
+                                                        self._commands['open_history'](in_file, item)
+                                                else:
+                                                    self._send_text(
+                                                        'Error: Requested station (id={0}) not found in playlist "{1}" (id={2})'.format(
+                                                            st+1, playlist_name, pl+1,
+                                                        )
+                                                    )
+                                            else:
+                                                self._send_text(
+                                                    'Error opening playlist "{0}" (id={1})'.format(
+                                                        playlist_name, pl+1
+                                                    )
+                                                )
 
             else:
-                ret = self._parse()
-                if ret is None:
-                    self._send_text(self._text['/error'], alert_type='alert-danger')
-                elif ret.startswith('/'):
-                    if ret == '/stations':
-                        if self._is_html:
-                            self._send_raw(
-                                self._format_html_table(
-                                    self._list_stations(html=True), 0,
-                                    sel=self.sel()[1]
-                                )
-                            )
-                        else:
-                            self._send_text(self._list_stations())
-                    elif ret == '/playlists':
-                        if self._is_html:
-                            self._send_raw(
-                                self._format_html_table(
-                                    self._list_playlists(html=True), 1,
-                                    sel=self._get_playlist_id(basename(self.playlist_in_editor()[:-4]))
-                                )
-                            )
-                        else:
-                            self._send_text(self._list_playlists())
+                if not self.can_send_command():
+                    if self._is_html:
+                        self._send_raw('<div class="alert alert-danger">' + self._text['/perm'] + '</div>')
                     else:
-                        self._send_text(self._text[ret])
-
+                        self._send_text(self._text['/perm'])
                 else:
-                    go_on = True
-                    try:
-                        ret = int(ret) - 1
-                    except (ValueError, TypeError):
-                        go_on = False
+                    ret = self._parse()
+                    if ret is None:
                         self._send_text(self._text['/error'], alert_type='alert-danger')
-                    if go_on:
-                        try:
-                            playlist_name = self.lists()[2][-1][ret][0]
-                        except IndexError:
-                            self._send_text('Error: Playlist not found (id={})'.format(ret+1), alert_type='alert-danger')
-                            go_on = False
-                        if go_on:
-                            in_file, out = self.config().read_playlist_for_server(
-                                playlist_name
-                            )
-                            if out:
-                                if self._is_html:
-                                    self._send_raw(
-                                        self._format_html_table(
-                                            self._list_stations(stations=out, html=True),
-                                            index=2,
-                                            playlist_index=ret
-                                        )
+                    elif ret.startswith('/'):
+                        if ret == '/stations':
+                            if self._is_html:
+                                self._send_raw(
+                                    self._format_html_table(
+                                        self._list_stations(html=True), 0,
+                                        sel=self.sel()[1]
                                     )
-                                else:
-                                    self._send_text(
-                                        self._list_stations(playlist_name, out)
-                                    )
+                                )
                             else:
-                                if self._is_html:
-                                    self._send_text('Error reading playlist: <b>{}</b>'.format(playlist_name), alert_type='alert-danger')
+                                self._send_text(self._list_stations())
+                        elif ret == '/playlists':
+                            if self._is_html:
+                                self._send_raw(
+                                    self._format_html_table(
+                                        self._list_playlists(html=True), 1,
+                                        sel=self._get_playlist_id(basename(self.playlist_in_editor()[:-4]))
+                                    )
+                                )
+                            else:
+                                self._send_text(self._list_playlists())
+                        else:
+                            self._send_text(self._text[ret])
+
+                    else:
+                        go_on = True
+                        try:
+                            ret = int(ret) - 1
+                        except (ValueError, TypeError):
+                            go_on = False
+                            self._send_text(self._text['/error'], alert_type='alert-danger')
+                        if go_on:
+                            try:
+                                playlist_name = self.lists()[2][-1][ret][0]
+                            except IndexError:
+                                self._send_text('Error: Playlist not found (id={})'.format(ret+1), alert_type='alert-danger')
+                                go_on = False
+                            if go_on:
+                                in_file, out = self.config().read_playlist_for_server(
+                                    playlist_name
+                                )
+                                if out:
+                                    if self._is_html:
+                                        self._send_raw(
+                                            self._format_html_table(
+                                                self._list_stations(stations=out, html=True),
+                                                index=2,
+                                                playlist_index=ret
+                                            )
+                                        )
+                                    else:
+                                        self._send_text(
+                                            self._list_stations(playlist_name, out)
+                                        )
                                 else:
-                                    self._send_text('Error reading playlist: "{}"'.format(playlist_name), alert_type='alert-danger')
+                                    if self._is_html:
+                                        self._send_text('Error reading playlist: <b>{}</b>'.format(playlist_name), alert_type='alert-danger')
+                                    else:
+                                        self._send_text('Error reading playlist: "{}"'.format(playlist_name), alert_type='alert-danger')
         else:
             self._send_text(self._text['/error'], alert_type='alert-danger')
 

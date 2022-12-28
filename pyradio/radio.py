@@ -7971,6 +7971,9 @@ class PyRadio(object):
                 self.jumpnr = ''
 
     def _html_start_player(self):
+        self._reset_status_bar_right()
+        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
         if self.number_of_items > 0:
             self._start_player()
             return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
@@ -7985,6 +7988,9 @@ class PyRadio(object):
             self.refreshBody()
 
     def _html_stop_player(self):
+        self._reset_status_bar_right()
+        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
+            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
         self._stop_player()
         return '<div class="alert alert-success">Player <b>stopped</b>!</div>'
 
