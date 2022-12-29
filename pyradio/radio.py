@@ -1499,8 +1499,13 @@ class PyRadio(object):
                     self._cnf.online_browser.save_config()
                 self._cnf.online_browser = None
         self._wait_for_threads()
-        if self._remote_control_server:
-            self._remote_control_server.close_server()
+        '''
+        this a daemonic thread, to make sure it always
+        terminates at program exit.
+        If that causes problems, uncomment lines
+        '''
+        # if self._remote_control_server:
+        #     self._remote_control_server.close_server()
         self.restore_colors()
 
     def _wait_for_threads(self):
@@ -9219,6 +9224,13 @@ class PyRadio(object):
                 lambda: self.log.song_title,
             )
         )
+        '''
+        making this a daemonic thread, to make sure it always
+        terminates at program exit.
+        If that causes problems, commane the following line
+        and uncomment lines in ctrl_c_handler()
+        '''
+        self._remote_control_server_thread.daemon = True
         self._remote_control_server_thread.start()
 
     def _stop_remote_control_server(self):

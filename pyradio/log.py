@@ -199,7 +199,7 @@ class Log(object):
                                     self._station_that_is_playing_now = msg[9:]
 
                     self.set_win_title(msg)
-                    self._write_title_to_log(msg)
+                    self._write_title_to_log(msg if msg else 'No')
                     self._show_notification(msg)
                     self._set_web_title(msg)
                     if self._show_status_updates:
@@ -493,10 +493,13 @@ class Log(object):
         return d_title, d_msg
 
     def _write_title_to_log(self, msg=None, force=False):
+        # logger.error('msg = "{}"'.format(msg))
         if msg is None:
             d_msg = None
         else:
             d_msg = msg.replace('[Muted] ', '')
+        if msg == 'No':
+            return
         if d_msg is None and self._cnf._current_log_title:
             try:
                 logger.critical(self._cnf._current_log_title.replace('Title: ', '    ') + ' (LIKED)')
@@ -550,8 +553,10 @@ class Log(object):
 
     def write_start_log_station_and_title(self):
         if self._cnf._current_log_station:
+            # logger.error('self._cnf._current_log_station = "{}"'.format(self._cnf._current_log_station))
             self._write_title_to_log(self._cnf._current_log_station, force=True)
         if self._cnf._current_log_title:
+            # logger.error('self._cnf._current_log_title = "{}"'.format(self._cnf._current_log_title))
             self._write_title_to_log(self._cnf._current_log_title, force=True)
 
     def _get_startup_window_title(self):
