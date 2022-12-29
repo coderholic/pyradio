@@ -2055,6 +2055,8 @@ class PyRadioConfig(PyRadioStations):
                 self.opts['default_station'][1] = 'False'
         # for n in self.opts.keys():
         #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
+        # for n in self.opts.keys():
+        #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
         return 0
 
     def get_last_playlist(self):

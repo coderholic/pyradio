@@ -122,7 +122,6 @@ class PyRadioConfigWindow(object):
             key_pgdown_function_handler=self._go_pgdown,
         )
         self._port_line_editor.visible = False
-        self._port_line_editor.string = '9998'
         self._port_line_editor.bracket = False
         self._port_line_editor._use_paste_mode = False
         self._port_line_editor.set_global_functions(self._global_functions)
@@ -150,6 +149,7 @@ class PyRadioConfigWindow(object):
                 self._headers.append(i)
         # logger.error('{}'.format(self._config_options))
         # logger.error('self._headers = {}'.format(self._headers))
+        self._port_line_editor.string = self._config_options['remote_control_server_port'][1]
         self.init_config_win()
         self.refresh_config_win()
         self._old_use_transparency = self._config_options['use_transparency'][1]
@@ -441,6 +441,10 @@ class PyRadioConfigWindow(object):
         self._config_options['confirm_playlist_reload'][1] = True
         self._config_options['auto_save_playlist'][1] = False
         self._config_options['requested_player'][1] = ''
+        self._config_options['remote_control_server_ip'][1] = 'localhost'
+        self._config_options['remote_control_server_port'][1] = '9998'
+        self._port_line_editor.string = '9998'
+        self._config_options['remote_control_server_auto_start'][1] = False
         ''' Theme
             Put this AFTER applying transparency, so that _do_init_pairs in
             _toggle_transparency does not overwrite pairs with applied theme values
@@ -465,6 +469,7 @@ class PyRadioConfigWindow(object):
 
     def _is_port_invalid(self):
         if 1025 <= int(self._port_line_editor.string) <= 65535:
+            self._config_options['remote_control_server_port'][1] = self._port_line_editor.string
             return False
         return True
 
@@ -513,18 +518,8 @@ class PyRadioConfigWindow(object):
 
         if val[0] == 'remote_control_server_port':
             ret = self._port_line_editor.keypress(self._win, char)
-            logger.error('_port_line_editor ret = {}'.format(ret))
             if ret == 1:
-                pass
                 return -1, []
-            elif ret == 2:
-                '''display help '''
-                pass
-                return -1, []
-            elif ret == -1:
-                pass
-
-
 
         if char in self._global_functions.keys():
             self._global_functions[char]()
@@ -642,52 +637,6 @@ class PyRadioConfigWindow(object):
                 self._win.refresh()
                 return -1, []
 
-        elif val[0] == 'remote_control_server_port':
-            got_it = False
-            port = int(self._config_options[val[0]][1])
-            if char in (curses.KEY_F2, ):
-                port += 1
-                got_it = True
-            elif char in (curses.KEY_F1, ):
-                port -= 1
-                got_it = True
-            elif char in (curses.KEY_F4, ):
-                port += 10
-                got_it = True
-            elif char in (curses.KEY_F3, ):
-                port -= 10
-                got_it = True
-            elif char in (curses.KEY_F6, ):
-                port += 100
-                got_it = True
-            elif char in (curses.KEY_F5, ):
-                port -= 100
-                got_it = True
-            elif char in (curses.KEY_F8, ):
-                port += 1000
-                got_it = True
-            elif char in (curses.KEY_F7, ):
-                port -= 1000
-                got_it = True
-            elif char in (curses.KEY_F10, ):
-                port += 10000
-                got_it = True
-            elif char in (curses.KEY_F9, ):
-                port -= 10000
-                got_it = True
-            if got_it:
-                if port < 1025:
-                    port = 65535
-                elif port > 65534:
-                    port = 1025
-                self._config_options[val[0]][1] = str(port)
-                self._win.addstr(
-                    Y, 3 + len(val[1][0]),
-                    str(port) + '    ', curses.color_pair(6))
-                self._print_title()
-                self._win.refresh()
-                return -1, []
-
         elif val[0] == 'connection_timeout':
             if char in (curses.KEY_RIGHT, ord('l')):
                 t = int(val[1][1])
@@ -743,6 +692,7 @@ class PyRadioConfigWindow(object):
                 old_theme = self._config_options['theme'][1]
                 old_transparency = self._config_options['use_transparency'][1]
                 self._config_options = deepcopy(self._saved_config_options)
+                self._port_line_editor.string = self._config_options['remote_control_server_port'][1]
                 ''' Transparency '''
                 self._config_options['use_transparency'][1] = self._old_use_transparency
                 self._toggle_transparency_function(
