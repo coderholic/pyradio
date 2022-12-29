@@ -88,9 +88,9 @@ class PyRadioConfigWindow(object):
     '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to save a modified playlist whenever it needs saving.', '|', 'Default value: False'])
     _help_text.append(None)
-    _help_text.append(['This is the IP for the Remote Control Server.', '|', 'Available options:', '- localhost', '  PyRadio will be accessible from within the current system only.', '- LAN', '  PyRadio will be accessible from any computer in the local network.', '|', 'One can see the active IP using the "\s" command from the Main program window.', '|', 'Use "h/Left", "l/Right" to change the value.','|', 'Default value: localhost'])
+    _help_text.append(['This is the IP for the Remote Control Server.', '|', 'Available options:', '- localhost', '  PyRadio will be accessible from within the current system only.', '- LAN', '  PyRadio will be accessible from any computer in the local network.', '|', 'One can see the active IP using the "\s" command from the program\'s Main Window.', '|', 'Use "Space", "h/Left", "l/Right" to change the value.','|', 'Default value: localhost'])
     _help_text.append(
-        ['This is the port used by the Remote Control Server (the port the server is listening to).', '|', 'Please make sure that a "free" port is specified here, to avoid any conflicts with existing services and daemons.', '|', 'To adjust the value, use:', '  F1, F2   - to adjust by 1', '  F3, F4   - to adjust by 10', '  F5, F6   - to adjust by 100', '  F7, F8   - to adjust by 1000', '  F9, F10  - to adjust by 10000', '|', 'Valid values: 1025-65535', 'Default value: 9998'])
+        ['This is the port used by the Remote Control Server (the port the server is listening to).', '|', 'Please make sure that a "free" port is specified here, to avoid any conflicts with existing services and daemons.', '|', 'None of the one-letter commands will work here; use the arrows (and PgUp / PgDn) to move to other fields.', '|', 'If an invalid port number is inserted, the cursor will not move to another field.', '|', 'Valid values: 1025-65535', 'Default value: 9998'])
     _help_text.append(['If set to True, the Server wiil be automatically started when PyRadio starts.', 'If set to False, one can start the Server using the "\s" command from the Main program window.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.', '|', "In order to use RadioBrowser, python's requests module must be installed."])
@@ -103,13 +103,38 @@ class PyRadioConfigWindow(object):
                  save_parameters_function,
                  reset_parameters_function,
                  global_functions=None):
+        self._global_functions = set_global_functions(global_functions)
+        self._port_line_editor = SimpleCursesLineEdit(
+            parent=self._win,
+            width=6,
+            begin_y=6,
+            begin_x=16,
+            boxed=False,
+            has_history=False,
+            caption='',
+            box_color=curses.color_pair(6),
+            edit_color=curses.color_pair(6),
+            cursor_color=curses.color_pair(8),
+            unfocused_color=curses.color_pair(4),
+            key_up_function_handler=self._go_up,
+            key_down_function_handler=self._go_down,
+            key_pgup_function_handler=self._go_pgup,
+            key_pgdown_function_handler=self._go_pgdown,
+        )
+        self._port_line_editor.visible = False
+        self._port_line_editor.string = '9998'
+        self._port_line_editor.bracket = False
+        self._port_line_editor._use_paste_mode = False
+        self._port_line_editor.set_global_functions(self._global_functions)
+        self._port_line_editor._paste_mode = False
+        self._port_line_editor.chars_to_accept = [ str(x) for x in range(0, 10)]
+
         self._start = 0
         self.parent = parent
         self._cnf = config
         self._toggle_transparency_function = toggle_transparency_function
         self._show_theme_selector_function = show_theme_selector_function
         self._save_parameters_function = save_parameters_function
-        self._global_functions = set_global_functions(global_functions)
         self._reset_parameters_function = reset_parameters_function
         self._saved_config_options = deepcopy(config.opts)
         self._config_options = deepcopy(config.opts)
@@ -265,6 +290,7 @@ class PyRadioConfigWindow(object):
             #     self._start += 1
             # logger.error('self._start = {}'.format(self._start))
             # for i in range(self._start, len(it_list)):
+            self._port_line_editor.visible = False
             for i in range(self._start, self._start + self.maxY - 2):
                 try:
                     it = it_list[i]
@@ -282,11 +308,26 @@ class PyRadioConfigWindow(object):
                     self._win.hline(i+1-self._start, 1, ' ', hline_width, col)
                 except:
                     logger.error('===== ERROR: {}'.format(i+1))
+                if it[0] == 'Server Port: ':
+                    logger.error('\n\ni = {0}, y = {1}, it[0] = "{2}"'.format(i, i+1-self._start, it[0]))
                 if i in self._headers:
                     self._win.addstr(i+1-self._start, 1, it[0], curses.color_pair(4))
                 else:
+                    on_editor = i+1-self._start if it[0] == 'Server Port: ' else -1
                     self._win.addstr(i+1-self._start, 1, '  ' + it[0], col)
-                    if isinstance(it[1], bool):
+                    if on_editor > -1:
+                        ''' move port editor to line '''
+                        self._port_line_editor.visible = True
+                        self._port_line_editor.move(self._win, on_editor + 1, 16, update=False)
+                        logger.error('{0}: moving to: {1},{2}'.format(on_editor+1, on_editor, 16))
+                        if i == self.__selection:
+                            self._port_line_editor.focused = True
+                            logger.error('line editor focused = True')
+                        else:
+                            self._port_line_editor.focused = False
+                            logger.error('line editor focused = False')
+                        logger.error('line editor string = "{}"'.format(self._port_line_editor.string))
+                    elif isinstance(it[1], bool):
                         self._win.addstr('{}'.format(it[1]), hcol)
                     else:
                         if it[1] is None:
@@ -296,6 +337,8 @@ class PyRadioConfigWindow(object):
                             if it[1] != '-':
                                 self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6]), hcol)
         self._win.refresh()
+        self._port_line_editor.keep_restore_data()
+        self._port_line_editor.show(self._win)
 
     def _get_col_line(self, ind):
         if ind < self._headers:
@@ -420,6 +463,35 @@ class PyRadioConfigWindow(object):
         theme = None
         curses.doupdate()
 
+    def _is_port_invalid(self):
+        if 1025 <= int(self._port_line_editor.string) <= 65535:
+            return False
+        return True
+
+    def _go_up(self):
+        if self._is_port_invalid():
+            return
+        self._put_cursor(-1)
+        self.refresh_selection()
+
+    def _go_down(self):
+        if self._is_port_invalid():
+            return
+        self._put_cursor(1)
+        self.refresh_selection()
+
+    def _go_pgup(self):
+        if self._is_port_invalid():
+            return
+        self._put_cursor(-5)
+        self.refresh_selection()
+
+    def _go_pgdown(self):
+        if self._is_port_invalid():
+            return
+        self._put_cursor(5)
+        self.refresh_selection()
+
     def keypress(self, char):
         ''' Config Window key press
             Returns:
@@ -437,6 +509,23 @@ class PyRadioConfigWindow(object):
         val = list(self._config_options.items())[self.selection]
         logger.error('val = {}'.format(val))
         Y = self.selection - self._start + 1
+
+
+        if val[0] == 'remote_control_server_port':
+            ret = self._port_line_editor.keypress(self._win, char)
+            logger.error('_port_line_editor ret = {}'.format(ret))
+            if ret == 1:
+                pass
+                return -1, []
+            elif ret == 2:
+                '''display help '''
+                pass
+                return -1, []
+            elif ret == -1:
+                pass
+
+
+
         if char in self._global_functions.keys():
             self._global_functions[char]()
         elif val[0] == 'radiobrowser':
@@ -524,7 +613,7 @@ class PyRadioConfigWindow(object):
                 return -1, []
 
         elif val[0] == 'remote_control_server_ip':
-            if char in (curses.KEY_RIGHT, ord('l')):
+            if char in (curses.KEY_RIGHT, ord('l'), ord(' ')):
                 if self._config_options[val[0]][1] == 'localhost':
                     self._config_options[val[0]][1] = 'LAN'
                     disp = 'LAN      '
@@ -628,17 +717,13 @@ class PyRadioConfigWindow(object):
                 self._win.refresh()
                 return -1, []
         if char in (ord('k'), curses.KEY_UP):
-            self._put_cursor(-1)
-            self.refresh_selection()
+            self._go_up()
         elif char in (ord('j'), curses.KEY_DOWN):
-            self._put_cursor(1)
-            self.refresh_selection()
+            self._go_down()
         elif char in (curses.KEY_NPAGE, ):
-            self._put_cursor(5)
-            self.refresh_selection()
+            self._go_pgdown()
         elif char in (curses.KEY_PPAGE, ):
-            self._put_cursor(-5)
-            self.refresh_selection()
+            self._go_pgup()
         elif char in (ord('g'), curses.KEY_HOME):
             self._start = 0
             self.__selection = 1

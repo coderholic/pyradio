@@ -228,7 +228,7 @@ class SimpleCursesWidget(object):
         '''Refresh the widget'''
         pass
 
-    def keypress(char):
+    def keypress(self, char):
         '''Handle keyboard input
 
             Returns
@@ -2823,6 +2823,10 @@ class SimpleCursesLineEdit(object):
 
     _global_functions = {}
 
+    _chars_to_accept = []
+
+    _visible = True
+
     def __init__(self, parent, width, begin_y, begin_x, **kwargs):
 
         self._parent_win = parent
@@ -2866,6 +2870,8 @@ class SimpleCursesLineEdit(object):
                 elif key == 'log_file':
                     self._log_file = value
                     self.log = self._log
+                elif key == 'chars_to_accept':
+                    self._chars_to_accept = value
                 elif key == 'key_up_function_handler':
                     ''' callback function for KEY_UP '''
                     self._key_up_function_handler = value
@@ -2895,6 +2901,27 @@ class SimpleCursesLineEdit(object):
         if self._has_history:
             self._input_history = SimpleCursesLineEditHistory()
         self._calculate_window_metrics()
+
+    @property
+    def visible(self):
+        '''Returns if the widget is visible'''
+        return self._visible
+
+    @visible.setter
+    def visible(self, value):
+        self._visible = value
+
+    @property
+    def chars_to_accept(self):
+        '''
+        Returns the widget's accepted characters
+        If [], all characters are accepted
+        '''
+        return self._chars_to_accept
+
+    @chars_to_accept.setter
+    def chars_to_accept(self, value):
+        self._chars_to_accept = value
 
     @property
     def focused(self):
@@ -3108,6 +3135,7 @@ class SimpleCursesLineEdit(object):
         self._edit_win.erase()
 
         ''' opening '''
+        logger.error('opening = {}'.format(opening))
         if opening:
             if self._restore_data:
                 self._string = self._restore_data[0]
@@ -3119,6 +3147,8 @@ class SimpleCursesLineEdit(object):
             else:
                 self.string = self._displayed_string = ''
                 self._curs_pos = self._disp_curs_pos = self._first = 0
+        logger.error('string = "{}"'.format(self._string))
+        logger.error('string = "{}"'.format(self._displayed_string))
         if self._enabled:
             self._edit_win.addstr(0, 0, self._displayed_string, active_edit_color)
 
@@ -3155,6 +3185,9 @@ class SimpleCursesLineEdit(object):
         self.show(self._parent_win, opening=False)
 
     def show(self, parent_win, **kwargs):
+        if not self._visible:
+            return
+        logger.error('string = "{}"'.format(self._string))
         opening = True
         self._caption_win = None
         self._edit_win = None
@@ -3851,6 +3884,8 @@ class SimpleCursesLineEdit(object):
             if version_info < (3, 0) or (self._pure_ascii and not platform.startswith('win')):
                 if 32 <= char < 127:
                     ''' accept only ascii characters '''
+                    if chr(char) not in self._chars_to_accept:
+                        return 1
                     if len(self._string) == self._first + self._curs_pos:
                         self._string += chr(char)
                         self._add_to_end = True
@@ -3873,6 +3908,8 @@ class SimpleCursesLineEdit(object):
                     if ord(char) > 127:
                         return 1
                 #if len(self._string) == self._first + self._curs_pos:
+                if char not in self._chars_to_accept:
+                    return 1
                 if self._at_end_of_sting():
                     self._string += char
                     self._add_to_end = True
