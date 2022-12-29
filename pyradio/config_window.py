@@ -102,7 +102,9 @@ class PyRadioConfigWindow(object):
                  show_theme_selector_function,
                  save_parameters_function,
                  reset_parameters_function,
-                 global_functions=None):
+                 show_port_number_invalid,
+                 global_functions=None
+        ):
         self._global_functions = set_global_functions(global_functions)
         self._port_line_editor = SimpleCursesLineEdit(
             parent=self._win,
@@ -131,6 +133,7 @@ class PyRadioConfigWindow(object):
         self._start = 0
         self.parent = parent
         self._cnf = config
+        self._show_port_number_invalid = show_port_number_invalid
         self._toggle_transparency_function = toggle_transparency_function
         self._show_theme_selector_function = show_theme_selector_function
         self._save_parameters_function = save_parameters_function
@@ -471,6 +474,7 @@ class PyRadioConfigWindow(object):
         if 1025 <= int(self._port_line_editor.string) <= 65535:
             self._config_options['remote_control_server_port'][1] = self._port_line_editor.string
             return False
+        self._show_port_number_invalid()
         return True
 
     def _go_up(self):

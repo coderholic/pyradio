@@ -390,7 +390,7 @@ Long             Short      Description
 /log             /g         toggle stations logging
 /like            /l         tag (like) station
 
-Restricted Commands
+Restricted Commands (Main mode only)
 --------------------------------------------------------------------
 /toggle          /t         toggle playback
 /playlists       /pl        get playlists list

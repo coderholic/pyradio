@@ -2201,6 +2201,13 @@ class PyRadio(object):
         else:
             self._redisplay[self.ws.operation_mode]()
 
+    def _show_port_number_invalid(self):
+        self._show_notification_with_delay(
+                txt='___Invalid port number!!!___',
+                mode_to_set=self.ws.operation_mode,
+                delay=1.25,
+                callback_function=self.refreshBody)
+
     def _show_playlist_recovered(self):
         self._show_notification_with_delay(
                 txt='___Playlist recovered!!!___',
@@ -4412,6 +4419,7 @@ class PyRadio(object):
                 self._show_theme_selector_from_config,
                 self._save_parameters,
                 self._reset_parameters,
+                self._show_port_number_invalid,
                 global_functions=self._global_functions
             )
         else:
@@ -5560,7 +5568,8 @@ class PyRadio(object):
         txt = '''
                |PyRadio Remote Control Server| is active!
 
-               ||_____Server IP: |{}
+               ||Text Address: |http://{0}
+               ||_Web Address: |http://{0}/html
 
                ||Press "|s|" to stop it, or'''.format(
             self._remote_control_server.ip + \
