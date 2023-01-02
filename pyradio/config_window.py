@@ -105,6 +105,27 @@ class PyRadioConfigWindow(object):
                  show_port_number_invalid,
                  global_functions=None
         ):
+        self._local_functions = {
+            ord('j'): self._go_down,
+            curses.KEY_DOWN: self._go_down,
+            ord('k'): self._go_up,
+            curses.KEY_UP: self._go_up,
+            curses.KEY_PPAGE: self._go_pgup,
+            curses.KEY_NPAGE: self._go_pgdown,
+            ord('g'): self._go_home,
+            curses.KEY_HOME: self._go_home,
+            ord('G'): self._go_end,
+            curses.KEY_END: self._go_end,
+            ord('d'): self._go_default,
+            ord('r'): self._go_saved,
+            curses.KEY_EXIT: self._go_exit,
+            27: self._go_exit,
+            ord('q'): self._go_exit,
+            ord('h'): self._go_exit,
+            curses.KEY_LEFT: self._go_exit,
+            ord('s'): self._go_save,
+        }
+
         self._global_functions = set_global_functions(global_functions)
         self._port_line_editor = SimpleCursesLineEdit(
             parent=self._win,
@@ -129,6 +150,7 @@ class PyRadioConfigWindow(object):
         self._port_line_editor.set_global_functions(self._global_functions)
         self._port_line_editor._paste_mode = False
         self._port_line_editor.chars_to_accept = [ str(x) for x in range(0, 10)]
+        self._port_line_editor.set_local_functions(self._local_functions)
 
         self._start = 0
         self.parent = parent
@@ -227,6 +249,8 @@ class PyRadioConfigWindow(object):
         else:
             self.too_small = False
         if self.too_small:
+            self._port_line_editor.visible = False
+            # self._port_line_editor.visible = False
             msg = 'Window too small to display content!'
             if self.maxX < len(msg) + 2:
                 msg = 'Window too small!'
@@ -340,8 +364,9 @@ class PyRadioConfigWindow(object):
                             if it[1] != '-':
                                 self._win.addstr('{}'.format(it[1][:self._second_column - len(it[0]) - 6]), hcol)
         self._win.refresh()
-        self._port_line_editor.keep_restore_data()
-        self._port_line_editor.show(self._win)
+        if self._port_line_editor.visible:
+            self._port_line_editor.keep_restore_data()
+            self._port_line_editor.show(self._win)
 
     def _get_col_line(self, ind):
         if ind < self._headers:
@@ -501,6 +526,89 @@ class PyRadioConfigWindow(object):
         self._put_cursor(5)
         self.refresh_selection()
 
+    def _go_home(self):
+        if self._is_port_invalid():
+            return
+        self._start = 0
+        self.__selection = 1
+        self.refresh_selection()
+
+    def _go_end(self):
+        if self._is_port_invalid():
+            return
+        self.__selection = self.number_of_items - 1
+        self._start = self.__selection - self.maxY + 2
+        self._put_cursor(0)
+        self.refresh_selection()
+
+    def _go_default(self):
+        self._load_default_values()
+        self.refresh_selection()
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Default options loaded')
+
+    def _go_saved(self):
+        if self._cnf.use_themes:
+            old_theme = self._config_options['theme'][1]
+            old_transparency = self._config_options['use_transparency'][1]
+            self._config_options = deepcopy(self._saved_config_options)
+            self._port_line_editor.string = self._config_options['remote_control_server_port'][1]
+            ''' Transparency '''
+            self._config_options['use_transparency'][1] = self._old_use_transparency
+            self._toggle_transparency_function(
+                changed_from_config_window=True,
+                force_value=self._old_use_transparency)
+            ''' Theme
+                Put it after applying transparency, so that saved color_pairs
+                do not get loaded instead of active ones
+            '''
+            self._config_options['theme'][1] = self._old_theme
+            self._saved_config_options['theme'][1] = self._old_theme
+            self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
+        self._reset_parameters_function()
+        self.refresh_selection()
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Saved options loaded')
+
+    def _go_exit(self):
+        self._win.nodelay(True)
+        char = self._win.getch()
+        self._win.nodelay(False)
+        if char == -1:
+            ''' ESCAPE '''
+            logger.error('dirty config is {}, and ESC pressed'.format(self._cnf.dirty_config))
+            self._saved_config_options['theme'][1] = self._old_theme
+            self._cnf.opts['theme'][1] = self._old_theme
+            self._cnf.theme = self._old_theme
+
+    def _go_save(self):
+        if self._is_port_invalid():
+            return
+        ''' save and exit '''
+        self._old_theme = self._config_options['theme'][1]
+        if self._saved_config_options['enable_mouse'][1] == self._config_options['enable_mouse'][1]:
+            self.mouse_support_option_changed = False
+        else:
+            self.mouse_support_option_changed = True
+        if self._saved_config_options['calculated_color_factor'][1] == self._config_options['calculated_color_factor'][1]:
+            self.need_to_update_theme = False
+        else:
+            self.need_to_update_theme = True
+        self._saved_config_options = deepcopy(self._config_options)
+        if self._cnf.opts != self._saved_config_options:
+            ''' check if player has changed '''
+            if self._cnf.opts['player'][1] != self._saved_config_options['player'][1]:
+                self._cnf.player_changed = True
+                self._cnf.player_values = [self._cnf.opts['player'][1], self._saved_config_options['player'][1]]
+            self._cnf.opts = deepcopy(self._saved_config_options)
+            self._old_theme == self._saved_config_options['theme'][1]
+            self._config_options = deepcopy(self._cnf.opts)
+            self._cnf.dirty_config = True
+        else:
+            self._cnf.dirty_config = False
+        self._save_parameters_function()
+        return True
+
     def keypress(self, char):
         ''' Config Window key press
             Returns:
@@ -520,17 +628,25 @@ class PyRadioConfigWindow(object):
         Y = self.selection - self._start + 1
 
 
-        if val[0] == 'remote_control_server_port':
-            ret = self._port_line_editor.keypress(self._win, char)
-            if ret == 1:
-                return -1, []
+        if char in self._local_functions.keys():
+            ret = self._local_functions[char]()
+            if self._local_functions[char] == self._go_exit:
+                return 1, []
+            elif self._local_functions[char] == self._go_save and ret:
+                return 0, []
 
-        if char in self._global_functions.keys():
+        elif char in self._global_functions.keys():
             self._global_functions[char]()
+
         elif val[0] == 'radiobrowser':
             if char in (curses.KEY_RIGHT, ord('l'),
                         ord(' '), curses.KEY_ENTER, ord('\n')):
                 return 3, []
+
+        elif val[0] == 'remote_control_server_port':
+            ret = self._port_line_editor.keypress(self._win, char)
+            if ret == 1:
+                return -1, []
 
         elif val[0] == 'enable_notifications':
             if char in (curses.KEY_RIGHT, ord('l')):
@@ -669,89 +785,8 @@ class PyRadioConfigWindow(object):
                 self._print_title()
                 self._win.refresh()
                 return -1, []
-        if char in (ord('k'), curses.KEY_UP):
-            self._go_up()
-        elif char in (ord('j'), curses.KEY_DOWN):
-            self._go_down()
-        elif char in (curses.KEY_NPAGE, ):
-            self._go_pgdown()
-        elif char in (curses.KEY_PPAGE, ):
-            self._go_pgup()
-        elif char in (ord('g'), curses.KEY_HOME):
-            self._start = 0
-            self.__selection = 1
-            self.refresh_selection()
-        elif char in (ord('G'), curses.KEY_END):
-            self.__selection = self.number_of_items - 1
-            self._start = self.__selection - self.maxY + 2
-            self._put_cursor(0)
-            self.refresh_selection()
-        elif char in (ord('d'), ):
-            self._load_default_values()
-            self.refresh_selection()
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('Default options loaded')
-        elif char in (ord('r'), ):
-            if self._cnf.use_themes:
-                old_theme = self._config_options['theme'][1]
-                old_transparency = self._config_options['use_transparency'][1]
-                self._config_options = deepcopy(self._saved_config_options)
-                self._port_line_editor.string = self._config_options['remote_control_server_port'][1]
-                ''' Transparency '''
-                self._config_options['use_transparency'][1] = self._old_use_transparency
-                self._toggle_transparency_function(
-                    changed_from_config_window=True,
-                    force_value=self._old_use_transparency)
-                ''' Theme
-                    Put it after applying transparency, so that saved color_pairs
-                    do not get loaded instead of active ones
-                '''
-                self._config_options['theme'][1] = self._old_theme
-                self._saved_config_options['theme'][1] = self._old_theme
-                self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
-            self._reset_parameters_function()
-            self.refresh_selection()
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('Saved options loaded')
-        elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):
-            self._win.nodelay(True)
-            char = self._win.getch()
-            self._win.nodelay(False)
-            if char == -1:
-                ''' ESCAPE '''
-                logger.error('dirty config is {}, and ESC pressed'.format(self._cnf.dirty_config))
-                self._saved_config_options['theme'][1] = self._old_theme
-                self._cnf.opts['theme'][1] = self._old_theme
-                self._cnf.theme = self._old_theme
-                # if self._cnf.dirty_config:
-                #     return 2, []
-                return 1, []
-        elif char in (ord('s'), ):
-            ''' save and exit '''
-            self._old_theme = self._config_options['theme'][1]
-            if self._saved_config_options['enable_mouse'][1] == self._config_options['enable_mouse'][1]:
-                self.mouse_support_option_changed = False
-            else:
-                self.mouse_support_option_changed = True
-            if self._saved_config_options['calculated_color_factor'][1] == self._config_options['calculated_color_factor'][1]:
-                self.need_to_update_theme = False
-            else:
-                self.need_to_update_theme = True
-            self._saved_config_options = deepcopy(self._config_options)
-            if self._cnf.opts != self._saved_config_options:
-                ''' check if player has changed '''
-                if self._cnf.opts['player'][1] != self._saved_config_options['player'][1]:
-                    self._cnf.player_changed = True
-                    self._cnf.player_values = [self._cnf.opts['player'][1], self._saved_config_options['player'][1]]
-                self._cnf.opts = deepcopy(self._saved_config_options)
-                self._old_theme == self._saved_config_options['theme'][1]
-                self._config_options = deepcopy(self._cnf.opts)
-                self._cnf.dirty_config = True
-            else:
-                self._cnf.dirty_config = False
-            self._save_parameters_function()
-            return 0, [1]
-        elif char in (
+
+        if char in (
                 curses.KEY_ENTER, ord('\n'),
                 ord('\r'), ord(' '), ord('l'), curses.KEY_RIGHT):
             ''' alter option value '''
@@ -791,6 +826,7 @@ class PyRadioConfigWindow(object):
                     force_value=not self._config_options['use_transparency'][1]
                 )
                 self.refresh_selection()
+
         return -1, []
 
 

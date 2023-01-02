@@ -5,6 +5,8 @@ from os.path import basename
 from sys import platform, version_info
 import requests
 from time import sleep
+from .simple_curses_widgets import SimpleCursesLineEdit
+
 
 PY2 = version_info[0] == 2
 logger = logging.getLogger(__name__)
@@ -478,8 +480,7 @@ Restricted Commands (Main mode only)
             server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             server.bind((self._bind_ip, self._bind_port))
         except (OSError, socket.error) as e:
-            if logger.isEnabledFor(logger.ERROR):
-                logger.error('Remote Control Server start error: "{}"'.format(e))
+            logger.error('Remote Control Server start error: "{}"'.format(e))
             server.close()
             error_func(e)
             return
@@ -489,8 +490,7 @@ Restricted Commands (Main mode only)
             else:
                 server.listen()  # max backlog of connections
         except (OSError, socket.error) as e:
-            if logger.isEnabledFor(logger.ERROR):
-                logger.error('Remote Control Server error: "{}"'.format(e))
+            logger.error('Remote Control Server error: "{}"'.format(e))
             server.close()
             error_func(e)
             return
@@ -533,8 +533,12 @@ Restricted Commands (Main mode only)
         except:
             rcv = 'Unicode Error'
         sp = rcv.split(' ')
-        self._path = sp[1]
 
+
+        try:
+            self._path = sp[1]
+        except IndexError:
+            self._path = ''
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Remote command: "{}"'.format(self._path))
 
@@ -1325,4 +1329,3 @@ Content-Length: {}
 
     def _read_playlist(self, a_playlist):
         pass
-

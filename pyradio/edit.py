@@ -1272,4 +1272,115 @@ class PyRadioConnectionType(object):
         return 0
 
 
+class PyRadioServerWindow(object):
+
+    _win = None
+
+    def __init__(
+            self,
+            parent,
+            config,
+            port_number_error_message=None,
+            global_functions=None
+    ):
+        self._cnf = config
+        self._parent = parent
+        self._win = None
+        self._global_functions = global_functions
+        self.maxY, self.maxX = (10, 55)
+        self._get_window()
+        self._showed = False
+        self._selection = 0
+        self._field_x = 4 +  len('Server Port: ')
+        self._the_ip = self._cnf.active_remote_control_server_ip
+        self._the_port = self._cnf.active_remote_control_server_port
+        self._editor = None
+
+    def show(self, parent=None):
+        if parent:
+            self._parent = parent
+            self._get_window()
+            self._win.bkgdset(' ', curses.color_pair(11))
+            self._win.erase()
+            self._win.box()
+            self._show_title()
+
+        if self._editor is None:
+            self._editor = SimpleCursesLineEdit(
+                parent=self._win,
+                width=self._field_width,
+                begin_y=self.Y + 5,
+                begin_x=self.X + self._field_x,
+                boxed=False,
+                has_history=False,
+                caption='',
+                box_color=curses.color_pair(6),
+                edit_color=curses.color_pair(6),
+                cursor_color=curses.color_pair(8),
+                unfocused_color=curses.color_pair(11),
+                key_up_function_handler=self._go_up,
+                key_down_function_handler=self._go_down,
+            )
+            self._editor.visible = True
+            self._editor.bracket = False
+            self._editor._use_paste_mode = False
+            self._editor.set_global_functions(self._global_functions)
+            self._editor._paste_mode = False
+            self._editor.chars_to_accept = [ str(x) for x in range(0, 10)]
+            self._editor.set_local_functions(
+                local_functions = {
+                    ord('j'): self._go_down,
+                    ord('k'): self._go_up
+                }
+            )
+            self._editor.string = self._the_port
+
+
+        self._win.addstr(2, 2, 'The server is ', curses.color_pair(10))
+        self._win.addstr('not active', curses.color_pair(11))
+
+        self._win.addstr(4, 4, '  Server IP: ', curses.color_pair(10))
+        if self._selection == 0:
+            self._win.addstr(self._the_ip.ljust(self._field_width, ' '), curses.color_pair(6))
+        else:
+            self._win.addstr(self._the_ip.ljust(self._field_width, ' '), curses.color_pair(10))
+        self._win.addstr(5, 4, 'Server Port: ', curses.color_pair(10))
+        self._win.addstr(7, 2, 'Press ', curses.color_pair(10))
+        self._win.addstr('s', curses.color_pair(11))
+        self._win.addstr(' to start the server, or ', curses.color_pair(10))
+        self._win.addstr(8, 2, 'any other key to hide this window...', curses.color_pair(10))
+
+        self._editor.focused = False if self._selection == 0 else True
+        self._win.refresh()
+        self._editor.keep_restore_data()
+        self._editor.show(self._win)
+        self._showed = True
+        logger.error('_the_port = "{}"'.format(self._the_port))
+
+    def _get_window(self):
+        self.max_parentY, self.max_parentX = self._parent.getmaxyx()
+        self.Y = int((self.max_parentY - self.maxY)/ 2) - 1
+        self.X = int((self.max_parentX -self.maxX)/ 2)
+        self._win = curses.newwin(
+            self.maxY, self.maxX,
+            self.Y, self.X
+        )
+        self._field_width = self.maxX - len('Server Port: ') - 6
+
+    def _show_title(self):
+        msg = ' PyRadio Remote Control '
+        self._win.addstr(0, int((self.maxX - len(msg)) / 2), msg, curses.color_pair(11))
+
+    def _go_up(self):
+        pass
+
+    def _go_down(self):
+        pass
+
+    def keypress(self, char):
+        pass
+
+
+
+
 

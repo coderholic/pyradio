@@ -1995,7 +1995,7 @@ class PyRadioConfig(PyRadioStations):
                            'vlc_parameter'):
                 self._config_to_params(sp)
             elif sp[0] == 'remote_control_server_ip':
-                hosts = ('localhost', 'LAN', 'lan')
+                hosts = ('localhost', 'LAN')
                 sp[1] = sp[1].strip()
                 x = [r for r in hosts if r == sp[1]]
                 if x:
@@ -2007,7 +2007,10 @@ class PyRadioConfig(PyRadioStations):
                      x = int(sp[1])
                 except (ValueError, TypeError):
                     x = 9998
-                self.opts['remote_control_server_port'][1] = str(x)
+                if 1025 <= x <= 65535:
+                    self.opts['remote_control_server_port'][1] = str(x)
+                else:
+                    self.opts['remote_control_server_port'][1] = '9998'
             elif sp[0] == 'remote_control_server_auto_start':
                 if sp[1].lower() == 'true':
                     self.opts['remote_control_server_auto_start'][1] = True

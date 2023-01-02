@@ -2443,7 +2443,12 @@ class SimpleCursesCheckBox(SimpleCursesWidget):
     def keypress(self, char):
         if self._focused and \
                 self.enabled and \
-                char in (ord(' '), curses.KEY_ENTER):
+                char in (
+                    ord(' '),
+                    curses.KEY_ENTER,
+                    ord('\n'),
+                    ord('\r')
+                ):
             self.checked = not self._checked
             if self._checked and \
                     self._callback_function is not None:
@@ -2822,6 +2827,7 @@ class SimpleCursesLineEdit(object):
     _mode_changed = None
 
     _global_functions = {}
+    _local_functions = {}
 
     _chars_to_accept = []
 
@@ -3039,6 +3045,9 @@ class SimpleCursesLineEdit(object):
     def getmaxyx(self):
         return self._caption_win.getmaxyx()
 
+    def set_local_functions(self, local_functions):
+        self._local_functions = local_functions
+
     def set_global_functions(self, global_functions):
         self._global_functions = {}
         if global_functions is not None:
@@ -3148,7 +3157,7 @@ class SimpleCursesLineEdit(object):
                 self.string = self._displayed_string = ''
                 self._curs_pos = self._disp_curs_pos = self._first = 0
         logger.error('string = "{}"'.format(self._string))
-        logger.error('string = "{}"'.format(self._displayed_string))
+        logger.error('displayed string = "{}"'.format(self._displayed_string))
         if self._enabled:
             self._edit_win.addstr(0, 0, self._displayed_string, active_edit_color)
 
@@ -3185,8 +3194,6 @@ class SimpleCursesLineEdit(object):
         self.show(self._parent_win, opening=False)
 
     def show(self, parent_win, **kwargs):
-        if not self._visible:
-            return
         logger.error('string = "{}"'.format(self._string))
         opening = True
         self._caption_win = None
@@ -3216,6 +3223,10 @@ class SimpleCursesLineEdit(object):
             else:
                 self._caption_win.bkgdset(' ', self.box_color)
                 self._edit_win.bkgdset(' ', self.box_color)
+        if not self._visible:
+            self._caption_win.refresh()
+            self._edit_win.refresh()
+            return
         if self._boxed:
             self._caption_win.box()
             if self._disp_title:
@@ -3535,6 +3546,14 @@ class SimpleCursesLineEdit(object):
             return 1
         if self.log is not None:
             self.log('char = {}\n'.format(char))
+
+        if char in self._local_functions.keys():
+            self._backslash_pressed = False
+            if not self._paste_mode_always_on:
+                self._paste_mode = False
+                if self._mode_changed:
+                    self._mode_changed()
+            self._local_functions[char]()
 
         if char in self._global_functions.keys() and \
                 self._backslash_pressed:
@@ -3884,8 +3903,9 @@ class SimpleCursesLineEdit(object):
             if version_info < (3, 0) or (self._pure_ascii and not platform.startswith('win')):
                 if 32 <= char < 127:
                     ''' accept only ascii characters '''
-                    if chr(char) not in self._chars_to_accept:
-                        return 1
+                    if self._chars_to_accept:
+                        if chr(char) not in self._chars_to_accept:
+                            return 1
                     if len(self._string) == self._first + self._curs_pos:
                         self._string += chr(char)
                         self._add_to_end = True
@@ -3908,8 +3928,9 @@ class SimpleCursesLineEdit(object):
                     if ord(char) > 127:
                         return 1
                 #if len(self._string) == self._first + self._curs_pos:
-                if char not in self._chars_to_accept:
-                    return 1
+                if self._chars_to_accept:
+                    if char not in self._chars_to_accept:
+                        return 1
                 if self._at_end_of_sting():
                     self._string += char
                     self._add_to_end = True

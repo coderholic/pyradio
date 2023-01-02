@@ -34,7 +34,7 @@ from .common import *
 from .window_stack import Window_Stack
 from .config_window import *
 from .log import Log
-from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType
+from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType, PyRadioServerWindow
 from .themes import *
 from .cjkwrap import cjklen
 from . import player
@@ -260,6 +260,8 @@ class PyRadio(object):
 
     _last_html_song_title = ''
 
+    _remote_control_window = None
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -425,6 +427,7 @@ class PyRadio(object):
                 self.ws.REMOTE_CONTROL_SERVER_START_ERROR_MODE: self._print_remote_control_server_error,
                 self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE: self._print_remote_control_server_dead_error,
                 self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
+                self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE: self._show_remote_control_server_not_active,
                 }
 
         ''' list of help functions '''
@@ -453,7 +456,6 @@ class PyRadio(object):
                 self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
                 self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
                 self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
-                self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
         }
 
         ''' search classes
@@ -588,18 +590,19 @@ class PyRadio(object):
         self._html_song_title()
 
     def _html_song_title(self):
-        title = self.log.song_title
-        if not title:
-            title = self.log.station_that_is_playing_now
-            if title:
-                title = 'Playing: ' + title
-        if not title:
-            if not self.player.isPlaying():
-                title =  'Player is stopped!'
-            else:
-                title = 'No Title'
-        # return title
-        self._remote_control_server.send_song_title(title)
+        if self._remote_control_server:
+            title = self.log.song_title
+            if not title:
+                title = self.log.station_that_is_playing_now
+                if title:
+                    title = 'Playing: ' + title
+            if not title:
+                if not self.player.isPlaying():
+                    title =  'Player is stopped!'
+                else:
+                    title = 'No Title'
+            # return title
+            self._remote_control_server.send_song_title(title)
 
     def restore_colors(self):
         if self._cnf.use_themes:
@@ -5569,6 +5572,15 @@ class PyRadio(object):
                 self._cnf.play_from_history = True
                 self._cnf.stations_history.play_next()
 
+    def _show_remote_control_server_not_active(self):
+        if self._remote_control_window is None:
+            self._remote_control_window = PyRadioServerWindow(
+                config=self._cnf,
+                parent=self.outerBodyWin
+            )
+        self.ws.operation_mode = self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE
+        self._remote_control_window.show(self.outerBodyWin)
+
     def _show_remote_control_server_active(self):
         txt = '''
                |PyRadio Remote Control Server| is active!
@@ -5576,7 +5588,7 @@ class PyRadio(object):
                ||Text Address: |http://{0}
                ||_Web Address: |http://{0}/html
 
-               ||Press "|s|" to stop it, or'''.format(
+               ||Press "|s|" to stop the server, or'''.format(
             self._remote_control_server.ip + \
             '|:|' + str(
                 self._cnf.active_remote_control_server_port
@@ -5755,7 +5767,7 @@ class PyRadio(object):
                 if self._remote_control_server_thread:
                     self._show_remote_control_server_active()
                 else:
-                    self.ws.operation_mode = self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE
+                    self._show_remote_control_server_not_active()
 
             elif char in (ord('h'), ):
                 ''' open html help '''

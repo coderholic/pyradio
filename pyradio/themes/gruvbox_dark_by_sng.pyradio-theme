@@ -33,7 +33,8 @@ Messages Border     #5f8700
 
 # Cursor foreground and background
 # This is the Line Editor cursor
-Edit Cursor         #000000 #ffffff
+Edit Cursor         #ffffff #fb4933
+
 # Theme Transparency
 # Values are:
 #   0: No transparency (default)
