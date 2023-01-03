@@ -965,7 +965,7 @@ Restricted Commands (Main mode only)
 Content-Type: text/event-stream
 Cache-Control: no-cache
 Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=9000, max=1000
+Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg))
@@ -975,7 +975,7 @@ Content-Length: {}
 Content-Type: text/event-stream; charset=UTF-8
 Cache-Control: no-cache
 Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=9000, max=1000
+Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg)).encode('utf-8')
@@ -995,7 +995,7 @@ Content-Length: {}
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=utf-8
 Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=9000, max=1000
+Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg))
@@ -1004,7 +1004,7 @@ Content-Length: {}
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=UTF-8
 Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=9000, max=1000
+Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg)).encode('utf-8')
@@ -1031,7 +1031,7 @@ Content-Length: {}
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=UTF-8
 Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=9000, max=1000
+Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg))
@@ -1040,7 +1040,7 @@ Content-Length: {}
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=UTF-8
 Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=9000, max=1000
+Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg)).encode('utf-8')
@@ -1060,7 +1060,7 @@ Content-Length: {}
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/html; charset=UTF-8
 Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=9000, max=1000
+Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg))
@@ -1069,7 +1069,7 @@ Content-Length: {}
             txt = '''HTTP/1.1 200 OK
 Content-Type: text/html; charset=UTF-8
 Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=9000, max=1000
+Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg)).encode('utf-8')

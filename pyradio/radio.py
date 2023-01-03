@@ -5599,24 +5599,25 @@ __|Remote Control Server| cannot be started!__
             self._remote_control_window.show(self.outerBodyWin)
 
     def _show_remote_control_server_active(self):
-        txt = '''
-               |PyRadio Remote Control Server| is active!
+        if self._remote_control_server is not None:
+            txt = '''
+                   |PyRadio Remote Control Server| is active!
 
-               ||Text Address: |http://{0}
-               ||_Web Address: |http://{0}/html
+                   ||Text Address: |http://{0}
+                   ||_Web Address: |http://{0}/html
 
-               ||Press "|s|" to stop the server, or'''.format(
-            self._remote_control_server.ip + \
-            '|:|' + str(
-                self._cnf.active_remote_control_server_port
+                   ||Press "|s|" to stop the server, or'''.format(
+                self._remote_control_server.ip + \
+                '|:|' + str(
+                    self._cnf.active_remote_control_server_port
+                )
             )
-        )
-        self._show_help(
-            txt,
-            self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE,
-            caption=' Remote Control Enabled ',
-            is_message=True
-        )
+            self._show_help(
+                txt,
+                self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE,
+                caption=' Remote Control Enabled ',
+                is_message=True
+            )
 
     def keypress(self, char):
         if self._system_asked_to_terminate:
