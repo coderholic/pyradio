@@ -428,6 +428,7 @@ class PyRadio(object):
                 self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE: self._print_remote_control_server_dead_error,
                 self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
                 self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE: self._show_remote_control_server_not_active,
+                self.ws.REMOTE_CONTROL_SERVER_ERROR_MODE: self._show_remote_control_error
                 }
 
         ''' list of help functions '''
@@ -700,7 +701,8 @@ class PyRadio(object):
                 else:
                     self._cnf.user_param_id = -1
 
-            if self._cnf.remote_control_server_auto_start:
+            if self._cnf.remote_control_server_auto_start and \
+                    not self._cnf.locked:
                 self._start_remote_control_server()
 
         self.stdscr.nodelay(0)
@@ -2208,6 +2210,17 @@ class PyRadio(object):
             self._display_help[self.ws.operation_mode]()
         else:
             self._redisplay[self.ws.operation_mode]()
+
+    def _show_remote_control_error(self):
+        txt = '''
+______This session is |locked|, so the
+__|Remote Control Server| cannot be started!__
+        '''
+        self._show_help(txt,
+                        self.ws.SERVICE_SERVERS_UNREACHABLE,
+                        caption=' Not Available ',
+                        prompt=' Press any key ',
+                        is_message=True)
 
     def _show_port_number_invalid(self):
         self._show_notification_with_delay(
@@ -5573,14 +5586,17 @@ class PyRadio(object):
                 self._cnf.stations_history.play_next()
 
     def _show_remote_control_server_not_active(self):
-        if self._remote_control_window is None:
-            self._remote_control_window = PyRadioServerWindow(
-                config=self._cnf,
-                parent=self.outerBodyWin,
-                port_number_error_message=self._show_port_number_invalid
-            )
-        self.ws.operation_mode = self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE
-        self._remote_control_window.show(self.outerBodyWin)
+        if self._cnf.locked:
+            self._show_remote_control_error()
+        else:
+            if self._remote_control_window is None:
+                self._remote_control_window = PyRadioServerWindow(
+                    config=self._cnf,
+                    parent=self.outerBodyWin,
+                    port_number_error_message=self._show_port_number_invalid
+                )
+                self.ws.operation_mode = self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE
+            self._remote_control_window.show(self.outerBodyWin)
 
     def _show_remote_control_server_active(self):
         txt = '''
@@ -5995,9 +6011,14 @@ class PyRadio(object):
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE:
             ret = self._remote_control_window.keypress(char)
-            logger.error('ret = {}'.format(ret))
             if ret == 0:
                 self.ws.close_window()
+                self._cnf.active_remote_control_server_ip = self._remote_control_window._the_ip
+                self._cnf.active_remote_control_server_port = self._remote_control_window._the_port
+                self._remote_control_window = None
+                self._start_remote_control_server()
+                if self._remote_control_server_thread:
+                    self._show_remote_control_server_active()
             elif ret == -1:
                 self.ws.close_window()
             self.refreshBody()

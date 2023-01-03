@@ -3144,7 +3144,7 @@ class SimpleCursesLineEdit(object):
         self._edit_win.erase()
 
         ''' opening '''
-        logger.error('opening = {}'.format(opening))
+        # logger.error('opening = {}'.format(opening))
         if opening:
             if self._restore_data:
                 self._string = self._restore_data[0]
@@ -3156,8 +3156,8 @@ class SimpleCursesLineEdit(object):
             else:
                 self.string = self._displayed_string = ''
                 self._curs_pos = self._disp_curs_pos = self._first = 0
-        logger.error('string = "{}"'.format(self._string))
-        logger.error('displayed string = "{}"'.format(self._displayed_string))
+        # logger.error('string = "{}"'.format(self._string))
+        # logger.error('displayed string = "{}"'.format(self._displayed_string))
         if self._enabled:
             self._edit_win.addstr(0, 0, self._displayed_string, active_edit_color)
 
@@ -3194,7 +3194,6 @@ class SimpleCursesLineEdit(object):
         self.show(self._parent_win, opening=False)
 
     def show(self, parent_win, **kwargs):
-        logger.error('string = "{}"'.format(self._string))
         opening = True
         self._caption_win = None
         self._edit_win = None
