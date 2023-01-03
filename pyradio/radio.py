@@ -5576,7 +5576,8 @@ class PyRadio(object):
         if self._remote_control_window is None:
             self._remote_control_window = PyRadioServerWindow(
                 config=self._cnf,
-                parent=self.outerBodyWin
+                parent=self.outerBodyWin,
+                port_number_error_message=self._show_port_number_invalid
             )
         self.ws.operation_mode = self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE
         self._remote_control_window.show(self.outerBodyWin)
@@ -5993,7 +5994,13 @@ class PyRadio(object):
             self.refreshBody()
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE:
-            self.ws.close_window()
+            ret = self._remote_control_window.keypress(char)
+            logger.error('ret = {}'.format(ret))
+            if ret == 0:
+                self.ws.close_window()
+            elif ret == -1:
+                self.ws.close_window()
+            self.refreshBody()
 
         elif char == ord('H') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):

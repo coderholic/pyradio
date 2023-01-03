@@ -150,7 +150,7 @@ class PyRadioConfigWindow(object):
         self._port_line_editor.set_global_functions(self._global_functions)
         self._port_line_editor._paste_mode = False
         self._port_line_editor.chars_to_accept = [ str(x) for x in range(0, 10)]
-        self._port_line_editor.set_local_functions(self._local_functions)
+        self._port_line_editor.set_local_functions(self._fix_local_functions_for_editor())
 
         self._start = 0
         self.parent = parent
@@ -189,6 +189,21 @@ class PyRadioConfigWindow(object):
 
     def __del__(self):
         self._toggle_transparency_function = None
+
+    def _fix_local_functions_for_editor(self):
+        chk = (
+            curses.KEY_HOME,
+            curses.KEY_END,
+            curses.KEY_LEFT,
+            curses.KEY_RIGHT,
+        )
+        local_f = {}
+        for n in self._local_functions.keys():
+            local_f[n] = self._local_functions[n]
+        for n in chk:
+            if n in local_f.keys():
+                local_f.pop(n)
+        return local_f
 
     @property
     def parent(self):
@@ -629,13 +644,22 @@ class PyRadioConfigWindow(object):
 
 
         if char in self._local_functions.keys():
-            ret = self._local_functions[char]()
-            if self._local_functions[char] == self._go_exit:
-                return 1, []
-            elif self._local_functions[char] == self._go_save and ret:
-                return 0, []
+            if not (val[0] == 'remote_control_server_port' and \
+                    char in (
+                        curses.KEY_HOME,
+                        curses.KEY_END,
+                        curses.KEY_LEFT,
+                        curses.KEY_RIGHT
+                    )
+                    ):
+                ret = self._local_functions[char]()
+                if self._local_functions[char] == self._go_exit:
+                    return 1, []
+                elif self._local_functions[char] == self._go_save and ret:
+                    return 0, []
+                return -1, []
 
-        elif char in self._global_functions.keys():
+        if char in self._global_functions.keys():
             self._global_functions[char]()
 
         elif val[0] == 'radiobrowser':

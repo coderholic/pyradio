@@ -1274,7 +1274,7 @@ class PyRadioConnectionType(object):
 
 class PyRadioServerWindow(object):
 
-    _win = None
+    _win = _editor = None
 
     def __init__(
             self,
@@ -1287,7 +1287,7 @@ class PyRadioServerWindow(object):
         self._parent = parent
         self._win = None
         self._global_functions = global_functions
-        self.maxY, self.maxX = (10, 55)
+        self.maxY, self.maxX = (14, 55)
         self._get_window()
         self._showed = False
         self._selection = 0
@@ -1295,12 +1295,13 @@ class PyRadioServerWindow(object):
         self._the_ip = self._cnf.active_remote_control_server_ip
         self._the_port = self._cnf.active_remote_control_server_port
         self._editor = None
+        self._port_number_error_message = port_number_error_message
 
     def show(self, parent=None):
         if parent:
             self._parent = parent
             self._get_window()
-            self._win.bkgdset(' ', curses.color_pair(11))
+            self._win.bkgdset(' ', curses.color_pair(12))
             self._win.erase()
             self._win.box()
             self._show_title()
@@ -1318,8 +1319,8 @@ class PyRadioServerWindow(object):
                 edit_color=curses.color_pair(6),
                 cursor_color=curses.color_pair(8),
                 unfocused_color=curses.color_pair(11),
-                key_up_function_handler=self._go_up,
-                key_down_function_handler=self._go_down,
+                key_up_function_handler=self._toggle_selection,
+                key_down_function_handler=self._toggle_selection,
             )
             self._editor.visible = True
             self._editor.bracket = False
@@ -1329,8 +1330,8 @@ class PyRadioServerWindow(object):
             self._editor.chars_to_accept = [ str(x) for x in range(0, 10)]
             self._editor.set_local_functions(
                 local_functions = {
-                    ord('j'): self._go_down,
-                    ord('k'): self._go_up
+                    ord('j'): self._toggle_selection,
+                    ord('k'): self._toggle_selection
                 }
             )
             self._editor.string = self._the_port
@@ -1345,42 +1346,137 @@ class PyRadioServerWindow(object):
         else:
             self._win.addstr(self._the_ip.ljust(self._field_width, ' '), curses.color_pair(10))
         self._win.addstr(5, 4, 'Server Port: ', curses.color_pair(10))
-        self._win.addstr(7, 2, 'Press ', curses.color_pair(10))
-        self._win.addstr('s', curses.color_pair(11))
-        self._win.addstr(' to start the server, or ', curses.color_pair(10))
-        self._win.addstr(8, 2, 'any other key to hide this window...', curses.color_pair(10))
+
+
+        try:
+            self._win.addstr(7, 3, '─' * (self.maxX - 6), curses.color_pair(12))
+        except:
+            self._win.addstr(7, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(12))
+        self._win.addstr(7, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
+        self._win.addstr(8, 8, 'j', curses.color_pair(4))
+        self._win.addstr(', ', curses.color_pair(10))
+        self._win.addstr('k', curses.color_pair(4))
+        self._win.addstr(', ', curses.color_pair(10))
+        self._win.addstr('Up', curses.color_pair(4))
+        self._win.addstr(', ', curses.color_pair(10))
+        self._win.addstr('Down', curses.color_pair(4))
+        self._win.addstr(8, 30, 'Change selection.', curses.color_pair(10))
+
+        self._win.addstr(9, 8, 'h', curses.color_pair(4))
+        self._win.addstr(', ', curses.color_pair(10))
+        self._win.addstr('l', curses.color_pair(4))
+        self._win.addstr(', ', curses.color_pair(10))
+        self._win.addstr('Left', curses.color_pair(4))
+        self._win.addstr(', ', curses.color_pair(10))
+        self._win.addstr('Right', curses.color_pair(4))
+
+        self._win.addstr(10, 8, 'Enter', curses.color_pair(4))
+        self._win.addstr(', ', curses.color_pair(10))
+        self._win.addstr('Space', curses.color_pair(4))
+        self._win.addstr(10, 30, 'Toggle IP.', curses.color_pair(10))
+
+        self._win.addstr(11, 8, 's', curses.color_pair(4))
+        self._win.addstr(11, 30, 'Start the Server.', curses.color_pair(10))
+
+        self._win.addstr(12, 2, 'Any other key will hide the window (not in editor).', curses.color_pair(10))
 
         self._editor.focused = False if self._selection == 0 else True
+        self._refresh()
+        self._showed = True
+
+    def _refresh(self):
         self._win.refresh()
         self._editor.keep_restore_data()
         self._editor.show(self._win)
-        self._showed = True
-        logger.error('_the_port = "{}"'.format(self._the_port))
 
     def _get_window(self):
         self.max_parentY, self.max_parentX = self._parent.getmaxyx()
-        self.Y = int((self.max_parentY - self.maxY)/ 2) - 1
+        self.Y = int((self.max_parentY - self.maxY)/ 2) + 1
         self.X = int((self.max_parentX -self.maxX)/ 2)
         self._win = curses.newwin(
             self.maxY, self.maxX,
             self.Y, self.X
         )
         self._field_width = self.maxX - len('Server Port: ') - 6
+        if self._editor is not None:
+            self._editor.move(self._win, self.Y + 5, self.X + self._field_x, update=False)
 
     def _show_title(self):
         msg = ' PyRadio Remote Control '
         self._win.addstr(0, int((self.maxX - len(msg)) / 2), msg, curses.color_pair(11))
 
-    def _go_up(self):
-        pass
+    def _toggle_selection(self):
+        if self._selection == 0:
+            self._selection = 1
+            self._editor.focused = True
+            self._win.chgat(5, self._field_x, self._field_width, curses.color_pair(6))
+        else:
+            if self._validate_port():
+                self._selection = 0
+                self._editor.focused = False
+                self._win.chgat(5, self._field_x, self._field_width, curses.color_pair(10))
+            else:
+                self._port_number_error_message()
+        self._refresh()
 
-    def _go_down(self):
-        pass
+    def _validate_port(self):
+        if self._editor.string:
+            x = int(self._editor.string)
+            if 1025 <= x <= 65535:
+                return True
+        return False
 
     def keypress(self, char):
-        pass
+        '''
+        Return
+            -1: cancel
+             0: saved
+             1: go on
+        '''
+        if self._selection == 0 and \
+                char in (
+                    ord(' '), ord('\n'),
+                    curses.KEY_ENTER,
+                    ord('h'), ord('l'),
+                    curses.KEY_LEFT,
+                    curses.KEY_RIGHT,
+                ):
+            if self._the_ip == 'localhost':
+                self._the_ip = 'LAN'
+            else:
+                self._the_ip = 'localhost'
+            self._win.addstr(5, self._field_x, self._the_ip.ljust(self._field_width), curses.color_pair(6))
 
+        elif char == ord('r'):
+            self._the_ip = self._cnf.active_remote_control_server_ip
+            self._the_port = self._cnf.active_remote_control_server_port
+            self._editor.string = self._the_port
+            self._refresh()
 
+        elif char == ord('d'):
+            self._the_ip = 'localhost'
+            self._the_port = '9998'
+            self._editor.string = self._the_port
+            self._refresh()
 
+        elif char in (
+            ord('j'), curses.KEY_UP,
+            ord('k'), curses.KEY_DOWN
+        ):
+            self._toggle_selection()
 
+        elif char in (ord('s'), ):
+            if self._validate_port():
+                return 0
+            else:
+                self._port_number_error_message()
 
+        elif self._editor.focused:
+            ret = self._editor.keypress(self._win, char)
+            if ret in (0, 1, 2):
+                return 1
+            return -1
+        else:
+            return -1
+
+        return 1
