@@ -226,6 +226,7 @@ class PyRadio(object):
     stop_watch_theme_thread = stop_update_notification_thread = False
     _watch_theme_lock = threading.Lock()
     _update_notify_lock = threading.Lock()
+    _server_send_lock = threading.Lock()
 
     ''' editor class '''
     _station_editor = None
@@ -6020,9 +6021,11 @@ __|Remote Control Server| cannot be started!__
                 self._start_remote_control_server()
                 if self._remote_control_server_thread:
                     self._show_remote_control_server_active()
+                self.refreshBody()
             elif ret == -1:
+                self._remote_control_window = None
                 self.ws.close_window()
-            self.refreshBody()
+                self.refreshBody()
 
         elif char == ord('H') and self.ws.operation_mode in \
                 (self.ws.NORMAL_MODE, self.ws.PLAYLIST_MODE):
@@ -9263,6 +9266,7 @@ __|Remote Control Server| cannot be started!__
                 self._print_remote_control_server_error,
                 self._print_remote_control_server_dead_error,
                 lambda: self.log.song_title,
+                self._server_send_lock
             )
         )
         '''

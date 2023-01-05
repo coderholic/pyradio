@@ -303,9 +303,12 @@ class Log(object):
             if server:
                 ''' remote control server running '''
                 title = None
+                # if msg.startswith('Playing: ') or \
+                #         msg.startswith('Connecting to: ') or \
+                #         msg.startswith('Initialization: ') or \
+                #         'abnormal' in msg:
+                #    title = msg
                 if msg.startswith('Playing: ') or \
-                        msg.startswith('Connecting to: ') or \
-                        msg.startswith('Initialization: ') or \
                         'abnormal' in msg:
                     title = msg
                 elif msg.startswith('Failed to'):

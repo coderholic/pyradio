@@ -133,24 +133,28 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
         <div id="the_blocking_box">
         </div>
         -->
-        <div class="row text-center" onclick="js_refresh_page();" style="background: green; color: white; padding-bottom: 15px;">
-            <h2>PyRadio Remote Control</h2>
-        </div>
-        <div id="title_container" class="row" style="margin: 3px; margin-top: 15px;>
-            <div class="col-xs-12">
-                <div id="song_title" class="alert alert-info text-center">
-                <b>No data!</b>
+        <a href="/html">
+            <div class="row text-center" onclick="js_refresh_page();" style="background: green; color: white; padding-bottom: 15px;">
+                <h2>PyRadio Remote Control</h2>
+            </div>
+        </a>
+        <a href="#" onclick="js_send_simple_command('/html/title', 0);">
+            <div id="title_container" class="row" style="margin: 3px; margin-top: 15px;>
+                <div class="col-xs-12">
+                    <div id="song_title" class="alert alert-info text-center">
+                    <b>No data!</b>
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
         <div id="all_buttons" class="row">
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
-                    <button onclick="js_send_simple_command('/html/next', 1500);" type="button" class="btn btn-warning">Play<br>Next</button>
-                    <button onclick="js_send_simple_command('/html/previous', 1500);" type="button" class="btn btn-warning">Play<br>Previous</button>
-                    <button onclick="js_send_simple_command('/html/histnext', 1500);" type="button" class="btn btn-success">Play Hist.<br> Next</button>
-                    <button onclick="js_send_simple_command('/html/histprev', 1500);" type="button" class="btn btn-success">Play Hist.<br>Previous</button>
-                    <button onclick="js_send_simple_command('/html/toggle', 1500);" type="button" class="btn btn-danger">Toggle<br>Playback</button>
+                    <button onclick="js_send_simple_command_with_stop('/html/next', 1500);" type="button" class="btn btn-warning">Play<br>Next</button>
+                    <button onclick="js_send_simple_command_with_stop('/html/previous', 1500);" type="button" class="btn btn-warning">Play<br>Previous</button>
+                    <button onclick="js_send_simple_command_with_stop('/html/histnext', 1500);" type="button" class="btn btn-success">Play Hist.<br> Next</button>
+                    <button onclick="js_send_simple_command_with_stop('/html/histprev', 1500);" type="button" class="btn btn-success">Play Hist.<br>Previous</button>
+                    <button onclick="js_send_simple_command_with_stop('/html/toggle', 1500);" type="button" class="btn btn-danger">Toggle<br>Playback</button>
                 </div>
             </div>
             <div class="col-xs-4 col-lg-4">
@@ -225,7 +229,14 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
 
     ////////////////////////////////////////////////////////////////////
 
+    function js_send_simple_command_with_stop(the_command, the_timeout){
+            js_set_title("#song_title", "<b>Player is stopped!</b>", the_command);
+            js_disable_buttons_on_stopped(true);
+            js_send_simple_command(the_command, the_timeout);
+        }
+
     function js_send_simple_command(the_command, the_timeout){
+
         $.get(the_command, function(result){
             // console.log(the_command, result, typeof result);
             //
@@ -365,7 +376,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
         url_to_reload = window.location.href;
         js_fix_muted();
         js_fix_stopped();
-        setTimeout(js_init_title, 2000);
+        setTimeout(js_init_title, 500);
     }
 
     function js_init_title(){
@@ -463,6 +474,7 @@ Restricted Commands (Main mode only)
             error_func,
             dead_func,
             song_title,
+            lock
     ):
         self._path = ''
         self.config = config
@@ -475,6 +487,7 @@ Restricted Commands (Main mode only)
         '''
         self.sel = sel
         self.muted = muted
+        self.lock = lock
         try:
             server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -979,12 +992,13 @@ Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg)).encode('utf-8')
-        try:
-            self.client_socket.sendall(txt + b_msg)
-        except socket.error as e:
-            self.error = e
-        except AttributeError:
-            pass
+        with self.lock:
+            try:
+                self.client_socket.sendall(txt + b_msg)
+            except socket.error as e:
+                self.error = e
+            except AttributeError:
+                pass
 
     def _send_raw(self, msg):
         if msg.startswith('retry: '):
@@ -1008,10 +1022,11 @@ Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg)).encode('utf-8')
-        try:
-            self.client_socket.sendall(txt + b_msg)
-        except socket.error as e:
-            self.error = e
+        with self.lock:
+            try:
+                self.client_socket.sendall(txt + b_msg)
+            except socket.error as e:
+                self.error = e
 
     def _send_text(self,
                    msg, alert_type='alert-info',
@@ -1044,10 +1059,11 @@ Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg)).encode('utf-8')
-        try:
-            self.client_socket.sendall(txt + b_msg)
-        except socket.error as e:
-            self.error = e
+        with self.lock:
+            try:
+                self.client_socket.sendall(txt + b_msg)
+            except socket.error as e:
+                self.error = e
 
     def _send_html(self, msg=None, put_script=False):
         f_msg = self._html + '\n'
@@ -1073,10 +1089,11 @@ Keep-Alive: timeout=1, max=1000
 Content-Length: {}
 
 '''.format(len(b_msg)).encode('utf-8')
-        try:
-            self.client_socket.sendall(txt + b_msg)
-        except socket.error as e:
-            self.error = e
+        with self.lock:
+            try:
+                self.client_socket.sendall(txt + b_msg)
+            except socket.error as e:
+                self.error = e
 
     def _get_numbers(self, comma):
         if logger.isEnabledFor(logging.DEBUG):
@@ -1151,13 +1168,15 @@ Content-Length: {}
             s.close()
             return False, e
 
-        try:
-            s.connect((self._bind_ip, self._bind_port))
-            request = "GET /quit HTTP/1.0\n\n".encode('utf-8')
-            s.sendall(request)
-        except socket.error as e:
-            s.close()
-            return False, e
+
+        with self.lock:
+            try:
+                s.connect((self._bind_ip, self._bind_port))
+                request = "GET /quit HTTP/1.0\n\n".encode('utf-8')
+                s.sendall(request)
+            except socket.error as e:
+                s.close()
+                return False, e
 
         # Receive data
         try:
@@ -1319,9 +1338,9 @@ Content-Length: {}
             else:
                 t_url = url[2].format(playlist_index+1, i+1)
             if sel == i:
-                out.append('                               <td id="' + str(i+1) + '"><a style="color: white;" href="#" onclick="js_send_simple_command(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
+                out.append('                               <td id="' + str(i+1) + '"><a style="color: white;" href="#" onclick="js_send_simple_command_with_stop(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
             else:
-                out.append('                               <td id="' + str(i+1) + '"><a href="#" onclick="js_send_simple_command(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
+                out.append('                               <td id="' + str(i+1) + '"><a href="#" onclick="js_send_simple_command_with_stop(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
             out.append('                            </tr>')
         out.append('                        </tbody>')
         out.append('                    </table>')
