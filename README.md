@@ -76,6 +76,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
     * [Session unlocking](#session-unlocking)
 * [Update notification](#update-notification)
     * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
+* [Remote Control Server](#remote-control-server)
 * [Cleaning up](#cleaning-up)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
@@ -98,6 +99,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
  - Search function
  - Theming support
  - [RadioBrowser](radio-browser.md) support
+ - Remote Control
  - Easy installation / updating
  - Runs on Linux, macOS and Windows
 
@@ -1087,7 +1089,7 @@ The function can be enabled:
 1. using the `-lt` (`--log-titles`) command line option, or
 2. by pressing "**W**" while in the **Main**, the **Playlist** or the **Register** mode.
 
-The titles are written in a file called `pyradio-titles.log` which is saved at **PyRadio** configuration directory.
+The titles are written in a file called *pyradio-titles.log* which is saved at **PyRadio** configuration directory.
 
 Log file sample:
 
@@ -1216,6 +1218,12 @@ Finally, execute the command:
 
     python install.py --force
 
+## Remote Control Server
+
+**PyRadio** can be controlled remotely using normal http requests either form the command line (with *curl* for example) or from a browser.
+
+For more information, please refer to [the relevant page](server.md).
+
 ## Cleaning up
 
 **PyRadio** will uninstall all previously installed versions when updated (using the **-U** command line option), so no extra steps are needed any more to house keep your system.
@@ -1285,8 +1293,8 @@ to have notifications every 60 seconds, for example. You can use any value here,
 
 Finally, make sure you install:
 
-- `devel/pyradio.png` to `/usr/share/icons` or `/usr/local/share/icons` or any other suitable location.
-- `devel/pyradio.desktop` to `/usr/share/applications` or `/usr/local/share/applications` or any other suitable location.
+- *devel/pyradio.png* to */usr/share/icons* or */usr/local/share/icons* or any other suitable location.
+- *devel/pyradio.desktop* to */usr/share/applications* or */usr/local/share/applications* or any other suitable location.
 
 ## TODO
 

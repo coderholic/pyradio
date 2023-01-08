@@ -125,6 +125,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
     overflow: hiddden;
     display: none;
     }
+div[id^='a_']:hover { underline: none;}
         </style>
     <link rel="shortcut icon" href="https://raw.githubusercontent.com/coderholic/pyradio/master/devel/pyradio.ico"
     </head>
@@ -133,12 +134,10 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
         <div id="the_blocking_box">
         </div>
         -->
-        <a href="/html">
-            <div class="row text-center" onclick="js_refresh_page();" style="background: green; color: white; padding-bottom: 15px;">
-                <h2>PyRadio Remote Control</h2>
-            </div>
-        </a>
-        <a href="#" onclick="js_send_simple_command('/html/title', 0);">
+        <div id="a_head" class="row text-center" onclick="js_refresh_page();" style="background: green; color: white; padding-bottom: 15px;">
+            <h2>PyRadio Remote Control</h2>
+        </div>
+        <div id="a_title" onclick="js_send_simple_command('/html/title', 0);">
             <div id="title_container" class="row" style="margin: 3px; margin-top: 15px;>
                 <div class="col-xs-12">
                     <div id="song_title" class="alert alert-info text-center">
@@ -170,7 +169,7 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
                     <button onclick="js_send_simple_command('/html/st', 0);" type="button" class="btn btn-success">Stations<br>List</button>
                     <button onclick="js_send_simple_command('/html/pl', 0);" type="button" class="btn btn-primary">Show<br>Playlists</button>
                     <button onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
-                    <button onclick="js_send_simple_command('/html/log', 1500);" type="button" class="btn btn-warning">Toggle<br>Titles Log</button>
+                    <button id="logging" onclick="js_toggle_titles_logging();" type="button" class="btn btn-warning">Enable<br>Titles Log</button>
                     <button id="like" onclick="js_send_simple_command('/html/like', 1500);" type="button" class="btn btn-info">Like<br>Title</button>
                 </div>
             </div>
@@ -322,8 +321,10 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
                 // console.log("async:", data);
                 if ( data == 0 ){
                     js_disable_buttons_on_stopped(true);
+                    $("#song_title").html("<b>Player is stopped!</b>");
                 } else {
                     js_disable_buttons_on_stopped(false);
+                    setTimeout(js_init_title, 500);
                 }
             }
         }
@@ -337,6 +338,29 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
             // console.log("async:", data);
             element.disabled = enable;
         }
+    }
+
+    function js_toggle_titles_logging(){
+        js_send_simple_command('/html/log', 1500);
+        js_fix_logging_titles();
+    }
+
+    function js_fix_logging_titles(){
+        const getTitlesLogging = async () => {
+            const response = await fetch("/html/is_logging_titles");
+            const data = await response.text();
+
+            console.log("async:", data);
+            var element = document.getElementById("logging");
+            if ( data == 0 ){
+                element.className = "btn btn-warning";
+                element.innerHTML = "Enable<br>Titles Log"
+            } else {
+                element.className = "btn btn-success";
+                element.innerHTML = "Disable<br>Titles Log"
+            }
+        }
+        getTitlesLogging();
     }
 
     function js_fix_muted(){
@@ -375,8 +399,8 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
     function js_init(){
         url_to_reload = window.location.href;
         js_fix_muted();
+        js_fix_logging_titles();
         js_fix_stopped();
-        setTimeout(js_init_title, 500);
     }
 
     function js_init_title(){
@@ -409,8 +433,7 @@ Restricted Commands (Main mode only)
 /playlists       /pl        get playlists list
 /playlists/x     /pl/x      get stations list from playlist id x
                             (x comes from command /pl)
-/playlists/x,y   /pl/x,y    play station id y (-1 = random) from
-                            playlist id x
+/playlists/x,y   /pl/x,y    play station id y from playlist id x
 /stations        /st        get stations list from current playlist
 /stations/x      /st/x      play station id x from current playlist
 /next            /n         play next station
@@ -519,10 +542,8 @@ Restricted Commands (Main mode only)
                     logger.error('Server accept error: "{}"'.format(e))
                 dead_func(e)
                 break
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Accepted connection from {}:{}'.format(address[0], address[1]))
             self.error = None
-            self._handle_client_connection(request)
+            self._handle_client_connection(address, request)
             if self.error is not None:
                 self.client_socket.close()
                 dead_func(self.error)
@@ -534,7 +555,7 @@ Restricted Commands (Main mode only)
         if logger.isEnabledFor(logging.INFO):
             logger.info('Remote Control Server exiting...')
 
-    def _handle_client_connection(self, request):
+    def _handle_client_connection(self, address, request):
         # logger.error ('Received {}'.format(request))
         # logger.error ('\n\nReceived {}'.format(request.decode('utf-8', 'replace')))
         try:
@@ -552,18 +573,15 @@ Restricted Commands (Main mode only)
             self._path = sp[1]
         except IndexError:
             self._path = ''
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Remote command: "{}"'.format(self._path))
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Accepted connection from {0}:{1} -> {2}'.format(address[0], address[1], self._path))
 
         self._is_html = True if self._path.startswith('/html') else False
-        logger.error('path = {}'.format(self._path))
         if self._path.startswith('/html'):
             self._is_html = True
             self._path = self._path[5:]
         else:
             self._is_html = False
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('URL path = {}'.format(self._path))
         if self._path == '/init':
             self._commands['/html_init']()
         elif self._path == '/title':
@@ -572,17 +590,21 @@ Restricted Commands (Main mode only)
             pass
         elif self._path == '/is_stopped' and self._is_html:
             received = self._commands['/html_is_stopped']()
-            logger.error('received = "{}"'.format(received))
             self._send_raw(received)
         elif self._path == '/is_muted' and self._is_html:
             if self.muted():
                 self._send_raw('0')
             else:
                 self._send_raw('1')
+        elif self._path == '/is_logging_titles' and self._is_html:
+            if self.config().titles_log.titles_handler is None:
+                self._send_raw('0')
+            else:
+                self._send_raw('1')
         elif self._path in ('/log', '/g'):
             if self._is_html:
                 received = self._commands['/html_log']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 self._commands['/log']()
@@ -590,7 +612,7 @@ Restricted Commands (Main mode only)
         elif self._path in ('/like', '/l'):
             if self._is_html:
                 received = self._commands['/html_like']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 if self.sel()[1] > -1:
@@ -601,7 +623,7 @@ Restricted Commands (Main mode only)
         elif self._path in ('/mute', '/m'):
             if self._is_html:
                 received = self._commands['/html_mute']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 if self.sel()[1] > -1:
@@ -612,7 +634,7 @@ Restricted Commands (Main mode only)
         elif self._path in ('/volumesave', '/vs'):
             if self._is_html:
                 received = self._commands['/html_volumesave']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 if self.sel()[1] > -1:
@@ -629,7 +651,7 @@ Restricted Commands (Main mode only)
         elif self._path in ('/volumeup', '/vu'):
             if self._is_html:
                 received = self._commands['/html_volumeup']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 if self.sel()[1] > -1:
@@ -643,7 +665,7 @@ Restricted Commands (Main mode only)
         elif self._path in ('/volumedown', '/vd'):
             if self._is_html:
                 received = self._commands['/html_volumedown']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 if self.sel()[1] > -1:
@@ -666,7 +688,7 @@ Restricted Commands (Main mode only)
         elif self._path in ('/i', '/info'):
             if self._is_html:
                 received = self._commands['/html_info']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 if self.can_send_command():
@@ -676,7 +698,7 @@ Restricted Commands (Main mode only)
         elif self._path in ('/next', '/n'):
             if self._is_html:
                 received = self._commands['/html_next']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 if self.can_send_command():
@@ -687,7 +709,7 @@ Restricted Commands (Main mode only)
         elif self._path in ('/previous', '/p'):
             if self._is_html:
                 received = self._commands['/html_previous']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 if self.can_send_command():
@@ -698,7 +720,7 @@ Restricted Commands (Main mode only)
         elif self._path in ('/histnext', '/hn'):
             if self._is_html:
                 received = self._commands['/html_histnext']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 if self.can_send_command():
@@ -719,7 +741,7 @@ Restricted Commands (Main mode only)
         elif self._path in ('/histprev', '/hp'):
             if self._is_html:
                 received = self._commands['/html_histprev']()
-                logger.error('received = "{}"'.format(received))
+                # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
                 if self.can_send_command():
@@ -742,11 +764,11 @@ Restricted Commands (Main mode only)
             if self._is_html:
                 if self.sel()[1] > -1:
                     received = self._commands['/html_stop']()
-                    logger.error('received = "{}"'.format(received))
+                    # logger.error('received = "{}"'.format(received))
                     self._send_raw(received)
                 else:
                     received = self._commands['/html_start']()
-                    logger.error('received = "{}"'.format(received))
+                    # logger.error('received = "{}"'.format(received))
                     self._send_raw(received)
             else:
                 if self.can_send_command():

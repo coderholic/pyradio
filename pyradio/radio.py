@@ -1510,8 +1510,10 @@ class PyRadio(object):
         terminates at program exit.
         If that causes problems, uncomment lines
         '''
-        # if self._remote_control_server:
-        #     self._remote_control_server.close_server()
+        while self._remote_control_server is not None:
+            ret, _ = self._remote_control_server.close_server()
+            if ret:
+                self._remote_control_server = None
         self.restore_colors()
 
     def _wait_for_threads(self):
@@ -9275,7 +9277,7 @@ __|Remote Control Server| cannot be started!__
         If that causes problems, commane the following line
         and uncomment lines in ctrl_c_handler()
         '''
-        self._remote_control_server_thread.daemon = True
+        # self._remote_control_server_thread.daemon = True
         self._remote_control_server_thread.start()
 
     def _stop_remote_control_server(self):

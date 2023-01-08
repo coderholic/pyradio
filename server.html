@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PyRadio Remote Control Server</title>
+    <style> 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 150%;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 120%;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown" id="pyradio-remote-control-server">PyRadio Remote Control Server</h1>
+<p>Command line internet radio player.</p>
+<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<!-- vim-markdown-toc Marked -->
+<ul>
+<li><a href="#remote-control-server">Remote Control Server</a>
+<ul>
+<li><a href="#using-the-web-server">Using the Web Server</a></li>
+<li><a href="#using-the-text-server">Using the Text Server</a></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#text-vs.-web-commands">Text vs. Web commands</a></li>
+</ul></li>
+</ul>
+<!-- vim-markdown-toc -->
+<h2 id="remote-control-server">Remote Control Server <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p><strong>PyRadio</strong> can be controlled remotely using normal http requests either form the command line (with <em>curl</em> for example) or from a browser.</p>
+<p>For this purpose, a simple web server has been integrated in <strong>PyRadio</strong>; this server can be started</p>
+<ul>
+<li>automatically<br />
+Setting the <strong>Remote Control Server</strong> options ins the config file, especially setting the <strong>Auto-start Server</strong> to <strong>True</strong>, or</li>
+<li>by pressing “<strong>\s</strong>” at the main window, selecting the desired options and pressing “<strong>s</strong>”.</li>
+</ul>
+<p>The options one can set are:</p>
+<ol type="1">
+<li><p><strong>Server IP</strong><br />
+This can either be <strong>localhost</strong> (the server will be accessible from the current system only) or <strong>LAN</strong> (the server will be accessible from any PC on the local network).</p></li>
+<li><p><strong>Server Port</strong><br />
+This is the port the server is listening to. Any free port number between 1025 and 65535 can be set here (default value is 9998).</p></li>
+<li><p><strong>Auto-start Server</strong><br />
+This option is available in the config only. If set to True, the server will be automatically started when <strong>PyRadio</strong> starts.</p></li>
+</ol>
+<p>After the server is up, pressing “<strong>\s</strong>” will display the following window:</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/server-on.jpg" target="_blank"><img style="width: 574px" src="https://members.hellug.gr/sng/pyradio/server-on.jpg" alt="Pyradio" /></a></p>
+
+<p>This window will display both the server’s <strong>Text</strong> and <strong>Web</strong> address.</p>
+<h3 id="using-the-web-server">Using the Web Server</h3>
+<p>So, inserting the <strong>Web</strong> address displayed in the previous window in a web browser will result to the output shown at the left of following image, (which is actually a screenshot of my mobile phone).</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/phone.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/phone.jpg" alt="Pyradio" /></a></p>
+
+<p>The idea is that while <strong>PyRadio</strong> is running on the PC, people relaxing on the sofa, chilling with friends, listening to music from their favorite radio station, being able to increase / decrease the volume, change stations, etc. using their phones.</p>
+<p>The available commands are “encoded” in the buttons shown on the screen; the right part of the image shows the output of the “<strong>Stations List</strong>” button. To start a station, I would just click (well, tap) on its name, and viola!</p>
+<p>The <strong>Web</strong> interface will also show the song’s title, if availabe, or the name of the station that’s playing, if it’s not. In order to achieve this functionality, <em>javascript</em> is heavily used, so one should keep that in mind (in case <em>javascript</em> has been disabled in the browser, for example).</p>
+<h3 id="using-the-text-server">Using the Text Server</h3>
+<p>Why having the <strong>Text</strong> interface as well, one might ask…</p>
+<p>Well, first of all it’s lighter, then one can use it to locally control <strong>PyRadio</strong> from a script and provide a way to adjust the volume for example, using some assigned shortcut key combination.</p>
+<p>Inserting the <strong>Text</strong> address on a terminal using <em>curl</em> or <em>wget</em> or any similar software:</p>
+<pre>$ curl http://192.168.122.4:9998</pre>
+<p>or</p>
+<pre>$ wget http://192.168.122.4:9998  -q -O -</pre>
+<p>would result to displaying the list of available commands:</p>
+<pre>PyRadio Remote Service
+
+Global Commands
+Long             Short      Description
+--------------------------------------------------------------------
+/info            /i         display PyRadio info
+/volumeup        /vu        increase volume
+/volumedown      /vd        decrease volume
+/vulumesave      /vs        save volume
+/mute            /m         toggle mute
+/log             /g         toggle stations logging
+/like            /l         tag (like) station
+
+Restricted Commands (Main mode only)
+--------------------------------------------------------------------
+/toggle          /t         toggle playback
+/playlists       /pl        get playlists list
+/playlists/x     /pl/x      get stations list from playlist id x
+                            (x comes from command /pl)
+/playlists/x,y   /pl/x,y    play station id y from playlist id x
+/stations        /st        get stations list from current playlist
+/stations/x      /st/x      play station id x from current playlist
+/next            /n         play next station
+/previous        /p         play previous station
+/histnext        /hn        play next station from history
+/histprev        /hp        play previous station from history</pre>
+<p>The “<strong>Restricted Commands</strong>” will not work in <strong>Playlist mode</strong>; the “<strong>Global Commands</strong>” will work everywhere.</p>
+<h3 id="examples">Examples</h3>
+<p>The following commands will increase / decrease the volume and mute the player:</p>
+<pre>$ curl http://192.168.122.4:9998/vu
+$ wget http://192.168.122.4:9998/vd  -q -O -
+$ wget http://192.168.122.4:9998/m  -q -O -</pre>
+<p>The following command will display the contents of the loaded playlist:</p>
+<pre>$ curl http://192.168.122.4:9998/st</pre>
+<p>The stations will be numbered, like so:</p>
+<pre>Stations List for Playlist: &quot;stations&quot;
+   1. Alternative (BAGeL Radio - SomaFM)
+   2. Alternative (The Alternative Project)
+  ...
+  17. Jazz (Sonic Universe - SomaFM)
++ 18. Lounge (Illinois Street Lounge - SomaFM)
+  19. Pop (PopTron! - SomaFM)
+  20. Pop/Rock/Urban  (Frequence 3 - Paris)
+  ...
+&gt; 34. Echoes of Bluemars - Cryosleep
+  34. Echoes of Bluemars - Voices from Within
+First column
+  [&gt; ]: Selected, [+ ]: Playing, [+&gt;]: Both</pre>
+<p>so that in order to start playing station No 20, for example, one would just use the command:</p>
+<pre>$ curl http://192.168.122.4:9998/st/20</pre>
+<h3 id="text-vs.-web-commands">Text vs. Web commands</h3>
+<p>On first glance, the difference between a <strong>Text</strong> and a <strong>Web</strong> command is the <em>/html</em> part that exists in the later.</p>
+<p>But things are actually more complex that that.</p>
+<p>For example, when the <em>/st</em> command is issued, the server will return the list of stations as text and keep listening for connections. In this case, one requests has been made to the server and one response has been returned.</p>
+<p>Now, if the <em>/html/st</em> command was issued, the server will return the same list, but formatted as html, so that a browser can correctly display it.</p>
+<p>This output would pretty much be unusable to a user issuing the “<strong>html</strong>” command on a terminal.</p>
+<p>Furthermore, using it from a browser, clicking or tapping the corresponding button, will lead to a number of requests from the browser to the server (requesting the mute status, the player’s status, the song’s title, etc.).</p>
+</body>
+</html>

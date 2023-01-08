@@ -2989,6 +2989,7 @@ class PyRadioLog(object):
 
         logging.raiseExceptions = False
         logging.lastResort = None
+        # logger.info('self.log_titles = {}'.format(self.log_titles))
 
     def tag_title(self, the_log):
         ''' tags a title

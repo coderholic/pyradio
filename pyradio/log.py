@@ -309,9 +309,9 @@ class Log(object):
                 #         'abnormal' in msg:
                 #    title = msg
                 if msg.startswith('Playing: ') or \
-                        'abnormal' in msg:
-                    title = msg
-                elif msg.startswith('Failed to'):
+                    msg.startswith('Connecting to: ') or \
+                        'abnormal' in msg or \
+                        msg.startswith('Failed to'):
                     title = msg
                     with self._song_title_lock:
                         old_song_title = self._song_title

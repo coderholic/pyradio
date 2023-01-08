@@ -1,0 +1,196 @@
+.\" Copyright (C) 2018-2023 Spiros Georgaras <sng@hellug.gr>
+.\" This manual is freely distributable under the terms of the GPL.
+.\"
+.TH pyradio_server 1 "January 2023" pyradio
+
+.SH Name
+.PP
+pyradio \- a curses Internet radio player.
+
+.SH \fBPyRadio\ Remote\ Control\ Server
+
+\fBpyradio\fR can be controlled remotely using normal http requests either form the command line (with \fIcurl\fR for example) or from a browser.
+
+For this purpose, a simple web server has been integrated in \fBpyradio\fR; this server can be started
+
+.IP -\ \fBautomatically
+Setting the \fBRemote Control Server\fR options ins the config file, especially setting the \fBAuto-start Server\fR to \fITrue\fR, or
+
+.IP -\ \fBmanually
+by pressing "\fI\\s\fR" at the main window, selecting the desired options and pressing "\fIs\fR".
+
+.P
+The options one can set are:
+
+.IP 1.\ \fBServer\ IP
+This can either be \fIlocalhost\fR (the server will be accessible from the current system only) or \fILAN\fR (the server will be accessible from any PC on the local network).
+
+.IP 2.\ \fBServer\ Port
+This is the port the server is listening to. Any free port number between 1025 and 65535 can be set here (default value is 9998).
+
+.IP 3.\ \fBAuto-start\ Server
+This option is available in the config only. If set to \fITrue\fR, the server will be automatically started when \fBpyradio\fR starts.
+
+.P
+After the server is up, pressing "\fI\\s\fR" will display a window which
+will present both the server's \fBText\fR and \fBWeb\fR address.
+
+.SH Using the Web Server
+
+Inserting the \fBWeb\fR address displayed in the previous window in a web browser will result to  loading the \fIRemote Control Web Interface\fR, shown in the following image (which is actually a screenshot of my mobile phone):
+
+\fIhttps://members.hellug.gr/sng/pyradio/phone.jpg\fR
+
+The interface consists of a header, a \fBtitle field\fR, and the \fBcommands buttons\fR.
+
+The idea is that while \fBpyradio\fR is running on the PC, people relaxing on the sofa, chilling with friends, listening to music from their favorite radio station, being able to increase / decrease the volume, change stations, etc. using their phones.
+
+The available commands are "encoded" in the buttons shown on the screen; the right part of the image shows the output of the "\fIStations List\fR" button. To start a station, I would just click (well, tap) on its name, and viola!
+
+The \fBWeb\fR interface will show the song's title in the \fBtitle field\fR, if availabe, or the name of the station that's playing, if it's not.
+
+In order to achieve this functionality, \fIjavascript\fR is heavily used, so one should keep that in mind (in case \fIjavascript\fR has been disabled in the browser, for example).
+
+.SH Using the Text Server
+
+Why having the \fBText\fR interface as well, one might ask...
+
+Well, first of all it's lighter, then one can use it to locally control \fBpyradio\fR from a script and provide a way to adjust the volume for example, using some assigned shortcut key combination.
+
+Inserting the \fBText\fR address on a terminal using \fIcurl\fR or \fIwget\fR or any similar software:
+
+.RS 5
+\fI$ curl http://192.168.122.4:9998\fR
+.RE
+
+or
+
+.RS 5
+\fI$ wget http://192.168.122.4:9998  -q -O -\fR
+.RE
+
+would result to displaying the list of available commands:
+
+\fRPyRadio Remote Service
+.br
+
+.br
+\fIGlobal Commands
+.br
+\fILong             Short      Description
+.br
+\fI--------------------------------------------------------------------
+.br
+\fB/info            /i         \fIdisplay PyRadio info
+.br
+\fB/volumeup        /vu        \fIincrease volume
+.br
+\fB/volumedown      /vd        \fIdecrease volume
+.br
+\fB/vulumesave      /vs        \fIsave volume
+.br
+\fB/mute            /m         \fItoggle mute
+.br
+\fB/log             /g         \fItoggle stations logging
+.br
+\fB/like            /l         \fItag (like) station
+.br
+\fB
+.br
+\fIRestricted Commands (Main mode only)
+.br
+\fI--------------------------------------------------------------------
+.br
+\fB/toggle          /t         \fItoggle playback
+.br
+\fB/playlists       /pl        \fIget playlists list
+.br
+\fB/playlists/x     /pl/x      \fIget stations list from playlist id x
+.br
+\fB                            \fI(x comes from command /pl)
+.br
+\fB/playlists/x,y   /pl/x,y    \fIplay station id y from playlist id x
+.br
+\fB/stations        /st        \fIget stations list from current playlist
+.br
+\fB/stations/x      /st/x      \fIplay station id x from current playlist
+.br
+\fB/next            /n         \fIplay next station
+.br
+\fB/previous        /p         \fIplay previous station
+.br
+\fB/histnext        /hn        \fIplay next station from history
+.br
+\fB/histprev        /hp        \fIplay previous station from history
+.br
+\fR
+
+The \fBRestricted Commands\fR will not work in \fIPlaylist mode\fR; the \fBGlobal Commands\fR will work everywhere.
+
+\fBExamples\fR
+.RS
+
+The following commands will increase / decrease the volume and mute the player:
+
+\fI$ curl http://192.168.122.4:9998\fB/vu\fR
+.br
+\fI$ wget http://192.168.122.4:9998\fB/vd\fR -q -O -
+.br
+\fI$ wget http://192.168.122.4:9998\fB/m\fR -q -O -\fR
+
+The following command will display the contents of the loaded playlist:
+
+\fI$ curl http://192.168.122.4:9998\fB/st\fR
+
+The stations will be numbered, like so:
+
+\fIStations List for Playlist: "\fBstations\fR"
+.br
+\fB   1\fI. Alternative (BAGeL Radio - SomaFM)
+.br
+\fB   2\fI. Alternative (The Alternative Project)
+.br
+\fI  ...
+.br
+\fB  17\fI. Jazz (Sonic Universe - SomaFM)
+.br
+\fI+\fB 18\fI. Lounge (Illinois Street Lounge - SomaFM)
+.br
+\fB  19\fI. Pop (PopTron! - SomaFM)
+.br
+\fB  20\fI. Pop/Rock/Urban  (Frequence 3 - Paris)
+.br
+\fI  ...
+.br
+\fI> \fB33\fI. Echoes of Bluemars - Cryosleep
+.br
+\fB  34\fI. Echoes of Bluemars - Voices from Within
+.br
+\fIFirst column
+.br
+\fI  [> ]: Selected, [+ ]: Playing, [+>]: Both
+\fR
+
+so that in order to start playing station No \fB20\fR, for example, one would just use the command:
+
+\fI$ curl http://192.168.122.4:9998\fB/st/20\fR
+
+.SH Text vs. Web commands
+
+On first glance, the difference between a \fBText\fR and a \fBWeb\fR command is the \fI/html\fR part that exists in the later.
+
+But things are actually more complex that that.
+
+For example, when the \fI/st\fR command is issued, the server will return the list of stations as text and keep listening for connections. In this case, one request has been made to the server and one response has been returned.
+
+Now, if the \fI/html/st\fR command was issued, the server will return the same list, but formatted as html, so that a browser can correctly display it.
+
+This output would pretty much be unusable to a user issuing the "\fIhtml\fR" command on a terminal.
+
+Furthermore, using it from a browser, clicking or tapping the corresponding button, will lead to a number of requests from the browser to the server (requesting the mute status, the player's status, the song's title, etc.).
+
+
+
+.SH See also
+
+    pyradio(1)
