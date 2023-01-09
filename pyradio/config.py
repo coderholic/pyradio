@@ -20,6 +20,7 @@ from .install import get_github_long_description
 from .common import is_rasberrypi
 from .player import pywhich
 HAS_REQUESTS = True
+
 try:
     import requests
 except:
@@ -84,7 +85,6 @@ class PyRadioStations(object):
 
     playlist_recovery_result = 0
 
-    _open_string = [ "open(stationFile, 'r')", "open(stationFile, 'r', encoding='utf-8')" ]
     _open_string_id = 0
 
     jump_tag = -1
@@ -324,7 +324,7 @@ class PyRadioStations(object):
         if llp[2]:
             # logger.error(f'llp = {llp} - saved = {self._last_opened_playlist_name}')
             try:
-                with open(lp, 'w') as f:
+                with open(lp, 'w', encoding='utf-8') as f:
                     writter = csv.writer(f)
                     writter.writerow(out_pl)
             except PermissionError:
@@ -475,7 +475,7 @@ class PyRadioStations(object):
 
     def _package_stations(self):
         ''' read package stations.csv file '''
-        with open(self.root_path, 'r') as cfgfile:
+        with open(self.root_path, 'r', encoding='utf-8') as cfgfile:
             for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                 if not row:
                     continue
@@ -511,7 +511,7 @@ class PyRadioStations(object):
         out = []
         in_file = self._construct_playlist_path(stationFile)
         try:
-            with open(in_file, 'r') as cfgfile:
+            with open(in_file, 'r', encoding='utf-8') as cfgfile:
                 for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                     if not row:
                         continue
@@ -571,7 +571,7 @@ class PyRadioStations(object):
             prev_format = self._playlist_version
             self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL
             self._reading_stations = []
-            with eval(self._open_string[self._open_string_id]) as cfgfile:
+            with open(stationFile, 'r', encoding='utf-8') as cfgfile:
                 try:
                     for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                         if not row:
@@ -625,7 +625,7 @@ class PyRadioStations(object):
                         remove(a_file)
                     except:
                         pass
-            with open(ver_file, 'a') as f:
+            with open(ver_file, 'a', encoding='utf-8') as f:
                 pass
 
         return self.number_of_stations
@@ -749,10 +749,7 @@ class PyRadioStations(object):
         #    tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '', '', '' ])
         #tmp_stations.reverse()
         try:
-            #with open(st_new_file, 'w') as cfgfile:
-            ''' Convert self._open_string to
-                open(st_new_file, 'w') '''
-            with eval(self._open_string[self._open_string_id].replace("'r'", "'w'").replace('stationFile','st_new_file')) as cfgfile:
+            with open(st_new_file, 'w', encoding='utf-8') as cfgfile:
                 writter = csv.writer(cfgfile)
                 for a_station in tmp_stations:
                     writter.writerow(self._format_playlist_row(a_station))
@@ -887,9 +884,7 @@ class PyRadioStations(object):
                 logger.debug('Appending station to playlist: "{}"'.format(stationFile))
             try:
                 #with open(st_file, 'a') as cfgfile:
-                ''' Convert self._open_string to
-                    with open(st_file, 'a') '''
-                with eval(self._open_string[self._open_string_id].replace("'r'", "'a'").replace('stationFile','st_file')) as cfgfile:
+                with open(st_file, 'a', encoding='utf-8') as cfgfile:
                     writter = csv.writer(cfgfile)
                     writter.writerow(params)
                 return 0
@@ -927,7 +922,7 @@ class PyRadioStations(object):
             while w_str.endswith(','):
                 w_str = w_str[:-1]
             try:
-                with open(a_playlist, 'a') as f:
+                with open(a_playlist, 'a', encoding='utf-8') as f:
                     f.write('\n' + w_str)
                 return 0
             except:
@@ -1096,7 +1091,7 @@ class PyRadioStations(object):
         string_to_write = ','.join(a_station) + '\n'
         with self._registers_lock:
             try:
-                with open(reg_file, 'a') as f:
+                with open(reg_file, 'a', encoding='utf-8') as f:
                     f.write(string_to_write)
             except:
                 if logger.isEnabledFor(logging.DEBUG):
@@ -1627,7 +1622,7 @@ class PyRadioConfig(PyRadioStations):
         for i, n in enumerate(ns):
             if path.exists(n):
                 try:
-                    with open(n, 'r') as f:
+                    with open(n, 'r', encoding='utf-8') as f:
                         for line in f:
                             self._notification_command.append(line.replace('\n', '').strip())
                 except:
@@ -1772,7 +1767,7 @@ class PyRadioConfig(PyRadioStations):
                 self.locked = True
         else:
             try:
-                with open(self._session_lock_file, 'w') as f:
+                with open(self._session_lock_file, 'w', encoding='utf-8') as f:
                     pass
             except:
                 pass
@@ -1849,12 +1844,12 @@ class PyRadioConfig(PyRadioStations):
 
     def _convert_config_for_rasberrypi(self, package_config_file, user_config_file):
         lines = []
-        with open(package_config_file, 'r') as f:
+        with open(package_config_file, 'r', encoding='utf-8') as f:
             lines = [line.strip() for line in f]
         for i in range(len(lines)):
             if lines[i].startswith('player'):
                 lines[i] = 'player = mplayer,vlc,mpv'
-        with open(user_config_file, 'w') as f:
+        with open(user_config_file, 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines) + '\n')
 
     def _validate_remote_control_server_ip(self, val):
@@ -1887,7 +1882,7 @@ class PyRadioConfig(PyRadioStations):
     def read_config(self):
         lines = []
         try:
-            with open(self.config_file, 'r') as cfgfile:
+            with open(self.config_file, 'r', encoding='utf-8') as cfgfile:
                 lines = [line.strip() for line in cfgfile if line.strip() and not line.startswith('#') ]
 
         except:
@@ -2024,7 +2019,7 @@ class PyRadioConfig(PyRadioStations):
         ''' read distro from package config file '''
         package_config_file = path.join(path.dirname(__file__), 'config')
         try:
-            with open(package_config_file, 'r') as pkg_config:
+            with open(package_config_file, 'r', encoding='utf-8') as pkg_config:
                 lines = [line.strip() for line in pkg_config if line.strip() and not line.startswith('#') ]
             for line in lines:
                 sp = line.split('=')
@@ -2073,8 +2068,9 @@ class PyRadioConfig(PyRadioStations):
         '''
         playlist = ''
         lp = path.join(self.stations_dir, 'last_playlist')
+        print('lp = "{}"'.format(lp))
         if path.exists(lp):
-            with open(lp, 'r') as f:
+            with open(lp, 'r', encoding='utf-8') as f:
                 for row in csv.reader(filter(lambda row: row[0]!='#', f), skipinitialspace=True):
                     if not row:
                         continue
@@ -2364,7 +2360,7 @@ remote_control_server_auto_start = {18}
             calcf = self.bck_opts['calculated_color_factor']
 
         try:
-            with open(self.config_file, 'w') as cfgfile:
+            with open(self.config_file, 'w', encoding='utf-8') as cfgfile:
                 cfgfile.write(txt.format(
                     self.opts['player'][1],
                     self.opts['open_last_playlist'][1],
@@ -2469,7 +2465,7 @@ remote_control_server_auto_start = {18}
                 user_terminal = []
                 if path.exists(term_file):
                     try:
-                        with open(term_file, 'r') as term:
+                        with open(term_file, 'r', encoding='utf-8') as term:
                             user_terminals = term.read().splitlines()
                     except:
                         pass
@@ -3146,8 +3142,7 @@ class PyRadioBase16Themes(object):
                     requests_response = requests.get(url, timeout=1)
                     requests_response.raise_for_status()
                     try:
-                        with open(w_path, 'w') as f:
-                            pass
+                        with open(w_path, 'w', encoding='utf-8') as f:
                             f.write(requests_response.text)
                         written = True
                     except:
@@ -3315,7 +3310,7 @@ transparency        0
             else:
                 w_theme = a_theme
 
-            with open(self._ln, 'r') as jfile:
+            with open(self._ln, 'r', encoding='utf-8') as jfile:
                 jdata = json.load(jfile)
 
             lines = templates[self.theme_id].split('\n')
@@ -3325,7 +3320,7 @@ transparency        0
 
             ret = True
             try:
-                with open(w_path, 'w') as out_file:
+                with open(w_path, 'w', encoding='utf-8') as out_file:
                     for n in lines:
                         out_file.write(n + '\n')
             except:
@@ -3602,7 +3597,7 @@ transparency        0
             # for n in lines:
             #     logger.error(n)
             try:
-                with open(w_path, 'w') as out_file:
+                with open(w_path, 'w', encoding='utf-8') as out_file:
                     for n in lines:
                         out_file.write(n + '\n')
             except:
@@ -3633,7 +3628,7 @@ transparency        0
     def _read_theme_sh(self, theme_name):
         lines = {}
         in_theme = False
-        with open(self._theme_sh_executable, 'r') as f:
+        with open(self._theme_sh_executable, 'r', encoding='utf-8') as f:
             for line in f:
                 if in_theme:
                     l = line.replace('\n', '').split(': ')

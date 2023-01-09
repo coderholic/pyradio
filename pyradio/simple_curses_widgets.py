@@ -17,6 +17,7 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
+
 class DisabledWidget(object):
     '''A dummy class that only returns enabled = False
 
@@ -4040,7 +4041,7 @@ class SimpleCursesLineEdit(object):
         return data
 
     def _log(self, msg):
-        with open(self._log_file, 'a') as log_file:
+        with open(self._log_file, 'a', encoding='utf-8') as log_file:
             log_file.write(msg)
 
     def run(self):

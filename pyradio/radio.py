@@ -4022,7 +4022,7 @@ __|Remote Control Server| cannot be started!__
             if not path.exists(self._cnf.station_path):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Creating empty register file: ' + self._cnf.register_to_open)
-                with open(self._cnf.station_path, "w") as rr:
+                with open(self._cnf.station_path, "w", encoding='utf-8') as rr:
                     pass
             self._find_renamed_selection(self.ws.REGISTER_MODE,
                                          self._cnf.registers_dir,
@@ -4513,7 +4513,7 @@ __|Remote Control Server| cannot be started!__
             d1 = datetime.now()
             now_str = d1.strftime('%Y-%m-%d')
             try:
-                with open(path.join(a_path, '.' + now_str + '.date'), 'w') as f:
+                with open(path.join(a_path, '.' + now_str + '.date'), 'w', encoding='utf-8') as f:
                     pass
             except:
                 pass
@@ -9189,7 +9189,7 @@ __|Remote Control Server| cannot be started!__
         '''
         num = -1
         self._reading_stations = []
-        with open(playlist_file, 'r') as cfgfile:
+        with open(playlist_file, 'r', encoding='utf-8') as cfgfile:
             try:
                 for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                     if not row:

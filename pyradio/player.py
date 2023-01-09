@@ -474,7 +474,7 @@ class Player(object):
                 #         return ret_strings[2].format(str(self.volume))
                 # else:
                 if self.PROFILE_FROM_USER:
-                    with open(config_file, 'r') as c_file:
+                    with open(config_file, 'r', encoding='utf-8') as c_file:
                         config_string = c_file.read()
 
                     if self.profile_token in config_string:
@@ -516,7 +516,7 @@ class Player(object):
                         config_string = self.profile_token.join(sections)
 
                     try:
-                        with open(config_file, 'w') as c_file:
+                        with open(config_file, 'w', encoding='utf-8') as c_file:
                             c_file.write(config_string)
                         self.volume = -1
                     except EnvironmentError:
@@ -540,7 +540,7 @@ class Player(object):
                         return ret_strings[2].format(str(self.volume))
                     new_profile_string = self.NEW_PROFILE_STRING + config_string
                 try:
-                    with open(config_file, 'a') as c_file:
+                    with open(config_file, 'a', encoding='utf-8') as c_file:
                         c_file.write(new_profile_string.format(str(self.volume)))
                 except EnvironmentError:
                     if (logger.isEnabledFor(logging.DEBUG)):
@@ -916,7 +916,7 @@ class Player(object):
             if stop():
                 break
             try:
-                fp = open(fn, mode='rt', encoding=enc, errors='ignore')
+                fp = open(fn, mode='r', encoding=enc, errors='ignore')
                 go_on = True
             except:
                 pass
@@ -1673,7 +1673,7 @@ class MpvPlayer(Player):
         self.PROFILE_FROM_USER = False
         for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
-                with open(config_file) as f:
+                with open(config_file, 'r', encoding='utf-8') as f:
                     config_string = f.read()
                 if self.profile_token in config_string:
                     if i == 0:
@@ -1684,7 +1684,7 @@ class MpvPlayer(Player):
             create a default profile
         '''
         try:
-            with open(self.config_files[0], 'a') as f:
+            with open(self.config_files[0], 'a', encoding='utf-8') as f:
                 f.write('\n[{}]\n'.format(self.profile_name))
                 f.write(self.NEW_PROFILE_STRING)
             self.PROFILE_FROM_USER = True
@@ -2115,7 +2115,7 @@ class MpPlayer(Player):
         #    return 0
         for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
-                with open(config_file) as f:
+                with open(config_file, 'r', encoding='utf-8') as f:
                     config_string = f.read()
                 if self.profile_token in config_string:
                     if i == 0:
@@ -2126,7 +2126,7 @@ class MpPlayer(Player):
             create a default profile
         '''
         try:
-            with open(self.config_files[0], 'a') as f:
+            with open(self.config_files[0], 'a', encoding='utf-8') as f:
                 f.write('\n[{}]\n'.format(self.profile_name))
                 f.write(self.NEW_PROFILE_STRING)
             self.PROFILE_FROM_USER = True
@@ -2323,7 +2323,7 @@ class VlcPlayer(Player):
                     logger.error('DE file exists: "{}"'.format(self._vlc_stdout_log_file))
                     continue
                 try:
-                    with open(self._vlc_stdout_log_file, 'w') as f:
+                    with open(self._vlc_stdout_log_file, 'w', encoding='utf-8') as f:
                         ok_to_go_on = True
                 except:
                     logger.error('DE file not opened: "{}"'.format(self._vlc_stdout_log_file))

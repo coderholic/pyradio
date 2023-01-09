@@ -1477,7 +1477,7 @@ class RadioBrowserConfig(object):
         lines = []
         term_str = []
         try:
-            with open(self.config_file, 'r') as cfgfile:
+            with open(self.config_file, 'r', encoding='utf-8') as cfgfile:
                 lines = [line.strip() for line in cfgfile if line.strip() and not line.startswith('#') ]
 
         except:
@@ -1634,7 +1634,7 @@ PING_TIMEOUT = '''
                 txt += 'SEARCH_TERM = ' + asterisk + str(search_history[n]).replace('{u\'', '{\'').replace('u\'', '\'') + '\n'
 
         try:
-            with open(self.config_file, 'w') as cfgfile:
+            with open(self.config_file, 'w', encoding='utf-8') as cfgfile:
                 cfgfile.write(txt)
         except:
             if logger.isEnabledFor(logging.ERROR):

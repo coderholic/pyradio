@@ -60,7 +60,7 @@ def erase_curses_win(self, Y, X, beginY, beginX, char=' ', color=5):
 def is_rasberrypi():
     ''' Try to detest rasberry pi '''
     try:
-        with io.open('/sys/firmware/devicetree/base/model', 'r') as m:
+        with io.open('/sys/firmware/devicetree/base/model', 'r', encoding='utf-8') as m:
             if 'raspberry pi' in m.read().lower():
                 return True
     except Exception:

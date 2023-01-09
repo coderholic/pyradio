@@ -19,6 +19,7 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
+
 class PyRadioSearch(SimpleCursesLineEdit):
 
     _caption = 'Search'
@@ -1063,7 +1064,7 @@ class PyRadioRenameFile(object):
         self.new_file_name = path.join(self._to_path, self._widgets[0].string + '.csv')
         if self._create:
             try:
-                with open(self.new_file_name, 'wt'):
+                with open(self.new_file_name, 'w', encoding='utf-8'):
                     pass
             except:
                 return -2

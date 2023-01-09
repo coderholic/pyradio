@@ -559,7 +559,7 @@ class PyRadioThemeReadWrite(object):
             return 2, None
 
         try:
-            with open(theme_path, 'r') as thmfile:
+            with open(theme_path, 'r', encoding='utf-8') as thmfile:
                 lines = [line.strip() for line in thmfile if line.strip() and not line.startswith('#')]
 
         except:
@@ -753,7 +753,7 @@ Messages Border     {13}
 #   2: Obey config setting
 transparency        0
 '''
-            with open(out_theme, 'w') as f:
+            with open(out_theme, 'w', encoding='utf-8') as f:
                 f.write(
                    msg.format(
                        colors['css'][1],
@@ -1363,7 +1363,7 @@ class PyRadioThemeSelector(object):
         return -3, False
 
     def _log(self, msg):
-        with open(self._log_file, 'a') as log_file:
+        with open(self._log_file, 'a', encoding='utf-8') as log_file:
             log_file.write(msg)
 
 

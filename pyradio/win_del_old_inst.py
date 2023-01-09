@@ -110,7 +110,7 @@ CD /d %~dp0
 
 '''
         TARGET_FILE = os.path.join(TARGET, 'RunMe.bat')
-        with open(TARGET_FILE, 'w') as ofile:
+        with open(TARGET_FILE, 'w', encoding='utf-8') as ofile:
             ofile.write(msg)
             ofile.write('\nECHO Looking for old style installation files\n')
             for n in out:

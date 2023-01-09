@@ -400,6 +400,7 @@ def shell():
         ret = pyradio_config.read_playlist_file(
             stationFile=args.stations,
             is_last_playlist=is_last_playlist)
+        print('ret = {}'.format(ret))
         if ret < 0:
             print_playlist_selection_error(args.stations, pyradio_config, ret)
 
@@ -567,6 +568,8 @@ def read_config(pyradio_config):
     elif ret == -2:
         print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
         sys.exit(1)
+    # for n in pyradio_config.opts.keys():
+    #     print('{0}: {1}'.format(n, pyradio_config.opts[n]))
 
 def save_config(pyradio_config):
     ret = pyradio_config.save_config(from_command_line=True)

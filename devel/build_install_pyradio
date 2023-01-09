@@ -434,10 +434,25 @@ done
 # echo "***** installing for user..."
 do_dev
 
+if [ "${TO_PYTHON}" == "2" ];
+then
+    tar czf pyradio.tar.gz pyradio
+    for a_file in pyradio/*.py
+    do
+        sed -i "/open/s/, encoding='utf-8'//" "${a_file}"
+    done
+fi
+
 if [ -e requirements.txt ];then
 	python"${TO_PYTHON}" -m pip install -r requirements.txt . || pip_error
 else
 	python"${TO_PYTHON}" -m pip install . || pip_error
+fi
+
+if [ "${TO_PYTHON}" == "2" ];
+then
+    tar xzf pyradio.tar.gz
+    rm pyradio.tar.gz
 fi
 
 do_undev

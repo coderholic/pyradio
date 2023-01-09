@@ -32,6 +32,7 @@ except:
 VERSION = ''
 
 PY3 = sys.version[0] == '3'
+
 # import logging
 # logger = logging.getLogger(__name__)
 
@@ -340,10 +341,10 @@ def windows_put_devel_version():
         cur_dir = os.getcwd()
         copyfile(os.path.join(cur_dir, 'config.py'), os.path.join(cur_dir, 'config.py.dev'))
         try:
-            with open(os.path.join(cur_dir, 'config.py'), 'r') as con:
+            with open(os.path.join(cur_dir, 'config.py'), 'r', encoding='utf-8') as con:
                 lines = con.read()
             lines = lines.replace("git_description = ''", "git_description = '" + long_descr + "'")
-            with open(os.path.join(cur_dir, 'config.py'), 'w') as con:
+            with open(os.path.join(cur_dir, 'config.py'), 'w', encoding='utf-8') as con:
                 con.write(lines)
         except:
             print('Error: Cannot change downloaded files...\n       Please close all running programs and try again.')
@@ -583,7 +584,7 @@ class PyRadioUpdate(object):
                 self.ZIP_URL[0] = self.ZIP_URL[0] + VERSION + '.zip'
                 self.ZIP_DIR[0] += VERSION
         try:
-            with open(bat, "w") as b:
+            with open(bat, "w", encoding='utf-8') as b:
                 b.write('@ECHO OFF\n')
                 b.write('CLS\n')
                 b.write('python -m pip install --upgrade wheel 1>NUL 2>NUL\n')
@@ -726,10 +727,10 @@ class PyRadioUpdate(object):
         ''' change git_discription in pyradio/config.py '''
         if self._github_long_description is not None:
             try:
-                with open(os.path.join(self._install_dir, 'pyradio', 'config.py'), 'r') as con:
+                with open(os.path.join(self._install_dir, 'pyradio', 'config.py'), 'r', encoding='utf-8') as con:
                     lines = con.read()
                 lines = lines.replace("git_description = ''", "git_description = '" + self._github_long_description + "'")
-                with open(os.path.join(self._install_dir, 'pyradio', 'config.py'), 'w') as con:
+                with open(os.path.join(self._install_dir, 'pyradio', 'config.py'), 'w', encoding='utf-8') as con:
                     con.write(lines)
             except:
                 print('Error: Cannot change downloaded files...\n       Please close all running programs and try again.')
@@ -758,7 +759,7 @@ class PyRadioUpdate(object):
             except:
                 print('Error: PyRadio source code ZIP file is corrupt...\n')
                 sys.exit(1)
-        with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w') as b:
+        with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w', encoding='utf-8') as b:
             pass
         ''' DEBUG on linux
             get new install.py, copy.py (any py)

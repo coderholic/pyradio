@@ -5,7 +5,7 @@ from textwrap import wrap
 import glob
 import csv
 from os import path, sep, remove
-from sys import platform
+from sys import platform, version_info
 
 from .common import *
 from .window_stack import Window_Stack_Constants
@@ -17,7 +17,6 @@ from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalP
 import logging
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
-
 
 logger = logging.getLogger(__name__)
 
@@ -2552,7 +2551,7 @@ class PyRadioSelectPlaylist(object):
 
         stationFile = path.join(self._config_path, self._items[self._selected_playlist_id] + '.csv')
         self._select_playlist_error = 0
-        with open(stationFile, 'r') as cfgfile:
+        with open(stationFile, 'r', encoding='utf-8') as cfgfile:
             try:
                 for row in csv.reader(filter(lambda row: row[0] != '#', cfgfile), skipinitialspace=True):
                     if not row:
@@ -2809,7 +2808,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         self._items = []
         stationFile = path.join(self._config_path, self._default_playlist + '.csv')
         if path.exists(stationFile):
-            with open(stationFile, 'r') as cfgfile:
+            with open(stationFile, 'r', encoding='utf-8') as cfgfile:
                 try:
                     for row in csv.reader(filter(lambda row: row[0] != '#', cfgfile), skipinitialspace=True):
                         if not row:
