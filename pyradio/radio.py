@@ -9298,8 +9298,6 @@ __|Remote Control Server| cannot be started!__
     def _open_playlist_and_station_from_station_history(self, stationFile, h_item):
         num = self._open_and_check_station_in_playlist(stationFile, h_item[-1], h_item[1])
         if num == -1:
-            ''' Continue going through history items '''
-            func()
             return
         self._set_rename_stations()
         self._cnf.stations = list(self._reading_stations)

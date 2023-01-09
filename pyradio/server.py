@@ -471,12 +471,6 @@ Restricted Commands (Main mode only)
             self._bind_ip = sys_ip.IPs[1]
         self._bind_port = bind_port
         self._commands = commands
-        self._html_data = {
-            '|ALERT|': '',
-            '|ALERT_TYPE|': '',
-            '|CONTENT|': '',
-            '|IP|': '{0}:{1}'.format(self._bind_ip, self._bind_port)
-        }
 
     @property
     def ip(self):
@@ -608,7 +602,7 @@ Restricted Commands (Main mode only)
                 self._send_raw(received)
             else:
                 self._commands['/log']()
-                self._send_text(self._text['/log'], alert_type='alert-success')
+                self._send_text(self._text['/log'])
         elif self._path in ('/like', '/l'):
             if self._is_html:
                 received = self._commands['/html_like']()
@@ -617,7 +611,7 @@ Restricted Commands (Main mode only)
             else:
                 if self.sel()[1] > -1:
                     self._commands['/like']()
-                    self._send_text(self._text['/like'], alert_type='alert-success')
+                    self._send_text(self._text['/like'])
                 else:
                     self._send_text(self._text['/idle'])
         elif self._path in ('/mute', '/m'):
@@ -627,7 +621,7 @@ Restricted Commands (Main mode only)
                 self._send_raw(received)
             else:
                 if self.sel()[1] > -1:
-                    self._send_text('Player mute toggled!', alert_type='alert-success')
+                    self._send_text('Player mute toggled!')
                     self._commands['/mute']()
                 else:
                     self._send_text(self._text['/idle'])
@@ -639,13 +633,13 @@ Restricted Commands (Main mode only)
             else:
                 if self.sel()[1] > -1:
                     if self.muted():
-                        self._send_text('Player is muted!', alert_type='alert-danger')
+                        self._send_text('Player is muted!')
                     else:
                         out = self._commands['/volumesave']()
                         if out:
-                            self._send_text('Volume saved', alert_type='alert-success')
+                            self._send_text('Volume saved')
                         else:
-                            self._send_text('Volume not saved', alert_type='alert-success')
+                            self._send_text('Volume not saved')
                 else:
                     self._send_text(self._text['/idle'])
         elif self._path in ('/volumeup', '/vu'):
@@ -656,10 +650,10 @@ Restricted Commands (Main mode only)
             else:
                 if self.sel()[1] > -1:
                     if self.muted():
-                        self._send_text('Player is muted!', alert_type='alert-danger')
+                        self._send_text('Player is muted!')
                     else:
                         self._commands['/volumeup']()
-                        self._send_text(self._text['/volumeup'], alert_type='alert-success')
+                        self._send_text(self._text['/volumeup'])
                 else:
                     self._send_text(self._text['/idle'])
         elif self._path in ('/volumedown', '/vd'):
@@ -670,10 +664,10 @@ Restricted Commands (Main mode only)
             else:
                 if self.sel()[1] > -1:
                     if self.muted():
-                        self._send_text('Player is muted!', alert_type='alert-danger')
+                        self._send_text('Player is muted!')
                     else:
                         self._commands['/volumedown']()
-                        self._send_text(self._text['/volumedown'], alert_type='alert-success')
+                        self._send_text(self._text['/volumedown'])
                 else:
                     self._send_text(self._text['/idle'])
         elif self._path == '/quit':
@@ -681,10 +675,10 @@ Restricted Commands (Main mode only)
                 self._send_text(self._text['/quit'])
         elif self._path in  ('', '/'):
             if self._is_html:
-                self._send_text('', alert_type='')
+                self._send_text('')
                 self.send_song_title(self.song_title())
             else:
-                self._send_text(self._text['/'], alert_type='')
+                self._send_text(self._text['/'])
         elif self._path in ('/i', '/info'):
             if self._is_html:
                 received = self._commands['/html_info']()
@@ -702,7 +696,7 @@ Restricted Commands (Main mode only)
                 self._send_raw(received)
             else:
                 if self.can_send_command():
-                    self._send_text(self._text['/next'], alert_type='alert-success')
+                    self._send_text(self._text['/next'])
                     self._commands['/next']()
                 else:
                     self._send_text(self._text['/perm'])
@@ -713,7 +707,7 @@ Restricted Commands (Main mode only)
                 self._send_raw(received)
             else:
                 if self.can_send_command():
-                    self._send_text(self._text['/previous'], alert_type='alert-success')
+                    self._send_text(self._text['/previous'])
                     self._commands['/previous']()
                 else:
                     self._send_text(self._text['/perm'])
@@ -728,11 +722,11 @@ Restricted Commands (Main mode only)
                     llen = len(self.config().stations_history.items)
                     l_item = self.config().stations_history.item
                     if l_item == -1 or llen == 0:
-                        self._send_text('No items in history!', alert_type='alert-danger')
+                        self._send_text('No items in history!')
                     elif l_item + 1 < llen:
                         go_on = True
                     if go_on:
-                        self._send_text(self._text['/histnext'], alert_type='alert-success')
+                        self._send_text(self._text['/histnext'])
                         self._commands['/histnext']()
                     else:
                         self._send_text('Already at last history item!')
@@ -749,7 +743,7 @@ Restricted Commands (Main mode only)
                     llen = len(self.config().stations_history.items)
                     l_item = self.config().stations_history.item
                     if l_item == -1 or llen == 0:
-                        self._send_text('No items in history!', alert_type='alert-danger')
+                        self._send_text('No items in history!')
                         go_on = False
                     elif l_item == 0:
                         go_on = False
@@ -773,10 +767,10 @@ Restricted Commands (Main mode only)
             else:
                 if self.can_send_command():
                     if self.sel()[1] > -1:
-                        self._send_text(self._text['/stop'], alert_type='alert-success')
+                        self._send_text(self._text['/stop'])
                         self._commands['/stop']()
                     else:
-                        self._send_text(self._text['/start'], alert_type='alert-success')
+                        self._send_text(self._text['/start'])
                         self._commands['/start']()
                 else:
                     self._send_text(self._text['/perm'])
@@ -785,7 +779,7 @@ Restricted Commands (Main mode only)
             if self.can_send_command():
                 ret = self._parse()
                 if ret is None:
-                    self._send_text(self._text['/error'], alert_type='alert-danger')
+                    self._send_text(self._text['/error'])
                 else:
                     has_error = False
                     if ret == '/stations':
@@ -802,7 +796,7 @@ Restricted Commands (Main mode only)
                         try:
                             ret = int(ret)
                         except (ValueError, TypeError):
-                            self._send_text(self._text['/error'], alert_type='alert-danger')
+                            self._send_text(self._text['/error'])
                             has_error = True
                         if not has_error:
                             # ret = ret -1 if ret > 0 else 0
@@ -836,12 +830,12 @@ Restricted Commands (Main mode only)
                         self._send_text(self._text['/error'], alert-danger)
                     else:
                         if sp[1] not in ('playlists', 'pl'):
-                            self._send_text(self._text['/error'], alert_type='alert-danger')
+                            self._send_text(self._text['/error'])
                         else:
                             # get the numbers
                             pl, st = self._get_numbers(sp[-1])
                             if pl is None:
-                                self._send_text(self._text['/error'], alert_type='alert-danger')
+                                self._send_text(self._text['/error'])
                             else:
                                 go_on = True
                                 try:
@@ -925,7 +919,7 @@ Restricted Commands (Main mode only)
                 else:
                     ret = self._parse()
                     if ret is None:
-                        self._send_text(self._text['/error'], alert_type='alert-danger')
+                        self._send_text(self._text['/error'])
                     elif ret.startswith('/'):
                         if ret == '/stations':
                             if self._is_html:
@@ -956,12 +950,12 @@ Restricted Commands (Main mode only)
                             ret = int(ret) - 1
                         except (ValueError, TypeError):
                             go_on = False
-                            self._send_text(self._text['/error'], alert_type='alert-danger')
+                            self._send_text(self._text['/error'])
                         if go_on:
                             try:
                                 playlist_name = self.lists()[2][-1][ret][0]
                             except IndexError:
-                                self._send_text('Error: Playlist not found (id={})'.format(ret+1), alert_type='alert-danger')
+                                self._send_text('Error: Playlist not found (id={})'.format(ret+1))
                                 go_on = False
                             if go_on:
                                 in_file, out = self.config().read_playlist_for_server(
@@ -982,11 +976,11 @@ Restricted Commands (Main mode only)
                                         )
                                 else:
                                     if self._is_html:
-                                        self._send_text('Error reading playlist: <b>{}</b>'.format(playlist_name), alert_type='alert-danger')
+                                        self._send_raw('<div class="alert txt-center alert-danger">Error reading playlist: <b>{}</b></div>'.format(playlist_name))
                                     else:
-                                        self._send_text('Error reading playlist: "{}"'.format(playlist_name), alert_type='alert-danger')
+                                        self._send_text('Error reading playlist: "{}"'.format(playlist_name))
         else:
-            self._send_text(self._text['/error'], alert_type='alert-danger')
+            self._send_text(self._text['/error'])
 
         return True
 
@@ -1050,16 +1044,13 @@ Content-Length: {}
             except socket.error as e:
                 self.error = e
 
-    def _send_text(self,
-                   msg, alert_type='alert-info',
-                   content='', put_script=False
+    def _send_text(
+        self, msg,
+        put_script=False
     ):
         if msg.startswith('retry: '):
             return
         if self._is_html:
-            self._html_data['|ALERT|'] = msg
-            self._html_data['|ALERT_TYPE|'] = alert_type
-            self._html_data['|CONTENT|'] = content
             self._send_html(put_script=put_script)
             return
         f_msg = msg + '\n'
@@ -1089,8 +1080,6 @@ Content-Length: {}
 
     def _send_html(self, msg=None, put_script=False):
         f_msg = self._html + '\n'
-        for n in self._html_data.keys():
-            f_msg = f_msg.replace(n, self._html_data[n])
         if put_script:
             f_msg = self._insert_html_script(f_msg)
         if PY2:
