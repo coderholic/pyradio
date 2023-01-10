@@ -1,4 +1,9 @@
 2023-01-10 s-n-g
+    * version 0.8.9.34 (0.9-beta31)
+    * fixing a line editor crash
+    * adding \s to help (page 5)
+
+2023-01-10 s-n-g
     * version 0.8.9.33 (0.9-beta30)
     * adding Remote Control Server
     * mpv volume will not go from zero to max when decreasing

@@ -2517,7 +2517,9 @@ __|Remote Control Server| cannot be started!__
                         reset_metrics=False)
 
     def _show_main_help_page_5(self, from_keyboard=False):
-        txt = '''!Titles Logger
+        txt = '''!Remote Control Server
+                 \s               |Start/Stop the |Server|.
+                 !Titles Logger
                  W                |Toggle Logger on/off
                  w                |Tag a station as liked
                  !Windows Only

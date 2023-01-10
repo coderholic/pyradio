@@ -501,7 +501,7 @@ class PyRadioEditor(object):
             self._win.chgat(0, x, 4, curses.color_pair(12))
         else:
             self._win.chgat(0, x, 2, curses.color_pair(12))
-        self._refresh()
+        # self._refresh()
 
     def _show_buttons(self):
         sid = 3
