@@ -1,3 +1,13 @@
+2023-01-10 s-n-g
+    * version 0.8.9.33 (0.9-beta30)
+    * adding Remote Control Server
+    * mpv volume will not go from zero to max when decreasing
+    * all file read/write will be utf-8 encoded
+      (python2 not affected)
+    * fixing Windows lnk installation
+    * editing gruvbox themes
+    * updating docs, creating pyradio_server man page
+
 2022-12-09 s-n-g
     * version 0.8.9.32 (0.9-beta29)
     * Making it possible to disable the no themes start
