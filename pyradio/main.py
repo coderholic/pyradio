@@ -15,6 +15,9 @@ from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_inst
 from .cjkwrap import cjklen, cjkslices, fill
 from .log import Log
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 PATTERN_TITLE = '%(asctime)s | %(message)s'
 
@@ -400,7 +403,6 @@ def shell():
         ret = pyradio_config.read_playlist_file(
             stationFile=args.stations,
             is_last_playlist=is_last_playlist)
-        print('ret = {}'.format(ret))
         if ret < 0:
             print_playlist_selection_error(args.stations, pyradio_config, ret)
 

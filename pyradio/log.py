@@ -13,6 +13,9 @@ import subprocess
 from .common import player_start_stop_token
 from .cjkwrap import cjklen, PY3
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 HAS_WIN10TOAST = True
 try:
     from win10toast import ToastNotifier

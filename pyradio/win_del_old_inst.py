@@ -2,6 +2,9 @@ import glob
 import os
 from sys import platform
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 def win_del_old_inst():
     if not platform.startswith('win'):
         return False

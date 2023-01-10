@@ -11,6 +11,10 @@ from time import sleep
 import collections
 import json
 import socket
+
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 try:
     import psutil
 except:

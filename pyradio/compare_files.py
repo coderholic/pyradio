@@ -1,5 +1,8 @@
 import hashlib
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 class CompareFiles(object):
     ''' Class to compare two files  by content '''
 

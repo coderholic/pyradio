@@ -1,6 +1,9 @@
 import subprocess
 from sys import platform, version_info
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 def ping(server, count=10, timeout_in_seconds=1):
     ''' ping a server on any platform
         Returns:

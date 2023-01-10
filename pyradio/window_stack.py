@@ -5,6 +5,9 @@ import locale
 locale.setlocale(locale.LC_ALL, "")
 logger = logging.getLogger(__name__)
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 
 class Window_Stack_Constants(object):
     ''' Modes of Operation '''

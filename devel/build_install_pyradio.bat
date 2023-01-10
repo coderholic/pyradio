@@ -119,11 +119,17 @@ CD ..
 
 :: Install lnk file
 ECHO *** Installing Dekstop Shortcut
-COPY /Y %APPDATA%\pyradio\help\*.lnk %DESKTOP% >NUL
-IF EXIST "%APPDATA%\Microsoft\Windows\Start Menu\Programs" (
-    ECHO *** Installing Start Menu Shortcut
-    COPY /Y %APPDATA%\pyradio\help\*.lnk "%APPDATA%\Microsoft\Windows\Start Menu\Programs" >NUL
-)
+REM DEL %USERPROFILE%\desktop\PyRadio.lnk >NUL
+REM DEL "%APPDATA%\Microsoft\Windows\Start Menu\Programs\PyRadio.lnk" >NUL
+REM REM COPY /Y %APPDATA%\pyradio\help\PyRadio.lnk %DESKTOP% >NUL
+REM COPY /Y %APPDATA%\pyradio\help\PyRadio.lnk %USERPROFILE%\desktop >NUL
+REM IF EXIST "%APPDATA%\Microsoft\Windows\Start Menu\Programs" (
+REM     ECHO *** Installing Start Menu Shortcut
+REM     COPY /Y %APPDATA%\pyradio\help\PyRadio.lnk "%APPDATA%\Microsoft\Windows\Start Menu\Programs" >NUL
+REM )
+CD pyradio
+%PROGRAM% -c "from win import install_pyradio_link; install_pyradio_link()"
+CD ..
 
 :: Clean up
 CD pyradio

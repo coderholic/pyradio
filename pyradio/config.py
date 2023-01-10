@@ -41,6 +41,8 @@ logger = logging.getLogger(__name__)
 
 SUPPORTED_PLAYERS = ('mpv', 'mplayer', 'vlc')
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
 
 class PyRadioStations(object):
     ''' PyRadio stations file management '''

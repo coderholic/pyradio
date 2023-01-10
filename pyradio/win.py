@@ -12,6 +12,9 @@ from os import sep
 import subprocess
 from urllib.request import urlretrieve
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 HAVE_PYUNPACK = True
 try:
     from pyunpack import Archive
@@ -454,28 +457,106 @@ def clean_up(print_msg=True):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL)
 
+def get_path(exe):
+    out_exe = ''
+    chk = []
+
+    for n in site.getsitepackages():
+        # print('adding: "{}"'.format(join(n, exe)))
+        # print('adding: "{}"'.format(join(n, 'Scripts', exe)))
+        chk.append(join(n, exe))
+        chk.append(join(n, 'Scripts', exe))
+    # print('------------------------')
+    x = site.getusersitepackages()
+    if isinstance(x, str):
+            # print('adding: "{}"'.format(join(x, exe)))
+            # print('adding: "{}"'.format(join(x, 'Scripts', exe)))
+            chk.append(join(x, exe))
+            chk.append(join(x, 'Scripts', exe))
+            # print('adding: "{}"'.format(join(x, exe)).replace('\site-packages', ''))
+            # print('adding: "{}"'.format(join(x, 'Scripts', exe)).replace('\site-packages', ''))
+            chk.append(join(x, exe).replace('\site-packages', ''))
+            chk.append(join(x, 'Scripts', exe).replace('\site-packages', ''))
+    else:
+        for n in site.getusersitepackages():
+            # print('adding: "{}"'.format(join(n, exe)))
+            # print('adding: "{}"'.format(join(n, 'Scripts', exe)))
+            chk.append(join(n, exe))
+            chk.append(join(n, 'Scripts', exe))
+    # print('------------------------')
+    for n in site.PREFIXES:
+        # print('adding: "{}"'.format(join(n, exe)))
+        # print('adding: "{}"'.format(join(n, 'Scripts', exe)))
+        chk.append(join(n, exe))
+        chk.append(join(n, 'Scripts', exe))
+    # for n in range(0,4):
+    #     print('')
+    # for n in chk:
+    #     print(n)
+    # print('------------------------')
+    for n in chk:
+        # print('checking: "{}'.format(n))
+        if exists(n):
+            return n
+    return ''
+
+def get_pyradio():
+    return get_path('pyradio.exe')
+
+def get_pylnk():
+    return get_path('pylnk3.exe')
+
 def create_pyradio_link():
-    sp = site.USER_SITE.split(sep)
-    sp[-1] = 'Scripts'
-    scripts_path = sep.join(sp)
-    pyradio_exe = join(scripts_path, 'pyradio.exe')
-    pylnk_exe = join(scripts_path, 'pylnk3.exe')
+    pyradio_exe = 'pyradio'
+    pyradio_exe = get_pyradio()
+    pylnk_exe = get_pylnk()
+    # print('pyradio_exe = "{}"'.format(pyradio_exe))
+    # print('pylnk_exe = "{}"'.format(pylnk_exe))
     icon = join(environ['APPDATA'], 'pyradio', 'help', 'pyradio.ico')
+    # print('icon = "{}"'.format(icon))
     link_path = join(environ['APPDATA'], 'pyradio', 'help', 'PyRadio.lnk')
+    # print('link_path = "{}"'.format(link_path))
     workdir = join(environ['APPDATA'], 'pyradio')
-    if exists(pyradio_exe):
-        print('*** Updating Dekstop Shortcut')
+    # print('workdir = "{}"'.format(workdir))
+    # print('*** Updating Dekstop Shortcut')
+    if not exists(workdir):
+        makedirs(workdir, exist_ok=True)
         if not exists(workdir):
-            makedirs(workdir, exist_ok=True)
-            if not exists(workdir):
-                print('Cannot create "' + workdir + '"')
-                sys.exit(1)
-        if not exists(pylnk_exe):
-            install_pylnk(workdir)
-        cmd = pylnk_exe + ' c --icon ' + icon + ' --workdir ' + workdir \
-            + ' ' + pyradio_exe + ' ' + link_path
-        #print(cmd)
-        subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print('Cannot create "' + workdir + '"')
+            sys.exit(1)
+    if not exists(pylnk_exe):
+        install_pylnk(workdir)
+    pylnk_exe = get_pylnk()
+    # print('pylnk_exe = "{}"'.format(pylnk_exe))
+    cmd = pylnk_exe + ' c --icon ' + icon + ' --workdir ' + workdir \
+        + ' ' + pyradio_exe + ' ' + link_path
+    # print('cmd = "{}"'.format(cmd))
+    subprocess.Popen(
+        [pylnk_exe, 'c', '--icon', icon, '--workdir', workdir, pyradio_exe, link_path],
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+
+def install_pyradio_link():
+    from shutil import copy
+    desktop = getenv('DESKTOP')
+    user_profile = getenv('USERPROFILE')
+    appdata = getenv('APPDATA')
+    to_desktop = desktop if desktop is not None else join(user_profile, 'desktop')
+    to_start_menu = join(appdata, 'Microsoft', 'Windows', 'Start Menu', 'Programs')
+
+    if exists(to_desktop):
+            copy(
+                join(appdata, 'pyradio', 'help', 'PyRadio.lnk'),
+                join(to_desktop, 'PyRadio.lnk')
+            )
+
+    if exists(to_start_menu):
+            copy(
+                join(appdata, 'pyradio', 'help', 'PyRadio.lnk'),
+                join(to_start_menu, 'PyRadio.lnk')
+            )
 
 if __name__ == '__main__':
     # _post_download(1, "C:\\Users\\spiros\\AppData\\Roaming\\pyradio")

@@ -7,6 +7,10 @@ import platform
 import json
 from time import sleep
 import site
+
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 try:
     from os.path import curdir, exists
     import ctypes

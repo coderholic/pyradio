@@ -29,6 +29,9 @@ import textwrap
 import unicodedata
 import sys
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 PY3 = sys.version[0] == '3'
 
 if PY3:

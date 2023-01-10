@@ -14,6 +14,9 @@ from .common import *
 
 logger = logging.getLogger(__name__)
 
+import locale
+locale.setlocale(locale.LC_ALL, "")
+
 def isLightOrDark(rgbColor=[0,128,255]):
     [r,g,b]=rgbColor
     '''
