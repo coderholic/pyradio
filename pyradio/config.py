@@ -25,6 +25,7 @@ try:
     import requests
 except:
     HAS_REQUESTS = False
+
 from .log import Log
 HAS_DNSPYTHON = True
 try:

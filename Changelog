@@ -6,6 +6,8 @@
       (python2 not affected)
     * fixing Windows lnk installation
     * editing gruvbox themes
+    * adding "Border" parameter to themes as per #173
+      (not used by default in any of the existing themes)
     * updating docs, creating pyradio_server man page
 
 2022-12-09 s-n-g

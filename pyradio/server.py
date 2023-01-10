@@ -1,4 +1,3 @@
-# https://stackoverflow.com/questions/10114224/how-to-properly-send-http-response-with-python-using-socket-library-only
 import socket
 import logging
 from os.path import basename
@@ -7,15 +6,18 @@ import requests
 from time import sleep
 from .simple_curses_widgets import SimpleCursesLineEdit
 
-
 PY2 = version_info[0] == 2
 logger = logging.getLogger(__name__)
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
-if not platform.lower().startswith('win'):
-    import netifaces
+HAS_NETIFACES = True
+try:
+    if not platform.lower().startswith('win'):
+        import netifaces
+except:
+    HAS_NETIFACES = False
 
 class IPs(object):
     def __init__(self, fetch_public_ip=False):
@@ -463,6 +465,7 @@ Restricted Commands (Main mode only)
     }
 
     def __init__(self, bind_ip, bind_port, commands):
+        self.has_netifaces = HAS_NETIFACES
         self._bind_ip = bind_ip
         if bind_ip.lower() == 'localhost':
             self._bind_ip = '127.0.0.1'

@@ -281,6 +281,7 @@ class PyRadio(object):
                  req_player='',
                  theme='',
                  force_update=''):
+        self._no_netifaces = False
         self._current_selection = 0
         self._force_print_all_lines = False
         self._system_asked_to_terminate = False
@@ -378,6 +379,7 @@ class PyRadio(object):
                 self.ws.EDIT_STATION_URL_ERROR: self._print_editor_url_error,
                 self.ws.PY2_EDITOR_ERROR: self._print_py2_editor_error,
                 self.ws.REQUESTS_MODULE_NOT_INSTALLED_ERROR: self._print_requests_not_installed_error,
+                self.ws.NETIFACES_MODULE_NOT_INSTALLED_ERROR: self._print_netifaces_not_installed_error,
                 self.ws.DNSPYTHON_MODULE_NOT_INSTALLED_ERROR: self._print_dnspython_not_installed_error,
                 self.ws.CLEAR_REGISTER_MODE: self._print_clear_register,
                 self.ws.CLEAR_ALL_REGISTERS_MODE: self._print_clear_all_registers,
@@ -992,6 +994,9 @@ class PyRadio(object):
             self._show_theme_not_supported()
         elif self._cnf.user_param_id == -1:
             self._print_user_parameter_error()
+        elif self._no_netifaces:
+            self._no_netifaces = False
+            self._print_netifaces_not_installed_error()
         # elif not self._cnf.use_themes:
         #     self._show_no_themes()
 
@@ -1026,6 +1031,8 @@ class PyRadio(object):
         self.bodyWin.addstr('dnspython', curses.color_pair(4))
         self.bodyWin.addstr(14,1, '      3. ', curses.color_pair(5))
         self.bodyWin.addstr('psutil ', curses.color_pair(4))
+        self.bodyWin.addstr(15,1, '      3. ', curses.color_pair(5))
+        self.bodyWin.addstr('netifaces', curses.color_pair(4))
         self.outerBodyWin.refresh()
         self.bodyWin.refresh()
 
@@ -3209,6 +3216,23 @@ __|Remote Control Server| cannot be started!__
         '''
         self._show_help(txt.format(python_version[0]),
                         self.ws.DNSPYTHON_MODULE_NOT_INSTALLED_ERROR,
+                        caption=' Module Error ',
+                        prompt=' Press any key ',
+                        is_message=True)
+
+    def _print_netifaces_not_installed_error(self):
+        txt = '''
+        Module "|netifaces|" not found!
+
+        In order to use the |Remote Control Server|, the
+        "|netifaces|" module must be installed.
+
+        Exit |PyRadio| now, install the module (named
+        |python-netifaces| or |python{}-netifaces|) and try
+        executing |PyRadio| again.
+        '''
+        self._show_help(txt.format(python_version[0]),
+                        self.ws.NETIFACES_MODULE_NOT_INSTALLED_ERROR,
                         caption=' Module Error ',
                         prompt=' Press any key ',
                         is_message=True)
@@ -9256,6 +9280,10 @@ __|Remote Control Server| cannot be started!__
                 '/html_init': self._html_init_song_title,
             }
         )
+        if not self._remote_control_server.has_netifaces:
+            self._remote_control_server = None
+            self._no_netifaces = True
+            return
         self._remote_control_server_thread = threading.Thread(
             target=self._remote_control_server.start_remote_control_server,
             args=(

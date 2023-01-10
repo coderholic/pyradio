@@ -58,6 +58,7 @@ Use your distribution method to install
 4. *python-requests*
 5. *python-dnspython*
 6. *python-psutil*
+6. *python-netifaces*
 7. *sed*
 8. any one of *MPV*, *MPlayer* and/or *VLC*.
 
@@ -98,7 +99,7 @@ If installing on a Rasberry Pi, there are a couple of things you should be aware
 
 First thing you do is install python dependencies (assuming python 3 is installed):
 
-    python3 -m pip install --upgrade pip wheel setuptools requests dnspython psutil
+    python3 -m pip install --upgrade pip wheel setuptools requests dnspython psutil netifaces
 
 Everything else you need to install and run **pyradio** is available on [Homebrew](https://github.com/Homebrew/homebrew). If you haven't already downloaded its client, go ahead and do it.
 
