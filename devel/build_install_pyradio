@@ -489,6 +489,7 @@ then
         put_exec_to_mac_path "${HOMEBREW}"
     else
         if [ ! -z "$(grep 'distro = None' pyradio/config)" ];then
+            chmod +x ./devel/fix_pyradio_desktop_file
             if [ -z "${REQ_TERMINAL}" ];then
                 ./devel/fix_pyradio_desktop_file -i
             else

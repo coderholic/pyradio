@@ -1,4 +1,8 @@
 2023-01-10 s-n-g
+    * version 0.8.9.35 (0.9-beta32)
+    * fixing call to fix_pyradio_desktop_file during installation
+
+2023-01-10 s-n-g
     * version 0.8.9.34 (0.9-beta31)
     * fixing a line editor crash
     * adding \s to help (page 5)
