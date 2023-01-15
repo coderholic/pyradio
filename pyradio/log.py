@@ -340,7 +340,7 @@ class Log(object):
             self.icon_path=join(getenv('APPDATA'), 'pyradio', 'help', 'pyradio.ico')
         else:
             the_path = (
-                join(self._cnf.stations_dir, 'pyradio.png'),
+                join(self._cnf.data_dir, 'pyradio.png'),
                 '/usr/share/icons/pyradio.png',
                 '/usr/local/share/icons/pyradio.png'
             )

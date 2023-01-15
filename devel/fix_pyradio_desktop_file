@@ -65,7 +65,7 @@ Comment=Curses based Radio Player" > "${DESKTOP_FILE}"
         PARAM=" ${PARAM//_/-}"
         echo "Exec=${REQ_TERMINAL}${PROGRAM} ${PARAM}" | sed -e 's/Exec= /Exec=/' -e 's/  / /g' >> "${DESKTOP_FILE}"
     fi
-    echo "Icon=/home/${USER}/.config/pyradio/pyradio.png" >> "${DESKTOP_FILE}"
+    echo "Icon=/home/${USER}/.config/pyradio/data/pyradio.png" >> "${DESKTOP_FILE}"
     echo "${TERMINAL_LINE}" >> "${DESKTOP_FILE}"
     echo "Categories=Network" >> "${DESKTOP_FILE}"
 

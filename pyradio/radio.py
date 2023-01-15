@@ -4568,7 +4568,7 @@ __|Remote Control Server| cannot be started!__
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('detectUpdateThread: Asked to stop. Stoping...')
             return
-        files = glob.glob(path.join(a_path, '.*.date'))
+        files = glob.glob(path.join(a_path, 'data', '.*.date'))
         if files:
             files.sort(reverse=True)
             if len(files) > 1:
@@ -4615,7 +4615,7 @@ __|Remote Control Server| cannot be started!__
                     logger.info('detectUpdateThread: Upstream version found: {}'.format(last_tag))
                 if this_version == last_tag:
                     clean_date_files(files, -1)
-                    create_tadays_date_file(a_path)
+                    create_tadays_date_file(path.join(a_path, 'data'))
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('detectUpdateThread: No update found. Will check again in {} days. Terminating...'.format(check_days))
                     break
@@ -4658,7 +4658,7 @@ __|Remote Control Server| cannot be started!__
                             if self._update_version == '':
                                 a_lock.release()
                                 ''' create today's date file '''
-                                create_tadays_date_file(a_path)
+                                create_tadays_date_file(path.join(a_path, 'data'))
                                 if logger.isEnabledFor(logging.INFO):
                                     logger.info('detectUpdateThread: Terminating after notification issued... I will check again in {} days'.format(check_days))
                                 return

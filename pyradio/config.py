@@ -10,7 +10,7 @@ from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_
 from sys import platform
 from time import ctime, sleep
 from datetime import datetime
-from shutil import copyfile, move
+from shutil import copyfile, move, Error as shutil_Error
 import threading
 from copy import deepcopy
 from pyradio import version, stations_updated
@@ -129,8 +129,9 @@ class PyRadioStations(object):
         else:
             self.stations_dir = path.join(getenv('HOME', '~'), '.config', 'pyradio')
             self.registers_dir = path.join(self.stations_dir, '.registers')
+        self.data_dir = path.join(self.stations_dir, 'data')
         ''' Make sure config dirs exists '''
-        for a_dir in (self.stations_dir, self.registers_dir):
+        for a_dir in (self.stations_dir, self.registers_dir, self.data_dir):
             if not path.exists(a_dir):
                 try:
                     makedirs(a_dir)
@@ -160,6 +161,33 @@ class PyRadioStations(object):
 
             self._move_old_csv(self.stations_dir)
             self._check_stations_csv(self.stations_dir, self.root_path)
+            self._move_to_data()
+
+    def _move_to_data(self):
+        if not path.exists(self.data_dir):
+            makedirs(self.data_dir)
+        files_to_move = [
+            path.join(self.stations_dir, 'pyradio.png'),
+        ]
+        for n in ('.*.date', '.*.ver', '*.lock'):
+            files = glob.glob(path.join(self.stations_dir, n))
+            if files:
+                files_to_move.extend(files)
+        for n in files_to_move:
+            from_file = path.join(self.stations_dir, n)
+            if path.exists(from_file):
+                to_file = from_file.replace(self.stations_dir, self.data_dir)
+                if path.exists(to_file):
+                    try:
+                        remove(from_file)
+                    except (shutil_Error, IOError, OSError):
+                        pass
+                else:
+                    try:
+                        move(from_file, self.data_dir)
+                    except (shutil_Error, IOError, OSError):
+                        print('\n\nError moving data files!\nPlease close all PyRadio related files and try again...\n')
+                        sys.exit(1)
 
     @property
     def integrate_stations(self):
@@ -607,7 +635,7 @@ class PyRadioStations(object):
             if stationFile == path.join(self.stations_dir, 'stations.csv'):
                 if self.current_pyradio_version is None:
                     self.get_pyradio_version()
-                ver_file = path.join(self.stations_dir, '.' + self.current_pyradio_version + '.ver')
+                ver_file = path.join(self.data_dir, '.' + self.current_pyradio_version + '.ver')
                 if stations_updated:
                     if not path.exists(ver_file):
                         import filecmp
@@ -621,7 +649,7 @@ class PyRadioStations(object):
                     ''' delete all ver files and create current '''
                     delete_ver_files = True
         if delete_ver_files:
-            files = glob.glob(path.join(self.stations_dir, '.*.ver'))
+            files = glob.glob(path.join(self.data_dir, '.*.ver'))
             if files:
                 for a_file in files:
                     try:
@@ -1750,12 +1778,12 @@ class PyRadioConfig(PyRadioStations):
                     pass
         else:
             if platform == 'win32':
-                self._session_lock_file = path.join(getenv('APPDATA'), 'pyradio', 'pyradio.lock')
+                self._session_lock_file = path.join(getenv('APPDATA'), 'pyradio', 'data', 'pyradio.lock')
             else:
-                self._session_lock_file = path.join(getenv('HOME'), '.config', 'pyradio', 'pyradio.lock')
+                self._session_lock_file = path.join(getenv('HOME'), '.config', 'pyradio', 'data', 'pyradio.lock')
         if path.exists(self._session_lock_file):
             if platform == 'win32':
-                win_lock = path.join(getenv('APPDATA'), 'pyradio', '_windows.lock')
+                win_lock = path.join(getenv('APPDATA'), 'pyradio', 'data', '_windows.lock')
                 if path.exists(win_lock):
                     ''' pyradio lock file was probably not deleted the last
                         time Windows terminated. It should be safe to use it
@@ -2460,6 +2488,7 @@ remote_control_server_auto_start = {18}
             except AttributeError:
                 parents = self._get_parents(pid)
 
+            logger.error('\n\n{}\n\n'.format(parents))
             if parents is not None:
                 '''
                 read ~/.config/pyradio/no-themes-terminals
@@ -2472,6 +2501,7 @@ remote_control_server_auto_start = {18}
                             user_terminals = term.read().splitlines()
                     except:
                         pass
+                    logger.error('\n\nuser terminals: {}\n\n'.format(user_terminals))
                     if user_terminals:
                         if parent.name() in user_terminals:
                             '''
