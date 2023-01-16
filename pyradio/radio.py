@@ -573,7 +573,10 @@ class PyRadio(object):
     def _save_colors(self):
         if self._cnf.use_themes:
             for i in range(0, 16):
-                self._saved_colors[i] = curses.color_content(i)
+                try:
+                    self._saved_colors[i] = curses.color_content(i)
+                except:
+                    return
 
     def _html_info(self):
         out = []
@@ -611,12 +614,15 @@ class PyRadio(object):
     def restore_colors(self):
         if self._cnf.use_themes:
             for i in range(0,16):
-                curses.init_color(
-                    i,
-                    self._saved_colors[i][0],
-                    self._saved_colors[i][1],
-                    self._saved_colors[i][2]
-                )
+                try:
+                    curses.init_color(
+                        i,
+                        self._saved_colors[i][0],
+                        self._saved_colors[i][1],
+                        self._saved_colors[i][2]
+                    )
+                except:
+                    return
 
     def setup(self, stdscr):
         self.setup_return_status = True

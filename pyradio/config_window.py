@@ -641,22 +641,23 @@ class PyRadioConfigWindow(object):
         logger.error('val = {}'.format(val))
         Y = self.selection - self._start + 1
 
-
         if char in self._local_functions.keys():
-            if not (val[0] == 'remote_control_server_port' and \
-                    char in (
-                        curses.KEY_HOME,
-                        curses.KEY_END,
-                        curses.KEY_LEFT,
-                        curses.KEY_RIGHT
-                    )
-                    ):
-                ret = self._local_functions[char]()
-                if self._local_functions[char] == self._go_exit:
-                    return 1, []
-                elif self._local_functions[char] == self._go_save and ret:
-                    return 0, []
-                return -1, []
+            if not (val[0] in (
+                'remote_control_server_port',
+                'enable_notifications',
+                'connection_timeout',
+                'calculated_color_factor',
+            ) and char in (
+                curses.KEY_LEFT,
+                curses.KEY_RIGHT,
+                ord('h'), ord('l'),
+            )):
+                    ret = self._local_functions[char]()
+                    if self._local_functions[char] == self._go_exit:
+                        return 1, []
+                    elif self._local_functions[char] == self._go_save and ret:
+                        return 0, []
+                    return -1, []
 
         if char in self._global_functions.keys():
             self._global_functions[char]()

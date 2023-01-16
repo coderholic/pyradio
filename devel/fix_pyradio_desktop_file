@@ -114,7 +114,7 @@ function get_req_terminal(){
         fi
         if [ -z "${REQ_TERMINAL}" ]
         then
-            get_terminal_from_desktop_file usr/share/applications/pyradio.desktop
+            get_terminal_from_desktop_file /usr/share/applications/pyradio.desktop
             SYSTEM_TERMINAL="${DET_TERMINAL}"
             SYSTEM_COMMAND="${DET_COMMAND}"
             if [ ! -z "${SYSTEM_TERMINAL}" ]

@@ -22,6 +22,7 @@ try:
       f.write('echo "Windows started" > "{}"\n'.format(os.path.join(
           appdata,
           'pyradio',
+          'data',
           '_windows.lock')))
 finally:
     winreg.CloseKey(rhandle)
