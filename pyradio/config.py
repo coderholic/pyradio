@@ -1947,12 +1947,13 @@ class PyRadioConfig(PyRadioStations):
                 else:
                     self.opts['enable_mouse'][1] = True
             elif sp[0] == 'enable_notifications':
-                # if not (sp[1] in ('0', '-1')):
-                try:
-                    t = int(int(sp[1]) / 30)
-                    self.opts['enable_notifications'][1] = str(t * 30)
-                except (ValueError, TypeError):
-                    self.opts['enable_notifications'][1] = '-1'
+                self.opts['enable_notifications'][1] = sp[1]
+                if sp[1] not in ('0', '-1'):
+                    try:
+                        t = int(int(sp[1]) / 30)
+                        self.opts['enable_notifications'][1] = str(t * 30)
+                    except (ValueError, TypeError):
+                        self.opts['enable_notifications'][1] = '-1'
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False
