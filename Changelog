@@ -1,3 +1,13 @@
+2023-01-16 s-n-g
+    * version 0.8.9.36 (0.9-beta33)
+    * fixing config win left ("h") key: will not exit when should be
+      decreasing a number
+    * fixing notification settings (pull request #175 from
+      RaeedAhmed/bugfix/notifications)
+    * moving execution data to "data" folder
+    * fixing Desktop file installation (linux)
+    * fixing pyradio_server man paget to installation
+
 2023-01-10 s-n-g
     * version 0.8.9.35 (0.9-beta32)
     * fixing call to fix_pyradio_desktop_file during installation
