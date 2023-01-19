@@ -201,7 +201,7 @@ class Log(object):
                                 if msg.startswith('Playing: '):
                                     self._station_that_is_playing_now = msg[9:]
 
-                    self.set_win_title(msg)
+                    self.set_win_title(self.msg)
                     self._write_title_to_log(msg if msg else 'No')
                     self._show_notification(msg)
                     self._set_web_title(msg)
