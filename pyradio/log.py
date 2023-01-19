@@ -594,6 +594,7 @@ class Log(object):
             'History is empty',
             'Operation not supported',
             'Please wait for the player to settle',
+            'Volume: ',
         )
         do_not_update = (
             ': Playback stopped',
