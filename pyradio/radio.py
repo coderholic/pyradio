@@ -368,6 +368,8 @@ class PyRadio(object):
                 self.ws.SEARCH_NORMAL_MODE: self._redisplay_search_show,
                 self.ws.SEARCH_PLAYLIST_MODE: self._redisplay_search_show,
                 self.ws.SEARCH_THEME_MODE: self._redisplay_search_show,
+                self.ws.SEARCH_SELECT_STATION_MODE: self._redisplay_search_show,
+                self.ws.SEARCH_SELECT_PLAYLIST_MODE: self._redisplay_search_show,
                 self.ws.THEME_MODE: self._redisplay_theme_mode,
                 self.ws.PLAYLIST_RECOVERY_ERROR_MODE: self._print_playlist_recovery_error,
                 self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
@@ -467,7 +469,7 @@ class PyRadio(object):
             1 - playlist search
             2 - theme search
         '''
-        self._search_classes = [None, None, None]
+        self._search_classes = [None, None, None, None]
 
         ''' points to list in which the search will be performed '''
         self._search_list = []
@@ -6788,7 +6790,9 @@ __|Remote Control Server| cannot be started!__
                 ''' Do this here to properly resize '''
             return
 
-        elif self.ws.operation_mode == self.ws.PASTE_MODE:
+        elif self.ws.operation_mode == self.ws.PASTE_MODE and \
+                char not in self._chars_to_bypass and \
+                char not in self._chars_to_bypass_for_search:
             ''' Return from station selection window for pasting '''
             if char == ord('?'):
                 self._show_config_playlist_help()
@@ -7134,7 +7138,7 @@ __|Remote Control Server| cannot be started!__
             return
 
         elif self.ws.operation_mode in \
-                [self._search_modes[x] for x in self._search_modes.keys()]:
+            [self._search_modes[x] for x in self._search_modes.keys()]:
             ''' serve search results '''
             ret = self.search.keypress(self.search._edit_win, char)
             if ret == 0:
@@ -7144,7 +7148,10 @@ __|Remote Control Server| cannot be started!__
                 elif self.ws.previous_operation_mode == self.ws.THEME_MODE:
                     self._search_list = self._theme_selector._themes
                     sel = self._theme_selector.selection + 1
-                elif self.ws.previous_operation_mode == self.ws.SELECT_PLAYLIST_MODE:
+                elif self.ws.previous_operation_mode in (
+                    self.ws.SELECT_PLAYLIST_MODE,
+                    self.ws.PASTE_MODE,
+                ):
                     self._search_list = self._playlist_select_win._items
                     sel = self._playlist_select_win._selected_playlist_id + 1
                 elif self.ws.previous_operation_mode == self.ws.SELECT_STATION_MODE:
