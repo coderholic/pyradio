@@ -3123,28 +3123,18 @@ __|Remote Control Server| cannot be started!__
 
     def _show_no_themes(self):
         if self._cnf.show_no_themes_message:
-            if not curses.can_change_color():
-                txt = '''|This terminal reports to |Curses| (the library
-                         |this program is based on), that it |cannot
-                         ||change colors| while running.
+            txt = '''||Curses| (the library this program is based on), will not display
+                     |colors |correctly| in this terminal, (after they have been |changed by
+                     |PyRadio.
 
-                         |Therefore, using |themes is disabled| and the
-                         ||default theme| is used.
-                      '''
-                caption = ' Themes Disabled '
-            else:
-                txt = '''||Curses| (the library this program is based on), will not display
-                         |colors |correctly| in this terminal, (after they have been |changed by
-                         |PyRadio.
+                     |Therefore, using |themes is disabled| and the |default theme| is used.
 
-                         |Therefore, using |themes is disabled| and the |default theme| is used.
+                     |For more info, please refer to:
+                     ||https://github.com/coderholic/pyradio/#virtual-terminal-restrictions
 
-                         |For more info, please refer to:
-                         ||https://github.com/coderholic/pyradio/#virtual-terminal-restrictions
-
-                         |Press "|x|" to never display this message in the future, or
-                      '''
-                caption = ' Themes Disabled '
+                     |Press "|x|" to never display this message in the future, or
+                  '''
+            caption = ' Themes Disabled '
 
             self._show_help(txt, mode_to_set=self.ws.NO_THEMES_MODE, caption=caption)
             self._cnf.no_themes_notification_shown = True
