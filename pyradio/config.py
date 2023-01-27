@@ -1093,13 +1093,14 @@ class PyRadioStations(object):
                 return i
         return -1
 
-    def open_browser(self, url, search_return_function, message_function):
+    def open_browser(self, url, search_return_function, message_function, cannot_delete_function):
         self._online_browser = probeBrowsers(url)(
             self,
             self.default_encoding,
             pyradio_info=self.info,
             search_return_function=search_return_function,
-            message_function=message_function
+            message_function=message_function,
+            cannot_delete_function=cannot_delete_function
         )
 
     def save_station_position(self, startPos, selection, playing):

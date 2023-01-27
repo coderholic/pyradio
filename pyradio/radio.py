@@ -2413,9 +2413,12 @@ __|Remote Control Server| cannot be started!__
                  j|, |Up| / |k|, |Down  |Go to next / previous field.
                  h|, |Left| / |l|, |Right
                  _________________|Change |auto save| and |counters| value.
+                 _________________|Navigate through |Search Terms|.
+                 g|, |G|, |Home|, |End|, |PgUp|, |PgDn|
+                 _________________|Navigate through |Search Terms|.
                  Space|, |Enter     |Toggle |auto save|  value.
                  _________________|Open |Server Selection| window.
-                 r|, |d             |Revert to |saved| / |default| values.
+                 r| / |d            |Revert to |saved| / |default| values.
                  s                |Save config.
                  Esc              |Exit without saving.
                  %_Global functions (with \ on Line editor)_
@@ -3981,7 +3984,8 @@ __|Remote Control Server| cannot be started!__
                         self._cnf.open_browser(
                             online_service_url,
                             self._return_from_online_browser_search,
-                            None)
+                            None,
+                            self._cannot_delete_function)
                     except TypeError:
                         pass
                     # logger.error('DE online browser = {}'.format(self._cnf._online_browser))
@@ -4840,6 +4844,13 @@ __|Remote Control Server| cannot be started!__
         self._register_open_pressed = reg_open_pressed
         self.log.write(suffix=self._status_suffix)
 
+    def _cannot_delete_function(self):
+        self._show_notification_with_delay(
+            txt='___Cannot delete item!___',
+            mode_to_set=self.ws.operation_mode,
+            callback_function=self.refreshBody
+        )
+
     def _show_colors_cannot_change(self):
         self._show_notification_with_delay(
                 txt='______Curses cannot change__\n____the colors of this window.__\n__Default colors are being used!___',
@@ -5176,7 +5187,7 @@ __|Remote Control Server| cannot be started!__
         '''
         if parent is None:
             parent = self.outerBodyWin
-        self._cnf._online_browser.show_config(parent, init)
+        self._cnf._online_browser.show_config(parent, init, self._cannot_delete_function)
 
     def _redisplay_browser_config(self):
         if self._cnf._online_browser:
@@ -5190,7 +5201,7 @@ __|Remote Control Server| cannot be started!__
         if parent is None:
             parent = self.outerBodyWin
         if self._cnf._online_browser:
-            self._cnf._online_browser.show_config(parent, init)
+            self._cnf._online_browser.show_config(parent, init, self._cannot_delete_function)
         else:
             if self._browser_config_win is None:
                 self._show_connect_to_server_message()
@@ -5199,7 +5210,8 @@ __|Remote Control Server| cannot be started!__
                     stations_dir=self._cnf.stations_dir,
                     init=init,
                     distro=distro,
-                    global_functions=self._global_functions
+                    global_functions=self._global_functions,
+                    cannot_delete_function=self._cannot_delete_function
                 )
                 self.ws.close_window()
             # if title:

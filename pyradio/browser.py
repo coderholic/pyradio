@@ -19,7 +19,7 @@ import logging
 from .player import info_dict_to_list
 from .cjkwrap import cjklen, PY3
 from .countries import countries
-from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString, SimpleCursesMenuEntries
+from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString, SimpleCursesMenuEntries, SimpleCursesWidget
 from .ping import ping
 
 import locale
@@ -146,7 +146,8 @@ class PyRadioStationsBrowser(object):
                  search=None,
                  pyradio_info=None,
                  search_return_function=None,
-                 message_function=None):
+                 message_function=None,
+                 cannot_delete_function=None):
         ''' Initialize the station's browser.
 
             It should return a valid search result (for example,
@@ -347,7 +348,8 @@ class RadioBrowser(PyRadioStationsBrowser):
                  search=None,
                  pyradio_info=None,
                  search_return_function=None,
-                 message_function=None):
+                 message_function=None,
+                 cannot_delete_function=None):
         '''
             When first_search is True, it means that we are opening
             the browser. If empty result is returned by the first
@@ -373,7 +375,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._config_encoding = config_encoding
         self._message_function = message_function
         self._search_return_function = search_return_function
-
+        self._cannot_delete_function = cannot_delete_function
 
     def reset_dirty_config(self):
         self.browser_config.dirty = False
@@ -1420,7 +1422,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         self.keyboard_handler = self._search_win
         self._search_win.show()
 
-    def show_config(self, parent=None, init=False):
+    def show_config(self, parent=None, init=False, cannot_delete_function=None):
         if init:
             self._config_win = RadioBrowserConfigWindow(
                 parent=parent,
@@ -1435,7 +1437,8 @@ class RadioBrowser(PyRadioStationsBrowser):
                 current_ping_timeout=self._default_ping_timeout,
                 init=init,
                 with_browser=True,
-                global_functions=self._global_functions
+                global_functions=self._global_functions,
+                cannot_delete_function=cannot_delete_function
             )
         self.keyboard_handler = self._config_win
         self._config_win.show(parent=parent)
@@ -1664,7 +1667,7 @@ class RadioBrowserConfigWindow(object):
 
     enable_servers = True
 
-    _wleft = (2, 5, 7, 8, 10)
+    _wleft = (2, 5, 7, 8, 10, 14)
 
     def __init__(
             self,
@@ -1682,13 +1685,15 @@ class RadioBrowserConfigWindow(object):
             stations_dir=None,
             distro=None,
             global_functions=None,
-            with_browser=False
+            with_browser=False,
+            cannot_delete_function=None
     ):
         ''' Parameters
                 0: working
                 1: current in browser window
                 2: from config
         '''
+        self._cannot_delete_function = cannot_delete_function
         if len(self._params) == 0:
             for i in range(0, 3):
                 self._params.append(
@@ -1719,8 +1724,7 @@ class RadioBrowserConfigWindow(object):
             [6, 4, 'A value of -1 will disable return items limiting', 5],
             [9, 4, 'Set any ping parameter to 0 to disable server pinging', 5],
             [11, 4, 'Set to "Random" if you cannot connet to service', 5],
-            [12, 0, 'Default Search Term', 4],
-            [13, 4, 'Not implemented yet', 5],
+            [12, 0, 'Search Terms', 4],
         ]
         self._with_browser = with_browser
         self._calculate_left_margin()
@@ -1809,8 +1813,8 @@ class RadioBrowserConfigWindow(object):
                 n.show(self._win)
 
     def _calculate_left_margin(self):
-        self._left = max([len(x[2]) for x in self._static_msg])
-        self._left = self.maxX - self._left
+        self._width = max([len(x[2]) for x in self._static_msg])
+        self._left = self.maxX - self._width
         self._left = int(self._left / 2) - 2
 
     def _init_set_working_params(self,
@@ -1899,14 +1903,17 @@ class RadioBrowserConfigWindow(object):
 
     def calculate_dirty(self):
         self._config.dirty = False
-        for n in (
-            'auto_save', 'server',
-            'ping_count', 'ping_timeout',
-            'limit','default', 'terms'
-        ):
-            if self._params[0][n] != self._params[1][n]:
-                self._config.dirty = True
-                break
+        if self._widgets[-1].dirty:
+            self._config.dirty = True
+        else:
+            for n in (
+                'auto_save', 'server',
+                'ping_count', 'ping_timeout',
+                'limit','default', 'terms'
+            ):
+                if self._params[0][n] != self._params[1][n]:
+                    self._config.dirty = True
+                    break
         self.print_title()
 
     def print_title(self):
@@ -1929,6 +1936,8 @@ class RadioBrowserConfigWindow(object):
                 self.TITLE,
                 curses.color_pair(4))
         self._win.refresh()
+        if self._widgets:
+            self._widgets[-1].refresh()
 
     def show(self, parent, init=False):
         self._parent = parent
@@ -2058,16 +2067,23 @@ class RadioBrowserConfigWindow(object):
             self._widgets[-1].id = 4
             self._widgets[-1].enabled = self.enable_servers
 
-            # self._widgets.append(
-            #     SimpleCursesMenuEntries(
-            #     )
-            # )
-            # self._widgets[-1].token = 'terms'
-            # self._widgets[-1].id = 5
-            # self._widgets[-1].enabled = True
-
-
-
+            self._widgets.append(
+                RadioBrowserTermNavigator(
+                    parent=self._win,
+                    items=self._params[0]['terms'],
+                    default=self._params[0]['default'],
+                    limit=self._params[0]['limit'],
+                    X=self._left, Y=14,
+                    width=self._width+6,
+                    color=curses.color_pair(5),
+                    header_color=curses.color_pair(4),
+                    highlight_color=curses.color_pair(6),
+                    cannot_delete_function=self._cannot_delete_function
+                )
+            )
+            self._widgets[-1].token = 'terms'
+            self._widgets[-1].id = 5
+            self._widgets[-1].enabled = True
             self._fix_focus(show=False)
         else:
             for i in range(0, len(self._widgets)):
@@ -2077,14 +2093,6 @@ class RadioBrowserConfigWindow(object):
 
         for i in self._static_msg:
             self._win.addstr(i[0], i[1] + self._left, i[2], curses.color_pair(i[-1]))
-        # self._win.addstr(1, 1, 'General Options', curses.color_pair(4))
-        # self._win.addstr(3, 5, 'If True, no confirmation will be asked before saving', curses.color_pair(5))
-        # self._win.addstr(4, 5, 'the configuration when leaving the search window', curses.color_pair(5))
-        # self._win.addstr(6, 5, 'A value of -1 will disable return items limiting', curses.color_pair(5))
-        # self._win.addstr(9, 5, 'Set any ping parameter to 0 to disable server pinging', curses.color_pair(5))
-        # self._win.addstr(11, 5, 'Set to "Random" if you cannot connet to service', curses.color_pair(5))
-        # self._win.addstr(12, 1, 'Default Search Term', curses.color_pair(4))
-        # self._win.addstr(13, 5, 'Not implemented yet', curses.color_pair(5))
 
         if self._distro != 'None':
             try:
@@ -2096,12 +2104,9 @@ class RadioBrowserConfigWindow(object):
 
         self._fix_ping_enable()
         self._win.refresh()
-
-        # for n in self._widgets:
-        #     logger.error(n)
+        self._widgets[-1].refresh()
 
         self._showed = True
-        # self._print_params()
 
     def save_config(self):
         ''' RadioBrowserConfigWindow save config
@@ -2112,6 +2117,7 @@ class RadioBrowserConfigWindow(object):
                 -4: config not modified
         '''
         if self._config.dirty:
+            self._params[0]['default'], self._params[0]['terms'] = self._widgets[-1].get_result()
             ret = self._config.save_config(
                 auto_save=self._params[0]['auto_save'],
                 search_history=self._params[0]['terms'],
@@ -2228,9 +2234,11 @@ class RadioBrowserConfigWindow(object):
 
         elif char in (ord('\t'), 9):
             self._focus_next()
+            self.calculate_dirty()
 
         elif char in (curses.KEY_BTAB, ):
             self._focus_previous()
+            self.calculate_dirty()
 
         elif char == ord('s'):
             return self.save_config()
@@ -2244,11 +2252,13 @@ class RadioBrowserConfigWindow(object):
             self._config.dirty = False
             self.calculate_dirty()
 
-        elif char in (curses.KEY_UP, ord('j')) and self._focused < 5:
+        elif char in (curses.KEY_UP, ord('j')):
             self._focus_previous()
+            self.calculate_dirty()
 
-        elif char in (curses.KEY_DOWN, ord('k')) and self._focused < 5:
+        elif char in (curses.KEY_DOWN, ord('k')):
             self._focus_next()
+            self.calculate_dirty()
 
         else:
             if self._focused < 4:
@@ -2277,9 +2287,11 @@ class RadioBrowserConfigWindow(object):
                             ord('\r'), ord('l'), curses.KEY_RIGHT):
                     ''' open server selection window '''
                     return 3
-            else:
+            elif self._focused == 5:
                 ''' terms '''
-                pass
+                ret = self._widgets[-1].keypress(char)
+                self.calculate_dirty()
+                return ret
         return 1
 
 class RadioBrowserSearchWindow(object):
@@ -4360,6 +4372,331 @@ class RadioBrowserStationsStack(object):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('   item is  = {}'.format(self.item))
             self.execute_func(self._get(), self.play_next)
+
+
+class RadioBrowserTermNavigator(SimpleCursesWidget):
+    """ A widget to show Radio Browser Search Terms
+        Availabe actions:
+            change default item
+            delete item
+    """
+    parent = None
+    _win = None
+    _width = _height = _X = _Y = 0
+    _selection = 1
+
+    _items = []
+
+    _page_jump = 5
+
+    log = None
+    _log_file = ''
+
+    _showed = False
+
+    def __init__(
+        self,
+        parent,
+        items,
+        default,
+        limit,
+        X, Y,
+        width,
+        color,
+        header_color,
+        highlight_color,
+        cannot_delete_function,
+        log_file=''
+    ):
+        """ A widget to show RarioBrowser Search Terms
+            Available actions:
+                change default term
+                delete terms
+        """
+        self._ungetch = 0
+        if log_file:
+            self._log_file = log_file
+            self.log = self._log
+
+        self._default, self._default_limit = default, limit
+        self._Y, self._X, self._width = Y, X, width
+        self._parent = parent
+        self._color = color
+        self._header_color = header_color
+        self._highlight_color = highlight_color
+        self._height = 7
+        self._get_win()
+        self._orig_items = items
+        self._selection = self._orig_default = default
+        self._items =deepcopy(items)
+        self._cannot_delete_function = cannot_delete_function
+
+    @property
+    def dirty(self):
+        return self._default != self._orig_default or \
+            self._items != self._orig_items
+
+    @property
+    def selection(self):
+        return self._selection
+
+    @selection.setter
+    def selection(self, val):
+        old_selection = self._selection
+        if 0 <= val < len(self._items):
+            self._selection = val
+            self.show()
+
+    def get_result(self):
+        return self._default, self._items
+
+    def _get_win(self):
+        self._parent_Y, self._parent_X = self._parent.getmaxyx()
+        self._win = curses.newwin(
+            self._height,
+            self._width,
+            self._Y,
+            self._X
+        )
+        self._win.bkgdset(' ', self._color)
+        self._win.erase()
+
+
+    def refresh(self, parent=None):
+        self.show(parent)
+
+    def _print_post_data(self, token):
+        str_out = 15 * ' '
+        if 'post_data' in self._items[self._selection]:
+            if token in self._items[self._selection]['post_data']:
+                str_out = '{}'.format(self._items[self._selection]['post_data'][token].ljust(15))
+        self._win.addstr(str_out, self._header_color)
+
+    def show(self, parent=None):
+        if self._focused:
+            col = self._header_color
+            fcol = self._highlight_color
+        else:
+            col = fcol = self._color
+        if parent:
+            if parent is not self._parent:
+                # self._log('changing parent!\n')
+                self._parent = parent
+                self._get_win()
+
+        limit = term = None
+        if self._items:
+            if 'type' in self._items[self._selection].keys():
+                # self._log('   >>> I am here\n')
+                if self._items[self._selection]['type'] in (
+                        'topvote',
+                        'lastchange',
+                        'topclick',
+                        'lastclick'
+                ):
+                    limit = self._items[self._selection]['term']
+                    term = ''
+
+        rpad = len(str(len(self._items)))
+        self._win.addstr(0, 0, '  Item: ', self._color)
+        if self._items:
+            self._win.addstr(' {}'.format(str(self._selection).rjust(rpad)), col)
+        else:
+            self._win.addstr(' {}'.format(0), col)
+            self._selection = -1
+        self._win.addstr('/{}   '.format(len(self._items) - 1), self._color)
+
+        if self._selection == 0:
+            self._win.addstr('   Template Item!', col)
+        elif self._selection == self._default:
+            self._win.addstr('   Default Item! ', col)
+        else:
+            self._win.addstr('                 ', col)
+
+        self._win.addstr(1, 0, '  Type: ', self._color)
+        str_out = 15 * ' '
+        if self._items:
+            if 'type' in self._items[self._selection].keys():
+                str_out = self._items[self._selection]['type'].ljust(15)
+        self._win.addstr(str_out, self._header_color)
+
+        self._win.addstr(1, 25, ' Limit: ', self._color)
+        str_out = 15 * ' '
+        if limit is not None:
+            str_out ='{}'.format(limit)
+        else:
+            if self._items:
+                if 'post_data' in self._items[self._selection]:
+                    if 'limit' in self._items[self._selection]['post_data']:
+                        str_out = '{}'.format(self._items[self._selection]['post_data']['limit'])
+                    else:
+                        if limit is None:
+                            str_out = '{}'.format(self._default_limit)
+                        else:
+                            if limit != '':
+                                str_out = '{}'.format(limit)
+        self._win.addstr(str_out, self._header_color)
+
+        self._win.addstr('   Codec: ', self._color)
+        self._print_post_data('codec')
+
+        self._win.addstr(2, 0, '  Term: ', self._color)
+        str_out = 15 * ' '
+        if self._items:
+            if term is not None:
+                if term != '':
+                    str_out = '{}'.format(term)
+            else:
+                if 'term' in self._items[self._selection]:
+                    try:
+                        x = len(self._items[self._selection]['term'])
+                        x = self._items[self._selection]['term']
+                    except TypeError:
+                        x = str(self._items[self._selection]['term'])
+                    str_out = x
+        self._win.addstr(str_out, self._header_color)
+
+        self._win.addstr(2, 25, ' Language: ', self._color)
+        self._print_post_data('language')
+
+        self._win.addstr(3, 0, '  Name: ', self._color)
+        self._print_post_data('name')
+
+        self._win.addstr(3, 25, ' Tag: ', self._color)
+        self._print_post_data('tag')
+
+        self._win.addstr(4, 0, '  Country: ', self._color)
+        self._print_post_data('country')
+
+        self._win.addstr(4, 25, ' State: ', self._color)
+        self._print_post_data('state')
+
+        self._win.addstr(5, 0, '  Sorting: ', self._color)
+        if self._items:
+            if 'post_data' in self._items[self._selection]:
+                if 'order' in self._items[self._selection]['post_data']:
+                    self._win.addstr('{} '.format(self._items[self._selection]['post_data']['order']), col)
+
+                    if 'reverse' in self._items[self._selection]['post_data']:
+                        self._win.addstr(' (', self._color)
+                        if self._items[self._selection]['post_data']['reverse'] == 'true':
+                            self._win.addstr('descending', col)
+                        else:
+                            self._win.addstr('ascending', col)
+                        self._win.addstr(')  ', self._color)
+                    else:
+                        self._win.addstr(' ' * (len(' (descending)   ') + 15), self._color)
+                else:
+                    self._win.addstr(' ' * (len(' (descending)   ') + 15), self._color)
+            else:
+                self._win.addstr(' ' * (len(' (descending)   ') + 15), self._color)
+        else:
+            self._win.addstr(' ' * (len(' (descending)   ') + 15), self._color)
+
+        self._win.hline(6, 0, ' ', self._width, fcol)
+        self._win.addstr(6, 0, '  Extra keys: x - delete item , Space - make item default', fcol)
+        self._win.refresh()
+        self._showed = True
+
+    def move(self, Y, X, show=True, erase=False):
+        self.mvwin(Y, X-2, show, erase=True)
+        if self._ungetch == 0:
+            curses.ungetch('#')
+            self._ungetch += 1
+        else:
+            self._ungetch = 0
+
+    def getmaxyx(self):
+        return self._width, self._height
+
+    def _remove_item(self):
+        if self._items:
+            self._items.pop(self._selection)
+            if self._default == self._selection:
+                self._default = 1
+            if self._selection == len(self._items):
+                self._selection -= 1
+            self.show()
+
+    def _go_up(self):
+        self._selection -= 1
+        if self._selection < 1:
+            self._selection = len(self._items) - 1
+        self.show()
+
+    def _go_down(self):
+        self._selection += 1
+        if self._selection == len(self._items):
+            self._selection = 1
+        self.show()
+
+    def _go_home(self):
+        self._selection = 1
+        self.show()
+
+    def _go_end(self):
+        self.selection = len(self._items) - 1
+        self.show()
+
+    def _jump_up(self):
+        if self._selection == 1:
+            self._selection = len(self._items) - 1
+        else:
+            sel = self._selection - self._page_jump
+            if sel < 1:
+                self._selection = 1
+            else:
+                self._selection = sel
+        self.show()
+
+    def _jump_down(self):
+        if self._selection == len(self._items) - 1:
+            self._selection = 1
+        else:
+            sel = self._selection + self._page_jump
+            if sel >= len(self._items):
+                self._selection = len(self._items) - 1
+            else:
+                self._selection = sel
+        self.show()
+
+    def keypress(self, char):
+        """ returns theme_id, save_theme
+            return_id
+               -1    : cancel
+                1    : go on
+                2    : help
+        """
+        if char == ord('?'):
+            return 2
+        elif char == ord('x'):
+            if len(self._items) > 2:
+                self._remove_item()
+            else:
+                self._cannot_delete_function()
+        elif char in (ord(' '), ):
+            if self._items:
+                self._default = self._selection
+                self.show()
+        elif char in (curses.KEY_LEFT, ord('h'), ord('p')):
+            self._go_up()
+        elif char in (curses.KEY_RIGHT, ord('l'), ord('n')):
+            self._go_down()
+        elif char in (curses.KEY_HOME, ord('g'), ord('0'), ord('^')):
+            self._go_home()
+        elif char in (curses.KEY_END, ord('G'), ord('$')):
+            self._go_end()
+        elif char in (curses.KEY_NPAGE, ):
+            self._jump_down()
+        elif char in (curses.KEY_PPAGE, ):
+            self._jump_up()
+        elif char in (curses.KEY_EXIT, 27, ord('q')):
+            return -1
+        return 1
+
+    def _log(self, msg):
+        with open(self._log_file, 'a') as log_file:
+            log_file.write(msg)
 
 def probeBrowsers(a_browser_url):
     base_url = a_browser_url.split('/')[2]
