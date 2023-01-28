@@ -1,3 +1,15 @@
+2023-01-28 s-n-g
+    * version 0.9.0
+    * finalizing Radio Browser service (adding config
+      search term navigation), closing #93 and partially
+      closing #80
+    * adding search function to all stations/playlists
+      lists
+    * when terminal cannot change colors, always ask to
+      not display the warning message
+    * window title will not be resetted randomly
+    * fixing python2 config dirty indication
+
 2023-01-16 s-n-g
     * version 0.8.9.36 (0.9-beta33)
     * fixing config win left ("h") key: will not exit when should be

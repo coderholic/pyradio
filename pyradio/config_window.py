@@ -299,11 +299,10 @@ class PyRadioConfigWindow(object):
             self._cnf.dirty_config = True
             col = 12
         X = int((self.maxX - len(self._title) - 1) / 2)
-        for i, n in enumerate(dirty_title):
-            try:
-                self._win.addstr(0, X+i, n, curses.color_pair(col))
-            except:
-                self._win.addstr(0, X+1, n.encode('utf-8'), curses.color_pair(col))
+        try:
+            self._win.addstr(0, X, dirty_title, curses.color_pair(col))
+        except:
+            self._win.addstr(0, X, dirty_title.encode('utf-8'), curses.color_pair(col))
         self._win.addstr(self._title + ' ', curses.color_pair(4))
 
         if self._cnf.distro != 'None':

@@ -116,8 +116,9 @@ Default value: *1*
 The default server to connect to when using the service.\
 Default value: *Random*
 
-6. **Default Search Term**\
-Not implemented yet
+6. **Search Terms**\
+User defined "*Search Terms*" displayed in a compact way. \
+Available actions: change the **default** search term and **delete** existing search terms.
 
 ### Server pinging
 

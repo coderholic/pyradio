@@ -1704,12 +1704,16 @@ class RadioBrowserConfigWindow(object):
                      'ping_count': 1,
                      'ping_timeout': 1,
                      'terms': [{
+                         'type': '',
+                         'term': current_limit,
+                         'post_data': {}
+                     },
+                     {
                          'type': 'topvote',
                          'term': '100',
                          'post_data': {'reverse': 'true'}
                      }]},
                 )
-        # self._print_params()
         self._win = self._parent = parent
         self.maxY, self.maxX = self._parent.getmaxyx()
 
@@ -1749,8 +1753,11 @@ class RadioBrowserConfigWindow(object):
         self._global_functions = {}
         if global_functions is not None:
             self._global_functions = global_functions.copy()
+            if ord('d') in self._global_functions.keys():
+                del self._global_functions[ord('d')]
             if ord('t') in self._global_functions.keys():
                 del self._global_functions[ord('t')]
+        # self._print_params()
 
     @property
     def urls(self):
@@ -1851,13 +1858,6 @@ class RadioBrowserConfigWindow(object):
         self._params[1]['limit'] = self._params[0]['limit']
         self._params[1]['terms'] = deepcopy(self._params[0]['terms'])
 
-        for n in self._params[0].keys():
-            if n == 'terms':
-                for i, k in enumerate(self._params[0][n]):
-                    logger.error('term {0}: {1}'.format(i, k))
-            else:
-                logger.error('{0}: {1}'.format(n, self._params[0][n]))
-
     def _revert_to_saved_params(self):
         self._revert_params(1)
 
@@ -1888,9 +1888,11 @@ class RadioBrowserConfigWindow(object):
             self._widgets[4].string = self._params[0]['server'] if self._params[0]['server'] else 'Random'
             # TODO: set of ping count and timeout
             self._fix_ping_enable()
+            self._widgets[-1].set_data(self._params[0]['default'], self._params[0]['limit'], self._params[0]['terms'])
             for n in self._widgets:
-                n.show(self._win)
+               n.show(self._win)
             self._win.refresh()
+            # self._widgets[-1].refresh()
         # self._print_params()
 
     def _fix_ping_enable(self):
@@ -2249,7 +2251,6 @@ class RadioBrowserConfigWindow(object):
 
         elif char == ord('d'):
             self._revert_to_default_params()
-            self._config.dirty = False
             self.calculate_dirty()
 
         elif char in (curses.KEY_UP, ord('j')):
@@ -4447,6 +4448,11 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
             self._selection = val
             self.show()
 
+    def set_data(self, default, default_limit, items):
+        self._selection = self._default = default
+        self._default_limit = default_limit
+        self._items = deepcopy(items)
+
     def get_result(self):
         return self._default, self._items
 
@@ -4465,12 +4471,12 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
     def refresh(self, parent=None):
         self.show(parent)
 
-    def _print_post_data(self, token):
+    def _print_post_data(self, token, col):
         str_out = 15 * ' '
         if 'post_data' in self._items[self._selection]:
             if token in self._items[self._selection]['post_data']:
                 str_out = '{}'.format(self._items[self._selection]['post_data'][token].ljust(15))
-        self._win.addstr(str_out, self._header_color)
+        self._win.addstr(str_out, col)
 
     def show(self, parent=None):
         if self._focused:
@@ -4507,18 +4513,18 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
         self._win.addstr('/{}   '.format(len(self._items) - 1), self._color)
 
         if self._selection == 0:
-            self._win.addstr('   Template Item!', col)
+            self._win.addstr('   Template Item!     ', col)
         elif self._selection == self._default:
-            self._win.addstr('   Default Item! ', col)
+            self._win.addstr('   Default Item!      ', col)
         else:
-            self._win.addstr('                 ', col)
+            self._win.addstr('                      ', col)
 
         self._win.addstr(1, 0, '  Type: ', self._color)
         str_out = 15 * ' '
         if self._items:
             if 'type' in self._items[self._selection].keys():
                 str_out = self._items[self._selection]['type'].ljust(15)
-        self._win.addstr(str_out, self._header_color)
+        self._win.addstr(str_out, col)
 
         self._win.addstr(1, 25, ' Limit: ', self._color)
         str_out = 15 * ' '
@@ -4535,10 +4541,10 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
                         else:
                             if limit != '':
                                 str_out = '{}'.format(limit)
-        self._win.addstr(str_out, self._header_color)
+        self._win.addstr(str_out, col)
 
         self._win.addstr('   Codec: ', self._color)
-        self._print_post_data('codec')
+        self._print_post_data('codec', col)
 
         self._win.addstr(2, 0, '  Term: ', self._color)
         str_out = 15 * ' '
@@ -4553,23 +4559,23 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
                         x = self._items[self._selection]['term']
                     except TypeError:
                         x = str(self._items[self._selection]['term'])
-                    str_out = x
-        self._win.addstr(str_out, self._header_color)
+                    str_out = x.ljust(15)
+        self._win.addstr(str_out, col)
 
         self._win.addstr(2, 25, ' Language: ', self._color)
-        self._print_post_data('language')
+        self._print_post_data('language', col)
 
         self._win.addstr(3, 0, '  Name: ', self._color)
-        self._print_post_data('name')
+        self._print_post_data('name', col)
 
         self._win.addstr(3, 25, ' Tag: ', self._color)
-        self._print_post_data('tag')
+        self._print_post_data('tag', col)
 
         self._win.addstr(4, 0, '  Country: ', self._color)
-        self._print_post_data('country')
+        self._print_post_data('country', col)
 
         self._win.addstr(4, 25, ' State: ', self._color)
-        self._print_post_data('state')
+        self._print_post_data('state', col)
 
         self._win.addstr(5, 0, '  Sorting: ', self._color)
         if self._items:
@@ -4595,6 +4601,9 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
 
         self._win.hline(6, 0, ' ', self._width, fcol)
         self._win.addstr(6, 0, '  Extra keys: x - delete item , Space - make item default', fcol)
+        # do this for windows
+        self._win.touchwin()
+        #####################
         self._win.refresh()
         self._showed = True
 

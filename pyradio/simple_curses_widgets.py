@@ -865,7 +865,6 @@ class SimpleCursesCounter(SimpleCursesWidget):
     @value.setter
     def value(self, val):
         self._value = int(val)
-        logger.error('Count: {}'.format(self._value))
 
     @property
     def minimum(self):
@@ -4147,7 +4146,6 @@ class SimpleCursesBoolean(SimpleCursesCounter):
     @value.setter
     def value(self, val):
         self._value = val
-        logger.error('Bool: {}'.format(self._value))
 
     def _print_full_line(self, col):
         tmp = self._full_selection[0] * ' ' + self._prefix + str(self._value) + self._suffix
