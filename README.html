@@ -154,7 +154,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#cleaning-up">Cleaning up</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
 <li><a href="#reporting-bugs">Reporting bugs</a></li>
-<li><a href="#packaging-pyradio">Packaging PyRadio</a></li>
+<li><a href="#packaging-pyradio">Packaging PyRadio</a>
+<ul>
+<li><a href="#distro-specific-files">Distro Specific Files</a></li>
+</ul></li>
 <li><a href="#todo">TODO</a></li>
 <li><a href="#acknowledgment">Acknowledgment</a></li>
 <li><a href="#special-thanks">Special thanks</a></li>
@@ -185,6 +188,7 @@ a:visited{color: SaddleBrown;}
 <li>requests</li>
 <li>dnspython</li>
 <li>psutil</li>
+<li>netifaces (optional)</li>
 </ul></li>
 <li>MPV, MPlayer or VLC installed and in your path</li>
 </ul>
@@ -1740,6 +1744,7 @@ $ pyradio -d</pre>
 <li>requests</li>
 <li>dnspython</li>
 <li>psutil</li>
+<li>netifaces</li>
 </ol>
 <p>After that, you will have to modify some files, because <strong>PyRadio</strong> is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; <strong>PyRadio</strong> should be updated and uninstalled using the distro package manager.</p>
 <p>In order to accomplice that, you just have to change the <strong>distro</strong> configuration parameter in the <strong>config</strong> file. <strong>PyRadio</strong> will read this parameter and will disable updating and uninstalling, when set to anything other than “<strong>None</strong>”. So, here’s how you do that:</p>
@@ -1755,15 +1760,18 @@ $ pyradio -d</pre>
 <p>or</p>
 <pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 60/&#39; pyradio/config</pre>
 <p>to have notifications every 60 seconds, for example. You can use any value here, starting from 30 to 300 (meaning every 30 seconds up to 5 minutes), using a step of 30.</p>
-<p>Finally, make sure you install:</p>
-<ul>
-<li><em>devel/pyradio.png</em> to <em>/usr/share/icons</em> or <em>/usr/local/share/icons</em> or any other suitable location.</li>
-<li><em>devel/pyradio.desktop</em> to <em>/usr/share/applications</em> or <em>/usr/local/share/applications</em> or any other suitable location.</li>
-</ul>
+<h3 id="distro-specific-files">Distro Specific Files</h3>
+<p><strong>1. Desktop File</strong></p>
+<p>If the Desktop File is not installed in <em>/usr/share/applications</em> or <em>/usr/local/share/applications</em>, it will have to be passed as a parameter to the script that will handle it, like so:</p>
+<pre>sed -i &quot;s,&#39; -t &#39;,&#39; -d /path/to/desktop_file&#39; + &amp;,&quot; pyradio/main.py</pre>
+<p><strong>2. Package Icon</strong></p>
+<p><strong>PyRadio</strong> will find and use <strong>pyradio.png</strong> if it’s installed in <em>/usr/share/icons</em> or <em>/usr/local/share/icons</em>.</p>
+<p>If this file is installed in any other location, you will have to patch yet another file, like so:</p>
+<pre>sed -i &#39;s/self.icon_path = None/self.icon_path = &quot;PATH TO FILE&quot;/&#39; pyradio/log.py</pre>
 <h2 id="todo">TODO <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <ul class="task-list">
 <li><input type="checkbox" disabled="" />Any user request I find interesting :)</li>
-<li><input type="checkbox" disabled="" />Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>)</li>
+<li><input type="checkbox" disabled="" checked="" />Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>) - v 0.9.0</li>
 <li><input type="checkbox" disabled="" />Use some OPML service, <a target="_blank" href="https://opml.radiotime.com">https://opml.radiotime.com</a> for example</li>
 <li><input type="checkbox" disabled="" checked="" />Notify the user that the package’s stations.csv has changed -v 0.8.9</li>
 <li><input type="checkbox" disabled="" checked="" />Update / uninstall using command line options (-U / -R) - v. 0.8.9</li>

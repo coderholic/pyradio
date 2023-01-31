@@ -336,18 +336,19 @@ class Log(object):
 
     def _get_icon_path(self):
         self.icon_path = None
-        if platform_system().lower().startswith('win'):
-            self.icon_path=join(getenv('APPDATA'), 'pyradio', 'help', 'pyradio.ico')
-        else:
-            the_path = (
-                join(self._cnf.data_dir, 'pyradio.png'),
-                '/usr/share/icons/pyradio.png',
-                '/usr/local/share/icons/pyradio.png'
-            )
-            for n in the_path:
-                if exists(n):
-                    self.icon_path = n
-                    break
+        if self.icon_path is None:
+            if platform_system().lower().startswith('win'):
+                self.icon_path=join(getenv('APPDATA'), 'pyradio', 'help', 'pyradio.ico')
+            else:
+                the_path = (
+                    join(self._cnf.data_dir, 'pyradio.png'),
+                    '/usr/share/icons/pyradio.png',
+                    '/usr/local/share/icons/pyradio.png'
+                )
+                for n in the_path:
+                    if exists(n):
+                        self.icon_path = n
+                        break
         self._repeat_notification.icon_path = self.icon_path
 
     def _show_notification(self, msg):

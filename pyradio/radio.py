@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
-from .server import PyRadioServer
+from .server import *
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -5821,10 +5821,13 @@ __|Remote Control Server| cannot be started!__
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
                 ''' open remote control '''
                 self._update_status_bar_right(status_suffix='')
-                if self._remote_control_server_thread:
-                    self._show_remote_control_server_active()
+                if HAS_NETIFACES:
+                    if self._remote_control_server_thread:
+                        self._show_remote_control_server_active()
+                    else:
+                        self._show_remote_control_server_not_active()
                 else:
-                    self._show_remote_control_server_not_active()
+                    self._print_netifaces_not_installed_error()
 
             elif char in (ord('h'), ):
                 ''' open html help '''

@@ -141,7 +141,7 @@ function do_dev(){
             rm pyradio/config.pydev 2>/dev/null
             return
         }
-        sed -idev "s/git_description = ''/git_description = '$DEVEL'/" pyradio/config.py
+        sed -i "s/git_description = ''/git_description = '$DEVEL'/" pyradio/config.py
     fi
 }
 

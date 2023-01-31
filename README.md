@@ -81,6 +81,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
 * [Packaging PyRadio](#packaging-pyradio)
+    * [Distro Specific Files](#distro-specific-files)
 * [TODO](#todo)
 * [Acknowledgment](#acknowledgment)
 * [Special thanks](#special-thanks)
@@ -112,6 +113,7 @@ and much more...
     - requests
     - dnspython
     - psutil
+    - netifaces (optional)
 * MPV, MPlayer or VLC installed and in your path
 
 <!-- Changelog -->
@@ -1262,6 +1264,7 @@ First of all, make sure you declare the pacakges's requirements to the relevant 
 3. requests
 4. dnspython
 5. psutil
+6. netifaces
 
 After that, you will have to modify some files, because **PyRadio** is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
 
@@ -1291,15 +1294,30 @@ or
 
 to have notifications every 60 seconds, for example. You can use any value here, starting from 30 to 300 (meaning every 30 seconds up to 5 minutes), using a step of 30.
 
-Finally, make sure you install:
+### Distro Specific Files
 
-- *devel/pyradio.png* to */usr/share/icons* or */usr/local/share/icons* or any other suitable location.
-- *devel/pyradio.desktop* to */usr/share/applications* or */usr/local/share/applications* or any other suitable location.
+**1. Desktop File**
+
+If the Desktop File is not installed in */usr/share/applications* or */usr/local/share/applications*, it will have to be passed as a parameter to the script that will handle it, like so:
+
+```
+sed -i "s,' -t ',' -d /path/to/desktop_file' + &," pyradio/main.py
+```
+
+**2. Package Icon**
+
+**PyRadio** will find and use **pyradio.png** if it's installed in */usr/share/icons* or */usr/local/share/icons*.
+
+If this file is installed in any other location, you will have to patch yet another file, like so:
+
+```
+sed -i 's/self.icon_path = None/self.icon_path = "PATH TO FILE"/' pyradio/log.py
+```
 
 ## TODO
 
 - [ ] Any user request I find interesting :)
-- [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
+- [x] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112)) - v 0.9.0
 - [ ] Use some OPML service, [https://opml.radiotime.com](https://opml.radiotime.com) for example
 - [x] Notify the user that the package's stations.csv has changed -v 0.8.9
 - [x] Update / uninstall using command line options (-U / -R) - v. 0.8.9

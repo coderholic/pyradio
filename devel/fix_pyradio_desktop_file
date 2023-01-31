@@ -27,6 +27,10 @@ Available options:
     -p   PARAMETER
          PyRadio parameter. Please replace hyphens with underscores.
          So, \"-p 2 -t light\" would be passed as \"_p 2 _t light\").
+    -d   DISTRO_DESKTOP_FILE
+         If this is a distribution package, and the Desktop File is not
+         installed under /usr/share/applications, this parameter will
+         tell the script where it is installed.
 
 For passing the command parameter, the script will use \"-e\" for all terminals,
 so that an executable line will be constracted.
@@ -69,7 +73,9 @@ Comment=Curses based Radio Player" > "${DESKTOP_FILE}"
     echo "${TERMINAL_LINE}" >> "${DESKTOP_FILE}"
     echo "Categories=Network" >> "${DESKTOP_FILE}"
 
-    if [ -e /usr/share/applications/pyradio.desktop ] || [ -e /usr/loacal/share/applications/pyradio.desktop ]
+    if [ -e /usr/share/applications/pyradio.desktop ] || \
+        [ -e /usr/loacal/share/applications/pyradio.desktop ] || \
+        [ -e "${ORIGINAL_DESKTOP_FILE}" ]
     then
         sed -i 's/Name=PyRadio/& - Local/' "${DESKTOP_FILE}"
     fi
@@ -104,25 +110,21 @@ function get_terminal_from_desktop_file(){
 function get_req_terminal(){
     if [ -z "${REQ_TERMINAL}" ]
     then
-        get_terminal_from_desktop_file ~/.local/share/applications/pyradio.desktop
-        LOCAL_TERMINAL="${DET_TERMINAL}"
-        LOCAL_COMMAND="${DET_COMMAND}"
-        if [ ! -z "${LOCAL_TERMINAL}" ]
-        then
-            REQ_TERMINAL="${LOCAL_TERMINAL}"
-            REQ_COMMAND="${LOCAL_COMMAND}"
-        fi
-        if [ -z "${REQ_TERMINAL}" ]
-        then
-            get_terminal_from_desktop_file /usr/share/applications/pyradio.desktop
-            SYSTEM_TERMINAL="${DET_TERMINAL}"
-            SYSTEM_COMMAND="${DET_COMMAND}"
-            if [ ! -z "${SYSTEM_TERMINAL}" ]
+        for n in ~/.local/share/applications/pyradio.desktop \
+                /usr/share/applications/pyradio.desktop \
+                /usr/local/share/applications/pyradio.desktop \
+                "${ORIGINAL_DESKTOP_FILE}"
+        do
+            get_terminal_from_desktop_file "$n"
+            LOCAL_TERMINAL="${DET_TERMINAL}"
+            LOCAL_COMMAND="${DET_COMMAND}"
+            if [ ! -z "${LOCAL_TERMINAL}" ]
             then
-                REQ_TERMINAL="${SYSTEM_TERMINAL}"
-                REQ_COMMAND="${SYSTEM_COMMAND}"
+                REQ_TERMINAL="${LOCAL_TERMINAL}"
+                REQ_COMMAND="${LOCAL_COMMAND}"
+                break
             fi
-        fi
+        done
 
         if [ ! -z "${REQ_TERMINAL}" ]
         then
@@ -191,6 +193,16 @@ do
         -h|--help)
             help
             exit
+            ;;
+        -d)
+            shift
+            if [ ! -r "$1" ];then
+                echo "Error in parameter -d: Desktop file not found..."
+                exit 1
+            else
+                ORIGINAL_DESKTOP_FILE="$1"
+            fi
+            shift
             ;;
         -t)
             shift
