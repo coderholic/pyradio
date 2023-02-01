@@ -1287,7 +1287,7 @@ Content-Length: {}
             for i in range(0, len(out)):
                 out[i] += '<br>'
         else:
-            out.append('Selection (id={0}): "{1}"'.format(selection, self.lists()[0][-1][selection][0]))
+            out.append('Selection (id={0}): "{1}"'.format(selection+1, self.lists()[0][-1][selection][0]))
 
         return '\n'.join(out)
 

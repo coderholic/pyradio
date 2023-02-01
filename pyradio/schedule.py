@@ -573,7 +573,7 @@ class PyRadioTime(object):
 
 if __name__ == '__main__':
     a= PyRadioScheduleItem()
-    print('B`|`2022-10-15 11:15:12 PM`|`A`|`2021-08-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation')
+    # print('B`|`2022-10-15 11:15:12 PM`|`A`|`2021-08-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation')
     a.set_item('B`|`2022-10-15 11:15:12 PM`|`A`|`2021-08-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation')
     # a.set_item('B`|`2022-10-15 23:15:12`|`A`|``|`I02:15:11`|`myplaylist`|`mystation')
     print(a)
