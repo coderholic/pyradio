@@ -5660,6 +5660,21 @@ __|Remote Control Server| cannot be started!__
             )
 
     def keypress(self, char):
+        if self.player.PLAYER_NAME == 'mpv':
+            low = 35
+            high = 50
+        else:
+            low = 2
+            high = 20
+        if char == curses.KEY_F3:
+            if int(self.player.volume) == -1 or int(self.player.volume) == high:
+                self.player.set_volume(low)
+            else:
+                self.player.set_volume(high)
+            # self.player.get_volume()
+            # logger.error('\n\nF3\nvolume = {0}\nactual volume = {1}\n\n'.format(self.player.volume, self.player.actual_volume))
+            return
+
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
             if logger.isEnabledFor(logging.debug):

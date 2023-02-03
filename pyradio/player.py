@@ -217,7 +217,7 @@ class Player(object):
     oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
 
     ''' volume percentage '''
-    volume = -1
+    actual_volume = volume = -1
 
     delay_thread = None
     connection_timeout_thread = None
@@ -339,6 +339,19 @@ class Player(object):
             return streamUrl.replace('https://', 'http://')
         else:
             return streamUrl
+
+    def set_volume(self, vol):
+        if vol < 1:
+            vol = 100 * vol
+        self.get_volume()
+        while vol != int(self.volume):
+            old_vol = int(self.volume)
+            if vol > int(self.volume):
+                self._volume_up()
+            else:
+                self._volume_down()
+            while old_vol == int(self.volume):
+                sleep(.1)
 
     def save_volume(self):
         pass
@@ -614,6 +627,8 @@ class Player(object):
                             if self.oldUserInput['Volume'] != subsystemOut:
                                 self.oldUserInput['Volume'] = subsystemOut
                                 self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+
+                                logger.error('\n\ngot volume: {}'.format(self.volume))
 
                                 # IMPORTANT: do this here, so that vlc actual_volume
                                 # gets updated in _format_volume_string
@@ -957,6 +972,8 @@ class Player(object):
                         if self.oldUserInput['Volume'] != subsystemOut:
                             self.oldUserInput['Volume'] = subsystemOut
                             self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+
+                            logger.error('\n\nvlc volume = {}\n\n'.forma(self.volume))
 
                             # IMPORTANT: do this here, so that vlc actual_volume
                             # gets updated in _format_volume_string
@@ -1402,7 +1419,7 @@ class Player(object):
                 )
         self.update_thread.start()
         if self.PLAYER_NAME == 'vlc':
-            self._get_volume()
+            self.get_volume()
         # start playback check timer thread
         self.stop_timeout_counter_thread = False
         if self.playback_timeout > 0:
@@ -1551,7 +1568,7 @@ class Player(object):
     def _stop(self):
         pass
 
-    def _get_volume(self):
+    def get_volume(self):
         ''' get volume, if player can report it '''
         pass
 
@@ -2015,12 +2032,12 @@ class MpvPlayer(Player):
             finally:
                 pass
         self._close_pipe(sock)
-        self.volume = vol
+        self.volume = self.actual_volume = vol
 
     def _display_mpv_volume_value(self):
         ''' Display volume for MPV
 
-            Calling _get_volume
+            Calling get_volume
         '''
 
         self.get_volume()
@@ -2199,6 +2216,17 @@ class MpPlayer(Player):
         ''' decrease mplayer's volume '''
         self._sendCommand('/')
 
+    def get_volume(self):
+        ''' get mplayer's actual_volume'''
+        logger.error('\n\nvolume I have: {}'.format(self.volume))
+        self.show_volume = False
+        if int(self.volume) < 0:
+            self.show_volume = False
+            self._volume_down()
+            sleep(.1)
+            self._volume_up()
+        self.show_volume = True
+
     def _format_title_string(self, title_string):
         ''' format mplayer's title '''
         if "StreamTitle='" in title_string:
@@ -2373,7 +2401,7 @@ class VlcPlayer(Player):
             self.muted = False
         else:
             if self.actual_volume == -1:
-                self._get_volume()
+                self.get_volume()
             if self.WIN:
                 self._win_mute()
             else:
@@ -2488,13 +2516,16 @@ class VlcPlayer(Player):
                     break
         return ret
 
-    def _get_volume(self):
+    def get_volume(self):
         ''' get vlc's actual_volume'''
         self.show_volume = False
         if self.WIN:
             self._win_get_volume()
         else:
-            self._sendCommand('volume\n')
+            # self._sendCommand('volume\n')
+            self._volume_down()
+            sleep(.1)
+            self._volume_up()
         self.show_volume = True
 
     def _no_mute_on_stop_playback(self):
@@ -2503,7 +2534,7 @@ class VlcPlayer(Player):
             return
         if self.isPlaying():
             if self.actual_volume == -1:
-                self._get_volume()
+                self.get_volume()
                 if self.actual_volume == -1:
                     self.actual_volume = 0
             if self.actual_volume == 0:
