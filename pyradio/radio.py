@@ -281,6 +281,7 @@ class PyRadio(object):
                  req_player='',
                  theme='',
                  force_update=''):
+        self.tcount = 0
         self._no_netifaces = False
         self._current_selection = 0
         self._force_print_all_lines = False
@@ -5667,10 +5668,12 @@ __|Remote Control Server| cannot be started!__
             low = 2
             high = 20
         if char == curses.KEY_F3:
-            if int(self.player.volume) == -1 or int(self.player.volume) == high:
+            if self.tcount == 0:
                 self.player.set_volume(low)
+                self.tcount = 1
             else:
                 self.player.set_volume(high)
+                self.tcount = 0
             # self.player.get_volume()
             # logger.error('\n\nF3\nvolume = {0}\nactual volume = {1}\n\n'.format(self.player.volume, self.player.actual_volume))
             return
