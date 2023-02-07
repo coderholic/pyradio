@@ -128,8 +128,16 @@ def calc_can_change_colors(config):
         return False
     ret = True
     if curses.can_change_color() and curses.COLORS > 16:
-        if config.is_blacklisted_terminal():
+        blacklisted_terminal = config.is_blacklisted_terminal()
+        if blacklisted_terminal:
             ret = False
+    if not ret:
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('curses.can_change_color() : {}'.format(curses.can_change_color()))
+            logger.debug('curses.COLORS: {}'.format(curses.COLORS))
+            logger.debug('config.is_blacklisted_terminal(): {}'.format(blacklisted_terminal))
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Terminal can change colors: {}'.format(ret))
     return ret
 
 class PyRadio(object):
@@ -597,6 +605,17 @@ class PyRadio(object):
         out.append('</div>')
         return '\n'.join(out)
 
+    def _get_text_volume(self):
+        if self.player.isPlaying() and \
+                not self.player.muted:
+            self.player.get_volume()
+            return 'Volume: {}'.format(self.player.volume)
+        else:
+             if self.player.muted:
+                 return 'Player is muted!'
+             else:
+                 return 'Player is Idle!'
+
     def _html_init_song_title(self):
         self._html_song_title()
 
@@ -629,6 +648,12 @@ class PyRadio(object):
                     return
 
     def setup(self, stdscr):
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('<<<===---  Program start  ---===>>>')
+            if self._cnf.distro == 'None':
+                logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), system()))
+            else:
+                logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), self._cnf.distro))
         self.setup_return_status = True
         if not curses.has_colors():
             self.setup_return_status = False
@@ -645,12 +670,6 @@ class PyRadio(object):
         else:
             if curses.COLORS > 32:
                 self._cnf.start_colors_at = 15
-        if logger.isEnabledFor(logging.INFO):
-            logger.info('<<<===---  Program start  ---===>>>')
-            if self._cnf.distro == 'None':
-                logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), system()))
-            else:
-                logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), self._cnf.distro))
             logger.info('Terminal supports {0} colors (first color to define = {1})'.format(curses.COLORS, self._cnf.start_colors_at))
         self.stdscr = stdscr
 
@@ -5665,8 +5684,12 @@ __|Remote Control Server| cannot be started!__
             low = 35
             high = 50
         else:
-            low = 2
-            high = 20
+            low = 20
+            high = 65
+        if char == curses.KEY_F2:
+            self.player.get_volume()
+            logger.error('volume = {}'.format(self.player.volume))
+            return
         if char == curses.KEY_F3:
             if self.tcount == 0:
                 self.player.set_volume(low)
@@ -9317,6 +9340,7 @@ __|Remote Control Server| cannot be started!__
                 '/html_info': self._html_info,
                 '/html_is_stopped': self._html_is_player_stopped,
                 '/html_init': self._html_init_song_title,
+                '/volume': self._get_text_volume,
             }
         )
         if not self._remote_control_server.has_netifaces:

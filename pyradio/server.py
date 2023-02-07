@@ -817,6 +817,14 @@ Restricted Commands (Main mode only)
                     self._send_raw('<div class="alert alert-danger">' + self._text['/perm'] + '</div>')
                 else:
                     self._send_text(self._text['/perm'])
+        elif self._path.startswith('/volumevalue') or \
+            self._path.startswith('/vv'):
+            ''' set volume '''
+            pass
+        elif self._path == '/volume' or self._path == '/v':
+            ''' get volume '''
+            received = self._commands['/volume']()
+            self._send_raw(received)
         elif self._path.startswith('/playlists') or \
                 self._path.startswith('/pl') or \
                 self._path == '/stations' or \
