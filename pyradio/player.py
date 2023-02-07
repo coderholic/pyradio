@@ -216,9 +216,6 @@ class Player(object):
     # Title:   old title input    - printed by delay thread
     oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
 
-    ''' volume percentage '''
-    actual_volume = volume = -1
-
     delay_thread = None
     connection_timeout_thread = None
 
@@ -632,9 +629,7 @@ class Player(object):
                         # disable volume for mpv
                         if self.PLAYER_NAME != 'mpv':
                             # logger.error('***** volume')
-                            logger.info('subsystemOut = "{}"'.format(subsystemOut))
                             if self.oldUserInput['Volume'] != subsystemOut:
-                                logger.info('here')
                                 self.oldUserInput['Volume'] = subsystemOut
                                 if self.PLAYER_NAME == 'vlc':
                                     if '.' in subsystemOut:
@@ -647,7 +642,6 @@ class Player(object):
                                         sp = subsystemOut.split(token)
                                         subsystemOut = sp[0]
                                 self.volume = ''.join(c for c in subsystemOut if c.isdigit())
-                                logger.info('1 got volume: "{}"'.format(self.volume))
 
                                 # IMPORTANT: do this here, so that vlc actual_volume
                                 # gets updated in _format_volume_string
@@ -2050,7 +2044,7 @@ class MpvPlayer(Player):
             finally:
                 pass
         self._close_pipe(sock)
-        self.volume = self.actual_volume = vol
+        self.volume = vol
 
     def _display_mpv_volume_value(self):
         ''' Display volume for MPV
@@ -2376,39 +2370,22 @@ class VlcPlayer(Player):
                 vols = [x + diff for x in range(int(self.volume), ovol, diff)]
                 vols[-1] = ovol
                 if self.WIN:
-                    # logger.info('ivol = {}'.format(ivol))
-                    the_vol = round(int(ivol)*self.max_volume/100/2)
-                    # logger.info('the_vol = {}'.format(the_vol))
-                    self._thrededreq('volume {}'.format(the_vol))
+                    self.show_volume = False
+                    for a_vol in vols:
+                        self._thrededreq('volume {}'.format(a_vol))
+                        self.volume = a_vol
+                        sleep(.01)
                     self._win_get_volume()
+                    self.show_volume = True
                     self._win_show_vlc_volume()
-                    return
                 else:
                     self.show_volume = False
                     for a_vol in vols:
                         self._sendCommand('volume {}\n'.format(a_vol))
                         self.volume = a_vol
-                        if a_vol == vols[-1]:
-                            self.show_volume = True
-                            self._sendCommand('status\n')
                         sleep(.01)
-                return
-                executed = []
-                wanted = '010'
-                while ivol != round(100*int(self.volume)/self.max_volume):
-                    old_vol = round(100*int(self.volume)/self.max_volume)
-                    if ivol > round(100*int(self.volume)/self.max_volume):
-                        self._volume_up()
-                        executed.append(0)
-                    else:
-                        self._volume_down()
-                        executed.append(1)
-                    if wanted in ''.join(map(str, executed)):
-                        # logger.error('setting final volume: {0} - {1}'.format(ivol, round(ivol*self.max_volume/100)))
-                        self._volume_set(round(ivol*self.max_volume/100))
-                        break
-                    while old_vol == round(100*int(self.volume)/self.max_volume):
-                        sleep(.1)
+                    self.show_volume = True
+                    self._sendCommand('status\n')
 
     def save_volume(self):
         pass
@@ -2686,7 +2663,7 @@ class VlcPlayer(Player):
     def _win_show_vlc_volume(self):
         #if self.win_show_vlc_volume_function:
         self._win_get_volume()
-        pvol = int((self.actual_volume + 1) / self.max_volume * 100 * 2)
+        pvol = int( 100 * self.volume / self.max_volume)
         if pvol > 0:
             avol = '[Vol: {}%] '.format(pvol)
             if self.show_volume and self.oldUserInput['Title']:
@@ -2694,7 +2671,7 @@ class VlcPlayer(Player):
                 self.threadUpdateTitle()
 
     def _win_get_volume(self):
-        self._thrededreq('volume', self._get_volume_response)
+        self._thrededreq('status', self._get_volume_response)
 
     def _get_volume_response(self, msg):
         parts = msg.split('\r\n')
@@ -2707,11 +2684,10 @@ class VlcPlayer(Player):
                         vol = vol[:ind]
                         break
                 try:
-                    self.actual_volume = int(vol)
+                    self.actual_volume = self.volume = int(vol)
                 except ValueError:
-                    logger.error('DE _get_volume_response: ValueError: vol = {}'.format(vol))
+                    # logger.error('DE ValueError: vol = {}'.format(vol))
                     return
-                logger.error('DE _get_volume_response: vol = {}'.format(vol))
                 break
         if self.actual_volume == 0:
             self.muted = True
