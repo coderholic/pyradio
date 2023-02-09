@@ -623,7 +623,7 @@ class PyRadio(object):
                 not self.player.muted:
             self.player.get_volume()
             if self.player.PLAYER_NAME == 'vlc':
-                return 'Volume: {}'.format(round(100*int(self.player.volume)/self.player.max_volume))
+                return 'Volume: {}'.format(int(round(100*int(self.player.volume)/self.player.max_volume)))
             else:
                 return 'Volume: {}'.format(self.player.volume)
         else:

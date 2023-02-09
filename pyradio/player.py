@@ -2352,7 +2352,7 @@ class VlcPlayer(Player):
                 not self.muted:
             self.get_volume()
             ivol = int(vol)
-            ovol = round(self.max_volume*ivol/100)
+            ovol = int(round(self.max_volume*ivol/100))
             logger.info('setting volume at {0}% ({1})'.format(ivol, ovol))
             if ovol != int(self.volume):
                 diff = 10 if ovol > int(self.volume) else -10
