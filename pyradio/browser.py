@@ -3616,8 +3616,7 @@ class RadioBrowserData(object):
                 # else:
                 #     return True, []
             except requests.exceptions.RequestException as e:
-                if logger.isEnabledFor(logger.ERROR):
-                    logger.error(e)
+                logger.error(e)
                 return True, []
 
         my_data = {}

@@ -537,8 +537,7 @@ Restricted Commands (Main mode only)
                 self.client_socket, address = server.accept()
                 request = self.client_socket.recv(1024)
             except socket.error as e:
-                if logger.isEnabledFor(logger.ERROR):
-                    logger.error('Server accept error: "{}"'.format(e))
+                logger.error('Server accept error: "{}"'.format(e))
                 dead_func(e)
                 break
             self.error = None
@@ -820,10 +819,6 @@ Restricted Commands (Main mode only)
                     self._send_raw('<div class="alert alert-danger">' + self._text['/perm'] + '</div>')
                 else:
                     self._send_text(self._text['/perm'])
-        elif self._path.startswith('/volumevalue') or \
-            self._path.startswith('/vv'):
-            ''' set volume '''
-            pass
         elif self._path == '/volume' or self._path == '/v':
             ''' get volume '''
             if self._is_html:

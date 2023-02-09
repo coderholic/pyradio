@@ -2560,7 +2560,7 @@ class VlcPlayer(Player):
                     break
         return ret
 
-    def get_volume(self):
+    def get_volume(self, repeat=False):
         ''' get vlc's actual_volume'''
         logger.error('=======================')
         old_vol = int(self.volume)
@@ -2580,6 +2580,12 @@ class VlcPlayer(Player):
                         break
             self.show_volume = True
         logger.error('self.volume = {}'.format(self.volume))
+        logger.error('repeat = {}'.format(repeat))
+        if self.WIN and int(self.volume) <= 0 and not repeat:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('got volume=0, repeating after 1 second')
+            sleep(1)
+            self.get_volume(repeat=True)
 
     def _no_mute_on_stop_playback(self):
         ''' make sure vlc does not stop muted '''
