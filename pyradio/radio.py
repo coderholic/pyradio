@@ -618,6 +618,19 @@ class PyRadio(object):
         out.append('</div>')
         return '\n'.join(out)
 
+    def _set_text_volume(self, vol):
+        if self.player.isPlaying() and \
+                not self.player.muted:
+            ivol = int(vol)
+            self.player.set_volume(vol)
+            sleep(.1)
+            return 'Volume set to: {}'.format(vol)
+        else:
+             if self.player.muted:
+                 return 'Player is Muted!'
+             else:
+                 return 'Player is Idle!'
+
     def _get_text_volume(self):
         if self.player.isPlaying() and \
                 not self.player.muted:
@@ -9359,6 +9372,7 @@ __|Remote Control Server| cannot be started!__
                 '/html_is_stopped': self._html_is_player_stopped,
                 '/html_init': self._html_init_song_title,
                 '/volume': self._get_text_volume,
+                '/set_volume': self._set_text_volume,
             }
         )
         if not self._remote_control_server.has_netifaces:

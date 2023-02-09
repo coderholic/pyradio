@@ -422,7 +422,8 @@ Global Commands
 Long             Short      Description
 --------------------------------------------------------------------
 /info            /i         display PyRadio info
-/volume          /v         Show volume (text only)
+/volume          /v         show volume (text only)
+/set_volume/x    /sv/x      set volume to x% (text only)
 /volumeup        /vu        increase volume
 /volumedown      /vd        decrease volume
 /vulumesave      /vs        save volume
@@ -825,8 +826,36 @@ Restricted Commands (Main mode only)
             pass
         elif self._path == '/volume' or self._path == '/v':
             ''' get volume '''
-            received = self._commands['/volume']()
-            self._send_raw(received)
+            if self._is_html:
+                pass
+            else:
+                received = self._commands['/volume']()
+                self._send_raw(received)
+        elif self._path.startswith('/set_volume/') or \
+                    self._path.startswith('/sv/'):
+            ''' set volume '''
+            go_on = True
+            sp = self._path.split('/')
+            if len(sp) != 3:
+                self._send_text(self._text['/error'])
+            else:
+                try:
+                    vol = int(sp[-1])
+                except (ValueError, TypeError):
+                    if self._is_html:
+                        self._send_raw(self._text['/error'])
+                    else:
+                        self._send_text(self._text['/error'])
+                    go_on = False
+            if self._is_html:
+                pass
+            else:
+                if go_on:
+                    if 0 <= vol <= 100:
+                        received = self._commands['/set_volume'](vol)
+                        self._send_raw(received)
+                    else:
+                        self._send_raw('Error: Volume must be 0-100')
         elif self._path.startswith('/playlists') or \
                 self._path.startswith('/pl') or \
                 self._path == '/stations' or \
