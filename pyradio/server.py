@@ -422,6 +422,7 @@ Global Commands
 Long             Short      Description
 --------------------------------------------------------------------
 /info            /i         display PyRadio info
+/volume          /v         Show volume (text only)
 /volumeup        /vu        increase volume
 /volumedown      /vd        decrease volume
 /vulumesave      /vs        save volume
@@ -689,7 +690,8 @@ Restricted Commands (Main mode only)
                 self._send_raw(received)
             else:
                 if self.can_send_command():
-                    self._send_text(self._info())
+                    received = self._commands['/text_info']()
+                    self._send_text(received)
                 else:
                     self._send_text(self._text['/perm'])
         elif self._path in ('/next', '/n'):
@@ -1268,36 +1270,6 @@ Content-Length: {}
             out[i] = tok + pad_str.format(i+1) + out[i]
 
         return 'Available Playlists\n' + '\n'.join(out) + '\nFirst column:\n  [>]: Playlist loaded'
-
-    def _info(self):
-        out = []
-        if self._is_html:
-            out.append('<b>Playlist:</b> ' + basename(self.playlist_in_editor()[:-4]) + '')
-        else:
-            out.append('Playlist: "' + basename(self.playlist_in_editor()[:-4]) + '"')
-        selection = self.sel()[0]
-        playing = self.sel()[1]
-        if playing == -1:
-            if self._is_html:
-                out.append('<b>Player:</b> ' + 'Idle')
-            else:
-                out.append('Player: ' + 'Idle')
-        else:
-            mut = ' (muted)' if self.muted() else ''
-            if self._is_html:
-                out.append('<b>Player:</b> ' + 'In playback' + mut)
-                out.append('<span style="padding-left: 1em; font-weight: bold;">  Station:</span> {}'.format(self.lists()[0][-1][playing][0]))
-            else:
-                out.append('Player: ' + 'In playback' + mut)
-                out.append('  Station (id={0}): "{1}"'.format(playing+1, self.lists()[0][-1][playing][0]))
-        if self._is_html:
-            out.append('<b>Selection:</b> {}'.format(self.lists()[0][-1][selection][0]))
-            for i in range(0, len(out)):
-                out[i] += '<br>'
-        else:
-            out.append('Selection (id={0}): "{1}"'.format(selection+1, self.lists()[0][-1][selection][0]))
-
-        return '\n'.join(out)
 
     def _insert_html_script(self, msg):
         script = '''        <script>

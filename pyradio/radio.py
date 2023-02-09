@@ -590,6 +590,19 @@ class PyRadio(object):
                 except:
                     return
 
+    def _text_info(self):
+        out = []
+        out.append('PyRadio {}'.format(self._cnf.current_pyradio_version))
+        out.append('Player: {}'.format(self.player.PLAYER_NAME))
+        out.append('Playlist: "{}"'.format(basename(self._playlist_in_editor)[:-4]))
+        if self.player.isPlaying():
+            out.append('Status: In playback {}'.format('(muted)' if self.player.muted else ''))
+            out.append('  Station (id={0}): "{1}"'.format(self.playing+1, self.stations[self.playing][0]))
+        else:
+            out.append('Status: Idle')
+        out.append('Selection (id={0}): "{1}"'.format(self.selection+1, self.stations[self.selection][0]))
+        return '\n'.join(out)
+
     def _html_info(self):
         out = []
         out.append('<div class="alert alert-info">')
@@ -609,10 +622,13 @@ class PyRadio(object):
         if self.player.isPlaying() and \
                 not self.player.muted:
             self.player.get_volume()
-            return 'Volume: {}'.format(self.player.volume)
+            if self.player.PLAYER_NAME == 'vlc':
+                return 'Volume: {}'.format(round(100*int(self.player.volume)/self.player.max_volume))
+            else:
+                return 'Volume: {}'.format(self.player.volume)
         else:
              if self.player.muted:
-                 return 'Player is muted!'
+                 return 'Player is Muted!'
              else:
                  return 'Player is Idle!'
 
@@ -8144,6 +8160,7 @@ __|Remote Control Server| cannot be started!__
         self._reset_status_bar_right()
         self.log.counter = None
         self._update_status_bar_right()
+        self.player.muted = False
         if self.number_of_items > 0:
             if self.player.isPlaying():
                 self.stopPlayer(show_message=True)
@@ -9338,6 +9355,7 @@ __|Remote Control Server| cannot be started!__
                 '/html_like': self._html_tag_a_title,
                 '/title': self._html_song_title,
                 '/html_info': self._html_info,
+                '/text_info': self._text_info,
                 '/html_is_stopped': self._html_is_player_stopped,
                 '/html_init': self._html_init_song_title,
                 '/volume': self._get_text_volume,

@@ -204,7 +204,7 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
     else:
         print('Downloading MPlayer (latest)...')
     url = ('https://sourceforge.net/projects/mpv-player-windows/files/latest/download',
-        'https://sourceforge.net/projects/mplayer-win32/files/latest/download')
+        'https://sourceforge.net/projects/mplayerwin/files/latest/download')
 
     output_folder = _get_output_folder(
         output_folder=output_folder,

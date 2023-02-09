@@ -1975,18 +1975,7 @@ class MpvPlayer(Player):
             return True
 
     def get_volume(self):
-        ''' Display volume for MPV
-
-            Currently working with python 2 and 3
-            Eventually will be used for python 2 only
-
-            Python 2 cannot correctly read icy-title from
-            the socket (unicode issue), so it has to read
-            it from stdout.
-        '''
-
-        #if version_info > (3, 0):
-        #    return
+        ''' Display volume for MPV '''
         vol = 0
         while True:
             sock = self._connect_to_socket(self.mpvsocket)

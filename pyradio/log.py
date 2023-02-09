@@ -673,7 +673,7 @@ class RepeatDesktopNotification(object):
         with self._a_lock:
             self._start_time = value
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Setting repetative Desktop Notification timer to: {}'.format(self._start_time))
+                logger.debug('Setting repetative Desktop Notification timer start to: {}'.format(self._start_time))
 
 
     def reset_timer(self):
