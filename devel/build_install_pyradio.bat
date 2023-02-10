@@ -103,7 +103,12 @@ IF "%NO_DEV%"=="1" (
     CD ..
 )
 ECHO.
-IF NOT EXIST "%APPDATA%\pyradio\*" MKDIR %APPDATA%\pyradio
+
+SET INSTALL_PLAYER=no
+IF NOT EXIST "%APPDATA%\pyradio\*" (
+    MKDIR %APPDATA%\pyradio
+    SET INSTALL_PLAYER=yes
+)
 IF NOT EXIST "%APPDATA%\pyradio\help\*" MKDIR %APPDATA%\pyradio\help
 COPY /Y *.html %APPDATA%\pyradio\help >NUL
 COPY /Y devel\pyradio.* %APPDATA%\pyradio\help >NUL
@@ -252,3 +257,7 @@ DEL DOPAUSE 2>NUL
 PAUSE
 
 :endnopause
+
+REM IF "%INSTALL_PLAYER%" == "yes" (
+REM    %PROGRAM% pyradio\win.py
+REM )

@@ -10,6 +10,7 @@ from msvcrt import getwch
 from os import sep, startfile
 import subprocess
 from urllib.request import urlretrieve
+import glob
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -187,6 +188,8 @@ def download_seven_zip(output_folder):
         print('go to https://www.7-zip.org/ to get it...')
         sys.exit(1)
 
+    print('\nPyRadio installation will resume as soon as\nyou complete the installation of 7-Zip..')
+
     subprocess.call(
         out_file,
         shell=True,
@@ -263,7 +266,11 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
 
         patool_exec = join(site.USER_SITE.replace('site-packages', 'Scripts'), 'patool')
         if not exists(patool_exec):
-            patool = None
+            patool_exec = glob.glob(join(environ['APPDATA'], '**', 'patool.exe'), recursive=True)
+            if patool_exec:
+                patool_exec = patool_exe[0]
+            else:
+                patool_exec = None
         try:
             Archive(out_file).extractall(join(output_folder, 'mpv' if package==0 else ''),
                 auto_create_dir=True,
@@ -615,9 +622,11 @@ def install_pyradio_link():
             )
 
 if __name__ == '__main__':
+    print('\n\n----====  Default Media Player Installation  ====----')
+    download_player(package=1)
     # _post_download(1, "C:\\Users\\spiros\\AppData\\Roaming\\pyradio")
     # download_player(package=0)
-    install_player()
+    #install_player()
 
     # install_pylnk("C:\\Users\\spiros")
     #create_pyradio_link()
