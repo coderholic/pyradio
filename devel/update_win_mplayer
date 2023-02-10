@@ -1,0 +1,46 @@
+#!/bin/bash
+echo "Working on pyradio/win.py"
+echo -n "  Reading in file MPlayer version ... "
+EXISTING=$(sed -n '/svn-[0-9]/p' pyradio/win.py | sed -e 's/.*svn-//' -e 's/-.*//')
+
+echo r${EXISTING}
+
+echo -n "  Reading published MPlayer versions ... "
+
+FOUND=$(curl -s -L 'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder' 2>/dev/null | grep '<tr title' | sed -e 's/<tr title="//' -e 's/".*//'|grep -e '^r')
+
+if [ $? -eq 0 ]
+then
+    echo "done"
+else
+    echo -e '\n  Error accessing SourceForge...'
+    exit 1
+fi
+
+count=0
+X=$FOUND
+for n in $FOUND
+do
+    if ((count == 0))
+    then
+        if [ r"${EXISTING}" = "$n" ]
+        then
+            echo "Latest MPlayer version already used..."
+            exit 1
+        else
+            TO_USE="${n/r/}"
+            break
+        fi
+        ((count++))
+    fi
+done
+
+if [ ! -z "${TO_USE}" ]
+then
+    echo "Version to use: ${TO_USE}"
+fi
+
+echo -n "  Updating in file MPlayer version ... "
+sed -i "/MPlayer-MEncoder/s/$EXISTING/$TO_USE/g" pyradio/win.py
+echo "done"
+exit 0

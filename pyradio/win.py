@@ -1,14 +1,13 @@
 import sys
 import requests
 import subprocess
-from os.path import join, exists, isdir
-from os import environ, makedirs, listdir, replace, remove, sep, getenv
+from os.path import join, exists, isdir, basename, dirname
+from os import environ, makedirs, listdir, replace, remove, sep, getenv, chdir
 from time import sleep
 import site
 from shutil import rmtree
 from msvcrt import getwch
-from msvcrt import getwch
-from os import sep
+from os import sep, startfile
 import subprocess
 from urllib.request import urlretrieve
 
@@ -69,7 +68,6 @@ def win_print_exe_paths():
 
 def press_any_key_to_continue():
     print('\nPress any key to exit...', end='', flush=True)
-    from msvcrt import getwch
     getwch()
 
 def install_module(a_module, do_not_exit=False, print_msg=True):
@@ -155,12 +153,14 @@ def _get_output_folder(package, output_folder=None, do_not_exit=False):
                 sys.exit(1)
     return output_folder
 
-def _get_out_file(output_folder):
+def _get_out_file(output_folder, package=1):
     count = 0
+    p_name=('mpv-latest', 'mplayer-latest')
+    out_file = join(output_folder, '{}.7z'.format(p_name[package]))
     while True:
-        out_file = join(output_folder, 'download-{}.7z'.format(count))
         if exists(out_file):
             count += 1
+            out_file = join(output_folder, '{0}-{1}.7z'.format(p_name[package], count))
         else:
             break
     return join(output_folder, out_file)
@@ -203,8 +203,14 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
         print('Downloading MPV (latest)...')
     else:
         print('Downloading MPlayer (latest)...')
-    url = ('https://sourceforge.net/projects/mpv-player-windows/files/latest/download',
-        'https://sourceforge.net/projects/mplayerwin/files/latest/download')
+    purl = (
+        'https://sourceforge.net/projects/mpv-player-windows/files',
+        'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder'
+    )
+    url = (
+        'https://sourceforge.net/projects/mpv-player-windows/files/latest/download',
+        'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder/r38151/mplayer-svn-38151-x86_64.7z/download'
+    )
 
     output_folder = _get_output_folder(
         output_folder=output_folder,
@@ -213,59 +219,109 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
     if output_folder is None:
         return False
 
-    print('    into "{}"'.format(output_folder))
+    if True == False and package == 0 and \
+            exists(join(output_folder, 'mpv', 'updater.bat')):
+        chdir(join(output_folder, 'mpv'))
+        startfile('updater.bat')
+    else:
+        print('    from  "{}"'.format(purl[package]))
+        print('    into  "{}"'.format(output_folder))
 
-    out_file = _get_out_file(output_folder)
-
-    session = requests.Session()
-    for count in range(1,6):
+        out_file = _get_out_file(output_folder, package)
+        session = requests.Session()
+        for count in range(1,6):
+            try:
+                r = session.get(url[package])
+                r.raise_for_status()
+                break
+            except requests.exceptions.RequestException as e:
+                if count < 5:
+                    print('  Download failed. Retrying {}/5'.format(count+1))
+                else:
+                    print('Failed to download player...\nPlease check your internet connection and try again...')
+                    if do_not_exit:
+                        return False
+                    sys.exit(1)
+        print('  Saving: "{}"'.format(out_file))
         try:
-            r = session.get(url[package])
-            r.raise_for_status()
-            break
-        except requests.exceptions.RequestException as e:
-            if count < 5:
-                print('  Download failed. Retrying {}/5'.format(count+1))
+            with open(out_file, 'wb') as f:
+                f.write(r.content)
+        except:
+            print('Failed to write archive...\nPlease try again later...')
+            if do_not_exit:
+                return False
+            sys.exit(1)
+
+        print('Extracting archive...')
+        if package == 0:
+            download_seven_zip(output_folder)
+
+        if not HAVE_PYUNPACK:
+            for a_module in ('pyunpack', 'patool'):
+                install_module(a_module, print_msg=False)
+        from pyunpack import Archive
+
+        patool_exec = join(site.USER_SITE.replace('site-packages', 'Scripts'), 'patool')
+        if not exists(patool_exec):
+            patool = None
+        try:
+            Archive(out_file).extractall(join(output_folder, 'mpv' if package==0 else ''),
+                auto_create_dir=True,
+                patool_path=patool_exec)
+        except:
+            file_only = basename(out_file)
+            player_name = 'mpv' if package == 0 else 'mplayer'
+            print('''Failed to extract the archive...
+
+    You will have to install the player MANUALLY!!!
+
+    PyRadio's configuration folder will open now,
+    along with the archive named "{0}".'''.format(basename(out_file)))
+            if player_name == 'mpv':
+                if exists(join(output_folder, 'mpv')):
+                    print('''    Please extract the archive in the "mpv" folder
+    (overwriting any existing files).''')
+                else:
+                    print('''    Please create a folder named "mpv" and extract
+    the archive there.''')
             else:
-                print('Failed to download player...\nPlease check your internet connection and try again...')
-                if do_not_exit:
-                    return False
-                sys.exit(1)
-    print('  Saving: ' + out_file)
-    try:
-        with open(out_file, 'wb') as f:
-            f.write(r.content)
-    except:
-        print('Failed to write archive...\nPlease try again later...')
-        if do_not_exit:
-            return False
-        sys.exit(1)
+                # mplayer
+                if exists(join(output_folder, 'mplayer')):
+                    print('''    Please delete the "mplayer" folder, extract
+    the archive and rename the resulting folder
+    to "mplayer".''')
+                else:
+                    print('''
+    Please extract the archive and rename the resulting
+    folder to "mplayer".''')
 
-    print('Extracting archive...')
-    if package == 0:
-        download_seven_zip(output_folder)
+            print('Press any key to continue...')
 
-    if not HAVE_PYUNPACK:
-        for a_module in ('pyunpack', 'patool'):
-            install_module(a_module, print_msg=False)
-    from pyunpack import Archive
+            getwch()
+            if player_name == 'mpv':
+                startfile(join(dirname(out_file), 'mpv'))
+            else:
+                startfile(dirname(out_file))
+            startfile(out_file)
 
-    patool_exec = join(site.USER_SITE.replace('site-packages', 'Scripts'), 'patool')
-    if not exists(patool_exec):
-        patool = None
-    try:
-        Archive(out_file).extractall(join(output_folder, 'mpv' if package==0 else ''),
-            auto_create_dir=True,
-            patool_path=patool_exec)
-    except:
-            print('Failed to extract the archive...\nPlease try again later...')
+            '''
+            if player_name == 'mpv':
+                while not exists(join(output_folder, 'mpv', 'updater.bat')):
+                    sleep(1)
+                chdir(join(output_folder, 'mpv'))
+                startfile('updater.bat')
+            '''
+
             if do_not_exit:
                 return False
             sys.exit(1)
 
     if not _post_download(package, output_folder, do_not_exit):
         return False
-    remove(out_file)
+    try:
+        remove(out_file)
+    except:
+        pass
     return True
 
 
@@ -280,7 +336,7 @@ def _post_download(package, output_folder, do_not_exit):
         for a_file in dir_list:
             if a_file == 'mplayer':
                 mplayer_dir_found = True
-            elif a_file.startswith('MPlayer-') and \
+            elif a_file.lower().startswith('mplayer-svn') and \
                     isdir(join(output_folder, a_file)):
                 extracted_dirname = a_file
 

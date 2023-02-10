@@ -161,3 +161,15 @@ rm 1.txt 2.txt pre
 sed -i '/<li><a href="#requirements">Requirements/ a\
 <li><a href="#changelog">Changelog</a></li>' README.html
 git add README.html
+
+# chmod +x devel/update_win_mplayer
+# devel/update_win_mplayer && {
+#     git add pyradio/win.py
+#     git add devel/update_win_mplayer
+# }
+
+echo "
+You should also run
+    devel/update_win_mplayer
+at this point, if you are ready to
+publish a new release"
