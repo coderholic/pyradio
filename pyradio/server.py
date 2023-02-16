@@ -161,7 +161,7 @@ div[id^='a_']:hover { underline: none;}
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
                     <button id="vu" onclick="js_send_simple_command('/html/volumeup', 500);" type="button" class="btn btn-primary">Volume<br>Up</button>
-                    <button id="vd" onclick="js_send_simple_command('/html/volumedown', 500);" type="button" class="btn btn-primary">Vulume<br>Down</button>
+                    <button id="vd" onclick="js_send_simple_command('/html/volumedown', 500);" type="button" class="btn btn-primary">Volume<br>Down</button>
                     <button id="vs" onclick="js_send_simple_command('/html/volumesave', 1500);" type="button" class="btn btn-success">Save<br>Volume</button>
                     <button id="mute" onclick="js_send_simple_command('/html/mute', 500);" type="button" class="btn btn-warning">Mute<br>Player</button>
                 </div>
