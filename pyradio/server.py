@@ -426,7 +426,7 @@ Long             Short      Description
 /set_volume/x    /sv/x      set volume to x% (text only)
 /volumeup        /vu        increase volume
 /volumedown      /vd        decrease volume
-/vulumesave      /vs        save volume
+/volumesave      /vs        save volume
 /mute            /m         toggle mute
 /log             /g         toggle stations logging
 /like            /l         tag (like) station
