@@ -424,7 +424,7 @@ Long             Short      Description
 /info            /i         display PyRadio info
 /volumeup        /vu        increase volume
 /volumedown      /vd        decrease volume
-/vulumesave      /vs        save volume
+/volumesave      /vs        save volume
 /mute            /m         toggle mute
 /log             /g         toggle stations logging
 /like            /l         tag (like) station
