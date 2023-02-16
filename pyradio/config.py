@@ -2023,7 +2023,7 @@ class PyRadioConfig(PyRadioStations):
                            'vlc_parameter'):
                 self._config_to_params(sp)
             elif sp[0] == 'remote_control_server_ip':
-                hosts = ('localhost', 'LAN')
+                hosts = ('localhost', 'LAN', 'lan')
                 sp[1] = sp[1].strip()
                 x = [r for r in hosts if r == sp[1]]
                 if x:

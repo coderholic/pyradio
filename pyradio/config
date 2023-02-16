@@ -134,8 +134,12 @@ auto_save_playlist = False
 # Remote Control server
 # A simple http server that can accept remote
 # connections and pass commands to PyRadio
+#
+# Valid remote_control_server_ip variable values: localhost, LAN, lan
+#
 # Default value: localhost:9998
 #                no auto start
+#
 remote_control_server_ip = localhost
 remote_control_server_port = 9998
 remote_control_server_auto_start = False
@@ -149,4 +153,3 @@ remote_control_server_auto_start = False
 # Packagers must populate this paramater as needed!
 #
 distro = None
-
