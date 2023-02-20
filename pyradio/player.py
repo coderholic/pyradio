@@ -2353,7 +2353,8 @@ class VlcPlayer(Player):
             self.get_volume()
             ivol = int(vol)
             ovol = int(round(self.max_volume*ivol/100))
-            logger.info('setting volume at {0}% ({1})'.format(ivol, ovol))
+            if logger.isEnabledFor(logging.DEBUG):
+	            logger.debug('setting volume at {0}% ({1})'.format(ivol, ovol))
             if ovol != int(self.volume):
                 diff = 10 if ovol > int(self.volume) else -10
                 vols = [x + diff for x in range(int(self.volume), ovol, diff)]
@@ -2562,9 +2563,9 @@ class VlcPlayer(Player):
 
     def get_volume(self, repeat=False):
         ''' get vlc's actual_volume'''
-        logger.error('=======================')
+        # logger.error('=======================')
         old_vol = int(self.volume)
-        logger.error('self.volume = {}'.format(self.volume))
+        # logger.error('self.volume = {}'.format(self.volume))
         if old_vol <= 0:
             self.show_volume = False
             if self.WIN:
@@ -2579,8 +2580,8 @@ class VlcPlayer(Player):
                     if count > 4:
                         break
             self.show_volume = True
-        logger.error('self.volume = {}'.format(self.volume))
-        logger.error('repeat = {}'.format(repeat))
+        # logger.error('self.volume = {}'.format(self.volume))
+        # logger.error('repeat = {}'.format(repeat))
         if self.WIN and int(self.volume) <= 0 and not repeat:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('got volume=0, repeating after 1 second')
@@ -2658,7 +2659,7 @@ class VlcPlayer(Player):
     def _win_show_vlc_volume(self):
         #if self.win_show_vlc_volume_function:
         self._win_get_volume()
-        pvol = int( 100 * self.volume / self.max_volume)
+        pvol = int(100 * self.volume / self.max_volume)
         if pvol > 0:
             avol = '[Vol: {}%] '.format(pvol)
             if self.show_volume and self.oldUserInput['Title']:

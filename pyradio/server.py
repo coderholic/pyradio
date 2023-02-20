@@ -171,7 +171,7 @@ div[id^='a_']:hover { underline: none;}
                     <button onclick="js_send_simple_command('/html/st', 0);" type="button" class="btn btn-success">Stations<br>List</button>
                     <button onclick="js_send_simple_command('/html/pl', 0);" type="button" class="btn btn-primary">Show<br>Playlists</button>
                     <button onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
-                    <button id="logging" onclick="js_toggle_titles_logging();" type="button" class="btn btn-warning">Enable<br>Titles Log</button>
+                    <button id="logging" onclick="js_toggle_titles_logging();" type="button" class="btn btn-warning">Enable<br>Title Log</button>
                     <button id="like" onclick="js_send_simple_command('/html/like', 1500);" type="button" class="btn btn-info">Like<br>Title</button>
                 </div>
             </div>
@@ -356,10 +356,10 @@ div[id^='a_']:hover { underline: none;}
             var element = document.getElementById("logging");
             if ( data == 0 ){
                 element.className = "btn btn-warning";
-                element.innerHTML = "Enable<br>Titles Log"
+                element.innerHTML = "Enable<br>Title Log"
             } else {
                 element.className = "btn btn-success";
-                element.innerHTML = "Disable<br>Titles Log"
+                element.innerHTML = "Disable<br>Title Log"
             }
         }
         getTitlesLogging();
@@ -537,7 +537,8 @@ Restricted Commands (Main mode only)
                 self.client_socket, address = server.accept()
                 request = self.client_socket.recv(1024)
             except socket.error as e:
-                logger.error('Server accept error: "{}"'.format(e))
+                if logger.isEnabledFor(logger.ERROR):
+                    logger.error('Server accept error: "{}"'.format(e))
                 dead_func(e)
                 break
             self.error = None

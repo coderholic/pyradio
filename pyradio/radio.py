@@ -289,7 +289,6 @@ class PyRadio(object):
                  req_player='',
                  theme='',
                  force_update=''):
-        self.tcount = 0
         self._no_netifaces = False
         self._current_selection = 0
         self._force_print_all_lines = False
@@ -2453,7 +2452,7 @@ __|Remote Control Server| cannot be started!__
                  %_Global functions (with \ on Line editor)_
                  -|/|+| or |,|/|.       |Change volume.
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 W| / |w            |Toggle titles log / like a station'''
+                 W| / |w            |Toggle title log / like a station'''
         self._show_help(txt,
                         mode_to_set=self.ws.RADIO_BROWSER_SEARCH_HELP_MODE,
                         caption=' RadioBrowser Search Help ')
@@ -2474,7 +2473,7 @@ __|Remote Control Server| cannot be started!__
                  %_Global functions (with \ on Line editor)_
                  -|/|+| or |,|/|.       |Change volume.
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 W| / |w            |Toggle titles log / like a station.'''
+                 W| / |w            |Toggle title log / like a station.'''
         self._show_help(txt,
                         mode_to_set=self.ws.RADIO_BROWSER_CONFIG_HELP_MODE,
                         caption=' RadioBrowser Config Help ')
@@ -2580,7 +2579,7 @@ __|Remote Control Server| cannot be started!__
     def _show_main_help_page_5(self, from_keyboard=False):
         txt = '''!Remote Control Server
                  \s               |Start/Stop the |Server|.
-                 !Titles Logger
+                 !Title Logger
                  W                |Toggle Logger on/off
                  w                |Tag a station as liked
                  !Windows Only
@@ -2612,7 +2611,7 @@ __|Remote Control Server| cannot be started!__
                  %_Global functions (with \ on Line editor)_
                  -|/|+| or |,|/|.       |Change volume.
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 W| / |w            |Toggle titles log / like a station.
+                 W| / |w            |Toggle title log / like a station.
                  %_Other Keys_
                  t| / |T            |Load |t|heme / |T|oggle transparency.'''
         if self._cnf.open_register_list:
@@ -2639,7 +2638,7 @@ __|Remote Control Server| cannot be started!__
                      %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.       |Change volume.
                      m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w            |Toggle titles log / like a station.'''
+                     W| / |w            |Toggle title log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.THEME_HELP_MODE,
                             caption=' Themes Help ')
@@ -2792,7 +2791,7 @@ __|Remote Control Server| cannot be started!__
                      %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.             |Change volume.
                      m| / |v                  ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w                  |Toggle titles log / like a station.'''
+                     W| / |w                  |Toggle title log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.CONFIG_HELP_MODE,
                             caption=' Configuration Help ')
@@ -2812,7 +2811,7 @@ __|Remote Control Server| cannot be started!__
                      %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.       |Change volume.
                      m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w            |Toggle titles log / like a station.'''
+                     W| / |w            |Toggle title log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.SELECT_PLAYER_HELP_MODE,
                             caption=' Player Selection Help ')
@@ -2831,7 +2830,7 @@ __|Remote Control Server| cannot be started!__
                          %_Global functions (with \ on Line editor)_
                          -|/|+| or |,|/|.       |Change volume.
                          m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                         W| / |w            |Toggle titles log / like a station.'''
+                         W| / |w            |Toggle title log / like a station.'''
             else:
                 txt = '''Up|,|j|,|Down|,|k
                          PgUp|, |PgDn       |Change selection.
@@ -2842,7 +2841,7 @@ __|Remote Control Server| cannot be started!__
                          %_Global functions (with \ on Line editor)_
                          -|/|+| or |,|/|.       |Change volume.
                          m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                         W| / |w            |Toggle titles log / like a station.'''
+                         W| / |w            |Toggle title log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.SELECT_PLAYER_HELP_MODE,
                             caption=' Player Extra Parameters Help ')
@@ -2859,7 +2858,7 @@ __|Remote Control Server| cannot be started!__
                      %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.       |Change volume.
                      m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w            |Toggle titles log / like a station.'''
+                     W| / |w            |Toggle title log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.SELECT_PLAYLIST_HELP_MODE,
                             caption=' Playlist Selection Help ')
@@ -2877,7 +2876,7 @@ __|Remote Control Server| cannot be started!__
                      %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.       |Change volume.
                      m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w            |Toggle titles log / like a station.'''
+                     W| / |w            |Toggle title log / like a station.'''
             self._show_help(txt,
                             mode_to_set=self.ws.SELECT_STATION_HELP_MODE,
                             caption=' Station Selection Help ')
@@ -2891,7 +2890,7 @@ __|Remote Control Server| cannot be started!__
                      %_Global functions (with \ on Line editor)_
                      -|/|+| or |,|/|.       |Change volume.
                      m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w            |Toggle titles log / like a station.'''
+                     W| / |w            |Toggle title log / like a station.'''
             if self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE:
                 txt = txt.replace('r c              |Revert to station / |c|onfig value.', 'r                |Revert to saved value.')
             self._show_help(txt,
@@ -5538,17 +5537,17 @@ __|Remote Control Server| cannot be started!__
         self.toggle_titles_logging()
         self.log.write_start_log_station_and_title()
         if self._cnf.titles_log.titles_handler:
-            return '<div class="alert alert-success">Titles Log <b>Enabled</b></div>'
+            return '<div class="alert alert-success">Title Log <b>Enabled</b></div>'
         else:
-            return '<div class="alert alert-success">Titles Log <b>Disabled</b></div>'
+            return '<div class="alert alert-success">Title Log <b>Disabled</b></div>'
 
     def _toggle_titles_logging(self):
         self.toggle_titles_logging()
         self.log.write_start_log_station_and_title()
         if self._cnf.titles_log.titles_handler:
-            self._show_delayed_notification('___Titles Log Enabled___')
+            self._show_delayed_notification('___Title Log Enabled___')
         else:
-            self._show_delayed_notification('___Titles Log Disabled___')
+            self._show_delayed_notification('___Title Log Disabled___')
 
     def _html_tag_a_title(self):
         return self._tag_a_title(html=True)
@@ -5709,27 +5708,6 @@ __|Remote Control Server| cannot be started!__
             )
 
     def keypress(self, char):
-        if self.player.PLAYER_NAME == 'mpv':
-            low = 35
-            high = 50
-        else:
-            low = 20
-            high = 65
-        if char == curses.KEY_F2:
-            self.player.get_volume()
-            logger.error('volume = {}'.format(self.player.volume))
-            return
-        if char == curses.KEY_F3:
-            if self.tcount == 0:
-                self.player.set_volume(low)
-                self.tcount = 1
-            else:
-                self.player.set_volume(high)
-                self.tcount = 0
-            # self.player.get_volume()
-            # logger.error('\n\nF3\nvolume = {0}\nactual volume = {1}\n\n'.format(self.player.volume, self.player.actual_volume))
-            return
-
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
             if logger.isEnabledFor(logging.debug):

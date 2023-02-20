@@ -1,6 +1,6 @@
 " pyradio -- Console radio player. "
 
-version_info = (0, 9, 0)
+version_info = (0, 9, 1)
 
 # Set it to True if new stations have been
 # added to the package's stations.csv

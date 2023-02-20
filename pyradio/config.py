@@ -119,7 +119,7 @@ class PyRadioStations(object):
 
     show_no_themes_message = True
 
-    def __init__(self, stationFile=''):
+    def __init__(self, stationFile='', user_config_dir=None):
         if platform.startswith('win'):
             self._open_string_id = 1
 
@@ -127,7 +127,10 @@ class PyRadioStations(object):
             self.stations_dir = path.join(getenv('APPDATA'), 'pyradio')
             self.registers_dir = path.join(self.stations_dir, '_registers')
         else:
-            self.stations_dir = path.join(getenv('HOME', '~'), '.config', 'pyradio')
+            if user_config_dir is None:
+                self.stations_dir = path.join(getenv('HOME', '~'), '.config', 'pyradio')
+            else:
+                self.stations_dir = user_config_dir
             self.registers_dir = path.join(self.stations_dir, '.registers')
         self.data_dir = path.join(self.stations_dir, 'data')
         ''' Make sure config dirs exists '''
@@ -162,6 +165,7 @@ class PyRadioStations(object):
             self._move_old_csv(self.stations_dir)
             self._check_stations_csv(self.stations_dir, self.root_path)
             self._move_to_data()
+        self._copy_icon()
 
     def _move_to_data(self):
         if not path.exists(self.data_dir):
@@ -188,6 +192,31 @@ class PyRadioStations(object):
                     except (shutil_Error, IOError, OSError):
                         print('\n\nError moving data files!\nPlease close all PyRadio related files and try again...\n')
                         sys.exit(1)
+
+    def _copy_icon(self):
+        ''' if i still do not have the icon in the data dir
+            copy it from the icons dir
+        '''
+        if not path.exists(path.join(self.data_dir, 'pyradio.png')):
+            from_file = path.join(path.dirname(__file__), 'icons', 'pyradio.png')
+            to_file = path.join(self.data_dir, 'pyradio.png')
+            try:
+                copyfile(from_file, to_file)
+            except:
+                pass
+
+        ''' make sure that the icon is under ~/.config/pyradio/data
+            (the previous section may install it to a different location,
+            if --config-dir is used).
+        '''
+        default_icon_location = path.join(getenv('HOME', '~'), '.config', 'pyradio', 'data')
+        if default_icon_location != self.data_dir:
+            to_file = path.join(default_icon_location, 'pyradio.png')
+            if not path.exists(to_file):
+                try:
+                    copyfile(from_file, to_file)
+                except:
+                    pass
 
     @property
     def integrate_stations(self):
@@ -1177,7 +1206,7 @@ class PyRadioConfig(PyRadioStations):
     log_titles = False
     log_degub = False
 
-    ''' Titles logging '''
+    ''' Title logging '''
     _current_log_title = _current_log_station = ''
     _old_log_title = _old_log_station = ''
     _last_liked_title = ''
@@ -1275,7 +1304,7 @@ class PyRadioConfig(PyRadioStations):
 
     start_colors_at = 0
 
-    def __init__(self):
+    def __init__(self, user_config_dir=None):
         self.backup_player_params = None
         self._profile_name = 'pyradio'
         self.player = ''
@@ -1305,7 +1334,7 @@ class PyRadioConfig(PyRadioStations):
         self._session_lock_file = ''
         self._get_lock_file()
 
-        PyRadioStations.__init__(self)
+        PyRadioStations.__init__(self, user_config_dir=user_config_dir)
 
         self._check_config_file(self.stations_dir)
         self.config_file = path.join(self.stations_dir, 'config')
@@ -2372,6 +2401,11 @@ show_no_themes_message = {15}
 # Remote Control server
 # A simple http server that can accept remote
 # connections and pass commands to PyRadio
+#
+# Valid values:
+#   remote_control_server_ip: localhost, LAN, lan
+#   remote_control_server_port: 1025-65535
+#
 # Default value: localhost:9998
 #                no auto start
 remote_control_server_ip = {16}

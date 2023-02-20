@@ -4,7 +4,7 @@ import curses
 import logging, logging.handlers
 import subprocess
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS
-from os import path, getenv, environ, remove, chmod
+from os import path, getenv, environ, remove, chmod, makedirs
 from sys import platform, version_info
 from contextlib import contextmanager
 from platform import system
@@ -24,8 +24,8 @@ PATTERN_TITLE = '%(asctime)s | %(message)s'
 PY3 = sys.version[0] == '3'
 
 @contextmanager
-def pyradio_config_file():
-    cf = PyRadioConfig()
+def pyradio_config_file(a_dir):
+    cf = PyRadioConfig(user_config_dir=a_dir)
     try:
         yield cf
     finally:
@@ -68,6 +68,11 @@ def shell():
 
     requested_player = ''
     parser = ArgumentParser(description='Curses based Internet radio player')
+    if not system().lower().startswith('win'):
+        parser.add_argument('-c', '--config-dir', default='',
+                            help='Use specified configuration directory instead of the default one. '
+                            'PyRadio will try to create it, if it does not exist. '
+                            'Not available on Windows.')
     parser.add_argument('-s', '--stations', default='',
                         help='Use specified station CSV file.')
     parser.add_argument('-p', '--play', nargs='?', default='False',
@@ -142,6 +147,17 @@ def shell():
     args = parser.parse_args()
     sys.stdout.flush()
 
+    user_config_dir = None
+    if not system().lower().startswith('win'):
+        if args.config_dir:
+            if '..' in args.config_dir:
+                print('Error in config path: "{}"\n      Please do not use ".." in the path!'.format(args.config_dir))
+                sys.exit(1)
+            user_config_dir = validate_user_config_dir(args.config_dir)
+            if user_config_dir is None:
+                print('Error in config path: "{}"\n      This directory cannot be used by PyRadio!'.format(args.config_dir))
+                sys.exit(1)
+
     config_already_read = False
 
     if not system().lower().startswith('darwin') and \
@@ -171,7 +187,7 @@ def shell():
             remove(r[0])
             sys.exit()
 
-    with pyradio_config_file() as pyradio_config:
+    with pyradio_config_file(user_config_dir) as pyradio_config:
         if args.write_theme:
             if args.write_theme[0]:
                 from .themes import PyRadioTheme
@@ -626,6 +642,39 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
     elif ret == -8:
         print('File type not supported')
         sys.exit(1)
+
+def validate_user_config_dir(a_dir):
+    if '~' in a_dir:
+        exp_dir = a_dir.replace('~', path.expanduser('~'))
+    else:
+        exp_dir = a_dir
+    this_dir = path.abspath(exp_dir)
+
+    if not path.exists(this_dir):
+        try:
+            makedirs(this_dir)
+        except:
+            return None
+
+    test_file = path.join(this_dir, 'test.txt')
+    # write a file to check if directory is writable
+    try:
+        with open(test_file, 'w') as f:
+            pass
+    except:
+        return None
+    # try to read the file created above
+    try:
+        with open(test_file, 'r') as f:
+            pass
+    except:
+        return None
+    # remove the file created above
+    try:
+       remove(test_file)
+    except:
+        return None
+    return this_dir
 
 def open_conf_dir(cnf):
     import subprocess

@@ -283,6 +283,7 @@ if [ ! -z "${BIN_IN_PATH}" ];then
 fi
 }
 
+rm -rf build pyradio.egg-info 2>/dev/null
 TO_PYTHON=3
 TO_PYTHON_FROM_X=''
 NO_DEV=''

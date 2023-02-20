@@ -47,6 +47,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#introduction">Introduction</a>
 <ul>
 <li><a href="#configuration">Configuration</a></li>
+<li><a href="#notification-icon">Notification Icon</a></li>
 </ul></li>
 <li><a href="#on-linux">On Linux</a></li>
 <li><a href="#on-macos">On MacOS</a></li>
@@ -77,6 +78,14 @@ a:visited{color: SaddleBrown;}
     x: enabled and repeat every x seconds</pre>
 <p><strong>PyRadio</strong> supports notifications repetition, so that even when used with quake or yakuake and the like, you still have some info on what’s going on with it.</p>
 <p>Notifications can be set to repeat every “<em>x</em>” seconds, with “<em>x</em>” ranging from 30 to 300 (30 seconds to 5 minutes), in 30 seconds steps.</p>
+<h3 id="notification-icon">Notification Icon</h3>
+<p>The icon that is displayed in the notification message is by default <strong>PyRadio</strong>’s icon.</p>
+<p><strong>PyRadio</strong> will search for this icon, named <em>pyradio.png</em> (or <em>pyradio.ico</em> on Windows) in the following locations:</p>
+<ol type="1">
+<li>In the <em>configuration directory</em>, under <strong>data</strong> (or <strong>Help</strong> folder on Windows).</li>
+<li>In the distribution directory (under the <strong>icons</strong> folder).</li>
+</ol>
+<p>As a consequence, one could replace the icon found in the <em>configuration directory</em> (under <strong>data</strong> or <strong>Help</strong>) with a custom icon, preserving the icon name as appropriate (<em>pyradio.png</em>, or <em>pyradio.ico</em>).</p>
 <h2 id="on-linux">On Linux <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><a href="https://members.hellug.gr/sng/pyradio/pyradio-notif.jpg" target="_blank"><img style="width: 411px" src="https://members.hellug.gr/sng/pyradio/pyradio-notif.jpg" alt="Linux notification" /></a></p>
 

@@ -405,7 +405,7 @@ class PyRadioEditor(object):
                 self._win.addstr(20 + step, 5, 'W', curses.color_pair(4))
                 self._win.addstr(' / ', curses.color_pair(5))
                 self._win.addstr('w', curses.color_pair(4))
-                self._win.addstr(20 + step, 23, 'Toggle titles log / like a station', curses.color_pair(5))
+                self._win.addstr(20 + step, 23, 'Toggle title log / like a station', curses.color_pair(5))
             if step + 22 < self.maxY:
                 self._win.addstr(21 + step, 5, 'T', curses.color_pair(4))
                 self._win.addstr(21 + step, 23, 'Toggle transparency', curses.color_pair(5))
@@ -990,7 +990,7 @@ class PyRadioRenameFile(object):
                 self._win.addstr(21 + adjust_line_Y, 5, 'W', curses.color_pair(4))
                 self._win.addstr(' / ', curses.color_pair(5))
                 self._win.addstr('w', curses.color_pair(4))
-                self._win.addstr(21 + adjust_line_Y, 23, 'Toggle titles log / like a station', curses.color_pair(5))
+                self._win.addstr(21 + adjust_line_Y, 23, 'Toggle title log / like a station', curses.color_pair(5))
             if adjust_line_Y + 23 < self.maxY:
                 self._win.addstr(22 + adjust_line_Y, 5, 'T', curses.color_pair(4))
                 self._win.addstr(22 + adjust_line_Y, 23, 'Toggle transparency', curses.color_pair(5))

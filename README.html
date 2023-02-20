@@ -129,7 +129,7 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 </ul></li>
 <li><a href="#mouse-support">Mouse support</a></li>
-<li><a href="#titles-logging">Titles logging</a>
+<li><a href="#title-logging">Title logging</a>
 <ul>
 <li><a href="#tagging-a-title">Tagging a title</a></li>
 </ul></li>
@@ -195,6 +195,20 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
+
+2023-02-20 s-n-g
+    * version 0.9.1
+    * adding pyproject.toml (as per pep-0518)
+    * adding the --config-dir (-c) command line argument
+      (as per #187) - Not available on Windows
+    * adding icons directory to distribution
+    * adding the /set_volume (/sv) text only RC command
+    * adding the /volume (/v) text only RC command
+    * adding WNYC station to stations.csv
+    * working on Windows MPV installation procedure
+      (making it less cumbersome and transparent)
+    * fixing system themes main border color
+    * fixing typos (thanks to @Wikinaut)
 
 2023-01-28 s-n-g
     * version 0.9.0
@@ -1049,7 +1063,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 <td><strong>+</strong> / <strong>-</strong> and <strong>,</strong> / <strong>.</strong></td>
 <td>adjust volume</td>
 <td><strong>W</strong></td>
-<td>toggle titles logging</td>
+<td>toggle title logging</td>
 </tr>
 <tr class="even">
 <td><strong>m</strong></td>
@@ -1635,10 +1649,10 @@ For this reason, a folder called “<strong>themes</strong>” will probably hav
 </tr>
 </tbody>
 </table>
-<h2 id="titles-logging">Titles logging <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>Version <strong>0.8.9.17</strong> adds to <strong>PyRadio</strong> the ability to log the titles displayed at the bottom of its window, in a log file, for refference.</p>
-<p>The logger, which works independantly from the “<em>degub</em>” function, is actually a <a target="_blank" href="https://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler">Rotating File Handler</a>, configured to write up to 5 files of around 50KB each (parameters <strong>maxBytes=50000</strong> and <strong>backupCount=5</strong>).</p>
-<p>The way this works, according to the documenataion, is that one “can use the <strong>maxBytes</strong> and <strong>backupCount</strong> values to allow the file to rollover at a predetermined size. When the size is about to be exceeded, the file is closed and a new file is silently opened for output. Rollover occurs whenever the current log file is nearly <strong>maxBytes</strong> in length… When <strong>backupCount</strong> is non-zero, the system will save old log files by appending the extensions ‘.1’, ‘.2’ etc., to the filename. For example, with a backupCount of 5 and a base file name of <strong>app.log</strong>, you would get <em>app.log</em>, <em>app.log.1</em>, <em>app.log.2</em>, up to <em>app.log.5</em>. The file being written to is always <strong>app.log</strong>. When this file is filled, it is closed and renamed to <em>app.log.1</em>, and if files <em>app.log.1</em>, <em>app.log.2</em>, etc. exist, then they are renamed to <em>app.log.2</em>, <em>app.log.3</em> etc. respectively.</p>
+<h2 id="title-logging">Title logging <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Version <strong>0.8.9.17</strong> adds to <strong>PyRadio</strong> the ability to log the titles displayed at the bottom of its window, in a log file, for reference.</p>
+<p>The logger, which works independently from the “<em>debug</em>” function, is actually a <a target="_blank" href="https://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler">Rotating File Handler</a>, configured to write up to 5 files of around 50KB each (parameters <strong>maxBytes=50000</strong> and <strong>backupCount=5</strong>).</p>
+<p>The way this works, according to the documentation, is that one “can use the <strong>maxBytes</strong> and <strong>backupCount</strong> values to allow the file to rollover at a predetermined size. When the size is about to be exceeded, the file is closed and a new file is silently opened for output. Rollover occurs whenever the current log file is nearly <strong>maxBytes</strong> in length… When <strong>backupCount</strong> is non-zero, the system will save old log files by appending the extensions ‘.1’, ‘.2’ etc., to the filename. For example, with a backupCount of 5 and a base file name of <strong>app.log</strong>, you would get <em>app.log</em>, <em>app.log.1</em>, <em>app.log.2</em>, up to <em>app.log.5</em>. The file being written to is always <strong>app.log</strong>. When this file is filled, it is closed and renamed to <em>app.log.1</em>, and if files <em>app.log.1</em>, <em>app.log.2</em>, etc. exist, then they are renamed to <em>app.log.2</em>, <em>app.log.3</em> etc. respectively.</p>
 <p>The function can be enabled:</p>
 <ol type="1">
 <li>using the -lt (--log-titles) command line option, or</li>
@@ -1651,13 +1665,13 @@ Apr 18 (Mon) 13:12 |     Jack Costanzo - La Cumparsa, Harlem Nocturne
 Apr 18 (Mon) 13:14 |     Don Baker Trio - Third Man Theme
 Apr 18 (Mon) 13:16 |     Gillian Hills - Un Petit Baiser</pre>
 <h3 id="tagging-a-title">Tagging a title</h3>
-<p>An extra functionality is made possible because of “<em>titles’s logging</em>”: tagging a title (something like liking a song).</p>
-<p>The idea is that the user plays a station and hears a song he likes and want to look it up later. With this functionality, he can tag the song (make a note in the log file), so he can refer to it at a later time.</p>
+<p>An extra functionality is made possible because of “<em>titles’ logging</em>”: tagging a title (a kind of “liking” a song).</p>
+<p>The idea is that when users play a station and hear a song, they may like and want to look it up later. With this functionality, they can tag the song (make a note in the log file) for later.</p>
 <p>To tag a title, one has to press the “<strong>w</strong>” key.</p>
-<p>Then, if titles’s logging is already enabled, the log file will have an entry similar to the one shown below:</p>
+<p>Then, if title logging is already enabled, the log file will show up an entry like the example below:</p>
 <pre>Apr 18 (Mon) 13:39 |     Tom Russell - Bus Station
 Apr 18 (Mon) 13:40 |     Tom Russell - Bus Station (LIKED)</pre>
-<p>If title’s logging is not enabled, it will be turned on, the song will be tagged and logging will be turned off again:</p>
+<p>If title logging is disabled, it will be temporarily turned on only for the tagging of that song:</p>
 <pre>Apr 18 (Mon) 15:38 | === Logging started
 Apr 18 (Mon) 15:38 | &gt;&gt;&gt; Station: Folk (Folk Forward - SomaFM)
 Apr 18 (Mon) 15:38 |     Lord Huron - Lullaby
@@ -1672,7 +1686,7 @@ Apr 18 (Mon) 15:38 | === Logging stopped</pre>
 </ul>
 <p>To access supported services, just press “<strong>O</strong>” (capital “<em>o</em>”) at the program’s main window.</p>
 <h2 id="desktop-notifications">Desktop Notifications <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><strong>PyRadio</strong> can provide Desktop Notifications when a notification daemon is already present (on Linux and BSD), or throught <strong>Windows Notification Service</strong> (<strong>WNS</strong>).</p>
+<p><strong>PyRadio</strong> can provide Desktop Notifications if a notification daemon is already present (on Linux and BSD), or via <strong>Windows Notification Service</strong> (<strong>WNS</strong>).</p>
 <p>If enabled, <strong>PyRadio</strong> will display:</p>
 <ol type="1">
 <li>The playlist name, when playback starts.</li>
@@ -1765,19 +1779,17 @@ $ pyradio -d</pre>
 <p>If the Desktop File is not installed in <em>/usr/share/applications</em> or <em>/usr/local/share/applications</em>, it will have to be passed as a parameter to the script that will handle it, like so:</p>
 <pre>sed -i &quot;s,&#39; -t &#39;,&#39; -d /path/to/desktop_file&#39; + &amp;,&quot; pyradio/main.py</pre>
 <p><strong>2. Package Icon</strong></p>
-<p><strong>PyRadio</strong> will find and use <strong>pyradio.png</strong> if it’s installed in <em>/usr/share/icons</em> or <em>/usr/local/share/icons</em>.</p>
-<p>If this file is installed in any other location, you will have to patch yet another file, like so:</p>
-<pre>sed -i &#39;s/self.icon_path = None/self.icon_path = &quot;PATH TO FILE&quot;/&#39; pyradio/log.py</pre>
+<p>As of <strong>v. 0.9.1</strong>, <strong>PyRadio</strong> includes the icon in its distribution files, so no further action is necessary.</p>
 <h2 id="todo">TODO <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <ul class="task-list">
-<li><input type="checkbox" disabled="" />Any user request I find interesting :)</li>
-<li><input type="checkbox" disabled="" checked="" />Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>) - v 0.9.0</li>
-<li><input type="checkbox" disabled="" />Use some OPML service, <a target="_blank" href="https://opml.radiotime.com">https://opml.radiotime.com</a> for example</li>
-<li><input type="checkbox" disabled="" checked="" />Notify the user that the package’s stations.csv has changed -v 0.8.9</li>
-<li><input type="checkbox" disabled="" checked="" />Update / uninstall using command line options (-U / -R) - v. 0.8.9</li>
-<li><input type="checkbox" disabled="" checked="" />Basic mouse support (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/119">#119</a>) - v. 0.8.8.3</li>
-<li><input type="checkbox" disabled="" checked="" />Players extra parameters (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
-<li><input type="checkbox" disabled="" checked="" />New player selection configuration window (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
+<li><input type="checkbox" />Any user request I find interesting :)</li>
+<li><input type="checkbox" checked="" />Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>) - v 0.9.0</li>
+<li><input type="checkbox" />Use some OPML service, <a target="_blank" href="https://opml.radiotime.com">https://opml.radiotime.com</a> for example</li>
+<li><input type="checkbox" checked="" />Notify the user that the package’s stations.csv has changed -v 0.8.9</li>
+<li><input type="checkbox" checked="" />Update / uninstall using command line options (-U / -R) - v. 0.8.9</li>
+<li><input type="checkbox" checked="" />Basic mouse support (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/119">#119</a>) - v. 0.8.8.3</li>
+<li><input type="checkbox" checked="" />Players extra parameters (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
+<li><input type="checkbox" checked="" />New player selection configuration window (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</li>
 </ul>
 <h2 id="acknowledgment">Acknowledgment <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> uses code from the following projects:</p>

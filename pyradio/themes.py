@@ -386,6 +386,8 @@ class PyRadioTheme(object):
         if a_theme == 'dark' or a_theme == 'default':
             self._colors['transparency'] = 2
             self._colors['data'] = {1: (192, 192, 192), 2: (0, 0, 0), 3: (0, 128, 0), 4: (0, 0, 0), 5: (135, 0, 135), 6: (0, 0, 0), 7: (0, 128, 0), 8: (0, 0, 0), 9: (0, 128, 0), 10: (128, 128, 0), 11: (95, 135, 255), 12: (0, 255, 255), 14: (192, 192, 192), 13: (0, 0, 0), 15: (26, 26, 26)}
+            if curses.COLORS > 16:
+                self._colors['data'][16] = (192, 192, 192)
             self._cnf.has_border_background = True
 
             ''' info '''
@@ -400,6 +402,8 @@ class PyRadioTheme(object):
             self._colors['Path'] = ''
             self.applied_theme_name = 'dark_16_colors'
             self._colors['data'] = {1: (255, 255, 255), 2: (128, 128, 128), 3: (0, 255, 0), 8: (0, 0, 0), 9: (0, 255, 0), 4: (0, 0, 0), 5: (255, 0, 255), 6: (0, 0, 0), 7: (0, 255, 0), 12: (0, 255, 255), 11: (0, 0, 255), 10: (255, 255, 0), 13: (255, 255, 255), 13: (128, 128, 128), 15: (154, 154, 154)}
+            if curses.COLORS > 16:
+                self._colors['data'][16] = (255, 255, 255)
             self._cnf.has_border_background = True
 
         elif a_theme == 'light':
@@ -409,6 +413,8 @@ class PyRadioTheme(object):
             self._colors['Path'] = ''
             self.applied_theme_name = 'light'
             self._colors['data'] = {1: (0, 0, 0), 2: (255,255, 255), 3: (128, 0, 0), 8: (192, 192, 192), 9: (0, 0, 128), 4: (192, 192, 192), 5: (128, 0, 128), 6: (192, 192, 192), 7: (0, 0, 128), 12: (0, 0, 128), 11: (0, 0, 128), 10: (128, 0, 128), 13: (255, 255, 255), 14: (128, 0, 0), 15: (230, 230, 230)}
+            if curses.COLORS > 16:
+                self._colors['data'][16] = (0, 0, 0)
             self._cnf.has_border_background = True
 
         elif a_theme == 'light_16_colors':
@@ -418,6 +424,8 @@ class PyRadioTheme(object):
             self._colors['Path'] = ''
             self.applied_theme_name = 'light_16_colors'
             self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (255, 0, 0), 8: (255, 255, 255), 9: (0, 0, 255), 4: (255, 255, 255), 5: (255, 0, 255), 6: (255, 255, 255), 7: (0, 0, 255), 12: (0, 0, 255), 11: (0, 0, 255), 10: (255, 0, 255), 13: (255, 255,255), 14: (255, 0, 0), 15: (230, 230, 230)}
+            if curses.COLORS > 16:
+                self._colors['data'][16] = (128, 128, 128)
             self._cnf.has_border_background = True
 
         elif a_theme == 'black_on_white' or a_theme == 'bow':
@@ -427,6 +435,8 @@ class PyRadioTheme(object):
             self._colors['Path'] = ''
             self.applied_theme_name = 'black_on_white'
             self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (0, 0, 0), 8: (255, 255, 255), 9: (138, 138, 138), 4: (255, 255, 255), 5: (128, 128, 128), 6: (0, 0, 0), 7: (128, 128, 128), 12: (0, 255, 255), 11: (138, 138, 138), 10: (138, 138, 138), 14: (0, 0, 0), 13: (255, 255, 255), 15: (229, 229, 229)}
+            if curses.COLORS > 16:
+                self._colors['data'][16] = (128, 128, 128)
             self._cnf.has_border_background = True
 
         elif a_theme == 'white_on_black' or a_theme == 'wob':
@@ -436,6 +446,8 @@ class PyRadioTheme(object):
             self._colors['Path'] = ''
             self.applied_theme_name = 'white_on_black'
             self._colors['data'] = {1: (158, 158, 158), 2: (38, 38, 38), 3: (238, 238, 238), 8: (28, 28, 28), 9: (218, 218, 218), 4: (38, 38, 38), 5: (158, 158, 158), 6: (38, 38, 38), 7: (218, 218, 218), 12: (218, 218, 218), 11: (138, 138, 138), 10: (158, 158, 158), 13: (0, 0, 0), 14: (169, 169, 169), 15: (52, 52, 52)}
+            if curses.COLORS > 16:
+                self._colors['data'][16] = (158, 158, 158)
             self._cnf.has_border_background = True
 
         else:

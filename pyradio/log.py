@@ -1,7 +1,7 @@
 # '''- coding: utf-8 -*- '''
 import curses
 from os import getenv
-from os.path import join, exists
+from os.path import join, exists, dirname
 from sys import version_info, platform, stdout
 from platform import system as platform_system
 from copy import deepcopy
@@ -338,17 +338,21 @@ class Log(object):
         self.icon_path = None
         if self.icon_path is None:
             if platform_system().lower().startswith('win'):
-                self.icon_path=join(getenv('APPDATA'), 'pyradio', 'help', 'pyradio.ico')
+                the_path = (
+                    join(getenv('APPDATA'), 'pyradio', 'help', 'pyradio.ico'),
+                    join(dirname(__file__), 'icons', 'pyradio.ico')
+                )
             else:
                 the_path = (
                     join(self._cnf.data_dir, 'pyradio.png'),
+                    join(dirname(__file__), 'icons', 'pyradio.png'),
                     '/usr/share/icons/pyradio.png',
                     '/usr/local/share/icons/pyradio.png'
                 )
-                for n in the_path:
-                    if exists(n):
-                        self.icon_path = n
-                        break
+            for n in the_path:
+                if exists(n):
+                    self.icon_path = n
+                    break
         self._repeat_notification.icon_path = self.icon_path
 
     def _show_notification(self, msg):
@@ -402,8 +406,8 @@ class Log(object):
                                         icon_path=self.icon_path
                                     )
                             except:
-                                if logger.isEnabledFor(logging.ERROR):
-                                    logger.error('Failure sending Desktop Notification!')
+                                if logger.isEnabledFor(logging.DEBUG):
+                                    logger.debug('Failure sending Desktop Notification!')
                                 return
                             if d_title == 'Station':
                                 self._station_sent = True
@@ -449,8 +453,8 @@ class Log(object):
                                         )
                                     pass
                                 except:
-                                    if logger.isEnabledFor(logging.ERROR):
-                                        logger.error('Failure sending Desktop Notification!')
+                                    if logger.isEnabledFor(logging.DEBUG):
+                                        logger.debug('Failure sending Desktop Notification!')
                                     return
                             if d_title == 'Station':
                                 self._station_sent = True
@@ -731,8 +735,8 @@ class RepeatDesktopNotification(object):
                         )
                         end_time = self._start_time + datetime.timedelta(seconds=my_time_out)
                 except:
-                    if logger.isEnabledFor(logging.ERROR):
-                        logger.error('Failure sending repetative Desktop Notification!')
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Failure sending repetative Desktop Notification!')
             else:
                 notification_command = self._populate_notification_command(a_notification_command, d_title, d_msg)
                 if logger.isEnabledFor(logging.DEBUG):
@@ -754,8 +758,8 @@ class RepeatDesktopNotification(object):
                             )
                         pass
                     except:
-                        if logger.isEnabledFor(logging.ERROR):
-                            logger.error('Failure sending repetative Desktop Notification!')
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Failure sending repetative Desktop Notification!')
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Desktop Notification Thread stopped!!!')

@@ -1,3 +1,17 @@
+2023-02-20 s-n-g
+    * version 0.9.1
+    * adding pyproject.toml (as per pep-0518)
+    * adding the --config-dir (-c) command line argument
+      (as per #187) - Not available on Windows
+    * adding icons directory to distribution
+    * adding the /set_volume (/sv) text only RC command
+    * adding the /volume (/v) text only RC command
+    * adding WNYC station to stations.csv
+    * working on Windows MPV installation procedure
+      (making it less cumbersome and transparent)
+    * fixing system themes main border color
+    * fixing typos (thanks to @Wikinaut)
+
 2023-01-28 s-n-g
     * version 0.9.0
     * finalizing Radio Browser service (adding config

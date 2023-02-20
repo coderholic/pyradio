@@ -22,7 +22,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [Fresh python installation?](#fresh-python-installation?)
         * [Final steps](#final-steps)
         * [Getting the path to pyradio.exe](#getting-the-path-to-pyradio.exe)
-        * [Using the Titles Logging feature](#using-the-titles-logging-feature)
+        * [Using the Title Logging feature](#using-the-title-logging-feature)
         * [Cleaning up](#cleaning-up)
 * [Updating PyRadio](#updating-pyradio)
     * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
@@ -243,9 +243,9 @@ This would be the case after installing a version newer than **0.8.9.14** while 
 
 If this is your case, please follow the instructions found in "[Removing an old-style installation](#removing-an-old-style-installation)".
 
-#### Using the Titles Logging feature
+#### Using the Title Logging feature
 
-If you want to use the [Titles Logging](README.md#titles-logging) feature, and your Country/Region is anything different than **English**, chances are you will have to correctly set your locale for non-unicode applications, which is something you should be doing regardless. Otherwise, the titles' log file may contain unreadable characters.
+If you want to use the [Title Logging](README.md#title-logging) feature, and your Country/Region is anything different than **English**, chances are you will have to correctly set your locale for non-unicode applications, which is something you should be doing regardless. Otherwise, the titles' log file may contain unreadable characters.
 
 If you want to go on and set your locale for non-unicode applications, just refer to the following image.
 

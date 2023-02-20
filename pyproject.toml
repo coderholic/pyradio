@@ -1,0 +1,34 @@
+[project]
+name = "pyradio"
+version = "0.9.1"
+authors = [
+  { name="Ben Dowling", email="ben.m.dowling@gmail.com" },
+  { name="Spiros Georgaras", email="sng@hellug.gr" },
+]
+description = "Command line internet radio player"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+cli = [
+  "mpv",
+  "mplayer",
+  "vlc"
+]
+
+[project.scripts]
+pyradio = "pyradio.main:shell"
+
+[project.urls]
+"Homepage" = "https://github.com/coderholic/pyradio"
+"Bug Tracker" = "https://github.com/coderholic/pyradio/issues"
+
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["setuptools", "wheel"]  # PEP 508 specifications.

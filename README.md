@@ -65,7 +65,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [theme.sh](#theme.sh)
             * [Using the themes without theme.sh](#using-the-themes-without-theme.sh)
 * [Mouse support](#mouse-support)
-* [Titles logging](#titles-logging)
+* [Title logging](#title-logging)
     * [Tagging a title](#tagging-a-title)
 * [Online radio directory services](#online-radio-directory-services)
 * [Desktop Notifications](#desktop-notifications)
@@ -257,7 +257,7 @@ Some of the functions provided by **PyRadio** will always be available to the us
 
 | Shortcut                       |   Function            |Shortcut                       |   Function            |
 |--------------------------------|-----------------------|-------------------------------|-----------------------|
-| **\+** / **\-** and **,** / **\.** | adjust volume         |**W**                          | toggle titles logging |
+| **\+** / **\-** and **,** / **\.** | adjust volume         |**W**                          | toggle title logging |
 | **m**                          | mute player           |**w**                          | like a station        |
 | **v**                          | save volume           |**^N** / **^P** [1] [2]|play next / previous station|
 | **T**                          | toggle transparency   |**<** / **>** [1]             | play next / previous station history entry|
@@ -1078,7 +1078,7 @@ Then, the mouse can be used as follows:
 | **Wheel**        | Scroll up / down                                           |
 | **Shift-Wheel**  | Adjust volume<br>(does not work with all terminals)        |
 
-## Titles logging
+## Title logging
 
 Version **0.8.9.17** adds to **PyRadio** the ability to log the titles displayed at the bottom of its window, in a log file, for reference.
 
@@ -1110,12 +1110,12 @@ The idea is that when users play a station and hear a song, they may like and wa
 
 To tag a title, one has to press the "**w**" key.
 
-Then, if titles' logging is already enabled, the log file will show up an entry like the example below:
+Then, if title logging is already enabled, the log file will show up an entry like the example below:
 
     Apr 18 (Mon) 13:39 |     Tom Russell - Bus Station
     Apr 18 (Mon) 13:40 |     Tom Russell - Bus Station (LIKED)
 
-If titles' logging is disabled, it will be temporarily turned on only for the tagging of that song:
+If title logging is disabled, it will be temporarily turned on only for the tagging of that song:
 
     Apr 18 (Mon) 15:38 | === Logging started
     Apr 18 (Mon) 15:38 | >>> Station: Folk (Folk Forward - SomaFM)
@@ -1306,13 +1306,7 @@ sed -i "s,' -t ',' -d /path/to/desktop_file' + &," pyradio/main.py
 
 **2. Package Icon**
 
-**PyRadio** will find and use **pyradio.png** if it's installed in */usr/share/icons* or */usr/local/share/icons*.
-
-If this file is installed in any other location, you will have to patch yet another file, like so:
-
-```
-sed -i 's/self.icon_path = None/self.icon_path = "PATH TO FILE"/' pyradio/log.py
-```
+As of **v. 0.9.1**, **PyRadio** includes the icon in its distribution files, so no further action is necessary.
 
 ## TODO
 

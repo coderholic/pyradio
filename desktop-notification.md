@@ -9,6 +9,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 * [Introduction](#introduction)
     * [Configuration](#configuration)
+    * [Notification Icon](#notification-icon)
 * [On Linux](#on-linux)
 * [On MacOS](#on-macos)
 * [On Windows](#on-windows)
@@ -49,6 +50,17 @@ Available values are:
 **PyRadio** supports notifications repetition, so that even when used with `quake` or `yakuake` and the like, you still have some info on what's going on with it.
 
 Notifications can be set to repeat every "*x*" seconds, with "*x*" ranging from 30 to 300 (30 seconds to 5 minutes), in 30 seconds steps.
+
+### Notification Icon
+
+The icon that is displayed in the notification message is by default **PyRadio**'s icon.
+
+**PyRadio** will search for this icon, named *pyradio.png*  (or *pyradio.ico* on Windows) in the following locations:
+
+1. In the *configuration directory*, under **data** (or **Help** folder on Windows).
+2. In the distribution directory (under the **icons** folder).
+
+As a consequence, one could replace the icon found in the *configuration directory* (under **data** or **Help**) with a custom icon, preserving the icon name as appropriate (*pyradio.png*, or *pyradio.ico*).
 
 ## On Linux
 
