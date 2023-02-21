@@ -8,7 +8,7 @@ IF EXIST DEV (SET NO_DEV=0) ELSE (SET NO_DEV=1)
 REM echo(NO_DEV = %NO_DEV%
 REM GOTO endnopause
 
-CLS
+REM CLS
 ECHO Installing / Updating wheel
 %PROGRAM% -m pip install --upgrade wheel 1>NUL 2>NUL
 IF %ERRORLEVEL% == 1 (
@@ -66,7 +66,7 @@ IF "%arg1%" == "2" SET "PROGRAM=python%arg1%"
 IF "%arg1%" == "3" SET "PROGRAM=python%arg1%"
 
 :noparam
-CLS
+REM CLS
 FOR /R .\... %%f in (*.pyc) DO DEL /q "%%~ff"
 
 

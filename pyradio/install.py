@@ -7,6 +7,7 @@ import platform
 import json
 from time import sleep
 import site
+import glob
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -85,6 +86,11 @@ def print_python3():
 
 
     ''')
+
+def print_no_python2():
+    print('''                                 not Supported!!!
+                             Please upgade to Python 3
+''')
 
 def print_trying_to_install():
     print('                              trying to install for')
@@ -364,7 +370,7 @@ def WindowExists(title):
     try:
         win32ui.FindWindow(None, title)
     except UnboundLocalError:
-        os.system('cls')
+        # os.system('cls')
         msg = '''PyRadio has installed all required python modules.
 In order for them to be properly loaded, the installation script
 has to be executed afresh.
@@ -557,7 +563,7 @@ class PyRadioUpdate(object):
                 print('Please report this at http://github.com/coderholic/pyradio/issues\n')
                 sys.exit(1)
 
-    def update_or_uninstall_on_windows(self, mode='update', from_pyradio=False, first_install=False):
+    def update_or_uninstall_on_windows(self, mode='update', from_pyradio=False):
         # Params:
         #       mode:           the type of zip file to download
         #       from_pyradio:   True if executed by "pyradio -d"
@@ -569,11 +575,11 @@ class PyRadioUpdate(object):
         os.makedirs(self._dir, exist_ok=True)
         if mode.startswith('update'):
             bat = os.path.join(self._dir, 'update.bat')
-            os.system('CLS')
+            # os.system('CLS')
             # PyRadioUpdateOnWindows.print_update_bat_created()
         else:
             bat = os.path.join(self._dir, 'uninstall.bat')
-            os.system('CLS')
+            # os.system('CLS')
             if from_pyradio:
                 PyRadioUpdateOnWindows.print_uninstall_bat_created()
 
@@ -590,7 +596,7 @@ class PyRadioUpdate(object):
         try:
             with open(bat, "w", encoding='utf-8') as b:
                 b.write('@ECHO OFF\n')
-                b.write('CLS\n')
+                # b.write('CLS\n')
                 b.write('python -m pip install --upgrade wheel 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade setuptools 1>NUL 2>NUL\n')
@@ -603,9 +609,9 @@ class PyRadioUpdate(object):
                 if mode.startswith('update'):
                     b.write('COPY "{}" . 1>NUL\n'.format(os.path.abspath(__file__)))
                     if self._package == 0:
-                        b.write(self._python_exec.python + ' install.py --do-update\n')
+                        b.write(self._python_exec.python + ' install.py --no-logo --do-update\n')
                     else:
-                        b.write(self._python_exec.python + ' install.py --do-update ' + params[self._package] + '\n')
+                        b.write(self._python_exec.python + ' install.py --no-logo --do-update ' + params[self._package] + '\n')
                     b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
 
@@ -617,10 +623,6 @@ class PyRadioUpdate(object):
 
 
                     b.write('devel\\build_install_pyradio.bat -U\n')
-                    if first_install:
-                        b.write('CD pyradio\n')
-                        b.write('python -c "from win import download_player; download_player(package=0, do_not_exit=True)"\n')
-                        b.write('CD ..\n')
                     b.write('GOTO endofscript\n')
                 else:
                     b.write('COPY "{}" uninstall.py 1>NUL\n'.format(os.path.abspath(__file__)))
@@ -645,14 +647,14 @@ class PyRadioUpdate(object):
                     b.write('GOTO endofscript\n')
                 b.write('ECHO.\n\n')
                 b.write(':downloaderror\n')
-                b.write('CLS\n')
+                # b.write('CLS\n')
                 b.write('ECHO Error:\tPyRadio cannot connect to GitHub...\n')
                 b.write('ECHO \tPlease make sure that your internet connection is still up and try again\n')
                 b.write('ECHO.\n\n')
                 b.write('PAUSE\n')
-                b.write('exit 1')
+                b.write('exit 1\n')
                 b.write(':endofscript\n')
-                b.write('exit 0')
+                b.write('exit 0\n')
         except:
             print('\nCreating the update/uninstall BAT file failed...')
             print('You should probably reboot your machine and try again.\n')
@@ -986,10 +988,15 @@ if __name__ == '__main__':
     parser.add_argument('--devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--sng-master', action='store_true', help=SUPPRESS)
     parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
+    parser.add_argument('--no-logo', action='store_true', help=SUPPRESS)
+    parser.add_argument('--first', action='store_true', help=SUPPRESS)
 
     args = parser.parse_args()
     sys.stdout.flush()
 
+    use_logo = True
+    if args.no_logo:
+        use_logo = False
     if platform.system().lower().startswith('darwin'):
         ''' get python version '''
         if sys.version_info < (3, 0):
@@ -1027,13 +1034,24 @@ if __name__ == '__main__':
             os.remove(r[0])
             sys.exit()
 
-    if not PY3 and not args.python2:
-        print_trying_to_install()
-        print_python3()
-    # sys.exit()
+
+    if platform.system().lower().startswith('win') and \
+            (not PY3 or args.python2):
+        print_pyradio_on()
+        print_python2()
+        print_no_python2()
+        sys.exit(1)
+
+    if use_logo:
+        print_pyradio_on()
+        if PY3 and not args.python2:
+            print_python3()
+        else:
+            print_python2()
 
     python_version_to_use = 2 if args.python2 else 3
     python_exec = PythonExecutable(python_version_to_use)
+
     if not python_exec.can_install:
         print('Error: Python {} not found on your system...\n'.format('2' if python_exec.requested_python_version == 2 else '3'))
         sys.exit(1)
@@ -1138,6 +1156,7 @@ if __name__ == '__main__':
         first_install = False
         if exe == [None, None]:
             first_install = True
+
         if not args.force:
             # is pyradio.exe in PATH
             ret = subprocess.call('pyradio -h 1>NUL 2>NUL', shell=True)
@@ -1187,12 +1206,20 @@ Then try installing PyRadio again
             python_version_to_use=python_version_to_use
         )
         uni.update_or_uninstall_on_windows(
-            mode='update-open',
-            first_install=first_install)
+            mode='update-open'
+        )
         while not os.path.isfile(os.path.join(uni._dir, 'update.bat')):
             pass
+
         os.chdir(uni._dir)
         if subprocess.call('update.bat') == 0:
+            if first_install:
+                files = glob.glob(uni._dir + '\\**\\win.py', recursive=True)
+                for n in files:
+                    if '\\build\\' not in n:
+                        win_file = n
+                        break
+                subprocess.call('python ' + win_file)
             print('\n\nNow you can delete the folder:')
             print('    "{}"'.format(uni._dir))
             print('and the file:')

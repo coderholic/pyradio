@@ -622,8 +622,9 @@ def install_pyradio_link():
             )
 
 if __name__ == '__main__':
-    print('\n\n----====  Default Media Player Installation  ====----')
+    print('\n\n----====  MPV Media Player Installation  ====----')
     download_player(package=1)
+    print('----====  MPV Media Player Installed  ====----')
     # _post_download(1, "C:\\Users\\spiros\\AppData\\Roaming\\pyradio")
     # download_player(package=0)
     #install_player()
