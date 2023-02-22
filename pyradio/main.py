@@ -3,9 +3,10 @@ import sys
 import curses
 import logging, logging.handlers
 import subprocess
+import argparse
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 from os import path, getenv, environ, remove, chmod, makedirs
-from sys import platform, version_info
+from sys import platform, version_info, executable
 from contextlib import contextmanager
 from platform import system
 
@@ -22,6 +23,48 @@ PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 PATTERN_TITLE = '%(asctime)s | %(message)s'
 
 PY3 = sys.version[0] == '3'
+
+HAS_PRINTY = False
+if PY3:
+    try:
+        from printy import printy as pr_printy
+        import re
+        HAS_PRINTY = True
+    except:
+        pass
+
+class MyArgParser(ArgumentParser):
+
+    def __init(self):
+        super(MyArgParser, self).__init__(
+            description = description
+        )
+
+    def print_usage(self, file=None):
+        if file is None:
+            file = sys.stdout
+        usage = self.format_usage()
+        if HAS_PRINTY:
+            pr_printy(self._add_colors(self.format_usage()))
+        else:
+            print(self.format_usage())
+
+    def print_help(self, file=None):
+        if file is None:
+            file = sys.stdout
+        if HAS_PRINTY:
+            pr_printy(self._add_colors(self.format_help()))
+        else:
+            print(self.format_help())
+
+    def _add_colors(self, txt):
+        t = txt.replace('show this help', 'Show this help').replace('usage:', 'Usage:').replace('options:', 'Options:').replace('[', '|').replace(']', '||')
+        x = re.sub(r'([^a-zZ-Z0-9])(--*[^ ,\t|]*)', r'\1[r]\2@', t)
+        t = re.sub(r'([A-Z_][A-Z_]+)', r'[n]\1@', x)
+        x = re.sub('([^"]pyradio)', r'[m]\1@', t, flags=re.I)
+        t = re.sub(r'(player_name:[a-z:_]+)', r'[n]\1@', x)
+        x = t.replace('mpv', '[n]mpv@').replace('mplayer', '[n]mplayer@').replace('vlc', '[n]vlc@')
+        return x.replace('||', r'\]').replace('|', r'\[')
 
 @contextmanager
 def pyradio_config_file(a_dir):
@@ -55,6 +98,33 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
             titles=titles
         )
 
+def check_printy(config_use_color_on_terminal):
+    if PY3 and not HAS_PRINTY and \
+            config_use_color_on_terminal:
+        print('\n\n*** Trying to install "printy"...')
+        if (subprocess.call(
+            sys.executable + \
+            ' -m pip install printy', shell=True
+        )
+                ) > 0:
+            print('''
+Please execute manually
+    python -m pip install printy
+and then execute PyRadio again.
+            ''')
+            sys.exit(1)
+        print('''
+To see it in action, just execute
+    pyradio -h
+        ''')
+    else:
+        if HAS_PRINTY and not config_use_color_on_terminal:
+            print('\n\n*** Trying to uninstall "printy"...')
+            subprocess.call(
+                sys.executable + \
+                ' -m pip uninstall -y printy', shell=True
+            )
+
 def shell():
     version_too_old = False
     if sys.version_info[0] == 2:
@@ -67,7 +137,10 @@ def shell():
         sys.exit(1)
 
     requested_player = ''
-    parser = ArgumentParser(description='Curses based Internet radio player')
+    # parser = ArgumentParser(description='Curses based Internet radio player')
+    parser = MyArgParser(
+        description='Curses based Internet radio player'
+    )
     if not system().lower().startswith('win'):
         parser.add_argument('-c', '--config-dir', default='',
                             help='Use specified configuration directory instead of the default one. '
@@ -128,7 +201,7 @@ def shell():
     parser.add_argument('-lt', '--log-titles', action='store_true',
                         help='Log titles to file.')
     parser.add_argument('-d', '--debug', action='store_true',
-                        help='Start pyradio in debug mode.')
+                        help='Start PyRadio in debug mode.')
     parser.add_argument('-V', '--version', action='store_true',
                         help='Display version information.')
     ''' extra downloads
@@ -234,7 +307,7 @@ def shell():
 
         if args.toggle_load_last_playlist:
             if pyradio_config.locked:
-                print('Error: Another instance of PyRadio is already running!')
+                print_simple_error('Error: Another instance of PyRadio is already running!')
                 print('       Please close it and try again...')
                 sys.exit(1)
             else:
@@ -333,17 +406,27 @@ def shell():
 
         ''' list extra player parameters '''
         if args.list_player_parameters:
-            print('PyRadio Players Extra Parameters')
-            print(32 * '-')
+            if HAS_PRINTY:
+                pr_printy('[m]PyRadio Players Extra Parameters@')
+                pr_printy('[m]' + 32 * '-' + '@')
+            else:
+                print('PyRadio Players Extra Parameters')
+                print(32 * '-')
             read_config(pyradio_config)
             default_player_name = pyradio_config.opts['player'][1].replace(' ', '').split(',')[0]
             if default_player_name == '':
                 default_player_name = SUPPORTED_PLAYERS[0]
             for a_player in SUPPORTED_PLAYERS:
                 if default_player_name == a_player:
-                    print('Player: ' + a_player + ' (default)')
+                    if HAS_PRINTY:
+                        pr_printy('Player: [r]' + a_player + '@ ([n]default@)')
+                    else:
+                        print('Player: ' + a_player + ' (default)')
                 else:
-                    print('Player: ' + a_player)
+                    if HAS_PRINTY:
+                        pr_printy('Player: [r]' + a_player + '@')
+                    else:
+                        print('Player: ' + a_player)
                 default = 0
                 for i, a_param in enumerate(pyradio_config.saved_params[a_player]):
                     if i == 0:
@@ -351,7 +434,10 @@ def shell():
                     else:
                         str_default = '(default)' if i == default else ''
                         count = str(i) if i > 9 else ' ' + str(i)
-                        print('    {0}. {1} {2}'.format(count, a_param, str_default))
+                        if HAS_PRINTY:
+                            pr_printy('    [n]{0}@. {1} {2}'.format(count, a_param, str_default).replace('(default)', '([n]default@)'))
+                        else:
+                            print('    {0}. {1} {2}'.format(count, a_param, str_default))
                 print('')
             sys.exit()
 
@@ -359,7 +445,7 @@ def shell():
         if args.extra_player_parameters:
             if ':' in args.extra_player_parameters:
                 if pyradio_config.locked:
-                    print('Error: This session is locked!')
+                    print_simple_error('Error: This session is locked!')
                     print('       Please exist any other instances of the program')
                     print('       that are currently running and try again.')
                     sys.exit(1)
@@ -371,9 +457,14 @@ def shell():
                     else:
                         pyradio_config.command_line_params = args.extra_player_parameters
             else:
-                print('Error in parameter: "-ep".')
-                print('  Parameter format: "player_name:parameters"')
-                print('                 or "player_name:profile:name_of_profile"\n')
+                if HAS_PRINTY:
+                    pr_printy('Error in parameter: "[n]-ep@".')
+                    pr_printy('  Parameter format: "[r]player_name@:[n]parameters@"')
+                    pr_printy('                 or "[r]player_name@:[m]profile@:[n]name_of_profile@"\n')
+                else:
+                    print('Error in parameter: "-ep".')
+                    print('  Parameter format: "player_name:parameters"')
+                    print('                 or "player_name:profile:name_of_profile"\n')
                 sys.exit()
 
         if args.unlock:
@@ -382,7 +473,10 @@ def shell():
             sys.exit()
 
         if args.show_config_dir:
-            print('PyRadio config dir: "{}"'.format(pyradio_config.stations_dir))
+            if HAS_PRINTY:
+                pr_printy('[m]PyRadio@ config dir: "[r]{}@"'.format(pyradio_config.stations_dir))
+            else:
+                print('PyRadio config dir: "{}"'.format(pyradio_config.stations_dir))
             sys.exit()
 
         if args.open_config_dir:
@@ -390,6 +484,7 @@ def shell():
             sys.exit()
 
         if args.list_playlists:
+            pyradio_config.read_config()
             pyradio_config.list_playlists()
             sys.exit()
 
@@ -505,12 +600,18 @@ def shell():
             term = getenv('TERM')
             # print('TERM = {}'.format(term))
             if term is None:
-                print('== Warning: TERM is not set. Using "xterm-256color"')
+                if HAS_PRINTY:
+                    pr_printy('[<y]== Warning: @[n]TERM@[<y] is not set. Using "@[n]xterm-256color@[<y]"@')
+                else:
+                    print('== Warning: TERM is not set. Using "xterm-256color"')
                 environ['TERM'] = 'xterm-256color'
             elif term == 'xterm' \
                     or term.startswith('screen') \
                     or term.startswith('tmux'):
-                print('== Warning: TERM is set to "{}". Using "xterm-256color"'.format(term))
+                if HAS_PRINTY:
+                    pr_printy('[<y]== Warning:@ [n]TERM@ [<y]is set to "@[n]{}@[<y]". Using "@[n]xterm-256color@[<y]"@'.format(term))
+                else:
+                    print('== Warning: TERM is set to "{}". Using "xterm-256color"'.format(term))
                 environ['TERM'] = 'xterm-256color'
             # this is for linux console (i.e. init 3)
             if term == 'linux':
@@ -574,7 +675,15 @@ def shell():
                     upd.user = is_pyradio_user_installed()
                     upd.update_pyradio()
             else:
-                print('\nThank you for using PyRadio. Cheers!')
+                if HAS_PRINTY:
+                    pr_printy('\nThank you for using [m]PyRadio@. Cheers!')
+                else:
+                    print('\nThank you for using PyRadio. Cheers!')
+
+                if not config_already_read:
+                    pyradio_config.read_config()
+                check_printy(pyradio_config.use_color_on_terminal)
+
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
 
@@ -600,6 +709,13 @@ def no_update(uninstall):
     print('PyRadio has been installed using either pip or your distribution\'s\npackage manager. Please use that to {} it.\n'.format(action))
     sys.exit(1)
 
+def print_simple_error(msg):
+    if HAS_PRINTY:
+        msg = msg.replace('Error: ', '[r]Error: @').replace('PyRadio', '[m]PyRadio@')
+        pr_printy(msg)
+    else:
+        print(msg)
+
 def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True):
     if exit_if_malformed:
         if ret == -1:
@@ -607,23 +723,23 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
             sys.exit(1)
 
     if ret == -2:
-        print('Error: Specified playlist not found')
+        print_simple_error('Error: Specified playlist not found')
         sys.exit(1)
     elif ret == -3:
-        print('Error: Negative playlist number specified')
+        print_simple_error('Error: Negative playlist number specified')
         sys.exit(1)
     elif ret == -4:
-        print('Error: Specified numbered playlist not found')
+        print_simple_error('Error: Specified numbered playlist not found')
         cnf.list_playlists()
         sys.exit(1)
     elif ret == -5:
-        print('Error: Failed to write playlist')
+        print_simple_error('Error: Failed to write playlist')
         sys.exit(1)
     elif ret == -6:
-        print('Error: Failed to rename playlist')
+        print_simple_error('Error: Failed to rename playlist')
         sys.exit(1)
     elif ret == -7:
-        print('Error: Playlist recovery failed!\n')
+        print_simple_error('Error: Playlist recovery failed!\n')
         if cnf.playlist_recovery_result == 1:
             msg = '''Both a playlist file (CSV) and a playlist backup file (TXT)
             exist for the selected playlist. In this case, PyRadio would
@@ -640,7 +756,7 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
         #open_conf_dir(cnf)
         sys.exit(1)
     elif ret == -8:
-        print('File type not supported')
+        print_simple_error('Error: File type not supported')
         sys.exit(1)
 
 def validate_user_config_dir(a_dir):

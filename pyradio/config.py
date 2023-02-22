@@ -38,6 +38,15 @@ try:
 except:
     HAS_PSUTIL = False
 
+PY3 = sys.version[0] == '3'
+HAS_PRINTY = False
+if PY3:
+    try:
+        from printy import printy as pr_printy
+        HAS_PRINTY = True
+    except:
+        pass
+
 logger = logging.getLogger(__name__)
 
 SUPPORTED_PLAYERS = ('mpv', 'mplayer', 'vlc')
@@ -1107,11 +1116,20 @@ class PyRadioStations(object):
         return len(self.playlists), self.selected_playlist
 
     def list_playlists(self):
-        print('Playlists found in "{}"'.format(self.stations_dir))
+        if HAS_PRINTY:
+            pr_printy('Playlists found in "[m]{}@"'.format(self.stations_dir))
+        else:
+            print('Playlists found in "{}"'.format(self.stations_dir))
         num_of_playlists, selected_playlist = self.read_playlists()
         pad = len(str(num_of_playlists))
         for i, a_playlist in enumerate(self.playlists):
-            print('  {0}. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
+            if HAS_PRINTY:
+                if self.default_playlist == a_playlist[0]:
+                    pr_printy('  [n]{0}@. [n]{1}@'.format(str(i+1).rjust(pad), a_playlist[0]))
+                else:
+                    pr_printy('  [n]{0}@. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
+            else:
+                print('  {0}. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
 
     def current_playlist_index(self):
         if not self.playlists:
@@ -1226,6 +1244,7 @@ class PyRadioConfig(PyRadioStations):
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
     opts['enable_mouse'] = ['Enable mouse support: ', False]
     opts['enable_notifications'] = ['Enable notifications: ', '-1']
+    opts['use_color_on_terminal'] = ['Use color on terminal: ', False]
     opts['conn_title'] = ['Connection Options: ', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
@@ -1352,6 +1371,14 @@ class PyRadioConfig(PyRadioStations):
         self.auto_update_frameworks = ( self.base16_themes, self.pywal_themes, self.theme_sh_themes)
 
         self._read_notification_command()
+
+    @property
+    def use_color_on_terminal(self):
+        return self.opts['use_color_on_terminal'][1]
+
+    @use_color_on_terminal.setter
+    def use_color_on_terminal(self, val):
+        raise ValueError('parameter is read only')
 
     @property
     def open_last_playlist(self):
@@ -1994,6 +2021,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['default_station'][1] = None
                 else:
                     self.opts['default_station'][1] = st
+            elif sp[0] == 'use_color_on_terminal':
+                if sp[1].lower() == 'true':
+                    self.opts['use_color_on_terminal'][1] = True
+                else:
+                    self.opts['use_color_on_terminal'][1] = False
             elif sp[0] == 'open_last_playlist':
                 if sp[1].lower() == 'false':
                     self.opts['open_last_playlist'][1] = False
@@ -2316,6 +2348,18 @@ enable_mouse = {5}
 # Default value: -1
 enable_notifications = {6}
 
+# Color on terminal
+# If this option is enabled, all (well, most) PyRadio output
+# to the terminal will be colored (pyradio -h, for example).
+# It works on Windows too, but not on Windows 7.
+# It also does not work on Python 2.
+# It uses a package called "printy", which will be installed
+# by PyRadio after the option is enabled and the program is
+# restarted.
+#
+# Default value: False
+use_color_on_terminal = {7}
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server
 # message indicating that playback has actually started.
@@ -2326,7 +2370,7 @@ enable_notifications = {6}
 #
 # Valid values: 5 - 60, 0 disables check
 # Default value: 10
-connection_timeout = {7}
+connection_timeout = {8}
 
 # Force http connections
 # Most radio stations use plain old http protocol to broadcast, but
@@ -2335,7 +2379,7 @@ connection_timeout = {7}
 #
 # Valid values: True, true, False, false
 # Default value: False
-force_http = {8}
+force_http = {9}
 
 # Default theme
 # Hardcooded themes:
@@ -2349,7 +2393,7 @@ force_http = {8}
 # with an asterisk (i.e. '*my_theme')
 # This is applicable for user themes only!
 # Default value = 'dark'
-theme = {9}
+theme = {10}
 
 # Transparency setting
 # If False, theme colors will be used.
@@ -2358,7 +2402,7 @@ theme = {9}
 # not running, the terminal's background color will be used.
 # Valid values: True, true, False, false
 # Default value: False
-use_transparency = {10}
+use_transparency = {11}
 
 # Calculated color factor
 # This is to produce Secondary Windows background color
@@ -2368,7 +2412,7 @@ use_transparency = {10}
 # https://github.com/coderholic/pyradio#secondary-windows-background
 # Valid values: 0-0.2
 # Default value: 0
-calculated_color_factor = {11}
+calculated_color_factor = {12}
 
 # Playlist management
 #
@@ -2376,27 +2420,27 @@ calculated_color_factor = {11}
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {12}
+confirm_station_deletion = {13}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within PyRadio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {13}
+confirm_playlist_reload = {14}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {14}
+auto_save_playlist = {15}
 
 # When PyRadio determines that a restricted
 # terminal is used, it will display a message
 # every time it is lounched. To disable this
 # message, change the value to False.
 # Default value: True
-show_no_themes_message = {15}
+show_no_themes_message = {16}
 
 # Remote Control server
 # A simple http server that can accept remote
@@ -2408,9 +2452,9 @@ show_no_themes_message = {15}
 #
 # Default value: localhost:9998
 #                no auto start
-remote_control_server_ip = {16}
-remote_control_server_port = {17}
-remote_control_server_auto_start = {18}
+remote_control_server_ip = {17}
+remote_control_server_port = {18}
+remote_control_server_auto_start = {19}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
@@ -2436,6 +2480,7 @@ remote_control_server_auto_start = {18}
                     self.opts['default_encoding'][1],
                     self.opts['enable_mouse'][1],
                     self.opts['enable_notifications'][1],
+                    self.opts['use_color_on_terminal'][1],
                     self.opts['connection_timeout'][1],
                     self.opts['force_http'][1],
                     theme,

@@ -66,6 +66,7 @@ class PyRadioConfigWindow(object):
     '|', 'Default value: utf-8'])
     _help_text.append(['If this options is enabled, the mouse can be used to scroll the playlist, start, stop and mute the player, adjust its volume etc.', '|', 'Mouse support is highly terminal dependent, that\'s why it is disabled by default.', '|', 'Default value: False'])
     _help_text.append(['If this options is enabled, a Desktop Notification will be displayed using the notification daemon / service.', '|', 'If enabled but no notification is displayed, please refer to', 'https://github.com/coderholic/pyradio/desktop-notification.md', '|', 'Valid values are:', '   -1: disabled ', '    0: enabled (no repetition) ', '    x: repeat every x seconds ', '|', 'Default value: -1'])
+    _help_text.append(['If this option is enabled, all (well, most) PyRadio output to the terminal will be colored (pyradio -h, for example).', '|', 'It works on Windows too, but not on Windows 7.', '|', 'It also does not work on Python 2.', '|', 'It uses a package called "printy", which will be installed by PyRadio after the option is enabled and the program is restarted.', '|', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
@@ -835,6 +836,7 @@ class PyRadioConfigWindow(object):
                     sel == 'enable_mouse' or \
                     sel == 'auto_save_playlist' or \
                     sel == 'force_http' or \
+                    sel == 'use_color_on_terminal' or \
                     sel == 'remote_control_server_auto_start':
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':
