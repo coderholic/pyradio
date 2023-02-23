@@ -442,6 +442,8 @@ then
     for a_file in pyradio/*.py
     do
         sed -i "/open/s/, encoding='utf-8'//" "${a_file}"
+        sed -i 's/console.print/# &/' "${a_file}"
+        sed -i 's/from rich import print/# &/' "${a_file}"
     done
 fi
 

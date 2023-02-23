@@ -39,13 +39,11 @@ except:
     HAS_PSUTIL = False
 
 PY3 = sys.version[0] == '3'
-HAS_PRINTY = False
+
 if PY3:
-    try:
-        from printy import printy as pr_printy
-        HAS_PRINTY = True
-    except:
-        pass
+    from rich.console import Console
+    from rich.table import Table
+    from rich import print
 
 logger = logging.getLogger(__name__)
 
@@ -1116,18 +1114,18 @@ class PyRadioStations(object):
         return len(self.playlists), self.selected_playlist
 
     def list_playlists(self):
-        if HAS_PRINTY:
-            pr_printy('Playlists found in "[m]{}@"'.format(self.stations_dir))
+        if PY3:
+            print('Playlists found in "[magenta]{}[/magenta]"'.format(self.stations_dir))
         else:
             print('Playlists found in "{}"'.format(self.stations_dir))
         num_of_playlists, selected_playlist = self.read_playlists()
         pad = len(str(num_of_playlists))
         for i, a_playlist in enumerate(self.playlists):
-            if HAS_PRINTY:
+            if PY3:
                 if self.default_playlist == a_playlist[0]:
-                    pr_printy('  [n]{0}@. [n]{1}@'.format(str(i+1).rjust(pad), a_playlist[0]))
+                    print('  [green]{0}[/green]. [green]{1}[/green]'.format(str(i+1).rjust(pad), a_playlist[0]))
                 else:
-                    pr_printy('  [n]{0}@. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
+                    print('  [green]{0}[/green]. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
             else:
                 print('  {0}. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
 
