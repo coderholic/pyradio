@@ -43,6 +43,7 @@ PY3 = sys.version[0] == '3'
 if PY3:
     from rich.console import Console
     from rich.table import Table
+    from rich.align import Align
     from rich import print
 
 logger = logging.getLogger(__name__)
@@ -1113,20 +1114,40 @@ class PyRadioStations(object):
                 break
         return len(self.playlists), self.selected_playlist
 
+    def format_rich_playlists(self, i, msg):
+        if not (i % 2):
+            return msg
+        else:
+            return '[plum4]' + msg + '[/plum4]'
+
     def list_playlists(self):
+        num_of_playlists, selected_playlist = self.read_playlists()
         if PY3:
-            print('Playlists found in "[magenta]{}[/magenta]"'.format(self.stations_dir))
+            console = Console()
+
+            table = Table(show_header=True, header_style="bold magenta")
+            #table.title = 'Playlist: [bold magenta]{}[/bold magenta]'.format(pyradio_config.station_title)
+            table.title_justify = "left"
+            centered_table = Align.center(table)
+            table.title = 'Playlists found in "[magenta]{}[/magenta]"'.format(self.stations_dir)
+            table.title_justify = "left"
+            table.add_column("#", justify="right")
+            table.add_column("Name")
+            table.add_column("Size", justify="right")
+            table.add_column("Date")
+            for i, n in enumerate(self.playlists):
+                table.add_row(
+                    self.format_rich_playlists(i, str(i+1)),
+                    self.format_rich_playlists(i, n[0]),
+                    self.format_rich_playlists(i, n[2]),
+                    self.format_rich_playlists(i, n[1]),
+                )
+            console.print(centered_table)
+
         else:
             print('Playlists found in "{}"'.format(self.stations_dir))
-        num_of_playlists, selected_playlist = self.read_playlists()
-        pad = len(str(num_of_playlists))
-        for i, a_playlist in enumerate(self.playlists):
-            if PY3:
-                if self.default_playlist == a_playlist[0]:
-                    print('  [green]{0}[/green]. [green]{1}[/green]'.format(str(i+1).rjust(pad), a_playlist[0]))
-                else:
-                    print('  [green]{0}[/green]. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
-            else:
+            pad = len(str(num_of_playlists))
+            for i, a_playlist in enumerate(self.playlists):
                 print('  {0}. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
 
     def current_playlist_index(self):

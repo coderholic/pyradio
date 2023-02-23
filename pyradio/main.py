@@ -9,6 +9,7 @@ from os import path, getenv, environ, remove, chmod, makedirs
 from sys import platform, version_info, executable
 from contextlib import contextmanager
 from platform import system
+import re
 
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
@@ -114,7 +115,7 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
         )
 
 def format_rich_string(i, msg, enc=None):
-    if i % 2:
+    if not (i % 2):
         if enc:
             return '[bold]' + msg + '[/bold]'
         else:
@@ -580,6 +581,8 @@ def shell():
                 console = Console()
 
                 table = Table(show_header=True, header_style="bold magenta")
+                table.title = 'Playlist: [bold magenta]{}[/bold magenta]'.format(pyradio_config.station_title)
+                table.title_justify = "left"
                 centered_table = Align.center(table)
                 table.add_column("#", justify="right")
                 table.add_column("Name")
