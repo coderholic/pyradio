@@ -68,7 +68,7 @@ class MyArgParser(ArgumentParser):
         x = re.sub('([^"]pyradio)', r'[magenta]\1[/magenta]', t, flags=re.I)
         t = re.sub(r'(player_name:[a-z:_]+)', r'[plum2]\1[/plum2]', x)
         x = t.replace('mpv', '[green]mpv[/green]').replace('mplayer', '[green]mplayer[/green]').replace('vlc', '[green]vlc[/green]')
-        return x.replace('||', r']').replace('|', r'\[')
+        return '[bold]' + x.replace('||', r']').replace('|', r'\[') + '[/bold]'
 
 @contextmanager
 def pyradio_config_file(a_dir):

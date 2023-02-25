@@ -30,14 +30,14 @@ except ImportError:
 def win_press_any_key_to_unintall():
     the_path = __file__.split(sep)
     the_file = sep.join(the_path[:-1]) + sep + 'install.py'
-    print('\nTo complete the process you will have to execute a batch file.')
+    print('\nTo complete the process you will have to [red]execute a batch file[/red].')
     print('Windows Explorer will open the location of the batch file to run.')
     print('')
     print('Please double click')
     print('')
-    print('    uninstall.bat')
+    print('    [bold green]uninstall.bat[/bold green]')
     print('')
-    print('to remove PyRadio from your system.')
+    print('to remove [magenta]PyRadio[/magenta] from your system.')
     print('')
     print('After you are done, you can delete the folder it resides in.')
     from .win import press_any_key_to_continue
@@ -53,15 +53,15 @@ def win_print_exe_paths():
     from .install import fix_pyradio_win_exe
     exe = fix_pyradio_win_exe()
     if exe[0] and exe[1]:
-        print('PyRadio EXE files:')
-        print('  System:\n    {}'.format(exe[0]))
-        print('  User:\n    {}'.format(exe[1]))
+        print('[magenta]PyRadio[/magenta] EXE files:')
+        print('  System:\n    [red]{}[/red]'.format(exe[0]))
+        print('  User:\n    [green]{}[/green]'.format(exe[1]))
     else:
-        print('PyRadio EXE file:')
+        print('[magenta]PyRadio[/magenta] EXE file:')
         if exe[0]:
-            print('  {}'.format(exe[0]))
+            print('  [green]{}[/green]'.format(exe[0]))
         else:
-            print('  {}'.format(exe[1]))
+            print('  [green]{}[/green]'.format(exe[1]))
     # doing it this way so that pyton2 does not break (#153)
     from .win import press_any_key_to_continue
     print('\nPress any key to exit...', end='', flush=True)
@@ -73,7 +73,7 @@ def press_any_key_to_continue():
 
 def install_module(a_module, do_not_exit=False, print_msg=True):
     if print_msg:
-        print('Installing module: ' + a_module)
+        print('Installing module: [green]' + a_module + '[/green]')
     for count in range(1,6):
         ret = subprocess.call('python -m pip install --upgrade ' + a_module,
             stdout=subprocess.DEVNULL,
@@ -83,16 +83,22 @@ def install_module(a_module, do_not_exit=False, print_msg=True):
         else:
             if count < 5:
                 if print_msg:
-                    print('  Download failed. Retrying {}/5'.format(count+1))
+                    print('  Download failed. Retrying [magenta]{}[/magenta]/[red]5[/red]'.format(count+1))
             else:
                 if print_msg:
                     print('Failed to download module...\nPlease check your internet connection and try again...')
                 else:
-                    print('Failed to download module "{}"...\nPlease check your internet connection and try again...').format(a_module)
+                    print('Failed to download module "[magenta]{}[/magenta]"...\nPlease check your internet connection and try again...').format(a_module)
                 if do_not_exit:
                     return False
                 sys.exit(1)
         return True
+
+try:
+    from rich import print
+except:
+    install_module('rich')
+    from rich import print
 
 def find_pyradio_win_exe():
     ''' find pyradio EXE files
@@ -148,7 +154,7 @@ def _get_output_folder(package, output_folder=None, do_not_exit=False):
             # create dir
             makedirs(output_folder, exist_ok=True)
             if not exists(output_folder):
-                print('Failed to create folder: "{}"'.format(pyradio_dir))
+                print('Failed to create folder: "[magenta]{}[/magenta]"'.format(pyradio_dir))
                 if do_not_exit:
                     return None
                 sys.exit(1)
@@ -178,17 +184,17 @@ def download_seven_zip(output_folder):
 
     out_file = join(output_folder, '7-Zip_latest.exe')
 
-    print('7-Zip not found...\nDownloading...')
+    print('[magenta]7-Zip not found...\n[green]Downloading...[/green]')
     try:
         urlretrieve(url, filename=out_file)
     except:
-        print('Failed to download 7-Zip...')
+        print('[red]Failed to download 7-Zip...[/red]')
         print('Please check your internet connection and try again...')
-        print('\nIn case you want to install 7-Zip manually,')
-        print('go to https://www.7-zip.org/ to get it...')
+        print('\nIn case you want to [green]install 7-Zip manually[/green],')
+        print('go to [magenta]https://www.7-zip.org/[/magenta] to get it...')
         sys.exit(1)
 
-    print('\nPyRadio installation will resume as soon as\nyou complete the installation of 7-Zip..')
+    print('\n[bold]PyRadio installation will resume as soon as\nyou complete the installation of 7-Zip...[/bold]')
 
     subprocess.call(
         out_file,
@@ -203,9 +209,9 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
     #   package         : 0: mpv, 1: mplayer
     package -= 1
     if package == 0:
-        print('Downloading MPV (latest)...')
+        print('Downloading [magenta]MPV[/magenta] ([green]latest[/green])...')
     else:
-        print('Downloading MPlayer (latest)...')
+        print('Downloading [magenta]MPlayer[/magenta] ([green]latest[/green])...')
     purl = (
         'https://sourceforge.net/projects/mpv-player-windows/files',
         'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder'
@@ -227,8 +233,8 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
         chdir(join(output_folder, 'mpv'))
         startfile('updater.bat')
     else:
-        print('    from  "{}"'.format(purl[package]))
-        print('    into  "{}"'.format(output_folder))
+        print('    from  "[plum4]{}[plum4]"'.format(purl[package]))
+        print('    into  "[magenta]{}[/magenta]"'.format(output_folder))
 
         out_file = _get_out_file(output_folder, package)
         session = requests.Session()
@@ -239,9 +245,9 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
                 break
             except requests.exceptions.RequestException as e:
                 if count < 5:
-                    print('  Download failed. Retrying {}/5'.format(count+1))
+                    print('  Download failed. Retrying [magenta]{}[/magenta]/[red]5[/red]'.format(count+1))
                 else:
-                    print('Failed to download player...\nPlease check your internet connection and try again...')
+                    print('[red]Failed to download player...[/red]\nPlease check your internet connection and try again...')
                     if do_not_exit:
                         return False
                     sys.exit(1)
@@ -250,7 +256,7 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
             with open(out_file, 'wb') as f:
                 f.write(r.content)
         except:
-            print('Failed to write archive...\nPlease try again later...')
+            print('[red]Failed to write archive...[/red]\nPlease try again later...')
             if do_not_exit:
                 return False
             sys.exit(1)
@@ -280,27 +286,27 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
             player_name = 'mpv' if package == 0 else 'mplayer'
             print('''Failed to extract the archive...
 
-    You will have to install the player MANUALLY!!!
+    You will have to install the player [red]MANUALLY[/red]!!!
 
     PyRadio's configuration folder will open now,
     along with the archive named "{0}".'''.format(basename(out_file)))
             if player_name == 'mpv':
                 if exists(join(output_folder, 'mpv')):
-                    print('''    Please extract the archive in the "mpv" folder
+                    print('''    Please extract the archive in the "[dev]mpv[/red]" folder
     (overwriting any existing files).''')
                 else:
-                    print('''    Please create a folder named "mpv" and extract
+                    print('''    Please create a folder named "[red]mpv[/red]" and extract
     the archive there.''')
             else:
                 # mplayer
                 if exists(join(output_folder, 'mplayer')):
-                    print('''    Please delete the "mplayer" folder, extract
+                    print('''    Please delete the "[red]mplayer[/red]" folder, extract
     the archive and rename the resulting folder
-    to "mplayer".''')
+    to "[red]mplayer[/red]".''')
                 else:
                     print('''
     Please extract the archive and rename the resulting
-    folder to "mplayer".''')
+    folder to "[red]mplayer[/red]".''')
 
             print('Press any key to continue...')
 
@@ -358,27 +364,27 @@ def _post_download(package, output_folder, do_not_exit):
                     try:
                         rmtree(mplayer_old_dir)
                     except OSError:
-                        print('Failed to remove "{}"\nPlease close all programs and try again...'.format(mplayer_old_dir))
+                        print('Failed to remove "[green]{}[/green]"\nPlease close all programs and try again...'.format(mplayer_old_dir))
                         if do_not_exit:
                             return False
                         sys.exit(1)
                 try:
                     replace(mplayer_final_dir, mplayer_old_dir)
                 except:
-                    print('Failed to rename folder "{0}"\n      to "{1}"...\nPlease close all open programs and try again...'.format(mplayer_final_dir, mplayer_old_dir))
+                    print('Failed to rename folder "[green]{0}[/green]"\n      to "[magenta]{1}[/magenta]"...\nPlease close all open programs and try again...'.format(mplayer_final_dir, mplayer_old_dir))
                     if do_not_exit:
                         return False
                     sys.exit(1)
             try:
                 replace(join(output_folder, extracted_dirname), join(output_folder, 'mplayer'))
             except:
-                print('Failed to rename folder "{0}" to\n      "{1}"...\nPlease close all open programs and try again...'.format(extracted_dirname, mplayer_final_dir))
+                print('Failed to rename folder "[green]{0}[/green]" to\n      "[magenta]{1}[/magenta]"...\nPlease close all open programs and try again...'.format(extracted_dirname, mplayer_final_dir))
                 if do_not_exit:
                     return False
                 sys.exit(1)
 
         else:
-            print('Extracted folder not found...\nPlease try again later...')
+            print('[red]Extracted folder not found...[/red]\nPlease try again later...')
             if do_not_exit:
                 return False
             sys.exit(1)
@@ -387,13 +393,13 @@ def _post_download(package, output_folder, do_not_exit):
 def install_player(output_folder=None, package=0, do_not_exit=False):
     while True:
         in_path = [None, None, None]
-        to_do = ['1. Install', '2. Install', 'VLC media player is not installed']
+        to_do = ['[bold red]1[/bold red]. Install', '[bold red]2[/bold red]. Install', '[green]VLC[/green] media player is not installed']
         from_path = ['', '']
         for n in range(0, 2):
             in_path[n] = _is_player_in_path(n)
             if in_path[n]:
-                to_do[n] = '{}. Update'.format(n+1)
-                from_path[n] = ' (found in PATH)'
+                to_do[n] = '[bold red]{}[/bold red]. Update'.format(n+1)
+                from_path[n] = ' (found in [magenat]PATH[/magenta])'
         if in_path[0] is None:
             in_path[0] = find_mpv_on_windows()
         if in_path[1] is None:
@@ -406,9 +412,9 @@ def install_player(output_folder=None, package=0, do_not_exit=False):
 
         for n in range(0, 2):
             if in_path[n]:
-                to_do[n] = '{}. Update'.format(n+1)
+                to_do[n] = '[bold red]{}[/bold red]. Update'.format(n+1)
         if find_vlc_on_windows():
-            to_do[2] = 'VLC media player is already installed'
+            to_do[2] = '[green]VLC[/green] media player is already installed'
         #print(in_path)
         #print(to_do)
         #print(from_path)
@@ -420,20 +426,20 @@ def install_player(output_folder=None, package=0, do_not_exit=False):
         if in_path[0]:
             best_choise = ''
         else:
-            best_choise = '(best choise)'
+            best_choise = '([yellow]best choise[/yellow])'
         if x == 'y' or x == '\n' or x == '\r':
             x = ''
             msg = '''
 Please select an action:
-    {0} MPV{1}      {2}
-    {3} MPlayer{4}'''
+    {0} [green]MPV[/green]{1}      {2}
+    {3} [green]MPlayer[/green]{4}'''
 
 
             print(msg.format(to_do[0], from_path[0],
                 best_choise, to_do[1], from_path[1]
             ))
             msg ='''
-    Note:
+    [plum4]Note:[/plum4]
       {}
     '''
             opts = []
@@ -441,19 +447,19 @@ Please select an action:
             all_uninstall = False
             if in_path[0] is None and in_path[1] is None:
                 opts = ['0', '1', '2', 'q']
-                prompt = 'Press 1, 2 or q to Cancel: '
+                prompt = 'Press [bold red]1[/bold red], [bold red]2[/bold red] or [bold red]q[/bold red] to Cancel: '
             elif in_path[0] is not None and in_path[1] is not None:
-                print('\n    3. Uninstall MPV')
-                print('    4. Uninstall MPlayer')
+                print('\n    [bold red]3[/bold red]. Uninstall [green]MPV[/green]')
+                print('    [bold red]4[/bold red]. Uninstall [green]MPlayer[/green]')
                 opts = ['0', '1', '2', '3', '4', 'q']
-                prompt = 'Press 1, 2, 3, 4 or q to Cancel: '
+                prompt = 'Press [bold red]1[/bold red], [bold red]2[/bold red], [bold red]3,[/bold red] [bold red]4[/bold red] or [bold red]q[/bold red] to Cancel: '
             else:
                 if in_path[0] is not None:
-                    print('\n    3. Uninstall MPV')
+                    print('\n    [bold red]3[/bold red]. Uninstall [green]MPV[/green]')
                 else:
-                    print('\n    3. Uninstall MPlayer')
+                    print('\n    [bold red]3[/bold red]. Uninstall [green]MPlayer[/green]')
                 opts = ['0', '1', '2', '3', 'q']
-                prompt = 'Press 1, 2, 3 or q to Cancel: '
+                prompt = 'Press [bold red]1[/bold red], [bold red]2[/bold red], [bold red]3[/bold red] or [bold red]q[/bold red] to Cancel: '
                 all_uninstall = True
 
             print(msg.format(to_do[2]))
@@ -473,15 +479,15 @@ Please select an action:
                 print('\n\n')
             elif x == '3':
                 # find out which player to wuninstall
-                print('uninstall mplayer or mpv')
+                print('uninstall [green]mplayer[/green] or [green]mpv[/green]')
                 print('\n\n')
             elif x == '4':
                 # uninstall mplayer
-                print('uninstall mplayer')
+                print('uninstall [green]mplayer[/green]')
                 print('\n\n')
 
 def install_pylnk(a_path, do_not_exit=False):
-    print('    Downloading pylnk...')
+    print('    Downloading [green]pylnk[/green]...')
     session = requests.Session()
     for count in range(1,6):
         try:
@@ -490,9 +496,9 @@ def install_pylnk(a_path, do_not_exit=False):
             break
         except requests.exceptions.RequestException as e:
             if count < 5:
-                print('      Download failed. Retrying {}/5'.format(count+1))
+                print('      Download failed. Retrying [magenta]{}[/magenta]/[red]5[/red]'.format(count+1))
             else:
-                print('    Failed to download pylnk...\nPlease check your internet connection and try again...')
+                print('    Failed to download [green]pylnk[/green]...\nPlease check your internet connection and try again...')
                 if do_not_exit:
                     return False
                 sys.exit(1)
@@ -505,7 +511,7 @@ def install_pylnk(a_path, do_not_exit=False):
             return False
         sys.exit(1)
 
-    print('    Installing pylnk...')
+    print('    Installing [green]pylnk...[/green]')
     ret = subprocess.call('python -m pip install ' + join(a_path, 'pylnk.zip'),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL)
@@ -622,9 +628,9 @@ def install_pyradio_link():
             )
 
 if __name__ == '__main__':
-    print('\n\n----====  MPV Media Player Installation  ====----')
+    print('\n\n[red]----[green]====  [magenta]MPV Media Player Installation  [green]====[red]----[/red]')
     download_player(package=1)
-    print('----====  MPV Media Player Installed  ====----')
+    print('[red]----[green]====  [magenta]MPV Media Player Installed  [green]====[red]----[/red]')
     # _post_download(1, "C:\\Users\\spiros\\AppData\\Roaming\\pyradio")
     # download_player(package=0)
     #install_player()
