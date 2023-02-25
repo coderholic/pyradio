@@ -113,6 +113,7 @@ and much more...
     - requests
     - dnspython
     - psutil
+    - rich
     - netifaces (optional)
 * MPV, MPlayer or VLC installed and in your path
 
@@ -1264,7 +1265,8 @@ First of all, make sure you declare the pacakges's requirements to the relevant 
 3. requests
 4. dnspython
 5. psutil
-6. netifaces
+6. rich
+7. netifaces
 
 After that, you will have to modify some files, because **PyRadio** is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
 

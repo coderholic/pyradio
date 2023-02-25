@@ -114,18 +114,6 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
             titles=titles
         )
 
-def format_rich_string(i, msg, enc=None):
-    if not (i % 2):
-        if enc:
-            return '[bold]' + msg + '[/bold]'
-        else:
-            return msg
-    else:
-        if enc:
-            return '[bold plum4]' + msg + '[/bold plum4]'
-        else:
-            return '[plum4]' + msg + '[/plum4]'
-
 def shell():
     version_too_old = False
     if sys.version_info[0] == 2:
@@ -442,37 +430,57 @@ def shell():
 
         ''' list extra player parameters '''
         if args.list_player_parameters:
-            if PY3:
-                print('[magenta]PyRadio Players Extra Parameters[/magenta]')
-                print('[magenta]' + 32 * '-' + '[/magenta]')
-            else:
-                print('PyRadio Players Extra Parameters')
-                print(32 * '-')
             read_config(pyradio_config)
             default_player_name = pyradio_config.opts['player'][1].replace(' ', '').split(',')[0]
             if default_player_name == '':
                 default_player_name = SUPPORTED_PLAYERS[0]
-            for a_player in SUPPORTED_PLAYERS:
-                if default_player_name == a_player:
-                    if PY3:
-                        print('Player: [red]' + a_player + '[/red] ([green]default[/green])')
+            if PY3:
+                console = Console()
+                table = Table(show_header=True, header_style="bold magenta")
+                table.title = '[bold magenta]Player Extra Parameters[/bold magenta]'
+                table.title_justify = "left"
+                centered_table = Align.center(table)
+                table.add_column("Player")
+                table.add_column("Parameters")
+                for n, a_player in enumerate(SUPPORTED_PLAYERS):
+                    if default_player_name == a_player:
+                        pl_field = '[green]' + a_player + '[/green]'
                     else:
+                        pl_field = '[red]' + a_player + '[/red]'
+                    default = 0
+                    param_field = ''
+                    for i, a_param in enumerate(pyradio_config.saved_params[a_player]):
+                        if i == 0:
+                            default = int(a_param)
+                        else:
+                            str_default = ''
+                            if a_player != 'vlc':
+                                str_default = '([green]default[/green])' if i == default else ''
+                            count = str(i) if i > 9 else ' ' + str(i)
+                            param_field = '[green]{0}[/green]. {1} {2}'.format(count, a_param, str_default)
+                            table.add_row(
+                                pl_field,
+                                param_field
+                            )
+                            pl_field = ''
+                    if n < len(SUPPORTED_PLAYERS) - 1:
+                        table.add_row('', '')
+                console.print(centered_table)
+            else:
+                print('Player Extra Parameters')
+                print(32 * '-')
+                for a_player in SUPPORTED_PLAYERS:
+                    if default_player_name == a_player:
                         print('Player: ' + a_player + ' (default)')
-                else:
-                    if PY3:
-                        print('Player: [red]' + a_player + '[/red]')
                     else:
                         print('Player: ' + a_player)
-                default = 0
-                for i, a_param in enumerate(pyradio_config.saved_params[a_player]):
-                    if i == 0:
-                        default = int(a_param)
-                    else:
-                        str_default = '(default)' if i == default else ''
-                        count = str(i) if i > 9 else ' ' + str(i)
-                        if PY3:
-                            print('    [green]{0}[/green]. {1} {2}'.format(count, a_param, str_default).replace('(default)', '([green]default[/green])'))
+                    default = 0
+                    for i, a_param in enumerate(pyradio_config.saved_params[a_player]):
+                        if i == 0:
+                            default = int(a_param)
                         else:
+                            str_default = '(default)' if i == default else ''
+                            count = str(i) if i > 9 else ' ' + str(i)
                             print('    {0}. {1} {2}'.format(count, a_param, str_default))
                 print('')
             sys.exit()
@@ -583,6 +591,7 @@ def shell():
                 table = Table(show_header=True, header_style="bold magenta")
                 table.title = 'Playlist: [bold magenta]{}[/bold magenta]'.format(pyradio_config.station_title)
                 table.title_justify = "left"
+                table.row_styles = ['', 'plum4']
                 centered_table = Align.center(table)
                 table.add_column("#", justify="right")
                 table.add_column("Name")
@@ -590,10 +599,11 @@ def shell():
                 table.add_column("Encoding")
                 for i, n in enumerate(pyradio_config.stations):
                     table.add_row(
-                        format_rich_string(i, str(i+1), n[2]),
-                        format_rich_string(i, n[0], n[2]),
-                        format_rich_string(i, n[1], n[2]),
-                        format_rich_string(i, 'utf-8' if not n[2] else n[2], n[2] )
+                        str(i+1),
+                        n[0],
+                        n[1],
+                        'utf-8' if not n[2] else n[2],
+                        style = '' if not n[2] else 'bold'
                     )
                 console.print(centered_table)
             else:

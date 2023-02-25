@@ -1114,12 +1114,6 @@ class PyRadioStations(object):
                 break
         return len(self.playlists), self.selected_playlist
 
-    def format_rich_playlists(self, i, msg):
-        if not (i % 2):
-            return msg
-        else:
-            return '[plum4]' + msg + '[/plum4]'
-
     def list_playlists(self):
         num_of_playlists, selected_playlist = self.read_playlists()
         if PY3:
@@ -1128,6 +1122,7 @@ class PyRadioStations(object):
             table = Table(show_header=True, header_style="bold magenta")
             #table.title = 'Playlist: [bold magenta]{}[/bold magenta]'.format(pyradio_config.station_title)
             table.title_justify = "left"
+            table.row_styles = ['', 'plum4']
             centered_table = Align.center(table)
             table.title = 'Playlists found in "[magenta]{}[/magenta]"'.format(self.stations_dir)
             table.title_justify = "left"
@@ -1137,10 +1132,10 @@ class PyRadioStations(object):
             table.add_column("Date")
             for i, n in enumerate(self.playlists):
                 table.add_row(
-                    self.format_rich_playlists(i, str(i+1)),
-                    self.format_rich_playlists(i, n[0]),
-                    self.format_rich_playlists(i, n[2]),
-                    self.format_rich_playlists(i, n[1]),
+                    str(i+1),
+                    n[0],
+                    n[2],
+                    n[1],
                 )
             console.print(centered_table)
 

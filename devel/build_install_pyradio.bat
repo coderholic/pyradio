@@ -28,8 +28,16 @@ IF %ERRORLEVEL% == 1 (
     GOTO piperror
 )
 
+ECHO Installing / Updating rich
+%PROGRAM% -m pip install --upgrade rich 1>NUL 2>NUL
+IF %ERRORLEVEL% == 1 (
+    SET ERRPKG=rich
+    GOTO piperror
+)
+
 echo pywin32 > requirements.txt
 echo requests >> requirements.txt
+echo rich >> requirements.txt
 echo dnspython >> requirements.txt
 echo psutil >> requirements.txt
 echo wheel >> requirements.txt

@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
+PY3 = sys.version[0] == '3'
+
 def isLightOrDark(rgbColor=[0,128,255]):
     [r,g,b]=rgbColor
     '''
@@ -342,14 +344,14 @@ class PyRadioTheme(object):
         '''
         out_file = path.join(self._cnf.themes_dir, out_theme_name + '.pyradio-theme')
         if exists(out_file):
-            return False, 'Theme "{}" already exists...'.format(out_theme_name)
+                return False, 'Theme "{}" already exists...'.format(out_theme_name)
         th_name = theme_name if theme_name else 'dark'
         if theme_name not in self._cnf.internal_themes and \
                 theme_name not in self._cnf.system_themes:
             th_name = 'dark'
         if th_name in self._cnf.internal_themes:
             ''' create theme file '''
-            ret = self.open_theme(th_name)
+            ret = self.open_theme(th_name, no_curses=True)
             if ret < 0:
                 self.open_theme('dark')
             self._active_colors = None
@@ -370,7 +372,7 @@ class PyRadioTheme(object):
             except:
                 return False, 'Error creating file for theme: "{}"'.format(out_theme_name)
 
-    def open_theme(self, a_theme='', a_path='', print_errors=None):
+    def open_theme(self, a_theme='', a_path='', print_errors=None, no_curses=False):
         """ Read a theme and place it in _colors
             a_theme: theme name
             a_path:  theme path (enpty if internal theme)
@@ -386,8 +388,9 @@ class PyRadioTheme(object):
         if a_theme == 'dark' or a_theme == 'default':
             self._colors['transparency'] = 2
             self._colors['data'] = {1: (192, 192, 192), 2: (0, 0, 0), 3: (0, 128, 0), 4: (0, 0, 0), 5: (135, 0, 135), 6: (0, 0, 0), 7: (0, 128, 0), 8: (0, 0, 0), 9: (0, 128, 0), 10: (128, 128, 0), 11: (95, 135, 255), 12: (0, 255, 255), 14: (192, 192, 192), 13: (0, 0, 0), 15: (26, 26, 26)}
-            if curses.COLORS > 16:
-                self._colors['data'][16] = (192, 192, 192)
+            if not no_curses:
+                if curses.COLORS > 16:
+                    self._colors['data'][16] = (192, 192, 192)
             self._cnf.has_border_background = True
 
             ''' info '''
@@ -402,8 +405,9 @@ class PyRadioTheme(object):
             self._colors['Path'] = ''
             self.applied_theme_name = 'dark_16_colors'
             self._colors['data'] = {1: (255, 255, 255), 2: (128, 128, 128), 3: (0, 255, 0), 8: (0, 0, 0), 9: (0, 255, 0), 4: (0, 0, 0), 5: (255, 0, 255), 6: (0, 0, 0), 7: (0, 255, 0), 12: (0, 255, 255), 11: (0, 0, 255), 10: (255, 255, 0), 13: (255, 255, 255), 13: (128, 128, 128), 15: (154, 154, 154)}
-            if curses.COLORS > 16:
-                self._colors['data'][16] = (255, 255, 255)
+            if not no_curses:
+                if curses.COLORS > 16:
+                    self._colors['data'][16] = (255, 255, 255)
             self._cnf.has_border_background = True
 
         elif a_theme == 'light':
@@ -424,8 +428,9 @@ class PyRadioTheme(object):
             self._colors['Path'] = ''
             self.applied_theme_name = 'light_16_colors'
             self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (255, 0, 0), 8: (255, 255, 255), 9: (0, 0, 255), 4: (255, 255, 255), 5: (255, 0, 255), 6: (255, 255, 255), 7: (0, 0, 255), 12: (0, 0, 255), 11: (0, 0, 255), 10: (255, 0, 255), 13: (255, 255,255), 14: (255, 0, 0), 15: (230, 230, 230)}
-            if curses.COLORS > 16:
-                self._colors['data'][16] = (128, 128, 128)
+            if not no_curses:
+                if curses.COLORS > 16:
+                    self._colors['data'][16] = (128, 128, 128)
             self._cnf.has_border_background = True
 
         elif a_theme == 'black_on_white' or a_theme == 'bow':
@@ -446,8 +451,9 @@ class PyRadioTheme(object):
             self._colors['Path'] = ''
             self.applied_theme_name = 'white_on_black'
             self._colors['data'] = {1: (158, 158, 158), 2: (38, 38, 38), 3: (238, 238, 238), 8: (28, 28, 28), 9: (218, 218, 218), 4: (38, 38, 38), 5: (158, 158, 158), 6: (38, 38, 38), 7: (218, 218, 218), 12: (218, 218, 218), 11: (138, 138, 138), 10: (158, 158, 158), 13: (0, 0, 0), 14: (169, 169, 169), 15: (52, 52, 52)}
-            if curses.COLORS > 16:
-                self._colors['data'][16] = (158, 158, 158)
+            if not no_curses:
+                if curses.COLORS > 16:
+                    self._colors['data'][16] = (158, 158, 158)
             self._cnf.has_border_background = True
 
         else:

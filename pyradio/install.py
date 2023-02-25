@@ -603,6 +603,8 @@ class PyRadioUpdate(object):
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade requests 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
+                b.write('python -m pip install --upgrade rich 1>NUL 2>NUL\n')
+                b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade win10toast 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 # b.write('PAUSE\n')
@@ -1169,6 +1171,7 @@ if __name__ == '__main__':
                 'pywin32',
                 'dnspython',
                 'requests',
+                'rich',
                 'psutil',
                 'patool',
                 'pyunpack',
