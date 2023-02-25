@@ -10,6 +10,7 @@ from sys import platform, version_info, executable
 from contextlib import contextmanager
 from platform import system
 import re
+import glob
 
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
@@ -286,26 +287,77 @@ def shell():
 
         if args.show_themes:
             pyradio_config.read_config()
+            int_themes = [x for x in pyradio_config.internal_themes if x != 'wob' and x != 'bow']
+            sys_themes = list(pyradio_config.system_themes)
+            user_themes = glob.glob(path.join(pyradio_config.themes_dir, '*.pyradio-theme'))
+            for i in range(0, len(user_themes)):
+                user_themes[i] = path.basename(user_themes[i]).replace('.pyradio-theme', '')
+
+            # remove project themes names from user_themes
+            projects_data = []
+            for n in pyradio_config.auto_update_frameworks:
+                projects_data.append([
+                    n.NAME,
+                    'Yes' if n.can_auto_update else 'No'
+                ])
+                if n.default_filename_only in user_themes:
+                    projects_data[-1].append(n.default_filename_only)
+                    user_themes.remove(n.default_filename_only)
+                else:
+                    projects_data[-1].append('-')
             if PY3:
-                print('[magenta]Internal Themes[/magenta]')
+                console = Console()
+                table = Table(show_header=True, header_style="bold magenta")
+                table.title = '[bold magenta]PyRadio Themes[/bold magenta]'
+                centered_table = Align.center(table)
+                table.add_column("Internal Themes")
+                table.add_column("System Themes")
+                table.add_column("User Themes")
+                x = max(len(int_themes), len(sys_themes), len(user_themes))
+                while len(int_themes) < x:
+                    int_themes.append('')
+                while len(sys_themes) < x:
+                    sys_themes.append('')
+                while len(user_themes) < x:
+                    user_themes.append('')
+                for n in zip(
+                        int_themes,
+                        sys_themes,
+                        user_themes
+                ):
+                    table.add_row(n[0], n[1], n[2])
+                console.print(centered_table)
+
+                table1 = Table(show_header=True, header_style="bold magenta")
+                centered_table1 = Align.center(table1)
+                table1.title = '[bold magenta]Ext. Projects Themes[/bold magenta]'
+                table1.add_column('Projects')
+                table1.add_column('Can auto-update', justify='center')
+                table1.add_column('Theme name', justify='center')
+                for n in projects_data:
+                    table1.add_row(
+                        '[magenta]' + n[0].replace(' Project', '') + '[/magenta]',
+                        '[green]' + n[1] + '[/green]' if n[1] == 'Yes' else '[red]' + n[1] + '[/red]',
+                        '[red]' + n[2] + '[/red]' if n[2] == '-' else n[2]
+                    )
+                console.print(centered_table1)
             else:
                 print('Internal Themes')
-            for n in pyradio_config.internal_themes:
-                if n not in ('bow', 'wob'):
-                    print('  ', n)
-            if PY3:
-                print('[magenta]System Themes[/magenta]')
-            else:
+                for n in int_themes:
+                    if n not in ('bow', 'wob'):
+                        print('  ' + n)
                 print('System Themes')
-            for n in pyradio_config.system_themes:
-                print('  ', n)
-            # print('Ext. Projects Themes')
-            # for n in pyradio_config.auto_update_frameworks:
-
-            #     print('  {0} {1}'.format(n.NAME, '  (Supported) ' if n.can_auto_update else '  (Not supported)'))
-            #     if n.can_auto_update:
-            #         for k in n.THEME:
-            #             print('    ', k)
+                for n in sys_themes:
+                    print('  ' + n)
+                print('User Themes')
+                if user_themes:
+                    for n in user_themes:
+                        print('  ' + n)
+                print('Ext. Projects Themes')
+                for n in projects_data:
+                    print('  Theme name: ' + n[2])
+                    print('    Project name: ' + n[0])
+                    print('    Can auto-update: ' + n[1])
             sys.exit()
 
         if platform.startswith('win'):

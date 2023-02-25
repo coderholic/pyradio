@@ -1676,7 +1676,10 @@ class PyRadioConfig(PyRadioStations):
 
     @property
     def system_themes(self):
-        return tuple(sorted([path.basename(x).replace('.pyradio-theme', '') for x in glob.glob(path.join(path.dirname(__file__), 'themes', '*.pyradio-theme'), recursive = False)]))
+        if PY3:
+            return tuple(sorted([path.basename(x).replace('.pyradio-theme', '') for x in glob.glob(path.join(path.dirname(__file__), 'themes', '*.pyradio-theme'), recursive = False)]))
+        else:
+            return tuple(sorted([path.basename(x).replace('.pyradio-theme', '') for x in glob.glob(path.join(path.dirname(__file__), 'themes', '*.pyradio-theme'))]))
 
     def is_project_theme(self, a_theme_name):
         ''' Check if a theme name is in auto_update_frameworks
@@ -1706,7 +1709,7 @@ class PyRadioConfig(PyRadioStations):
 
     def is_default_file(self, a_theme_name):
         for n in self.auto_update_frameworks:
-            if a_theme_name == n.deault_filename_only:
+            if a_theme_name == n.default_filename_only:
                 return True
         return False
 
@@ -3156,7 +3159,7 @@ class PyRadioBase16Themes(object):
     ''' pyradio base16 file for auto download '''
     _default_theme_file = None
     ''' the default base16 file, without path and extension '''
-    deault_filename_only = 'base16-pyradio'
+    default_filename_only = 'base16-pyradio'
     ''' pyradio base16 them for download '''
     _custom_theme_file = None
 
@@ -3318,7 +3321,7 @@ class PyRadioPyWalThemes(PyRadioBase16Themes):
         self._custom_theme_file = path.join(self._themes_dir, self.THEME[self.theme_id] + '.pyradio-theme')
         self._default_theme_file = path.join(self._themes_dir, 'pywal-pyradio.pyradio-theme')
         ''' the default pywal file, without path and extension '''
-        self.deault_filename_only = 'pywal-pyradio'
+        self.default_filename_only = 'pywal-pyradio'
 
     def download(self, a_theme=None, a_path=None, print_errors=None):
         ''' download a theme
@@ -3483,7 +3486,7 @@ class PyRadioThemesShThemes(PyRadioBase16Themes):
         self._default_theme_file = path.join(self._themes_dir, 'theme-sh-pyradio.pyradio-theme')
         self._theme_sh_executable = pywhich('theme.sh')
         ''' the default theme.sh file, without path and extension '''
-        self.deault_filename_only = 'theme-sh-pyradio'
+        self.default_filename_only = 'theme-sh-pyradio'
 
         xdg = getenv('XDG_CONFIG_HOME')
         if xdg:

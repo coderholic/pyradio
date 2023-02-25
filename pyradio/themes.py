@@ -362,7 +362,7 @@ class PyRadioTheme(object):
             if ret == 0:
                 return True, 'Theme created: "{}"'.format(out_theme_name)
             elif ret == -2:
-                return False, 'Error writing theme file: {}'.format(out_theme_name)
+                return False, 'Error writing theme file: "{}"'.format(out_theme_name)
         else:
             ''' copy theme file '''
             in_file = path.join(path.dirname(__file__), 'themes', theme_name + '.pyradio-theme')
