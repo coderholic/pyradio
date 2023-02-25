@@ -41,10 +41,13 @@ except:
 PY3 = sys.version[0] == '3'
 
 if PY3:
-    from rich.console import Console
-    from rich.table import Table
-    from rich.align import Align
-    from rich import print
+    try:
+        from rich.console import Console
+        from rich.table import Table
+        from rich.align import Align
+        from rich import print
+    except:
+        pass
 
 logger = logging.getLogger(__name__)
 

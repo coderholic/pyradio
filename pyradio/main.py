@@ -26,11 +26,16 @@ PATTERN_TITLE = '%(asctime)s | %(message)s'
 
 PY3 = sys.version[0] == '3'
 
+HAS_RICH = False
 if PY3:
-    from rich.console import Console
-    from rich.table import Table
-    from rich.align import Align
-    from rich import print
+    try:
+        from rich.console import Console
+        from rich.table import Table
+        from rich.align import Align
+        from rich import print
+        HAS_RICH = True
+    except:
+        pass
 
 class MyArgParser(ArgumentParser):
 
@@ -125,6 +130,19 @@ def shell():
     if version_too_old:
         print('PyRadio requires python 2.7 or 3.5+...')
         sys.exit(1)
+
+    if not HAS_RICH and PY3:
+        print('''Module "rich" not found!
+
+Please install it and try executing PyRadio again.
+
+The module name is "python-rich" (or "python3-rich" on Debian-based and
+Ubuntu-based distributions).
+
+If nothing else works, try the following command:
+    python -m pip install rich
+''')
+        sys.exit()
 
     requested_player = ''
     # parser = ArgumentParser(description='Curses based Internet radio player')
