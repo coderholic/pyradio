@@ -23,19 +23,6 @@ default_playlist = stations
 # "0" or "Random" means play a random station
 default_station = False
 
-# Default encoding
-# This is the encoding used by default when reading data provided by
-# a station (such as song title, etc.) If reading said data ends up
-# in an error, 'utf-8' will be used instead.
-#
-# A valid encoding list can be found at:
-#   https://docs.python.org/2.7/library/codecs.html#standard-encodings
-# replacing 2.7 with specific version:
-#   3.0 up to current python version.
-#
-# Default value: utf-8
-default_encoding = utf-8
-
 # Enable mouse
 # If this options is enabled, the mouse can be used to scroll the
 # playlist, start playback, etc.
