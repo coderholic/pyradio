@@ -794,6 +794,8 @@ Two themes based on the [gruvbox](https://github.com/morhetz/gruvbox) theme.
 A theme by user [ben_chile](https://forum.maboxlinux.org/u/ben_chile) created on the [Mabox Linux](https://maboxlinux.org) Forum.
 - **pastel_based_by_sng** \
 A dim but colorful theme.
+- **catppuccin-frappe**, **catppuccin-latte**, **catppuccin-macchiato** and **catppuccin-mocha** \
+Four themes by the [Catppuccin community](https://github.com/catppuccin).
 
 Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual CSS colors can now be defined.
 
