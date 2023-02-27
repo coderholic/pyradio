@@ -176,7 +176,8 @@ class PyRadioTheme(object):
                         10: (1 + self._cnf.start_colors_at, -1),
                         11: (3 + self._cnf.start_colors_at, -1),
                         12: (10 + self._cnf.start_colors_at, -1),
-                        13: (border_color + self._cnf.start_colors_at, -1)
+                        13: (border_color + self._cnf.start_colors_at, -1),
+                        14: (9 + self._cnf.start_colors_at, -1)
                     }
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -195,6 +196,7 @@ class PyRadioTheme(object):
                         11: (3 + self._cnf.start_colors_at, 15 + self._cnf.start_colors_at),
                         12: (10 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
                         13: (border_color + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        14: (9 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
                     }
             else:
                 if self._cnf.use_transparency:
@@ -213,7 +215,8 @@ class PyRadioTheme(object):
                         10: (1 + self._cnf.start_colors_at, -1),
                         11: (3 + self._cnf.start_colors_at, -1),
                         12: (10 + self._cnf.start_colors_at, -1),
-                        13: (border_color + self._cnf.start_colors_at, -1)
+                        13: (border_color + self._cnf.start_colors_at, -1),
+                        14: (9 + self._cnf.start_colors_at, -1),
                     }
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -231,7 +234,8 @@ class PyRadioTheme(object):
                         10: (1 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
                         11: (3 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
                         12: (10 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
-                        13: (border_color + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
+                        13: (border_color + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at),
+                        14: (9 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
                     }
             for k in colors.keys():
                 curses.init_pair(k, colors[k][0], colors[k][1])

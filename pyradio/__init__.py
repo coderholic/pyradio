@@ -4,7 +4,7 @@ version_info = (0, 9, 1)
 
 # Set it to True if new stations have been
 # added to the package's stations.csv
-stations_updated = False
+stations_updated = True
 
 
 __version__ = version = '.'.join(map(str, version_info))

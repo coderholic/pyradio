@@ -1118,6 +1118,10 @@ class PyRadio(object):
         self.txtWin.refresh()
 
     def _print_body_header(self):
+        http_conn = {
+            False: ('', '' ),
+            True: ('[http forced (z)]', '[f]')
+        }
         cur_mode = self.ws.window_mode
         if cur_mode == self.ws.THEME_MODE:
             cur_mode = self.ws.previous_operation_mode
@@ -1141,17 +1145,35 @@ class PyRadio(object):
 
             align = 1
             w_header = self._cnf.station_title
+            w_conn = http_conn[self.player.force_http][0]
             if self._cnf.dirty_playlist:
                 align += 1
                 w_header = '*' + self._cnf.station_title
             while len(w_header) > self.bodyMaxX - 14:
                 w_header = w_header[:-1]
+                w_conn = False
+            w_header_left = int((self.bodyMaxX - len(w_header)) / 2) - align
+            if w_header_left < 14:
+                w_conn = False
             self.outerBodyWin.addstr(
-                0,
-                int((self.bodyMaxX - len(w_header)) / 2) - align, '[',
-                curses.color_pair(13))
+                0, w_header_left, '[', curses.color_pair(13)
+            )
             self.outerBodyWin.addstr(w_header, curses.color_pair(4))
             self.outerBodyWin.addstr(']', curses.color_pair(13))
+
+            if w_conn:
+                w_conn_left = self.bodyMaxX - len(w_conn) + 1
+                if w_header_left + len(w_header) + 10 > w_conn_left:
+                    w_conn = '[h]'
+                    w_conn_left = self.bodyMaxX - len(w_conn) + 1
+                self.outerBodyWin.addstr(0, w_conn_left,'[', curses.color_pair(13))
+                if w_conn == '[h]':
+                    self.outerBodyWin.addstr('h', curses.color_pair(14))
+                else:
+                    self.outerBodyWin.addstr('http forced (', curses.color_pair(14))
+                    self.outerBodyWin.addstr('z', curses.color_pair(4))
+                    self.outerBodyWin.addstr(')', curses.color_pair(14))
+                self.outerBodyWin.addstr(']', curses.color_pair(13))
 
         elif cur_mode == self.ws.PLAYLIST_MODE or \
                 self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \

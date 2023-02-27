@@ -39,6 +39,8 @@ except:
 
 logger = logging.getLogger(__name__)
 
+available_players = []
+
 try:  # Forced testing
     from shutil import which
     def pywhich (cmd):
@@ -2727,7 +2729,6 @@ class VlcPlayer(Player):
 def probePlayer(requested_player=''):
     ''' Probes the multimedia players which are
         available on the host system. '''
-    ret_player = None
     if logger.isEnabledFor(logging.INFO):
         logger.info('Probing available multimedia players...')
     implementedPlayers = Player.__subclasses__()
@@ -2736,25 +2737,27 @@ def probePlayer(requested_player=''):
                     ', '.join([player.PLAYER_NAME
                               for player in implementedPlayers]))
 
+    for player in implementedPlayers:
+        ret = check_player(player)
+        if ret is not None:
+            available_players.append(ret)
+    if logger.isEnabledFor(logging.INFO):
+        logger.info('Available players: ' +
+                    ', '.join([player.PLAYER_NAME
+                              for player in available_players]))
     if requested_player:
         req = requested_player.split(',')
         for r_player in req:
             if r_player == 'cvlc':
                 r_player = 'vlc'
-            for player in implementedPlayers:
-                if player.PLAYER_NAME == r_player:
-                    ret_player = check_player(player)
-                    if ret_player is not None:
-                        return ret_player
-            if ret_player is None:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('Requested player "{}" not supported'.format(r_player))
+            for a_found_player in available_players:
+                if a_found_player.PLAYER_NAME == r_player:
+                    return a_found_player
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('Requested player "{}" not supported'.format(requested_player))
+        return None
     else:
-        for player in implementedPlayers:
-            ret_player = check_player(player)
-            if ret_player is not None:
-                break
-    return ret_player
+        return available_players[0] if available_players else None
 
 def check_player(a_player):
     try:

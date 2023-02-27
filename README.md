@@ -42,6 +42,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
         * [Using the Configuration Window](#using-the-configuration-window)
     * [Changing parameters set](#changing-parameters-set)
 * [Player connection protocol](#player-connection-protocol)
+    * [Visual reminder](#visual-reminder)
 * [Player default volume level](#player-default-volume-level)
     * [MPV](#mpv)
     * [MPlayer](#mplayer)
@@ -129,18 +130,21 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 
 ```
 $ pyradio -h
-
-usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-               [-t THEME] [--show-themes] [--no-themes]
+Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
+               [-a] [-ls] [-l] [-t THEME] [--show-themes] [--no-themes]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
                [--terminal-param TERMINAL_PARAM] [-tlp] [-scd] [-ocd]
                [-ep EXTRA_PLAYER_PARAMETERS] [-ap ACTIVE_PLAYER_PARAM_ID]
-               [-lp] [-U] [--user] [-R] [--unlock] [-lt] [-d] [-V]
+               [-lp] [-U] [-R] [--unlock] [-lt] [-d] [-V]
 
 Curses based Internet radio player
 
-options:
-  -h, --help            show this help message and exit
+Options:
+  -h, --help            Show this help message and exit
+  -c CONFIG_DIR, --config-dir CONFIG_DIR
+                        Use specified configuration directory instead of the
+                        default one. PyRadio will try to create it, if it does
+                        not exist. Not available on Windows.
   -s STATIONS, --stations STATIONS
                         Use specified station CSV file.
   -p [PLAY], --play [PLAY]
@@ -191,20 +195,13 @@ options:
   -lp, --list-player-parameters
                         List extra players parameters.
   -U, --update          Update PyRadio.
-  --user                Install only for current user (not on Windows).
   -R, --uninstall       Uninstall PyRadio.
   --unlock              Remove sessions' lock file.
   -lt, --log-titles     Log titles to file.
-  -d, --debug           Start pyradio in debug mode.
+  -d, --debug           Start PyRadio in debug mode.
   -V, --version         Display version information.
+
 ```
-
-The following options can also be set in **PyRadio**'s [configuration file](#config-file):
-
-* **-s** - parameter **default_playlist** (default value: **stations**)
-* **-p** - parameter **default_station** (default value: **-1**)
-* **-u** - parameter **player** (default value: **mpv, mplayer, vlc**)
-* **-t** - parameter **theme** (default value: **dark**)
 
 ## Controls
 
@@ -664,6 +661,16 @@ When the selected player is initialized (at program startup), it reads this conf
 If the parameter has to be changed mid-session (without restarting the program), one would press "**z**" to display the "*Connection Type*" window, where the parameter's value can be set as desired.
 
 **Note:** Changes made using the "*Connection Type*" window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds. Furthermore, changing the configuration stored value, will not affect the "working" value of the parameter.
+
+### Visual reminder
+
+When this option is activated, either through the config or the keyboard, a "*[http forced (z)]*"message appears on the top right corner of the window, as shown in the following image.
+
+![http force](https://members.hellug.gr/sng/pyradio/http-force.jpg)
+
+The "**z**" in parenthesis is just a hint to remind the user that he can change the behavior by pressing "**z**".
+
+As the window shrinks in width, the message becomes a "*[h]*"; when it shrinks even more, it disappears completely.
 
 ## Player default volume level
 

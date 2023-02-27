@@ -199,9 +199,6 @@ If nothing else works, try the following command:
                             help='Show EXE file location (Windows only).')
     parser.add_argument('-U', '--update', action='store_true',
                         help='Update PyRadio.')
-    if not platform.startswith('win'):
-        parser.add_argument('--user', action='store_true', default=False,
-                            help='Install only for current user (not on Windows).')
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='Uninstall PyRadio.')
     parser.add_argument('--unlock', action='store_true',
@@ -354,7 +351,7 @@ If nothing else works, try the following command:
                 table1.add_column('Theme name', justify='center')
                 for n in projects_data:
                     table1.add_row(
-                        '[magenta]' + n[0].replace(' Project', '') + '[/magenta]',
+                        '[bold magenta]' + n[0].replace(' Project', '') + '[/bold magenta]',
                         '[green]' + n[1] + '[/green]' if n[1] == 'Yes' else '[red]' + n[1] + '[/red]',
                         '[red]' + n[2] + '[/red]' if n[2] == '-' else n[2]
                     )
@@ -438,8 +435,6 @@ If nothing else works, try the following command:
                     package=package,
                     python_version_to_use=python_version_to_use
                 )
-                if not platform.startswith('win'):
-                    upd.user = args.user
                 upd.update_pyradio()
             except RuntimeError:
                 upd = PyRadioUpdateOnWindows(

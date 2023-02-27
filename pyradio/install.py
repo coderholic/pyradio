@@ -38,16 +38,48 @@ VERSION = ''
 
 PY3 = sys.version[0] == '3'
 
+if PY3:
+    try:
+        from rich import print
+    except:
+        if platform.system().lower().startswith('win'):
+            subprocess.call('python -m pip install rich 1>NUL 2>NUL', shell=True)
+            from rich import print
+        else:
+            print('''Error: Module "rich" not found!
+
+Please install the above module and try again.
+
+Debial based distros:
+    sudo apt install python3-rich
+
+Arch based distros:
+    sudo apt install python-rich
+
+Fedora based distros:
+    sudo dnf install python-rich
+
+OpenSUSE based distros:
+    sudo zypper install python3-rich
+
+If everything else fails, try:
+    python -m pip install rich
+or
+    python3 -m pip install rich
+
+''')
+            sys.exit(1)
+
 # import logging
 # logger = logging.getLogger(__name__)
 
 ''' This is PyRadio version this
     install.py was released for
 '''
-PyRadioInstallPyReleaseVersion = '0.8.9.16'
+PyRadioInstallPyReleaseVersion = '0.9.2'
 
 def print_pyradio_on():
-    print('''
+    msg = '''[bold magenta]
                      _____       _____           _ _
                     |  __ \     |  __ \         | (_)
                     | |__) |   _| |__) |__ _  __| |_  ___
@@ -56,10 +88,14 @@ def print_pyradio_on():
                     |_|    \__, |_|  \_\__,_|\__,_|_|\___/
                             __/ |
                            |___/
-
-
-                               installation script
-                                   running on ''')
+[/bold magenta]
+                               [bold]installation script
+                                   running on[/bold]
+'''
+    if PY3:
+        print(msg)
+    else:
+        print(msg.replace('[bold]', '').replace('[/bold]', '').replace('[bold magenta]', '').replace('[/bold magenta]', ''))
 
 def print_python2():
     print('''                   _____       _   _                    ___
@@ -75,7 +111,7 @@ def print_python2():
     ''')
 
 def print_python3():
-    print('''                   _____       _   _                    ____
+    msg = '''[bold green]                   _____       _   _                    ____
                   |  __ \     | | | |                  |___ \\
                   | |__) |   _| |_| |__   ___  _ __      __) |
                   |  ___/ | | | __| '_ \ / _ \| '_ \    |__ <
@@ -83,9 +119,10 @@ def print_python3():
                   |_|    \__, |\__|_| |_|\___/|_| |_|  |____/
                           __/ |
                          |___/
+[/bold green]
 
-
-    ''')
+    '''
+    print(msg)
 
 def print_no_python2():
     print('''                                 not Supported!!!
@@ -142,11 +179,14 @@ def is_pyradio_user_installed():
     return True if ret.startswith(home) else False
 
 def isRunning():
+    count = 1
     ctypes.windll.kernel32.SetConsoleTitleW('PyRadio Installation')
-    print('PyRadio is still running. Please terminate it to continue ... ')
     while WindowExists('PyRadio: Your Internet Radio Player') or \
             WindowExists('PyRadio: Your Internet Radio Player (Session Locked)'):
         sleep(1)
+        if count > 2:
+            print('[bold magebta]PyRadio[/bold magebta] is still running. Please terminate it to continue ... ')
+        cout += 1
     print('')
 
 def version_string_to_list(this_version):
@@ -371,15 +411,15 @@ def WindowExists(title):
         win32ui.FindWindow(None, title)
     except UnboundLocalError:
         # os.system('cls')
-        msg = '''PyRadio has installed all required python modules.
+        msg = '''\n\n[bold magenta]PyRadio[/bold magenta] has installed all required python modules.
 In order for them to be properly loaded, the installation script
-has to be executed afresh.
+has to [bold green]start afresh[/bold green].
 
 Please execute the installation script again, like so:
 
-    python install.py
+    [bold red]python install.py[/bold red]
 
-        '''
+'''
         print(msg)
         sys.exit()
     except win32ui.error:
@@ -618,8 +658,8 @@ class PyRadioUpdate(object):
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
 
                     b.write('IF EXIST C:\\Users\\Spiros\\pyradio (\n')
-                    b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\install.py pyradio\n')
-                    # b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\*.py pyradio\n')
+                    # b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\install.py pyradio\n')
+                    b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\*.py pyradio\n')
                     b.write('COPY C:\\Users\\Spiros\\pyradio\\devel\\*.bat devel\n')
                     b.write(')\n')
 
@@ -639,8 +679,8 @@ class PyRadioUpdate(object):
                     b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
 
                     b.write('IF EXIST C:\\Users\\Spiros\\pyradio (\n')
-                    b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\install.py pyradio\n')
-                    # b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\*.py pyradio\n')
+                    # b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\install.py pyradio\n')
+                    b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\*.py pyradio\n')
                     b.write('COPY C:\\Users\\Spiros\\pyradio\\devel\\*.bat devel\n')
                     b.write(')\n')
 
@@ -1178,7 +1218,7 @@ if __name__ == '__main__':
                 'wheel',
                 'win10toast',
         ):
-            print('Checking module: ' + a_module + ' ...')
+            print('Checking module: [bold green]' + a_module + '[/bold green] ...')
             ret = subprocess.call('python -m pip install --upgrade ' + a_module,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL)

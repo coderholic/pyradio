@@ -92,7 +92,10 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#changing-parameters-set">Changing parameters set</a></li>
 </ul></li>
-<li><a href="#player-connection-protocol">Player connection protocol</a></li>
+<li><a href="#player-connection-protocol">Player connection protocol</a>
+<ul>
+<li><a href="#visual-reminder">Visual reminder</a></li>
+</ul></li>
 <li><a href="#player-default-volume-level">Player default volume level</a>
 <ul>
 <li><a href="#mpv">MPV</a></li>
@@ -927,18 +930,21 @@ a:visited{color: SaddleBrown;}
 <p>In any other case, and since <strong>PyRadio</strong> is currently not available via pip, you will have to <a href="build.html">build it from source</a>.</p>
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre>$ pyradio -h
-
-usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-               [-t THEME] [--show-themes] [--no-themes]
+Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
+               [-a] [-ls] [-l] [-t THEME] [--show-themes] [--no-themes]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
                [--terminal-param TERMINAL_PARAM] [-tlp] [-scd] [-ocd]
                [-ep EXTRA_PLAYER_PARAMETERS] [-ap ACTIVE_PLAYER_PARAM_ID]
-               [-lp] [-U] [--user] [-R] [--unlock] [-lt] [-d] [-V]
+               [-lp] [-U] [-R] [--unlock] [-lt] [-d] [-V]
 
 Curses based Internet radio player
 
-options:
-  -h, --help            show this help message and exit
+Options:
+  -h, --help            Show this help message and exit
+  -c CONFIG_DIR, --config-dir CONFIG_DIR
+                        Use specified configuration directory instead of the
+                        default one. PyRadio will try to create it, if it does
+                        not exist. Not available on Windows.
   -s STATIONS, --stations STATIONS
                         Use specified station CSV file.
   -p [PLAY], --play [PLAY]
@@ -989,19 +995,12 @@ options:
   -lp, --list-player-parameters
                         List extra players parameters.
   -U, --update          Update PyRadio.
-  --user                Install only for current user (not on Windows).
   -R, --uninstall       Uninstall PyRadio.
   --unlock              Remove sessions&#39; lock file.
   -lt, --log-titles     Log titles to file.
-  -d, --debug           Start pyradio in debug mode.
-  -V, --version         Display version information.</pre>
-<p>The following options can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>:</p>
-<ul>
-<li><strong>-s</strong> - parameter <strong>default_playlist</strong> (default value: <strong>stations</strong>)</li>
-<li><strong>-p</strong> - parameter <strong>default_station</strong> (default value: <strong>-1</strong>)</li>
-<li><strong>-u</strong> - parameter <strong>player</strong> (default value: <strong>mpv, mplayer, vlc</strong>)</li>
-<li><strong>-t</strong> - parameter <strong>theme</strong> (default value: <strong>dark</strong>)</li>
-</ul>
+  -d, --debug           Start PyRadio in debug mode.
+  -V, --version         Display version information.
+</pre>
 <h2 id="controls">Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre>                  Main window                                      Playlists window                   Themes window
 -------------------------------------------------------------------------------------------------------------------------------------
@@ -1344,6 +1343,12 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>When the selected player is initialized (at program startup), it reads this configuration parameter and acts accordingly.</p>
 <p>If the parameter has to be changed mid-session (without restarting the program), one would press “<strong>z</strong>” to display the “<em>Connection Type</em>” window, where the parameter’s value can be set as desired.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Changes made using the “<em>Connection Type</em>” window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds. Furthermore, changing the configuration stored value, will not affect the “working” value of the parameter.</p>
+<h3 id="visual-reminder">Visual reminder</h3>
+<p>When this option is activated, either through the config or the keyboard, a “<em>[http forced (z)]</em>”message appears on the top right corner of the window, as shown in the following image.</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/http-force.jpg" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/http-force.jpg" alt="http force" /></a></p>
+
+<p>The “<strong>z</strong>” in parenthesis is just a hint to remind the user that he can change the behavior by pressing “<strong>z</strong>”.</p>
+<p>As the window shrinks in width, the message becomes a “<em>[h]</em>”; when it shrinks even more, it disappears completely.</p>
 <h2 id="player-default-volume-level">Player default volume level <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>MPV and MPlayer, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with VLC.</p>
 <p>This introduces a problem to <strong>PyRadio</strong>: every time a user plays a station (i.e restarts playback), even though he may have already set the volume to a desired level, the playback starts at the player’s default level.</p>

@@ -21,6 +21,8 @@ It currently supports the following players: \fIMPV\fR, \fIMPlayer\fR and \fIVLC
 
 .SH Options
 
+.IP \fB-c\fR\ [\fICONFIG\fR],\ \fB\ \--config-dir\ \fR[\fICONFIG\fR]
+Use specified configuration directory instead of the default one. \fBpyradio\fR will try to create it, if it does not exist. Not available on Windows.
 .IP \fB-s\fR,\fB\ \--stations\ \fR[\fISTATIONS\fR]
 Use specified station CSV file.
 .IP \fB-p\fR,\fB\ \--play\ \fR\<\fIPLAY\fR\>
@@ -57,12 +59,14 @@ Provide extra player parameters as a string. For more information, refer to the 
 Specify the extra player parameter set to be used with the default player. \fIACTIVE_PLAYER_PARAM_ID\fR is 1-11.
 .IP \fB-lp
 List extra players parameters.
-.IP \fB-U
+.IP \fB-U\fR,\ \fB--update\fR
 Update \fBpyradio\fR.
-.IP \fB-R
+.IP \fB-R\fR,\ \fB--uninstall\fr
 Uninstall \fBpyradio\fR.
 .IP \fB--unlock
 Remove sessions' lock file.
+.IP \fB-lt\fR,\ \fB--log-titles\fR
+Log titles to file.
 .IP \fB-d\fR,\fB\ \--debug
 Enable \fBDEBUG MODE\fR.
 .IP \fB-h\fR,\fB\ \--help
@@ -705,6 +709,20 @@ If the parameter has to be changed mid-session (without restarting the program),
 
 .IP \fBNote\fR
 Changes made using the "\fIConnection Type\fR" window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds. Furthermore, changing the configuration stored value, will not affect the "working" value of the parameter.
+
+.P
+
+\fBVisual reminder\fR
+
+.RS 5
+
+When this option is activated, either through the config or the keyboard, a "\fI[http forced (z)]\fR" message appears on the top right corner of the window, as can be seen in the following image.
+
+\fIhttps://members.hellug.gr/sng/pyradio/http-force.jpg\fR
+
+The "\fIz\fR" in parenthesis is just a hint to remind the user that he can change the behavior by pressing "\fBz\fR".
+
+As the window shrinks in width, the message becomes a "\fI[h]\fR"; when it shrinks even more, it disappears completely.
 
 .SH Player Default Volume Level
 .PP

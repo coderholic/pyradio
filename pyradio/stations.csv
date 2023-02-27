@@ -4,6 +4,9 @@ Alternative (The Alternative Project),http://c9.prod.playlists.ihrhls.com/4447/p
 American Roots (Boot Liquor - SomaFM),http://somafm.com/bootliquor.pls
 Celtic (ThistleRadio - SomaFM),http://somafm.com/thistle.pls
 Chillout (Groove Salad - SomaFM),http://somafm.com/startstream=groovesalad.pls
+Groove Salad Classic (Early 2000s Ambient),https://somafm.com/gsclassic.pls
+n5MD Radio (Ambient and Experimental),https://somafm.com/n5md.pls
+Vaporwaves [SomaFM],https://somafm.com/vaporwaves.pls
 Commodore 64 Remixes (Slay Radio),http://www.slayradio.org/tune_in.php/128kbps/listen.m3u
 Covers (SomaFM),http://somafm.com/covers.pls
 Downtempo (Secret Agent - SomaFM),http://somafm.com/secretagent.pls
@@ -17,14 +20,17 @@ Indie Pop (Indie Pop Rocks! - SomaFM),http://somafm.com/indiepop130.pls
 Intelligent dance music (Cliq Hop - SomaFM),http://somafm.com/startstream=cliqhop.pls
 Jazz (Sonic Universe - SomaFM),http://somafm.com/startstream=sonicuniverse.pls
 Lounge (Illinois Street Lounge - SomaFM),http://somafm.com/illstreet.pls
+The Trip: [SomaFM],https://somafm.com/thetrip.pls
 Pop (PopTron! - SomaFM),http://somafm.com/poptron.pls
 Pop/Rock/Urban  (Frequence 3 - Paris) ,http://streams.frequence3.net/hd-mp3.m3u
 Progressive (Tags Trance Trip - SomaFM),http://somafm.com/tagstrance.pls
 Public Radio (NPR National Public Radio Stream),https://npr-ice.streamguys1.com/live.mp3
-Reggae Dancehall (Ragga Kings),http://www.raggakings.net/listen.m3u
+Ragga Kings,https://raggakings.radio:8443/stream.ogg
+Heavyweight Reggae,https://somafm.com/reggae.pls
 Rock (Digitalis - SomaFM),http://somafm.com/digitalis.pls
 Vox Noctem: Rock-Goth, http://r2d2.voxnoctem.de:8000/voxnoctem.mp3
 Beyond Metal (Progressive - Symphonic),http://streamingV2.shoutcast.com/BeyondMetal
+Metal Detector,https://somafm.com/metal.pls
 DanceUK,https://www.internet-radio.com/servers/tools/playlistgenerator/?u=http://uk2.internet-radio.com:8024/listen.pls&t=.pls
 JazzGroove,https://www.internet-radio.com/servers/tools/playlistgenerator/?u=http://199.180.72.2:8015/listen.pls?sid=1&t=.pls
 Radio Paradise - Main Mix,http://stream.radioparadise.com/aac-128
@@ -34,3 +40,4 @@ Radio Paradise - Eclectic Mix,http://stream.radioparadise.com/eclectic-128
 Echoes of Bluemars,http://streams.echoesofbluemars.org:8000/bluemars.m3u
 Echoes of Bluemars - Cryosleep,http://streams.echoesofbluemars.org:8000/cryosleep.m3u
 Echoes of Bluemars - Voices from Within,http://streams.echoesofbluemars.org:8000/voicesfromwithin.m3u
+Synphaera Radio (Space Music),https://somafm.com/synphaera.pls

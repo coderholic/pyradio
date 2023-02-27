@@ -128,6 +128,10 @@ do
     # sed -i 's|^<li>\(.*\)</p>$|<li>\1</li>|' ${out}
     # sed -i 's|^<li><p>\(.*\)</p>$|<li>\1</li>|' ${out}
 
+    if [ "$out" = "README.html" ];then
+        sed -i -e '/http-force.jpg/s/src=/style="width: 600px" src=/' "$out"
+    fi
+
     if [ "$out" = "desktop-notification.html" ];then
         sed -i -e '/pyradio-notif.jpg/s/src=/style="width: 411px" src=/' "$out"
         sed -i -e '/mac-notif.jpg/s/src=/style="width: 411px" src=/' "$out"
