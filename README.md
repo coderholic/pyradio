@@ -378,15 +378,23 @@ If this file was saved inside **PyRadio**'s configuration directory, one could u
 To use the playlist number, one would execute the commands:
 
     $ pyradio -ls
-    Playlists found in "/home/user/.config/pyradio"
-      1. hip-hop
-      2. party
-      3. stations
-      4. huge
-      5. blues
-      6. rock
-      7. pop
+
+           Playlists found in "/home/user/.config/pyradio"
+           ┏━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+           ┃  # ┃ Name     ┃    Size ┃ Date                     ┃
+           ┡━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+           │  1 │ hip-hop  │ 6.41 KB │ Mon Nov  7 18:17:47 2022 │
+           │  2 │ party    │ 1.94 KB │ Fri Nov 29 10:49:39 2021 │
+           │  3 │ stations │ 5.30 KB │ Sat Jul 18 23:32:04 2022 │
+           │  4 │ huge     │ 1.94 MB │ Wed Oct 23 11:05:09 2019 │
+           │  5 │ blues    │ 5.30 KB │ Thu Jul 16 16:30:51 2020 │
+           │  6 │ rock     │ 2.56 KB │ Fri Jan 10 00:20:07 2023 │
+           │  7 │ pop      │ 1.01 KB │ Fri Sep 18 00:06:51 2020 │
+           └────┴──────────┴─────────┴──────────────────────────┘
+
     $ pyradio -s 5
+
+**Note:** Python 2 output is much simpler, but the functionality is the same.
 
 **Note:** The default playlist to load can also be set in **PyRadio**'s [configuration file](#config-file), parameter **default_playlist** (default value is **stations**).
 

@@ -325,19 +325,37 @@ To use the playlist number, one would execute the commands:
 
 .RS 5
 
-\fBpyradio -ls\fI
+\fBpyradio -ls\fR
 
-Playlists found in "/home/user/.config/pyradio"
-  1. hip-hop
-  2. party
-  3. stations
-  4. huge
-  \fB5. blues\fI
-  6. rock
-  7. pop
+    Playlists found in "\fI/home/user/.config/pyradio\fR"
+.br
+    ┏━━━━┳━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+.br
+    ┃  # ┃ Name     ┃    Size ┃ Date                     ┃
+.br
+    ┡━━━━╇━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+.br
+    │  1 │ hip-hop  │ 6.41 KB │ Mon Nov  7 18:17:47 2022 │
+.br
+    │  2 │ party    │ 1.94 KB │ Fri Nov 29 10:49:39 2021 │
+.br
+    │  3 │ stations │ 5.30 KB │ Sat Jul 18 23:32:04 2022 │
+.br
+    │  4 │ huge     │ 1.94 MB │ Wed Oct 23 11:05:09 2019 │
+.br
+    │  \fI5\fR │ \fIblues\fR    │ 5.30 KB │ Thu Jul 16 16:30:51 2020 │
+.br
+    │  6 │ rock     │ 2.56 KB │ Fri Jan 10 00:20:07 2023 │
+.br
+    │  7 │ pop      │ 1.01 KB │ Fri Sep 18 00:06:51 2020 │
+.br
+    └────┴──────────┴─────────┴──────────────────────────┘
 
 \fBpyradio -s \fI5\fR
 
+
+.IP \fBNote\fR
+Python 2 output is much simpler, but the functionality is the same.
 
 .IP \fBNote\fR
 The default playlist to load can also be set in \fBpyradio\fR’s configuration file, parameter \fIdefault_playlist\fR (default value is \fIstations\fR).

@@ -1170,10 +1170,17 @@ class PyRadio(object):
                 if w_conn == '[h]':
                     self.outerBodyWin.addstr('h', curses.color_pair(14))
                 else:
-                    self.outerBodyWin.addstr('http forced (', curses.color_pair(14))
-                    self.outerBodyWin.addstr('z', curses.color_pair(4))
-                    self.outerBodyWin.addstr(')', curses.color_pair(14))
+                    self.outerBodyWin.addstr('http forced (z)', curses.color_pair(14))
                 self.outerBodyWin.addstr(']', curses.color_pair(13))
+
+                # self.outerBodyWin.addstr(0, w_conn_left,'[', curses.color_pair(13))
+                # if w_conn == '[h]':
+                #     self.outerBodyWin.addstr('h', curses.color_pair(14))
+                # else:
+                #     self.outerBodyWin.addstr('http forced (', curses.color_pair(14))
+                #     self.outerBodyWin.addstr('z', curses.color_pair(4))
+                #     self.outerBodyWin.addstr(')', curses.color_pair(14))
+                # self.outerBodyWin.addstr(']', curses.color_pair(13))
 
         elif cur_mode == self.ws.PLAYLIST_MODE or \
                 self.ws.operation_mode == self.ws.PLAYLIST_LOAD_ERROR_MODE or \
