@@ -140,6 +140,101 @@ def calc_can_change_colors(config):
             logger.info('Terminal can change colors: {}'.format(ret))
     return ret
 
+class SelectPlayer(object):
+
+    X = Y = maxX = maxY = 0
+    _win = _parent = None
+
+    _players = {
+        'mpv': '  MPV Media Player',
+        'mplayer': '  MPlayer Media Player',
+        'vlc': '  VLC Media Player',
+    }
+
+    def __init__(self, active_player, parent):
+        self._selected = 0
+        self._active_player = active_player
+        self._available_players = [x.PLAYER_NAME for x in player.available_players if x.PLAYER_NAME != self._active_player]
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('available players = {}'.format(player.available_players))
+            logger.debug('players: active = {0}, available = {1}'.format(self._active_player, self._available_players))
+        self.maxX = 45
+        self.hline = 36
+        self.maxY = 8 + len(self._available_players)
+        self._get_window(parent)
+
+    def _get_window(self, parent):
+        self._parent = parent
+        parent_maxY, parent_maxX = self._parent.getmaxyx()
+        self.Y = int((parent_maxY - self.maxY) / 2) + 2
+        self.X = int((parent_maxX - self.maxX) / 2)
+        self._win = curses.newwin(
+            self.maxY, self.maxX,
+            self.Y, self.X
+        )
+        self._win.bkgdset(' ', curses.color_pair(3))
+        self._win.erase()
+
+    def _print_header(self):
+        txt_col = curses.color_pair(10)
+        box_col = curses.color_pair(3)
+        caption_col = curses.color_pair(11)
+        header = ' Switch Media Player '
+        X = int( ( self.maxX - len(header) ) / 2 )
+        self._win.addstr(0, X, header, curses.color_pair(11))
+
+    def show(self, parent=None):
+        y = 0
+        if parent is not None:
+            self._get_window(parent)
+        self._win.box()
+        self._print_header()
+        self._win.addstr(1, 2, 'Active Media Player: ', curses.color_pair(10))
+        self._win.addstr(self._active_player, curses.color_pair(11))
+        self._win.addstr(3, 2, 'Please select a Media Player to activate', curses.color_pair(10))
+        for n in range(0, len(self._available_players)):
+            y = 6 + n
+            if self._selected == n:
+                self._win.addstr(4+n, 4, self._players[self._available_players[n]].ljust(self.hline), curses.color_pair(6))
+            else:
+                self._win.addstr(4+n, 4, self._players[self._available_players[n]].ljust(self.hline), curses.color_pair(10))
+        self._win.addstr(y, 2, 'and press ', curses.color_pair(10))
+        self._win.addstr('s', curses.color_pair(11))
+        self._win.addstr(', ', curses.color_pair(10))
+        self._win.addstr('Enter', curses.color_pair(11))
+        self._win.addstr(' or ', curses.color_pair(10))
+        self._win.addstr('Space', curses.color_pair(11))
+        self._win.addstr(' to Switch to', curses.color_pair(10))
+        self._win.addstr(y + 1, 2, 'it, or ', curses.color_pair(10))
+        self._win.addstr('Escape', curses.color_pair(11))
+        self._win.addstr(' to Cancel.', curses.color_pair(10))
+
+        self._win.refresh()
+
+    def _update_selection(self):
+        if len(self._available_players) > 1:
+            for n in range(0, len(self._available_players)):
+                col = 6 if self._selected == n else 10
+                self._win.chgat(4 + n, 4, self.hline, curses.color_pair(col))
+            self._win.refresh()
+
+    def keypress(self, char):
+        if char in (
+            ord('j'), curses.KEY_DOWN,
+            ord('k'), curses.KEY_UP
+        ):
+            self._selected = 1 if self._selected == 0 else 0
+            self._update_selection()
+        elif char in (
+            curses.KEY_ENTER,
+            ord('\n'), ord('\r'),
+            ord('s'), ord(' ')
+        ):
+            return self._available_players[self._selected]
+        elif char in (ord('q'), curses.KEY_EXIT, 27):
+            return None
+        return ''
+
 class PyRadio(object):
     player = None
     ws = Window_Stack()
@@ -220,6 +315,7 @@ class PyRadio(object):
     _server_selection_window  = None
     _color_config_win = None
 
+    _change_player = None
     _player_select_win = None
     _encoding_select_win = None
     _playlist_select_win = None
@@ -441,7 +537,10 @@ class PyRadio(object):
                 self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE: self._print_remote_control_server_dead_error,
                 self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
                 self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE: self._show_remote_control_server_not_active,
-                self.ws.REMOTE_CONTROL_SERVER_ERROR_MODE: self._show_remote_control_error
+                self.ws.REMOTE_CONTROL_SERVER_ERROR_MODE: self._show_remote_control_error,
+                self.ws.CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE: self._print_change_player_same_player_error,
+                self.ws.CHANGE_PLAYER_ONE_PLAYER_ERROR_MODE: self._print_change_player_one_player_error,
+                self.ws.CHANGE_PLAYER_MODE: self._redisplay_select_player,
                 }
 
         ''' list of help functions '''
@@ -742,7 +841,8 @@ class PyRadio(object):
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
                     self._show_station_info_from_thread,
-                    self._add_station_to_stations_history)
+                    self._add_station_to_stations_history
+                )
         except:
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
@@ -788,6 +888,25 @@ class PyRadio(object):
         self.playlist_selections[self.ws.PLAYLIST_MODE] = self.selections[self.ws.PLAYLIST_MODE][:-1][:]
         self.ll('setup')
         self.run()
+
+    def change_player(self, a_player):
+        if a_player == self.player.PLAYER_NAME:
+            pass
+        else:
+            for a_available_player in player.available_players:
+                if a_player == a_available_player.PLAYER_NAME:
+                    new_player = a_player(
+                        self._cnf,
+                        self.log,
+                        self.playbackTimeoutCounter,
+                        self.connectionFailed,
+                        self._show_station_info_from_thread,
+                        self._add_station_to_stations_history
+                    )
+        if new_player:
+            pass
+        else:
+            pass
 
     def _redraw(self):
         self.footerWin.noutrefresh()
@@ -3123,6 +3242,39 @@ __|Remote Control Server| cannot be started!__
                         is_message=True)
         self._remote_control_server = self._remote_control_server_thread = None
 
+    def _print_change_player_one_player_error(self):
+        players = [x.PLAYER_NAME for x in player.Player.__subclasses__() if x.PLAYER_NAME != self.player.PLAYER_NAME]
+        logger.error('players = {}'.format(players))
+        txt = '''
+            You have requested to change the |Media Player| but
+            there's only one player detected.
+
+            If you have already installed any other player
+            (|{0}| or |{1}|), please make sure its executable
+            is in your PATH.
+        '''.format(
+                players[0],
+                players[1]
+        )
+        self._show_help(txt, self.ws.CHANGE_PLAYER_ONE_PLAYER_ERROR_MODE,
+                        caption=' PyRadio ',
+                        prompt=' Press any key... ',
+                        is_message=True)
+
+    def _print_change_player_same_player_error(self):
+        txt = '''
+            |{}|: Media Player already active.
+
+            You have requested to change the |Media Player| to
+            the one that's already active.
+
+            Please try selecting a different |Media Player|.
+        '''.format(self.player.PLAYER_NAME)
+        self._show_help(txt, self.ws.CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE,
+                        caption=' PyRadio ',
+                        prompt=' Press any key... ',
+                        is_message=True)
+
     def _print_not_implemented_yet(self):
         txt = '''
             This feature has not been implemented yet...
@@ -5269,6 +5421,9 @@ __|Remote Control Server| cannot be started!__
             parent = self.outerBodyWin
         self._cnf._online_browser.show_config(parent, init, self._cannot_delete_function)
 
+    def _redisplay_select_player(self):
+        self._change_player.show(self.bodyWin)
+
     def _redisplay_browser_config(self):
         if self._cnf._online_browser:
             self._cnf._online_browser._config_win.show(parent=self.outerBodyWin)
@@ -5897,7 +6052,21 @@ __|Remote Control Server| cannot be started!__
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
 
-            if char == ord('s') and \
+            if char == ord('m') and \
+                    self.ws.operation_mode == self.ws.NORMAL_MODE:
+                ''' change player  '''
+                self._update_status_bar_right(status_suffix='')
+                if len(player.available_players) == 1:
+                    self._print_change_player_one_player_error()
+                else:
+                    self.ws.operation_mode = self.ws.CHANGE_PLAYER_MODE
+                    self._change_player = SelectPlayer(
+                        active_player=self.player.PLAYER_NAME,
+                        parent=self.bodyWin
+                    )
+                    self._change_player.show()
+
+            elif char == ord('s') and \
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
                 ''' open remote control '''
                 self._update_status_bar_right(status_suffix='')
@@ -6125,6 +6294,47 @@ __|Remote Control Server| cannot be started!__
             else:
                 self._handle_mouse(main_window=False)
             return
+
+        elif self.ws.operation_mode == self.ws.CHANGE_PLAYER_MODE:
+            ret = self._change_player.keypress(char)
+            if ret is None:
+                self._change_player = None
+                self.ws.close_window()
+                self.refreshBody()
+            elif ret != '':
+                # set player
+                self.ws.close_window()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('selected player = {}'.format(ret))
+                self._change_player = None
+                to_play = self.playing
+                if self.player.isPlaying():
+                    self.stopPlayer()
+                self.player = None
+                for i, n in enumerate(player.available_players):
+                    if n.PLAYER_NAME == ret:
+                        player_index = i
+                        break
+                self.player = player.available_players[player_index](
+                    self._cnf,
+                    self.log,
+                    self.playbackTimeoutCounter,
+                    self.connectionFailed,
+                    self._show_station_info_from_thread,
+                    self._add_station_to_stations_history
+                )
+                self.log.display_help_message = False
+                self.log.write(ret + ': Player activated!!!', help_msg=False, suffix='')
+                self.player.volume = -1
+                if to_play > -1:
+                    if to_play != self.selections:
+                        self.setStation(to_play)
+                    self.playSelection()
+                    #if self._cnf.browsing_station_service:
+                    #    self.playSelection()
+                    #else:
+                    #    self.playSelectionBrowser()
+                self.refreshBody()
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:
             if char == ord('s'):
