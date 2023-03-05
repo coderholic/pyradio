@@ -414,7 +414,7 @@ def install_player(output_folder=None, package=0, do_not_exit=False):
             if in_path[n]:
                 to_do[n] = '[bold red]{}[/bold red]. Update'.format(n+1)
         if find_vlc_on_windows():
-            to_do[2] = '[green]VLC[/green] media player is already installed'
+            to_do[2] = '[green]VLC[/green] media player is already installed.\n[bold red]      It is not recommended to be used!!![/bold red]'
         #print(in_path)
         #print(to_do)
         #print(from_path)

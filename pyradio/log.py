@@ -67,6 +67,8 @@ class Log(object):
     _song_title = ''
     _station_that_is_playing_now = ''
 
+    can_display_help_msg = None
+
     def __init__(self, config, get_web_song_title):
         self._get_web_song_title = get_web_song_title
         self._muted = False
@@ -264,7 +266,7 @@ class Log(object):
                     self.counter = None
                     return
                 ''' display press ? '''
-                if help_msg or self.display_help_message:
+                if (help_msg or self.display_help_message) and self.can_display_help_msg(msg):
                     if not self.error_msg:
                         self.counter = None
                         suffix_string = ' Press ? for help'

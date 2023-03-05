@@ -832,6 +832,7 @@ class PyRadio(object):
             logger.info(rev)
 
         self.log = Log(self._cnf, lambda: self._remote_control_server)
+        self.log.can_display_help_msg = self._can_display_help_msg
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
         try:
             self.player = player.probePlayer(
@@ -6324,7 +6325,7 @@ __|Remote Control Server| cannot be started!__
                     self._add_station_to_stations_history
                 )
                 self.log.display_help_message = False
-                self.log.write(ret + ': Player activated!!!', help_msg=False, suffix='')
+                self.log.write(ret + ': Player activated!!!', help_msg=True, suffix='')
                 self.player.volume = -1
                 if to_play > -1:
                     if to_play != self.selections:
@@ -8452,6 +8453,16 @@ __|Remote Control Server| cannot be started!__
             self._browser_config_win = None
         self.refreshBody()
 
+    def _can_display_help_msg(self, msg):
+        ''' len("Press ? for help") = 16 '''
+        if msg is None:
+            ret = False
+        else:
+            ret = self.outerBodyMaxX - len(msg) - 16 > 10 if msg else True
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     logger.debug('Display "Press ? for help": {}'.format(ret))
+        return ret
+
     def _show_delayed_notification(self, txt, delay=.75):
         if not (self._limited_height_mode or self._limited_width_mode):
             self._show_notification_with_delay(
@@ -8463,12 +8474,12 @@ __|Remote Control Server| cannot be started!__
 
     def _show_stations_history_playlist_modified(self):
         if self._limited_height_mode or self._limited_width_mode:
-            msg= 'Playlist has been modified, cannot close it...'
+            msg = 'Playlist has been modified, cannot close it...'
             if self.player.isPlaying():
                 self.log.write(msg=msg)
                 self.player.threadUpdateTitle()
             else:
-                self.log.write(msg=mgd, help_msg=True, suffix=self._status_suffix)
+                self.log.write(msg=msg, help_msg=True, suffix=self._status_suffix)
         else:
             self._show_notification_with_delay(
                     txt='____Playlist has been modified____\n___Please save it and try again___',
@@ -8478,12 +8489,12 @@ __|Remote Control Server| cannot be started!__
 
     def _show_no_station_history_notification(self):
         if self._limited_height_mode or self._limited_width_mode:
-            msg= 'History is empty!!!'
+            msg = 'History is empty!!!'
             if self.player.isPlaying():
                 self.log.write(msg=msg)
                 self.player.threadUpdateTitle()
             else:
-                self.log.write(msg=mgd, help_msg=True, suffix=self._status_suffix)
+                self.log.write(msg=msg, help_msg=True, suffix=self._status_suffix)
         else:
             self._show_delayed_notification('___History is empty!!!___')
 
