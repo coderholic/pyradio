@@ -1,4 +1,6 @@
+import sys
 import hashlib
+import csv
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -69,9 +71,34 @@ class CompareFiles(object):
                 hash_sha512.update(chunk)
                 return hash_sha512.hexdigest()
 
+    def read_file(self, a_file):
+        stations_read = []
+        with open(a_file, 'r', encoding='utf-8') as cfgfile:
+            try:
+                for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
+                    if not row:
+                        continue
+                    try:
+                        name, url = [s.strip() for s in row]
+                        stations_read.append([name, url, '', ''])
+                    except:
+                        try:
+                            name, url, enc = [s.strip() for s in row]
+                            stations_read.append([name, url, enc, ''])
+                        except:
+                            name, url, enc, onl = [s.strip() for s in row]
+                            stations_read.append([name, url, enc, onl])
+            except:
+                stations_read = []
+                return None
+        return stations_read
+
 if __name__ == '__main__':
-    cmp = CompareFiles('/home/spiros/.bashrc',
-                       '/home/spiros/.zshrc')
+    files = (
+        '/home/spiros/.config/pyradio/stations.csv',
+        '/home/spiros/projects/my-gits/pyradio/pyradio/stations.csv'
+    )
+    cmp = CompareFiles(files[0], files[1])
 
     res = cmp.different
     if res is None:
@@ -81,4 +108,20 @@ if __name__ == '__main__':
             print('Files are different')
         else:
             print('Files are equal')
+            sys.exit()
 
+    first_list = cmp.read_file(files[0])
+    second_list = cmp.read_file(files[1])
+
+    # diff = [x for x in first_list if x not in second_list] + [x for x in second_list if x not in first_list]
+    old = [x for x in first_list if x not in second_list]
+    new = [x for x in second_list if x not in first_list]
+
+
+    for n in old:
+        print(n)
+
+    print('\n\n\n')
+
+    for n in new:
+        print(n)

@@ -17,6 +17,7 @@ from .config import PyRadioConfig, SUPPORTED_PLAYERS
 from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed, version_string_to_list, get_github_tag
 from .cjkwrap import cjklen, cjkslices, fill
 from .log import Log
+from .common import StationsChanges
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -99,6 +100,14 @@ def pyradio_config_file(a_dir):
                      print('Lock file not found: "{}"'.format(lfile))
         except:
             pass
+
+def do_update_stations(pyradio_config):
+    stations_change = StationsChanges(pyradio_config)
+    if stations_change.check_if_version_needs_sync():
+        stations_change.update_stations_csv()
+    else:
+        print('File "stations.csv" already up to date!')
+    sys.exit()
 
 def __configureLogger(pyradio_config, debug=None, titles=None):
     if debug or titles:
@@ -203,6 +212,8 @@ If nothing else works, try the following command:
                         help='Uninstall PyRadio.')
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
+    parser.add_argument('-us', '--update_stations', action='store_true',
+                        help='Update "stations.csv" (if needed).')
     parser.add_argument('-lt', '--log-titles', action='store_true',
                         help='Log titles to file.')
     parser.add_argument('-d', '--debug', action='store_true',
@@ -606,6 +617,9 @@ If nothing else works, try the following command:
         if not config_already_read:
             read_config(pyradio_config)
             config_already_read = True
+
+        if args.update_stations:
+            do_update_stations(pyradio_config)
 
         if args.no_themes:
             pyradio_config.use_themes = False

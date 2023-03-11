@@ -38,6 +38,7 @@ VERSION = ''
 
 PY3 = sys.version[0] == '3'
 
+##### NO PYTHON2
 if PY3:
     try:
         from rich import print
@@ -69,6 +70,7 @@ or
 
 ''')
             sys.exit(1)
+##### END NO PYTHON2
 
 # import logging
 # logger = logging.getLogger(__name__)

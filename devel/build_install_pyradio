@@ -444,6 +444,7 @@ then
         sed -i "/open/s/, encoding='utf-8'//" "${a_file}"
         sed -i 's/console.print/# &/' "${a_file}"
         sed -i 's/from rich import print/# &/' "${a_file}"
+        sed -i '/##### NO PYTHON2/,/##### END NO PYTHON2/d' "${a_file}"
     done
 fi
 
