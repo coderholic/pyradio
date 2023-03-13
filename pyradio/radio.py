@@ -6325,16 +6325,15 @@ __|Remote Control Server| cannot be started!__
                     self._add_station_to_stations_history
                 )
                 self.log.display_help_message = False
-                self.log.write(ret + ': Player activated!!!', help_msg=True, suffix='')
+                self.log.write(ret + ': Player activated!!!', help_msg=False, suffix='')
                 self.player.volume = -1
                 if to_play > -1:
                     if to_play != self.selections:
                         self.setStation(to_play)
-                    self.playSelection()
-                    #if self._cnf.browsing_station_service:
-                    #    self.playSelection()
-                    #else:
-                    #    self.playSelectionBrowser()
+                    if self._cnf.browsing_station_service:
+                        self.playSelection()
+                    else:
+                        self.playSelectionBrowser()
                 self.refreshBody()
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:

@@ -227,8 +227,6 @@ class StationsChanges(object):
         self.PLAYLIST_HAS_NAME_URL_ENCODING = 1
         self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER = 2
 
-
-
     def _read_version(self):
         the_file = join(dirname(__file__), '__init__.py')
         lin = ''

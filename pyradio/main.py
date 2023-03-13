@@ -103,10 +103,8 @@ def pyradio_config_file(a_dir):
 
 def do_update_stations(pyradio_config):
     stations_change = StationsChanges(pyradio_config)
-    if stations_change.check_if_version_needs_sync():
+    if stations_change.stations_csv_needs_sync():
         stations_change.update_stations_csv()
-    else:
-        print('File "stations.csv" already up to date!')
     sys.exit()
 
 def __configureLogger(pyradio_config, debug=None, titles=None):
