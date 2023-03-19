@@ -326,10 +326,11 @@ class PyRadio(object):
     ''' update notification '''
     _update_version = ''
     _update_version_do_display = ''
-    _watch_theme_thread = _update_notification_thread = None
+    _watch_theme_thread = _update_notification_thread = _update_stations_thread = None
     stop_watch_theme_thread = stop_update_notification_thread = False
     _watch_theme_lock = threading.Lock()
     _update_notify_lock = threading.Lock()
+    _update_stations_lock = threading.Lock()
     _server_send_lock = threading.Lock()
 
     ''' editor class '''
@@ -350,6 +351,10 @@ class PyRadio(object):
 
     _station_rename_from_info = False
 
+    ''' to get notification about stations
+        update set it to 2
+    '''
+    _need_to_update_stations_csv = 3
 
     _limited_height_mode = False
     _limited_width_mode = False
@@ -425,150 +430,152 @@ class PyRadio(object):
         )
 
         ''' list of functions to open for entering
-            or redisplaying a mode '''
+        or redisplaying a mode '''
         self._redisplay = {
-                self.ws.NOT_IMPLEMENTED_YET_MODE: self._print_not_implemented_yet,
-                self.ws.NORMAL_MODE: self._redisplay_stations_and_playlists,
-                self.ws.PLAYLIST_MODE: self._redisplay_stations_and_playlists,
-                self.ws.CONFIG_MODE: self._redisplay_config,
-                self.ws.SELECT_PLAYER_MODE: self._redisplay_player_select_win_refresh_and_resize,
-                self.ws.SELECT_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
-                self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
-                self.ws.SELECT_PLAYLIST_MODE: self._playlist_select_win_refresh_and_resize,
-                self.ws.PASTE_MODE: self._playlist_select_paste_win_refresh_and_resize,
-                self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
-                self.ws.MAIN_HELP_MODE: self._show_main_help,
-                self.ws.MAIN_HELP_MODE_PAGE_2: self._show_main_help_page_2,
-                self.ws.MAIN_HELP_MODE_PAGE_3: self._show_main_help_page_3,
-                self.ws.MAIN_HELP_MODE_PAGE_4: self._show_main_help_page_4,
-                self.ws.MAIN_HELP_MODE_PAGE_5: self._show_main_help_page_5,
-                self.ws.PLAYLIST_HELP_MODE: self._show_playlist_help,
-                self.ws.THEME_HELP_MODE: self._show_theme_help,
-                self.ws.CONFIG_HELP_MODE: self._show_config_help,
-                self.ws.SELECT_PLAYER_HELP_MODE: self._show_config_player_help,
-                self.ws.SELECT_PLAYLIST_HELP_MODE: self._show_config_playlist_help,
-                self.ws.SELECT_STATION_HELP_MODE: self._show_config_station_help,
-                self.ws.SESSION_LOCKED_MODE: self._print_session_locked,
-                self.ws.UPDATE_NOTIFICATION_MODE: self._print_update_notification,
-                self.ws.UPDATE_NOTIFICATION_OK_MODE: self._print_update_ok_notification,
-                self.ws.UPDATE_NOTIFICATION_NOK_MODE: self._print_update_nok_notification,
-                self.ws.SELECT_ENCODING_HELP_MODE: self._show_config_encoding_help,
-                self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
-                self.ws.EDIT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
-                self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE: self._print_playlist_not_found_error,
-                self.ws.PLAYLIST_LOAD_ERROR_MODE: self._print_playlist_load_error,
-                self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE: self._redisplay_print_save_modified_playlist,
-                self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_BACK_IN_HISTORY_MODE: self._redisplay_print_save_modified_playlist,
-                self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE: self._redisplay_print_save_modified_playlist,
-                self.ws.PLAYLIST_RELOAD_CONFIRM_MODE: self._print_playlist_reload_confirmation,
-                self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE: self._print_playlist_dirty_reload_confirmation,
-                self.ws.PLAYLIST_RELOAD_ERROR_MODE: self._print_playlist_reload_error,
-                self.ws.SAVE_PLAYLIST_ERROR_1_MODE: self._print_save_playlist_error_1,
-                self.ws.SAVE_PLAYLIST_ERROR_2_MODE: self._print_save_playlist_error_2,
-                self.ws.REMOVE_STATION_MODE: self.removeStation,
-                self.ws.FOREIGN_PLAYLIST_ASK_MODE: self._print_handle_foreign_playlist,
-                self.ws.FOREIGN_PLAYLIST_MESSAGE_MODE: self._print_foreign_playlist_message,
-                self.ws.FOREIGN_PLAYLIST_COPY_ERROR_MODE: self._print_foreign_playlist_copy_error,
-                self.ws.SEARCH_NORMAL_MODE: self._redisplay_search_show,
-                self.ws.SEARCH_PLAYLIST_MODE: self._redisplay_search_show,
-                self.ws.SEARCH_THEME_MODE: self._redisplay_search_show,
-                self.ws.SEARCH_SELECT_STATION_MODE: self._redisplay_search_show,
-                self.ws.SEARCH_SELECT_PLAYLIST_MODE: self._redisplay_search_show,
-                self.ws.THEME_MODE: self._redisplay_theme_mode,
-                self.ws.PLAYLIST_RECOVERY_ERROR_MODE: self._print_playlist_recovery_error,
-                self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
-                self.ws.SEARCH_HELP_MODE: self._show_search_help,
-                self.ws.ADD_STATION_MODE: self._show_station_editor,
-                self.ws.EDIT_STATION_MODE: self._show_station_editor,
-                self.ws.LINE_EDITOR_HELP_MODE: self._show_line_editor_help,
-                self.ws.EDIT_STATION_NAME_ERROR: self._print_editor_name_error,
-                self.ws.EDIT_STATION_URL_ERROR: self._print_editor_url_error,
-                self.ws.PY2_EDITOR_ERROR: self._print_py2_editor_error,
-                self.ws.REQUESTS_MODULE_NOT_INSTALLED_ERROR: self._print_requests_not_installed_error,
-                self.ws.NETIFACES_MODULE_NOT_INSTALLED_ERROR: self._print_netifaces_not_installed_error,
-                self.ws.DNSPYTHON_MODULE_NOT_INSTALLED_ERROR: self._print_dnspython_not_installed_error,
-                self.ws.CLEAR_REGISTER_MODE: self._print_clear_register,
-                self.ws.CLEAR_ALL_REGISTERS_MODE: self._print_clear_all_registers,
-                self.ws.REGISTER_HELP_MODE: self._show_register_help,
-                self.ws.EXTRA_COMMANDS_HELP_MODE: self._show_extra_commands_help,
-                self.ws.YANK_HELP_MODE: self._show_yank_help,
-                self.ws.STATION_INFO_ERROR_MODE: self._print_station_info_error,
-                self.ws.STATION_INFO_MODE: self._show_station_info,
-                self.ws.STATION_DATABASE_INFO_MODE: self._browser_station_info,
-                self.ws.RENAME_PLAYLIST_MODE: self._show_rename_dialog,
-                self.ws.CREATE_PLAYLIST_MODE: self._show_rename_dialog,
-                self.ws.PLAYLIST_COPY_ERROR: self._print_playlist_copy_error,
-                self.ws.PLAYLIST_RENAME_ERROR: self._print_playlist_rename_error,
-                self.ws.PLAYLIST_CREATE_ERROR: self._print_playlist_create_error,
-                self.ws.PLAYLIST_NOT_SAVED_ERROR_MODE: self._print_playlist_not_saved_error,
-                self.ws.CONNECTION_MODE: self._show_http_connection,
-                self.ws.UNNAMED_REGISTER_MODE: self._show_unnamed_register,
-                self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
-                self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
-                self.ws.PLAYER_PARAMS_MODE: self._redisplay_player_select_win_refresh_and_resize,
-                self.ws.MOUSE_RESTART_INFO_MODE: self._print_mouse_restart_info,
-                self.ws.IN_PLAYER_PARAMS_EDITOR: self._redisplay_player_select_win_refresh_and_resize,
-                self.ws.USER_PARAMETER_ERROR: self._print_user_parameter_error,
-                self.ws.IN_PLAYER_PARAMS_EDITOR_HELP_MODE: self._show_params_ediror_help,
-                self.ws.STATIONS_ASK_TO_INTEGRATE_MODE: self._print_ask_to_integrate,
-                self.ws.STATIONS_INTEGRATED_MODE: self._print_integrated,
-                self.ws.VOTE_RESULT_MODE: self._print_vote_result,
-                self.ws.BROWSER_SEARCH_MODE: self._browser_search,
-                self.ws.BROWSER_SORT_MODE: self._browser_sort,
-                self.ws.BROWSER_SERVER_SELECTION_MODE: self._browser_server_selection,
-                self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
-                self.ws.BROWSER_OPEN_MODE: self._show_connect_to_server_message,
-                self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
-                self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
-                self.ws.BROWSER_PERFORMING_SEARCH_MODE: self._show_performing_search_message,
-                self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER: self._ask_to_save_browser_config_from_config,
-                self.ws.RADIO_BROWSER_CONFIG_MODE: self._redisplay_browser_config,
-                self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
-                self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG: self._ask_to_save_browser_config_from_config,
-                self.ws.SERVICE_SERVERS_UNREACHABLE: self._print_servers_unreachable,
-                self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT: self._ask_to_save_browser_config_to_exit,
-                self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_win_manage_players,
-                self.ws.WIN_PRINT_EXE_LOCATION_MODE: self._show_win_print_exe_paths,
-                self.ws.UNKNOWN_BROWSER_SERVICE_ERROR: self._print_unknown_browser_service,
-                self.ws.SCHEDULE_PLAYER_STOP_MODE: self._show_schedule_player_stop,
-                self.ws.SCHEDULE_PLAYER_STOP_HELP_MODE: self._show_schedule_player_stop_help,
-                self.ws.NO_THEMES_MODE: self._show_no_themes,
-                self.ws.REMOTE_CONTROL_SERVER_START_ERROR_MODE: self._print_remote_control_server_error,
-                self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE: self._print_remote_control_server_dead_error,
-                self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
-                self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE: self._show_remote_control_server_not_active,
-                self.ws.REMOTE_CONTROL_SERVER_ERROR_MODE: self._show_remote_control_error,
-                self.ws.CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE: self._print_change_player_same_player_error,
-                self.ws.CHANGE_PLAYER_ONE_PLAYER_ERROR_MODE: self._print_change_player_one_player_error,
-                self.ws.CHANGE_PLAYER_MODE: self._redisplay_select_player,
-                }
+            self.ws.NOT_IMPLEMENTED_YET_MODE: self._print_not_implemented_yet,
+            self.ws.NORMAL_MODE: self._redisplay_stations_and_playlists,
+            self.ws.PLAYLIST_MODE: self._redisplay_stations_and_playlists,
+            self.ws.CONFIG_MODE: self._redisplay_config,
+            self.ws.SELECT_PLAYER_MODE: self._redisplay_player_select_win_refresh_and_resize,
+            self.ws.SELECT_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
+            self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
+            self.ws.SELECT_PLAYLIST_MODE: self._playlist_select_win_refresh_and_resize,
+            self.ws.PASTE_MODE: self._playlist_select_paste_win_refresh_and_resize,
+            self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
+            self.ws.MAIN_HELP_MODE: self._show_main_help,
+            self.ws.MAIN_HELP_MODE_PAGE_2: self._show_main_help_page_2,
+            self.ws.MAIN_HELP_MODE_PAGE_3: self._show_main_help_page_3,
+            self.ws.MAIN_HELP_MODE_PAGE_4: self._show_main_help_page_4,
+            self.ws.MAIN_HELP_MODE_PAGE_5: self._show_main_help_page_5,
+            self.ws.PLAYLIST_HELP_MODE: self._show_playlist_help,
+            self.ws.THEME_HELP_MODE: self._show_theme_help,
+            self.ws.CONFIG_HELP_MODE: self._show_config_help,
+            self.ws.SELECT_PLAYER_HELP_MODE: self._show_config_player_help,
+            self.ws.SELECT_PLAYLIST_HELP_MODE: self._show_config_playlist_help,
+            self.ws.SELECT_STATION_HELP_MODE: self._show_config_station_help,
+            self.ws.SESSION_LOCKED_MODE: self._print_session_locked,
+            self.ws.UPDATE_NOTIFICATION_MODE: self._print_update_notification,
+            self.ws.UPDATE_NOTIFICATION_OK_MODE: self._print_update_ok_notification,
+            self.ws.UPDATE_NOTIFICATION_NOK_MODE: self._print_update_nok_notification,
+            self.ws.SELECT_ENCODING_HELP_MODE: self._show_config_encoding_help,
+            self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
+            self.ws.EDIT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
+            self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE: self._print_playlist_not_found_error,
+            self.ws.PLAYLIST_LOAD_ERROR_MODE: self._print_playlist_load_error,
+            self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE: self._redisplay_print_save_modified_playlist,
+            self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_BACK_IN_HISTORY_MODE: self._redisplay_print_save_modified_playlist,
+            self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_EXITING_MODE: self._redisplay_print_save_modified_playlist,
+            self.ws.PLAYLIST_RELOAD_CONFIRM_MODE: self._print_playlist_reload_confirmation,
+            self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE: self._print_playlist_dirty_reload_confirmation,
+            self.ws.PLAYLIST_RELOAD_ERROR_MODE: self._print_playlist_reload_error,
+            self.ws.SAVE_PLAYLIST_ERROR_1_MODE: self._print_save_playlist_error_1,
+            self.ws.SAVE_PLAYLIST_ERROR_2_MODE: self._print_save_playlist_error_2,
+            self.ws.REMOVE_STATION_MODE: self.removeStation,
+            self.ws.FOREIGN_PLAYLIST_ASK_MODE: self._print_handle_foreign_playlist,
+            self.ws.FOREIGN_PLAYLIST_MESSAGE_MODE: self._print_foreign_playlist_message,
+            self.ws.FOREIGN_PLAYLIST_COPY_ERROR_MODE: self._print_foreign_playlist_copy_error,
+            self.ws.SEARCH_NORMAL_MODE: self._redisplay_search_show,
+            self.ws.SEARCH_PLAYLIST_MODE: self._redisplay_search_show,
+            self.ws.SEARCH_THEME_MODE: self._redisplay_search_show,
+            self.ws.SEARCH_SELECT_STATION_MODE: self._redisplay_search_show,
+            self.ws.SEARCH_SELECT_PLAYLIST_MODE: self._redisplay_search_show,
+            self.ws.THEME_MODE: self._redisplay_theme_mode,
+            self.ws.PLAYLIST_RECOVERY_ERROR_MODE: self._print_playlist_recovery_error,
+            self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
+            self.ws.SEARCH_HELP_MODE: self._show_search_help,
+            self.ws.ADD_STATION_MODE: self._show_station_editor,
+            self.ws.EDIT_STATION_MODE: self._show_station_editor,
+            self.ws.LINE_EDITOR_HELP_MODE: self._show_line_editor_help,
+            self.ws.EDIT_STATION_NAME_ERROR: self._print_editor_name_error,
+            self.ws.EDIT_STATION_URL_ERROR: self._print_editor_url_error,
+            self.ws.PY2_EDITOR_ERROR: self._print_py2_editor_error,
+            self.ws.REQUESTS_MODULE_NOT_INSTALLED_ERROR: self._print_requests_not_installed_error,
+            self.ws.NETIFACES_MODULE_NOT_INSTALLED_ERROR: self._print_netifaces_not_installed_error,
+            self.ws.DNSPYTHON_MODULE_NOT_INSTALLED_ERROR: self._print_dnspython_not_installed_error,
+            self.ws.CLEAR_REGISTER_MODE: self._print_clear_register,
+            self.ws.CLEAR_ALL_REGISTERS_MODE: self._print_clear_all_registers,
+            self.ws.REGISTER_HELP_MODE: self._show_register_help,
+            self.ws.EXTRA_COMMANDS_HELP_MODE: self._show_extra_commands_help,
+            self.ws.YANK_HELP_MODE: self._show_yank_help,
+            self.ws.STATION_INFO_ERROR_MODE: self._print_station_info_error,
+            self.ws.STATION_INFO_MODE: self._show_station_info,
+            self.ws.STATION_DATABASE_INFO_MODE: self._browser_station_info,
+            self.ws.RENAME_PLAYLIST_MODE: self._show_rename_dialog,
+            self.ws.CREATE_PLAYLIST_MODE: self._show_rename_dialog,
+            self.ws.PLAYLIST_COPY_ERROR: self._print_playlist_copy_error,
+            self.ws.PLAYLIST_RENAME_ERROR: self._print_playlist_rename_error,
+            self.ws.PLAYLIST_CREATE_ERROR: self._print_playlist_create_error,
+            self.ws.PLAYLIST_NOT_SAVED_ERROR_MODE: self._print_playlist_not_saved_error,
+            self.ws.CONNECTION_MODE: self._show_http_connection,
+            self.ws.UNNAMED_REGISTER_MODE: self._show_unnamed_register,
+            self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
+            self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
+            self.ws.PLAYER_PARAMS_MODE: self._redisplay_player_select_win_refresh_and_resize,
+            self.ws.MOUSE_RESTART_INFO_MODE: self._print_mouse_restart_info,
+            self.ws.IN_PLAYER_PARAMS_EDITOR: self._redisplay_player_select_win_refresh_and_resize,
+            self.ws.USER_PARAMETER_ERROR: self._print_user_parameter_error,
+            self.ws.IN_PLAYER_PARAMS_EDITOR_HELP_MODE: self._show_params_ediror_help,
+            self.ws.STATIONS_ASK_TO_INTEGRATE_MODE: self._print_ask_to_integrate,
+            self.ws.STATIONS_INTEGRATED_MODE: self._print_integrated,
+            self.ws.VOTE_RESULT_MODE: self._print_vote_result,
+            self.ws.BROWSER_SEARCH_MODE: self._browser_search,
+            self.ws.BROWSER_SORT_MODE: self._browser_sort,
+            self.ws.BROWSER_SERVER_SELECTION_MODE: self._browser_server_selection,
+            self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
+            self.ws.BROWSER_OPEN_MODE: self._show_connect_to_server_message,
+            self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
+            self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
+            self.ws.BROWSER_PERFORMING_SEARCH_MODE: self._show_performing_search_message,
+            self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER: self._ask_to_save_browser_config_from_config,
+            self.ws.RADIO_BROWSER_CONFIG_MODE: self._redisplay_browser_config,
+            self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
+            self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG: self._ask_to_save_browser_config_from_config,
+            self.ws.SERVICE_SERVERS_UNREACHABLE: self._print_servers_unreachable,
+            self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT: self._ask_to_save_browser_config_to_exit,
+            self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_win_manage_players,
+            self.ws.WIN_PRINT_EXE_LOCATION_MODE: self._show_win_print_exe_paths,
+            self.ws.UNKNOWN_BROWSER_SERVICE_ERROR: self._print_unknown_browser_service,
+            self.ws.SCHEDULE_PLAYER_STOP_MODE: self._show_schedule_player_stop,
+            self.ws.SCHEDULE_PLAYER_STOP_HELP_MODE: self._show_schedule_player_stop_help,
+            self.ws.NO_THEMES_MODE: self._show_no_themes,
+            self.ws.REMOTE_CONTROL_SERVER_START_ERROR_MODE: self._print_remote_control_server_error,
+            self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE: self._print_remote_control_server_dead_error,
+            self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
+            self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE: self._show_remote_control_server_not_active,
+            self.ws.REMOTE_CONTROL_SERVER_ERROR_MODE: self._show_remote_control_error,
+            self.ws.CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE: self._print_change_player_same_player_error,
+            self.ws.CHANGE_PLAYER_ONE_PLAYER_ERROR_MODE: self._print_change_player_one_player_error,
+            self.ws.CHANGE_PLAYER_MODE: self._redisplay_select_player,
+            self.ws.UPDATE_STATIONS_CSV_RESULT_MODE: self._update_stations_result,
+            self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE: self._ask_to_update_stations_csv,
+        }
 
         ''' list of help functions '''
         self._display_help = {
-                self.ws.NORMAL_MODE: self._show_main_help,
-                self.ws.PLAYLIST_MODE: self._show_playlist_help,
-                self.ws.THEME_MODE: self._show_theme_help,
-                self.ws.SEARCH_NORMAL_MODE: self._show_search_help,
-                self.ws.SEARCH_PLAYLIST_MODE: self._show_search_help,
-                self.ws.CONFIG_MODE: self._show_config_help,
-                self.ws.SELECT_PLAYER_MODE: self._show_config_player_help,
-                self.ws.SELECT_PLAYLIST_MODE: self._show_config_playlist_help,
-                self.ws.PASTE_MODE: self._show_config_playlist_help,
-                self.ws.SELECT_STATION_MODE: self._show_config_station_help,
-                self.ws.SELECT_STATION_ENCODING_MODE: self._show_config_encoding_help,
-                self.ws.SELECT_ENCODING_MODE: self._show_config_encoding_help,
-                self.ws.EDIT_STATION_ENCODING_MODE: self._show_config_encoding_help,
-                self.ws.LINE_EDITOR_HELP_MODE: self._show_line_editor_help,
-                self.ws.REGISTER_HELP_MODE: self._show_register_help,
-                self.ws.EXTRA_COMMANDS_HELP_MODE: self._show_extra_commands_help,
-                self.ws.YANK_HELP_MODE: self._show_yank_help,
-                self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
-                self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
-                self.ws.PLAYER_PARAMS_MODE: self._show_config_player_help,
-                self.ws.IN_PLAYER_PARAMS_EDITOR: self._show_params_ediror_help,
-                self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
-                self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
-                self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
+            self.ws.NORMAL_MODE: self._show_main_help,
+            self.ws.PLAYLIST_MODE: self._show_playlist_help,
+            self.ws.THEME_MODE: self._show_theme_help,
+            self.ws.SEARCH_NORMAL_MODE: self._show_search_help,
+            self.ws.SEARCH_PLAYLIST_MODE: self._show_search_help,
+            self.ws.CONFIG_MODE: self._show_config_help,
+            self.ws.SELECT_PLAYER_MODE: self._show_config_player_help,
+            self.ws.SELECT_PLAYLIST_MODE: self._show_config_playlist_help,
+            self.ws.PASTE_MODE: self._show_config_playlist_help,
+            self.ws.SELECT_STATION_MODE: self._show_config_station_help,
+            self.ws.SELECT_STATION_ENCODING_MODE: self._show_config_encoding_help,
+            self.ws.SELECT_ENCODING_MODE: self._show_config_encoding_help,
+            self.ws.EDIT_STATION_ENCODING_MODE: self._show_config_encoding_help,
+            self.ws.LINE_EDITOR_HELP_MODE: self._show_line_editor_help,
+            self.ws.REGISTER_HELP_MODE: self._show_register_help,
+            self.ws.EXTRA_COMMANDS_HELP_MODE: self._show_extra_commands_help,
+            self.ws.YANK_HELP_MODE: self._show_yank_help,
+            self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
+            self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
+            self.ws.PLAYER_PARAMS_MODE: self._show_config_player_help,
+            self.ws.IN_PLAYER_PARAMS_EDITOR: self._show_params_ediror_help,
+            self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
+            self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
+            self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
         }
 
         ''' search classes
@@ -583,38 +590,38 @@ class PyRadio(object):
 
         ''' points to _search_classes for each supported mode '''
         self._mode_to_search = {
-                self.ws.NORMAL_MODE: 0,
-                self.ws.SELECT_STATION_MODE: 0,
-                self.ws.PLAYLIST_MODE: 1,
-                self.ws.SELECT_PLAYLIST_MODE: 1,
-                self.ws.THEME_MODE: 2,
-                self.ws.PASTE_MODE: 3,
-                }
+            self.ws.NORMAL_MODE: 0,
+            self.ws.SELECT_STATION_MODE: 0,
+            self.ws.PLAYLIST_MODE: 1,
+            self.ws.SELECT_PLAYLIST_MODE: 1,
+            self.ws.THEME_MODE: 2,
+            self.ws.PASTE_MODE: 3,
+        }
 
         ''' which search mode opens from each allowed mode '''
         self._search_modes = {
-                self.ws.NORMAL_MODE: self.ws.SEARCH_NORMAL_MODE,
-                self.ws.PLAYLIST_MODE: self.ws.SEARCH_PLAYLIST_MODE,
-                self.ws.THEME_MODE: self.ws.SEARCH_THEME_MODE,
-                self.ws.SELECT_PLAYLIST_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
-                self.ws.PASTE_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
-                self.ws.SELECT_STATION_MODE: self.ws.SEARCH_SELECT_STATION_MODE,
-                }
+            self.ws.NORMAL_MODE: self.ws.SEARCH_NORMAL_MODE,
+            self.ws.PLAYLIST_MODE: self.ws.SEARCH_PLAYLIST_MODE,
+            self.ws.THEME_MODE: self.ws.SEARCH_THEME_MODE,
+            self.ws.SELECT_PLAYLIST_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
+            self.ws.PASTE_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
+            self.ws.SELECT_STATION_MODE: self.ws.SEARCH_SELECT_STATION_MODE,
+        }
 
         ''' search modes opened from main windows '''
         self.search_main_window_modes = (
-                self.ws.SEARCH_NORMAL_MODE,
-                self.ws.SEARCH_PLAYLIST_MODE,
-                )
+            self.ws.SEARCH_NORMAL_MODE,
+            self.ws.SEARCH_PLAYLIST_MODE,
+        )
 
         ''' volume functions '''
         self.volume_functions = {
-                '+': self._volume_up,
-                '=': self._volume_up,
-                '.': self._volume_up,
-                '-': self._volume_down,
-                ',': self._volume_down,
-                'v': self._volume_save
+            '+': self._volume_up,
+            '=': self._volume_up,
+            '.': self._volume_up,
+            '-': self._volume_down,
+            ',': self._volume_down,
+            'v': self._volume_save
         }
 
         self.buttons = {
@@ -666,6 +673,9 @@ class PyRadio(object):
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
+
+        self._cls_update_stations = None
+        self._cls_update_stations_message = ''
 
     def __del__(self):
         self.transientWin = None
@@ -848,6 +858,7 @@ class PyRadio(object):
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
 
+        self._cls_update_stations = StationsChanges(self._cnf)
         if self.ws.operation_mode != self.ws.NO_PLAYER_ERROR_MODE:
             if self._cnf.command_line_params_not_ready is not None:
                 self._cnf.command_line_params = self._cnf.command_line_params_not_ready
@@ -1176,6 +1187,13 @@ class PyRadio(object):
             self._print_netifaces_not_installed_error()
         # elif not self._cnf.use_themes:
         #     self._show_no_themes()
+        else:
+            with self._update_stations_lock:
+                if self._need_to_update_stations_csv == 2:
+                    if self._cnf.station_title == 'stations' and \
+                            not self._cnf.dirty_playlist:
+                        self._need_to_update_stations_csv = 3
+                        self._ask_to_update_stations_csv()
 
         self._update_history_positions_in_list()
 
@@ -1605,6 +1623,16 @@ class PyRadio(object):
                                   lambda: self.stop_update_notification_thread))
                         self._update_notification_thread.start()
 
+            ''' check if stations.csv is updated '''
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('(detectUpdateStationsThread): checking in 10 seconds')
+            self._update_stations_thread = threading.Thread(
+                target=self.detectUpdateStationsThread,
+                args=(self._cls_update_stations.check_if_version_needs_sync,
+                      self._update_stations_lock,
+                      lambda: self.stop_update_notification_thread))
+            self._update_stations_thread.start()
+
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
             if self.play != 'False':
@@ -1702,6 +1730,7 @@ class PyRadio(object):
 
     def ctrl_c_handler(self, signum, frame):
         # ok
+        self._cls_update_stations = None
         self.detect_if_player_exited = False
         if self._cnf.dirty_playlist:
             ''' Try to auto save playlist on exit
@@ -4753,12 +4782,40 @@ __|Remote Control Server| cannot be started!__
                             mode_to_set=self.ws.STATION_INFO_MODE,
                             caption=' Station Info ', is_message=True)
 
+    def detectUpdateStationsThread(self, check_function, a_lock, stop):
+        ''' a thread to check if stations.csv is updated '''
+
+        def delay(secs, stop):
+            for i in range(0, 5 * secs):
+                sleep(.2)
+                if stop():
+                    return
+
+        delay(10, stop)
+        if stop():
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('detectUpdateThread: Asked to stop. Stoping...')
+            return
+        ret = check_function()
+        if stop():
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('detectUpdateThread: Asked to stop. Stoping...')
+            return
+        if ret:
+            with a_lock:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('detectUpdateThread: Need to update stations.csv!!!')
+                self._need_to_update_stations_csv = 2
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('detectUpdateThread: stations.csv is up to date!!!')
+
     def detectUpdateThread(self, config, a_lock, stop):
         ''' a thread to check if an update is available '''
 
         def delay(secs, stop):
-            for i in range(0, 2 * secs):
-                sleep(.5)
+            for i in range(0, 5 * secs):
+                sleep(.2)
                 if stop():
                     return
 
@@ -5657,6 +5714,172 @@ __|Remote Control Server| cannot be started!__
     def _show_schedule_player_stop_help(self):
         pass
 
+    def _update_stations_result(self):
+        '''
+        Value of self._need_to_update_stations_csv:
+
+        from update stations:
+            1 : Update not needed
+            0 : All ok
+           -1 : Cannot read stations.csv
+           -2 : File not saved
+        from reply of
+            -3 : No pressed, do not notify for this version
+            -4 : Other key pressed, notify me at next PyRadio execution
+        from write_synced_version(asked=True)
+            -5 : Cannot write last_asked file
+            -6 : Cannot write last_synced file
+        '''
+        logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
+        try:
+            logger.debug('stations update counter = {}'.format(self._update_stations_error_count))
+        except:
+            pass
+        prompt=' Press any key... '
+        if self._need_to_update_stations_csv == 1:
+            caption = ' PyRadio '
+            prompt = ''
+            txt = '''
+                  ___Stations already up to date!___
+                  '''
+        elif self._need_to_update_stations_csv == 0:
+            if self._cls_update_stations is not None:
+                self._cls_update_stations_message = '''
+                Your "|stations.csv|" file has been successfully
+                updated. The following number of stations have
+                been affected:
+                __________stations added:_|{0}|
+                ________stations updated:_|{1}|
+                ________stations deleted:_|{2}|
+                '''.format(
+                    self._cls_update_stations.counts[0],
+                    self._cls_update_stations.counts[1],
+                    self._cls_update_stations.counts[2]
+                )
+            caption = ' Stations Updated! '
+            txt = self._cls_update_stations_message
+        elif self._need_to_update_stations_csv == -1:
+            caption = ' Stations Update Error '
+            txt = '''
+                There was an error reading your "|stations.csv|"
+                file. This should not be happening!
+
+                Please close all open programs and restart
+                |PyRadio| now, to try again.
+            '''
+        elif self._need_to_update_stations_csv == -2:
+            caption = ' Stations Update Error '
+            txt = '''
+                There was an error saving your "|stations.csv"
+                file. This should not be happening!
+
+                Please close all open programs and restart
+                |PyRadio| now, to try again.
+            '''
+        elif self._need_to_update_stations_csv == -3:
+            caption=' Stations not updated '
+            txt = '''
+                    You have chosen not to update "|stations.csv|"
+                    at this time.
+
+                    You will not be asked to do so until |PyRadio|
+                    updates its default stations again.
+
+                    You can always update them manually with the
+                    following command:
+                    __________________|pyradio -us|
+                     '''
+        elif self._need_to_update_stations_csv == -4:
+            caption=' Stations not updated '
+            txt = '''
+                    You have chosen not to update "|stations.csv|" at
+                    this time. You can always update it manually with
+                    the following command:
+                    __________________|pyradio -us|
+                     '''
+        elif self._need_to_update_stations_csv == -5 and \
+                self._update_stations_error_count < 6:
+            caption = ' Error writing file ({}/5) '.format(self._update_stations_error_count)
+            txt = '''
+                |PyRadio| cannot write the "|asked_sync|" file.
+                This means that you will be asked to sync the stations
+                next time the program is executed.
+
+                Please close all open programs and documents and press
+                any key to try to write it again.
+            '''
+        elif self._need_to_update_stations_csv == -5 and \
+                self._update_stations_error_count >= 6:
+            self.ws.close_window()
+            self.refreshBody()
+            caption = ' Error writing file '
+            if self._cls_update_stations is not None:
+                self._cls_update_stations_message = '''
+                    |PyRadio| did not write the "|asked_sync|" file.
+                    Please create the file
+                    |{0}|
+                    and write in it
+                    ______"|{1}|" (no quotes).
+                '''.format(
+                    self._cls_update_stations._asked_sync_file,
+                    self._cls_update_stations.version_to_write
+                )
+            txt = self._cls_update_stations_message
+        elif self._need_to_update_stations_csv == -6 and \
+                self._update_stations_error_count < 6:
+            caption = ' Error writing file ({}/5) '.format(self._update_stations_error_count)
+            txt = '''
+                |PyRadio| cannot write the "|last_sync|" file.
+                This means that although stations have been synced,
+                |PyRadio| will try to sync them again next time,
+                which means that you may end up with duplicates.
+
+                Please close all open programs and documents and press
+                any key to try to write it again.
+            '''
+        elif self._need_to_update_stations_csv == -6 and \
+                self._update_stations_error_count >= 6:
+            self.ws.close_window()
+            self.refreshBody()
+            caption = ' Error writing file '
+            if self._cls_update_stations is not None:
+                self._cls_update_stations_message = '''
+                    |PyRadio| did not write the "|last_sync|" file.
+                    Please create the file
+                    |{0}|
+                    and write in it
+                    ______"|{1}|" (no quotes).
+                '''.format(
+                    self._cls_update_stations._last_sync_file,
+                    self._cls_update_stations.version_to_write
+                )
+            txt = self._cls_update_stations_message
+        else:
+            return
+        self._show_help(txt,
+                        self.ws.UPDATE_STATIONS_CSV_RESULT_MODE,
+                        caption=caption,
+                        prompt=prompt,
+                        is_message=True)
+
+    def _ask_to_update_stations_csv(self):
+        txt = '''
+                |PyRadio| default stations (file "|stations.csv|") has been
+                updated upstream.
+
+                Do you want to update your "|stations.csv|" file with the
+                upstream changes?
+
+                Press |y| to update, |n| to decline and not be asked again
+                for this version, or any other key to close this window
+                and be asked next time you execute |PyRadio|.
+                 '''
+        self._show_help(txt,
+                        self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE,
+                        caption=' Stations update ',
+                        prompt='',
+                        is_message=True)
+
     def _ask_to_save_browser_config_to_exit(self):
         if self._cnf.online_browser:
             title = self._cnf.online_browser.BROWSER_NAME
@@ -5895,6 +6118,10 @@ __|Remote Control Server| cannot be started!__
             )
 
     def keypress(self, char):
+        if char == curses.KEY_F2:
+            self._need_to_update_stations_csv = 2
+            return
+
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
             if logger.isEnabledFor(logging.debug):
@@ -6294,6 +6521,52 @@ __|Remote Control Server| cannot be started!__
                 self._handle_mouse()
             else:
                 self._handle_mouse(main_window=False)
+            return
+
+        elif self.ws.operation_mode == self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE:
+            self.ws.close_window()
+            self.refreshBody()
+            ret = -1
+            if char == ord('y'):
+                ret = self._need_to_update_stations_csv = self._cls_update_stations.update_stations_csv(print_messages=False)
+                if self._need_to_update_stations_csv == -6:
+                    self._update_stations_error_count = 0
+                    while True:
+                        ret = self._need_to_update_stations_csv = self._cls_update_stations.write_synced_version()
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
+                        if self._need_to_update_stations_csv == -6:
+                            self._update_stations_error_count += 1
+                            if self._update_stations_error_count > 4:
+                                self._update_stations_error_count += 1
+                                break
+                            self._update_stations_result()
+                            self.bodyWin.getch()
+                        else:
+                            break
+                if self._cnf.station_title == 'stations':
+                    self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
+
+            elif char == ord('n'):
+                self._update_stations_error_count = 0
+                while True:
+                    ret = self._need_to_update_stations_csv = self._cls_update_stations.write_synced_version(asked=True)
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
+                    if self._need_to_update_stations_csv == -5:
+                        self._update_stations_error_count += 1
+                        if self._update_stations_error_count > 4:
+                            self._update_stations_error_count += 1
+                            break
+                        self._update_stations_result()
+                        self.bodyWin.getch()
+                    else:
+                        break
+            if ret == -1:
+                self._need_to_update_stations_csv = -4        # next time
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
+            self._update_stations_result()
             return
 
         elif self.ws.operation_mode == self.ws.CHANGE_PLAYER_MODE:

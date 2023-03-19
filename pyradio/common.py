@@ -220,12 +220,13 @@ class StationsChanges(object):
 
     def __init__(self, config):
         self._cnf = config
-        self._last_sync_file = join(self._cnf.data_dir, 'last_sync')
-        self._asked_sync_file = join(self._cnf.data_dir, 'asked_sync')
+        self._last_sync_file = join(self._cnf.data_dir, 'last-sync')
+        self._asked_sync_file = join(self._cnf.data_dir, 'asked-sync')
 
         self.PLAYLIST_HAS_NAME_URL = 0
         self.PLAYLIST_HAS_NAME_URL_ENCODING = 1
         self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER = 2
+        self.counts = [0, 0, 0]
 
     def _read_version(self):
         the_file = join(dirname(__file__), '__init__.py')
@@ -249,13 +250,14 @@ class StationsChanges(object):
                 pass
         return None
 
-    def _write_synced_version(self, asked=False):
+    def write_synced_version(self, asked=False):
         out_file = self._asked_sync_file if asked else self._last_sync_file
         try:
             with open(out_file, 'w', encoding='utf-8') as l:
-                l.write(str(self.version_changed).replace('(', '').replace(')', ''))
+                l.write(self.version_to_write)
         except:
-            pass
+            return -5 if asked else -6
+        return -3 if asked else 0
 
     def _open_stations_file(self):
         self._stations = []
@@ -286,7 +288,7 @@ class StationsChanges(object):
             return True
         return False
 
-    def _save_stations_file(self):
+    def _save_stations_file(self, print_messages=True):
         self._out_stations_file = join(self._cnf.stations_dir, 'stations-new.csv')
         self._bck_stations_file = join(self._cnf.stations_dir, 'stations.csv.bck')
         try:
@@ -318,7 +320,8 @@ class StationsChanges(object):
             remove(self._bck_stations_file)
         except:
             pass
-        print('File "stations.csv" updated...')
+        if print_messages:
+            print('File "stations.csv" updated...')
         return True
 
     def _format_playlist_row_out(self, a_row):
@@ -382,6 +385,7 @@ class StationsChanges(object):
             self.keys.reverse()
         # print('keys = {}'.format(self.keys))
         self.version_changed = self.keys[-1]
+        self.version_to_write = str(self.version_changed).replace('(', '').replace(')', '')
         if print_messages:
             print('Updating "stations.csv"')
             print('Last updated version: {}'.format(self._format_vesion(self.version_changed)))
@@ -398,44 +402,103 @@ class StationsChanges(object):
             a_row.append('')
         return a_row
 
-    def update_stations_csv(self):
-        ''' update stations.csv '''
-        if self.stations_csv_needs_sync(print_messages=True):
+    def update_stations_csv(self, print_messages=True):
+        ''' update stations.csv
+            Returns:
+                 1 : Update not needed
+                 0 : All ok
+                -1 : Cannot read stations.csv
+                -2 : File not saved
+
+
+        '''
+        if self.stations_csv_needs_sync(print_messages=print_messages):
             if not self._open_stations_file():
-                print('Cannot read "stations.csv"')
+                if print_messages:
+                    print('Cannot read "stations.csv"')
                 return -1
             # for n in self._stations:
             #     print(n)
 
             for k in self.keys:
-                print('  From version: {}'.format('.'.join(map(str, k))))
+                if print_messages:
+                    print('  From version: {}'.format('.'.join(map(str, k))))
                 for n in self.versions[k][2]:
                     found = [x for x in self._stations if x[0] == n[0]]
                     if found:
                         for an_item in found:
-                            if PY3:
-                                print('[red]    --- deleting: "[green]{}[/green]"[/red]'.format(an_item[0]))
-                            else:
-                                print('    --- deleting: "{}"'.format(an_item[0]))
+                            if print_messages:
+                                if PY3:
+                                    print('[red]    --- deleting: "[green]{}[/green]"[/red]'.format(an_item[0]))
+                                else:
+                                    print('    --- deleting: "{}"'.format(an_item[0]))
+                            self.counts[2] += 1
                             self._stations.pop(self._stations.index(an_item))
                 for n in self.versions[k][1]:
                     found = [x for x in self._stations if x[0] == n[1][n[0]]]
                     if found:
-                        if PY3:
-                            print('[plum4]    +/- updating: "[green]{}[/green]"[/plum4]'.format(found[0][0]))
-                        else:
-                            print('    +/- updating: "{}"'.format(found[0][0]))
+                        if print_messages:
+                            if PY3:
+                                print('[plum4]    +/- updating: "[green]{}[/green]"[/plum4]'.format(found[0][0]))
+                            else:
+                                print('    +/- updating: "{}"'.format(found[0][0]))
+                        self.counts[1] += 1
                         index = self._stations.index(found[0])
                         self._stations[index] = self._format_playlist_row_in(n[1])
                 for n in self.versions[k][0]:
-                    if PY3:
-                        print('[magenta]    +++   adding: "[green]{}[/green]"[/magenta]'.format(n[0]))
-                    else:
-                        print('    +++   adding: "{}"'.format(n[0]))
+                    if print_messages:
+                        if PY3:
+                            print('[magenta]    +++   adding: "[green]{}[/green]"[/magenta]'.format(n[0]))
+                        else:
+                            print('    +++   adding: "{}"'.format(n[0]))
+                    self.counts[0] += 1
                     self._stations.append(self._format_playlist_row_in(n))
 
-            if self._save_stations_file():
-                self._write_synced_version()
+            if self._save_stations_file(print_messages=print_messages):
+                ret = self.write_synced_version()
+                if ret == -6:
+                    if print_messages:
+
+                        if PY3:
+                            txt = '''
+[red]Error:[/red] [magenta]PyRadio[/magenta] could not write the "last_sync" file.
+This means that although stations have been synced, [magenta]PyRadio[/magenta] will try
+to sync them again next time, which means that you may end up with
+duplicate stations.
+
+Please close all open programs and documents and create the file
+[green]{0}[/green]
+and write in it
+      "[green]{1}[/green]" (no quotes).
+                        '''.format(
+                            self._last_sync_file,
+                            self.version_to_write
+                        )
+                        else:
+                            txt = '''
+Error: PyRadio could not write the "last_sync" file.
+This means that although stations have been synced, PyRadio will try
+to sync them again next time, which means that you may end up with
+duplicate stations.
+
+Please close all open programs and documents and create the file
+{0}
+and write in it
+      "{1}" (no quotes).
+                        '''.format(
+                            self._last_sync_file,
+                            self.version_to_write
+                        )
+                    print(txt)
+
+                elif print_messages:
+                    if PY3:
+                        print('\n[bold]Summary[/bold]\n[magenta]    +++ added   :[/magenta]  {0}\n[plum4]    +/- updated :[/plum4]  {1}\n[red]    --- deleted :[/red]  {2}'.format(self.counts[0], self.counts[1], self.counts[2]))
+                    else:
+                        print('\nSummary:\n    +++ added   :  {0}\n    +/- updated :  {1}\n    --- deleted :  {2}'.format(self.counts[0], self.counts[1], self.counts[2]))
+                return ret
+            return -2
+        return 1
 
         # print('\n\n\n')
         # for n in self._stations:
