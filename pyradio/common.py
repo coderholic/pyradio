@@ -6,6 +6,12 @@ from os import rename, remove
 from os.path import exists, dirname, join
 from copy import deepcopy
 from rich import print
+import logging
+
+logger = logging.getLogger(__name__)
+
+import locale
+locale.setlocale(locale.LC_ALL, "")
 
 PY3 = sys_version[0] == '3'
 
@@ -350,6 +356,8 @@ class StationsChanges(object):
         ret = self.stations_csv_needs_sync(print_messages=False)
         self.asked_sync = self._read_synced_version(asked=True)
         if self.version_changed == self.asked_sync:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('asked_sync is equal to version_changed!!!')
             return False
         return ret
 

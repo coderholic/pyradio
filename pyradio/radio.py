@@ -22,7 +22,6 @@ from platform import system
 from time import ctime, sleep
 from datetime import datetime
 import glob
-import logging
 try:
     import psutil
     HAVE_PSUTIL = True
@@ -1190,8 +1189,14 @@ class PyRadio(object):
         else:
             with self._update_stations_lock:
                 if self._need_to_update_stations_csv == 2:
+                    logger.error('\n\nstations title = "{0}"\ndirty = {1}\n\n'.format(self._cnf.station_title, self._cnf.dirty_playlist))
                     if self._cnf.station_title == 'stations' and \
-                            not self._cnf.dirty_playlist:
+                            self._cnf.dirty_playlist:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Not asking to update stations.csv; playlist is dirty!!!')
+                    else:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Asking to update stations.csv!!!')
                         self._need_to_update_stations_csv = 3
                         self._ask_to_update_stations_csv()
 
@@ -5787,7 +5792,7 @@ __|Remote Control Server| cannot be started!__
 
                     You can always update them manually with the
                     following command:
-                    __________________|pyradio -us|
+                    _______________|pyradio -us|
                      '''
         elif self._need_to_update_stations_csv == -4:
             caption=' Stations not updated '
