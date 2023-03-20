@@ -1733,11 +1733,11 @@ class PyRadio(object):
         else:
             self.search.box_color = curses.color_pair(5)
 
-    def ctrl_c_handler(self, signum, frame):
+    def ctrl_c_handler(self, signum, frame, save_playlist=True):
         # ok
         self._cls_update_stations = None
         self.detect_if_player_exited = False
-        if self._cnf.dirty_playlist:
+        if self._cnf.dirty_playlist and save_playlist:
             ''' Try to auto save playlist on exit
                 Do not check result!!! '''
             self.saveCurrentPlaylist()
@@ -7819,7 +7819,7 @@ __|Remote Control Server| cannot be started!__
                 self.detect_if_player_exited = False
                 if self.player:
                     self.stopPlayer()
-                self._cnf.save_config()
+                self.ctrl_c_handler(0, 0, False)
                 self._wait_for_threads()
                 return -1
             elif char in (curses.KEY_EXIT, ord('q'), 27):
