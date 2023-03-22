@@ -395,13 +395,15 @@ class StationsChanges(object):
                         index = self._stations.index(found[0])
                         self._stations[index] = self._format_playlist_row_in(n[1])
                 for n in self.versions[k][0]:
-                    if print_messages:
-                        if PY3:
-                            print('[magenta]    +++   adding: "[green]{}[/green]"[/magenta]'.format(n[0]))
-                        else:
-                            print('    +++   adding: "{}"'.format(n[0]))
-                    self.counts[0] += 1
-                    self._stations.append(self._format_playlist_row_in(n))
+                    found = [x for x in self._stations if x[0] == n[0]]
+                    if not found:
+                        if print_messages:
+                            if PY3:
+                                print('[magenta]    +++   adding: "[green]{}[/green]"[/magenta]'.format(n[0]))
+                            else:
+                                print('    +++   adding: "{}"'.format(n[0]))
+                        self.counts[0] += 1
+                        self._stations.append(self._format_playlist_row_in(n))
 
             if self._save_stations_file(print_messages=print_messages):
                 ret = self.write_synced_version()
