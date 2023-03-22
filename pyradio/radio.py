@@ -1623,14 +1623,18 @@ class PyRadio(object):
                         self._update_notification_thread.start()
 
             ''' check if stations.csv is updated '''
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('(detectUpdateStationsThread): checking in 10 seconds')
-            self._update_stations_thread = threading.Thread(
-                target=self.detectUpdateStationsThread,
-                args=(self._cls_update_stations.check_if_version_needs_sync,
-                      self._update_stations_lock,
-                      lambda: self.stop_update_notification_thread))
-            self._update_stations_thread.start()
+            if self._cnf.locked:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('(detectUpdateStationsThread): not starting; session is locked!!!')
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('(detectUpdateStationsThread): checking in 10 seconds')
+                self._update_stations_thread = threading.Thread(
+                    target=self.detectUpdateStationsThread,
+                    args=(self._cls_update_stations.check_if_version_needs_sync,
+                          self._update_stations_lock,
+                          lambda: self.stop_update_notification_thread))
+                self._update_stations_thread.start()
 
             #signal.signal(signal.SIGINT, self.ctrl_c_handler)
             self.log.write(msg='Selected player: ' + self.player.PLAYER_NAME, help_msg=True)
@@ -8337,7 +8341,14 @@ __|Remote Control Server| cannot be started!__
                     if self._cnf.browsing_station_service:
                         return
                     if self.number_of_items > 0:
-                        self.removeStation()
+                        if self._cnf.locked:
+                            self._show_notification_with_delay(
+                                    txt='___Cannnot delete station!!!___\n______Session is locked',
+                                    mode_to_set=self.ws.NORMAL_MODE,
+                                    callback_function=self.refreshBody)
+                            pass
+                        else:
+                            self.removeStation()
                     return
 
                 elif char in(ord('s'), ):
