@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2023 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "February 2023" pyradio
+.TH pyradio 1 "March 2023" pyradio
 
 .SH Name
 .PP
@@ -65,6 +65,8 @@ Update \fBpyradio\fR.
 Uninstall \fBpyradio\fR.
 .IP \fB--unlock
 Remove sessions' lock file.
+.IP \fB-us\fR,\ \fB--update_stations
+Update "\fIstations.csv\fR" (if needed).
 .IP \fB-lt\fR,\ \fB--log-titles\fR
 Log titles to file.
 .IP \fB-d\fR,\fB\ \--debug
@@ -286,6 +288,77 @@ If you already have a custom \fIstations.csv\fR file, but want to update it with
 
 .IP \fBNote:
 Older versions used to use \fI~/.pyradio\fR as default stations file. If this file is found, it will be copied to use's config directory (e.g. \fI~/.config/pyradio\fR) and renamed to \fIstations.csv\fR or if this file exists, to \fIpyradio.csv\fR. In this case, this file will be the default one.
+
+.PP
+.B
+Integrating new stations
+
+When the package's "\fIstations.csv\fR" files is updated, the changes it has will not automatically appear in the user's stations file.
+
+\fBpyradio\fR will display a message asking the user to either update the file, ignore the changes for this version or postpone his decision for the next time \fBPyRadio\fR will be executed.
+
+Either way, the user can always manually update his \fBstations file\fR, by issuing the following command:
+
+.RS 4
+\fIpyradio -us\fR
+.RE
+
+If changes have been applied, a message resembling the following will appear:
+
+.RS 4
+\fIReading config...
+.br
+Updating "\fBstations.csv\fI"
+.br
+Last updated version: \fB0.9.2\fI
+.br
+ Last synced version: \fBNone\fI
+.br
+  From version: \fB0.9.2\fI
+.br
+    +/- updating: "\fBReggae Dancehall (Ragga Kings)\fI"
+.br
+    +++   adding: "\fBGroove Salad Classic (Early 2000s Ambient)\fI"
+.br
+    +++   adding: "\fBn5MD Radio (Ambient and Experimental)\fI"
+.br
+    +++   adding: "\fBVaporwaves [SomaFM]\fI"
+.br
+    +++   adding: "\fBThe Trip: [SomaFM]\fI"
+.br
+    +++   adding: "\fBHeavyweight Reggae\fI"
+.br
+    +++   adding: "\fBMetal Detector\fI"
+.br
+    +++   adding: "\fBSynphaera Radio (Space Music)\fI"
+.br
+
+.br
+\fBSummary\fI
+.br
+    +++ added   :  \fB7\fI
+.br
+    +/- updated :  \fB1\fI
+.br
+    --- deleted :  \fB0\fI
+.br
+\fR
+.RE
+
+If the file is already up to date, the following message will be displayed:
+
+.RS 4
+\fIReading config...
+.br
+Updating "\fBstations.csv\fI"
+.br
+Last updated version: \fB0.9.2\fI
+.br
+ Last synced version: \fB0.9.2\fI
+.br
+Already synced: "\fBstations.csv\fI"
+
+.RE
 
 .PP
 .B

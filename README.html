@@ -935,7 +935,7 @@ Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
                [--terminal-param TERMINAL_PARAM] [-tlp] [-scd] [-ocd]
                [-ep EXTRA_PLAYER_PARAMETERS] [-ap ACTIVE_PLAYER_PARAM_ID]
-               [-lp] [-U] [-R] [--unlock] [-lt] [-d] [-V]
+               [-lp] [-U] [-R] [--unlock] [-us] [-lt] [-d] [-V]
 
 Curses based Internet radio player
 
@@ -997,6 +997,8 @@ Options:
   -U, --update          Update PyRadio.
   -R, --uninstall       Uninstall PyRadio.
   --unlock              Remove sessions&#39; lock file.
+  -us, --update_stations
+                        Update &quot;stations.csv&quot; (if needed).
   -lt, --log-titles     Log titles to file.
   -d, --debug           Start PyRadio in debug mode.
   -V, --version         Display version information.
@@ -1140,9 +1142,36 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong>~/.pyradio</strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong>~/.config/pyradio</strong>) and renamed to <strong>stations.csv</strong> or if this file exists, to <strong>pyradio.csv</strong>. In this case, this file will be the default one.</p>
 <h3 id="integrating-new-stations">Integrating new stations</h3>
 <p>When the package’s “<em>stations.csv</em>” files is updated, the changes it has will not automatically appear in the user’s stations file.</p>
-<p>What <strong>PyRadio</strong> will do is inform the user that these changes do exist and give him a chance to <strong>integrate</strong> these changes to his stations file, by appending the new stations to the file.</p>
-<p>When this is done, the first added station will be selected so that the user can inspect the changes and decide to keep or delete the new stations.</p>
-<p><strong>PyRadio</strong> will only add stations to the user’s stations file; no station will be deleted as a result of this procedure.</p>
+<p><strong>PyRadio</strong> will display a message asking the user to either update the file, ignore the changes for this version or postpone his decision for the next time <strong>PyRadio</strong> will be executed.</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png" alt="Pyradio stations update" /></a></p>
+
+<p>Either way, the user can always manually update his <strong>stations file</strong>, by issuing the following command:</p>
+<pre>pyradio -us</pre>
+<p>If changes have been applied, a message resembling the following will appear:</p>
+<pre>Reading config...
+Updating &quot;stations.csv&quot;
+Last updated version: 0.9.2
+ Last synced version: None
+  From version: 0.9.2
+    +/- updating: &quot;Reggae Dancehall (Ragga Kings)&quot;
+    +++   adding: &quot;Groove Salad Classic (Early 2000s Ambient)&quot;
+    +++   adding: &quot;n5MD Radio (Ambient and Experimental)&quot;
+    +++   adding: &quot;Vaporwaves [SomaFM]&quot;
+    +++   adding: &quot;The Trip: [SomaFM]&quot;
+    +++   adding: &quot;Heavyweight Reggae&quot;
+    +++   adding: &quot;Metal Detector&quot;
+    +++   adding: &quot;Synphaera Radio (Space Music)&quot;
+
+Summary
+    +++ added   :  7
+    +/- updated :  1
+    --- deleted :  0</pre>
+<p>If the file is already up to date, the following message will be displayed:</p>
+<pre>Reading config...
+Updating &quot;stations.csv&quot;
+Last updated version: 0.9.2
+ Last synced version: 0.9.2
+Already synced: &quot;stations.csv&quot;</pre>
 <h3 id="specifying-a-playlist-to-load-command-line">Specifying a playlist to load (command line)</h3>
 <p><strong>PyRadio</strong> will normally load its default playlist file, as described above, upon its execution. A different file can be loaded when the <strong>-s</strong> command line option is used.</p>
 <p>The <strong>-s</strong> option will accept:</p>

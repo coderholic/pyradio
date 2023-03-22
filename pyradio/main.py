@@ -210,7 +210,7 @@ If nothing else works, try the following command:
                         help='Uninstall PyRadio.')
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
-    parser.add_argument('-us', '--update_stations', action='store_true',
+    parser.add_argument('-us', '--update-stations', action='store_true',
                         help='Update "stations.csv" (if needed).')
     parser.add_argument('-lt', '--log-titles', action='store_true',
                         help='Log titles to file.')

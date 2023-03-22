@@ -389,7 +389,7 @@ class PyRadioStations(object):
         self.stations_history = self.normal_stations_history
 
     def save_last_playlist(self, sel):
-        lp = path.join(self.stations_dir, 'last_playlist')
+        lp = path.join(self.data_dir, 'last-playlist')
         llp = self._ps.last_local_playlist
         out_pl = [llp[2], llp[4], llp[5]]
         if llp[2]:
@@ -2167,43 +2167,53 @@ class PyRadioConfig(PyRadioStations):
                 To be used by main.py only
         '''
         playlist = ''
-        lp = path.join(self.stations_dir, 'last_playlist')
-        print('lp = "{}"'.format(lp))
-        if path.exists(lp):
-            with open(lp, 'r', encoding='utf-8') as f:
-                for row in csv.reader(filter(lambda row: row[0]!='#', f), skipinitialspace=True):
-                    if not row:
-                        continue
-                    self.last_playlist_to_open = row
+        lps = (
+            path.join(self.data_dir, 'last-playlist'),
+            path.join(self.stations_dir, 'last_playlist'),
+            path.join(self.stations_dir, 'last-playlist')
+        )
+        for lp in lps:
+            # print('lp = "{}"'.format(lp))
+            if path.exists(lp):
+                with open(lp, 'r', encoding='utf-8') as f:
+                    for row in csv.reader(filter(lambda row: row[0]!='#', f), skipinitialspace=True):
+                        if not row:
+                            continue
+                        self.last_playlist_to_open = row
 
-            if len(self.last_playlist_to_open) == 0:
-                self.last_playlist_to_open = []
-                return None
+                if len(self.last_playlist_to_open) == 0:
+                    self.last_playlist_to_open = []
+                    return None
 
-            if len(self.last_playlist_to_open) > 3:
-                self.last_playlist_to_open = self.last_playlist_to_open[:3]
+                if len(self.last_playlist_to_open) > 3:
+                    self.last_playlist_to_open = self.last_playlist_to_open[:3]
 
-            while len(self.last_playlist_to_open) < 3:
-                self.last_playlist_to_open.append(0)
+                while len(self.last_playlist_to_open) < 3:
+                    self.last_playlist_to_open.append(0)
 
-            for i in range(-1, -3, -1):
-                try:
-                    x = int(self.last_playlist_to_open[i])
-                except ValueError:
-                    x = -1 if i == -1 else 0
-                self.last_playlist_to_open[i] = x
+                for i in range(-1, -3, -1):
+                    try:
+                        x = int(self.last_playlist_to_open[i])
+                    except ValueError:
+                        x = -1 if i == -1 else 0
+                    self.last_playlist_to_open[i] = x
 
 
-            playlist = self.last_playlist_to_open[0]
-            if playlist != '':
-                if path.exists(path.join(self.stations_dir, playlist + '.csv')):
-                    print('=> Opening last playlist: "' + playlist + '"')
-                    self._last_opened_playlist_name = playlist
-                    return playlist
+                playlist = self.last_playlist_to_open[0]
+                if playlist != '':
+                    if path.exists(path.join(self.stations_dir, playlist + '.csv')):
+                        print('=> Opening last playlist: "' + playlist + '"')
+                        self._last_opened_playlist_name = playlist
+                        return playlist
+                    else:
+                        print('=> Last playlist does not exist: "' + playlist + '"')
                 else:
-                    print('=> Last playlist does not exist: "' + playlist + '"')
-            else:
-                print('=> Last playlist name is invalid!')
+                    print('=> Last playlist name is invalid!')
+                try:
+                    remove(lp)
+                except:
+                    pass
+                break
         return None
 
     def init_backup_player_params(self):

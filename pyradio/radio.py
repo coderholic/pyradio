@@ -5750,12 +5750,11 @@ __|Remote Control Server| cannot be started!__
         elif self._need_to_update_stations_csv == 0:
             if self._cls_update_stations is not None:
                 self._cls_update_stations_message = '''
-                Your "|stations.csv|" file has been successfully
-                updated. The following number of stations have
-                been affected:
-                __________stations added:_|{0}|
-                ________stations updated:_|{1}|
-                ________stations deleted:_|{2}|
+                Your "|stations.csv|" file has been successfully updated.
+                The following number of stations have been affected:
+                ________________stations added:_|{0}|
+                ______________stations updated:_|{1}|
+                ______________stations deleted:_|{2}|
                 '''.format(
                     self._cls_update_stations.counts[0],
                     self._cls_update_stations.counts[1],
@@ -5766,11 +5765,11 @@ __|Remote Control Server| cannot be started!__
         elif self._need_to_update_stations_csv == -1:
             caption = ' Stations Update Error '
             txt = '''
-                There was an error reading your "|stations.csv|"
-                file. This should not be happening!
+                There was an error reading your "|stations.csv|" file.
+                This should not be happening!
 
-                Please close all open programs and restart
-                |PyRadio| now, to try again.
+                Please close all open programs and restart |PyRadio| now,
+                to try again.
             '''
         elif self._need_to_update_stations_csv == -2:
             caption = ' Stations Update Error '
@@ -5784,34 +5783,32 @@ __|Remote Control Server| cannot be started!__
         elif self._need_to_update_stations_csv == -3:
             caption=' Stations not updated '
             txt = '''
-                    You have chosen not to update "|stations.csv|"
-                    at this time.
+                    You have chosen not to update "|stations.csv|" at this time.
 
-                    You will not be asked to do so until |PyRadio|
-                    updates its default stations again.
+                    You will not be asked to do so until |PyRadio| updates its
+                    default stations again.
 
-                    You can always update them manually with the
-                    following command:
-                    _______________|pyradio -us|
+                    You can always update them manually with the following
+                    command:
+                    _______________________|pyradio -us|
                      '''
         elif self._need_to_update_stations_csv == -4:
             caption=' Stations not updated '
             txt = '''
-                    You have chosen not to update "|stations.csv|" at
-                    this time. You can always update it manually with
-                    the following command:
-                    __________________|pyradio -us|
+                    You have chosen not to update "|stations.csv|" at this time.
+                    You can always update it manually with the following command:
+                    _______________________|pyradio -us|
                      '''
         elif self._need_to_update_stations_csv == -5 and \
                 self._update_stations_error_count < 6:
             caption = ' Error writing file ({}/5) '.format(self._update_stations_error_count)
             txt = '''
                 |PyRadio| cannot write the "|asked_sync|" file.
-                This means that you will be asked to sync the stations
-                next time the program is executed.
+                This means that you will be asked to sync the stations next time
+                the program is executed.
 
-                Please close all open programs and documents and press
-                any key to try to write it again.
+                Please close all open programs and documents and press any key to
+                try to write it again.
             '''
         elif self._need_to_update_stations_csv == -5 and \
                 self._update_stations_error_count >= 6:
@@ -5835,12 +5832,12 @@ __|Remote Control Server| cannot be started!__
             caption = ' Error writing file ({}/5) '.format(self._update_stations_error_count)
             txt = '''
                 |PyRadio| cannot write the "|last_sync|" file.
-                This means that although stations have been synced,
-                |PyRadio| will try to sync them again next time,
-                which means that you may end up with duplicates.
+                This means that although stations have been synced, |PyRadio|
+                will try to sync them again next time, which means that you
+                may end up with duplicates.
 
-                Please close all open programs and documents and press
-                any key to try to write it again.
+                Please close all open programs and documents and press any key
+                to try to write it again.
             '''
         elif self._need_to_update_stations_csv == -6 and \
                 self._update_stations_error_count >= 6:
@@ -5876,8 +5873,8 @@ __|Remote Control Server| cannot be started!__
                 upstream changes?
 
                 Press |y| to update, |n| to decline and not be asked again
-                for this version, or any other key to close this window
-                and be asked next time you execute |PyRadio|.
+                for this version, or any other key to close this window and
+                be asked next time you execute |PyRadio|.
                  '''
         self._show_help(txt,
                         self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE,
@@ -6608,10 +6605,7 @@ __|Remote Control Server| cannot be started!__
                 if to_play > -1:
                     if to_play != self.selections:
                         self.setStation(to_play)
-                    if self._cnf.browsing_station_service:
-                        self.playSelection()
-                    else:
-                        self.playSelectionBrowser()
+                    self.playSelection()
                 self.refreshBody()
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:

@@ -135,7 +135,7 @@ Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
                [--terminal-param TERMINAL_PARAM] [-tlp] [-scd] [-ocd]
                [-ep EXTRA_PLAYER_PARAMETERS] [-ap ACTIVE_PLAYER_PARAM_ID]
-               [-lp] [-U] [-R] [--unlock] [-lt] [-d] [-V]
+               [-lp] [-U] [-R] [--unlock] [-us] [-lt] [-d] [-V]
 
 Curses based Internet radio player
 
@@ -197,6 +197,8 @@ Options:
   -U, --update          Update PyRadio.
   -R, --uninstall       Uninstall PyRadio.
   --unlock              Remove sessions' lock file.
+  -us, --update_stations
+                        Update "stations.csv" (if needed).
   -lt, --log-titles     Log titles to file.
   -d, --debug           Start PyRadio in debug mode.
   -V, --version         Display version information.
@@ -344,16 +346,52 @@ Optionally, a third column can be inserted, stating the encoding used by the sta
 
 **Note:** Older versions used to use **~/.pyradio** as default stations file. If this file is found, it will be copied to use's config directory (e.g. **~/.config/pyradio**) and renamed to **stations.csv** or if this file exists, to **pyradio.csv**. In this case, this file will be the default one.
 
-
 ### Integrating new stations
 
 When the package's "*stations.csv*" files is updated, the changes it has will not automatically appear in the user's stations file.
 
-What **PyRadio** will do is inform the user that these changes do exist and give him a chance to **integrate** these changes to his stations file, by appending the new stations to the file.
+**PyRadio** will display a message asking the user to either update the file, ignore the changes for this version or postpone his decision for the next time **PyRadio** will be executed.
 
-When this is done, the first added station will be selected so that the user can inspect the changes and decide to keep or delete the new stations.
+![Pyradio stations update](https://members.hellug.gr/sng/pyradio/pyradio-stations-update.png)
 
-**PyRadio** will only add stations to the user's stations file; no station will be deleted as a result of this procedure.
+Either way, the user can always manually update his **stations file**, by issuing the following command:
+
+```
+pyradio -us
+```
+
+If changes have been applied, a message resembling the following will appear:
+
+```
+Reading config...
+Updating "stations.csv"
+Last updated version: 0.9.2
+ Last synced version: None
+  From version: 0.9.2
+    +/- updating: "Reggae Dancehall (Ragga Kings)"
+    +++   adding: "Groove Salad Classic (Early 2000s Ambient)"
+    +++   adding: "n5MD Radio (Ambient and Experimental)"
+    +++   adding: "Vaporwaves [SomaFM]"
+    +++   adding: "The Trip: [SomaFM]"
+    +++   adding: "Heavyweight Reggae"
+    +++   adding: "Metal Detector"
+    +++   adding: "Synphaera Radio (Space Music)"
+
+Summary
+    +++ added   :  7
+    +/- updated :  1
+    --- deleted :  0
+```
+
+If the file is already up to date, the following message will be displayed:
+
+```
+Reading config...
+Updating "stations.csv"
+Last updated version: 0.9.2
+ Last synced version: 0.9.2
+Already synced: "stations.csv"
+```
 
 ### Specifying a playlist to load (command line)
 

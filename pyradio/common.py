@@ -161,66 +161,6 @@ class StationsChanges(object):
             ],
 
             []
-        ],
-
-        (0, 9, 1):
-        [
-            [
-                ['0.9.1 Groove Salad Classic (Early 2000s Ambient)', 'https://somafm.com/gsclassic.pls'],
-                ['0.9.1 n5MD Radio (Ambient and Experimental)', 'https://somafm.com/n5md.pls'],
-                ['0.9.1 Vaporwaves [SomaFM]', 'https://somafm.com/vaporwaves.pls'],
-                ['0.9.1 The Trip: [SomaFM]', 'https://somafm.com/thetrip.pls'],
-                ['0.9.1 Heavyweight Reggae', 'https://somafm.com/reggae.pls'],
-                ['0.9.1 Metal Detector', 'https://somafm.com/metal.pls'],
-                ['0.9.1 Synphaera Radio (Space Music)', 'https://somafm.com/synphaera.pls']
-            ],
-
-            [
-                [0, ['Reggae Dancehall (Ragga Kings)', 'https://raggakings.radio:8443/stream.ogg']]
-            ],
-
-            [
-                ['0.9.0 Vaporwaves [SomaFM]', 'https://somafm.com/vaporwaves.pls'],
-                ['0.9.0 The Trip: [SomaFM]', 'https://somafm.com/thetrip.pls'],
-            ]
-        ],
-
-        (0, 9, 0):
-        [
-            [
-                ['0.9.0 Groove Salad Classic (Early 2000s Ambient)', 'https://somafm.com/gsclassic.pls'],
-                ['0.9.0 n5MD Radio (Ambient and Experimental)', 'https://somafm.com/n5md.pls'],
-                ['0.9.0 Vaporwaves [SomaFM]', 'https://somafm.com/vaporwaves.pls'],
-                ['0.9.0 The Trip: [SomaFM]', 'https://somafm.com/thetrip.pls'],
-                ['0.9.0 Heavyweight Reggae', 'https://somafm.com/reggae.pls'],
-                ['0.9.0 Metal Detector', 'https://somafm.com/metal.pls'],
-                ['0.9.0 Synphaera Radio (Space Music)', 'https://somafm.com/synphaera.pls']
-            ],
-
-            [
-                [0, ['Reggae Dancehall (Ragga Kings)', 'https://raggakings.radio:8443/stream.ogg']]
-            ],
-
-            []
-        ],
-
-        (0, 8, 9):
-        [
-            [
-                ['0.8.9 Groove Salad Classic (Early 2000s Ambient)', 'https://somafm.com/gsclassic.pls'],
-                ['0.8.9 n5MD Radio (Ambient and Experimental)', 'https://somafm.com/n5md.pls'],
-                ['0.8.9 Vaporwaves [SomaFM]', 'https://somafm.com/vaporwaves.pls'],
-                ['0.8.9 The Trip: [SomaFM]', 'https://somafm.com/thetrip.pls'],
-                ['0.8.9 Heavyweight Reggae', 'https://somafm.com/reggae.pls'],
-                ['0.8.9 Metal Detector', 'https://somafm.com/metal.pls'],
-                ['0.8.9 Synphaera Radio (Space Music)', 'https://somafm.com/synphaera.pls']
-            ],
-
-            [
-                [0, ['Reggae Dancehall (Ragga Kings)', 'https://raggakings.radio:8443/stream.ogg']]
-            ],
-
-            []
         ]
     }
 
@@ -420,7 +360,8 @@ class StationsChanges(object):
 
 
         '''
-        if self.stations_csv_needs_sync(print_messages=print_messages):
+        # if self.stations_csv_needs_sync(print_messages=print_messages):
+        if self.stations_csv_needs_sync(print_messages=False):
             if not self._open_stations_file():
                 if print_messages:
                     print('Cannot read "stations.csv"')
