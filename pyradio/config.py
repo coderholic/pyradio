@@ -114,9 +114,6 @@ class PyRadioStations(object):
     ''' set to True if a stations.csv is found in user's folder '''
     _user_csv_found = False
 
-    ''' mark changed package stations.csv  '''
-    _integrate_stations = False
-
     ''' the playlist saved as last playlist (name only) '''
     _last_opened_playlist_name = ''
 
@@ -228,14 +225,6 @@ class PyRadioStations(object):
                     copyfile(from_file, to_file)
                 except:
                     pass
-
-    @property
-    def integrate_stations(self):
-        return self._integrate_stations
-
-    @integrate_stations.setter
-    def user_has_stations_csv(self, val):
-        raise ValueError('parameter is read only')
 
     @property
     def user_has_stations_csv(self):
@@ -668,36 +657,6 @@ class PyRadioStations(object):
         # logger.error('DE stations\n{}\n\n'.format(self.stations))
         self.set_playlist_data(stationFile, prev_file, is_register)
         self.number_of_stations = len(self.stations)
-
-        ''' check for package's stations.csv change '''
-        delete_ver_files = False
-        if self._user_csv_found:
-            if stationFile == path.join(self.stations_dir, 'stations.csv'):
-                if self.current_pyradio_version is None:
-                    self.get_pyradio_version()
-                ver_file = path.join(self.data_dir, '.' + self.current_pyradio_version + '.ver')
-                if stations_updated:
-                    if not path.exists(ver_file):
-                        import filecmp
-                        if not filecmp.cmp(stationFile, self.root_path):
-                            ''' need to ask the user to integrate stations '''
-                            self._integrate_stations = True
-                            delete_ver_files = True
-                            if logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('Stations integration is due!')
-                else:
-                    ''' delete all ver files and create current '''
-                    delete_ver_files = True
-        if delete_ver_files:
-            files = glob.glob(path.join(self.data_dir, '.*.ver'))
-            if files:
-                for a_file in files:
-                    try:
-                        remove(a_file)
-                    except:
-                        pass
-            with open(ver_file, 'a', encoding='utf-8') as f:
-                pass
 
         return self.number_of_stations
 

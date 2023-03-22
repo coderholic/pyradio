@@ -514,8 +514,6 @@ class PyRadio(object):
             self.ws.IN_PLAYER_PARAMS_EDITOR: self._redisplay_player_select_win_refresh_and_resize,
             self.ws.USER_PARAMETER_ERROR: self._print_user_parameter_error,
             self.ws.IN_PLAYER_PARAMS_EDITOR_HELP_MODE: self._show_params_ediror_help,
-            self.ws.STATIONS_ASK_TO_INTEGRATE_MODE: self._print_ask_to_integrate,
-            self.ws.STATIONS_INTEGRATED_MODE: self._print_integrated,
             self.ws.VOTE_RESULT_MODE: self._print_vote_result,
             self.ws.BROWSER_SEARCH_MODE: self._browser_search,
             self.ws.BROWSER_SORT_MODE: self._browser_sort,
@@ -1169,11 +1167,7 @@ class PyRadio(object):
                 logger.debug('Redisplaying RadioBrowser Search Window!!!')
             self._browser_search()
 
-        if self._cnf.integrate_stations and \
-                self.ws.operation_mode == self.ws.NORMAL_MODE:
-            ''' display ask to integrate stations '''
-            self._print_ask_to_integrate()
-        elif self._cnf.playlist_recovery_result == -1:
+        if self._cnf.playlist_recovery_result == -1:
             ''' display playlist recovered '''
             self._show_playlist_recovered()
         elif self._cnf.theme_not_supported:
@@ -3931,36 +3925,6 @@ __|Remote Control Server| cannot be started!__
         self._show_help(txt, self.ws.ASK_TO_CREATE_NEW_THEME_MODE,
                         caption=' Read-only theme ',
                         prompt=' ',
-                        is_message=True)
-
-    def _print_ask_to_integrate(self):
-        txt = '''
-            The package's |stations.csv| file has been
-            changed. Do you want to integrate these
-            changes to |your station's| file?
-
-            Press "|y|" to accept or |n| to decline.
-            '''
-        self._show_help(txt, self.ws.STATIONS_ASK_TO_INTEGRATE_MODE,
-                        caption=' New Stations available ',
-                        prompt=' ',
-                        is_message=True)
-        self._redraw()
-        # logger.error('3 redraw')
-        curses.doupdate()
-
-    def _print_integrated(self):
-        txt = '''
-            |PyRadio| has added |{}| new stations at the end
-            of the playlist. You can now inspect them and
-            decide to keep or delete them.
-
-            For your convenience, the selection has now
-            moved to the first inserted station.
-            '''
-        self._show_help(txt.format(self._cnf.added_stations), self.ws.STATIONS_INTEGRATED_MODE,
-                        caption=' New Stations integrated ',
-                        prompt=' Press any key to hide ',
                         is_message=True)
 
     def _print_config_save_error(self):
@@ -8029,30 +7993,6 @@ __|Remote Control Server| cannot be started!__
                 operration has been canceled
             '''
             self._cnf.get_player_params_from_backup(param_type=1)
-            return
-
-        elif self.ws.operation_mode == self.ws.STATIONS_ASK_TO_INTEGRATE_MODE:
-            if char in self._global_functions.keys():
-                self._global_functions[char]()
-            elif char == ord('y'):
-                self._cnf._integrate_stations = False
-                self.ws.close_window()
-                self._cnf.integrate_playlists()
-                if self._cnf.added_stations > 0:
-                    if self._cnf.added_stations > self.bodyMaxY:
-                        self.selection = self._cnf.number_of_stations
-                        self.startPos = self.selection - 1
-                    else:
-                        self.setStation(-1)
-                        self.selection = self._cnf.number_of_stations
-                    self._cnf.number_of_stations = len(self.stations)
-                    self._cnf.dirty_playlist = True
-                    self.refreshBody()
-                self._print_integrated()
-            elif char == ord('n'):
-                self._cnf._integrate_stations = False
-                self.ws.close_window()
-                self.refreshBody()
             return
 
         elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
