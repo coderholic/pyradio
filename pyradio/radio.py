@@ -469,7 +469,7 @@ class PyRadio(object):
             self.ws.PLAYLIST_RELOAD_ERROR_MODE: self._print_playlist_reload_error,
             self.ws.SAVE_PLAYLIST_ERROR_1_MODE: self._print_save_playlist_error_1,
             self.ws.SAVE_PLAYLIST_ERROR_2_MODE: self._print_save_playlist_error_2,
-            self.ws.REMOVE_STATION_MODE: self.removeStation,
+            self.ws.REMOVE_STATION_MODE: self._ask_to_remove_station,
             self.ws.FOREIGN_PLAYLIST_ASK_MODE: self._print_handle_foreign_playlist,
             self.ws.FOREIGN_PLAYLIST_MESSAGE_MODE: self._print_foreign_playlist_message,
             self.ws.FOREIGN_PLAYLIST_COPY_ERROR_MODE: self._print_foreign_playlist_copy_error,
@@ -2074,7 +2074,7 @@ class PyRadio(object):
             help_msg=True, suffix=self._status_suffix, counter=''
         )
 
-    def removeStation(self):
+    def _ask_to_remove_station(self):
         if self._cnf.confirm_station_deletion and not self._cnf.is_register:
             if self._cnf.locked:
                 txt = '''
@@ -2103,7 +2103,7 @@ class PyRadio(object):
                     prompt='', is_message=True)
         else:
             self.ws.operation_mode = self.ws.REMOVE_STATION_MODE
-            curses.ungetch('y')
+            self._remove_station()
 
     def saveCurrentPlaylist(self, stationFile=''):
         ret = self._cnf.save_playlist_file(stationFile)
@@ -4078,6 +4078,7 @@ __|Remote Control Server| cannot be started!__
                 self.stopPlayer()
             self.playing, self.selection, self.stations, \
                 self.number_of_items = (-1, 0, 0, 0)
+            self.refreshBody()
             return
         else:
             #if logger.isEnabledFor(logging.DEBUG):
@@ -4094,10 +4095,10 @@ __|Remote Control Server| cannot be started!__
                         self.playing -= 1
                 else:
                     self.playing = -1
-
                 if self.selection > self.number_of_items - self.bodyMaxY:
                     self.startPos -= 1
-                    if self.selection >= self.number_of_items:
+                    if self.selection >= self.number_of_items or \
+                            self.selection >= self.startPos + self.maxY - 4:
                         self.selection -= 1
                 if self.startPos < 0:
                     self.startPos = 0
@@ -4164,7 +4165,8 @@ __|Remote Control Server| cannot be started!__
             self.selection = 0
             self.startPos = 0
         ''' make sure playing station is visible '''
-        self._goto_playing_station(changing_playlist=True)
+        if cur_mode != self.ws.REMOVE_STATION_MODE:
+            self._goto_playing_station(changing_playlist=True)
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('self.selection = {0}, self.playing = {1}, self.startPos = {2}'.format(self.selection, self.playing, self.startPos))
@@ -6087,6 +6089,31 @@ __|Remote Control Server| cannot be started!__
                 is_message=True
             )
 
+    def _remove_station(self, char=121):
+        ''' removes a station
+            char=121 is ord('y')
+        '''
+        self._set_active_stations()
+        deleted_station, self.number_of_items = self._cnf.remove_station(self.selection)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Deleted station: "{}"'.format(deleted_station[0]))
+        self.ws.close_window()
+        self._align_stations_and_refresh(self.ws.REMOVE_STATION_MODE)
+        if not self._cnf.locked and char == ord('Y'):
+            self._cnf.confirm_station_deletion = False
+        self._cnf.stations_history.remove_station(deleted_station[0])
+
+        ''' auto save register file '''
+        if self._cnf.is_register:
+            self.saveCurrentPlaylist()
+            if self.number_of_items == 0:
+                try:
+                    remove(self._cnf.station_path)
+                except:
+                    pass
+        self._unnamed_register = deleted_station
+        self.selections[0][3] = self.stations
+
     def keypress(self, char):
         if char == curses.KEY_F2:
             self._need_to_update_stations_csv = 2
@@ -7872,27 +7899,7 @@ __|Remote Control Server| cannot be started!__
                 self._global_functions[char]()
                 return
             if char in (ord('y'), ord('Y')):
-                self._set_active_stations()
-                deleted_station, self.number_of_items = self._cnf.remove_station(self.selection)
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Deleted station: "{}"'.format(deleted_station[0]))
-                self.ws.close_window()
-                self._align_stations_and_refresh(self.ws.REMOVE_STATION_MODE)
-                if not self._cnf.locked and char == ord('Y'):
-                    self._cnf.confirm_station_deletion = False
-                self._cnf.stations_history.remove_station(deleted_station[0])
-
-                ''' auto save register file '''
-                if self._cnf.is_register:
-                    self.saveCurrentPlaylist()
-                    if self.number_of_items == 0:
-                        try:
-                            remove(self._cnf.station_path)
-                        except:
-                            pass
-                self._unnamed_register = deleted_station
-                self.selections[0][3] = self.stations
-
+                self._remove_station(char)
             else:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Canceling: Remove station')
@@ -8348,7 +8355,7 @@ __|Remote Control Server| cannot be started!__
                                     callback_function=self.refreshBody)
                             pass
                         else:
-                            self.removeStation()
+                            self._ask_to_remove_station()
                     return
 
                 elif char in(ord('s'), ):
