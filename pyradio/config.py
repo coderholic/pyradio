@@ -227,11 +227,11 @@ class PyRadioStations(object):
                     pass
 
     @property
-    def user_has_stations_csv(self):
+    def user_csv_found(self):
         return self._user_csv_found
 
-    @user_has_stations_csv.setter
-    def user_has_stations_csv(self, val):
+    @user_csv_found.setter
+    def user_csv_found(self, val):
         raise ValueError('parameter is read only')
 
     @property

@@ -1626,6 +1626,9 @@ class PyRadio(object):
             if self._cnf.locked:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('(detectUpdateStationsThread): not starting; session is locked!!!')
+            elif not self._cnf.user_csv_found:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('(detectUpdateStationsThread): not starting; copyed stations.csv!!!')
             else:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('(detectUpdateStationsThread): checking in 10 seconds')
