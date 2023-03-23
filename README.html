@@ -200,6 +200,27 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
+2023-03-23 s-n-g
+    * version 0.9.2
+    * implementing "player change" (key: \m)
+    * working on stations deletion, do not delete stations
+      when session is locked
+    * changing the way stations.csv updates are done
+    * adding --update-stations (-us) command line option
+    * adding indication to denote forced http connection mode
+    * adding Catppuccin themes - https://github.com/catppuccin
+    * using rich to add color to console messages as per #174
+      (python 3 only)
+    * "Press ? for help" message will not show up when overlapping
+      normal messages
+    * working on MPV auto-installation on first install on Windows
+    * moving last-playlist file in data dir
+    * fixing pyradio not terminating when answering no to save a
+      modified playlist
+    * fixing a theme save crash
+    * removing some curses.ungetch calls
+    * updating docs
+
 2023-02-20 s-n-g
     * version 0.9.1
     * adding pyproject.toml (as per pep-0518)

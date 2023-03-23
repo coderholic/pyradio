@@ -127,6 +127,12 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
             titles=titles
         )
 
+def print_session_is_locked():
+    print_simple_error('Error: This session is locked!')
+    print('       Please exist any other instances of the program')
+    print('       that are currently running and try again.')
+    sys.exit(1)
+
 def shell():
     version_too_old = False
     if sys.version_info[0] == 2:
@@ -391,8 +397,7 @@ If nothing else works, try the following command:
 
         if args.toggle_load_last_playlist:
             if pyradio_config.locked:
-                print_simple_error('Error: Another instance of PyRadio is already running!')
-                print('       Please close it and try again...')
+                print_session_is_locked()
                 sys.exit(1)
             else:
                 read_config(pyradio_config)
@@ -563,9 +568,7 @@ If nothing else works, try the following command:
         if args.extra_player_parameters:
             if ':' in args.extra_player_parameters:
                 if pyradio_config.locked:
-                    print_simple_error('Error: This session is locked!')
-                    print('       Please exist any other instances of the program')
-                    print('       that are currently running and try again.')
+                    print_session_is_locked()
                     sys.exit(1)
                 else:
                     if args.extra_player_parameters.startswith('vlc:profile'):
@@ -606,7 +609,9 @@ If nothing else works, try the following command:
             sys.exit()
 
         if args.list_playlists:
-            pyradio_config.read_config()
+            if not config_already_read:
+                pyradio_config.read_config()
+            config_already_read = True
             pyradio_config.list_playlists()
             sys.exit()
 
@@ -617,7 +622,11 @@ If nothing else works, try the following command:
             config_already_read = True
 
         if args.update_stations:
-            do_update_stations(pyradio_config)
+            if pyradio_config.locked:
+                print_session_is_locked()
+                sys.exit(1)
+            else:
+                do_update_stations(pyradio_config)
 
         if args.no_themes:
             pyradio_config.use_themes = False

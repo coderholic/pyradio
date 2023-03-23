@@ -2760,7 +2760,9 @@ __|Remote Control Server| cannot be started!__
                         reset_metrics=False)
 
     def _show_main_help_page_5(self, from_keyboard=False):
-        txt = '''!Remote Control Server
+        txt = '''!Change Player
+                 \m               |Open player selection window.
+                 !Remote Control Server
                  \s               |Start/Stop the |Server|.
                  !Title Logger
                  W                |Toggle Logger on/off
