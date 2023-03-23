@@ -6089,6 +6089,21 @@ __|Remote Control Server| cannot be started!__
                 is_message=True
             )
 
+    def _reload_playlist_after_confirmation(self, char=121):
+        if char in (ord('y'), ord('Y')):
+            if not self._cnf.locked and char == ord('Y'):
+                self._cnf.confirm_playlist_reload = False
+            self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
+            self.ws.close_window()
+            self.refreshBody()
+        else:
+            ''' close confirmation message '''
+            self.stations = self._cnf.stations
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Canceling Playlist Reload')
+            self.ws.close_window()
+            self.refreshBody()
+
     def _remove_station(self, char=121):
         ''' removes a station
             char=121 is ord('y')
@@ -7879,19 +7894,7 @@ __|Remote Control Server| cannot be started!__
             if char in self._global_functions.keys():
                 self._global_functions[char]()
                 return
-            if char in (ord('y'), ord('Y')):
-                if not self._cnf.locked and char == ord('Y'):
-                    self._cnf.confirm_playlist_reload = False
-                self.reloadCurrentPlaylist(self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE)
-                self.ws.close_window()
-                self.refreshBody()
-            else:
-                ''' close confirmation message '''
-                self.stations = self._cnf.stations
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Canceling Playlist Reload')
-                self.ws.close_window()
-                self.refreshBody()
+            self._reload_playlist_after_confirmation(char)
             return
 
         elif self.ws.operation_mode == self.ws.REMOVE_STATION_MODE:
@@ -8394,13 +8397,13 @@ __|Remote Control Server| cannot be started!__
                             self._print_playlist_dirty_reload_confirmation()
                         else:
                             self.ws.operation_mode = self.ws.PLAYLIST_RELOAD_CONFIRM_MODE
-                            curses.ungetch('y')
+                            self._reload_playlist_after_confirmation(char)
                     else:
                         if not self._cnf.is_register and self._cnf.confirm_playlist_reload:
                             self._print_playlist_reload_confirmation()
                         else:
                             self.ws.operation_mode = self.ws.PLAYLIST_RELOAD_CONFIRM_MODE
-                            curses.ungetch('y')
+                            self._reload_playlist_after_confirmation(char)
                     return
 
                 elif char in (ord('z'), ):
