@@ -384,7 +384,11 @@ class StationsChanges(object):
                             self.counts[2] += 1
                             self._stations.pop(self._stations.index(an_item))
                 for n in self.versions[k][1]:
-                    found = [x for x in self._stations if x[0] == n[1][n[0]]]
+                    found = []
+                    if n[0] == 0:
+                        found = [x for x in self._stations if x[0] == n[1][0] and x[1] != n[1][1]]
+                    elif n[0] == 1:
+                        found = [x for x in self._stations if x[1] == n[1][1] and x[0] != n[1][0]]
                     if found:
                         if print_messages:
                             if PY3:
