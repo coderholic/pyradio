@@ -1778,6 +1778,11 @@ class PyRadio(object):
                 self.stop_update_notification_thread = True
                 if self._update_notification_thread:
                     self._update_notification_thread.join()
+        if self._update_notification_thread:
+            if self._update_stations_thread.is_alive():
+                self.stop_update_notification_thread = True
+                if self._update_stations_thread:
+                    self._update_stations_thread.join()
 
     def _goto_playing_station(self, changing_playlist=False):
         ''' make sure playing station is visible '''
@@ -4771,26 +4776,37 @@ __|Remote Control Server| cannot be started!__
             for i in range(0, 5 * secs):
                 sleep(.2)
                 if stop():
-                    return
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('detectUpdateStationsThread: Asked to stop. Stoping...')
+                    return False
+            return True
 
-        delay(10, stop)
+        if not delay(10, stop):
+            return
         if stop():
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('detectUpdateThread: Asked to stop. Stoping...')
+                logger.debug('detectUpdateStationsThread: Asked to stop. Stoping...')
             return
-        ret = check_function()
+        ret = check_function(stop)
         if stop():
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('detectUpdateThread: Asked to stop. Stoping...')
+                logger.debug('detectUpdateStationsThread: Asked to stop. Stoping...')
             return
+        x = stop()
         if ret:
             with a_lock:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('detectUpdateThread: Need to update stations.csv!!!')
-                self._need_to_update_stations_csv = 2
+                if x:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('detectUpdateStationsThread: Asked to stop. Stoping...')
+                    return
+                else:
+                    self._need_to_update_stations_csv = 2
         else:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('detectUpdateThread: stations.csv is up to date!!!')
+                if x:
+                    logger.debug('detectUpdateStationsThread: Asked to stop. Stoping...')
+                else:
+                    logger.debug('detectUpdateStationsThread: stations.csv is up to date!!!')
 
     def detectUpdateThread(self, config, a_lock, stop):
         ''' a thread to check if an update is available '''

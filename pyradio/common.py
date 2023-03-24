@@ -288,20 +288,30 @@ class StationsChanges(object):
         ret = ret.replace(', ', '.')
         return ret
 
-    def check_if_version_needs_sync(self):
+    def check_if_version_needs_sync(self, stop=None):
         ''' check if we need to sync stations.csv
             takes under consideration the answer
             the user gave at the TUI
         '''
         ret = self.stations_csv_needs_sync(print_messages=False)
+        if stop is not None:
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('asked to stop! Terminating!')
+                return False
         self.asked_sync = self._read_synced_version(asked=True)
+        if stop is not None:
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('asked to stop! Terminating!')
+                return False
         if self.version_changed == self.asked_sync:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('asked_sync is equal to version_changed!!!')
             return False
         return ret
 
-    def stations_csv_needs_sync(self, print_messages=True):
+    def stations_csv_needs_sync(self, print_messages=True, stop=None):
         ''' check if we need to sync stations.csv
             it will return true no matter what the user has
             replied about syncing, at the TUI
@@ -311,7 +321,17 @@ class StationsChanges(object):
         self.keys = [x for x in self.versions.keys()]
         self.keys.sort()
         # print('keys = {}'.format(self.keys))
+        if stop is not None:
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('asked to stop! Terminating!')
+                return False
         self.last_sync = self._read_synced_version()
+        if stop is not None:
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('asked to stop! Terminating!')
+                return False
         if exists(self._last_sync_file):
             try:
                 with open(self._last_sync_file, 'r', encoding='utf-8') as l:
@@ -324,6 +344,11 @@ class StationsChanges(object):
             else:
                 ret = True if self.keys[-1] > self.last_sync else False
         else:
+            if stop is not None:
+                if stop():
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('asked to stop! Terminating!')
+                    return False
             ret = True
 
         if ret and self.last_sync is not None:
@@ -331,13 +356,28 @@ class StationsChanges(object):
             while self.keys[-1] <= self.last_sync:
                 self.keys.pop()
             self.keys.reverse()
+        if stop is not None:
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('asked to stop! Terminating!')
+                return False
         # print('keys = {}'.format(self.keys))
         self.version_changed = self.keys[-1]
         self.version_to_write = str(self.version_changed).replace('(', '').replace(')', '')
+        if stop is not None:
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('asked to stop! Terminating!')
+                return False
         if print_messages:
             print('Updating "stations.csv"')
             print('Last updated version: {}'.format(self._format_vesion(self.version_changed)))
             print(' Last synced version: {}'.format(self._format_vesion(self.last_sync)))
+        if stop is not None:
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('asked to stop! Terminating!')
+                return False
         if print_messages and not ret:
             print('Already synced: "stations.csv"')
         return ret
