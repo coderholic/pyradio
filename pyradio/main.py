@@ -626,6 +626,9 @@ If nothing else works, try the following command:
                 print_session_is_locked()
                 sys.exit(1)
             elif not pyradio_config.user_csv_found:
+                stations_change = StationsChanges(pyradio_config)
+                stations_change .stations_csv_needs_sync(print_messages=False)
+                stations_change.write_synced_version()
                 print_simple_error('Error: "stations.csv" already up to date!')
                 sys.exit(1)
             else:
