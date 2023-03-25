@@ -470,6 +470,7 @@ class PyRadio(object):
             self.ws.SAVE_PLAYLIST_ERROR_1_MODE: self._print_save_playlist_error_1,
             self.ws.SAVE_PLAYLIST_ERROR_2_MODE: self._print_save_playlist_error_2,
             self.ws.REMOVE_STATION_MODE: self._ask_to_remove_station,
+            self.ws.REMOVE_SECTION_MODE: self._ask_to_remove_section,
             self.ws.FOREIGN_PLAYLIST_ASK_MODE: self._print_handle_foreign_playlist,
             self.ws.FOREIGN_PLAYLIST_MESSAGE_MODE: self._print_foreign_playlist_message,
             self.ws.FOREIGN_PLAYLIST_COPY_ERROR_MODE: self._print_foreign_playlist_copy_error,
@@ -794,6 +795,10 @@ class PyRadio(object):
             return
         curses.start_color()
         curses.use_default_colors()
+
+        self._section_color_normal = 2
+        self._section_color_active = 9
+
         if self._cnf.use_themes:
             self._cnf.use_themes = calc_can_change_colors(self._cnf)
         #self._cnf.use_themes = False
@@ -1353,21 +1358,27 @@ class PyRadio(object):
         #     self.selections[0][2]))
         if not return_line:
             if station:
-                if lineNum + self.startPos == self.selection and \
-                        self.selection == self.playing:
-                    col = curses.color_pair(9)
-                    ''' initialize col_sep here to have separated cursor '''
-                    sep_col = curses.color_pair(13)
-                    # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
-                elif lineNum + self.startPos == self.selection:
-                    col = curses.color_pair(6)
-                    ''' initialize col_sep here to have separated cursor '''
-                    sep_col = curses.color_pair(13)
-                    # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
-                elif lineNum + self.startPos == self.playing:
-                    col = curses.color_pair(4)
-                    sep_col = curses.color_pair(13)
-                    # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+                if station[1] == '-':
+                    if lineNum + self.startPos == self.selection:
+                        col = curses.color_pair(self._section_color_active)
+                    else:
+                        col = curses.color_pair(self._section_color_normal)
+                else:
+                    if lineNum + self.startPos == self.selection and \
+                            self.selection == self.playing:
+                        col = curses.color_pair(9)
+                        ''' initialize col_sep here to have separated cursor '''
+                        sep_col = curses.color_pair(13)
+                        # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+                    elif lineNum + self.startPos == self.selection:
+                        col = curses.color_pair(6)
+                        ''' initialize col_sep here to have separated cursor '''
+                        sep_col = curses.color_pair(13)
+                        # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
+                    elif lineNum + self.startPos == self.playing:
+                        col = curses.color_pair(4)
+                        sep_col = curses.color_pair(13)
+                        # self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
             else:
                 ''' this is only for a browser service '''
                 col = curses.color_pair(5)
@@ -1403,7 +1414,10 @@ class PyRadio(object):
                     played, line = self._cnf.online_browser.format_empty_line(self.bodyMaxX)
             else:
                 if station:
-                    line = self._format_station_line("{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0]))
+                    if station[1] == '-':
+                        line = self._format_section_line(lineNum, pad, station)
+                    else:
+                        line = self._format_station_line("{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), station[0]))
                 else:
                     line = ' ' * (self.bodyMaxX - 2)
 
@@ -1427,6 +1441,17 @@ class PyRadio(object):
 
             if station and self._cnf.browsing_station_service and sep_col:
                 self._change_browser_ticks(lineNum, sep_col, all_ticks=ticks)
+
+    def _format_section_line(self, lineNum, pad, station):
+        to_disp = ' ' + station[0] + ' '
+        try:
+            line = to_disp.center(self.bodyMaxX, u'─')
+        except:
+            line = to_disp.center(self.bodyMaxX, '_')
+            # line = line.replace('_', '─'.encode('utf-8'))
+
+        return "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), line[pad + 2:-2] + ' ')
+
 
     def _change_browser_ticks(self, lineNum, sep_col, all_ticks=None):
         ticks = all_ticks
@@ -1892,6 +1917,9 @@ class PyRadio(object):
             if restart = True, start the station that has
             been played last
         '''
+        if self.stations[self.selection][1] == '-':
+            ''' this is a section '''
+            return
         # logger.error('DE \n\n\nplaying = {}'.format(self.playing))
         self._station_rename_from_info = False
         # logger.info('\n\nselected station\n{}\n\n'.format(self.stations[self.selection]))
@@ -2083,6 +2111,23 @@ class PyRadio(object):
             + player_start_stop_token[msg_id],
             help_msg=True, suffix=self._status_suffix, counter=''
         )
+
+    def _ask_to_remove_section(self):
+        txt = '''
+        Are you sure you want to delete this section header:
+        "|{}|"?
+
+        Press "|y|" to confirm, or any other key to cancel
+        '''
+
+        ''' truncate parameter to text width '''
+        mwidth = self._get_message_width_from_string(txt)
+        msg = self.stations[self.selection][0]
+        if len(msg) > mwidth - 3:
+            msg = msg[:mwidth-6] + '...'
+        self._show_help(txt.format(msg),
+                self.ws.REMOVE_SECTION_MODE, caption=' Section Deletion ',
+                prompt='', is_message=True)
 
     def _ask_to_remove_station(self):
         if self._cnf.confirm_station_deletion and not self._cnf.is_register:
@@ -5585,7 +5630,10 @@ __|Remote Control Server| cannot be started!__
         # if a_line - self.startPos < 0:
         #     logger.error('DE *** _unselect_line: a_line:{0} -  start pos:{1} = {2}'.format(a_line, self.startPos, a_line-self.startPos))
         #     return
-        col = 9 if a_line == self.playing else 6
+        if self.stations[a_line][1] == '-':
+            col = self._section_color_active if a_line == self.selection else self._section_color_normal
+        else:
+            col = 9 if a_line == self.playing else 6
         # if logger.isEnabledFor(logging.DEBUG):
         #     logger.debug('selecting line {}, color {}'.format(a_line - self.startPos, col))
         ''' chgat also touches the line '''
@@ -5604,7 +5652,10 @@ __|Remote Control Server| cannot be started!__
         #     if logger.isEnabledFor(logging.ERROR):
         #         logger.error('*** _unselect_line: a_line:{0} -  start pos:{1} = {2}'.format(a_line, self.startPos, a_line-self.startPos))
         #     return
-        col = 4 if a_line == self.playing else 5
+        if self.stations[a_line][1] == '-':
+            col = self._section_color_active if a_line == self.selection else self._section_color_normal
+        else:
+            col = 4 if a_line == self.playing else 5
         # if logger.isEnabledFor(logging.DEBUG):
         #     logger.debug('unselecting line {}, color {}'.format(a_line - self.startPos, col))
         ''' chgat also touches the line '''
@@ -7920,7 +7971,10 @@ __|Remote Control Server| cannot be started!__
             self._reload_playlist_after_confirmation(char)
             return
 
-        elif self.ws.operation_mode == self.ws.REMOVE_STATION_MODE:
+        elif self.ws.operation_mode in (
+                self.ws.REMOVE_STATION_MODE,
+                self.ws.REMOVE_SECTION_MODE
+        ):
             if char in self._global_functions.keys():
                 self._global_functions[char]()
                 return
@@ -8375,13 +8429,19 @@ __|Remote Control Server| cannot be started!__
                         return
                     if self.number_of_items > 0:
                         if self._cnf.locked:
+                            txt='___Cannot delete station!!!___\n______Session is locked'
+                            if self.stations[self.selection][1] == '-':
+                                txt = txt.replace('station', 'section')
                             self._show_notification_with_delay(
-                                    txt='___Cannnot delete station!!!___\n______Session is locked',
+                                    txt=txt,
                                     mode_to_set=self.ws.NORMAL_MODE,
                                     callback_function=self.refreshBody)
                             pass
                         else:
-                            self._ask_to_remove_station()
+                            if self.stations[self.selection][1] == '-':
+                                self._ask_to_remove_section()
+                            else:
+                                self._ask_to_remove_station()
                     return
 
                 elif char in(ord('s'), ):
