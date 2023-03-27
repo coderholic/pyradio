@@ -6554,6 +6554,12 @@ __|Remote Control Server| cannot be started!__
                         txt='___Nothing to put in register!!!___',
                         mode_to_set=self.ws.NORMAL_MODE,
                         callback_function=self.refreshBody)
+            elif self.stations[self.selection][1] == '-':
+                self._update_status_bar_right(status_suffix='')
+                self._show_notification_with_delay(
+                        txt='___Cannot copy a group header!!!___',
+                        mode_to_set=self.ws.NORMAL_MODE,
+                        callback_function=self.refreshBody)
             else:
                 self._update_status_bar_right(reg_y_pressed=True, status_suffix='y')
                 self._do_display_notify()
@@ -8243,7 +8249,12 @@ __|Remote Control Server| cannot be started!__
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char in (curses.ascii.EM, curses.ascii.ENQ):
+                if char == curses.ascii.BEL:
+                    logger.error('^G')
+                    data = [(x, y[0]) for x, y in enumerate(self.stations) if y[1] =='-']
+                    logger.error(data)
+
+                elif char in (curses.ascii.EM, curses.ascii.ENQ):
                     if self._cnf._online_browser is None:
                         # logger.error('^E ^Y')
                         d = [x for x, y in enumerate(self.stations) if y[1] == '-' ]

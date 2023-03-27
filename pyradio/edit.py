@@ -305,6 +305,12 @@ class PyRadioEditor(object):
                 self._line_editor[ed].use_paste_mode = True
                 self._line_editor[ed].set_global_functions(self._global_functions)
 
+    def _print_group_header(self):
+        if self._line_editor[1].string.strip() == '-':
+            self._win.addstr(1, self.maxX - 14 , 'Group Header', curses.color_pair(12))
+        else:
+            self._win.addstr(1, self.maxX - 14 , '            ', curses.color_pair(4))
+
     def show(self, item=None):
         self._win = None
         self.maxY, self.maxX = self._parent_win.getmaxyx()
@@ -413,6 +419,7 @@ class PyRadioEditor(object):
         if item:
             self._set_item(item)
             self._show_encoding()
+        self._print_group_header()
         self._win.refresh()
         self._update_focus()
         if not self._too_small:
@@ -421,11 +428,14 @@ class PyRadioEditor(object):
 
             if self._focus == 1:
                 ''' Tip: Press \p before pasting here '''
-                ''' 123456789012345678901234567890123 '''
                 self._win.addstr(6, self.maxX - 41, 'Tip: ', curses.color_pair(4))
                 self._win.addstr('Press ', curses.color_pair(5))
                 self._win.addstr('\\p', curses.color_pair(4))
                 self._win.addstr(' before pasting a URL here', curses.color_pair(5))
+                self._win.addstr(7, self.maxX - 32, 'or type a ', curses.color_pair(5))
+                self._win.addstr('- ', curses.color_pair(4))
+                self._win.addstr('for a ', curses.color_pair(5))
+                self._win.addstr('Group Header', curses.color_pair(4))
                 self._win.refresh()
 
     def _show_alternative_modes(self):
@@ -534,23 +544,27 @@ class PyRadioEditor(object):
         if ret == 1:
             if self._encoding == self._config_encoding:
                 self._encoding = ''
-            self.new_station = [self._line_editor[0].string.strip(), self._line_editor[1].string.strip(), self._encoding, '']
+            if self._line_editor[1].string.strip() == '-':
+                self.new_station = [self._line_editor[0].string.strip(), self._line_editor[1].string.strip(), '', '']
+            else:
+                self.new_station = [self._line_editor[0].string.strip(), self._line_editor[1].string.strip(), self._encoding, '']
         return ret
 
     def _validate(self):
         if not self._line_editor[0].string.strip():
             return -2
-        url = urlparse(self._line_editor[1].string.strip())
-        if not (url.scheme and url.netloc):
-            return -3
-        if url.scheme not in ('http', 'https'):
-            return -3
-        if url.netloc != 'localhost':
-            dot = url.netloc.find('.')
-            if dot == -1:
+        if self._line_editor[1].string.strip() != '-':
+            url = urlparse(self._line_editor[1].string.strip())
+            if not (url.scheme and url.netloc):
                 return -3
-            elif dot > len(url.netloc) - 3:
+            if url.scheme not in ('http', 'https'):
                 return -3
+            if url.netloc != 'localhost':
+                dot = url.netloc.find('.')
+                if dot == -1:
+                    return -3
+                elif dot > len(url.netloc) - 3:
+                    return -3
         return 1
 
     def keypress(self, char):
@@ -589,6 +603,7 @@ class PyRadioEditor(object):
                 elif self._focus == 1:
                     # URL
                     self.focus += 1
+                    self._print_group_header()
                 elif self._focus == 2:
                     # encoding
                     return 3
@@ -621,18 +636,20 @@ class PyRadioEditor(object):
                  Returns:
                     2: display help
                     1: get next char
-                    0: exit edit mode, string isvalid
+                    0: exit edit mode, string is valid
                    -1: cancel
                 """
                 logger.error('>> line editort key press')
                 ret = self._line_editor[self._focus].keypress(self._win, char)
                 if ret == 1:
                     # get next char
+                    self._print_group_header()
                     ret = 0
                 elif ret == 0:
                     # exit, string is valid
                     self._return_station()
                     self._reset_editors_modes()
+                    self._print_group_header()
                     ret = -1
                 elif ret == -1:
                     # cancel
