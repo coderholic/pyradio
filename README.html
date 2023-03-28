@@ -64,6 +64,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#config-file">Config file</a></li>
 <li><a href="#about-playlist-files">About Playlist files</a>
 <ul>
+<li><a href="#defining-and-using-groups">Defining and using Groups</a></li>
 <li><a href="#integrating-new-stations">Integrating new stations</a></li>
 <li><a href="#specifying-a-playlist-to-load-(command-line)">Specifying a playlist to load (command line)</a></li>
 <li><a href="#autoloading-playlists">Autoloading playlists</a></li>
@@ -85,6 +86,7 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#player-detection-/-selection">Player detection / selection</a>
 <ul>
+<li><a href="#changing-player-mid-session">Changing player mid-session</a></li>
 <li><a href="#extra-player-parameters">Extra Player Parameters</a>
 <ul>
 <li><a href="#using-the-command-line">Using the command line</a></li>
@@ -1172,6 +1174,35 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p>Optionally, a third column can be inserted, stating the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
 <p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong>~/.pyradio</strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong>~/.config/pyradio</strong>) and renamed to <strong>stations.csv</strong> or if this file exists, to <strong>pyradio.csv</strong>. In this case, this file will be the default one.</p>
+<h3 id="defining-and-using-groups">Defining and using Groups</h3>
+<p>In order to better organize stations within a (large) playlist, <strong>PyRadio</strong> supports <em>Groups</em>.</p>
+<p>A <em>Group</em> is defined as a normal “station” entry, whose URL field is a hyphen (“<strong>-</strong>”). For example, the following will define a <strong>Group Header</strong> for a <em>Group</em> called <strong>Blues</strong>.</p>
+<pre>Blues,-</pre>
+<p>A <strong>Group Header</strong> entry does not define a station, and subsequently cannot stat a playback session. Other that that, it can be moved, copied, deleted, etc, just like any other playlist entry.</p>
+<p>To add a <strong>Group Header</strong>, just press “<strong>a</strong>”, fill in the name and type a “<strong>-</strong>” in the <em>URL</em> field.</p>
+<p>Navigation among <strong>Groups</strong> can be achieved by:</p>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 76%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>^E</strong> / <strong>^Y</strong></td>
+<td>Go to next / previous <strong>Group</strong></td>
+</tr>
+<tr class="even">
+<td><strong>^G</strong></td>
+<td>Display a list of existing <strong>Groups</strong> to select from</td>
+</tr>
+</tbody>
+</table>
 <h3 id="integrating-new-stations">Integrating new stations</h3>
 <p>When the package’s “<em>stations.csv</em>” files is updated, the changes it has will not automatically appear in the user’s stations file.</p>
 <p><strong>PyRadio</strong> will display a message asking the user to either update the file, ignore the changes for this version or postpone his decision for the next time <strong>PyRadio</strong> will be executed.</p>
@@ -1341,6 +1372,10 @@ Station2,Station2_URL,iso-8859-7</pre>
 <pre>pyradio -u vlc,mplayer,mpv</pre>
 <p>will instruct <strong>PyRadio</strong> to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.</p>
 <p>The default player to use can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>, parameter <strong>player</strong> (default value is <strong>mpv, mplayer, vlc</strong>), using the “<em>Configuration Window</em>”, through which <strong>extra player parameters</strong> can be set.</p>
+<h3 id="changing-player-mid-session">Changing player mid-session</h3>
+<p>If the user faces a playback problem with a given station, chances are that a different player will successfully play it.</p>
+<p>Pressing “<strong>\m</strong>” will bring up the “<em>Switch Media Player</em>” window, where a different player can be activated.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The activated player will not be saved; <strong>PyRadio</strong> will still use the player defined at its config next time it is executed.</p>
 <h3 id="extra-player-parameters">Extra Player Parameters</h3>
 <p>All three supported players can accept a significant number of “<em>command line options</em>”, which are well documented and accessible through man pages (on linux and macOs) or the documentation (on Windows).</p>
 <p><strong>PyRadio</strong> uses some of these parameters in order to execute and communicate with the players. In particular, the following parameters are in use <strong>by default</strong>:</p>

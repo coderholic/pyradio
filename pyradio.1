@@ -291,6 +291,32 @@ Older versions used to use \fI~/.pyradio\fR as default stations file. If this fi
 
 .PP
 .B
+Defining and using Groups
+
+In order to better organize stations within a (large) playlist, \fBpyradio\fR supports \fIGroups\fR.
+
+A \fIGroup\fR is defined as a normal "station" entry, whose URL field is a hyphen ("\fB-\fR"). For example, the following will define a \fBGroup Header\fR for a \fIGroup\fR called \fBBlues\fR.
+
+.RS 5
+\fIBlues,-\fR
+.RE
+
+A \fBGroup Header\fR entry does not define a station, and subsequently cannot stat a playback session. Other that that, it can be moved, copied, deleted, etc, just like any other playlist entry.
+
+To add a \fBGroup Header\fR, just press "\fBa\fR", fill in the name and type a "\fB-\fR" in the \fIURL\fR field.
+
+Navigation among \fIGroups\fR can be achieved by:
+
+.RS 5
+
+.IP \fB^E\ /\ \^Y\fR
+Go to next / previous \fBGroup\fR.
+.IP \fB^G\fR
+Display a list of existing \fBGroups\fR to select from.
+.RE
+
+.PP
+.B
 Integrating new stations
 
 When the package's "\fIstations.csv\fR" files is updated, the changes it has will not automatically appear in the user's stations file.
@@ -689,6 +715,19 @@ will instruct \fBpyradio\fR to look for VLC, then MPlayer and finaly for MPV and
 
 .IP \fBNote\fR
 The default player to use can also be set in \fBpyradio\fR’s configuration file, parameter \fIplayer\fR (default value is \fImpv, mplayer, vlc\fR).
+
+
+.P
+\fBChanging player mid-session\fR
+
+.RS 4
+
+If the user faces a playback problem with a given station, chances are that a different player will successfully play it.
+
+Pressing "\fI\\m\fR" will bring up the "\fBSwitch Media Player\fR" window, where a different player can be activated.
+
+.IP \fBNote\fR
+The activated player will not be saved; **PyRadio** will still use the player defined at its config next time it is executed.
 
 .SH
 \fBExtra Player Parameters\fR

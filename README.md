@@ -22,6 +22,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
     * [Tiling manager modes](#tiling-manager-modes)
 * [Config file](#config-file)
 * [About Playlist files](#about-playlist-files)
+    * [Defining and using Groups](#defining-and-using-groups)
     * [Integrating new stations](#integrating-new-stations)
     * [Specifying a playlist to load (command line)](#specifying-a-playlist-to-load-(command-line))
     * [Autoloading playlists](#autoloading-playlists)
@@ -37,6 +38,7 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
     * [Station by station encoding declaration](#station-by-station-encoding-declaration)
     * [Global encoding declaration](#global-encoding-declaration)
 * [Player detection / selection](#player-detection-/-selection)
+    * [Changing player mid-session](#changing-player-mid-session)
     * [Extra Player Parameters](#extra-player-parameters)
         * [Using the command line](#using-the-command-line)
         * [Using the Configuration Window](#using-the-configuration-window)
@@ -346,6 +348,26 @@ Optionally, a third column can be inserted, stating the encoding used by the sta
 
 **Note:** Older versions used to use **~/.pyradio** as default stations file. If this file is found, it will be copied to use's config directory (e.g. **~/.config/pyradio**) and renamed to **stations.csv** or if this file exists, to **pyradio.csv**. In this case, this file will be the default one.
 
+### Defining and using Groups
+
+In order to better organize stations within a (large) playlist, **PyRadio** supports *Groups*.
+
+A *Group* is defined as a normal "station" entry, whose URL field is a hyphen ("**-**"). For example, the following will define a **Group Header** for a *Group* called **Blues**.
+
+    Blues,-
+
+A **Group Header** entry does not define a station, and subsequently cannot stat a playback session. Other that that, it can be moved, copied, deleted, etc, just like any other playlist entry.
+
+To add a **Group Header**, just press "**a**", fill in the name and type a "**-**" in the *URL* field.
+
+Navigation among **Groups** can be achieved by:
+
+| Key             | Description                                          |
+|-----------------|------------------------------------------------------|
+| **^E** / **^Y** | Go to next / previous **Group**                      |
+| **^G**          | Display a list of existing **Groups** to select from |
+
+
 ### Integrating new stations
 
 When the package's "*stations.csv*" files is updated, the changes it has will not automatically appear in the user's stations file.
@@ -625,6 +647,14 @@ will instruct **PyRadio** to use VLC; if it is not found, the program will termi
 will instruct **PyRadio** to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.
 
 The default player to use can also be set in **PyRadio**'s [configuration file](#config-file), parameter **player** (default value is **mpv, mplayer, vlc**), using the "*Configuration Window*", through which **extra player parameters** can be set.
+
+### Changing player mid-session
+
+If the user faces a playback problem with a given station, chances are that a different player will successfully play it.
+
+Pressing "**\\m**" will bring up the "*Switch Media Player*" window, where a different player can be activated.
+
+**Note:** The activated player will not be saved; **PyRadio** will still use the player defined at its config next time it is executed.
 
 ### Extra Player Parameters
 

@@ -1452,7 +1452,6 @@ class PyRadio(object):
 
         return "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), line[pad + 2:-2] + ' ')
 
-
     def _change_browser_ticks(self, lineNum, sep_col, all_ticks=None):
         ticks = all_ticks
         if self._cnf._online_browser:
@@ -3151,6 +3150,7 @@ __|Remote Control Server| cannot be started!__
                  self.ws.previous_operation_mode == self.ws.NORMAL_MODE):
             txt = '''\\      |Open previous playlist.
                      ]      |Open first opened playlist.
+                     m      |Cahnge |m|edia player.
                      n      |Create a |n|ew playlist.
                      p      |Select playlist/register to |p|aste to.
                      r      ||R|ename current playlist.
@@ -6554,12 +6554,12 @@ __|Remote Control Server| cannot be started!__
                         txt='___Nothing to put in register!!!___',
                         mode_to_set=self.ws.NORMAL_MODE,
                         callback_function=self.refreshBody)
-            elif self.stations[self.selection][1] == '-':
-                self._update_status_bar_right(status_suffix='')
-                self._show_notification_with_delay(
-                        txt='___Cannot copy a group header!!!___',
-                        mode_to_set=self.ws.NORMAL_MODE,
-                        callback_function=self.refreshBody)
+            # elif self.stations[self.selection][1] == '-':
+            #     self._update_status_bar_right(status_suffix='')
+            #     self._show_notification_with_delay(
+            #             txt='___Cannot copy a group header!!!___',
+            #             mode_to_set=self.ws.NORMAL_MODE,
+            #             callback_function=self.refreshBody)
             else:
                 self._update_status_bar_right(reg_y_pressed=True, status_suffix='y')
                 self._do_display_notify()
