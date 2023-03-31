@@ -1818,12 +1818,13 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._old_start_pos = self._start_pos
 
             self._selection = a_sel
+            self._make_sure_selection_is_visible()
             self._verify_selection_not_on_caption()
 
             # log_it('last line = {}'.format(self._start_pos + self._maxY))
             if a_sel < self._start_pos or a_sel >= self._start_pos + self._body_maxY:
                 self._start_pos = self._selection - int(self._body_maxY / 2) + 1
-                self.show()
+                self._refresh()
             else:
                 self._toggle_selected_item()
 
@@ -1940,22 +1941,16 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 the window to print output
         '''
         # log_it('show')
+        new_win = False
         if (not self._showed or parent != self._parent) \
                 and parent is not None:
             # log_it('\n\nhere\n\n')
             # log_it('got new parent')
             self._parent = parent
             self._get_window()
-            self._win.bkgdset(' ', self._color_border)
-            self._win.erase()
-            self._win.box()
             # logger.error('too_small = {}'.format(self._too_small))
-            if not self._too_small:
-                self._win.addstr(
-                    0, int((self._maxX-len(self._title))/2),
-                    self._title, self._color_title
-                )
             self._calculate_max_height_max_width()
+            new_win = True
 
         if self._too_small:
             self._win.addstr(1, 1, ' Window is', self._color)
@@ -1963,6 +1958,22 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._win.refresh()
             return
 
+        if new_win:
+            self._verify_selection_not_on_caption()
+            self._make_sure_selection_is_visible()
+            self.show()
+            return
+
+        self._win.bkgdset(' ', self._color_border)
+        self._win.erase()
+        self._win.box()
+        self._win.addstr(
+            0, int((self._maxX-len(self._title))/2),
+            self._title, self._color_title
+        )
+        self._refresh()
+
+    def _refresh(self):
         if len(self._items) == 0:
             self._win.hline(self._Y, self._X, ' ', self._maxX, self._color)
             self._win.refresh()
@@ -2111,7 +2122,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
         self._verify_selection_not_on_caption(mov)
         if not self._make_sure_selection_is_visible():
-            self.show()
+            self._refresh()
 
         return len(self._items)
 
@@ -2190,28 +2201,6 @@ class SimpleCursesMenu(SimpleCursesWidget):
         if self._too_small:
             return 1
 
-        if char == ord('z'):
-            self.selection = 10
-            return 1
-
-        if char == ord('d'):
-            self.selection = 50
-            return 1
-
-        if char == ord('c'):
-            self.selection = 100
-            return 1
-
-        if char == ord('e'):
-            self.selection = 15
-            return 1
-
-        if char == ord('w'):
-            self.selection = 1122
-            return 1
-
-
-
         if (not self._focused) or (not self._enabled):
             return 1
 
@@ -2239,7 +2228,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 if len(self._items) == len(self._captions) + 1:
                     return 0
             self.delete_item(self._selection)
-            self.show()
+            self._refresh()
             return 0
 
         elif self._right_arrow_selects and char in (
@@ -2270,7 +2259,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._toggle_selected_item()
             else:
                 self._start_pos = 0
-                self.show()
+                self._refresh()
 
         elif char in (ord('G'), curses.KEY_END):
             if len(self._items) == 0:
@@ -2284,10 +2273,10 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     self._toggle_selected_item()
                 else:
                     self._start_pos = self._selection - self._body_maxY + 1
-                    self.show()
+                    self._refresh()
             else:
                 self._start_pos = 0
-                self.show()
+                self._refresh()
 
         elif char == ord('H'):
             if len(self._items) == 0:
@@ -2318,17 +2307,17 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._verify_selection_not_on_caption()
                 if self._scroll:
                     self._start_pos = self._selection - self._body_maxY + 1
-                    self.show()
+                    self._refresh()
                     return 1
             else:
                 self._selection -= 5
                 self._verify_selection_not_on_caption()
                 if self._selection < self._start_pos:
                     self._start_pos = self._selection
-                    self.show()
+                    self._refresh()
                     return 1
             if not self._toggle_selected_item():
-                self.show()
+                self._refresh()
 
         elif char in (curses.KEY_NPAGE, ):
             if len(self._items) == 0:
@@ -2338,7 +2327,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._verify_selection_not_on_caption()
                 self._start_pos = 0
                 if self._scroll:
-                    self.show()
+                    self._refresh()
                     return 1
             else:
                 self._selection += 5
@@ -2350,10 +2339,10 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     # log_it('sel = {1}, start = {1}'.format(self._selection, self._start_pos))
                     if self._selection - self._start_pos > self._body_maxY - 1:
                         self._start_pos = self._selection - self._body_maxY + 1
-                        self.show()
+                        self._refresh()
                         return 1
             if not self._toggle_selected_item():
-                self.show()
+                self._refresh()
 
         elif char in (ord('k'), curses.KEY_UP):
             if len(self._items) == 0:
@@ -2366,7 +2355,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._start_pos = 0
                 if self._scroll:
                     self._start_pos = self._selection - self._body_maxY + 1
-                    self.show()
+                    self._refresh()
                     return 1
             if self._scroll:
                 # we have scrolling items
@@ -2374,12 +2363,12 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     # we need to scroll!
                     self._start_pos -= 1
                     # log_it('We need to scroll: start: {0}, selection = {1}'.format(self._start_pos,self._selection))
-                    self.show()
+                    self._refresh()
                     return 1
             # log_it('going from {0} to {1}, start at {2}'.format(self._old_selection, self._selection, self._start_pos))
             if not self._toggle_selected_item():
-                # log_it('self.show')
-                self.show()
+                # log_it('self._refresh')
+                self._refresh()
 
         elif char in (ord('j'), curses.KEY_DOWN):
             if len(self._items) == 0:
@@ -2393,7 +2382,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._verify_selection_not_on_caption()
                 self._start_pos = 0
                 if self._scroll:
-                    self.show()
+                    self._refresh()
                     return 1
             if self._scroll:
                 # we have scrolling items
@@ -2401,11 +2390,11 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     # we need to scroll!
                     self._start_pos = self._selection - self._body_maxY + 1
                     # log_it('We need to scroll: start: {0}, selection {1}'.format(self._start_pos, self._selection))
-                    self.show()
+                    self._refresh()
                     return 1
 
             if not self._toggle_selected_item():
-                self.show()
+                self._refresh()
 
         elif char in self._local_functions.keys():
             self._local_functions(char)
@@ -2414,6 +2403,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             return self._external_keypress__function(char)
 
         return 1
+
 
 class SimpleCursesCheckBox(SimpleCursesWidget):
     '''A very simple checkbox curses widget '''

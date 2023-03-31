@@ -482,6 +482,7 @@ class PyRadio(object):
             self.ws.SEARCH_THEME_MODE: self._redisplay_search_show,
             self.ws.SEARCH_SELECT_STATION_MODE: self._redisplay_search_show,
             self.ws.SEARCH_SELECT_PLAYLIST_MODE: self._redisplay_search_show,
+            self.ws.GROUP_SEARCH_MODE: self._redisplay_search_show,
             self.ws.THEME_MODE: self._redisplay_theme_mode,
             self.ws.PLAYLIST_RECOVERY_ERROR_MODE: self._print_playlist_recovery_error,
             self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
@@ -585,7 +586,7 @@ class PyRadio(object):
             1 - playlist search
             2 - theme search
         '''
-        self._search_classes = [None, None, None, None]
+        self._search_classes = [None, None, None, None, None]
 
         ''' points to list in which the search will be performed '''
         self._search_list = []
@@ -598,6 +599,7 @@ class PyRadio(object):
             self.ws.SELECT_PLAYLIST_MODE: 1,
             self.ws.THEME_MODE: 2,
             self.ws.PASTE_MODE: 3,
+            self.ws.GROUP_SELECTION_MODE: 4,
         }
 
         ''' which search mode opens from each allowed mode '''
@@ -608,6 +610,7 @@ class PyRadio(object):
             self.ws.SELECT_PLAYLIST_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
             self.ws.PASTE_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
             self.ws.SELECT_STATION_MODE: self.ws.SEARCH_SELECT_STATION_MODE,
+            self.ws.GROUP_SELECTION_MODE: self.ws.GROUP_SEARCH_MODE,
         }
 
         ''' search modes opened from main windows '''
@@ -5038,6 +5041,8 @@ __|Remote Control Server| cannot be started!__
                 self._playlist_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
                 self._station_select_win.setPlaylistById(ret, adjust=True)
+            elif self.ws.operation_mode in (self.ws.GROUP_SELECTION_MODE, self.ws.GROUP_SEARCH_MODE):
+                self._group_selection_window.selection = ret
             self.refreshBody()
 
         else:
@@ -5050,6 +5055,8 @@ __|Remote Control Server| cannot be started!__
                 self._playlist_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.previous_operation_mode == self.ws.SELECT_STATION_MODE:
                 self._station_select_win.setPlaylistById(ret, adjust=True)
+            elif self.ws.operation_mode in (self.ws.GROUP_SELECTION_MODE, self.ws.GROUP_SEARCH_MODE):
+                self._group_selection_window.selection = ret
             self.ws.close_window()
             self.refreshBody()
 
@@ -6699,27 +6706,6 @@ __|Remote Control Server| cannot be started!__
             self._update_stations_result()
             return
 
-        elif self.ws.operation_mode == self.ws.GROUP_SELECTION_MODE:
-            ret = self._group_selection_window.keypress(char)
-            if ret <= 0:
-                if ret == 0:
-                    ret = self._groups[self._group_selection_window.selection][0]
-                    self.setStation(ret)
-                    self._put_selection_in_the_middle(force=True)
-                    self.refreshBody()
-                    self.selections[self.ws.NORMAL_MODE] = [self.selection,
-                                                            self.startPos,
-                                                            self.playing,
-                                                            self.stations]
-                self._group_selection_window = None
-                self._groups = None
-                self.ws.close_window()
-                self.refreshBody()
-            elif ret == 2:
-                ''' show help '''
-                pass
-            return
-
         elif self.ws.operation_mode == self.ws.CHANGE_PLAYER_MODE:
             ret = self._change_player.keypress(char)
             if ret is None:
@@ -7757,6 +7743,27 @@ __|Remote Control Server| cannot be started!__
                 self.refreshBody()
             return
 
+        elif self.ws.operation_mode == self.ws.GROUP_SELECTION_MODE:
+            ret = self._group_selection_window.keypress(char)
+            if ret <= 0:
+                if ret == 0:
+                    ret = self._groups[self._group_selection_window.selection][0]
+                    self.setStation(ret)
+                    self._put_selection_in_the_middle(force=True)
+                    self.refreshBody()
+                    self.selections[self.ws.NORMAL_MODE] = [self.selection,
+                                                            self.startPos,
+                                                            self.playing,
+                                                            self.stations]
+                self._group_selection_window = None
+                self._groups = None
+                self.ws.close_window()
+                self.refreshBody()
+            elif ret == 2:
+                ''' show help '''
+                pass
+            return
+
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_OK_MODE:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
@@ -7807,6 +7814,9 @@ __|Remote Control Server| cannot be started!__
             elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
                 self._search_list = self._station_select_win._items
                 sel = self._station_select_win._selected_playlist_id + 1
+            elif self.ws.operation_mode == self.ws.GROUP_SELECTION_MODE:
+                self._search_list = self._group_selection_window._items
+                sel = self._group_selection_window.selection + 1
 
             if self.search.string:
                 if sel == len(self._search_list):
@@ -7845,6 +7855,9 @@ __|Remote Control Server| cannot be started!__
             elif self.ws.operation_mode == self.ws.SELECT_STATION_MODE:
                 self._search_list = self._station_select_win._items
                 sel = self._station_select_win._selected_playlist_id - 1
+            elif self.ws.operation_mode == self.ws.GROUP_SELECTION_MODE:
+                self._search_list = self._group_selection_window._items
+                sel = self._group_selection_window.selection - 1
 
             if self.search.string:
                 if sel < 0:
@@ -7883,6 +7896,9 @@ __|Remote Control Server| cannot be started!__
                 elif self.ws.previous_operation_mode == self.ws.SELECT_STATION_MODE:
                     self._search_list = self._station_select_win._items
                     sel = self._station_select_win._selected_playlist_id + 1
+                elif self.ws.previous_operation_mode == self.ws.GROUP_SELECTION_MODE:
+                    self._search_list = self._group_selection_window._items
+                    sel = self._group_selection_window.selection + 1
 
                 ''' perform search '''
                 if sel == len(self._search_list):
