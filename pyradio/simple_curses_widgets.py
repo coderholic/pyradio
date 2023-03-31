@@ -1498,10 +1498,9 @@ class SimpleCursesWidgetColumns(SimpleCursesWidget):
         return 1
 
 
-class SimpleCursesMenuEntries(SimpleCursesWidget):
-    ''' A menu entries widget
-        (a list of items vertically stacked)
-        with selection and active item.
+class SimpleCursesMenu(SimpleCursesWidget):
+    ''' A bordered wrapper around
+        SimpleCursesListEntries
     '''
 
     ''' items alignment '''
@@ -1509,23 +1508,36 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
     RIGHT = 1
     CENTER = 2      # not implemented
 
+    ''' window type '''
+    FULL_SCREEN = 0
+    CENTERED = 1
+    POS_Y_X = 2
+
     _selection = _start_pos = 0
     _global_functions = _local_functions = {}
     _can_add_items = _can_delete_items = False
-
     def __init__(self,
                  Y, X,
                  parent,
+                 window_type,
                  items,
+                 title,
                  color,
+                 color_title,
+                 color_border,
                  color_active,
                  color_cursor_selection,
                  color_cursor_active,
                  mode=-1,
                  selection=0,
                  active=-1,
-                 height=0,
-                 width=0,
+                 max_height=0,
+                 max_width=0,
+                 min_height=8,
+                 min_width=25,
+                 auto_adjust_width=False,
+                 full_window=False,
+                 outer_margin=2,
                  margin=0,
                  align=0,
                  has_captions = False,
@@ -1542,7 +1554,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                  on_right_callback_function=None,
                  global_functions=None,
                  local_functions=None,
-                 external_keypress__function=None
+                 external_keypress_function=None
                  ):
         ''' Initialize the widget.
 
@@ -1553,6 +1565,12 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             parent
                 The window to print items into. It must already exist
                 (this widget will not create a window)
+            window_type
+                The type of window to create
+                Types are:
+                    0 - Full screen; occupy the whole of the parent window
+                    1 - centered; center in parent window, obbey outer_margin
+                    2 - at Y,X with max_width and max_height
             items
                 A list containing the menu items
             mode
@@ -1579,6 +1597,10 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 If True, captions will not be displayed
             color
                 The normal color of the non-selected items
+            color_border
+                The color of the border
+            color_title
+                The color of the title (caption) of the widget
             color_active
                 The color of the active item (no cursor on it)
             color_cursor_selection
@@ -1589,12 +1611,17 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 The id of the currently selected item
             active
                 The id of the active item
-            height
+            max_height
                 The maximum number of lines to display
-                If 0, use parent's height - 2
-            width
+                If 0, use parent's max_height - 2
+            max_width
                 The maximum line length to display
-                If 0, use parent's width - 2
+                If 0, use parent's max_width - 2
+            auto_adjust_width
+                If False, obbey self._max_width
+                If True, set max_width to maximum length of items
+            outer_margin
+                Margin from parent
             margin
                 Number of spaces to add before and after each item caption
             align
@@ -1630,16 +1657,31 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                     1 - Continue
                     2 - Display help
         '''
-        self._items = []
+        self._too_small = False
+        self._showed = False
+        self._window_type = window_type
+        self._title = title
+        self._items = items
         self._Y = Y
         self._X = X
-        self._win = parent
+        self._parent = parent
+        self._items = []
         self._color = color
+        self._color_border = color_border
+        self._color_title = color_title
         self._color_active = color_active
         self._color_cursor_active = color_cursor_active
         self._color_cursor_selection = color_cursor_selection
-        self._maxY = height
-        self._maxX = width
+        self._maxY = self._max_height = max_height
+        self._body_maxY = self._maxY - 2
+        self._maxX = self._max_width = max_width
+        # log_it('init maxX = {}\n'.format(self._maxX))
+        self._minY = min_height
+        self._minX = min_width
+        self._body_maxX = self._maxX - 2
+        self._auto_adjust_width = auto_adjust_width
+        self._full_window = full_window
+        self._outer_margin = outer_margin
         self._margin = margin
         self._align = align
         self._has_captions = has_captions
@@ -1665,7 +1707,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             self._global_functions = global_functions
         if local_functions is not None:
             self._local_functions = local_functions
-        self._external_keypress__function = external_keypress__function
+        self._external_keypress__function = external_keypress_function
         self.active = active
         self._focused = True
         self._enabled = True
@@ -1682,8 +1724,15 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             can_add_items=self._can_add_items,
             can_delete_items=self._can_delete_items
         )
-        self._calculate_height_width()
+        self._get_window()
+        self._calculate_max_height_max_width()
         self._verify_selection_not_on_caption()
+        self._make_sure_selection_is_visible()
+
+    @property
+    def too_small(self):
+        '''Returns if the widget is too small '''
+        return self.too_small
 
     @property
     def string(self):
@@ -1697,7 +1746,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
 
     @property
     def selection(self):
-        '''Returns the widget's height '''
+        '''Returns the widget's max_height '''
         return self._selection
 
     @selection.setter
@@ -1708,25 +1757,25 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             raise ValueError('selection out of bounds!')
 
     @property
-    def height(self):
-        '''Returns the widget's height '''
+    def max_height(self):
+        '''Returns the widget's max_height '''
         return self._maxY
 
-    @height.setter
-    def height(self, value):
+    @max_height.setter
+    def max_height(self, value):
         self._maxY = val
-        self._calculate_height_width()
+        self._calculate_max_height_max_width()
         self._showed = False
 
     @property
-    def width(self):
-        '''Returns the widget's width '''
+    def max_width(self):
+        '''Returns the widget's max_width '''
         return self._maxX
 
-    @width.setter
-    def width(self, value):
+    @max_width.setter
+    def max_width(self, value):
         self._maxX = val
-        self._calculate_height_width()
+        self._calculate_max_height_max_width()
         self._showed = False
 
     @property
@@ -1738,7 +1787,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
     def parent(self, value):
         self._win = value
         self._showed = False
-        self._calculate_height_width()
+        self._calculate_max_height_max_width()
 
     @property
     def enabled(self):
@@ -1771,12 +1820,58 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             self._selection = a_sel
             self._verify_selection_not_on_caption()
 
-            log_it('last line = {}'.format(self._start_pos + self._maxY))
-            if a_sel < self._start_pos or a_sel >= self._start_pos + self._maxY:
-                self._start_pos = self._selection - int(self._maxY / 2) + 1
+            # log_it('last line = {}'.format(self._start_pos + self._maxY))
+            if a_sel < self._start_pos or a_sel >= self._start_pos + self._body_maxY:
+                self._start_pos = self._selection - int(self._body_maxY / 2) + 1
                 self.show()
             else:
                 self._toggle_selected_item()
+
+
+    def _get_window(self):
+        Y, X = self._parent.getmaxyx()
+        # log_it('== WIN Y = {0}, X = {1}'.format(Y, X))
+        if self._window_type == self.FULL_SCREEN:
+            self._Y = self._X = 0
+            self._maxY = Y
+            self._maxX = X
+        elif self._window_type == self.CENTERED:
+            self._maxY = items_max_Y = len(self._items)
+            if self._maxY > Y - 2 * self._outer_margin:
+                self._maxY = Y - 2 * self._outer_margin
+
+            # logger.error('max = {}'.format(max(len(x) for x in self._items)))
+            self._maxX = items_max_X = max(len(x) for x in self._items) + 2
+            if self._margin > 0:
+                self._maxX = self._maxX + 2 * self._margin
+            if self._display_count:
+                self._maxX = self._maxX + len(str(items_max_Y)) + 3
+            if self._maxX > X - 2 * self._outer_margin:
+                self._maxX = X - 2 * self._outer_margin
+
+            aY, aX = self._parent.getbegyx()
+            self._Y = aY + int((Y-self._maxY)/2)
+            self._X = int((X-self._maxX)/2)
+        else:
+            pass
+
+        if self._maxY <= self._minY or \
+                self._maxX <= self._minX:
+            self._too_small = True
+            aY, aX = self._parent.getbegyx()
+            self._win = curses.newwin(
+                4, 13,
+                aY + int((Y-4)/2),
+                int((X-13)/2)
+            )
+        else:
+            self._too_small = False
+            self._win = curses.newwin(
+                self._maxY, self._maxX,
+                self._Y, self._X
+            )
+        self._body_maxY = self._maxY - 2
+        self._body_maxX = self._maxX - 2
 
     def _get_item_id(self, item=None):
         ''' returns item id in visible window
@@ -1785,20 +1880,26 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
         if item is None:
             item = self._selection
         ret = item - self._start_pos
-        log_it('== ret = {}'.format(ret))
-        if ret < 0 or ret >= self._maxY:
+        # log_it('== ret = {}'.format(ret))
+        if ret < 0 or ret >= self._body_maxY:
             return -1
         return ret
 
     def toSrt(self, a_str):
         return a_str
 
-    def _calculate_height_width(self):
+    def _calculate_max_height_max_width(self):
+        return
         Y, X = self._win.getmaxyx()
         if self._maxY == 0:
             self._maxY = Y - 2
+
         if self._maxX == 0:
             self._maxX = X - 2
+        if self._auto_adjust_width:
+            self._maxX = len(max(self._items)) + 2 * self._margin
+        if self._maxX > self._max_width:
+            self._maxX = self._max_width
 
     def set_items(
         self,
@@ -1828,35 +1929,39 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 self._items = items
                 self._captions = []
             self._showed = False
-        self._scroll = True if len(self._items) > self._maxY else False
+        self._scroll = True if len(self._items) > self._body_maxY else False
 
-    def show(self, parent=None, height=-1, width=-1):
+    def show(self, parent=None):
         ''' show the widget
 
             Paramters
             =========
             parent
                 the window to print output
-            height
-                the widget's height
-                If set to 0, set to parent's height - 2
-                the window to print output
-            width
-                the widget's width
-                If set to 0, set to parent's width - 2
         '''
         # log_it('show')
-        if parent:
-            self._win = parent
-            self._calculate_height_width()
+        if (not self._showed or parent != self._parent) \
+                and parent is not None:
+            # log_it('\n\nhere\n\n')
+            # log_it('got new parent')
+            self._parent = parent
+            self._get_window()
+            self._win.bkgdset(' ', self._color_border)
+            self._win.erase()
+            self._win.box()
+            # logger.error('too_small = {}'.format(self._too_small))
+            if not self._too_small:
+                self._win.addstr(
+                    0, int((self._maxX-len(self._title))/2),
+                    self._title, self._color_title
+                )
+            self._calculate_max_height_max_width()
 
-        if height != -1:
-            self._maxY = height
-            self._calculate_height_width()
-
-        if width != -1:
-            self._maxX = width
-            self._calculate_height_width()
+        if self._too_small:
+            self._win.addstr(1, 1, ' Window is', self._color)
+            self._win.addstr(2, 1, ' Too small', self._color)
+            self._win.refresh()
+            return
 
         if len(self._items) == 0:
             self._win.hline(self._Y, self._X, ' ', self._maxX, self._color)
@@ -1865,48 +1970,62 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
         # calculate start item
         # TODO: calculate start_pos
 
-        self._item_width = len(max(self._items, key=len))
-        active_item_length = self._maxX - 2 * self._margin
-        for i in range(0, self._maxY):
-            cap = False
-            #print('i=',i)
+        self._item_max_width = len(max(self._items, key=len))
+        active_item_length = self._maxX - 2 * self._margin - 2
+        if self._start_pos < 0:
+            self._start_pos = 0
+        elif self._start_pos > len(self._items) - 1 - self._body_maxY:
+            self._start_pos = len(self._items) - self._body_maxY
+        for i in range(0, self._body_maxY):
             item_id = i + self._start_pos
-            if item_id < len(self._items):
-                if self._has_captions and not self._display_count:
-                    if item_id in self._captions:
-                        cap = True
-                if cap:
-                    disp_item = '─ ' + self._items[item_id][:active_item_length-2] + ' ─'
-                    self._win.addstr(i + self._Y, self._X, disp_item, self._color_captions)
-                    continue
-                elif self._display_count:
-                    if self._scroll:
-                        count_len = len(str(self._start_pos + self._maxY))
-                        # log_it('scroll count_len = {0}, start_pos = {1}'.format(count_len, self._start_pos))
-                    else:
-                        count_len = len(str(len(self._items)))
-                        # log_it('count_len = {}'.format(count_len))
-                    disp_item_pref = '{}. '.format(str(item_id+1).rjust(count_len))
-                    disp_item_suf = self._items[item_id][:active_item_length-len(disp_item_pref)]
-                    disp_item = ' ' * self._margin + disp_item_pref + disp_item_suf + ' ' * self._margin
-                else:
-                    #print('item_id = {}'.format(item_id))
-                    item = self._items[item_id][:active_item_length]
-                    if self._align == self.LEFT:
-                        disp_item = ' ' * self._margin + item.ljust(active_item_length) + ' ' * self._margin
-                    elif self._align == self.RIGHT:
-                        disp_item = ' ' * self._margin + item.rjust(active_item_length) + ' ' * self._margin
-                    else:
-                        disp_item = ' ' * self._margin + item.center(active_item_length) + ' ' * self._margin
-            else:
-                # create empty lines
-                disp_item = ' ' * self._maxX
-
+            disp_item = self._format_line(i, active_item_length)
+            if disp_item is None:
+                continue
+            # log_it('X={0}, item = "{1}"'.format(self._X, disp_item))
             col = self._get_item_color(item_id)
-            self._win.addstr(i + self._Y, self._X, disp_item, col)
+            try:
+                self._win.addstr(i+1, 1, disp_item, col)
+            except:
+                pass
+        self._win.refresh()
         self._showed = True
 
-        self._win.refresh()
+    def _format_line(self, i, active_item_length):
+        cap = False
+        #print('i=',i)
+        item_id = i + self._start_pos
+        if item_id < len(self._items):
+            if self._has_captions and not self._display_count:
+                if item_id in self._captions:
+                    cap = True
+            if cap:
+                disp_item = '─ ' + self._items[item_id][:active_item_length-2] + ' ─'
+                self._win.addstr(i + self._Y, self._X, disp_item, self._color_captions)
+                return None
+            elif self._display_count:
+                if self._scroll:
+                    count_len = len(str(self._start_pos + self._body_maxY))
+                    # log_it('scroll count_len = {0}, start_pos = {1}'.format(count_len, self._start_pos))
+                else:
+                    count_len = len(str(len(self._items)))
+                    # log_it('count_len = {}'.format(count_len))
+                disp_item_pref = '{}. '.format(str(item_id+1).rjust(count_len))
+                disp_item_suf = self._items[item_id][:active_item_length-len(disp_item_pref)]
+                disp_item = ' ' * self._margin + disp_item_pref + disp_item_suf + ' ' * self._margin
+            else:
+                #print('item_id = {}'.format(item_id))
+                item = self._items[item_id][:active_item_length]
+                if self._align == self.LEFT:
+                    disp_item = ' ' * self._margin + item.ljust(active_item_length) + ' ' * self._margin
+                elif self._align == self.RIGHT:
+                    disp_item = ' ' * self._margin + item.rjust(active_item_length) + ' ' * self._margin
+                else:
+                    disp_item = ' ' * self._margin + item.center(active_item_length) + ' ' * self._margin
+            disp_item = disp_item.ljust(self._body_maxX)
+        else:
+            # create empty lines
+            disp_item = ' ' * self._body_maxX
+        return disp_item
 
     def _get_item_color(self, item_id):
         # log_it('--- START ---')
@@ -1934,37 +2053,21 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
         return col
 
     def _make_sure_selection_is_visible(self):
-        if len(self._items) <= self._maxY:
+        if len(self._items) <= self._body_maxY:
             self._start_pos = 0
             return
-        meso = int(self._maxY / 2)
+        meso = int(self._body_maxY / 2)
         st = old_st = self._start_pos
-        en = st + self._maxY - 1
-        log_it('old_st = st = {0}, sel = {1}, en = {2}'.format(st, self._selection, en))
-        # if not (st <= self._selection <= en):
-        if st < self._selection:
-            log_it('I am at 1')
-            st = self._selection - self._maxY + 1
-            if st < 0:
-                st = 0
+        en = st + self._body_maxY - 1
 
-        elif en < self._selection:
-            log_it('I am at 2')
-            st = self._selection - self._maxY
-            log_it('(){0} + {1}): {2} >= {3}'.format(st, meso, st + meso, self._maxY))
-            if st < 0:
-                st = 0
-            elif st + meso >= self._maxY:
-                st = len(self._items) - self._maxY
-        if st > self._selection:
-            st = self._selection
+        st = self._selection - meso
+
+        if st < 0:
+            st = 0
         self._start_pos = st
-        # self._verify_selection_not_on_caption()
-        log_it('old_st = {0} , st = {1}, sel = {2}, en = {3}'.format(old_st, st, self._selection, en))
-        return old_st == st
 
     def _verify_selection_not_on_caption(self, movement=1):
-        log_it('\n\n1 mov = {0}, sel = {1}, items = {2}'.format(movement, self._selection, len(self._items)))
+        # log_it('\n\n1 mov = {0}, sel = {1}, items = {2}'.format(movement, self._selection, len(self._items)))
         if len(self._items) == 0:
             return
         if self._selection < 0 and movement != -1:
@@ -1981,7 +2084,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                     self._selection = 0
                 elif self._selection < 0:
                     self._selection = len(self._items) - 1
-        log_it('\n\n2 mov = {0}, sel = {1}, items = {2}'.format(movement, self._selection, len(self._items)))
+        # log_it('\n\n2 mov = {0}, sel = {1}, items = {2}'.format(movement, self._selection, len(self._items)))
 
     def delete_item(self, target):
         d = deque(self._items)
@@ -1989,13 +2092,13 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
         ret = d.popleft()
         d.rotate(target)
         self._items = list(d)
-        log_it('=======> id = {0}, captions = {1}'.format(target, self._captions))
+        # log_it('=======> id = {0}, captions = {1}'.format(target, self._captions))
         if self._has_captions:
             for i in range(0, len(self._captions)):
                 if target < self._captions[i]:
                     self._captions[i] -= 1
 
-        log_it('-------> id = {0}, captions = {1}'.format(target, self._captions))
+        # log_it('-------> id = {0}, captions = {1}'.format(target, self._captions))
 
         mov = 1
         if self._selection >= len(self._items):
@@ -2013,22 +2116,36 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
         return len(self._items)
 
     def _toggle_selected_item(self):
-        log_it('_toggle_selected_item')
+        active_item_length = self._body_maxX - 2 * self._margin
+        # log_it('_toggle_selected_item')
         update = False
         old_selection_id = self._get_item_id(self._old_selection)
         if old_selection_id > -1:
-            self._win.chgat(self._Y + old_selection_id, self._X, self._maxX, self._get_item_color(self._old_selection))
-            log_it('_toggle_selection_item: changing old selection: {0}, line: {1}'.format(old_selection_id, self._Y + old_selection_id))
+            self._win.chgat(old_selection_id + 1, 1, self._body_maxX, self._get_item_color(self._old_selection))
+            # self._win.addstr(
+            #     old_selection_id + 1,
+            #     1,
+            #     self._format_line(old_selection_id, active_item_length),
+            #     self._get_item_color(self._old_selection)
+            # )
+            # log_it('_toggle_selection_item: X={0}, changing old selection: {1}, line: {2}'.format(self._X, old_selection_id, self._Y + old_selection_id))
             update = True
         else:
-            log_it('_toggle_selection_item: NOT changing old selection: {0}, line: {1}'.format(old_selection_id, self._Y + old_selection_id))
-            log_it('                        start: {}'.format(self._start_pos))
-            log_it('                        selection: {}'.format(self._selection))
-            log_it('                        old_selection: {}'.format(self._old_selection))
+            # log_it('_toggle_selection_item: NOT changing old selection: {0}, line: {1}'.format(old_selection_id, self._Y + old_selection_id))
+            # log_it('                        start: {}'.format(self._start_pos))
+            # log_it('                        selection: {}'.format(self._selection))
+            # log_it('                        old_selection: {}'.format(self._old_selection))
+            pass
         selection_id = self._get_item_id(self._selection)
         if selection_id > -1:
-            self._win.chgat(self._Y + selection_id, self._X, self._maxX, self._get_item_color(self._selection))
-            log_it('_toggle_selection_item: setting new selection: {0}, line: {1}'.format(selection_id, self._Y + selection_id))
+            self._win.chgat(selection_id + 1, 1, self._body_maxX, self._get_item_color(self._selection))
+            # self._win.addstr(
+            #     selection_id + 1,
+            #     1,
+            #     self._format_line(selection_id, active_item_length),
+            #     self._get_item_color(self._selection)
+            # )
+            # log_it('_toggle_selection_item: X={0}, setting new selection: {1}, line: {2}'.format(self._X, selection_id, self._Y + selection_id))
             update = True
         if update:
             self._win.refresh()
@@ -2036,15 +2153,28 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
         return False
 
     def _toggle_active_item(self):
+        active_item_length = self._body_maxX - 2 * self._margin
         self._old_active = self.active
         self.active = self._selection
         old_active_id = self._get_item_id(self._old_active)
         if old_active_id > -1:
-            self._win.chgat(self._Y + old_active_id, self._X, self._maxX, self._color)
-            log_it('_toggle_active_item: changind old active: {0}, line: {1}'.format(old_active_id, self._Y + old_active_id))
+            self._win.addstr(
+                old_active_id + 1,
+                1,
+                self._format_line(old_active_id, active_item_length),
+                self._get_item_color(old_active_id)
+            )
+            # self._win.chgat(old_active_id + 1, 1, self._body_maxX, self._color)
+            # log_it('_toggle_active_item: changind old active: {0}, line: {1}'.format(old_active_id, self._Y + old_active_id))
         active_id = self._get_item_id(self.active)
-        self._win.chgat(self._Y + active_id, self._X, self._maxX, self._color_cursor_active)
-        log_it('_toggle_active_item: setting new active: {0}, line: {1}'.format(active_id, self._Y + active_id))
+        # self._win.chgat(active_id + 1, 1, self._body_maxX, self._color_cursor_active)
+        self._win.addstr(
+            active_id + 1,
+            1,
+            self._format_line(active_id, active_item_length),
+            self._get_item_color(self._selection)
+        )
+        # log_it('_toggle_active_item: setting new active: {0}, line: {1}'.format(active_id, self._Y + active_id))
         self._win.refresh()
 
     def keypress(self, char):
@@ -2057,6 +2187,8 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 1 - Continue
                 2 - Display help
         '''
+        if self._too_small:
+            return 1
 
         if char == ord('z'):
             self.selection = 10
@@ -2070,6 +2202,14 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             self.selection = 100
             return 1
 
+        if char == ord('e'):
+            self.selection = 15
+            return 1
+
+        if char == ord('w'):
+            self.selection = 1122
+            return 1
+
 
 
         if (not self._focused) or (not self._enabled):
@@ -2077,10 +2217,10 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
 
         self._old_selection = self._selection
         self._old_start_pos = self._start_pos
-        log_it('  == old_sel = {0}, start = {1}'.format(self._old_selection, self._old_start_pos))
+        # log_it('  == old_sel = {0}, start = {1}'.format(self._old_selection, self._old_start_pos))
 
         if char in self._global_functions.keys():
-            self._global_functions(char)
+            self._global_functions[char]()
 
         elif char in (
             curses.KEY_EXIT, ord('q'), 27,
@@ -2123,7 +2263,7 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
 
         elif char in (ord('g'), curses.KEY_HOME):
             if len(self._items) == 0:
-                return
+                return 1
             self._selection = 0
             self._verify_selection_not_on_caption()
             if self._start_pos == 0:
@@ -2134,16 +2274,16 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
 
         elif char in (ord('G'), curses.KEY_END):
             if len(self._items) == 0:
-                return
+                return 1
             self._selection = len(self._items) - 1
             self._verify_selection_not_on_caption(-1)
-            log_it('\n\n=====> max = {0}, items = {1}\n\n'.format(self._maxY, len(self._items)))
-            if len(self._items) >= self._maxY:
-                if self._start_pos > self._selection - self._maxY:
-                    self._start_pos = self._selection - self._maxY + 1
+            # log_it('\n\n=====> max = {0}, items = {1}\n\n'.format(self._body_maxY, len(self._items)))
+            if len(self._items) >= self._body_maxY:
+                if self._start_pos > self._selection - self._body_maxY:
+                    self._start_pos = self._selection - self._body_maxY + 1
                     self._toggle_selected_item()
                 else:
-                    self._start_pos = self._selection - self._maxY + 1
+                    self._start_pos = self._selection - self._body_maxY + 1
                     self.show()
             else:
                 self._start_pos = 0
@@ -2151,55 +2291,55 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
 
         elif char == ord('H'):
             if len(self._items) == 0:
-                return
+                return 1
             self._selection = self._start_pos
             self._verify_selection_not_on_caption()
             self._toggle_selected_item()
 
         elif char == ord('M'):
             if len(self._items) == 0:
-                return
-            self._selection = self._start_pos + int(self._maxY /2) - 1
+                return 1
+            self._selection = self._start_pos + int(self._body_maxY /2) - 1
             self._verify_selection_not_on_caption()
             self._toggle_selected_item()
 
         elif char == ord('L'):
             if len(self._items) == 0:
-                return
-            self._selection = self._start_pos + self._maxY - 1
+                return 1
+            self._selection = self._start_pos + self._body_maxY - 1
             self._verify_selection_not_on_caption()
             self._toggle_selected_item()
 
         elif char in (curses.KEY_PPAGE, ):
             if len(self._items) == 0:
-                return
+                return 1
             if self._selection == 0:
                 self._selection = len(self._items) - 1
                 self._verify_selection_not_on_caption()
                 if self._scroll:
-                    self._start_pos = self._selection - self._maxY + 1
+                    self._start_pos = self._selection - self._body_maxY + 1
                     self.show()
-                    return
+                    return 1
             else:
                 self._selection -= 5
                 self._verify_selection_not_on_caption()
                 if self._selection < self._start_pos:
                     self._start_pos = self._selection
                     self.show()
-                    return
+                    return 1
             if not self._toggle_selected_item():
                 self.show()
 
         elif char in (curses.KEY_NPAGE, ):
             if len(self._items) == 0:
-                return
+                return 1
             if self._selection == len(self._items) - 1:
                 self._selection = 0
                 self._verify_selection_not_on_caption()
                 self._start_pos = 0
                 if self._scroll:
                     self.show()
-                    return
+                    return 1
             else:
                 self._selection += 5
                 self._verify_selection_not_on_caption()
@@ -2207,17 +2347,17 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                     self._selection = len(self._items) - 1
                     self._verify_selection_not_on_caption(-1)
                 if self._scroll:
-                    log_it('sel = {1}, start = {1}'.format(self._selection, self._start_pos))
-                    if self._selection - self._start_pos > self._maxY - 1:
-                        self._start_pos = self._selection - self._maxY + 1
+                    # log_it('sel = {1}, start = {1}'.format(self._selection, self._start_pos))
+                    if self._selection - self._start_pos > self._body_maxY - 1:
+                        self._start_pos = self._selection - self._body_maxY + 1
                         self.show()
-                        return
+                        return 1
             if not self._toggle_selected_item():
                 self.show()
 
         elif char in (ord('k'), curses.KEY_UP):
             if len(self._items) == 0:
-                return
+                return 1
             self._selection -= 1
             self._verify_selection_not_on_caption(-1)
             if self._selection < 0:
@@ -2225,25 +2365,25 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 self._verify_selection_not_on_caption(-1)
                 self._start_pos = 0
                 if self._scroll:
-                    self._start_pos = self._selection - self._maxY + 1
+                    self._start_pos = self._selection - self._body_maxY + 1
                     self.show()
-                    return
+                    return 1
             if self._scroll:
                 # we have scrolling items
                 if self._selection < self._start_pos:
                     # we need to scroll!
                     self._start_pos -= 1
-                    log_it('We need to scroll: start: {0}, selection = {1}'.format(self._start_pos,self._selection))
+                    # log_it('We need to scroll: start: {0}, selection = {1}'.format(self._start_pos,self._selection))
                     self.show()
-                    return
-            log_it('going from {0} to {1}, start at {2}'.format(self._old_selection, self._selection, self._start_pos))
+                    return 1
+            # log_it('going from {0} to {1}, start at {2}'.format(self._old_selection, self._selection, self._start_pos))
             if not self._toggle_selected_item():
-                log_it('self.show')
+                # log_it('self.show')
                 self.show()
 
         elif char in (ord('j'), curses.KEY_DOWN):
             if len(self._items) == 0:
-                return
+                return 1
             self._selection += 1
             if self._has_captions:
                 if self._selection in self._captions:
@@ -2254,15 +2394,15 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
                 self._start_pos = 0
                 if self._scroll:
                     self.show()
-                    return
+                    return 1
             if self._scroll:
                 # we have scrolling items
-                if self._selection >= self._start_pos + self._maxY:
+                if self._selection >= self._start_pos + self._body_maxY:
                     # we need to scroll!
-                    self._start_pos = self._selection - self._maxY + 1
-                    log_it('We need to scroll: start: {0}, selection {1}'.format(self._start_pos, self._selection))
+                    self._start_pos = self._selection - self._body_maxY + 1
+                    # log_it('We need to scroll: start: {0}, selection {1}'.format(self._start_pos, self._selection))
                     self.show()
-                    return
+                    return 1
 
             if not self._toggle_selected_item():
                 self.show()
@@ -2274,8 +2414,6 @@ class SimpleCursesMenuEntries(SimpleCursesWidget):
             return self._external_keypress__function(char)
 
         return 1
-
-
 
 class SimpleCursesCheckBox(SimpleCursesWidget):
     '''A very simple checkbox curses widget '''
@@ -2519,7 +2657,7 @@ class SimpleCursesPushButton(SimpleCursesWidget):
 
     @X.setter
     def X(self, value):
-        logger.info('new X = {}'.format(value))
+        # logger.info('new X = {}'.format(value))
         if value != self._X:
             self._X = value
             self._win = curses.newwin(1, self._width, self._Y, self._X)
@@ -3452,11 +3590,11 @@ class SimpleCursesLineEdit(object):
                         if at_end_of_disp:
                             self._disp_curs_pos += cjklen(self._displayed_string[-1])
             else:
-                self.__to_right_simple()
+                self._to_right_simple()
             if self._curs_pos > len(self._displayed_string):
                 self._curs_pos = len(self._displayed_string)
 
-    def __to_right_simple(self):
+    def _to_right_simple(self):
         if len(self.string) < self._max_chars_to_display:
             self._curs_pos += 1
             if self._curs_pos > len(self.string):

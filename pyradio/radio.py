@@ -41,6 +41,8 @@ from .install import version_string_to_list, get_github_tag, fix_pyradio_win_exe
 from .html_help import HtmlHelp
 from .browser import RadioBrowserConfig, RadioBrowserConfigWindow
 from .schedule_win import PyRadioSimpleScheduleWindow
+from .simple_curses_widgets import SimpleCursesMenu
+
 CAN_CHECK_FOR_UPDATES = True
 try:
     from urllib.request import urlopen
@@ -370,6 +372,7 @@ class PyRadio(object):
     _last_html_song_title = ''
 
     _remote_control_window = None
+    _group_selection_window = None
 
     def ll(self, msg):
         logger.error('DE ==========')
@@ -546,6 +549,7 @@ class PyRadio(object):
             self.ws.CHANGE_PLAYER_MODE: self._redisplay_select_player,
             self.ws.UPDATE_STATIONS_CSV_RESULT_MODE: self._update_stations_result,
             self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE: self._ask_to_update_stations_csv,
+            self.ws.GROUP_SELECTION_MODE: self._show_group_selection,
         }
 
         ''' list of help functions '''
@@ -6203,6 +6207,44 @@ __|Remote Control Server| cannot be started!__
         self._unnamed_register = deleted_station
         self.selections[0][3] = self.stations
 
+    def _show_group_selection(self):
+        if self._group_selection_window is None:
+            self._groups = [(x, y[0]) for x, y in enumerate(self.stations) if y[1] =='-']
+            if self._groups == []:
+                self._groups = None
+                txt='___No Groups found!___'
+                self._show_notification_with_delay(
+                        txt=txt,
+                        mode_to_set=self.ws.NORMAL_MODE,
+                        callback_function=self.refreshBody)
+                return
+            if self.selection < self._groups[0][0]:
+                active = -1
+                selection = 0
+            else:
+                active = selection = [i for i, x in enumerate(self._groups) if self.selection>=x[0]][-1]
+                logger.error(active)
+            logger.error('active = {}'.format(active))
+            self.ws.operation_mode = self.ws.GROUP_SELECTION_MODE
+            self._group_selection_window = SimpleCursesMenu(
+                Y = -1, X = -1,
+                items=[x[1] for x in self._groups],
+                parent=self.bodyWin,
+                title=' Available Groups ',
+                display_count=True,
+                active=active, selection=selection,
+                color=curses.color_pair(10),
+                color_title=curses.color_pair(11),
+                color_border=curses.color_pair(3),
+                color_active=curses.color_pair(11),
+                color_cursor_selection=curses.color_pair(6),
+                color_cursor_active=curses.color_pair(9),
+                window_type=SimpleCursesMenu.CENTERED,
+                margin=1,
+                global_functions=self._global_functions
+            )
+        self._group_selection_window.show(parent=self.bodyWin)
+
     def keypress(self, char):
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
@@ -6655,6 +6697,27 @@ __|Remote Control Server| cannot be started!__
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
             self._update_stations_result()
+            return
+
+        elif self.ws.operation_mode == self.ws.GROUP_SELECTION_MODE:
+            ret = self._group_selection_window.keypress(char)
+            if ret <= 0:
+                if ret == 0:
+                    ret = self._groups[self._group_selection_window.selection][0]
+                    self.setStation(ret)
+                    self._put_selection_in_the_middle(force=True)
+                    self.refreshBody()
+                    self.selections[self.ws.NORMAL_MODE] = [self.selection,
+                                                            self.startPos,
+                                                            self.playing,
+                                                            self.stations]
+                self._group_selection_window = None
+                self._groups = None
+                self.ws.close_window()
+                self.refreshBody()
+            elif ret == 2:
+                ''' show help '''
+                pass
             return
 
         elif self.ws.operation_mode == self.ws.CHANGE_PLAYER_MODE:
@@ -8250,9 +8313,9 @@ __|Remote Control Server| cannot be started!__
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == curses.ascii.BEL:
-                    logger.error('^G')
-                    data = [(x, y[0]) for x, y in enumerate(self.stations) if y[1] =='-']
-                    logger.error(data)
+                    ''' ^G - show groups '''
+                    self._group_selection_window = None
+                    self._show_group_selection()
 
                 elif char in (curses.ascii.EM, curses.ascii.ENQ):
                     if self._cnf._online_browser is None:
