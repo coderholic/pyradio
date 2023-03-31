@@ -551,6 +551,7 @@ class PyRadio(object):
             self.ws.UPDATE_STATIONS_CSV_RESULT_MODE: self._update_stations_result,
             self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE: self._ask_to_update_stations_csv,
             self.ws.GROUP_SELECTION_MODE: self._show_group_selection,
+            self.ws.GROUP_HELP_MODE: self._show_group_help,
         }
 
         ''' list of help functions '''
@@ -579,6 +580,7 @@ class PyRadio(object):
             self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
             self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
             self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
+            self.ws.GROUP_HELP_MODE: self._show_group_help,
         }
 
         ''' search classes
@@ -2722,6 +2724,22 @@ __|Remote Control Server| cannot be started!__
                         mode_to_set=self.ws.RADIO_BROWSER_CONFIG_HELP_MODE,
                         caption=' RadioBrowser Config Help ')
 
+    def _show_group_help(self):
+        txt = '''Up|,|j|,|PgUp|,
+                 Down|,|k|,|PgDown    |Change Group Header selection.
+                 g G              |Go to first / last Group Header.
+                 H M L            |Go to top / middle / bottom of screen.
+                 Space|, |Left|, |Enter
+                 _________________|Select a Group Header.
+                 Esc|,|q            |Cancel.
+                 %_Global functions_
+                 -|/|+| or |,|/|.       |Change volume.
+                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                 W| / |w            |Toggle title log / like a station.'''
+        self._show_help(txt,
+                        mode_to_set=self.ws.GROUP_HELP_MODE,
+                        caption=' Group Selection Help ')
+
     def _show_main_help(self, from_keyboard=False):
         txt = '''Up|,|j|,|PgUp|,
                  Down|,|k|,|PgDown    |Change station selection.
@@ -2822,12 +2840,16 @@ __|Remote Control Server| cannot be started!__
 
     def _show_main_help_page_5(self, from_keyboard=False):
         txt = '''!Change Player
-                 \m               |Open player selection window.
+                 \m               |Open the |Player Selection| window.
                  !Remote Control Server
                  \s               |Start/Stop the |Server|.
                  !Title Logger
                  W                |Toggle Logger on/off
                  w                |Tag a station as liked
+                 !Group Management
+                 a A              |Add a |Group| (set |URL| = |-|).
+                 ^E |/ |^Y          |Go to next /previous |Group|.
+                 ^G               |Open the |Group Selection| window.
                  !Windows Only
                  F7               |Delete old installation files.
                  F8               |Players management.
@@ -7761,6 +7783,7 @@ __|Remote Control Server| cannot be started!__
                 self.refreshBody()
             elif ret == 2:
                 ''' show help '''
+                self._show_group_help()
                 pass
             return
 

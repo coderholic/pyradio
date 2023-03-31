@@ -97,6 +97,7 @@ class Window_Stack_Constants(object):
     UPDATE_STATIONS_CSV_RESULT_MODE = 136
     GROUP_SELECTION_MODE = 137
     GROUP_SEARCH_MODE = 138
+    GROUP_HELP_MODE = 139
     # TODO: return values from opening theme
     PLAYLIST_RECOVERY_ERROR_MODE = 200
     PLAYLIST_NOT_FOUND_ERROR_MODE = 201
@@ -277,7 +278,8 @@ class Window_Stack_Constants(object):
         UPDATE_NOTIFICATION_MODE: 'UPDATE_NOTIFICATION_MODE',
         UPDATE_STATIONS_CSV_RESULT_MODE: 'UPDATE_STATIONS_CSV_RESULT_MODE',
         GROUP_SELECTION_MODE: 'GROUP_SELECTION_MODE',
-        GROUP_SEARCH_MODE: 'GROUP_SEARCH_MODE'
+        GROUP_SEARCH_MODE: 'GROUP_SEARCH_MODE',
+        GROUP_HELP_MODE: 'GROUP_HELP_MODE',
     }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -361,6 +363,7 @@ class Window_Stack_Constants(object):
         CHANGE_PLAYER_ONE_PLAYER_ERROR_MODE,
         CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE,
         UPDATE_STATIONS_CSV_RESULT_MODE,
+        GROUP_HELP_MODE,
     )
 
     def __init__(self):

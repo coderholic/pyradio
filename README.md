@@ -1398,6 +1398,7 @@ As of **v. 0.9.1**, **PyRadio** includes the icon in its distribution files, so 
 ## TODO
 
 - [ ] Any user request I find interesting :)
+- [ ] Use some kind of a scheduler
 - [x] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112)) - v 0.9.0
 - [ ] Use some OPML service, [https://opml.radiotime.com](https://opml.radiotime.com) for example
 - [x] Notify the user that the package's stations.csv has changed -v 0.8.9
