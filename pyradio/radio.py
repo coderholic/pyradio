@@ -4721,7 +4721,11 @@ __|Remote Control Server| cannot be started!__
     def play_random(self):
         # Pick a random radio station
         if self.number_of_items > 0:
-            self.setStation(random.randint(0, len(self.stations)))
+            while True:
+                rnd = random.randint(0, len(self.stations))
+                if self.stations[rnd][1] != '-':
+                    break
+            self.setStation(rnd)
             self.playSelection()
             self._put_selection_in_the_middle(force=True)
             self.refreshBody()
@@ -7765,28 +7769,6 @@ __|Remote Control Server| cannot be started!__
                 self.refreshBody()
             return
 
-        elif self.ws.operation_mode == self.ws.GROUP_SELECTION_MODE:
-            ret = self._group_selection_window.keypress(char)
-            if ret <= 0:
-                if ret == 0:
-                    ret = self._groups[self._group_selection_window.selection][0]
-                    self.setStation(ret)
-                    self._put_selection_in_the_middle(force=True)
-                    self.refreshBody()
-                    self.selections[self.ws.NORMAL_MODE] = [self.selection,
-                                                            self.startPos,
-                                                            self.playing,
-                                                            self.stations]
-                self._group_selection_window = None
-                self._groups = None
-                self.ws.close_window()
-                self.refreshBody()
-            elif ret == 2:
-                ''' show help '''
-                self._show_group_help()
-                pass
-            return
-
         elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_OK_MODE:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
@@ -7816,9 +7798,10 @@ __|Remote Control Server| cannot be started!__
                 self.refreshBody()
             return
 
+        # elif char in (ord('n'), ) and \
+        #         self.ws.operation_mode in self._search_modes.keys():
         elif char in (ord('n'), ) and \
                 self.ws.operation_mode in self._search_modes.keys():
-            # logger.error('DE n operation_mode = {}'.format(self.ws.operation_mode))
             self._give_me_a_search_class(self.ws.operation_mode)
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 self._update_status_bar_right()
@@ -7947,6 +7930,28 @@ __|Remote Control Server| cannot be started!__
                 self.ws.close_window()
                 self.refreshBody()
                 return
+
+        elif self.ws.operation_mode == self.ws.GROUP_SELECTION_MODE:
+            ret = self._group_selection_window.keypress(char)
+            if ret <= 0:
+                if ret == 0:
+                    ret = self._groups[self._group_selection_window.selection][0]
+                    self.setStation(ret)
+                    self._put_selection_in_the_middle(force=True)
+                    self.refreshBody()
+                    self.selections[self.ws.NORMAL_MODE] = [self.selection,
+                                                            self.startPos,
+                                                            self.playing,
+                                                            self.stations]
+                self._group_selection_window = None
+                self._groups = None
+                self.ws.close_window()
+                self.refreshBody()
+            elif ret == 2:
+                ''' show help '''
+                self._show_group_help()
+                pass
+            return
 
         elif char in (ord('T'), ):
             self._update_status_bar_right()

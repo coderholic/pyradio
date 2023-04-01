@@ -1726,7 +1726,6 @@ class SimpleCursesMenu(SimpleCursesWidget):
         )
         self._get_window()
         self._calculate_max_height_max_width()
-        self._verify_selection_not_on_caption()
         self._make_sure_selection_is_visible()
 
     @property
@@ -1818,15 +1817,21 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._old_start_pos = self._start_pos
 
             self._selection = a_sel
-            self._make_sure_selection_is_visible()
-            self._verify_selection_not_on_caption()
 
-            # log_it('last line = {}'.format(self._start_pos + self._maxY))
-            if a_sel < self._start_pos or a_sel >= self._start_pos + self._body_maxY:
-                self._start_pos = self._selection - int(self._body_maxY / 2) + 1
+            if self._make_sure_selection_is_visible():
                 self._refresh()
             else:
                 self._toggle_selected_item()
+
+
+            # self._make_sure_selection_is_visible()
+
+            # # log_it('last line = {}'.format(self._start_pos + self._maxY))
+            # if a_sel < self._start_pos or a_sel >= self._start_pos + self._body_maxY:
+            #     self._start_pos = self._selection - int(self._body_maxY / 2) + 1
+            #     self._refresh()
+            # else:
+            #     self._toggle_selected_item()
 
 
     def _get_window(self):
@@ -1959,7 +1964,6 @@ class SimpleCursesMenu(SimpleCursesWidget):
             return
 
         if new_win:
-            self._verify_selection_not_on_caption()
             self._make_sure_selection_is_visible()
             self.show()
             return
@@ -1987,6 +1991,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._start_pos = 0
         elif self._start_pos > len(self._items) - 1 - self._body_maxY:
             self._start_pos = len(self._items) - self._body_maxY
+        # logger.error('refresh (st={0}, sel={1})'.format(self._start_pos, self._selection))
         for i in range(0, self._body_maxY):
             item_id = i + self._start_pos
             disp_item = self._format_line(i, active_item_length)
@@ -2063,19 +2068,28 @@ class SimpleCursesMenu(SimpleCursesWidget):
         # log_it('--- END ---')
         return col
 
-    def _make_sure_selection_is_visible(self):
+    def _make_sure_selection_is_visible(self, mov=1):
+        ''' adjust self._start_pos to make self._selection visible
+            Returns
+                True    self._start_pos changed (use self._refresh)
+                False   self._start_pos not changed (use self._toggle_selected_item)
+        '''
         if len(self._items) <= self._body_maxY:
             self._start_pos = 0
             return
+        self._verify_selection_not_on_caption(mov)
+        self._old_start_pos = self._start_pos
         meso = int(self._body_maxY / 2)
-        st = old_st = self._start_pos
-        en = st + self._body_maxY - 1
+        self._end_pos = self._start_pos + self._body_maxY - 1
 
-        st = self._selection - meso
+        if self._start_pos <= self._selection <= self._end_pos:
+            return False
 
-        if st < 0:
-            st = 0
-        self._start_pos = st
+        self._start_pos = self._selection - meso
+
+        if self._start_pos < 0:
+            self._start_pos = 0
+        return True
 
     def _verify_selection_not_on_caption(self, movement=1):
         # log_it('\n\n1 mov = {0}, sel = {1}, items = {2}'.format(movement, self._selection, len(self._items)))
@@ -2121,8 +2135,10 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self.active = -1
 
         self._verify_selection_not_on_caption(mov)
-        if not self._make_sure_selection_is_visible():
+        if self._make_sure_selection_is_visible():
             self._refresh()
+        else:
+            self._toggle_selected_item()
 
         return len(self._items)
 
@@ -2158,6 +2174,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             # )
             # log_it('_toggle_selection_item: X={0}, setting new selection: {1}, line: {2}'.format(self._X, selection_id, self._Y + selection_id))
             update = True
+        # logger.error('toggle (st={0}, sel={1})'.format(self._start_pos, self._selection))
         if update:
             self._win.refresh()
             return True
