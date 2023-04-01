@@ -1,4 +1,10 @@
 2023-04-01 s-n-g
+    * version 0.9.2.4
+    * do not crash when we have a small number of Groups
+    * get a minimum size so that we don't get stuck
+    * position all windows relevant to parent
+
+2023-04-01 s-n-g
     * version 0.9.2.3
     * fixing search function for Group Selection window (pressing
       "n" or "N" will now work)

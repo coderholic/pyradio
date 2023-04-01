@@ -2729,6 +2729,7 @@ __|Remote Control Server| cannot be started!__
                  Down|,|k|,|PgDown    |Change Group Header selection.
                  g G              |Go to first / last Group Header.
                  H M L            |Go to top / middle / bottom of screen.
+                 / n N            |Perform search.
                  Space|, |Left|, |Enter
                  _________________|Select a Group Header.
                  Esc|,|q            |Cancel.
@@ -8391,13 +8392,13 @@ __|Remote Control Server| cannot be started!__
                             else:
                                 # logger.error('selection not in d')
                                 if len(d) == 1:
-                                    logger.error('x1 ind = {}'.format(ind))
                                     ind = d[0]
+                                    # logger.error('x1 ind = {}'.format(ind))
                                 else:
                                     if char == curses.ascii.EM:
                                         try:
                                             ind = [n for n in d if n < self.selection][-1]
-                                            logger.error('x2 ind = {}'.format(ind))
+                                            # logger.error('x2 ind = {}'.format(ind))
                                         except IndexError:
                                             ind = [n for n in d if n < self.number_of_items][0]
                                             # logger.error('x3 ind = {}'.format(ind))

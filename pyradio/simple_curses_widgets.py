@@ -1855,23 +1855,37 @@ class SimpleCursesMenu(SimpleCursesWidget):
             if self._maxX > X - 2 * self._outer_margin:
                 self._maxX = X - 2 * self._outer_margin
 
+            ''' make sure we have a big enough window '''
+            if self._maxY < 10:
+                self._maxY = 10
+            if self._maxX < 30:
+                self._maxX = 30
+
             aY, aX = self._parent.getbegyx()
             self._Y = aY + int((Y-self._maxY)/2)
-            self._X = int((X-self._maxX)/2)
+            self._X = aX + int((X-self._maxX)/2)
+
         else:
-            pass
+            aY, aX = self._parent.getbegyx()
 
         if self._maxY <= self._minY or \
-                self._maxX <= self._minX:
+                self._maxX <= self._minX or \
+                self._X < 2 or \
+                self._Y < 2:
             self._too_small = True
             aY, aX = self._parent.getbegyx()
             self._win = curses.newwin(
                 4, 13,
                 aY + int((Y-4)/2),
-                int((X-13)/2)
+                aX + int((X-13)/2)
             )
+            self._print_box()
         else:
             self._too_small = False
+            # logger.info('Y={0}, X={1}, maxY={2}, maxX={3}'.format(
+            #     self._Y, self._X,
+            #     self._maxY, self._maxX
+            # ))
             self._win = curses.newwin(
                 self._maxY, self._maxX,
                 self._Y, self._X
@@ -1968,14 +1982,23 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self.show()
             return
 
+        self._print_box_and_title()
+        self._refresh()
+
+    def _print_box_and_title(self):
+        self._print_box()
+        self._print_title()
+
+    def _print_box(self):
         self._win.bkgdset(' ', self._color_border)
         self._win.erase()
         self._win.box()
+
+    def _print_title(self):
         self._win.addstr(
             0, int((self._maxX-len(self._title))/2),
             self._title, self._color_title
         )
-        self._refresh()
 
     def _refresh(self):
         if len(self._items) == 0:
@@ -1991,6 +2014,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._start_pos = 0
         elif self._start_pos > len(self._items) - 1 - self._body_maxY:
             self._start_pos = len(self._items) - self._body_maxY
+        ''' make sure we have a valid self._start_pos '''
+        if self._start_pos < 0:
+            self._start_pos = 0
         # logger.error('refresh (st={0}, sel={1})'.format(self._start_pos, self._selection))
         for i in range(0, self._body_maxY):
             item_id = i + self._start_pos
