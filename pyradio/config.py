@@ -654,12 +654,12 @@ class PyRadioStations(object):
                     return -1
 
         self.stations = list(self._reading_stations)
-        logger.error('DE stations\n{}\n\n'.format(self.stations))
+        # logger.error('DE stations\n{}\n\n'.format(self.stations))
         self.set_playlist_data(stationFile, prev_file, is_register)
         self.number_of_stations = len(self.stations)
 
-        for n in self.stations:
-            logger.info(n)
+        # for n in self.stations:
+        #     logger.info(n)
         return self.number_of_stations
 
     def set_playlist_data(self, stationFile, prev_file, is_register = False):

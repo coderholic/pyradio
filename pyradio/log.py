@@ -67,6 +67,7 @@ class Log(object):
     _song_title_lock = threading.Lock()
     _song_title = ''
     _station_that_is_playing_now = ''
+    _last = ['', '']
 
     can_display_help_msg = None
 
@@ -76,7 +77,8 @@ class Log(object):
         self._cnf = config
         self.width = None
         self._get_startup_window_title()
-        self._repeat_notification = RepeatDesktopNotification()
+        self._enable_notifications = int(self._cnf.enable_notifications)
+        self._repeat_notification = RepeatDesktopNotification(lambda: self._enable_notifications)
         self._get_icon_path()
 
     def __del__(self):
@@ -378,6 +380,7 @@ class Log(object):
                 self._station_sent = False
                 self._stop_desktop_notification_thread = True
                 self._desktop_notification_thread = None
+                self._last = ['', '']
                 return
 
             if msg.startswith('[Muted] '):
@@ -484,11 +487,28 @@ class Log(object):
         if msg.startswith('Title: '):
             d_msg = msg.replace('Title: ', '')
             d_title = 'Now playing'
+            if self._last[1] == d_msg:
+                ''' already shown this title '''
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('already shown this title: "{0}" - {1}'.format(d_msg, self._last))
+                self._desktop_notification_message = d_msg
+                return None, None
+            self._last[1] = d_msg
         elif msg.startswith('Playing: '):
             if self._station_sent:
                 return None, None
             d_title = 'Station'
             d_msg = msg.replace('Playing: ', '')
+            # if self._last[1]:
+            #     ''' already shown song title '''
+            #     logger.error('already shown song title: "{0}" - {1}'.format(d_msg, self._last))
+            #     return None, None
+            if self._last[0] == d_msg:
+                ''' already shown song title '''
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('already shown station name: "{0}" - {1}'.format(d_msg, self._last))
+                return None, None
+            self._last[0] = d_msg
         elif msg.startswith('[Muted] '):
             d_title = 'Player muted!'
             d_msg = msg.replace('[Muted] ', '')
@@ -668,8 +688,9 @@ class Log(object):
 
 class RepeatDesktopNotification(object):
 
-    def __init__(self):
+    def __init__(self, timeout):
         self._a_lock = self._start_time = None
+        self.timeout = timeout
 
     @property
     def start_time(self):
@@ -679,9 +700,9 @@ class RepeatDesktopNotification(object):
     def start_time(self, value):
         with self._a_lock:
             self._start_time = value
+            end_time = value + datetime.timedelta(seconds=self.timeout())
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Setting repetative Desktop Notification timer start to: {}'.format(self._start_time))
-
+                logger.debug('Setting repetative Desktop Notification timer to: {}'.format(end_time))
 
     def reset_timer(self):
         self.start_time = datetime.datetime.now()
