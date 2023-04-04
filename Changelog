@@ -1,3 +1,10 @@
+2023-04-02 s-n-g
+    * version 0.9.2.5
+    * Desktop Notifications will display the image
+      provided by the station (jpg or png). The image
+      will be stations[3] = {'image': 'url'}
+    * updating docs
+
 2023-04-01 s-n-g
     * version 0.9.2.4
     * do not crash when we have a small number of Groups

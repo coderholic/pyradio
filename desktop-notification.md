@@ -60,7 +60,9 @@ The icon that is displayed in the notification message is by default **PyRadio**
 1. In the *configuration directory*, under **data** (or **Help** folder on Windows).
 2. In the distribution directory (under the **icons** folder).
 
-As a consequence, one could replace the icon found in the *configuration directory* (under **data** or **Help**) with a custom icon, preserving the icon name as appropriate (*pyradio.png*, or *pyradio.ico*).
+As a consequence, one could replace the icon found in the *configuration directory* (under **data** or **Help**) with a custom icon, preserving the icon name as appropriate (*pyradio.png*, or *pyradio.ico* on Windows).
+
+On **Radio Browser**, stations may provide a *station icon*; this icon will be used instead, provided that it is of JPG or PNG format.
 
 ## On Linux
 

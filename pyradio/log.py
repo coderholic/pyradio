@@ -10,6 +10,7 @@ import datetime
 import logging
 import threading
 import subprocess
+from tempfile import gettempdir
 from .common import player_start_stop_token
 from .cjkwrap import cjklen, PY3
 
@@ -668,7 +669,7 @@ class Log(object):
 class RepeatDesktopNotification(object):
 
     def __init__(self):
-        _a_lock = _start_time = None
+        self._a_lock = self._start_time = None
 
     @property
     def start_time(self):
@@ -774,6 +775,16 @@ class RepeatDesktopNotification(object):
             if 'MSG' in notification_command[i]:
                 notification_command[i] = notification_command[i].replace('MSG', d_msg)
             if 'ICON' in notification_command[i]:
-                notification_command[i] = notification_command[i].replace('ICON', self.icon_path)
+                if platform.lower().startswith('win'):
+                    icon = self.icon_path
+                else:
+                    temp_dir = gettempdir()
+                    ic = (
+                        join(temp_dir, 'station.jpg'),
+                        join(temp_dir, 'station.png'),
+                        self.icon_path
+                    )
+                    icon = [x for x in ic if exists(x)][0]
+                notification_command[i] = notification_command[i].replace('ICON', icon)
         return notification_command
 

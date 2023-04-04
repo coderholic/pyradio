@@ -66,6 +66,7 @@ class PyRadioConfigWindow(object):
     '|', 'Default value: utf-8'])
     _help_text.append(['If this options is enabled, the mouse can be used to scroll the playlist, start, stop and mute the player, adjust its volume etc.', '|', 'Mouse support is highly terminal dependent, that\'s why it is disabled by default.', '|', 'Default value: False'])
     _help_text.append(['If this options is enabled, a Desktop Notification will be displayed using the notification daemon / service.', '|', 'If enabled but no notification is displayed, please refer to', 'https://github.com/coderholic/pyradio/desktop-notification.md', '|', 'Valid values are:', '   -1: disabled ', '    0: enabled (no repetition) ', '    x: repeat every x seconds ', '|', 'Default value: -1'])
+    _help_text.append(['Notice: Not applicable on Windows!', '|',  'Online Radio Directory Services (like Radio Browser) will usually provide an icon for the stations they advertise.', '|', 'PyRadio can use this icon (provided that one exists and is of JPG or PNG format) while displaying Desktop Notifications.', '|', 'Setting this option to True, will enable the behavior above.', '|', 'If this option is False, the default icon will be used.', '|', 'Default value: True'])
     _help_text.append(None)
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
@@ -469,6 +470,8 @@ class PyRadioConfigWindow(object):
         self._config_options['default_station'][1] = 'False'
         self._config_options['default_encoding'][1] = 'utf-8'
         self._config_options['enable_mouse'][1] = 'False'
+        self._config_options['enable_notifications'][1] = '-1'
+        self._config_options['use_station_icon'][1] = 'True'
         self._config_options['connection_timeout'][1] = '10'
         self._config_options['theme_title'][1] = ''
         ''' Transparency '''
@@ -835,7 +838,8 @@ class PyRadioConfigWindow(object):
                     sel == 'enable_mouse' or \
                     sel == 'auto_save_playlist' or \
                     sel == 'force_http' or \
-                    sel == 'remote_control_server_auto_start':
+                    sel == 'remote_control_server_auto_start' or \
+                    sel == 'use_station_icon':
                 self._config_options[sel][1] = not self._config_options[sel][1]
                 # # if sel == 'open_last_playlist':
                 # #     if self._config_options[sel][1]:

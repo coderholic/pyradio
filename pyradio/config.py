@@ -85,14 +85,14 @@ class PyRadioStations(object):
     '''
     PLAYLIST_HAS_NAME_URL = 0
     PLAYLIST_HAS_NAME_URL_ENCODING = 1
-    PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER = 2
+    PLAYLIST_HAS_NAME_URL_ENCODING_ICON = 2
     _playlist_version = PLAYLIST_HAS_NAME_URL
     _read_playlist_version = PLAYLIST_HAS_NAME_URL
 
     _playlist_version_to_string = {
             PLAYLIST_HAS_NAME_URL: 'PLAYLIST_HAS_NAME_URL',
             PLAYLIST_HAS_NAME_URL_ENCODING: 'PLAYLIST_HAS_NAME_URL_ENCODING',
-            PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER: 'PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER'
+            PLAYLIST_HAS_NAME_URL_ENCODING_ICON: 'PLAYLIST_HAS_NAME_URL_ENCODING_ICON'
         }
 
     dirty_playlist = False
@@ -611,7 +611,7 @@ class PyRadioStations(object):
                 self._reading_stations = []
                 prev_file = self.station_path
                 prev_format = self._playlist_version
-                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER
+                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
                 read_file = False
             else:
                 self.stations = []
@@ -645,19 +645,21 @@ class PyRadioStations(object):
                                 self._reading_stations.append([name, url, enc, ''])
                                 self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING
                             except:
-                                name, url, enc, onl = [s.strip() for s in row]
-                                self._reading_stations.append([name, url, enc, onl])
-                                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER
+                                name, url, enc, icon = [s.strip() for s in row]
+                                self._reading_stations.append([name, url, enc, {'image': icon}])
+                                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
                 except:
                     self._reading_stations = []
                     self._playlist_version = prev_format
                     return -1
 
         self.stations = list(self._reading_stations)
-        # logger.error('DE stations\n{}\n\n'.format(self.stations))
+        logger.error('DE stations\n{}\n\n'.format(self.stations))
         self.set_playlist_data(stationFile, prev_file, is_register)
         self.number_of_stations = len(self.stations)
 
+        for n in self.stations:
+            logger.info(n)
         return self.number_of_stations
 
     def set_playlist_data(self, stationFile, prev_file, is_register = False):
@@ -726,7 +728,7 @@ class PyRadioStations(object):
         playlist_version = self.PLAYLIST_HAS_NAME_URL
         for n in self.stations:
             if n[3] != '':
-                playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER
+                playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
                 break
         if playlist_version == self.PLAYLIST_HAS_NAME_URL:
             for n in self.stations:
@@ -799,8 +801,10 @@ class PyRadioStations(object):
     def _format_playlist_row(self, a_row):
         ''' Return a 2-column if in old format,
             a 3-column row if has encoding, or
-            a 4 column row if has online browser flag too '''
-        if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER:
+            a 4 column row if has icon too '''
+        if 'image' in a_row[3]:
+            a_row[3] = a_row[3] ['image']
+        if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
             return a_row
         elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
             return a_row[:-1]
@@ -948,6 +952,8 @@ class PyRadioStations(object):
                     m_station[0] = '"' + m_station[0] + '"'
                     break
 
+            if 'image' in m_station[3]:
+                m_station[3] = m_station[3]['image']
             w_str = ','.join(m_station)
             while w_str.endswith(','):
                 w_str = w_str[:-1]
@@ -1141,8 +1147,10 @@ class PyRadioStations(object):
             a_station[0] = '"' + name + '"'
         else:
             a_station[0] = name
-        while len(a_station) < self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER + 2:
+        while len(a_station) < self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON + 2:
             a_station.append('')
+        if 'image' in a_station[3]:
+            a_station[3] = a_station[3]['image']
         string_to_write = ','.join(a_station) + '\n'
         with self._registers_lock:
             try:
@@ -1220,6 +1228,7 @@ class PyRadioConfig(PyRadioStations):
     opts['default_encoding'] = ['Def. encoding: ', 'utf-8']
     opts['enable_mouse'] = ['Enable mouse support: ', False]
     opts['enable_notifications'] = ['Enable notifications: ', '-1']
+    opts['use_station_icon'] = ['    Use station icon: ', True]
     opts['conn_title'] = ['Connection Options: ', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
@@ -1457,6 +1466,15 @@ class PyRadioConfig(PyRadioStations):
     @enable_notifications.setter
     def enable_notifications(self, val):
         self.opts['enable_notifications'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def use_station_icon(self):
+        return self.opts['use_station_icon'][1]
+
+    @use_station_icon.setter
+    def use_station_icon(self, val):
+        self.opts['use_station_icon'][1] = val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -2009,6 +2027,11 @@ class PyRadioConfig(PyRadioStations):
                         self.opts['enable_notifications'][1] = str(t * 30)
                     except (ValueError, TypeError):
                         self.opts['enable_notifications'][1] = '-1'
+            elif sp[0] == 'use_station_icon':
+                if sp[1].lower() == 'false':
+                    self.opts['use_station_icon'][1] = False
+                else:
+                    self.opts['use_station_icon'][1] = True
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False
@@ -2323,6 +2346,14 @@ enable_mouse = {5}
 # Default value: -1
 enable_notifications = {6}
 
+# Station icon
+# Radio Browser will provide an icon for some of its stations.
+# This icon can be downloaded and used in Desktop Notifications,
+# if this option is True.
+#
+# Default value: True
+use_station_icon = {7}
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server
 # message indicating that playback has actually started.
@@ -2333,7 +2364,7 @@ enable_notifications = {6}
 #
 # Valid values: 5 - 60, 0 disables check
 # Default value: 10
-connection_timeout = {7}
+connection_timeout = {8}
 
 # Force http connections
 # Most radio stations use plain old http protocol to broadcast, but
@@ -2342,7 +2373,7 @@ connection_timeout = {7}
 #
 # Valid values: True, true, False, false
 # Default value: False
-force_http = {8}
+force_http = {9}
 
 # Default theme
 # Hardcooded themes:
@@ -2356,7 +2387,7 @@ force_http = {8}
 # with an asterisk (i.e. '*my_theme')
 # This is applicable for user themes only!
 # Default value = 'dark'
-theme = {9}
+theme = {10}
 
 # Transparency setting
 # If False, theme colors will be used.
@@ -2365,7 +2396,7 @@ theme = {9}
 # not running, the terminal's background color will be used.
 # Valid values: True, true, False, false
 # Default value: False
-use_transparency = {10}
+use_transparency = {11}
 
 # Calculated color factor
 # This is to produce Secondary Windows background color
@@ -2375,7 +2406,7 @@ use_transparency = {10}
 # https://github.com/coderholic/pyradio#secondary-windows-background
 # Valid values: 0-0.2
 # Default value: 0
-calculated_color_factor = {11}
+calculated_color_factor = {12}
 
 # Playlist management
 #
@@ -2383,27 +2414,27 @@ calculated_color_factor = {11}
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {12}
+confirm_station_deletion = {13}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within PyRadio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {13}
+confirm_playlist_reload = {14}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {14}
+auto_save_playlist = {15}
 
 # When PyRadio determines that a restricted
 # terminal is used, it will display a message
 # every time it is lounched. To disable this
 # message, change the value to False.
 # Default value: True
-show_no_themes_message = {15}
+show_no_themes_message = {16}
 
 # Remote Control server
 # A simple http server that can accept remote
@@ -2415,9 +2446,9 @@ show_no_themes_message = {15}
 #
 # Default value: localhost:9998
 #                no auto start
-remote_control_server_ip = {16}
-remote_control_server_port = {17}
-remote_control_server_auto_start = {18}
+remote_control_server_ip = {17}
+remote_control_server_port = {18}
+remote_control_server_auto_start = {19}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
@@ -2443,6 +2474,7 @@ remote_control_server_auto_start = {18}
                     self.opts['default_encoding'][1],
                     self.opts['enable_mouse'][1],
                     self.opts['enable_notifications'][1],
+                    self.opts['use_station_icon'][1],
                     self.opts['connection_timeout'][1],
                     self.opts['force_http'][1],
                     theme,

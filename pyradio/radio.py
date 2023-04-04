@@ -17,10 +17,11 @@ import signal
 from copy import deepcopy
 from sys import version as python_version, version_info, platform
 from os.path import join, basename, getmtime, getsize
-from os import remove
+from os import remove, rename
 from platform import system
 from time import ctime, sleep
 from datetime import datetime
+from tempfile import gettempdir
 import glob
 try:
     import psutil
@@ -392,6 +393,13 @@ class PyRadio(object):
                  req_player='',
                  theme='',
                  force_update=''):
+        temp_dir = gettempdir()
+        self._station_images = (
+            join(temp_dir, 'station.jpg'),
+            join(temp_dir, 'station.png'),
+            join(temp_dir, 'station-icon.raw'),
+        )
+
         self._no_netifaces = False
         self._current_selection = 0
         self._force_print_all_lines = False
@@ -1800,6 +1808,7 @@ class PyRadio(object):
             if ret:
                 self._remote_control_server = None
         self.restore_colors()
+        self._remove_station_images()
 
     def _wait_for_threads(self):
         self.log._stop_desktop_notification_thread = True
@@ -1816,6 +1825,7 @@ class PyRadio(object):
                 self.stop_update_notification_thread = True
                 if self._update_stations_thread:
                     self._update_stations_thread.join()
+        self.stop_update_notification_thread = True
 
     def _goto_playing_station(self, changing_playlist=False):
         ''' make sure playing station is visible '''
@@ -1920,6 +1930,14 @@ class PyRadio(object):
                 sleep(.25)
             self.playSelection(restart=True)
 
+    def _remove_station_images(self):
+        for n in self._station_images:
+            if exists(n):
+                try:
+                    remove(n)
+                except:
+                    pass
+
     def playSelection(self, restart=False):
         ''' start playback using current selection
             if restart = True, start the station that has
@@ -1944,6 +1962,18 @@ class PyRadio(object):
             # logger.error('setting playing to {}'.format(self._last_played_station_id))
             self.playing = self._last_played_station_id
         else:
+            self._remove_station_images()
+            if self._cnf.enable_notifications and \
+                    self._cnf.use_station_icon and \
+                    not platform.startswith('win'):
+                if 'image' in self.stations[self.selection][3]:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('+++ need to download icon: "{}"'.format(self.stations[self.selection][3]['image']))
+                    self.log.write(msg='Downloading icon...')
+                    self._download_station_image(
+                        self.stations[self.selection][3]['image'],
+                        lambda: self.stop_update_notification_thread
+                    )
             # if self._cnf.browsing_station_service:
             #     if self._cnf.online_browser.have_to_retrieve_url:
             #         self.log.display_help_message = False
@@ -1961,7 +1991,6 @@ class PyRadio(object):
                     enc = ''
             except:
                 enc = ''
-
         ''' start player '''
         self.log.write(msg=player_start_stop_token[0] + self._last_played_station[0])
         # logger.error('DE \n\nself.detect_if_player_exited = {}\n\n'.format(self.detect_if_player_exited))
@@ -2119,6 +2148,51 @@ class PyRadio(object):
             + player_start_stop_token[msg_id],
             help_msg=True, suffix=self._status_suffix, counter=''
         )
+
+    def _download_station_image(self, url, stop):
+        threading.Thread(
+            target=self._thread_download_station_image,
+            args=(url, stop),
+        ).start()
+
+    def _thread_download_station_image(self, url, stop):
+        if url:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('+++ downloading icon...')
+            file_to_write = self._station_images[0] if url.endswith('.jpg') else self._station_images[1]
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('+++ icon download: asked to stop. Stopping...')
+                return
+            response = requests.get(url)
+            if stop():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('+++ icon download: asked to stop. Stopping...')
+                return
+            if response.status_code == 200:
+                with open(self._station_images[2], 'wb') as local_file:
+                    for chunk in response.iter_content(chunk_size=128):
+                        if stop():
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('+++ icon download: asked to stop. Stopping...')
+                            return
+                        local_file.write(chunk)
+            if not (exists(self._station_images[0]) or exists(self._station_images[1])):
+                if stop():
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('+++ icon download: asked to stop. Stopping...')
+                    return
+                try:
+                    rename(self._station_images[2], file_to_write)
+                except:
+                    self._remove_station_images()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('+++ icon downloaded...')
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('+++ icon downloaded, but already exists...')
+
+
 
     def _ask_to_remove_group(self):
         txt = '''

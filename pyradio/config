@@ -45,6 +45,14 @@ enable_mouse = False
 # Default value: -1
 enable_notifications = -1
 
+# Station icon
+# Radio Browser will provide an icon for some of its stations.
+# This icon can be downloaded and used in Desktop Notifications,
+# if this option is True.
+# #
+# Default value: True
+use_station_icon = True
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server
 # message indicating that playback has actually started.

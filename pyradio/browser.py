@@ -218,7 +218,7 @@ class PyRadioStationsBrowser(object):
     def vote_callback(self, val):
         self._vote_callback = val
 
-    def stations(self, playlist_format=1):
+    def stations(self, playlist_format=2):
         return []
 
     def url(self, id_in_list):
@@ -294,8 +294,6 @@ class RadioBrowser(PyRadioStationsBrowser):
         'User-Agent': 'PyRadio/dev',
         'Content-Type': 'application/json'
     }
-
-    _raw_stations = []
 
     # the output format to use based on window width
     # Default value: -1
@@ -421,7 +419,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             # if 'T' in self._global_functions.keys():
             #     del self._global_functions['T']
 
-    def stations(self, playlist_format=1):
+    def stations(self, playlist_format=2):
         ''' Return stations' list (in PyRadio playlist format)
 
             Parameters
@@ -429,7 +427,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             playlist_format
                 0: station name, url
                 1: station name, url, encoding
-                2: station name, url, encoding, browser flag (default)
+                2: station name, url, encoding, {icon}
         '''
 
         ret = []
@@ -441,7 +439,14 @@ class RadioBrowser(PyRadioStationsBrowser):
                 ret.append([n['name'], n['url'], enc])
             else:
                 enc = '' if n['encoding'] == self._config_encoding else n['encoding']
-                ret.append([n['name'], n['url'], enc, ''])
+                fav = ''
+                chk_fav = n['favicon'].split('?')
+                use_fav = chk_fav[0]
+                if use_fav.endswith('.jpg') or \
+                        use_fav.endswith('.png'):
+                    fav = use_fav
+                # ret.append([n['name'], n['url'], enc, ''])
+                ret.append([n['name'], n['url'], enc, {'image': fav}])
         return ret
 
     def save_config(self):
@@ -1025,6 +1030,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 ret[-1]['state'] = n['state']
                 ret[-1]['tags'] = n['tags'].replace(',', ', ')
                 ret[-1]['homepage'] = n['homepage']
+                ret[-1]['favicon'] = n['favicon']
                 if isinstance(n['clickcount'], int):
                     # old API
                     ret[-1]['votes'] = n['votes']

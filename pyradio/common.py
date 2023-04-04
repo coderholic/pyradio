@@ -171,7 +171,7 @@ class StationsChanges(object):
 
         self.PLAYLIST_HAS_NAME_URL = 0
         self.PLAYLIST_HAS_NAME_URL_ENCODING = 1
-        self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER = 2
+        self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON = 2
         self.counts = [0, 0, 0]
 
     def _read_version(self):
@@ -226,7 +226,7 @@ class StationsChanges(object):
                             except:
                                 name, url, enc, onl = [s.strip() for s in row]
                                 self._stations.append([name, url, enc, onl])
-                                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER
+                                self._read_playlist_version = self._playlist_version = self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON
                 except:
                     self._stations = []
                     self._playlist_version = self.PLAYLIST_HAS_NAME_URL
@@ -241,6 +241,10 @@ class StationsChanges(object):
             with open(self._out_stations_file, 'w', encoding='utf-8') as cfgfile:
                 writter = csv.writer(cfgfile)
                 for a_station in self._stations:
+                    logger.error('before a_station = "{}"'.format(a_station))
+                    if a_station[3] != '':
+                        a_station[3] = a_station[3]['image']
+                        logger.error(' after a_station = "{}"'.format(a_station))
                     writter.writerow(self._format_playlist_row_out(a_station))
         except:
             print('Error: Cannot create the updated stations file.')
@@ -274,7 +278,7 @@ class StationsChanges(object):
         ''' Return a 2-column if in old format,
             a 3-column row if has encoding, or
             a 4 column row if has online browser flag too '''
-        if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_BROWSER:
+        if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
             return a_row
         elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
             return a_row[:-1]

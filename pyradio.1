@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2023 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "March 2023" pyradio
+.TH pyradio 1 "April 2023" pyradio
 
 .SH Name
 .PP
@@ -309,7 +309,7 @@ Navigation among \fIGroups\fR can be achieved by:
 
 .RS 5
 
-.IP \fB^E\ /\ \^Y\fR
+.IP \fB^E\fR\ /\ \fB^Y\fR
 Go to next / previous \fBGroup\fR.
 .IP \fB^G\fR
 Display a list of existing \fBGroups\fR to select from.
@@ -1492,6 +1492,26 @@ Available values are:
 \fBpyradio\fR supports notifications repetition, so that even when used with \fIquake\fR or \fIyakuake\fR and the like, you still have some info on what’s going on with it.
 
 Notifications can be set to repeat every "\fIx\fR" seconds, with "\fIx\fR" ranging from 30 to 300 (30 seconds to 5 minutes), in 30 seconds steps.
+
+.B
+Notification Icon
+
+.RS 5
+The icon that is displayed in the notification message is by default \fBpyradio\fR icon.
+
+\fBpyradio\fR will search for this icon, named \fIpyradio.png\fR (or \fIpyradio.ico\fR on Windows) in the following locations:
+
+.IP \fB1.\fR 3
+In the configuration directory, under \fBdata\fR (or \fBHelp\fR folder on Windows).
+
+.IP \fB2.\fR 3
+In the distribution directory (under the \fBicons\fR folder).
+.br
+As a consequence, one could replace the icon found in the configuration directory (under \fBdata\fR or \fBHelp\fR) with a custom icon, preserving the icon name as appropriate (\fIpyradio.png\fR, or \fIpyradio.ico\fR on Windows).
+
+.PP
+On \fBRadio Browser\fR, stations may provide a \fIstation icon\fR; this icon will be used instead, provided that it is of \fIJPG\fR or \fIPNG\fR format.
+.RE
 
 .RE
 
