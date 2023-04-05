@@ -770,7 +770,7 @@ class PyRadioStations(object):
 
         st_new_file = st_file.replace('.csv', '.txt')
 
-        tmp_stations = self.stations[:]
+        # tmp_stations = self.stations[:]
         # Do not write comment about iheart.com
         #tmp_stations.reverse()
         #if self._playlist_version == self.PLAYLIST_HAS_NAME_URL:
@@ -783,7 +783,7 @@ class PyRadioStations(object):
         try:
             with open(st_new_file, 'w', encoding='utf-8') as cfgfile:
                 writter = csv.writer(cfgfile)
-                for a_station in tmp_stations:
+                for a_station in self.stations:
                     writter.writerow(self._format_playlist_row(a_station))
         except:
             if logger.isEnabledFor(logging.DEBUG):
@@ -802,14 +802,15 @@ class PyRadioStations(object):
         ''' Return a 2-column if in old format,
             a 3-column row if has encoding, or
             a 4 column row if has icon too '''
-        if 'image' in a_row[3]:
-            a_row[3] = a_row[3] ['image']
+        this_row = deepcopy(a_row)
+        if 'image' in this_row[3]:
+            this_row[3] = this_row[3] ['image']
         if self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING_ICON:
-            return a_row
+            return this_row
         elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
-            return a_row[:-1]
+            return this_row[:-1]
         else:
-            return a_row[:-2]
+            return this_row[:-2]
 
     def _set_playlist_elements(self, a_playlist, a_title=''):
         self.station_path = path.abspath(a_playlist)

@@ -500,6 +500,8 @@ class PyRadio(object):
             self.ws.LINE_EDITOR_HELP_MODE: self._show_line_editor_help,
             self.ws.EDIT_STATION_NAME_ERROR: self._print_editor_name_error,
             self.ws.EDIT_STATION_URL_ERROR: self._print_editor_url_error,
+            self.ws.EDIT_STATION_ICON_URL_ERROR: self._print_icon_url_error,
+            self.ws.EDIT_STATION_ICON_FORMAT_ERROR: self._print_icon_url_format_error,
             self.ws.PY2_EDITOR_ERROR: self._print_py2_editor_error,
             self.ws.REQUESTS_MODULE_NOT_INSTALLED_ERROR: self._print_requests_not_installed_error,
             self.ws.NETIFACES_MODULE_NOT_INSTALLED_ERROR: self._print_netifaces_not_installed_error,
@@ -4022,7 +4024,7 @@ __|Remote Control Server| cannot be started!__
         txt = '''
             ___Incomplete Station Data provided!___
 
-            ___Please provide a Station Name.___
+            ____Please provide a Station Name.___
 
             '''
         self._show_help(txt,
@@ -4034,22 +4036,51 @@ __|Remote Control Server| cannot be started!__
     def _print_editor_url_error(self):
         if self._station_editor._line_editor[1].string.strip():
             txt = '''
-                ___Errorenous Station Data provided!___
+                ____Errorenous Station Data provided!___
 
-                ___Station URL is invalid!___
+                _________Station URL is invalid!___
                 ___Please provide a valid Station URL.___
 
                 '''
         else:
             txt = '''
-                ___Incomplete Station Data provided!___
+                ____Incomplete Station Data provided!___
 
-                ___Station URL is empty!___
+                _________Station URL is empty!___
                 ___Please provide a valid Station URL.___
 
                 '''
         self._show_help(txt,
                         mode_to_set=self.ws.EDIT_STATION_URL_ERROR,
+                        caption=' Error ',
+                        prompt=' Press any key ',
+                        is_message=True)
+
+    def _print_icon_url_error(self):
+        txt = '''
+            ______Errorenous Station Data provided!___
+
+            ________Station Icon URL is invalid!___
+            ___Please provide a valid Station Icon URL.___
+
+            '''
+        self._show_help(txt,
+                        mode_to_set=self.ws.EDIT_STATION_ICON_URL_ERROR,
+                        caption=' Error ',
+                        prompt=' Press any key ',
+                        is_message=True)
+
+    def _print_icon_url_format_error(self):
+        txt = '''
+            ______Errorenous Station Data provided!___
+
+            ________Station Icon URL is invalid!___
+            ____It must point to a JPG or a PNG file.__
+            ___Please provide a valid Station Icon URL.___
+
+            '''
+        self._show_help(txt,
+                        mode_to_set=self.ws.EDIT_STATION_ICON_FORMAT_ERROR,
                         caption=' Error ',
                         prompt=' Press any key ',
                         is_message=True)
@@ -4797,7 +4828,7 @@ __|Remote Control Server| cannot be started!__
         # Pick a random radio station
         if self.number_of_items > 0:
             while True:
-                rnd = random.randint(0, len(self.stations))
+                rnd = random.randint(0, len(self.stations) - 1)
                 if self.stations[rnd][1] != '-':
                     break
             self.setStation(rnd)
@@ -7207,7 +7238,6 @@ __|Remote Control Server| cannot be started!__
                         ret_encoding = ''
                     if self._old_station_encoding != ret_encoding:
                         self._cnf.dirty_playlist = True
-                        logger.info('self.stations[self.selection] = {}'.format(self.stations[self.selection]))
                         self.stations[self.selection][2] = ret_encoding
                         self.selections[0][3] = self.stations
                         if self.selection == self.playing:
@@ -7232,7 +7262,11 @@ __|Remote Control Server| cannot be started!__
             # logger.error('DE char = {0} - {1}'.format(char, chr(char)))
             restart_player = False
             ret = self._station_editor.keypress(char)
-            if ret == -3:
+            if ret == -5:
+                self._print_icon_url_format_error()
+            elif ret == -4:
+                self._print_icon_url_error()
+            elif ret == -3:
                 self._print_editor_url_error()
             elif ret == -2:
                 self._print_editor_name_error()
@@ -8524,18 +8558,18 @@ __|Remote Control Server| cannot be started!__
 
                 elif char in (ord('a'), ord('A')):
                     self._reset_status_bar_right()
-                    if self._cnf.browsing_station_service: return
-                    self._station_editor = PyRadioEditor(
-                        self.stations,
-                        self.selection,
-                        self.outerBodyWin,
-                        self._cnf.default_encoding,
-                        global_functions=self._global_functions)
-                    if char == ord('A'):
-                        self._station_editor.append = True
-                    self._station_editor.show()
-                    self._station_editor.item = ['', '', '']
-                    self.ws.operation_mode = self.ws.ADD_STATION_MODE
+                    if not self._cnf.browsing_station_service:
+                        self._station_editor = PyRadioEditor(
+                            self.stations,
+                            self.selection,
+                            self.outerBodyWin,
+                            self._cnf.default_encoding,
+                            global_functions=self._global_functions)
+                        if char == ord('A'):
+                            self._station_editor.append = True
+                        self._station_editor.show()
+                        self._station_editor.item = ['', '', '']
+                        self.ws.operation_mode = self.ws.ADD_STATION_MODE
 
                 elif char == ord('p'):
                     self._reset_status_bar_right()
