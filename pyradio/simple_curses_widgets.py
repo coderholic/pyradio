@@ -10,7 +10,7 @@ from sys import version_info, platform, version
 # except:
 #     from cjkwrap import PY3, is_wide, cjklen
 #     from schedule import PyRadioTime
-from .cjkwrap import PY3, is_wide, cjklen
+from .cjkwrap import PY3, is_wide, cjklen, cjkljust
 from .schedule import PyRadioTime
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -1847,7 +1847,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._maxY = Y - 2 * self._outer_margin
 
             # logger.error('max = {}'.format(max(len(x) for x in self._items)))
-            self._maxX = items_max_X = max(len(x) for x in self._items) + 2
+            self._maxX = items_max_X = max(cjklen(x) for x in self._items) + 2
             if self._margin > 0:
                 self._maxX = self._maxX + 2 * self._margin
             if self._display_count:
@@ -1917,7 +1917,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         if self._maxX == 0:
             self._maxX = X - 2
         if self._auto_adjust_width:
-            self._maxX = len(max(self._items)) + 2 * self._margin
+            self._maxX = cjklen(max(self._items)) + 2 * self._margin
         if self._maxX > self._max_width:
             self._maxX = self._max_width
 
@@ -2008,7 +2008,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         # calculate start item
         # TODO: calculate start_pos
 
-        self._item_max_width = len(max(self._items, key=len))
+        self._item_max_width = cjklen(max(self._items, key=cjklen))
         active_item_length = self._maxX - 2 * self._margin - 2
         if self._start_pos < 0:
             self._start_pos = 0
@@ -2052,18 +2052,19 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     count_len = len(str(len(self._items)))
                     # log_it('count_len = {}'.format(count_len))
                 disp_item_pref = '{}. '.format(str(item_id+1).rjust(count_len))
-                disp_item_suf = self._items[item_id][:active_item_length-len(disp_item_pref)]
+                # disp_item_suf = self._items[item_id][:active_item_length-cjklen(disp_item_pref)]
+                disp_item_suf = cjkljust(self._items[item_id], self._body_maxX - len(disp_item_pref) - 2 * self._margin)
                 disp_item = ' ' * self._margin + disp_item_pref + disp_item_suf + ' ' * self._margin
             else:
                 #print('item_id = {}'.format(item_id))
                 item = self._items[item_id][:active_item_length]
                 if self._align == self.LEFT:
-                    disp_item = ' ' * self._margin + item.ljust(active_item_length) + ' ' * self._margin
+                    disp_item = ' ' * self._margin + item.cjkljust(active_item_length) + ' ' * self._margin
                 elif self._align == self.RIGHT:
-                    disp_item = ' ' * self._margin + item.rjust(active_item_length) + ' ' * self._margin
+                    disp_item = ' ' * self._margin + item.cjkrjust(active_item_length) + ' ' * self._margin
                 else:
-                    disp_item = ' ' * self._margin + item.center(active_item_length) + ' ' * self._margin
-            disp_item = disp_item.ljust(self._body_maxX)
+                    disp_item = ' ' * self._margin + item.cjkcenter(active_item_length) + ' ' * self._margin
+                # disp_item = disp_item.ljust(self._body_maxX)
         else:
             # create empty lines
             disp_item = ' ' * self._body_maxX

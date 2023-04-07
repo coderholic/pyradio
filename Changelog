@@ -1,10 +1,11 @@
-2023-04-05 s-n-g
+2023-04-07 s-n-g
     * version 0.9.2.5
     * Desktop Notifications will display the image
       provided by the station (jpg or png).
     * adding config option "Use station icon"
     * adding a fourth optional column for pyradio playlists.
       This column will define a station icon url.
+    * adding CJK chars support for Group Headers
     * fixing a potential crash when randomly playing stations.
     * trying to limit duplicate Desktop Notifications.
     * adding a system theme: blue_by_boxer
