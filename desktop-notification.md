@@ -62,7 +62,7 @@ The icon that is displayed in the notification message is by default **PyRadio**
 
 As a consequence, one could replace the icon found in the *configuration directory* (under **data** or **Help**) with a custom icon, preserving the icon name as appropriate (*pyradio.png*, or *pyradio.ico* on Windows).
 
-On **Radio Browser**, stations may provide a *station icon*; this icon will be used instead, provided that it is of JPG or PNG format.
+If the station defines a "*Station Icon URL*" (either on a local playlist or an online service; **Radio Browser** includes an icon for many stations, for example), **PyRadio** will used this one instead, provided that it is of *JPG* or *PNG* format. This does not apply to Windows; an *ICO* file is used instead for **Desktop Notifications**.
 
 ## On Linux
 

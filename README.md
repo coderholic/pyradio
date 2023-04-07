@@ -342,7 +342,11 @@ If saving the configuration file fails, **PyRadio** will create a back up file a
 
 **PyRadio** reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.
 
-Optionally, a third column can be inserted, stating the encoding used by the station (more on this at [Specifying stations' encoding](#specifying-stations-encoding)).
+Optionally, two more columns can be used.
+
+The third column will define the encoding used by the station (more on this at [Specifying stations' encoding](#specifying-stations-encoding)).
+
+The fourth column will set an  *Icon URL*, to be used when displaying [Desktop Notifiacations](#desktop-notifications).
 
 **PyRadio** will by default load the user's stations file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
 
@@ -879,6 +883,8 @@ A theme by user [ben_chile](https://forum.maboxlinux.org/u/ben_chile) created on
 A dim but colorful theme.
 - **catppuccin-frappe**, **catppuccin-latte**, **catppuccin-macchiato** and **catppuccin-mocha** \
 Four themes by the [Catppuccin community](https://github.com/catppuccin).
+- **blue-by-boxer** \
+A reddish on blue theme by user **Boxer** at [Mabox Forum](https://forum.maboxlinux.org/).
 
 Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual CSS colors can now be defined.
 

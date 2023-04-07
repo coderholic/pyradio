@@ -36,7 +36,7 @@ from .config_window import *
 from .log import Log
 from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType, PyRadioServerWindow
 from .themes import *
-from .cjkwrap import cjklen
+from .cjkwrap import cjklen, cjkcenter, cjkslices
 from . import player
 from .install import version_string_to_list, get_github_tag, fix_pyradio_win_exe
 from .html_help import HtmlHelp
@@ -1462,14 +1462,38 @@ class PyRadio(object):
                 self._change_browser_ticks(lineNum, sep_col, all_ticks=ticks)
 
     def _format_group_line(self, lineNum, pad, station):
-        to_disp = ' ' + station[0] + ' '
-        try:
-            line = to_disp.center(self.bodyMaxX, u'─')
-        except:
-            line = to_disp.center(self.bodyMaxX, '_')
-            # line = line.replace('_', '─'.encode('utf-8'))
+        old_disp = ' ' + station[0] + ' '
+        old_len = cjklen(old_disp)
+        # if cjklen(to_disp) < self.maxX - (pad + 6):
+        if version_info < (3, 0):
+            to_disp = cjkcenter(old_disp + '__', self.bodyMaxX, '_')
+            # logger.error('cjklen = {0}, old cjklen = {1}'.format(cjklen(to_disp), old_len))
+            out = cjkslices(to_disp, pad + 5)[1] + ' '
+            # logger.error('out = "{}"'.format(out))
+            if out[0] == '_' or out[0] == ' ':
+                return '{0}. __{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), out)
+            else:
+                return '{0}. __{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), self._cjk_ljust(old_disp, self.bodyMaxX - pad - 4, '_'))
+        else:
+            to_disp = cjkcenter(old_disp + '──', self.bodyMaxX, '─')
+            # logger.error('cjklen = {0}, old cjklen = {1}'.format(cjklen(to_disp), old_len))
+            out = cjkslices(to_disp, pad + 5)[1] + ' '
+            # logger.error('out = "{}"'.format(out))
+            if out[0] == '─' or out[0] == ' ':
+                return '{0}. ──{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), out)
+            else:
+                return '{0}. ──{1}'.format(str(lineNum + self.startPos + 1).rjust(pad), self._cjk_ljust(old_disp, self.bodyMaxX - pad - 4, '─'))
 
-        return "{0}. {1}".format(str(lineNum + self.startPos + 1).rjust(pad), line[pad + 2:-2] + ' ')
+    def _cjk_ljust(self, text, width, char):
+        if cjklen(text) >= width:
+            return cjkslices(text, width-1)[0] + ' '
+        else:
+            out = text
+            # while cjklen(out) < width - 1:
+            #     out += char
+            if cjklen(out) < width - 1:
+                out += (width - 1 - cjklen(out)) * char
+            return out + ' '
 
     def _change_browser_ticks(self, lineNum, sep_col, all_ticks=None):
         ticks = all_ticks

@@ -202,11 +202,16 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
-2023-04-02 s-n-g
+2023-04-05 s-n-g
     * version 0.9.2.5
     * Desktop Notifications will display the image
-      provided by the station (jpg or png). The image
-      will be stations[3] = {'image': 'url'}
+      provided by the station (jpg or png).
+    * adding config option "Use station icon"
+    * adding a fourth optional column for pyradio playlists.
+      This column will define a station icon url.
+    * fixing a potential crash when randomly playing stations.
+    * trying to limit duplicate Desktop Notifications.
+    * adding a system theme: blue_by_boxer
     * updating docs
 
 2023-04-01 s-n-g
@@ -1192,7 +1197,9 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p>If saving the configuration file fails, <strong>PyRadio</strong> will create a back up file and terminate. When restarted, <strong>PyRadio</strong> will try to restore previously used settings from the said back up file.</p>
 <h2 id="about-playlist-files">About Playlist files <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
-<p>Optionally, a third column can be inserted, stating the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
+<p>Optionally, two more columns can be used.</p>
+<p>The third column will define the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
+<p>The fourth column will set an <em>Icon URL</em>, to be used when displaying <a href="#desktop-notifications">Desktop Notifiacations</a>.</p>
 <p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong>~/.pyradio</strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong>~/.config/pyradio</strong>) and renamed to <strong>stations.csv</strong> or if this file exists, to <strong>pyradio.csv</strong>. In this case, this file will be the default one.</p>
 <h3 id="defining-and-using-groups">Defining and using Groups</h3>
@@ -1566,6 +1573,8 @@ A theme by user <a target="_blank" href="https://forum.maboxlinux.org/u/ben_chil
 A dim but colorful theme.</li>
 <li><strong>catppuccin-frappe</strong>, <strong>catppuccin-latte</strong>, <strong>catppuccin-macchiato</strong> and <strong>catppuccin-mocha</strong><br />
 Four themes by the <a target="_blank" href="https://github.com/catppuccin">Catppuccin community</a>.</li>
+<li><strong>blue-by-boxer</strong><br />
+A reddish on blue theme by user <strong>Boxer</strong> at <a target="_blank" href="https://forum.maboxlinux.org/">Mabox Forum</a>.</li>
 </ul>
 <p>Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual CSS colors can now be defined.</p>
 <p>Theme sample / template:</p>

@@ -160,3 +160,35 @@ def fill(text, width=70, **kwargs):
     """
     w = CJKWrapper(width=width, **kwargs)
     return w.fill(text)
+
+def cjkcenter(text, width, char= ' '):
+    txt_len = cjklen(text)
+    out = text
+    if width == txt_len:
+        return text
+    elif width > txt_len:
+        pad = int(( width - txt_len ) / 2)
+        out =  pad * char + text + pad * char
+        while cjklen(out) < width:
+            out = char + out
+        return out
+    elif width < txt_len:
+        return cjkslices(text, width)[0]
+
+if __name__ == '__main__':
+    a='这显然不是巧合。美国敌视中国之情绪正在加深、加剧'
+    print(cjklen(a) * '-')
+    print('{}'.format(a))
+    print('len =', len(a))
+    print('cjklen =', cjklen(a))
+
+    print('\nCentering at 78')
+    print((cjklen(a) * '-' ).center(78, '*'))
+    print(cjkcenter(a, 78, '*'))
+
+    print('\nCentering at 40')
+    print(40 * '-')
+    print(cjkcenter(a, 40, '*'))
+
+
+    print('\n', cjkslices(a, cjklen(a)-4)[0])

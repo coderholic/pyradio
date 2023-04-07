@@ -281,6 +281,12 @@ If saving the configuration file fails, \fBpyradio\fR will create a back up file
 .PP
 Optionally, a third column can be inserted, stating the encoding used by the station (more on this at \fBSpecifying Stations' Encoding\fR).
 .PP
+Optionally, two more columns can be used.
+.PP
+The third column will define the encoding used by the station (more on this at \fBSpecifying Stations' Encoding\fR).
+.PP
+The fourth column will set an \fIIcon URL\fR, to be used when displaying \fBDesktop Notifiacations\fR.
+.PP
 \fBpyradio\fR will by default load the user's stations file (e.g. \fI~/.config/pyradio/stations.csv\fR). If this file is not found, it will be created and populated with a default set of stations.
 
 .IP \fBTip:
@@ -1510,7 +1516,7 @@ In the distribution directory (under the \fBicons\fR folder).
 As a consequence, one could replace the icon found in the configuration directory (under \fBdata\fR or \fBHelp\fR) with a custom icon, preserving the icon name as appropriate (\fIpyradio.png\fR, or \fIpyradio.ico\fR on Windows).
 
 .PP
-On \fBRadio Browser\fR, stations may provide a \fIstation icon\fR; this icon will be used instead, provided that it is of \fIJPG\fR or \fIPNG\fR format.
+If the station defines a \fBStation Icon URL\fR (either on a local playlist or an online service; \fIRadio Browser\fR includes an icon for many stations, for example), \fBpyradio\fR will used this one instead, provided that it is of \fIJPG\fR or \fIPNG\fR format.
 .RE
 
 .RE
