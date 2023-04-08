@@ -659,12 +659,12 @@ If nothing else works, try the following command:
 
         # No need to parse the file if we add station
         # Actually we do need to do so now, so that we
-        # handle 2-column vs. 3-column playlists
+        # handle 2-column vs. 3 or 4-column playlists
         if args.add:
             if sys.version_info < (3, 0):
-                params = raw_input("Enter the name: "), raw_input("Enter the url: "), raw_input("Enter the encoding (leave empty for '" + pyradio_config.default_encoding + "'): ")
+                params = raw_input("Enter the name: "), raw_input("Enter the url: "), raw_input("Enter the encoding (leave empty for '" + pyradio_config.default_encoding + "'): ", raw_input("Enter the icon url: "))
             else:
-                params = input("Enter the name: "), input("Enter the url: "), input("Enter the encoding (leave empty for '" + pyradio_config.default_encoding + "'): ")
+                params = input("Enter the name: "), input("Enter the url: "), input("Enter the encoding (leave empty for '" + pyradio_config.default_encoding + "'): ", raw_input("Enter the icon url: "))
             msg = ('name', 'url')
             for i, a_param in enumerate(params):
                 if i < 2:
@@ -690,13 +690,22 @@ If nothing else works, try the following command:
                 table.add_column("URL")
                 table.add_column("Encoding")
                 for i, n in enumerate(pyradio_config.stations):
-                    table.add_row(
-                        str(i+1),
-                        n[0],
-                        n[1],
-                        'utf-8' if not n[2] else n[2],
-                        style = '' if not n[2] else 'bold'
-                    )
+                    if n[1] == '-':
+                        table.add_row(
+                            str(i+1),
+                            '[green]' + n[0] + '[/green]',
+                            '[green]Group Header[/green]'
+                            '',
+                            style = 'bold'
+                        )
+                    else:
+                        table.add_row(
+                            str(i+1),
+                            n[0],
+                            n[1],
+                            'utf-8' if not n[2] else n[2],
+                            style = '' if not n[2] else 'bold'
+                        )
                 console.print(centered_table)
             else:
                 m_len, header_format_string, format_string = get_format_string(pyradio_config.stations)
@@ -704,12 +713,15 @@ If nothing else works, try the following command:
                 print(header_string)
                 print(len(header_string) * '-')
                 for num, a_station in enumerate(pyradio_config.stations):
-                    if a_station[2]:
-                        encoding = a_station[2]
-                    else:
-                        encoding = pyradio_config.default_encoding
                     station_name = pad_string(a_station[0], m_len)
-                    print(format_string.format(str(num+1), station_name, a_station[1], encoding))
+                    if a_station[1] == '-':
+                        print(format_string.format(str(num+1), '>>> ' + station_name, '', ''))
+                    else:
+                        if a_station[2]:
+                            encoding = a_station[2]
+                        else:
+                            encoding = pyradio_config.default_encoding
+                        print(format_string.format(str(num+1), station_name, a_station[1], encoding))
             sys.exit()
 
         #pyradio_config.log.configure_logger(titles=True)
