@@ -8,6 +8,21 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
+def format_date_to_iso8851(a_date=None):
+    ''' format a datetime.date in ISO-8851 format
+    '''
+    if a_date is None:
+        a_date = datetime.now()
+    days = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
+    months = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
+
+    cur_day = days[a_date.weekday()]
+    cur_month = months[a_date.month-1]
+    return cur_day + ', ' + str(a_date.day) + ' ' + \
+        cur_month + ' ' + str(a_date.year) + \
+        a_date.strftime(' %H:%M:%S')
+
 class PyRadioScheduleItem(object):
     '''
     Provide a Schedule Item
@@ -91,12 +106,10 @@ class PyRadioScheduleItem(object):
                 minutes=self.start_time[1],
                 seconds=self.start_time[2]
             )
-            time_out = PyRadioTime()
-            time_out.set_time(self._start_duration)
             return date_out + timedelta(
-                hours=time_out.time[0],
-                minutes=time_out.time[1],
-                seconds=time_out.time[2]
+                hours=self._start_duration[0],
+                minutes=self._start_duration[1],
+                seconds=self._start_duration[2]
             )
 
 
@@ -105,7 +118,8 @@ class PyRadioScheduleItem(object):
         '''
         return a datetime representing the ending date-time
         '''
-        if self.end_type == 'A':
+
+        if self.end_type[0] == 'A':
             return datetime(
                 self.end_date.year,
                 self.end_date.month,
@@ -125,12 +139,10 @@ class PyRadioScheduleItem(object):
                 minutes=self.start_time[1],
                 seconds=self.start_time[2]
             )
-            time_out = PyRadioTime()
-            time_out.set_time(self._end_duration)
             return date_out + timedelta(
-                hours=time_out.time[0],
-                minutes=time_out.time[1],
-                seconds=time_out.time[2]
+                hours=self._end_duration[0],
+                minutes=self._end_duration[1],
+                seconds=self._end_duration[2]
             )
 
     @property
@@ -157,7 +169,7 @@ class PyRadioScheduleItem(object):
     @start_type.setter
     def start_type(self, value):
         if value in ('A', 'I'):
-            self._start__type = value
+            self._start_type = value
             if value[0] == "I":
                 self._start_type = "I"
                 self._start_duration = value[1:]
@@ -179,7 +191,7 @@ class PyRadioScheduleItem(object):
     @end_type.setter
     def end_type(self, value):
         if value in ('A', 'I'):
-            self._end__type = value
+            self._end_type = value
             if value[0] == "I":
                 self._end_type = "I"
                 self._end_duration = value[1:]
@@ -198,39 +210,70 @@ class PyRadioScheduleItem(object):
         if self._start_date is None and \
                 self._end_date is None:
             return ''
+        if self._start_type[0] == 'I':
+            start_type = self._start_type[0] + ':'.join([str(x).zfill(2) for x in self._start_duration[:-1]])
+        else:
+            start_type = 'A'
+        if self._end_type[0] == 'I':
+            end_type = self._end_type[0] + ':'.join([str(x).zfill(2) for x in self._end_duration[:-1]])
+        else:
+            end_type = 'A'
         return '{0}`|`{1}`|`{2}`|`{3}`|`{4}`|`{5}`|`{6}'.format(
             self._type,
             self._format_date_string(self._start_date, self._start_time),
-            self._start_type + self._start_duration,
+            start_type,
             self._format_date_string(self._end_date, self._end_time),
-            self._end_type + self._end_duration,
+            end_type,
             self._playlist,
             self._station
         )
 
+    def is_valid(self):
+        if self.type == 'B':
+            duration = self.active_end - self.active_start
+            if duration.total_seconds() > 300:
+                return True
+            return False
+        return True
+
     def set_item(self, a_string):
         sp = a_string.split('`|`')
+        # for i, n in enumerate(sp):
+        #     print(i,':', n)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('new item = "{}"'.format(sp))
         if len(sp) != 7:
             raise ValueError
             return
         self._type = sp [0]
-        self._start_date, self._start_time= self._date_time_string_to_date_time(sp[1])
-        self._start_type = sp[2]
+        self._start_date, self._start_time = self._date_time_string_to_date_time(sp[1])
+        self._start_type = sp[2] if sp[2][0] == 'I' else 'A'
         self._end_date, self._end_time= self._date_time_string_to_date_time(sp[3])
-        self._end_type = sp[4]
+        self._end_type = sp[4] if sp[4][0] == 'I' else 'A'
         self._playlist = sp[5]
         self._station = sp[6]
 
         if self._start_type[0] == "I":
-            self._start_duration = self._start_type[1:]
+            self._start_duration = PyRadioTime.string_to_pyradio_time(self._start_type[1:])
             self._start_type = self._start_type[0]
 
         if self._end_type[0] == "I":
-            self._end_duration = self._end_type[1:]
+            self._end_duration = PyRadioTime.string_to_pyradio_time(self._end_type[1:])
             self._end_type = self._end_type[0]
+            self._end_date, self._end_time = self._start_date, self._start_time
 
+
+        # print('... self._type =', self._type)
+        # print('... self._start_date =', self._start_date, ' type:', type(self._start_date))
+        # print('... self._start_time =', self._start_time)
+        # print('... self._start_type =', self._start_type)
+        # print('... self._end_date =', self._end_date)
+        # print('... self._end_time =', self._end_time)
+        # print('... self._end_type =', self._end_type)
+        # print('... self._playlist =', self._playlist)
+        # print('... self._station =', self._station)
+        # print('... self._start_duration =', self._start_duration)
+        # print('... self._end_duration =', self._end_duration, '\n')
 
         self._fix_active_times()
 
@@ -243,13 +286,14 @@ class PyRadioScheduleItem(object):
                          self._start_time[1],
                          self._start_time[2]
                          )
-            sp = self._start_duration.split(':')
-            for n in range(0, line(sp)):
-                sp[i] = int(sp[i])
 
-            e = t + deltatime(hours=sp[0], minutes=sp[1], seconds=sp[2])
+            e = t + timedelta(
+                hours=self._start_duration[0],
+                minutes=self._start_duration[1],
+                seconds=self._start_duration[2]
+            )
 
-            print(e)
+            print('e =', e)
 
         if self._end_duration:
             t = datetime(self._start_date.year,
@@ -259,22 +303,51 @@ class PyRadioScheduleItem(object):
                          self._start_time[1],
                          self._start_time[2]
                          )
-            sp = self._end_duration.split(':')
-            for i in range(0, len(sp)):
-                sp[i] = int(sp[i])
 
-            e = t + timedelta(hours=sp[0], minutes=sp[1], seconds=sp[2])
+            e = t + timedelta(
+                hours=self._end_duration[0],
+                minutes=self._end_duration[1],
+                seconds=self._end_duration[2]
+            )
 
-            print(e)
+            print('e =', e)
 
 
+    def to_abs(self):
+        if self._end_type == 'I':
+            act = self.active_end
+            self._end_date = act
+            print('--- end act:', act)
+            self._end_time = [
+                act.hour,
+                act.minute,
+                act.second,
+                0
+            ]
+            self._end_type = 'A'
+            print('--- end time:', self._end_time)
+
+        if self._start_type == 'I':
+            act = self.active_start
+            print('--- start act:', act)
+            self._start_date = act
+            self._start_time = [
+                act.hour,
+                act.minute,
+                act.second,
+                0
+            ]
+            self._start_type = 'A'
+            print('--- start time:', self._start_time)
 
     def _date_time_string_to_date_time(self, a_string):
         '''
         string (date + time + [AM/PM]) to self.date, self.time
         '''
+        # print('>>> a_string:', a_string)
         pt = PyRadioTime()
         s_split = a_string.split()
+        # print('    s_split:', s_split)
         pt.set_date(s_split[0])
         if len(s_split) == 2:
             pt.set_time(s_split[1])
@@ -353,6 +426,7 @@ class PyRadioTime(object):
             self.date = ddate.today()
 
     def set_time(self, a_time_string):
+        # print('    a_time_string:', a_time_string)
         valid = True
         is_12_format = self.NO_AM_PM_FORMAT
         if a_time_string is None:
@@ -366,7 +440,10 @@ class PyRadioTime(object):
                 my_string = a_time_string[:-3]
             else:
                 my_string = a_time_string
+            # print('    is_12_format:', is_12_format)
+            # print('    my_string:', my_string)
             sp = my_string.split(':')
+            # print('    sp =', sp)
             if len(sp) > 3:
                 valid = False
             if len(sp) < 3:
@@ -378,6 +455,10 @@ class PyRadioTime(object):
             except ValueError:
                 valid = False
 
+        # print('    hour: ', hour)
+        # print('    minute: ', minute)
+        # print('    seconds: ', seconds)
+        # print('    valid =', valid)
         if valid:
             if is_12_format == self.PM_FORMAT:
                 ''' pm '''
@@ -391,6 +472,7 @@ class PyRadioTime(object):
                 if hour > 12:
                     valid = False
 
+        # print('    valid =', valid)
         if not valid:
             a_date_time = datetime.now()
             hour = a_date_time.hour
@@ -398,6 +480,7 @@ class PyRadioTime(object):
             seconds = a_date_time.second
 
         self.time = [hour, minute, seconds, is_12_format]
+        # print('!!! self.time =', self.time)
 
     @classmethod
     def number_of_days_in_month(self, year, month):
@@ -452,7 +535,7 @@ class PyRadioTime(object):
                 ''' pm '''
                 hour += 12
                 if hour == 24:
-                    hour =0
+                    hour = 0
                 elif hour > 24:
                     valid = False
             elif is_12_format == PyRadioTime.AM_FORMAT:
@@ -502,11 +585,28 @@ class PyRadioTime(object):
             out[0] += 12
             return tuple(out)
 
-    def pyradio_time_to_time(self, a_time=None):
-        if t_time is None:
-            a_time = self.time
-        else:
-            a_time = t_time
+    @classmethod
+    def pyradio_time_to_timedelta(cls, a_time):
+        if a_time[-1] == PyRadioTime.NO_AM_PM_FORMAT:
+            return timedelta(
+                hours=a_time[0],
+                minutes=a_time[1],
+                seconds=a_time[2]
+            )
+
+        elif a_time[-1] == PyRadioTime.AM_FORMAT:
+            return timedelta(
+                hours=a_time[0] if a_time[0] < 12 else a_time[0] - 12,
+                minutes=a_time[1],
+                seconds=a_time[2]
+            )
+
+        elif a_time[-1] == PyRadioTime.PM_FORMAT:
+            return timedelta(
+                hours=a_time[0] if a_time[0] < 12 else a_time[0] - 12,
+                minutes=a_time[1],
+                seconds=a_time[2]
+            )
 
     def schedule_datetime(self):
         ''' return final datetime for this object
@@ -574,14 +674,23 @@ class PyRadioTime(object):
 if __name__ == '__main__':
     a= PyRadioScheduleItem()
     # print('B`|`2022-10-15 11:15:12 PM`|`A`|`2021-08-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation')
-    a.set_item('B`|`2022-10-15 11:15:12 PM`|`A`|`2021-08-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation')
+    s = 'B`|`2022-10-15 11:15:12 PM`|`A08:37:04`|`2023-01-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation'
+    a.set_item(s)
     # a.set_item('B`|`2022-10-15 23:15:12`|`A`|``|`I02:15:11`|`myplaylist`|`mystation')
-    print(a)
-    print(a.active_start)
-    print(a.active_end)
-    print('======')
-    a._end_duration = '3:5:10'
-    print(a.active_start)
-    print(a.active_end)
+    print('s =', s)
+    print('a =', a)
+    st = a .active_start
+    print('a.active_start =', st, '- type: ', type(st))
+    en = a.active_end
+    print('  a.active_end =', en, '- type: ', type(en))
+    # print('======')
+    # a._end_duration = '3:05:10'
+    # print(a.active_start)
+    # print(a.active_end)
+    # print(a)
+    print('Is valid:', a.is_valid())
+    print('\n\n')
+    a.to_abs()
     print(a)
 
+    print(format_date_to_iso8851(datetime.now()))

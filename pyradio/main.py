@@ -692,7 +692,7 @@ If nothing else works, try the following command:
                 for i, n in enumerate(pyradio_config.stations):
                     if n[1] == '-':
                         table.add_row(
-                            str(i+1),
+                            '[green]' + str(i+1) + '[/green]',
                             '[green]' + n[0] + '[/green]',
                             '[green]Group Header[/green]'
                             '',
