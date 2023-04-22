@@ -868,19 +868,7 @@ class PyRadioUpdate(object):
                 sys.exit(1)
         with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w', encoding='utf-8') as b:
             pass
-        from shutil import copyfile
-        cur_dir = os.getcwd()
-        copyfile('/home/spiros/pyradio/pyradio/install.py', \
-            os.path.join(cur_dir, 'install.py'))
-        copyfile('/home/spiros/pyradio/pyradio/config.py', \
-            os.path.join(cur_dir, 'config.py'))
-        copyfile('/home/spiros/pyradio/pyradio/radio.py', \
-            os.path.join(cur_dir, 'radio.py'))
-        copyfile('/home/spiros/pyradio/devel/build_install_pyradio', \
-            os.path.join(os.path.join(self._dir, self.ZIP_DIR[self._package], \
-            'devel', 'build_install_pyradio')))
-
-        input("Files copied...\nPlease check them: ")
+        # input('Please update files as needed. Then press ENTER to continue...')
 
         ''' DEBUG on linux
             get new install.py, copy.py (any py)
