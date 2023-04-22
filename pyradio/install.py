@@ -803,7 +803,6 @@ class PyRadioUpdate(object):
 
         param = ' 2' if self.python2 else ''
         isol = ' -i ' if self._pix_isolated else ' '
-        print('isol = "{}"'.format(isol))
         if mode == 'update':
             ''' install pyradio '''
             if self.user:
@@ -811,7 +810,6 @@ class PyRadioUpdate(object):
             comm = 'devel/build_install_pyradio' + \
                 isol + ' -no-dev -x ' + \
                 self._python_exec.python + ' '  + param,
-            print('\n\ncomm = {}\n\n'.format(comm))
             ret = subprocess.call(
                 comm, shell=True
             )
