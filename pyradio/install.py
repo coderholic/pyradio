@@ -1105,8 +1105,6 @@ if __name__ == '__main__':
 
     if is_externally_managed() and \
             not HAS_PIPX:
-        pass
-    if True:
         # PY3 = False
         print_pipx_error()
         print_distro_packages()
