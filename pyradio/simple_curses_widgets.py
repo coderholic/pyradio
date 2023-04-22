@@ -2,6 +2,7 @@
 import curses
 import curses.ascii
 from datetime import date, time, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 import logging
 from sys import version_info, platform, version
 # try:
@@ -373,7 +374,7 @@ class SimpleCursesString(SimpleCursesWidget):
 
     def show(self, parent=None):
         if parent:
-            self._win = self_parent = parent
+            self._win = self._parent = parent
         if self._full_selection and self._enabled and self._focused:
             self._print_full_line(self._color_focused)
         else:
@@ -394,6 +395,244 @@ class SimpleCursesString(SimpleCursesWidget):
                 self._win.addstr(self._Y, self._X, self._caption, self._color_disabled)
                 self._win.addstr(self._string.ljust(self._max_string), self._color_disabled)
 
+
+class SimpleCursesDate(SimpleCursesWidget):
+    ''' A class to provide a time insertion widget
+
+        Parameters
+        ==========
+        Y, X, window
+            Coordinates and parent window
+        string
+            Date string
+                format is YYYY-MM-DD
+        date_tuple
+            Date as a tuple
+                Format (YYYY, M, D) od int
+        color
+            text color
+        color_focused
+            counter color when enabled and focused
+        next_widget_func
+            Function to call when going from days
+            field to next widget. If set to None, go
+            to hours fields
+        previous_widget_func
+            Function to call when going from years field
+            to previous widget. If set to None, go to
+            seconds field
+    '''
+    def __init__(
+        self, Y, X, window,
+        color, color_focused,
+        string=None,
+        date_tuple=None,
+        next_widget_func=None,
+        previous_widget_func=None,
+        global_functions=None
+    ):
+        # logger.error('   ---===***===---   ')
+        self._Y = Y
+        self._X = X
+        self._win = self._parent = window
+        self._color = color
+        self._color_focused = color_focused
+        self._date = None
+        self.datetime = None
+        self._next_func = next_widget_func
+        self._previous_func = previous_widget_func
+        self._global_functions = global_functions
+        if self._global_functions is None:
+            self._global_functions = {}
+
+        self._set_date()
+
+        # logger.error('DE num = {}'.format(self._num))
+
+        self.selected = 0
+        self._showed = False
+
+    def __str__(self):
+        return self._date.strftime('%Y-%m-%d')
+
+    @property
+    def date(self):
+        return self._date
+
+    @date.setter
+    def date(self, val):
+        if isinstance(val, str):
+            self._set_date(date_string=val)
+        else:
+            self._set_date(date_tuple=val)
+
+    def increase(self, delta=1):
+        if self.selected == 0:
+            self._date = self._date + relativedelta(years=+delta)
+        elif self.selected == 1:
+            self._date = self._date + relativedelta(months=+delta)
+        elif self.selected == 2:
+            self._date = self._date + relativedelta(days=+delta)
+        self.show()
+
+    def decrease(self, delta=1):
+        if self.selected == 0:
+            self._date = self._date + relativedelta(years=-delta)
+        elif self.selected == 1:
+            self._date = self._date + relativedelta(months=-delta)
+        elif self.selected == 2:
+            self._date = self._date + relativedelta(days=-delta)
+        self.show()
+
+    def set_date_string(self, a_string=None):
+        self._set_date(date_string=a_string)
+
+    def set_date_tupple(self, a_tuple=None):
+        self._set_date(date_tuple=a_tuple)
+
+    def _set_date(self, date_string=None, date_tuple=None):
+        ''' set date
+            Either specify:
+                sting: format "YYYY-MM-YY"
+            or
+                date_tuple = (YYYY, M, D) of int
+
+            On error, get today
+        '''
+        a_date = []
+        if date_string is None and date_tuple is None:
+            self._date = datetime.now()
+            return True
+        elif date_string is not None:
+            sp = date_string.split('-')
+            try:
+                for i in range(0, 3):
+                    a_date.append(int(sp[i]))
+            except ValueError:
+                self._date = datetime.now()
+                return True
+        elif date_tuple is not None:
+            a_date = list(date_tuple)
+        try:
+            self._date = datetime(
+                year=a_date[0],
+                month=a_date[1],
+                day=a_date[2]
+            )
+            return True
+        except:
+            self._date = datetime.now()
+            return False
+
+    def move(self, new_Y=None, new_X=None):
+        if new_Y:
+            self._Y = new_Y
+        if new_X:
+            self._X = new_X
+
+    def show(self, parent=None):
+        sel = (
+            (self._X, 4),
+            (self._X + 5, 2),
+            (self._X + 8, 2),
+        )
+        if parent is not None:
+            self._win = self._parent = parent
+        if self._win is None:
+            return
+        if self._enabled:
+            if self._focused:
+                self._win.addstr(
+                    self._Y, self._X,
+                    str(self._date.year),
+                    self.color_focused if self.selected == 0 else self._color
+                )
+                self._win.addstr('-', self._color)
+                self._win.addstr(
+                    str(self._date.month).zfill(2),
+                    self.color_focused if self.selected == 1 else self._color
+                )
+                self._win.addstr('-', self._color)
+                self._win.addstr(
+                    str(self._date.day).zfill(2),
+                    self.color_focused if self.selected == 2 else self._color
+                )
+            else:
+                self._win.addstr(self._Y, self._X, self.__str__(), self._color)
+        else:
+            self._win.addstr(self._Y, self._X, '====-==-==', self._color)
+        self._win.refresh()
+        self._showed = True
+
+    def keypress(self, char):
+        '''
+        SimpleCursesDate keypress
+        Returns:
+            -1: Cancel
+             0: Continue
+             1: Show help
+        '''
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
+            return 0
+
+        if char == ord('t'):
+            self._enabled = not self._enabled
+            self.show()
+            return 0
+
+        if char in (curses.KEY_EXIT, ord('q'), 27):
+            return -1
+
+        elif char == ord('?'):
+            return 1
+
+        elif char in (curses.KEY_HOME, ):
+            self._date = datetime.today()
+            self.show()
+
+        elif char in (curses.KEY_NPAGE, ):
+            delta = 5
+            if self.selected == 1:
+                delta = 3
+            self.decrease(delta=delta)
+
+        elif char in (curses.KEY_PPAGE, ):
+            delta = 5
+            if self.selected == 1:
+                delta = 3
+            self.increase(delta=delta)
+
+        elif char in (ord('h'), curses.KEY_LEFT):
+            self.decrease()
+
+        elif char in (ord('l'), curses.KEY_RIGHT):
+                self.increase()
+
+        elif char in (9, ord('L')):
+            ''' TAB '''
+            if self._next_func and self.selected == 2:
+                self._next_func()
+                self._focused = False
+            else:
+                self.selected += 1
+                if self.selected > 2:
+                    self.selected = 0
+            self.show()
+
+        elif char in (curses.KEY_BTAB, ord('H')):
+            ''' Shift-TAB '''
+            if self._previous_func and self.selected == 0:
+                self._previous_func()
+                self._focused = False
+            else:
+                self.selected -= 1
+                if self.selected < 0:
+                    self.selected = 2
+            self.show()
+
+        return 0
+    pass
 
 class SimpleCursesTime(SimpleCursesWidget):
     ''' A class to provide a time insertion widget
@@ -4409,6 +4648,11 @@ def main(stdscr):
     __configureLogger()
     curses.start_color()
     curses.use_default_colors()
+    try:
+        curses.curs_set(0)
+    except:
+        pass
+
     #stdscr.addstr('Number of colors: {0}, number of pairs: {1}\n'.format(curses.COLORS, curses.COLOR_PAIRS), curses.color_pair(0))
     #stdscr.getch()
 
@@ -4416,7 +4660,7 @@ def main(stdscr):
     #stdscr.getch()
 
     curses.init_pair(4,curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(5,curses.COLOR_BLACK,curses.COLOR_GREEN)
+    curses.init_pair(5,curses.COLOR_BLACK,curses.COLOR_BLUE)
     curses.init_pair(6,curses.COLOR_BLACK,curses.COLOR_RED)
     curses.init_pair(9,curses.COLOR_RED,curses.COLOR_WHITE)
     #curses.init_pair(1,237,248)
@@ -4428,13 +4672,11 @@ def main(stdscr):
     stdscr.erase()
     stdscr.touchwin()
     #stdscr.refresh()
-    x = SimpleCursesTime(
+    x = SimpleCursesDate(
         1, 2, stdscr,
         5, 9,
-        show_am_pm=True,
-        time_format=PyRadioTime.AM_FORMAT
     )
-    x.enabled = False
+    x.enabled = True
     x.focused = True
     x.show()
 
@@ -4479,6 +4721,25 @@ def __configureLogger():
     logger.addHandler(fh)
 
 if __name__ == "__main__":
+    # x = SimpleCursesDate(0,0,None,0,0)
+    # x.set_date_string('2023-1-12')
+    # print(x)
+    # print(x._date)
+    # x.selected = 1
+    # x.increase()
+    # print(x)
+    # x.selected = 2
+    # for n in range(1, 21):
+    #     x.increase()
+    #     print(x)
+    # x.selected = 1
+    # x.increase(9)
+    # print('========')
+    # print(x)
+    # x.selected = 2
+    # for n in range(1, 31):
+    #     x.increase()
+    #     print(x)
     curses.wrapper(main)
     # # curses.wrapper(main)
     # print(SimpleCursesTime.string_to_pyradio_time('2:35:15 aM'))

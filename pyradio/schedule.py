@@ -1,5 +1,6 @@
 from sys import version_info as python_version
 from datetime import date as ddate, datetime, timedelta
+from dateutil.relativedelta import *
 from calendar import monthrange
 import logging
 
@@ -36,9 +37,9 @@ class PyRadioScheduleItem(object):
                      Start time is the time the Item was created
 
         start_date
-            A datetime.date
+            A PyRadioDate: [YYYY, M, D]
         start_time
-            A PyRadioTime (XX:XX:[XX] [AM/PM])
+            A PyRadioTime: [X, X, X, T]
 
         start type
             "A" or "I"
@@ -49,9 +50,9 @@ class PyRadioScheduleItem(object):
             This gives a hint for the presenting window
 
         end_date
-            A datetime.date
+            A PyRadioDate: [YYYY, M, D]
         end_time
-            A PyRadioTime (XX:XX:[XX] [AM/PM])
+            A PyRadioTime: [X, X, X, T]
 
         end type
             "A" or "I"
@@ -68,300 +69,177 @@ class PyRadioScheduleItem(object):
             station name
 
     '''
-    def __init__(self):
-        self._type = None           # string (E)nd or (B)oth
-        self._start_date = None     # datetime.date
-        self._start_time=None       # PyRadioTime time
-        self._start_type = None     # Type of time (A: absolute time, I: In time)
-        self._end_date=None         # datetime.date
-        self._end_time=None         # PyradioTime time
-        self._end_type = None       # Type of time (T: absolute time, I: In time)
-        self._playlist=None         # string (playlist title)
-        self._station=None          # string
-        self._start_duration = ''
-        self._end_duration = ''
+    TYPE_START_END = TIME_ABSOLUTE = 0
+    TYPE_START = TIME_RELATIVE = 1
+    TYPE_END = 2
+
+    def __init__(self, item=None):
+        self._item = None
+        if item:
+            if isinstance(item, str):
+                self._item = json.loads(item)
+            elif isinstance(item, dict):
+                self._item = item
+
+        if self._item is None:
+           self._item = self.default_item
 
     @property
-    def active_start(self):
-        '''
-        return a datetime representing the starting date-time
-        '''
-        if self.start_type == 'A':
-            return datetime(
-                self.start_date.year,
-                self.start_date.month,
-                self.start_date.day
-            ) + timedelta(
-                hours=self.start_time[0],
-                minutes=self.start_time[1],
-                seconds=self.start_time[2]
-            )
-        else:
-            date_out = datetime(
-                self.start_date.year,
-                self.start_date.month,
-                self.start_date.day
-            ) + timedelta(
-                hours=self.start_time[0],
-                minutes=self.start_time[1],
-                seconds=self.start_time[2]
-            )
-            return date_out + timedelta(
-                hours=self._start_duration[0],
-                minutes=self._start_duration[1],
-                seconds=self._start_duration[2]
-            )
+    def item(self):
+        st, en = self.get_active_dates()
+        out = {
+            'type': self._item['type'],
+            'start_type': 0,
+            'start_date': [st.year, st.month, st.day],
+            'start_time': [st.hour, st.minute, st.second, 0],
+            'start_duration': [0, 0, 0, 0],
+            'end_type': 0,
+            'end_date': [en.year, en.month, en.day],
+            'end_time': [en.hour, en.minute, en.second, 0],
+            'end_duration': [0, 0, 0, 0],
+            'playlist': self._item['playlist'],
+            'station': self._item['station']
+        }
+        return out
 
+    @item.setter
+    def item(self, val):
+        if isinstance(item, str):
+            try:
+                self._item = json.loads(item)
+            except:
+                raise ValueError('JSON string not supported')
+        elif isinstance(item, dict):
+            self._item = item
 
-    @property
-    def active_end(self):
-        '''
-        return a datetime representing the ending date-time
-        '''
-
-        if self.end_type[0] == 'A':
-            return datetime(
-                self.end_date.year,
-                self.end_date.month,
-                self.end_date.day
-            ) + timedelta(
-                hours=self.end_time[0],
-                minutes=self.end_time[1],
-                seconds=self.end_time[2]
-            )
-        else:
-            date_out = datetime(
-                self.start_date.year,
-                self.start_date.month,
-                self.start_date.day
-            ) + timedelta(
-                hours=self.start_time[0],
-                minutes=self.start_time[1],
-                seconds=self.start_time[2]
-            )
-            return date_out + timedelta(
-                hours=self._end_duration[0],
-                minutes=self._end_duration[1],
-                seconds=self._end_duration[2]
-            )
+        for n in self.default_item.keys():
+            if n not in self._item:
+                self.item = self.default_item
+                raise ValueError('Item is missing keys')
 
     @property
-    def type (self):
-        return self._type
+    def default_item(self):
+        n_date, n_time = self._get_today_plus_one_hour()
+        t_date, t_time = self._get_today()
+        return {
+            'type': 2,
+            'start_type': 0,
+            'start_date':  t_date,
+            'start_time': t_time,
+            'start_duration': [0, 0, 0, 0],
+            'end_type': 0,
+            'end_date': n_date,
+            'end_time': n_time,
+            'end_duration': [0, 0, 0, 0],
+            'playlist': 'stations',
+            'station': ''
+        }
+
+    @property
+    def type(self):
+        return self._item['type']
 
     @type.setter
-    def type(self, value):
-        if value in ('S', 'E', 'B'):
-            self._type = value
+    def type(self, val):
+        try:
+            if val in (
+                self.TYPE_END,
+                self.TYPE_START,
+                self.TYPE_START_END
+            ):
+                self._item['type'] = val
+                return
+        except:
+            pass
+        raise ValueError('Invalid item type')
 
     @property
-    def start_date (self):
-        return self._start_date
-
-    @property
-    def start_time(self):
-        return self._start_time
-
-    @property
-    def start_type (self):
-        return self._start_type
+    def start_type(self):
+        return self._item['start_type']
 
     @start_type.setter
-    def start_type(self, value):
-        if value in ('A', 'I'):
-            self._start_type = value
-            if value[0] == "I":
-                self._start_type = "I"
-                self._start_duration = value[1:]
-            else:
-                self._start_duration = ''
+    def start_type(self, val):
+        if self._check_start_end_type(val):
+            self._item['start_type'] = val
+        else:
+            raise ValueError('Invalid item start_type')
 
     @property
-    def end_date(self):
-        return self._end_date
-
-    @property
-    def end_time(self):
-        return self._end_time
-
-    @property
-    def end_type (self):
-        return self._end_type
+    def end_type(self):
+        return self._item['end_type']
 
     @end_type.setter
-    def end_type(self, value):
-        if value in ('A', 'I'):
-            self._end_type = value
-            if value[0] == "I":
-                self._end_type = "I"
-                self._end_duration = value[1:]
-            else:
-                self._end_duration = ''
-
-    @property
-    def playlist(self):
-        return self._playlist
-
-    @property
-    def station(self):
-        return self._station
-
-    def __str__(self):
-        if self._start_date is None and \
-                self._end_date is None:
-            return ''
-        if self._start_type[0] == 'I':
-            start_type = self._start_type[0] + ':'.join([str(x).zfill(2) for x in self._start_duration[:-1]])
+    def end_type(self, val):
+        if self._check_start_end_type(val):
+            self._item['end_type'] = val
         else:
-            start_type = 'A'
-        if self._end_type[0] == 'I':
-            end_type = self._end_type[0] + ':'.join([str(x).zfill(2) for x in self._end_duration[:-1]])
-        else:
-            end_type = 'A'
-        return '{0}`|`{1}`|`{2}`|`{3}`|`{4}`|`{5}`|`{6}'.format(
-            self._type,
-            self._format_date_string(self._start_date, self._start_time),
-            start_type,
-            self._format_date_string(self._end_date, self._end_time),
-            end_type,
-            self._playlist,
-            self._station
-        )
+            raise ValueError('Invalid item end_type')
 
-    def is_valid(self):
-        if self.type == 'B':
-            duration = self.active_end - self.active_start
-            if duration.total_seconds() > 300:
+    def _check_start_end_type(self, val):
+        try:
+            if val in (
+                self.TIME_ABSOLUTE,
+                self.TIME_RELATIVE,
+            ):
+                self._item['start_type'] = val
                 return True
-            return False
-        return True
+        except:
+            pass
+        return False
 
-    def set_item(self, a_string):
-        sp = a_string.split('`|`')
-        # for i, n in enumerate(sp):
-        #     print(i,':', n)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('new item = "{}"'.format(sp))
-        if len(sp) != 7:
-            raise ValueError
-            return
-        self._type = sp [0]
-        self._start_date, self._start_time = self._date_time_string_to_date_time(sp[1])
-        self._start_type = sp[2] if sp[2][0] == 'I' else 'A'
-        self._end_date, self._end_time= self._date_time_string_to_date_time(sp[3])
-        self._end_type = sp[4] if sp[4][0] == 'I' else 'A'
-        self._playlist = sp[5]
-        self._station = sp[6]
-
-        if self._start_type[0] == "I":
-            self._start_duration = PyRadioTime.string_to_pyradio_time(self._start_type[1:])
-            self._start_type = self._start_type[0]
-
-        if self._end_type[0] == "I":
-            self._end_duration = PyRadioTime.string_to_pyradio_time(self._end_type[1:])
-            self._end_type = self._end_type[0]
-            self._end_date, self._end_time = self._start_date, self._start_time
-
-
-        # print('... self._type =', self._type)
-        # print('... self._start_date =', self._start_date, ' type:', type(self._start_date))
-        # print('... self._start_time =', self._start_time)
-        # print('... self._start_type =', self._start_type)
-        # print('... self._end_date =', self._end_date)
-        # print('... self._end_time =', self._end_time)
-        # print('... self._end_type =', self._end_type)
-        # print('... self._playlist =', self._playlist)
-        # print('... self._station =', self._station)
-        # print('... self._start_duration =', self._start_duration)
-        # print('... self._end_duration =', self._end_duration, '\n')
-
-        self._fix_active_times()
-
-    def _fix_active_times(self):
-        if self._start_duration:
-            t = datetime(self._start_date.year,
-                         self._start_date.month,
-                         self._start_date.day,
-                         self._start_time[0],
-                         self._start_time[1],
-                         self._start_time[2]
-                         )
-
-            e = t + timedelta(
-                hours=self._start_duration[0],
-                minutes=self._start_duration[1],
-                seconds=self._start_duration[2]
-            )
-
-            print('e =', e)
-
-        if self._end_duration:
-            t = datetime(self._start_date.year,
-                         self._start_date.month,
-                         self._start_date.day,
-                         self._start_time[0],
-                         self._start_time[1],
-                         self._start_time[2]
-                         )
-
-            e = t + timedelta(
-                hours=self._end_duration[0],
-                minutes=self._end_duration[1],
-                seconds=self._end_duration[2]
-            )
-
-            print('e =', e)
-
-
-    def to_abs(self):
-        if self._end_type == 'I':
-            act = self.active_end
-            self._end_date = act
-            print('--- end act:', act)
-            self._end_time = [
-                act.hour,
-                act.minute,
-                act.second,
-                0
-            ]
-            self._end_type = 'A'
-            print('--- end time:', self._end_time)
-
-        if self._start_type == 'I':
-            act = self.active_start
-            print('--- start act:', act)
-            self._start_date = act
-            self._start_time = [
-                act.hour,
-                act.minute,
-                act.second,
-                0
-            ]
-            self._start_type = 'A'
-            print('--- start time:', self._start_time)
-
-    def _date_time_string_to_date_time(self, a_string):
+    def get_active_dates(self):
         '''
-        string (date + time + [AM/PM]) to self.date, self.time
+        return a tuple of datetimes representing
+        the (starting date-time, ending date-time)
         '''
-        # print('>>> a_string:', a_string)
-        pt = PyRadioTime()
-        s_split = a_string.split()
-        # print('    s_split:', s_split)
-        pt.set_date(s_split[0])
-        if len(s_split) == 2:
-            pt.set_time(s_split[1])
+        today = datetime.now().replace(microsecond=0)
+        if self._item['start_type'] == self.TIME_ABSOLUTE:
+            start_date = datetime(
+                year=self._item[ 'start_date' ][0],
+                month=self._item[ 'start_date' ][1],
+                day=self._item[ 'start_date' ][2],
+            ) + PyRadioTime.pyradio_time_to_timedelta(
+                self._item['start_time']
+            )
         else:
-            pt.set_time(s_split[1] + ' ' + s_split[2])
-        return pt.date, pt.time
+            start_date = today + PyRadioTime.pyradio_time_to_timedelta(
+                self._item['start_duration']
+            )
 
-    def _format_date_string(self, a_date, a_time):
-        '''
-        '''
-        pdt = PyRadioTime()
-        pdt.date = a_date
-        pdt.time = a_time
-        return pdt              # return __str__
+        if self._item['end_type'] == self.TIME_ABSOLUTE:
+            end_date = datetime(
+                self._item['end_date'][0],
+                self._item['end_date'][1],
+                self._item['end_date'][1]
+            ) + timedelta(
+                hours=self._item['end_time'][0],
+                minutes=self._item['end_time'][1],
+                seconds=self._item['end_time'][2],
+            )
+        else:
+            if self._item['type'] == self.TYPE_END:
+                use_date = today
+            else:
+                use_date = start_date
+            end_date = use_date + timedelta(
+                hours=self._item['end_duration'][0],
+                minutes=self._item['end_duration'][1],
+                seconds=self._item['end_duration'][2]
+            )
+
+        return start_date, end_date
+
+    def _get_today(self):
+        ''' get today as pyradio date and time '''
+        today = datetime.now()
+        return [today.year, today.month, today.day], \
+            [today.hour, today.minute, 0, 0]
+
+    def _get_today_plus_one_hour(self):
+        today = datetime.now() + relativedelta(hours=+1)
+        return [today.year, today.month, today.day], \
+            [today.hour, today.minute, 0, 0]
+
 
 class PyRadioTime(object):
     ''' A class to provide PyRadio time and date
@@ -603,7 +481,7 @@ class PyRadioTime(object):
 
         elif a_time[-1] == PyRadioTime.PM_FORMAT:
             return timedelta(
-                hours=a_time[0] if a_time[0] < 12 else a_time[0] - 12,
+                hours=a_time[0] + 12,
                 minutes=a_time[1],
                 seconds=a_time[2]
             )
@@ -672,25 +550,25 @@ class PyRadioTime(object):
 
 
 if __name__ == '__main__':
-    a= PyRadioScheduleItem()
-    # print('B`|`2022-10-15 11:15:12 PM`|`A`|`2021-08-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation')
-    s = 'B`|`2022-10-15 11:15:12 PM`|`A08:37:04`|`2023-01-01 03:12:02 AM`|`I02:15:11`|`myplaylist`|`mystation'
-    a.set_item(s)
-    # a.set_item('B`|`2022-10-15 23:15:12`|`A`|``|`I02:15:11`|`myplaylist`|`mystation')
-    print('s =', s)
-    print('a =', a)
-    st = a .active_start
-    print('a.active_start =', st, '- type: ', type(st))
-    en = a.active_end
-    print('  a.active_end =', en, '- type: ', type(en))
-    # print('======')
-    # a._end_duration = '3:05:10'
-    # print(a.active_start)
-    # print(a.active_end)
-    # print(a)
-    print('Is valid:', a.is_valid())
-    print('\n\n')
-    a.to_abs()
-    print(a)
-
     print(format_date_to_iso8851(datetime.now()))
+
+    print('\n\n============')
+    an_item = {
+        'type': 1,                                  # TYPE_START_END, TYPE_START, TYPE_END
+        'start_type': 0,                            # TIME_ABSOLUTE, TYPE_RELATIVE
+        'start_date':  [2022, 10, 15],
+        'start_time': [11, 15, 12, 2],              # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+        'start_duration': [0, 0, 0, 0],
+        'end_type': 1,                              # TIME_ABSOLUTE, TYPE_RELATIVE
+        'end_date': [2023, 1, 1],
+        'end_time': [3, 12, 2, 1],                  # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+        'end_duration': [2, 15, 11, 0],
+        'playlist': 'myplaylist',
+        'station': 'mystation'
+    }
+
+    b = PyRadioScheduleItem(an_item)
+    x, y = b.get_active_dates()
+    print('start_date:', str(x))
+    print('  end_date:', str(y))
+    print('item =', b.item)

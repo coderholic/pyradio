@@ -8,6 +8,7 @@ import json
 from time import sleep
 import site
 import glob
+import re
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -38,16 +39,14 @@ VERSION = ''
 
 PY3 = sys.version[0] == '3'
 
+HAS_PIPX = True if shutil.which('pipx') else False
+
 ##### NO PYTHON2
 if PY3:
     try:
         from rich import print
     except:
-        if platform.system().lower().startswith('win'):
-            subprocess.call('python -m pip install rich 1>NUL 2>NUL', shell=True)
-            from rich import print
-        else:
-            print('''Error: Module "rich" not found!
+        print('''Error: Module "rich" not found!
 
 Please install the above module and try again.
 
@@ -55,7 +54,7 @@ Debial based distros:
     sudo apt install python3-rich
 
 Arch based distros:
-    sudo apt install python-rich
+    sudo pacman install python-rich
 
 Fedora based distros:
     sudo dnf install python-rich
@@ -69,7 +68,7 @@ or
     python3 -m pip install rich
 
 ''')
-            sys.exit(1)
+        sys.exit(1)
 ##### END NO PYTHON2
 
 # import logging
@@ -78,7 +77,50 @@ or
 ''' This is PyRadio version this
     install.py was released for
 '''
-PyRadioInstallPyReleaseVersion = '0.9.2'
+PyRadioInstallPyReleaseVersion = '0.9.2.5'
+
+def print_pipx_error():
+    msg = '''[red]Error:[/red] This python installation is [red]externally managed[/red], which in plain words
+        means that [red]pip[/red] can only install packages within a [green]virtual environment[/green].
+
+       The tool to do that is called [bold green]pipx[/bold green], but it is currently not installed
+       in your system.
+
+       Please install [bold green]pipx[/bold green] and try again.
+'''
+    if PY3:
+        print(msg)
+    else:
+        print(re.sub('\[[^\[]+\]', '', msg))
+
+def print_distro_packages():
+    msg = '''To succesfully complete [magenta]PyRadio[/magenta]'s installation, please make sure that the
+following [bold]distro python packages[/bold] are installed as well:
+       [bold]- setuptools
+       - wheel
+       - venv           [/bold]([magenta]Debian[/magenta] only?)[bold]
+       - rich
+       - requests[/bold]
+
+Please keep in mind that Distros will prepend these package names with a
+"[green]python-[/green]" or a "[green]python3-[/green]" or even a "[green]python2-[/green]".
+'''
+    if PY3:
+        print(msg)
+    else:
+        print(re.sub('\[[^\[]+\]', '', msg))
+
+def is_externally_managed():
+    files = [
+        os.path.join(
+            os.path.dirname(x),
+            'EXTERNALLY-MANAGED'
+        ) for x in site.getsitepackages()
+    ]
+    for n in files:
+        if os.path.exists(n):
+            return True
+    return False
 
 def print_pyradio_on():
     msg = '''[bold magenta]
@@ -545,7 +587,9 @@ class PyRadioUpdate(object):
                  package=0,
                  user=True,
                  github_long_description=None,
-                 python_version_to_use=3):
+                 python_version_to_use=3,
+                 pix_isolated=False
+                 ):
         if platform.system().lower().startswith('win'):
             raise RuntimeError('This is a linux only class...')
         self._dir = self._install_dir = ''
@@ -554,6 +598,7 @@ class PyRadioUpdate(object):
         self._github_long_description = github_long_description
         self._python_exec = PythonExecutable(python_version_to_use)
         self.python2 = True if python_version_to_use == 2 else False
+        self._pix_isolated = pix_isolated
 
     def update_pyradio(self, win_open_dir=False):
         if platform.system().lower().startswith('win'):
@@ -648,6 +693,8 @@ class PyRadioUpdate(object):
                 b.write('python -m pip install --upgrade rich 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade win10toast 1>NUL 2>NUL\n')
+                b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
+                b.write('python -m pip install --upgrade python-dateutil 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 # b.write('PAUSE\n')
                 if mode.startswith('update'):
@@ -755,15 +802,25 @@ class PyRadioUpdate(object):
         self._change_git_discription_in_config_py()
 
         param = ' 2' if self.python2 else ''
-
+        isol = ' -i ' if self._pix_isolated else ' '
+        print('isol = "{}"'.format(isol))
         if mode == 'update':
             ''' install pyradio '''
             if self.user:
                 param += ' --user'
-            ret = subprocess.call('devel/build_install_pyradio -no-dev -x ' + self._python_exec.python + ' '  + param, shell=True)
+            comm = 'devel/build_install_pyradio' + \
+                isol + ' -no-dev -x ' + \
+                self._python_exec.python + ' '  + param,
+            print('\n\ncomm = {}\n\n'.format(comm))
+            ret = subprocess.call(
+                comm, shell=True
+            )
         else:
             ''' uninstall pyradio '''
-            ret = subprocess.call('devel/build_install_pyradio -no-dev -x ' + self._python_exec.python + ' -R' + param, shell=True)
+            ret = subprocess.call(
+                'devel/build_install_pyradio -no-dev -x ' + \
+                self._python_exec.python + ' -R' + param, shell=True
+            )
         if ret > 0:
             ret = False
         else:
@@ -811,6 +868,20 @@ class PyRadioUpdate(object):
                 sys.exit(1)
         with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w', encoding='utf-8') as b:
             pass
+        from shutil import copyfile
+        cur_dir = os.getcwd()
+        copyfile('/home/spiros/pyradio/pyradio/install.py', \
+            os.path.join(cur_dir, 'install.py'))
+        copyfile('/home/spiros/pyradio/pyradio/config.py', \
+            os.path.join(cur_dir, 'config.py'))
+        copyfile('/home/spiros/pyradio/pyradio/radio.py', \
+            os.path.join(cur_dir, 'radio.py'))
+        copyfile('/home/spiros/pyradio/devel/build_install_pyradio', \
+            os.path.join(os.path.join(self._dir, self.ZIP_DIR[self._package], \
+            'devel', 'build_install_pyradio')))
+
+        input("Files copied...\nPlease check them: ")
+
         ''' DEBUG on linux
             get new install.py, copy.py (any py)
             into downloaded directory
@@ -934,7 +1005,9 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
                  fromTUI=False,
                  package=0,
                  github_long_description=None,
-                 python_version_to_use=3):
+                 python_version_to_use=3,
+                 pix_isolated=False
+                 ):
         if not platform.system().lower().startswith('win'):
             raise RuntimeError('This is a windows only class...')
         self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
@@ -943,6 +1016,7 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
         self._github_long_description = github_long_description
         self._python_exec = PythonExecutable(python_version_to_use)
         self.python2 = True if python_version_to_use == 2 else False
+        self._pix_isolated = pix_isolated
 
     @classmethod
     def print_update_bat_created(cls):
@@ -1006,9 +1080,12 @@ if __name__ == '__main__':
         parser.add_argument('--brew', nargs='?', default='False',
                             help='Create a link to pyradio executable in PATH. [BREW] can be empty (the default will be used in this case: /urs/local/opt). If a different package manager is in use, [BREW] should be the path to the location it installs its packages.')
     if not platform.system().lower().startswith('win'):
+        parser.add_argument('-i', '--isolate', action='store_true',
+                            help='install using pipx in an fully Isolated Environment (all dependencies will be installed in a virtual environment); the default is to have pipx depend on distro python packages.')
         parser.add_argument('--python2', action='store_true',
                             help='install using python 2.')
     else:
+        parser.add_argument('-i', '--isolated', action='store_true', help=SUPPRESS)
         parser.add_argument('--python2', action='store_true', help=SUPPRESS)
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='uninstall PyRadio.')
@@ -1038,6 +1115,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
     sys.stdout.flush()
 
+    if is_externally_managed() and \
+            not HAS_PIPX:
+        pass
+    if True:
+        # PY3 = False
+        print_pipx_error()
+        print_distro_packages()
+        sys.exit()
     use_logo = True
     if args.no_logo:
         use_logo = False
@@ -1163,7 +1248,8 @@ if __name__ == '__main__':
             upd = PyRadioUpdateOnWindows(
                 package=package,
                 github_long_description=github_long_description,
-                python_version_to_use=python_version_to_use
+                python_version_to_use=python_version_to_use,
+                pix_isolated=args.isolate
             )
             upd.update_or_uninstall_on_windows(mode='update-open')
             upd.print_update_bat_created()
@@ -1171,7 +1257,8 @@ if __name__ == '__main__':
             upd = PyRadioUpdate(
                 package=package,
                 github_long_description=github_long_description,
-                python_version_to_use=python_version_to_use
+                python_version_to_use=python_version_to_use,
+                pix_isolated=args.isolate
             )
             upd.user = is_pyradio_user_installed()
             upd.update_pyradio()
@@ -1180,7 +1267,8 @@ if __name__ == '__main__':
         ''' coming from uninstall BAT file on Windows'''
         uni = PyRadioUpdateOnWindows(
             package=package,
-            python_version_to_use=python_version_to_use
+            python_version_to_use=python_version_to_use,
+            pix_isolated=args.isolate
         )
         uni.remove_pyradio()
         sys.exit()
@@ -1189,7 +1277,8 @@ if __name__ == '__main__':
         upd = PyRadioUpdateOnWindows(
             package=package,
             github_long_description=github_long_description,
-            python_version_to_use=python_version_to_use
+            python_version_to_use=python_version_to_use,
+            pix_isolated=args.isolate
         )
         upd.update_pyradio()
         sys.exit()
@@ -1214,6 +1303,7 @@ if __name__ == '__main__':
                 'dnspython',
                 'requests',
                 'rich',
+                'python-dateutil',
                 'psutil',
                 'patool',
                 'pyunpack',
@@ -1248,7 +1338,8 @@ Then try installing PyRadio again
         uni = PyRadioUpdateOnWindows(
             package=package,
             github_long_description=github_long_description,
-            python_version_to_use=python_version_to_use
+            python_version_to_use=python_version_to_use,
+            pix_isolated=args.isolate
         )
         uni.update_or_uninstall_on_windows(
             mode='update-open'
@@ -1278,7 +1369,8 @@ Then try installing PyRadio again
         uni = PyRadioUpdate(
             package=package,
             github_long_description=github_long_description,
-            python_version_to_use=python_version_to_use
+            python_version_to_use=python_version_to_use,
+            pix_isolated=args.isolate
         )
         uni.install = True
         if not platform.system().lower().startswith('darwin'):

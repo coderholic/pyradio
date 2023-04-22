@@ -685,14 +685,15 @@ class PyRadio(object):
             curses.KEY_PREVIOUS: self._play_previous_station,
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
-            ord('d'): self._html_song_title,
-            ord('b'): self._show_schedule_player_stop,
+            # ord('d'): self._html_song_title,
+            # ord('b'): self._show_schedule_player_stop,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
 
         self._cls_update_stations = None
         self._cls_update_stations_message = ''
+
 
     def __del__(self):
         self.transientWin = None
@@ -1691,9 +1692,11 @@ class PyRadio(object):
 
             ''' check if stations.csv is updated '''
             if self._cnf.locked:
+                self._update_stations_thread = None
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('(detectUpdateStationsThread): not starting; session is locked!!!')
             elif not self._cnf.user_csv_found:
+                self._update_stations_thread = None
                 self._cls_update_stations.stations_csv_needs_sync(print_messages=False)
                 self._cls_update_stations.write_synced_version()
                 if logger.isEnabledFor(logging.INFO):
@@ -1841,16 +1844,19 @@ class PyRadio(object):
         if self._watch_theme_thread:
             self.stop_watch_theme_thread = True
             self._watch_theme_thread.join()
-        if self._update_notification_thread:
+        if self._update_notification_thread is not None:
             if self._update_notification_thread.is_alive():
                 self.stop_update_notification_thread = True
                 if self._update_notification_thread:
                     self._update_notification_thread.join()
-        if self._update_notification_thread:
-            if self._update_stations_thread.is_alive():
-                self.stop_update_notification_thread = True
-                if self._update_stations_thread:
-                    self._update_stations_thread.join()
+        if self._update_stations_thread is not None:
+            try:
+                if self._update_stations_thread.is_alive():
+                    self.stop_update_notification_thread = True
+                    if self._update_stations_thread:
+                        self._update_stations_thread.join()
+            except AttributeError:
+                pass
         self.stop_update_notification_thread = True
 
     def _goto_playing_station(self, changing_playlist=False):

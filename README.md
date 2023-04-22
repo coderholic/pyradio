@@ -117,6 +117,7 @@ and much more...
     - dnspython
     - psutil
     - rich
+    - python-dateutil
     - netifaces (optional)
 * MPV, MPlayer or VLC installed and in your path
 

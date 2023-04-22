@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """CJK wrapping and filling. Fix Python issue24665.
 
 Copyright (C) 2015-2018, Florent Gallaire <f@gallai.re>

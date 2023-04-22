@@ -23,6 +23,15 @@ Checking python availability:"
             echo
 }
 
+function pipx_error(){
+cat <<END
+The installation has failed!!!
+Please report this at https://github.com/coderholic/pyradio/issues
+
+END
+exit 1
+}
+
 function pip_error(){
 cat <<END
 Your installation is missing python's package manager (pip)
@@ -73,9 +82,15 @@ function remove_pip_sudo_install(){
 function uninstall(){
     echo 'Uninstalling PyRadio'
     echo -n '  ** Removing python files ... '
-    python -m pip uninstall -y pyradio 2>/dev/null 1>&2 || pip_error
-    python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
-    python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    pipx list 2>/dev/null 1>&2 && PIPX=1
+    if [ -z "${PIPX}" ]
+    then
+        python -m pip uninstall -y pyradio 2>/dev/null 1>&2 || pip_error
+        python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
+        python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    else
+        pipx uninstall pyradio 2>/dev/null 1>&2
+    fi
     echo 'done'
     echo -n '  ** Removing help files ... '
     if [ -d ~/.local/share/doc/pyradio ];then
@@ -343,6 +358,10 @@ do
             put_exec_to_mac_path
             exit
             ;;
+        --isolate|-i)
+            PIPX_ISOLATE=1
+            shift
+            ;;
         -R)
             uninstall
             exit
@@ -448,10 +467,38 @@ then
     done
 fi
 
-if [ -e requirements.txt ];then
-	python"${TO_PYTHON}" -m pip install -r requirements.txt . || pip_error
+# Use pipx by default, if installed
+pipx list 2>/dev/null 1>&2 && PIPX=1
+
+# Make an editable installation if
+#       ~/.pyradio-editable
+# exists
+test -e ~/.pyradio-editable && PIPX_EDITABLE="-e"
+
+if [ -z "$PIPX" ]
+then
+    # Normanl, old style installation
+	if [ -e requirements.txt ]
+    then
+		python"${TO_PYTHON}" -m pip install -r requirements.txt . || pip_error
+	else
+		python"${TO_PYTHON}" -m pip install . || pip_error
+	fi
 else
-	python"${TO_PYTHON}" -m pip install . || pip_error
+    # pipx installation
+    if [ -z "$PIPX_ISOLATE" ]
+    then
+        pipx install $PIPX_EDITABLE --system-site-packages --force . || pipx_error
+    else
+        pipx install $PIPX_EDITABLE --force . || pipx_error
+        pipx inject pyradio \
+            rich \
+            requests \
+            dnspython \
+            psutil \
+            netifaces \
+            python-dateutil
+    fi
 fi
 
 if [ "${TO_PYTHON}" == "2" ];

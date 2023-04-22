@@ -424,6 +424,10 @@ class PyRadioStations(object):
             return
         else:
             copyfile(root, path.join(usr, 'stations.csv'))
+            with open(path.join(self.data_dir, 'last-sync'), 'w') as f:
+                self.get_pyradio_version()
+                v = self.current_pyradio_version.replace('.', ', ')
+                f.write(v)
 
     def copy_playlist_to_config_dir(self):
         ''' Copy a foreign playlist in config dir
