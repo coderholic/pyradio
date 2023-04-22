@@ -407,15 +407,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 
 if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
-python"${TO_PYTHON}" -m pip install --upgrade setuptools || pip_error
-cat <<END > requirements.txt
-wheel
-requests
-psutil
-dnspython
-END
-else
-	rm requirements.txt 2>/dev/null
+    python"${TO_PYTHON}" -m pip install --upgrade setuptools || pip_error
 fi
 
 ## check dependencies :)
@@ -491,13 +483,7 @@ else
         pipx install $PIPX_EDITABLE --system-site-packages --force . || pipx_error
     else
         pipx install $PIPX_EDITABLE --force . || pipx_error
-        pipx inject pyradio \
-            rich \
-            requests \
-            dnspython \
-            psutil \
-            netifaces \
-            python-dateutil
+        pipx runpip pyradio install -r requirements.txt
     fi
 fi
 

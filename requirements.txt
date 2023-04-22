@@ -1,0 +1,7 @@
+rich
+requests
+dnspython
+psutil
+netifaces
+python-dateutil
+
