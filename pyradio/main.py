@@ -275,11 +275,12 @@ If nothing else works, try the following command:
                 print('Cannot contact github...')
                 sys.exit(1)
             script = r[0]
+            # script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
             chmod(script , 0o766)
             if args.terminal_param:
                 command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '-" + args.terminal_param + "'" + '"'
                 command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '" + args.terminal_param.replace('\\', '') + "'" + '"'
-                print(command)
+                # print(command)
                 subprocess.call(command, shell=True)
             else:
                 subprocess.call('bash -c "' + script + ' -t ' + args.terminal + '"', shell=True)

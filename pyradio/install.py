@@ -66,6 +66,8 @@ If everything else fails, try:
     python -m pip install rich
 or
     python3 -m pip install rich
+or even
+    python -m pip install --user rich
 
 ''')
         sys.exit(1)
@@ -864,6 +866,18 @@ class PyRadioUpdate(object):
             except:
                 print('Error: PyRadio source code ZIP file is corrupt...\n')
                 sys.exit(1)
+        try:
+            os.rename(
+                os.path.join(self._dir, self.ZIP_DIR[self._package]),
+                os.path.join(self._dir, 'pyradio-source')
+            )
+            self.ZIP_DIR[self._package] = 'pyradio-source'
+            self._install_dir = 'pyradio-source'
+        except:
+            print('Error creating source code directory!')
+            self._clean_up()
+            sys.exit(1)
+
         with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w', encoding='utf-8') as b:
             pass
         # input('Please update files as needed. Then press ENTER to continue...')
