@@ -5,7 +5,7 @@ echo "
 Available options:
      2   build using python v. 2.7 (linux only)
     -R   remove (uninstall) pyradio
-    -t   Use this terminal for Desktop file
+    -t   Use this terminal for Desktop file (linux only)
 
 If no option is used, will build using Python 3
 and will install in your HOME directory
@@ -43,10 +43,6 @@ exit 1
 
 function find_paths(){
 local APATH
-# Fix for MacOs Catalina python 3
-if [[ $(uname -s) = "Darwin" ]] || [[ $(uname -s) = "darwin" ]]; then
-    echo /usr/local/lib
-fi
 python devel/site.py 2>/dev/null
 python2 devel/site.py 2>/dev/null
 python3 devel/site.py 2>/dev/null
@@ -77,6 +73,7 @@ function remove_pip_sudo_install(){
     sudo python -m pip uninstall -y pyradio 2>/dev/null 1>&2 || pip_error
     sudo python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
     sudo python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
+    rm ~/.config/pyradio/data/INSTALLATION_TYPE 2>/dev/null
 }
 
 function uninstall(){
@@ -85,7 +82,7 @@ function uninstall(){
     pipx list 2>/dev/null 1>&2 && PIPX=1
     if [ -z "${PIPX}" ]
     then
-        python -m pip uninstall -y pyradio 2>/dev/null 1>&2 || pip_error
+        python -m pip uninstall -y pyradio 2>/dev/null 1>&2
         python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
         python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
     else
@@ -93,7 +90,8 @@ function uninstall(){
     fi
     echo 'done'
     echo -n '  ** Removing help files ... '
-    if [ -d ~/.local/share/doc/pyradio ];then
+    if [ -d ~/.local/share/doc/pyradio ]
+    then
         rm -rf ~/.local/share/doc/pyradio 2>/dev/null
     else
         rm -rf ~/.local/local/share/doc/pyradio 2>/dev/null
@@ -101,12 +99,16 @@ function uninstall(){
     rm -f ~/.local/share/man/man1/pyradio*gz 2>/dev/null
     rm -f ~/.local/share/applications/pyradio.desktop 2>/dev/null
     echo 'done'
-    if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
+    if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ]
+    then
         # delete link on mac
-        echo -n '  ** Removing link to executable ... '
-        [ -h ~/bin/pyradio ] && rm ~/bin/pyradio 2>/dev/null
-        echo 'done'
+        [ -h ~/bin/pyradio ] && {
+            echo -n '  ** Removing link to executable ... '
+            rm ~/bin/pyradio 2>/dev/null
+            echo 'done'
+        }
     fi
+    rm ~/.config/pyradio/data/INSTALLATION_TYPE 2>/dev/null
     echo "PyRadio successfully uninstalled"
 }
 
@@ -121,7 +123,8 @@ function uninstall_sudo(){
     sudo echo 'Uninstalling PyRadio'
     echo -n '  ** Removing executable ... '
     sudo rm -f `which pyradio 2>/dev/null` 2>/dev/null
-    if [ -d /usr/share/doc/pyradio ];then
+    if [ -d /usr/share/doc/pyradio ]
+    then
         sudo rm -rf /usr/share/doc/pyradio 2>/dev/null
     else
         sudo rm -rf /usr/local/share/doc/pyradio 2>/dev/null
@@ -135,7 +138,8 @@ function uninstall_sudo(){
 #set -x
     remove_paths
     remove_pip_sudo_install
-    if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
+    if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ]
+    then
         # delete link on mac
         [ -h ~/bin/pyradio ] && rm ~/bin/pyradio 2>/dev/null
     fi
@@ -169,133 +173,49 @@ function do_undev(){
 
 function do_exit(){
     # remove instasllation directory
-    if [ ! -z "$REMOVE_DIR" ];then
+    if [ ! -z "$REMOVE_DIR" ]
+    then
         if [ "$REMOVE_DIR" = "$HOME/pyradio" ] || \
                 [ "$REMOVE_DIR" = "$HOME/tmp-pyradio" ] || \
                 [ "$REMOVE_DIR" = "/tmp/pyradio" ] || \
-                [ "$REMOVE_DIR" = "/tmp/tmp-pyradio" ];then
+                [ "$REMOVE_DIR" = "/tmp/tmp-pyradio" ]
+        then
             rm -fr "$REMOVE_DIR"
         fi
     fi
 }
 
-function put_exec_to_mac_path(){
-echo "Checking executable accessability"
-echo -n "  ** Checking if pyradio is in PATH ... "
-pyradio --version 1>/dev/null 2>&1
-if (( $? == 0 ));then
-    echo "found"
-    exit
-else
-    echo "not found"
-fi
-
-echo -n "  ** Checking if ~/bin is in PATH ... "
-BIN_IN_PATH=$(python${TO_PYTHON} -c "from os import getenv; \
-find_path=getenv('HOME') + '/bin'; \
-path=getenv('PATH'); \
-print('nok') if not find_path in path else print('')")
-#
-# if BIN_IN_PATH is not empty, exit with warning!
-#
-[ -z ${BIN_IB_PATH} ] && echo "found" || echo "not found"
-
-BIN_FOLDER="${HOME}"/bin
-[ -d "${BIN_FOLDER}" ] || mkdir "${BIN_FOLDER}"
-
-# find pyradio
-echo -n "  ** Looking for pyradio executable ... "
-#ver=$(python"${TO_PYTHON}" -c 'from sys import version_info; print("{0}.{1}.{2}".format(version_info.major, version_info.minor, version_info.micro))')
-#FILE=$(find /usr/local -type f -name pyradio | grep ${ver})
-
-#set -x
-cat <<EOF > tmp_$$.py
-import glob
-from os.path import isfile, exists
-from argparse import ArgumentParser
-import subprocess
-import sys
-homebrew='/usr/local/opt'
-parser = ArgumentParser(description='Put PyRadio in PATH on MacOsX')
-parser.add_argument('--brew', default='', help='Homebrew installation path.')
-args = parser.parse_args()
-if args.brew:
-    if exists(str(args.brew)):
-        homebrew = str(args.brew)
-#print('homebrew =', homebrew)
-#sys.exit()
-files=glob.glob(homebrew + '/**/pyradio', recursive=True)
-ver = str(sys.version_info.major) + '.' + str(sys.version_info.minor)
-for f in files:
-    if isfile(f) and ver in f:
-        #print('trying ' + f)
-        ret = subprocess.call(f + ' --version', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        #print('ret ', ret)
-        if ret == 0:
-            print(f)
-            break
-EOF
-#set -x
-if [ -z "${HOMEBREW_TOKEN}" ];then
-    FILE=$(python${TO_PYTHON} tmp_$$.py)
-else
-    FILE=$(python${TO_PYTHON} tmp_$$.py "${HOMEBREW_TOKEN}" "${HOMEBREW}")
-fi
-rm tmp_$$.py
-#set +x
-#exit
-
-#
-# if FILE is empty, exeit with error, point to issues
-#
-[ -z ${FILE} ] && echo "not found" || echo "found"
-
-#echo "FILE = ${FILE}"
-#unset FILE
-if [ -z "${FILE}" ];then
-    echo ""
-    echo "I cannot find pyradio executable file!"
-    echo
-    if [ -z ${WARNING} ];then
-        echo "Try to use the --brew command line parameter"
-        echo "to indicate where Hombrew (or whatever package"
-        echo "manager you are using) installs files."
-    else
-        echo "Try to pass the location where Hombrew (or whatever"
-        echo "package manager you are using) installs files, as"
-        echo "a parameter and try again."
+function check_installation_type(){
+    if [ -z "$PIPX" ]
+    then
+        echo
+        echo 'Error: Inconsistent installation type!'
+        echo
+        echo 'A previous pipx installation has been retected,'
+        echo 'but pipx is not installed in your system anymore.'
+        echo 'Please install pipx and try again!'
+        exit 1
     fi
-    echo ""
-    echo "If you still cannot make it work, please"
-    echo "fill in a bug report at"
-    echo "    https://github.com/coderholic/pyradio/issues"
-    echo ""
-    exit 1
-fi
-
-echo -n "  ** Linking pyradio to ${BIN_FOLDER} ... "
-ln -s "${FILE}" "${BIN_FOLDER}"/pyradio 2>/dev/null && echo "done" || {
-    echo "error"
-    echo ""
-    echo "  ** Error: I cannot create a link to pyradio"
-    echo "            executable file..."
-    echo "  ** Please execute the following command and check"
-    echo "     its status:"
-    echo "ln -s "${FILE}" "${BIN_FOLDER}"/pyradio"
-    echo ""
-    exit 1
 }
 
-if [ ! -z "${BIN_IN_PATH}" ];then
-    echo ""
-    echo "  ** Error: Your bin folder (${BIN_FOLDER})"
-    echo "            is not in your PATH"
-    echo "  ** PyRadio has already created a link to the"
-    echo "     executable file, but you will have to add"
-    echo "     ${BIN_FOLDER} to your PATH variable, for"
-    echo "     it to work..."
-    echo ""
-fi
+function create_installation_type_file(){
+    mkdir -p ~/.config/pyradio/data && \
+        echo "$inst_type" > ~/.config/pyradio/data/INSTALLATION_TYPE
+    if (( $inst_type > 0 ))
+    then
+        OLD=$(find ~/.local/lib -type d -name "pyradio*" 2>/dev/null | grep -v pipx | grep -v venvs)
+        if [ ! -z "$OLD" ]
+        then
+        echo
+        echo
+        echo "The following pyradio directories have been found:
+$OLD
+
+They probably belong to an older non-pipx installation
+and they should be deleted.
+"
+        fi
+    fi
 }
 
 rm -rf build pyradio.egg-info 2>/dev/null
@@ -312,7 +232,8 @@ do
             ;;
         -t)
             shift
-            if [ -z "$1" ];then
+            if [ -z "$1" ]
+            then
                 echo "Error: No terminal specified..."
                 echo
                 exit 1
@@ -330,34 +251,6 @@ do
             WARNING=1
             shift
             ;;
-        --brew)
-            # macos only; put pyradio in PATH
-            #
-            # DO NOT USE IT on any other circumstance
-            #
-            shift
-            [ -z "${1}" ] || {
-                HOMEBREW_TOKEN="--brew"
-                HOMEBREW="${1}"
-                shift
-            }
-            ;;
-        --fix-mac-path)
-            # macos only; put pyradio in PATH (same as above)
-            # but actuall run put_exec_to_mac_path (maybe from
-            # install.py?)
-            #
-            # DO NOT USE IT on any other circumstance
-            #
-            shift
-            #set -x
-            [ -z "$1" ] ||{
-                HOMEBREW_TOKEN="--brew"
-                HOMEBREW="${1}"
-            }
-            put_exec_to_mac_path
-            exit
-            ;;
         --isolate|-i)
             PIPX_ISOLATE=1
             shift
@@ -368,6 +261,14 @@ do
             ;;
         2)
             [ -z "${TO_PYTHON_FROM_X}" ] && TO_PYTHON=2
+            if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ]
+            then
+                echo
+                echo
+                echo "Error: PyRadio does not support python 2 any more."
+                echo "Please install python 3 and try again."
+                exit 1
+            fi
             shift
             ;;
         -x)
@@ -406,10 +307,6 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 # fi
 
 
-if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
-    python"${TO_PYTHON}" -m pip install --upgrade setuptools || pip_error
-fi
-
 ## check dependencies :)
 #for prog in git sed ;do
 #    ${prog} --version 2>/dev/null 1>&2 || {
@@ -423,7 +320,8 @@ fi
 # for prog in git sed ;do
 for prog in sed ;do
     ${prog} --version 2>/dev/null 1>&2 || {
-        if [ "${prog}" = "sed" ];then
+        if [ "${prog}" = "sed" ]
+        then
             sed 's/a/b/' LICENCE > /dev/null ||{
                 echo "Error: ${prog} not found."
                 echo "       Please install it and try again."
@@ -462,28 +360,66 @@ fi
 # Use pipx by default, if installed
 pipx list 2>/dev/null 1>&2 && PIPX=1
 
+if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ]
+then
+    [ -z "$PIPX" ] && {
+        echo
+        echo
+        echo "Error: pipx not found."
+        echo "       Please install pipx and try again"
+        exit 1
+    }
+fi
 # Make an editable installation if
 #       ~/.pyradio-editable
 # exists
 test -e ~/.pyradio-editable && PIPX_EDITABLE="-e"
 
+inst_type=0
+if [ -e ~/.config/pyradio/data/INSTALLATION_TYPE ]
+then
+    # we have an update
+    # read INSTALLATION_TYPE and identify installation file
+    read inst_type < ~/.config/pyradio/data/INSTALLATION_TYPE
+    if [ ! -z "$inst_type" ]
+    then
+        if [ "$inst_type" = "1" ]
+        then
+            # pipx installation without isolation
+            check_installation_type
+        elif [ "$inst_type" = "2" ]
+        then
+            # pipx installation with isolation
+            check_installation_type
+        else
+            # normal pip installation
+            if [ ! -z "$PIPX" ]
+            then
+                inst_type=1
+            fi
+        fi
+    fi
+fi
+
 if [ -z "$PIPX" ]
 then
     # Normanl, old style installation
-	if [ -e requirements.txt ]
+    if [ -e requirements.txt ]
     then
-		python"${TO_PYTHON}" -m pip install -r requirements.txt . || pip_error
-	else
-		python"${TO_PYTHON}" -m pip install . || pip_error
-	fi
+        python"${TO_PYTHON}" -m pip install -r requirements.txt . || pip_error
+    else
+        python"${TO_PYTHON}" -m pip install . || pip_error
+    fi
 else
     # pipx installation
     if [ -z "$PIPX_ISOLATE" ]
     then
         pipx install $PIPX_EDITABLE --system-site-packages --force . || pipx_error
+        inst_type=1
     else
         pipx install $PIPX_EDITABLE --force . || pipx_error
         pipx runpip pyradio install -r requirements.txt
+        inst_type=2
     fi
 fi
 
@@ -507,7 +443,8 @@ then
     mv -f pyradio_server.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio_server.1.gz ~/.local/local/share/man/man1
     DOC=~/.local/share/doc/pyradio
     mkdir -p "$DOC" 2>/dev/null
-    if [ ! -d "$DOC" ];then
+    if [ ! -d "$DOC" ]
+    then
         # Mac OS SIP protects /usr
         DOC=~/.local/local/share/doc/pyradio
         mkdir "$DOC"
@@ -518,24 +455,25 @@ then
     done
     # copy LICENCE
     mkdir -p ~/.local/share/licenses 2>/dev/null
-    if [ "$DOC" = "~/.local/share/doc/pyradio" ];then
+    if [ "$DOC" = "~/.local/share/doc/pyradio" ]
+    then
         mkdir -p ~/.local/share/licenses/pyradio 2>/dev/null
         cp LICENCE ~/.local/share/licenses/pyradio
     else
         cp LICENCE "$DOC"
     fi
-    if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ];then
-        [ -z "${HOMEBREW}" ] && HOMEBREW=/usr/local/opt
-        put_exec_to_mac_path "${HOMEBREW}"
-    else
-        if [ ! -z "$(grep 'distro = None' pyradio/config)" ];then
-           if [ ! -e ~/.local/share/applications/pyradio.desktop ]
-           then
-               mkdir -p ~/.local/share/applications/ 2>/dev/null
-               cp devel/pyradio.desktop ~/.local/share/applications/pyradio.desktop
-           fi
+    if [ $(uname -s) != "Darwin" ] && [ $(uname -s) != "darwin" ]
+    then
+        if [ ! -z "$(grep 'distro = None' pyradio/config)" ]
+        then
+            if [ ! -e ~/.local/share/applications/pyradio.desktop ]
+            then
+                mkdir -p ~/.local/share/applications/ 2>/dev/null
+                cp devel/pyradio.desktop ~/.local/share/applications/pyradio.desktop
+            fi
             chmod +x ./devel/fix_pyradio_desktop_file
-            if [ -z "${REQ_TERMINAL}" ];then
+            if [ -z "${REQ_TERMINAL}" ]
+            then
                 ./devel/fix_pyradio_desktop_file -i
             else
                 ./devel/fix_pyradio_desktop_file -i -t "${REQ_TERMINAL}"
@@ -544,6 +482,7 @@ then
     fi
     mkdir -p ~/.config/pyradio/data
     cp devel/pyradio.png ~/.config/pyradio/data
+    create_installation_type_file
 else
     do_exit
     exit 1

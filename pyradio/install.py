@@ -882,45 +882,6 @@ class PyRadioUpdate(object):
             pass
         # input('Please update files as needed. Then press ENTER to continue...')
 
-        ''' DEBUG on linux
-            get new install.py, copy.py (any py)
-            into downloaded directory
-        '''
-        '''
-        from shutil import copyfile
-        cur_dir = os.getcwd()
-        copyfile('/Users/max/pyradio/pyradio/install.py',
-            os.path.join(cur_dir, 'install.py'))
-        #copyfile('/Users/max/pyradio/devel/build_install_pyradio', \
-        #    os.path.join(os.path.join(self._dir, self.ZIP_DIR[self._package],
-        #        'devel', 'build_install_pyradio'))
-        #)
-        #print('\n\n{}\n\n'.format(os.path.join(self._dir, self.ZIP_DIR[self._package])))
-        #print(cur_dir)
-        #copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/install.py',
-        #    os.path.join(cur_dir, 'install.py'))
-        #copyfile('/home/spiros/projects/my-gits/pyradio/devel/build_install_pyradio', \
-        #    os.path.join(os.path.join(self._dir, self.ZIP_DIR[self._package],
-        #        'devel', 'build_install_pyradio'))
-        #)
-        # copyfile('/home/spiros/projects/my-gits/pyradio/pyradio/config.py',
-        #    os.path.join(self._dir, self.ZIP_DIR[self._package], 'pyradio', 'config.py'))
-        '''
-        ''' DEBUG on Windows
-            get new install.py, build_install_pyradio.bat (any py)
-            into downloaded directory
-        '''
-        '''
-        from shutil import copyfile
-        cur_dir = os.getcwd()
-        print('\n\n{}\n\n'.format(os.path.join(self._dir, self.ZIP_DIR[self._package])))
-        print(cur_dir)
-        copyfile('C:\\Users\\Spiros\\pyradio\\pyradio\\install.py',
-            os.path.join(cur_dir, 'install.py'))
-        copyfile('C:\\Users\\Spiros\\pyradio\\devel\\build_install_pyradio.bat',
-            os.path.join(self._dir, self.ZIP_DIR[self._package], 'devel', 'build_install_pyradio.bat'))
-        '''
-
     def _mkdir(self, name, dir_exist_function=None, _permission_error_function=None):
         if os.path.isdir(name):
             self._clean_up()
@@ -1076,9 +1037,6 @@ if __name__ == '__main__':
                         help='update PyRadio.')
     parser.add_argument('-f', '--force', action='store_true',
                         help='force installation (even if already installed).')
-    if platform.system().lower().startswith('darwin'):
-        parser.add_argument('--brew', nargs='?', default='False',
-                            help='Create a link to pyradio executable in PATH. [BREW] can be empty (the default will be used in this case: /urs/local/opt). If a different package manager is in use, [BREW] should be the path to the location it installs its packages.')
     if not platform.system().lower().startswith('win'):
         parser.add_argument('-i', '--isolate', action='store_true',
                             help='install using pipx in an fully Isolated Environment (all dependencies will be installed in a virtual environment); the default is to have pipx depend on distro python packages.')
@@ -1132,35 +1090,6 @@ if __name__ == '__main__':
             print('\n           python3 install.py')
             print('\n       to install PyRadio.\n\n')
             sys.exit(1)
-
-        if args.brew != "False":
-            if args.brew is None:
-                param = ' --fix-mac-path'
-            else:
-                param = ' --warning --fix-mac-path "' + args.brew + '"'
-            #### print('parameter: ' + param)
-            try:
-                from urllib.request import urlretrieve
-            except:
-                from urllib import urlretrieve
-            try:
-                r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/build_install_pyradio')
-            except:
-                print('Cannot contact github...')
-                sys.exit(1)
-            if int(r[1]['content-length']) < 1000:
-                print('Cannot contact github...')
-                sys.exit(1)
-            script = r[0]
-            #### print('script:', script)
-            if exists('/Users/Max/pyradio/devel/build_install_pyradio'):
-                script = '/Users/Max/pyradio/devel/build_install_pyradio'
-            #### print('script:', script)
-            # now I can run the script
-            subprocess.call('bash -c "' + script + param + '"', shell=True)
-            os.remove(r[0])
-            sys.exit()
-
 
     if platform.system().lower().startswith('win') and \
             (not PY3 or args.python2):
@@ -1371,7 +1300,7 @@ Then try installing PyRadio again
             pix_isolated=args.isolate
         )
         uni.install = True
-        if not platform.system().lower().startswith('darwin'):
-            uni.user = True
+        # if not platform.system().lower().startswith('darwin'):
+        #     uni.user = True
         uni.update_pyradio()
 
