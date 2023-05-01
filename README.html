@@ -40,9 +40,11 @@ a:visited{color: SaddleBrown;}
 </header>
 <h1 style="color: SaddleBrown" id="pyradio">PyRadio</h1>
 <p>Command line internet radio player.</p>
-<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <p><a href="https://members.hellug.gr/sng/pyradio/pyradio.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio.png" alt="Pyradio" /></a></p>
 
+<h2 id="important">IMPORTANT <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p><strong>PyRadio</strong> may fail to install/update on some linux distros (mainly Ubuntu 23.04, Debian Testing and derivatives, etc.) due to a change to the underlined python installation.</p>
+<p>If you face this situation, please refer to <a href="pipx.html">this page</a> to resolve the problem.</p>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
@@ -105,7 +107,7 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
-<li><a href="#pyradio-themes">PyRadio Themes</a> * <a href="#alternative-main-window-border-color">Alternative Main Window border color</a>
+<li><a href="#pyradio-themes">PyRadio Themes</a>
 <ul>
 <li><a href="#virtual-terminal-restrictions">Virtual terminal restrictions</a></li>
 <li><a href="#css-color-themes-restrictions">CSS color themes restrictions</a></li>
@@ -114,6 +116,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#theme-defined-secondary-windows-color">Theme defined secondary windows color</a></li>
 <li><a href="#calculated-secondary-windows-color">Calculated secondary windows color</a></li>
 </ul></li>
+<li><a href="#alternative-main-window-border-color">Alternative Main Window border color</a></li>
 <li><a href="#user-themes">User themes</a>
 <ul>
 <li><a href="#converting-old-themes">Converting old themes</a></li>
@@ -1627,13 +1630,6 @@ transparency        0</pre>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the theme selected in the “<em>Theme selection window</em>”, (or requested using the “<strong>-t</strong>” command line option), is in any way invalid, or is of the old format, <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme and will display a relevant message.</p>
 <p>The “<em>Theme selection window</em>” will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
 <p>Pressing “<strong>SPACE</strong>”, will apply the theme and make it default, and pressing “<strong>c</strong>” will apply the theme and make it default and start a file watch function on the file, so that if the file changes, <strong>PyRadio</strong> will automatically update itself.</p>
-<h4 id="alternative-main-window-border-color">Alternative Main Window border color</h4>
-<p>It is also possible to change the <strong>Main Window</strong> border color. This is a feature that has been requested and implemented, but not used by default.</p>
-<p>To provide an alternative border color, one would just add the following to a theme file:</p>
-<pre># Border color for the Main Window
-# (background color will come from Stations)
-Border              #69a9a7</pre>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This color will be used <strong>only</strong> when the trerminal supports more than 16 colors. This is because <strong>Pyradio</strong> already uses colors 0-15, and this border color will be declaread as color No 16.</p>
 <h3 id="virtual-terminal-restrictions">Virtual terminal restrictions</h3>
 <p>After introducing CSS color themes, it has come to my attention that <strong>PyRadio</strong> will not display colors correctly when executed within specific terminals, <em>konsole</em>, <em>yakuake</em>, <em>deepin-teminal</em>, <em>qterminal</em> and <em>terminology</em>, just to name a few.</p>
 <p>Now, I do not know whether this is because of the terminals themselves, python curses implementation or whatever, but that’s that.</p>
@@ -1700,6 +1696,13 @@ This is just a recomenration, though; just get a color that combines well with e
 <p>This is how this works: <strong>PyRadio</strong> will calculate the “<em>Stations background</em>” color perceived brightness, which will indicate whether the color is dark or light. Then depending on that, will add or subtract <strong>factor</strong> percent from its luminance value.</p>
 <p>Finally, a check will be made to see if this color is close to “<em>Messages Border</em>” foreground color, and re-adjusted as possible.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a calculated background color is used, pressing “<strong>~</strong>” (<strong>tilde</strong>) will toggle it on and off. This setting will be valid until <strong>PyRadio</strong> terminates, or a new theme is loaded.</p>
+<h3 id="alternative-main-window-border-color">Alternative Main Window border color</h3>
+<p>It is also possible to change the <strong>Main Window</strong> border color. This is a feature that has been requested and implemented, but not used by default.</p>
+<p>To provide an alternative border color, one would just add the following to a theme file:</p>
+<pre># Border color for the Main Window
+# (background color will come from Stations)
+Border              #69a9a7</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This color will be used <strong>only</strong> when the trerminal supports more than 16 colors. This is because <strong>Pyradio</strong> already uses colors 0-15, and this border color will be declaread as color No 16.</p>
 <h3 id="user-themes">User themes</h3>
 <p>Users can easiliy create their own themes, using for example <a target="_blank" href="https://www.cssportal.com/css3-color-names/">CSS color names</a> as a resource, and</p>
 <ol type="1">

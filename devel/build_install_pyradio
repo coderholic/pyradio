@@ -355,10 +355,11 @@ then
         sed -i 's/from rich import print/# &/' "${a_file}"
         sed -i '/##### NO PYTHON2/,/##### END NO PYTHON2/d' "${a_file}"
     done
+else
+    # Use pipx by default, if installed
+    pipx list 2>/dev/null 1>&2 && PIPX=1
 fi
 
-# Use pipx by default, if installed
-pipx list 2>/dev/null 1>&2 && PIPX=1
 
 if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ]
 then
@@ -370,32 +371,37 @@ then
         exit 1
     }
 fi
-# Make an editable installation if
-#       ~/.pyradio-editable
-# exists
-test -e ~/.pyradio-editable && PIPX_EDITABLE="-e"
 
-inst_type=0
-if [ -e ~/.config/pyradio/data/INSTALLATION_TYPE ]
+
+if [ "${TO_PYTHON}" != "2" ];
 then
-    # we have an update
-    # read INSTALLATION_TYPE and identify installation file
-    read inst_type < ~/.config/pyradio/data/INSTALLATION_TYPE
-    if [ ! -z "$inst_type" ]
+    # Make an editable installation if
+    #       ~/.pyradio-editable
+    # exists
+    test -e ~/.pyradio-editable && PIPX_EDITABLE="-e"
+
+    inst_type=0
+    if [ -e ~/.config/pyradio/data/INSTALLATION_TYPE ]
     then
-        if [ "$inst_type" = "1" ]
+        # we have an update
+        # read INSTALLATION_TYPE and identify installation file
+        read inst_type < ~/.config/pyradio/data/INSTALLATION_TYPE
+        if [ ! -z "$inst_type" ]
         then
-            # pipx installation without isolation
-            check_installation_type
-        elif [ "$inst_type" = "2" ]
-        then
-            # pipx installation with isolation
-            check_installation_type
-        else
-            # normal pip installation
-            if [ ! -z "$PIPX" ]
+            if [ "$inst_type" = "1" ]
             then
-                inst_type=1
+                # pipx installation without isolation
+                check_installation_type
+            elif [ "$inst_type" = "2" ]
+            then
+                # pipx installation with isolation
+                check_installation_type
+            else
+                # normal pip installation
+                if [ ! -z "$PIPX" ]
+                then
+                    inst_type=1
+                fi
             fi
         fi
     fi
@@ -412,13 +418,18 @@ then
     fi
 else
     # pipx installation
+    # MacOS will always permorm an fully isolated installation
+    if [ $(uname -s) == "Darwin" ] || [ $(uname -s) == "darwin" ]
+    then
+        PIPX_ISOLATE=1
+    fi
     if [ -z "$PIPX_ISOLATE" ]
     then
         pipx install $PIPX_EDITABLE --system-site-packages --force . || pipx_error
         inst_type=1
     else
         pipx install $PIPX_EDITABLE --force . || pipx_error
-        pipx runpip pyradio install -r requirements.txt
+        pipx runpip pyradio install -r requirements_pipx.txt
         inst_type=2
     fi
 fi
@@ -482,7 +493,7 @@ then
     fi
     mkdir -p ~/.config/pyradio/data
     cp devel/pyradio.png ~/.config/pyradio/data
-    create_installation_type_file
+    [ "$TO_PYTHON" == "2"  ] || create_installation_type_file
 else
     do_exit
     exit 1

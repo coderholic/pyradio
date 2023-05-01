@@ -1,8 +1,6 @@
 # PyRadio Desktop Notification
 
-Command line internet radio player.
-
-Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
+**PyRadio**: Command line internet radio player.
 
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->

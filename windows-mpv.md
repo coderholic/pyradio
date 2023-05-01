@@ -2,8 +2,6 @@
 
 **PyRadio**: Command line internet radio player.
 
-Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
-
 ## Table of Contents
 
 <!-- vim-markdown-toc Marked -->

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PyRadio pipx installation on Linux</title>
+    <style> 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 150%;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 120%;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown" id="pyradio-pipx-installation-on-linux">PyRadio pipx installation on Linux</h1>
+<p><strong>PyRadio</strong>: Command line internet radio player.</p>
+<h2 id="table-of-contents">Table of contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<!-- vim-markdown-toc Marked -->
+<ul>
+<li><a href="#preface">Preface</a></li>
+<li><a href="#install-a-media-player">Install a media player</a></li>
+<li><a href="#get-the-installation-script">Get the installation script</a></li>
+<li><a href="#debian-and-derivatives">Debian and derivatives</a>
+<ul>
+<li><a href="#fully-isolated-installation---debian">Fully isolated installation - Debian</a></li>
+<li><a href="#system-dependent-installation---debian">System dependent installation - Debian</a></li>
+</ul></li>
+<li><a href="#fedora-and-derivatives">Fedora and derivatives</a>
+<ul>
+<li><a href="#fully-isolated-installation---fedora">Fully isolated installation - fedora</a></li>
+<li><a href="#system-dependent-installation---fedora">System dependent installation - fedora</a></li>
+</ul></li>
+<li><a href="#opensuse-and-derivatives">openSUSE and derivatives</a>
+<ul>
+<li><a href="#fully-isolated-installation---opensuse">Fully isolated installation - openSUSE</a></li>
+<li><a href="#system-dependent-installation---opensuse">System dependent installation - openSUSE</a></li>
+</ul></li>
+</ul>
+<!-- vim-markdown-toc -->
+<p><a href="build.html">[Return to PyRadio Build Instructions]</a></p>
+<h2 id="preface">Preface <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>This document will help you install <strong>PyRadio</strong> within a <strong>virtual environment</strong> using <a target="_blank" href="https://pypa.github.io/pipx/">pipx</a>.</p>
+<p>In order to install <strong>PyRadio</strong> to your system you will:</p>
+<ol type="1">
+<li>Install a media player</li>
+<li>Download the installation script</li>
+<li>Install the basic python system and <strong>PyRadio</strong> installation dependencies</li>
+<li>Choose the type of <strong>PyRadio</strong> installation</li>
+<li>Perform the installation</li>
+</ol>
+<p>In order to decide which type of installation to perform, here are a couple of things you have to consider.</p>
+<p>There are two installation types you can use for <strong>PyRadio</strong>:</p>
+<ol type="1">
+<li><p><strong>Fully isolated installation</strong><br />
+This type of installation will install all <strong>PyRadio</strong> dependencies inside a virtual environment.<br />
+<br />
+The advantage is that the system’s python installation is not cluttered with the package’s dependencies.<br />
+<br />
+The disadvantage is that installing the dependencies in a virtual environment may fail.</p></li>
+<li><p><strong>System dependent installation</strong><br />
+This type of installation requires that all <strong>PyRadio</strong> dependencies are installed outside the virtual environment used by <strong>PyRadio</strong>. All dependencies must be provided by the distribution (i.e. exist in the distribution repositories).</p></li>
+</ol>
+<h2 id="install-a-media-player">Install a media player <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p><strong>PyRadio</strong> relies on the existence of at least one of the following media players: <strong>mpv</strong>, <strong>mplayer</strong> or <strong>vlc</strong>.</p>
+<p>Please install at least one of them beforehand:</p>
+<pre># on Debian
+sudo apt-get install [ mpv / mplayer / vlc ]
+
+# on Fedora
+sudo dnf install [ mpv / mplayer / vlc ]
+
+# on openSUSE
+sudo zypper install [ mpv / mplayer / vlc ]</pre>
+<h2 id="get-the-installation-script">Get the installation script <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Open a terminal and execute:</p>
+<pre>cd
+wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py</pre>
+<p>or using curl:</p>
+<pre>cd
+curl -L \
+    https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py \
+    -o install.py</pre>
+<p>Please follow the instructions that match/suit your distribution.</p>
+<h2 id="debian-and-derivatives">Debian and derivatives <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following instructions were tested on a freshly installed <strong>Debian Testing</strong>.</p>
+<p>Install the requirements for the installation script:</p>
+<pre>sudo apt-get install \
+    python3-full \
+    python3-pip \
+    python3-rich \
+    python3-requests</pre>
+<p>Then install pipx:</p>
+<pre>sudo apt-get install pipx</pre>
+<p>If that fails, execute:</p>
+<pre>pyton3 -m pip install pipx</pre>
+<p>Finally, execute:</p>
+<pre>python3 -m pipx ensurepath</pre>
+<p>and exit the terminal.</p>
+<h3 id="fully-isolated-installation---debian">Fully isolated installation - Debian</h3>
+<p>Open a terminal and execute:</p>
+<pre>cd
+python3 install.py -i</pre>
+<h3 id="system-dependent-installation---debian">System dependent installation - Debian</h3>
+<p>Install dependencies:</p>
+<pre>sudo apt-get install \
+    python3-dnspython \
+    python3-psutil \
+    python3-netifaces \
+    python3-dateutil</pre>
+<p>Install <strong>PyRadio</strong>:</p>
+<pre>cd
+python3 install.py</pre>
+<h2 id="fedora-and-derivatives">Fedora and derivatives <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following instructions were tested on a freshly installed <strong>Fedora 38 Workstation</strong>.</p>
+<p>Execute:</p>
+<pre>sudo dnf install \
+    python3-pip \
+    python3-wheel \
+    python3-rich \
+    python3-requests \
+    pipx</pre>
+<p>And</p>
+<pre>python3 -m pipx ensurepath</pre>
+<p>and exit the terminal.</p>
+<h3 id="fully-isolated-installation---fedora">Fully isolated installation - fedora</h3>
+<p>Open a terminal and execute:</p>
+<pre>sudo dnf install gcc python3-devel</pre>
+<p>And finally:</p>
+<pre>cd
+python isntall.py -i</pre>
+<h3 id="system-dependent-installation---fedora">System dependent installation - fedora</h3>
+<p>Open a terminal and execute:</p>
+<pre>sudo dnf install \
+    python3-netifaces \
+    python3-psutil \
+    python3-dns \
+    python3-dateutil</pre>
+<p>Install <strong>PyRadio</strong>:</p>
+<pre>cd
+python install.py</pre>
+<h2 id="opensuse-and-derivatives">openSUSE and derivatives <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following instructions were tested on a freshly installed <strong>openSUSE Tumbleweed 20230427</strong>.</p>
+<p>Execute:</p>
+<pre>sudo zypper install \
+    python310-requests \
+    python310-rich
+# install pipx through pip to get the latest version (1.2.0+)
+# at the time of writing this, a very old pipx version (0.14.0.0)
+# was available on the openSUSE Tumbleweed repositories
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath</pre>
+<p>and close the terminal.</p>
+<h3 id="fully-isolated-installation---opensuse">Fully isolated installation - openSUSE</h3>
+<p>Open a terminal and execute:</p>
+<pre>sudo zypper install \
+    gcc \
+    python310-dev</pre>
+<p>Install <strong>PyRadio</strong>:</p>
+<pre>cd
+python3 install.py -i</pre>
+<h3 id="system-dependent-installation---opensuse">System dependent installation - openSUSE</h3>
+<p>Open a terminal and install <strong>PyRadio</strong> dependencies:</p>
+<pre>sudo zypper install \
+    python3-psutil \
+    python3-dnspython \
+    python3-dateutil \
+    python3-netifaces</pre>
+<p>Finally, install <strong>PyRadio</strong>:</p>
+<pre>cd
+python3 install.py</pre>
+</body>
+</html>

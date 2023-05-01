@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+cReset="[0m"
+cBold="[1m"
+colorGreen=2
+colorRed=1
+colorYellow=3
+cGreen="[0;3${colorGreen}m"${cBold}
+cRed="[1;3${colorRed}m"${cBold}
+cYellow="[1;3${colorYellow}m"${cBold}
+
 function images_to_links(){
 awk '{if($0 ~ /img src=/){
     #print $0
@@ -34,7 +43,7 @@ sed -i 's/\t/    /g' Changelog
 
 
 # Create HTML file from md files
-for afile in README.md build.md windows.md windows-mplayer.md windows-mpv.md radio-browser.md desktop-notification.md server.md
+for afile in README.md build.md windows.md windows-mplayer.md windows-mpv.md radio-browser.md desktop-notification.md server.md linux.md linux-pipx.md macos.md pipx.md
 do
 #[ -z "$(git status | grep ${afile})" ] || {
     out=${afile/%.md/.html}
@@ -54,6 +63,14 @@ do
         echo '% PyRadio Desktop Notifications' > tmp.md
     elif [ "$afile" = "server.md" ];then
         echo '% PyRadio Remote Control Server' > tmp.md
+    elif [ "$afile" = "linux.md" ];then
+        echo '% PyRadio pip installation on Linux' > tmp.md
+    elif [ "$afile" = "linux-pipx.md" ];then
+        echo '% PyRadio pipx installation on Linux' > tmp.md
+    elif [ "$afile" = "macos.md" ];then
+        echo '% PyRadio pipx installation on MacOS' > tmp.md
+    elif [ "$afile" = "pipx.md" ];then
+        echo '% What happened?' > tmp.md
     fi
     cat ${afile} >> tmp.md
     pandoc --wrap=none -s -t html tmp.md -o ${out} || {
@@ -172,8 +189,18 @@ git add README.html
 #     git add devel/update_win_mplayer
 # }
 
-echo "
+
+echo -en "pyproject.toml ${cGreen}"
+grep version pyproject.toml
+echo -en "${cReset}__init.py ${cRed}"
+grep '^version_info ' pyradio/__init__.py
+echo -en "${cReset}install.py ${cYellow}"
+grep '^PyRadioInstallPyReleaseVersion '  pyradio/install.py
+
+echo -e "${cReset}
 You should also run
-    devel/update_win_mplayer
+    ${cGreen}devel/update_win_mplayer${cReset}
 at this point, if you are ready to
 publish a new release"
+
+

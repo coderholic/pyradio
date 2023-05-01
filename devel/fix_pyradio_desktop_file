@@ -138,17 +138,16 @@ function get_req_terminal(){
 }
 
 function get_program(){
-    #if [ -e ~/.local/bin/pyradio ]
-    #then
-    #    if [[ "${PATH}" == *'~/.local/bin'* ]] | \
-    #        [[ "${PATH}" == *"/home/${USER}/.local/bin"* ]]
-    #    then
-    #    #     PROGRAM=pyradio
-    #    # else
-    #        PROGRAM=/home/"${USER}/.local/bin/pyradio"
-    #    fi
-    #fi
     PROGRAM=$(which pyradio)
+    if [ -z "$PROGRAM" ]
+    then
+        if [ -e /home/"$USER"/.local/bin/pyradio ]
+        then
+            PROGRAM=/home/"$USER"/.local/bin/pyradio
+        else
+            PROGRAM=pyradio
+        fi
+    fi
 }
 
 function get_terminal(){

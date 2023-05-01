@@ -2,23 +2,17 @@
 
 **PyRadio**: Command line internet radio player.
 
-Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
-
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
 * [Current state of the project](#current-state-of-the-project)
     * [What does it all mean and why should you care](#what-does-it-all-mean-and-why-should-you-care)
-* [Preparing for the installation](#preparing-for-the-installation)
-    * [Linux](#linux)
-        * [Notice for Python 2 users](#notice-for-python-2-users)
-        * [Installation on the BSDs](#installation-on-the-bsds)
-        * [Rasberry Pi installation](#rasberry-pi-installation)
-    * [macOS](#macos)
-    * [Windows](#windows)
-* [Performing the installation](#performing-the-installation)
-    * [Note for macOS users](#note-for-macos-users)
-    * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
+    * [When do I need to install pipx?](#when-do-i-need-to-install-pipx?)
+        * [More info](#more-info)
+    * [Notice for Python 2 users](#notice-for-python-2-users)
+    * [Installation on the BSDs](#installation-on-the-bsds)
+    * [Rasberry Pi installation](#rasberry-pi-installation)
+* [Installation guides](#installation-guides)
 
 <!-- vim-markdown-toc -->
 
@@ -26,173 +20,126 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
 ## Current state of the project
 
-Starting with version **0.8.9.15**, **PyRadio** has changed its installation method from invoking *setup.py* directly to *pip* (i.e. from "*python setup.py install*" to "*python -m pip .*"). This is a must for all **Python** projects in order to keep up with the latest developments. For more info, please refer to "[Why you shouldn't invoke setup.py directly](https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html)".
+Starting with version **0.9.2.6**, **PyRadio** has changed (yet again) its installation method, forced by the emergance of Ubuntu 23.04.
+
+After abandoning invoking *setup.py* directly, now it's time to start using **virtual environments** (through a program called `pipx`) along with the pure `pip` method.
+
+This is not a **PyRadio** thing; distributions are starting to embrace this behaviour.
+
+The rationale behind this move it this: since `pip` can be used to install packages **system wide**, it can easily "destroy" the whole python installation. This would be the equivalent of forcing the installation of an Ubuntu package in a Debian system or a Debian 11 package on a Debian 8 system.
+
+At the same time, python scripts and packages are already used by distributions to provide system tools and breaking a system's python installation may lead to breaking the whole system.
+
+The solution is forcing the use of **virtual environments** for any python script or program or package that is **not provided** by the distribution itself, effectively isolating the program's installation from the rest of the system. Any program, package or module installed within the **virtual environment** exists and lives within that environment only, it does not interfere with the distribution's Python installation and cannot "destroy" it.
+
+Python **virtual environments** have existed for a long time, but their use was not always that straight forward. Fortunately, a program called [pipx]() will help with the installation and execution of python programs from within a virtual environment while taking care of the overhead required.
 
 ### What does it all mean and why should you care
 
-Moving to the **pip** way of doing things has its implications:
+Moving to the **pipx** means:
 
-1. **PyRadio** will be installed as a pip package.
+1. **PyRadio** will be installed by default through `pipx` on Linux, if pipx is already installed.
 
-2. **PyRadio** will no longer be installed as a system-wide package. \
-\
-This means that after installing **PyRadio**, it will only be available to the current user. If another user wants to use it as well, he would have to install it again. \
-\
-In other words, in order to have a **Pyradio system-wide installation**, your distribution has to provide a package for it.
+2. If a Linux distribution does not provide a pipx package, you can still use the `pip` installation method.
 
-3. As I'm starting the procedure to move away from *Python 2*, **PyRadio** will not be compatible with it on *macOs* and *Windows* (but will still be on *Linux*, at least for the time being).
+3. Python 2 is still supported on a Linux system, in which case a `pip` installation will be performed.
 
+4. **PyRadio** on **Windows** will still use the `pip` installation method. *Python 2* is not supported anymore.
 
-## Preparing for the installation
-
-Before installing **PyRadio** you have to prepare your system, so that you end up with a working installation. The process depends on the OS you are on.
+5. **PyRadio** will only be installed using `pipx` on **Python 3** on **MacOS**. *Python 2* is not supported anymore.
 
 
-### Linux
+### When do I need to install pipx?
 
-Use your distribution method to install
+If you already have **PyRadio** installed, a subsequent update notification may lead to an installation failure. The same goes if you try to install **PyRadio** on a freshly installed Ubuntu 23.04 (or Debian Testing or any other distribution that ships its python "externally managed" in the future).
 
-1. *python-pip*
-2. *python-setuptools*
-3. *python-wheel*
-4. *python-requests*
-5. *python-dnspython*
-6. *python-psutil*
-7. *python-rich*
-8. *python-netifaces*
-9. *sed*
-10. any one of *MPV*, *MPlayer* and/or *VLC*.
+This is what you get on Ubuntu 23.04 (and probably Debian Testing and any distribution based on them):
 
-#### Notice for Python 2 users
+```
+error: externally-managed-environment
 
-If you are still using **Python 2**, plase make sure "**pip**" is installed. Execute the following command to verify its existance:
+× This environment is externally managed
+╰─> To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install.
 
-    python[2] -m pip list
+    If you wish to install a non-Debian-packaged Python package,
+    create a virtual environment using python3 -m venv path/to/venv.
+    Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+    sure you have python3-full installed.
+
+    If you wish to install a non-Debian packaged Python application,
+    it may be easiest to use pipx install xyz, which will manage a
+    virtual environment for you. Make sure you have pipx installed.
+
+    See /usr/share/doc/python3.11/README.venv [1] for more information.
+
+--
+[1] https://sources.debian.org/src/python3.11/3.11.2-6/debian/README.venv
+```
+
+If you get that message, or a similar one, it is time to install `pipx`.
+
+#### More info
+
+- [Externally Managed Environments @ PyPA](https://packaging.python.org/en/latest/specifications/externally-managed-environments/)
+
+- [PEP 668 – Marking Python base environments as “externally managed”](https://peps.python.org/pep-0668/)
+
+
+### Notice for Python 2 users
+
+If you are still using **Python 2** in a linux system, plase make sure "**pip**" is installed. Execute the following command to verify its existance:
+
+```
+python[2] -m pip list
+```
 
 If you get a response, you are good to go. Otherwise, use your distro package manager to install it.
 
 If your distro does not provide it (some do not anymore), use the following commands to get it:
 
-    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+```
+    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py \
+        --output get-pip.py
     sudo python[2] get-pip.py
+```
 
 or
 
+```
     wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
     sudo python[2] get-pip.py
+```
 
-When you are done, proceed to  "[Performing the installation](#performing-the-installation)".
+When you are done, proceed to  "[pip installation](linux.md) (the old way)", adapting the commands to python2.
 
-#### Installation on the BSDs
+### Installation on the BSDs
 
-If you are on any of the BSDs, please do install **bash** beforehand.
+If you are on any of the BSDs, please do install **bash** beforehand and try to follow the [pip installation guide](linux-pip.md).
+
+Please be aware that **PyRadio** is provided as a **port** on [FreeBSB](https://www.freshports.org/audio/py-pyradio/).
 
 
-#### Rasberry Pi installation
+### Rasberry Pi installation
 
 If installing on a Rasberry Pi, there are a couple of things you should be aware of:
 
 1. The default player will be **MPlayer**
 3. If you still want to use **MPV**, please make sure you increase the *Connection timeout* value to at least 20 (sometimes even 30 for some machines). Even then, your machine may eventually crash, if it's on the lower end of things and **PyRadio** is left running for hours.
 
+## Installation guides
 
-### macOS
+Please follow the installation guides for your OS.
 
-First thing you do is install python dependencies (assuming python 3 is installed):
+1. Linux
+    - [pip installation](linux.md) (the old way) \
+Not valid for **Debian Testing** and **Ubuntu 23.04**
+    - [pipx installation](linux-pipx.md) (the new way) \
+Valid for **Debian Testing** and **Ubuntu 23.04**
+2. MacOS \
+Follow the instructions on [this page](macos.md).
+3. Windows \
+Follow the instructions on [this page](windows.md).
 
-    python3 -m pip install --upgrade pip wheel setuptools requests dnspython psutil rich netifaces
-
-Everything else you need to install and run **pyradio** is available on [Homebrew](https://github.com/Homebrew/homebrew). If you haven't already downloaded its client, go ahead and do it.
-
-Open a **terminal** and type:
-
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
-Depending on your macOS version, you may have to install **sed** too:
-
-    brew install gnu-sed --default-names
-
-Now it's time to install a media player. You are free to install any one of them or even more than one...
-
-1\. ***MPV***
-
-    brew install mpv
-
-2\. ***MPlayer***
-
-    brew install mplayer
-
-3\. ***VLC***
-
-You  can get VLC from the official site or from [Homebrew](https://github.com/Homebrew/homebrew).
-
-a\. ***Oficial package***
-
-You just go to [videolan.org](http://www.videolan.org/vlc/download-macos.html),  download and install the program as you usually do with any other application.
-
-Finally, add a symbolic link to the executable as follows:
-
-    sudo ln -s /Applications/VLC.app/Contents/MacOS/VLC /usr/local/bin/cvlc
-
-b\. ***Homebrew package***
-
-    brew cask install vlc
-    sudo ln -s /usr/local/bin/vlc /usr/local/bin/cvlc
-
-Your system is ready now for **pyradio** to be installed. You can follow the instructions given at "[Performing the installation](#performing-the-installation)".
-
-### Windows
-
-Windows installation is presented in its [own page](windows.md).
-
-## Performing the installation
-
-First thing you do is get the installation script. Open a **terminal** and type:
-
-    cd
-    wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py
-
-or using curl:
-
-    cd
-    curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py -o install.py
-
-**Note**: If you have neither *wget* or *curl* installed, just right click on [this link](https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py) and use your browser "**Save link as**" menu entry to save the file in your home folder.
-
-Finally, execute the command:
-
-    python install.py
-
-On **Debian** based systems you will have to execute:
-
-    python3 install.py
-
-If for some reason you want a **python 2** installation, execute:
-
-    python2 install.py
-
-
-### Note for macOS users
-
-This release of **PyRadio** has been tested on **Catalina** and **Big Sur**.
-
-On **Catalina** the executable has been placed on a location which is not directly accessible (not in the PATH). **PyRadio** will try to link it to your **bin** folder (creating *~/bin/pyradio*), and **PyRadio** will be ready yo be executed, provided that this folder is in your PATH and that **Homebrew** default installation folders have been used during the installation of **Python 3**.
-
-In case a different **Homebrew** location has been used (or a different package manager, for this matter), you can just point the installation to the correct path, using the following command (post installation):
-
-    python3 install.py --brew /path/to/homebrew/installation
-
-so that **PyRadio** can find and link the executable to your **bin** folder.
-
-### Updating a pre 0.8.9 installation
-
-If you are on a pre 0.8.9 release and want to update **PyRadio**, just follow the instructions above, but add the "*--force*" command line parameter to the installation command.
-
-So, instead of
-
-    python install.py
-
-do a
-
-    python install.py --force
 

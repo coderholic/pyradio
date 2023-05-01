@@ -40,131 +40,105 @@ a:visited{color: SaddleBrown;}
 </header>
 <h1 style="color: SaddleBrown" id="pyradio-build-instructions">PyRadio Build Instructions</h1>
 <p><strong>PyRadio</strong>: Command line internet radio player.</p>
-<p>Ben Dowling - <a target="_blank" href="https://github.com/coderholic">https://github.com/coderholic</a></p>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
 <li><a href="#current-state-of-the-project">Current state of the project</a>
 <ul>
 <li><a href="#what-does-it-all-mean-and-why-should-you-care">What does it all mean and why should you care</a></li>
+<li><a href="#when-do-i-need-to-install-pipx?">When do I need to install pipx?</a>
+<ul>
+<li><a href="#more-info">More info</a></li>
 </ul></li>
-<li><a href="#preparing-for-the-installation">Preparing for the installation</a>
-<ul>
-<li><a href="#linux">Linux</a>
-<ul>
 <li><a href="#notice-for-python-2-users">Notice for Python 2 users</a></li>
 <li><a href="#installation-on-the-bsds">Installation on the BSDs</a></li>
 <li><a href="#rasberry-pi-installation">Rasberry Pi installation</a></li>
 </ul></li>
-<li><a href="#macos">macOS</a></li>
-<li><a href="#windows">Windows</a></li>
-</ul></li>
-<li><a href="#performing-the-installation">Performing the installation</a>
-<ul>
-<li><a href="#note-for-macos-users">Note for macOS users</a></li>
-<li><a href="#updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</a></li>
-</ul></li>
+<li><a href="#installation-guides">Installation guides</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p><a href="README.html">[Return to main doc]</a></p>
 <h2 id="current-state-of-the-project">Current state of the project <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>Starting with version <strong>0.8.9.15</strong>, <strong>PyRadio</strong> has changed its installation method from invoking <em>setup.py</em> directly to <em>pip</em> (i.e. from “<em>python setup.py install</em>” to “<em>python -m pip .</em>”). This is a must for all <strong>Python</strong> projects in order to keep up with the latest developments. For more info, please refer to “<a target="_blank" href="https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html">Why you shouldn’t invoke setup.py directly</a>”.</p>
+<p>Starting with version <strong>0.9.2.6</strong>, <strong>PyRadio</strong> has changed (yet again) its installation method, forced by the emergance of Ubuntu 23.04.</p>
+<p>After abandoning invoking <em>setup.py</em> directly, now it’s time to start using <strong>virtual environments</strong> (through a program called pipx) along with the pure pip method.</p>
+<p>This is not a <strong>PyRadio</strong> thing; distributions are starting to embrace this behaviour.</p>
+<p>The rationale behind this move it this: since pip can be used to install packages <strong>system wide</strong>, it can easily “destroy” the whole python installation. This would be the equivalent of forcing the installation of an Ubuntu package in a Debian system or a Debian 11 package on a Debian 8 system.</p>
+<p>At the same time, python scripts and packages are already used by distributions to provide system tools and breaking a system’s python installation may lead to breaking the whole system.</p>
+<p>The solution is forcing the use of <strong>virtual environments</strong> for any python script or program or package that is <strong>not provided</strong> by the distribution itself, effectively isolating the program’s installation from the rest of the system. Any program, package or module installed within the <strong>virtual environment</strong> exists and lives within that environment only, it does not interfere with the distribution’s Python installation and cannot “destroy” it.</p>
+<p>Python <strong>virtual environments</strong> have existed for a long time, but their use was not always that straight forward. Fortunately, a program called <a href="">pipx</a> will help with the installation and execution of python programs from within a virtual environment while taking care of the overhead required.</p>
 <h3 id="what-does-it-all-mean-and-why-should-you-care">What does it all mean and why should you care</h3>
-<p>Moving to the <strong>pip</strong> way of doing things has its implications:</p>
+<p>Moving to the <strong>pipx</strong> means:</p>
 <ol type="1">
-<li><p><strong>PyRadio</strong> will be installed as a pip package.</p></li>
-<li><p><strong>PyRadio</strong> will no longer be installed as a system-wide package.<br />
-<br />
-This means that after installing <strong>PyRadio</strong>, it will only be available to the current user. If another user wants to use it as well, he would have to install it again.<br />
-<br />
-In other words, in order to have a <strong>Pyradio system-wide installation</strong>, your distribution has to provide a package for it.</p></li>
-<li><p>As I’m starting the procedure to move away from <em>Python 2</em>, <strong>PyRadio</strong> will not be compatible with it on <em>macOs</em> and <em>Windows</em> (but will still be on <em>Linux</em>, at least for the time being).</p></li>
+<li><p><strong>PyRadio</strong> will be installed by default through pipx on Linux, if pipx is already installed.</p></li>
+<li><p>If a Linux distribution does not provide a pipx package, you can still use the pip installation method.</p></li>
+<li><p>Python 2 is still supported on a Linux system, in which case a pip installation will be performed.</p></li>
+<li><p><strong>PyRadio</strong> on <strong>Windows</strong> will still use the pip installation method. <em>Python 2</em> is not supported anymore.</p></li>
+<li><p><strong>PyRadio</strong> will only be installed using pipx on <strong>Python 3</strong> on <strong>MacOS</strong>. <em>Python 2</em> is not supported anymore.</p></li>
 </ol>
-<h2 id="preparing-for-the-installation">Preparing for the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>Before installing <strong>PyRadio</strong> you have to prepare your system, so that you end up with a working installation. The process depends on the OS you are on.</p>
-<h3 id="linux">Linux</h3>
-<p>Use your distribution method to install</p>
-<ol type="1">
-<li><em>python-pip</em></li>
-<li><em>python-setuptools</em></li>
-<li><em>python-wheel</em></li>
-<li><em>python-requests</em></li>
-<li><em>python-dnspython</em></li>
-<li><em>python-psutil</em></li>
-<li><em>python-rich</em></li>
-<li><em>python-netifaces</em></li>
-<li><em>sed</em></li>
-<li>any one of <em>MPV</em>, <em>MPlayer</em> and/or <em>VLC</em>.</li>
-</ol>
-<h4 id="notice-for-python-2-users">Notice for Python 2 users</h4>
-<p>If you are still using <strong>Python 2</strong>, plase make sure “<strong>pip</strong>” is installed. Execute the following command to verify its existance:</p>
+<h3 id="when-do-i-need-to-install-pipx">When do I need to install pipx?</h3>
+<p>If you already have <strong>PyRadio</strong> installed, a subsequent update notification may lead to an installation failure. The same goes if you try to install <strong>PyRadio</strong> on a freshly installed Ubuntu 23.04 (or Debian Testing or any other distribution that ships its python “externally managed” in the future).</p>
+<p>This is what you get on Ubuntu 23.04 (and probably Debian Testing and any distribution based on them):</p>
+<pre>error: externally-managed-environment
+
+× This environment is externally managed
+╰─&gt; To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install.
+
+    If you wish to install a non-Debian-packaged Python package,
+    create a virtual environment using python3 -m venv path/to/venv.
+    Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+    sure you have python3-full installed.
+
+    If you wish to install a non-Debian packaged Python application,
+    it may be easiest to use pipx install xyz, which will manage a
+    virtual environment for you. Make sure you have pipx installed.
+
+    See /usr/share/doc/python3.11/README.venv [1] for more information.
+
+--
+[1] https://sources.debian.org/src/python3.11/3.11.2-6/debian/README.venv</pre>
+<p>If you get that message, or a similar one, it is time to install pipx.</p>
+<h4 id="more-info">More info</h4>
+<ul>
+<li><p><a target="_blank" href="https://packaging.python.org/en/latest/specifications/externally-managed-environments/">Externally Managed Environments @ PyPA</a></p></li>
+<li><p><a target="_blank" href="https://peps.python.org/pep-0668/">PEP 668 – Marking Python base environments as “externally managed”</a></p></li>
+</ul>
+<h3 id="notice-for-python-2-users">Notice for Python 2 users</h3>
+<p>If you are still using <strong>Python 2</strong> in a linux system, plase make sure “<strong>pip</strong>” is installed. Execute the following command to verify its existance:</p>
 <pre>python[2] -m pip list</pre>
 <p>If you get a response, you are good to go. Otherwise, use your distro package manager to install it.</p>
 <p>If your distro does not provide it (some do not anymore), use the following commands to get it:</p>
-<pre>curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
-sudo python[2] get-pip.py</pre>
+<pre>    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py \
+        --output get-pip.py
+    sudo python[2] get-pip.py</pre>
 <p>or</p>
-<pre>wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
-sudo python[2] get-pip.py</pre>
-<p>When you are done, proceed to “<a href="#performing-the-installation">Performing the installation</a>”.</p>
-<h4 id="installation-on-the-bsds">Installation on the BSDs</h4>
-<p>If you are on any of the BSDs, please do install <strong>bash</strong> beforehand.</p>
-<h4 id="rasberry-pi-installation">Rasberry Pi installation</h4>
+<pre>    wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
+    sudo python[2] get-pip.py</pre>
+<p>When you are done, proceed to “<a href="linux.html">pip installation</a> (the old way)”, adapting the commands to python2.</p>
+<h3 id="installation-on-the-bsds">Installation on the BSDs</h3>
+<p>If you are on any of the BSDs, please do install <strong>bash</strong> beforehand and try to follow the <a href="linux-pip.html">pip installation guide</a>.</p>
+<p>Please be aware that <strong>PyRadio</strong> is provided as a <strong>port</strong> on <a target="_blank" href="https://www.freshports.org/audio/py-pyradio/">FreeBSB</a>.</p>
+<h3 id="rasberry-pi-installation">Rasberry Pi installation</h3>
 <p>If installing on a Rasberry Pi, there are a couple of things you should be aware of:</p>
 <ol type="1">
 <li>The default player will be <strong>MPlayer</strong></li>
 <li>If you still want to use <strong>MPV</strong>, please make sure you increase the <em>Connection timeout</em> value to at least 20 (sometimes even 30 for some machines). Even then, your machine may eventually crash, if it’s on the lower end of things and <strong>PyRadio</strong> is left running for hours.</li>
 </ol>
-<h3 id="macos">macOS</h3>
-<p>First thing you do is install python dependencies (assuming python 3 is installed):</p>
-<pre>python3 -m pip install --upgrade pip wheel setuptools requests dnspython psutil rich netifaces</pre>
-<p>Everything else you need to install and run <strong>pyradio</strong> is available on <a target="_blank" href="https://github.com/Homebrew/homebrew">Homebrew</a>. If you haven’t already downloaded its client, go ahead and do it.</p>
-<p>Open a <strong>terminal</strong> and type:</p>
-<pre>/usr/bin/ruby -e &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</pre>
-<p>Depending on your macOS version, you may have to install <strong>sed</strong> too:</p>
-<pre>brew install gnu-sed --default-names</pre>
-<p>Now it’s time to install a media player. You are free to install any one of them or even more than one…</p>
-<p>1. <strong><em>MPV</em></strong></p>
-<pre>brew install mpv</pre>
-<p>2. <strong><em>MPlayer</em></strong></p>
-<pre>brew install mplayer</pre>
-<p>3. <strong><em>VLC</em></strong></p>
-<p>You can get VLC from the official site or from <a target="_blank" href="https://github.com/Homebrew/homebrew">Homebrew</a>.</p>
-<p>a. <strong><em>Oficial package</em></strong></p>
-<p>You just go to <a target="_blank" href="http://www.videolan.org/vlc/download-macos.html">videolan.org</a>, download and install the program as you usually do with any other application.</p>
-<p>Finally, add a symbolic link to the executable as follows:</p>
-<pre>sudo ln -s /Applications/VLC.app/Contents/MacOS/VLC /usr/local/bin/cvlc</pre>
-<p>b. <strong><em>Homebrew package</em></strong></p>
-<pre>brew cask install vlc
-sudo ln -s /usr/local/bin/vlc /usr/local/bin/cvlc</pre>
-<p>Your system is ready now for <strong>pyradio</strong> to be installed. You can follow the instructions given at “<a href="#performing-the-installation">Performing the installation</a>”.</p>
-<h3 id="windows">Windows</h3>
-<p>Windows installation is presented in its <a href="windows.html">own page</a>.</p>
-<h2 id="performing-the-installation">Performing the installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>First thing you do is get the installation script. Open a <strong>terminal</strong> and type:</p>
-<pre>cd
-wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py</pre>
-<p>or using curl:</p>
-<pre>cd
-curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py -o install.py</pre>
-<p><strong>Note</strong>: If you have neither <em>wget</em> or <em>curl</em> installed, just right click on <a target="_blank" href="https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py">this link</a> and use your browser “<strong>Save link as</strong>” menu entry to save the file in your home folder.</p>
-<p>Finally, execute the command:</p>
-<pre>python install.py</pre>
-<p>On <strong>Debian</strong> based systems you will have to execute:</p>
-<pre>python3 install.py</pre>
-<p>If for some reason you want a <strong>python 2</strong> installation, execute:</p>
-<pre>python2 install.py</pre>
-<h3 id="note-for-macos-users">Note for macOS users</h3>
-<p>This release of <strong>PyRadio</strong> has been tested on <strong>Catalina</strong> and <strong>Big Sur</strong>.</p>
-<p>On <strong>Catalina</strong> the executable has been placed on a location which is not directly accessible (not in the PATH). <strong>PyRadio</strong> will try to link it to your <strong>bin</strong> folder (creating <em>~/bin/pyradio</em>), and <strong>PyRadio</strong> will be ready yo be executed, provided that this folder is in your PATH and that <strong>Homebrew</strong> default installation folders have been used during the installation of <strong>Python 3</strong>.</p>
-<p>In case a different <strong>Homebrew</strong> location has been used (or a different package manager, for this matter), you can just point the installation to the correct path, using the following command (post installation):</p>
-<pre>python3 install.py --brew /path/to/homebrew/installation</pre>
-<p>so that <strong>PyRadio</strong> can find and link the executable to your <strong>bin</strong> folder.</p>
-<h3 id="updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</h3>
-<p>If you are on a pre 0.8.9 release and want to update <strong>PyRadio</strong>, just follow the instructions above, but add the “<em>–force</em>” command line parameter to the installation command.</p>
-<p>So, instead of</p>
-<pre>python install.py</pre>
-<p>do a</p>
-<pre>python install.py --force</pre>
+<h2 id="installation-guides">Installation guides <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Please follow the installation guides for your OS.</p>
+<ol type="1">
+<li>Linux
+<ul>
+<li><a href="linux.html">pip installation</a> (the old way)<br />
+Not valid for <strong>Debian Testing</strong> and <strong>Ubuntu 23.04</strong></li>
+<li><a href="linux-pipx.html">pipx installation</a> (the new way)<br />
+Valid for <strong>Debian Testing</strong> and <strong>Ubuntu 23.04</strong></li>
+</ul></li>
+<li>MacOS<br />
+Follow the instructions on <a href="macos.html">this page</a>.</li>
+<li>Windows<br />
+Follow the instructions on <a href="windows.html">this page</a>.</li>
+</ol>
 </body>
 </html>

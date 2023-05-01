@@ -2,10 +2,13 @@
 
 Command line internet radio player.
 
-Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
-
 ![Pyradio](https://members.hellug.gr/sng/pyradio/pyradio.png)
 
+## IMPORTANT
+
+**PyRadio** may fail to install/update on some linux distros (mainly Ubuntu 23.04, Debian Testing and derivatives, etc.) due to a change to the underlined python installation.
+
+If you face this situation, please refer to [this page](pipx.md) to resolve the problem.
 
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
@@ -51,12 +54,12 @@ Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
 * [PyRadio Themes](#pyradio-themes)
-        * [Alternative Main Window border color](#alternative-main-window-border-color)
     * [Virtual terminal restrictions](#virtual-terminal-restrictions)
     * [CSS color themes restrictions](#css-color-themes-restrictions)
     * [Secondary windows background](#secondary-windows-background)
         * [Theme defined secondary windows color](#theme-defined-secondary-windows-color)
         * [Calculated secondary windows color](#calculated-secondary-windows-color)
+    * [Alternative Main Window border color](#alternative-main-window-border-color)
     * [User themes](#user-themes)
         * [Converting old themes](#converting-old-themes)
     * [Using transparency](#using-transparency)
@@ -945,20 +948,6 @@ The "*Theme selection window*" will remain open after activating a theme, so tha
 
 Pressing "**SPACE**", will apply the theme and make it default, and pressing "**c**" will apply the theme and make it default and start a file watch function on the file, so that if the file changes, **PyRadio** will automatically update itself.
 
-#### Alternative Main Window border color
-
-It is also possible to change the **Main Window** border color. This is a feature that has been requested and implemented, but not used by default.
-
-To provide an alternative border color, one would just add the following to a theme file:
-
-```
-# Border color for the Main Window
-# (background color will come from Stations)
-Border              #69a9a7
-```
-
-**Note:** This color will be used **only** when the trerminal supports more than 16 colors. This is because **Pyradio** already uses colors 0-15, and this border color will be declaread as color No 16.
-
 ### Virtual terminal restrictions
 
 After introducing CSS color themes, it has come to my attention that **PyRadio** will not display colors correctly when executed within specific terminals, *konsole*, *yakuake*, *deepin-teminal*, *qterminal* and *terminology*, just to name a few.
@@ -1061,6 +1050,20 @@ This is how this works: **PyRadio** will calculate the "*Stations background*" c
 Finally, a check will be made to see if this color is close to "*Messages Border*" foreground color, and re-adjusted as possible.
 
 **Note:** When a calculated background color is used, pressing "**~**" (**tilde**) will toggle it on and off. This setting will be valid until **PyRadio** terminates, or a new theme is loaded.
+
+### Alternative Main Window border color
+
+It is also possible to change the **Main Window** border color. This is a feature that has been requested and implemented, but not used by default.
+
+To provide an alternative border color, one would just add the following to a theme file:
+
+```
+# Border color for the Main Window
+# (background color will come from Stations)
+Border              #69a9a7
+```
+
+**Note:** This color will be used **only** when the trerminal supports more than 16 colors. This is because **Pyradio** already uses colors 0-15, and this border color will be declaread as color No 16.
 
 ### User themes
 

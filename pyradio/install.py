@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 import os
 import subprocess
@@ -9,6 +10,11 @@ from time import sleep
 import site
 import glob
 import re
+
+''' This is PyRadio version this
+    install.py was released for
+'''
+PyRadioInstallPyReleaseVersion = '0.9.2.6'
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -39,7 +45,11 @@ VERSION = ''
 
 PY3 = sys.version[0] == '3'
 
-HAS_PIPX = True if shutil.which('pipx') else False
+if PY3:
+    HAS_PIPX = True if shutil.which('pipx') else False
+else:
+    HAS_PIPX = False
+
 
 ##### NO PYTHON2
 if PY3:
@@ -50,7 +60,7 @@ if PY3:
 
 Please install the above module and try again.
 
-Debial based distros:
+Debian based distros:
     sudo apt install python3-rich
 
 Arch based distros:
@@ -59,7 +69,7 @@ Arch based distros:
 Fedora based distros:
     sudo dnf install python-rich
 
-OpenSUSE based distros:
+openSUSE based distros:
     sudo zypper install python3-rich
 
 If everything else fails, try:
@@ -75,11 +85,6 @@ or even
 
 # import logging
 # logger = logging.getLogger(__name__)
-
-''' This is PyRadio version this
-    install.py was released for
-'''
-PyRadioInstallPyReleaseVersion = '0.9.2.5'
 
 def print_pipx_error():
     msg = '''[red]Error:[/red] This python installation is [red]externally managed[/red], which in plain words

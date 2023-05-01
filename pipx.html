@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>What happened?</title>
+    <style> 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 150%;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 120%;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown" id="what-happened">What happened?</h1>
+<p>Well, things are always evolving and changing when it comes to computers, this is what happened :)</p>
+<p>In a word, pip is not allowed to install packages anymore, unless they are installed in a virtual environment.</p>
+<p>For more info, please refer to this <a href="build.html#current-state-of-the-project">section</a>.</p>
+<h2 id="solution">Solution <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<ol type="1">
+<li>Uninstall <strong>PyRadio</strong>:</li>
+</ol>
+<pre>pyradio -R</pre>
+<ol start="2" type="1">
+<li>Install pipx. Since your distro has moved to this python installation change, it will probably have pipx in its repos.<br />
+<br />
+For Debian Testing, Ubuntu 23.04, etc, this would be the way to go:</li>
+</ol>
+<pre>sudo apt-get install python3-full python3-pip python3-venv pipx
+</pre>
+<p>After pipx is installed, execute the follwoing command:</p>
+<pre>python3 -m pipx ensurepath</pre>
+<p>and exit the terminal.</p>
+<p>Open a new terminal (so that the new PATH is read) and…</p>
+<ol start="3" type="1">
+<li>Download <a target="_blank" href="https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py">install.py</a> and execute:</li>
+</ol>
+<pre>cd
+curl -L \
+    https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py \
+    -o install.py
+python3 install.py</pre>
+<p>This should get you up and running.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If you are updating a <strong>0.9.2.5 PyRadio installation</strong>, please do execute:</p>
+<pre>sudo apt-get install python3-dateutil</pre>
+</body>
+</html>
