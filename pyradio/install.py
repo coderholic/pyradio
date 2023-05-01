@@ -781,10 +781,13 @@ class PyRadioUpdate(object):
         #self._prompt_sudo()
 
         '''' get tmp dir '''
-        if os.path.isdir('/tmp'):
-            self._dir = os.path.join('/tmp', 'tmp-pyradio')
+        if HAS_PIPX:
+            self._dir = os.path.join(os.path.expanduser('~'), 'pyradio', 'data', 'pyradio-download')
         else:
-            self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
+            if os.path.isdir('/tmp'):
+                self._dir = os.path.join('/tmp', 'tmp-pyradio')
+            else:
+                self._dir = os.path.join(os.path.expanduser('~'), 'tmp-pyradio')
         print('Using directory: "{}"'.format(self._dir))
 
         ''' create tmp directory '''
@@ -906,7 +909,7 @@ class PyRadioUpdate(object):
                       print('Dir already exists...')
         else:
           try:
-              os.makedirs(name, exist_ok=True)
+              os.makedirs(name)
           except PermissionError:
               if _permission_error_function:
                   _permission_error_function(name)
@@ -926,15 +929,27 @@ class PyRadioUpdate(object):
             print('\n\nError: Cannot delete directory: "' + ddir  +  '"')
             print('       Please relete it manually and try again... ')
             sys.exit(1)
-        shutil.rmtree(ddir, ignore_errors=True)
-        self._mkdir(ddir, self._empty_dir, self._permission_error)
+        if HAS_PIPX:
+            r_dir = os.path.join(ddir, 'pyradio-source'
+            shutil.rmtree(r_dir), ignore_errors=True)
+            if os.path.exists(r_dir):
+                if PY3:
+                    print('[red]Error:[/red] Cannot remove "{}"'.format(r_dir))
+                else:
+                    print('Error: Cannot remove "{}"'.format(r_dir))
+                print('       Please close all open programs and try again...')
+                sys.exit(1)
+        else:
+            shutil.rmtree(ddir, ignore_errors=True)
+            self._mkdir(ddir, self._empty_dir, self._permission_error)
 
     def _permission_error(self):
         print('Error: You don\'t have permission to create: "{}"\n'.format(self._dir))
         sys.exit(1)
 
     def _clean_up(self):
-        shutil.rmtree(self._dir, ignore_errors=True)
+        if not HAS_PIPX:
+            shutil.rmtree(self._dir, ignore_errors=True)
 
     def _prompt_sudo(self):
         ret = 0
