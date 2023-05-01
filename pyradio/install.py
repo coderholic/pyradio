@@ -782,7 +782,7 @@ class PyRadioUpdate(object):
 
         '''' get tmp dir '''
         if HAS_PIPX:
-            self._dir = os.path.join(os.path.expanduser('~'), 'pyradio', 'data', 'pyradio-download')
+            self._dir = os.path.join(os.path.expanduser('~'), '.config', 'pyradio', 'data', '.cache')
         else:
             if os.path.isdir('/tmp'):
                 self._dir = os.path.join('/tmp', 'tmp-pyradio')
@@ -930,8 +930,8 @@ class PyRadioUpdate(object):
             print('       Please relete it manually and try again... ')
             sys.exit(1)
         if HAS_PIPX:
-            r_dir = os.path.join(ddir, 'pyradio-source'
-            shutil.rmtree(r_dir), ignore_errors=True)
+            r_dir = os.path.join(ddir, 'pyradio-source')
+            shutil.rmtree(r_dir, ignore_errors=True)
             if os.path.exists(r_dir):
                 if PY3:
                     print('[red]Error:[/red] Cannot remove "{}"'.format(r_dir))
@@ -1323,4 +1323,5 @@ Then try installing PyRadio again
         # if not platform.system().lower().startswith('darwin'):
         #     uni.user = True
         uni.update_pyradio()
+
 
