@@ -43,7 +43,7 @@ sed -i 's/\t/    /g' Changelog
 
 
 # Create HTML file from md files
-for afile in README.md build.md windows.md windows-mplayer.md windows-mpv.md radio-browser.md desktop-notification.md server.md linux.md linux-pipx.md macos.md pipx.md
+for afile in README.md build.md windows.md windows-mplayer.md windows-mpv.md radio-browser.md desktop-notification.md server.md linux.md linux-pipx.md macos.md pip-error.md
 do
 #[ -z "$(git status | grep ${afile})" ] || {
     out=${afile/%.md/.html}
@@ -69,7 +69,7 @@ do
         echo '% PyRadio pipx installation on Linux' > tmp.md
     elif [ "$afile" = "macos.md" ];then
         echo '% PyRadio pipx installation on MacOS' > tmp.md
-    elif [ "$afile" = "pipx.md" ];then
+    elif [ "$afile" = "pip-error.md" ];then
         echo '% What happened?' > tmp.md
     fi
     cat ${afile} >> tmp.md

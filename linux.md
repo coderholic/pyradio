@@ -17,7 +17,6 @@
 
 [[Return to PyRadio Build Instructions]](build.md)
 
-
 ## Preface
 
 This document will help you install **PyRadio** within your **.local** directory, using `pip`.
@@ -70,6 +69,14 @@ curl -L \
     https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py \
     -o install.py
 ```
+
+If you are going to use **Python 2**, please execute:
+
+```
+sed -i.orig 's/from rich import print/pass/' install.py
+```
+
+This will fix the instllation script for **Python 2**; the original script will be renamed to *install.py.orig*.
 
 Please follow the instructions that match/suit your distribution.
 

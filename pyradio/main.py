@@ -4,6 +4,7 @@ import curses
 import logging, logging.handlers
 import subprocess
 import argparse
+import shutil
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 from os import path, getenv, environ, remove, chmod, makedirs
 from sys import platform, version_info, executable
@@ -14,7 +15,9 @@ import glob
 
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
-from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed, version_string_to_list, get_github_tag
+from .install import PyRadioUpdate, PyRadioUpdateOnWindows, PyRadioCache, \
+    is_pyradio_user_installed, version_string_to_list, get_github_tag, \
+    open_cache_dir
 from .cjkwrap import cjklen, cjkslices, fill
 from .log import Log
 from .common import StationsChanges
@@ -26,6 +29,11 @@ PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 PATTERN_TITLE = '%(asctime)s | %(message)s'
 
 PY3 = sys.version[0] == '3'
+
+if PY3:
+    HAS_PIPX = True if shutil.which('pipx') else False
+else:
+    HAS_PIPX = False
 
 HAS_RICH = False
 if PY3:
@@ -214,6 +222,21 @@ If nothing else works, try the following command:
                         help='Update PyRadio.')
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='Uninstall PyRadio.')
+    if HAS_PIPX:
+        parser.add_argument('-oc', '--open-cache', action='store_true',
+                           help='Open the Cache folder')
+        parser.add_argument('-sc', '--show-cache', action='store_true',
+                           help='Show Cache contents')
+        parser.add_argument('-cc', '--clear-cache', action='store_true',
+                           help='Clear Cache contents')
+        parser.add_argument('-gc', '--get-cache', action='store_true',
+                            help='Download source code, keep it in the cache and exit.')
+    else:
+        parser.add_argument('-oc', '--open-cache', action='store_true', help=SUPPRESS)
+        parser.add_argument('-sc', '--show-cache', action='store_true', help=SUPPRESS)
+        parser.add_argument('-cc', '--clear-cache', action='store_true', help=SUPPRESS)
+        parser.add_argument('-gc', '--get-cache', action='store_true', help=SUPPRESS)
+
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
     parser.add_argument('-us', '--update-stations', action='store_true',
@@ -634,6 +657,40 @@ If nothing else works, try the following command:
                 sys.exit(1)
             else:
                 do_update_stations(pyradio_config)
+
+        if args.open_cache:
+            open_cache_dir()
+            sys.exit()
+
+        if args.show_cache:
+            c = PyRadioCache()
+            c.list()
+            sys.exit()
+
+        if args.clear_cache:
+            c = PyRadioCache()
+            if c.exists():
+                if len(c.files) > 1:
+                    c.clear()
+                if PY3:
+                    print('[magenta]PyRadio Cache[/magenta]: [green]cleared[/green]\n')
+                else:
+                    print('PyRadio Cache: cleared\n')
+                sys.exit()
+            c.list()
+            sys.exit(1)
+
+        if args.get_cache:
+            upd = PyRadioUpdate(
+                package=0,      # always get latest stable release
+                github_long_description=None,
+                python_version_to_use=3,
+                pix_isolated=False
+            )
+            upd._get_cache = True
+            upd.user = is_pyradio_user_installed()
+            upd.update_pyradio()
+            sys.exit()
 
         if args.no_themes:
             pyradio_config.use_themes = False

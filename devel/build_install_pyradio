@@ -73,7 +73,6 @@ function remove_pip_sudo_install(){
     sudo python -m pip uninstall -y pyradio 2>/dev/null 1>&2 || pip_error
     sudo python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
     sudo python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
-    rm ~/.config/pyradio/data/INSTALLATION_TYPE 2>/dev/null
 }
 
 function uninstall(){
@@ -218,6 +217,16 @@ and they should be deleted.
     fi
 }
 
+function check_root(){
+    if [ "$UID" = "0" ] || [ "$USER" = "root" ]
+    then
+        echo "Error: You must not run this script as root"
+        echo
+        exit 1
+    fi
+}
+
+check_root
 rm -rf build pyradio.egg-info 2>/dev/null
 TO_PYTHON=3
 TO_PYTHON_FROM_X=''
@@ -396,6 +405,7 @@ then
             then
                 # pipx installation with isolation
                 check_installation_type
+                PIPX_ISOLATE=1
             else
                 # normal pip installation
                 if [ ! -z "$PIPX" ]

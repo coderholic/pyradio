@@ -10,6 +10,7 @@ from time import sleep
 import site
 import glob
 import re
+from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 
 ''' This is PyRadio version this
     install.py was released for
@@ -478,6 +479,248 @@ Please execute the installation script again, like so:
     else:
         return True
 
+def open_cache_dir():
+    c = PyRadioCache()
+    if not c.exists():
+        if PY3:
+            print('[magenta]PyRadio Cache[/magenta]: [red]not found[/red]\n')
+        else:
+            print('PyRadio Cache: not found\n')
+        sys.exit(1)
+    if platform.system().lower() == 'windows':
+        os.startfile(c.cache_dir)
+    elif platform.system().lower() == 'darwin':
+        subprocess.Popen(['open', c.cache_dir])
+    else:
+        subprocess.Popen(['xdg-open', c.cache_dir])
+
+
+class PyRadioCache(object):
+
+    _files = []
+    _gits = (
+        'pyradio-master.zip',
+        'pyradio-devel.zip',
+        'pyradio-master.zip'
+    )
+
+    def __init__(self,
+                 config_path=None,
+                 data_path=None,
+                 cache_path=None
+        ):
+        ''' Initialize a PyRadio Cache
+
+            Parameters:
+                if none is specified, use
+                    ~/.config/pyradio/data/.cache     or
+                    %APPDATA%\pyradio\data\_cache
+                parced in this order
+            config_dir
+                PyRadio config dir
+                cache dir = config_dir + data + .cache
+            data_dir
+                PyRadio data dir
+                cache_dir = data_dir + .cache
+            cache_dir
+                cache dir = cache_dir
+        '''
+        if config_path is not None:
+            self._cache_dir = os.path.join(
+                config_path, 'data', '.cache'
+            )
+        elif data_path is not None:
+            self._cache_dir = os.path.join(
+                data_path, '.cache'
+            )
+        elif cache_path is not None:
+            self._cache_dir = cache_dir
+        else:
+            if platform.system().lower().startswith('win'):
+                self._cache_dir = os.path.join(
+                    os.path.expanduser('APPDATA'),
+                    'pyradio', 'data', '_cache'
+                )
+            else:
+                self._cache_dir = os.path.join(
+                    os.path.expanduser('~'),
+                    '.config', 'pyradio', 'data', '.cache'
+                )
+        self._del_gits()
+
+    def list(self):
+        ''' return a string
+        the string is a list of file in the cache
+        '''
+        if PY3:
+            if self.exists():
+                from rich.console import Console
+                console = Console()
+                if self.files:
+                    max_len = max([len(x) for x in self._files]) + 4
+                    console.print('[magenta]PyRadio Cache[/magenta]:')
+                    for i, n in enumerate(self._files):
+                        if i < 5:
+                            s = os.path.join(self._cache_dir, n)
+                            console.print('  [green]{0}[/green]. {1} [bold]{2}MB[/bold]'.format(i+1, n.ljust(max_len), self.get_size(s, 'mb')), highlight=False)
+                        else:
+                            console.print('plus [green]{}[/green] more files'.format(len(self._files)-5), highlight=False)
+                            break
+                else:
+                    print('[magenta]PyRadio Cache[/magenta]: [bold cyan]empty[/bold cyan]')
+            else:
+                print('[magenta]PyRadio Cache[/magenta]: [bold red]not found[/bold red]')
+        else:
+            if self.exists():
+                if self.files:
+                    max_len = max([len(x) for x in self._files]) + 4
+                    print('PyRadio Cache:')
+                    for i, n in enumerate(self._files):
+                        if i < 5:
+                            s = os.path.join(self._cache_dir, n)
+                            print('  {0}. {1} {2}MB'.format(
+                                i+1, n.ljust(max_len), self.get_size(s, 'mb')
+                            ))
+                        else:
+                            print('plus {} more files'.format(len(self._files)-5))
+                            break
+                else:
+                    print('PyRadio Cache: empty')
+            else:
+                print('PyRadio Cache: not found')
+        print('')
+
+    @property
+    def cache_dir(self):
+        ''' resturn the cache dir '''
+        return self._cache_dir
+
+    @property
+    def files(self):
+        ''' return the ZIP files in the cache '''
+        self._read_cache()
+        return self._files
+
+    @property
+    def current_version(self):
+        ''' return the latest PyRadio version ZIP file name '''
+        if self.files:
+            return self._files[0]
+        return ''
+
+    @classmethod
+    def get_size(cls, file_path, unit='bytes'):
+        ''' get the size of a file and return it as
+            x (bytes), x (kb), x (mb), x (gb)
+
+            units are: 'bytes' (default), 'kb', 'mb', 'gb'
+        '''
+        if os.path.exists(file_path):
+            file_size = os.path.getsize(file_path)
+        else:
+            file_size = 0
+        exponents_map = {'bytes': 0, 'kb': 1, 'mb': 2, 'gb': 3}
+        if unit not in exponents_map:
+            raise ValueError("Must select from \
+            ['bytes', 'kb', 'mb', 'gb']")
+        else:
+            size = file_size / 1024 ** exponents_map[unit]
+            return round(size, 3)
+
+    def delete(self):
+        ''' delete the cache dir and all file in it '''
+        shutil.rmtree(self._cache_dir, ignore_errors=True)
+
+    def clear(self):
+        ''' clear the cache dir
+            deletes all file but the latest PyRadio ZIP version
+        '''
+        ret = True
+        if self._files:
+            del_files = [os.path.join(self._cache_dir, x) for x in self._files]
+            del del_files[0]
+            for n in del_files:
+                try:
+                    os.remove(n)
+                except:
+                    ret = False
+        source = os.path.join(self._cache_dir, 'pyradio-source')
+        if os.path.exists(source):
+            shutil.rmtree(source, ignore_errors=True)
+        return ret
+
+    def exists(self):
+        ''' does the cache dir exists? '''
+        return True if os.path.exists(self._cache_dir) else False
+
+    def is_empty(self):
+        ''' is the cache dir empty?
+            True means that either there are no ZIP files
+            in the dir, or only the latest version ZIP file
+            exists
+        '''
+        return False if self.files else True
+
+    def _read_cache(self):
+        if self.exists():
+            f = os.listdir(self._cache_dir)
+            self._files = [
+                x for x in f if x.endswith('.zip') and \
+                    x not in self._gits
+            ]
+            if self._files:
+                self._files.sort()
+                self._files.reverse()
+                #self._files.pop()
+        else:
+            self._files = []
+
+        return self._files
+
+    def _del_gits(self):
+        del_files = [
+            os.path.join(self._cache_dir, x) for x in self._gits
+        ]
+        for n in del_files:
+            if os.path.exists(n):
+                try:
+                    os.remove(n)
+                except:
+                    pass
+
+
+class MyArgParser(ArgumentParser):
+
+    def __init(self):
+        super(MyArgParser, self).__init__(
+            description = description
+        )
+
+    def print_usage(self, file=None):
+        if file is None:
+            file = sys.stdout
+        usage = self.format_usage()
+        if PY3:
+            print(self._add_colors(self.format_usage()))
+        else:
+            print(self.format_usage())
+
+    def print_help(self, file=None):
+        if file is None:
+            file = sys.stdout
+        if PY3:
+            print(self._add_colors(self.format_help()))
+        else:
+            print(self.format_help())
+
+    def _add_colors(self, txt):
+        t = txt.replace('show this help', 'Show this help').replace('usage:', 'Usage:').replace('options:', 'Options:').replace('[', '|').replace(']', '||')
+        x = re.sub(r'([^a-zZ-Z0-9])(--*[^ ,\t|]*)', r'\1[red]\2[/red]', t)
+        t = re.sub(r'([A-Z_][A-Z_]+)', r'[green]\1[/green]', x)
+        x = re.sub('([^"]pyradio)', r'[magenta]\1[/magenta]', t, flags=re.I)
+        t = re.sub(r'(player_name:[a-z:_]+)', r'[plum2]\1[/plum2]', x)
+        x = t.replace('mpv', '[green]mpv[/green]').replace('mplayer', '[green]mplayer[/green]').replace('vlc', '[green]vlc[/green]')
+        return '[bold]' + x.replace('||', r']').replace('|', r'\[') + '[/bold]'
 
 class PythonExecutable(object):
     is_debian = False
@@ -590,6 +833,8 @@ class PyRadioUpdate(object):
 
     _delete_dir_limit = 0
 
+    _get_cache = True
+
     def __init__(self,
                  package=0,
                  user=True,
@@ -616,7 +861,9 @@ class PyRadioUpdate(object):
                 self.update_or_uninstall_on_windows('update')
         else:
             ''' update PyRadio under Linux and MacOS '''
-            if self.install:
+            if self._get_cache:
+                print('Downloading PyRadio...')
+            elif self.install:
                 print('Installing PyRadio...')
             else:
                 print('Updating PyRadio...')
@@ -777,9 +1024,6 @@ class PyRadioUpdate(object):
         if not HAVE_REQUESTS:
             self._no_download_method()
 
-        ''' Am I root ?'''
-        #self._prompt_sudo()
-
         '''' get tmp dir '''
         if HAS_PIPX:
             self._dir = os.path.join(os.path.expanduser('~'), '.config', 'pyradio', 'data', '.cache')
@@ -886,6 +1130,9 @@ class PyRadioUpdate(object):
             self._clean_up()
             sys.exit(1)
 
+        if self._get_cache:
+            sys.exit()
+
         with open(os.path.join(self._dir, self.ZIP_DIR[self._package], 'DEV'), 'w', encoding='utf-8') as b:
             pass
         # input('Please update files as needed. Then press ENTER to continue...')
@@ -965,19 +1212,25 @@ class PyRadioUpdate(object):
     def _download_file(self, url, filename):
         print('  url: "{}"'.format(url))
         print('  filename: "{}"'.format(filename))
-        try:
-            r = requests.get(url)
-        except:
-            return False
-        try:
-            with open(filename, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=1024):
-                    if chunk: # filter out keep-alive new chunks
-                        f.write(chunk)
-                        f.flush()
-                        os.fsync(f.fileno())
-        except:
-            return False
+        if os.path.exists(filename):
+            if PY3:
+                print('  [magenta]** file found in cache![/magenta]')
+            else:
+                print('  ** file found in cache!')
+        else:
+            try:
+                r = requests.get(url)
+            except:
+                return False
+            try:
+                with open(filename, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=1024):
+                        if chunk: # filter out keep-alive new chunks
+                            f.write(chunk)
+                            f.flush()
+                            os.fsync(f.fileno())
+            except:
+                return False
         return True
 
 class PyRadioUpdateOnWindows(PyRadioUpdate):
@@ -998,6 +1251,7 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
         self._python_exec = PythonExecutable(python_version_to_use)
         self.python2 = True if python_version_to_use == 2 else False
         self._pix_isolated = pix_isolated
+        self._get_cache = False
 
     @classmethod
     def print_update_bat_created(cls):
@@ -1017,6 +1271,7 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
         self._do_it()
 
     def remove_pyradio(self):
+        self._get_cache = False
         self._do_it(mode='uninstall')
 
     def _do_it(self, mode='update'):
@@ -1039,6 +1294,9 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
 
 if __name__ == '__main__':
+    # x = PyRadioCache()
+    # x.list()
+    # sys.exit()
     #exe = find_pyradio_win_exe()
     #print(exe)
     #sys.exit()
@@ -1050,23 +1308,43 @@ if __name__ == '__main__':
     #print_python3() if PY3 else print_python2()
     # print(get_devel_version())
     # sys.exit()
-    from argparse import ArgumentParser, SUPPRESS as SUPPRESS
-    parser = ArgumentParser(description='PyRadio update / uninstall tool',
-                            epilog='When executed without an argument, it installs PyRadio (stable release).')
+    parser = MyArgParser(
+        description='Curses based Internet radio player',
+        epilog='When executed without an argument, it installs PyRadio (stable release).'
+    )
+    # parser = ArgumentParser(description='PyRadio update / uninstall tool',
+    #                         epilog='When executed without an argument, it installs PyRadio (stable release).')
     parser.add_argument('-U', '--update', action='store_true',
-                        help='update PyRadio.')
+                        help='Update PyRadio.')
     parser.add_argument('-f', '--force', action='store_true',
-                        help='force installation (even if already installed).')
+                        help='Force installation (even if already installed).')
     if not platform.system().lower().startswith('win'):
-        parser.add_argument('-i', '--isolate', action='store_true',
-                            help='install using pipx in an fully Isolated Environment (all dependencies will be installed in a virtual environment); the default is to have pipx depend on distro python packages.')
+        if PY3 and HAS_PIPX:
+            parser.add_argument('-i', '--isolate', action='store_true',
+                                help='Install using pipx in an fully Isolated Environment (all dependencies will be installed in a virtual environment); the default is to have pipx depend on distro python packages.')
+            parser.add_argument('-oc', '--open-cache', action='store_true',
+                               help='Open the Cache folder')
+            parser.add_argument('-sc', '--show-cache', action='store_true',
+                               help='Show Cache contents')
+            parser.add_argument('-cc', '--clear-cache', action='store_true',
+                               help='Clear Cache contents')
+        else:
+            parser.add_argument('-oc', '--open-cache', action='store_true', help=SUPPRESS)
+            parser.add_argument('-sc', '--show-cache', action='store_true', help=SUPPRESS)
+            parser.add_argument('-cc', '--clear-cache', action='store_true', help=SUPPRESS)
+            parser.add_argument('-i', '--isolated', action='store_true', help=SUPPRESS)
+        if HAS_PIPX:
+            parser.add_argument('-gc', '--get-cache', action='store_true',
+                                help='Download source code, keep it in the cache and exit.')
+        else:
+            parser.add_argument('-gc', '--get-cache', action='store_true', help=SUPPRESS)
         parser.add_argument('--python2', action='store_true',
-                            help='install using python 2.')
+                            help='Install using python 2.')
     else:
         parser.add_argument('-i', '--isolated', action='store_true', help=SUPPRESS)
         parser.add_argument('--python2', action='store_true', help=SUPPRESS)
     parser.add_argument('-R', '--uninstall', action='store_true',
-                        help='uninstall PyRadio.')
+                        help='Uninstall PyRadio.')
 
     ''' to be used by intermediate scripts '''
     parser.add_argument('--do-update', action='store_true', help=SUPPRESS)
@@ -1089,9 +1367,48 @@ if __name__ == '__main__':
     parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--no-logo', action='store_true', help=SUPPRESS)
     parser.add_argument('--first', action='store_true', help=SUPPRESS)
+    parser.add_argument('-v', '--version', action='store_true',
+                        help='Print the version of the script')
 
     args = parser.parse_args()
     sys.stdout.flush()
+
+    if args.open_cache:
+        open_cache_dir()
+        sys.exit()
+
+    if args.show_cache:
+        c = PyRadioCache()
+        c.list()
+        sys.exit()
+
+    if args.clear_cache:
+        c = PyRadioCache()
+        if c.exists():
+            if len(c.files) > 1:
+                c.clear()
+            if PY3:
+                print('[magenta]PyRadio Cache[/magenta]: [green]cleared[/green]\n')
+            else:
+                print('PyRadio Cache: cleared\n')
+            sys.exit()
+        c.list()
+        sys.exit(1)
+
+    if args.version:
+        if PY3:
+            print('[bold green]install.py[/bold green]: installation script for [bold magenta]PyRadio {}[/bold magenta]\n'.format(PyRadioInstallPyReleaseVersion ))
+        else:
+            print('install.py: installation script for PyRadio {}\n'.format(PyRadioInstallPyReleaseVersion ))
+        sys.exit()
+
+    if not platform.system().lower().startswith('win'):
+        if os.getuid() == 0 or os.getgid() == 0:
+            if PY3:
+                print('[red]Error:[/red] You must not run this script as [green]root[/green]\n')
+            else:
+                print('Error: You must not run this script as root\n')
+            sys.exit(1)
 
     if is_externally_managed() and \
             not HAS_PIPX:
@@ -1099,9 +1416,7 @@ if __name__ == '__main__':
         print_pipx_error()
         print_distro_packages()
         sys.exit()
-    use_logo = True
-    if args.no_logo:
-        use_logo = False
+    use_logo = False if args.no_logo else True
     if platform.system().lower().startswith('darwin'):
         ''' get python version '''
         if sys.version_info < (3, 0):
@@ -1118,7 +1433,7 @@ if __name__ == '__main__':
         print_no_python2()
         sys.exit(1)
 
-    if use_logo:
+    if use_logo and not args.get_cache:
         print_pyradio_on()
         if PY3 and not args.python2:
             print_python3()
@@ -1174,6 +1489,7 @@ if __name__ == '__main__':
         VERSION = PyRadioInstallPyReleaseVersion
 
     if args.uninstall:
+        self._get_cache = False
         if platform.system().lower().startswith('win'):
             ''' ok, create BAT file on Windows'''
             uni = PyRadioUpdateOnWindows(
@@ -1207,6 +1523,8 @@ if __name__ == '__main__':
                 python_version_to_use=python_version_to_use,
                 pix_isolated=args.isolate
             )
+            if args.get_cache and HAS_PIPX:
+                upd._get_cache = True
             upd.user = is_pyradio_user_installed()
             upd.update_pyradio()
         sys.exit()
@@ -1308,7 +1626,7 @@ Then try installing PyRadio again
             print('and the file:')
             print('    "{}"'.format(__file__))
     else:
-        if not args.force:
+        if not args.force and not args.get_cache:
             ret = subprocess.call('pyradio -h 1>/dev/null 2>&1', shell=True)
             if ret == 0:
                 print('PyRadio is already installed.\n')
@@ -1322,6 +1640,8 @@ Then try installing PyRadio again
         uni.install = True
         # if not platform.system().lower().startswith('darwin'):
         #     uni.user = True
+        if args.get_cache:
+            uni._get_cache = True
         uni.update_pyradio()
 
 

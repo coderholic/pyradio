@@ -32,7 +32,7 @@ At the same time, python scripts and packages are already used by distributions 
 
 The solution is forcing the use of **virtual environments** for any python script or program or package that is **not provided** by the distribution itself, effectively isolating the program's installation from the rest of the system. Any program, package or module installed within the **virtual environment** exists and lives within that environment only, it does not interfere with the distribution's Python installation and cannot "destroy" it.
 
-Python **virtual environments** have existed for a long time, but their use was not always that straight forward. Fortunately, a program called [pipx]() will help with the installation and execution of python programs from within a virtual environment while taking care of the overhead required.
+Python **virtual environments** have existed for a long time, but their use was not always that straight forward. Fortunately, a program called [pipx](https://pypa.github.io/pipx/) will help with the installation and execution of python programs from within a virtual environment while taking care of the overhead required.
 
 ### What does it all mean and why should you care
 

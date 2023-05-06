@@ -1,3 +1,10 @@
+2023-05-03 s-n-g
+    * version 0.9.2.6
+    * using pipx for installation on "externally-managed"
+      python installations
+    * --list will indicate Group Headers
+    * started working on scheduling
+
 2023-04-07 s-n-g
     * version 0.9.2.5
     * Desktop Notifications will display the image

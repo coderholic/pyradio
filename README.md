@@ -8,7 +8,7 @@ Command line internet radio player.
 
 **PyRadio** may fail to install/update on some linux distros (mainly Ubuntu 23.04, Debian Testing and derivatives, etc.) due to a change to the underlined python installation.
 
-If you face this situation, please refer to [this page](pipx.md) to resolve the problem.
+If you face this situation, please refer to [this page](pip-error.md) to resolve the problem.
 
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
@@ -141,7 +141,8 @@ Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
                [--terminal-param TERMINAL_PARAM] [-tlp] [-scd] [-ocd]
                [-ep EXTRA_PLAYER_PARAMETERS] [-ap ACTIVE_PLAYER_PARAM_ID]
-               [-lp] [-U] [-R] [--unlock] [-us] [-lt] [-d] [-V]
+               [-lp] [-U] [-R] [-oc] [-sc] [-cc] [-gc] [--unlock] [-us] [-lt]
+               [-d] [-V]
 
 Curses based Internet radio player
 
@@ -202,8 +203,12 @@ Options:
                         List extra players parameters.
   -U, --update          Update PyRadio.
   -R, --uninstall       Uninstall PyRadio.
+  -oc, --open-cache     Open the Cache folder.
+  -sc, --show-cache     Show Cache contents.
+  -cc, --clear-cache    Clear Cache contents.
+  -gc, --get-cache      Download source code, keep it in the cache and exit.
   --unlock              Remove sessions' lock file.
-  -us, --update_stations
+  -us, --update-stations
                         Update "stations.csv" (if needed).
   -lt, --log-titles     Log titles to file.
   -d, --debug           Start PyRadio in debug mode.

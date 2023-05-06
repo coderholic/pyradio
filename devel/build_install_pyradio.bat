@@ -43,6 +43,7 @@ echo psutil >> requirements.txt
 echo wheel >> requirements.txt
 echo pylnk >> requirements.txt
 echo win10toast >> requirements.txt
+echo python-dateutil >> requirements.txt
 
 ::Remove the elevation tag and SET the correct working directory
 IF '%1'=='ELEV' ( SHIFT /1 )

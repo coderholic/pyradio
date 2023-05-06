@@ -86,6 +86,9 @@ wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install
 curl -L \
     https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py \
     -o install.py</pre>
+<p>If you are going to use <strong>Python 2</strong>, please execute:</p>
+<pre>sed -i.orig &#39;s/from rich import print/pass/&#39; install.py</pre>
+<p>This will fix the instllation script for <strong>Python 2</strong>; the original script will be renamed to <em>install.py.orig</em>.</p>
 <p>Please follow the instructions that match/suit your distribution.</p>
 <h2 id="debian-and-derivatives">Debian and derivatives <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following instructions were tested on a freshly installed <strong>Debian Testing</strong>.</p>

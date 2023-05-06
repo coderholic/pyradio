@@ -17,6 +17,7 @@
 * [openSUSE and derivatives](#opensuse-and-derivatives)
     * [Fully isolated installation - openSUSE](#fully-isolated-installation---opensuse)
     * [System dependent installation - openSUSE](#system-dependent-installation---opensuse)
+* [PyRadio Cache](#pyradio-cache)
 
 <!-- vim-markdown-toc -->
 
@@ -207,7 +208,7 @@ Execute:
 sudo zypper install \
     python310-requests \
     python310-rich
-# install pipx through pip to get the latest version (1.2.0+)
+# install pipx through pip to get the latest version (1.1.0+)
 # at the time of writing this, a very old pipx version (0.14.0.0)
 # was available on the openSUSE Tumbleweed repositories
 python3 -m pip install --user pipx
@@ -250,4 +251,72 @@ Finally, install **PyRadio**:
 ```
 cd
 python3 install.py
+```
+
+## PyRadio Cache
+
+Using **pipx** (a third party package) to deploy **PyRadio** on a system, may cause problems by itself.
+
+**pipx** is able to correct some of these issues (according to its documentation), by executing:
+
+```
+pipx list
+```
+
+Furthermore, issues can also be resolved by reinstalling a package:
+
+```
+pipx reinstall pyradio
+```
+
+or even all pipx installed packages:
+
+```
+pipx reinstall-all
+```
+
+For these last commands to work, **PyRadio** source code must be available and present at the location it receded when the original installation took place.
+
+**PyRadio** will keep a **cache** of ZIP files and a folder called **pyradio-source** in its data folder; all files will be kept in a folder called **.cache** (**_cache** on Windows).
+
+Normally, just one ZIP file has to be present in the **cache**; the ZIP with the latest **PyRadio** version code. If more ZIP files are present in the cache, they can safely be deleted.
+
+To see the contents of the cache (provided you have downloaded [the latest install.py](#get-the-installation-script)), execute:
+```
+python install.py -sc
+```
+
+To open the cache folder, execute:
+
+```
+python install.py -oc
+```
+
+
+To clear the cache (delete all ZIP files but the latest), execute:
+```
+python install.py -cc
+```
+
+If for some reason the cache has been lost, or got corrupted, you can just:
+
+```
+python install.py -oc
+```
+
+Delete all file and then:
+
+```
+python install.py -gc
+```
+
+This will download the latest stable ZIP file and unzip it into the **pyradio-source** folder.
+
+And of course, if you have a working **PyRadio** installation, you can execute:
+
+```
+pyradio -sc
+pyradio -oc
+pyradio -cc
+pyradio -gc
 ```

@@ -61,6 +61,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#fully-isolated-installation---opensuse">Fully isolated installation - openSUSE</a></li>
 <li><a href="#system-dependent-installation---opensuse">System dependent installation - openSUSE</a></li>
 </ul></li>
+<li><a href="#pyradio-cache">PyRadio Cache</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p><a href="build.html">[Return to PyRadio Build Instructions]</a></p>
@@ -170,7 +171,7 @@ python install.py</pre>
 <pre>sudo zypper install \
     python310-requests \
     python310-rich
-# install pipx through pip to get the latest version (1.2.0+)
+# install pipx through pip to get the latest version (1.1.0+)
 # at the time of writing this, a very old pipx version (0.14.0.0)
 # was available on the openSUSE Tumbleweed repositories
 python3 -m pip install --user pipx
@@ -194,5 +195,32 @@ python3 install.py -i</pre>
 <p>Finally, install <strong>PyRadio</strong>:</p>
 <pre>cd
 python3 install.py</pre>
+<h2 id="pyradio-cache">PyRadio Cache <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Using <strong>pipx</strong> (a third party package) to deploy <strong>PyRadio</strong> on a system, may cause problems by itself.</p>
+<p><strong>pipx</strong> is able to correct some of these issues (according to its documentation), by executing:</p>
+<pre>pipx list</pre>
+<p>Furthermore, issues can also be resolved by reinstalling a package:</p>
+<pre>pipx reinstall pyradio</pre>
+<p>or even all pipx installed packages:</p>
+<pre>pipx reinstall-all</pre>
+<p>For these last commands to work, <strong>PyRadio</strong> source code must be available and present at the location it receded when the original installation took place.</p>
+<p><strong>PyRadio</strong> will keep a <strong>cache</strong> of ZIP files and a folder called <strong>pyradio-source</strong> in its data folder; all files will be kept in a folder called <strong>.cache</strong> (**_cache** on Windows).</p>
+<p>Normally, just one ZIP file has to be present in the <strong>cache</strong>; the ZIP with the latest <strong>PyRadio</strong> version code. If more ZIP files are present in the cache, they can safely be deleted.</p>
+<p>To see the contents of the cache (provided you have downloaded <a href="#get-the-installation-script">the latest install.py</a>), execute:</p>
+<pre>python install.py -sc</pre>
+<p>To open the cache folder, execute:</p>
+<pre>python install.py -oc</pre>
+<p>To clear the cache (delete all ZIP files but the latest), execute:</p>
+<pre>python install.py -cc</pre>
+<p>If for some reason the cache has been lost, or got corrupted, you can just:</p>
+<pre>python install.py -oc</pre>
+<p>Delete all file and then:</p>
+<pre>python install.py -gc</pre>
+<p>This will download the latest stable ZIP file and unzip it into the <strong>pyradio-source</strong> folder.</p>
+<p>And of course, if you have a working <strong>PyRadio</strong> installation, you can execute:</p>
+<pre>pyradio -sc
+pyradio -oc
+pyradio -cc
+pyradio -gc</pre>
 </body>
 </html>
