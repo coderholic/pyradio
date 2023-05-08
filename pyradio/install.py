@@ -102,16 +102,8 @@ def print_pipx_error():
         print(re.sub('\[[^\[]+\]', '', msg))
 
 def print_distro_packages():
-    msg = '''To succesfully complete [magenta]PyRadio[/magenta]'s installation, please make sure that the
-following [bold]distro python packages[/bold] are installed as well:
-       [bold]- setuptools
-       - wheel
-       - venv           [/bold]([magenta]Debian[/magenta] only?)[bold]
-       - rich
-       - requests[/bold]
-
-Please keep in mind that Distros will prepend these package names with a
-"[green]python-[/green]" or a "[green]python3-[/green]" or even a "[green]python2-[/green]".
+    msg = '''To succesfully complete [magenta]PyRadio[/magenta]'s installation, please refer to this page:
+    [plum]https://github.com/coderholic/pyradio/blob/master/build.md[/plum]
 '''
     if PY3:
         print(msg)
