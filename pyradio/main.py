@@ -884,14 +884,14 @@ If nothing else works, try the following command:
         ''' curses is off '''
         if pyradio.setup_return_status:
             if pyradio_config.WIN_UNINSTALL and platform.startswith('win'):
-                # doing it this way so that pyton2 does not break (#153)
+                # doing it this way so that python2 does not break (#153)
                 from .win import win_press_any_key_to_unintall
                 win_press_any_key_to_unintall()
                 sys.exit()
 
             if pyradio_config.WIN_PRINT_PATHS and platform.startswith('win'):
                 ''' print exe path '''
-                # doing it this way so that pyton2 does not break (#153)
+                # doing it this way so that python2 does not break (#153)
                 from .win import win_print_exe_paths
                 print('')
                 win_print_exe_paths()

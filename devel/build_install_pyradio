@@ -205,6 +205,8 @@ function create_installation_type_file(){
         OLD=$(find ~/.local/lib -type d -name "pyradio*" 2>/dev/null | grep -v pipx | grep -v venvs)
         if [ ! -z "$OLD" ]
         then
+            if [ "$TO_PYTHON" = "2" ]
+            then
         echo
         echo
         echo "The following pyradio directories have been found:
@@ -213,6 +215,19 @@ $OLD
 They probably belong to an older non-pipx installation
 and they should be deleted.
 "
+        else
+            msg="
+
+The following [magenta]pyradio[/magenta] directories have been found:
+[red]$OLD[/red]
+
+They probably belong to an older non-pipx installation
+and they [red]should be deleted[/red].
+"
+            python${TO_PYTHON} -c \
+                'import sys; from rich import print; print(sys.argv[1])' \
+                "${msg}"
+        fi
         fi
     fi
 }
@@ -439,7 +454,7 @@ else
         inst_type=1
     else
         pipx install $PIPX_EDITABLE --force . || pipx_error
-        pipx runpip pyradio install -r requirements_pipx.txt
+        cat requirements_pipx.txt | sed -e 's/#.*//' | xargs pipx inject pyradio
         inst_type=2
     fi
 fi
@@ -503,7 +518,7 @@ then
     fi
     mkdir -p ~/.config/pyradio/data
     cp devel/pyradio.png ~/.config/pyradio/data
-    [ "$TO_PYTHON" == "2"  ] || create_installation_type_file
+    [ -z $PIPX  ] || create_installation_type_file
 else
     do_exit
     exit 1

@@ -62,7 +62,7 @@ def win_print_exe_paths():
             print('  [green]{}[/green]'.format(exe[0]))
         else:
             print('  [green]{}[/green]'.format(exe[1]))
-    # doing it this way so that pyton2 does not break (#153)
+    # doing it this way so that python2 does not break (#153)
     from .win import press_any_key_to_continue
     print('\nPress any key to exit...', end='', flush=True)
     getwch()

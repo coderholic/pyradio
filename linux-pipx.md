@@ -109,7 +109,7 @@ sudo apt-get install pipx
 If that fails, execute:
 
 ```
-pyton3 -m pip install pipx
+python3 -m pip install pipx
 ```
 
 Finally, execute:
