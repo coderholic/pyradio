@@ -833,7 +833,7 @@ class PyRadioUpdate(object):
 
     _delete_dir_limit = 0
 
-    _get_cache = True
+    _get_cache = False
 
     def __init__(self,
                  package=0,
