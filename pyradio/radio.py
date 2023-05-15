@@ -9984,9 +9984,11 @@ __|Remote Control Server| cannot be started!__
         self._cnf.stations_history.add(self._cnf.station_file_name[:-4], self.stations[self.playing][0], self.playing)
 
     def _load_playlist_and_station_from_station_history(self, h_item, func):
+        # logger.info('h_item = {}'.format(h_item))
         num = -1
         current_playlist = self._cnf.station_file_name[:-4]
-        if h_item[0] == h_item[1] or \
+        if h_item[0] == '' or h_item[1] == '' or \
+                h_item[0] == h_item[1] or \
                 h_item[1].startswith('register_') or \
                 h_item[-1] < 0 or \
                 (h_item[-1] >= self.number_of_items and current_playlist == h_item[0]):
