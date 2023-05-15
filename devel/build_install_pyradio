@@ -454,7 +454,8 @@ else
         inst_type=1
     else
         pipx install $PIPX_EDITABLE --force . || pipx_error
-        cat requirements_pipx.txt | sed -e 's/#.*//' | xargs pipx inject pyradio
+        [ -z "$PIPX_EDITABLE" ] && \
+            cat requirements_pipx.txt | sed -e 's/#.*//' | xargs pipx inject pyradio
         inst_type=2
     fi
 fi

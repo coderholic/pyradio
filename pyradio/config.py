@@ -579,7 +579,7 @@ class PyRadioStations(object):
                 for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
                     if not row:
                         continue
-                    out.append(row[0])
+                    out.append('<b>' + row[0] + '</b>') if row[1] == '-' else out.append(row[0])
         except:
             return None, []
         return in_file, out

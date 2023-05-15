@@ -387,7 +387,7 @@ If nothing else works, try the following command:
                 table1.title = '[bold magenta]Ext. Projects Themes[/bold magenta]'
                 table1.add_column('Projects')
                 table1.add_column('Can auto-update', justify='center')
-                table1.add_column('Theme name', justify='center')
+                table1.add_column('Theme name')
                 for n in projects_data:
                     table1.add_row(
                         '[bold magenta]' + n[0].replace(' Project', '') + '[/bold magenta]',
@@ -639,7 +639,11 @@ If nothing else works, try the following command:
             pyradio_config.list_playlists()
             sys.exit()
 
-        if args.list is False and args.add is False:
+        if args.list is False and \
+                args.add is False and \
+                args.show_cache is False and \
+                args.clear_cache is False and \
+                args.open_cache is False:
             print('Reading config...')
         if not config_already_read:
             read_config(pyradio_config)

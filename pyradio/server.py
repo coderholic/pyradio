@@ -1245,7 +1245,13 @@ Content-Length: {}
         out = []
         if stations is None:
             for n in self.lists()[0][-1]:
-                out.append(n[0])
+                if html:
+                    if n[1] == '-':
+                        out.append('<b>' + n[0] + '</b>')
+                    else:
+                        out.append(n[0])
+                else:
+                    out.append(n[0])
             p_name = basename(self.playlist_in_editor()[:-4])
         else:
             out = stations
@@ -1344,22 +1350,31 @@ Content-Length: {}
 '''.format(head_captions[index])
         out = []
         for i, n in enumerate(in_list):
-            if sel == i:
-                out.append('                            <tr class="btn-success">')
-            else:
+            header = False
+            if n.startswith('<b>') or \
+                    n.startswith('<B>'):
+                header = True
                 out.append('                            <tr>')
-            if sel == i:
-                out.append('                                <td class="text-right" style="color: white;">{}</td>'.format(i+1))
             else:
-                out.append('                                <td class="text-right">{}</td>'.format(i+1))
-            if index < 2:
-                t_url = url[index].format(i+1)
+                if sel == i:
+                    out.append('                            <tr class="btn-success">')
+                else:
+                    out.append('                            <tr>')
+                if sel == i:
+                    out.append('                                <td class="text-right" style="color: white;">{}</td>'.format(i+1))
+                else:
+                    out.append('                                <td class="text-right">{}</td>'.format(i+1))
+            if header:
+                out.append('                               <td id="' + str(i+1) + '" class="text-center" colspan="2">' + n + '</td>')
             else:
-                t_url = url[2].format(playlist_index+1, i+1)
-            if sel == i:
-                out.append('                               <td id="' + str(i+1) + '"><a style="color: white;" href="#" onclick="js_send_simple_command_with_stop(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
-            else:
-                out.append('                               <td id="' + str(i+1) + '"><a href="#" onclick="js_send_simple_command_with_stop(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
+                if index < 2:
+                    t_url = url[index].format(i+1)
+                else:
+                    t_url = url[2].format(playlist_index+1, i+1)
+                if sel == i:
+                    out.append('                               <td id="' + str(i+1) + '"><a style="color: white;" href="#" onclick="js_send_simple_command_with_stop(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
+                else:
+                    out.append('                               <td id="' + str(i+1) + '"><a href="#" onclick="js_send_simple_command_with_stop(\'' + t_url + '\', ' + timeout[index] + ');">' + n + '</a></td>')
             out.append('                            </tr>')
         out.append('                        </tbody>')
         out.append('                    </table>')
