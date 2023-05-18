@@ -415,6 +415,31 @@ div[id^='a_']:hover { underline: none;}
                 js_fix_muted();
             }
             // console.log("the_command:", the_command)
+            if ( ( the_command == '/html/st' ) || ( the_command == '/html/pl' ) || ( ( the_command.startsWith("/html/pl/" ) && ( the_command.length > 9 )) )){
+            td = document.getElementsByTagName('td');
+            for(i=0; i<td.length; i++){
+                try{
+                    var x = td[i].getAttribute('style');
+                    // console.log("x =", x);
+                    if(i>0){
+                        if(x == "color: white;"){
+                            // console.log("found at", i, "id =", td[i].getAttribute('id'));
+                            var this_id = td[i+1].getAttribute('id');
+                            if (i>6){
+                              this_id = "n" + (this_id-2);
+                            }else{
+                                this_id = "myInput";
+                            }
+                            // console.log("this_id =", this_id);
+                            document.getElementById(this_id).scrollIntoView();
+                            break;
+                        }
+                    }
+                }catch{
+                    // do not care about it!
+                }
+            }
+        }
         });
     }
 
