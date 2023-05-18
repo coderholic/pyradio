@@ -116,7 +116,7 @@ sudo dnf install \
     python3-dns \
     python3-dateutil
 cd
-python isntall.py
+python install.py
 ```
 
 ## openSUSE and derivatives
