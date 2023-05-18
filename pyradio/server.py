@@ -127,6 +127,48 @@ html, body, td, a, a:hover, a:visited{color: #333333;}
     overflow: hiddden;
     display: none;
     }
+    #group {
+        background-color: #FF71FF;
+        color: white;
+    }
+    /* The Modal (background) */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+    /* Modal Content/Box */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+        }
+
+    /* The Close Button */
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
 div[id^='a_']:hover { underline: none;}
         </style>
     <link rel="shortcut icon" href="https://raw.githubusercontent.com/coderholic/pyradio/master/devel/pyradio.ico"
@@ -136,6 +178,19 @@ div[id^='a_']:hover { underline: none;}
         <div id="the_blocking_box">
         </div>
         -->
+
+        <!-- The Modal -->
+        <div id="myModal" class="modal modal-dialog">
+            <!-- Modal content -->
+            <div class="modal-content">
+              <p>
+                  <span class="close">&times;</span>
+              </p>
+              <div id="mod-cont">
+                  No Groups found!
+              </div>
+            </div>
+        </div>
         <div id="a_head" class="row text-center" onclick="js_refresh_page();" style="background: green; color: white; padding-bottom: 15px;">
             <h2>PyRadio Remote Control</h2>
         </div>
@@ -169,6 +224,7 @@ div[id^='a_']:hover { underline: none;}
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
                     <button onclick="js_send_simple_command('/html/st', 0);" type="button" class="btn btn-success">Stations<br>List</button>
+                    <button id="group" type="button" class="btn">Groups<br>List</button>
                     <button onclick="js_send_simple_command('/html/pl', 0);" type="button" class="btn btn-primary">Show<br>Playlists</button>
                     <button onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
                     <button id="logging" onclick="js_toggle_titles_logging();" type="button" class="btn btn-warning">Enable<br>Title Log</button>
@@ -188,6 +244,69 @@ div[id^='a_']:hover { underline: none;}
         </div>
 
     <script>
+    ////////////////////////////////////////////////////////////////////
+    //                     Group Modal Popup                          //
+    ////////////////////////////////////////////////////////////////////
+
+    // Get the modal
+    var modal = document.getElementById("myModal");
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("group");
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks on the button, open the modal
+    btn.onclick = function() {
+      $('#mod-cont').html = "Nothing found!";
+      var elements = document.getElementsByClassName('group-header');
+      if (elements.length == 0){
+          document.getElementById('mod-cont').innerHTML = "No Groups found!";
+      } else {
+        var my_out_str = `<table class="table table-bordered">
+                        <thead>
+                            <tr class="btn-success">
+                                <td style="font-size:150%; color: white; font-weight: bolder;">Groups</td>
+                            </tr>
+                        </thead>
+                        <tbody id="myGroupTable">`;
+
+
+        for (i = 0; i < elements.length ; i++){
+            var the_id = "";
+            var the_text = "";
+            var final_text = "";
+            the_id = elements[i].getAttribute('id');
+            the_text = elements[i].innerText;
+            final_text = `<a onclick="js_hide_modal();" href="#` + the_id + `">` + the_text + "</a>";
+            my_out_str += "<tr><td>" + final_text + "</td></tr>";
+        }
+        my_out_str += "</tbody></table>";
+        document.getElementById('mod-cont').innerHTML =  my_out_str;
+      }
+      modal.style.display = "block";
+    }
+
+    function js_hide_modal(){
+      modal.style.display = "none";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+          modal.style.display = "none";
+        }
+    }
+    ////////////////////////////////////////////////////////////////////
+    //                   Group Modal Popup End                        //
+    ////////////////////////////////////////////////////////////////////
+
     var error_count = 0;
     var msg_timeout = 0;
     var url_to_reload = "";
@@ -238,6 +357,16 @@ div[id^='a_']:hover { underline: none;}
 
     function js_send_simple_command(the_command, the_timeout){
 
+        // console.log("the_command =", the_command);
+        // console.log("startsWith /html/pl/ :", the_command.startsWith("/html/pl/"));
+        // console.log("length =:", the_command.length);
+        if ( the_command == '/html/st' || ( ( the_command.startsWith("/html/pl/" ) && ( the_command.length > 9 )) )){
+            js_disable_group_button(false);
+        }
+        else
+        {
+            js_disable_group_button(true);
+        }
         $.get(the_command, function(result){
             // console.log(the_command, result, typeof result);
             //
@@ -333,8 +462,13 @@ div[id^='a_']:hover { underline: none;}
         getStopped();
     }
 
+    function js_disable_group_button(enable){
+        var element = document.getElementById("group");
+        element.disabled = enable;
+    }
+
     function js_disable_buttons_on_stopped(enable){
-        let b_id = ["vu", "vd", "vs", "mute", "like"];
+        let b_id = ["vu", "vd", "vs", "mute", "like" ];
         for (let i in b_id) {
             var element = document.getElementById(b_id[i]);
             // console.log("async:", data);
@@ -403,6 +537,7 @@ div[id^='a_']:hover { underline: none;}
         js_fix_muted();
         js_fix_logging_titles();
         js_fix_stopped();
+        js_disable_group_button(true);
     }
 
     function js_init_title(){
@@ -1361,11 +1496,11 @@ Content-Length: {}
                 else:
                     out.append('                            <tr>')
                 if sel == i:
-                    out.append('                                <td class="text-right" style="color: white;">{}</td>'.format(i+1))
+                    out.append('                                <td id="n{0}" class="text-right" style="color: white;">{1}</td>'.format(i+1, i+1))
                 else:
-                    out.append('                                <td class="text-right">{}</td>'.format(i+1))
+                    out.append('                                <td id="n{0}" class="text-right">{1}</td>'.format(i+1, i+1))
             if header:
-                out.append('                               <td id="' + str(i+1) + '" class="text-center" colspan="2">' + n + '</td>')
+                out.append('                               <td id="n' + str(i+1) + '" class="text-center group-header" colspan="2">' + n + '</td>')
             else:
                 if index < 2:
                     t_url = url[index].format(i+1)
