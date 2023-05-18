@@ -65,7 +65,7 @@ or
 
 or
 
-    sudo port isntall MPlayer
+    sudo port install MPlayer
 
 ## Get the installation script
 

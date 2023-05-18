@@ -178,7 +178,7 @@ And finally:
 
 ```
 cd
-python isntall.py -i
+python install.py -i
 ```
 
 ### System dependent installation - fedora
