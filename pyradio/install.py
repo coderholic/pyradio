@@ -1324,7 +1324,7 @@ if __name__ == '__main__':
             parser.add_argument('-oc', '--open-cache', action='store_true', help=SUPPRESS)
             parser.add_argument('-sc', '--show-cache', action='store_true', help=SUPPRESS)
             parser.add_argument('-cc', '--clear-cache', action='store_true', help=SUPPRESS)
-            parser.add_argument('-i', '--isolated', action='store_true', help=SUPPRESS)
+            parser.add_argument('-i', '--isolate', action='store_true', help=SUPPRESS)
         if HAS_PIPX:
             parser.add_argument('-gc', '--get-cache', action='store_true',
                                 help='Download source code, keep it in the cache and exit.')
@@ -1333,7 +1333,10 @@ if __name__ == '__main__':
         parser.add_argument('--python2', action='store_true',
                             help='Install using python 2.')
     else:
-        parser.add_argument('-i', '--isolated', action='store_true', help=SUPPRESS)
+        parser.add_argument('-oc', '--open-cache', action='store_true', help=SUPPRESS)
+        parser.add_argument('-sc', '--show-cache', action='store_true', help=SUPPRESS)
+        parser.add_argument('-cc', '--clear-cache', action='store_true', help=SUPPRESS)
+        parser.add_argument('-i', '--isolate', action='store_true', help=SUPPRESS)
         parser.add_argument('--python2', action='store_true', help=SUPPRESS)
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='Uninstall PyRadio.')
