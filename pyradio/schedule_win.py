@@ -8,7 +8,7 @@ import threading
 
 from .simple_curses_widgets import DisabledWidget, SimpleCursesCheckBox, SimpleCursesPushButton, SimpleCursesTime, SimpleCursesString, SimpleCursesDate
 from .cjkwrap import cjklen, cjkslices
-from .schedule import PyRadioScheduleItem, PyRadioTime, format_date_to_iso8851
+from .schedule import PyRadioScheduleItem, PyRadioScheduleItemType, PyRadioScheduleTimeType, PyRadioTime, format_date_to_iso8851
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -288,7 +288,7 @@ class PyRadioSimpleScheduleWindow(object):
                     next_widget_func=self._next_widget,
                     previous_widget_func=self._previous_widget,
                     global_functions=self._global_functions,
-                    string=PyRadioTime.pyradio_time_to_string(self._schedule_item.end_time)
+                    string=PyRadioTime.pyradio_time_to_string(self._schedule_item.item['end_time'])
                 )
             )
             self._widgets[-1].w_id = 11
@@ -415,7 +415,8 @@ class PyRadioSimpleScheduleWindow(object):
         self._showed = True
 
     def _dummy_enable(self):
-        if self._schedule_item.type == 'E':
+        logger.error('\n\n{}\n\n'.format(self._schedule_item.item))
+        if self._schedule_item.item['type'] == PyRadioScheduleItemType.TYPE_END:
             self._widgets[2].enabled = True
             self._widgets[2].checked = False
             self._widgets[8].enabled = True

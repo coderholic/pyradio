@@ -287,11 +287,16 @@ class PyRadioTheme(object):
         elif self._colors['transparency'] == 1:
             transp = True
         else:
+            logger.info('use_transparency = {}'.format(use_transparency))
+            logger.info('self.transparent = {}'.format(self.transparent))
             if use_transparency is None and \
                     self._transparent:
                 transp = True
             elif use_transparency:
                 self._transparent = transp = True
+        logger.info('=============')
+        logger.info('transp = {}'.format(transp))
+        logger.info('self.transparent = {}'.format(self._transparent))
         self._do_init_pairs(transparency=transp)
 
         self._read_colors = deepcopy(self._colors)
@@ -640,6 +645,7 @@ class PyRadioThemeReadWrite(object):
                 'Border' not in names.keys():
             names['Border'] = [names['Stations'][0]]
 
+        logger.error('\n\nnames = {}\n\n'.format(names))
         self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 0}
         for name in names.keys():
             if name != 'transparency':
@@ -653,13 +659,13 @@ class PyRadioThemeReadWrite(object):
                 if len(self._param_to_color_id[name]) == 2:
                     self._temp_colors['css'][self._param_to_color_id[name][1]] = names[name][1]
                     self._temp_colors['data'][self._param_to_color_id[name][1]] = hex_to_rgb(names[name][1])
-            else:
-                try:
-                    self._temp_colors['transparency'] = int(names[name][0])
-                    if not self._temp_colors['transparency'] in range(0,3):
+                else:
+                    try:
+                        self._temp_colors['transparency'] = int(names[name][0])
+                        if not self._temp_colors['transparency'] in range(0,3):
+                            self._temp_colors['transparency'] = 0
+                    except ValueError:
                         self._temp_colors['transparency'] = 0
-                except ValueError:
-                    pass
 
         if self._theme_is_incomplete():
             if logger.isEnabledFor(logging.ERROR):
@@ -683,7 +689,8 @@ class PyRadioThemeReadWrite(object):
         self._theme_path = theme_path
         self._temp_colors['Name'] = theme_name
         self._temp_colors['Path'] = theme_path
-        # logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
+        self._cnf.active_transparency = self._temp_colors['transparency']
+        logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
         return 0, self._temp_colors
 
     def _calculate_fifteenth_color(self):

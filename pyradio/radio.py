@@ -686,7 +686,7 @@ class PyRadio(object):
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
             # ord('d'): self._html_song_title,
-            # ord('b'): self._show_schedule_player_stop,
+            ord('b'): self._show_schedule_player_stop,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -838,6 +838,7 @@ class PyRadio(object):
             pass
 
         if self._cnf.use_themes:
+            # TODO: maybe delete this line?
             self._theme._transparent = self._cnf.use_transparency
             self._theme.config_dir = self._cnf.stations_dir
             ''' In case we have to download a theme, and it takes too long  '''

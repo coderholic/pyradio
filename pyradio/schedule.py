@@ -24,6 +24,43 @@ def format_date_to_iso8851(a_date=None):
         cur_month + ' ' + str(a_date.year) + \
         a_date.strftime(' %H:%M:%S')
 
+class PyRadioScheduleItemType(object):
+
+    TYPE_START_END = 0
+    TYPE_START = 1
+    TYPE_END = 2
+
+    items = 0, 1, 2
+
+    @classmethod
+    def to_string(cls, a_type):
+        if a_type == 0:
+            return 'TYPE_START_END'
+        elif a_type == 1:
+            return 'TYPE_START'
+        elif a_type == 2:
+            return 'TYPE_END'
+        else:
+            return 'UNKNOUN'
+
+
+class PyRadioScheduleTimeType(object):
+
+    TIME_ABSOLUTE = 0
+    TIME_RELATIVE = 1
+
+    items = 0, 1
+
+    @classmethod
+    def to_string(cls, a_type):
+        if a_type == 0:
+            return 'TIME_ABSOLUTE'
+        elif a_type == 1:
+            return 'TIME_RELATIVE'
+        else:
+            return 'UNKNOUN'
+
+
 class PyRadioScheduleItem(object):
     '''
     Provide a Schedule Item
@@ -69,9 +106,6 @@ class PyRadioScheduleItem(object):
             station name
 
     '''
-    TYPE_START_END = TIME_ABSOLUTE = 0
-    TYPE_START = TIME_RELATIVE = 1
-    TYPE_END = 2
 
     def __init__(self, item=None):
         self._item = None
@@ -142,11 +176,7 @@ class PyRadioScheduleItem(object):
     @type.setter
     def type(self, val):
         try:
-            if val in (
-                self.TYPE_END,
-                self.TYPE_START,
-                self.TYPE_START_END
-            ):
+            if val in (PyRadioScheduleItemType.items):
                 self._item['type'] = val
                 return
         except:
@@ -178,8 +208,8 @@ class PyRadioScheduleItem(object):
     def _check_start_end_type(self, val):
         try:
             if val in (
-                self.TIME_ABSOLUTE,
-                self.TIME_RELATIVE,
+                PyRadioScheduleTimeType.TIME_ABSOLUTE,
+                PyRadioScheduleTimeType.TIME_RELATIVE,
             ):
                 self._item['start_type'] = val
                 return True
@@ -193,7 +223,7 @@ class PyRadioScheduleItem(object):
         the (starting date-time, ending date-time)
         '''
         today = datetime.now().replace(microsecond=0)
-        if self._item['start_type'] == self.TIME_ABSOLUTE:
+        if self._item['start_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
             start_date = datetime(
                 year=self._item[ 'start_date' ][0],
                 month=self._item[ 'start_date' ][1],
@@ -206,7 +236,7 @@ class PyRadioScheduleItem(object):
                 self._item['start_duration']
             )
 
-        if self._item['end_type'] == self.TIME_ABSOLUTE:
+        if self._item['end_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
             end_date = datetime(
                 self._item['end_date'][0],
                 self._item['end_date'][1],
@@ -217,7 +247,7 @@ class PyRadioScheduleItem(object):
                 seconds=self._item['end_time'][2],
             )
         else:
-            if self._item['type'] == self.TYPE_END:
+            if self._item['type'] == PyRadioScheduleItemType.TYPE_END:
                 use_date = today
             else:
                 use_date = start_date
@@ -554,7 +584,7 @@ if __name__ == '__main__':
 
     print('\n\n============')
     an_item = {
-        'type': 1,                                  # TYPE_START_END, TYPE_START, TYPE_END
+        'type': PyRadioScheduleItemType.TYPE_START_END,
         'start_type': 0,                            # TIME_ABSOLUTE, TYPE_RELATIVE
         'start_date':  [2022, 10, 15],
         'start_time': [11, 15, 12, 2],              # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
@@ -567,8 +597,13 @@ if __name__ == '__main__':
         'station': 'mystation'
     }
 
+    for n,k in an_item.items():
+        print(n, ":", k)
+    print('\n\n============')
+
     b = PyRadioScheduleItem(an_item)
     x, y = b.get_active_dates()
     print('start_date:', str(x))
     print('  end_date:', str(y))
-    print('item =', b.item)
+    for n,k in b.item.items():
+        print(n, ":", k)

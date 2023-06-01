@@ -312,6 +312,8 @@ div[id^='a_']:hover { underline: none;}
     var url_to_reload = "";
     var last_title = "";
 
+    var selection = -1;
+
     function js_refresh_page(){
         window.location.href = url_to_reload;
     }
@@ -367,6 +369,9 @@ div[id^='a_']:hover { underline: none;}
         {
             js_disable_group_button(true);
         }
+        // if ( ( the_command == '/html/st' ) || ( the_command == '/html/pl' ) || ( ( the_command.startsWith("/html/pl/" ) && ( the_command.length > 9 )) )){
+        //     js_get_selection();
+        // }
         $.get(the_command, function(result){
             // console.log(the_command, result, typeof result);
             //
@@ -416,30 +421,37 @@ div[id^='a_']:hover { underline: none;}
             }
             // console.log("the_command:", the_command)
             if ( ( the_command == '/html/st' ) || ( the_command == '/html/pl' ) || ( ( the_command.startsWith("/html/pl/" ) && ( the_command.length > 9 )) )){
-            td = document.getElementsByTagName('td');
-            for(i=0; i<td.length; i++){
-                try{
-                    var x = td[i].getAttribute('style');
-                    // console.log("x =", x);
-                    if(i>0){
-                        if(x == "color: white;"){
-                            // console.log("found at", i, "id =", td[i].getAttribute('id'));
-                            var this_id = td[i+1].getAttribute('id');
-                            if (i>6){
-                              this_id = "n" + (this_id-2);
-                            }else{
-                                this_id = "myInput";
+                // console.log("-- selection =", selection);
+                let the_counter = 0;
+                //if (selection > 0){
+                //    the_counter = 2 * selection;
+                //    console.log("the_counter =", the_counter);
+                //}
+                td = document.getElementsByTagName('td');
+                for(i=the_counter; i<td.length; i++){
+                    try{
+                        var x = td[i].getAttribute('style');
+                        // console.log("x =", x);
+                        if(i>0){
+                            if(x == "color: white;"){
+                                // console.log("found at", i, "id =", td[i].getAttribute('id'));
+                                var this_id = td[i+1].getAttribute('id');
+                                if (i>6){
+                                  this_id = "n" + (this_id-2);
+                                }else{
+                                    this_id = "myInput";
+                                }
+                                // console.log("this_id =", this_id);
+                                document.getElementById(this_id).scrollIntoView();
+                                break;
                             }
-                            // console.log("this_id =", this_id);
-                            document.getElementById(this_id).scrollIntoView();
-                            break;
                         }
+                    }catch{
+                        // do not care about it!
                     }
-                }catch{
-                    // do not care about it!
                 }
-            }
         }
+        // console.log("--------");
         });
     }
 
@@ -487,6 +499,21 @@ div[id^='a_']:hover { underline: none;}
         getStopped();
     }
 
+    function js_get_selection(){
+        const getSelection = async () => {
+            const response = await fetch("/html/get_selection");
+            const data = await response.text();
+            // console.log("async selection:", data);
+            if ( data > -1 ){
+                selection = data;
+            }else{
+                selection = -1;
+            }
+        }
+        getSelection();
+        console.log("==> selection =", selection);
+    }
+
     function js_disable_group_button(enable){
         var element = document.getElementById("group");
         element.disabled = enable;
@@ -511,7 +538,7 @@ div[id^='a_']:hover { underline: none;}
             const response = await fetch("/html/is_logging_titles");
             const data = await response.text();
 
-            console.log("async:", data);
+            // console.log("async:", data);
             var element = document.getElementById("logging");
             if ( data == 0 ){
                 element.className = "btn btn-warning";
@@ -668,6 +695,8 @@ Restricted Commands (Main mode only)
         sel = (self.selection, self.playing)
         '''
         self.sel = sel
+        ''' the item to scroll to when displaying list of stations / playlists '''
+        self._selected = -1
         self.muted = muted
         self.lock = lock
         try:
@@ -747,6 +776,8 @@ Restricted Commands (Main mode only)
             self.send_song_title(self.song_title())
         elif self._path == '/favicon.ico':
             pass
+        elif self._path == '/get_selection' and self._is_html:
+            self._send_raw(str(self._selected))
         elif self._path == '/is_stopped' and self._is_html:
             received = self._commands['/html_is_stopped']()
             self._send_raw(received)
@@ -950,10 +981,11 @@ Restricted Commands (Main mode only)
                     has_error = False
                     if ret == '/stations':
                         if self._is_html:
+                            self._selected = self.sel()[1]
                             self._send_raw(
                                 self._format_html_table(
                                 self._list_stations(html=True), 0,
-                                sel=self.sel()[1]
+                                sel=self._selected
                                 )
                             )
                         else:
@@ -1121,20 +1153,22 @@ Restricted Commands (Main mode only)
                     elif ret.startswith('/'):
                         if ret == '/stations':
                             if self._is_html:
+                                self._selected = self.sel()[1]
                                 self._send_raw(
                                     self._format_html_table(
                                         self._list_stations(html=True), 0,
-                                        sel=self.sel()[1]
+                                        sel=self._selected
                                     )
                                 )
                             else:
                                 self._send_text(self._list_stations())
                         elif ret == '/playlists':
                             if self._is_html:
+                                self._selected = self._get_playlist_id(basename(self.playlist_in_editor()[:-4]))
                                 self._send_raw(
                                     self._format_html_table(
                                         self._list_playlists(html=True), 1,
-                                        sel=self._get_playlist_id(basename(self.playlist_in_editor()[:-4]))
+                                        sel=self._selected
                                     )
                                 )
                             else:
@@ -1486,7 +1520,7 @@ Content-Length: {}
         Parameters
         ==========
         in_list         list of items
-        self            selected item
+        sel             selected item
         index           type of output (stations / playlist) and URL formatter
         playlist_index  playist index (only valid if index == 2)
         '''

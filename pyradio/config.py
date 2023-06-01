@@ -1326,7 +1326,6 @@ class PyRadioConfig(PyRadioStations):
         self.default_encoding = 'utf-8'
         self.connection_timeout = '10'
         self.theme = 'dark'
-        self.use_transparency = False
         self.active_transparency = False
         self._distro = 'None'
 
