@@ -2363,7 +2363,7 @@ class PyRadio(object):
             self._theme_name,
             self._cnf.theme,
             11, 3, 11, 10, 6, 9,
-            self._theme.getTransparency(),
+            self._theme.calculate_transparency(),
             self._cnf.auto_update_theme,
             self._watch_theme_lock
         )
@@ -4884,8 +4884,8 @@ __|Remote Control Server| cannot be started!__
             return
         logger.error('\n==========================\nself._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
         logger.error('force_value = {}'.format(force_value))
-        self._theme.toggleTransparency(force_value)
-        self._cnf.use_transparency = self._theme.getTransparency()
+        self._cnf.use_transparency = not self._cnf.use_transparency
+        self._theme.restoreActiveTheme()
         logger.error('self._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
         if self.ws.operation_mode == self.ws.THEME_MODE:
             self._theme_selector.transparent = self._cnf.use_transparency

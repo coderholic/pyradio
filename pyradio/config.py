@@ -3275,9 +3275,12 @@ class PyRadioBase16Themes(object):
             self.theme = self._last_used_theme
             self.theme_file_name = w_path
             self.theme_url = url
-            self.status = requests_response.status_code
+            try:
+                self.status = requests_response.status_code
+            except AttributeError:
+                self.status = 404
 
-            ret = requests_response.status_code == 200 and written
+            ret = self.status == 200 and written
             if not ret:
                 try:
                    remove(w_path)

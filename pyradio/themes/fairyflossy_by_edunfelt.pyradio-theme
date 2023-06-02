@@ -37,7 +37,7 @@ Messages Border     #9673d3
 
 # Theme Transparency
 # Values are:
-#   0: No transparency (default)
+#   0: No transparency
 #   1: Theme is transparent
-#   2: Obey config setting
+#   2: Obey config setting (default)
 transparency        0

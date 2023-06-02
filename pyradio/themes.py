@@ -127,9 +127,6 @@ class PyRadioTheme(object):
     _read_colors = {}
     _temp_colors = {}
 
-    transparent = False
-    _transparent = False
-
     applied_theme_name = 'dark'
 
     config_dir = ''
@@ -145,22 +142,34 @@ class PyRadioTheme(object):
         self._read_colors = None
         self._temp_colors = None
 
+    def calculate_transparency(self, transparency=None):
+        transp = False
+        if transparency is None:
+            if self._active_colors['transparency'] == 0:
+                transp = False
+            elif self._active_colors['transparency'] == 1:
+                transp = True
+            else:
+                transp = self._cnf.use_transparency
+        else:
+            if transparency == 0:
+                transp = False
+            elif transparency == 1:
+                transp = True
+            else:
+                transp = self._cnf.use_transparency
+        return transp
+
     def _do_init_pairs(self, transparency=None):
         if self._cnf.use_themes:
-            if transparency is not None:
-                logger.error('before self._cnf.use_transparency = {}'.format( self._cnf.use_transparency ))
-                self._cnf.use_transparency = transparency
-                logger.error('after self._cnf.use_transparency = {}'.format( self._cnf.use_transparency ))
-            else:
-                logger.error('self._transparent = {}'.format(self._transparent))
-                logger.error('self._cnf.use_transparency = {}'.format( self._cnf.use_transparency ))
-                self._cnf.use_transparency = self._transparent
-                # transp = self._transparent if self._cnf.use_transparency else False
-            # logger.error('transp = {}'.format(transp))
+            transp = self.calculate_transparency(transparency)
+            logger.info('=============')
+            logger.info('transp = {}'.format(transp))
+
             border_color = 16  if curses.COLORS > 16 else 1
             if self._cnf.use_calculated_colors or \
                    self._cnf.has_border_background:
-                if self._cnf.use_transparency:
+                if transp:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('--> 1 transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
@@ -199,7 +208,7 @@ class PyRadioTheme(object):
                         14: (9 + self._cnf.start_colors_at, 2 + self._cnf.start_colors_at)
                     }
             else:
-                if self._cnf.use_transparency:
+                if transp:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('--> 2 transparency: ON (use_calculated_colors: {0}, has_border_background: {1})'.format(self._cnf.use_calculated_colors, self._cnf.has_border_background))
                     colors = {
@@ -281,23 +290,7 @@ class PyRadioTheme(object):
 
         self._active_colors = None
         self._active_colors = deepcopy(self._colors)
-        transp = False
-        if self._colors['transparency'] == 0:
-            transp = False
-        elif self._colors['transparency'] == 1:
-            transp = True
-        else:
-            logger.info('use_transparency = {}'.format(use_transparency))
-            logger.info('self.transparent = {}'.format(self.transparent))
-            if use_transparency is None and \
-                    self._transparent:
-                transp = True
-            elif use_transparency:
-                self._transparent = transp = True
-        logger.info('=============')
-        logger.info('transp = {}'.format(transp))
-        logger.info('self.transparent = {}'.format(self._transparent))
-        self._do_init_pairs(transparency=transp)
+        self._do_init_pairs(transparency=self._colors['transparency'])
 
         self._read_colors = deepcopy(self._colors)
         # logger.error('colors\n{}'.format(self._read_colors))
@@ -524,25 +517,6 @@ class PyRadioTheme(object):
                          return a_file
         return ''
 
-    def toggleTransparency(self, force_value=None):
-        """ Toggles theme transparency.
-
-            force_value will set transparency if True or False,
-            or toggle transparency if None
-        """
-        # logger.error(' 1 self._transparent = {}'.format(self._transparent))
-        # logger.error(' 1 force_value = {}'.format(force_value))
-        if force_value is None:
-            self._transparent = not self._transparent
-        else:
-            self._transparent = force_value
-        logger.error('=== restoring active theme')
-        self.restoreActiveTheme()
-        return True
-
-    def getTransparency(self):
-        return self._transparent
-
 
 class PyRadioThemeReadWrite(object):
 
@@ -646,7 +620,7 @@ class PyRadioThemeReadWrite(object):
             names['Border'] = [names['Stations'][0]]
 
         logger.error('\n\nnames = {}\n\n'.format(names))
-        self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 0}
+        self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 2}
         for name in names.keys():
             if name != 'transparency':
                 try:
@@ -659,13 +633,15 @@ class PyRadioThemeReadWrite(object):
                 if len(self._param_to_color_id[name]) == 2:
                     self._temp_colors['css'][self._param_to_color_id[name][1]] = names[name][1]
                     self._temp_colors['data'][self._param_to_color_id[name][1]] = hex_to_rgb(names[name][1])
-                else:
-                    try:
-                        self._temp_colors['transparency'] = int(names[name][0])
-                        if not self._temp_colors['transparency'] in range(0,3):
-                            self._temp_colors['transparency'] = 0
-                    except ValueError:
-                        self._temp_colors['transparency'] = 0
+            elif name == 'transparency':
+                self._temp_colors['transparency'] = 2
+                try:
+                    self._temp_colors['transparency'] = int(names[name][0])
+                except (ValueError, TypeError):
+                    self._temp_colors['transparency'] = 2
+                if not self._temp_colors['transparency'] in range(0,3):
+                    self._temp_colors['transparency'] = 2
+                logger.error('\n\nset transparency: {}\n\n'.format(self._temp_colors['transparency']))
 
         if self._theme_is_incomplete():
             if logger.isEnabledFor(logging.ERROR):
@@ -780,9 +756,9 @@ Messages Border     {13}
 
 # Theme Transparency
 # Values are:
-#   0: No transparency (default)
+#   0: No transparency
 #   1: Theme is transparent
-#   2: Obey config setting
+#   2: Obey config setting (default)
 transparency        0
 '''
             with open(out_theme, 'w', encoding='utf-8') as f:

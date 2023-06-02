@@ -1428,7 +1428,7 @@ if __name__ == '__main__':
         print_no_python2()
         sys.exit(1)
 
-    if use_logo and not args.get_cache:
+    if use_logo and not args.open_cache:
         print_pyradio_on()
         if PY3 and not args.python2:
             print_python3()
