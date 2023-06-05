@@ -41,4 +41,4 @@ Edit Cursor       #bdae93 #504945
 #   0: No transparency
 #   1: Theme is transparent
 #   2: Obey config setting (default)
-transparency        0
+transparency        2

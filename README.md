@@ -939,9 +939,9 @@ Messages Border     #a3b367
 
 # Theme Transparency
 # Values are:
-#   0: No transparency (default)
+#   0: No transparency
 #   1: Theme is transparent
-#   2: Obey config setting
+#   2: Obey config setting (default)
 transparency        0
 ```
 
@@ -1096,13 +1096,17 @@ For **PyRadio**, transparency means that a theme's background actually disappear
 
 Not all themes look good when transparency is ON, so themes can now declare whether they want to use transparency or not. This is the "**transparency**" variable of the theme, which can have these values:
 
-- 0 means that the theme looks better with no transparency (default)
-- 1 means that the theme looks better when transparency in ON
-- 2 means that the theme looks good either way, and the global transparency setting (defined in **PyRadio** config file) can be used.
+- 0 means that the theme will be opaque (no transparency)
+- 1 means that the theme will be transparent
+- 2 means that the theme looks good either way (the default), and the global transparency setting value (defined in **PyRadio** config file) will be used.
 
-Please notice that this is just a hint; themes will obey the rules above, but transparency can still be toggled using "**T**" (capital "**t**").
+Please note that this behavior has changed since **v. 0.9.2.7**: theme transparency will always be honored, regardless of the global config value.
 
-When the "*Theme selection window*" is visible, a "**[T]**" string displayed  at  its  bottom right corner will indicate that transparency is *on*.
+This means that a theme which is set to be transparent (by its creator) will always be transparent, no matter if the global transparency is on or off. Similarly, if a theme is set to be opaque, it will be so regardless of the global transparency value.
+
+The only case when global transparency will come into play is when the theme does not care about it (theme transparency set to 2 - Obey config setting).
+
+When the "*Theme selection window*" is visible, a "**[T]**" string displayed  at  its  bottom right corner will indicate that global transparency is "*ON*".
 
 ### Updating themes automatically
 

@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2023 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "May 2023" pyradio
+.TH pyradio 1 "June 2023" pyradio
 
 .SH Name
 .PP
@@ -1263,19 +1263,23 @@ Not all themes look good when transparency is ON, so themes can now declare whet
 
 .RS 5
 .IP \fI0\fR 3
-means that the theme looks better with no transparency (default)
+means that the theme will be opaque (no transparency).
 
 .IP \fI1\fR 3
-means that the theme looks better when transparency in ON
+means that the theme will be transparent.
 
 .IP \fI2\fR 3
-means that the theme looks good either way, and the global transparency setting (defined in \fBpyrRadio\fR config file) can be used.
+- 2 means that the theme looks good either way (the default), and the global transparency setting value (defined in \fBpyradio\fR config file) will be used.
 
 .RE
 .PP
-Please notice that this is just a hint; themes will obey the rules above, but transparency can still be toggled using "\fIT\fR" (capital "\fIt\fR").
+Please note that this behavior has changed since \fBv. 0.9.2.7\fR: theme transparency will always be honored, regardless of the global config value.
 
-When the \fITheme selection window\fR is visible, a "\fI[T]\fR" string displayed at its bottom right corner will indicate that transparency is \fIon\fR.
+This means that a theme which is set to be transparent (by its creator) will always be transparent, no matter if the global transparency is on or off. Similarly, if a theme is set to be opaque, it will be so regardless of the global transparency value.
+
+The only case when global transparency will come into play is when the theme does not care about it (theme transparency set to \fI2 \fR- \fIObey config setting\fR).
+
+When the \fITheme selection window\fR is visible, a "\fI[T]\fR" string displayed at its bottom right corner will indicate that global transparency is \fIon\fR.
 .RE
 
 \fBUpdating themes automatically\fR

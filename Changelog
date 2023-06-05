@@ -1,3 +1,10 @@
+2023-06-05 s-n-g
+    * version 0.9.2.7
+    * fixing a couple of install.py potential crashes
+    * fixing a theme download potential crash
+    * theme transparency will always be honored, in contrast
+      to global (config transparency setting)
+
 2023-05-08 s-n-g
     * version 0.9.2.6
     * using pipx for installation on "externally-managed"

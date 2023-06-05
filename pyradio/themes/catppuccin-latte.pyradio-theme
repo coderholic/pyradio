@@ -33,11 +33,11 @@ PyRadio URL         #8839EF
 # Please refer to the following link for more info
 # https://github.com/coderholic/pyradio#secondary-windows-background
 #
-Messages Border     #8839EF 
+Messages Border     #8839EF
 
 # Theme Transparency
 # Values are:
 #   0: No transparency
 #   1: Theme is transparent
 #   2: Obey config setting (default)
-transparency        0
+transparency        2

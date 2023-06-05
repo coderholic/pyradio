@@ -2363,7 +2363,6 @@ class PyRadio(object):
             self._theme_name,
             self._cnf.theme,
             11, 3, 11, 10, 6, 9,
-            self._theme.calculate_transparency(),
             self._cnf.auto_update_theme,
             self._watch_theme_lock
         )

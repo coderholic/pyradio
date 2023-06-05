@@ -78,7 +78,7 @@ class PyRadioConfigWindow(object):
     'This is the equivalent to the -t , --theme command line option.', '|',
     'If a theme uses more colors than those supported by the terminal in use, the "dark" theme will be used instead (but the "light" theme will be used, if the "light_16colors" theme was requested but not supported).',
     '|', 'Default value = dark'])
-    _help_text.append(['If False, theme colors will be used.', '|',
+    _help_text.append(['This option will work when a theme\'s transparency value is set to 2 (Obey config setting), the default. Otherwise, it\'s up to the theme to handle transparency.', '|', 'If False, theme colors will be used.', '|',
     "If True and a compositor is running, the stations' window background will be transparent.", '|', "If True and a compositor is not running, the terminal's background color will be used.", '|', 'Default value: False'])
     _help_text.append(['Pyradio can calculate and use an alternative color for secondary windows.', '|', 'This option will determine if this color will be used (value > 0) or not (value = 0), provided that the theme used does not already provide it.', '|', 'The value of this option is actually the factor to darken or lighten the main (stations) background color.', '|', 'You can get more info on this at https://github.com/coderholic/pyradio#secondary-windows-background', '|', 'Valid Values: 0-0.2', 'Default value: 0'])
     _help_text.append(None)

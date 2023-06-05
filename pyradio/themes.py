@@ -814,9 +814,6 @@ class PyRadioThemeSelector(object):
     _max_title_width = 20
     _categories = 1
 
-    transparent = False
-    _transparent = False
-
     _showed = False
 
     changed_from_config = False
@@ -827,7 +824,7 @@ class PyRadioThemeSelector(object):
                  title_color_pair, box_color_pair,
                  applied_color_pair, normal_color_pair,
                  cursor_color_pair, applied_cursor_color_pair,
-                 is_transparent, is_watched, a_lock, log_file=''):
+                 is_watched, a_lock, log_file=''):
         self.parent = parent
         self._cnf = config
         self._theme = theme
@@ -839,7 +836,6 @@ class PyRadioThemeSelector(object):
         self._applied_cursor_color_pair = applied_cursor_color_pair
         self._applied_color_pair = applied_color_pair
         self._normal_color_pair = normal_color_pair
-        self._transparent = is_transparent
         self._theme_is_watched = is_watched
         self._watch_theme_lock = a_lock
         self._watch_theme_lock.acquire()
@@ -1064,12 +1060,11 @@ class PyRadioThemeSelector(object):
 
     @property
     def transparent(self):
-        return self._transparent
+        return self._cnf.use_transparency
 
     @transparent.setter
     def transparent(self, val):
-        self._transparent = val
-        self.refresh()
+        return
 
     @property
     def selection(self):
@@ -1176,7 +1171,7 @@ class PyRadioThemeSelector(object):
         except:
             pass
         ''' display transparency indicator '''
-        if self._transparent:
+        if self._cnf.use_transparency:
             self._win.addstr(self._height-1, self._width - 4, '[T]', curses.color_pair(self._box_color_pair))
         else:
             try:

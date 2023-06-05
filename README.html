@@ -206,6 +206,13 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
+2023-06-05 s-n-g
+    * version 0.9.2.7
+    * fixing a couple of install.py potential crashes
+    * fixing a theme download potential crash
+    * theme transparency will always be honored, in contrast
+      to global (config transparency setting)
+
 2023-05-08 s-n-g
     * version 0.9.2.6
     * using pipx for installation on "externally-managed"
@@ -1637,9 +1644,9 @@ Messages Border     #a3b367
 
 # Theme Transparency
 # Values are:
-#   0: No transparency (default)
+#   0: No transparency
 #   1: Theme is transparent
-#   2: Obey config setting
+#   2: Obey config setting (default)
 transparency        0</pre>
 <p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the theme selected in the “<em>Theme selection window</em>”, (or requested using the “<strong>-t</strong>” command line option), is in any way invalid, or is of the old format, <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme and will display a relevant message.</p>
@@ -1734,12 +1741,14 @@ For this reason, a folder called “<strong>themes</strong>” will probably hav
 <p>For <strong>PyRadio</strong>, transparency means that a theme’s background actually disappears, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
 <p>Not all themes look good when transparency is ON, so themes can now declare whether they want to use transparency or not. This is the “<strong>transparency</strong>” variable of the theme, which can have these values:</p>
 <ul>
-<li>0 means that the theme looks better with no transparency (default)</li>
-<li>1 means that the theme looks better when transparency in ON</li>
-<li>2 means that the theme looks good either way, and the global transparency setting (defined in <strong>PyRadio</strong> config file) can be used.</li>
+<li>0 means that the theme will be opaque (no transparency)</li>
+<li>1 means that the theme will be transparent</li>
+<li>2 means that the theme looks good either way (the default), and the global transparency setting value (defined in <strong>PyRadio</strong> config file) will be used.</li>
 </ul>
-<p>Please notice that this is just a hint; themes will obey the rules above, but transparency can still be toggled using “<strong>T</strong>” (capital “<strong>t</strong>”).</p>
-<p>When the “<em>Theme selection window</em>” is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that transparency is <em>on</em>.</p>
+<p>Please note that this behavior has changed since <strong>v. 0.9.2.7</strong>: theme transparency will always be honored, regardless of the global config value.</p>
+<p>This means that a theme which is set to be transparent (by its creator) will always be transparent, no matter if the global transparency is on or off. Similarly, if a theme is set to be opaque, it will be so regardless of the global transparency value.</p>
+<p>The only case when global transparency will come into play is when the theme does not care about it (theme transparency set to 2 - Obey config setting).</p>
+<p>When the “<em>Theme selection window</em>” is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that global transparency is “<em>ON</em>”.</p>
 <h3 id="updating-themes-automatically">Updating themes automatically</h3>
 <p>Terminal users have been using all kind of software to change / update / adapt their terminal colors and palettes, such as <a target="_blank" href="https://github.com/chriskempson/base16">bASE16</a>, <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a>, <a target="_blank" href="https://github.com/deviantfero/wpgtk">wpgtk</a>, <a target="_blank" href="https://github.com/lemnos/theme.sh">theme.sh</a>, to name a few.</p>
 <p><strong>PyRadio</strong> is now able to “watch” a given theme for changes and update its colors whenever the theme changes.</p>
