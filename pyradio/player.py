@@ -1553,6 +1553,29 @@ class Player(object):
     def _buildStartOpts(self, streamUrl, playList):
         pass
 
+    def _write_silenced_profile(self):
+        for i, config_file in enumerate(self.config_files):
+            if os.path.exists(config_file):
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    config_string = f.read()
+                if '[silent]' in config_string:
+                    if i == 0:
+                        return
+
+        ''' profile not found in config
+            create a default profile
+        '''
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('No [silent] profile found!')
+        try:
+            with open(self.config_files[0], 'a', encoding='utf-8') as f:
+                f.write('\n[{}]\n'.format('silent'))
+                f.write('volume=0\n\n')
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Written [silent] profile in: "{}"'.format(self.config_files[0]))
+        except:
+            pass
+
     def toggleMute(self):
         ''' mute / unmute player '''
 
@@ -1758,6 +1781,7 @@ class MpvPlayer(Player):
         if self._cnf.command_line_params:
             params = self._cnf.command_line_params.split(' ')
 
+        self._write_silenced_profile()
         ''' Do I have user profile in config?
             If so, can I use it?
         '''
@@ -2167,6 +2191,7 @@ class MpPlayer(Player):
         if self._cnf.command_line_params:
             params = self._cnf.command_line_params.split(' ')
 
+        self._write_silenced_profile()
         ''' Do I have user profile in config?
             If so, can I use it?
         '''

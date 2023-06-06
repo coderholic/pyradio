@@ -1371,6 +1371,7 @@ First of all, make sure you declare the pacakges's requirements to the relevant 
 5. psutil
 6. rich
 7. netifaces
+8. dateutils
 
 After that, you will have to modify some files, because **PyRadio** is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
 
