@@ -950,7 +950,7 @@ class PyRadioUpdate(object):
                     else:
                         b.write(self._python_exec.python + ' install.py --no-logo --do-update ' + params[self._package] + '\n')
                     b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
-                    b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
+                    b.write('cd "' + os.path.join(self._dir, 'pyradio-source') + '"\n')
 
                     b.write('IF EXIST C:\\Users\\Spiros\\pyradio (\n')
                     # b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\install.py pyradio\n')
@@ -971,7 +971,7 @@ class PyRadioUpdate(object):
                     # print('self._dir = "{}"'.format(self._dir))
                     # print('self._package = "{}"'.format(self._package))
                     # print('self.ZIP_DIR = "{}"'.format(self.ZIP_DIR))
-                    b.write('cd "' + os.path.join(self._dir, self.ZIP_DIR[self._package]) + '"\n')
+                    b.write('cd "' + os.path.join(self._dir, 'pyradio-source') + '"\n')
 
                     b.write('IF EXIST C:\\Users\\Spiros\\pyradio (\n')
                     # b.write('COPY C:\\Users\\Spiros\\pyradio\\pyradio\\install.py pyradio\n')
@@ -1638,5 +1638,3 @@ Then try installing PyRadio again
         if args.get_cache:
             uni._get_cache = True
         uni.update_pyradio()
-
-
