@@ -6194,9 +6194,13 @@ __|Remote Control Server| cannot be started!__
     def _show_recording_toggle_window(self):
         if self.player.recording > 0:
             caption = ' Recording Enable '
-            txt = '''
-                      Next time you play a station,
-                      it will be |written to a file|!
+            txt = ''' _____Next time you play a station,
+                      _____it will be |written to a file|!
+
+                      A [|r|] at the right top corner of the
+                      window indicates that recording is |enabled|.
+                      A [|R|] indicates that a station is actually
+                      |being recorded| to a file.
                     '''
         else:
             caption = ' Recording Disabled '
