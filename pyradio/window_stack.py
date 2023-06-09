@@ -58,6 +58,7 @@ class Window_Stack_Constants(object):
     RADIO_BROWSER_CONFIG_MODE = 74
     SCHEDULE_PLAYER_STOP_MODE = 75
     REMOVE_GROUP_MODE = 76
+    RECORD_WINDOW_MODE = 77
     MAIN_HELP_MODE = 100
     MAIN_HELP_MODE_PAGE_2 = 101
     MAIN_HELP_MODE_PAGE_3 = 102
@@ -284,6 +285,7 @@ class Window_Stack_Constants(object):
         GROUP_SELECTION_MODE: 'GROUP_SELECTION_MODE',
         GROUP_SEARCH_MODE: 'GROUP_SEARCH_MODE',
         GROUP_HELP_MODE: 'GROUP_HELP_MODE',
+        RECORD_WINDOW_MODE: 'RECORD_WINDOW_MODE',
     }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -370,6 +372,7 @@ class Window_Stack_Constants(object):
         CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE,
         UPDATE_STATIONS_CSV_RESULT_MODE,
         GROUP_HELP_MODE,
+        RECORD_WINDOW_MODE,
     )
 
     def __init__(self):

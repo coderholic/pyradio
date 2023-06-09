@@ -562,6 +562,7 @@ class PyRadio(object):
             self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE: self._ask_to_update_stations_csv,
             self.ws.GROUP_SELECTION_MODE: self._show_group_selection,
             self.ws.GROUP_HELP_MODE: self._show_group_help,
+            self.ws.RECORD_WINDOW_MODE: self._show_recording_toggle_window,
         }
 
         ''' list of help functions '''
@@ -686,7 +687,7 @@ class PyRadio(object):
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
             # ord('d'): self._html_song_title,
-            ord('b'): self._show_schedule_player_stop,
+            # ord('b'): self._show_schedule_player_stop,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -1307,6 +1308,11 @@ class PyRadio(object):
                                 pass
 
             align = 1
+
+            ''' TODO show recording status '''
+            self._show_recording_status_in_header(from_header_update=True)
+
+            ''' show force http indication '''
             w_header = self._cnf.station_title
             w_conn = http_conn[self.player.force_http][0]
             if self._cnf.dirty_playlist:
@@ -2117,6 +2123,7 @@ class PyRadio(object):
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Looking for a working station (random is on)')
             self.play_random()
+        self._show_recording_status_in_header()
 
     def stopPlayerFromKeyboard(self, from_update_thread=False):
         ''' stops the player with a keyboard command
@@ -4422,6 +4429,25 @@ __|Remote Control Server| cannot be started!__
                  ____Please wait...'''
         self._show_help(txt, self.ws.BROWSER_PERFORMING_SEARCH_MODE, caption=' ', prompt=' ', is_message=True)
 
+    def _show_recording_status_in_header(self, from_header_update=False):
+        if self.player.recording == 0:
+            if not from_header_update:
+                try:
+                    self.outerBodyWin.addstr(
+                        0, 1, '───', curses.color_pair(13)
+                    )
+                except:
+                    self.outerBodyWin.addstr(
+                        0, 1, '───'.encode('utf-8'), curses.color_pair(13)
+                    )
+        else:
+            w_header = 'R' if self.player.isPlaying() else 'r'
+            self.outerBodyWin.addstr(
+                0, 1, '[', curses.color_pair(13)
+            )
+            self.outerBodyWin.addstr(w_header, curses.color_pair(4))
+            self.outerBodyWin.addstr(']', curses.color_pair(13))
+
     def _open_playlist(self, a_url=None):
         ''' open playlist
 
@@ -6144,6 +6170,24 @@ __|Remote Control Server| cannot be started!__
                         mode_to_set=self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER,
                         caption=' Online Browser Config not Saved! ',
                         prompt='',
+                        is_message=True)
+
+    def _show_recording_toggle_window(self):
+        if self.player.recording > 0:
+            caption = ' Recording Enable '
+            txt = '''
+                      Next time you play a station,
+                      it will be |written to a file|!
+                    '''
+        else:
+            caption = ' Recording Disabled '
+            txt = '''
+                      Next time you play a station
+                      it will |NOT| be written to a file!
+            '''
+        self._show_help(txt,
+                        mode_to_set=self.ws.RECORD_WINDOW_MODE,
+                        caption=caption,
                         is_message=True)
 
     def _return_from_server_selection(self, a_server):
@@ -8495,7 +8539,12 @@ __|Remote Control Server| cannot be started!__
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char == curses.ascii.BEL:
+                if char == ord('|'):
+                    self.player.recording = 1 if self.player.recording == 0 else 0
+                    self._show_recording_status_in_header()
+                    self._show_recording_toggle_window()
+
+                elif char == curses.ascii.BEL:
                     ''' ^G - show groups '''
                     self._group_selection_window = None
                     self._show_group_selection()
@@ -9006,6 +9055,7 @@ __|Remote Control Server| cannot be started!__
 
     def _start_player(self):
         self._reset_status_bar_right()
+        # self._show_recording_status_in_header()
         self.log.counter = None
         self._update_status_bar_right()
         if self.number_of_items > 0:
@@ -9021,6 +9071,7 @@ __|Remote Control Server| cannot be started!__
 
     def _stop_player(self):
         self._reset_status_bar_right()
+        self._show_recording_status_in_header()
         self.log.counter = None
         self._update_status_bar_right()
         self.player.muted = False

@@ -8,6 +8,7 @@ from os.path import expanduser
 from sys import platform, version_info, platform
 from sys import exit
 from time import sleep
+from datetime import datetime
 import collections
 import json
 import socket
@@ -254,6 +255,14 @@ class Player(object):
 
     all_config_files = {}
 
+    NO_RECORDING = 0
+    RECORD_AND_LISTEN = 1
+    RECORD_WITH_SILENCE = 2
+    _recording = 0
+    _recording_from_schedule = 0
+
+    name = ''
+
     def __init__(self,
                  config,
                  outputStream,
@@ -283,6 +292,25 @@ class Player(object):
             ''' delete old vlc files (vlc_log.*) '''
             from .del_vlc_log import RemoveWinVlcLogFiles
             threading.Thread(target=RemoveWinVlcLogFiles(self.config_dir)).start()
+
+    @property
+    def recording(self):
+        if self._recording_from_schedule > 0:
+            return self._recording_from_schedule
+        else:
+            return self._recording
+
+    @recording.setter
+    def recording(self, val):
+        if val in range(0, 3):
+            self._recording = val
+        else:
+            self._recording = 0
+        logger.error('\n\nsetting recording to {}'.format(self._recording))
+
+    def get_recording_name(self, name, extension):
+        f = datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + "-" + name + extension
+        return os.path.join(self._cnf.stations_dir, f)
 
     def _get_all_config_files(self):
         ''' MPV config files '''
@@ -1357,6 +1385,7 @@ class Player(object):
              encoding=''
          ):
         ''' use a multimedia player to play a stream '''
+        logger.error('\n\nname = {}\n\n'.format(name))
         self.volume = -1
         self.close()
         self.name = name
@@ -1711,6 +1740,8 @@ class MpvPlayer(Player):
             history_add_function
         )
         self.config_files = self.all_config_files['mpv']
+        self._recording_name = ''
+        logger.error('\n\nMPV recording = {}\n\n'.format(self._recording))
 
     def save_volume(self):
         ''' Saving Volume in Windows does not work;
@@ -1751,6 +1782,7 @@ class MpvPlayer(Player):
             return 0
 
     def _buildStartOpts(self, streamUrl, playList=False):
+        logger.error('\n\nself._recording = {}'.format(self._recording))
         ''' Builds the options to pass to mpv subprocess.'''
 
         ''' Test for newer MPV versions as it supports different IPC flags. '''
@@ -1788,22 +1820,31 @@ class MpvPlayer(Player):
         if self.USE_PROFILE == -1:
             self.USE_PROFILE = self._configHasProfile()
 
-        if self.USE_PROFILE == 1:
-            opts.append('--profile=' + self.profile_name)
-            if (logger.isEnabledFor(logging.INFO)):
-                logger.info('Using profile: "[{}]"'.format(self.profile_name))
+        if self._recording == self.RECORD_WITH_SILENCE:
+            opts.append('--profile=silent')
         else:
-            if (logger.isEnabledFor(logging.INFO)):
-                if self.USE_PROFILE == 0:
-                    logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
-                else:
-                    logger.info('No usable profile found')
+            if self.USE_PROFILE == 1:
+                opts.append('--profile=' + self.profile_name)
+                if (logger.isEnabledFor(logging.INFO)):
+                    logger.info('Using profile: "[{}]"'.format(self.profile_name))
+            else:
+                if (logger.isEnabledFor(logging.INFO)):
+                    if self.USE_PROFILE == 0:
+                        logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
+                    else:
+                        logger.info('No usable profile found')
 
         ''' add command line parameters '''
         if params:
             for a_param in params:
                 opts.append(a_param)
 
+        logger.error('\n\nself._recording = {}'.format(self._recording))
+        if self._recording > 0:
+            self._recording_name = self.get_recording_name(self.name, '.mkv')
+            opts.append('--stream-record=' + self._recording_name)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('---=== Starting Recording: "{}" ===---',format(self._recording_name))
         return opts
 
 
@@ -2220,6 +2261,9 @@ class MpPlayer(Player):
             for a_param in params:
                 opts.append(a_param)
 
+        # opts.append('-dumpstream')
+        # opts.append('-dumpfile')
+        # opts.append('/home/spiros/.config/pyradio/rec.mkv')
         return opts
 
     def _mute(self):
@@ -2457,6 +2501,8 @@ class VlcPlayer(Player):
                 for a_param in params:
                     opts.append(a_param)
 
+        # opts.append('--sout')
+        # opts.append('file/ps:/home/spiros/.config/pyradio/rec.mp4')
         return opts
 
     def _mute(self):
