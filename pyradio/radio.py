@@ -2125,11 +2125,16 @@ class PyRadio(object):
             self.play_random()
         self._show_recording_status_in_header()
 
-    def stopPlayerFromKeyboard(self, from_update_thread=False):
+    def stopPlayerFromKeyboard(
+        self,
+        from_update_thread=False,
+        player_disappeared=False
+    ):
         ''' stops the player with a keyboard command
             Also used at self.player.play as a loopback function
             for the status update thread.
         '''
+        logger.error('stopPlayerFromKeyboard()!!!!!')
         self.player.stop_update_notification_thread = True
         self.player.stop_win_vlc_status_update_thread = True
         if from_update_thread:
@@ -2140,6 +2145,7 @@ class PyRadio(object):
         self._update_status_bar_right()
         if self.player.isPlaying():
             self.stopPlayer(show_message=True, from_update_thread=from_update_thread)
+        self._show_recording_status_in_header(player_disappeared=player_disappeared)
         # if from_update_thread and self.ws.operation_mode == self.ws.NORMAL_MODE:
         #     with self.log.lock:
         #         pass
@@ -2177,6 +2183,7 @@ class PyRadio(object):
             self.player.process = None
             if show_message:
                 self._show_player_is_stopped(from_update_thread)
+            self._show_recording_status_in_header()
 
     def _show_player_is_stopped(self, from_update_thread=False):
         if from_update_thread:
@@ -4429,7 +4436,12 @@ __|Remote Control Server| cannot be started!__
                  ____Please wait...'''
         self._show_help(txt, self.ws.BROWSER_PERFORMING_SEARCH_MODE, caption=' ', prompt=' ', is_message=True)
 
-    def _show_recording_status_in_header(self, from_header_update=False):
+    def _show_recording_status_in_header(
+        self,
+        from_header_update=False,
+        player_disappeared=False
+    ):
+        logger.info('player_disappeared = {}'.format(player_disappeared))
         if self.player.recording == 0:
             if not from_header_update:
                 try:
@@ -4440,13 +4452,20 @@ __|Remote Control Server| cannot be started!__
                     self.outerBodyWin.addstr(
                         0, 1, '───'.encode('utf-8'), curses.color_pair(13)
                     )
+            logger.info('w_header = " "')
         else:
             w_header = 'R' if self.player.isPlaying() else 'r'
+            if player_disappeared or \
+                    self.player.already_playing:
+                w_header = 'r'
+            logger.info('w_header = "{}"'.format(w_header))
             self.outerBodyWin.addstr(
                 0, 1, '[', curses.color_pair(13)
             )
             self.outerBodyWin.addstr(w_header, curses.color_pair(4))
             self.outerBodyWin.addstr(']', curses.color_pair(13))
+            if player_disappeared:
+                self.refreshBody()
 
     def _open_playlist(self, a_url=None):
         ''' open playlist
@@ -8541,6 +8560,13 @@ __|Remote Control Server| cannot be started!__
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == ord('|'):
                     self.player.recording = 1 if self.player.recording == 0 else 0
+                    if self.player.recording > 0:
+                        if self.player.isPlaying():
+                            self.player.already_playing = True
+                        else:
+                            self.player.already_playing = False
+                    else:
+                        self.player.already_playing = False
                     self._show_recording_status_in_header()
                     self._show_recording_toggle_window()
 
@@ -9054,6 +9080,7 @@ __|Remote Control Server| cannot be started!__
         return '<div class="alert alert-danger"><b>No stations in Playlist!</b>!</div>'
 
     def _start_player(self):
+        self.player.already_playing = False
         self._reset_status_bar_right()
         # self._show_recording_status_in_header()
         self.log.counter = None

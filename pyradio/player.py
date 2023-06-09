@@ -928,7 +928,10 @@ class Player(object):
             if detect_if_player_exited():
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('----==== MPV disappeared! ====----')
-                stop_player(from_update_thread=True)
+                stop_player(
+                    from_update_thread=True,
+                    player_disappeared = True
+                )
             else:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Crash detection is off; waiting to timeout')
@@ -2425,7 +2428,7 @@ class VlcPlayer(Player):
             ivol = int(vol)
             ovol = int(round(self.max_volume*ivol/100))
             if logger.isEnabledFor(logging.DEBUG):
-	            logger.debug('setting volume at {0}% ({1})'.format(ivol, ovol))
+                logger.debug('setting volume at {0}% ({1})'.format(ivol, ovol))
             if ovol != int(self.volume):
                 diff = 10 if ovol > int(self.volume) else -10
                 vols = [x + diff for x in range(int(self.volume), ovol, diff)]
