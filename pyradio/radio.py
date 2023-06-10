@@ -6203,11 +6203,16 @@ __|Remote Control Server| cannot be started!__
                       |being recorded| to a file.
                     '''
         else:
-            caption = ' Recording Disabled '
-            txt = '''
-                      Next time you play a station
-                      it will |NOT| be written to a file!
-            '''
+            if self.player.isPlaying() and \
+                    self.player._recording_name != '':
+                caption = ' Recording Disabled '
+                txt = '''
+                          Recording will actually continue until
+                          you stop the playback of the station!
+                '''
+            else:
+                self.refreshBody()
+                return
         self._show_help(txt,
                         mode_to_set=self.ws.RECORD_WINDOW_MODE,
                         caption=caption,
@@ -8563,19 +8568,22 @@ __|Remote Control Server| cannot be started!__
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == ord('|'):
-                    self.player.recording = 1 if self.player.recording == 0 else 0
-                    if self.player.recording > 0:
-                        if self.player.isPlaying():
-                            self.player.already_playing = True
+                    self._reset_status_bar_right()
+                    if self.player.PLAYER_NAME == 'mpv':
+                        self.player.recording = 1 if self.player.recording == 0 else 0
+                        if self.player.recording > 0:
+                            if self.player.isPlaying():
+                                self.player.already_playing = True
+                            else:
+                                self.player.already_playing = False
                         else:
                             self.player.already_playing = False
-                    else:
-                        self.player.already_playing = False
-                    self._show_recording_status_in_header()
-                    self._show_recording_toggle_window()
+                        self._show_recording_status_in_header()
+                        self._show_recording_toggle_window()
 
                 elif char == curses.ascii.BEL:
                     ''' ^G - show groups '''
+                    self._reset_status_bar_right()
                     self._group_selection_window = None
                     self._show_group_selection()
 
@@ -9105,6 +9113,7 @@ __|Remote Control Server| cannot be started!__
         self._show_recording_status_in_header()
         self.log.counter = None
         self._update_status_bar_right()
+        self.player._recording_name = ''
         self.player.muted = False
         if self.number_of_items > 0:
             if self.player.isPlaying():

@@ -260,6 +260,7 @@ class Player(object):
     RECORD_WITH_SILENCE = 2
     _recording = 0
     _recording_from_schedule = 0
+    _recording_name = ''
 
     name = ''
 
@@ -1388,7 +1389,7 @@ class Player(object):
              encoding=''
          ):
         ''' use a multimedia player to play a stream '''
-        logger.error('\n\nname = {}\n\n'.format(name))
+        self._recording_name = ''
         self.volume = -1
         self.close()
         self.name = name
