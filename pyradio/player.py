@@ -225,7 +225,7 @@ class Player(object):
     ''' make it possible to change volume but not show it '''
     show_volume = True
 
-    muted = False
+    muted = paused = False
 
     ctrl_c_pressed = False
 
@@ -1394,7 +1394,7 @@ class Player(object):
         self.close()
         self.name = name
         self.oldUserInput = {'Input': '', 'Volume': '', 'Title': ''}
-        self.muted = False
+        self.muted = self.paused = False
         self.show_volume = True
         self.title_prefix = ''
         self.playback_is_on = False
@@ -1609,27 +1609,54 @@ class Player(object):
         except:
             pass
 
-    def toggleMute(self):
-        ''' mute / unmute player '''
-
+    def togglePause(self):
         if self.PLAYER_NAME == 'mpv':
-            self.muted = self._mute()
+            self.paused = self._pause()
         elif self.PLAYER_NAME == 'vlc':
-            self._mute()
+            self._pause()
         else:
             self.muted = not self.muted
-            self._mute()
-        if self.muted:
-            self._stop_delay_thread()
-            self.title_prefix = '[Muted] '
+            self._pause()
+        if self.paused:
+            # self._stop_delay_thread()
+            self.title_prefix = '[Paused] '
             self.show_volume = False
+            self.muted = False
         else:
             self.title_prefix = ''
             self.show_volume = True
+        # logger.info('\n\nself.paused = {}\n\n'.format(self.paused))
         if self.oldUserInput['Title'] == '':
             self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']), counter='')
         else:
             self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']), counter='')
+
+    def toggleMute(self):
+        ''' mute / unmute player '''
+
+        if not self.paused:
+            if self.PLAYER_NAME == 'mpv':
+                self.muted = bool(self._mute())
+            elif self.PLAYER_NAME == 'vlc':
+                self._mute()
+            else:
+                self.muted = not self.muted
+                self._mute()
+            if self.muted:
+                self._stop_delay_thread()
+                self.title_prefix = '[Muted] '
+                self.show_volume = False
+            else:
+                self.title_prefix = ''
+                self.show_volume = True
+            logger.info('\n\nself.muted = {}\n\n'.format(self.muted))
+            if self.oldUserInput['Title'] == '':
+                self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']), counter='')
+            else:
+                self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Title']), counter='')
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Cannot toggle mute, player paused!')
 
     def _mute(self):
         ''' to be implemented on subclasses '''
@@ -1723,7 +1750,7 @@ class MpvPlayer(Player):
                 'volume_up':   b'{ "command": ["cycle", "volume", "up"], "request_id": 1000 }\n',
                 'volume_down': b'{ "command": ["cycle", "volume", "down"], "request_id": 1001 }\n',
                 'mute':        b'{ "command": ["cycle", "mute"], "request_id": 1002 }\n',
-                'pause':       b'{ "command": ["pause"], "request_id": 1003 }\n',
+                'pause':       b'{ "command": ["cycle", "pause"], "request_id": 1003 }\n',
                 'quit':        b'{ "command": ["quit"], "request_id": 1004}\n',
                 }
 
@@ -1862,6 +1889,55 @@ class MpvPlayer(Player):
             a_data = data
         return a_data
 
+    def _pause(self):
+        ''' pause mpv '''
+        ret = self._send_mpv_command('pause')
+        while not ret:
+            ret = self._send_mpv_command('pause')
+        return self._get_pause_status()
+
+    def _get_pause_status(self):
+        while True:
+            sock = self._connect_to_socket(self.mpvsocket)
+            try:
+                if platform.startswith('win'):
+                    win32file.WriteFile(sock, b'{ "command": ["get_property", "pause"], "request_id": 600 }\n')
+                else:
+                    sock.sendall(b'{ "command": ["get_property", "pause"], "request_id": 600 }\n')
+            except:
+                self._close_pipe(sock)
+                return
+            # wait for response
+
+            try:
+                if platform.startswith('win'):
+                    try:
+                        data = win32file.ReadFile(sock, 64*1024)
+                    except pywintypes.error as e:
+                        data = b''
+                else:
+                    if version_info < (3, 0):
+                        data = sock.recv(4096)
+                    else:
+                        data = sock.recvmsg(4096)
+                a_data = self._fix_returned_data(data)
+                # logger.error('DE Received: "{!r}"'.format(a_data))
+
+                if a_data:
+                    all_data = a_data.split(b'\n')
+                    for n in all_data:
+                        try:
+                            d = json.loads(n)
+                            if d['error'] == 'success':
+                                if isinstance(d['data'], bool):
+                                    self._close_pipe(sock)
+                                    return d['data']
+                        except:
+                            pass
+            finally:
+                pass
+            self._close_pipe(sock)
+
     def _mute(self):
         ''' mute mpv '''
         ret = self._send_mpv_command('mute')
@@ -1910,10 +1986,6 @@ class MpvPlayer(Player):
             finally:
                 pass
             self._close_pipe(sock)
-
-    def pause(self):
-        ''' pause streaming (if possible) '''
-        self._send_mpv_command('pause')
 
     def _stop(self):
         ''' kill mpv instance '''
@@ -2365,7 +2437,7 @@ class VlcPlayer(Player):
                 'using audio decoder module ': 'codec-name',
                 }
 
-        muted = False
+        muted = paused = False
 
         ''' String to denote volume change '''
         volume_string = '( audio volume: '

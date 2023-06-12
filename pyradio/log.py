@@ -73,7 +73,7 @@ class Log(object):
 
     def __init__(self, config, get_web_song_title):
         self._get_web_song_title = get_web_song_title
-        self._muted = False
+        self._muted = self._paused = False
         self._cnf = config
         self.width = None
         self._get_startup_window_title()

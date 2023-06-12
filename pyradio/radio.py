@@ -8821,8 +8821,18 @@ __|Remote Control Server| cannot be started!__
                     self._do_display_notify()
                     return
 
-                elif char in (ord(' '), curses.KEY_LEFT, ord('h')):
+                elif char in (curses.KEY_LEFT, ord('h')):
                     self._stop_player()
+                    return
+
+                elif char in (ord(' '), ):
+                    if self.player.isPlaying() and \
+                            self.player.playback_is_on and \
+                            self.player.recording and \
+                            self.player._recording_name != '':
+                        self._pause_player()
+                    else:
+                        self._stop_player()
                     return
 
                 elif char in (ord('x'), curses.KEY_DC):
@@ -9108,13 +9118,15 @@ __|Remote Control Server| cannot be started!__
         self._stop_player()
         return '<div class="alert alert-success">Player <b>stopped</b>!</div>'
 
+    def _pause_player(self):
+        self._reset_status_bar_right()
+        self.player.togglePause()
+
     def _stop_player(self):
         self._reset_status_bar_right()
         self._show_recording_status_in_header()
         self.log.counter = None
         self._update_status_bar_right()
-        self.player._recording_name = ''
-        self.player.muted = False
         if self.number_of_items > 0:
             if self.player.isPlaying():
                 self.stopPlayer(show_message=True)
@@ -9122,6 +9134,8 @@ __|Remote Control Server| cannot be started!__
                 self.detect_if_player_exited = True
                 self.playSelection()
             self.refreshBody()
+        self.player._recording_name = ''
+        self.player.muted = self.player.paused = False
 
     def _browser_config_not_modified(self):
         self.ws.close_window()
@@ -9504,6 +9518,8 @@ __|Remote Control Server| cannot be started!__
                 self.player.playback_is_on:
             if self.player.muted:
                 return '<div class="alert alert-danger">Player is <b>muted</b>; command not applicable</div>'
+            elif self.player.paused:
+                return '<div class="alert alert-danger">Player is <b>paused</b>; command not applicable</div>'
             else:
                 self.player.volumeUp()
                 return '<div class="alert alert-success">Volume <b>increased</b>!</div>'
@@ -9511,9 +9527,13 @@ __|Remote Control Server| cannot be started!__
             return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
     def _volume_up(self):
-        if self.player.isPlaying():
-            if self.player.playback_is_on:
+        if self.player.isPlaying() and \
+                self.player.playback_is_on:
+            if not self.player.paused:
                 self.player.volumeUp()
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Volume adjustment inhibited because playback is paused')
         else:
             if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
                 self.ws.close_window()
@@ -9526,6 +9546,8 @@ __|Remote Control Server| cannot be started!__
                 self.player.playback_is_on:
             if self.player.muted:
                 return '<div class="alert alert-danger">Player is <b>muted</b>; command not applicable</div>'
+            elif self.player.paused:
+                return '<div class="alert alert-danger">Player is <b>paused</b>; command not applicable</div>'
             else:
                 self.player.volumeDown()
                 return '<div class="alert alert-success">Volume <b>decreased</b>!</div>'
@@ -9533,9 +9555,13 @@ __|Remote Control Server| cannot be started!__
             return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
     def _volume_down(self):
-        if self.player.isPlaying():
-            if self.player.playback_is_on:
+        if self.player.isPlaying() and \
+                self.player.playback_is_on:
+            if not self.player.paused:
                 self.player.volumeDown()
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('Volume adjustment inhibited because playback is paused')
         else:
             if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
                 self.ws.close_window()
