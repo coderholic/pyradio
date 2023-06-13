@@ -10079,6 +10079,10 @@ __|Remote Control Server| cannot be started!__
                 )
             except:
                 pass
+        while self._remote_control_server is not None:
+            ret, _ = self._remote_control_server.close_server()
+            if ret:
+                self._remote_control_server = None
 
     def _windows_signal_handler(self, event):
         ''' windows signal handler
