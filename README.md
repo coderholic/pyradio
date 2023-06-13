@@ -70,6 +70,7 @@ If you face this situation, please refer to [this page](pip-error.md) to resolve
         * [pywal](#pywal)
         * [theme.sh](#theme.sh)
             * [Using the themes without theme.sh](#using-the-themes-without-theme.sh)
+* [Recording stations](#recording-stations)
 * [Mouse support](#mouse-support)
 * [Title logging](#title-logging)
     * [Tagging a title](#tagging-a-title)
@@ -243,6 +244,9 @@ Options:
     < >               Browse the Stations history list                 -                                  -
     t T               Load theme / Toggle transparency                 [Valid]                            [Valid]
     c                 Open Configuration window.                       -                                  -
+    | (vertical       Enable / disable recording
+       line or
+       pipe symbol)
     / n N             Search, go to next / previous result             [Valid]                            [Valid]
     J                 Create a jump tag
     <n>^U <n>^D       Move station up / down.                          -                                  -
@@ -1162,6 +1166,29 @@ When detected, four themes will be added to the menu; the main and the alternati
 In case one wants to use any of these themes, but not install or use [theme.sh](https://github.com/lemnos/theme.sh), one can download [this repo](https://github.com/s-n-g/theme-sh-pyradio), and use the "*create_themes.py*" script to create the themes, and "*cycle_themes.py*" and "*install_themes.py*" scripts to inspect and install them.
 
 For Windows users, this is the only way to use any of these "*Project Themes*", since their generation works on non-windows platforms only.
+
+## Recording stations
+
+**PyRadio** supports recording of stations, as much as this feature is provided by the players it supports.
+
+
+___
+
+**Berfore you continue, read this!**
+
+Generally, recording a radio streaming broadcast is considered legit, if the recording is to be used for personal use only (i.e. to listen to the broadcast at a later time).
+
+Distributing such a recording, is illegal. Broadcasting it is also illegal. Its reproduction before an audience is also illegal. In some countries/regions, it is also illegal to split or tag the songs in the recording.
+
+Please make sure you are informed about this topic, about what the law considers illegal at your country/region, **before using this feature!**
+
+**You have been warned!**
+
+**PyRadio**, its creator and maintainers do not condone any behavior that involves online piracy or copyright violation. This feature is provided strictly for personal use, and to utilize another requested feature: **pausing and resuming** playback.
+
+___
+
+Please refer to [this page](recording.md) to read more about his feature.
 
 ## Mouse support
 

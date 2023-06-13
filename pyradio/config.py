@@ -13,6 +13,10 @@ from datetime import datetime
 from shutil import copyfile, move, Error as shutil_Error
 import threading
 from copy import deepcopy
+from subprocess import Popen
+from platform import system
+if system().lower() == 'windows':
+    from os import stastfile
 from pyradio import version, stations_updated
 
 from .browser import PyRadioStationsBrowser, probeBrowsers
@@ -141,8 +145,13 @@ class PyRadioStations(object):
                 self.stations_dir = user_config_dir
             self.registers_dir = path.join(self.stations_dir, '.registers')
         self.data_dir = path.join(self.stations_dir, 'data')
+        self.recording_dir = path.join(self.stations_dir, 'recordings')
         ''' Make sure config dirs exists '''
-        for a_dir in (self.stations_dir, self.registers_dir, self.data_dir):
+        for a_dir in (self.stations_dir,
+                      self.registers_dir,
+                      self.data_dir,
+                      self.recording_dir
+                      ):
             if not path.exists(a_dir):
                 try:
                     makedirs(a_dir)
@@ -1775,6 +1784,14 @@ class PyRadioConfig(PyRadioStations):
             curses.mousemask(curses.ALL_MOUSE_EVENTS
                              | curses.REPORT_MOUSE_POSITION)
             #curses.mouseinterval(0)
+
+    def open_config_dir(self):
+        if system().lower() == 'windows':
+            startfile(self.stations_dir)
+        elif system().lower() == 'darwin':
+            Popen(['open', self.stations_dir])
+        else:
+            Popen(['xdg-open', self.stations_dir])
 
     def reset_profile_name(self):
         self._profile_name = 'pyradio'

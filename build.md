@@ -51,9 +51,9 @@ Moving to the **pipx** means:
 
 ### When do I need to install pipx?
 
-If you already have **PyRadio** installed, a subsequent update notification may lead to an installation failure. The same goes if you try to install **PyRadio** on a freshly installed Ubuntu 23.04 (or Debian Testing or any other distribution that ships its python "externally managed" in the future).
+If you already have **PyRadio** installed, a subsequent update notification may lead to an installation failure. The same goes if you try to install **PyRadio** on a freshly installed Ubuntu 23.04 (or Debian or any other distribution that ships its python "externally managed" in the future).
 
-This is what you get on Ubuntu 23.04 (and probably Debian Testing and any distribution based on them):
+This is what you get on Ubuntu 23.04 (and probably Debian and any distribution based on them):
 
 ```
 error: externally-managed-environment
@@ -134,9 +134,9 @@ Please follow the installation guides for your OS.
 
 1. Linux
     - [pip installation](linux.md) (the old way) \
-Not valid for **Debian Testing** and **Ubuntu 23.04**
+Not valid for **Debian** and **Ubuntu 23.04**
     - [pipx installation](linux-pipx.md) (the new way) \
-Valid for **Debian Testing** and **Ubuntu 23.04**
+Valid for **Debian** and **Ubuntu 23.04**
 2. MacOS \
 Follow the instructions on [this page](macos.md).
 3. Windows \

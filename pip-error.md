@@ -14,7 +14,7 @@ pyradio -R
 ```
 2. Install `pipx`. Since your distro has moved to this python installation change, it will probably have `pipx` in its repos. \
 \
-For Debian Testing, Ubuntu 23.04, etc, this would be the way to go:
+For Debian, Ubuntu 23.04, etc, this would be the way to go:
 
 ```
 sudo apt-get install python3-full python3-pip python3-venv pipx

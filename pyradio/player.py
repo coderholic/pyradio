@@ -260,7 +260,7 @@ class Player(object):
     RECORD_WITH_SILENCE = 2
     _recording = 0
     _recording_from_schedule = 0
-    _recording_name = ''
+    recording_filename = ''
 
     name = ''
 
@@ -309,9 +309,9 @@ class Player(object):
             self._recording = 0
         logger.error('\n\nsetting recording to {}'.format(self._recording))
 
-    def get_recording_name(self, name, extension):
-        f = datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + "-" + name + extension
-        return os.path.join(self._cnf.stations_dir, f)
+    def getrecording_filename(self, name, extension):
+        f = datetime.now().strftime('%Y-%m-%d %H-%M-%S') + " " + name + extension
+        return os.path.join(self._cnf.recording_dir, f)
 
     def _get_all_config_files(self):
         ''' MPV config files '''
@@ -1389,7 +1389,7 @@ class Player(object):
              encoding=''
          ):
         ''' use a multimedia player to play a stream '''
-        self._recording_name = ''
+        self.recording_filename = ''
         self.volume = -1
         self.close()
         self.name = name
@@ -1771,7 +1771,7 @@ class MpvPlayer(Player):
             history_add_function
         )
         self.config_files = self.all_config_files['mpv']
-        self._recording_name = ''
+        self.recording_filename = ''
         logger.error('\n\nMPV recording = {}\n\n'.format(self._recording))
 
     def save_volume(self):
@@ -1872,10 +1872,10 @@ class MpvPlayer(Player):
 
         logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
-            self._recording_name = self.get_recording_name(self.name, '.mkv')
-            opts.append('--stream-record=' + self._recording_name)
+            self.recording_filename = self.getrecording_filename(self.name, '.mkv')
+            opts.append('--stream-record=' + self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('---=== Starting Recording: "{}" ===---',format(self._recording_name))
+                logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
         return opts
 
 

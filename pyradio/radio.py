@@ -1030,7 +1030,10 @@ class PyRadio(object):
             self.bodyWin.erase()
             if self.player.isPlaying():
                 try:
-                    self.bodyWin.addstr(self.maxY - 2, 0, ' Station: ', curses.color_pair(5))
+                    if self.player.recording and self.player.recording_filename:
+                        self.bodyWin.addstr(self.maxY - 2, 0, ' Recording Station: ', curses.color_pair(5))
+                    else:
+                        self.bodyWin.addstr(self.maxY - 2, 0, ' Station: ', curses.color_pair(5))
                     self.bodyWin.addstr(self._last_played_station[0], curses.color_pair(4))
                 except:
                     pass
@@ -1038,6 +1041,10 @@ class PyRadio(object):
                 try:
                     self.bodyWin.addstr(self.maxY - 2, 0, ' Status: ', curses.color_pair(5))
                     self.bodyWin.addstr('Idle', curses.color_pair(4))
+                    if self.player.recording:
+                        self.bodyWin.addstr(' (', curses.color_pair(5))
+                        self.bodyWin.addstr('recording enabled', curses.color_pair(4))
+                        self.bodyWin.addstr(')', curses.color_pair(5))
                 except:
                     pass
             if self.maxY - 3 >= 0:
@@ -2960,7 +2967,10 @@ __|Remote Control Server| cannot be started!__
                         reset_metrics=False)
 
     def _show_main_help_page_5(self, from_keyboard=False):
-        txt = '''!Change Player
+        txt = '''!Recording
+                 Veritcal line    |Enable / disable |recording|.
+                 Space            |Pause / resume playback.
+                 !Change Player
                  \m               |Open the |Player Selection| window.
                  !Remote Control Server
                  \s               |Start/Stop the |Server|.
@@ -2972,7 +2982,6 @@ __|Remote Control Server| cannot be started!__
                  ^E |/ |^Y          |Go to next /previous |Group|.
                  ^G               |Open the |Group Selection| window.
                  !Windows Only
-                 F7               |Delete old installation files.
                  F8               |Players management.
                  F9               |Show |EXE| location.
                  F10              |Uninstall |PyRadio|.'''
@@ -4441,6 +4450,9 @@ __|Remote Control Server| cannot be started!__
         from_header_update=False,
         player_disappeared=False
     ):
+        if self._limited_height_mode or \
+                self._limited_width_mode:
+            return
         logger.info('player_disappeared = {}'.format(player_disappeared))
         if self.player.recording == 0:
             if not from_header_update:
@@ -6204,7 +6216,7 @@ __|Remote Control Server| cannot be started!__
                     '''
         else:
             if self.player.isPlaying() and \
-                    self.player._recording_name != '':
+                    self.player.recording_filename != '':
                 caption = ' Recording Disabled '
                 txt = '''
                           Recording will actually continue until
@@ -6504,10 +6516,16 @@ __|Remote Control Server| cannot be started!__
 
         ''' if small exit '''
         if self._limited_height_mode or self._limited_width_mode:
-            if char == ord(' ') \
-                    and self.player.isPlaying():
-                self.stopPlayer()
+            if char == ord(' '):
+                if self.player.isPlaying() and \
+                        self.player.playback_is_on and \
+                        self.player.recording and \
+                        self.player.recording_filename != '':
+                    self._pause_player()
+                else:
+                    self._stop_player()
                 self.refreshBody()
+
             elif char in self._global_functions.keys():
                 self._global_functions[char]()
             return
@@ -6644,6 +6662,9 @@ __|Remote Control Server| cannot be started!__
         elif self._backslash_pressed and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                 self.ws.PLAYLIST_MODE):
+
+            if char == ord('o'):
+                self._cnf.open_config_dir()
 
             if char == ord('m') and \
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -8670,7 +8691,7 @@ __|Remote Control Server| cannot be started!__
                     self._show_win_uninstall()
 
                 elif char == curses.KEY_F7 and platform.startswith('win'):
-                    ''' uninstall on Windows '''
+                    ''' delete old installation files on Windows '''
                     self._show_win_remove_old_installation()
 
                 elif char in (ord('a'), ord('A')):
@@ -8829,7 +8850,7 @@ __|Remote Control Server| cannot be started!__
                     if self.player.isPlaying() and \
                             self.player.playback_is_on and \
                             self.player.recording and \
-                            self.player._recording_name != '':
+                            self.player.recording_filename != '':
                         self._pause_player()
                     else:
                         self._stop_player()
@@ -9134,7 +9155,7 @@ __|Remote Control Server| cannot be started!__
                 self.detect_if_player_exited = True
                 self.playSelection()
             self.refreshBody()
-        self.player._recording_name = ''
+        self.player.recording_filename = ''
         self.player.muted = self.player.paused = False
 
     def _browser_config_not_modified(self):
