@@ -1,3 +1,11 @@
+2023-06-13 s-n-g
+    * version 0.9.2.8
+    * \o will open the config directory in a file manager
+    * implementing station recording vor MPV media player
+    * implementing playback pause for MPV media player, when
+      player in recording mode
+    * fixing Windows installayion scripts
+
 2023-06-05 s-n-g
     * version 0.9.2.7
     * fixing a couple of install.py potential crashes
