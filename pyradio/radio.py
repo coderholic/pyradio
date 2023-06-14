@@ -1822,6 +1822,17 @@ class PyRadio(object):
 
     def ctrl_c_handler(self, signum, frame, save_playlist=True):
         # ok
+        logger.error('signum = {}'.format(signum))
+        logger.error('frame = {}'.format(frame))
+        self.player.stop_update_notification_thread = True
+        self.player.stop_win_vlc_status_update_thread = True
+        if self.player:
+            # ok
+            self.detect_if_player_exited = False
+            self.stopPlayer(
+                show_message=False,
+                reset_playing=False
+            )
         self._cls_update_stations = None
         self.detect_if_player_exited = False
         if self._cnf.dirty_playlist and save_playlist:
@@ -1872,6 +1883,11 @@ class PyRadio(object):
             except AttributeError:
                 pass
         self.stop_update_notification_thread = True
+        try:
+            while self.log._desktop_notification_thread.is_alive():
+                self.log._stop_desktop_notification_thread = True
+        except:
+            self.log._stop_desktop_notification_thread = True
 
     def _goto_playing_station(self, changing_playlist=False):
         ''' make sure playing station is visible '''
@@ -10047,12 +10063,32 @@ __|Remote Control Server| cannot be started!__
 
     def _linux_signal_handler(self, a_signal, a_frame):
         logger.error('DE ----==== _linux_signal_handler  ====----')
+
+        # self.ctrl_c_handler(0,0, True)
+        # for a_sig in self.handled_signals.keys():
+        #     try:
+        #         signal.signal(
+        #             self.handled_signals[a_sig],
+        #             self.def_signal_handlers[a_sig]
+        #         )
+        #     except:
+        #         pass
+        # return
+        self._cls_update_stations = None
+        self.detect_if_player_exited = False
         self.log._stop_desktop_notification_thread = True
+        self.player.stop_update_notification_thread = True
+        self.player.stop_win_vlc_status_update_thread = True
+        if self.player:
+            # ok
+            self.detect_if_player_exited = False
+            self.stopPlayer(
+                show_message=False,
+                reset_playing=False
+            )
         if self._system_asked_to_terminate:
             return
         self._system_asked_to_terminate = True
-        self.player.stop_update_notification_thread = True
-        self.player.stop_win_vlc_status_update_thread = True
         if logger.isEnabledFor(logging.INFO):
             # logger.info('System asked me to terminate (signal: {})!!!'.format(list(self.handled_signals.keys())[list(self.handled_signals.values()).index(a_signal)]))
             logger.info('My terminal got closed... Terminating...')
@@ -10069,7 +10105,6 @@ __|Remote Control Server| cannot be started!__
                     sel._cnf.online_browser = None
         self.player.close()
         self._cnf.save_config()
-        #self._wait_for_threads()
         self._cnf.remove_session_lock_file()
         for a_sig in self.handled_signals.keys():
             try:
@@ -10083,6 +10118,7 @@ __|Remote Control Server| cannot be started!__
             ret, _ = self._remote_control_server.close_server()
             if ret:
                 self._remote_control_server = None
+        self._wait_for_threads()
 
     def _windows_signal_handler(self, event):
         ''' windows signal handler

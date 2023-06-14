@@ -1,8 +1,36 @@
 # -*- coding: utf-8 -*-
 import curses
 import curses.ascii
+from sys import exit
 from datetime import date, time, datetime, timedelta
-from dateutil.relativedelta import relativedelta
+try:
+    from dateutil.relativedelta import relativedelta
+except:
+    print('''Error: Module "dateutil" not found!
+
+Please install the above module and try again.
+
+Debian based distros:
+sudo apt install python3-dateutil
+
+Arch based distros:
+sudo pacman install python-dateutil
+
+Fedora based distros:
+sudo dnf install python-dateutil
+
+openSUSE based distros:
+sudo zypper install python3-dateutil
+
+If everything else fails, try:
+python -m pip install dateutil
+or
+python3 -m pip install dateutil
+or even
+python -m pip install --user dateutil
+
+''')
+    exit(1)
 import logging
 from sys import version_info, platform, version
 # try:

@@ -1,3 +1,11 @@
+2023-06-14 s-n-g
+    * version 0.9.2.10
+    * all PyRadio threads will terminate when Alt-F4 or the
+      close button is used to close the program
+    * adding a message about dateutil module missing
+    * fixing a Windows error that has made PyRadio unusable
+      on Windows
+
 2023-06-13 s-n-g
     * version 0.9.2.9
     * fixing: Remote Control Server does not terminate when

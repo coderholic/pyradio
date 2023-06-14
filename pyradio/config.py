@@ -16,7 +16,7 @@ from copy import deepcopy
 from subprocess import Popen
 from platform import system
 if system().lower() == 'windows':
-    from os import stastfile
+    from os import startfile
 from pyradio import version, stations_updated
 
 from .browser import PyRadioStationsBrowser, probeBrowsers
