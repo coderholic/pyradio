@@ -232,7 +232,8 @@ class Player(object):
     ''' When found in station transmission, playback is on
         These strings are used by MPlayer
      '''
-    _playback_token_tuple = ( 'AO: [', 'Cache size')
+    _playback_token_tuple = ( 'AO: [', )
+    # _playback_token_tuple = ( 'AO: [', 'Cache size')
 
     icy_tokens = ()
     icy_audio_tokens = {}
@@ -733,11 +734,17 @@ class Player(object):
                             title = self._format_title_string(subsystemOut)
                             # logger.error('DE title = "{}"'.format(title))
                             ok_to_display = False
+                            self.stop_timeout_counter_thread = True
+                            try:
+                                self.connection_timeout_thread.join()
+                            except:
+                                pass
                             if not self.playback_is_on:
                                 if logger.isEnabledFor(logging.INFO):
                                     logger.info('*** updateStatus(): Start of playback detected (Icy-Title received) ***')
                             self.playback_is_on = True
                             self.connecting = False
+                            self._stop_delay_thread()
                             self.stations_history_add_function()
                             ''' detect empty Icy-Title '''
                             title_without_prefix = title[len(self.icy_title_prefix):].strip()
@@ -780,6 +787,11 @@ class Player(object):
                                 if not self.playback_is_on:
                                     if logger.isEnabledFor(logging.INFO):
                                         logger.info('*** updateStatus(): Start of playback detected (Icy audio token received) ***')
+                                self.stop_timeout_counter_thread = True
+                                try:
+                                    self.connection_timeout_thread.join()
+                                except:
+                                    pass
                                 self.playback_is_on = True
                                 self.connecting = False
                                 self.stations_history_add_function()
@@ -1065,6 +1077,11 @@ class Player(object):
                         if stop():
                             break
                         if not self.playback_is_on:
+                            self.stop_timeout_counter_thread = True
+                            try:
+                                self.connection_timeout_thread.join()
+                            except:
+                                pass
                             if logger.isEnabledFor(logging.INFO):
                                 logger.info('*** updateWinVLCStatus(): Start of playback detected (Icy-Title received) ***')
                         self.stop_timeout_counter_thread = True
@@ -1110,14 +1127,14 @@ class Player(object):
                             break
                         for a_token in self.icy_audio_tokens.keys():
                             if a_token in subsystemOut:
-                                if not self.playback_is_on:
-                                    if logger.isEnabledFor(logging.INFO):
-                                        logger.info('*** updateWinVLCStatus(): Start of playback detected (Icy audio token received) ***')
                                 self.stop_timeout_counter_thread = True
                                 try:
                                     self.connection_timeout_thread.join()
                                 except:
                                     pass
+                                if not self.playback_is_on:
+                                    if logger.isEnabledFor(logging.INFO):
+                                        logger.info('*** updateWinVLCStatus(): Start of playback detected (Icy audio token received) ***')
                                 self.playback_is_on = True
                                 self.connecting = False
                                 self._stop_delay_thread()
@@ -1321,6 +1338,11 @@ class Player(object):
         self.detect_if_player_exited = True
         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
                     logger.info('*** _set_mpv_playback_is_on(): Start of playback detected ***')
+        self.stop_timeout_counter_thread = True
+        try:
+            self.connection_timeout_thread.join()
+        except:
+            pass
         self.stations_history_add_function()
         new_input = 'Playing: ' + self.name
         self.outputStream.write(msg=new_input, counter='')
@@ -2340,9 +2362,10 @@ class MpPlayer(Player):
             for a_param in params:
                 opts.append(a_param)
 
-        # opts.append('-dumpstream')
-        # opts.append('-dumpfile')
-        # opts.append('/home/spiros/.config/pyradio/rec.mkv')
+        #opts.append('-dumpstream')
+        #opts.append('-dumpfile')
+        #opts.append('/home/spiros/.config/pyradio/recordings/rec.mkv')
+        ## opts.append(r'C:\Users\Spiros\AppData\Roaming\pyradio\recordings\rec.mkv')
         return opts
 
     def _mute(self):
@@ -2456,14 +2479,16 @@ class VlcPlayer(Player):
                 # 'main audio ',
                 # 'Content-Type: audio',
                 ' Segment #',
-                'using audio decoder module'
+                'using audio decoder module',
+                'answer code 200'
             )
         else:
             _playback_token_tuple = (
                 # 'Content-Type: audio',
                 ' Segment #',
                 'using audio filter module',
-                'using audio decoder module'
+                'using audio decoder module',
+                'answer code 200'
             )
 
         ''' Windows only variables '''
@@ -2580,8 +2605,9 @@ class VlcPlayer(Player):
                 for a_param in params:
                     opts.append(a_param)
 
-        # opts.append('--sout')
-        # opts.append('file/ps:/home/spiros/.config/pyradio/rec.mp4')
+        #opts.append('--sout')
+        #opts.append('file/ts:/home/spiros/.config/pyradio/recordings/rec.mkv')
+        ## opts.append(r'file/ts:C:\Users\Spiros\AppData\Roaming\pyradio\recordings\rec.mkv')
         return opts
 
     def _mute(self):
