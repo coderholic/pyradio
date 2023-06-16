@@ -229,8 +229,10 @@ class Player(object):
 
     ctrl_c_pressed = False
 
-    ''' When found in station transmission, playback is on '''
-    _playback_token_tuple = ( 'AO: [', )
+    ''' When found in station transmission, playback is on
+        These strings are used by MPlayer
+     '''
+    _playback_token_tuple = ( 'AO: [', 'Cache size')
 
     icy_tokens = ()
     icy_audio_tokens = {}
@@ -646,6 +648,7 @@ class Player(object):
                     continue
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
+                logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
 
                 if self.oldUserInput['Input'] != subsystemOut:
                     if (logger.isEnabledFor(logging.DEBUG)):
