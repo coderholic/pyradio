@@ -7,10 +7,11 @@ from time import sleep
 from .simple_curses_widgets import SimpleCursesLineEdit
 
 PY2 = version_info[0] == 2
-logger = logging.getLogger(__name__)
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
+
+logger = logging.getLogger(__name__)
 
 HAS_NETIFACES = True
 try:

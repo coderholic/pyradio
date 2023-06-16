@@ -53,12 +53,12 @@ except:
     except:
         CAN_CHECK_FOR_UPDATES = False
 
-logger = logging.getLogger(__name__)
-
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
-from .server import *
+logger = logging.getLogger(__name__)
+
+from .server import IPs, PyRadioServer, HAS_NETIFACES
 
 def rel(path):
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
@@ -805,11 +805,12 @@ class PyRadio(object):
 
     def setup(self, stdscr):
         if logger.isEnabledFor(logging.INFO):
+            ver = self._cnf.get_pyradio_version()
             logger.info('<<<===---  Program start  ---===>>>')
             if self._cnf.distro == 'None':
-                logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), system()))
+                logger.info("PyRadio {0}: TUI initialization on python v. {1} on {2}".format(self._cnf.current_pyradio_version, python_version.replace('\n', ' ').replace('\r', ' '), system()))
             else:
-                logger.info("TUI initialization on python v. {0} on {1}".format(python_version.replace('\n', ' ').replace('\r', ' '), self._cnf.distro))
+                logger.info("PyRadio {0}: TUI initialization on python v. {1} on {2}".format(self._cnf.current_pyradio_version, python_version.replace('\n', ' ').replace('\r', ' '), self._cnf.distro))
         self.setup_return_status = True
         if not curses.has_colors():
             self.setup_return_status = False
@@ -1822,6 +1823,8 @@ class PyRadio(object):
 
     def ctrl_c_handler(self, signum, frame, save_playlist=True):
         # ok
+        if self._cnf.titles_log.titles_handler:
+            logger.critical('=== Logging stopped')
         logger.error('signum = {}'.format(signum))
         logger.error('frame = {}'.format(frame))
         self.player.stop_update_notification_thread = True
@@ -10064,6 +10067,8 @@ __|Remote Control Server| cannot be started!__
     def _linux_signal_handler(self, a_signal, a_frame):
         logger.error('DE ----==== _linux_signal_handler  ====----')
 
+        if self._cnf.titles_log.titles_handler:
+            logger.critical('=== Logging stopped')
         # self.ctrl_c_handler(0,0, True)
         # for a_sig in self.handled_signals.keys():
         #     try:
@@ -10124,6 +10129,8 @@ __|Remote Control Server| cannot be started!__
         ''' windows signal handler
             https://danielkaes.wordpress.com/2009/06/04/how-to-catch-kill-events-with-python/
         '''
+        if self._cnf.titles_log.titles_handler:
+            logger.critical('=== Logging stopped')
         self.log._stop_desktop_notification_thread = True
         import win32con, win32api
         if event in (win32con.CTRL_C_EVENT,
