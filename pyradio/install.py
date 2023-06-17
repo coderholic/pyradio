@@ -484,7 +484,14 @@ def open_cache_dir():
     elif platform.system().lower() == 'darwin':
         subprocess.Popen(['open', c.cache_dir])
     else:
-        subprocess.Popen(['xdg-open', c.cache_dir])
+        try:
+            subprocess.Popen(
+                ['xdg-open', c.cache_dir],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except:
+            subprocess.Popen(['xdg-open', c.cache_dir])
 
 
 class PyRadioCache(object):

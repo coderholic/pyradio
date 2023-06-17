@@ -1048,7 +1048,14 @@ def open_conf_dir(cnf):
     elif platform.system().lower() == 'darwin':
         subprocess.Popen(['open', cnf.stations_dir])
     else:
-        subprocess.Popen(['xdg-open', cnf.stations_dir])
+        try:
+            subprocess.Popen(
+                ['xdg-open', cnf.stations_dir],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except:
+            subprocess.Popen(['xdg-open', cnf.stations_dir])
 
 def get_format_string(stations):
     len0 = len1 = 0

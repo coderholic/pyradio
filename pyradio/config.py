@@ -13,7 +13,7 @@ from datetime import datetime
 from shutil import copyfile, move, Error as shutil_Error
 import threading
 from copy import deepcopy
-from subprocess import Popen
+from subprocess import Popen, DEVNULL
 from platform import system
 if system().lower() == 'windows':
     from os import startfile
@@ -1791,7 +1791,14 @@ class PyRadioConfig(PyRadioStations):
         elif system().lower() == 'darwin':
             Popen(['open', self.stations_dir])
         else:
-            Popen(['xdg-open', self.stations_dir])
+            try:
+                Popen(['xdg-open', self.stations_dir])
+            except:
+                Popen(
+                    ['xdg-open', self.stations_dir],
+                    stderr=DEVNULL,
+                    stdout=DEVNULL
+                )
 
     def reset_profile_name(self):
         self._profile_name = 'pyradio'
