@@ -3335,6 +3335,7 @@ __|Remote Control Server| cannot be started!__
                      r      ||R|ename current playlist.
                      C      ||C|lear all registers.
                      u      |Show |U|nnamed Register.
+                     o      ||O|pen  config dir in file manager.
 
                     |Any other key exits current mode.
                   '''
@@ -3348,6 +3349,7 @@ __|Remote Control Server| cannot be started!__
                          c      |Clear |c|urrent register.
                          C      ||C|lear all registers.
                          u      |Show |U|nnamed Register.
+                         o      ||O|pen  config dir in file manager.
 
                         |Any other key exits current mode.
                        '''
@@ -3356,6 +3358,7 @@ __|Remote Control Server| cannot be started!__
                          p      ||P|aste to current playlist.
                          r      ||R|ename current playlist.
                          u      |Show |U|nnamed Register.
+                         o      ||O|pen  config dir in file manager.
 
                         |Any other key exits current mode.
                        '''
@@ -4470,6 +4473,7 @@ __|Remote Control Server| cannot be started!__
         from_header_update=False,
         player_disappeared=False
     ):
+        logger.error('\n\n')
         if self._limited_height_mode or \
                 self._limited_width_mode:
             return
@@ -4497,6 +4501,7 @@ __|Remote Control Server| cannot be started!__
             self.outerBodyWin.addstr(w_header, curses.color_pair(4))
             self.outerBodyWin.addstr(']', curses.color_pair(13))
             if player_disappeared:
+                logger.error('with refreshBody')
                 self.refreshBody()
 
     def _open_playlist(self, a_url=None):
@@ -8610,17 +8615,17 @@ __|Remote Control Server| cannot be started!__
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == ord('|'):
                     self._reset_status_bar_right()
-                    if self.player.PLAYER_NAME == 'mpv':
-                        self.player.recording = 1 if self.player.recording == 0 else 0
-                        if self.player.recording > 0:
-                            if self.player.isPlaying():
-                                self.player.already_playing = True
-                            else:
-                                self.player.already_playing = False
+                    # if self.player.PLAYER_NAME == 'mpv':
+                    self.player.recording = 1 if self.player.recording == 0 else 0
+                    if self.player.recording > 0:
+                        if self.player.isPlaying():
+                            self.player.already_playing = True
                         else:
                             self.player.already_playing = False
-                        self._show_recording_status_in_header()
-                        self._show_recording_toggle_window()
+                    else:
+                        self.player.already_playing = False
+                    self._show_recording_status_in_header()
+                    self._show_recording_toggle_window()
 
                 elif char == curses.ascii.BEL:
                     ''' ^G - show groups '''

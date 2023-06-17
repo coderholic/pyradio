@@ -620,6 +620,12 @@ class Player(object):
                 return True
         return False
 
+    def _clear_empty_mkv(self):
+        if self.recording > 0 and self.recording_filename:
+            if os.path.exists(self.recording_filename):
+                if os.path.getsize(self.recording_filename) == 0:
+                    os.remove(self.recording_filename)
+
     def updateStatus(self, *args):
         stop = args[0]
         process = args[1]
@@ -649,7 +655,7 @@ class Player(object):
                     continue
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
-                logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
 
                 if self.oldUserInput['Input'] != subsystemOut:
                     if (logger.isEnabledFor(logging.DEBUG)):
@@ -836,7 +842,10 @@ class Player(object):
                         if detect_if_player_exited():
                             if logger.isEnabledFor(logging.INFO):
                                 logger.info('----==== player disappeared! ====----')
-                            stop_player(from_update_thread=True)
+                            stop_player(
+                                from_update_thread=True,
+                                player_disappeared=True
+                            )
                         else:
                             if logger.isEnabledFor(logging.INFO):
                                 logger.info('Crash detection is off; waiting to timeout')
@@ -845,12 +854,16 @@ class Player(object):
                     if detect_if_player_exited():
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('----==== player disappeared! ====----')
-                        stop_player(from_update_thread=True)
+                        stop_player(
+                            from_update_thread=True,
+                            player_disappeared = True
+                        )
                     else:
                         if logger.isEnabledFor(logging.INFO):
                             logger.info('Crash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('updateStatus thread stopped.')
+        self._clear_empty_mkv()
 
     def updateMPVStatus(self, *args):
         stop = args[0]
@@ -953,6 +966,7 @@ class Player(object):
                     logger.info('Crash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('MPV updateStatus thread stopped.')
+        self._clear_empty_mkv()
 
     def _close_pipe(self, sock):
         if platform.startswith('win'):
@@ -1174,6 +1188,7 @@ class Player(object):
             fp.close()
         except:
             pass
+        self._clear_empty_mkv()
 
     def _request_mpv_info_data(self, sock):
         with self.status_update_lock:
@@ -2340,17 +2355,20 @@ class MpPlayer(Player):
         if self.USE_PROFILE == -1:
             self.USE_PROFILE = self._configHasProfile()
 
-        if self.USE_PROFILE == 1:
-            opts.append('-profile')
-            opts.append(self.profile_name)
-            if (logger.isEnabledFor(logging.INFO)):
-                logger.info('Using profile: "[{}]"'.format(self.profile_name))
+        if self._recording == self.RECORD_WITH_SILENCE:
+            opts.append('--profile=silent')
         else:
-            if (logger.isEnabledFor(logging.INFO)):
-                if self.USE_PROFILE == 0:
-                    logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
-                else:
-                    logger.info('No usable profile found')
+            if self.USE_PROFILE == 1:
+                opts.append('-profile')
+                opts.append(self.profile_name)
+                if (logger.isEnabledFor(logging.INFO)):
+                    logger.info('Using profile: "[{}]"'.format(self.profile_name))
+            else:
+                if (logger.isEnabledFor(logging.INFO)):
+                    if self.USE_PROFILE == 0:
+                        logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
+                    else:
+                        logger.info('No usable profile found')
 
         if playList:
             opts.append('-playlist')
@@ -2366,6 +2384,14 @@ class MpPlayer(Player):
         #opts.append('-dumpfile')
         #opts.append('/home/spiros/.config/pyradio/recordings/rec.mkv')
         ## opts.append(r'C:\Users\Spiros\AppData\Roaming\pyradio\recordings\rec.mkv')
+        logger.error('\n\nself._recording = {}'.format(self._recording))
+        if self._recording > 0:
+            self.recording_filename = self.getrecording_filename(self.name, '.mkv')
+            opts.append('-dumpstream')
+            opts.append('-dumpfile')
+            opts.append(self.recording_filename)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
         return opts
 
     def _mute(self):
@@ -2608,6 +2634,14 @@ class VlcPlayer(Player):
         #opts.append('--sout')
         #opts.append('file/ts:/home/spiros/.config/pyradio/recordings/rec.mkv')
         ## opts.append(r'file/ts:C:\Users\Spiros\AppData\Roaming\pyradio\recordings\rec.mkv')
+        logger.error('\n\nself._recording = {}'.format(self._recording))
+        if self._recording > 0:
+            self.recording_filename = self.getrecording_filename(self.name, '.mkv')
+            opts.append('--sout')
+            opts.append(r'file/ts:' + self.recording_filename)
+            opts.append(self.recording_filename)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
         return opts
 
     def _mute(self):
