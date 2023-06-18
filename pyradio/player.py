@@ -297,6 +297,9 @@ class Player(object):
             from .del_vlc_log import RemoveWinVlcLogFiles
             threading.Thread(target=RemoveWinVlcLogFiles(self.config_dir)).start()
 
+        ''' Recording monitor player for MPlayer and VLC '''
+        self.monitor = self.monitor_process = self.monitor_opts = None
+
     @property
     def recording(self):
         if self._recording_from_schedule > 0:
@@ -1429,6 +1432,7 @@ class Player(object):
              encoding=''
          ):
         ''' use a multimedia player to play a stream '''
+        self.monitor = self.monitor_process = self.monitor_opts = None
         self.recording_filename = ''
         self.volume = -1
         self.close()
@@ -1449,7 +1453,7 @@ class Player(object):
             self._station_encoding = self.config_encoding
         opts = []
         isPlayList = streamUrl.split("?")[0][-3:] in ['m3u', 'pls']
-        opts = self._buildStartOpts(streamUrl, isPlayList)
+        opts, self.monitor_opts = self._buildStartOpts(streamUrl, isPlayList)
         self.stop_mpv_status_update_thread = False
         if logger.isEnabledFor(logging.INFO):
             logger.info('Executing command: {}'.format(' '.join(opts)))
@@ -1535,19 +1539,26 @@ class Player(object):
                 logger.debug('playback detection thread not starting (timeout is 0)')
         if logger.isEnabledFor(logging.INFO):
             logger.info('----==== {} player started ====----'.format(self.PLAYER_NAME))
+        if self.recording == self.RECORD_AND_LISTEN \
+                and self.PLAYER_NAME != 'mpv':
+            threading.Thread(
+                    target=self.create_monitor_player,
+                    args=(lambda: self.stop_mpv_status_update_thread or \
+                            self.stop_win_vlc_status_update_thread,  )
+                    ).start()
 
     def _sendCommand(self, command):
         ''' send keystroke command to player '''
-
-        if(self.process is not None):
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Sending Command: {}'.format(command).strip())
-            try:
-                self.process.stdin.write(command.encode('utf-8', 'replace'))
-                self.process.stdin.flush()
-            except:
-                if logger.isEnabledFor(logging.ERROR):
-                    logger.error('Error while sending Command: {}'.format(command).strip(), exc_info=True)
+        for a_process in (self.process, self.monitor_process):
+            if a_process is not None:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Sending Command: {}'.format(command).strip())
+                try:
+                    a_process.stdin.write(command.encode('utf-8', 'replace'))
+                    a_process.stdin.flush()
+                except:
+                    if logger.isEnabledFor(logging.ERROR):
+                        logger.error('Error while sending Command: {}'.format(command).strip(), exc_info=True)
 
     def close_from_windows(self):
         ''' kill player instance when window console is closed '''
@@ -1582,6 +1593,13 @@ class Player(object):
                 pass
             finally:
                 self.update_thread = None
+        if self.monitor_process is not None:
+            self._kill_process_tree(self.monitor_process.pid)
+            try:
+                self.monitor_process.wait()
+            except:
+                pass
+        self.monitor = self.monitor_process = self.monitor_opts = None
 
     def _kill_process_tree(self, pid):
         if psutil.pid_exists(pid):
@@ -1653,9 +1671,10 @@ class Player(object):
         if self.PLAYER_NAME == 'mpv':
             self.paused = self._pause()
         elif self.PLAYER_NAME == 'vlc':
+            self.paused = not self.paused
             self._pause()
         else:
-            self.muted = not self.muted
+            self.paused = not self.paused
             self._pause()
         if self.paused:
             # self._stop_delay_thread()
@@ -1916,7 +1935,7 @@ class MpvPlayer(Player):
             opts.append('--stream-record=' + self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
-        return opts
+        return opts, None
 
 
     def _fix_returned_data(self, data):
@@ -2034,6 +2053,7 @@ class MpvPlayer(Player):
         if not platform.startswith('win'):
             os.system('rm ' + self.mpvsocket + ' 2>/dev/null');
         self._icy_data = {}
+        self.monitor = self.monitor_process = self.monitor_opts = None
 
     def _volume_up(self):
         ''' increase mpv's volume '''
@@ -2296,6 +2316,29 @@ class MpPlayer(Player):
         )
         self.config_files = self.all_config_files['mplayer']
 
+    def create_monitor_player(self, stop):
+        while not os.path.exists(self.recording_filename):
+            sleep(.1)
+            if stop():
+                logger.error('Asked to stop. Exiting....')
+                return
+        while os.path.getsize(self.recording_filename) < 500:
+            sleep(.1)
+            if stop():
+                logger.error('Asked to stop. Exiting....')
+                return
+        if stop():
+            logger.error('Asked to stop. Exiting....')
+            return
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('----==== {} monitor started ====----'.format(self.PLAYER_NAME))
+        self.monitor_process = subprocess.Popen(
+            self.monitor_opts, shell=False,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.STDOUT
+        )
+
     def save_volume(self):
         if platform.startswith('win'):
             return self._do_save_volume('volume={}\r\n')
@@ -2342,6 +2385,7 @@ class MpPlayer(Player):
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
         opts = [self.PLAYER_CMD, '-vo', 'null', '-quiet']
+        monitor_opts = None
 
         ''' this will set the profile too '''
         params = []
@@ -2355,20 +2399,17 @@ class MpPlayer(Player):
         if self.USE_PROFILE == -1:
             self.USE_PROFILE = self._configHasProfile()
 
-        if self._recording == self.RECORD_WITH_SILENCE:
-            opts.append('--profile=silent')
+        if self.USE_PROFILE == 1:
+            opts.append('-profile')
+            opts.append(self.profile_name)
+            if (logger.isEnabledFor(logging.INFO)):
+                logger.info('Using profile: "[{}]"'.format(self.profile_name))
         else:
-            if self.USE_PROFILE == 1:
-                opts.append('-profile')
-                opts.append(self.profile_name)
-                if (logger.isEnabledFor(logging.INFO)):
-                    logger.info('Using profile: "[{}]"'.format(self.profile_name))
-            else:
-                if (logger.isEnabledFor(logging.INFO)):
-                    if self.USE_PROFILE == 0:
-                        logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
-                    else:
-                        logger.info('No usable profile found')
+            if (logger.isEnabledFor(logging.INFO)):
+                if self.USE_PROFILE == 0:
+                    logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
+                else:
+                    logger.info('No usable profile found')
 
         if playList:
             opts.append('-playlist')
@@ -2386,17 +2427,40 @@ class MpPlayer(Player):
         ## opts.append(r'C:\Users\Spiros\AppData\Roaming\pyradio\recordings\rec.mkv')
         logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
+            monitor_opts = opts[:]
+            if self._recording == self.RECORD_WITH_SILENCE:
+                try:
+                    i = [y for y, x in enumerate(opts) if x == '-profile'][0]
+                    opts[i+1] = 'silent'
+                except IndexError:
+                    opts.append('-profile')
+                    opts.append('silent')
+            try:
+                ''' find and remove -playlist url '''
+                i = [y for y, x in enumerate(monitor_opts) if x == '-playlist'][0]
+                del monitor_opts[i+1]
+                del monitor_opts[i]
+            except IndexError:
+                ''' not -playlist, find and remove url '''
+                i = [y for y, x in enumerate(monitor_opts) if x == streamUrl][0]
+                del monitor_opts[i]
             self.recording_filename = self.getrecording_filename(self.name, '.mkv')
+            monitor_opts.append(self.recording_filename)
             opts.append('-dumpstream')
             opts.append('-dumpfile')
             opts.append(self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
-        return opts
+        logger.error('Opts:\n{0}\n{1}'.format(opts, monitor_opts))
+        return opts, monitor_opts
 
     def _mute(self):
         ''' mute mplayer '''
         self._sendCommand('m')
+
+    def _pause(self):
+        ''' pause streaming (if possible) '''
+        self._sendCommand('p')
 
     def pause(self):
         ''' pause streaming (if possible) '''
@@ -2584,6 +2648,7 @@ class VlcPlayer(Player):
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to vlc subprocess.'''
         #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
+        monitor_opts = None
         if self.WIN:
             ''' Get a random port (44000-44999)
                 Create a log file for vlc and make sure it is unique
@@ -2642,7 +2707,7 @@ class VlcPlayer(Player):
             opts.append(self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
-        return opts
+        return opts, monitor_opts
 
     def _mute(self):
         ''' mute vlc '''
@@ -2689,6 +2754,7 @@ class VlcPlayer(Player):
             self._sendCommand('shutdown\n')
         self._icy_data = {}
         self.volume = -1
+        self.monitor = self.monitor_process = self.monitor_opts = None
 
     def _remove_vlc_stdout_log_file(self):
         file_to_remove = self._vlc_stdout_log_file
