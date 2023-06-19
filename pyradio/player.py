@@ -12,6 +12,7 @@ from datetime import datetime
 import collections
 import json
 import socket
+from shutil import copyfile as shutil_copy_file
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -348,6 +349,7 @@ class Player(object):
             else:
                 config_files = []
         self.all_config_files['mplayer'] = config_files[:]
+        self._restore_win_player_config_file()
 
     @property
     def profile_name(self):
@@ -607,7 +609,35 @@ class Player(object):
                     return ret_strings[2].format(str(self.volume))
                 self.volume = -1
                 self.PROFILE_FROM_USER = True
+            self.bck_win_player_config_file(config_file)
             return ret_string
+
+    def bck_win_player_config_file(self, config_file=None):
+        if platform.startswith('win'):
+            ''' backup player config '''
+            if config_file is None:
+                cnf_file = self.config_files[0]
+            else:
+                cnf_file = config_file
+            if os.path.exists(cnf_file):
+                bck_file = os.path.join(os.getenv('APPDATA'), "pyradio", self.PLAYER_NAME + "-active.conf")
+                try:
+                    shutil_copy_file(cnf_file, bck_file)
+                except:
+                    pass
+
+    def _restore_win_player_config_file(self):
+        if platform.startswith('win'):
+            ''' restore player config '''
+            for k in ('mplayer', 'mpv'):
+                cnf_file = self.all_config_files[k][0]
+                if os.path.exists(cnf_file):
+                    bck_file = os.path.join(os.getenv('APPDATA'), "pyradio", k + "-active.conf")
+                    if os.path.exists(bck_file):
+                        try:
+                            shutil_copy_file(bck_file, cnf_file)
+                        except:
+                            pass
 
     def _stop_delay_thread(self):
         if self.delay_thread is not None:
@@ -1549,16 +1579,28 @@ class Player(object):
 
     def _sendCommand(self, command):
         ''' send keystroke command to player '''
-        for a_process in (self.process, self.monitor_process):
-            if a_process is not None:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Sending Command: {}'.format(command).strip())
-                try:
-                    a_process.stdin.write(command.encode('utf-8', 'replace'))
-                    a_process.stdin.flush()
-                except:
-                    if logger.isEnabledFor(logging.ERROR):
-                        logger.error('Error while sending Command: {}'.format(command).strip(), exc_info=True)
+        for a_process in (self.monitor_process, self.process):
+            self._command_to_player(a_process, command)
+        return
+        if command in ('q', '/', '*'):
+            for a_process in (self.monitor_process, self.process):
+                self._command_to_player(a_process, command)
+        elif self.recording == self.NO_RECORDING or \
+                self.recording == self.RECORD_WITH_SILENCE:
+            self._command_to_player(self.process, command)
+        elif self.recording == self.RECORD_AND_LISTEN:
+            self._command_to_player(self.monitor_process, command)
+
+    def _command_to_player(self, a_process, command):
+        if a_process is not None:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Sending Command: {}'.format(command).strip())
+            try:
+                a_process.stdin.write(command.encode('utf-8', 'replace'))
+                a_process.stdin.flush()
+            except:
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('Error while sending Command: {}'.format(command).strip(), exc_info=True)
 
     def close_from_windows(self):
         ''' kill player instance when window console is closed '''
