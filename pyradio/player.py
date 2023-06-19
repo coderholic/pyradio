@@ -630,14 +630,13 @@ class Player(object):
         if platform.startswith('win'):
             ''' restore player config '''
             for k in ('mplayer', 'mpv'):
-                cnf_file = self.all_config_files[k][0]
-                if os.path.exists(cnf_file):
-                    bck_file = os.path.join(os.getenv('APPDATA'), "pyradio", k + "-active.conf")
-                    if os.path.exists(bck_file):
-                        try:
-                            shutil_copy_file(bck_file, cnf_file)
-                        except:
-                            pass
+                bck_file = os.path.join(os.getenv('APPDATA'), "pyradio", k + "-active.conf")
+                if os.path.exists(bck_file):
+                    cnf_file = self.all_config_files[k][0]
+                    try:
+                        shutil_copy_file(bck_file, cnf_file)
+                    except:
+                        pass
 
     def _stop_delay_thread(self):
         if self.delay_thread is not None:
