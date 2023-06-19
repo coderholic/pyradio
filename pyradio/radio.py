@@ -2238,7 +2238,12 @@ class PyRadio(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon download: asked to stop. Stopping...')
                 return
-            response = requests.get(url)
+            try:
+                response = requests.get(url)
+            except:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('+++ icon download fialed!!')
+                return
             if stop():
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon download: asked to stop. Stopping...')
