@@ -1,3 +1,9 @@
+2023-06-20 s-n-g
+    * version 0.9.2.11
+    * implementing station recording for MPlayer media player
+    * players' config file will be backed up on Windows
+    * fixing a couple of potential crashes
+
 2023-06-14 s-n-g
     * version 0.9.2.10
     * all PyRadio threads will terminate when Alt-F4 or the
@@ -14,7 +20,7 @@
 2023-06-13 s-n-g
     * version 0.9.2.8
     * \o will open the config directory in a file manager
-    * implementing station recording vor MPV media player
+    * implementing station recording for MPV media player
     * implementing playback pause for MPV media player, when
       player in recording mode
     * fixing Windows installayion scripts

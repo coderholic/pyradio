@@ -39,29 +39,41 @@ ___
 
 All supported media players (**MPV**, **MPlayer** and **VLC**) support stream recording, each implementing it in a different way, which pose a challenge for the front end implementation.
 
-Let us see the differences.
+Before we see the differences, let us talk about some things that will make the whole thing easier to understand.
+
+When it comes to recording a stream the program has to provide two things:
+
+1. a **recorder**, which is the component that will connect to the stream (in our case the station), receive its data, and write them in a file that media players can recognize and reproduce. \
+\
+Since this is the program receiving data from the station, it will also receive song titles, or other stations data, but will not save them to the recorded file.
+
+2. a **monitor**, which is the component that will reproduce the saved stream so that the user can monitor what is being downloaded. \
+\
+The **monitor** will just reproduce what's written to the file by the **recorder**, so it knows nothing about a station, it's data and song titles transmitted by it.
+
+Now, let's see how **PyRadio**'s supported players behave.
 
 ### MPV
 
 **MPV** stream recording has the following characteristics:
 
-- it is done using the **--stream-record** command line parameter.
 - it is considered an **experimental feature** by the **MPV** developers. \
 Radio streaming uses well known and established codecs (mainly mp3 and aac) and I have had no broken recording while testing the feature (even with flac stations).
-- **MPV** has the ability to play and record a stream at the same time. \
+- **MPV** has the ability to play and record a stream at the same time (both the **recorder** and the **monitor** components are active simultaneously). \
 This is very convenient, since all one has to do is add a command line parameter and start recording, while listening to what's being recorded.
 - adjusting the volume or muting the player will not affect what's being recorded.
 - when paused, the player will pause the playback but will keep recording the stream. Furthermore, song titles will stop being updated, but will be correctly displayed and updated when playback is resumed.
 
 ### MPlayer
 
-**Note**: **MPlayer** recording has not been implemented yet!
-
 **MPlayer** stream recording has the following characteristics:
 
-- it is done using the **-dumpstream** and **-dumpfile** command line parameters.
 - it does not have the ability to record and play a stream at the same time. \
-This means that the front end will have to use two *mplayer* instances: one to record the stream and one more to play the recorded file (as it is being recorded).
+This means that the front end (**PyRadio**) will have to use two *mplayer* instances (run *mplayer* twice): one as a **recorder** and one as a **monitor**.
+- the **recorder** will display the song titles in addition to saving the output file.
+- the **monitor** will be started after the output file gets to a certain size, set to 12000 bytes by trial and error.
+- pausing and resuming the **monitor** for long will lead to song titles being out of sync, since the **recorder** will keep receiving data (and song titles) even when the playback if off.
+- adjusting the playback volume is of course possible, but there will be no vissible indication for it.
 
 ### VLC
 
@@ -69,7 +81,6 @@ This means that the front end will have to use two *mplayer* instances: one to r
 
 **VLC** stream recording has the following characteristics:
 
-- it is done using the **--sout** command line parameter.
 - it does not have the ability to record and play a stream at the same time. \
 This means that the front end will have to use two *vlc* instances: one to record the stream and one more to play the recorded file (as it is being recorded).
 

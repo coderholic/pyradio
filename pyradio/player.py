@@ -316,7 +316,7 @@ class Player(object):
             self._recording = 0
         logger.error('\n\nsetting recording to {}'.format(self._recording))
 
-    def getrecording_filename(self, name, extension):
+    def get_recording_filename(self, name, extension):
         f = datetime.now().strftime('%Y-%m-%d %H-%M-%S') + " " + name + extension
         return os.path.join(self._cnf.recording_dir, f)
 
@@ -396,6 +396,35 @@ class Player(object):
                     sleep(.01)
                 while old_vol == int(self.volume):
                     sleep(.1)
+
+    def create_monitor_player(self, stop):
+        logger.info('\n\n======|||==========')
+        # self.monitor_opts.append('--volume')
+        # self.monitor_opts.append('300')
+        logger.info(self.monitor_opts)
+        while not os.path.exists(self.recording_filename):
+            sleep(.1)
+            if stop():
+                logger.error('Asked to stop. Exiting....')
+                return
+        while os.path.getsize(self.recording_filename) < 12000:
+            sleep(.1)
+            if stop():
+                logger.error('Asked to stop. Exiting....')
+                return
+        if stop():
+            logger.error('Asked to stop. Exiting....')
+            return
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('\n\n')
+            logger.info('----==== {} monitor started ====----'.format(self.PLAYER_NAME))
+            logger.info('\n\n')
+        self.monitor_process = subprocess.Popen(
+            self.monitor_opts, shell=False,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.STDOUT
+        )
 
     def save_volume(self):
         pass
@@ -1570,11 +1599,17 @@ class Player(object):
             logger.info('----==== {} player started ====----'.format(self.PLAYER_NAME))
         if self.recording == self.RECORD_AND_LISTEN \
                 and self.PLAYER_NAME != 'mpv':
-            threading.Thread(
-                    target=self.create_monitor_player,
-                    args=(lambda: self.stop_mpv_status_update_thread or \
-                            self.stop_win_vlc_status_update_thread,  )
-                    ).start()
+                    if self.PLAYER_NAME == 'mplayer':
+                        threading.Thread(
+                                target=self.create_monitor_player,
+                                args=(lambda: self.stop_mpv_status_update_thread or \
+                                        self.stop_win_vlc_status_update_thread,  )
+                                ).start()
+                    else:
+                        threading.Thread(
+                                target=self.create_monitor_player,
+                                args=(lambda: self.stop_mpv_status_update_thread, )
+                                ).start()
 
     def _sendCommand(self, command):
         ''' send keystroke command to player '''
@@ -1972,7 +2007,7 @@ class MpvPlayer(Player):
 
         logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
-            self.recording_filename = self.getrecording_filename(self.name, '.mkv')
+            self.recording_filename = self.get_recording_filename(self.name, '.mkv')
             opts.append('--stream-record=' + self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
@@ -2357,29 +2392,6 @@ class MpPlayer(Player):
         )
         self.config_files = self.all_config_files['mplayer']
 
-    def create_monitor_player(self, stop):
-        while not os.path.exists(self.recording_filename):
-            sleep(.1)
-            if stop():
-                logger.error('Asked to stop. Exiting....')
-                return
-        while os.path.getsize(self.recording_filename) < 500:
-            sleep(.1)
-            if stop():
-                logger.error('Asked to stop. Exiting....')
-                return
-        if stop():
-            logger.error('Asked to stop. Exiting....')
-            return
-        if logger.isEnabledFor(logging.INFO):
-            logger.info('----==== {} monitor started ====----'.format(self.PLAYER_NAME))
-        self.monitor_process = subprocess.Popen(
-            self.monitor_opts, shell=False,
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-            stderr=subprocess.STDOUT
-        )
-
     def save_volume(self):
         if platform.startswith('win'):
             return self._do_save_volume('volume={}\r\n')
@@ -2485,7 +2497,7 @@ class MpPlayer(Player):
                 ''' not -playlist, find and remove url '''
                 i = [y for y, x in enumerate(monitor_opts) if x == streamUrl][0]
                 del monitor_opts[i]
-            self.recording_filename = self.getrecording_filename(self.name, '.mkv')
+            self.recording_filename = self.get_recording_filename(self.name, '.mkv')
             monitor_opts.append(self.recording_filename)
             opts.append('-dumpstream')
             opts.append('-dumpfile')
@@ -2725,7 +2737,10 @@ class VlcPlayer(Player):
                 logger.info('vlc log file: "{}"'.format(self._vlc_stdout_log_file))
 
         else:
-            opts = [self.PLAYER_CMD, '-Irc', '-vv', self._url_to_use(streamUrl)]
+            if self.recording == self.NO_RECORDING:
+                opts = [self.PLAYER_CMD, '-Irc', '-vv', self._url_to_use(streamUrl)]
+            else:
+                opts = [self.PLAYER_CMD, '--no-one-instance', '-Irc', '-vv', self._url_to_use(streamUrl)]
 
 
         ''' take care of command line parameters '''
@@ -2742,10 +2757,14 @@ class VlcPlayer(Player):
         ## opts.append(r'file/ts:C:\Users\Spiros\AppData\Roaming\pyradio\recordings\rec.mkv')
         logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
-            self.recording_filename = self.getrecording_filename(self.name, '.mkv')
+            monitor_opts = opts[:]
+            i = [y for y, x in enumerate(monitor_opts) if x == streamUrl][0]
+            del monitor_opts[i]
+            self.recording_filename = self.get_recording_filename(self.name, '.mkv')
             opts.append('--sout')
             opts.append(r'file/ts:' + self.recording_filename)
             opts.append(self.recording_filename)
+            monitor_opts.append(self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
         return opts, monitor_opts

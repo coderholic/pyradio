@@ -8620,17 +8620,19 @@ __|Remote Control Server| cannot be started!__
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == ord('|'):
                     self._reset_status_bar_right()
-                    # if self.player.PLAYER_NAME == 'mpv':
-                    self.player.recording = 1 if self.player.recording == 0 else 0
-                    if self.player.recording > 0:
-                        if self.player.isPlaying():
-                            self.player.already_playing = True
+                    if self.player.PLAYER_NAME != 'vlc':
+                        self.player.recording = 1 if self.player.recording == 0 else 0
+                        if self.player.recording > 0:
+                            if self.player.isPlaying():
+                                self.player.already_playing = True
+                            else:
+                                self.player.already_playing = False
                         else:
                             self.player.already_playing = False
+                        self._show_recording_status_in_header()
+                        self._show_recording_toggle_window()
                     else:
-                        self.player.already_playing = False
-                    self._show_recording_status_in_header()
-                    self._show_recording_toggle_window()
+                        self._print_not_implemented_yet()
 
                 elif char == curses.ascii.BEL:
                     ''' ^G - show groups '''
@@ -8868,6 +8870,9 @@ __|Remote Control Server| cannot be started!__
                 elif char in (curses.KEY_ENTER,
                               ord('\n'), ord('\r'),
                               curses.KEY_RIGHT, ord('l')):
+                    if self.player.isPlaying() and \
+                            self.player.playback_is_on:
+                        self._stop_player()
                     self._start_player()
                     self._do_display_notify()
                     return

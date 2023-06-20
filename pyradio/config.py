@@ -13,7 +13,10 @@ from datetime import datetime
 from shutil import copyfile, move, Error as shutil_Error
 import threading
 from copy import deepcopy
-from subprocess import Popen, DEVNULL
+try:
+    from subprocess import Popen, DEVNULL
+except ImportError:
+    from subprocess import Popen
 from platform import system
 if system().lower() == 'windows':
     from os import startfile
