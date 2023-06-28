@@ -8620,7 +8620,8 @@ __|Remote Control Server| cannot be started!__
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == ord('|'):
                     self._reset_status_bar_right()
-                    if self.player.PLAYER_NAME != 'vlc':
+                    # if self.player.PLAYER_NAME != 'vlc':
+                    if self.player.PLAYER_NAME:
                         self.player.recording = 1 if self.player.recording == 0 else 0
                         if self.player.recording > 0:
                             if self.player.isPlaying():

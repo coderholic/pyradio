@@ -397,7 +397,7 @@ class Player(object):
                 while old_vol == int(self.volume):
                     sleep(.1)
 
-    def create_monitor_player(self, stop):
+    def create_monitor_player(self, stop, limit):
         logger.info('\n\n======|||==========')
         # self.monitor_opts.append('--volume')
         # self.monitor_opts.append('300')
@@ -407,7 +407,7 @@ class Player(object):
             if stop():
                 logger.error('Asked to stop. Exiting....')
                 return
-        while os.path.getsize(self.recording_filename) < 12000:
+        while os.path.getsize(self.recording_filename) < limit:
             sleep(.1)
             if stop():
                 logger.error('Asked to stop. Exiting....')
@@ -1603,12 +1603,12 @@ class Player(object):
                         threading.Thread(
                                 target=self.create_monitor_player,
                                 args=(lambda: self.stop_mpv_status_update_thread or \
-                                        self.stop_win_vlc_status_update_thread,  )
+                                        self.stop_win_vlc_status_update_thread,  12000)
                                 ).start()
                     else:
                         threading.Thread(
                                 target=self.create_monitor_player,
-                                args=(lambda: self.stop_mpv_status_update_thread, )
+                                args=(lambda: self.stop_mpv_status_update_thread, 120000)
                                 ).start()
 
     def _sendCommand(self, command):
@@ -2740,7 +2740,7 @@ class VlcPlayer(Player):
             if self.recording == self.NO_RECORDING:
                 opts = [self.PLAYER_CMD, '-Irc', '-vv', self._url_to_use(streamUrl)]
             else:
-                opts = [self.PLAYER_CMD, '--no-one-instance', '-Irc', '-vv', self._url_to_use(streamUrl)]
+                opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save', '-Irc', '-vv', self._url_to_use(streamUrl)]
 
 
         ''' take care of command line parameters '''
@@ -2762,8 +2762,7 @@ class VlcPlayer(Player):
             del monitor_opts[i]
             self.recording_filename = self.get_recording_filename(self.name, '.mkv')
             opts.append('--sout')
-            opts.append(r'file/ts:' + self.recording_filename)
-            opts.append(self.recording_filename)
+            opts.append(r'file/ps:' + self.recording_filename)
             monitor_opts.append(self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
