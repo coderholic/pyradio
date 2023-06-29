@@ -335,6 +335,7 @@ class PyRadio(object):
     _update_notify_lock = threading.Lock()
     _update_stations_lock = threading.Lock()
     _server_send_lock = threading.Lock()
+    _recording_lock = threading.Lock()
 
     ''' editor class '''
     _station_editor = None
@@ -878,7 +879,8 @@ class PyRadio(object):
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
                     self._show_station_info_from_thread,
-                    self._add_station_to_stations_history
+                    self._add_station_to_stations_history,
+                    self._recording_lock
                 )
         except:
             ''' no player '''

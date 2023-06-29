@@ -274,7 +274,8 @@ class Player(object):
                  playback_timeout_counter,
                  playback_timeout_handler,
                  info_display_handler,
-                 history_add_function):
+                 history_add_function,
+                 recording_lock):
         self.outputStream = outputStream
         self._cnf = config
         self.stations_history_add_function = history_add_function
@@ -299,7 +300,9 @@ class Player(object):
             threading.Thread(target=RemoveWinVlcLogFiles(self.config_dir)).start()
 
         ''' Recording monitor player for MPlayer and VLC '''
-        self.monitor = self.monitor_process = self.monitor_opts = None
+        self.monitor = self.monitor_process = None
+        self.monitor_opts = self.monitor_update_thread = None
+        self._recording_lock = recording_lock
 
     @property
     def recording(self):
@@ -397,7 +400,7 @@ class Player(object):
                 while old_vol == int(self.volume):
                     sleep(.1)
 
-    def create_monitor_player(self, stop, limit):
+    def create_monitor_player(self, stop, limit, notify_function):
         logger.info('\n\n======|||==========')
         # self.monitor_opts.append('--volume')
         # self.monitor_opts.append('300')
@@ -425,6 +428,7 @@ class Player(object):
             stdin=subprocess.PIPE,
             stderr=subprocess.STDOUT
         )
+        notify_function()
 
     def save_volume(self):
         pass
@@ -693,6 +697,7 @@ class Player(object):
         stop_player = args[2]
         detect_if_player_exited = args[3]
         enable_crash_detection_function = args[4]
+        recording_lock = args[5]
         has_error = False
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('updateStatus thread started.')
@@ -700,193 +705,198 @@ class Player(object):
         #    self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
         #    self.outputStream.write(msg=self.oldUserInput['Title'])
         ''' Force volume display even when icy title is not received '''
-        self.oldUserInput['Title'] = 'Playing: ' + self.name
+        with recording_lock:
+            self.oldUserInput['Title'] = 'Playing: ' + self.name
         try:
-            out = self.process.stdout
+            out = process.stdout
             while(True):
                 subsystemOutRaw = out.readline()
-                try:
-                    subsystemOut = subsystemOutRaw.decode(self._station_encoding, 'replace')
-                except:
-                    subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
+                with recording_lock:
+                    try:
+                        subsystemOut = subsystemOutRaw.decode(self._station_encoding, 'replace')
+                    except:
+                        subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
                 if subsystemOut == '':
                     break
                 # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
-                if not self._is_accepted_input(subsystemOut):
+                with recording_lock:
+                    tmp = self._is_accepted_input(subsystemOut)
+                if not tmp:
                     continue
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
                 # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
 
-                if self.oldUserInput['Input'] != subsystemOut:
-                    if (logger.isEnabledFor(logging.DEBUG)):
-                        if version_info < (3, 0):
-                            disp = subsystemOut.encode('utf-8', 'replace').strip()
-                            logger.debug('User input: {}'.format(disp))
-                        else:
-                            logger.debug('User input: {}'.format(subsystemOut))
+                with recording_lock:
+                    if self.oldUserInput['Input'] != subsystemOut:
+                        if (logger.isEnabledFor(logging.DEBUG)):
+                            if version_info < (3, 0):
+                                disp = subsystemOut.encode('utf-8', 'replace').strip()
+                                logger.debug('User input: {}'.format(disp))
+                            else:
+                                logger.debug('User input: {}'.format(subsystemOut))
 
-                    self.oldUserInput['Input'] = subsystemOut
-                    if self.volume_string in subsystemOut:
-                        # disable volume for mpv
-                        if self.PLAYER_NAME != 'mpv':
-                            # logger.error('***** volume')
-                            if self.oldUserInput['Volume'] != subsystemOut:
-                                self.oldUserInput['Volume'] = subsystemOut
-                                if self.PLAYER_NAME == 'vlc':
-                                    if '.' in subsystemOut:
-                                        token = '.'
-                                    elif ',' in subsystemOut:
-                                        token = ','
-                                    else:
-                                        token = ''
-                                    if token:
-                                        sp = subsystemOut.split(token)
-                                        subsystemOut = sp[0]
-                                self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                        self.oldUserInput['Input'] = subsystemOut
+                        if self.volume_string in subsystemOut:
+                            # disable volume for mpv
+                            if self.PLAYER_NAME != 'mpv':
+                                # logger.error('***** volume')
+                                if self.oldUserInput['Volume'] != subsystemOut:
+                                    self.oldUserInput['Volume'] = subsystemOut
+                                    if self.PLAYER_NAME == 'vlc':
+                                        if '.' in subsystemOut:
+                                            token = '.'
+                                        elif ',' in subsystemOut:
+                                            token = ','
+                                        else:
+                                            token = ''
+                                        if token:
+                                            sp = subsystemOut.split(token)
+                                            subsystemOut = sp[0]
+                                    self.volume = ''.join(c for c in subsystemOut if c.isdigit())
 
-                                # IMPORTANT: do this here, so that vlc actual_volume
-                                # gets updated in _format_volume_string
-                                string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
+                                    # IMPORTANT: do this here, so that vlc actual_volume
+                                    # gets updated in _format_volume_string
+                                    string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
 
-                                if self.show_volume and self.oldUserInput['Title']:
-                                    self.outputStream.write(msg=string_to_show, counter='')
-                                    self.threadUpdateTitle()
-                    elif self._is_in_playback_token(subsystemOut):
-                        self.stop_timeout_counter_thread = True
-                        try:
-                            self.connection_timeout_thread.join()
-                        except:
-                            pass
-                        self.connecting = False
-                        if enable_crash_detection_function:
-                            enable_crash_detection_function()
-                        if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
-                                logger.info('*** updateStatus(): Start of playback detected ***')
-                        #if self.outputStream.last_written_string.startswith('Connecting to'):
-                        if self.oldUserInput['Title'] == '':
-                            new_input = 'Playing: ' + self.name
-                        else:
-                            new_input = self.oldUserInput['Title']
-                        self.outputStream.write(msg=new_input, counter='')
-                        self.playback_is_on = True
-                        self.connecting = False
-                        self._stop_delay_thread()
-                        self.stations_history_add_function()
-                        if 'AO: [' in subsystemOut:
-                            with self.status_update_lock:
-                                if version_info > (3, 0):
-                                    self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0]
-                                else:
-                                    self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0].encode('utf-8')
-                                self.info_display_handler()
-                        if self.PLAYER_NAME == 'mpv' and version_info < (3, 0):
-                            for a_cmd in (
-                                    b'{ "command": ["get_property", "metadata"], "request_id": 100 }\n',
-                                    self.GET_AUDIO_CODEC,
-                                    self.GET_AUDIO_CODEC_NAME):
-                                response = self._send_mpv_command( a_cmd, return_response=True)
-                                if response:
-                                    self._get_mpv_metadata(response, lambda: False, enable_crash_detection_function)
-                                    self.info_display_handler()
-                                else:
-                                    if logger.isEnabledFor(logging.INFO):
-                                        logger.info('no response!!!')
-                        # logger.error('DE 3 {}'.format(self._icy_data))
-                    elif self._is_icy_entry(subsystemOut):
-                        if not subsystemOut.endswith('Icy-Title=(null)'):
-                            if enable_crash_detection_function:
-                                enable_crash_detection_function()
-                            # logger.error('***** icy_entry: "{}"'.format(subsystemOut))
-                            title = self._format_title_string(subsystemOut)
-                            # logger.error('DE title = "{}"'.format(title))
-                            ok_to_display = False
+                                    if self.show_volume and self.oldUserInput['Title']:
+                                        self.outputStream.write(msg=string_to_show, counter='')
+                                        self.threadUpdateTitle()
+                        elif self._is_in_playback_token(subsystemOut):
                             self.stop_timeout_counter_thread = True
                             try:
                                 self.connection_timeout_thread.join()
                             except:
                                 pass
-                            if not self.playback_is_on:
-                                if logger.isEnabledFor(logging.INFO):
-                                    logger.info('*** updateStatus(): Start of playback detected (Icy-Title received) ***')
+                            self.connecting = False
+                            if enable_crash_detection_function:
+                                enable_crash_detection_function()
+                            if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
+                                    logger.info('*** updateStatus(): Start of playback detected ***')
+                            #if self.outputStream.last_written_string.startswith('Connecting to'):
+                            if self.oldUserInput['Title'] == '':
+                                new_input = 'Playing: ' + self.name
+                            else:
+                                new_input = self.oldUserInput['Title']
+                            self.outputStream.write(msg=new_input, counter='')
                             self.playback_is_on = True
                             self.connecting = False
                             self._stop_delay_thread()
                             self.stations_history_add_function()
-                            ''' detect empty Icy-Title '''
-                            title_without_prefix = title[len(self.icy_title_prefix):].strip()
-                            # logger.error('DE title_without_prefix = "{}"'.format(title_without_prefix))
-                            if title_without_prefix:
-                                #self._stop_delay_thread()
-                                # logger.error("***** updating title")
-                                if title_without_prefix.strip() == '-':
-                                    ''' Icy-Title is empty '''
-                                    if logger.isEnabledFor(logging.DEBUG):
-                                        logger.debug('Icy-Title = " - ", not displaying...')
-                                else:
-                                    self.oldUserInput['Title'] = title
-                                    # make sure title will not pop-up while Volume value is on
-                                    if self.delay_thread is None:
-                                        ok_to_display = True
-                                    if ok_to_display and self.playback_is_on:
-                                        string_to_show = self.title_prefix + title
-                                        self.outputStream.write(msg=string_to_show, counter='')
+                            if 'AO: [' in subsystemOut:
+                                with self.status_update_lock:
+                                    if version_info > (3, 0):
+                                        self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0]
                                     else:
-                                        if logger.isEnabledFor(logging.DEBUG):
-                                            logger.debug('***** Title change inhibited: ok_to_display = {0}, playbabk_is_on = {1}'.format(ok_to_display, self.playback_is_on))
-                            else:
-                                ok_to_display = True
-                                if (logger.isEnabledFor(logging.INFO)):
-                                    logger.info('Icy-Title is NOT valid')
-                                if ok_to_display and self.playback_is_on:
-                                    title = 'Playing: ' + self.name
-                                    self.oldUserInput['Title'] = title
-                                    string_to_show = self.title_prefix + title
-                                    self.outputStream.write(msg=string_to_show, counter='')
-                    #else:
-                    #    if self.oldUserInput['Title'] == '':
-                    #        self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
-                    #        self.outputStream.write(msg=self.oldUserInput['Title'], counter='')
-
-                    else:
-                        for a_token in self.icy_audio_tokens.keys():
-                            if a_token in subsystemOut:
-                                if not self.playback_is_on:
-                                    if logger.isEnabledFor(logging.INFO):
-                                        logger.info('*** updateStatus(): Start of playback detected (Icy audio token received) ***')
+                                        self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0].encode('utf-8')
+                                    self.info_display_handler()
+                            if self.PLAYER_NAME == 'mpv' and version_info < (3, 0):
+                                for a_cmd in (
+                                        b'{ "command": ["get_property", "metadata"], "request_id": 100 }\n',
+                                        self.GET_AUDIO_CODEC,
+                                        self.GET_AUDIO_CODEC_NAME):
+                                    response = self._send_mpv_command( a_cmd, return_response=True)
+                                    if response:
+                                        self._get_mpv_metadata(response, lambda: False, enable_crash_detection_function)
+                                        self.info_display_handler()
+                                    else:
+                                        if logger.isEnabledFor(logging.INFO):
+                                            logger.info('no response!!!')
+                            # logger.error('DE 3 {}'.format(self._icy_data))
+                        elif self._is_icy_entry(subsystemOut):
+                            if not subsystemOut.endswith('Icy-Title=(null)'):
+                                if enable_crash_detection_function:
+                                    enable_crash_detection_function()
+                                # logger.error('***** icy_entry: "{}"'.format(subsystemOut))
+                                title = self._format_title_string(subsystemOut)
+                                # logger.error('DE title = "{}"'.format(title))
+                                ok_to_display = False
                                 self.stop_timeout_counter_thread = True
                                 try:
                                     self.connection_timeout_thread.join()
                                 except:
                                     pass
+                                if not self.playback_is_on:
+                                    if logger.isEnabledFor(logging.INFO):
+                                        logger.info('*** updateStatus(): Start of playback detected (Icy-Title received) ***')
                                 self.playback_is_on = True
                                 self.connecting = False
+                                self._stop_delay_thread()
                                 self.stations_history_add_function()
-                                if enable_crash_detection_function:
-                                    enable_crash_detection_function()
-                                # logger.error('DE token = "{}"'.format(a_token))
-                                # logger.error('DE icy_audio_tokens[a_token] = "{}"'.format(self.icy_audio_tokens[a_token]))
-                                a_str = subsystemOut.split(a_token)
-                                # logger.error('DE str = "{}"'.format(a_str))
-                                with self.status_update_lock:
-                                    if self.icy_audio_tokens[a_token] == 'icy-br':
-                                        self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1].replace('kbit/s', '')
+                                ''' detect empty Icy-Title '''
+                                title_without_prefix = title[len(self.icy_title_prefix):].strip()
+                                # logger.error('DE title_without_prefix = "{}"'.format(title_without_prefix))
+                                if title_without_prefix:
+                                    #self._stop_delay_thread()
+                                    # logger.error("***** updating title")
+                                    if title_without_prefix.strip() == '-':
+                                        ''' Icy-Title is empty '''
+                                        if logger.isEnabledFor(logging.DEBUG):
+                                            logger.debug('Icy-Title = " - ", not displaying...')
                                     else:
-                                        self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1]
-                                    if self.icy_audio_tokens[a_token] == 'codec':
-                                        if '[' in self._icy_data['codec']:
-                                            self._icy_data['codec-name'] = self._icy_data['codec'].split('] ')[0].replace('[', '')
-                                            self._icy_data['codec'] = self._icy_data['codec'].split('] ')[1]
-                                    if version_info < (3, 0):
-                                        for an_item in self._icy_data.keys():
-                                            try:
-                                                self._icy_data[an_item] = self._icy_data[an_item].encode(self._station_encoding, 'replace')
-                                            except UnicodeDecodeError as e:
-                                                self._icy_data[an_item] = ''
-                                    if 'codec-name' in self._icy_data.keys():
-                                        self._icy_data['codec-name'] = self._icy_data['codec-name'].replace('"', '')
-                                # logger.error('DE audio data\n\n{}\n\n'.format(self._icy_data))
-                        self.info_display_handler()
+                                        self.oldUserInput['Title'] = title
+                                        # make sure title will not pop-up while Volume value is on
+                                        if self.delay_thread is None:
+                                            ok_to_display = True
+                                        if ok_to_display and self.playback_is_on:
+                                            string_to_show = self.title_prefix + title
+                                            self.outputStream.write(msg=string_to_show, counter='')
+                                        else:
+                                            if logger.isEnabledFor(logging.DEBUG):
+                                                logger.debug('***** Title change inhibited: ok_to_display = {0}, playbabk_is_on = {1}'.format(ok_to_display, self.playback_is_on))
+                                else:
+                                    ok_to_display = True
+                                    if (logger.isEnabledFor(logging.INFO)):
+                                        logger.info('Icy-Title is NOT valid')
+                                    if ok_to_display and self.playback_is_on:
+                                        title = 'Playing: ' + self.name
+                                        self.oldUserInput['Title'] = title
+                                        string_to_show = self.title_prefix + title
+                                        self.outputStream.write(msg=string_to_show, counter='')
+                        #else:
+                        #    if self.oldUserInput['Title'] == '':
+                        #        self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
+                        #        self.outputStream.write(msg=self.oldUserInput['Title'], counter='')
+
+                        else:
+                            for a_token in self.icy_audio_tokens.keys():
+                                if a_token in subsystemOut:
+                                    if not self.playback_is_on:
+                                        if logger.isEnabledFor(logging.INFO):
+                                            logger.info('*** updateStatus(): Start of playback detected (Icy audio token received) ***')
+                                    self.stop_timeout_counter_thread = True
+                                    try:
+                                        self.connection_timeout_thread.join()
+                                    except:
+                                        pass
+                                    self.playback_is_on = True
+                                    self.connecting = False
+                                    self.stations_history_add_function()
+                                    if enable_crash_detection_function:
+                                        enable_crash_detection_function()
+                                    # logger.error('DE token = "{}"'.format(a_token))
+                                    # logger.error('DE icy_audio_tokens[a_token] = "{}"'.format(self.icy_audio_tokens[a_token]))
+                                    a_str = subsystemOut.split(a_token)
+                                    # logger.error('DE str = "{}"'.format(a_str))
+                                    with self.status_update_lock:
+                                        if self.icy_audio_tokens[a_token] == 'icy-br':
+                                            self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1].replace('kbit/s', '')
+                                        else:
+                                            self._icy_data[self.icy_audio_tokens[a_token]] = a_str[1]
+                                        if self.icy_audio_tokens[a_token] == 'codec':
+                                            if '[' in self._icy_data['codec']:
+                                                self._icy_data['codec-name'] = self._icy_data['codec'].split('] ')[0].replace('[', '')
+                                                self._icy_data['codec'] = self._icy_data['codec'].split('] ')[1]
+                                        if version_info < (3, 0):
+                                            for an_item in self._icy_data.keys():
+                                                try:
+                                                    self._icy_data[an_item] = self._icy_data[an_item].encode(self._station_encoding, 'replace')
+                                                except UnicodeDecodeError as e:
+                                                    self._icy_data[an_item] = ''
+                                        if 'codec-name' in self._icy_data.keys():
+                                            self._icy_data['codec-name'] = self._icy_data['codec-name'].replace('"', '')
+                                    # logger.error('DE audio data\n\n{}\n\n'.format(self._icy_data))
+                            self.info_display_handler()
         except:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Error in updateStatus thread.', exc_info=True)
@@ -925,6 +935,87 @@ class Player(object):
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('updateStatus thread stopped.')
         self._clear_empty_mkv()
+
+
+    def updateRecordingStatus(self, *args):
+        stop = args[0]
+        process = args[1]
+        recording_lock = args[2]
+        has_error = False
+        if (logger.isEnabledFor(logging.DEBUG)):
+            logger.debug('updateRecordingStatus thread started.')
+        #with lock:
+        #    self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
+        #    self.outputStream.write(msg=self.oldUserInput['Title'])
+        ''' Force volume display even when icy title is not received '''
+        # self.oldUserInput['Title'] = 'Playing: ' + self.name
+        try:
+            out = process.stdout
+            while(True):
+                subsystemOutRaw = out.readline()
+                with recording_lock:
+                    try:
+                        subsystemOut = subsystemOutRaw.decode(self._station_encoding, 'replace')
+                    except:
+                        subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
+                if subsystemOut == '':
+                    break
+                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+                with recording_lock:
+                    tmp = self._is_accepted_input(subsystemOut)
+                if not tmp:
+                    continue
+                subsystemOut = subsystemOut.strip()
+                subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
+                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+
+                with recording_lock:
+                    tmp = self.oldUserInput['Input']
+                if tmp != subsystemOut:
+                    if (logger.isEnabledFor(logging.DEBUG)):
+                        if version_info < (3, 0):
+                            disp = subsystemOut.encode('utf-8', 'replace').strip()
+                            logger.debug('User input: {}'.format(disp))
+                        else:
+                            logger.debug('User input: {}'.format(subsystemOut))
+
+                    with recording_lock:
+                        self.oldUserInput['Input'] = subsystemOut
+                        self_volume_string = self.volume_string
+                        self_player_name = self.PLAYER_NAME
+                    if self_volume_string in subsystemOut:
+                        # disable volume for mpv
+                        if self_player_name != 'mpv':
+                            # logger.error('***** volume')
+                            with recording_lock:
+                                if self.oldUserInput['Volume'] != subsystemOut:
+                                    self.oldUserInput['Volume'] = subsystemOut
+                                    if self_player_name == 'vlc':
+                                        if '.' in subsystemOut:
+                                            token = '.'
+                                        elif ',' in subsystemOut:
+                                            token = ','
+                                        else:
+                                            token = ''
+                                        if token:
+                                            sp = subsystemOut.split(token)
+                                            subsystemOut = sp[0]
+                                self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+
+                                # IMPORTANT: do this here, so that vlc actual_volume
+                                # gets updated in _format_volume_string
+                                string_to_show = self._format_volume_string(subsystemOut) + self._format_title_string(self.oldUserInput['Title'])
+
+                                if self.show_volume and self.oldUserInput['Title']:
+                                    self.outputStream.write(msg=string_to_show, counter='')
+                                    self.threadUpdateTitle()
+        except:
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('Error in updateRecordingStatus thread.', exc_info=True)
+            # return
+
+        if (logger.isEnabledFor(logging.INFO)):
+            logger.info('updateRecordingStatus thread stopped.')
 
     def updateMPVStatus(self, *args):
         stop = args[0]
@@ -1481,6 +1572,17 @@ class Player(object):
     def isPlaying(self):
         return bool(self.process)
 
+    def _start_monitor_update_thread(self):
+        self.monitor_update_thread = threading.Thread(
+            target=self.updateRecordingStatus,
+            args=(
+                lambda: self.stop_mpv_status_update_thread,
+                self.monitor_process,
+                self._recording_lock
+            )
+        )
+        self.monitor_update_thread.start()
+
     def play(self,
              name,
              streamUrl,
@@ -1563,7 +1665,8 @@ class Player(object):
                         self.process,
                         stop_player,
                         detect_if_player_exited,
-                        enable_crash_detection_function
+                        enable_crash_detection_function,
+                        self._recording_lock
                     )
                 )
         self.update_thread.start()
@@ -1603,27 +1706,27 @@ class Player(object):
                         threading.Thread(
                                 target=self.create_monitor_player,
                                 args=(lambda: self.stop_mpv_status_update_thread or \
-                                        self.stop_win_vlc_status_update_thread,  12000)
+                                        self.stop_win_vlc_status_update_thread,  12000, self._start_monitor_update_thread)
                                 ).start()
                     else:
                         threading.Thread(
                                 target=self.create_monitor_player,
-                                args=(lambda: self.stop_mpv_status_update_thread, 120000)
+                                args=(lambda: self.stop_mpv_status_update_thread, 120000, self._start_monitor_update_thread)
                                 ).start()
 
     def _sendCommand(self, command):
         ''' send keystroke command to player '''
-        for a_process in (self.monitor_process, self.process):
-            self._command_to_player(a_process, command)
-        return
-        if command in ('q', '/', '*'):
+        if command in ('q', ):
             for a_process in (self.monitor_process, self.process):
                 self._command_to_player(a_process, command)
-        elif self.recording == self.NO_RECORDING or \
-                self.recording == self.RECORD_WITH_SILENCE:
-            self._command_to_player(self.process, command)
-        elif self.recording == self.RECORD_AND_LISTEN:
-            self._command_to_player(self.monitor_process, command)
+            return
+        if self.PLAYER_NAME == 'mplayer':
+            if command in ('/', '*'):
+                pr = self.process if self.monitor_process is None else self.monitor_process
+                self._command_to_player(pr, command)
+            elif command in (' ', ):
+                if self.monitor_process is not None:
+                    self._command_to_player(a_process, command)
 
     def _command_to_player(self, a_process, command):
         if a_process is not None:
@@ -1675,6 +1778,14 @@ class Player(object):
                 self.monitor_process.wait()
             except:
                 pass
+            finally:
+                self.monitor_process = None
+            try:
+                self.monitor_update_thread.join()
+            except:
+                pass
+            finally:
+                self.monitor_update_thread = None
         self.monitor = self.monitor_process = self.monitor_opts = None
 
     def _kill_process_tree(self, pid):
@@ -1895,7 +2006,8 @@ class MpvPlayer(Player):
                  playback_timeout_counter,
                  playback_timeout_handler,
                  info_display_handler,
-                 history_add_function):
+                 history_add_function,
+                 recording_lock):
         config.PLAYER_NAME = 'mpv'
         super(MpvPlayer, self).__init__(
             config,
@@ -1903,7 +2015,8 @@ class MpvPlayer(Player):
             playback_timeout_counter,
             playback_timeout_handler,
             info_display_handler,
-            history_add_function
+            history_add_function,
+            recording_lock
         )
         self.config_files = self.all_config_files['mpv']
         self.recording_filename = ''
@@ -2380,7 +2493,8 @@ class MpPlayer(Player):
                  playback_timeout_counter,
                  playback_timeout_handler,
                  info_display_handler,
-                 history_add_function):
+                 history_add_function,
+                 recording_lock):
         config.PLAYER_NAME = 'mplayer'
         super(MpPlayer, self).__init__(
             config,
@@ -2388,7 +2502,8 @@ class MpPlayer(Player):
             playback_timeout_counter,
             playback_timeout_handler,
             info_display_handler,
-            history_add_function
+            history_add_function,
+            recording_lock
         )
         self.config_files = self.all_config_files['mplayer']
 
@@ -2645,7 +2760,8 @@ class VlcPlayer(Player):
                  playback_timeout_counter,
                  playback_timeout_handler,
                  info_display_handler,
-                 history_add_function):
+                 history_add_function,
+                 recording_lock):
         config.PLAYER_NAME = 'vlc'
         super(VlcPlayer, self).__init__(
             config,
@@ -2653,7 +2769,8 @@ class VlcPlayer(Player):
             playback_timeout_counter,
             playback_timeout_handler,
             info_display_handler,
-            history_add_function
+            history_add_function,
+            recording_lock
         )
         # self.config_files = self.all_config_files['vlc']
 
