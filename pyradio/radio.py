@@ -7019,7 +7019,8 @@ __|Remote Control Server| cannot be started!__
                     self.playbackTimeoutCounter,
                     self.connectionFailed,
                     self._show_station_info_from_thread,
-                    self._add_station_to_stations_history
+                    self._add_station_to_stations_history,
+                    self._recording_lock
                 )
                 self.log.display_help_message = False
                 self.log.write(ret + ': Player activated!!!', help_msg=False, suffix='')
