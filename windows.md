@@ -54,6 +54,8 @@ Installing [MPlayer](http://www.mplayerhq.hu/) takes a couple of extra steps, an
 
 [VLC](https://www.videolan.org/vlc/) is much easier to install, but song titles' updating may not be 100% consistent (if any). If this is not a deal breaker for you, then just go on and use [VLC](https://www.videolan.org/vlc/) as **PyRadio**'s player.
 
+If you are on **Windows 7** and using *MPlayer*, you will not be able to use profiles; it seems the use of profiles is not supported.
+
 Other than that, you will have a fully functional **PyRadio** installation.
 
 Having said that, let us proceed with the installation.
