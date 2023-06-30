@@ -12,13 +12,19 @@ REM CLS
 ECHO Installing / Updating wheel
 %PROGRAM% -m pip install --upgrade wheel 1>NUL 2>NUL
 IF %ERRORLEVEL% == 1 (
-    SET ERRPKG=windows-curses
+    SET ERRPKG=wheel
     GOTO piperror
 )
 ECHO Installing / Updating setuptools
 %PROGRAM% -m pip install --upgrade setuptools 1>NUL 2>NUL
 IF %ERRORLEVEL% == 1 (
-    SET ERRPKG=windows-curses
+    SET ERRPKG=setuptools
+    GOTO piperror
+)
+ECHO Installing / Updating pip
+%PROGRAM% -m pip install --upgrade pip 1>NUL 2>NUL
+IF %ERRORLEVEL% == 1 (
+    SET ERRPKG=pip
     GOTO piperror
 )
 ECHO Installing / Updating windows-curses
@@ -27,11 +33,16 @@ IF %ERRORLEVEL% == 1 (
     SET ERRPKG=windows-curses
     GOTO piperror
 )
-
 ECHO Installing / Updating rich
 %PROGRAM% -m pip install --upgrade rich 1>NUL 2>NUL
 IF %ERRORLEVEL% == 1 (
     SET ERRPKG=rich
+    GOTO piperror
+)
+ECHO Installing / Updating requests
+%PROGRAM% -m pip install --upgrade requests 1>NUL 2>NUL
+IF %ERRORLEVEL% == 1 (
+    SET ERRPKG=requests
     GOTO piperror
 )
 
