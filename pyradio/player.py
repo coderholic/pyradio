@@ -1732,16 +1732,19 @@ class Player(object):
             logger.info('----==== {} player started ====----'.format(self.PLAYER_NAME))
         if self.recording == self.RECORD_AND_LISTEN \
                 and self.PLAYER_NAME != 'mpv':
+                    limit = 120000
                     if self.PLAYER_NAME == 'mplayer':
+                        if not platform.startswith('win'):
+                            limit = 12000
                         threading.Thread(
                                 target=self.create_monitor_player,
                                 args=(lambda: self.stop_mpv_status_update_thread or \
-                                        self.stop_win_vlc_status_update_thread,  12000, self._start_monitor_update_thread)
+                                        self.stop_win_vlc_status_update_thread,  limit, self._start_monitor_update_thread)
                                 ).start()
                     else:
                         threading.Thread(
                                 target=self.create_monitor_player,
-                                args=(lambda: self.stop_mpv_status_update_thread, 120000, self._start_monitor_update_thread)
+                                args=(lambda: self.stop_mpv_status_update_thread, limit, self._start_monitor_update_thread)
                                 ).start()
 
     def _sendCommand(self, command):
@@ -2555,11 +2558,11 @@ class MpPlayer(Player):
         '''
 
         self.PROFILE_FROM_USER = False
-        #if platform.startswith('win'):
-        #    ''' Existing mplayer Windows implementations
-        #        do not support profiles
-        #    '''
-        #    return 0
+        if platform.startswith('win'):
+            ''' Existing mplayer Windows implementations
+                do not support profiles
+            '''
+            return 0
         for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
                 with open(config_file, 'r', encoding='utf-8') as f:

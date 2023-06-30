@@ -18,7 +18,7 @@ from copy import deepcopy
 from sys import version as python_version, version_info, platform
 from os.path import join, basename, getmtime, getsize
 from os import remove, rename
-from platform import system
+from platform import uname
 from time import ctime, sleep
 from datetime import datetime
 from tempfile import gettempdir
@@ -810,9 +810,9 @@ class PyRadio(object):
             ver = self._cnf.get_pyradio_version()
             logger.info('<<<===---  Program start  ---===>>>')
             if self._cnf.distro == 'None':
-                logger.info("PyRadio {0}: TUI initialization on python v. {1} on {2}".format(self._cnf.current_pyradio_version, python_version.replace('\n', ' ').replace('\r', ' '), system()))
+                logger.info('PyRadio {0}: TUI initialization on python v. {1} on "{2}"'.format(self._cnf.current_pyradio_version, python_version.replace('\n', ' ').replace('\r', ' '), ', '.join(uname())))
             else:
-                logger.info("PyRadio {0}: TUI initialization on python v. {1} on {2}".format(self._cnf.current_pyradio_version, python_version.replace('\n', ' ').replace('\r', ' '), self._cnf.distro))
+                logger.info('PyRadio {0}: TUI initialization on python v. {1} on {2} ({3})'.format(self._cnf.current_pyradio_version, python_version.replace('\n', ' ').replace('\r', ' '), self._cnf.distro, ', '.join(uname())))
         self.setup_return_status = True
         if not curses.has_colors():
             self.setup_return_status = False
