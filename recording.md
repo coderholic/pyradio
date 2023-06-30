@@ -73,7 +73,6 @@ This means that the front end (**PyRadio**) will have to use two *mplayer* insta
 - the **recorder** will display the song titles in addition to saving the output file.
 - the **monitor** will be started after the output file gets to a certain size, set to 12000 bytes by trial and error.
 - pausing and resuming the **monitor** for long will lead to song titles being out of sync, since the **recorder** will keep receiving data (and song titles) even when the playback if off.
-- adjusting the playback volume is of course possible, <s>but there will be no vissible indication for it.</s> but the result is a bit luggy...
 
 ### VLC
 
@@ -82,8 +81,10 @@ This means that the front end (**PyRadio**) will have to use two *mplayer* insta
 **VLC** stream recording has the following characteristics:
 
 - it does not have the ability to record and play a stream at the same time. \
-This means that the front end will have to use two *vlc* instances: one to record the stream and one more to play the recorded file (as it is being recorded).
-
+This means that the front end (**PyRadio**) will have to use two *vlc* instances (run *vlc* twice): one as a **recorder** and one as a **monitor**.
+- the **recorder** will display the song titles in addition to saving the output file.
+- the **monitor** will be started after the output file gets to a certain size, set to 120000 bytes by trial and error.
+- pausing and resuming the **monitor** for long will lead to song titles being out of sync, since the **recorder** will keep receiving data (and song titles) even when the playback if off.
 
 ## Recording implementation
 

@@ -97,14 +97,16 @@ This means that the front end (<strong>PyRadio</strong>) will have to use two <e
 <li>the <strong>recorder</strong> will display the song titles in addition to saving the output file.</li>
 <li>the <strong>monitor</strong> will be started after the output file gets to a certain size, set to 12000 bytes by trial and error.</li>
 <li>pausing and resuming the <strong>monitor</strong> for long will lead to song titles being out of sync, since the <strong>recorder</strong> will keep receiving data (and song titles) even when the playback if off.</li>
-<li>adjusting the playback volume is of course possible, <s>but there will be no vissible indication for it.</s> but the result is a bit luggy…</li>
 </ul>
 <h3 id="vlc">VLC</h3>
 <p><strong>Note</strong>: <strong>VLC</strong> recording has not been implemented yet!</p>
 <p><strong>VLC</strong> stream recording has the following characteristics:</p>
 <ul>
 <li>it does not have the ability to record and play a stream at the same time.<br />
-This means that the front end will have to use two <em>vlc</em> instances: one to record the stream and one more to play the recorded file (as it is being recorded).</li>
+This means that the front end (<strong>PyRadio</strong>) will have to use two <em>vlc</em> instances (run <em>vlc</em> twice): one as a <strong>recorder</strong> and one as a <strong>monitor</strong>.</li>
+<li>the <strong>recorder</strong> will display the song titles in addition to saving the output file.</li>
+<li>the <strong>monitor</strong> will be started after the output file gets to a certain size, set to 120000 bytes by trial and error.</li>
+<li>pausing and resuming the <strong>monitor</strong> for long will lead to song titles being out of sync, since the <strong>recorder</strong> will keep receiving data (and song titles) even when the playback if off.</li>
 </ul>
 <h2 id="recording-implementation">Recording implementation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>The following keys are used for this feature:</p>
