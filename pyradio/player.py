@@ -5,6 +5,7 @@ import os
 import random
 import logging
 from os.path import expanduser
+from platform import uname as platform_uname
 from sys import platform, version_info, platform
 from sys import exit
 from time import sleep
@@ -13,7 +14,6 @@ import collections
 import json
 import socket
 from shutil import copyfile as shutil_copy_file
-
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
@@ -2558,10 +2558,13 @@ class MpPlayer(Player):
         '''
 
         self.PROFILE_FROM_USER = False
-        if platform.startswith('win'):
-            ''' Existing mplayer Windows implementations
-                do not support profiles
+        if platform.startswith('win') and \
+                int(platform_uname().release) < 10:
+            ''' Existing mplayer Windows 7 and earlier
+                implementations do not support profiles
             '''
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('>>>>> Disabling profiles usage on Windows 7 <<<<<')
             return 0
         for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
