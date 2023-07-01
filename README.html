@@ -207,6 +207,14 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
+2023-07-01 s-n-g
+    * version 0.9.2.12
+    * Implementing VLC recorder (not for Windows)
+    * MPlayer recorder will display volume level
+    * MPlayer on Windows 7 will not use profiles
+    * Trying different recorded file limit to start monitor
+    * updating docs
+
 2023-06-20 s-n-g
     * version 0.9.2.11
     * implementing station recording for MPlayer media player
@@ -1461,6 +1469,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <h3 id="changing-player-mid-session">Changing player mid-session</h3>
 <p>If the user faces a playback problem with a given station, chances are that a different player will successfully play it.</p>
 <p>Pressing “<strong>\m</strong>” will bring up the “<em>Switch Media Player</em>” window, where a different player can be activated.</p>
+<p>If <strong>recording is on</strong> while using the previously activated player, it will remain on with the newly activated one. This actually means that the recording will stop when the old player is stopped and resumed when the new player is activated (creating a new recorder file). There is just one exception to that; selecting <strong>VLC</strong> is not possible on <strong>Windows</strong>, since <strong>VLC</strong> does not support recording on this platform.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The activated player will not be saved; <strong>PyRadio</strong> will still use the player defined at its config next time it is executed.</p>
 <h3 id="extra-player-parameters">Extra Player Parameters</h3>
 <p>All three supported players can accept a significant number of “<em>command line options</em>”, which are well documented and accessible through man pages (on linux and macOs) or the documentation (on Windows).</p>

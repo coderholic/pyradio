@@ -26,12 +26,15 @@ ___
     * [MPV](#mpv)
     * [MPlayer](#mplayer)
     * [VLC](#vlc)
+    * [VLC recording on Windows](#vlc-recording-on-windows)
 * [Recording implementation](#recording-implementation)
     * [File location](#file-location)
     * [File type](#file-type)
     * [Pausing playback](#pausing-playback)
 
 <!-- vim-markdown-toc -->
+
+[[Return to main doc]](README.md)
 
 ## Intro
 
@@ -76,8 +79,6 @@ This means that the front end (**PyRadio**) will have to use two *mplayer* insta
 
 ### VLC
 
-**Note**: **VLC** recording has not been implemented yet!
-
 **VLC** stream recording has the following characteristics:
 
 - it does not have the ability to record and play a stream at the same time. \
@@ -85,6 +86,16 @@ This means that the front end (**PyRadio**) will have to use two *vlc* instances
 - the **recorder** will display the song titles in addition to saving the output file.
 - the **monitor** will be started after the output file gets to a certain size, set to 120000 bytes by trial and error.
 - pausing and resuming the **monitor** for long will lead to song titles being out of sync, since the **recorder** will keep receiving data (and song titles) even when the playback if off.
+
+### VLC recording on Windows
+
+**VLC** recording in **not** supported on **Windows**.
+
+The **VLC** implementation on **Window** is a bit clumsy as it is as a radio player, and duplicating all this clumsiness in order to support recording as well, is just too much.
+
+Trying to enable recording while **VLC** is the active player will lead to displaying a message informing the user of the situation and ways to proceed.
+
+Consequently, this restriction has been applied to the "*Switch Media Player*" window (opened with "**\\m**"); when recording a station and trying to change the player in use on **Windows**, selecting **VLC** is not supported.
 
 ## Recording implementation
 

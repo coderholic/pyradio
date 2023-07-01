@@ -671,6 +671,8 @@ If the user faces a playback problem with a given station, chances are that a di
 
 Pressing "**\\m**" will bring up the "*Switch Media Player*" window, where a different player can be activated.
 
+If **recording is on** while using the previously activated player, it will remain on with the newly activated one. This actually means that the recording will stop when the old player is stopped and resumed when the new player is activated (creating a new recorder file). There is just one exception to that; selecting **VLC** is not possible on **Windows**, since **VLC** does not support recording on this platform.
+
 **Note:** The activated player will not be saved; **PyRadio** will still use the player defined at its config next time it is executed.
 
 ### Extra Player Parameters

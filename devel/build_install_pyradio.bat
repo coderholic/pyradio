@@ -27,12 +27,12 @@ IF %ERRORLEVEL% == 1 (
     SET ERRPKG=pip
     GOTO piperror
 )
-ECHO Installing / Updating windows-curses
-%PROGRAM% -m pip install --upgrade windows-curses 1>NUL 2>NUL
-IF %ERRORLEVEL% == 1 (
-    SET ERRPKG=windows-curses
-    GOTO piperror
-)
+REM ECHO Installing / Updating windows-curses
+REM %PROGRAM% -m pip install --upgrade windows-curses 1>NUL 2>NUL
+REM IF %ERRORLEVEL% == 1 (
+REM     SET ERRPKG=windows-curses
+REM     GOTO piperror
+REM )
 ECHO Installing / Updating rich
 %PROGRAM% -m pip install --upgrade rich 1>NUL 2>NUL
 IF %ERRORLEVEL% == 1 (
@@ -47,6 +47,7 @@ IF %ERRORLEVEL% == 1 (
 )
 
 echo pywin32 > requirements.txt
+echo windows-curses >> requirements.txt
 echo requests >> requirements.txt
 echo rich >> requirements.txt
 echo dnspython >> requirements.txt

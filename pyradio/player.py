@@ -412,7 +412,7 @@ class Player(object):
             if stop():
                 logger.error('Asked to stop. Exiting....')
                 return
-        logger.error('while 2')
+        # logger.error('while 2')
         while os.path.getsize(self.recording_filename) < limit:
             sleep(.1)
             if stop():
@@ -422,17 +422,17 @@ class Player(object):
         if stop():
             logger.error('\n\nAsked to stop. Exiting....\n\n')
             return
-        logger.error('----------------------starting!')
+        # logger.error('----------------------starting!')
         self.monitor_process = subprocess.Popen(
             self.monitor_opts, shell=False,
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE,
             stderr=subprocess.STDOUT
         )
-        logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
-        logger.error('------------------ to notify function')
+        # logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
+        # logger.error('------------------ to notify function')
         notify_function()
-        logger.error('------------------ after notify function')
+        # logger.error('------------------ after notify function')
         if logger.isEnabledFor(logging.INFO):
             logger.info('Executing command: {}'.format(' '.join(self.monitor_opts)))
             logger.info('----==== {} monitor started ====----'.format(self.PLAYER_NAME))
@@ -1631,7 +1631,7 @@ class Player(object):
          ):
         ''' use a multimedia player to play a stream '''
         self.monitor = self.monitor_process = self.monitor_opts = None
-        logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
+        # logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
         self.recording_filename = ''
         self.volume = -1
         self.close()
@@ -1741,7 +1741,7 @@ class Player(object):
             logger.info('----==== {} player started ====----'.format(self.PLAYER_NAME))
         if self.recording == self.RECORD_AND_LISTEN \
                 and self.PLAYER_NAME != 'mpv':
-                    logger.error('=======================\n\n')
+                    # logger.error('=======================\n\n')
                     limit = 120000
                     if self.PLAYER_NAME == 'mplayer':
                         if not platform.startswith('win'):
@@ -1756,22 +1756,22 @@ class Player(object):
                                 target=self.create_monitor_player,
                                 args=(lambda: self.stop_mpv_status_update_thread,  limit, self._start_monitor_update_thread)
                                 ).start()
-                    logger.error('=======================\n\n')
+                    # logger.error('=======================\n\n')
 
     def _sendCommand(self, command):
         ''' send keystroke command to player '''
         if [x for x in ('q', 'shutdown') if command.startswith(x)]:
             self._command_to_player(self.process, command)
-            logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
+            # logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
             if self.monitor_process is not None:
                 self._command_to_player(self.monitor_process, command)
             return
-        logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
+        # logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
         if self.monitor_process is not None and \
                 [x for x in
                  ('/', '*', 'p', 'm', 'vol', 'pause' ) if command.startswith(x)
                  ]:
-                    logger.error('\n\nsending command: "{}"\n\n'.format(command))
+                    # logger.error('\n\nsending command: "{}"\n\n'.format(command))
                     self._command_to_player(self.monitor_process, command)
         else:
             self._command_to_player(self.process, command)

@@ -1,3 +1,11 @@
+2023-07-01 s-n-g
+    * version 0.9.2.12
+    * Implementing VLC recorder (not for Windows)
+    * MPlayer recorder will display volume level
+    * MPlayer on Windows 7 will not use profiles
+    * Trying different recorded file limit to start monitor
+    * updating docs
+
 2023-06-20 s-n-g
     * version 0.9.2.11
     * implementing station recording for MPlayer media player

@@ -240,7 +240,8 @@ class SelectPlayer(object):
             ord('s'), ord(' '),
             ord('l'), curses.KEY_RIGHT
         ):
-            if not self._no_vlc:
+            if not (self._no_vlc and \
+                    self._available_players[self._selected] == 'vlc'):
                 return self._available_players[self._selected]
         elif char in (ord('h'), curses.KEY_LEFT,
                       ord('q'), curses.KEY_EXIT, 27):
