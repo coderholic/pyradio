@@ -231,10 +231,11 @@ class SelectPlayer(object):
         elif char in (
             curses.KEY_ENTER,
             ord('\n'), ord('\r'),
-            ord('s'), ord(' ')
+            ord('s'), ord(' '),
+            ord('l'), curses.KEY_RIGHT
         ):
             return self._available_players[self._selected]
-        elif char in (ord('q'), curses.KEY_EXIT, 27):
+        elif char in (ord('h'), ord('q'), curses.KEY_EXIT, 27):
             return None
         return ''
 
@@ -7006,6 +7007,7 @@ __|Remote Control Server| cannot be started!__
                     logger.debug('selected player = {}'.format(ret))
                 self._change_player = None
                 to_play = self.playing
+                to_record = self.player.recording
                 if self.player.isPlaying():
                     self.stopPlayer()
                 self.player = None
@@ -7022,6 +7024,7 @@ __|Remote Control Server| cannot be started!__
                     self._add_station_to_stations_history,
                     self._recording_lock
                 )
+                self.player.recording = to_record
                 self.log.display_help_message = False
                 self.log.write(ret + ': Player activated!!!', help_msg=False, suffix='')
                 self.player.volume = -1

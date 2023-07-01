@@ -303,6 +303,7 @@ class Player(object):
         self.monitor = self.monitor_process = None
         self.monitor_opts = self.monitor_update_thread = None
         self._recording_lock = recording_lock
+        self.already_playing = False
 
     @property
     def recording(self):
