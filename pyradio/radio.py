@@ -148,15 +148,21 @@ class SelectPlayer(object):
     X = Y = maxX = maxY = 0
     _win = _parent = None
 
-    _players = {
-        'mpv': '  MPV Media Player',
-        'mplayer': '  MPlayer Media Player',
-        'vlc': '  VLC Media Player',
-    }
 
-    def __init__(self, active_player, parent):
+    def __init__(self, active_player, parent, recording):
+        self._players = {
+            'mpv': '  MPV Media Player',
+            'mplayer': '  MPlayer Media Player',
+            'vlc': '  VLC Media Player',
+        }
         self._selected = 0
         self._active_player = active_player
+        self._recording = recording
+        self._no_vlc = False
+        if recording > 0 and \
+                platform.startswith('win'):
+            self._players['vlc'] += ' (Not Supported)'
+            self._no_vlc = True
         self._available_players = [x.PLAYER_NAME for x in player.available_players if x.PLAYER_NAME != self._active_player]
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('available players = {}'.format(player.available_players))
@@ -234,8 +240,10 @@ class SelectPlayer(object):
             ord('s'), ord(' '),
             ord('l'), curses.KEY_RIGHT
         ):
-            return self._available_players[self._selected]
-        elif char in (ord('h'), ord('q'), curses.KEY_EXIT, 27):
+            if not self._no_vlc:
+                return self._available_players[self._selected]
+        elif char in (ord('h'), curses.KEY_LEFT,
+                      ord('q'), curses.KEY_EXIT, 27):
             return None
         return ''
 
@@ -566,6 +574,7 @@ class PyRadio(object):
             self.ws.GROUP_SELECTION_MODE: self._show_group_selection,
             self.ws.GROUP_HELP_MODE: self._show_group_help,
             self.ws.RECORD_WINDOW_MODE: self._show_recording_toggle_window,
+            self.ws.WIN_VLC_NO_RECORD_MODE: self._show_win_no_record,
         }
 
         ''' list of help functions '''
@@ -6236,15 +6245,34 @@ __|Remote Control Server| cannot be started!__
                         prompt='',
                         is_message=True)
 
+    def _show_win_no_record(self):
+        txt = '''
+                |VLC| on |Windows| does not support recording.
+
+                If you really need to record a station, please use one
+                of the other two supported players, preferably |MPV|.
+
+                To use one of them (|MPV| or |MPlayer|), close this window
+                and press |\m| to activate it.
+
+                If none of them is installed, close this window and
+                press |F8| to get to the player installation window.
+            '''
+        self._show_help(txt,
+                        mode_to_set=self.ws.WIN_VLC_NO_RECORD_MODE,
+                        caption=' Recording not supported! ',
+                        prompt='',
+                        is_message=True)
+
     def _show_recording_toggle_window(self):
         if self.player.recording > 0:
             caption = ' Recording Enable '
             txt = ''' _____Next time you play a station,
                       _____it will be |written to a file|!
 
-                      A [|r|] at the right top corner of the
-                      window indicates that recording is |enabled|.
-                      A [|R|] indicates that a station is actually
+                      A |[r]| at the right top corner of the window
+                      indicates that recording is |enabled|.
+                      A |[R]| indicates that a station is actually
                       |being recorded| to a file.
                     '''
         else:
@@ -6709,7 +6737,8 @@ __|Remote Control Server| cannot be started!__
                     self.ws.operation_mode = self.ws.CHANGE_PLAYER_MODE
                     self._change_player = SelectPlayer(
                         active_player=self.player.PLAYER_NAME,
-                        parent=self.bodyWin
+                        parent=self.bodyWin,
+                        recording=self.player.recording
                     )
                     self._change_player.show()
 
@@ -7024,7 +7053,9 @@ __|Remote Control Server| cannot be started!__
                     self._add_station_to_stations_history,
                     self._recording_lock
                 )
-                self.player.recording = to_record
+                if not (self.player.PLAYER_NAME == 'vlc' and \
+                        platform.startswith('win')):
+                    self.player.recording = to_record
                 self.log.display_help_message = False
                 self.log.write(ret + ': Player activated!!!', help_msg=False, suffix='')
                 self.player.volume = -1
@@ -7033,6 +7064,7 @@ __|Remote Control Server| cannot be started!__
                         self.setStation(to_play)
                     self.playSelection()
                 self.refreshBody()
+                self._change_player = None
 
         elif self.ws.operation_mode == self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE:
             if char == ord('s'):
@@ -8627,7 +8659,10 @@ __|Remote Control Server| cannot be started!__
                 if char == ord('|'):
                     self._reset_status_bar_right()
                     # if self.player.PLAYER_NAME != 'vlc':
-                    if self.player.PLAYER_NAME:
+                    if self.player.PLAYER_NAME == 'vlc' and \
+                            platform.startswith('win'):
+                        self._show_win_no_record()
+                    else:
                         self.player.recording = 1 if self.player.recording == 0 else 0
                         if self.player.recording > 0:
                             if self.player.isPlaying():
@@ -8638,8 +8673,6 @@ __|Remote Control Server| cannot be started!__
                             self.player.already_playing = False
                         self._show_recording_status_in_header()
                         self._show_recording_toggle_window()
-                    else:
-                        self._print_not_implemented_yet()
 
                 elif char == curses.ascii.BEL:
                     ''' ^G - show groups '''

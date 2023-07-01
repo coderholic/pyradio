@@ -140,6 +140,7 @@ class Window_Stack_Constants(object):
     CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE = 323
     EDIT_STATION_ICON_URL_ERROR = 324
     EDIT_STATION_ICON_FORMAT_ERROR = 325
+    WIN_VLC_NO_RECORD_MODE = 326
     THEME_MODE = 400
     HISTORY_EMPTY_NOTIFICATION = 500
     NO_BROWSER_SEARCH_RESULT_NOTIFICATION = 501
@@ -286,6 +287,7 @@ class Window_Stack_Constants(object):
         GROUP_SEARCH_MODE: 'GROUP_SEARCH_MODE',
         GROUP_HELP_MODE: 'GROUP_HELP_MODE',
         RECORD_WINDOW_MODE: 'RECORD_WINDOW_MODE',
+        WIN_VLC_NO_RECORD_MODE: 'WIN_VLC_NO_RECORD_MODE' ,
     }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -373,6 +375,7 @@ class Window_Stack_Constants(object):
         UPDATE_STATIONS_CSV_RESULT_MODE,
         GROUP_HELP_MODE,
         RECORD_WINDOW_MODE,
+        WIN_VLC_NO_RECORD_MODE,
     )
 
     def __init__(self):
