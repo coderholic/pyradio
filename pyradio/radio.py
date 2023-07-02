@@ -5,7 +5,7 @@
 # Ben Dowling - 2009 - 2010
 # Kirill Klenov - 2012
 # Peter Stevenson (2E0PGS) - 2018
-# Spiros Georgaras - 2018, 2022
+# Spiros Georgaras - 2018, 2023
 
 import curses
 import curses.ascii
@@ -611,8 +611,19 @@ class PyRadio(object):
             0 - station search
             1 - playlist search
             2 - theme search
+            3 - paste mode
+            4 - group selection
         '''
         self._search_classes = [None, None, None, None, None]
+
+        ''' the files that the search terms are stored to  '''
+        self._search_files = (
+                path.join(self._cnf.data_dir, 'search-station.txt'),
+                path.join(self._cnf.data_dir, 'search-playlist.txt'),
+                path.join(self._cnf.data_dir, 'search-theme.txt'),
+                path.join(self._cnf.data_dir, 'search-paste.txt'),
+                path.join(self._cnf.data_dir, 'search-group.txt'),
+                )
 
         ''' points to list in which the search will be performed '''
         self._search_list = []
@@ -1824,7 +1835,11 @@ class PyRadio(object):
                         box_color=curses.color_pair(5),
                         caption_color=curses.color_pair(4),
                         edit_color=curses.color_pair(5),
-                        cursor_color=curses.color_pair(8))
+                        cursor_color=curses.color_pair(8),
+                        is_locked=self._cnf.locked,
+                        search_history_file=\
+                            self._search_files[self._mode_to_search[operation_mode]],
+                    )
         except KeyError:
             self.search = None
             return
@@ -2253,9 +2268,9 @@ class PyRadio(object):
                 return
             try:
                 response = requests.get(url)
-            except:
+            except requests.exceptions.RequestException as e:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('+++ icon download fialed!!')
+                    logger.debug('+++ icon download failed: {}'.format(e))
                 return
             if stop():
                 if logger.isEnabledFor(logging.DEBUG):

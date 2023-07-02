@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import curses
 import curses.ascii
+from os.path import basename
 from sys import exit
 from datetime import date, time, datetime, timedelta
 try:
@@ -3280,6 +3281,8 @@ class SimpleCursesLineEdit(object):
         self.y = begin_y
         self.x = begin_x
 
+        self._search_history_file = ''
+        self._locked = False
         if kwargs:
             for key, value in kwargs.items():
                 if key == 'boxed':
@@ -3342,9 +3345,16 @@ class SimpleCursesLineEdit(object):
                     ''' set paste mode and never disable it '''
                     self._paste_mode_always_on = True
                     self._paste_mode = True
+                elif key == 'search_history_file':
+                    self._search_history_file = value
+                elif key == 'is_locked':
+                    self._locked = value
 
         if self._has_history:
-            self._input_history = SimpleCursesLineEditHistory()
+            self._input_history = SimpleCursesLineEditHistory(
+                    self._search_history_file,
+                    self._locked
+                    )
         self._calculate_window_metrics()
 
     @property
@@ -4501,23 +4511,78 @@ class SimpleCursesLineEdit(object):
 
 class SimpleCursesLineEditHistory(object):
 
-    def __init__(self):
+    def __init__(self, history_file=None, history_file_is_locked=None):
         self._history = ['']
         self._active_history_index = 0
+        self._history_file = history_file
+        if self._history_file is None:
+            self._read_history_file()
+        self._history_file_is_locked = False
+        if history_file_is_locked is not None:
+            self._history_file_is_locked = history_file_is_locked
+        if self._history_file:
+            self._read_history_file()
+        self._dirty = False
+
+    def _read_history_file(self, a_file=None):
+        if a_file is not None:
+            file_to_read = a_file
+        else:
+            file_to_read = self._history_file
+        try:
+            with open(file_to_read, 'r', encoding='utf-8') as f:
+                line = f.read().strip()
+            self._history = line.split()
+            self._active_history_index = len(self._history)
+        except:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('search history failed to be read from "{}"'.format(basename(file_to_read)))
+
+    def _save_history_file(self, a_file=None):
+        if self._history_file_is_locked:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('not saving search history; sesson is locked!')
+            return False
+        if self._dirty:
+            if a_file is not None:
+                file_to_write = a_file
+            else:
+                file_to_write = self._history_file
+            if len(self._history) > 20:
+                history = self._history[len(self._history)-20:]
+            else:
+                history = self._history[:]
+            try:
+                with open(file_to_write, 'w', encoding='utf-8') as f:
+                    f.write('\n'.join(history) + '\n')
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('search history saved to "{}"'.format(basename(file_to_write)))
+                return True
+            except:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('search history failed to be saved to "{}"'.format(basename(file_to_write)))
+                return False
+        return False
 
     def add_to_history(self, a_string):
         if a_string:
             if self._history:
-                if len(self._history) > 1:
-                    for i, a_history_item in enumerate(self._history):
-                        if a_history_item.lower() == a_string.lower():
-                            self._history.pop(i)
-                            break
                 if self._history[-1].lower() != a_string.lower():
-                    self._history.append(a_string)
-            else:
-                self._history.append(a_string)
+                    if len(self._history) > 1:
+                        i = [(x, y) for x, y in \
+                                enumerate(self._history) \
+                                if y.lower() == a_string.lower()
+                             ]
+                        if i:
+                            self._history.pop(i[0][0])
+                else:
+                    return
+            self._history.append(a_string)
+            self._dirty = True
             self._active_history_index = len(self._history)
+        if self._dirty:
+            if self._save_history_file():
+                self._dirty = False
 
     def return_history(self, direction, current_string):
         if self._history:

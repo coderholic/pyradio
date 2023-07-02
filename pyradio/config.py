@@ -1795,13 +1795,13 @@ class PyRadioConfig(PyRadioStations):
             Popen(['open', self.stations_dir])
         else:
             try:
-                Popen(['xdg-open', self.stations_dir])
-            except:
                 Popen(
                     ['xdg-open', self.stations_dir],
                     stderr=DEVNULL,
                     stdout=DEVNULL
                 )
+            except:
+                Popen(['xdg-open', self.stations_dir])
 
     def reset_profile_name(self):
         self._profile_name = 'pyradio'
