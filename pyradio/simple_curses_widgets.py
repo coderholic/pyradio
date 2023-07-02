@@ -4530,9 +4530,10 @@ class SimpleCursesLineEditHistory(object):
         else:
             file_to_read = self._history_file
         try:
+            self._histor = ['']
             with open(file_to_read, 'r', encoding='utf-8') as f:
                 line = f.read().strip()
-            self._history = line.split()
+            self._history.extend(line.split())
             self._active_history_index = len(self._history)
         except:
             if logger.isEnabledFor(logging.DEBUG):
