@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import subprocess
 import logging
 from sys import platform

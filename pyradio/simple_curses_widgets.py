@@ -3357,6 +3357,10 @@ class SimpleCursesLineEdit(object):
                     )
         self._calculate_window_metrics()
 
+    def save_search_history(self):
+        if self._has_history:
+            self._input_history.save_search_history()
+
     @property
     def visible(self):
         '''Returns if the widget is visible'''
@@ -4539,12 +4543,12 @@ class SimpleCursesLineEditHistory(object):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('search history failed to be read from "{}"'.format(basename(file_to_read)))
 
-    def _save_history_file(self, a_file=None):
+    def save_search_history(self, a_file=None):
         if self._history_file_is_locked:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('not saving search history; sesson is locked!')
             return False
-        if self._dirty:
+        if self._history and self._dirty:
             if a_file is not None:
                 file_to_write = a_file
             else:
@@ -4581,9 +4585,6 @@ class SimpleCursesLineEditHistory(object):
             self._history.append(a_string)
             self._dirty = True
             self._active_history_index = len(self._history)
-        if self._dirty:
-            if self._save_history_file():
-                self._dirty = False
 
     def return_history(self, direction, current_string):
         if self._history:

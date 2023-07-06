@@ -1856,6 +1856,10 @@ class PyRadio(object):
             logger.critical('=== Logging stopped')
         logger.error('signum = {}'.format(signum))
         logger.error('frame = {}'.format(frame))
+        search_cls = [x for x in self._search_classes if x is not None]
+        for n in range(len(search_cls)):
+            search_cls[n].save_search_history()
+            search_cls[n] = None
         self.player.stop_update_notification_thread = True
         self.player.stop_win_vlc_status_update_thread = True
         if self.player:
@@ -10141,16 +10145,10 @@ __|Remote Control Server| cannot be started!__
 
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
-        # self.ctrl_c_handler(0,0, True)
-        # for a_sig in self.handled_signals.keys():
-        #     try:
-        #         signal.signal(
-        #             self.handled_signals[a_sig],
-        #             self.def_signal_handlers[a_sig]
-        #         )
-        #     except:
-        #         pass
-        # return
+        search_cls = [x for x in self._search_classes if x is not None]
+        for n in range(len(search_cls)):
+            search_cls[n].save_search_history()
+            search_cls[n] = None
         self._cls_update_stations = None
         self.detect_if_player_exited = False
         self.log._stop_desktop_notification_thread = True
@@ -10201,6 +10199,10 @@ __|Remote Control Server| cannot be started!__
         ''' windows signal handler
             https://danielkaes.wordpress.com/2009/06/04/how-to-catch-kill-events-with-python/
         '''
+        search_cls = [x for x in self._search_classes if x is not None]
+        for n in range(len(search_cls)):
+            search_cls[n].save_search_history()
+            search_cls[n] = None
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
         self.log._stop_desktop_notification_thread = True

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import subprocess
 from sys import platform, version_info
 

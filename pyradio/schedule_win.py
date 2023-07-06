@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from sys import exit
 from datetime import date, datetime, timedelta
 from calendar import monthrange

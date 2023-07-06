@@ -1,4 +1,4 @@
-# '''- coding: utf-8 -*- '''
+# -*- coding: utf-8 -*-
 import curses
 from os import getenv
 from os.path import join, exists, dirname

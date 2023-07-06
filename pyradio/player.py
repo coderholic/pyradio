@@ -353,7 +353,16 @@ class Player(object):
             else:
                 config_files = []
         self.all_config_files['mplayer'] = config_files[:]
+        config_files = [os.path.join(self._cnf.data_dir, 'vlc.conf')]
+        self.all_config_files['vlc'] = config_files[:]
         self._restore_win_player_config_file()
+        if not os.path.exists(self.all_config_files['vlc'][0]):
+            ''' create a default vlc config file '''
+            try:
+                with open(self.all_config_files['vlc'][0], 'w') as f:
+                    f.write('50')
+            except:
+                pass
 
     @property
     def profile_name(self):
@@ -379,6 +388,9 @@ class Player(object):
             return streamUrl.replace('https://', 'http://')
         else:
             return streamUrl
+
+    def _on_connect(self):
+        pass
 
     def set_volume(self, vol):
         if self.isPlaying() and \
@@ -516,6 +528,7 @@ class Player(object):
         return ret + '\n\n|Highlighted values| are user specified.\nOther values are station provided (live) data.', tail
 
     def _do_save_volume(self, config_string):
+        logger.error('\n\nself.volume = {}\n\n'.format(self.volume))
         if not self.config_files:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Volume not saved!!! (config file not found!!!)')
@@ -544,111 +557,116 @@ class Player(object):
             profile_found = False
             config_file = self.config_files[0]
             ret_string = ret_strings[1].format(str(self.volume))
-            if os.path.exists(config_file):
-                # if platform.startswith('win'):
-                #     """ This is actually only for mplayer
-                #         which does not support profiles on Windows
-                #     """
-                #     with open(config_file, 'r') as c_file:
-                #         config_string = c_file.read()
-                #     if "volume=" in config_string:
-                #         config_string = config_string.replace('#Volume set from pyradio\n', '')
-                #         vol = config_string.splitlines()
-                #         for i, v_string in enumerate(vol):
-                #             if v_string.startswith('volume'):
-                #                 vol[i] = '#Volume set from pyradio\nvolume={}'.format(self.volume)
-                #                 break
-                #         config_string = '\n'.join(vol)
-                #     else:
-                #         out = config_string + 'volume={}'.format(self.volume)
-                #         config_string = out
-                #     try:
-                #         with open(config_file, "w") as c_file:
-                #             c_file.write(config_string)
-                #         volume = self.volume
-                #         self.volume = -1
-                #         self.PROFILE_FROM_USER = True
-                #         return ret_strings[1].format(str(volume))
-                #     except:
-                #         if (logger.isEnabledFor(logging.DEBUG)):
-                #             logger.debug(log_strings[2].format(config_file))
-                #         return ret_strings[2].format(str(self.volume))
-                # else:
-                if self.PROFILE_FROM_USER:
-                    with open(config_file, 'r', encoding='utf-8') as c_file:
-                        config_string = c_file.read()
+            if self.PLAYER_NAME == 'vlc':
+                ret = self._write_config()
+                if not ret:
+                    ret_string = ret_strings[2]
+            else:
+                if os.path.exists(config_file):
+                    # if platform.startswith('win'):
+                    #     """ This is actually only for mplayer
+                    #         which does not support profiles on Windows
+                    #     """
+                    #     with open(config_file, 'r') as c_file:
+                    #         config_string = c_file.read()
+                    #     if "volume=" in config_string:
+                    #         config_string = config_string.replace('#Volume set from pyradio\n', '')
+                    #         vol = config_string.splitlines()
+                    #         for i, v_string in enumerate(vol):
+                    #             if v_string.startswith('volume'):
+                    #                 vol[i] = '#Volume set from pyradio\nvolume={}'.format(self.volume)
+                    #                 break
+                    #         config_string = '\n'.join(vol)
+                    #     else:
+                    #         out = config_string + 'volume={}'.format(self.volume)
+                    #         config_string = out
+                    #     try:
+                    #         with open(config_file, "w") as c_file:
+                    #             c_file.write(config_string)
+                    #         volume = self.volume
+                    #         self.volume = -1
+                    #         self.PROFILE_FROM_USER = True
+                    #         return ret_strings[1].format(str(volume))
+                    #     except:
+                    #         if (logger.isEnabledFor(logging.DEBUG)):
+                    #             logger.debug(log_strings[2].format(config_file))
+                    #         return ret_strings[2].format(str(self.volume))
+                    # else:
+                    if self.PROFILE_FROM_USER:
+                        with open(config_file, 'r', encoding='utf-8') as c_file:
+                            config_string = c_file.read()
 
-                    if self.profile_token in config_string:
-                        profile_found = True
+                        if self.profile_token in config_string:
+                            profile_found = True
 
-                        ''' split on self.profile_token
-                        last item has our options '''
-                        sections = config_string.split(self.profile_token)
+                            ''' split on self.profile_token
+                            last item has our options '''
+                            sections = config_string.split(self.profile_token)
 
-                        ''' split at [ - i.e. isolate consecutive profiles
-                        first item has pyradio options '''
-                        py_section = sections[-1].split('[')
+                            ''' split at [ - i.e. isolate consecutive profiles
+                            first item has pyradio options '''
+                            py_section = sections[-1].split('[')
 
-                        ''' split to lines in order to get '^volume=' '''
-                        py_options = py_section[0].split('\n')
+                            ''' split to lines in order to get '^volume=' '''
+                            py_options = py_section[0].split('\n')
 
-                        ''' replace volume line '''
-                        vol_set = False
-                        for i, opt in enumerate(py_options):
-                            if opt.startswith('volume='):
-                                py_options[i]='volume=' + str(self.volume)
-                                vol_set = True
-                                break
-                        ''' or add it if it does not exist '''
-                        if not vol_set:
-                            py_options.append('volume=' + str(self.volume))
+                            ''' replace volume line '''
+                            vol_set = False
+                            for i, opt in enumerate(py_options):
+                                if opt.startswith('volume='):
+                                    py_options[i]='volume=' + str(self.volume)
+                                    vol_set = True
+                                    break
+                            ''' or add it if it does not exist '''
+                            if not vol_set:
+                                py_options.append('volume=' + str(self.volume))
 
-                        ''' join lines together in py_section's first item '''
-                        py_section[0] = '\n'.join(py_options)
+                            ''' join lines together in py_section's first item '''
+                            py_section[0] = '\n'.join(py_options)
 
-                        ''' join consecutive profiles (if exist)
-                        in last item of sections '''
-                        if len(py_section) > 1:
-                            sections[-1] = '['.join(py_section)
+                            ''' join consecutive profiles (if exist)
+                            in last item of sections '''
+                            if len(py_section) > 1:
+                                sections[-1] = '['.join(py_section)
+                            else:
+                                sections[-1] = py_section[0]
+
+                            ''' finally get the string back together '''
+                            config_string = self.profile_token.join(sections)
+
+                        try:
+                            with open(config_file, 'w', encoding='utf-8') as c_file:
+                                c_file.write(config_string)
+                            self.volume = -1
+                        except EnvironmentError:
+                            if (logger.isEnabledFor(logging.DEBUG)):
+                                logger.debug(log_strings[2].format(config_file))
+                            return ret_strings[2].format(str(self.volume))
+
+                ''' no user profile or user config file does not exist '''
+                if not profile_found:
+                    if os.path.isdir(os.path.dirname(config_file)):
+                        if os.path.exists(config_file):
+                            new_profile_string = '\n' + config_string
                         else:
-                            sections[-1] = py_section[0]
-
-                        ''' finally get the string back together '''
-                        config_string = self.profile_token.join(sections)
-
+                            new_profile_string = self.NEW_PROFILE_STRING + config_string
+                    else:
+                        try:
+                            os.mkdir(os.path.dirname(config_file))
+                        except OSError:
+                            if (logger.isEnabledFor(logging.DEBUG)):
+                                logger.debug(log_strings[2].format(config_file))
+                            return ret_strings[2].format(str(self.volume))
+                        new_profile_string = self.NEW_PROFILE_STRING + config_string
                     try:
-                        with open(config_file, 'w', encoding='utf-8') as c_file:
-                            c_file.write(config_string)
-                        self.volume = -1
+                        with open(config_file, 'a', encoding='utf-8') as c_file:
+                            c_file.write(new_profile_string.format(str(self.volume)))
                     except EnvironmentError:
                         if (logger.isEnabledFor(logging.DEBUG)):
                             logger.debug(log_strings[2].format(config_file))
                         return ret_strings[2].format(str(self.volume))
-
-            ''' no user profile or user config file does not exist '''
-            if not profile_found:
-                if os.path.isdir(os.path.dirname(config_file)):
-                    if os.path.exists(config_file):
-                        new_profile_string = '\n' + config_string
-                    else:
-                        new_profile_string = self.NEW_PROFILE_STRING + config_string
-                else:
-                    try:
-                        os.mkdir(os.path.dirname(config_file))
-                    except OSError:
-                        if (logger.isEnabledFor(logging.DEBUG)):
-                            logger.debug(log_strings[2].format(config_file))
-                        return ret_strings[2].format(str(self.volume))
-                    new_profile_string = self.NEW_PROFILE_STRING + config_string
-                try:
-                    with open(config_file, 'a', encoding='utf-8') as c_file:
-                        c_file.write(new_profile_string.format(str(self.volume)))
-                except EnvironmentError:
-                    if (logger.isEnabledFor(logging.DEBUG)):
-                        logger.debug(log_strings[2].format(config_file))
-                    return ret_strings[2].format(str(self.volume))
-                self.volume = -1
-                self.PROFILE_FROM_USER = True
+                    self.volume = -1
+                    self.PROFILE_FROM_USER = True
             self.bck_win_player_config_file(config_file)
             return ret_string
 
@@ -705,6 +723,7 @@ class Player(object):
         detect_if_player_exited = args[3]
         enable_crash_detection_function = args[4]
         recording_lock = args[5]
+        on_connect = args[6]
         has_error = False
         if (logger.isEnabledFor(logging.DEBUG)):
             logger.debug('updateStatus thread started.')
@@ -797,6 +816,8 @@ class Player(object):
                                 new_input = 'Playing: ' + self.name
                             else:
                                 new_input = self.oldUserInput['Title']
+                        if not self.playback_is_on:
+                            on_connect()
                         self.outputStream.write(msg=new_input, counter='')
                         with recording_lock:
                             self.playback_is_on = True
@@ -839,6 +860,7 @@ class Player(object):
                             if not self.playback_is_on:
                                 if logger.isEnabledFor(logging.INFO):
                                     logger.info('*** updateStatus(): Start of playback detected (Icy-Title received) ***')
+                                    on_connect()
                             with self.status_update_lock:
                                 self.playback_is_on = True
                                 self.connecting = False
@@ -885,6 +907,7 @@ class Player(object):
                                 if not self.playback_is_on:
                                     if logger.isEnabledFor(logging.INFO):
                                         logger.info('*** updateStatus(): Start of playback detected (Icy audio token received) ***')
+                                        on_connect()
                                 self.stop_timeout_counter_thread = True
                                 try:
                                     self.connection_timeout_thread.join()
@@ -918,12 +941,6 @@ class Player(object):
                                         self._icy_data['codec-name'] = self._icy_data['codec-name'].replace('"', '')
                                 # logger.error('DE audio data\n\n{}\n\n'.format(self._icy_data))
                         self.info_display_handler()
-
-
-
-
-
-
         except:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Error in updateStatus thread.', exc_info=True)
@@ -1090,7 +1107,7 @@ class Player(object):
                         except:
                             data = b''
                     a_data = self._fix_returned_data(data)
-                    # logger.error('DE Received: "{!r}"'.format(a_data))
+                    logger.error('DE Received: "{!r}"'.format(a_data))
                     if a_data == b'' or stop():
                         break
 
@@ -1118,7 +1135,8 @@ class Player(object):
                                                 break
                                             self._request_mpv_info_data(sock)
                                             self.info_display_handler()
-                                        elif d['event'] == 'playback-restart':
+                                        elif d['event'] == 'playback-restart' or \
+                                                d['event'] == 'start-file':
                                             if not self.playback_is_on:
                                                 ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
@@ -1705,7 +1723,8 @@ class Player(object):
                         stop_player,
                         detect_if_player_exited,
                         enable_crash_detection_function,
-                        self._recording_lock
+                        self._recording_lock,
+                        self._on_connect
                     )
                 )
         self.update_thread.start()
@@ -2780,6 +2799,7 @@ class VlcPlayer(Player):
         ''' vlc reports volume in values 0..256 '''
         actual_volume = -1
         max_volume = 256
+        # max_volume = 1000
 
         ''' When found in station transmission, playback is on '''
         if platform.startswith('win'):
@@ -2824,6 +2844,43 @@ class VlcPlayer(Player):
             recording_lock
         )
         # self.config_files = self.all_config_files['vlc']
+        self._config_volume = -1
+        self._read_config()
+        self.config_files = self.all_config_files['vlc']
+
+    def _on_connect(self):
+        logger.error('\n\n***********  VLC on connect\n\n')
+        if self._config_volume > -1:
+            self.get_volume()
+            if self.volume != self._config_volume:
+                self.set_volume(self._config_volume)
+
+    def _read_config(self):
+        if self._config_volume == -1:
+            try:
+                with open(self.all_config_files['vlc'][0], 'r') as f:
+                    val = f.read().strip()
+            except:
+                logger.error('\n\nself._config_volume = {}\n\n'.format(self._config_volume))
+                return
+            try:
+                self._config_volume = int(val)
+            except ValueError:
+                pass
+            logger.error('\n\nself._config_volume = {}\n\n'.format(self._config_volume))
+
+    def _write_config(self):
+        logger.error('\n\nself.volume = {}'.format(self.volume))
+        logger.error('self.actual_volume = {}'.format(self.actual_volume))
+        # ovol = round(int(self.volume)*100/self.max_volume)
+        # logger.error('ovol = {}\n\n'.format(ovol))
+        try:
+            with open(self.all_config_files['vlc'][0], 'w') as f:
+                # f.write(str(ovol))
+                f.write(str(self.volume))
+        except:
+            return False
+        return True
 
     def _volume_set(self, vol):
         ''' increase vlc's volume '''
@@ -2838,7 +2895,7 @@ class VlcPlayer(Player):
                 not self.muted:
             self.get_volume()
             ivol = int(vol)
-            ovol = int(round(self.max_volume*ivol/100))
+            ovol = round(self.max_volume*ivol/100)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('setting volume at {0}% ({1})'.format(ivol, ovol))
             if ovol != int(self.volume):
@@ -2864,7 +2921,7 @@ class VlcPlayer(Player):
                     self._sendCommand('status\n')
 
     def save_volume(self):
-        pass
+        return self._do_save_volume('{}')
 
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to vlc subprocess.'''
@@ -2940,10 +2997,12 @@ class VlcPlayer(Player):
         if self.muted:
             if self.WIN:
                 self._win_set_volume(self._unmuted_volume)
+                self.volume = int(100 * self._unmuted_volume / self.max_volume)
             else:
                 self._sendCommand('volume {}\n'.format(self.actual_volume))
+                self.volume = int(100 * self.actual_volume / self.max_volume)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('VLC unmuted: {0} ({1}%)'.format(self.actual_volume, int(100 * self.actual_volume / self.max_volume)))
+                logger.debug('VLC unmuted: {0} ({1}%)'.format(self.actual_volume, self.volume))
             self.muted = False
         else:
             if self.actual_volume == -1:
@@ -3021,7 +3080,8 @@ class VlcPlayer(Player):
         if not self.WIN:
             dec_sep = '.' if '.' in volume_string else ','
             self.actual_volume = int(volume_string.split(self.volume_string)[1].split(dec_sep)[0].split()[0])
-        return '[Vol: {}%] '.format(int(100 * self.actual_volume / self.max_volume))
+            self.volume = int(100 * self.actual_volume / self.max_volume)
+        return '[Vol: {}%] '.format(self.volume)
 
     def _format_title_string(self, title_string):
         ''' format vlc's title '''
@@ -3097,6 +3157,8 @@ class VlcPlayer(Player):
                 logger.debug('got volume=0, repeating after 1 second')
             sleep(1)
             self.get_volume(repeat=True)
+        self.actual_volume = self.volume
+        self.volume = int(100 * self.actual_volume / self.max_volume)
 
     def _no_mute_on_stop_playback(self):
         ''' make sure vlc does not stop muted '''
@@ -3121,8 +3183,9 @@ class VlcPlayer(Player):
                         self._win_set_volume(self.actual_volume)
                     else:
                         self._sendCommand('volume {}\n'.format(self.actual_volume))
+                    self.volume = int(100 * self.actual_volume / self.max_volume)
                     if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('VLC volume restored on exit: {0} ({1}%)'.format(self.actual_volume, int(100 * self.actual_volume / self.max_volume)))
+                        logger.debug('VLC volume restored on exit: {0} ({1}%)'.format(self.actual_volume, self.volume))
 
             self.show_volume = True
 
@@ -3190,15 +3253,17 @@ class VlcPlayer(Player):
                         vol = vol[:ind]
                         break
                 try:
-                    self.actual_volume = self.volume = int(vol)
+                    self.actual_volume = int(vol)
                 except ValueError:
                     # logger.error('DE ValueError: vol = {}'.format(vol))
                     return
                 break
         if self.actual_volume == 0:
             self.muted = True
+            self.volume = 0
         else:
             self.muted = False
+            self.volume = int(100 * self.actual_volume / self.max_volume)
         #self.print_response(vol)
 
     def _win_volup(self):
@@ -3211,12 +3276,13 @@ class VlcPlayer(Player):
         ivol = int(vol)
         self._thrededreq('volume ' + str(ivol))
         self.actual_volume = ivol
+        self.volume = int(100 * self.actual_volume / self.max_volume)
 
     def _win_mute(self):
         self._win_get_volume()
         self._unmuted_volume = self.actual_volume
         self._thrededreq('volume 0')
-        self.actual_volume = 0
+        self.actual_volume = self.volume = 0
         self.muted = True
 
     def _win_pause(self):

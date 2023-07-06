@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from sys import version_info as python_version
 from datetime import date as ddate, datetime, timedelta
 from dateutil.relativedelta import *

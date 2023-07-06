@@ -549,6 +549,8 @@ One can always get help by pressing the "**?**" key.
 
 After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
 
+All search widgets provide a "*search history*" function; pressing the **Up** or **Down** arrow will cycle through previously used search terms (maximum number remembered is 20).
+
 ## Line editor
 
 **PyRadio** "*Search function*" and "*Station editor*" use a *Line editor* to permit typing and editing stations' data.

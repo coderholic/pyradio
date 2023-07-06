@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import socket
 import logging
 from os.path import basename

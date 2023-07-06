@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 " pyradio -- Console radio player. "
 
 version_info = (0, 9, 2, 12)
