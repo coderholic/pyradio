@@ -577,9 +577,9 @@ class Player(object):
                         """
                         lines_no_profile, lines_with_profile = \
                                 self._split_config_file(config_file)
-                        if "volume=" in lines_no_profile:
-                            ind = lines_no_profile.index("volume=")
-                            lines_no_profile[ind] = 'volume={}'.format(self.volume)
+                        ind = [(i,x) for i,x in enumerate(lines_no_profile) if 'volume=' in x]
+                        if ind:
+                            lines_no_profile[ind[0][0]] = 'volume={}'.format(self.volume)
                         else:
                             lines_no_profile.append('volume={}\n'.format(self.volume))
                         try:
@@ -675,7 +675,7 @@ class Player(object):
             self.bck_win_player_config_file(config_file)
             return ret_string
 
-    def _split_config_file(self, config):
+    def _split_config_file(self, config_file):
         with open(config_file, 'r') as c_file:
             config_string = c_file.read()
             config_string = config_string.replace('#Volume set from pyradio\n', '')
