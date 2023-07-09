@@ -149,7 +149,7 @@ class SelectPlayer(object):
     _win = _parent = None
 
 
-    def __init__(self, active_player, parent, recording):
+    def __init__(self, active_player, parent, recording, vlc_no_recording):
         self._players = {
             'mpv': '  MPV Media Player',
             'mplayer': '  MPlayer Media Player',
@@ -158,6 +158,7 @@ class SelectPlayer(object):
         self._selected = 0
         self._active_player = active_player
         self._recording = recording
+        self._vlc_no_recording = vlc_no_recording
         self._no_vlc = False
         if recording > 0 and \
                 platform.startswith('win'):
@@ -243,6 +244,8 @@ class SelectPlayer(object):
             if not (self._no_vlc and \
                     self._available_players[self._selected] == 'vlc'):
                 return self._available_players[self._selected]
+            else:
+                self._vlc_no_recording()
         elif char in (ord('h'), curses.KEY_LEFT,
                       ord('q'), curses.KEY_EXIT, 27):
             return None
@@ -6758,7 +6761,8 @@ __|Remote Control Server| cannot be started!__
                     self._change_player = SelectPlayer(
                         active_player=self.player.PLAYER_NAME,
                         parent=self.bodyWin,
-                        recording=self.player.recording
+                        recording=self.player.recording,
+                        vlc_no_recording=self._show_win_no_record
                     )
                     self._change_player.show()
 
