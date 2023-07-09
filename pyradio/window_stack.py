@@ -374,7 +374,6 @@ class Window_Stack_Constants(object):
         CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE,
         UPDATE_STATIONS_CSV_RESULT_MODE,
         GROUP_HELP_MODE,
-        RECORD_WINDOW_MODE,
         WIN_VLC_NO_RECORD_MODE,
     )
 

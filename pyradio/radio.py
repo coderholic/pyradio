@@ -6297,7 +6297,8 @@ __|Remote Control Server| cannot be started!__
                       indicates that recording is |enabled|.
                       A |[R]| indicates that a station is actually
                       |being recorded| to a file.
-                    '''
+
+                     Press |x| to not show this message again, or'''
         else:
             if self.player.isPlaying() and \
                     self.player.recording_filename != '':
@@ -8519,6 +8520,14 @@ __|Remote Control Server| cannot be started!__
             self._cnf.get_player_params_from_backup(param_type=1)
             return
 
+        elif self.ws.operation_mode == self.ws.RECORD_WINDOW_MODE:
+            if char == ord('x'):
+                self._cnf.show_recording_start_message = False
+                self._cnf.dirty_config = True
+            self.ws.close_window()
+            self.refreshBody()
+            return
+
         elif self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
             if char in self._global_functions.keys():
                 self._global_functions[char]()
@@ -8696,7 +8705,10 @@ __|Remote Control Server| cannot be started!__
                         else:
                             self.player.already_playing = False
                         self._show_recording_status_in_header()
-                        self._show_recording_toggle_window()
+                        if self._cnf.show_recording_start_message:
+                            self._show_recording_toggle_window()
+                        else:
+                            self.refreshBody()
 
                 elif char == curses.ascii.BEL:
                     ''' ^G - show groups '''

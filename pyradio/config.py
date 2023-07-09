@@ -1232,6 +1232,8 @@ class PyRadioConfig(PyRadioStations):
     _current_notification_message = ''
     _notification_command = None
 
+    show_recording_start_message = True
+
     ''' True if lock file exists '''
     locked = False
 
@@ -2011,6 +2013,11 @@ class PyRadioConfig(PyRadioStations):
                 st = sp[1].strip()
                 if st.lower() == 'false':
                     self.show_no_themes_message = False
+            elif sp[0] == 'show_recording_message':
+                self.show_recording_start_message = True
+                st = sp[1].strip()
+                if st.lower() == 'false':
+                    self.show_recording_start_message = False
             elif sp[0] == 'player':
                 self.opts['player'][1] = sp[1].lower().strip()
                 # if sys.platform.startswith('win'):
@@ -2467,6 +2474,11 @@ auto_save_playlist = {15}
 # Default value: True
 show_no_themes_message = {16}
 
+# When recording is turned on, a message will
+# be displayed if this option is True (default)
+#
+show_recording_message = {17}
+
 # Remote Control server
 # A simple http server that can accept remote
 # connections and pass commands to PyRadio
@@ -2477,9 +2489,9 @@ show_no_themes_message = {16}
 #
 # Default value: localhost:9998
 #                no auto start
-remote_control_server_ip = {17}
-remote_control_server_port = {18}
-remote_control_server_auto_start = {19}
+remote_control_server_ip = {18}
+remote_control_server_port = {19}
+remote_control_server_auto_start = {20}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
@@ -2515,6 +2527,7 @@ remote_control_server_auto_start = {19}
                     self.opts['confirm_playlist_reload'][1],
                     self.opts['auto_save_playlist'][1],
                     self.show_no_themes_message,
+                    self.show_recording_start_message,
                     self.remote_control_server_ip,
                     self.remote_control_server_port,
                     self.remote_control_server_auto_start
