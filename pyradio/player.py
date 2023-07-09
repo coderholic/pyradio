@@ -305,6 +305,11 @@ class Player(object):
         self._recording_lock = recording_lock
         self.already_playing = False
 
+        ''' I True, we have mplayer on Windows
+            ehich will not support profiles
+        '''
+        self._mplayer_on_windows7 = False
+
     @property
     def recording(self):
         if self._recording_from_schedule > 0:
@@ -563,85 +568,85 @@ class Player(object):
                     ret_string = ret_strings[2]
             else:
                 if os.path.exists(config_file):
-                    # if platform.startswith('win'):
-                    #     """ This is actually only for mplayer
-                    #         which does not support profiles on Windows
-                    #     """
-                    #     with open(config_file, 'r') as c_file:
-                    #         config_string = c_file.read()
-                    #     if "volume=" in config_string:
-                    #         config_string = config_string.replace('#Volume set from pyradio\n', '')
-                    #         vol = config_string.splitlines()
-                    #         for i, v_string in enumerate(vol):
-                    #             if v_string.startswith('volume'):
-                    #                 vol[i] = '#Volume set from pyradio\nvolume={}'.format(self.volume)
-                    #                 break
-                    #         config_string = '\n'.join(vol)
-                    #     else:
-                    #         out = config_string + 'volume={}'.format(self.volume)
-                    #         config_string = out
-                    #     try:
-                    #         with open(config_file, "w") as c_file:
-                    #             c_file.write(config_string)
-                    #         volume = self.volume
-                    #         self.volume = -1
-                    #         self.PROFILE_FROM_USER = True
-                    #         return ret_strings[1].format(str(volume))
-                    #     except:
-                    #         if (logger.isEnabledFor(logging.DEBUG)):
-                    #             logger.debug(log_strings[2].format(config_file))
-                    #         return ret_strings[2].format(str(self.volume))
-                    # else:
-                    if self.PROFILE_FROM_USER:
-                        with open(config_file, 'r', encoding='utf-8') as c_file:
-                            config_string = c_file.read()
-
-                        if self.profile_token in config_string:
-                            profile_found = True
-
-                            ''' split on self.profile_token
-                            last item has our options '''
-                            sections = config_string.split(self.profile_token)
-
-                            ''' split at [ - i.e. isolate consecutive profiles
-                            first item has pyradio options '''
-                            py_section = sections[-1].split('[')
-
-                            ''' split to lines in order to get '^volume=' '''
-                            py_options = py_section[0].split('\n')
-
-                            ''' replace volume line '''
-                            vol_set = False
-                            for i, opt in enumerate(py_options):
-                                if opt.startswith('volume='):
-                                    py_options[i]='volume=' + str(self.volume)
-                                    vol_set = True
-                                    break
-                            ''' or add it if it does not exist '''
-                            if not vol_set:
-                                py_options.append('volume=' + str(self.volume))
-
-                            ''' join lines together in py_section's first item '''
-                            py_section[0] = '\n'.join(py_options)
-
-                            ''' join consecutive profiles (if exist)
-                            in last item of sections '''
-                            if len(py_section) > 1:
-                                sections[-1] = '['.join(py_section)
-                            else:
-                                sections[-1] = py_section[0]
-
-                            ''' finally get the string back together '''
-                            config_string = self.profile_token.join(sections)
-
+                    if self._mplayer_on_windows7:
+                        ''' we are on Windows7 with player
+                            write global mplayer config section
+                        '''
+                        """ This is actually only for mplayer
+                            which does not support profiles on Windows
+                        """
+                        lines_no_profile, lines_with_profile = \
+                                self._split_config_file(config_file)
+                        if "volume=" in lines_no_profile:
+                            ind = lines_no_profile.index("volume=")
+                            lines_no_profile[ind] = 'volume={}'.format(self.volume)
+                        else:
+                            lines_no_profile.append('volume={}\n'.format(self.volume))
                         try:
-                            with open(config_file, 'w', encoding='utf-8') as c_file:
-                                c_file.write(config_string)
-                            self.volume = -1
-                        except EnvironmentError:
+                            with open(config_file, "w") as c_file:
+                                c_file.write(
+                                    '\n'.join(lines_no_profile) + \
+                                    '\n'.join(lines_with_profile)
+                                )
+                            volume = self.volume
+                            # self.volume = -1
+                            self.PROFILE_FROM_USER = False
+                            return ret_strings[1].format(str(self.volume))
+                        except:
                             if (logger.isEnabledFor(logging.DEBUG)):
                                 logger.debug(log_strings[2].format(config_file))
                             return ret_strings[2].format(str(self.volume))
+                    else:
+                        if self.PROFILE_FROM_USER:
+                            with open(config_file, 'r', encoding='utf-8') as c_file:
+                                config_string = c_file.read()
+
+                            if self.profile_token in config_string:
+                                profile_found = True
+
+                                ''' split on self.profile_token
+                                last item has our options '''
+                                sections = config_string.split(self.profile_token)
+
+                                ''' split at [ - i.e. isolate consecutive profiles
+                                first item has pyradio options '''
+                                py_section = sections[-1].split('[')
+
+                                ''' split to lines in order to get '^volume=' '''
+                                py_options = py_section[0].split('\n')
+
+                                ''' replace volume line '''
+                                vol_set = False
+                                for i, opt in enumerate(py_options):
+                                    if opt.startswith('volume='):
+                                        py_options[i]='volume=' + str(self.volume)
+                                        vol_set = True
+                                        break
+                                ''' or add it if it does not exist '''
+                                if not vol_set:
+                                    py_options.append('volume=' + str(self.volume))
+
+                                ''' join lines together in py_section's first item '''
+                                py_section[0] = '\n'.join(py_options)
+
+                                ''' join consecutive profiles (if exist)
+                                in last item of sections '''
+                                if len(py_section) > 1:
+                                    sections[-1] = '['.join(py_section)
+                                else:
+                                    sections[-1] = py_section[0]
+
+                                ''' finally get the string back together '''
+                                config_string = self.profile_token.join(sections)
+
+                            try:
+                                with open(config_file, 'w', encoding='utf-8') as c_file:
+                                    c_file.write(config_string)
+                                self.volume = -1
+                            except EnvironmentError:
+                                if (logger.isEnabledFor(logging.DEBUG)):
+                                    logger.debug(log_strings[2].format(config_file))
+                                return ret_strings[2].format(str(self.volume))
 
                 ''' no user profile or user config file does not exist '''
                 if not profile_found:
@@ -669,6 +674,27 @@ class Player(object):
                     self.PROFILE_FROM_USER = True
             self.bck_win_player_config_file(config_file)
             return ret_string
+
+    def _split_config_file(self, config):
+        with open(config_file, 'r') as c_file:
+            config_string = c_file.read()
+            config_string = config_string.replace('#Volume set from pyradio\n', '')
+            lines = config_string.split('\n')
+        no_comment_or_empty=[d for d in lines if d and not d.startswith('#')]
+        l_ind=[(i,d) for i,d in enumerate(no_comment_or_empty) if d.startswith('[')]
+        '''
+            no global, with profiles:
+                [(0, '[silent]'), (2, '[pyradio]')]
+        '''
+
+        if l_ind:
+            lines_no_profile = lines[:l_ind[0][0]]
+            lines_with_profile = lines[l_ind[0][0]:]
+        else:
+            lines_no_profile = []
+            lines_with_profile = lines
+        return lines_no_profile, lines_with_profile
+        return lines_no_profile, lines_with_profile
 
     def bck_win_player_config_file(self, config_file=None):
         if platform.startswith('win'):
@@ -1135,8 +1161,7 @@ class Player(object):
                                                 break
                                             self._request_mpv_info_data(sock)
                                             self.info_display_handler()
-                                        elif d['event'] == 'playback-restart' or \
-                                                d['event'] == 'start-file':
+                                        elif d['event'] == 'playback-restart':
                                             if not self.playback_is_on:
                                                 ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
@@ -1196,6 +1221,7 @@ class Player(object):
         stop_player = args[4]
         detect_if_player_exited = args[5]
         enable_crash_detection_function = args[6]
+        on_connect = args[7]
         ''' Force volume display even when icy title is not received '''
         self.oldUserInput['Title'] = 'Playing: ' + self.name
         # logger.error('DE ==== {0}\n{1}\n{2}'.format(fn, enc, stop))
@@ -1264,8 +1290,10 @@ class Player(object):
                             pass
                         if enable_crash_detection_function:
                             enable_crash_detection_function()
-                        if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
+                        if not self.playback_is_on:
+                            if logger.isEnabledFor(logging.INFO):
                                 logger.info('*** updateWinVLCStatus(): Start of playback detected ***')
+                            on_connect()
                         #if self.outputStream.last_written_string.startswith('Connecting to'):
                         if self.oldUserInput['Title'] == '':
                             new_input = 'Playing: ' + self.name
@@ -1295,6 +1323,8 @@ class Player(object):
                                 pass
                             if logger.isEnabledFor(logging.INFO):
                                 logger.info('*** updateWinVLCStatus(): Start of playback detected (Icy-Title received) ***')
+                            if not self.playback_is_on:
+                                on_connect()
                         self.stop_timeout_counter_thread = True
                         try:
                             self.connection_timeout_thread.join()
@@ -1346,6 +1376,7 @@ class Player(object):
                                 if not self.playback_is_on:
                                     if logger.isEnabledFor(logging.INFO):
                                         logger.info('*** updateWinVLCStatus(): Start of playback detected (Icy audio token received) ***')
+                                    on_connect()
                                 self.playback_is_on = True
                                 self.connecting = False
                                 self._stop_delay_thread()
@@ -1690,7 +1721,8 @@ class Player(object):
                     self.process,
                     stop_player,
                     detect_if_player_exited,
-                    enable_crash_detection_function
+                    enable_crash_detection_function,
+                    self._on_connect
                 )
             )
         else:
@@ -2573,6 +2605,12 @@ class MpPlayer(Player):
             recording_lock
         )
         self.config_files = self.all_config_files['mplayer']
+        if platform.startswith('win') and \
+                int(platform_uname().release) < 10:
+            ''' Existing mplayer Windows 7 and earlier
+                implementations do not support profiles
+            '''
+            self._mplayer_on_windows7 = True
 
     def save_volume(self):
         if platform.startswith('win'):
@@ -2591,11 +2629,7 @@ class MpPlayer(Player):
         '''
 
         self.PROFILE_FROM_USER = False
-        if platform.startswith('win') and \
-                int(platform_uname().release) < 10:
-            ''' Existing mplayer Windows 7 and earlier
-                implementations do not support profiles
-            '''
+        if self._mplayer_on_windows7:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('>>>>> Disabling profiles usage on Windows 7 <<<<<')
             return 0
@@ -2799,7 +2833,6 @@ class VlcPlayer(Player):
         ''' vlc reports volume in values 0..256 '''
         actual_volume = -1
         max_volume = 256
-        # max_volume = 1000
 
         ''' When found in station transmission, playback is on '''
         if platform.startswith('win'):
@@ -2811,6 +2844,7 @@ class VlcPlayer(Player):
                 'using audio decoder module',
                 'answer code 200'
             )
+            # max_volume = 1000
         else:
             _playback_token_tuple = (
                 # 'Content-Type: audio',
@@ -2852,7 +2886,11 @@ class VlcPlayer(Player):
         logger.error('\n\n***********  VLC on connect\n\n')
         if self._config_volume > -1:
             self.get_volume()
+            #self.actual_volume = int(self.max_volume*self._config_volume/100)
+            #logger.info('1 self.actual_volume = {}'.format(self.actual_volume))
             if self.volume != self._config_volume:
+                #self.volume = self._config_volume
+                #self.set_volume(self.actual_volume)
                 self.set_volume(self._config_volume)
 
     def _read_config(self):
@@ -2897,7 +2935,7 @@ class VlcPlayer(Player):
             ivol = int(vol)
             ovol = round(self.max_volume*ivol/100)
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('setting volume at {0}% ({1})'.format(ivol, ovol))
+                logger.debug('setting volume at {0}% ({1}) with max_volume={2}'.format(ivol, ovol, self.max_volume))
             if ovol != int(self.volume):
                 diff = 10 if ovol > int(self.volume) else -10
                 vols = [x + diff for x in range(int(self.volume), ovol, diff)]
@@ -2951,9 +2989,9 @@ class VlcPlayer(Player):
                 if ok_to_go_on:
                     break
 
-            opts = [self.PLAYER_CMD, '-Irc', '--rc-host',
-                '127.0.0.1:' + str(self._port),
-                '--file-logging', '--logmode', 'text', '--log-verbose', '4',
+            opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
+                '-Irc', '--rc-host', '127.0.0.1:' + str(self._port),
+                '--file-logging', '--logmode', 'text', '--log-verbose', '3',
                 '--logfile', self._vlc_stdout_log_file, '-vv',
                 self._url_to_use(streamUrl)]
 
@@ -3227,12 +3265,17 @@ class VlcPlayer(Player):
         return response
 
     def _thrededreq(self, msg, ret_function=None):
-        threading.Thread(target=self._req, args=(msg,ret_function)).start()
+        self._thrededreq_thread = threading.Thread(
+            target=self._req,
+            args=(msg,ret_function)
+        )
+        self._thrededreq_thread.start()
 
     def _win_show_vlc_volume(self):
         #if self.win_show_vlc_volume_function:
         self._win_get_volume()
-        pvol = int(100 * self.volume / self.max_volume)
+        self._thrededreq_thread.join()
+        pvol = int(100 * self.actual_volume / self.max_volume)
         if pvol > 0:
             avol = '[Vol: {}%] '.format(pvol)
             if self.show_volume and self.oldUserInput['Title']:
