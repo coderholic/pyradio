@@ -215,6 +215,8 @@ If nothing else works, try the following command:
     parser.add_argument('-lp', '--list-player-parameters', default=None,
                         action='store_true',
                         help='List extra players parameters.')
+    parser.add_argument('--record', action='store_true',
+                        help='Turn recording on (not available for VLC player on Windows).')
     if platform.startswith('win'):
         parser.add_argument('--exe', action='store_true', default=False,
                             help='Show EXE file location (Windows only).')
@@ -865,7 +867,8 @@ If nothing else works, try the following command:
             pre_select=pre_select,
             req_player=requested_player,
             theme=theme_to_use,
-            force_update=args.force_update
+            force_update=args.force_update,
+            record=args.record
         )
         ''' Setting ESCAPE key delay to 25ms
             Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses

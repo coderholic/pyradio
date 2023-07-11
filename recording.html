@@ -60,6 +60,7 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#recording-implementation">Recording implementation</a>
 <ul>
+<li><a href="#starting-recording-from-the-command-line">Starting recording from the command line</a></li>
 <li><a href="#file-location">File location</a></li>
 <li><a href="#file-type">File type</a></li>
 <li><a href="#pausing-playback">Pausing playback</a></li>
@@ -144,6 +145,12 @@ This means that the front end (<strong>PyRadio</strong>) will have to use two <e
 
 <p>Pressing the <em>“pipe symbol</em>” or “<em>vetical line</em>” (“<strong>|</strong>”) again will disable recording and nothing will be displayed at the top left corner of the window. The actual recording of the station will still be active, until the station is stopped.</p>
 <p>It must be made clear that toggling the recording status for <strong>PyRadio</strong> will actually take effect after a station has been started or stopped. This is because of the way the players get the recording command; through command line arguments, which can only be passed when the player is executed.</p>
+<h3 id="starting-recording-from-the-command-line">Starting recording from the command line</h3>
+<p>One can use the “<strong>–record</strong>” command line parameter to start the program in recording mode.</p>
+<p>This would be extra useful to start playback and recording, for example:</p>
+<pre>pyradio -p 3 --record</pre>
+<p>This command would open the default playlist (or the one last used, if set in the config), using the default player, and start playing and recording station No 3.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the default player is <strong>VLC</strong> on Windows, and the “<strong>–record</strong>” command line parameter is used, a message informing the user that recording is not supported, will be displayed.</p>
 <h3 id="file-location">File location</h3>
 <p>Files created by the recording feature will be saved under the “<strong>recordings</strong>” folder inside <strong>PyRadio</strong>’s configuration directory.</p>
 <p>The file will be named:</p>

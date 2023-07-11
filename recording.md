@@ -28,6 +28,7 @@ ___
     * [VLC](#vlc)
     * [VLC recording on Windows](#vlc-recording-on-windows)
 * [Recording implementation](#recording-implementation)
+    * [Starting recording from the command line](#starting-recording-from-the-command-line)
     * [File location](#file-location)
     * [File type](#file-type)
     * [Pausing playback](#pausing-playback)
@@ -121,6 +122,20 @@ The following image is a mockup presenting the difference.
 Pressing the *"pipe symbol*" or "*vetical line*" ("**|**") again will disable recording and nothing will be displayed at the top left corner of the window. The actual recording of the station will still be active, until the station is stopped.
 
 It must be made clear that toggling the recording status for **PyRadio** will actually take effect after a station has been started or stopped. This is because of the way the players get the recording command; through command line arguments, which can only be passed when the player is executed.
+
+### Starting recording from the command line
+
+One can use the "**--record**" command line parameter to start the program in recording mode.
+
+This would be extra useful to start playback and recording, for example:
+
+```
+pyradio -p 3 --record
+```
+
+This command would open the default playlist (or the one last used, if set in the config), using the default player, and start playing and recording station No 3.
+
+**Note:** If the default player is **VLC** on Windows, and the "**--record**" command line parameter is used, a message informing the user that recording is not supported, will be displayed.
 
 ### File location
 

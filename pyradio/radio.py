@@ -407,7 +407,8 @@ class PyRadio(object):
                  play='False',
                  req_player='',
                  theme='',
-                 force_update=''):
+                 force_update='',
+                 record=False):
         temp_dir = gettempdir()
         self._station_images = (
             join(temp_dir, 'station.jpg'),
@@ -415,6 +416,7 @@ class PyRadio(object):
             join(temp_dir, 'station-icon.raw'),
         )
 
+        self._request_recording = record
         self._no_netifaces = False
         self._current_selection = 0
         self._force_print_all_lines = False
@@ -907,6 +909,12 @@ class PyRadio(object):
                     self._add_station_to_stations_history,
                     self._recording_lock
                 )
+            if self._request_recording:
+                if not (platform.startswith('win') and \
+                        self.player.PLAYER_NAME == 'vlc'):
+                    self.player.recording = 1
+                else:
+                    self.ws.operation_mode = self.ws.WIN_VLC_NO_RECORD_MODE
         except:
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE

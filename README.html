@@ -104,6 +104,7 @@ a:visited{color: SaddleBrown;}
 <ul>
 <li><a href="#mpv">MPV</a></li>
 <li><a href="#mplayer">MPlayer</a></li>
+<li><a href="#vlc">VLC</a></li>
 </ul></li>
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
@@ -1048,13 +1049,14 @@ a:visited{color: SaddleBrown;}
 <p>In any other case, and since <strong>PyRadio</strong> is currently not available via pip, you will have to <a href="build.html">build it from source</a>.</p>
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre>$ pyradio -h
+
 Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
                [-a] [-ls] [-l] [-t THEME] [--show-themes] [--no-themes]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
                [--terminal-param TERMINAL_PARAM] [-tlp] [-scd] [-ocd]
                [-ep EXTRA_PLAYER_PARAMETERS] [-ap ACTIVE_PLAYER_PARAM_ID]
-               [-lp] [-U] [-R] [-oc] [-sc] [-cc] [-gc] [--unlock] [-us] [-lt]
-               [-d] [-V]
+               [-lp] [--record] [-U] [-R] [-oc] [-sc] [-cc] [-gc] [--unlock]
+               [-us] [-lt] [-d] [-V]
 
 Curses based Internet radio player
 
@@ -1113,19 +1115,20 @@ Options:
                         (refer to the output of the -lp option)
   -lp, --list-player-parameters
                         List extra players parameters.
+  --record              Turn recording on (not available for VLC player on
+                        Windows).
   -U, --update          Update PyRadio.
   -R, --uninstall       Uninstall PyRadio.
-  -oc, --open-cache     Open the Cache folder.
-  -sc, --show-cache     Show Cache contents.
-  -cc, --clear-cache    Clear Cache contents.
+  -oc, --open-cache     Open the Cache folder
+  -sc, --show-cache     Show Cache contents
+  -cc, --clear-cache    Clear Cache contents
   -gc, --get-cache      Download source code, keep it in the cache and exit.
   --unlock              Remove sessions&#39; lock file.
   -us, --update-stations
                         Update &quot;stations.csv&quot; (if needed).
   -lt, --log-titles     Log titles to file.
   -d, --debug           Start PyRadio in debug mode.
-  -V, --version         Display version information.
-</pre>
+  -V, --version         Display version information.</pre>
 <h2 id="controls">Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre>                  Main window                                      Playlists window                   Themes window
 -------------------------------------------------------------------------------------------------------------------------------------
@@ -1549,7 +1552,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>The “<strong>z</strong>” in parenthesis is just a hint to remind the user that he can change the behavior by pressing “<strong>z</strong>”.</p>
 <p>As the window shrinks in width, the message becomes a “<em>[h]</em>”; when it shrinks even more, it disappears completely.</p>
 <h2 id="player-default-volume-level">Player default volume level <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>MPV and MPlayer, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with VLC.</p>
+<p>All players, when started, use their saved (or default) volume level to play any multimedia content. Fortunately, this is not the case with VLC.</p>
 <p>This introduces a problem to <strong>PyRadio</strong>: every time a user plays a station (i.e restarts playback), even though he may have already set the volume to a desired level, the playback starts at the player’s default level.</p>
 <p>The way to come around it, is to save the desired volume level in a way that it will be used by the player whenever it is restarted.</p>
 <p>This is done by typing “<strong>v</strong>” right after setting a desired volume level.</p>
@@ -1573,6 +1576,11 @@ softvol-max=300
 volstep=1
 volume=50</pre>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Starting with <strong>PyRadio v. 0.8.9</strong>, <em>mplayer</em>’s default profile will use its internal mixer to adjust its volume; this is accompliced using the “<em>softvol=1</em>” and “<em>softvol-max=300</em>” lines above. The user may choose to remove these lines from the config (to activate system-wide volume adjustment) or add them to the config (in case the profile was created by an older <strong>PyRadio</strong> version).</p>
+<h3 id="vlc">VLC</h3>
+<p>Although <strong>VLC</strong> can use a local configuration file, there seems to be no reliable way of defining the playback volume in it.</p>
+<p>In the past, <strong>VLC</strong> would just use any volume setting it had saved from a previous execution, but now it is possible to save the volume it will use when executed by <strong>PyRadio</strong>.</p>
+<p>This means that <strong>VLC</strong> will start and connect to a station, use whatever volume level it’s stored for it and then <strong>PyRadio</strong> will reset the volume to the desired one (as saved within <strong>PyRadio</strong>).</p>
+<p>The volume will be saved is a file called <em>vlc.conf</em> and reside withing the <em>data</em> directory, inside <strong>PyRadio</strong>’s configuration folder.</p>
 <h2 id="displaying-station-info">Displaying Station Info <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>When a connection to a radio station has been established, the station starts sending audio data for the user to listen to.</p>
 <p>Well, that’s obvious, right?</p>
