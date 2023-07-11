@@ -3339,7 +3339,7 @@ class SimpleCursesLineEdit(object):
                     ''' callback function for KEY_STAB '''
                     self._key_stab_function_handler = value
                 elif key == 'string_changed_handler':
-                    ''' callback function for KEY_STAB '''
+                    ''' callback function for string change '''
                     self._string_changed_handler = value
                 elif key == 'paste_mode_always_on':
                     ''' set paste mode and never disable it '''
@@ -4080,6 +4080,22 @@ class SimpleCursesLineEdit(object):
                         self._mode_changed()
             return 2
 
+
+        elif char == curses.ascii.CAN and \
+                self._has_history:
+            self._backslash_pressed = False
+            self._input_history.remove_from_history(self._string)
+            self._string = self._input_history.return_history(0, '')
+            if self.string:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('action: CLEAR HISTORY')
+            self._go_to_end()
+            if not self._paste_mode_always_on:
+                if self._use_paste_mode and self._paste_mode:
+                    self._paste_mode = self._disable_paste_mode = False
+                    if self._mode_changed:
+                        self._mode_changed()
+
         elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
             ''' ENTER '''
             self._backslash_pressed = False
@@ -4586,6 +4602,21 @@ class SimpleCursesLineEditHistory(object):
             self._dirty = True
             self._active_history_index = len(self._history)
 
+    def remove_from_history(self, a_string):
+        if a_string:
+            i = [(x, y) for x, y in \
+                    enumerate(self._history) \
+                    if y.lower() == a_string.lower()
+                 ]
+            if i:
+                self._history.pop(i[0][0])
+                self._dirty = True
+                if self._history:
+                    if self._active_history_index == len(self._history):
+                        self._active_history_index -= 1
+                else:
+                    self._active_history_index = -1
+
     def return_history(self, direction, current_string):
         if self._history:
             self._active_history_index += direction
@@ -4594,8 +4625,9 @@ class SimpleCursesLineEditHistory(object):
             elif self._active_history_index >= len(self._history):
                 self._active_history_index = 0
             ret = self._history[self._active_history_index]
-            if ret.lower() == current_string.lower():
-                return self.return_history(direction, current_string)
+            if ret and current_string:
+                if ret.lower() == current_string.lower():
+                    return self.return_history(direction, current_string)
             return ret
         return ''
 

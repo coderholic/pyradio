@@ -552,7 +552,7 @@ One can always get help by pressing the "**?**" key.
 
 After a search term has been successfully found (search is case insensitive), next occurrence can be obtained using the "**n**" key and previous occurrence can be obtained using the "**N**" key.
 
-All search widgets provide a "*search history*" function; pressing the **Up** or **Down** arrow will cycle through previously used search terms (maximum number remembered is 20).
+All search widgets provide a "*search history*" function; pressing the **Up** or **Down** arrow will cycle through previously used search terms (maximum number remembered is 20). Pressing **^X** will remove an item from the history.
 
 ## Line editor
 

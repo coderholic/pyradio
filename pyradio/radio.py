@@ -3125,10 +3125,12 @@ __|Remote Control Server| cannot be started!__
             '''
         else:
             txt = '''Left| / |Right        |Move to next / previous character.
+            Up| / |Down           |Cycle within history.
             M-F| / |M-B           |Move to next / previous word.
             HOME|,|^A| / |END|,|^E    |Move to start / end of line.
             ^W| / |M-D|,|^K         |Clear to start / end of line.
             ^U                  |Clear line.
+            ^X                  |Remove history item.
             DEL|,|^D              |Delete character.
             Backspace|,|^H        |Backspace (delete previous character).
             Up|,|^P| / |Down|,|^N     |Get previous / next history item.
