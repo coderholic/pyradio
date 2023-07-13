@@ -3379,6 +3379,7 @@ __|Remote Control Server| cannot be started!__
                  self.ws.previous_operation_mode == self.ws.NORMAL_MODE):
             txt = '''\\      |Open previous playlist.
                      ]      |Open first opened playlist.
+                     l      |Toggle |Open last playlist|.
                      m      |Cahnge |m|edia player.
                      n      |Create a |n|ew playlist.
                      p      |Select playlist/register to |p|aste to.
@@ -6842,6 +6843,16 @@ __|Remote Control Server| cannot be started!__
                     self._rename_playlist_dialog.title = ' Create Playlist '
                     self._rename_playlist_dialog.show()
                     self.ws.operation_mode = self.ws.CREATE_PLAYLIST_MODE
+
+            elif char == ord('l'):
+                self._update_status_bar_right(status_suffix='')
+                self._cnf.open_last_playlist = not self._cnf.open_last_playlist
+                self._show_notification_with_delay(
+                        txt='___Open last playlist set to {}___'.format(
+                            self._cnf.open_last_playlist
+                            ),
+                        mode_to_set=self.ws.operation_mode,
+                        callback_function=self.refreshBody)
 
             elif char == ord('p'):
                 ''' paste '''

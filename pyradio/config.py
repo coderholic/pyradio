@@ -1380,7 +1380,10 @@ class PyRadioConfig(PyRadioStations):
 
     @open_last_playlist.setter
     def open_last_playlist(self, val):
-        raise ValueError('parameter is read only')
+        old_val = self.opts['open_last_playlist'][1]
+        self.opts['open_last_playlist'][1] = val
+        if old_val != val:
+            self.dirty_config = True
 
     @property
     def distro(self):
@@ -2329,7 +2332,7 @@ player = {0}
 # Open last playlist
 # If this option is enabled, the last opened playlist will be opened
 # the next time PyRadio is opened. This option will take precedence
-# over the "Def. playlist" option.
+# over the "Def. playlist" option and the "-s" commans line parameter.
 # Default value: False
 open_last_playlist = {1}
 
