@@ -1,3 +1,11 @@
+2023-07-15 s-n-g
+    * version 0.9.2.13
+    * all search widgets will save up to 20 of their last search terms
+    * VLC will now save its default volume
+    * adding --record command line parameter
+    * \l will toggle the "Open last playlist" config setting
+    * updating docs
+
 2023-07-01 s-n-g
     * version 0.9.2.12
     * Implementing VLC recorder (not for Windows)
