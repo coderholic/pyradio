@@ -3197,34 +3197,20 @@ class VlcPlayer(Player):
             self.get_volume(repeat=True)
         self.actual_volume = self.volume
         self.volume = int(100 * self.actual_volume / self.max_volume)
+        # logger.error('Final')
+        # logger.error('self.actual_volume = {}'.format(self.actual_volume))
+        # logger.error('self.volume = {}'.format(self.volume))
+        # logger.error('=======================')
 
     def _no_mute_on_stop_playback(self):
         ''' make sure vlc does not stop muted '''
         if self.ctrl_c_pressed:
             return
         if self.isPlaying():
-            if self.actual_volume == -1:
-                self.get_volume()
-                if self.actual_volume == -1:
-                    self.actual_volume = 0
-            if self.actual_volume == 0:
-                self.actual_volume = int(self.max_volume*0.25)
-                if self.WIN:
-                    self._win_set_volume(self.actual_volume)
-                else:
-                    self._sendCommand('volume {}\n'.format(self.actual_volume))
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Unmuting VLC on exit: {} (25%)'.format(self.actual_volume))
-            elif self.muted:
-                if self.actual_volume > 0:
-                    if self.WIN:
-                        self._win_set_volume(self.actual_volume)
-                    else:
-                        self._sendCommand('volume {}\n'.format(self.actual_volume))
-                    self.volume = int(100 * self.actual_volume / self.max_volume)
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('VLC volume restored on exit: {0} ({1}%)'.format(self.actual_volume, self.volume))
-
+            self.show_volume = False
+            self.set_volume(0)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('VLC volume set to 0 at exit')
             self.show_volume = True
 
     '''   WINDOWS PART '''
@@ -3257,6 +3243,7 @@ class VlcPlayer(Player):
                 sock.close()
         except:
             pass
+        # logger.info('response = "{}"'.format(response))
         if msg == 'quit':
             self.process.terminate()
             self.process = None
@@ -3270,6 +3257,9 @@ class VlcPlayer(Player):
             args=(msg,ret_function)
         )
         self._thrededreq_thread.start()
+        self._thrededreq_thread.join()
+        while self._thrededreq_thread.is_alive():
+            sleep(.01)
 
     def _win_show_vlc_volume(self):
         #if self.win_show_vlc_volume_function:
@@ -3286,7 +3276,9 @@ class VlcPlayer(Player):
         self._thrededreq('status', self._get_volume_response)
 
     def _get_volume_response(self, msg):
+        # logger.debug('msg = "{}"'.format(msg))
         parts = msg.split('\r\n')
+        # logger.debug('parts = {}'.format(parts))
         for n in parts:
             if 'volume' in n:
                 vol = n.split(': ')[-1].replace(' )', '')
@@ -3295,12 +3287,14 @@ class VlcPlayer(Player):
                     if ind > -1:
                         vol = vol[:ind]
                         break
+                # logger.debug('vol = "{}"'.format(vol))
                 try:
                     self.actual_volume = int(vol)
                 except ValueError:
                     # logger.error('DE ValueError: vol = {}'.format(vol))
                     return
                 break
+        # logger.debug('self.actual_volume = {}'.format(self.actual_volume))
         if self.actual_volume == 0:
             self.muted = True
             self.volume = 0
