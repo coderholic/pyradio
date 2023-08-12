@@ -1722,7 +1722,7 @@ class PyRadioSelectPlayer(object):
         return self._players[self.selection][0]
 
     def _populate_players(self):
-        self._players.clear()
+        self._players = []
         parts = self.player.replace(' ', '').split(',')
         for ap in parts:
             self._players.append([ap, True, True])

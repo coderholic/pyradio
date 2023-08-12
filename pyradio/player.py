@@ -231,9 +231,11 @@ class Player(object):
     ctrl_c_pressed = False
 
     ''' When found in station transmission, playback is on
-        These strings are used by MPlayer
      '''
-    _playback_token_tuple = ( 'AO: [', )
+    _playback_token_tuple = (
+            'AO: [',       # for mplayer
+            '(+) Audio '   # for mpv python 2
+            )
     # _playback_token_tuple = ( 'AO: [', 'Cache size')
 
     icy_tokens = ()
@@ -770,7 +772,7 @@ class Player(object):
                         subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
                 if subsystemOut == '':
                     break
-                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+                logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 with recording_lock:
                     tmp = self._is_accepted_input(subsystemOut)
                 if not tmp:
@@ -1148,6 +1150,7 @@ class Player(object):
                                         break
                                     d = json.loads(n)
                                     if 'event' in d.keys():
+                                        logger.info('metadata-update\n\n')
                                         if d['event'] == 'metadata-update':
                                             try:
                                                 if platform.startswith('win'):
@@ -1162,11 +1165,20 @@ class Player(object):
                                             self._request_mpv_info_data(sock)
                                             self.info_display_handler()
                                         elif d['event'] == 'playback-restart':
+                                            logger.info('====== playback-restarted\n\n')
                                             if not self.playback_is_on:
                                                 ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
                                                 break
                                             self._request_mpv_info_data(sock)
+                                            self.info_display_handler()
+                                        elif d['event'] == 'file-loaded' or \
+                                                d['event'] == 'audio-reconfig':
+                                            logger.info('{}\n\n'.format(d['event']))
+                                            if not self.playback_is_on:
+                                                ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
+                                            if not ret:
+                                                break
                                             self.info_display_handler()
                                 except:
                                     pass

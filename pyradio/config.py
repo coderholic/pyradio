@@ -2308,6 +2308,9 @@ class PyRadioConfig(PyRadioStations):
             self.get_player_params_from_backup()
         if self.check_parameters():
             self.saved_params = deepcopy(self.params)
+            self.get_profile_name_from_saved_params()
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('New profile name: "{}"'.format(self.profile_name))
         if not from_command_line and \
                 logger.isEnabledFor(logging.DEBUG):
             logger.debug('saved params = {}'.format(self.saved_params))
