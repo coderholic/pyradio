@@ -233,8 +233,9 @@ class Player(object):
     ''' When found in station transmission, playback is on
      '''
     _playback_token_tuple = (
-            'AO: [',       # for mplayer
-            '(+) Audio '   # for mpv python 2
+            'AO: [',                    # for mplayer
+            'CACHE_PRE_INIT',           # for mplayer using cache
+            '(+) Audio '                # for mpv python 2
             )
     # _playback_token_tuple = ( 'AO: [', 'Cache size')
 
@@ -311,6 +312,27 @@ class Player(object):
             ehich will not support profiles
         '''
         self._mplayer_on_windows7 = False
+
+    @property
+    def p_name(self):
+        if self.PLAYER_NAME == 'vlc':
+            return ''
+        ret = 'pyradio'
+        logger.error('***** self.params\n{}'.format(self.params))
+        candidate = self.params[self.params[0]]
+        logger.error('candidate = "{}"'.format(candidate))
+        if candidate:
+            if candidate.startswith('profile'):
+                candidate = candidate.replace('profile:', '')
+                logger.error('candidate = "{}"'.format(candidate))
+            ''' does this profile exist in the config files? '''
+        if self._configHasProfile(candidate):
+            ret = candidate
+        return ret
+
+    @p_name.setter
+    def p_name(self, val):
+        pass
 
     @property
     def recording(self):
@@ -1642,6 +1664,19 @@ class Player(object):
         return self._title_string_format_text_tag(title_string)
 
     def _title_string_format_text_tag(self, a_string):
+
+
+        logger.error('\n...\n...\na_string: "{}"'.format(a_string))
+        if 'Metadata update for StreamTitle: ' in a_string:
+            ''' mplayer verbose... '''
+            sp = a_string.split('Metadata update for StreamTitle: ')
+            try:
+                final_text_string = self.icy_title_prefix + sp[1]
+                logger.error('final_text_string: "{}"'.format(final_text_string))
+                return final_text_string
+            except IndexError:
+                pass
+
         i = a_string.find(' - text="')
         if i == -1:
             return a_string
@@ -1690,6 +1725,9 @@ class Player(object):
              enable_crash_detection_function=None,
              encoding=''
          ):
+        logger.error('')
+        logger.error('params = {}'.format(self.params))
+        logger.error('')
         ''' use a multimedia player to play a stream '''
         self.monitor = self.monitor_process = self.monitor_opts = None
         # logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
@@ -2140,7 +2178,7 @@ class MpvPlayer(Player):
             self.volume = -2
         return self._do_save_volume(self.profile_token + '\nvolume={}\n')
 
-    def _configHasProfile(self):
+    def _configHasProfile(self, a_profile_name=None):
         ''' Checks if mpv config has [pyradio] entry / profile.
 
         Profile example:
@@ -2149,30 +2187,35 @@ class MpvPlayer(Player):
         volume-max=300
         volume=50'''
 
+        if a_profile_name is None:
+            a_profile_token = self.profile_token
+        else:
+            a_profile_token = '[' + a_profile_name + ']'
         self.PROFILE_FROM_USER = False
         for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
                 with open(config_file, 'r', encoding='utf-8') as f:
                     config_string = f.read()
-                if self.profile_token in config_string:
+                if a_profile_token in config_string:
                     if i == 0:
                         self.PROFILE_FROM_USER = True
-                        return 1
+                        return 1, a_profile_name
 
         ''' profile not found in config
             create a default profile
         '''
         try:
             with open(self.config_files[0], 'a', encoding='utf-8') as f:
-                f.write('\n[{}]\n'.format(self.profile_name))
+                f.write('\n[{}]\n'.format(a_profile_name))
                 f.write(self.NEW_PROFILE_STRING)
             self.PROFILE_FROM_USER = True
-            return 1
+            return 1, a_profile_name
         except:
-            return 0
+            return 0, ''
 
     def _buildStartOpts(self, streamUrl, playList=False):
         logger.error('\n\nself._recording = {}'.format(self._recording))
+        logger.error('self.p_name = "{}"'.format(self.p_name))
         ''' Builds the options to pass to mpv subprocess.'''
 
         ''' Test for newer MPV versions as it supports different IPC flags. '''
@@ -2207,22 +2250,23 @@ class MpvPlayer(Player):
         ''' Do I have user profile in config?
             If so, can I use it?
         '''
-        if self.USE_PROFILE == -1:
-            self.USE_PROFILE = self._configHasProfile()
+        self.USE_PROFILE, profile = self._configHasProfile(self.p_name)
 
         if self._recording == self.RECORD_WITH_SILENCE:
             opts.append('--profile=silent')
         else:
             if self.USE_PROFILE == 1:
-                opts.append('--profile=' + self.profile_name)
+                opts.append('--profile=' + profile)
                 if (logger.isEnabledFor(logging.INFO)):
-                    logger.info('Using profile: "[{}]"'.format(self.profile_name))
+                    logger.info('Using profile: "[{}]"'.format(profile))
             else:
                 if (logger.isEnabledFor(logging.INFO)):
                     if self.USE_PROFILE == 0:
-                        logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
+                        logger.info('Profile "[{}]" not found in config file!!!'.format(profile))
                     else:
                         logger.info('No usable profile found')
+
+        opts.append(self._url_to_use(streamUrl))
 
         ''' add command line parameters '''
         if params:
@@ -2235,8 +2279,8 @@ class MpvPlayer(Player):
             opts.append('--stream-record=' + self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
+        logger.error('Opts:\n{}'.format(opts))
         return opts, None
-
 
     def _fix_returned_data(self, data):
         if isinstance(data, tuple):
@@ -2573,7 +2617,7 @@ class MpPlayer(Player):
         ''' items of this tuple are considered icy-title
             and get displayed after first icy-title is received
         '''
-        icy_tokens = ('ICY Info:', )
+        icy_tokens = ('ICY Info:', 'Metadata update for StreamTitle: ')
 
         # 'audio-data' comes from playback start
         icy_audio_tokens = {
@@ -2630,45 +2674,50 @@ class MpPlayer(Player):
             return 0
         return self._do_save_volume(self.profile_token + '\nvolstep=1\nvolume={}\n')
 
-    def _configHasProfile(self):
+    def _configHasProfile(self, a_profile_name=None):
         ''' Checks if mplayer config has [pyradio] entry / profile.
 
-            Profile example:
+        Profile example:
 
             [pyradio]
             volstep=2
             volume=28
         '''
-
         self.PROFILE_FROM_USER = False
         if self._mplayer_on_windows7:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('>>>>> Disabling profiles usage on Windows 7 <<<<<')
-            return 0
+            return -1, None
+        if a_profile_name is None:
+            a_profile_token = self.profile_token
+        else:
+            a_profile_token = '[' + a_profile_name + ']'
+        self.PROFILE_FROM_USER = False
         for i, config_file in enumerate(self.config_files):
             if os.path.exists(config_file):
                 with open(config_file, 'r', encoding='utf-8') as f:
                     config_string = f.read()
-                if self.profile_token in config_string:
+                if a_profile_token in config_string:
                     if i == 0:
                         self.PROFILE_FROM_USER = True
-                        return 1
+                        return 1, a_profile_name
 
         ''' profile not found in config
             create a default profile
         '''
         try:
             with open(self.config_files[0], 'a', encoding='utf-8') as f:
-                f.write('\n[{}]\n'.format(self.profile_name))
+                f.write('\n[{}]\n'.format(a_profile_name))
                 f.write(self.NEW_PROFILE_STRING)
             self.PROFILE_FROM_USER = True
-            return 1
+            return 1, a_profile_name
         except:
-            return 0
+            return 0, profile
 
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
-        opts = [self.PLAYER_CMD, '-vo', 'null', '-quiet']
+        opts = [self.PLAYER_CMD, '-vo', 'null', '-msglevel', 'all=6']
+        # opts = [self.PLAYER_CMD, '-vo', 'null']
         monitor_opts = None
 
         ''' this will set the profile too '''
@@ -2680,20 +2729,38 @@ class MpPlayer(Player):
         ''' Do I have user profile in config?
             If so, can I use it?
         '''
-        if self.USE_PROFILE == -1:
-            self.USE_PROFILE = self._configHasProfile()
+        self.USE_PROFILE, profile = self._configHasProfile(self.p_name)
 
-        if self.USE_PROFILE == 1:
-            opts.append('-profile')
-            opts.append(self.profile_name)
-            if (logger.isEnabledFor(logging.INFO)):
-                logger.info('Using profile: "[{}]"'.format(self.profile_name))
+        if self._recording == self.RECORD_WITH_SILENCE:
+            if self.USE_PROFILE > -1:
+                opts.append('-profile')
+                opts.append('silent')
+            else:
+                self._recording = self.RECORD_AND_LISTEN
         else:
-            if (logger.isEnabledFor(logging.INFO)):
-                if self.USE_PROFILE == 0:
-                    logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
-                else:
-                    logger.info('No usable profile found')
+            if self.USE_PROFILE == 1:
+                opts.append('-profile')
+                opts.append(profile)
+                if (logger.isEnabledFor(logging.INFO)):
+                    logger.info('Using profile: "[{}]"'.format(profile))
+            else:
+                if (logger.isEnabledFor(logging.INFO)):
+                    if self.USE_PROFILE == 0:
+                        logger.info('Profile "[{}]" not found in config file!!!'.format(profile))
+                    else:
+                        logger.info('No usable profile found')
+
+        # if self.USE_PROFILE == 1:
+        #     opts.append('-profile')
+        #     opts.append(self.profile_name)
+        #     if (logger.isEnabledFor(logging.INFO)):
+        #         logger.info('Using profile: "[{}]"'.format(self.profile_name))
+        # else:
+        #     if (logger.isEnabledFor(logging.INFO)):
+        #         if self.USE_PROFILE == 0:
+        #             logger.info('Profile "[{}]" not found in config file!!!'.format(self.profile_name))
+        #         else:
+        #             logger.info('No usable profile found')
 
         if playList:
             opts.append('-playlist')
@@ -3021,12 +3088,16 @@ class VlcPlayer(Player):
 
         ''' take care of command line parameters '''
         params = []
+        logger.error('\n\n=================================')
+        logger.error('command_line_params = "{}"'.format(self._cnf.command_line_params))
         if self._cnf.command_line_params:
             params = self._cnf.command_line_params.split(' ')
             ''' add command line parameters '''
             if params:
                 for a_param in params:
                     opts.append(a_param)
+        logger.error('vlc params\n{}'.format(params))
+        logger.error('\n=================================\n\n')
 
         logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:

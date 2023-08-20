@@ -909,6 +909,7 @@ class PyRadio(object):
                     self._add_station_to_stations_history,
                     self._recording_lock
                 )
+            self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
             if self._request_recording:
                 if not (platform.startswith('win') and \
                         self.player.PLAYER_NAME == 'vlc'):
@@ -4999,7 +5000,19 @@ __|Remote Control Server| cannot be started!__
             self._put_selection_in_the_middle(force=True)
             self.refreshBody()
 
-    def _toggle_transparency(self, changed_from_config_window=False, force_value=None):
+    def _update_transparency(self, changed_from_config_window, calculate_transparency_function):
+        logger.info('|||| _update_transparency Launched')
+        self._toggle_transparency(
+                changed_from_config_window=changed_from_config_window,
+                calculate_transparency_function=calculate_transparency_function
+                )
+
+    def _toggle_transparency(
+            self,
+            changed_from_config_window=False,
+            force_value=None,
+            calculate_transparency_function=None
+            ):
         ''' Toggles theme transparency.
 
             changed_from_config_window is used to inhibit toggling from within
@@ -5016,8 +5029,11 @@ __|Remote Control Server| cannot be started!__
             return
         logger.error('\n==========================\nself._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
         logger.error('force_value = {}'.format(force_value))
-        self._cnf.use_transparency = not self._cnf.use_transparency
-        self._theme.restoreActiveTheme()
+        if calculate_transparency_function is None:
+            self._cnf.use_transparency = not self._cnf.use_transparency
+            self._theme.restoreActiveTheme()
+        else:
+            self._theme.restoreActiveTheme(calculate_transparency_function)
         logger.error('self._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
         if self.ws.operation_mode == self.ws.THEME_MODE:
             self._theme_selector.transparent = self._cnf.use_transparency
@@ -5031,6 +5047,9 @@ __|Remote Control Server| cannot be started!__
             if not changed_from_config_window:
                 self._config_win._saved_config_options['use_transparency'][1] = self._cnf.use_transparency
                 self._config_win._old_use_transparency = self._cnf.use_transparency
+        if self.ws.operation_mode == self.ws.THEME_MODE:
+            if self.ws.previous_window_mode != self.ws.CONFIG_MODE:
+                self._theme_selector.show()
 
     def _toggle_claculated_colors(self):
         self._cnf.use_calculated_colors = not self._cnf.use_calculated_colors
@@ -5064,6 +5083,7 @@ __|Remote Control Server| cannot be started!__
                 self.outerBodyWin,
                 self._cnf,
                 self._toggle_transparency,
+                self._update_transparency,
                 self._show_theme_selector_from_config,
                 self._save_parameters,
                 self._reset_parameters,
@@ -6595,6 +6615,9 @@ __|Remote Control Server| cannot be started!__
         self._group_selection_window.show(parent=self.bodyWin)
 
     def keypress(self, char):
+        # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
+        # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
+        # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
             if logger.isEnabledFor(logging.debug):
@@ -7099,6 +7122,11 @@ __|Remote Control Server| cannot be started!__
                     self._add_station_to_stations_history,
                     self._recording_lock
                 )
+                self._cnf.backup_player_params = [
+                        self._cnf.params[self.player.PLAYER_NAME],
+                        self._cnf.params[self.player.PLAYER_NAME]
+                        ]
+                self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
                 if not (self.player.PLAYER_NAME == 'vlc' and \
                         platform.startswith('win')):
                     self.player.recording = to_record
@@ -7335,6 +7363,7 @@ __|Remote Control Server| cannot be started!__
                         if self._cnf.backup_player_params[1][self._cnf.backup_player_params[1][0]] != old_param:
                             self._cnf.params_changed = True
 
+                        self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
                         if self.player.isPlaying():
                             # logger.error('DE params_changed = {}'.format(self._cnf.params_changed))
                             #if self._cnf.opts['default_encoding'][1] != self._old_config_encoding or \
@@ -8514,8 +8543,10 @@ __|Remote Control Server| cannot be started!__
 
             elif ret == 0:
                 ''' Parameter selected '''
+                logger.error('\n\nbefore params\n{}\n\n'.format(self._cnf.params))
                 if self._cnf.params_changed:
                     self._cnf.params = deepcopy(self._player_select_win.params)
+                logger.error('\n\nafter params\n{}\n\n'.format(self._cnf.params))
                 self.ws.close_window()
                 if self._player_select_win._extra.active != self._player_select_win._extra.original_active:
                     self.restartPlayer('*** Restarting playback due to player parameter change ***')
@@ -8916,6 +8947,7 @@ __|Remote Control Server| cannot be started!__
                         if self._cnf.dirty_config:
                             self._cnf.save_config()
                             self._cnf.dirty_config = False
+                            self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
                             if logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('Config saved before entering Config Window')
                         self._show_config_window()

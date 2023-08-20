@@ -142,29 +142,52 @@ class PyRadioTheme(object):
         self._read_colors = None
         self._temp_colors = None
 
-    def calculate_transparency(self, transparency=None):
+    def calculate_transparency(self):
         transp = False
-        if transparency is None:
-            if self._active_colors['transparency'] == 0:
-                transp = False
-            elif self._active_colors['transparency'] == 1:
-                transp = True
+        theme_transp = self._active_colors['transparency']
+        if logger.isEnabledFor(logging.DEBUG):
+            if theme_transp == 0:
+                logger.debug('Theme says: Do not use transparency (0)')
+            elif theme_transp == 1:
+                logger.debug('Theme says: Use transparency (1)')
             else:
-                transp = self._cnf.use_transparency
+                logger.debug('Theme says: I work both with and without transparency (2)')
+            if self._cnf.use_transparency:
+                logger.debug('Config says: Transparency is ON')
+            else:
+                logger.debug('Config says: Transparency is OFF')
+            if self._cnf.force_transparency:
+                logger.debug('Config says: Force transparency')
+            else:
+                logger.debug('Config says: Do not force transparency')
+
+        if self._cnf.force_transparency:
+            theme_transp = 2
+        if logger.isEnabledFor(logging.DEBUG):
+            if theme_transp == 2:
+                logger.debug('Using config transparency setting!')
+            else:
+                logger.debug('Using theme transparency setting!')
+        if theme_transp == 0:
+            transp = False
+        elif theme_transp == 1:
+            transp = True
         else:
-            if transparency == 0:
-                transp = False
-            elif transparency == 1:
-                transp = True
-            else:
-                transp = self._cnf.use_transparency
+            transp = self._cnf.use_transparency
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('*** Active transparency is {}'.format('ON' if transp else 'OFF'))
         return transp
 
-    def _do_init_pairs(self, transparency=None):
+    def _do_init_pairs(
+            self,
+            transparency=None,
+            calculate_transparency_function=None
+            ):
         if self._cnf.use_themes:
-            transp = self.calculate_transparency(transparency)
-            logger.info('=============')
-            logger.info('transp = {}'.format(transp))
+            if calculate_transparency_function is None:
+                transp = self.calculate_transparency()
+            else:
+                transp = calculate_transparency_function()
 
             border_color = 16  if curses.COLORS > 16 else 1
             if self._cnf.use_calculated_colors or \
@@ -250,9 +273,11 @@ class PyRadioTheme(object):
                 curses.init_pair(k, colors[k][0], colors[k][1])
             # curses.start_color()
 
-    def restoreActiveTheme(self):
+    def restoreActiveTheme(self, calculate_transparency_function=None):
         self._active_colors = deepcopy(self._read_colors)
-        self._do_init_pairs()
+        self._do_init_pairs(
+                calculate_transparency_function=calculate_transparency_function
+                )
         self._update_colors()
         # curses.start_color()
 
@@ -291,7 +316,7 @@ class PyRadioTheme(object):
         self._active_colors = None
         self._active_colors = deepcopy(self._colors)
         self._do_init_pairs(transparency=self._colors['transparency'])
-
+        self._cnf.last_theme_s_transparency_setting = self._colors['transparency']
         self._read_colors = deepcopy(self._colors)
         # logger.error('colors\n{}'.format(self._read_colors))
         return result
@@ -308,6 +333,7 @@ class PyRadioTheme(object):
             logger.info('Applying fallback theme: "{0}" instead of: "{1}"'.format(self.applied_theme_name, a_theme))
         self.open_theme(self.applied_theme_name)
         self._update_colors()
+        self._cnf.last_theme_s_transparency_setting = self._colors['transparency']
         try:
             self.outerBodyWin.refresh()
             self.bodyWin.refresh()
@@ -1171,13 +1197,18 @@ class PyRadioThemeSelector(object):
         except:
             pass
         ''' display transparency indicator '''
-        if self._cnf.use_transparency:
+        if not self.changed_from_config:
             self._win.addstr(self._height-1, self._width - 4, '[T]', curses.color_pair(self._box_color_pair))
-        else:
             try:
-                self._win.addstr(self._height-1, self._width - 4, '───', curses.color_pair(self._box_color_pair))
+                self._win.addstr(self._height-1, self._width - 5, '────', curses.color_pair(self._box_color_pair))
             except:
-                self._win.addstr(self._height-1, self._width - 4, '───'.encode('utf-8'), curses.color_pair(self._box_color_pair))
+                self._win.addstr(self._height-1, self._width - 5, '────'.encode('utf-8'), curses.color_pair(self._box_color_pair))
+            if self._cnf.use_transparency and self._cnf.force_transparency:
+                self._win.addstr(self._height-1, self._width - 5, '[TF]', curses.color_pair(self._box_color_pair))
+            elif self._cnf.use_transparency:
+                self._win.addstr(self._height-1, self._width - 4, '[T]', curses.color_pair(self._box_color_pair))
+            elif self._cnf.force_transparency:
+                self._win.addstr(self._height-1, self._width - 4, '[F]', curses.color_pair(self._box_color_pair))
         self._win.refresh()
         curses.doupdate()
         self._showed = True

@@ -204,7 +204,7 @@ grep '^PyRadioInstallPyReleaseVersion '  pyradio/install.py
 
 echo -e "${cReset}
 You should also run
-    ${cGreen}devel/update_win_mplayer${cReset}
+    ${cGreen}devel/update_win_players${cReset}
 at this point, if you are ready to
 publish a new release"
 

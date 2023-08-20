@@ -97,6 +97,16 @@ theme = dark
 # Default value: False
 use_transparency = False
 
+# Always obey config Transparency setting
+# Most themes will either be transparent of opaque by default.
+# This means that these themes will never be allowed to change
+# the transparency setting within PyRadio.
+# Enabling this option will make all themes to behave as if
+# their "transparency" option is set to 2 (Obey config setting),
+# Valid values: True, true, False, false
+# Default value: False
+force_transparency = False
+
 # Calculated color factor
 # This is to produce Secondary Windows background color
 # A value of 0 dissables it, otherwise it is the factor

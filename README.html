@@ -1707,6 +1707,14 @@ Messages Border     #a3b367
 transparency        0</pre>
 <p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the theme selected in the “<em>Theme selection window</em>”, (or requested using the “<strong>-t</strong>” command line option), is in any way invalid, or is of the old format, <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme and will display a relevant message.</p>
+<p>The window will display the current state of the <strong>Use transparency</strong> and <strong>Force transparency</strong> configuration options in its bottom right corner:</p>
+<ul>
+<li>A <strong>[T]</strong> means that the <strong>Use transparency</strong> option is enabled.</li>
+<li>A <strong>[F]</strong> means that the <strong>Force transparency</strong> option is enabled.</li>
+<li>A <strong>[TF]</strong> means that the both options are enabled.</li>
+</ul>
+<p>One can get more info about these options in the “<a href="#using-transparency">Using Transparency</a>” section, bellow.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> the options indication will not be visible when the window is opened withing the <strong>PyRadio</strong>’s “<em>Configuration Window</em>”.</p>
 <p>The “<em>Theme selection window</em>” will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
 <p>Pressing “<strong>SPACE</strong>”, will apply the theme and make it default, and pressing “<strong>c</strong>” will apply the theme and make it default and start a file watch function on the file, so that if the file changes, <strong>PyRadio</strong> will automatically update itself.</p>
 <h3 id="virtual-terminal-restrictions">Virtual terminal restrictions</h3>
@@ -1805,7 +1813,57 @@ For this reason, a folder called “<strong>themes</strong>” will probably hav
 <p>Please note that this behavior has changed since <strong>v. 0.9.2.7</strong>: theme transparency will always be honored, regardless of the global config value.</p>
 <p>This means that a theme which is set to be transparent (by its creator) will always be transparent, no matter if the global transparency is on or off. Similarly, if a theme is set to be opaque, it will be so regardless of the global transparency value.</p>
 <p>The only case when global transparency will come into play is when the theme does not care about it (theme transparency set to 2 - Obey config setting).</p>
-<p>When the “<em>Theme selection window</em>” is visible, a “<strong>[T]</strong>” string displayed at its bottom right corner will indicate that global transparency is “<em>ON</em>”.</p>
+<p>Since <strong>v. 0.9.2.14</strong>, it is also possible to <strong>force</strong> the use of the Transparency setting; the “<strong>Force Transparency</strong>” configuration option. When enabled, it will effectively make all themes behave as if their <strong>transparency</strong> setting was set to 2 (Obey config setting).</p>
+<p>The following table illustrates how things work:</p>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 18%" />
+<col style="width: 14%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Force transparency</th>
+<th>Theme setting</th>
+<th>PyRadio honors</th>
+<th>If Config Transparency<br>is ON, you get</th>
+<th>If Config Transparency is OFF, you get</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>False<br>(the default)</td>
+<td>0 - Do not use transparency</td>
+<td>Theme setting</td>
+<td>Opaque window</td>
+<td>Opaque window</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>1 - Theme is transparent</td>
+<td>Theme setting</td>
+<td>Transparent window</td>
+<td>Transparent window</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>2 - Don't care</td>
+<td>Config Transparency</td>
+<td>Transparent window</td>
+<td>Opaque window</td>
+</tr>
+<tr class="even">
+<td>True</td>
+<td>Any (0, 1 or 2)</td>
+<td>Config Transparency</td>
+<td>Transparent window</td>
+<td>Opaque window</td>
+</tr>
+</tbody>
+</table>
+<p>So, pressing “<strong>T</strong>” when <strong>Force Transparency</strong> is enabled, or the theme’s <strong>transparency</strong> value is set to 2, will toggle the window’s transparency.</p>
 <h3 id="updating-themes-automatically">Updating themes automatically</h3>
 <p>Terminal users have been using all kind of software to change / update / adapt their terminal colors and palettes, such as <a target="_blank" href="https://github.com/chriskempson/base16">bASE16</a>, <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a>, <a target="_blank" href="https://github.com/deviantfero/wpgtk">wpgtk</a>, <a target="_blank" href="https://github.com/lemnos/theme.sh">theme.sh</a>, to name a few.</p>
 <p><strong>PyRadio</strong> is now able to “watch” a given theme for changes and update its colors whenever the theme changes.</p>

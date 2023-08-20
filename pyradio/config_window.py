@@ -80,6 +80,7 @@ class PyRadioConfigWindow(object):
     '|', 'Default value = dark'])
     _help_text.append(['This option will work when a theme\'s transparency value is set to 2 (Obey config setting), the default. Otherwise, it\'s up to the theme to handle transparency.', '|', 'If False, theme colors will be used.', '|',
     "If True and a compositor is running, the stations' window background will be transparent.", '|', "If True and a compositor is not running, the terminal's background color will be used.", '|', 'Default value: False'])
+    _help_text.append(['This option, when enabled, will make all themes behave as if their transparency setting was set to 2 (Obey config setting), in which case the windows\'s transparency will depend entirely on the value of the "Use transparency" setting (the one above this one).', '|', 'Default value: False'])
     _help_text.append(['Pyradio can calculate and use an alternative color for secondary windows.', '|', 'This option will determine if this color will be used (value > 0) or not (value = 0), provided that the theme used does not already provide it.', '|', 'The value of this option is actually the factor to darken or lighten the main (stations) background color.', '|', 'You can get more info on this at https://github.com/coderholic/pyradio#secondary-windows-background', '|', 'Valid Values: 0-0.2', 'Default value: 0'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.',
@@ -99,6 +100,7 @@ class PyRadioConfigWindow(object):
 
     def __init__(self, parent, config,
                  toggle_transparency_function,
+                 update_transparency_function,
                  show_theme_selector_function,
                  save_parameters_function,
                  reset_parameters_function,
@@ -157,6 +159,7 @@ class PyRadioConfigWindow(object):
         self._cnf = config
         self._show_port_number_invalid = show_port_number_invalid
         self._toggle_transparency_function = toggle_transparency_function
+        self._update_transparency_function = update_transparency_function
         self._show_theme_selector_function = show_theme_selector_function
         self._save_parameters_function = save_parameters_function
         self._reset_parameters_function = reset_parameters_function
@@ -189,6 +192,42 @@ class PyRadioConfigWindow(object):
 
     def __del__(self):
         self._toggle_transparency_function = None
+
+    def calculate_transparency(self):
+        transp = False
+        theme_transp = self._cnf.last_theme_s_transparency_setting
+        if logger.isEnabledFor(logging.DEBUG):
+            if theme_transp == 0:
+                logger.debug('Theme says: Do not use transparency (0)')
+            elif theme_transp == 1:
+                logger.debug('Theme says: Use transparency (1)')
+            else:
+                logger.debug('Theme says: I work both with and without transparency (2)')
+            if self._config_options['use_transparency'][1]:
+                logger.debug('Config says: Transparency is ON')
+            else:
+                logger.debug('Config says: Transparency is OFF')
+            if self._config_options['force_transparency'][1]:
+                logger.debug('Config says: Force transparency')
+            else:
+                logger.debug('Config says: Do not force transparency')
+
+        if self._config_options['force_transparency'][1]:
+            theme_transp = 2
+        if logger.isEnabledFor(logging.DEBUG):
+            if theme_transp == 2:
+                logger.debug('Using config transparency setting!')
+            else:
+                logger.debug('Using theme transparency setting!')
+        if theme_transp == 0:
+            transp = False
+        elif theme_transp == 1:
+            transp = True
+        else:
+            transp = self._config_options['use_transparency'][1]
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('*** Active transparency is {}'.format('ON' if transp else 'OFF'))
+        return transp
 
     def _fix_local_functions_for_editor(self):
         chk = (
@@ -477,6 +516,7 @@ class PyRadioConfigWindow(object):
         ''' Transparency '''
         #self._old_use_transparency = self._config_options['use_transparency'][1]
         self._config_options['use_transparency'][1] = False
+        self._config_options['force_transparency'][1] = False
         self._config_options['calculated_color_factor'][1] = '0'
         self._config_options['force_http'][1] = False
         self._toggle_transparency_function(changed_from_config_window=True, force_value=False)
@@ -846,13 +886,29 @@ class PyRadioConfigWindow(object):
                 # #         ''' became True, save last playlist '''
                 # #         self._cnf.save_last_playlist()
                 self.refresh_selection()
-            elif sel == 'use_transparency':
+            elif sel == 'force_transparency':
                 #self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]
-                self._toggle_transparency_function(
+                self._config_options['force_transparency'][1] = not self._config_options['force_transparency'][1]
+                logger.info('|||| Launching self._update_transparency_function')
+                self._update_transparency_function(
                     changed_from_config_window=True,
-                    force_value=not self._config_options['use_transparency'][1]
+                    calculate_transparency_function=self.calculate_transparency
                 )
                 self.refresh_selection()
+            elif sel == 'use_transparency':
+                self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]
+                self._cnf.use_transparency = not self._cnf.use_transparency
+                self._config_options[ 'use_transparency' ][1] = self._old_use_transparency
+                self._update_transparency_function(
+                    changed_from_config_window=True,
+                    calculate_transparency_function=self.calculate_transparency
+                )
+                self.refresh_selection()
+                # self._toggle_transparency_function(
+                #     changed_from_config_window=True,
+                #     force_value = not self._config_options['use_transparency'][1]
+                # )
+                # self.refresh_selection()
 
         return -1, []
 
@@ -1248,8 +1304,9 @@ class ExtraParameters(object):
                  max_lines=11,
                  from_config=True,
                  global_functions=None):
+        logger.error('player = {}'.format(player))
         self._cnf = config
-        self._orig_params = deepcopy(self._cnf.saved_params)
+        self._orig_params = deepcopy(self._cnf.params)
         self._global_functions = set_global_functions(global_functions)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('original parameters = {}'.format(self._orig_params))
@@ -1538,6 +1595,7 @@ class ExtraParameters(object):
             if self._cnf.PLAYER_NAME == self._orig_player:
                 if not self._items[self.active].startswith('profile:'):
                     self._cnf._profile_name = 'pyradio'
+                    logger.inco('1 self._cnf._profile_name = "{}"'.format(self._cnf._profile_name))
 
             if self.from_config:
                 self.refresh_win()
@@ -1642,6 +1700,7 @@ class PyRadioSelectPlayer(object):
 
     def __init__(self, config, parent, player,
                  global_functions=None):
+        self._char = ' [X] ' if platform.lower().startswith('win') else ' [✔] '
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('current players = {}'.format(player))
         self._cnf = config
@@ -1764,7 +1823,7 @@ class PyRadioSelectPlayer(object):
 
     def refresh_selection(self):
         for i in range(0, len(self._players)):
-            token = ' [✔] ' if self._players[i][1] else ' [ ] '
+            token = self._char if self._players[i][1] else ' [ ] '
             first_char = last_char = ' '
             if self.focus:
                 if self.selection == i:

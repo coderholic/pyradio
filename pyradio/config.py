@@ -1254,6 +1254,7 @@ class PyRadioConfig(PyRadioStations):
     opts['theme_title'] = ['Theme Options', '']
     opts['theme'] = ['Theme: ', 'dark']
     opts['use_transparency'] = ['Use transparency: ', False]
+    opts['force_transparency'] = ['  Force transparency: ', False]
     opts['calculated_color_factor'] = ['Calculated color: ', '0']
     opts['playlist_manngement_title'] = ['Playlist Management Options', '']
     opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
@@ -1329,6 +1330,7 @@ class PyRadioConfig(PyRadioStations):
     def __init__(self, user_config_dir=None):
         self.backup_player_params = None
         self._profile_name = 'pyradio'
+        logger.info('2 self._profile_name = "{}"'.format(self._profile_name))
         self.player = ''
         self.requested_player = ''
         self.confirm_station_deletion = True
@@ -1395,6 +1397,7 @@ class PyRadioConfig(PyRadioStations):
 
     @property
     def profile_name(self):
+        logger.info('3 self._profile_name = "{}"'.format(self._profile_name))
         return self._profile_name
 
     @profile_name.setter
@@ -1404,10 +1407,13 @@ class PyRadioConfig(PyRadioStations):
     @property
     def command_line_params(self):
         self._profile_name = '' if self.PLAYER_NAME == 'vlc' else 'pyradio'
+        logger.info('3 self._profile_name = "{}"'.format(self._profile_name))
+        logger.info('3 self.backup_player_params {}'.format(self.backup_player_params))
+        # logger.info('3 self.backup_player_params {}'.format(self.backup_player_params))
         the_id = self.backup_player_params[1][0]
         if the_id == 1:
             return ''
-        the_string = self.backup_player_params[1][the_id]
+        the_string = self.saved_params[self.PLAYER_NAME][self.saved_params[self.PLAYER_NAME][0]]
         if the_string.startswith('profile:'):
             self.get_profile_name_from_saved_params(the_string)
             return ''
@@ -1523,6 +1529,15 @@ class PyRadioConfig(PyRadioStations):
     @use_transparency.setter
     def use_transparency(self, val):
         self.opts['use_transparency'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def force_transparency(self):
+        return self.opts['force_transparency'][1]
+
+    @force_transparency.setter
+    def force_transparency(self, val):
+        self.opts['force_transparency'][1] = val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -1810,15 +1825,18 @@ class PyRadioConfig(PyRadioStations):
 
     def reset_profile_name(self):
         self._profile_name = 'pyradio'
+        logger.info('5 self._profile_name = "{}"'.format(self._profile_name))
 
     def get_profile_name_from_saved_params(self, a_string=None):
         ''' populate command_line_params_not_ready because this
             is what self.set_profile_from_command_line() reads
         '''
         if a_string:
+            logger.error('a_string = "{}"'.format(a_string))
             self.command_line_params_not_ready = self.PLAYER_NAME + ':' + a_string
         else:
             self.command_line_params_not_ready = self.PLAYER_NAME + ':' + self.params[self.PLAYER_NAME][self.params[self.PLAYER_NAME][0]]
+        logger.error('--- self.command_line_params_not_ready = "{}"'.format(self.command_line_params_not_ready))
         self.set_profile_from_command_line()
 
     def set_profile_from_command_line(self):
@@ -1833,10 +1851,12 @@ class PyRadioConfig(PyRadioStations):
 
             if the_string:
                 self._profile_name = the_string
+                logger.info('6 self._profile_name = "{}"'.format(self._profile_name))
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Setting profile to "[{}]"'.format(self._profile_name))
             else:
                 self._profile_name = 'pyradio'
+                logger.info('7 self._profile_name = "{}"'.format(self._profile_name))
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Invalid profile... Falling back to "[pyradio]"')
         else:
@@ -1923,11 +1943,13 @@ class PyRadioConfig(PyRadioStations):
         curses.init_pair(15, curses.COLOR_WHITE, curses.COLOR_BLACK)
         ''' Theme values backup '''
         self.bck_opts['use_transparency'] = self.opts['use_transparency'][1]
+        self.bck_opts['force_transparency'] = self.opts['force_transparency'][1]
         self.bck_opts['theme'] = self.opts['theme'][1]
         self.bck_opts['auto_update_theme'] = self.opts['auto_update_theme'][1]
         self.bck_opts['calculated_color_factor'] = self.opts['calculated_color_factor'][1]
         ''' No theme values '''
         self.opts['use_transparency'][1] = False
+        self.opts['force_transparency'][1] = False
         self.opts['theme'][1] = 'dark'
         self.opts['auto_update_theme'][1] = False
         self.opts['calculated_color_factor'][1] = "0"
@@ -2006,11 +2028,13 @@ class PyRadioConfig(PyRadioStations):
             'vlc': [1, 'Do not use any extra player parameters']
         }
         for line in lines:
-            sp = line.replace(' ', '').split('=')
+            sp = line.split('=')
             if len(sp) < 2:
                 return -2
             if sp[1] == '':
                 return -2
+            for i, n in enumerate(sp):
+                sp[i] = sp[i].strip()
             if sp[0] == 'show_no_themes_message':
                 self.show_no_themes_message = True
                 st = sp[1].strip()
@@ -2093,6 +2117,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['use_transparency'][1] = True
                 else:
                     self.opts['use_transparency'][1] = False
+            elif sp[0] == 'force_transparency':
+                if sp[1].lower() == 'true':
+                    self.opts['force_transparency'][1] = True
+                else:
+                    self.opts['force_transparency'][1] = False
             elif sp[0] == 'calculated_color_factor':
                 try:
                     t = round(float(sp[1]), 2)
@@ -2308,12 +2337,25 @@ class PyRadioConfig(PyRadioStations):
             self.get_player_params_from_backup()
         if self.check_parameters():
             self.saved_params = deepcopy(self.params)
-            self.get_profile_name_from_saved_params()
+            logger.error('\n\n{}\n\n'.format(self.saved_params))
+            logger.debug('* Old profile name: "{}"'.format(self.profile_name))
+            logger.debug('* Old _profile name: "{}"'.format(self._profile_name))
+            self.get_profile_name_from_saved_params(
+                    self.saved_params[
+                        self.PLAYER_NAME
+                        ][
+                            self.saved_params[self.PLAYER_NAME][0]
+                        ]
+                    )
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('New profile name: "{}"'.format(self.profile_name))
+                logger.debug('* New profile name: "{}"'.format(self.profile_name))
+                logger.debug('* New _profile name: "{}"'.format(self._profile_name))
+                logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
+                self.backup_player_params[1] = self.backup_player_params[0][:]
+                logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
         if not from_command_line and \
                 logger.isEnabledFor(logging.DEBUG):
-            logger.debug('saved params = {}'.format(self.saved_params))
+                    logger.debug('saved params = {}'.format(self.saved_params))
 
         if not self.opts['dirty_config'][1]:
             if not from_command_line and \
@@ -2442,6 +2484,16 @@ theme = {10}
 # Default value: False
 use_transparency = {11}
 
+# Always obey config Transparency setting
+# Most themes will either be transparent of opaque by default.
+# This means that these themes will never be allowed to change
+# the transparency setting within PyRadio.
+# Enabling this option will make all themes to behave as if
+# their "transparency" option is set to 2 (Obey config setting),
+# Valid values: True, true, False, false
+# Default value: False
+force_transparency = {12}
+
 # Calculated color factor
 # This is to produce Secondary Windows background color
 # A value of 0 dissables it, otherwise it is the factor
@@ -2450,7 +2502,7 @@ use_transparency = {11}
 # https://github.com/coderholic/pyradio#secondary-windows-background
 # Valid values: 0-0.2
 # Default value: 0
-calculated_color_factor = {12}
+calculated_color_factor = {13}
 
 # Playlist management
 #
@@ -2458,32 +2510,32 @@ calculated_color_factor = {12}
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {13}
+confirm_station_deletion = {14}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within PyRadio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {14}
+confirm_playlist_reload = {15}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {15}
+auto_save_playlist = {16}
 
 # When PyRadio determines that a restricted
 # terminal is used, it will display a message
 # every time it is lounched. To disable this
 # message, change the value to False.
 # Default value: True
-show_no_themes_message = {16}
+show_no_themes_message = {17}
 
 # When recording is turned on, a message will
 # be displayed if this option is True (default)
 #
-show_recording_message = {17}
+show_recording_message = {18}
 
 # Remote Control server
 # A simple http server that can accept remote
@@ -2495,9 +2547,9 @@ show_recording_message = {17}
 #
 # Default value: localhost:9998
 #                no auto start
-remote_control_server_ip = {18}
-remote_control_server_port = {19}
-remote_control_server_auto_start = {20}
+remote_control_server_ip = {19}
+remote_control_server_port = {20}
+remote_control_server_auto_start = {21}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
@@ -2528,6 +2580,7 @@ remote_control_server_auto_start = {20}
                     self.opts['force_http'][1],
                     theme,
                     trnsp,
+                    self.opts['force_transparency'][1],
                     calcf,
                     self.opts['confirm_station_deletion'][1],
                     self.opts['confirm_playlist_reload'][1],

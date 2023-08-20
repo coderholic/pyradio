@@ -970,6 +970,16 @@ Pressing "**t**" will bring up the *Theme selection window*, which can be used t
 
 **Note:** If the theme selected in the "*Theme selection window*", (or requested using the "**-t**" command line option), is in any way invalid, or is of the old format, **PyRadio** will fall-back to the "**dark**" theme and will display a relevant message.
 
+The window will display the current state of the **Use transparency** and **Force transparency** configuration options in its bottom right corner:
+
+- A **[T]** means that the **Use transparency** option is enabled.
+- A **[F]** means that the **Force transparency** option is enabled.
+- A **[TF]** means that the both options are enabled.
+
+One can get more info about these options in the "[Using Transparency](#using-transparency)" section, bellow.
+
+**Note:** the options indication will not be visible when the window is opened withing the **PyRadio**'s "*Configuration Window*".
+
 The "*Theme selection window*" will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing "**q**" or any other relevant key - pressing "**?**" will bring up its help).
 
 Pressing "**SPACE**", will apply the theme and make it default, and pressing "**c**" will apply the theme and make it default and start a file watch function on the file, so that if the file changes, **PyRadio** will automatically update itself.
@@ -1127,7 +1137,18 @@ This means that a theme which is set to be transparent (by its creator) will alw
 
 The only case when global transparency will come into play is when the theme does not care about it (theme transparency set to 2 - Obey config setting).
 
-When the "*Theme selection window*" is visible, a "**[T]**" string displayed  at  its  bottom right corner will indicate that global transparency is "*ON*".
+Since **v. 0.9.2.14**, it is also possible to **force** the use of the Transparency setting; the "**Force Transparency**" configuration option. When enabled, it will effectively make all themes behave as if their **transparency** setting was set to 2 (Obey config setting).
+
+The following table illustrates how things work:
+
+|  Force transparency  | Theme setting               | PyRadio honors   | If Config Transparency<br>is ON, you get  | If Config Transparency is OFF, you get
+|  --------------------| ----------------------------| ----------------------| ---------------------------------------| ----------------------------------------
+|  False<br>(the default)               | 0 - Do not use transparency  | Theme setting         | Opaque window                                    | Opaque window
+|                      | 1 - Theme is transparent    | Theme setting         | Transparent window                                     | Transparent window
+|                      | 2 - Don\'t care             | Config Transparency          | Transparent window                                     | Opaque window
+|  True                | Any (0, 1 or 2)             | Config Transparency          | Transparent window                                     | Opaque window
+
+So, pressing "**T**" when **Force Transparency** is enabled, or the theme's **transparency** value is set to 2, will toggle the window's transparency.
 
 ### Updating themes automatically
 

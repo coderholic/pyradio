@@ -204,6 +204,25 @@ def download_seven_zip(output_folder):
         stderr=subprocess.DEVNULL
     )
 
+def get_latest_x86_64_mpv_url():
+    url = 'https://sourceforge.net/projects/mpv-player-windows/files/64bit/'
+    try:
+        r = requests.get(url)
+    except:
+        return None
+    if r.status_code == 200:
+        # print(r.text)
+        sp = r.text.split('"url":"')
+        for i, n in enumerate(sp):
+            if n.startswith('/project') and '-v3' not in n:
+                # print('item: {}'.format(i))
+                # print(n)
+                # print('\n\n\n')
+                r.close()
+                return 'https://sourceforge.com' + n.split('"')[0] + 'download'
+    r.close()
+    return None
+
 def download_player(output_folder=None, package=1, do_not_exit=False):
     # Parameters
     #   output_folder   : where to save files
@@ -213,14 +232,26 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
         print('Downloading [magenta]MPV[/magenta] ([green]latest[/green])...')
     else:
         print('Downloading [magenta]MPlayer[/magenta] ([green]latest[/green])...')
+
     purl = (
-        'https://sourceforge.net/projects/mpv-player-windows/files',
+        'https://sourceforge.net/projects/mpv-player-windows/files/64bit',
         'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder'
     )
-    url = (
-        'https://sourceforge.net/projects/mpv-player-windows/files/latest/download',
+
+    '''
+        to get the latest v3 version use this url
+            https://sourceforge.net/projects/mpv-player-windows/files/latest/download
+    '''
+    url = [
+        'https://sourceforge.com/projects/mpv-player-windows/files/64bit/mpv-x86_64-20230820-git-19384e0.7z/download',
         'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder/r38151/mplayer-svn-38151-x86_64.7z/download'
-    )
+    ]
+
+    mpv_url = None
+    if package == 0:
+        mpv_url = get_latest_x86_64_mpv_url()
+        if mpv_url:
+            url[0] = mpv_url
 
     output_folder = _get_output_folder(
         output_folder=output_folder,
