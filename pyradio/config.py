@@ -2489,7 +2489,7 @@ use_transparency = {11}
 # This means that these themes will never be allowed to change
 # the transparency setting within PyRadio.
 # Enabling this option will make all themes to behave as if
-# their "transparency" option is set to 2 (Obey config setting),
+# their "transparency" option is set to 2 (Obey config setting).
 # Valid values: True, true, False, false
 # Default value: False
 force_transparency = {12}

@@ -28,6 +28,20 @@ try:
 except ImportError:
     from player import find_mpv_on_windows, find_mplayer_on_windows, find_vlc_on_windows
 
+purl = (
+    'https://sourceforge.net/projects/mpv-player-windows/files/64bit',
+    'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder'
+)
+
+'''
+    to get the latest v3 version use this url
+        https://sourceforge.net/projects/mpv-player-windows/files/latest/download
+'''
+zurl = [
+    'https://sourceforge.com/projects/mpv-player-windows/files/64bit/mpv-x86_64-20230820-git-19384e0.7z/download',
+    'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder/r38151/mplayer-svn-38151-x86_64.7z/download'
+]
+
 def win_press_any_key_to_unintall():
     the_path = __file__.split(sep)
     the_file = sep.join(the_path[:-1]) + sep + 'install.py'
@@ -204,8 +218,36 @@ def download_seven_zip(output_folder):
         stderr=subprocess.DEVNULL
     )
 
+def get_latest_x86_64_mplayer_url():
+    url = purl[1]
+    try:
+        r = requests.get(url)
+    except:
+        return None
+    if r.status_code == 200:
+        # print(r.text)
+        sp = r.text.split('<tr title="')
+        for i, n in enumerate(sp):
+            if n.startswith('r'):
+                rev = n.split('"')[0][1:]
+                try:
+                    r = int(rev)
+                except ValueError:
+                    return None
+                existing = zurl[1].split('-svn-')[1].split('-')[0]
+                # print('     rev = ' + rev[1:])
+                # print('existing = ' + existing[1:])
+                if existing == rev:
+                    rev = None
+                else:
+                    zurl[1] = zurl[1].replace(existing, rev[1:])
+                r.close()
+                return rev
+    r.close()
+    return None
+
 def get_latest_x86_64_mpv_url():
-    url = 'https://sourceforge.net/projects/mpv-player-windows/files/64bit/'
+    url = purl[0]
     try:
         r = requests.get(url)
     except:
@@ -233,25 +275,13 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
     else:
         print('Downloading [magenta]MPlayer[/magenta] ([green]latest[/green])...')
 
-    purl = (
-        'https://sourceforge.net/projects/mpv-player-windows/files/64bit',
-        'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder'
-    )
-
-    '''
-        to get the latest v3 version use this url
-            https://sourceforge.net/projects/mpv-player-windows/files/latest/download
-    '''
-    url = [
-        'https://sourceforge.com/projects/mpv-player-windows/files/64bit/mpv-x86_64-20230820-git-19384e0.7z/download',
-        'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder/r38151/mplayer-svn-38151-x86_64.7z/download'
-    ]
-
     mpv_url = None
     if package == 0:
         mpv_url = get_latest_x86_64_mpv_url()
         if mpv_url:
-            url[0] = mpv_url
+            zurl[0] = mpv_url
+    elif package == 1:
+        get_latest_x86_64_mplayer_url()
 
     output_folder = _get_output_folder(
         output_folder=output_folder,
@@ -272,7 +302,7 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
         session = requests.Session()
         for count in range(1,6):
             try:
-                r = session.get(url[package])
+                r = session.get(zurl[package])
                 r.raise_for_status()
                 break
             except requests.exceptions.RequestException as e:
