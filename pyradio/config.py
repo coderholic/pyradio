@@ -1413,6 +1413,7 @@ class PyRadioConfig(PyRadioStations):
         the_id = self.backup_player_params[1][0]
         if the_id == 1:
             return ''
+        logger.info('3 self.saved_params {}'.format(self.saved_params))
         the_string = self.saved_params[self.PLAYER_NAME][self.saved_params[self.PLAYER_NAME][0]]
         if the_string.startswith('profile:'):
             self.get_profile_name_from_saved_params(the_string)

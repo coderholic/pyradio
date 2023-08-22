@@ -43,9 +43,7 @@ If you face this situation, please refer to [this page](pip-error.md) to resolve
 * [Player detection / selection](#player-detection-/-selection)
     * [Changing player mid-session](#changing-player-mid-session)
     * [Extra Player Parameters](#extra-player-parameters)
-        * [Using the command line](#using-the-command-line)
         * [Using the Configuration Window](#using-the-configuration-window)
-    * [Changing parameters set](#changing-parameters-set)
 * [Player connection protocol](#player-connection-protocol)
     * [Visual reminder](#visual-reminder)
 * [Player default volume level](#player-default-volume-level)
@@ -143,9 +141,8 @@ Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
                [-a] [-ls] [-l] [-t THEME] [--show-themes] [--no-themes]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
                [--terminal-param TERMINAL_PARAM] [-tlp] [-scd] [-ocd]
-               [-ep EXTRA_PLAYER_PARAMETERS] [-ap ACTIVE_PLAYER_PARAM_ID]
-               [-lp] [--record] [-U] [-R] [-oc] [-sc] [-cc] [-gc] [--unlock]
-               [-us] [-lt] [-d] [-V]
+               [--record] [-U] [-R] [-oc] [-sc] [-cc] [-gc] [--unlock] [-us]
+               [-lt] [-d] [-V]
 
 Curses based Internet radio player
 
@@ -189,21 +186,6 @@ Options:
   -ocd, --open-config-dir
                         Open config directory [CONFIG DIR] with default file
                         manager.
-  -ep EXTRA_PLAYER_PARAMETERS, --extra-player_parameters EXTRA_PLAYER_PARAMETERS
-                        Provide extra player parameters as a string. The
-                        parameter is saved in the configuration file and is
-                        activated for the current session. The string's format
-                        is [player_name:parameters]. player_name can be 'mpv',
-                        'mplayer' or 'vlc'. Alternative format to pass a
-                        profile: [player_name:profile:profile_name]. In this
-                        case, the profile_name must be a valid profile defined
-                        in the player's config file (not for VLC).
-  -ap ACTIVE_PLAYER_PARAM_ID, --active-player-param-id ACTIVE_PLAYER_PARAM_ID
-                        Specify the extra player parameter set to be used with
-                        the default player. ACTIVE_PLAYER_PARAM_ID is 1-11
-                        (refer to the output of the -lp option)
-  -lp, --list-player-parameters
-                        List extra players parameters.
   --record              Turn recording on (not available for VLC player on
                         Windows).
   -U, --update          Update PyRadio.
@@ -698,34 +680,6 @@ All three supported players can accept a significant number of "*command line op
 
 This way, 10 sets of parameters can be inserted and made available for selection.
 
-#### Using the command line
-
-When the command line option (**-ep** or **--extra_player_parameters**) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.
-
-The format of the parameter is the following: **[player_name:parameters]**
-
-Where:
-
-- **player_name**: the name of the player
-- **parameters**: the actual player parameters
-
-Example:
-
-    pyradio -ep "vlc:--force-dolby-surround 2"
-
-**Note:** When a parameter is passed to "*mpv*" or "*mplayer*", **PyRadio**" will use the default player profile (called "**pyradio**").
-
-For "*mpv*" and "*mplayer*" a profile can be specified ("*vlc*" does not support profiles). In this case the format of the **parameters** part of the command line is: **profile:profile_name**.
-
-Where:
-
-- **profile**: the word "*profile*"
-- **profile_name**: the name of a profile. The profile must be already defined in the player's configuration file.
-
-Example:
-
-    pyradio -ep "mpv:profile:second_sound_card"
-
 #### Using the Configuration Window
 
 When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with **PyRadio** and edit its extra parameters.
@@ -735,16 +689,6 @@ When the user uses the configuration window (shown in the following image), he i
 Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).
 
 The user can add ("**a**") a new parameter, edit ("**e**") an existing set and delete ("**x**" or "**DEL**") one.
-
-### Changing parameters set
-
-When all desired parameter sets are already defined, using the **-ap** (**--active-player-param-id**) command line option can activate the set that corresponds to the number specified. The number to use for any given set can be retrieved using the **-lp** (**--list-player-parameters**) command line option.
-
-While **PyRadio** is running, the user can change the parameters set used by the player using the "*Player Extra Parameters*" window, by pressing "**Z**".
-
-If playback is on, changing the player's parameters will make the player restart the playback so that the new parameters get used.
-
-**Note:** Any changes made this way will not be saved but will be in effect until **PyRadio** terminates.
 
 ## Player connection protocol
 

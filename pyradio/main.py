@@ -209,12 +209,6 @@ If nothing else works, try the following command:
                         help='Print config directory [CONFIG DIR] location and exit.')
     parser.add_argument('-ocd', '--open-config-dir', action='store_true',
                         help='Open config directory [CONFIG DIR] with default file manager.')
-    parser.add_argument('-ep', '--extra-player_parameters', default=None,
-                        help="Provide extra player parameters as a string. The parameter is saved in the configuration file and is activated for the current session. The string\'s format is [player_name:parameters]. player_name can be 'mpv', 'mplayer' or 'vlc'. Alternative format to pass a profile: [player_name:profile:profile_name]. In this case, the profile_name must be a valid profile defined in the player\'s config file (not for VLC).")
-    parser.add_argument('-ap', '--active-player-param-id', default=0, help='Specify the extra player parameter set to be used with the default player. ACTIVE_PLAYER_PARAM_ID is 1-11 (refer to the output of the -lp option)')
-    parser.add_argument('-lp', '--list-player-parameters', default=None,
-                        action='store_true',
-                        help='List extra players parameters.')
     parser.add_argument('--record', action='store_true',
                         help='Turn recording on (not available for VLC player on Windows).')
     if platform.startswith('win'):
@@ -502,121 +496,6 @@ If nothing else works, try the following command:
                     from_pyradio=True
                 )
             sys.exit()
-
-        ''' check conflicting parameters '''
-        if args.active_player_param_id and \
-                args.extra_player_parameters:
-            if PY3:
-                print('[red]Error:[/red] You cannot use parameters "[green]-ep[/green]" and "[green]-ap[/green]" together!\n')
-            else:
-                print('Error: You cannot use parameters "-ep" and "-ap" together!\n')
-            sys.exit(1)
-
-        ''' user specified extra player parameter '''
-        if args.active_player_param_id:
-            try:
-                a_param = int(args.active_player_param_id)
-            except ValueError:
-                if PY3:
-                    print('[red]Error:[/red] Parameter "[green]-ap[/green]" is not a number\n')
-                else:
-                    print('Error: Parameter "-ap" is not a number\n')
-                sys.exit(1)
-            if 1 <= a_param <= 11:
-                pyradio_config.user_param_id = a_param
-            else:
-                if PY3:
-                    print('[red]Error:[/red] Parameter "[green]-ap[/green]" must be between 1 and 11')
-                else:
-                    print('Error: Parameter -ap must be between 1 and 11')
-                print('       Actually, it must be between 1 and the maximum')
-                print('       number of parameters for your default player.\n')
-                args.list_player_parameters = True
-
-        ''' list extra player parameters '''
-        if args.list_player_parameters:
-            read_config(pyradio_config)
-            default_player_name = pyradio_config.opts['player'][1].replace(' ', '').split(',')[0]
-            if default_player_name == '':
-                default_player_name = SUPPORTED_PLAYERS[0]
-            if PY3:
-                console = Console()
-                table = Table(show_header=True, header_style="bold magenta")
-                table.title = '[bold magenta]Player Extra Parameters[/bold magenta]'
-                table.title_justify = "left"
-                centered_table = Align.center(table)
-                table.add_column("Player")
-                table.add_column("Parameters")
-                for n, a_player in enumerate(SUPPORTED_PLAYERS):
-                    if default_player_name == a_player:
-                        pl_field = '[green]' + a_player + '[/green]'
-                    else:
-                        pl_field = '[red]' + a_player + '[/red]'
-                    default = 0
-                    param_field = ''
-                    for i, a_param in enumerate(pyradio_config.saved_params[a_player]):
-                        if i == 0:
-                            default = int(a_param)
-                        else:
-                            str_default = ''
-                            if a_player != 'vlc':
-                                str_default = '([green]default[/green])' if i == default else ''
-                            count = str(i) if i > 9 else ' ' + str(i)
-                            param_field = '[green]{0}[/green]. {1} {2}'.format(count, a_param, str_default)
-                            table.add_row(
-                                pl_field,
-                                param_field
-                            )
-                            pl_field = ''
-                    if n < len(SUPPORTED_PLAYERS) - 1:
-                        table.add_row('', '')
-                console.print(centered_table)
-            else:
-                print('Player Extra Parameters')
-                print(32 * '-')
-                for a_player in SUPPORTED_PLAYERS:
-                    if default_player_name == a_player:
-                        print('Player: ' + a_player + ' (default)')
-                    else:
-                        print('Player: ' + a_player)
-                    default = 0
-                    for i, a_param in enumerate(pyradio_config.saved_params[a_player]):
-                        if i == 0:
-                            default = int(a_param)
-                        else:
-                            str_default = '(default)' if i == default else ''
-                            count = str(i) if i > 9 else ' ' + str(i)
-                            print('    {0}. {1} {2}'.format(count, a_param, str_default))
-                print('')
-            sys.exit()
-
-        ''' extra player parameters '''
-        if args.extra_player_parameters:
-            if ':' in args.extra_player_parameters:
-                if pyradio_config.locked:
-                    print_session_is_locked()
-                    sys.exit(1)
-                else:
-                    if args.extra_player_parameters.startswith('vlc:profile'):
-                        if PY3:
-                            print('Error in parameter: "[green]-ep[/green]".')
-                            print('  [green]VLC[/green] does not supports profiles\n')
-                        else:
-                            print('Error in parameter: "-ep".')
-                            print('  VLC does not supports profiles\n')
-                        sys.exit()
-                    else:
-                        pyradio_config.command_line_params = args.extra_player_parameters
-            else:
-                if PY3:
-                    print('Error in parameter: "[green]-ep[/green]".')
-                    print('  Parameter format: [red]player_name[/red]:[green]parameters[/green]')
-                    print('                 or [red]player_name[/red]:[magenta]profile[/magenta]:[green]name_of_profile[/green]\n')
-                else:
-                    print('Error in parameter: "-ep".')
-                    print('  Parameter format: "player_name:parameters"')
-                    print('                 or "player_name:profile:name_of_profile"\n')
-                sys.exit()
 
         if args.unlock:
             pyradio_config.locked = False

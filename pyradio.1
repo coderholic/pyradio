@@ -53,12 +53,6 @@ Toggle autoload last opened playlist.
 Print config directory (\fI[CONFIG DIR]\fR) location and exit.
 .IP \fB-ocd\fR,\fB--open-config-dir\fR
 Open config directory (\fI[CONFIG DIR]\fR) with default file manager.
-.IP \fB-ep\ \fIEXTRA_PLAYER_PARAMETERS\fR,\ \fB--extra_player_parameters\ \fIEXTRA_PLAYER_PARAMETERS\fR
-Provide extra player parameters as a string. For more information, refer to the \fBEXTRA PLAYER PARAMETERS\fR section.
-.IP \fB-ap\fR\ \fIACTIVE_PLAYER_PARAM_ID\fR,\ \fB--active-player-param-id\fR\ \fIACTIVE_PLAYER_PARAM_ID\fR
-Specify the extra player parameter set to be used with the default player. \fIACTIVE_PLAYER_PARAM_ID\fR is 1-11.
-.IP \fB-lp
-List extra players parameters.
 .IP \fB|\ \fR(\fBVertical\ line\fR\ or\ \fBPipe\ symbol\fR)
 Enable / disable recording.
 .IP \fB-U\fR,\ \fB--update\fR
@@ -771,51 +765,6 @@ The user should not use or change the above player parameters. Failing to do so,
 
 This way, 10 sets of parameters can be inserted and made available for selection.
 
-\fBUsing The Command Line\fR
-
-When the command line parameter (\fB-epp\fR or \fB-extra_player_parameters\fR) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.
-
-The format of the parameter is the following: \fI[\fBplayer_name\fR:\fBparameters\fI]\fR.
-
-Where:
-
-.RS 5
-.IP \fBplayer_name\fR
-the name of the player (\fImpv\fR, \fImplayer\fR or \fIvlc\fR)
-.IP \fBparameters\fR
-the actual player parameters
-.RE
-
-.P
-Example:
-
-.HP
-
-\fIpyradio -epp "vlc:--force-dolby-surround 2"\fR
-
-
-.IP \fBNote\fR
-When a parameter is passed to \fImpv\fR or \fImplayer\fR, \fBpyradio\fR will use the default player profile (called \fBpyradio\fR).
-
-.P
-For \fImpv\fR and \fImplayer\fR a profile can be specified (\fIvlc\fR does not support profiles). In this case the format of the \fBparameters\fR part of the command line is: \fI[\fBprofile\fR:\fBprofile_name\fI]\fR.
-
-Where:
-.RS 5
-.IP \fBprofile
-the word "\fIprofile\fR"
-.IP \fBprofile_name
-the name of a profile. The profile must be already defined in the player's configuration file.
-.RE
-
-.P
-Example:
-
-.HP
-
-\fIpyradio -epp "mpv:profile:second_sound_card"
-
-
 .P
 \fBUsing The Configuration Window\fR
 
@@ -826,18 +775,6 @@ When the user uses the configuration window (shown in the following image), he i
 Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).
 
 The user can add ("\fBa\fR") a new parameter, edit ("\fBe\fR") an existing set and delete ("\fBx\fR" or "\fBDEL\fR") one.
-
-\fBChanging Parameters' Set\fR
-
-.P
-When all desired parameter sets are already defined, using the \fB-ap\fR (\fB--active-player-param-id\fR) command line parameter can activate the set that corresponds to the number specified. The number to use for any given set can be retrieved using the \fB-lp\fR (\fB--list-player-parameters\fR) command line parameter.
-
-While \fBpyradio\fR is running, the user can change the parameters' set used by the player using the "\fIPlayer Extra Parameters\fR" window, by pressing "\fBZ\fR".
-
-If playback is on, changing the player's parameters will make the player restart the playback so that the new parameters is used.
-
-.IP \fBNote\fR
-Any changes made this way will not be saved but will be in effect until \fBpyradio\fR terminates.
 
 .SH Player Connection Protocol
 
