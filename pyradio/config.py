@@ -1209,7 +1209,6 @@ class PyRadioConfig(PyRadioStations):
         It will be used when command line parameters are evaluated
     '''
     PLAYER_NAME = None
-    command_line_params_not_ready = None
 
     fallback_theme = ''
     use_themes = True
@@ -1403,69 +1402,6 @@ class PyRadioConfig(PyRadioStations):
     @profile_name.setter
     def profile_name(self, val):
         raise ValueError('parameter is read only')
-
-    @property
-    def command_line_params(self):
-        self._profile_name = '' if self.PLAYER_NAME == 'vlc' else 'pyradio'
-        logger.info('3 self._profile_name = "{}"'.format(self._profile_name))
-        logger.info('3 self.backup_player_params {}'.format(self.backup_player_params))
-        # logger.info('3 self.backup_player_params {}'.format(self.backup_player_params))
-        the_id = self.backup_player_params[1][0]
-        if the_id == 1:
-            return ''
-        logger.info('3 self.saved_params {}'.format(self.saved_params))
-        the_string = self.saved_params[self.PLAYER_NAME][self.saved_params[self.PLAYER_NAME][0]]
-        if the_string.startswith('profile:'):
-            self.get_profile_name_from_saved_params(the_string)
-            return ''
-        else:
-            return the_string
-
-    @command_line_params.setter
-    def command_line_params(self, val):
-        self.command_line_params_not_ready = None
-        if val:
-            if val.startswith('vlc:profile'):
-                if logger.isEnabledFor(logging.ERROR):
-                    logger.error('VLC does not support profiles')
-                self.init_backup_player_params()
-                return
-
-            if self.PLAYER_NAME:
-                parts = val.replace('\'', '').replace('"', '').split(':')
-                if len(parts) > 1 and parts[0] in SUPPORTED_PLAYERS:
-                    ''' add to params '''
-                    # logger.error('DE \n\n{0}\n{1}'.format(self.saved_params, self.params))
-                    to_add = ':'.join(parts[1:])
-                    if to_add in self.params[parts[0]]:
-                        added_id = self.params[parts[0]].index(to_add)
-                    else:
-                        self.params[parts[0]].append(to_add)
-                        added_id = len(self.params[parts[0]]) - 1
-                    # logger.error('DE \n{0}\n{1}\n\n'.format(self.saved_params, self.params))
-
-                    self.dirty_config = True
-
-                    if len(parts) > 2:
-                        if parts[1] == 'profile':
-                            ''' Custom profile for player '''
-                            self.command_line_params_not_ready = val
-                            self.set_profile_from_command_line()
-
-                ''' change second backup params item to point to this new item
-                    if the parameter belongs to the player pyradio currently uses
-                '''
-                if parts[0] == self.PLAYER_NAME:
-                    self.init_backup_player_params()
-                    self.backup_player_params[1][0] = added_id
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Setting active parameters: "{}"'.format(self.backup_player_params[1]))
-            else:
-                ''' Since we don't know which player we use yet
-                    we do not know if this profile has to be
-                    applied. So set evaluate for later...
-                '''
-                self.command_line_params_not_ready = val
 
     @property
     def requested_player(self):
@@ -1823,46 +1759,6 @@ class PyRadioConfig(PyRadioStations):
                 )
             except:
                 Popen(['xdg-open', self.stations_dir])
-
-    def reset_profile_name(self):
-        self._profile_name = 'pyradio'
-        logger.info('5 self._profile_name = "{}"'.format(self._profile_name))
-
-    def get_profile_name_from_saved_params(self, a_string=None):
-        ''' populate command_line_params_not_ready because this
-            is what self.set_profile_from_command_line() reads
-        '''
-        if a_string:
-            logger.error('a_string = "{}"'.format(a_string))
-            self.command_line_params_not_ready = self.PLAYER_NAME + ':' + a_string
-        else:
-            self.command_line_params_not_ready = self.PLAYER_NAME + ':' + self.params[self.PLAYER_NAME][self.params[self.PLAYER_NAME][0]]
-        logger.error('--- self.command_line_params_not_ready = "{}"'.format(self.command_line_params_not_ready))
-        self.set_profile_from_command_line()
-
-    def set_profile_from_command_line(self):
-        parts = self.command_line_params_not_ready.split(':')
-        self.command_line_params_not_ready = None
-        if self.PLAYER_NAME == 'vlc':
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('VLC does not support profiles...')
-            return
-        if parts[0] == self.PLAYER_NAME:
-            the_string = ':'.join(parts[2:]) if len(parts) > 1 else None
-
-            if the_string:
-                self._profile_name = the_string
-                logger.info('6 self._profile_name = "{}"'.format(self._profile_name))
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Setting profile to "[{}]"'.format(self._profile_name))
-            else:
-                self._profile_name = 'pyradio'
-                logger.info('7 self._profile_name = "{}"'.format(self._profile_name))
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Invalid profile... Falling back to "[pyradio]"')
-        else:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Profile for other player ({0} -> {1})'.format(parts[0], self.PLAYER_NAME))
 
     def _get_lock_file(self):
         ''' Populate self._session_lock_file
@@ -2341,13 +2237,6 @@ class PyRadioConfig(PyRadioStations):
             logger.error('\n\n{}\n\n'.format(self.saved_params))
             logger.debug('* Old profile name: "{}"'.format(self.profile_name))
             logger.debug('* Old _profile name: "{}"'.format(self._profile_name))
-            self.get_profile_name_from_saved_params(
-                    self.saved_params[
-                        self.PLAYER_NAME
-                        ][
-                            self.saved_params[self.PLAYER_NAME][0]
-                        ]
-                    )
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('* New profile name: "{}"'.format(self.profile_name))
                 logger.debug('* New _profile name: "{}"'.format(self._profile_name))

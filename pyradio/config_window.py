@@ -1591,12 +1591,6 @@ class ExtraParameters(object):
             self.active = self.selection
             # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
 
-            ''' reset profile '''
-            if self._cnf.PLAYER_NAME == self._orig_player:
-                if not self._items[self.active].startswith('profile:'):
-                    self._cnf._profile_name = 'pyradio'
-                    logger.inco('1 self._cnf._profile_name = "{}"'.format(self._cnf._profile_name))
-
             if self.from_config:
                 self.refresh_win()
             else:

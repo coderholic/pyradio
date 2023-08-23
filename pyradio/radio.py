@@ -922,11 +922,8 @@ class PyRadio(object):
 
         self._cls_update_stations = StationsChanges(self._cnf)
         if self.ws.operation_mode != self.ws.NO_PLAYER_ERROR_MODE:
-            if self._cnf.command_line_params_not_ready is not None:
-                self._cnf.command_line_params = self._cnf.command_line_params_not_ready
-            else:
-                if self._cnf.backup_player_params is None:
-                    self._cnf.init_backup_player_params()
+            if self._cnf.backup_player_params is None:
+                self._cnf.init_backup_player_params()
 
             ''' activate user specified player parameter set '''
             if self._cnf.user_param_id > 0:

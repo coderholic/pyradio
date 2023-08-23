@@ -2260,7 +2260,9 @@ class MpvPlayer(Player):
         logger.info('self.params = {}'.format(self.params))
         logger.error('\n\n')
         if not params.startswith('profile:'):
-            opts.append(params)
+            sp = params.split(' ')
+            for n in sp:
+                opts.append(n)
 
         ''' Do I have user profile in config?
             If so, can I use it?
@@ -2725,7 +2727,9 @@ class MpPlayer(Player):
         logger.info('self.params = {}'.format(self.params))
         logger.error('\n\n')
         if not params.startswith('profile:'):
-            opts.append(params)
+            sp = params.split(' ')
+            for n in sp:
+                opts.append(n)
 
         logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
@@ -3051,7 +3055,9 @@ class VlcPlayer(Player):
             logger.info('self.params = {}'.format(self.params))
             logger.error('\n\n')
             if not params.startswith('profile:'):
-                opts.append(params)
+                sp = params.split(' ')
+                for n in sp:
+                    opts.append(n)
 
         logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
