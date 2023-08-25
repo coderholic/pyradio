@@ -314,25 +314,32 @@ class Player(object):
         self._mplayer_on_windows7 = False
 
     @property
-    def p_name(self):
+    def profile_name(self):
         if self.PLAYER_NAME == 'vlc':
             return ''
         ret = 'pyradio'
-        logger.error('***** self.params\n{}'.format(self.params))
+        # logger.error('***** self.params\n{}'.format(self.params))
         candidate = self.params[self.params[0]]
-        logger.error('candidate = "{}"'.format(candidate))
+        # logger.error('candidate = "{}"'.format(candidate))
         if candidate:
             if candidate.startswith('profile:'):
                 candidate = candidate.replace('profile:', '')
-                logger.error('candidate = "{}"'.format(candidate))
-                ''' does this profile exist in the config files? '''
+                # logger.error('candidate = "{}"'.format(candidate))
             else:
                 candidate = None
         return candidate
 
-    @p_name.setter
-    def p_name(self, val):
-        pass
+    @profile_name.setter
+    def profile_name(self, val):
+        raise ValueError('parameter is read only')
+
+    @property
+    def profile_token(self):
+        return  '[' + self.profile_name + ']'
+
+    @profile_token.setter
+    def profile_token(self, value):
+        raise ValueError('property is read only')
 
     @property
     def recording(self):
@@ -403,21 +410,18 @@ class Player(object):
         config_files = []
         config_files = [expanduser("~") + "/.config/mpv/mpv.conf"]
 
-        if platform.startswith('darwin'):
-            config_files.append("/usr/local/etc/mpv/mpv.conf")
-        elif platform.startswith('win'):
+        if platform.startswith('win'):
             config_files[0] = os.path.join(os.getenv('APPDATA'), "mpv", "mpv.conf")
         else:
             # linux, freebsd, etc.
             config_files.append("/etc/mpv/mpv.conf")
+            config_files.append("/usr/local/etc/mpv/mpv.conf")
         self.all_config_files['mpv'] = config_files[:]
 
         ''' MPlayer config files '''
         config_files = []
         config_files = [expanduser("~") + "/.mplayer/config"]
-        if platform.startswith('darwin'):
-            config_files.append("/usr/local/etc/mplayer/mplayer.conf")
-        elif platform.startswith('win'):
+        if platform.startswith('win'):
             if os.path.exists('C:\\mplayer\\mplayer.exe'):
                 config_files[0] = 'C:\\mplayer\mplayer\\config'
             elif os.path.exists(os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
@@ -427,6 +431,7 @@ class Player(object):
             else:
                 config_files = []
         else:
+            config_files.append("/usr/local/etc/mplayer/mplayer.conf")
             config_files.append('/etc/mplayer/config')
         self.all_config_files['mplayer'] = config_files[:]
         config_files = [os.path.join(self._cnf.data_dir, 'vlc.conf')]
@@ -439,22 +444,6 @@ class Player(object):
                     f.write('50')
             except:
                 pass
-
-    @property
-    def profile_name(self):
-        return self._cnf.profile_name
-
-    @profile_name.setter
-    def progile_name(self, value):
-        raise ValueError('property is read only')
-
-    @property
-    def profile_token(self):
-        return  '[' + self.profile_name + ']'
-
-    @profile_token.setter
-    def profile_token(self, value):
-        raise ValueError('property is read only')
 
     def __del__(self):
         self.close()
@@ -490,11 +479,11 @@ class Player(object):
                     sleep(.1)
 
     def create_monitor_player(self, stop, limit, notify_function):
-        logger.info('\n\n======|||==========')
+        # logger.info('\n\n======|||==========')
         # self.monitor_opts.append('--volume')
         # self.monitor_opts.append('300')
-        logger.info(self.monitor_opts)
-        logger.error('limit = {}'.format(limit))
+        # logger.info(self.monitor_opts)
+        # logger.error('limit = {}'.format(limit))
         while not os.path.exists(self.recording_filename):
             sleep(.1)
             if stop():
@@ -504,11 +493,10 @@ class Player(object):
         while os.path.getsize(self.recording_filename) < limit:
             sleep(.1)
             if stop():
-                logger.error('\n\nAsked to stop. Exiting....\n\n')
+                # logger.error('\n\nAsked to stop. Exiting....\n\n')
                 return
-        logger.error('if stop')
         if stop():
-            logger.error('\n\nAsked to stop. Exiting....\n\n')
+            # logger.error('\n\nAsked to stop. Exiting....\n\n')
             return
         # logger.error('----------------------starting!')
         self.monitor_process = subprocess.Popen(
@@ -604,7 +592,7 @@ class Player(object):
         return ret + '\n\n|Highlighted values| are user specified.\nOther values are station provided (live) data.', tail
 
     def _do_save_volume(self, config_string):
-        logger.error('\n\nself.volume = {}\n\n'.format(self.volume))
+        # logger.error('\n\nself.volume = {}\n\n'.format(self.volume))
         if not self.config_files:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Volume not saved!!! (config file not found!!!)')
@@ -841,7 +829,7 @@ class Player(object):
                         subsystemOut = subsystemOutRaw.decode('utf-8', 'replace')
                 if subsystemOut == '':
                     break
-                logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 with recording_lock:
                     tmp = self._is_accepted_input(subsystemOut)
                 if not tmp:
@@ -1204,7 +1192,7 @@ class Player(object):
                         except:
                             data = b''
                     a_data = self._fix_returned_data(data)
-                    logger.error('DE Received: "{!r}"'.format(a_data))
+                    # logger.error('DE Received: "{!r}"'.format(a_data))
                     if a_data == b'' or stop():
                         break
 
@@ -1219,7 +1207,7 @@ class Player(object):
                                         break
                                     d = json.loads(n)
                                     if 'event' in d.keys():
-                                        logger.info('metadata-update\n\n')
+                                        # logger.info('metadata-update\n\n')
                                         if d['event'] == 'metadata-update':
                                             try:
                                                 if platform.startswith('win'):
@@ -1234,7 +1222,7 @@ class Player(object):
                                             self._request_mpv_info_data(sock)
                                             self.info_display_handler()
                                         elif d['event'] == 'playback-restart':
-                                            logger.info('====== playback-restarted\n\n')
+                                            # logger.info('====== playback-restarted\n\n')
                                             if not self.playback_is_on:
                                                 ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
@@ -1243,7 +1231,7 @@ class Player(object):
                                             self.info_display_handler()
                                         elif d['event'] == 'file-loaded' or \
                                                 d['event'] == 'audio-reconfig':
-                                            logger.info('{}\n\n'.format(d['event']))
+                                            # logger.info('{}\n\n'.format(d['event']))
                                             if not self.playback_is_on:
                                                 ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
@@ -1711,15 +1699,13 @@ class Player(object):
         return self._title_string_format_text_tag(title_string)
 
     def _title_string_format_text_tag(self, a_string):
-
-
-        logger.error('\n...\n...\na_string: "{}"'.format(a_string))
+        # logger.error('\n...\n...\na_string: "{}"'.format(a_string))
         if 'Metadata update for StreamTitle: ' in a_string:
             ''' mplayer verbose... '''
             sp = a_string.split('Metadata update for StreamTitle: ')
             try:
                 final_text_string = self.icy_title_prefix + sp[1]
-                logger.error('final_text_string: "{}"'.format(final_text_string))
+                # logger.error('final_text_string: "{}"'.format(final_text_string))
                 return final_text_string
             except IndexError:
                 pass
@@ -1772,9 +1758,9 @@ class Player(object):
              enable_crash_detection_function=None,
              encoding=''
          ):
-        logger.error('')
-        logger.error('params = {}'.format(self.params))
-        logger.error('')
+        # logger.error('')
+        # logger.error('params = {}'.format(self.params))
+        # logger.error('')
         ''' use a multimedia player to play a stream '''
         self.monitor = self.monitor_process = self.monitor_opts = None
         # logger.error('self.monitor_process.pid = {}'.format(self.monitor_process))
@@ -2091,7 +2077,7 @@ class Player(object):
             else:
                 self.title_prefix = ''
                 self.show_volume = True
-            logger.info('\n\nself.muted = {}\n\n'.format(self.muted))
+            # logger.info('\n\nself.muted = {}\n\n'.format(self.muted))
             if self.oldUserInput['Title'] == '':
                 self.outputStream.write(msg=self.title_prefix + self._format_title_string(self.oldUserInput['Input']), counter='')
             else:
@@ -2216,7 +2202,7 @@ class MpvPlayer(Player):
         )
         self.config_files = self.all_config_files['mpv']
         self.recording_filename = ''
-        logger.error('\n\nMPV recording = {}\n\n'.format(self._recording))
+        # logger.error('\n\nMPV recording = {}\n\n'.format(self._recording))
 
     def save_volume(self):
         ''' Saving Volume in Windows does not work;
@@ -2226,8 +2212,8 @@ class MpvPlayer(Player):
         return self._do_save_volume(self.profile_token + '\nvolume={}\n')
 
     def _buildStartOpts(self, streamUrl, playList=False):
-        logger.error('\n\nself._recording = {}'.format(self._recording))
-        logger.error('self.p_name = "{}"'.format(self.p_name))
+        # logger.error('\n\nself._recording = {}'.format(self._recording))
+        # logger.error('self.profile_name = "{}"'.format(self.profile_name))
         ''' Builds the options to pass to mpv subprocess.'''
 
         ''' Test for newer MPV versions as it supports different IPC flags. '''
@@ -2255,10 +2241,10 @@ class MpvPlayer(Player):
 
         ''' this will set the profile too '''
         params = self.params[self.params[0]]
-        logger.error('\n\n')
-        logger.info('params = {}'.format(params))
-        logger.info('self.params = {}'.format(self.params))
-        logger.error('\n\n')
+        # logger.error('\n\n')
+        # logger.info('params = {}'.format(params))
+        # logger.info('self.params = {}'.format(self.params))
+        # logger.error('\n\n')
         if not params.startswith('profile:'):
             sp = params.split(' ')
             for n in sp:
@@ -2267,8 +2253,7 @@ class MpvPlayer(Player):
         ''' Do I have user profile in config?
             If so, can I use it?
         '''
-        logger.info('Calling _configHasProfile')
-        self.USE_PROFILE, profile = self._configHasProfile(self.p_name)
+        self.USE_PROFILE, profile = self._configHasProfile(self.profile_name)
 
         if self._recording == self.RECORD_WITH_SILENCE:
             self._write_silenced_profile()
@@ -2285,14 +2270,14 @@ class MpvPlayer(Player):
                     else:
                         logger.info('No usable profile found')
 
-        logger.error('\n\nself._recording = {}'.format(self._recording))
+        # logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
             self.recording_filename = self.get_recording_filename(self.name, '.mkv')
             opts.append('--stream-record=' + self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
 
-        logger.error('Opts:\n{}'.format(opts))
+        # logger.error('Opts:\n{}'.format(opts))
         return opts, None
 
     def _fix_returned_data(self, data):
@@ -2696,8 +2681,7 @@ class MpPlayer(Player):
         ''' Do I have user profile in config?
             If so, can I use it?
         '''
-        logger.info('Calling _configHasProfile')
-        self.USE_PROFILE, profile = self._configHasProfile(self.p_name)
+        self.USE_PROFILE, profile = self._configHasProfile(self.profile_name)
 
         if self._recording == self.RECORD_WITH_SILENCE:
             if self.USE_PROFILE > -1:
@@ -2722,16 +2706,16 @@ class MpPlayer(Player):
 
         ''' this will set the profile too '''
         params = self.params[self.params[0]]
-        logger.error('\n\n')
-        logger.info('params = {}'.format(params))
-        logger.info('self.params = {}'.format(self.params))
-        logger.error('\n\n')
+        # logger.error('\n\n')
+        # logger.info('params = {}'.format(params))
+        # logger.info('self.params = {}'.format(self.params))
+        # logger.error('\n\n')
         if not params.startswith('profile:'):
             sp = params.split(' ')
             for n in sp:
                 opts.append(n)
 
-        logger.error('\n\nself._recording = {}'.format(self._recording))
+        # logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
             monitor_opts = opts[:]
             if self._recording == self.RECORD_WITH_SILENCE:
@@ -2763,7 +2747,7 @@ class MpPlayer(Player):
             opts.append('-playlist')
         opts.append(self._url_to_use(streamUrl))
 
-        logger.error('Opts:\n{0}\n{1}'.format(opts, monitor_opts))
+        # logger.error('Opts:\n{0}\n{1}'.format(opts, monitor_opts))
         return opts, monitor_opts
 
     def _mute(self):
@@ -2939,17 +2923,17 @@ class VlcPlayer(Player):
                 with open(self.all_config_files['vlc'][0], 'r') as f:
                     val = f.read().strip()
             except:
-                logger.error('\n\nself._config_volume = {}\n\n'.format(self._config_volume))
+                # logger.error('\n\nself._config_volume = {}\n\n'.format(self._config_volume))
                 return
             try:
                 self._config_volume = int(val)
             except ValueError:
                 pass
-            logger.error('\n\nself._config_volume = {}\n\n'.format(self._config_volume))
+            # logger.error('\n\nself._config_volume = {}\n\n'.format(self._config_volume))
 
     def _write_config(self):
-        logger.error('\n\nself.volume = {}'.format(self.volume))
-        logger.error('self.actual_volume = {}'.format(self.actual_volume))
+        # logger.error('\n\nself.volume = {}'.format(self.volume))
+        # logger.error('self.actual_volume = {}'.format(self.actual_volume))
         # ovol = round(int(self.volume)*100/self.max_volume)
         # logger.error('ovol = {}\n\n'.format(ovol))
         try:
@@ -3050,16 +3034,16 @@ class VlcPlayer(Player):
         ''' this will set the profile too '''
         if self.params[0] > 1:
             params = self.params[self.params[0]]
-            logger.error('\n\n')
-            logger.info('params = {}'.format(params))
-            logger.info('self.params = {}'.format(self.params))
-            logger.error('\n\n')
+            # logger.error('\n\n')
+            # logger.info('params = {}'.format(params))
+            # logger.info('self.params = {}'.format(self.params))
+            # logger.error('\n\n')
             if not params.startswith('profile:'):
                 sp = params.split(' ')
                 for n in sp:
                     opts.append(n)
 
-        logger.error('\n\nself._recording = {}'.format(self._recording))
+        # logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
             monitor_opts = opts[:]
             i = [y for y, x in enumerate(monitor_opts) if x == streamUrl][0]
@@ -3074,7 +3058,7 @@ class VlcPlayer(Player):
 
     def _mute(self):
         ''' mute vlc '''
-        logger.error('DE vlc_mute(): muted = {}'.format(self.muted))
+        # logger.error('DE vlc_mute(): muted = {}'.format(self.muted))
         if self.muted:
             if self.WIN:
                 self._win_set_volume(self._unmuted_volume)

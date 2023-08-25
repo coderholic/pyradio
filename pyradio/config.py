@@ -1328,8 +1328,6 @@ class PyRadioConfig(PyRadioStations):
 
     def __init__(self, user_config_dir=None):
         self.backup_player_params = None
-        self._profile_name = 'pyradio'
-        logger.info('2 self._profile_name = "{}"'.format(self._profile_name))
         self.player = ''
         self.requested_player = ''
         self.confirm_station_deletion = True
@@ -1392,15 +1390,6 @@ class PyRadioConfig(PyRadioStations):
 
     @distro.setter
     def distro(self, val):
-        raise ValueError('parameter is read only')
-
-    @property
-    def profile_name(self):
-        logger.info('3 self._profile_name = "{}"'.format(self._profile_name))
-        return self._profile_name
-
-    @profile_name.setter
-    def profile_name(self, val):
         raise ValueError('parameter is read only')
 
     @property
@@ -2235,11 +2224,7 @@ class PyRadioConfig(PyRadioStations):
         if self.check_parameters():
             self.saved_params = deepcopy(self.params)
             logger.error('\n\n{}\n\n'.format(self.saved_params))
-            logger.debug('* Old profile name: "{}"'.format(self.profile_name))
-            logger.debug('* Old _profile name: "{}"'.format(self._profile_name))
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('* New profile name: "{}"'.format(self.profile_name))
-                logger.debug('* New _profile name: "{}"'.format(self._profile_name))
                 logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
                 self.backup_player_params[1] = self.backup_player_params[0][:]
                 logger.info('* self.backup_player_params {}'.format(self.backup_player_params))

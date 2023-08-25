@@ -8540,11 +8540,12 @@ __|Remote Control Server| cannot be started!__
 
             elif ret == 0:
                 ''' Parameter selected '''
-                logger.error('\n\nbefore params\n{}\n\n'.format(self._cnf.params))
+                # logger.error('\n\nbefore params\n{}\n\n'.format(self._cnf.params))
                 if self._cnf.params_changed:
                     self._cnf.params = deepcopy(self._player_select_win.params)
-                logger.error('\n\nafter params\n{}\n\n'.format(self._cnf.params))
+                # logger.error('\n\nafter params\n{}\n\n'.format(self._cnf.params))
                 self.ws.close_window()
+                self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
                 if self._player_select_win._extra.active != self._player_select_win._extra.original_active:
                     self.restartPlayer('*** Restarting playback due to player parameter change ***')
                 self._player_select_win = None
@@ -9096,6 +9097,8 @@ __|Remote Control Server| cannot be started!__
                     return
 
                 elif char in (ord('Z'), ):
+                    self._random_requested = False
+                    self.jumpnr = ''
                     self._reset_status_bar_right()
                     self.ws.operation_mode = self.ws.PLAYER_PARAMS_MODE
                     self._player_select_win = PyRadioExtraParams(
