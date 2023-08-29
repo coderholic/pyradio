@@ -14,7 +14,7 @@ import re
 import glob
 
 from .radio import PyRadio
-from .config import PyRadioConfig, SUPPORTED_PLAYERS
+from .config import PyRadioConfig
 from .install import PyRadioUpdate, PyRadioUpdateOnWindows, PyRadioCache, \
     is_pyradio_user_installed, version_string_to_list, get_github_tag, \
     open_cache_dir

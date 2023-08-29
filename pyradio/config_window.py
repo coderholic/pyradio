@@ -10,7 +10,6 @@ from sys import platform, version_info
 from .common import *
 from .window_stack import Window_Stack_Constants
 from .cjkwrap import cjklen
-from .config import SUPPORTED_PLAYERS
 from .encodings import *
 from .themes import *
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons
@@ -1310,6 +1309,7 @@ class ExtraParameters(object):
         self._global_functions = set_global_functions(global_functions)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('original parameters = {}'.format(self._orig_params))
+        self._player = player
         self._orig_player = player
         # logger.error('DE orig player = {}'.format(self._orig_player))
         self._win = win
@@ -1323,11 +1323,119 @@ class ExtraParameters(object):
         ''' maximum number of lines to display '''
         self.max_lines = max_lines
 
+        if from_config:
+            self._working_params = deepcopy(self._cnf.saved_params)
+        else:
+            self._working_params = deepcopy(self._cnf.params)
+        self._profiles_from_files = self._extract_all_profiles()
+        # logger.error('\n\nself._profiles_from_files\n{}\n\n'.format(self._profiles_from_files))
+
         self.reset(saved=False)
         ''' set cursor to active item '''
         for a_key in self._selections.keys():
             self._selections[a_key][0] = self._selections[a_key][2]
+        # logger.error('self._selections\n{}'.format(self._selections))
         self._get_width()
+
+    def _add_params_to_all_profiles(self):
+        for n in self._cnf.SUPPORTED_PLAYERS:
+            self._add_params_to_profiles(n)
+
+    def _add_params_to_profiles(self, a_player_name=None):
+        if a_player_name is None:
+            a_player_name = self._player
+        # logger.error('\n=============================\n============================')
+        # logger.error('self._working_params = {}'.format(self._working_params))
+        # logger.error('a_player_name = {}'.format(a_player_name))
+        default_id = self._working_params[a_player_name][0]
+        # logger.error('default_id = {}'.format(default_id))
+        default = self._working_params[a_player_name][default_id].strip()
+        # logger.error('default = {}'.format(default))
+        for n in self._working_params[a_player_name][1:]:
+            stripped = n.strip()
+            if not stripped.startswith('profile:'):
+                if not stripped.startswith('Do not use any extra'):
+                    self._profiles_from_files[a_player_name].append(stripped)
+        # logger.error('self._profiles_from_files[a_player_name] = {}'.format(self._profiles_from_files[a_player_name]))
+        if default in self._profiles_from_files[a_player_name]:
+            default_id = self._profiles_from_files[a_player_name].index(default)
+        else:
+            try:
+                default_id = self._profiles_from_files[a_player_name].index('profile:pyradio')
+            except ValueError:
+                default_id = 0
+        # logger.error('default_id = {}'.format(default_id))
+        if self.from_config or (a_player_name=='vlc'):
+            self._selections[a_player_name][2] = default_id
+        else:
+            self._selections[a_player_name][2] = default_id - 1
+        # logger.error('self._selections[a_player_name][2] = {}'.format( self._selections[a_player_name][2] ))
+
+    def _extract_profile(self, a_file):
+        ''' extract profiles from a file '''
+        from sys import version as l_py_version
+        PY3 = l_py_version[0] == 3
+        try:
+            out = []
+            with open(a_file, 'r') as f:
+                r = f.readlines()
+                for n in r:
+                    k = n.strip()
+                    if k.startswith('[') and \
+                            k.endswith(']'):
+                        out.append(k[1:-1])
+            return out
+        except (FileNotFoundError, PermissionError) if PY3 else IOError:
+            return []
+
+    def _extract_profiles(self, config_files, a_player_name=None):
+        if a_player_name is None:
+            a_player_name = self._player
+        if a_player_name == 'vlc':
+            return ['Do not use any extra player parameters']
+        ''' extract profiles for a player '''
+        result = []
+        for n in config_files:
+            result.extend(self._extract_profile(n))
+
+        ''' convert to set and remove pyradio '''
+        result = list(set(result))
+        if result:
+            if 'pyradio' not in result:
+                result.app('pyradio')
+        else:
+            result = ['pyradio']
+        result.sort()
+        return ['profile:' + x for x in result]
+
+    def _extract_all_profiles(self):
+        ''' extract profiles for all players '''
+        out = {}
+        if self.from_config:
+            for n in self._cnf.SUPPORTED_PLAYERS:
+                if n == 'vlc':
+                    out[n] = ['Do not use any extra player parameters']
+                else:
+                    out[n] = self._extract_profiles(
+                            self._cnf.player_instance().all_config_files[n],
+                            a_player_name=n
+                            )
+        else:
+            if self._player == 'vlc':
+                out['vlc'] = ['Do not use any extra player parameters']
+                out['mpv'] = []
+                out['mplayer'] = []
+            else:
+                out['vlc'] = []
+                if self._player == 'mplayer':
+                    out['mpv'] = []
+                else:
+                    out['mplayer'] = []
+                out[self._player] = self._extract_profiles(
+                        self._cnf.player_instance().all_config_files[self._player],
+                        a_player_name=self._player
+                        )
+        return out
 
     def check_parameters(self):
         ''' Exrta Parameters check '''
@@ -1347,6 +1455,7 @@ class ExtraParameters(object):
                 True  - load saved params from config
         '''
         self._player = self._orig_player
+        # logger.error('saved = {}'.format(saved))
         if saved:
             self._working_params = deepcopy(self._cnf.saved_params)
         else:
@@ -1361,9 +1470,37 @@ class ExtraParameters(object):
             'mplayer': [],
             'vlc': []
         }
+        if self.from_config:
+            self._add_params_to_all_profiles()
+        else:
+            self._add_params_to_profiles(self._player)
+        # logger.error('\n\n\n\nself._working_params\n{}'.format(self._working_params))
+        self._defaults = {
+            'mpv': self._working_params['mpv'][self._working_params['mpv'][0]],
+            'mplayer': self._working_params['mplayer'][self._working_params['mplayer'][0]],
+            'vlc': self._working_params['vlc'][self._working_params['vlc'][0]],
+        }
+        # logger.error('\n\nself._defaults\n{}'.format(self._defaults))
         self._dict_to_list()
+        # default_id = self._working_params[a_player_name][0]
+        # default = self._working_params[a_player_name][default_id].strip()
+        for a_player in self._cnf.SUPPORTED_PLAYERS:
+            if self._items_dict[a_player]:
+                if isinstance(self._items_dict[a_player][0], int):
+                    self._items_dict[a_player].pop(0)
         self._items = self._items_dict[self._player]
-        self._original_active = self.active
+        # logger.error('\n\n*****************************')
+        # logger.error('self._selections\n{}'.format(self._selections))
+        # logger.error('self._items_dict\n{}'.format(self._items_dict))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('parameter items: {}'.format(self._items))
+        # logger.error('\n*****************************\n\n')
+        if self._defaults[self._player] in self._items:
+            self.active = self._items.index(self._defaults[self._player])
+        else:
+            self.active =  self._items.index('profile:pyradio')
+        if not saved:
+            self._original_active = self.active
 
     @property
     def player(self):
@@ -1371,7 +1508,7 @@ class ExtraParameters(object):
 
     @player.setter
     def player(self, a_player):
-        if a_player in SUPPORTED_PLAYERS:
+        if a_player in self._cnf.SUPPORTED_PLAYERS:
             self._player = a_player
             self._items = self._items_dict[a_player]
             self.refresh_win()
@@ -1427,13 +1564,9 @@ class ExtraParameters(object):
         '''
         # logger.error('DE\n')
         # logger.error('DE working params = {}'.format(self._working_params))
-        for a_param_set in self._working_params.keys():
-            for i, a_param in enumerate(self._working_params[a_param_set]):
-                if i == 0:
-                    # logger.error('DE a_param = {}'.format(a_param))
-                    self._selections[a_param_set][2] = int(a_param) - 1
-                else:
-                    self._items_dict[a_param_set].append(a_param)
+        for a_param_set in self._profiles_from_files.keys():
+            for a_param in self._profiles_from_files[a_param_set]:
+                self._items_dict[a_param_set].append(a_param)
 
     def _list_to_dict(self):
         ''' convert self._items_dict to self._working_params '''
@@ -1492,7 +1625,7 @@ class ExtraParameters(object):
         return col
 
     def set_player(self, a_player):
-        if a_player in SUPPORTED_PLAYERS:
+        if a_player in self._cnf.SUPPORTED_PLAYERS:
             self._orig_player = self._player
             self._player = a_player
             self._items = self._items_dict[a_player]
@@ -1780,9 +1913,9 @@ class PyRadioSelectPlayer(object):
         for ap in parts:
             self._players.append([ap, True, True])
 
-        if len(parts) < len(SUPPORTED_PLAYERS):
+        if len(parts) < len(self._cnf.SUPPORTED_PLAYERS):
             ''' add missing player '''
-            for ap in SUPPORTED_PLAYERS:
+            for ap in self._cnf.SUPPORTED_PLAYERS:
                 if ap not in parts:
                     self._players.append([ap, False, True])
 
@@ -1907,7 +2040,7 @@ class PyRadioSelectPlayer(object):
                 if working_players:
                     self.player = ','.join(working_players)
                 else:
-                    self.player = ','.join(SUPPORTED_PLAYERS)
+                    self.player = ','.join(self._cnf.SUPPORTED_PLAYERS)
                 self._extra.save_results()
                 return 0
 

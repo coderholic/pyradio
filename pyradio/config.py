@@ -58,8 +58,6 @@ if PY3:
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_PLAYERS = ('mpv', 'mplayer', 'vlc')
-
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
@@ -1208,6 +1206,9 @@ class PyRadioConfig(PyRadioStations):
     ''' I will get this when a player is selected
         It will be used when command line parameters are evaluated
     '''
+    SUPPORTED_PLAYERS = ('mpv', 'mplayer', 'vlc')
+    AVAILABLE_PLAYERS = None
+
     PLAYER_NAME = None
 
     fallback_theme = ''
@@ -1372,6 +1373,9 @@ class PyRadioConfig(PyRadioStations):
         self.auto_update_frameworks = ( self.base16_themes, self.pywal_themes, self.theme_sh_themes)
 
         self._read_notification_command()
+
+        ''' function to return a player instance '''
+        player_instance = None
 
     @property
     def open_last_playlist(self):
@@ -2223,15 +2227,15 @@ class PyRadioConfig(PyRadioStations):
             self.get_player_params_from_backup()
         if self.check_parameters():
             self.saved_params = deepcopy(self.params)
-            logger.error('\n\n{}\n\n'.format(self.saved_params))
             if logger.isEnabledFor(logging.DEBUG):
-                logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
+                # logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
                 self.backup_player_params[1] = self.backup_player_params[0][:]
-                logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
+                # logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
         if not from_command_line and \
                 logger.isEnabledFor(logging.DEBUG):
                     logger.debug('saved params = {}'.format(self.saved_params))
 
+        # logger.info('\nsaved_params\n{}\n\n'.format(self.saved_params))
         if not self.opts['dirty_config'][1]:
             if not from_command_line and \
                     logger.isEnabledFor(logging.INFO):
@@ -2492,13 +2496,18 @@ remote_control_server_auto_start = {21}
 
                         else:
                             txt = '''\n# {} extra parameters\n'''
+                        # logger.error('\n\n{}\n\n'.format(self.saved_params))
                         cfgfile.write(txt.format(a_set))
                         for i, a_param in enumerate(self.saved_params[a_set]):
                             if i == 0:
                                 default = a_param
                             elif i > 1:
-                                txt = '*' + a_param if i == default else a_param
-                                cfgfile.write('{}\n'.format(a_set + '_parameter=' + txt))
+                                if i == default:
+                                    txt = '*' + a_param
+                                    cfgfile.write('{}\n'.format(a_set + '_parameter=' + txt))
+                                else:
+                                    if not a_param.startswith('profile:'):
+                                        cfgfile.write('{}\n'.format(a_set + '_parameter=' + txt))
 
         except:
             if not from_command_line and \

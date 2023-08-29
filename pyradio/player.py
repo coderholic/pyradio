@@ -3364,7 +3364,7 @@ class VlcPlayer(Player):
                 break
         #self.print_response(rep)
 
-def probePlayer(requested_player=''):
+def probePlayer(config, requested_player=''):
     ''' Probes the multimedia players which are
         available on the host system. '''
     if logger.isEnabledFor(logging.INFO):
@@ -3374,7 +3374,6 @@ def probePlayer(requested_player=''):
         logger.info('Implemented players: ' +
                     ', '.join([player.PLAYER_NAME
                               for player in implementedPlayers]))
-
     for player in implementedPlayers:
         ret = check_player(player)
         if ret is not None:
@@ -3383,6 +3382,7 @@ def probePlayer(requested_player=''):
         logger.info('Available players: ' +
                     ', '.join([player.PLAYER_NAME
                               for player in available_players]))
+    config.AVAILABLE_PLAYERS = available_players[:]
     if requested_player:
         req = requested_player.split(',')
         for r_player in req:

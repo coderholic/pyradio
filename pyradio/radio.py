@@ -832,6 +832,9 @@ class PyRadio(object):
                 except:
                     return
 
+    def player_instance(self):
+        return self.player
+
     def setup(self, stdscr):
         if logger.isEnabledFor(logging.INFO):
             ver = self._cnf.get_pyradio_version()
@@ -900,6 +903,7 @@ class PyRadio(object):
         ''' For the time being, supported players are mpv, mplayer and vlc. '''
         try:
             self.player = player.probePlayer(
+                config=self._cnf,
                 requested_player=self.requested_player)(
                     self._cnf,
                     self.log,
@@ -909,6 +913,7 @@ class PyRadio(object):
                     self._add_station_to_stations_history,
                     self._recording_lock
                 )
+            self._cnf.player_instance = self.player_instance
             self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
             if self._request_recording:
                 if not (platform.startswith('win') and \
@@ -7119,6 +7124,7 @@ __|Remote Control Server| cannot be started!__
                     self._add_station_to_stations_history,
                     self._recording_lock
                 )
+                self._cnf.player_instance = self.player_instance
                 self._cnf.backup_player_params = [
                         self._cnf.params[self.player.PLAYER_NAME],
                         self._cnf.params[self.player.PLAYER_NAME]
@@ -8542,7 +8548,7 @@ __|Remote Control Server| cannot be started!__
                 ''' Parameter selected '''
                 # logger.error('\n\nbefore params\n{}\n\n'.format(self._cnf.params))
                 if self._cnf.params_changed:
-                    self._cnf.params = deepcopy(self._player_select_win.params)
+                    self._cnf.params[self.player.PLAYER_NAME] = deepcopy(self._player_select_win.params[self.player.PLAYER_NAME])
                 # logger.error('\n\nafter params\n{}\n\n'.format(self._cnf.params))
                 self.ws.close_window()
                 self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
