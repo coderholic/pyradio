@@ -317,7 +317,6 @@ class Player(object):
     def profile_name(self):
         if self.PLAYER_NAME == 'vlc':
             return ''
-        ret = 'pyradio'
         # logger.error('***** self.params\n{}'.format(self.params))
         candidate = self.params[self.params[0]]
         # logger.error('candidate = "{}"'.format(candidate))
@@ -325,9 +324,8 @@ class Player(object):
             if candidate.startswith('profile:'):
                 candidate = candidate.replace('profile:', '')
                 # logger.error('candidate = "{}"'.format(candidate))
-            else:
-                candidate = None
-        return candidate
+                return candidate
+        return 'pyradio'
 
     @profile_name.setter
     def profile_name(self, val):

@@ -1229,8 +1229,9 @@ class PyRadio(object):
                         logger.debug('Not displaying stations, next mode is full screen')
                     display = False
             if display:
-                # logger.error('DE \n\ndisplaying mode {}\n\n'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
-                self._redisplay[self._redisplay_list[n][0]]()
+                logger.error('DE \n\ndisplaying mode {}\n\n'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
+                # if self.ws.MODE_NAMES[self._redisplay_list[n][0]] != 'PLAYER_PARAMS_MODE':
+            self._redisplay[self._redisplay_list[n][0]]()
 
         # logger.error('DE window mode = {}'.format(self.ws.window_mode))
         # logger.error('DE operation mode = {}'.format(self.ws.operation_mode))
@@ -10003,8 +10004,10 @@ __|Remote Control Server| cannot be started!__
     def _redisplay_player_select_win_refresh_and_resize(self):
         if self._config_win:
             if not self._config_win.too_small:
+                # self._redisplay_config()
                 self._player_select_win.refresh_and_resize(self.outerBodyMaxY, self.outerBodyMaxX)
         else:
+            # self._redisplay_stations_and_playlists()
             self._player_select_win.set_parrent(self.bodyWin)
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):

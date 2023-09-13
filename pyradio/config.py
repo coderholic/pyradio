@@ -2074,14 +2074,6 @@ class PyRadioConfig(PyRadioStations):
         except:
             self._distro = 'None'
 
-        ''' make sure extra params have only up to 10 items each
-            (well, actually 11 items, since the first one is the
-            index to the default string in the list)
-        '''
-        if self.params:
-            for n in self.params.keys():
-                self.params[n] = self.params[n][:12]
-
         self.opts['dirty_config'][1] = False
         self.saved_params = deepcopy(self.params)
 

@@ -34,18 +34,22 @@ python -m pip install --user dateutil
     exit(1)
 import logging
 from sys import version_info, platform, version
-# try:
-#     from .cjkwrap import PY3, is_wide, cjklen
-#     from .schedule import PyRadioTime
-# except:
-#     from cjkwrap import PY3, is_wide, cjklen
-#     from schedule import PyRadioTime
-from .cjkwrap import PY3, is_wide, cjklen, cjkljust
-from .schedule import PyRadioTime
+try:
+    from .cjkwrap import PY3, is_wide, cjklen, cjkljust
+    from .schedule import PyRadioTime
+except:
+    from cjkwrap import PY3, is_wide, cjklen, cjkljust
+    from schedule import PyRadioTime
+# from .cjkwrap import PY3, is_wide, cjklen, cjkljust
+# from .schedule import PyRadioTime
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
+
+def log_it(msg):
+    with open('/home/spiros/log_it.log', 'a') as f:
+        f.write(msg + '\n')
 
 
 class DisabledWidget(object):
@@ -1808,13 +1812,12 @@ class SimpleCursesMenu(SimpleCursesWidget):
                  outer_margin=2,
                  margin=0,
                  align=0,
+                 bordered=True,
                  has_captions = False,
                  color_captions = None,
                  captions = None,
                  display_count = False,
                  right_arrow_selects=True,
-                 can_add_items=False,
-                 can_delete_items=False,
                  on_activate_callback_function=None,
                  on_up_callback_function=None,
                  on_down_callback_function=None,
@@ -1822,6 +1825,17 @@ class SimpleCursesMenu(SimpleCursesWidget):
                  on_right_callback_function=None,
                  global_functions=None,
                  local_functions=None,
+                 can_add_items=False,
+                 add_item_function=None,
+                 validate_add_entry=None,
+                 entry_cannot_be_added_function=None,
+                 can_edit_items=False,
+                 edit_item_function=None,
+                 validate_edit_entry=None,
+                 entry_cannot_be_edited_function=None,
+                 can_delete_items=False,
+                 validate_delete_entry=None,
+                 entry_cannot_be_deleted_function=None,
                  external_keypress_function=None
                  ):
         ''' Initialize the widget.
@@ -1862,7 +1876,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 Will be calculated from items if None
             display_count
                 If True, display itme id + 1 before item data
-                If True, captions will not be displayed
+                If False, captions will not be displayed
             color
                 The normal color of the non-selected items
             color_border
@@ -1885,6 +1899,11 @@ class SimpleCursesMenu(SimpleCursesWidget):
             max_width
                 The maximum line length to display
                 If 0, use parent's max_width - 2
+            bordered
+                if False, the default, create a menu
+                    (draw a border around the items)
+                if True, no border will be created,
+                    margins will be set to 0
             auto_adjust_width
                 If False, obbey self._max_width
                 If True, set max_width to maximum length of items
@@ -1898,9 +1917,6 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 If True (default) right arrow and "l" selects the new
                 active item (for example a menu). Set it to False if
                 the widget is part of a composite widget.
-            can_add_items
-            can_delete_items
-                Set either to True, to enable item addition or deletion
             on_activate_callback_function
                 A function to execute when new active item selected
             global_functions
@@ -1915,6 +1931,30 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     Format: {ord('key'): function}
                     Example: {ord('R'): self._reload}
                 return is 1 (continue) in the widget
+            can_add_items
+            can_edit_items
+            can_delete_items
+                Set either to True, to enable item addition,
+                edit or deletion
+            add_item_function
+            edit_item_function
+                A function to provide the TUI interface (or whatever)
+                to add / edit a new / existing item
+                    Function prototype:
+                        func(self, index, item)
+            validate_add_item
+            validate_edit_entry
+            validate_delete_entry
+                A function to validate that an entry can be added,
+                edited or deleted
+                    Function prototype:
+                        func(index, item)
+            entry_cannot_be_edited_function
+            entry_cannot_be_deleted_function
+                A function to execute when entry cannot be edited
+                or deleted (display a message or whatever)
+                    Function prototype:
+                        func(msg=None)
             external_keypress_function
                 An external keypress function to call, after handling
                 all other key handling routines.
@@ -1925,6 +1965,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     1 - Continue
                     2 - Display help
         '''
+        self._bordered = bordered
         self._too_small = False
         self._showed = False
         self._window_type = window_type
@@ -1941,16 +1982,22 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._color_cursor_active = color_cursor_active
         self._color_cursor_selection = color_cursor_selection
         self._maxY = self._max_height = max_height
-        self._body_maxY = self._maxY - 2
         self._maxX = self._max_width = max_width
         # log_it('init maxX = {}\n'.format(self._maxX))
         self._minY = min_height
         self._minX = min_width
-        self._body_maxX = self._maxX - 2
         self._auto_adjust_width = auto_adjust_width
         self._full_window = full_window
-        self._outer_margin = outer_margin
-        self._margin = margin
+        if bordered:
+            self._body_maxX = self._maxX - 2
+            self._body_maxY = self._maxY - 2
+            self._outer_margin = 0
+            self._margin = 0
+        else:
+            self._body_maxX = self._maxX
+            self._body_maxY = self._maxY
+            self._outer_margin = outer_margin
+            self._margin = margin
         self._align = align
         self._has_captions = has_captions
         if captions:
@@ -1963,6 +2010,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._caption = None
             self._has_captions = False
         self._can_add_items = can_add_items
+        self._can_edit_items = can_edit_items
         self._can_delete_items = can_delete_items
         self._right_arrow_selects = right_arrow_selects
         self._on_activate_callback_function = on_activate_callback_function
@@ -1970,15 +2018,21 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._on_down_callback_function = on_down_callback_function
         self._on_left_callback_function = on_left_callback_function
         self._on_right_callback_function = on_right_callback_function
+        self._validate_delete_entry = validate_delete_entry
+        self._validate_edit_entry = validate_edit_entry
+        self._validate_add_entry = validate_add_entry
+        self._add_item_function = add_item_function
+        self._edit_item_function = edit_item_function
+        self._entry_cannot_be_added_function = entry_cannot_be_added_function
+        self._entry_cannot_be_edited_function = entry_cannot_be_edited_function
+        self._entry_cannot_be_deleted_function = entry_cannot_be_deleted_function
         self._selection = selection
         if global_functions is not None:
             self._global_functions = global_functions
         if local_functions is not None:
             self._local_functions = local_functions
         self._external_keypress__function = external_keypress_function
-        self.active = active
-        self._focused = True
-        self._enabled = True
+        self._active = active
         self._showed = False
         if color_captions:
             self._color_captions = color_captions
@@ -2002,14 +2056,30 @@ class SimpleCursesMenu(SimpleCursesWidget):
         return self.too_small
 
     @property
-    def string(self):
-        '''Returns the widget's active string '''
-        return self._items[self.active]
-
-    @property
-    def current_string(self):
+    def current_item(self):
         '''Returns the widget's seldcted string '''
         return self._items[self._selection]
+
+    @property
+    def item(self):
+        '''Returns selected item'''
+        return self._items[self._selection]
+
+    @item.setter
+    def item(self, value):
+        raise ValueError('item out of bounds!')
+
+    @property
+    def active(self):
+        '''Returns the widget's max_height '''
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        if 0 <= value < len(self._items):
+            self._active = value
+        else:
+            raise ValueError('active out of bounds!')
 
     @property
     def selection(self):
@@ -2136,10 +2206,16 @@ class SimpleCursesMenu(SimpleCursesWidget):
         else:
             aY, aX = self._parent.getbegyx()
 
+        # logger.error('self._maxY = {} '.format(self._maxY))
+        # logger.error('self._maxX = {} '.format(self._maxX))
+        # logger.error('self._minY = {} '.format(self._minY))
+        # logger.error('self._minX = {} '.format(self._minX))
+        # logger.error('self._Y = {} '.format(self._Y))
+        # logger.error('self._X = {} '.format(self._X))
         if self._maxY <= self._minY or \
                 self._maxX <= self._minX or \
-                self._X < 2 or \
-                self._Y < 2:
+                self._X < 1 or \
+                self._Y < 1:
             self._too_small = True
             aY, aX = self._parent.getbegyx()
             self._win = curses.newwin(
@@ -2154,12 +2230,24 @@ class SimpleCursesMenu(SimpleCursesWidget):
             #     self._Y, self._X,
             #     self._maxY, self._maxX
             # ))
-            self._win = curses.newwin(
-                self._maxY, self._maxX,
-                self._Y, self._X
-            )
-        self._body_maxY = self._maxY - 2
-        self._body_maxX = self._maxX - 2
+            self.get_new_win()
+        if self._bordered:
+            self._body_maxY = self._maxY - 2
+            self._body_maxX = self._maxX - 2
+        else:
+            self._body_maxY = self._maxY
+            self._body_maxX = self._maxX
+
+    def get_new_win(self, Y=None, X=None):
+        self._win = None
+        if Y is not None:
+            self._Y = Y
+        if X is not None:
+            self._X = X
+        self._win = curses.newwin(
+            self._maxY, self._maxX,
+            self._Y, self._X
+        )
 
     def _get_item_id(self, item=None):
         ''' returns item id in visible window
@@ -2219,6 +2307,26 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._showed = False
         self._scroll = True if len(self._items) > self._body_maxY else False
 
+    def add_item(self, an_item, select=False):
+        ''' Add an item to the list
+            Tip: to be used from the return of the
+                 add_item_function implementation
+                 after enabling can_add_items
+        '''
+        self._items.append(an_item)
+        if select:
+            self._set_selection(len(self._items) - 1)
+
+    def edit_item(self, index, an_item, select=False):
+        ''' Edit an item
+            Tip: to be used from the return of the
+                 edit_item_function implementation
+                 after enabling can_edit_items
+        '''
+        self._items[index] = an_item
+        if select:
+            self._set_selection(len(index) - 1)
+
     def show(self, parent=None):
         ''' show the widget
 
@@ -2240,6 +2348,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             new_win = True
 
         if self._too_small:
+            logger.error('Window is TOO SMALL')
             self._win.addstr(1, 1, ' Window is', self._color)
             self._win.addstr(2, 1, ' Too small', self._color)
             self._win.refresh()
@@ -2254,8 +2363,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._refresh()
 
     def _print_box_and_title(self):
-        self._print_box()
-        self._print_title()
+        if self._bordered:
+            self._print_box()
+            self._print_title()
 
     def _print_box(self):
         self._win.bkgdset(' ', self._color_border)
@@ -2277,7 +2387,10 @@ class SimpleCursesMenu(SimpleCursesWidget):
         # TODO: calculate start_pos
 
         self._item_max_width = cjklen(max(self._items, key=cjklen))
-        active_item_length = self._maxX - 2 * self._margin - 2
+        if self._bordered:
+            active_item_length = self._maxX - 2 * self._margin - 2
+        else:
+            active_item_length = self._maxX - 2 * self._margin
         if self._start_pos < 0:
             self._start_pos = 0
         elif self._start_pos > len(self._items) - 1 - self._body_maxY:
@@ -2293,8 +2406,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 continue
             # log_it('X={0}, item = "{1}"'.format(self._X, disp_item))
             col = self._get_item_color(item_id)
+            displace = 1 if self._bordered else 0
             try:
-                self._win.addstr(i+1, 1, disp_item, col)
+                self._win.addstr(i+displace, displace, disp_item, col)
             except:
                 pass
         self._win.refresh()
@@ -2327,11 +2441,11 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 #print('item_id = {}'.format(item_id))
                 item = self._items[item_id][:active_item_length]
                 if self._align == self.LEFT:
-                    disp_item = ' ' * self._margin + item.cjkljust(active_item_length) + ' ' * self._margin
+                    disp_item = ' ' * self._margin + cjkljust(item, active_item_length) + ' ' * self._margin
                 elif self._align == self.RIGHT:
-                    disp_item = ' ' * self._margin + item.cjkrjust(active_item_length) + ' ' * self._margin
+                    disp_item = ' ' * self._margin + cjkrjust(item, active_item_length) + ' ' * self._margin
                 else:
-                    disp_item = ' ' * self._margin + item.cjkcenter(active_item_length) + ' ' * self._margin
+                    disp_item = ' ' * self._margin + cjkcenter(item, active_item_length) + ' ' * self._margin
                 # disp_item = disp_item.ljust(self._body_maxX)
         else:
             # create empty lines
@@ -2344,18 +2458,22 @@ class SimpleCursesMenu(SimpleCursesWidget):
         if self._focused and self._enabled:
             col = self._color
             # log_it('  color: color (default)')
-            if item_id == self._selection == self.active:
+            # logger.error('  color: color (default)')
+            if item_id == self._selection == self._active:
                 col = self._color_cursor_active
                 # log_it('  color: color cursor active')
+                # logger.error('color: color cursor active')
             elif item_id == self._selection:
                 col =self._color_cursor_selection
                 # log_it('  color: color cursor selection')
-            elif item_id == self.active:
+                # logger.error('  color: color cursor selection')
+            elif item_id == self._active:
                 col = self._color_active
                 # log_it('  color: color active')
+                # logger.error('  color: color active')
         elif self._enabled:
             col = self._color
-            if item_id == self.active:
+            if item_id == self._active:
                 col = self._color_active
         else:
             col = self._color
@@ -2406,28 +2524,28 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     self._selection = len(self._items) - 1
         # log_it('\n\n2 mov = {0}, sel = {1}, items = {2}'.format(movement, self._selection, len(self._items)))
 
-    def delete_item(self, target):
+    def delete_item(self, index):
         d = deque(self._items)
-        d.rotate(-target)
+        d.rotate(-index)
         ret = d.popleft()
-        d.rotate(target)
+        d.rotate(index)
         self._items = list(d)
-        # log_it('=======> id = {0}, captions = {1}'.format(target, self._captions))
+        # log_it('=======> id = {0}, captions = {1}'.format(index, self._captions))
         if self._has_captions:
             for i in range(0, len(self._captions)):
-                if target < self._captions[i]:
+                if index < self._captions[i]:
                     self._captions[i] -= 1
 
-        # log_it('-------> id = {0}, captions = {1}'.format(target, self._captions))
+        # log_it('-------> id = {0}, captions = {1}'.format(index, self._captions))
 
         mov = 1
         if self._selection >= len(self._items):
             self._selection -= 1
             mov = -1
-        if self.active > target:
-            self.active -= 1
-        elif self.active == target:
-            self.active = -1
+        if self._active > index:
+            self._active -= 1
+        elif self._active == index:
+            self._active = -1
 
         self._verify_selection_not_on_caption(mov)
         if self._make_sure_selection_is_visible():
@@ -2440,10 +2558,11 @@ class SimpleCursesMenu(SimpleCursesWidget):
     def _toggle_selected_item(self):
         active_item_length = self._body_maxX - 2 * self._margin
         # log_it('_toggle_selected_item')
+        displace = 1 if self._bordered else 0
         update = False
         old_selection_id = self._get_item_id(self._old_selection)
         if old_selection_id > -1:
-            self._win.chgat(old_selection_id + 1, 1, self._body_maxX, self._get_item_color(self._old_selection))
+            self._win.chgat(old_selection_id + displace, displace, self._body_maxX, self._get_item_color(self._old_selection))
             # self._win.addstr(
             #     old_selection_id + 1,
             #     1,
@@ -2460,7 +2579,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             pass
         selection_id = self._get_item_id(self._selection)
         if selection_id > -1:
-            self._win.chgat(selection_id + 1, 1, self._body_maxX, self._get_item_color(self._selection))
+            self._win.chgat(selection_id + displace, displace, self._body_maxX, self._get_item_color(self._selection))
             # self._win.addstr(
             #     selection_id + 1,
             #     1,
@@ -2476,24 +2595,25 @@ class SimpleCursesMenu(SimpleCursesWidget):
         return False
 
     def _toggle_active_item(self):
+        displace = 1 if self._bordered else 0
         active_item_length = self._body_maxX - 2 * self._margin
-        self._old_active = self.active
-        self.active = self._selection
+        self._old_active = self._active
+        self._active = self._selection
         old_active_id = self._get_item_id(self._old_active)
         if old_active_id > -1:
             self._win.addstr(
-                old_active_id + 1,
-                1,
+                old_active_id + displace,
+                displace,
                 self._format_line(old_active_id, active_item_length),
                 self._get_item_color(old_active_id)
             )
             # self._win.chgat(old_active_id + 1, 1, self._body_maxX, self._color)
             # log_it('_toggle_active_item: changind old active: {0}, line: {1}'.format(old_active_id, self._Y + old_active_id))
-        active_id = self._get_item_id(self.active)
+        active_id = self._get_item_id(self._active)
         # self._win.chgat(active_id + 1, 1, self._body_maxX, self._color_cursor_active)
         self._win.addstr(
-            active_id + 1,
-            1,
+            active_id + displace,
+            displace,
             self._format_line(active_id, active_item_length),
             self._get_item_color(self._selection)
         )
@@ -2522,6 +2642,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
         if char in self._global_functions.keys():
             self._global_functions[char]()
+            return 1
 
         elif char in (
             curses.KEY_EXIT, ord('q'), 27,
@@ -2532,12 +2653,25 @@ class SimpleCursesMenu(SimpleCursesWidget):
         elif char == ord('?'):
             return 2
 
+        elif self._can_add_items and \
+                char in (ord('a'), ):
+            if len(self._items) == 0:
+                return 0
+            if self._add_item_function:
+                self._add_item_function(self, self._selection, self._items[self._selection])
+            return 0
+
         elif self._can_delete_items and \
                 char in (ord('x'), curses.KEY_DC):
             if len(self._items) == 0:
                 return 0
             if self._has_captions:
                 if len(self._items) == len(self._captions) + 1:
+                    return 0
+            if self._validete_delete_entry:
+                if not self._validate_delete_entry(self._selection, self.item):
+                    if self._entry_cannot_be_deleted_function:
+                        self._entry_cannot_be_deleted_function()
                     return 0
             self.delete_item(self._selection)
             self._refresh()
@@ -2589,6 +2723,15 @@ class SimpleCursesMenu(SimpleCursesWidget):
             else:
                 self._start_pos = 0
                 self._refresh()
+
+        elif char == ord('P'):
+            if len(self._items) == 0:
+                return 1
+            self._selection = self._active
+            self._verify_selection_not_on_caption()
+            self._make_sure_selection_is_visible()
+            self._refresh()
+            # self._toggle_selected_item()
 
         elif char == ord('H'):
             if len(self._items) == 0:
@@ -2658,10 +2801,12 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
         elif char in (ord('k'), curses.KEY_UP):
             if len(self._items) == 0:
+                # log_it('*** no items')
                 return 1
             self._selection -= 1
             self._verify_selection_not_on_caption(-1)
             if self._selection < 0:
+                # log_it('*** was minus')
                 self._selection = len(self._items) - 1
                 self._verify_selection_not_on_caption(-1)
                 self._start_pos = 0
@@ -2670,6 +2815,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     self._refresh()
                     return 1
             if self._scroll:
+                # log_it('*** scroll')
                 # we have scrolling items
                 if self._selection < self._start_pos:
                     # we need to scroll!
@@ -2715,6 +2861,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             return self._external_keypress__function(char)
 
         return 1
+
 
 
 class SimpleCursesCheckBox(SimpleCursesWidget):
@@ -4772,7 +4919,7 @@ logger = logging.getLogger('pyradio')
 logger.setLevel(logging.DEBUG)
 
 def main(stdscr):
-    __configureLogger()
+    # __configureLogger()
     curses.start_color()
     curses.use_default_colors()
     try:
@@ -4786,26 +4933,55 @@ def main(stdscr):
     #pr(stdscr)
     #stdscr.getch()
 
+    curses.init_pair(3,curses.COLOR_BLACK, curses.COLOR_WHITE)
     curses.init_pair(4,curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(5,curses.COLOR_BLACK,curses.COLOR_BLUE)
+    curses.init_pair(5,curses.COLOR_WHITE,curses.COLOR_BLUE)
     curses.init_pair(6,curses.COLOR_BLACK,curses.COLOR_RED)
     curses.init_pair(9,curses.COLOR_RED,curses.COLOR_WHITE)
     #curses.init_pair(1,237,248)
     #for n in range(3,13):
     #    stdscr.addstr(n,1,str(n),curses.color_pair(1))
 
-    stdscr.bkgdset(' ', curses.color_pair(5))
+    stdscr.bkgdset(' ', curses.color_pair(6))
     # stdscr.bkgdset(' ', 5)
     stdscr.erase()
     stdscr.touchwin()
-    #stdscr.refresh()
-    x = SimpleCursesDate(
-        1, 2, stdscr,
-        5, 9,
-    )
+    stdscr.refresh()
+    # x = SimpleCursesDate(
+    #     1, 2, stdscr,
+    #     5, 9,
+    # )
+    items = ['profile:low', 'profile:pseudo-gui', 'profile:pyradio', 'profile:pyradio_cache', 'profile:silent', 'profile:test', 'profile:usb', 'profile:very-low', '--test-run', '--another_test', '_more_test',
+    'profile:low', 'profile:pseudo-gui', 'profile:pyradio', 'profile:pyradio_cache', 'profile:silent', 'profile:test', 'profile:usb', 'profile:very-low', '--test-run', '--another_test', '_more_test']
+
+    x = SimpleCursesMenu(
+            2, 3, stdscr,
+            selection=0,
+            active=5,
+            display_count=True,
+            max_height=10,
+            max_width=40,
+            items=items,
+            title='',
+            window_type=2,
+            color=curses.color_pair(3),
+            color_title=curses.color_pair(9),
+            bordered=False,
+            color_border=curses.color_pair(9),
+            color_active=curses.color_pair(9),
+            color_cursor_selection=curses.color_pair(5),
+            color_cursor_active=curses.color_pair(6),
+            validate_delete_entry=validate_delete_entry,
+            validate_edit_entry=validate_delete_entry,
+            can_add_items=True,
+            add_item_function=add_i,
+            )
     x.enabled = True
-    x.focused = True
+    x.focused = False
     x.show()
+
+    stdscr.refresh()
+    stdscr.refresh()
 
     while True:
         try:
@@ -4816,6 +4992,12 @@ def main(stdscr):
                 return
         except KeyboardInterrupt:
             break
+
+def add_i(me, index, item):
+    me.add_item('New!!!', select=True)
+
+def validate_delete_entry(index, item):
+    return False if item.startswith('profile:') else True
 
 def up():
     logger.error('up')

@@ -12,7 +12,7 @@ from .window_stack import Window_Stack_Constants
 from .cjkwrap import cjklen
 from .encodings import *
 from .themes import *
-from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons
+from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 import logging
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -935,6 +935,8 @@ class PyRadioExtraParams(object):
         self._too_small_str = 'Window too small'
         self._cnf.get_player_params_from_backup(param_type=1)
         self._global_functions = global_functions
+        ''' list is list of player profiles / parameters '''
+        self._list = None
         self._redisplay()
 
     @property
@@ -960,18 +962,20 @@ class PyRadioExtraParams(object):
                 int((pX - len(self._too_small_str)) / 2)
             )
             self.show()
+            return
         else:
             self._too_small = False
             self.maxX = pX - 2 if pX < 40 else 40
             logger.error('maxX = {}'.format(self.maxX))
             logger.error('max_lines = {}'.format(self._max_lines))
+            self._Y = int((pY - self._max_lines) / 2) + 2
+            self._X = int((pX - self.maxX) / 2)
             self._win = curses.newwin(
                 self._max_lines, self.maxX,
-                int((pY - self._max_lines) / 2) + 2,
-                int((pX - self.maxX) / 2)
+                self._Y, self._X
             )
         if self._extra:
-            self._extra.set_window(self._win)
+            self._extra.set_window(self._win, do_show=False)
             self.show()
         else:
             self._extra = ExtraParameters(
@@ -982,6 +986,7 @@ class PyRadioExtraParams(object):
                 from_config=False,
                 global_functions=self._global_functions
             )
+            self._extra.enabled = self._extra.focused = True
 
     def show(self):
         self._win.bkgdset(' ', curses.color_pair(3))
@@ -992,6 +997,7 @@ class PyRadioExtraParams(object):
                              curses.color_pair(10))
             self._win.refresh()
         else:
+            ''' show title '''
             self._win.addstr(
                 0, int((self.maxX - len(self._title)) / 2),
                 self._title,
@@ -1006,6 +1012,8 @@ class PyRadioExtraParams(object):
             self._win.addstr(13, int((self.maxX - len(self._note_line1)) / 2), self._note_line1, curses.color_pair(10))
             self._win.addstr(14, int((self.maxX - len(self._note_line2)) / 2), self._note_line2, curses.color_pair(10))
 
+            self._move_in_config_win_Y = self._Y
+            self._move_in_config_win_Y = self._X
             self._extra.refresh_win()
 
     def keypress(self, char):
@@ -1303,6 +1311,7 @@ class ExtraParameters(object):
                  max_lines=11,
                  from_config=True,
                  global_functions=None):
+        self._list = None
         logger.error('player = {}'.format(player))
         self._cnf = config
         self._orig_params = deepcopy(self._cnf.params)
@@ -1319,6 +1328,11 @@ class ExtraParameters(object):
         ''' start Y, X '''
         self.startY = startY
         self.startX = startX
+        # logger.error('start self.startY = {}'.format(self.startY))
+        # logger.error('start self.startX = {}'.format(self.startX))
+        self._parentY, self._parentX = self._win.getbegyx()
+        # logger.error('start self._parentY = {}'.format(self._parentY))
+        # logger.error('start self._parentX = {}'.format(self._parentX))
 
         ''' maximum number of lines to display '''
         self.max_lines = max_lines
@@ -1336,6 +1350,17 @@ class ExtraParameters(object):
             self._selections[a_key][0] = self._selections[a_key][2]
         # logger.error('self._selections\n{}'.format(self._selections))
         self._get_width()
+
+    def _reposition_list(self):
+        Y, X = self._win.getbegyx()
+        if self.from_config:
+            self._offsetY = Y + 2
+            self._offsetX = X + 24
+        else:
+            self._offsetY = Y + 1
+            self._offsetX = X + 2
+        if self._list:
+            self._list.get_new_win(self._offsetY, self._offsetX)
 
     def _add_params_to_all_profiles(self):
         for n in self._cnf.SUPPORTED_PLAYERS:
@@ -1503,12 +1528,23 @@ class ExtraParameters(object):
             self._original_active = self.active
 
     @property
+    def focused(self):
+        return self._focus
+
+    @focused.setter
+    def focused(self, val):
+        self._focus = val
+        if self._list is not None:
+            self._list.focused = val
+
+    @property
     def player(self):
         return self._player
 
     @player.setter
     def player(self, a_player):
         if a_player in self._cnf.SUPPORTED_PLAYERS:
+            logger.info('==== new player: {}'.format(a_player))
             self._player = a_player
             self._items = self._items_dict[a_player]
             self.refresh_win()
@@ -1579,35 +1615,44 @@ class ExtraParameters(object):
         Y, X = self._win.getmaxyx()
         self._width = X - self.startX - 2
 
-    def refresh_win(self):
-        for a_line in range(0, self.max_lines):
-            i = a_line + 1
-            d_str = ' ' + str(i) + '.' if i < 10 else str(i) + '.'
-            self._win.addstr(
-                self.startY + a_line,
-                self.startX,
-                d_str,
-                curses.color_pair(11)
-            )
-        for a_line in range(0, len(self._items)):
-            if a_line == len(self._items):
-                break
-            else:
-                col = self._get_color(a_line)
-                item_str = self._items[a_line]
-                cjk_len = cjklen(item_str) + 3
-                if cjk_len > self._width - 1:
-                    d_str = ' ' + item_str[:self._width - 4] + ' '
-                else:
-                    d_str = ' ' + item_str + ' ' * (self._width - cjk_len)
-
-                self._win.addstr(
-                    self.startY + a_line,
-                    self.startX + 3,
-                    d_str,
-                    col
-                )
+    def refresh_win(self, do_show=True):
+        self._reposition_list()
+        if self._list is None:
+            # logger.error('self._parentY = {}'.format(self._parentY))
+            # logger.error('self._parentX = {}'.format(self._parentX))
+            # logger.error('self.startY = {}'.format(self.startY))
+            # logger.error('self.startX = {}'.format(self.startX))
+            # logger.error('self._offsetY = {}'.format(self._offsetY))
+            # logger.error('self._offsetX = {}'.format(self._offsetX))
+            # logger.error('max_lines = {}'.format(self.max_lines))
+            # logger.error('max_width = {}'.format(self._width))
+            self._list = SimpleCursesMenu(
+                    self._offsetY, self._offsetX,
+                    parent=self._win,
+                    selection=self.selection,
+                    active=self.active,
+                    items=self._items,
+                    display_count=True,
+                    max_height=self.max_lines,
+                    max_width=self._width,
+                    title='',
+                    window_type=2,
+                    bordered=False,
+                    can_add_items=False,
+                    can_edit_items=False,
+                    can_delete_items=False,
+                    color=curses.color_pair(10),
+                    color_title=curses.color_pair(11),
+                    color_border=curses.color_pair(3),
+                    color_active=curses.color_pair(11),
+                    color_cursor_selection=curses.color_pair(6),
+                    color_cursor_active=curses.color_pair(9),
+                    )
+            self._list.enabled = True
+            self._list.focused = not self.from_config
         self._win.refresh()
+        if do_show:
+            self._list.show(parent=self._win)
 
     def _get_color(self, a_line):
         col = curses.color_pair(10)
@@ -1640,7 +1685,8 @@ class ExtraParameters(object):
                                      curses.color_pair(10))
             self.refresh_win()
 
-    def resize(self, window, startY=None, startX=None):
+    def resize(self, window, startY=None, startX=None, do_show=True):
+        logger.error('rrr1 do_show = {}'.format(do_show))
         self._win = window
         if startY is not None:
             self.startY = startY
@@ -1652,11 +1698,13 @@ class ExtraParameters(object):
             done by containing window
         '''
 
-        if self.from_config:
-            self.refresh_win()
+        logger.error('\n\nRepositioning!!!\n\n')
+        logger.error('rrr2 do_show = {}'.format(do_show))
+        self.refresh_win(do_show=do_show)
 
-    def set_window(self, window):
-        self.resize(window=window)
+    def set_window(self, window, do_show=True):
+        logger.error('**** do_show = {}'.format(do_show))
+        self.resize(window=window, do_show=do_show)
 
     def _go_up(self, how_much=1):
         old_selection = self.selection
@@ -1721,7 +1769,7 @@ class ExtraParameters(object):
                 curses.KEY_RIGHT, ord('s')):
             ''' activate selection '''
             # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
-            self.active = self.selection
+            self.active = self.selection = self._list.selection
             # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
 
             if self.from_config:
@@ -1746,8 +1794,12 @@ class ExtraParameters(object):
         elif char == ord('?'):
             ''' display help '''
             return 1
+        ret = self._list.keypress(char)
+        if ret == 1:
+            ret = -1
+        return ret
 
-        elif char in (curses.KEY_UP, ord('k')):
+        if char in (curses.KEY_UP, ord('k')):
             self._go_up()
 
         elif char in (curses.KEY_DOWN, ord('j')):
@@ -1901,6 +1953,8 @@ class PyRadioSelectPlayer(object):
                 startY=2,
                 startX=self.mlength + 11,
             )
+            self._extra.enabled = True
+            self._extra.focused = False
         else:
             self._extra.set_window(self._win)
 
@@ -2012,7 +2066,7 @@ class PyRadioSelectPlayer(object):
             if char in self._global_functions.keys():
                 self._global_functions[char]()
             elif char in (9, ):
-                if self._players[self.selection][1]:
+                if self.from_config  and self._players[self.selection][1]:
                     self._switch_column()
                     self.refresh_selection()
 
@@ -2152,6 +2206,7 @@ class PyRadioSelectPlayer(object):
 
     def _switch_column(self):
         self.focus = not self.focus
+        self._extra.focused = not self.focus
         self.refresh_selection()
         self._extra.refresh_win()
 
