@@ -1485,6 +1485,11 @@ class ExtraParameters(object):
             self._working_params = deepcopy(self._cnf.saved_params)
         else:
             self._working_params = deepcopy(self._cnf.params)
+        ''' selections
+                0: selection
+                1: startPos
+                2: active
+        '''
         self._selections = {
             'mpv': [0, 0, 0],
             'mplayer': [0, 0, 0],
@@ -1551,19 +1556,38 @@ class ExtraParameters(object):
 
     @property
     def selection(self):
+        if self._list:
+            return self._list.selection
         return(self._selections[self._player][0])
 
     @selection.setter
     def selection(self, val):
+        if self._list:
+            self._list.selection = val
         self._selections[self._player][0] = val
 
     @property
     def startPos(self):
+        if self._list:
+            return self._list.startPos
         return(self._selections[self._player][1])
 
     @startPos.setter
     def startPos(self, val):
         self._selections[self._player][1] = val
+
+    @property
+    def active(self):
+        ''' this is the parameter to be used by the player '''
+        if self._list:
+            return self._list.active
+        return(self._selections[self._player][2])
+
+    @active.setter
+    def active(self, val):
+        if self._list:
+            self._list.active = val
+        self._selections[self._player][2] = val
 
     @property
     def original_active(self):
@@ -1577,15 +1601,6 @@ class ExtraParameters(object):
         raise ValueError('property is read only')
 
     @property
-    def active(self):
-        ''' this is the parameter to be used by the player '''
-        return(self._selections[self._player][2])
-
-    @active.setter
-    def active(self, val):
-        self._selections[self._player][2] = val
-
-    @property
     def params(self):
         ''' Returns the parameters as changed by the user '''
         return self._orig_params
@@ -1593,6 +1608,17 @@ class ExtraParameters(object):
     @params.setter
     def params(self, val):
         raise ValueError('parameter is read only')
+
+    def list_widget_to_selections(self):
+        ''' pass Menu selection, startPos, active
+            to self._selections
+        '''
+        logger.error('setting to player: {}'.format(self._player))
+        self._selections[self._player] = [
+                self._list.selection,
+                self._list.startPos,
+                self._list.active
+                ]
 
     def _dict_to_list(self):
         ''' convert self._working_params dict
@@ -1671,18 +1697,27 @@ class ExtraParameters(object):
 
     def set_player(self, a_player):
         if a_player in self._cnf.SUPPORTED_PLAYERS:
+            logger.error('\n>>>==========')
+            logger.error('self._selections = {}'.format(self._selections))
+            if self._list:
+                self._selections[self._player] = [
+                        self._list.selection,
+                        self._list.startPos,
+                        self._list.active
+                        ]
             self._orig_player = self._player
             self._player = a_player
             self._items = self._items_dict[a_player]
-
-            if len(self._items) < self.max_lines:
-                ''' "erase" window '''
-                empty_str = ' ' * self._width
-                for a_line in range(len(self._items), self.max_lines):
-                    self._win.addstr(self.startY + a_line,
-                                     self.startX,
-                                     empty_str,
-                                     curses.color_pair(10))
+            if self._list:
+                self._list.set_items(items=self._items)
+                self._list.selection = self._selections[self._player][0]
+                self._list._start_pos = self._selections[self._player][1]
+                self._list.active = self._selections[self._player][2]
+            logger.error('self._items_dict = {}'.format(self._items_dict))
+            logger.error('a_player = {}'.format(a_player))
+            logger.error('self._items = {}'.format(self._items))
+            logger.error('self._selections = {}'.format(self._selections))
+            logger.error('\n<<<==========')
             self.refresh_win()
 
     def resize(self, window, startY=None, startX=None, do_show=True):
@@ -1857,6 +1892,7 @@ class ExtraParameters(object):
                 return 5
 
         return -1
+
 
 
 class PyRadioSelectPlayer(object):
@@ -2099,6 +2135,7 @@ class PyRadioSelectPlayer(object):
                 return 0
 
             if self.focus:
+                ''' focus on players '''
                 if char in (
                     curses.KEY_ENTER, ord('\n'), ord('\r'),
                     ord(' '), ord('l'), curses.KEY_RIGHT

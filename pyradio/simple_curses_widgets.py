@@ -2094,6 +2094,15 @@ class SimpleCursesMenu(SimpleCursesWidget):
             raise ValueError('selection out of bounds!')
 
     @property
+    def startPos(self):
+        '''Returns the widget's max_height '''
+        return self._start_pos
+
+    @startPos.setter
+    def startPos(self, value):
+        raise ValueError('property is read only')
+
+    @property
     def max_height(self):
         '''Returns the widget's max_height '''
         return self._maxY
