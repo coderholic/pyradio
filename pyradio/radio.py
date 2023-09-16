@@ -539,8 +539,6 @@ class PyRadio(object):
             self.ws.PLAYLIST_NOT_SAVED_ERROR_MODE: self._print_playlist_not_saved_error,
             self.ws.CONNECTION_MODE: self._show_http_connection,
             self.ws.UNNAMED_REGISTER_MODE: self._show_unnamed_register,
-            self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
-            self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
             self.ws.PLAYER_PARAMS_MODE: self._redisplay_player_select_win_refresh_and_resize,
             self.ws.MOUSE_RESTART_INFO_MODE: self._print_mouse_restart_info,
             self.ws.IN_PLAYER_PARAMS_EDITOR: self._redisplay_player_select_win_refresh_and_resize,
@@ -602,8 +600,6 @@ class PyRadio(object):
             self.ws.REGISTER_HELP_MODE: self._show_register_help,
             self.ws.EXTRA_COMMANDS_HELP_MODE: self._show_extra_commands_help,
             self.ws.YANK_HELP_MODE: self._show_yank_help,
-            self.ws.PROFILE_EDIT_DELETE_ERROR_MODE: self._print_default_profile_edit_delete_error,
-            self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: self._print_max_number_of_profiles_error,
             self.ws.PLAYER_PARAMS_MODE: self._show_config_player_help,
             self.ws.IN_PLAYER_PARAMS_EDITOR: self._show_params_ediror_help,
             self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
@@ -4276,35 +4272,6 @@ __|Remote Control Server| cannot be started!__
                         prompt=' Press any key to exit ',
                         is_message=True)
 
-    def _print_default_profile_edit_delete_error(self):
-        txt = '''||
-            This is the default parameter set for this player
-            which cannot be edited or deleted.
-
-            If you want to add a new parameter set, please press
-            "|a|" to do so, after you close this window.
-            '''
-        self._show_help(txt,
-                        mode_to_set=self.ws.PROFILE_EDIT_DELETE_ERROR_MODE,
-                        caption=' Error ',
-                        prompt=' Press any key to hide ',
-                        is_message=True)
-
-    def _print_max_number_of_profiles_error(self):
-        txt = '''
-            |||PyRadio| provides support for up to |10| extra player
-            parameters sets, a limit which has already been reached.
-
-            At this point you can either |e|dit an existing set or
-            delete (|x|,|DEL|) an existing one and then |a|dd a new one.
-            '''
-        self._show_help(
-            txt,
-            mode_to_set=self.ws.MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE,
-            caption=' Error ',
-            prompt=' Press any key to hide ',
-            is_message=True)
-
     def _print_update_notification(self):
         txt = '''
                 A new |PyRadio| release (|{0}|) is available!
@@ -7494,12 +7461,6 @@ __|Remote Control Server| cannot be started!__
                 elif ret == 4:
                     ''' Parameter editor exited '''
                     self.ws.close_window()
-            else:
-                if ret == -2:
-                    logger.error('DE number of max lines reached!!!')
-                    self._print_max_number_of_profiles_error()
-                elif ret == -3:
-                    self._print_default_profile_edit_delete_error()
             return
 
         elif self.ws.operation_mode == self.ws.SELECT_STATION_ENCODING_MODE and \
