@@ -62,12 +62,14 @@ GenericName=Terminal Radio Player
 Comment=Curses based Radio Player" > "${DESKTOP_FILE}"
 
     echo "TryExec=${PROGRAM}" >> "${DESKTOP_FILE}"
+    EXEC_LINE=$(echo "Exec=${REQ_TERMINAL}${PROGRAM}" | sed -e 's/Exec=  */Exec=/' -e 's/  / /g')
     if [ -z "${PARAM}" ]
     then
-        echo "Exec=${REQ_TERMINAL}${PROGRAM}" | sed -e 's/Exec= /Exec=/' -e 's/  / /g' >> "${DESKTOP_FILE}"
+        echo "$EXEC_LINE" >> "${DESKTOP_FILE}"
     else
         PARAM=" ${PARAM//_/-}"
-        echo "Exec=${REQ_TERMINAL}${PROGRAM} ${PARAM}" | sed -e 's/Exec= /Exec=/' -e 's/  / /g' >> "${DESKTOP_FILE}"
+        NEW_EXEC_LINE="${EXEC_LINE/ / $PARAM }"
+        echo "$NEW_EXEC_LINE" >> "${DESKTOP_FILE}"
     fi
     echo "Icon=/home/${USER}/.config/pyradio/data/pyradio.png" >> "${DESKTOP_FILE}"
     echo "${TERMINAL_LINE}" >> "${DESKTOP_FILE}"
