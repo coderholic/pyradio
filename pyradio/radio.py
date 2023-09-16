@@ -2723,6 +2723,15 @@ class PyRadio(object):
         else:
             self._redisplay[self.ws.operation_mode]()
 
+    def _show_player_parameter_editing_error(self, msg=None):
+        a_msg = '___Action not supported!___' if msg is None else msg
+        self._show_notification_with_delay(
+                txt=a_msg,
+                mode_to_set=self.ws.operation_mode,
+                delay=.5,
+                callback_function=self.refreshBody)
+
+
     def _show_remote_control_error(self):
         txt = '''
 ______This session is |locked|, so the
@@ -7269,6 +7278,7 @@ __|Remote Control Server| cannot be started!__
                         self._cnf,
                         self.outerBodyWin,
                         self._config_win._config_options['player'][1],
+                        parameters_editing_error_function=self._show_player_parameter_editing_error,
                         global_functions=self._global_functions
                     )
                 else:

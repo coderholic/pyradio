@@ -104,8 +104,10 @@ class PyRadioConfigWindow(object):
                  save_parameters_function,
                  reset_parameters_function,
                  show_port_number_invalid,
+                 parameters_editing_error=None,
                  global_functions=None
         ):
+        self.parameters_editing_error = parameters_editing_error
         self._local_functions = {
             ord('j'): self._go_down,
             curses.KEY_DOWN: self._go_down,
@@ -978,6 +980,7 @@ class PyRadioExtraParams(object):
             self._extra.set_window(self._win, do_show=False)
             self.show()
         else:
+            ''' No editing allowed '''
             self._extra = ExtraParameters(
                 self._cnf,
                 self._cnf.PLAYER_NAME,
@@ -1310,6 +1313,12 @@ class ExtraParameters(object):
                  startX=1,
                  max_lines=11,
                  from_config=True,
+                 can_add_items=False,
+                 can_delete_items=False,
+                 can_edit_items=False,
+                 entry_cannot_be_added_function=None,
+                 entry_cannot_be_edited_function=None,
+                 entry_cannot_be_deleted_function=None,
                  global_functions=None):
         self._list = None
         logger.error('player = {}'.format(player))
@@ -1324,6 +1333,16 @@ class ExtraParameters(object):
         self._win = win
         self._focus = focus
         self.from_config = from_config
+
+        ''' editing functions '''
+        self._can_add_items = can_add_items
+        self._can_delete_items = can_delete_items
+        self._can_edit_items = can_edit_items
+
+        self._entry_cannot_be_added_function = entry_cannot_be_added_function
+        self._entry_cannot_be_edited_function = entry_cannot_be_edited_function
+        self._entry_cannot_be_deleted_function = entry_cannot_be_deleted_function
+        ''' end editing functions '''
 
         ''' start Y, X '''
         self.startY = startY
@@ -1350,6 +1369,19 @@ class ExtraParameters(object):
             self._selections[a_key][0] = self._selections[a_key][2]
         # logger.error('self._selections\n{}'.format(self._selections))
         self._get_width()
+
+    def _validate_add_entry(self, index, item):
+        return False if item.startswith('profile:') else True
+
+    def _validate_delete_entry(self, index, item):
+        if item.startswith('Do not use'):
+            return False
+        return False if item.startswith('profile:') else True
+
+    def _validate_edit_entry(self, index, item):
+        if item.startswith('Do not use'):
+            return False
+        return False if item.startswith('profile:') else True
 
     def _reposition_list(self):
         Y, X = self._win.getbegyx()
@@ -1652,6 +1684,10 @@ class ExtraParameters(object):
             # logger.error('self._offsetX = {}'.format(self._offsetX))
             # logger.error('max_lines = {}'.format(self.max_lines))
             # logger.error('max_width = {}'.format(self._width))
+            if self.from_config:
+                self._can_add_items = self._can_edit_items = self._can_delete_items = True
+            else:
+                self._can_add_items = self._can_edit_items = self._can_delete_items = False
             self._list = SimpleCursesMenu(
                     self._offsetY, self._offsetX,
                     parent=self._win,
@@ -1664,15 +1700,21 @@ class ExtraParameters(object):
                     title='',
                     window_type=2,
                     bordered=False,
-                    can_add_items=False,
-                    can_edit_items=False,
-                    can_delete_items=False,
                     color=curses.color_pair(10),
                     color_title=curses.color_pair(11),
                     color_border=curses.color_pair(3),
                     color_active=curses.color_pair(11),
                     color_cursor_selection=curses.color_pair(6),
                     color_cursor_active=curses.color_pair(9),
+                    can_add_items=self._can_add_items,
+                    can_edit_items=self._can_edit_items,
+                    can_delete_items=self._can_delete_items,
+                    validate_add_entry=self._validate_add_entry,
+                    validate_edit_entry=self._validate_edit_entry,
+                    validate_delete_entry=self._validate_delete_entry,
+                    entry_cannot_be_added_function=self._entry_cannot_be_added_function,
+                    entry_cannot_be_edited_function=self._entry_cannot_be_edited_function,
+                    entry_cannot_be_deleted_function=self._entry_cannot_be_deleted_function,
                     )
             self._list.enabled = True
             self._list.focused = not self.from_config
@@ -1834,66 +1876,6 @@ class ExtraParameters(object):
             ret = -1
         return ret
 
-        if char in (curses.KEY_UP, ord('k')):
-            self._go_up()
-
-        elif char in (curses.KEY_DOWN, ord('j')):
-            self._go_down()
-
-        elif char in (curses.KEY_NPAGE, ):
-            self._go_down(5)
-
-        elif char in (curses.KEY_PPAGE, ):
-            self._go_up(5)
-
-        elif char == ord('g'):
-            self.selection = 0
-            self.refresh_win()
-
-        elif char == ord('G'):
-            self.selection = len(self._items) - 1
-            self.refresh_win()
-
-        elif char in (ord('x'), curses.KEY_DC):
-            if self.from_config:
-                if self.selection == 0:
-                    ''' error: cannot delete first item '''
-                    return 3
-                else:
-                    self._win.addstr(
-                        self.startY + len(self._items) - 1,
-                        self.startX,
-                        ' ' * (self._width + 1),
-                        curses.color_pair(10)
-                    )
-                    if self.active == self.selection or self.selection > len(self._items):
-                        self.active = 0
-                    elif self.active > self.selection:
-                        self.active -= 1
-                    self._items.pop(self.selection)
-                    while self.selection > len(self._items) - 1:
-                        self.selection -= 1
-                    self.refresh_win()
-
-        elif char == ord('e'):
-            if self.from_config:
-                if self.selection == 0:
-                    ''' error: cannot edit first item '''
-                    return 3
-                ''' edit parameter '''
-                return 4
-
-        elif char == ord('a'):
-            if self.from_config:
-                if len(self._items) == self.max_lines:
-                    ''' error: cannot add more items '''
-                    return 2
-                ''' add parameter '''
-                return 5
-
-        return -1
-
-
 
 class PyRadioSelectPlayer(object):
 
@@ -1913,8 +1895,15 @@ class PyRadioSelectPlayer(object):
     '''
     mlength = 13
 
-    def __init__(self, config, parent, player,
-                 global_functions=None):
+    def __init__(
+            self,
+            config,
+            parent,
+            player,
+            parameters_editing_error_function=None,
+            global_functions=None
+            ):
+        self._parameters_editing_error_function=parameters_editing_error_function
         self._char = ' [X] ' if platform.lower().startswith('win') else ' [✔] '
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('current players = {}'.format(player))
@@ -1981,6 +1970,7 @@ class PyRadioSelectPlayer(object):
             int((self._parent_maxX - self.maxX) / 2)
         )
         if self._extra is None:
+            ''' Editing allowed '''
             self._extra = ExtraParameters(
                 self._cnf,
                 self.selected_player_name(),
@@ -1988,6 +1978,9 @@ class PyRadioSelectPlayer(object):
                 lambda: not self.focus,
                 startY=2,
                 startX=self.mlength + 11,
+                entry_cannot_be_added_function=self._parameters_editing_error_function,
+                entry_cannot_be_edited_function=self._parameters_editing_error_function,
+                entry_cannot_be_deleted_function=self._parameters_editing_error_function,
             )
             self._extra.enabled = True
             self._extra.focused = False

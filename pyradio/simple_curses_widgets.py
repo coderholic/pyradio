@@ -4,6 +4,7 @@ import curses.ascii
 from os.path import basename
 from sys import exit
 from datetime import date, time, datetime, timedelta
+from collections import deque
 try:
     from dateutil.relativedelta import relativedelta
 except:
@@ -2031,7 +2032,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             self._global_functions = global_functions
         if local_functions is not None:
             self._local_functions = local_functions
-        self._external_keypress__function = external_keypress_function
+        self._external_keypress_function = external_keypress_function
         self._active = active
         self._showed = False
         if color_captions:
@@ -2554,7 +2555,10 @@ class SimpleCursesMenu(SimpleCursesWidget):
         if self._active > index:
             self._active -= 1
         elif self._active == index:
-            self._active = -1
+            try:
+                self._active = self._items.index('profile:pyradio')
+            except ValueError:
+                self._active = 0
 
         self._verify_selection_not_on_caption(mov)
         if self._make_sure_selection_is_visible():
@@ -2676,15 +2680,37 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 return 0
             if self._has_captions:
                 if len(self._items) == len(self._captions) + 1:
+                    if self._entry_cannot_be_deleted_function:
+                        self._entry_cannot_be_deleted_function('___Item is read only!___')
                     return 0
-            if self._validete_delete_entry:
+            if self._validate_delete_entry:
                 if not self._validate_delete_entry(self._selection, self.item):
                     if self._entry_cannot_be_deleted_function:
-                        self._entry_cannot_be_deleted_function()
+                        self._entry_cannot_be_deleted_function('___Item cannot be deleted!___')
                     return 0
             self.delete_item(self._selection)
             self._refresh()
             return 0
+
+        elif self._can_delete_items and \
+                char in (ord('e'),):
+            if len(self._items) == 0:
+                return 0
+            if self._has_captions:
+                if len(self._items) == len(self._captions) + 1:
+                    if self._entry_cannot_be_edited_function:
+                        self._entry_cannot_be_edited_function('___Item is read only!___')
+                    return 0
+            if self._validate_edit_entry:
+                if not self._validate_edit_entry(self._selection, self.item):
+                    if self._entry_cannot_be_edited_function:
+                        self._entry_cannot_be_edited_function('___Item cannot be edited!___')
+                    return 0
+            return 4
+
+        elif self._can_delete_items and \
+                char in (ord('a'),):
+            return 5
 
         elif self._right_arrow_selects and char in (
             ord('l'), ord(' '), ord('\n'), ord('\r'),
@@ -2866,8 +2892,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
         elif char in self._local_functions.keys():
             self._local_functions(char)
 
-        elif self._external_keypress__function:
-            return self._external_keypress__function(char)
+        elif self._external_keypress_function:
+            return self._external_keypress_function(char)
 
         return 1
 

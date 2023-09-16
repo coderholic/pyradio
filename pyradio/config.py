@@ -2542,7 +2542,7 @@ remote_control_server_auto_start = {21}
             except AttributeError:
                 parents = self._get_parents(pid)
 
-            logger.error('\n\n{}\n\n'.format(parents))
+            # logger.error('\n\n{}\n\n'.format(parents))
             if parents is not None:
                 '''
                 read ~/.config/pyradio/no-themes-terminals
