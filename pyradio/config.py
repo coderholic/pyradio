@@ -2491,15 +2491,18 @@ remote_control_server_auto_start = {21}
                         # logger.error('\n\n{}\n\n'.format(self.saved_params))
                         cfgfile.write(txt.format(a_set))
                         for i, a_param in enumerate(self.saved_params[a_set]):
+                            logger.info('set: {0} - i = {1}, param = "{2}"'.format(a_set, i , a_param))
                             if i == 0:
                                 default = a_param
                             elif i > 1:
                                 if i == default:
                                     txt = '*' + a_param
                                     cfgfile.write('{}\n'.format(a_set + '_parameter=' + txt))
+                                    logger.info('i= {0} == default : txt = "{1}"'.format(i, txt))
                                 else:
                                     if not a_param.startswith('profile:'):
-                                        cfgfile.write('{}\n'.format(a_set + '_parameter=' + txt))
+                                        logger.info('i= {0} != default : txt = "{1}"'.format(i, a_param))
+                                        cfgfile.write('{}\n'.format(a_set + '_parameter=' + a_param))
 
         except:
             if not from_command_line and \

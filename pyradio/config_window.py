@@ -1412,7 +1412,8 @@ class ExtraParameters(object):
             stripped = n.strip()
             if not stripped.startswith('profile:'):
                 if not stripped.startswith('Do not use any extra'):
-                    self._profiles_from_files[a_player_name].append(stripped)
+                    if stripped not in self._profiles_from_files[a_player_name]:
+                        self._profiles_from_files[a_player_name].append(stripped)
         # logger.error('self._profiles_from_files[a_player_name] = {}'.format(self._profiles_from_files[a_player_name]))
         if default in self._profiles_from_files[a_player_name]:
             default_id = self._profiles_from_files[a_player_name].index(default)
@@ -1536,7 +1537,7 @@ class ExtraParameters(object):
             self._add_params_to_all_profiles()
         else:
             self._add_params_to_profiles(self._player)
-        # logger.error('\n\n\n\nself._working_params\n{}'.format(self._working_params))
+        logger.error('\n\n\n\nself._working_params\n{}'.format(self._working_params))
         self._defaults = {
             'mpv': self._working_params['mpv'][self._working_params['mpv'][0]],
             'mplayer': self._working_params['mplayer'][self._working_params['mplayer'][0]],
@@ -1551,16 +1552,19 @@ class ExtraParameters(object):
                 if isinstance(self._items_dict[a_player][0], int):
                     self._items_dict[a_player].pop(0)
         self._items = self._items_dict[self._player]
-        # logger.error('\n\n*****************************')
-        # logger.error('self._selections\n{}'.format(self._selections))
-        # logger.error('self._items_dict\n{}'.format(self._items_dict))
+        logger.error('\n\n*****************************')
+        logger.error('self._selections\n{}'.format(self._selections))
+        logger.error('self._items_dict\n{}'.format(self._items_dict))
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('parameter items: {}'.format(self._items))
-        # logger.error('\n*****************************\n\n')
         if self._defaults[self._player] in self._items:
+            logger.error('\n\nself._defaults\n{}'.format(self._defaults))
+            logger.error('setting to players default: {}'.format(self._player))
             self.active = self._items.index(self._defaults[self._player])
         else:
+            lgger.error('setting to profile:pyradio')
             self.active =  self._items.index('profile:pyradio')
+        logger.error('\n*****************************\n\n')
         if not saved:
             self._original_active = self.active
 
@@ -1716,7 +1720,6 @@ class ExtraParameters(object):
                     entry_cannot_be_edited_function=self._entry_cannot_be_edited_function,
                     entry_cannot_be_deleted_function=self._entry_cannot_be_deleted_function,
                     )
-            self._list.enabled = True
             self._list.focused = not self.from_config
         self._win.refresh()
         if do_show:
@@ -1747,6 +1750,7 @@ class ExtraParameters(object):
                         self._list.startPos,
                         self._list.active
                         ]
+                self._items_dict[self._player] = self._list.items[:]
             self._orig_player = self._player
             self._player = a_player
             self._items = self._items_dict[a_player]
@@ -1938,6 +1942,10 @@ class PyRadioSelectPlayer(object):
         self.init_window()
         self.refresh_win(do_params=True)
 
+    def refresh_list(self):
+        if self._extra is not None:
+            self._extra.refresh_win()
+
     @property
     def from_config(self):
         if self._extra:
@@ -2097,7 +2105,6 @@ class PyRadioSelectPlayer(object):
             elif char in (9, ):
                 if self.from_config  and self._players[self.selection][1]:
                     self._switch_column()
-                    self.refresh_selection()
 
             elif char in (
                 curses.KEY_EXIT, 27,
@@ -2112,6 +2119,7 @@ class PyRadioSelectPlayer(object):
                     return 1
 
             elif char == ord('r'):
+                logger.error('\n\n************\n\n')
                 self.reset()
 
             elif char == ord('s'):

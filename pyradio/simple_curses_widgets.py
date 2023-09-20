@@ -1966,6 +1966,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                     1 - Continue
                     2 - Display help
         '''
+        self._focused = self._enabled = True
         self._bordered = bordered
         self._too_small = False
         self._showed = False
@@ -2062,6 +2063,24 @@ class SimpleCursesMenu(SimpleCursesWidget):
         return self._items[self._selection]
 
     @property
+    def items(self):
+        '''Returns items'''
+        return self._items
+
+    @items.setter
+    def items(self, value):
+        raise ValueError('not supported; use set_items() instead')
+
+    @property
+    def captions(self):
+        '''Returns captions'''
+        return self._captions
+
+    @captions.setter
+    def captions(self, value):
+        raise ValueError('not supported; use set_items() instead')
+
+    @property
     def item(self):
         '''Returns selected item'''
         return self._items[self._selection]
@@ -2080,7 +2099,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
         if 0 <= value < len(self._items):
             self._active = value
         else:
-            raise ValueError('active out of bounds!')
+            self._active = 0
+            # raise ValueError('active out of bounds!')
 
     @property
     def selection(self):
@@ -2535,11 +2555,13 @@ class SimpleCursesMenu(SimpleCursesWidget):
         # log_it('\n\n2 mov = {0}, sel = {1}, items = {2}'.format(movement, self._selection, len(self._items)))
 
     def delete_item(self, index):
+        logger.info('items before delete\n{}'.format(self._items))
         d = deque(self._items)
         d.rotate(-index)
         ret = d.popleft()
         d.rotate(index)
         self._items = list(d)
+        logger.info('items after delete\n{}'.format(self._items))
         # log_it('=======> id = {0}, captions = {1}'.format(index, self._captions))
         if self._has_captions:
             for i in range(0, len(self._captions)):
@@ -2672,7 +2694,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 return 0
             if self._add_item_function:
                 self._add_item_function(self, self._selection, self._items[self._selection])
-            return 0
+            return 5
 
         elif self._can_delete_items and \
                 char in (ord('x'), curses.KEY_DC):
@@ -5011,8 +5033,6 @@ def main(stdscr):
             can_add_items=True,
             add_item_function=add_i,
             )
-    x.enabled = True
-    x.focused = False
     x.show()
 
     stdscr.refresh()

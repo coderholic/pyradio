@@ -1225,7 +1225,8 @@ class PyRadio(object):
                         logger.debug('Not displaying stations, next mode is full screen')
                     display = False
             if display:
-                logger.error('DE \n\ndisplaying mode {}\n\n'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Displaying mode {}'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
                 # if self.ws.MODE_NAMES[self._redisplay_list[n][0]] != 'PLAYER_PARAMS_MODE':
             self._redisplay[self._redisplay_list[n][0]]()
 
@@ -2720,13 +2721,25 @@ class PyRadio(object):
             self._redisplay[self.ws.operation_mode]()
 
     def _show_player_parameter_editing_error(self, msg=None):
+        ''' error function to indicate editing or deleting
+            players parameters is not allowed, in the players
+            selection windows
+        '''
         a_msg = '___Action not supported!___' if msg is None else msg
         self._show_notification_with_delay(
                 txt=a_msg,
                 mode_to_set=self.ws.operation_mode,
                 delay=.5,
-                callback_function=self.refreshBody)
+                callback_function=self._update_players_selection_window)
 
+    def _update_players_selection_window(self):
+        ''' The target function for the previous
+            function (_show_player_parameter_editing_error)
+            to update the player selection window
+        '''
+        if self._player_select_win:
+            self._player_select_win.refresh_win()
+            self._player_select_win.refresh_list()
 
     def _show_remote_control_error(self):
         txt = '''
@@ -8300,7 +8313,6 @@ __|Remote Control Server| cannot be started!__
             elif ret == 2:
                 ''' show help '''
                 self._show_group_help()
-                pass
             return
 
         elif char in (ord('T'), ):
