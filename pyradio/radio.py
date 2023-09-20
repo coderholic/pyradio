@@ -1227,8 +1227,8 @@ class PyRadio(object):
             if display:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Displaying mode {}'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
-                # if self.ws.MODE_NAMES[self._redisplay_list[n][0]] != 'PLAYER_PARAMS_MODE':
-            self._redisplay[self._redisplay_list[n][0]]()
+                    # if self.ws.MODE_NAMES[self._redisplay_list[n][0]] != 'PLAYER_PARAMS_MODE':
+                    self._redisplay[self._redisplay_list[n][0]]()
 
         # logger.error('DE window mode = {}'.format(self.ws.window_mode))
         # logger.error('DE operation mode = {}'.format(self.ws.operation_mode))

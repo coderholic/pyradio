@@ -681,7 +681,6 @@ class PyRadioConfigWindow(object):
         self._max_start =  len(self._config_options) -1 - self.maxY
         # logger.error('mas_start = {}'.format(self._max_start))
         val = list(self._config_options.items())[self.selection]
-        logger.error('val = {}'.format(val))
         Y = self.selection - self._start + 1
 
         if char in self._local_functions.keys():
@@ -1370,6 +1369,83 @@ class ExtraParameters(object):
         # logger.error('self._selections\n{}'.format(self._selections))
         self._get_width()
 
+    @property
+    def focused(self):
+        return self._focus
+
+    @focused.setter
+    def focused(self, val):
+        self._focus = val
+        if self._list is not None:
+            self._list.focused = val
+
+    @property
+    def player(self):
+        return self._player
+
+    @player.setter
+    def player(self, a_player):
+        if a_player in self._cnf.SUPPORTED_PLAYERS:
+            logger.info('==== new player: {}'.format(a_player))
+            self._player = a_player
+            self._items = self._items_dict[a_player]
+            self.refresh_win()
+
+    @property
+    def selection(self):
+        if self._list:
+            return self._list.selection
+        return(self._selections[self._player][0])
+
+    @selection.setter
+    def selection(self, val):
+        if self._list:
+            self._list.selection = val
+        self._selections[self._player][0] = val
+
+    @property
+    def startPos(self):
+        if self._list:
+            return self._list.startPos
+        return(self._selections[self._player][1])
+
+    @startPos.setter
+    def startPos(self, val):
+        self._selections[self._player][1] = val
+
+    @property
+    def active(self):
+        ''' this is the parameter to be used by the player '''
+        if self._list:
+            return self._list.active
+        return(self._selections[self._player][2])
+
+    @active.setter
+    def active(self, val):
+        if self._list:
+            self._list.active = val
+        self._selections[self._player][2] = val
+
+    @property
+    def original_active(self):
+        if self._player == self._cnf.PLAYER_NAME:
+            return self._original_active
+        else:
+            return self.selection
+
+    @original_active.setter
+    def original_active(self, val):
+        raise ValueError('property is read only')
+
+    @property
+    def params(self):
+        ''' Returns the parameters as changed by the user '''
+        return self._orig_params
+
+    @params.setter
+    def params(self, val):
+        raise ValueError('parameter is read only')
+
     def _validate_add_entry(self, index, item):
         return False if item.startswith('profile:') else True
 
@@ -1495,6 +1571,10 @@ class ExtraParameters(object):
                         )
         return out
 
+    def _on_default_parameter_change(self):
+        logger.error('selected!!!')
+        self._defaults[self._player] = self._list.active_item
+
     def check_parameters(self):
         ''' Exrta Parameters check '''
         for a_key in self._orig_params.keys():
@@ -1537,7 +1617,7 @@ class ExtraParameters(object):
             self._add_params_to_all_profiles()
         else:
             self._add_params_to_profiles(self._player)
-        logger.error('\n\n\n\nself._working_params\n{}'.format(self._working_params))
+        logger.error('self._working_params\n{}'.format(self._working_params))
         self._defaults = {
             'mpv': self._working_params['mpv'][self._working_params['mpv'][0]],
             'mplayer': self._working_params['mplayer'][self._working_params['mplayer'][0]],
@@ -1563,87 +1643,10 @@ class ExtraParameters(object):
             self.active = self._items.index(self._defaults[self._player])
         else:
             lgger.error('setting to profile:pyradio')
-            self.active =  self._items.index('profile:pyradio')
+            self.active = self._items.index('profile:pyradio')
         logger.error('\n*****************************\n\n')
         if not saved:
             self._original_active = self.active
-
-    @property
-    def focused(self):
-        return self._focus
-
-    @focused.setter
-    def focused(self, val):
-        self._focus = val
-        if self._list is not None:
-            self._list.focused = val
-
-    @property
-    def player(self):
-        return self._player
-
-    @player.setter
-    def player(self, a_player):
-        if a_player in self._cnf.SUPPORTED_PLAYERS:
-            logger.info('==== new player: {}'.format(a_player))
-            self._player = a_player
-            self._items = self._items_dict[a_player]
-            self.refresh_win()
-
-    @property
-    def selection(self):
-        if self._list:
-            return self._list.selection
-        return(self._selections[self._player][0])
-
-    @selection.setter
-    def selection(self, val):
-        if self._list:
-            self._list.selection = val
-        self._selections[self._player][0] = val
-
-    @property
-    def startPos(self):
-        if self._list:
-            return self._list.startPos
-        return(self._selections[self._player][1])
-
-    @startPos.setter
-    def startPos(self, val):
-        self._selections[self._player][1] = val
-
-    @property
-    def active(self):
-        ''' this is the parameter to be used by the player '''
-        if self._list:
-            return self._list.active
-        return(self._selections[self._player][2])
-
-    @active.setter
-    def active(self, val):
-        if self._list:
-            self._list.active = val
-        self._selections[self._player][2] = val
-
-    @property
-    def original_active(self):
-        if self._player == self._cnf.PLAYER_NAME:
-            return self._original_active
-        else:
-            return self.selection
-
-    @original_active.setter
-    def original_active(self, val):
-        raise ValueError('property is read only')
-
-    @property
-    def params(self):
-        ''' Returns the parameters as changed by the user '''
-        return self._orig_params
-
-    @params.setter
-    def params(self, val):
-        raise ValueError('parameter is read only')
 
     def list_widget_to_selections(self):
         ''' pass Menu selection, startPos, active
@@ -1719,6 +1722,7 @@ class ExtraParameters(object):
                     entry_cannot_be_added_function=self._entry_cannot_be_added_function,
                     entry_cannot_be_edited_function=self._entry_cannot_be_edited_function,
                     entry_cannot_be_deleted_function=self._entry_cannot_be_deleted_function,
+                    on_select_callback_function=self._on_default_parameter_change,
                     )
             self._list.focused = not self.from_config
         self._win.refresh()
@@ -1742,8 +1746,8 @@ class ExtraParameters(object):
 
     def set_player(self, a_player):
         if a_player in self._cnf.SUPPORTED_PLAYERS:
-            logger.error('\n>>>==========')
-            logger.error('self._selections = {}'.format(self._selections))
+            # logger.error('\n>>>==========')
+            # logger.error('self._selections = {}'.format(self._selections))
             if self._list:
                 self._selections[self._player] = [
                         self._list.selection,
@@ -1759,15 +1763,16 @@ class ExtraParameters(object):
                 self._list.selection = self._selections[self._player][0]
                 self._list._start_pos = self._selections[self._player][1]
                 self._list.active = self._selections[self._player][2]
-            logger.error('self._items_dict = {}'.format(self._items_dict))
-            logger.error('a_player = {}'.format(a_player))
-            logger.error('self._items = {}'.format(self._items))
-            logger.error('self._selections = {}'.format(self._selections))
-            logger.error('\n<<<==========')
+            # logger.error('self._items_dict = {}'.format(self._items_dict))
+            # logger.error('a_player = {}'.format(a_player))
+            # logger.error('self._items = {}'.format(self._items))
+            # logger.error('self._selections = {}'.format(self._selections))
+            # logger.error('\n<<<==========')
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('changing player to "{0}", loading times items: {1}'.format(self._player, self._items))
             self.refresh_win()
 
     def resize(self, window, startY=None, startX=None, do_show=True):
-        logger.error('rrr1 do_show = {}'.format(do_show))
         self._win = window
         if startY is not None:
             self.startY = startY
@@ -1778,13 +1783,9 @@ class ExtraParameters(object):
         ''' erase params window
             done by containing window
         '''
-
-        logger.error('\n\nRepositioning!!!\n\n')
-        logger.error('rrr2 do_show = {}'.format(do_show))
         self.refresh_win(do_show=do_show)
 
     def set_window(self, window, do_show=True):
-        logger.error('**** do_show = {}'.format(do_show))
         self.resize(window=window, do_show=do_show)
 
     def _go_up(self, how_much=1):
@@ -1849,6 +1850,7 @@ class ExtraParameters(object):
             ord('\r'), ord(' '), ord('l'),
                 curses.KEY_RIGHT, ord('s')):
             ''' activate selection '''
+            self._list.keypress(char)
             # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))
             self.active = self.selection = self._list.selection
             # logger.error('DE active ={}, selection={}'.format(self.active, self.selection))

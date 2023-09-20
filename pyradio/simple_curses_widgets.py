@@ -1819,6 +1819,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
                  captions = None,
                  display_count = False,
                  right_arrow_selects=True,
+                 on_select_callback_function=None,
                  on_activate_callback_function=None,
                  on_up_callback_function=None,
                  on_down_callback_function=None,
@@ -1918,8 +1919,10 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 If True (default) right arrow and "l" selects the new
                 active item (for example a menu). Set it to False if
                 the widget is part of a composite widget.
-            on_activate_callback_function
+            on_select_callback_function
                 A function to execute when new active item selected
+            on_activate_callback_function
+                A function to execute when new active item activated
             global_functions
                 A dict with functions to execute when keys pressed,
                 before handling keys internally
@@ -2015,6 +2018,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._can_edit_items = can_edit_items
         self._can_delete_items = can_delete_items
         self._right_arrow_selects = right_arrow_selects
+        self._on_select_callback_function = on_select_callback_function
         self._on_activate_callback_function = on_activate_callback_function
         self._on_up_callback_function = on_up_callback_function
         self._on_down_callback_function = on_down_callback_function
@@ -2089,9 +2093,17 @@ class SimpleCursesMenu(SimpleCursesWidget):
     def item(self, value):
         raise ValueError('item out of bounds!')
 
+    def selected_item(self):
+        '''Returns the selected item text'''
+        return self._items[self._selection]
+
+    def active_item(self):
+        '''Returns the active item text'''
+        return self._items[self._active]
+
     @property
     def active(self):
-        '''Returns the widget's max_height '''
+        '''Returns the active index '''
         return self._active
 
     @active.setter
@@ -2742,8 +2754,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 probably be hidden next
             '''
             self._toggle_active_item()
-            if self._on_activate_callback_function:
-                self._on_activate_callback_function()
+            if self._on_select_callback_function:
+                self._on_select_callback_function()
             return 0
 
         elif not self._right_arrow_selects and char in (
@@ -2751,6 +2763,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
             curses.KEY_ENTER
         ):
             self._toggle_active_item()
+            if self._on_activate_callback_function:
+                self._on_activate_callback_function()
             return 0
 
         elif char in (ord('g'), curses.KEY_HOME):
