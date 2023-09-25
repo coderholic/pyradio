@@ -277,19 +277,20 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
 
     mpv_url = None
     if package == 0:
-        mpv_url = get_latest_x86_64_mpv_url()
-        if mpv_url:
-            zurl[0] = mpv_url
+        if is_cpu_mpv_v3_compatible():
+            zurl[0] = 'https://sourceforge.net/projects/mpv-player-windows/files/latest/download'
+        else:
+            mpv_url = get_latest_x86_64_mpv_url()
+            if mpv_url:
+                zurl[0] = mpv_url
     elif package == 1:
         get_latest_x86_64_mplayer_url()
-
     output_folder = _get_output_folder(
         output_folder=output_folder,
         package=package,
         do_not_exit=do_not_exit)
     if output_folder is None:
         return False
-
     if True == False and package == 0 and \
             exists(join(output_folder, 'mpv', 'updater.bat')):
         chdir(join(output_folder, 'mpv'))
@@ -399,6 +400,51 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
         pass
     return True
 
+def is_cpu_mpv_v3_compatible(print_flags=False):
+    try:
+        import cpuinfo
+    except:
+        install_module('py-cpuinfo')
+    from cpuinfo import get_cpu_info
+    cpu = get_cpu_info()
+
+    ''' Source: Difference between x86_64 and x86_64 v3
+        https://github.com/shinchiro/mpv-winbuild-cmake/wiki/Difference-between-x86_64-and-x86_64-v3
+    '''
+    mpv_v3_cpu_flags = (
+    'avx',
+    'avx2',
+    'bmi',
+    'bmi2',
+    'fma',
+    'lzcnt',
+    'movbe',
+    'sse3',
+    'sse4',
+    'sse4_1',
+    'sse4_2',
+    'ssse3',
+    'xsave',
+    'sahf',
+    'mwait',
+    'crc32',
+    'cx16',
+    'popcnt',
+    'f16c'
+    )
+
+    count = 0
+
+    for n in mpv_v3_cpu_flags:
+        if n in cpu['flags']:
+            count += 1
+            if print_flags:
+                print(n, '\t', 'ok')
+        else:
+            if print_flags:
+                print(n, '\t', 'nok')
+
+    return True if len(mpv_v3_cpu_flags) == count else False
 
 def _post_download(package, output_folder, do_not_exit):
 

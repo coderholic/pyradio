@@ -9695,6 +9695,8 @@ __|Remote Control Server| cannot be started!__
                 return '<div class="alert alert-danger">Player is <b>muted</b>; command not applicable</div>'
             elif self.player.paused:
                 return '<div class="alert alert-danger">Player is <b>paused</b>; command not applicable</div>'
+            elif self.player.buffering:
+                return '<div class="alert alert-danger">Player is <b>buffering</b>; <b>cannot adjust volume</b>...</div>'
             else:
                 self.player.volumeUp()
                 return '<div class="alert alert-success">Volume <b>increased</b>!</div>'
@@ -9705,7 +9707,11 @@ __|Remote Control Server| cannot be started!__
         if self.player.isPlaying() and \
                 self.player.playback_is_on:
             if not self.player.paused:
-                self.player.volumeUp()
+                if self.player.buffering:
+                    self.log.write(msg='Player is buffering; cannot adjust volume...')
+                    self.player.threadUpdateTitle()
+                else:
+                    self.player.volumeUp()
             else:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Volume adjustment inhibited because playback is paused')
@@ -9723,6 +9729,8 @@ __|Remote Control Server| cannot be started!__
                 return '<div class="alert alert-danger">Player is <b>muted</b>; command not applicable</div>'
             elif self.player.paused:
                 return '<div class="alert alert-danger">Player is <b>paused</b>; command not applicable</div>'
+            elif self.player.buffering:
+                return '<div class="alert alert-danger">Player is <b>buffering</b>; <b>cannot adjust volume</b>...</div>'
             else:
                 self.player.volumeDown()
                 return '<div class="alert alert-success">Volume <b>decreased</b>!</div>'
@@ -9733,7 +9741,11 @@ __|Remote Control Server| cannot be started!__
         if self.player.isPlaying() and \
                 self.player.playback_is_on:
             if not self.player.paused:
-                self.player.volumeDown()
+                if self.player.buffering:
+                    self.log.write(msg='Player is buffering; cannot adjust volume...')
+                    self.player.threadUpdateTitle()
+                else:
+                    self.player.volumeDown()
             else:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('Volume adjustment inhibited because playback is paused')
@@ -9747,15 +9759,23 @@ __|Remote Control Server| cannot be started!__
     def _html_volume_mute(self):
         if self.player.isPlaying() and \
                 self.player.playback_is_on:
-            self.player.toggleMute()
-            return '<div class="alert alert-success">Player muted state <b>toggled!</b></div>'
+            if self.player.buffering:
+                return '<div class="alert alert-danger">Player is <b>buffering</b>; <b>cannot mute</b>...</div>'
+                # self.player.threadUpdateTitle()
+            else:
+                self.player.toggleMute()
+                return '<div class="alert alert-success">Player muted state <b>toggled!</b></div>'
         else:
             return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
     def _volume_mute(self):
         if self.player.isPlaying():
             if self.player.playback_is_on:
-                self.player.toggleMute()
+                if self.player.buffering:
+                    self.log.write(msg='Player is buffering; cannot mute...')
+                    self.player.threadUpdateTitle()
+                else:
+                    self.player.toggleMute()
         else:
             if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
                 self.ws.close_window()
@@ -9766,25 +9786,33 @@ __|Remote Control Server| cannot be started!__
     def _html_volume_save(self):
         if self.player.isPlaying() and \
                 self.player.playback_is_on:
-            if self.player.muted:
-                return '<div class="alert alert-danger">Player is <b>muted!</b></div>'
+            if self.player.buffering:
+                return '<div class="alert alert-danger">Player is <b>buffering</b>; <b>cannot save volume</b>...</div>'
+                # self.player.threadUpdateTitle()
             else:
-                ret_string = self.player.save_volume()
-                if ret_string:
-                    self.log.write(msg=ret_string)
-                    self.player.threadUpdateTitle()
-                    return '<div class="alert alert-success">Volume <b>saved!</b></div>'
-                return '<div class="alert alert-danger">Volume <b>not saved!</b></div>'
+                if self.player.muted:
+                    return '<div class="alert alert-danger">Player is <b>muted!</b></div>'
+                else:
+                    ret_string = self.player.save_volume()
+                    if ret_string:
+                        self.log.write(msg=ret_string)
+                        self.player.threadUpdateTitle()
+                        return '<div class="alert alert-success">Volume <b>saved!</b></div>'
+                    return '<div class="alert alert-danger">Volume <b>not saved!</b></div>'
         else:
             return '<div class="alert alert-danger">Player is <b>stopped</b>; command not applicable</div>'
 
     def _volume_save(self):
         if self.player.isPlaying():
             if self.player.playback_is_on:
-                ret_string = self.player.save_volume()
-                if ret_string:
-                    self.log.write(msg=ret_string)
+                if self.player.buffering:
+                    self.log.write(msg='Player is buffering; cannot save volume...')
                     self.player.threadUpdateTitle()
+                else:
+                    ret_string = self.player.save_volume()
+                    if ret_string:
+                        self.log.write(msg=ret_string)
+                        self.player.threadUpdateTitle()
         else:
             if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
                 self.ws.close_window()

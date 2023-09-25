@@ -1536,7 +1536,7 @@ class ExtraParameters(object):
         result = list(set(result))
         if result:
             if 'pyradio' not in result:
-                result.app('pyradio')
+                result.append('pyradio')
         else:
             result = ['pyradio']
         result.sort()
@@ -1583,7 +1583,7 @@ class ExtraParameters(object):
                 return True
         return False
 
-    def reset(self, saved=True):
+    def reset(self, saved=True, from_reset=False):
         ''' reset Player Selection Options
 
             Parameter
@@ -1613,6 +1613,7 @@ class ExtraParameters(object):
             'mplayer': [],
             'vlc': []
         }
+        logger.exception('\n\n1 Extraparameters.reset\nself._items.dict\n{}\n\n'.format(self._items_dict))
         if self.from_config:
             self._add_params_to_all_profiles()
         else:
@@ -1647,6 +1648,7 @@ class ExtraParameters(object):
         logger.error('\n*****************************\n\n')
         if not saved:
             self._original_active = self.active
+        logger.exception('\n\n2 Extraparameters.reset\nself._items.dict\n{}\n\n'.format(self._items_dict))
 
     def list_widget_to_selections(self):
         ''' pass Menu selection, startPos, active
@@ -1746,7 +1748,7 @@ class ExtraParameters(object):
 
     def set_player(self, a_player):
         if a_player in self._cnf.SUPPORTED_PLAYERS:
-            # logger.error('\n>>>==========')
+            logger.error('\n>>>==========')
             # logger.error('self._selections = {}'.format(self._selections))
             if self._list:
                 self._selections[self._player] = [
@@ -1763,11 +1765,11 @@ class ExtraParameters(object):
                 self._list.selection = self._selections[self._player][0]
                 self._list._start_pos = self._selections[self._player][1]
                 self._list.active = self._selections[self._player][2]
-            # logger.error('self._items_dict = {}'.format(self._items_dict))
-            # logger.error('a_player = {}'.format(a_player))
+            logger.error('self._items_dict = {}'.format(self._items_dict))
+            logger.error('a_player = {}'.format(a_player))
             # logger.error('self._items = {}'.format(self._items))
             # logger.error('self._selections = {}'.format(self._selections))
-            # logger.error('\n<<<==========')
+            logger.error('\n<<<==========')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('changing player to "{0}", loading times items: {1}'.format(self._player, self._items))
             self.refresh_win()
@@ -2083,7 +2085,7 @@ class PyRadioSelectPlayer(object):
         self.refresh_win(True)
 
     def reset(self):
-        self._extra.reset()
+        self._extra.reset(from_reset=True)
         self._populate_players()
         self.refresh_win(do_params=True)
         self._cnf.params_changed = False

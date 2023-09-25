@@ -46,6 +46,13 @@ IF %ERRORLEVEL% == 1 (
     GOTO piperror
 )
 
+ECHO Installing / Updating py-cpuinfo
+%PROGRAM% -m pip install --upgrade py-cpuinfo 1>NUL 2>NUL
+IF %ERRORLEVEL% == 1 (
+    SET ERRPKG=py-cpuinfo
+    GOTO piperror
+)
+
 echo pywin32 > requirements.txt
 echo windows-curses >> requirements.txt
 echo requests >> requirements.txt
@@ -56,6 +63,7 @@ echo wheel >> requirements.txt
 echo pylnk >> requirements.txt
 echo win10toast >> requirements.txt
 echo python-dateutil >> requirements.txt
+echo py-cpuinfo >> requirements.txt
 
 ::Remove the elevation tag and SET the correct working directory
 IF '%1'=='ELEV' ( SHIFT /1 )

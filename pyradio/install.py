@@ -945,6 +945,8 @@ class PyRadioUpdate(object):
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade rich 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
+                b.write('python -m pip install --upgrade py-cpuinfo 1>NUL 2>NUL\n')
+                b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade win10toast 1>NUL 2>NUL\n')
                 b.write('if %ERRORLEVEL% == 1 GOTO downloaderror\n')
                 b.write('python -m pip install --upgrade python-dateutil 1>NUL 2>NUL\n')
@@ -1576,6 +1578,7 @@ if __name__ == '__main__':
                 'pyunpack',
                 'wheel',
                 'win10toast',
+                'py-cpuinfo',
         ):
             print('Checking module: [bold green]' + a_module + '[/bold green] ...')
             ret = subprocess.call('python -m pip install --upgrade ' + a_module,

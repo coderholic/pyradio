@@ -119,6 +119,7 @@ class Log(object):
               help_msg=False,
               error_msg=False,
               notify_function=None):
+        logger.error('**** Log.write: msg = "{}"'.format(msg))
         if self.cursesScreen:
             with self.lock:
                 if msg:
@@ -174,6 +175,7 @@ class Log(object):
                     self._player_stopped = 0
                     return
                 ''' update main message '''
+                logger.error('*** msg = "{}"'.format(msg))
                 if self.msg:
                     self.cursesScreen.erase()
                     d_msg = ''
@@ -205,6 +207,8 @@ class Log(object):
                                 self._song_title = ''
                                 if msg.startswith('Playing: '):
                                     self._station_that_is_playing_now = msg[9:]
+                                elif msg.startswith('Buffering: '):
+                                    self._station_that_is_playing_now = msg[11:]
 
                     self.set_win_title(self.msg)
                     self._write_title_to_log(msg if msg else 'No')
@@ -317,7 +321,8 @@ class Log(object):
                 #         'abnormal' in msg:
                 #    title = msg
                 if msg.startswith('Playing: ') or \
-                    msg.startswith('Connecting to: ') or \
+                        msg.startswith('Buffering: ') or \
+                        msg.startswith('Connecting to: ') or \
                         'abnormal' in msg or \
                         msg.startswith('Failed to'):
                     title = msg
@@ -494,11 +499,12 @@ class Log(object):
                 self._desktop_notification_message = d_msg
                 return None, None
             self._last[1] = d_msg
-        elif msg.startswith('Playing: '):
+        elif msg.startswith('Playing: ') or \
+                msg.startswith('Buffering: '):
             if self._station_sent:
                 return None, None
             d_title = 'Station'
-            d_msg = msg.replace('Playing: ', '')
+            d_msg = msg.replace('Playing: ', '').replace('Buffering: ', '')
             # if self._last[1]:
             #     ''' already shown song title '''
             #     logger.error('already shown song title: "{0}" - {1}'.format(d_msg, self._last))
@@ -563,12 +569,17 @@ class Log(object):
                                 except:
                                     logger.critical('Error writing title...')
                         self._cnf._current_log_title = d_msg
-                elif d_msg.startswith('Playing: '):
-                    if logger.isEnabledFor(logging.CRITICAL):
+                elif d_msg.startswith('Playing: ') or \
+                          d_msg.startswith('Buffering: '):
+                    if d_msg[0] == 'P':
+                        tok = 'Playing: '
+                    else:
+                        tok = 'Buffering: '
+                    if logger.isEnabledFor(logging.CRITICAL) and tok == 'Playing: ':
                         try:
                             if force or not d_msg in self._cnf._old_log_station:
                                 try:
-                                    logger.critical(d_msg.replace('Playing: ', '>>> Station: '))
+                                    logger.critical(d_msg.replace(tok, '>>> Station: '))
                                 except:
                                     logger.critical('Error writing station name...')
                                 self._cnf._old_log_station = d_msg
@@ -577,7 +588,7 @@ class Log(object):
                             try:
                                 if force or not d_msg.decode('utf-8', 'replace') in self._cnf._old_log_title.decode('utf-8', 'replace'):
                                     try:
-                                        logger.critical(d_msg.replace('Playing: ', '>>> Station: '))
+                                        logger.critical(d_msg.replace(tok, '>>> Station: '))
                                     except:
                                         logger.critical('Error writing station name...')
                                     self._cnf._old_log_station = d_msg

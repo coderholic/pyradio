@@ -118,7 +118,6 @@ except:
 
         return None
 
-
 def find_vlc_on_windows(config_dir=None):
     PLAYER_CMD = ''
     for path in (
@@ -313,6 +312,9 @@ class Player(object):
         '''
         self._mplayer_on_windows7 = False
 
+    def _return_false(self):
+        return False
+
     @property
     def profile_name(self):
         if self.PLAYER_NAME == 'vlc':
@@ -353,6 +355,15 @@ class Player(object):
         else:
             self._recording = 0
         logger.error('\n\nsetting recording to {}'.format(self._recording))
+
+    def _player_is_buffering(self, opts, tokens):
+        logger.error('opts = {}'.format(opts))
+        logger.error('tokens = {}'.format(tokens))
+        for k in tokens:
+            for n in opts:
+                if k in n:
+                    return True
+        return False
 
     def _configHasProfile(self, a_profile_name=None):
         ''' Checks if a player config files have
@@ -815,7 +826,10 @@ class Player(object):
         #    self.outputStream.write(msg=self.oldUserInput['Title'])
         ''' Force volume display even when icy title is not received '''
         with recording_lock:
-            self.oldUserInput['Title'] = 'Playing: ' + self.name
+            if self.buffering:
+                self.oldUserInput['Title'] = 'Buffering: ' + self.name
+            else:
+                self.oldUserInput['Title'] = 'Playing: ' + self.name
         try:
             out = self.process.stdout
             while(True):
@@ -854,7 +868,6 @@ class Player(object):
                         if self.PLAYER_NAME != 'mpv':
                             # logger.error('***** volume')
                             with recording_lock:
-
                                 self_oldUserInput_Volume = self.oldUserInput['Volume']
                             if self_oldUserInput_Volume != subsystemOut:
                                 with recording_lock:
@@ -896,7 +909,10 @@ class Player(object):
                                     logger.info('*** updateStatus(): Start of playback detected ***')
                             #if self.outputStream.last_written_string.startswith('Connecting to'):
                             if self.oldUserInput['Title'] == '':
-                                new_input = 'Playing: ' + self.name
+                                if self.buffering:
+                                    new_input = 'Buffering: ' + self.name
+                                else:
+                                    new_input = 'Playing: ' + self.name
                             else:
                                 new_input = self.oldUserInput['Title']
                         if not self.playback_is_on:
@@ -907,13 +923,21 @@ class Player(object):
                             self.connecting = False
                         self._stop_delay_thread()
                         self.stations_history_add_function()
-                        if 'AO: [' in subsystemOut:
+                        if 'AO: [' in subsystemOut or \
+                                'Stream buffering done' in subsystemOut or \
+                                'Buffering ' in subsystemOut:
+                            self.buffering = False
                             with self.status_update_lock:
                                 if version_info > (3, 0):
                                     self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0]
                                 else:
                                     self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0].encode('utf-8')
                                 self.info_display_handler()
+                            if self.oldUserInput['Title'].startswith('Buffering: '):
+                                self.outputStream.write(
+                                        self.oldUserInput['Title'].replace('Buffering', 'Playing'),
+                                        counter=''
+                                        )
                         if self.PLAYER_NAME == 'mpv' and version_info < (3, 0):
                             for a_cmd in (
                                     b'{ "command": ["get_property", "metadata"], "request_id": 100 }\n',
@@ -964,6 +988,7 @@ class Player(object):
                                     # make sure title will not pop-up while Volume value is on
                                     if self.delay_thread is None:
                                         ok_to_display = True
+                                    self.buffering = False
                                     if ok_to_display and self.playback_is_on:
                                         string_to_show = self.title_prefix + title
                                         self.outputStream.write(msg=string_to_show, counter='')
@@ -975,7 +1000,13 @@ class Player(object):
                                 if (logger.isEnabledFor(logging.INFO)):
                                     logger.info('Icy-Title is NOT valid')
                                 if ok_to_display and self.playback_is_on:
-                                    title = 'Playing: ' + self.name
+                                    logger.error('\n\nhere - self.buffering: {}'.format(self.buffering))
+                                    if self.buffering:
+                                        title = 'Buffering: ' + self.name
+                                        logger.error('buffering')
+                                    else:
+                                        title = 'Playing: ' + self.name
+                                        logger.error('playing')
                                     self.oldUserInput['Title'] = title
                                     string_to_show = self.title_prefix + title
                                     self.outputStream.write(msg=string_to_show, counter='')
@@ -1204,9 +1235,11 @@ class Player(object):
                                     if stop():
                                         break
                                     d = json.loads(n)
+                                    logger.error('d = {}'.format(d))
                                     if 'event' in d.keys():
                                         # logger.info('metadata-update\n\n')
                                         if d['event'] == 'metadata-update':
+                                            logger.info('{}\n\n'.format(d['event']))
                                             try:
                                                 if platform.startswith('win'):
                                                     win32file.WriteFile(sock, self.GET_TITLE)
@@ -1220,17 +1253,27 @@ class Player(object):
                                             self._request_mpv_info_data(sock)
                                             self.info_display_handler()
                                         elif d['event'] == 'playback-restart':
-                                            # logger.info('====== playback-restarted\n\n')
+                                            logger.info('====== playback-restarted\n{}\n\n'.format(self.oldUserInput))
+                                            logger.info('{}\n\n'.format(d['event']))
+                                            self.buffering = False
                                             if not self.playback_is_on:
                                                 ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
                                                 break
                                             self._request_mpv_info_data(sock)
                                             self.info_display_handler()
-                                        elif d['event'] == 'file-loaded' or \
-                                                d['event'] == 'audio-reconfig':
-                                            # logger.info('{}\n\n'.format(d['event']))
-                                            if not self.playback_is_on:
+                                            if self.oldUserInput['Title'].startswith('Buffering: '):
+                                                self.outputStream.write(
+                                                        self.oldUserInput['Title'].replace('Buffering', 'Playing'),
+                                                        counter=''
+                                                        )
+                                        elif (d['event'] == 'file-loaded' or \
+                                                d['event'] == 'audio-reconfig') and \
+                                                self.buffering:
+                                            ''' buffering '''
+                                            logger.info('{}\n\n'.format(d['event']))
+                                            if self.buffering and not self.playback_is_on:
+                                                logger.info('sending playback is on')
                                                 ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
                                                 break
@@ -1290,7 +1333,10 @@ class Player(object):
         enable_crash_detection_function = args[6]
         on_connect = args[7]
         ''' Force volume display even when icy title is not received '''
-        self.oldUserInput['Title'] = 'Playing: ' + self.name
+        if self.buffering:
+            self.oldUserInput['Title'] = 'Buffering: ' + self.name
+        else:
+            self.oldUserInput['Title'] = 'Playing: ' + self.name
         # logger.error('DE ==== {0}\n{1}\n{2}'.format(fn, enc, stop))
         #with lock:
         #    self.oldUserInput['Title'] = 'Connecting to: "{}"'.format(self.name)
@@ -1363,7 +1409,10 @@ class Player(object):
                             on_connect()
                         #if self.outputStream.last_written_string.startswith('Connecting to'):
                         if self.oldUserInput['Title'] == '':
-                            new_input = 'Playing: ' + self.name
+                            if self.buffering:
+                                new_input = 'Buffering: ' + self.name
+                            else:
+                                new_input = 'Playing: ' + self.name
                         else:
                             new_input = self.oldUserInput['Title']
                         self.outputStream.write(msg=new_input, counter='')
@@ -1371,13 +1420,22 @@ class Player(object):
                         self.connecting = False
                         self._stop_delay_thread()
                         self.stations_history_add_function()
-                        if 'AO: [' in subsystemOut:
-                            with self.status_update_lock:
-                                if version_info > (3, 0):
-                                    self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0]
-                                else:
-                                    self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0].encode('utf-8')
-                                self.info_display_handler()
+                        logger.info('checking: "{}"'.format(subsystemOut))
+                        if 'AO: [' in subsystemOut or \
+                                'buffering done' in subsystemOut or \
+                                'Buffering 100%' in subsystemOut:
+                            if 'AO: [' in subsystemOut:
+                                with self.status_update_lock:
+                                    if version_info > (3, 0):
+                                        self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0]
+                                    else:
+                                        self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0].encode('utf-8')
+                                    self.info_display_handler()
+                            if self.oldUserInput['Title'].startswith('Buffering: '):
+                                self.outputStream.write(
+                                        self.oldUserInput['Title'].replace('Buffering', 'Playing'),
+                                        counter=''
+                                        )
                         # logger.error('DE 3 {}'.format(self._icy_data))
                     elif self._is_icy_entry(subsystemOut):
                         if stop():
@@ -1421,7 +1479,10 @@ class Player(object):
                                 if (logger.isEnabledFor(logging.INFO)):
                                     logger.info('Icy-Title is NOT valid')
                                 if ok_to_display and self.playback_is_on:
-                                    title = 'Playing: ' + self.name
+                                    if self.buffering:
+                                        title = 'Buffering: ' + self.name
+                                    else:
+                                        title = 'Playing: ' + self.name
                                     self.oldUserInput['Title'] = title
                                     string_to_show = self.title_prefix + title
                                     self.outputStream.write(msg=string_to_show, counter='')
@@ -1561,6 +1622,7 @@ class Player(object):
                 else:
                     if (logger.isEnabledFor(logging.INFO)):
                         logger.info('Icy-Title is NOT valid')
+                    self.buffering = False
                     title = 'Playing: ' + self.name
                     string_to_show = self.title_prefix + title
                     if stop():
@@ -1640,6 +1702,7 @@ class Player(object):
             return False
 
     def _set_mpv_playback_is_on(self, stop, enable_crash_detection_function):
+        logger.error('self._set_mpv_playback_is_on!!!')
         self.stop_timeout_counter_thread = True
         try:
             self.connection_timeout_thread.join()
@@ -1647,14 +1710,18 @@ class Player(object):
             pass
         self.detect_if_player_exited = True
         if (not self.playback_is_on) and (logger.isEnabledFor(logging.INFO)):
-                    logger.info('*** _set_mpv_playback_is_on(): Start of playback detected ***')
+            logger.info('*** _set_mpv_playback_is_on(): Start of playback detected ***')
         self.stop_timeout_counter_thread = True
         try:
             self.connection_timeout_thread.join()
         except:
             pass
         self.stations_history_add_function()
-        new_input = 'Playing: ' + self.name
+        logger.info('self.buffering = {}'.format(self.buffering))
+        if self.buffering:
+            new_input = 'Buffering: ' + self.name
+        else:
+            new_input = 'Playing: ' + self.name
         self.outputStream.write(msg=new_input, counter='')
         if self.oldUserInput['Title'] == '':
             self.oldUserInput['Input'] = new_input
@@ -2180,6 +2247,9 @@ class MpvPlayer(Player):
                 'quit':        b'{ "command": ["quit"], "request_id": 1004}\n',
                 }
 
+        ''' if found in built options, buffering is ON '''
+        buffering_tokens = ('cache', 'demuxer-readahead-secs')
+
     def __init__(self,
                  config,
                  outputStream,
@@ -2210,6 +2280,7 @@ class MpvPlayer(Player):
         return self._do_save_volume(self.profile_token + '\nvolume={}\n')
 
     def _buildStartOpts(self, streamUrl, playList=False):
+        self.buffering = False
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         # logger.error('self.profile_name = "{}"'.format(self.profile_name))
         ''' Builds the options to pass to mpv subprocess.'''
@@ -2274,6 +2345,10 @@ class MpvPlayer(Player):
             opts.append('--stream-record=' + self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
+
+        ''' check if buffering '''
+        self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
+        logger.error('==== self.buffering = {}'.format(self.buffering))
 
         # logger.error('Opts:\n{}'.format(opts))
         return opts, None
@@ -2638,6 +2713,9 @@ class MpPlayer(Player):
         ''' String to denote volume change '''
         volume_string = 'Volume: '
 
+        ''' if found in built options, buffering is ON '''
+        buffering_tokens = ('cache', )
+
     def __init__(self,
                  config,
                  outputStream,
@@ -2672,6 +2750,7 @@ class MpPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
+        self.buffering = False
         opts = [self.PLAYER_CMD, '-vo', 'null', '-msglevel', 'all=6']
         # opts = [self.PLAYER_CMD, '-vo', 'null']
         monitor_opts = None
@@ -2744,6 +2823,10 @@ class MpPlayer(Player):
         if playList:
             opts.append('-playlist')
         opts.append(self._url_to_use(streamUrl))
+
+        ''' check if buffering '''
+        self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
+        logger.error('---- self.buffering = {}'.format(self.buffering))
 
         # logger.error('Opts:\n{0}\n{1}'.format(opts, monitor_opts))
         return opts, monitor_opts
@@ -2864,7 +2947,9 @@ class VlcPlayer(Player):
                 # 'Content-Type: audio',
                 ' Segment #',
                 'using audio decoder module',
-                'answer code 200'
+                'answer code 200',
+                'buffering done',
+                'Buffering '
             )
             # max_volume = 1000
         else:
@@ -2873,13 +2958,17 @@ class VlcPlayer(Player):
                 ' Segment #',
                 'using audio filter module',
                 'using audio decoder module',
-                'answer code 200'
+                'answer code 200',
+                'buffering done'
             )
 
         ''' Windows only variables '''
         _vlc_stdout_log_file = ''
         _port = None
         win_show_vlc_volume_function = None
+
+        ''' if found in built options, buffering is ON '''
+        buffering_tokens = ('--network-caching', )
 
     def __init__(self,
                  config,
@@ -2985,6 +3074,7 @@ class VlcPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to vlc subprocess.'''
+        self.buffering = False
         #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
         monitor_opts = None
         if self.WIN:
@@ -3052,6 +3142,10 @@ class VlcPlayer(Player):
             monitor_opts.append(self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
+
+        ''' check if buffering '''
+        self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
+
         return opts, monitor_opts
 
     def _mute(self):
@@ -3163,6 +3257,7 @@ class VlcPlayer(Player):
                 otherwise they may not be handled at all...
             '''
             accept_filter = (self.volume_string,
+                             'buffering',
                              'error',
                              'debug: ',
                              'format: ',
@@ -3175,6 +3270,7 @@ class VlcPlayer(Player):
                              )
         else:
             accept_filter = (self.volume_string,
+                             'buffering',
                              'error',
                              'http stream debug: ',
                              'format: ',
