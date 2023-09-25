@@ -2750,9 +2750,15 @@ class MpPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
-        self.buffering = False
-        opts = [self.PLAYER_CMD, '-vo', 'null', '-msglevel', 'all=6']
-        # opts = [self.PLAYER_CMD, '-vo', 'null']
+        ''' check if buffering '''
+        self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
+        logger.error('---- self.buffering = {}'.format(self.buffering))
+
+        opts = [self.PLAYER_CMD, '-vo', 'null']
+        if self.buffering:
+            opts.append('-msglevel')
+            opts.append('all=6')
+
         monitor_opts = None
 
         ''' Do I have user profile in config?
@@ -2823,10 +2829,6 @@ class MpPlayer(Player):
         if playList:
             opts.append('-playlist')
         opts.append(self._url_to_use(streamUrl))
-
-        ''' check if buffering '''
-        self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
-        logger.error('---- self.buffering = {}'.format(self.buffering))
 
         # logger.error('Opts:\n{0}\n{1}'.format(opts, monitor_opts))
         return opts, monitor_opts
