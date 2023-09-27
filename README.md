@@ -140,9 +140,9 @@ $ pyradio -h
 Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
                [-a] [-ls] [-l] [-t THEME] [--show-themes] [--no-themes]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
-               [--terminal-param TERMINAL_PARAM] [-tlp] [-scd] [-ocd]
-               [--record] [-U] [-R] [-oc] [-sc] [-cc] [-gc] [--unlock] [-us]
-               [-lt] [-d] [-V]
+               [--terminal-param TERMINAL_PARAM] [-tlp] [-sd] [-od] [-or]
+               [-oc] [-sc] [-cc] [-gc] [-us] [-lt] [-r] [-d] [-ul] [-U] [-R]
+               [-V]
 
 Curses based Internet radio player
 
@@ -181,24 +181,26 @@ Options:
                         light" (which will result to "pyradio -p 3 -t light").
   -tlp, --toggle-load-last-playlist
                         Toggle autoload last opened playlist.
-  -scd, --show-config-dir
+  -sd, --show-config-dir
                         Print config directory [CONFIG DIR] location and exit.
-  -ocd, --open-config-dir
+  -od, --open-config-dir
                         Open config directory [CONFIG DIR] with default file
                         manager.
-  --record              Turn recording on (not available for VLC player on
-                        Windows).
-  -U, --update          Update PyRadio.
-  -R, --uninstall       Uninstall PyRadio.
-  -oc, --open-cache     Open the Cache folder
-  -sc, --show-cache     Show Cache contents
-  -cc, --clear-cache    Clear Cache contents
+  -or, --open-recordings
+                        Open the Recordings folder.
+  -oc, --open-cache     Open the Cache folder.
+  -sc, --show-cache     Show Cache contents.
+  -cc, --clear-cache    Clear Cache contents.
   -gc, --get-cache      Download source code, keep it in the cache and exit.
-  --unlock              Remove sessions' lock file.
   -us, --update-stations
                         Update "stations.csv" (if needed).
   -lt, --log-titles     Log titles to file.
+  -r, --record          Turn recording on (not available for VLC player on
+                        Windows).
   -d, --debug           Start PyRadio in debug mode.
+  -ul, --unlock         Remove sessions' lock file.
+  -U, --update          Update PyRadio.
+  -R, --uninstall       Uninstall PyRadio.
   -V, --version         Display version information.
 ```
 
@@ -664,7 +666,7 @@ If **recording is on** while using the previously activated player, it will rema
 
 ### Extra Player Parameters
 
-All three supported players can accept a significant number of "*command line options*", which are well documented and accessible through man pages (on linux and macOs) or the documentation (on Windows).
+All three supported players can accept a significant number of "*command line options*", which are well documented and accessible through man pages (on linux and MacOs) or the documentation (on Windows).
 
 **PyRadio** uses some of these parameters in order to execute and communicate with the players. In particular, the following parameters are in use **by default**:
 
@@ -678,17 +680,15 @@ All three supported players can accept a significant number of "*command line op
 
 **PyRadio** provides a way for the user to add extra parameters to the player, either by a command line option, or the "*Configuration Window*" (under "*Player:*").
 
-This way, 10 sets of parameters can be inserted and made available for selection.
-
 #### Using the Configuration Window
 
 When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with **PyRadio** and edit its extra parameters.
 
 ![PyRadio Player Selection Window](https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg)
 
-Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).
+For each of the supported players the existing profiles (not for *VLC*) and existing extra parameters will be displayed.
 
-The user can add ("**a**") a new parameter, edit ("**e**") an existing set and delete ("**x**" or "**DEL**") one.
+The user can add ("**a**") a new parameter, edit ("**e**") an existing set and delete ("**x**" or "**DEL**") one; profiles cannot be edited or deleted, though.
 
 ## Player connection protocol
 
@@ -845,6 +845,12 @@ A theme for light terminal background settings.
 
 Furthermore, a number of themes (these are actual files saved in the **themes** installation directory) are also available:
 
+- **AM_by_amski1** \
+A simple green on dark theme, created for Window.
+- **blue-by-boxer** \
+A reddish on blue theme by user **Boxer** at [Mabox Forum](https://forum.maboxlinux.org/).
+- **catppuccin-frappe**, **catppuccin-latte**, **catppuccin-macchiato** and **catppuccin-mocha** \
+Four themes by the [Catppuccin community](https://github.com/catppuccin).
 - **classic_by_obsdg** \
 A clasic theme by [The OpenBSD Guy](https://github.com/OpenBSDGuy), originally created on [OpenBSD](https://www.openbsd.org/).
 - **cupcake_by_edunfelt** and  **fairyflossy_by_edunfelt** \
@@ -855,10 +861,6 @@ Two themes based on the [gruvbox](https://github.com/morhetz/gruvbox) theme.
 A theme by user [ben_chile](https://forum.maboxlinux.org/u/ben_chile) created on the [Mabox Linux](https://maboxlinux.org) Forum.
 - **pastel_based_by_sng** \
 A dim but colorful theme.
-- **catppuccin-frappe**, **catppuccin-latte**, **catppuccin-macchiato** and **catppuccin-mocha** \
-Four themes by the [Catppuccin community](https://github.com/catppuccin).
-- **blue-by-boxer** \
-A reddish on blue theme by user **Boxer** at [Mabox Forum](https://forum.maboxlinux.org/).
 
 Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual CSS colors can now be defined.
 

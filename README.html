@@ -1059,9 +1059,9 @@ a:visited{color: SaddleBrown;}
 Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
                [-a] [-ls] [-l] [-t THEME] [--show-themes] [--no-themes]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
-               [--terminal-param TERMINAL_PARAM] [-tlp] [-scd] [-ocd]
-               [--record] [-U] [-R] [-oc] [-sc] [-cc] [-gc] [--unlock] [-us]
-               [-lt] [-d] [-V]
+               [--terminal-param TERMINAL_PARAM] [-tlp] [-sd] [-od] [-or]
+               [-oc] [-sc] [-cc] [-gc] [-us] [-lt] [-r] [-d] [-ul] [-U] [-R]
+               [-V]
 
 Curses based Internet radio player
 
@@ -1100,24 +1100,26 @@ Options:
                         light&quot; (which will result to &quot;pyradio -p 3 -t light&quot;).
   -tlp, --toggle-load-last-playlist
                         Toggle autoload last opened playlist.
-  -scd, --show-config-dir
+  -sd, --show-config-dir
                         Print config directory [CONFIG DIR] location and exit.
-  -ocd, --open-config-dir
+  -od, --open-config-dir
                         Open config directory [CONFIG DIR] with default file
                         manager.
-  --record              Turn recording on (not available for VLC player on
-                        Windows).
-  -U, --update          Update PyRadio.
-  -R, --uninstall       Uninstall PyRadio.
-  -oc, --open-cache     Open the Cache folder
-  -sc, --show-cache     Show Cache contents
-  -cc, --clear-cache    Clear Cache contents
+  -or, --open-recordings
+                        Open the Recordings folder.
+  -oc, --open-cache     Open the Cache folder.
+  -sc, --show-cache     Show Cache contents.
+  -cc, --clear-cache    Clear Cache contents.
   -gc, --get-cache      Download source code, keep it in the cache and exit.
-  --unlock              Remove sessions&#39; lock file.
   -us, --update-stations
                         Update &quot;stations.csv&quot; (if needed).
   -lt, --log-titles     Log titles to file.
+  -r, --record          Turn recording on (not available for VLC player on
+                        Windows).
   -d, --debug           Start PyRadio in debug mode.
+  -ul, --unlock         Remove sessions&#39; lock file.
+  -U, --update          Update PyRadio.
+  -R, --uninstall       Uninstall PyRadio.
   -V, --version         Display version information.</pre>
 <h2 id="controls">Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre>                  Main window                                      Playlists window                   Themes window
@@ -1466,7 +1468,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p>If <strong>recording is on</strong> while using the previously activated player, it will remain on with the newly activated one. This actually means that the recording will stop when the old player is stopped and resumed when the new player is activated (creating a new recorder file). There is just one exception to that; selecting <strong>VLC</strong> is not possible on <strong>Windows</strong>, since <strong>VLC</strong> does not support recording on this platform.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The activated player will not be saved; <strong>PyRadio</strong> will still use the player defined at its config next time it is executed.</p>
 <h3 id="extra-player-parameters">Extra Player Parameters</h3>
-<p>All three supported players can accept a significant number of “<em>command line options</em>”, which are well documented and accessible through man pages (on linux and macOs) or the documentation (on Windows).</p>
+<p>All three supported players can accept a significant number of “<em>command line options</em>”, which are well documented and accessible through man pages (on linux and MacOs) or the documentation (on Windows).</p>
 <p><strong>PyRadio</strong> uses some of these parameters in order to execute and communicate with the players. In particular, the following parameters are in use <strong>by default</strong>:</p>
 <table>
 <colgroup>
@@ -1496,13 +1498,12 @@ Station2,Station2_URL,iso-8859-7</pre>
 </table>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The user should not use or change the above player parameters. Failing to do so, may render the player <strong><em>unusable</em></strong>.</p>
 <p><strong>PyRadio</strong> provides a way for the user to add extra parameters to the player, either by a command line option, or the “<em>Configuration Window</em>” (under “<em>Player:</em>”).</p>
-<p>This way, 10 sets of parameters can be inserted and made available for selection.</p>
 <h4 id="using-the-configuration-window">Using the Configuration Window</h4>
 <p>When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with <strong>PyRadio</strong> and edit its extra parameters.</p>
 <p><a href="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" alt="PyRadio Player Selection Window" /></a></p>
 
-<p>Each of the supported players can have up to 11 sets of extra parameters (the first one is the default).</p>
-<p>The user can add (“<strong>a</strong>”) a new parameter, edit (“<strong>e</strong>”) an existing set and delete (“<strong>x</strong>” or “<strong>DEL</strong>”) one.</p>
+<p>For each of the supported players the existing profiles (not for <em>VLC</em>) and existing extra parameters will be displayed.</p>
+<p>The user can add (“<strong>a</strong>”) a new parameter, edit (“<strong>e</strong>”) an existing set and delete (“<strong>x</strong>” or “<strong>DEL</strong>”) one; profiles cannot be edited or deleted, though.</p>
 <h2 id="player-connection-protocol">Player connection protocol <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Most radio stations use plain old http protocol to broadcast, but some of them use https.</p>
 <p>Experience has shown that playing a <strong>https</strong> radio station depends on the combination of the station’s configuration and the player used.</p>
@@ -1603,6 +1604,12 @@ A theme for light terminal background settings.</li>
 </ol>
 <p>Furthermore, a number of themes (these are actual files saved in the <strong>themes</strong> installation directory) are also available:</p>
 <ul>
+<li><strong>AM_by_amski1</strong><br />
+A simple green on dark theme, created for Window.</li>
+<li><strong>blue-by-boxer</strong><br />
+A reddish on blue theme by user <strong>Boxer</strong> at <a target="_blank" href="https://forum.maboxlinux.org/">Mabox Forum</a>.</li>
+<li><strong>catppuccin-frappe</strong>, <strong>catppuccin-latte</strong>, <strong>catppuccin-macchiato</strong> and <strong>catppuccin-mocha</strong><br />
+Four themes by the <a target="_blank" href="https://github.com/catppuccin">Catppuccin community</a>.</li>
 <li><strong>classic_by_obsdg</strong><br />
 A clasic theme by <a target="_blank" href="https://github.com/OpenBSDGuy">The OpenBSD Guy</a>, originally created on <a target="_blank" href="https://www.openbsd.org/">OpenBSD</a>.</li>
 <li><strong>cupcake_by_edunfelt</strong> and <strong>fairyflossy_by_edunfelt</strong><br />
@@ -1613,10 +1620,6 @@ Two themes based on the <a target="_blank" href="https://github.com/morhetz/gruv
 A theme by user <a target="_blank" href="https://forum.maboxlinux.org/u/ben_chile">ben_chile</a> created on the <a target="_blank" href="https://maboxlinux.org">Mabox Linux</a> Forum.</li>
 <li><strong>pastel_based_by_sng</strong><br />
 A dim but colorful theme.</li>
-<li><strong>catppuccin-frappe</strong>, <strong>catppuccin-latte</strong>, <strong>catppuccin-macchiato</strong> and <strong>catppuccin-mocha</strong><br />
-Four themes by the <a target="_blank" href="https://github.com/catppuccin">Catppuccin community</a>.</li>
-<li><strong>blue-by-boxer</strong><br />
-A reddish on blue theme by user <strong>Boxer</strong> at <a target="_blank" href="https://forum.maboxlinux.org/">Mabox Forum</a>.</li>
 </ul>
 <p>Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual CSS colors can now be defined.</p>
 <p>Theme sample / template:</p>

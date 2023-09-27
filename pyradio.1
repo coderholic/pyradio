@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2023 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "August 2023" pyradio
+.TH pyradio 1 "October 2023" pyradio
 
 .SH Name
 .PP
@@ -49,16 +49,12 @@ Use this terminal for Desktop file instead of the auto-detected one. Use "none" 
 Use this as \fBpyradio\fR parameter in the Desktop File. Please replace hyphens with underscores when passing the parameter, for example: \fI--terminal-param\fR "\fB_p 3 _t light\fR" (which will result to "\fIpyradio \fB-p 3 -t light\fR").
 .IP \fB-tlp\fR,\ \fB--toggle-load-last-playlist
 Toggle autoload last opened playlist.
-.IP \fB-scd\fR,\fB--show-config-dir\fR
+.IP \fB-sd\fR,\fB--show-config-dir\fR
 Print config directory (\fI[CONFIG DIR]\fR) location and exit.
-.IP \fB-ocd\fR,\fB--open-config-dir\fR
+.IP \fB-od\fR,\fB--open-config-dir\fR
 Open config directory (\fI[CONFIG DIR]\fR) with default file manager.
-.IP \fB|\ \fR(\fBVertical\ line\fR\ or\ \fBPipe\ symbol\fR)
-Enable / disable recording.
-.IP \fB-U\fR,\ \fB--update\fR
-Update \fBpyradio\fR.
-.IP \fB-R\fR,\ \fB--uninstall\fR
-Uninstall \fBpyradio\fR.
+.IP \fB-or\fR,\fB--open-recordings\fR
+Open the Recordings folder.
 .IP \fB-oc\fR,\ \fB--open-cache\fR
 Open the Cache folder.
 .IP \fB-sc\fR,\ \fB--show-cache\fR
@@ -67,16 +63,24 @@ Show Cache contents.
 Clear Cache contents.
 .IP \fB-gc\fR,\ \fB--get-cache\fR
 Download source code, keep it in the cache and exit.
-.IP \fB--unlock
-Remove sessions' lock file.
 .IP \fB-us\fR,\ \fB--update_stations
 Update "\fIstations.csv\fR" (if needed).
 .IP \fB-lt\fR,\ \fB--log-titles\fR
 Log titles to file.
+.IP \fB-r\fR,\ \fB--record\fR
+Turn recording on (not available for VLC player on Windows).
 .IP \fB-d\fR,\fB\ \--debug
 Enable \fBDEBUG MODE\fR.
+.IP \fB-ul\fR,\ \fB--unlock\fR
+Remove sessions' lock file.
+.IP \fB-U\fR,\ \fB--update\fR
+Update \fBpyradio\fR.
+.IP \fB-R\fR,\ \fB--uninstall\fR
+Uninstall \fBpyradio\fR.
+.IP \fB-V\fR,\fB\ \--version\fR
+Display version information.
 .IP \fB-h\fR,\fB\ \--help
-Show usage information and exit.
+Display usage information and exit.
 
 .RE
 .PP
