@@ -205,26 +205,22 @@ If nothing else works, try the following command:
 
     parser.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
                         help='Toggle autoload last opened playlist.')
-    parser.add_argument('-scd', '--show-config-dir', action='store_true',
+    parser.add_argument('-sd', '--show-config-dir', action='store_true',
                         help='Print config directory [CONFIG DIR] location and exit.')
-    parser.add_argument('-ocd', '--open-config-dir', action='store_true',
+    parser.add_argument('-od', '--open-config-dir', action='store_true',
                         help='Open config directory [CONFIG DIR] with default file manager.')
-    parser.add_argument('--record', action='store_true',
-                        help='Turn recording on (not available for VLC player on Windows).')
     if platform.startswith('win'):
         parser.add_argument('--exe', action='store_true', default=False,
                             help='Show EXE file location (Windows only).')
-    parser.add_argument('-U', '--update', action='store_true',
-                        help='Update PyRadio.')
-    parser.add_argument('-R', '--uninstall', action='store_true',
-                        help='Uninstall PyRadio.')
+    parser.add_argument('-or', '--open-recordings', action='store_true',
+                       help='Open the Recordings folder.')
     if HAS_PIPX:
         parser.add_argument('-oc', '--open-cache', action='store_true',
-                           help='Open the Cache folder')
+                           help='Open the Cache folder.')
         parser.add_argument('-sc', '--show-cache', action='store_true',
-                           help='Show Cache contents')
+                           help='Show Cache contents.')
         parser.add_argument('-cc', '--clear-cache', action='store_true',
-                           help='Clear Cache contents')
+                           help='Clear Cache contents.')
         parser.add_argument('-gc', '--get-cache', action='store_true',
                             help='Download source code, keep it in the cache and exit.')
     else:
@@ -233,14 +229,20 @@ If nothing else works, try the following command:
         parser.add_argument('-cc', '--clear-cache', action='store_true', help=SUPPRESS)
         parser.add_argument('-gc', '--get-cache', action='store_true', help=SUPPRESS)
 
-    parser.add_argument('--unlock', action='store_true',
-                        help="Remove sessions' lock file.")
     parser.add_argument('-us', '--update-stations', action='store_true',
                         help='Update "stations.csv" (if needed).')
     parser.add_argument('-lt', '--log-titles', action='store_true',
                         help='Log titles to file.')
+    parser.add_argument('-r', '--record', action='store_true',
+                        help='Turn recording on (not available for VLC player on Windows).')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Start PyRadio in debug mode.')
+    parser.add_argument('-ul', '--unlock', action='store_true',
+                        help="Remove sessions' lock file.")
+    parser.add_argument('-U', '--update', action='store_true',
+                        help='Update PyRadio.')
+    parser.add_argument('-R', '--uninstall', action='store_true',
+                        help='Uninstall PyRadio.')
     parser.add_argument('-V', '--version', action='store_true',
                         help='Display version information.')
     ''' extra downloads
@@ -511,6 +513,10 @@ If nothing else works, try the following command:
 
         if args.open_config_dir:
             open_conf_dir(pyradio_config)
+            sys.exit()
+
+        if args.open_recordings:
+            open_conf_dir(pyradio_config, pyradio_config.recording_dir)
             sys.exit()
 
         if args.list_playlists:
@@ -921,23 +927,27 @@ def validate_user_config_dir(a_dir):
         return None
     return this_dir
 
-def open_conf_dir(cnf):
+def open_conf_dir(cnf, a_dir=None):
     import subprocess
     import os
     import platform
+    if a_dir is None:
+        op_dir = cnf.stations_dir
+    else:
+        op_dir = a_dir
     if platform.system().lower() == 'windows':
-        os.startfile(cnf.stations_dir)
+        os.startfile(op_dir)
     elif platform.system().lower() == 'darwin':
-        subprocess.Popen(['open', cnf.stations_dir])
+        subprocess.Popen(['open', op_dir])
     else:
         try:
             subprocess.Popen(
-                ['xdg-open', cnf.stations_dir],
+                ['xdg-open', op_dir],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
         except:
-            subprocess.Popen(['xdg-open', cnf.stations_dir])
+            subprocess.Popen(['xdg-open', op_dir])
 
 def get_format_string(stations):
     len0 = len1 = 0

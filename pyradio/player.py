@@ -209,6 +209,8 @@ class Player(object):
     process = None
     update_thread = None
 
+    buffering = False
+
     icy_title_prefix = 'Title: '
     title_prefix = ''
 
@@ -927,6 +929,8 @@ class Player(object):
                                 'Stream buffering done' in subsystemOut or \
                                 'Buffering ' in subsystemOut:
                             self.buffering = False
+                            with self.buffering_lock:
+                                self.buffering_change_function()
                             with self.status_update_lock:
                                 if version_info > (3, 0):
                                     self._icy_data['audio_format'] = subsystemOut.split('] ')[1].split(' (')[0]
@@ -988,7 +992,10 @@ class Player(object):
                                     # make sure title will not pop-up while Volume value is on
                                     if self.delay_thread is None:
                                         ok_to_display = True
-                                    self.buffering = False
+                                    # if self.PLAYER_NAME != 'vlc':
+                                    #     self.buffering = False
+                                    #     with self.buffering_lock:
+                                    #         self.buffering_change_function()
                                     if ok_to_display and self.playback_is_on:
                                         string_to_show = self.title_prefix + title
                                         self.outputStream.write(msg=string_to_show, counter='')
@@ -1256,6 +1263,8 @@ class Player(object):
                                             logger.info('====== playback-restarted\n{}\n\n'.format(self.oldUserInput))
                                             logger.info('{}\n\n'.format(d['event']))
                                             self.buffering = False
+                                            with self.buffering_lock:
+                                                self.buffering_change_function()
                                             if not self.playback_is_on:
                                                 ret = self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
                                             if not ret:
@@ -1623,6 +1632,8 @@ class Player(object):
                     if (logger.isEnabledFor(logging.INFO)):
                         logger.info('Icy-Title is NOT valid')
                     self.buffering = False
+                    with self.buffering_lock:
+                        self.buffering_change_function()
                     title = 'Playing: ' + self.name
                     string_to_show = self.title_prefix + title
                     if stop():
@@ -1723,6 +1734,8 @@ class Player(object):
         else:
             new_input = 'Playing: ' + self.name
         self.outputStream.write(msg=new_input, counter='')
+        with self.buffering_lock:
+            self.buffering_change_function()
         if self.oldUserInput['Title'] == '':
             self.oldUserInput['Input'] = new_input
         self.oldUserInput['Title'] = new_input
@@ -2280,7 +2293,6 @@ class MpvPlayer(Player):
         return self._do_save_volume(self.profile_token + '\nvolume={}\n')
 
     def _buildStartOpts(self, streamUrl, playList=False):
-        self.buffering = False
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         # logger.error('self.profile_name = "{}"'.format(self.profile_name))
         ''' Builds the options to pass to mpv subprocess.'''
@@ -2348,6 +2360,8 @@ class MpvPlayer(Player):
 
         ''' check if buffering '''
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
+        with self.buffering_lock:
+            self.buffering_change_function()
         logger.error('==== self.buffering = {}'.format(self.buffering))
 
         # logger.error('Opts:\n{}'.format(opts))
@@ -2750,7 +2764,6 @@ class MpPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
-        self.buffering = False
         opts = [self.PLAYER_CMD, '-vo', 'null', '-msglevel', 'all=6']
         # opts = [self.PLAYER_CMD, '-vo', 'null']
         monitor_opts = None
@@ -2826,6 +2839,8 @@ class MpPlayer(Player):
 
         ''' check if buffering '''
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
+        with self.buffering_lock:
+            self.buffering_change_function()
         logger.error('---- self.buffering = {}'.format(self.buffering))
 
         if not self.buffering:
@@ -3078,7 +3093,6 @@ class VlcPlayer(Player):
 
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to vlc subprocess.'''
-        self.buffering = False
         #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
         monitor_opts = None
         if self.WIN:
@@ -3149,6 +3163,8 @@ class VlcPlayer(Player):
 
         ''' check if buffering '''
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)
+        with self.buffering_lock:
+            self.buffering_change_function()
 
         return opts, monitor_opts
 

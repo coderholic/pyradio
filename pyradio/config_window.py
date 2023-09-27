@@ -1746,11 +1746,11 @@ class ExtraParameters(object):
                 col = curses.color_pair(11)
         return col
 
-    def set_player(self, a_player):
+    def set_player(self, a_player, from_keypress=False):
         if a_player in self._cnf.SUPPORTED_PLAYERS:
             logger.error('\n>>>==========')
             # logger.error('self._selections = {}'.format(self._selections))
-            if self._list:
+            if self._list and from_keypress:
                 self._selections[self._player] = [
                         self._list.selection,
                         self._list.startPos,
@@ -2176,14 +2176,14 @@ class PyRadioSelectPlayer(object):
                     if self.selection < 0:
                         self.selection = len(self._players) - 1
                     self.refresh_selection()
-                    self._extra.set_player(self.selected_player_name())
+                    self._extra.set_player(self.selected_player_name(), True)
 
                 elif char in (curses.KEY_DOWN, ord('j')):
                     self.selection += 1
                     if self.selection == len(self._players):
                         self.selection = 0
                     self.refresh_selection()
-                    self._extra.set_player(self.selected_player_name())
+                    self._extra.set_player(self.selected_player_name(), True)
 
             else:
                 ''' focus on parameters '''
