@@ -1838,7 +1838,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
                  can_delete_items=False,
                  validate_delete_entry=None,
                  entry_cannot_be_deleted_function=None,
-                 external_keypress_function=None
+                 external_keypress_function=None,
+                 items_changed_function=None
                  ):
         ''' Initialize the widget.
 
@@ -1968,6 +1969,9 @@ class SimpleCursesMenu(SimpleCursesWidget):
                    -1 - Cancel
                     1 - Continue
                     2 - Display help
+            items_changed_function
+                A function to execute when items have changed
+                (after adding, editing, deleting)
         '''
         self._focused = self._enabled = True
         self._bordered = bordered
@@ -2032,6 +2036,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._entry_cannot_be_added_function = entry_cannot_be_added_function
         self._entry_cannot_be_edited_function = entry_cannot_be_edited_function
         self._entry_cannot_be_deleted_function = entry_cannot_be_deleted_function
+        self._items_changed_function = items_changed_function
         self._selection = selection
         if global_functions is not None:
             self._global_functions = global_functions
@@ -2117,14 +2122,15 @@ class SimpleCursesMenu(SimpleCursesWidget):
     @property
     def selection(self):
         '''Returns the widget's max_height '''
+        logger.error('=-=-=- selection = {}'.format(self._selection))
         return self._selection
 
     @selection.setter
     def selection(self, value):
         if 0 <= value < len(self._items):
             self._set_selection(value)
-        else:
-            raise ValueError('selection out of bounds!')
+        # else:
+        #     raise ValueError('selection out of bounds!')
 
     @property
     def startPos(self):
@@ -2348,6 +2354,21 @@ class SimpleCursesMenu(SimpleCursesWidget):
                 self._captions = []
             self._showed = False
         self._scroll = True if len(self._items) > self._body_maxY else False
+        # if self._items_changed_function:
+        #     self._items_changed_function()
+
+    def edit_item(self, an_item_id, an_item, select=False):
+        ''' Edit an item of the list
+            Tip: to be used from the return of the
+                 add_item_function implementation
+                 after enabling can_add_items
+        '''
+        if 0 <= an_item_id < len(self._items):
+            self._items[an_item_id] = an_item
+            if select:
+                self._set_selection(an_item_id)
+            if self._items_changed_function:
+                self._items_changed_function()
 
     def add_item(self, an_item, select=False):
         ''' Add an item to the list
@@ -2358,16 +2379,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
         self._items.append(an_item)
         if select:
             self._set_selection(len(self._items) - 1)
-
-    def edit_item(self, index, an_item, select=False):
-        ''' Edit an item
-            Tip: to be used from the return of the
-                 edit_item_function implementation
-                 after enabling can_edit_items
-        '''
-        self._items[index] = an_item
-        if select:
-            self._set_selection(len(index) - 1)
+        if self._items_changed_function:
+            self._items_changed_function()
 
     def show(self, parent=None):
         ''' show the widget
@@ -2600,6 +2613,8 @@ class SimpleCursesMenu(SimpleCursesWidget):
         else:
             self._toggle_selected_item()
 
+        if self._items_changed_function:
+            self._items_changed_function()
         return len(self._items)
 
     def _toggle_selected_item(self):
@@ -2924,6 +2939,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
             if not self._toggle_selected_item():
                 self._refresh()
+            logger.error('j selection = {}'.format(self._selection))
 
         elif char in self._local_functions.keys():
             self._local_functions(char)

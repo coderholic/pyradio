@@ -1446,6 +1446,14 @@ class ExtraParameters(object):
     def params(self, val):
         raise ValueError('parameter is read only')
 
+    def edit_item(self, an_item_id, an_item, select=False):
+        if self._list:
+            self._list.edit_item(an_item_id, an_item, select)
+
+    def add_item(self, an_item, select=False):
+        if self._list:
+            self._list.add_item(an_item, select)
+
     def _validate_add_entry(self, index, item):
         return False if item.startswith('profile:') else True
 
@@ -1725,6 +1733,7 @@ class ExtraParameters(object):
                     entry_cannot_be_edited_function=self._entry_cannot_be_edited_function,
                     entry_cannot_be_deleted_function=self._entry_cannot_be_deleted_function,
                     on_select_callback_function=self._on_default_parameter_change,
+                    items_changed_function=self._update_items_dict,
                     )
             self._list.focused = not self.from_config
         self._win.refresh()
@@ -1751,12 +1760,7 @@ class ExtraParameters(object):
             logger.error('\n>>>==========')
             # logger.error('self._selections = {}'.format(self._selections))
             if self._list and from_keypress:
-                self._selections[self._player] = [
-                        self._list.selection,
-                        self._list.startPos,
-                        self._list.active
-                        ]
-                self._items_dict[self._player] = self._list.items[:]
+                self._update_items_dict()
             self._orig_player = self._player
             self._player = a_player
             self._items = self._items_dict[a_player]
@@ -1817,11 +1821,27 @@ class ExtraParameters(object):
                     self.selection = len(self._items) - 1
         self.refresh_win()
 
+    def _update_items_dict(self):
+        ''' pass _list content to self._items_dict '''
+        if self._list is not None:
+            self._selections[self._player] = [
+                    self._list.selection,
+                    self._list.startPos,
+                    self._list.active
+                    ]
+            self._items_dict[self._player] = self._list.items[:]
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('self._selections\n{0}\nself._items_dic\n{1}'.format(self._selections, self._items_dict))
+
     def save_results(self):
         ''' pass working parameters to original parameters
             effectively saving any changes.
         '''
+        if self._list:
+            self._update_items_dict()
+        # logger.error('\n\n')
         # logger.error('DE save_results')
+        # logger.error('DE self._player = {}'.format(self._player))
         # logger.error('DE 1 working_params = {}'.format(self._working_params))
         self._list_to_dict()
         # logger.error('DE 2 working_params = {}'.format(self._working_params))
@@ -2226,13 +2246,14 @@ class PyRadioSelectPlayer(object):
                 if self._parameter_editor.edit_string:
                     if self.editing == 1:
                         ''' add parameter  '''
-                        self._extra._items.append(self._parameter_editor.edit_string)
-                        self._extra.selection = len(self._extra._items) - 1
+                        self._extra.add_item(self._parameter_editor.edit_string, select=True)
+                        # self._extra._items.append(self._parameter_editor.edit_string)
+                        # self._extra.selection = len(self._extra._items) - 1
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('New parameter: ' + self._extra._items[-1])
                     else:
                         ''' change parameter '''
-                        self._extra._items[self._extra.selection] = self._parameter_editor.edit_string
+                        self._extra.edit_item(self._extra.selection, self._parameter_editor.edit_string)
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('New parameter value: ' + self._parameter_editor.edit_string)
 

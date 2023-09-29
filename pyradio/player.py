@@ -2298,7 +2298,7 @@ class MpvPlayer(Player):
         ''' Builds the options to pass to mpv subprocess.'''
 
         ''' Test for newer MPV versions as it supports different IPC flags. '''
-        p = subprocess.Popen([self.PLAYER_CMD, '--no-video',  '--input-ipc-server'], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
+        p = subprocess.Popen([self.PLAYER_CMD, '--no-video',  '--input-ipc-server=' + self.mpvsocket], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=False)
         out = p.communicate()
         if 'not found' not in str(out[0]):
             if logger.isEnabledFor(logging.DEBUG):

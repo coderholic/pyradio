@@ -2470,17 +2470,9 @@ remote_control_server_auto_start = {21}
                         if first_param:
                             txt = '''# Player Extra parameters section
 #
-# Each supported player can have up to 9 entries in this section,
-# specifying extra parameters to be used when it is executed.
+# Each supported player can have any number of entries in this
+# section, specifying extra parameters to be used when it is executed.
 # The format is "[player name]_parameter=[parameters]"
-# The parameter part can either be:
-# 1) "profile:[name of profile]" or 2) [prayer parameters]
-# When (1) is used, the [name of profile] should exist in the
-# player's config file (otherwise it will be created).
-# The use of profiles will be silently ignored for VLC, which
-# does not support profiles.
-# When (2) is used, the parameters are added to those specified
-# at PyRadio's default profile (again not for VLC).
 # An asterisk will indicate the parameter to be used as default.
 
 # {} extra parameters\n'''
