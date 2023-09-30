@@ -1327,6 +1327,8 @@ class PyRadioConfig(PyRadioStations):
 
     start_colors_at = 0
 
+    buffering_data = []
+
     def __init__(self, user_config_dir=None):
         self.backup_player_params = None
         self.player = ''

@@ -2319,6 +2319,8 @@ class MpvPlayer(Player):
             else:
                 opts = [self.PLAYER_CMD, '--no-video', '--quiet', self._url_to_use(streamUrl), '--input-unix-socket=' + self.mpvsocket]
 
+        if self._cnf.buffering_data:
+            opts.extend(self._cnf.buffering_data)
 
         ''' this will set the profile too '''
         params = self.params[self.params[0]]
@@ -2765,6 +2767,8 @@ class MpPlayer(Player):
     def _buildStartOpts(self, streamUrl, playList=False):
         ''' Builds the options to pass to mplayer subprocess.'''
         opts = [self.PLAYER_CMD, '-vo', 'null', '-msglevel', 'all=6']
+        if self._cnf.buffering_data:
+            opts.extend(self._cnf.buffering_data)
         # opts = [self.PLAYER_CMD, '-vo', 'null']
         monitor_opts = None
 
@@ -3137,6 +3141,9 @@ class VlcPlayer(Player):
                 opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
                         '-Irc', '-vv', self._url_to_use(streamUrl)]
 
+        if self._cnf.buffering_data:
+            opts.extend(self._cnf.buffering_data)
+
         ''' this will set the profile too '''
         if self.params[0] > 1:
             params = self.params[self.params[0]]
@@ -3477,6 +3484,118 @@ class VlcPlayer(Player):
                 rep = True
                 break
         #self.print_response(rep)
+
+
+class PlayerCache(object):
+
+    _dirty = False
+
+    _data = {
+            'mpv': [
+                '--cache-secs=30',
+                '--cache=yes',
+                '--cache-on-disk=yes',
+                '--demuxer-cache-wait=yes',
+                '--demuxer-readahead-secs=29',
+                ],
+            'mplayer': [
+                '-cache=1024',
+                '-cache-min=80'
+                ],
+            'vlc': [
+                 '--network-caching',
+                 '10000'
+                 ]
+            }
+
+    def __init__(self, player_name, data_dir, recording):
+        self._player_name = player_name
+        self._data_file = os.path.join(data_dir, 'buffers')
+        self_recording = recording
+        self._read()
+
+    def __del__(self):
+        self._save()
+
+    @property
+    def cache(self):
+        if self._player_name == 'mpv':
+            self._on_disk()
+        return self._data[self._player_name]
+
+    @property
+    def delay(self):
+        if self._player_name == 'mpv':
+            return int(self._data['mpv'][0].replace('--cache-secs=', ''))
+        elif self._player_name == 'mplayer':
+            return int(self._data['mplayer'][0].replace('-cache=', ''))
+        else:
+            return int(self._data['vlc'][1])
+
+    @delay.setter
+    def delay(self, a_delay):
+        try:
+            x = int(a_delay)
+        except ValueError:
+            return
+        if self._player_name == 'vlc':
+            x *= 1000
+
+        if self._player_name == 'vlc':
+            self._data['vlc'][1] = str(x)
+        else:
+            str_x = str(x)
+            if self._player_name == 'mpv':
+                self._data['mpv'][0] = '--cache-secs=' + str_x
+                x -= 1
+                self._data['mpv'][-1] = '--demuxer-readahead-secs=' + str(x)
+            elif self._player_name == 'mplayer':
+                self._data['mplayer'][0] = '-cache=' + str_x
+        self._dirty = True
+
+    def _read(self):
+        if os.path.exists(self._data_file):
+            try:
+                with open(self._data_file, 'r', encoding='utf-8') as f:
+                    line = f.read()
+                sp = line.split(',')
+                orig_player_name = self._player_name
+                for i, a_player in enumerate(('mpv', 'mplayer', 'vlc')):
+                    self._player_name = a_player
+                    self.delay = sp[i]
+                self._player_name = orig_player_name
+            except:
+                pass
+
+    def _save(self):
+        if self._dirty:
+            mpl = int(self._data['vlc'][1])
+            i_mpl = int(int(mpl) / 1000)
+            msg = self._data['mpv'][0].replace('--cache-secs=', '') + ',' + \
+                    self._data['mplayer'][0].replace('-cache=', '') + ',' + \
+                    str(i_mpl)
+            try:
+                with open(self._data_file, 'w', encoding='utf-8') as f:
+                    f.write(msg)
+            except:
+                pass
+            self._dirty = False
+
+    def _on_disk(self):
+        if self._recording():
+            self._data['mpv'][2] = '--cache-on-disk=no'
+            return
+        try:
+            vitr = psutil.virtual_memory()
+        except:
+            self._data['mpv'][2] = '--cache-on-disk=no'
+            return
+
+        if virt.available > 1073741824:
+            self._data['mpv'][2] = '--cache-on-disk=no'
+        else:
+            self._data['mpv'][2] = '--cache-on-disk=yes'
+
 
 def probePlayer(config, requested_player=''):
     ''' Probes the multimedia players which are
