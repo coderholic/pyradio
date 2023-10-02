@@ -119,7 +119,7 @@ class Log(object):
               help_msg=False,
               error_msg=False,
               notify_function=None):
-        logger.error('**** Log.write: msg = "{}"'.format(msg))
+        # logger.error('**** Log.write: msg = "{}"'.format(msg))
         if self.cursesScreen:
             with self.lock:
                 if msg:
@@ -175,7 +175,7 @@ class Log(object):
                     self._player_stopped = 0
                     return
                 ''' update main message '''
-                logger.error('*** msg = "{}"'.format(msg))
+                # logger.error('*** msg = "{}"'.format(msg))
                 if self.msg:
                     self.cursesScreen.erase()
                     d_msg = ''

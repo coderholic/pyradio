@@ -1233,7 +1233,7 @@ class PyRadio(object):
                     display = False
             if display:
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Displaying mode {}'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
+                    # logger.debug('Displaying mode {}'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
                     # if self.ws.MODE_NAMES[self._redisplay_list[n][0]] != 'PLAYER_PARAMS_MODE':
                     self._redisplay[self._redisplay_list[n][0]]()
 
@@ -4535,7 +4535,6 @@ __|Remote Control Server| cannot be started!__
         if self._limited_height_mode or \
                 self._limited_width_mode:
             return
-        logger.error('\n\n')
         b_header = 'B' if self.player.buffering else ''
         logger.info('player_disappeared = {}'.format(player_disappeared))
         if self.player.recording == 0:
@@ -4548,7 +4547,7 @@ __|Remote Control Server| cannot be started!__
                     self.outerBodyWin.addstr(
                         0, 1, '────'.encode('utf-8'), curses.color_pair(13)
                     )
-            logger.error('self.player.buffering = {}'.format(self.player.buffering))
+            # logger.error('self.player.buffering = {}'.format(self.player.buffering))
             if self.player.buffering:
                 self.outerBodyWin.addstr(0, 1, '[', curses.color_pair(13))
                 self.outerBodyWin.addstr(b_header, curses.color_pair(4))
@@ -5037,7 +5036,6 @@ __|Remote Control Server| cannot be started!__
             self.refreshBody()
 
     def _update_transparency(self, changed_from_config_window, calculate_transparency_function):
-        logger.info('|||| _update_transparency Launched')
         self._toggle_transparency(
                 changed_from_config_window=changed_from_config_window,
                 calculate_transparency_function=calculate_transparency_function

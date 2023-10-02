@@ -889,7 +889,6 @@ class PyRadioConfigWindow(object):
             elif sel == 'force_transparency':
                 #self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]
                 self._config_options['force_transparency'][1] = not self._config_options['force_transparency'][1]
-                logger.info('|||| Launching self._update_transparency_function')
                 self._update_transparency_function(
                     changed_from_config_window=True,
                     calculate_transparency_function=self.calculate_transparency
@@ -1320,7 +1319,6 @@ class ExtraParameters(object):
                  entry_cannot_be_deleted_function=None,
                  global_functions=None):
         self._list = None
-        logger.error('player = {}'.format(player))
         self._cnf = config
         self._orig_params = deepcopy(self._cnf.params)
         self._global_functions = set_global_functions(global_functions)
@@ -1757,8 +1755,8 @@ class ExtraParameters(object):
 
     def set_player(self, a_player, from_keypress=False):
         if a_player in self._cnf.SUPPORTED_PLAYERS:
-            logger.error('\n>>>==========')
-            # logger.error('self._selections = {}'.format(self._selections))
+            # logger.error('\n>>>==========')
+            # # logger.error('self._selections = {}'.format(self._selections))
             if self._list and from_keypress:
                 self._update_items_dict()
             self._orig_player = self._player
@@ -1769,11 +1767,11 @@ class ExtraParameters(object):
                 self._list.selection = self._selections[self._player][0]
                 self._list._start_pos = self._selections[self._player][1]
                 self._list.active = self._selections[self._player][2]
-            logger.error('self._items_dict = {}'.format(self._items_dict))
-            logger.error('a_player = {}'.format(a_player))
-            # logger.error('self._items = {}'.format(self._items))
-            # logger.error('self._selections = {}'.format(self._selections))
-            logger.error('\n<<<==========')
+            # logger.error('self._items_dict = {}'.format(self._items_dict))
+            # logger.error('a_player = {}'.format(a_player))
+            # # logger.error('self._items = {}'.format(self._items))
+            # # logger.error('self._selections = {}'.format(self._selections))
+            # logger.error('\n<<<==========')
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('changing player to "{0}", loading times items: {1}'.format(self._player, self._items))
             self.refresh_win()
@@ -2143,7 +2141,6 @@ class PyRadioSelectPlayer(object):
                     return 1
 
             elif char == ord('r'):
-                logger.error('\n\n************\n\n')
                 self.reset()
 
             elif char == ord('s'):

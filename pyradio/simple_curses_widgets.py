@@ -2121,8 +2121,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
     @property
     def selection(self):
-        '''Returns the widget's max_height '''
-        logger.error('=-=-=- selection = {}'.format(self._selection))
+        '''Returns the widget's selection '''
         return self._selection
 
     @selection.setter
@@ -2134,7 +2133,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
     @property
     def startPos(self):
-        '''Returns the widget's max_height '''
+        '''Returns the widget's startPos '''
         return self._start_pos
 
     @startPos.setter
@@ -2403,7 +2402,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
             new_win = True
 
         if self._too_small:
-            logger.error('Window is TOO SMALL')
+            # logger.error('Window is TOO SMALL')
             self._win.addstr(1, 1, ' Window is', self._color)
             self._win.addstr(2, 1, ' Too small', self._color)
             self._win.refresh()
@@ -2580,13 +2579,13 @@ class SimpleCursesMenu(SimpleCursesWidget):
         # log_it('\n\n2 mov = {0}, sel = {1}, items = {2}'.format(movement, self._selection, len(self._items)))
 
     def delete_item(self, index):
-        logger.info('items before delete\n{}'.format(self._items))
+        # logger.info('items before delete\n{}'.format(self._items))
         d = deque(self._items)
         d.rotate(-index)
         ret = d.popleft()
         d.rotate(index)
         self._items = list(d)
-        logger.info('items after delete\n{}'.format(self._items))
+        # logger.info('items after delete\n{}'.format(self._items))
         # log_it('=======> id = {0}, captions = {1}'.format(index, self._captions))
         if self._has_captions:
             for i in range(0, len(self._captions)):
@@ -2939,7 +2938,6 @@ class SimpleCursesMenu(SimpleCursesWidget):
 
             if not self._toggle_selected_item():
                 self._refresh()
-            logger.error('j selection = {}'.format(self._selection))
 
         elif char in self._local_functions.keys():
             self._local_functions(char)
