@@ -861,6 +861,7 @@ class Player(object):
                             logger.debug('User input: {}'.format(disp))
                         else:
                             logger.debug('User input: {}'.format(subsystemOut))
+                            pass
 
                     with recording_lock:
                         self.oldUserInput['Input'] = subsystemOut
@@ -885,7 +886,8 @@ class Player(object):
                                         sp = subsystemOut.split(token)
                                         subsystemOut = sp[0]
                                 with recording_lock:
-                                    self.volume = ''.join(c for c in subsystemOut if c.isdigit())
+                                    sp = subsystemOut.split(self_volume_string)
+                                    self.volume = ''.join(c for c in sp[-1] if c.isdigit())
 
                                     self_show_volume = self.show_volume
                                     self_oldUserInput_Title = self.oldUserInput['Title']
@@ -3592,7 +3594,7 @@ class PlayerCache(object):
             self._data['mpv'][2] = '--cache-on-disk=no'
             return
 
-        if virt.available > 1073741824:
+        if virt.available > 500000:
             self._data['mpv'][2] = '--cache-on-disk=no'
         else:
             self._data['mpv'][2] = '--cache-on-disk=yes'
