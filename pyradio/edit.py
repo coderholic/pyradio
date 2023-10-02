@@ -12,6 +12,7 @@ try:
 except:
     from urlparse import urlparse
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesCheckBox, SimpleCursesHorizontalPushButtons, DisabledWidget
+from .player import PlayerCache
 from .log import Log
 
 import locale
@@ -1228,6 +1229,139 @@ class PyRadioRenameFile(object):
         #self._show_title()
         #self.show()
         return self._get_result(ret)
+
+
+class PyRadioBuffering(object):
+
+    _text = 'Buffer size in seconds: '
+    _help_text = ' Help '
+    _note_text = ' Note '
+    _max_lines = 12
+    _cache_data  = None
+    _step = 1
+    _big_step = 5
+    _limit = 60
+
+    def __init__(self,
+                 parent,
+                 config,
+                 player,
+                 global_functions=None):
+        self._parent = parent
+        self._cnf = config
+        self._player = player
+        self._global_functions = global_functions
+        if self._global_functions is None:
+            self._global_functions = {}
+        self.recording = lambda: self._player.recording
+        self._title = ' ' + self._player.PLAYER_NAME + ' Buffering '
+        if self._player.PLAYER_NAME == 'mplayer':
+            self._text = 'Buffer size in KBytes: '
+            self._step = 500
+            self._big_step = 1000
+            self._limit = 100000
+        self._cache_data = PlayerCache(
+                player.PLAYER_NAME,
+                self._cnf.data_dir,
+                lambda: self._player.recording
+                )
+        if self._cnf.buffering_data:
+            self._delay = self._cache_data.delay
+        else:
+            self._delay = 0
+
+    def save(self):
+        self._cache_data._save()
+
+    def show(self, parent=None):
+        if parent:
+            self._parent = parent
+        y, x = self._parent.getmaxyx()
+        new_y = int((y - self._max_lines) / 2) + 1
+        new_x = int((x - len(self._text) - 9 - 4) / 2)
+        self.MaxX = len(self._text) + 9 + 4
+        self._win = None
+        if y < self._max_lines + 2 or x < self.MaxX + 2:
+            self._win = curses.newwin(3, 20, int((y-2)/2), int((x - 20) / 2))
+            self._win.bkgdset(' ', curses.color_pair(3))
+            self._win.erase()
+            self._win.box()
+            self._win.addstr(1, 2, 'Window too small', curses.color_pair(10))
+        else:
+
+            self._win = curses.newwin(self._max_lines, self.MaxX, new_y, new_x)
+            self._win.bkgdset(' ', curses.color_pair(3))
+            self._win.erase()
+            self._win.box()
+
+            # show title
+            x = int((self.MaxX - len(self._title)) / 2)
+            self._win.addstr(0, x, self._title, curses.color_pair(11))
+
+            # show content
+            self._win.addstr(2, 4, self._text, curses.color_pair(10))
+            self._win.addstr('{}'.format(self._delay), curses.color_pair(11))
+
+            # show help
+            try:
+                self._win.addstr(4, 2, '─' * (self.MaxX - 4), curses.color_pair(3))
+            except:
+                self._win.addstr(4, 2, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(3))
+            self._win.addstr(4, int((self.MaxX - len(self._help_text))/2), self._help_text, curses.color_pair(3))
+            self._win.addstr(5, 2, 'j k UP DOWN', curses.color_pair(11))
+            self._win.addstr(6, 2, 'PgUp PgDown', curses.color_pair(11))
+            self._win.addstr('     Adjust value', curses.color_pair(10))
+            self._win.addstr(7, 2, 'r', curses.color_pair(11))
+            self._win.addstr('               Load saved value', curses.color_pair(10))
+            self._win.addstr(8, 2, 'z', curses.color_pair(11))
+            self._win.addstr('               No buffering', curses.color_pair(10))
+            self._win.addstr(9, 2, 'ENTER s', curses.color_pair(11))
+            self._win.addstr('         Accept value', curses.color_pair(10))
+            self._win.addstr(10, 2, 'Esc q h RIGHT', curses.color_pair(11))
+            self._win.addstr('   Cancel operation', curses.color_pair(10))
+        self._win.refresh()
+
+    def keypress(self, char):
+        """ Returns:
+                -1: Cancel  - []
+                 0: go on   - []
+                 1: Ok      = [buffering parameters]
+        """
+        if char in self._global_functions.keys():
+            self._global_functions[char]()
+
+        elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'), ord('s')):
+            self._cache_data.delay = self._delay
+            return 1, self._cache_data.cache
+
+        elif char in (curses.KEY_EXIT, 27, ord('q'), ord('h'), curses.KEY_LEFT):
+            return -1, []
+
+        elif char in (ord('j'), curses.KEY_UP,
+                      ord('k'), curses.KEY_DOWN,
+                      curses.KEY_NPAGE, curses.KEY_PPAGE,
+                      ord('z'), ord('r')
+                      ):
+            if char == ord('r'):
+                self._delay = self._cache_data.delay
+            elif char in (ord('k'), curses.KEY_UP):
+                self._delay += self._step
+            elif char in (ord('j'), curses.KEY_DOWN):
+                self._delay -= self._step
+            elif char == curses.KEY_NPAGE:
+                self._delay -= self._big_step
+            elif char == curses.KEY_PPAGE:
+                self._delay += self._big_step
+            elif char == ord('z'):
+                self._delay = 0
+
+            if self._delay < 0:
+                self._delay = 0
+            elif self._delay > self._limit:
+                self._delay = self._limit
+            self._win.addstr(2, len(self._text) + 4, '{:<7}'.format(self._delay), curses.color_pair(11))
+            self._win.refresh()
+        return 0, []
 
 
 class PyRadioConnectionType(object):

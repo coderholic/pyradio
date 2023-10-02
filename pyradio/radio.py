@@ -35,7 +35,7 @@ from .common import *
 from .window_stack import Window_Stack
 from .config_window import *
 from .log import Log
-from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType, PyRadioServerWindow
+from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering
 from .themes import *
 from .cjkwrap import cjklen, cjkcenter, cjkslices
 from . import player
@@ -391,6 +391,8 @@ class PyRadio(object):
     _remote_control_window = None
     _group_selection_window = None
 
+    _buffering_win = None           # Cache editing window
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -580,6 +582,7 @@ class PyRadio(object):
             self.ws.GROUP_HELP_MODE: self._show_group_help,
             self.ws.RECORD_WINDOW_MODE: self._show_recording_toggle_window,
             self.ws.WIN_VLC_NO_RECORD_MODE: self._show_win_no_record,
+            self.ws.BUFFER_SET_MODE: self._show_buffer_set,
         }
 
         ''' list of help functions '''
@@ -914,6 +917,7 @@ class PyRadio(object):
             self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
             self.player.buffering_change_function = self._show_recording_status_in_header
             self.player.buffering_lock = self._buffering_lock
+            self._cnf.buffering_data = []
             if self._request_recording:
                 if not (platform.startswith('win') and \
                         self.player.PLAYER_NAME == 'vlc'):
@@ -2263,6 +2267,9 @@ class PyRadio(object):
             # with self._buffering_lock:
             #     self._show_recording_status_in_header()
 
+    def _show_buffer_set(self):
+        pass
+
     def _show_player_is_stopped(self, from_update_thread=False):
         if from_update_thread:
             msg_id = 2
@@ -3408,6 +3415,7 @@ __|Remote Control Server| cannot be started!__
                  self.ws.previous_operation_mode == self.ws.NORMAL_MODE):
             txt = '''\\      |Open previous playlist.
                      ]      |Open first opened playlist.
+                     b      |Set player |b|uffering.
                      l      |Toggle |Open last playlist|.
                      m      |Cahnge |m|edia player.
                      n      |Create a |n|ew playlist.
@@ -6993,6 +7001,22 @@ __|Remote Control Server| cannot be started!__
                                 mode_to_set=self.ws.NORMAL_MODE,
                                 callback_function=self.refreshBody)
 
+            elif char == ord('b'):
+                self._update_status_bar_right(status_suffix='')
+                if self.ws.operation_mode == self.ws.NORMAL_MODE:
+                    self._buffering_win = PyRadioBuffering(
+                            parent=self.outerBodyWin,
+                            config=self._cnf,
+                            player=self.player,
+                            global_functions=self._global_functions
+                            )
+                    self.ws.operation_mode = self.ws.BUFFER_SET_MODE
+                    self._buffering_win.show()
+                else:
+                    self._backslash_pressed = False
+                    self._print_not_applicable()
+                    return
+
             else:
                 ''' ESC or invalid char pressed - leave \ mode '''
                 self._update_status_bar_right(status_suffix='')
@@ -7158,6 +7182,7 @@ __|Remote Control Server| cannot be started!__
                 self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
                 self.player.buffering_change_function = self._show_recording_status_in_header
                 self.player.buffering_lock = self._buffering_lock
+                self._cnf.buffering_data = []
                 if not (self.player.PLAYER_NAME == 'vlc' and \
                         platform.startswith('win')):
                     self.player.recording = to_record
@@ -7278,6 +7303,21 @@ __|Remote Control Server| cannot be started!__
                 self._simple_schedule = None
                 self.ws.close_window()
                 self.refreshBody()
+
+        elif self.ws.operation_mode == self.ws.BUFFER_SET_MODE:
+            ret, buf = self._buffering_win.keypress(char)
+            if ret == 0:
+                return
+            elif ret == 1:
+                self._cnf.buffering_data = buf[:]
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('buffering data = {}'.format(buf))
+                self._buffering_win.save()
+                self._buffering_win = None
+            elif ret == -1:
+                self._buffering_win = None
+            self.ws.close_window()
+            self.refreshBody()
 
         elif self.ws.operation_mode == self.ws.CONFIG_MODE and \
                 char not in self._chars_to_bypass:

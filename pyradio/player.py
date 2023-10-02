@@ -3492,26 +3492,26 @@ class PlayerCache(object):
 
     _data = {
             'mpv': [
-                '--cache-secs=30',
+                '--cache-secs=20',
                 '--cache=yes',
                 '--cache-on-disk=yes',
                 '--demuxer-cache-wait=yes',
                 '--demuxer-readahead-secs=29',
                 ],
             'mplayer': [
-                '-cache=1024',
+                '-cache=2000',
                 '-cache-min=80'
                 ],
             'vlc': [
                  '--network-caching',
-                 '10000'
+                 '20'
                  ]
             }
 
     def __init__(self, player_name, data_dir, recording):
         self._player_name = player_name
         self._data_file = os.path.join(data_dir, 'buffers')
-        self_recording = recording
+        self._recording = recording
         self._read()
 
     def __del__(self):
@@ -3521,7 +3521,11 @@ class PlayerCache(object):
     def cache(self):
         if self._player_name == 'mpv':
             self._on_disk()
-        return self._data[self._player_name]
+        if self._player_name != 'vlc':
+            return self._data[self._player_name]
+        out = self._data['vlc']
+        out[1] = str(int(out[1]) * 1000)
+        return out
 
     @property
     def delay(self):
@@ -3538,8 +3542,6 @@ class PlayerCache(object):
             x = int(a_delay)
         except ValueError:
             return
-        if self._player_name == 'vlc':
-            x *= 1000
 
         if self._player_name == 'vlc':
             self._data['vlc'][1] = str(x)
@@ -3582,11 +3584,11 @@ class PlayerCache(object):
             self._dirty = False
 
     def _on_disk(self):
-        if self._recording():
+        if self._recording() > 0:
             self._data['mpv'][2] = '--cache-on-disk=no'
             return
         try:
-            vitr = psutil.virtual_memory()
+            virt = psutil.virtual_memory()
         except:
             self._data['mpv'][2] = '--cache-on-disk=no'
             return
