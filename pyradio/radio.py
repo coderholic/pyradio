@@ -30,6 +30,7 @@ try:
 except:
     HAVE_PSUTIL = False
 
+from . player import PlayerCache
 from .config import HAS_REQUESTS, HAS_DNSPYTHON
 from .common import *
 from .window_stack import Window_Stack
@@ -2268,7 +2269,7 @@ class PyRadio(object):
             #     self._show_recording_status_in_header()
 
     def _show_buffer_set(self):
-        pass
+        self._buffering_win.show(parent=self.bodyWin)
 
     def _show_player_is_stopped(self, from_update_thread=False):
         if from_update_thread:
@@ -3415,7 +3416,7 @@ __|Remote Control Server| cannot be started!__
                  self.ws.previous_operation_mode == self.ws.NORMAL_MODE):
             txt = '''\\      |Open previous playlist.
                      ]      |Open first opened playlist.
-                     b      |Set player |b|uffering.
+                     b B    |Set player |b|uffering.
                      l      |Toggle |Open last playlist|.
                      m      |Cahnge |m|edia player.
                      n      |Create a |n|ew playlist.
@@ -7000,6 +7001,31 @@ __|Remote Control Server| cannot be started!__
                                 callback_function=self.refreshBody)
 
             elif char == ord('b'):
+                self._update_status_bar_right(status_suffix='')
+                if self._cnf.buffering_data:
+                    self._cnf.buffering_data = []
+                    self._show_notification_with_delay(
+                            txt='___Buffering disabled___',
+                            mode_to_set=self.ws.NORMAL_MODE,
+                            callback_function=self.refreshBody)
+                else:
+                    x = PlayerCache(
+                            self.player.PLAYER_NAME,
+                            self._cnf.data_dir,
+                            lambda: self.player.recording
+                            )
+                    self._cnf.buffering_data = x.cache[:]
+                    self._show_notification_with_delay(
+                            txt='___Buffering set to {0} {1}___'.format(
+                                    x.delay,
+                                    'KBytes' if self.player.PLAYER_NAME == 'mplayer' else 'seconds',
+                                ),
+                            mode_to_set=self.ws.NORMAL_MODE,
+                            callback_function=self.refreshBody)
+                    x = None
+                return
+
+            elif char == ord('B'):
                 self._update_status_bar_right(status_suffix='')
                 if self.ws.operation_mode == self.ws.NORMAL_MODE:
                     self._buffering_win = PyRadioBuffering(

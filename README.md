@@ -50,6 +50,10 @@ If you face this situation, please refer to [this page](pip-error.md) to resolve
     * [MPV](#mpv)
     * [MPlayer](#mplayer)
     * [VLC](#vlc)
+* [Buffering](#buffering)
+    * [Parameters used](#parameters-used)
+    * [Customizing the buffering behaviour](#customizing-the-buffering-behaviour)
+    * [How it works](#how-it-works)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
 * [PyRadio Themes](#pyradio-themes)
@@ -756,7 +760,7 @@ Example:
     volstep=1
     volume=50
 
-**Note:** Starting with **PyRadio v. 0.8.9**, *mplayer*'s default profile will use its internal mixer to adjust its volume; this is accompliced using the "*softvol=1*" and "*softvol-max=300*" lines above. The user may choose to remove these lines from the config (to activate system-wide volume adjustment) or add them to the config (in case the profile was created by an older **PyRadio** version).
+**Note:** Starting with **PyRadio v. 0.8.9**, *mplayer*'s default profile will use its internal mixer to adjust its volume; this is accomplished using the "*softvol=1*" and "*softvol-max=300*" lines above. The user may choose to remove these lines from the config (to activate system-wide volume adjustment) or add them to the config (in case the profile was created by an older **PyRadio** version).
 
 ### VLC
 
@@ -767,6 +771,56 @@ In the past, **VLC** would just use any volume setting it had saved from a previ
 This means that **VLC** will start and connect to a station, use whatever volume level it's stored for it and then **PyRadio** will reset the volume to the desired one (as saved within **PyRadio**).
 
 The volume will be saved is a file called *vlc.conf* and reside withing the *data* directory, inside **PyRadio**'s configuration folder.
+
+## Buffering
+
+When a station is slow (or the internet connection is slow), one might get to a situation where the connection timeout will run out before the connection with the station can be established. Even worse, **PyRadio** will connect to the station, but the sound will be choppy and crackling.
+
+The solution is to use a large enough **buffer** to connect to the station; this will effectively make **PyRadio** connect to the station and start receiving data, but will not start playback until the buffer is full.
+
+All **PyRadio** supported support buffering, using a number of command line parameters to actually set it up. **PyRadio** will remove all this complexity by making is as simple as inserting a single value to the "*Buffering*" window, shown below.
+
+![PyRadio Buffering Window](https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg)
+
+The window opens by pressing "**\\B**" while in the **Main** mode.
+
+It will display the current buffer size (0 means no buffering), and will permit to adjust it, or use the previously used value (pressing "**r**").
+
+In any case, one can enable or disable the use of buffering by pressing "**\\b**" (using either the default value or the one set in the "*Buffering*" window).
+
+### Parameters used
+
+The following table shows the command line parameters used by **PyRadio** when the "*Buffering*" window is used to set up buffering.
+
+| mpv<br>(X in seconds)          | mplayer<br>(X in KBytes) | vlc<br>(X in seconds)    |
+|--------------------------------|--------------------------|--------------------------|
+| --demuxer-readahead-secs=X-1   | -cache X                 | --network-caching X*1000 |
+| --demuxer-cache-wait=yes       | -cache-min 80            |                          |
+| --cache=yes                    |                          |                          |
+| --cache-secs=X                 |                          |                          |
+| --cache-on-disk=yes/no \*      |                          |                          |
+
+\* disabled if more than 300KB of memory is free
+
+### Customizing the buffering behaviour
+
+In case one wants to use a different set of parameters (when using **mpv** or **mplayer**, but not **vlc**), one would just not use the integrated solution; one would just use a **profile**.
+
+Please refer to the players' documentation on profiles and the "[Player default volume level](#player-default-volume-level)" section in this document.
+
+As long as the word "**cache**" is contained in the profile's name, **PyRadio** will understand this is a buffering profile and act accordingly. But it's up to the user to make sure this presupposition is honored.
+
+### How it works
+
+When buffering is enabled, and a connection to a station initializes, **PyRadio** will display a "**[B]**" at the top left corner of the window, and display "**Buffering:**" and the name of the station in the status bar, until it get a token that the buffering has stopped.
+
+![PyRadio Buffering](https://members.hellug.gr/sng/pyradio/pyradio-b.jpg)
+
+An example is shown in the image above.
+
+Now, this behaviour depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.
+
+It should be noted that, no volume adjustment can be preformed while buffering.
 
 ## Displaying Station Info
 

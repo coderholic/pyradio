@@ -450,10 +450,10 @@ else
     fi
     if [ -z "$PIPX_ISOLATE" ]
     then
-        pipx install $PIPX_EDITABLE --system-site-packages --force . || pipx_error
+        python3 -m pipx install $PIPX_EDITABLE --system-site-packages --force . || pipx_error
         inst_type=1
     else
-        pipx install $PIPX_EDITABLE --force . || pipx_error
+        python3 -m pipx install $PIPX_EDITABLE --force . || pipx_error
         [ -z "$PIPX_EDITABLE" ] && \
             cat requirements_pipx.txt | sed -e 's/#.*//' | xargs pipx inject pyradio
         inst_type=2

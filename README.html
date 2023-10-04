@@ -104,6 +104,12 @@ a:visited{color: SaddleBrown;}
 <li><a href="#mplayer">MPlayer</a></li>
 <li><a href="#vlc">VLC</a></li>
 </ul></li>
+<li><a href="#buffering">Buffering</a>
+<ul>
+<li><a href="#parameters-used">Parameters used</a></li>
+<li><a href="#customizing-the-buffering-behaviour">Customizing the buffering behaviour</a></li>
+<li><a href="#how-it-works">How it works</a></li>
+</ul></li>
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
 <li><a href="#pyradio-themes">PyRadio Themes</a>
@@ -205,6 +211,26 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
+
+2023-10-04 s-n-g
+    * version 0.9.2.14
+    * adding players buffering
+    * [B] will be displayed at top left corner of the window
+      when player is buffering
+    * adding "Force transparency" config option (as per #201)
+    * redisigning players' extra parameters window
+    * removing command line parameters -ep, -ap, lp
+      and changing -ocd etc.
+    * Windows: MPV installation will check CPU flags to
+      download V3 or normal mpv release
+    * fix_pyradio_desktop_file: parameters will be placed
+      after terminal name (before -e)
+    * fixing mpv parameter which might throw a warning
+      which would break the TUI
+    * fixing mplayer volume parsing error
+    * fixing a couple of python2 crashes
+    * updating build_install_pyradio (as per #203)
+    * updating docs
 
 2023-07-15 s-n-g
     * version 0.9.2.13
@@ -1542,12 +1568,76 @@ softvol=1
 softvol-max=300
 volstep=1
 volume=50</pre>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Starting with <strong>PyRadio v. 0.8.9</strong>, <em>mplayer</em>’s default profile will use its internal mixer to adjust its volume; this is accompliced using the “<em>softvol=1</em>” and “<em>softvol-max=300</em>” lines above. The user may choose to remove these lines from the config (to activate system-wide volume adjustment) or add them to the config (in case the profile was created by an older <strong>PyRadio</strong> version).</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Starting with <strong>PyRadio v. 0.8.9</strong>, <em>mplayer</em>’s default profile will use its internal mixer to adjust its volume; this is accomplished using the “<em>softvol=1</em>” and “<em>softvol-max=300</em>” lines above. The user may choose to remove these lines from the config (to activate system-wide volume adjustment) or add them to the config (in case the profile was created by an older <strong>PyRadio</strong> version).</p>
 <h3 id="vlc">VLC</h3>
 <p>Although <strong>VLC</strong> can use a local configuration file, there seems to be no reliable way of defining the playback volume in it.</p>
 <p>In the past, <strong>VLC</strong> would just use any volume setting it had saved from a previous execution, but now it is possible to save the volume it will use when executed by <strong>PyRadio</strong>.</p>
 <p>This means that <strong>VLC</strong> will start and connect to a station, use whatever volume level it’s stored for it and then <strong>PyRadio</strong> will reset the volume to the desired one (as saved within <strong>PyRadio</strong>).</p>
 <p>The volume will be saved is a file called <em>vlc.conf</em> and reside withing the <em>data</em> directory, inside <strong>PyRadio</strong>’s configuration folder.</p>
+<h2 id="buffering">Buffering <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>When a station is slow (or the internet connection is slow), one might get to a situation where the connection timeout will run out before the connection with the station can be established. Even worse, <strong>PyRadio</strong> will connect to the station, but the sound will be choppy and crackling.</p>
+<p>The solution is to use a large enough <strong>buffer</strong> to connect to the station; this will effectively make <strong>PyRadio</strong> connect to the station and start receiving data, but will not start playback until the buffer is full.</p>
+<p>All <strong>PyRadio</strong> supported support buffering, using a number of command line parameters to actually set it up. <strong>PyRadio</strong> will remove all this complexity by making is as simple as inserting a single value to the “<em>Buffering</em>” window, shown below.</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg" target="_blank"><img style="width: 300px" src="https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg" alt="PyRadio Buffering Window" /></a></p>
+
+<p>The window opens by pressing “<strong>\B</strong>” while in the <strong>Main</strong> mode.</p>
+<p>It will display the current buffer size (0 means no buffering), and will permit to adjust it, or use the previously used value (pressing “<strong>r</strong>”).</p>
+<p>In any case, one can enable or disable the use of buffering by pressing “<strong>\b</strong>” (using either the default value or the one set in the “<em>Buffering</em>” window).</p>
+<h3 id="parameters-used">Parameters used</h3>
+<p>The following table shows the command line parameters used by <strong>PyRadio</strong> when the “<em>Buffering</em>” window is used to set up buffering.</p>
+<table>
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 30%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>mpv<br>(X in seconds)</th>
+<th>mplayer<br>(X in KBytes)</th>
+<th>vlc<br>(X in seconds)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>–demuxer-readahead-secs=X-1</td>
+<td>-cache X</td>
+<td>–network-caching X*1000</td>
+</tr>
+<tr class="even">
+<td>–demuxer-cache-wait=yes</td>
+<td>-cache-min 80</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>–cache=yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>–cache-secs=X</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>–cache-on-disk=yes/no *</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>* disabled if more than 300KB of memory is free</p>
+<h3 id="customizing-the-buffering-behaviour">Customizing the buffering behaviour</h3>
+<p>In case one wants to use a different set of parameters (when using <strong>mpv</strong> or <strong>mplayer</strong>, but not <strong>vlc</strong>), one would just not use the integrated solution; one would just use a <strong>profile</strong>.</p>
+<p>Please refer to the players’ documentation on profiles and the “<a href="#player-default-volume-level">Player default volume level</a>” section in this document.</p>
+<p>As long as the word “<strong>cache</strong>” is contained in the profile’s name, <strong>PyRadio</strong> will understand this is a buffering profile and act accordingly. But it’s up to the user to make sure this presupposition is honored.</p>
+<h3 id="how-it-works">How it works</h3>
+<p>When buffering is enabled, and a connection to a station initializes, <strong>PyRadio</strong> will display a “<strong>[B]</strong>” at the top left corner of the window, and display “<strong>Buffering:</strong>” and the name of the station in the status bar, until it get a token that the buffering has stopped.</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" target="_blank"><img style="width: 450px" src="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" alt="PyRadio Buffering" /></a></p>
+
+<p>An example is shown in the image above.</p>
+<p>Now, this behaviour depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.</p>
+<p>It should be noted that, no volume adjustment can be preformed while buffering.</p>
 <h2 id="displaying-station-info">Displaying Station Info <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>When a connection to a radio station has been established, the station starts sending audio data for the user to listen to.</p>
 <p>Well, that’s obvious, right?</p>

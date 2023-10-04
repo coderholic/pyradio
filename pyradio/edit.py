@@ -1239,7 +1239,7 @@ class PyRadioBuffering(object):
     _max_lines = 12
     _cache_data  = None
     _step = 1
-    _big_step = 5
+    _big_step = _min = 5
     _limit = 60
 
     def __init__(self,
@@ -1257,7 +1257,8 @@ class PyRadioBuffering(object):
         self._title = ' ' + self._player.PLAYER_NAME + ' Buffering '
         if self._player.PLAYER_NAME == 'mplayer':
             self._text = 'Buffer size in KBytes: '
-            self._step = 500
+            self._step = 250
+            self._min = 500
             self._big_step = 1000
             self._limit = 100000
         self._cache_data = PlayerCache(
@@ -1346,10 +1347,16 @@ class PyRadioBuffering(object):
                 self._delay = self._cache_data.delay
             elif char in (ord('k'), curses.KEY_UP):
                 self._delay += self._step
+                if self._delay < self._min:
+                    self._delay = self._min
             elif char in (ord('j'), curses.KEY_DOWN):
                 self._delay -= self._step
+                if self._delay < self._min:
+                    self._delay = 0
             elif char == curses.KEY_NPAGE:
                 self._delay -= self._big_step
+                if self._delay < self._min:
+                    self._delay = 0
             elif char == curses.KEY_PPAGE:
                 self._delay += self._big_step
             elif char == ord('z'):

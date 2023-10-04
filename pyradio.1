@@ -874,6 +874,82 @@ This means that \fIVLC\fR will start and connect to a station, use whatever volu
 
 The volume will be saved is a file called \fIvlc.conf\fR and reside withing the \fIdata\fR directory, inside \fBpyradio\fR's configuration folder.
 
+.SH Buffering
+
+When a station is slow (or the internet connection is slow), one might get to a situation where the connection timeout will run out before the connection with the station can be established. Even worse, \fBpyradio\fR will connect to the station, but the sound will be choppy and crackling.
+
+The solution is to use a large enough \fIbuffer\fR to connect to the station; this will effectively make \fBpyradio\fR connect to the station and start receiving data, but will not start playback until the buffer is full.
+
+All \fBpyradio\fR supported support buffering, using a number of command line parameters to actually set it up. \fBpyradio\fR will remove all this complexity by making is as simple as inserting a single value to the "\fIBuffering\fR" window (image available at the link below).
+
+\fIhttps://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg\fR
+
+The window opens by pressing "\fI\\B\fR" while in the \fBMain\fR mode.
+
+It will display the current buffer size (0 means no buffering), and will permit to adjust it, or use the previously used value (pressing "\fIr\fR").
+
+In any case, one can enable or disable the use of buffering by pressing "\fI\\b\fR" (using either the default value or the one set in the "\fIBuffering\fR" window).
+
+\fBParameters used\fR
+
+.RS 5
+The following list shows the command line parameters used by \fBpradio\fR when the "\fIBuffering\fR" window is used to set up buffering.
+
+\fBmpv \fI(\fBX\fI in seconds)\fR
+.RS 3
+\fI--demuxer-readahead-secs=\fBX\fI-1
+.br
+--demuxer-cache-wait=yes
+.br
+--cache=yes
+.br
+--cache-secs=\fBX\fI
+.br
+--cache-on-disk=yes/no \fB*\fR
+
+\fB*\fR disabled if more than 300KB of memory is free
+.RE
+
+
+\fBmplayer \fI(\fBX\fI in KBytes)\fR
+.RS 3
+\fI-cache \fBX\fI
+.br
+-cache-min 80\fR
+.RE
+
+\fBvlc \fI(\fBX\fI in seconds)\fR
+.RS 3
+\fI--network-cachin \fBX\fI * 1000\fR
+.RE
+
+.RE
+
+\fBCustomizing the buffering behaviour\fR
+.RS 5
+
+In case one wants to use a different set of parameters (when using \fImpv\fR or \fImplayer\fR, but not \fIvlc\fR), one would just not use the integrated solution; one would just use a \fBprofile\fR.
+
+Please refer to the players' documentation on profiles and the "\fIPlayer default volume level\fR" section in this man page.
+
+As long as the word "\fBcache\fR" is contained in the profile's name, \fBpyradio\fR will understand this is a buffering profile and act accordingly. But it's up to the user to make sure this presupposition is honored.
+
+.RE
+
+\fBHow it works\fR
+.RS 5
+
+When buffering is enabled, and a connection to a station initializes, \fBpyradio\fR will display a "\fI[B]\fR" at the top left corner of the window, and display "\fIBuffering:\fR" and the name of the station in the status bar, until it get a token that the buffering has stopped.
+
+\fIhttps://members.hellug.gr/sng/pyradio/pyradio-b.jpg\fR
+
+An example is shown in the image linked above.
+
+Now, this behaviour depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.
+
+It should be noted that, no volume adjustment can be preformed while buffering.
+.RE
+
 .SH Displaying Station Info
 
 When a connection to a radio station has been established, the station starts sending audio data for the user to listen to.

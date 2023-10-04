@@ -887,7 +887,7 @@ class Player(object):
                                         subsystemOut = sp[0]
                                 with recording_lock:
                                     sp = subsystemOut.split(self_volume_string)
-                                    self.volume = ''.join(c for c in sp[-1] if c.isdigit())
+                                    self.volume = ''.join(c for c in sp[-1].split()[0] if c.isdigit())
 
                                     self_show_volume = self.show_volume
                                     self_oldUserInput_Title = self.oldUserInput['Title']
@@ -1372,6 +1372,7 @@ class Player(object):
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
                 if subsystemOut == '':
                     continue
+                logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 if not self._is_accepted_input(subsystemOut):
                     continue
@@ -1923,6 +1924,15 @@ class Player(object):
                 )
         self.update_thread.start()
         if self.PLAYER_NAME == 'vlc':
+            if self.WIN:
+                pass
+                # if self.process:
+                #     self._thrededreq('volume 0\n')
+                #     self._thrededreq('add ' + self._vlc_url + '\n')
+                # threading.Thread(target=self._remove_vlc_stdout_log_file, args=()).start()
+            else:
+                self._sendCommand('volume 0\n')
+                self._sendCommand('add ' + self._vlc_url + '\n')
             self.get_volume()
         # start playback check timer thread
         self.stop_timeout_counter_thread = False
@@ -3053,6 +3063,7 @@ class VlcPlayer(Player):
                 f.write(str(self.volume))
         except:
             return False
+        self._config_volume - self.volume
         return True
 
     def _volume_set(self, vol):
@@ -3100,6 +3111,7 @@ class VlcPlayer(Player):
         ''' Builds the options to pass to vlc subprocess.'''
         #opts = [self.PLAYER_CMD, "-Irc", "--quiet", streamUrl]
         monitor_opts = None
+        self._vlc_url = self._url_to_use(streamUrl)
         if self.WIN:
             ''' Get a random port (44000-44999)
                 Create a log file for vlc and make sure it is unique
@@ -3136,11 +3148,19 @@ class VlcPlayer(Player):
 
         else:
             if self.recording == self.NO_RECORDING:
-                opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
-                        '-Irc', '-vv', self._url_to_use(streamUrl)]
+                if self.WIN:
+                    opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
+                            '-Irc', '-vv', self._vlc_url]
+                else:
+                    opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
+                            '-Irc', '-vv']
             else:
-                opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
-                        '-Irc', '-vv', self._url_to_use(streamUrl)]
+                if self.WIN:
+                    opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
+                            '-Irc', '-vv', self._vlc_url]
+                else:
+                    opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
+                            '-Irc', '-vv']
 
         if self._cnf.buffering_data:
             opts.extend(self._cnf.buffering_data)

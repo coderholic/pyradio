@@ -149,6 +149,8 @@ do
 
     if [ "$out" = "README.html" ];then
         sed -i -e '/http-force.jpg/s/src=/style="width: 600px" src=/' "$out"
+        sed -i -e '/pyradio-buffering-win.jpg/s/src=/style="width: 300px" src=/' "$out"
+        sed -i -e '/pyradio-b.jpg/s/src=/style="width: 450px" src=/' "$out"
     fi
 
     if [ "$out" = "desktop-notification.html" ];then

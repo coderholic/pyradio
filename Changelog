@@ -1,3 +1,23 @@
+2023-10-04 s-n-g
+    * version 0.9.2.14
+    * adding players buffering
+    * [B] will be displayed at top left corner of the window
+      when player is buffering
+    * adding "Force transparency" config option (as per #201)
+    * redisigning players' extra parameters window
+    * removing command line parameters -ep, -ap, lp
+      and changing -ocd etc.
+    * Windows: MPV installation will check CPU flags to
+      download V3 or normal mpv release
+    * fix_pyradio_desktop_file: parameters will be placed
+      after terminal name (before -e)
+    * fixing mpv parameter which might throw a warning
+      which would break the TUI
+    * fixing mplayer volume parsing error
+    * fixing a couple of python2 crashes
+    * updating build_install_pyradio (as per #203)
+    * updating docs
+
 2023-07-15 s-n-g
     * version 0.9.2.13
     * all search widgets will save up to 20 of their last search terms
