@@ -2839,8 +2839,11 @@ class MpPlayer(Player):
                 del monitor_opts[i]
             except IndexError:
                 ''' not -playlist, find and remove url '''
-                i = [y for y, x in enumerate(monitor_opts) if x == streamUrl][0]
-                del monitor_opts[i]
+                try:
+                    i = [y for y, x in enumerate(monitor_opts) if x == streamUrl][0]
+                    del monitor_opts[i]
+                except IndexError:
+                    pass
             self.recording_filename = self.get_recording_filename(self.name, '.mkv')
             monitor_opts.append(self.recording_filename)
             opts.append('-dumpstream')
@@ -3184,8 +3187,11 @@ class VlcPlayer(Player):
         # logger.error('\n\nself._recording = {}'.format(self._recording))
         if self._recording > 0:
             monitor_opts = opts[:]
-            i = [y for y, x in enumerate(monitor_opts) if x == streamUrl][0]
-            del monitor_opts[i]
+            try:
+                i = [y for y, x in enumerate(monitor_opts) if x == streamUrl][0]
+                del monitor_opts[i]
+            except IndexError:
+                pass
             self.recording_filename = self.get_recording_filename(self.name, '.mkv')
             opts.append('--sout')
             opts.append(r'file/ps:' + self.recording_filename)
