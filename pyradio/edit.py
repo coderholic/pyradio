@@ -1258,7 +1258,7 @@ class PyRadioBuffering(object):
         if self._player.PLAYER_NAME == 'mplayer':
             self._text = 'Buffer size in KBytes: '
             self._step = 250
-            self._min = 500
+            self._min = 250
             self._big_step = 1000
             self._limit = 100000
         self._cache_data = PlayerCache(
