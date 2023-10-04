@@ -1130,14 +1130,20 @@ class Player(object):
                 if subsystemOut == '':
                     break
                 # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
+                if stop():
+                    break
                 with recording_lock:
                     tmp = self._is_accepted_input(subsystemOut)
                 if not tmp:
+                    if stop():
+                        break
                     continue
                 subsystemOut = subsystemOut.strip()
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
                 # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
 
+                if stop():
+                    break
                 with recording_lock:
                     tmp = self.oldUserInput['Input']
                 if tmp != subsystemOut:
@@ -1148,14 +1154,20 @@ class Player(object):
                         else:
                             logger.debug('Monitor User input: {}'.format(subsystemOut))
 
+                    if stop():
+                        break
                     with recording_lock:
                         self.oldUserInput['Input'] = subsystemOut
                         self_volume_string = self.volume_string
                         self_player_name = self.PLAYER_NAME
+                    if stop():
+                        break
                     if self_volume_string in subsystemOut:
                         # disable volume for mpv
                         if self_player_name != 'mpv':
                             # logger.error('***** volume')
+                            if stop():
+                                break
                             with recording_lock:
                                 if self.oldUserInput['Volume'] != subsystemOut:
                                     self.oldUserInput['Volume'] = subsystemOut
@@ -1178,6 +1190,8 @@ class Player(object):
                                 if self.show_volume and self.oldUserInput['Title']:
                                     self.outputStream.write(msg=string_to_show, counter='')
                                     self.threadUpdateTitle()
+                            if stop():
+                                break
         except:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Error in updateRecordingStatus thread.', exc_info=True)
