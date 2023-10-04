@@ -931,6 +931,8 @@ class Player(object):
                                 'Stream buffering done' in subsystemOut or \
                                 'Buffering ' in subsystemOut:
                             self.buffering = False
+                            if self.PLAYER_NAME == 'vlc':
+                                on_connect()
                             with self.buffering_lock:
                                 self.buffering_change_function()
                             with self.status_update_lock:
@@ -2982,7 +2984,7 @@ class VlcPlayer(Player):
                 ' Segment #',
                 'using audio decoder module',
                 'answer code 200',
-                'buffering done',
+                ' buffering done',
                 'Buffering '
             )
             # max_volume = 1000
@@ -2993,7 +2995,7 @@ class VlcPlayer(Player):
                 'using audio filter module',
                 'using audio decoder module',
                 'answer code 200',
-                'buffering done'
+                ' buffering done'
             )
 
         ''' Windows only variables '''
@@ -3029,6 +3031,8 @@ class VlcPlayer(Player):
 
     def _on_connect(self):
         logger.error('\n\n***********  VLC on connect\n\n')
+        if self.buffering:
+            logger.error('not setting volume: buffering')
         if self._config_volume > -1:
             self.get_volume()
             #self.actual_volume = int(self.max_volume*self._config_volume/100)
@@ -3063,7 +3067,7 @@ class VlcPlayer(Player):
                 f.write(str(self.volume))
         except:
             return False
-        self._config_volume - self.volume
+        self._config_volume = self.volume
         return True
 
     def _volume_set(self, vol):

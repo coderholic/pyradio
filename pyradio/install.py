@@ -15,7 +15,7 @@ from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 ''' This is PyRadio version this
     install.py was released for
 '''
-PyRadioInstallPyReleaseVersion = '0.9.2.13'
+PyRadioInstallPyReleaseVersion = '0.9.2.14'
 
 import locale
 locale.setlocale(locale.LC_ALL, "")

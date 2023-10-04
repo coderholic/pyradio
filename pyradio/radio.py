@@ -2177,6 +2177,7 @@ class PyRadio(object):
 
     def connectionFailed(self):
         # ok
+        self.buffering = self.player.playback_is_on = False
         self.detect_if_player_exited = False
         if self.ws.operation_mode in (self.ws.STATION_INFO_MODE,
                 self.ws.STATION_DATABASE_INFO_MODE,
@@ -7017,7 +7018,7 @@ __|Remote Control Server| cannot be started!__
                     self._cnf.buffering_data = x.cache[:]
                     self._show_notification_with_delay(
                             txt='___Buffering set to {0} {1}___'.format(
-                                    x.delay,
+                                    int(x.delay / 1000) if self.player.PLAYER_NAME == 'vlc' else x.delay,
                                     'KBytes' if self.player.PLAYER_NAME == 'mplayer' else 'seconds',
                                 ),
                             mode_to_set=self.ws.NORMAL_MODE,

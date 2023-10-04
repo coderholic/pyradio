@@ -800,7 +800,7 @@ The following table shows the command line parameters used by **PyRadio** when t
 | --cache-secs=X                 |                          |                          |
 | --cache-on-disk=yes/no \*      |                          |                          |
 
-\* disabled if more than 300KB of memory is free
+\* disabled if more than 500KB of memory is free
 
 ### Customizing the buffering behaviour
 
