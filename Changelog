@@ -1,3 +1,10 @@
+2023-10-05 s-n-g
+    * version 0.9.2.15 (BUG FIX)
+    * fixing mplayer and vlc recording
+    * mplayer buffering min changed to 250KB
+    * fixing updateRecordingStatus not exiting when asked
+    * buffer size cannot be 0
+
 2023-10-04 s-n-g
     * version 0.9.2.14
     * adding players buffering
