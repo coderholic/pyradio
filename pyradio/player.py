@@ -3587,6 +3587,8 @@ class PlayerCache(object):
             x = int(a_delay)
         except ValueError:
             return
+        if x == 0:
+            return
 
         if self._player_name == 'vlc':
             self._data['vlc'][1] = str(x)

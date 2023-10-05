@@ -2139,8 +2139,8 @@ class PyRadio(object):
         self._click_station()
 
     def _enable_player_crash_detection(self):
-        if logger.isEnabledFor(logging.INFO):
-            logger.info('Enabling crash detection')
+        # if logger.isEnabledFor(logging.INFO):
+        #     logger.info('Enabling crash detection')
         self.detect_if_player_exited = True
 
     def _click_station(self):
