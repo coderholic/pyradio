@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 if platform.lower().startswith('win'):
     import ctypes
 
+
 class Log(object):
     ''' Log class that outputs text to a curses screen '''
 
@@ -69,6 +70,8 @@ class Log(object):
     _station_that_is_playing_now = ''
     _last = ['', '']
 
+    _add_chapter_function = None
+
     can_display_help_msg = None
 
     def __init__(self, config, get_web_song_title):
@@ -94,6 +97,15 @@ class Log(object):
     def station_that_is_playing_now(self):
         with self._song_title_lock:
             return self._station_that_is_playing_now
+
+    @property
+    def add_chapters_function(self):
+        return self._add_chapter_function
+
+    @add_chapters_function.setter
+    def add_chapters_function(self, val):
+        with self.lock:
+            self._add_chapter_function = val
 
     def setScreen(self, cursesScreen):
         self.cursesScreen = cursesScreen
@@ -210,6 +222,9 @@ class Log(object):
                                 elif msg.startswith('Buffering: '):
                                     self._station_that_is_playing_now = msg[11:]
 
+                    if self._add_chapter_function is not None and msg:
+                        if msg.startswith('Title: '):
+                            self._add_chapter_function(msg.replace('Title: ', ''))
                     self.set_win_title(self.msg)
                     self._write_title_to_log(msg if msg else 'No')
                     self._show_notification(msg)

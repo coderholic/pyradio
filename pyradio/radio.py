@@ -918,6 +918,7 @@ class PyRadio(object):
             self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
             self.player.buffering_change_function = self._show_recording_status_in_header
             self.player.buffering_lock = self._buffering_lock
+            self.player.log = self.log
             self._cnf.buffering_data = []
             if self._request_recording:
                 if not (platform.startswith('win') and \
@@ -2217,6 +2218,7 @@ class PyRadio(object):
             for the status update thread.
         '''
         logger.error('stopPlayerFromKeyboard()!!!!!')
+        self.stop_mpv_status_update_thread = True
         self.player.stop_update_notification_thread = True
         self.player.stop_win_vlc_status_update_thread = True
         if from_update_thread:
@@ -2224,11 +2226,17 @@ class PyRadio(object):
             self.player.stop_timeout_counter_thread = True
         with self.log.lock:
             self.log.counter = None
+            logger.error('after lock')
         self._update_status_bar_right()
+        logger.error('after update')
         if self.player.isPlaying():
             self.stopPlayer(show_message=True, from_update_thread=from_update_thread)
+        logger.error('after stop')
         with self._buffering_lock:
+            logger.error('with buffering lock')
             self._show_recording_status_in_header(player_disappeared=player_disappeared)
+        logger.error('after buffer lock')
+        logger.error('end')
         # if from_update_thread and self.ws.operation_mode == self.ws.NORMAL_MODE:
         #     with self.log.lock:
         #         pass
@@ -4588,8 +4596,13 @@ __|Remote Control Server| cannot be started!__
                 except:
                     self.outerBodyWin.addstr('─'.encode('utf-8'), curses.color_pair(13))
             if player_disappeared:
-                logger.error('with refreshBody')
-                self.refreshBody()
+                if self.player.recording == 0:
+                    logger.error('with refreshBody')
+                    self.refreshBody()
+                else:
+                    self.outerBodyWin.refresh()
+                    ''' add chappters! '''
+                    self.player.write_chapters()
             else:
                 self.outerBodyWin.refresh()
 
@@ -6819,7 +6832,7 @@ __|Remote Control Server| cannot be started!__
                 self.ws.PLAYLIST_MODE):
 
             if char == ord('o'):
-                self._cnf.open_config_dir()
+                self._cnf.open_config_dir(self.player.recording)
 
             if char == ord('m') and \
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -7015,15 +7028,18 @@ __|Remote Control Server| cannot be started!__
                             self._cnf.data_dir,
                             lambda: self.player.recording
                             )
+                    x.enabled = False if self._cnf.buffering_data else True
                     self._cnf.buffering_data = x.cache[:]
                     self._show_notification_with_delay(
                             txt='___Buffering set to {0} {1}___'.format(
-                                    int(x.delay / 1000) if self.player.PLAYER_NAME == 'vlc' else x.delay,
+                                    x.delay,
                                     'KBytes' if self.player.PLAYER_NAME == 'mplayer' else 'seconds',
                                 ),
                             mode_to_set=self.ws.NORMAL_MODE,
                             callback_function=self.refreshBody)
                     x = None
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('buffering data = {}'.format(self._cnf.buffering_data))
                 return
 
             elif char == ord('B'):
@@ -7207,6 +7223,7 @@ __|Remote Control Server| cannot be started!__
                 self.player.params = self._cnf.params[self.player.PLAYER_NAME][:]
                 self.player.buffering_change_function = self._show_recording_status_in_header
                 self.player.buffering_lock = self._buffering_lock
+                self.player.log = self.log
                 self._cnf.buffering_data = []
                 if not (self.player.PLAYER_NAME == 'vlc' and \
                         platform.startswith('win')):

@@ -1740,15 +1740,16 @@ class PyRadioConfig(PyRadioStations):
                              | curses.REPORT_MOUSE_POSITION)
             #curses.mouseinterval(0)
 
-    def open_config_dir(self):
+    def open_config_dir(self, recording=0):
+        a_dir = self.stations_dir if recording == 0 else self.recording_dir
         if system().lower() == 'windows':
-            startfile(self.stations_dir)
+            startfile(a_dir)
         elif system().lower() == 'darwin':
-            Popen(['open', self.stations_dir])
+            Popen(['open', a_dir])
         else:
             try:
                 Popen(
-                    ['xdg-open', self.stations_dir],
+                    ['xdg-open', a_dir],
                     stderr=DEVNULL,
                     stdout=DEVNULL
                 )

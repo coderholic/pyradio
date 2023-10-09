@@ -272,6 +272,8 @@ class Player(object):
 
     name = ''
 
+    _chapters = None
+
     def __init__(self,
                  config,
                  outputStream,
@@ -357,6 +359,12 @@ class Player(object):
         else:
             self._recording = 0
         logger.error('\n\nsetting recording to {}'.format(self._recording))
+
+    def write_chapters(self):
+        ''' write chapters from a player crash reoutine '''
+        if self._chapters and self.recording:
+            self._chapters.write_chapters_to_file(self.recording_filename)
+            self._chapters = None
 
     def _player_is_buffering(self, opts, tokens):
         # logger.error('opts = {}'.format(opts))
@@ -521,8 +529,7 @@ class Player(object):
         notify_function()
         # logger.error('------------------ after notify function')
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Executing command: {}'.format(' '.join(self.monitor_opts)))
-            logger.info('----==== {} monitor started ====----'.format(self.PLAYER_NAME))
+            logger.info('----==== {0} monitor started ====----\nExecuting command {1}'.format(self.PLAYER_NAME, self.monitor_opts))
 
     def save_volume(self):
         pass
@@ -1950,6 +1957,18 @@ class Player(object):
                 self._sendCommand('volume 0\n')
                 self._sendCommand('add ' + self._vlc_url + '\n')
             self.get_volume()
+
+        if self._recording > 0:
+            ''' start chapters logger '''
+            if self._chapters is None:
+                self._chapters = PyRadioChapters()
+            self._chapters.clear()
+            self.log.add_chapters_function = self._chapters.add_function()
+            if self.log.add_chapters_function:
+                self._chapters.add(name)
+        else:
+            self.log.add_chapters_function = None
+
         # start playback check timer thread
         self.stop_timeout_counter_thread = False
         if self.playback_timeout > 0:
@@ -1980,6 +1999,7 @@ class Player(object):
             logger.info('----==== {} player started ====----'.format(self.PLAYER_NAME))
         if self.recording == self.RECORD_AND_LISTEN \
                 and self.PLAYER_NAME != 'mpv':
+                    self.buffering = False
                     # logger.error('=======================\n\n')
                     limit = 120000
                     if self.PLAYER_NAME == 'mplayer':
@@ -1988,7 +2008,9 @@ class Player(object):
                         threading.Thread(
                                 target=self.create_monitor_player,
                                 args=(lambda: self.stop_mpv_status_update_thread or \
-                                        self.stop_win_vlc_status_update_thread,  limit, self._start_monitor_update_thread)
+                                        self.stop_win_vlc_status_update_thread,
+                                      limit,
+                                      self._start_monitor_update_thread)
                                 ).start()
                     else:
                         threading.Thread(
@@ -2512,6 +2534,9 @@ class MpvPlayer(Player):
             os.system('rm ' + self.mpvsocket + ' 2>/dev/null');
         self._icy_data = {}
         self.monitor = self.monitor_process = self.monitor_opts = None
+        if self._chapters:
+            self._chapters.write_chapters_to_file(self.recording_filename)
+        self._chapters = None
 
     def _volume_up(self):
         ''' increase mpv's volume '''
@@ -2901,6 +2926,10 @@ class MpPlayer(Player):
         self.stop_mpv_status_update_thread = True
         self._sendCommand('q')
         self._icy_data = {}
+        self.monitor = self.monitor_process = self.monitor_opts = None
+        if self._chapters:
+            self._chapters.write_chapters_to_file(self.recording_filename)
+        self._chapters = None
 
     def _volume_up(self):
         ''' increase mplayer's volume '''
@@ -3275,6 +3304,9 @@ class VlcPlayer(Player):
         self._icy_data = {}
         self.volume = -1
         self.monitor = self.monitor_process = self.monitor_opts = None
+        if self._chapters:
+            self._chapters.write_chapters_to_file(self.recording_filename)
+        self._chapters = None
 
     def _remove_vlc_stdout_log_file(self):
         file_to_remove = self._vlc_stdout_log_file
@@ -3531,6 +3563,168 @@ class VlcPlayer(Player):
         #self.print_response(rep)
 
 
+class PyRadioChapters(object):
+
+    HAS_MKVTOOLNIX = False
+
+    mkvmerge = None
+
+    _list= []
+    _out = []
+    _mkv_file = None
+    _chapters_file = None
+    _output_file = None
+
+    def __init__(self, encoding='urf-8'):
+        self._encoding = encoding
+        s_path = (r'C:\Program Files\MKVToolNix\mkvmerge.exe',
+            r'C:\Program Files (x86)\MKVToolNix\mkvmerge.exe'
+        )
+        if platform.lower().startswith('win'):
+            for n in s_path:
+                if os.path.exists(n):
+                    self.mkvmerge = n
+                    self.HAS_MKVTOOLNIX = True
+                    break
+        else:
+            p = subprocess.Popen(
+                'which mkvmerge',
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            r = p.communicate()
+            self.HAS_MKVTOOLNIX = True if p.returncode == 0 else False
+            if self.HAS_MKVTOOLNIX:
+                if version_info.major < 3:
+                    self.mkvmerge = r[0].strip()
+                else:
+                    self.mkvmerge = r[0].decode('utf-8').strip()
+
+    def __del__(self):
+        logger.error('self._list = {}'.format(self._list))
+
+    def add_function(self):
+        ''' return the function to use to add
+            items to the list of chapters
+            Returns None if chapters not supported
+        '''
+        if self.HAS_MKVTOOLNIX:
+            return self.add
+        return None
+
+    def add(self, a_title=None):
+        if self.HAS_MKVTOOLNIX:
+            if a_title is None:
+                self._list = []
+                self._list.append([datetime.now()])
+            else:
+                if self._list:
+                    if self._list[-1][1] == a_title:
+                        return
+                self._list.append([datetime.now(), a_title])
+
+    def clear(self):
+        self._list = []
+        self._out = []
+        self._mkv_file = None
+        self._chapters_file = None
+
+
+    def write_chapters_to_file(self, input_file):
+        if self.HAS_MKVTOOLNIX:
+            if self.create_chapter_file(input_file):
+                opts = [self.mkvmerge,
+                        '--chapters', self._chapters_file,
+                        '-o', self._output_file,
+                        self._mkv_file
+                        ]
+                p = subprocess.Popen(
+                    opts, shell=False,
+                    stdout=subprocess.PIPE,
+                    stdin=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
+                outs, err = p.communicate()
+                if p.returncode == 0:
+                    try:
+                        os.remove(self._mkv_file)
+                    except:
+                        pass
+                    try:
+                        os.remove(self._chapters_file)
+                    except:
+                        pass
+                    try:
+                        os.rename(self._output_file, self._mkv_file)
+                    except:
+                        pass
+                    return True
+                else:
+                    if os.path.exists(self._chapters_file):
+                        os.remove(self._chapters_file)
+                    if os.path.exists(self._output_file):
+                        os.remove(self._output_file)
+                    return False
+        return False
+
+    def create_chapter_file(self, input_file):
+        if self.HAS_MKVTOOLNIX and \
+                os.path.exists(input_file) and \
+                input_file.endswith('.mkv'):
+            self._mkv_file = input_file
+            self._chapters_file = input_file.replace('.mkv', '-chapters.txt')
+            self._output_file = self._chapters_file.replace('-chapters.txt', '-chapters.mkv')
+            if not self._create_chapters():
+                return False
+            try:
+                with open(self._chapters_file, 'w', encoding='utf-8') as f:
+                    f.writelines(self._out)
+            except:
+                try:
+                    os.remove(self._chapters_file)
+                except:
+                    pass
+                return False
+            return True
+        return False
+
+    def _create_chapters(self):
+        if len(self._list) < 2:
+            self._out = []
+            return False
+        d = self._list[0][0]
+        chapter_count = 1
+        for n in self._list:
+            x = n[0] - d
+            self._out.append('CHAPTER{0:0>2}={1}\n'.format(
+                chapter_count,
+                self.chapter_time_from_timedelta(x)
+                )
+            )
+            self._out.append('CHAPTER{0:0>2}NAME={1}\n'.format(chapter_count, n[1]))
+            chapter_count += 1
+        return True
+
+    @classmethod
+    def chapter_time_from_datetime(cls, a_datetime):
+        return '{0:0>2}:{1:0>2}:{2:0>2}.{3:0>3}'.format(
+                a_datetime.hour,
+                a_datetime.minute,
+                a_datetime.second,
+                int(a_datetime.microsecond/1000)
+                )
+
+    @classmethod
+    def chapter_time_from_timedelta(cls, a_timedelta):
+        h, rem = divmod(a_timedelta.seconds, 3600)
+        m, s = divmod(rem, 60)
+        n = int(a_timedelta.microseconds/1000)
+        return '{0:0>2}:{1:0>2}:{2:0>2}.{3:0>3}'.format(
+                h, m, s, n
+                )
+
+
 class PlayerCache(object):
 
     _dirty = False
@@ -3553,6 +3747,12 @@ class PlayerCache(object):
                  ]
             }
 
+    _enabled = {
+        'mpv': '0',
+        'mplayer': '0',
+        'vlc': '0'
+            }
+
     def __init__(self, player_name, data_dir, recording):
         self._player_name = player_name
         self._data_file = os.path.join(data_dir, 'buffers')
@@ -3563,13 +3763,31 @@ class PlayerCache(object):
         self._save()
 
     @property
+    def enabled(self):
+        return bool(int(self._enabled[self._player_name]))
+
+    @enabled.setter
+    def enabled(self, val):
+        if val == '0':
+            self._enabled[self._player_name] = '0'
+        elif val == '1':
+            self._enabled[self._player_name] = '1'
+        elif not val:
+            self._enabled[self._player_name] = '0'
+        else:
+            self._enabled[self._player_name] = '1'
+        self._dirty = True
+
+    @property
     def cache(self):
+        if self._enabled[self._player_name] == '0':
+            return []
         if self._player_name == 'mpv':
             self._on_disk()
         if self._player_name != 'vlc':
             return self._data[self._player_name]
         out = self._data['vlc']
-        out[1] = str(int(out[1]) * 1000)
+        out[1] = str(int(out[1]))
         return out
 
     @property
@@ -3579,7 +3797,7 @@ class PlayerCache(object):
         elif self._player_name == 'mplayer':
             return int(self._data['mplayer'][1])
         else:
-            return int(self._data['vlc'][1])
+            return int(int(self._data['vlc'][1]) / 1000)
 
     @delay.setter
     def delay(self, a_delay):
@@ -3588,10 +3806,12 @@ class PlayerCache(object):
         except ValueError:
             return
         if x == 0:
+            self._enabled[self._player_name] = '0'
             return
+        self._enabled[self._player_name] = '1'
 
         if self._player_name == 'vlc':
-            self._data['vlc'][1] = str(x)
+            self._data['vlc'][1] = str(x * 1000)
         else:
             str_x = str(x)
             if self._player_name == 'mpv':
@@ -3606,12 +3826,17 @@ class PlayerCache(object):
         if os.path.exists(self._data_file):
             try:
                 with open(self._data_file, 'r', encoding='utf-8') as f:
-                    line = f.read()
-                sp = line.split(',')
+                    line = f.read().strip()
                 orig_player_name = self._player_name
+                sp = line.split(',')
                 for i, a_player in enumerate(('mpv', 'mplayer', 'vlc')):
                     self._player_name = a_player
-                    self.delay = sp[i]
+                    if len(sp) == 3:
+                        self.delay = sp[i]
+                        self.enabled = '0'
+                    else:
+                        self.delay = sp[2*i]
+                        self.enabled = sp[2*i+1]
                 self._player_name = orig_player_name
             except:
                 pass
@@ -3621,8 +3846,13 @@ class PlayerCache(object):
             mpl = int(self._data['vlc'][1])
             i_mpl = int(int(mpl) / 1000)
             msg = self._data['mpv'][0].replace('--cache-secs=', '') + ',' + \
+                    self._enabled['mpv'] + ',' + \
                     self._data['mplayer'][1] + ',' + \
-                    str(i_mpl)
+                    self._enabled['mplayer'] + ',' + \
+                    str(i_mpl) + ',' + \
+                    self._enabled['vlc']
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('msg = "{}"'.format(msg))
             try:
                 with open(self._data_file, 'w', encoding='utf-8') as f:
                     f.write(msg)
