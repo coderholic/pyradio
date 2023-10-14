@@ -8,10 +8,10 @@ from time import sleep
 import site
 from shutil import rmtree
 from msvcrt import getwch
-from os import sep, startfile
-import subprocess
+from os import sep, startfile, path
 from urllib.request import urlretrieve
 import glob
+import threading
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -734,6 +734,29 @@ def install_pyradio_link():
                 join(appdata, 'pyradio', 'help', 'PyRadio.lnk'),
                 join(to_start_menu, 'PyRadio.lnk')
             )
+
+def find_and_remove_recording_data(data_dir):
+    threading.Thread(
+        target=find_and_remove_recording_data_thread(data_dir)
+        ).start()
+
+def find_and_remove_recording_data_thread(data_dir):
+    files = glob.glob('*.mkv', root_dir=data_dir)
+    txt= glob.glob('*.txt', root_dir=data_dir)
+    xml = glob.glob('*.xml', root_dir=data_dir)
+
+    for i in range(len(txt)-1, -1, -1):
+        if txt[i].startswith('search-'):
+            txt.pop(i)
+    for n in txt, xml:
+        if n:
+            files.extend(n)
+    if files:
+        for n in files:
+            try:
+                remove(path.join(data_dir, n))
+            except:
+                pass
 
 if __name__ == '__main__':
     print('\n\n[red]----[green]====  [magenta]MPV Media Player Installation  [green]====[red]----[/red]')

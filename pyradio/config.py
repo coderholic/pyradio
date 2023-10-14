@@ -1939,7 +1939,7 @@ class PyRadioConfig(PyRadioStations):
                 if st.lower() == 'false':
                     self.show_recording_start_message = False
             elif sp[0] == 'player':
-                self.opts['player'][1] = sp[1].lower().strip()
+                self.opts['player'][1] = sp[1].lower().replace(' ', '')
                 # if sys.platform.startswith('win'):
                 #     self.opts['player'][1] = self.opts['player'][1].replace('mpv,', '')
             elif sp[0] == 'connection_timeout':

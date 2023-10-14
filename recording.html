@@ -63,6 +63,15 @@ a:visited{color: SaddleBrown;}
 <li><a href="#starting-recording-from-the-command-line">Starting recording from the command line</a></li>
 <li><a href="#file-location">File location</a></li>
 <li><a href="#file-type">File type</a></li>
+<li><a href="#chapters">Chapters</a>
+<ul>
+<li><a href="#mkvtoolnix-installation">MKVToolNix installation</a>
+<ul>
+<li><a href="#linux">Linux</a></li>
+<li><a href="#macos">MacOS</a></li>
+<li><a href="#windows">Windows</a></li>
+</ul></li>
+</ul></li>
 <li><a href="#pausing-playback">Pausing playback</a></li>
 </ul></li>
 </ul>
@@ -85,30 +94,30 @@ The <strong>monitor</strong> will just reproduce what’s written to the file by
 <h3 id="mpv">MPV</h3>
 <p><strong>MPV</strong> stream recording has the following characteristics:</p>
 <ul>
-<li>it is considered an <strong>experimental feature</strong> by the <strong>MPV</strong> developers.<br />
-Radio streaming uses well known and established codecs (mainly mp3 and aac) and I have had no broken recording while testing the feature (even with flac stations).</li>
-<li><strong>MPV</strong> has the ability to play and record a stream at the same time (both the <strong>recorder</strong> and the <strong>monitor</strong> components are active simultaneously).<br />
-This is very convenient, since all one has to do is add a command line parameter and start recording, while listening to what’s being recorded.</li>
-<li>adjusting the volume or muting the player will not affect what’s being recorded.</li>
-<li>when paused, the player will pause the playback but will keep recording the stream. Furthermore, song titles will stop being updated, but will be correctly displayed and updated when playback is resumed.</li>
+<li><p>it is considered an <strong>experimental feature</strong> by the <strong>MPV</strong> developers.<br />
+Radio streaming uses well known and established codecs (mainly mp3 and aac) and I have had no broken recording while testing the feature (even with flac stations).</p></li>
+<li><p><strong>MPV</strong> has the ability to play and record a stream at the same time (both the <strong>recorder</strong> and the <strong>monitor</strong> components are active simultaneously).<br />
+This is very convenient, since all one has to do is add a command line parameter and start recording, while listening to what’s being recorded.</p></li>
+<li><p>adjusting the volume or muting the player will not affect what’s being recorded.</p></li>
+<li><p>when paused, the player will pause the playback but will keep recording the stream. Furthermore, song titles will stop being updated, but will be correctly displayed and updated when playback is resumed.</p></li>
 </ul>
 <h3 id="mplayer">MPlayer</h3>
 <p><strong>MPlayer</strong> stream recording has the following characteristics:</p>
 <ul>
-<li>it does not have the ability to record and play a stream at the same time.<br />
-This means that the front end (<strong>PyRadio</strong>) will have to use two <em>mplayer</em> instances (run <em>mplayer</em> twice): one as a <strong>recorder</strong> and one as a <strong>monitor</strong>.</li>
-<li>the <strong>recorder</strong> will display the song titles in addition to saving the output file.</li>
-<li>the <strong>monitor</strong> will be started after the output file gets to a certain size, set to 12000 bytes by trial and error.</li>
-<li>pausing and resuming the <strong>monitor</strong> for long will lead to song titles being out of sync, since the <strong>recorder</strong> will keep receiving data (and song titles) even when the playback if off.</li>
+<li><p>it does not have the ability to record and play a stream at the same time.<br />
+This means that the front end (<strong>PyRadio</strong>) will have to use two <em>mplayer</em> instances (run <em>mplayer</em> twice): one as a <strong>recorder</strong> and one as a <strong>monitor</strong>.</p></li>
+<li><p>the <strong>recorder</strong> will display the song titles in addition to saving the output file.</p></li>
+<li><p>the <strong>monitor</strong> will be started after the output file gets to a certain size, set to 12000 bytes by trial and error.</p></li>
+<li><p>pausing and resuming the <strong>monitor</strong> for long will lead to song titles being out of sync, since the <strong>recorder</strong> will keep receiving data (and song titles) even when the playback if off.</p></li>
 </ul>
 <h3 id="vlc">VLC</h3>
 <p><strong>VLC</strong> stream recording has the following characteristics:</p>
 <ul>
-<li>it does not have the ability to record and play a stream at the same time.<br />
-This means that the front end (<strong>PyRadio</strong>) will have to use two <em>vlc</em> instances (run <em>vlc</em> twice): one as a <strong>recorder</strong> and one as a <strong>monitor</strong>.</li>
-<li>the <strong>recorder</strong> will display the song titles in addition to saving the output file.</li>
-<li>the <strong>monitor</strong> will be started after the output file gets to a certain size, set to 120000 bytes by trial and error.</li>
-<li>pausing and resuming the <strong>monitor</strong> for long will lead to song titles being out of sync, since the <strong>recorder</strong> will keep receiving data (and song titles) even when the playback if off.</li>
+<li><p>it does not have the ability to record and play a stream at the same time.<br />
+This means that the front end (<strong>PyRadio</strong>) will have to use two <em>vlc</em> instances (run <em>vlc</em> twice): one as a <strong>recorder</strong> and one as a <strong>monitor</strong>.</p></li>
+<li><p>the <strong>recorder</strong> will display the song titles in addition to saving the output file.</p></li>
+<li><p>the <strong>monitor</strong> will be started after the output file gets to a certain size, set to 120000 bytes by trial and error.</p></li>
+<li><p>pausing and resuming the <strong>monitor</strong> for long will lead to song titles being out of sync, since the <strong>recorder</strong> will keep receiving data (and song titles) even when the playback if off.</p></li>
 </ul>
 <h3 id="vlc-recording-on-windows">VLC recording on Windows</h3>
 <p><strong>VLC</strong> recording in <strong>not</strong> supported on <strong>Windows</strong>.</p>
@@ -160,6 +169,59 @@ This means that the front end (<strong>PyRadio</strong>) will have to use two <e
 <p>This is just a measure of convenience since the type of audio (mp3, aac, aac+, flac, etc.) the station will broadcast cannot be known beforehand (before starting the recording, that is).</p>
 <p>Although a <strong>mkv</strong> file is a video/audio/subs etc. container, it’s perfectly fine to contain just a sound stream, as is the case of the files produced by <strong>PyRadio</strong>.</p>
 <p>The file can be (hopefully) reproduced using any video media player.</p>
+<h3 id="chapters">Chapters</h3>
+<p>As a convenience, <strong>PyRadio</strong> will write chapter markers to the file produced, provided that:</p>
+<ol type="1">
+<li><p><a target="_blank" href="https://mkvtoolnix.download/">MKVToolNix</a> is installed.<br />
+MKVToolNix is a set of tools to create, alter and inspect <a target="_blank" href="http://www.matroska.org/">Matroska</a> files under Linux, other Unices and Windows.<br />
+<strong>PyRadio</strong> uses <em>mkvmerge</em> (<em>mkvmerge.exe</em> on Windows) to add chapters to the MKV file.</p></li>
+<li><p>The stations will provide <em>ICY Titles</em> (the titles will be used as <strong>chapter titles</strong>).</p></li>
+</ol>
+<p>Things to consider:</p>
+<ul>
+<li><p>The first chaprer will always be at 00:00 and will be the name of the station.</p></li>
+<li><p>Chapters markers timing depends on the time the <em>ICY Titles</em> are received, plus any overhead added by <strong>PyRadio</strong>.<br />
+<br />
+This means that, for whatever reason, a chapter marker may not exactly point to the beginning of the song associated with it.</p></li>
+</ul>
+<p>The image below shows how a chapter aware player will display and handle chapter markers found in a MKV file. This is the <a target="_blank" href="https://sourceforge.net/projects/mpc-hc/">Media Player Classic</a> on Windows 7.</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-chapters.gif" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-chapters.gif" alt="PyRadio Chapters" /></a></p>
+
+<h4 id="mkvtoolnix-installation">MKVToolNix installation</h4>
+<h5 id="linux">Linux</h5>
+<p>On <strong>Linux</strong> you will have no problem installing the package; all distros will include it, either as <em>mkvtoolnix</em>, or <em>mkvtoolnix-cli</em> or whatever.</p>
+<h5 id="macos">MacOS</h5>
+<p>On <strong>MacOS</strong>, it all depends on your System Version, i guess.</p>
+<p>First try to use <a target="_blank" href="https://brew.sh/">HomeBrew</a>:</p>
+<pre>brew install mkvtoolnix</pre>
+<p>I do not know if using <a target="_blank" href="https://brew.sh/">HomeBrew</a> for the installation will place <strong>mkvmerge</strong> into your PATH, but if it does, you are done.</p>
+<p>I was not able to install it on <em>Catalina</em> using <a href="">HomeBrew</a>, so I ended up using the AppImage from <a target="_blank" href="https://mkvtoolnix.download/downloads.html#macosx">MKVToolNix</a>. Just make sure you download the right version for your system.</p>
+<p>Then, since the installed application was not in the PATH (so that <strong>PyRadio</strong> finds <strong>mkvmerge</strong>), I just executed (in a terminal):</p>
+<pre>sudo find / -name mkvmerge</pre>
+<p>and ended up with</p>
+<pre>/System/Volumes/Data/Applications/MKVToolNix-54.0.0.app/Contents/MacOS/mkvmerge
+/Applications/MKVToolNix-54.0.0.app/Contents/MacOS/mkvmerge</pre>
+<p>Since I do not know the difference between the first and second result, I will just use the second one, just because it is shorter :)</p>
+<p>So, finally:</p>
+<pre>mkdir -p ~/.config/pyradio/data
+echo &#39;#!/bin/bash&#39; &gt; ~/.config/pyradio/data/mkvmerge
+echo &#39;/Applications/MKVToolNix-54.0.0.app/Contents/MacOS/mkvmerge &quot;$@&quot;&#39; &gt;&gt; ~/.config/pyradio/data/mkvmerge
+chmod +x ~/.config/pyradio/data/mkvmerge</pre>
+<h5 id="windows">Windows</h5>
+<p>For <strong>Windows 10</strong> and <strong>11</strong> you have two options; either install the package provided by <a target="_blank" href="https://mkvtoolnix.download/">MKVToolNix</a>, or use the portable version.</p>
+<p>If you decide to go with the later option, please read on.</p>
+<p>For <strong>Window 7</strong> (or <strong>Windows 10</strong> and <strong>11</strong> portable installation), this is what you do:</p>
+<ol type="1">
+<li><p>Download the <strong>7z</strong> file provided by <a target="_blank" href="https://github.com/jpsdr/MKVToolnix-QT5-Windows-7/releases">MKVToolNix for Windows 7</a>.<br />
+<br />
+If you have decided to use one of the <strong>portable</strong> versions of <a target="_blank" href="https://mkvtoolnix.download/">MKVToolNix</a> on <strong>Windows 10</strong> or <strong>11</strong>, download that <strong>7z</strong> file instead.</p></li>
+<li><p>“Install” it in <strong>PyRadio Configuration Folder</strong>.<br />
+<br />
+To do that, open <strong>PyRadio</strong> and press “<em>\o</em>” to open the configuradio folder in the File Explorer.<br />
+</p></li>
+<li><p>Create a folder named “<strong>mkvtoolnix</strong>”</p></li>
+<li><p>Extract the <strong>7z</strong> file you previously downloaded, in the “<strong>mkvtoolnix</strong>” folder.</p></li>
+</ol>
 <h3 id="pausing-playback">Pausing playback</h3>
 <p>After you have started recording a station, <strong>PyRadio</strong> will connect to it and start downloading the station data and at the same time will produce sound for you to hear what’s downloaded.</p>
 <p>You can then press “<strong>Space</strong>” to pause the playback, but still continue downloading the station’s data.</p>

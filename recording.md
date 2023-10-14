@@ -31,6 +31,11 @@ ___
     * [Starting recording from the command line](#starting-recording-from-the-command-line)
     * [File location](#file-location)
     * [File type](#file-type)
+    * [Chapters](#chapters)
+        * [MKVToolNix installation](#mkvtoolnix-installation)
+            * [Linux](#linux)
+            * [MacOS](#macos)
+            * [Windows](#windows)
     * [Pausing playback](#pausing-playback)
 
 <!-- vim-markdown-toc -->
@@ -63,9 +68,12 @@ Now, let's see how **PyRadio**'s supported players behave.
 
 - it is considered an **experimental feature** by the **MPV** developers. \
 Radio streaming uses well known and established codecs (mainly mp3 and aac) and I have had no broken recording while testing the feature (even with flac stations).
+
 - **MPV** has the ability to play and record a stream at the same time (both the **recorder** and the **monitor** components are active simultaneously). \
 This is very convenient, since all one has to do is add a command line parameter and start recording, while listening to what's being recorded.
+
 - adjusting the volume or muting the player will not affect what's being recorded.
+
 - when paused, the player will pause the playback but will keep recording the stream. Furthermore, song titles will stop being updated, but will be correctly displayed and updated when playback is resumed.
 
 ### MPlayer
@@ -74,8 +82,11 @@ This is very convenient, since all one has to do is add a command line parameter
 
 - it does not have the ability to record and play a stream at the same time. \
 This means that the front end (**PyRadio**) will have to use two *mplayer* instances (run *mplayer* twice): one as a **recorder** and one as a **monitor**.
+
 - the **recorder** will display the song titles in addition to saving the output file.
+
 - the **monitor** will be started after the output file gets to a certain size, set to 12000 bytes by trial and error.
+
 - pausing and resuming the **monitor** for long will lead to song titles being out of sync, since the **recorder** will keep receiving data (and song titles) even when the playback if off.
 
 ### VLC
@@ -84,8 +95,11 @@ This means that the front end (**PyRadio**) will have to use two *mplayer* insta
 
 - it does not have the ability to record and play a stream at the same time. \
 This means that the front end (**PyRadio**) will have to use two *vlc* instances (run *vlc* twice): one as a **recorder** and one as a **monitor**.
+
 - the **recorder** will display the song titles in addition to saving the output file.
+
 - the **monitor** will be started after the output file gets to a certain size, set to 120000 bytes by trial and error.
+
 - pausing and resuming the **monitor** for long will lead to song titles being out of sync, since the **recorder** will keep receiving data (and song titles) even when the playback if off.
 
 ### VLC recording on Windows
@@ -156,6 +170,90 @@ This is just a measure of convenience since the type of audio (mp3, aac, aac+, f
 Although a **mkv** file is a video/audio/subs etc. container, it's perfectly fine to contain just a sound stream, as is the case of the files produced by **PyRadio**.
 
 The file can be (hopefully) reproduced using any video media player.
+
+### Chapters
+
+As a convenience, **PyRadio** will write chapter markers to the file produced, provided that:
+
+1. [MKVToolNix](https://mkvtoolnix.download/) is installed. \
+MKVToolNix is a set of tools to create, alter and inspect [Matroska](http://www.matroska.org/) files under Linux, other Unices and Windows. \
+**PyRadio** uses *mkvmerge* (*mkvmerge.exe* on Windows) to add chapters to the MKV file.
+
+2. The stations will provide *ICY Titles* (the titles will be used as **chapter titles**).
+
+Things to consider:
+
+- The first chaprer will always be at 00:00 and will be the name of the station.
+
+- Chapters markers timing depends on the time the *ICY Titles* are received, plus any overhead added by **PyRadio**. \
+\
+This means that, for whatever reason, a chapter marker may not exactly point to the beginning of the song associated with it.
+
+The image below shows how a chapter aware player will display and handle chapter markers found in a MKV file. This is the [Media Player Classic](https://sourceforge.net/projects/mpc-hc/) on Windows 7.
+
+![PyRadio Chapters](https://members.hellug.gr/sng/pyradio/pyradio-chapters.gif)
+
+#### MKVToolNix installation
+
+##### Linux
+
+On **Linux** you will have no problem installing the package; all distros will include it, either as *mkvtoolnix*, or *mkvtoolnix-cli* or whatever.
+
+##### MacOS
+
+On **MacOS**, it all depends on your System Version, i guess.
+
+First try to use [HomeBrew](https://brew.sh/):
+
+    brew install mkvtoolnix
+
+I do not know if using [HomeBrew](https://brew.sh/) for the installation will place **mkvmerge** into your PATH, but if it does, you are done.
+
+I was not able to install it on *Catalina* using [HomeBrew](), so I ended up using the AppImage from [MKVToolNix](https://mkvtoolnix.download/downloads.html#macosx). Just make sure you download the right version for your system.
+
+Then, since the installed application was not in the PATH (so that **PyRadio** finds **mkvmerge**), I just executed (in a terminal):
+
+```
+sudo find / -name mkvmerge
+```
+
+and ended up with
+
+```
+/System/Volumes/Data/Applications/MKVToolNix-54.0.0.app/Contents/MacOS/mkvmerge
+/Applications/MKVToolNix-54.0.0.app/Contents/MacOS/mkvmerge
+```
+
+Since I do not know the difference between the first and second result, I will just use the second one, just because it is shorter :)
+
+So, finally:
+
+```
+mkdir -p ~/.config/pyradio/data
+echo '#!/bin/bash' > ~/.config/pyradio/data/mkvmerge
+echo '/Applications/MKVToolNix-54.0.0.app/Contents/MacOS/mkvmerge "$@"' >> ~/.config/pyradio/data/mkvmerge
+chmod +x ~/.config/pyradio/data/mkvmerge
+```
+
+##### Windows
+
+For **Windows 10** and **11** you have two options; either install the package provided by [MKVToolNix](https://mkvtoolnix.download/), or use the portable version.
+
+If you decide to go with the later option, please read on.
+
+For **Window 7** (or **Windows 10** and **11** portable installation), this is what you do:
+
+1. Download the **7z** file provided by [MKVToolNix for Windows 7](https://github.com/jpsdr/MKVToolnix-QT5-Windows-7/releases). \
+\
+If you have decided to use one of the **portable** versions of [MKVToolNix](https://mkvtoolnix.download/) on **Windows 10** or **11**, download that **7z** file instead.
+
+2. "Install" it in **PyRadio Configuration Folder**. \
+\
+To do that, open **PyRadio** and press "*\\o*" to open the configuradio folder in the File Explorer. \
+
+3. Create a folder named "**mkvtoolnix**"
+
+4. Extract the **7z** file you previously downloaded, in the "**mkvtoolnix**" folder.
 
 ### Pausing playback
 

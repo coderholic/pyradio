@@ -2226,17 +2226,11 @@ class PyRadio(object):
             self.player.stop_timeout_counter_thread = True
         with self.log.lock:
             self.log.counter = None
-            logger.error('after lock')
         self._update_status_bar_right()
-        logger.error('after update')
         if self.player.isPlaying():
             self.stopPlayer(show_message=True, from_update_thread=from_update_thread)
-        logger.error('after stop')
         with self._buffering_lock:
-            logger.error('with buffering lock')
             self._show_recording_status_in_header(player_disappeared=player_disappeared)
-        logger.error('after buffer lock')
-        logger.error('end')
         # if from_update_thread and self.ws.operation_mode == self.ws.NORMAL_MODE:
         #     with self.log.lock:
         #         pass
@@ -4546,7 +4540,7 @@ __|Remote Control Server| cannot be started!__
                 self._limited_width_mode:
             return
         b_header = 'B' if self.player.buffering else ''
-        logger.info('player_disappeared = {}'.format(player_disappeared))
+        # logger.info('player_disappeared = {}'.format(player_disappeared))
         if self.player.recording == 0:
             if not from_header_update:
                 try:
@@ -4576,13 +4570,13 @@ __|Remote Control Server| cannot be started!__
                         0, 1, '────'.encode('utf-8'), curses.color_pair(13)
                     )
             self.outerBodyWin.refresh()
-            logger.info('w_header = " "')
+            # logger.info('w_header = " "')
         else:
             w_header = 'R' if self.player.isPlaying() else 'r'
             if player_disappeared or \
                     self.player.already_playing:
                 w_header = 'r'
-            logger.info('w_header = "{}"'.format(w_header))
+            # logger.info('w_header = "{}"'.format(w_header))
             self.outerBodyWin.addstr(
                 0, 1, '[', curses.color_pair(13)
             )
@@ -4597,7 +4591,6 @@ __|Remote Control Server| cannot be started!__
                     self.outerBodyWin.addstr('─'.encode('utf-8'), curses.color_pair(13))
             if player_disappeared:
                 if self.player.recording == 0:
-                    logger.error('with refreshBody')
                     self.refreshBody()
                 else:
                     self.outerBodyWin.refresh()

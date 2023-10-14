@@ -770,6 +770,10 @@ If nothing else works, try the following command:
         except:
             pass
 
+        if platform.startswith('win') and not args.record:
+            from .win import find_and_remove_recording_data
+            find_and_remove_recording_data(pyradio_config.data_dir)
+
         ''' curses wrapper '''
         curses.wrapper(pyradio.setup)
 

@@ -364,7 +364,6 @@ class Player(object):
         ''' write chapters from a player crash reoutine '''
         if self._chapters and self.recording:
             self._chapters.write_chapters_to_file(self.recording_filename)
-            self._chapters = None
 
     def _player_is_buffering(self, opts, tokens):
         # logger.error('opts = {}'.format(opts))
@@ -421,8 +420,18 @@ class Player(object):
             return 0, profile
 
     def get_recording_filename(self, name, extension):
-        f = datetime.now().strftime('%Y-%m-%d %H-%M-%S') + " " + name + extension
-        return os.path.join(self._cnf.recording_dir, f)
+        if self._chapters is None:
+                self._chapters = PyRadioChapters(
+                        self._cnf.stations_dir,
+                        version=self._cnf.current_pyradio_version,
+                        playlist=self._cnf.station_path,
+                        )
+        self._chapters.look_for_mkvmerge()
+        f = datetime.now().strftime('%Y-%m-%d %H-%M-%S') + " " + name  + extension
+        if self._chapters.HAS_MKVTOOLNIX:
+            return os.path.join(self._cnf.data_dir, f)
+        else:
+            return os.path.join(self._cnf.recording_dir, f)
 
     def _get_all_config_files(self):
         ''' MPV config files '''
@@ -865,9 +874,9 @@ class Player(object):
                     if (logger.isEnabledFor(logging.DEBUG)):
                         if version_info < (3, 0):
                             disp = subsystemOut.encode('utf-8', 'replace').strip()
-                            logger.debug('User input: {}'.format(disp))
+                            # logger.debug('User input: {}'.format(disp))
                         else:
-                            logger.debug('User input: {}'.format(subsystemOut))
+                            # logger.debug('User input: {}'.format(subsystemOut))
                             pass
 
                     with recording_lock:
@@ -1083,31 +1092,27 @@ class Player(object):
 
         if not stop():
             if not platform.startswith('win'):
-                poll = process.poll()
-                if poll is not None:
-                    if not stop():
-                        if detect_if_player_exited():
-                            if logger.isEnabledFor(logging.INFO):
-                                logger.info('----==== player disappeared! ====----')
-                            stop_player(
-                                from_update_thread=True,
-                                player_disappeared=True
-                            )
-                        else:
-                            if logger.isEnabledFor(logging.INFO):
-                                logger.info('Crash detection is off; waiting to timeout')
+                if detect_if_player_exited():
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('----==== player disappeared! ====----')
+                    stop_player(
+                        from_update_thread=True,
+                        player_disappeared=True
+                    )
+                else:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Crash detection is off; waiting to timeout')
             else:
-                if not stop():
-                    if detect_if_player_exited():
-                        if logger.isEnabledFor(logging.INFO):
-                            logger.info('----==== player disappeared! ====----')
-                        stop_player(
-                            from_update_thread=True,
-                            player_disappeared = True
-                        )
-                    else:
-                        if logger.isEnabledFor(logging.INFO):
-                            logger.info('Crash detection is off; waiting to timeout')
+                if detect_if_player_exited():
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('----==== player disappeared! ====----')
+                    stop_player(
+                        from_update_thread=True,
+                        player_disappeared = True
+                    )
+                else:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('Crash detection is off; waiting to timeout')
         if (logger.isEnabledFor(logging.INFO)):
             logger.info('updateStatus thread stopped.')
         self._clear_empty_mkv()
@@ -1349,7 +1354,10 @@ class Player(object):
                         if detect_if_player_exited():
                             if logger.isEnabledFor(logging.INFO):
                                 logger.info('----==== VLC disappeared! ====----')
-                            stop_player(from_update_thread=True)
+                            try:
+                                stop_player(from_update_thread=True)
+                            except:
+                                pass
                             return True
                         else:
                             if logger.isEnabledFor(logging.INFO):
@@ -1394,8 +1402,9 @@ class Player(object):
                 subsystemOut = subsystemOut.strip().replace(u'\ufeff', '')
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
                 if subsystemOut == '':
+                    if do_crash_detection(detect_if_player_exited, stop):
+                        break
                     continue
-                logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 # logger.error('DE subsystemOut = "{0}"'.format(subsystemOut))
                 if not self._is_accepted_input(subsystemOut):
                     continue
@@ -1961,7 +1970,11 @@ class Player(object):
         if self._recording > 0:
             ''' start chapters logger '''
             if self._chapters is None:
-                self._chapters = PyRadioChapters()
+                self._chapters = PyRadioChapters(
+                        self._cnf.stations_dir,
+                        version=self._cnf.current_pyradio_version,
+                        playlist=self._cnf.station_path,
+                        )
             self._chapters.clear()
             self.log.add_chapters_function = self._chapters.add_function()
             if self.log.add_chapters_function:
@@ -2536,7 +2549,6 @@ class MpvPlayer(Player):
         self.monitor = self.monitor_process = self.monitor_opts = None
         if self._chapters:
             self._chapters.write_chapters_to_file(self.recording_filename)
-        self._chapters = None
 
     def _volume_up(self):
         ''' increase mpv's volume '''
@@ -2929,7 +2941,6 @@ class MpPlayer(Player):
         self.monitor = self.monitor_process = self.monitor_opts = None
         if self._chapters:
             self._chapters.write_chapters_to_file(self.recording_filename)
-        self._chapters = None
 
     def _volume_up(self):
         ''' increase mplayer's volume '''
@@ -3306,7 +3317,6 @@ class VlcPlayer(Player):
         self.monitor = self.monitor_process = self.monitor_opts = None
         if self._chapters:
             self._chapters.write_chapters_to_file(self.recording_filename)
-        self._chapters = None
 
     def _remove_vlc_stdout_log_file(self):
         file_to_remove = self._vlc_stdout_log_file
@@ -3575,12 +3585,28 @@ class PyRadioChapters(object):
     _chapters_file = None
     _output_file = None
 
-    def __init__(self, encoding='urf-8'):
+    def __init__(
+            self,
+            stations_dir,
+            version,
+            playlist,
+            encoding='urf-8'
+            ):
+        self._stations_dir = stations_dir
+        self._version = version
+        self._playlist = os.path.basename(playlist)[:-4]
         self._encoding = encoding
-        s_path = (r'C:\Program Files\MKVToolNix\mkvmerge.exe',
-            r'C:\Program Files (x86)\MKVToolNix\mkvmerge.exe'
-        )
+        self.mkvmerge = ''
+        self._output_dir = os.path.join(stations_dir, 'recordings')
+        self.look_for_mkvmerge()
+
+    def look_for_mkvmerge(self):
         if platform.lower().startswith('win'):
+            s_path = (
+                    r'C:\Program Files\MKVToolNix\mkvmerge.exe',
+                    r'C:\Program Files (x86)\MKVToolNix\mkvmerge.exe',
+                    os.path.join(self._stations_dir, 'mkvtoolnix', 'mkvmerge.exe')
+                    )
             for n in s_path:
                 if os.path.exists(n):
                     self.mkvmerge = n
@@ -3588,11 +3614,11 @@ class PyRadioChapters(object):
                     break
         else:
             p = subprocess.Popen(
-                'which mkvmerge',
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
+                    'which mkvmerge',
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                    )
             r = p.communicate()
             self.HAS_MKVTOOLNIX = True if p.returncode == 0 else False
             if self.HAS_MKVTOOLNIX:
@@ -3600,9 +3626,13 @@ class PyRadioChapters(object):
                     self.mkvmerge = r[0].strip()
                 else:
                     self.mkvmerge = r[0].decode('utf-8').strip()
-
-    def __del__(self):
-        logger.error('self._list = {}'.format(self._list))
+            if not self.HAS_MKVTOOLNIX and platform.lower().startswith('dar'):
+                mkvmerge_file = os.path.join(stations_dir, 'data', 'mkvmerge')
+                if os.path.exists(mkvmerge_file):
+                    self.HAS_MKVTOOLNIX = True
+                    self.mkvmerge = mkvmerge_file
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('mkvmerge is: "{}"'.format(self.mkvmerge))
 
     def add_function(self):
         ''' return the function to use to add
@@ -3630,53 +3660,91 @@ class PyRadioChapters(object):
         self._mkv_file = None
         self._chapters_file = None
 
-
     def write_chapters_to_file(self, input_file):
-        if self.HAS_MKVTOOLNIX:
-            if self.create_chapter_file(input_file):
-                opts = [self.mkvmerge,
-                        '--chapters', self._chapters_file,
-                        '-o', self._output_file,
-                        self._mkv_file
-                        ]
-                p = subprocess.Popen(
+        if input_file:
+            logger.error('input_file = "{}"'.format(input_file))
+            if self.HAS_MKVTOOLNIX:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('starting mkvmerge!')
+                threading.Thread(
+                        target=self._write_chapters_to_file_thread(input_file)
+                    )
+            else:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('mkvmerge not found!')
+        else:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('empty input file provided! Exiting!')
+
+    def _write_chapters_to_file_thread(self, input_file):
+        if not input_file:
+            return False
+        if self.create_chapter_file(input_file):
+            opts = [self.mkvmerge,
+                    '--global-tags', self._tag_file,
+                    ]
+            if len(self._list) > 1:
+                opts.extend([
+                    '--chapters', self._chapters_file,
+                    ])
+            opts.extend([
+                '-o', self._output_file,
+                self._mkv_file
+                ])
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('merge options = {}'.format(opts))
+            p = subprocess.Popen(
                     opts, shell=False,
                     stdout=subprocess.PIPE,
                     stdin=subprocess.PIPE,
                     stderr=subprocess.PIPE
-                )
-                outs, err = p.communicate()
-                if p.returncode == 0:
+                    )
+            outs, err = p.communicate()
+            # logger.error('outs = "{0}", err = "{1}"'.format(outs, err))
+            if p.returncode == 0:
+                for n in self._mkv_file, self._chapters_file, self._tag_file:
                     try:
-                        os.remove(self._mkv_file)
+                        os.remove(n)
                     except:
                         pass
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('MKV merge successful!')
+                for n in self._chapters_file, self._tag_file, self._mkv_file:
                     try:
-                        os.remove(self._chapters_file)
+                        os.remove(n)
                     except:
                         pass
-                    try:
-                        os.rename(self._output_file, self._mkv_file)
-                    except:
-                        pass
-                    return True
-                else:
-                    if os.path.exists(self._chapters_file):
-                        os.remove(self._chapters_file)
-                    if os.path.exists(self._output_file):
-                        os.remove(self._output_file)
-                    return False
-        return False
+                return True
+            else:
+                if logger.isEnabledFor(logging.ERROR):
+                    logger.error('MKV merge failed!')
+                return False
 
     def create_chapter_file(self, input_file):
+        if not input_file:
+            return False
+        logger.error('HAS_MKVTOOLNIX = {}'.format(self.HAS_MKVTOOLNIX))
+        logger.error('input_file = "{}"'.format(input_file))
         if self.HAS_MKVTOOLNIX and \
-                os.path.exists(input_file) and \
-                input_file.endswith('.mkv'):
+                os.path.exists(input_file):
+            # input_file.endswith('.mkv'):
             self._mkv_file = input_file
-            self._chapters_file = input_file.replace('.mkv', '-chapters.txt')
-            self._output_file = self._chapters_file.replace('-chapters.txt', '-chapters.mkv')
+            self._chapters_file = input_file[:-4] + '-chapters.txt'
+            self._tag_file = input_file[:-4] + '.xml'
+            self._output_file = os.path.join(
+                self._output_dir,
+                os.path.basename(self._mkv_file)
+            )
+            # logger.error('self._mkv_file\n{}'.format(self._mkv_file))
+            # logger.error('self._chapters_file\n{}'.format(self._chapters_file))
+            # logger.error('self._tag_file\n{}'.format(self._tag_file))
+            # logger.error('self._output_file\n{}'.format(self._output_file))
+
             if not self._create_chapters():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('failed to extract chapters!')
                 return False
+            ''' write chapters file '''
             try:
                 with open(self._chapters_file, 'w', encoding='utf-8') as f:
                     f.writelines(self._out)
@@ -3685,25 +3753,58 @@ class PyRadioChapters(object):
                     os.remove(self._chapters_file)
                 except:
                     pass
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('failed to write chapters file!')
+                return False
+            ''' write tags file '''
+            tags = '''<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE Tags SYSTEM "matroskatags.dtd">
+<Tags>
+    <Tag>
+        <Simple>
+            <Name>COMMENT</Name>
+            <String>Created with {0}</String>
+        </Simple>
+    </Tag>
+    <Tag>
+        <Simple>
+            <Name>ALBUM</Name>
+            <String>PyRadio Playlist: {1}</String>
+        </Simple>
+    </Tag>
+    <Tag>
+        <Simple>
+            <Name>TITLE</Name>
+            <String>Station: {2}</String>
+        </Simple>
+    </Tag>
+</Tags>
+'''.format('PyRadio ' +self._version, self._playlist, self._list[0][1].strip())
+            try:
+                with open(self._tag_file, 'w', encoding='utf-8') as f:
+                    f.writelines(tags)
+            except:
+                try:
+                    os.remove(self._tag_file)
+                except:
+                    pass
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('failed to write tag file!')
                 return False
             return True
-        return False
+        else:
+            logger.error('mkvmerge or input file not found')
+            return False
 
     def _create_chapters(self):
-        if len(self._list) < 2:
-            self._out = []
-            return False
-        d = self._list[0][0]
-        chapter_count = 1
-        for n in self._list:
-            x = n[0] - d
+        zero_time = self._list[0][0]
+        for i, n in enumerate(self._list):
+            current_time = n[0] - zero_time
             self._out.append('CHAPTER{0:0>2}={1}\n'.format(
-                chapter_count,
-                self.chapter_time_from_timedelta(x)
+                i+1, self.chapter_time_from_timedelta(current_time)
                 )
             )
-            self._out.append('CHAPTER{0:0>2}NAME={1}\n'.format(chapter_count, n[1]))
-            chapter_count += 1
+            self._out.append('CHAPTER{0:0>2}NAME={1}\n'.format(i+1, n[1]))
         return True
 
     @classmethod

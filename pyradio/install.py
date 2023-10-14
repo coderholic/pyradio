@@ -848,6 +848,16 @@ class PyRadioUpdate(object):
         self.user = user
         self._github_long_description = github_long_description
         self._python_exec = PythonExecutable(python_version_to_use)
+        if self._python_exec.python is None:
+            print('''
+
+Python was not found in your system.
+If you have already installed it, chances are you have not added it in your PATH.
+To verify that Python is in your PATH open a terminal/console and type "python".
+If you get en error, you have to add it to your PATH.
+''')
+            sys.exit(1)
+
         self.python2 = True if python_version_to_use == 2 else False
         self._pix_isolated = pix_isolated
 
@@ -1250,6 +1260,16 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
         self._fromTUI = fromTUI
         self._github_long_description = github_long_description
         self._python_exec = PythonExecutable(python_version_to_use)
+        if self._python_exec.python is None:
+            print('''
+
+Python was not found in your system.
+If you have already installed it, chances are you have not added it in your PATH.
+To verify that Python is in your PATH open a terminal/console and type "python".
+If you get en error, you have to add it to your PATH.
+''')
+            sys.exit(1)
+
         self.python2 = True if python_version_to_use == 2 else False
         self._pix_isolated = pix_isolated
         self._get_cache = False
@@ -1446,6 +1466,16 @@ if __name__ == '__main__':
 
     python_version_to_use = 2 if args.python2 else 3
     python_exec = PythonExecutable(python_version_to_use)
+
+    if python_exec.python is None:
+        print('''
+
+Python was not found in your system.
+If you have already installed it, chances are you have not added it in your PATH.
+To verify that Python is in your PATH open a terminal/console and type "python".
+If you get en error, you have to add it to your PATH.
+''')
+        sys.exit(1)
 
     if not python_exec.can_install:
         print('Error: Python {} not found on your system...\n'.format('2' if python_exec.requested_python_version == 2 else '3'))
