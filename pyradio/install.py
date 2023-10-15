@@ -721,13 +721,30 @@ class MyArgParser(ArgumentParser):
         x = t.replace('mpv', '[green]mpv[/green]').replace('mplayer', '[green]mplayer[/green]').replace('vlc', '[green]vlc[/green]')
         return '[bold]' + x.replace('||', r']').replace('|', r'\[') + '[/bold]'
 
+
 class PythonExecutable(object):
+    ''' A class to verify that python is installed
+        and in the PATH
+    '''
     is_debian = False
     _python = [None, None]
     requested_python_version = 3
 
-    def __init__(self, requested_python_version):
+    def __init__(
+            self,
+                 requested_python_version,
+                 terminate_if_not_found=False):
+        ''' Parameters
+            ==========
+            requested_python_version
+                The version of python we are looking for
+                (either 2 or 3)
+            terminate_if_not_found
+                If True, the program will terminate if python
+                is not found (default is False)
+        '''
         self.requested_python_version = requested_python_version
+        self._terminate_if_not_found = terminate_if_not_found
         if not platform.system().lower().startswith('win'):
             self._check_if_is_debian_based()
         self._get_pythons()
@@ -790,16 +807,25 @@ class PythonExecutable(object):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        # print(p.communicate())
-        # print(p.returncode)
-        # if p.communicate()[0]:
         p.communicate()
         if p.returncode == 0:
             self._python[version - 2] = 'python' + str(version)
 
-    def can_install(self):
-        return True if self._python[self.requested_python_version - 2] else False
+        if self._terminate_if_not_found and \
+                not self.can_use():
+            print('''
 
+Python {} was not found in your system.
+If you have already installed it, you probably have not added it in your PATH.
+To verify that Python is in your PATH open a terminal/console and type "python".
+If you get en error, you have to add it to your PATH.
+'''.format('2' if self.requested_python_version == 2 else '3'))
+            sys.exit(1)
+
+    def can_use(self):
+        ''' Can I use the python I requested?
+        '''
+        return True if self._python[self.requested_python_version - 2] else False
 
 class PyRadioUpdate(object):
 
@@ -847,17 +873,10 @@ class PyRadioUpdate(object):
         self._package = package
         self.user = user
         self._github_long_description = github_long_description
-        self._python_exec = PythonExecutable(python_version_to_use)
-        if self._python_exec.python is None:
-            print('''
-
-Python was not found in your system.
-If you have already installed it, chances are you have not added it in your PATH.
-To verify that Python is in your PATH open a terminal/console and type "python".
-If you get en error, you have to add it to your PATH.
-''')
-            sys.exit(1)
-
+        self._python_exec = PythonExecutable(
+                python_version_to_use,
+                terminate_if_not_found=True
+                )
         self.python2 = True if python_version_to_use == 2 else False
         self._pix_isolated = pix_isolated
 
@@ -1259,17 +1278,10 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
         self._package = package
         self._fromTUI = fromTUI
         self._github_long_description = github_long_description
-        self._python_exec = PythonExecutable(python_version_to_use)
-        if self._python_exec.python is None:
-            print('''
-
-Python was not found in your system.
-If you have already installed it, chances are you have not added it in your PATH.
-To verify that Python is in your PATH open a terminal/console and type "python".
-If you get en error, you have to add it to your PATH.
-''')
-            sys.exit(1)
-
+        self._python_exec = PythonExecutable(
+                python_version_to_use,
+                terminate_if_not_found=True
+                )
         self.python2 = True if python_version_to_use == 2 else False
         self._pix_isolated = pix_isolated
         self._get_cache = False
@@ -1465,19 +1477,12 @@ if __name__ == '__main__':
             print_python2()
 
     python_version_to_use = 2 if args.python2 else 3
-    python_exec = PythonExecutable(python_version_to_use)
+    python_exec = PythonExecutable(
+            python_version_to_use,
+            terminate_if_not_found=True
+            )
 
-    if python_exec.python is None:
-        print('''
-
-Python was not found in your system.
-If you have already installed it, chances are you have not added it in your PATH.
-To verify that Python is in your PATH open a terminal/console and type "python".
-If you get en error, you have to add it to your PATH.
-''')
-        sys.exit(1)
-
-    if not python_exec.can_install:
+    if not python_exec.can_use:
         print('Error: Python {} not found on your system...\n'.format('2' if python_exec.requested_python_version == 2 else '3'))
         sys.exit(1)
 

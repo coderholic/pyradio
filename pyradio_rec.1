@@ -1,0 +1,397 @@
+.TH pyradio_rec 1 "October 2023" pyradio
+
+.SH Name
+.PP
+pyradio \- a curses Internet radio player.
+.PP
+\fBBerfore you continue, read this!\fR
+.br
+_________________________________________________________________________
+.PP
+Generally, recording a radio streaming broadcast is considered legit, if
+the recording is to be used for personal use only (i.e.\ to listen to
+the broadcast at a later time).
+.PP
+Distributing such a recording, is illegal.
+Broadcasting it is also illegal.
+Its reproduction before an audience is also illegal.
+In some countries/regions, it is also illegal to split or tag the songs
+in the recording.
+.PP
+Please make sure you are informed about this topic, about what the law
+considers illegal at your country/region, \fBbefore using this
+feature!\fR
+.PP
+\fBYou have been warned!\fR
+.PP
+\fBpyradio\fR, its creator and maintainers do not condone any
+behavior that involves online piracy or copyright violation.
+This feature is provided strictly for personal use, and to utilize
+another requested feature: \fIpausing and resuming\fR playback.
+.PP
+_________________________________________________________________________
+.SH Recording stations
+.PP
+\fBpyradio v.
+0.9.2.8\fR introduces the ability to record stations, a feature used
+mainly to facilitate another feature: the ability to \fIpause and
+resume playback\fR.
+.PP
+All supported media players (\fBMPV\fR, \fBMPlayer\fR and
+\fBVLC\fR) support stream recording, each implementing it in a
+different way, which pose a challenge for the front end implementation.
+.PP
+Before we see the differences, let us talk about some things that will
+make the whole thing easier to understand.
+.PP
+When it comes to recording a stream the program has to provide two
+things:
+.IP "1." 3
+a \fIrecorder\fR, which is the component that will connect to the
+stream (in our case the station), receive its data, and write them in a
+file that media players can recognize and reproduce.
+
+Since this is the program receiving data from the station, it will also
+receive song titles, or other stations data, but will not save them to
+the recorded file.
+.IP "2." 3
+a \fImonitor\fR, which is the component that will reproduce the
+saved stream so that the user can monitor what is being downloaded.
+
+The \fImonitor\fR will just reproduce what\[cq]s written to the file
+by the \fIrecorder\fR, so it knows nothing about a station, it\[cq]s
+data and song titles transmitted by it.
+.PP
+Now, let\[cq]s see how \fBpyradio\fR\[cq]s supported players behave.
+.SS MPV
+.PP
+\fBMPV\fR stream recording has the following characteristics:
+.IP \[bu] 2
+it is considered an \fBexperimental feature\fR by the \fBMPV\fR
+developers.
+
+Radio streaming uses well known and established codecs (mainly mp3 and
+aac) and I have had no broken recording while testing the feature (even
+with flac stations).
+.IP \[bu] 2
+\fBMPV\fR has the ability to play and record a stream at the same
+time (both the \fIrecorder\fR and the \fImonitor\fR components
+are active simultaneously).
+
+This is very convenient, since all one has to do is add a command line
+parameter and start recording, while listening to what\[cq]s being
+recorded.
+.IP \[bu] 2
+adjusting the volume or muting the player will not affect what\[cq]s
+being recorded.
+.IP \[bu] 2
+when paused, the player will pause the playback but will keep recording
+the stream.
+Furthermore, song titles will stop being updated, but will be correctly
+displayed and updated when playback is resumed.
+.SS MPlayer
+.PP
+\fBMPlayer\fR stream recording has the following characteristics:
+.IP \[bu] 2
+it does not have the ability to record and play a stream at the same
+time.
+
+This means that the front end (\fBpyradio\fR) will have to use two
+\fBmplayer\fR instances (execute \fBmplayer\fR twice): one as a
+\fIrecorder\fR and one as a \fImonitor\fR.
+.IP \[bu] 2
+the \fIrecorder\fR will display the song titles in addition to
+saving the output file.
+.IP \[bu] 2
+the \fImonitor\fR will be started after the output file gets to a
+certain size, set to 12000 bytes by trial and error.
+.IP \[bu] 2
+pausing and resuming the \fImonitor\fR for long will lead to song
+titles being out of sync, since the \fIrecorder\fR will keep
+receiving data (and song titles) even when the playback if off.
+.SS VLC
+.PP
+\fBVLC\fR stream recording has the following characteristics:
+.IP \[bu] 2
+it does not have the ability to record and play a stream at the same
+time.
+
+This means that the front end (\fBpyradio\fR) will have to use two
+\fBvlc\fR instances (execute \fBvlc\fR twice): one as a
+\fIrecorder\fR and one as a \fImonitor\fR.
+.IP \[bu] 2
+the \fIrecorder\fR will display the song titles in addition to
+saving the output file.
+.IP \[bu] 2
+the \fImonitor\fR will be started after the output file gets to a
+certain size, set to 120000 bytes by trial and error.
+.IP \[bu] 2
+pausing and resuming the \fImonitor\fR for long will lead to song
+titles being out of sync, since the \fIrecorder\fR will keep
+receiving data (and song titles) even when the playback if off.
+.SS Recording implementation
+.PP
+The following keys are used for this feature:
+.PP
+.TS
+tab(@);
+l l.
+T{
+\fBKey
+T}@T{
+\fBDescription
+T}
+_
+T{
+\fI|\fR\ (\fIpipe symbol\fR)
+T}@T{
+Toggle recording on and off
+T}
+T{
+\fISpace
+T}@T{
+Pause and resume playback
+T}
+.TE
+.PP
+In order to record a station, recording has to be enabled
+\fBbeforehand\fR, by pressing the \fI\[lq]pipe symbol\fR\[rq] or
+\[lq]\fIvetical line\fR\[rq] (\[lq]\fI|\fR\[rq]).
+Then an info message appears, which can be seen here:
+.P
+\fIhttps://members.hellug.gr/sng/pyradio/pyradio-recording1.jpg\fR
+.PP
+When this is done an \[lq]\fB[r]\fR\[rq] will be displayed at the
+top left corner of the window.
+This means that recording is enabled, but \fBpyradio\fR is not
+currently recording to a file.
+.PP
+When playback is started (i.e.\ start playing a station), an
+\[lq]\fBR\fR\[rq] will be displayed at the top left corner of the
+window (replacing the \[lq]\fB[r]\fR\[rq] that was already there),
+which means that \fBpyradio\fR is actually recording the station to
+a file.
+.PP
+The following image is a mockup presenting the difference.
+.PP
+\fIhttps://members.hellug.gr/sng/pyradio/pyradio-recording2.jpg\fR
+.PP
+Pressing the \fI\[lq]pipe symbol\fR\[rq] or \[lq]\fIvetical
+line\fR\[rq] (\[lq]\fB|\fR\[rq]) again will disable recording and
+nothing will be displayed at the top left corner of the window.
+The actual recording of the station will still be active, until the
+station is stopped.
+.PP
+It must be made clear that toggling the recording status for
+\fBpyradio\fR will actually take effect after a station has been
+started or stopped.
+This is because of the way the players get the recording command;
+through command line arguments, which can only be passed when the player
+is executed.
+.SS Starting recording from the command line
+.PP
+One can use the \[lq]\fB\[en]record\fR\[rq] command line parameter
+to start the program in recording mode.
+.PP
+This would be extra useful to start playback and recording, for example:
+.IP
+.nf
+\f[C]
+\fIpyradio -p 3 --record
+\fR
+.fi
+.PP
+This command would open the default playlist (or the one last used, if
+set in the config), using the default player, and start playing and
+recording station No 3.
+.IP \fBNote\fR
+If the default player is \fBVLC\fR on Windows, and
+the \[lq]\fB\[en]record\fR\[rq] command line parameter is used, a
+message informing the user that recording is not supported, will be
+displayed.
+.SS File location
+.PP
+Files created by the recording feature will be saved under the
+\[lq]\fBrecordings\fR\[rq] folder inside \fBpyradio\fR\[cq]s
+configuration directory.
+.PP
+The file will be named:
+.IP
+.nf
+\f[C]
+\fI[date] [Station Name].mkv
+\fR
+.fi
+.SS File type
+.PP
+\fBpyradio\fR will produce a \fImkv\fR file when recording a
+station.
+.PP
+This is just a measure of convenience since the type of audio (mp3, aac,
+aac+, flac, etc.)
+the station will broadcast cannot be known beforehand (before starting
+the recording, that is).
+.PP
+Although a \fImkv\fR file is a video/audio/subs etc.  container, it\[cq]s perfectly fine to contain just a sound stream, as is the case of the files produced by \fBpyradio\fR.
+.PP
+The file can be (hopefully) reproduced using any video media player.
+.SS Chapters
+.PP
+As a convenience, \fBpyradio\fR will write chapter markers to the
+file produced, provided that:
+.IP "1." 3
+\fBMKVToolNix\fR (\fIhttps://mkvtoolnix.download/\fR) is installed.
+
+\fBMKVToolNix\fR is a set of tools to create, alter and inspect
+\fBMatroska\fR (\fIhttp://www.matroska.org/\fR) files under Linux, other Unices and Windows.
+
+\fBpyradio\fR uses \fImkvmerge\fR (\fImkvmerge.exe\fR on
+Windows) to add chapters to the MKV file.
+.IP "2." 3
+The stations will provide \fIICY Titles\fR (the titles will be used
+as \fBchapter titles\fR).
+.PP
+Things to consider:
+.IP \[bu] 2
+The first chaprer will always be at 00:00 and will be the name of the
+station.
+.IP \[bu] 2
+Chapters markers timing depends on the time the \fIICY Titles\fR are
+received, plus any overhead added by \fBpyradio\fR.
+
+This means that, for whatever reason, a chapter marker may not exactly
+point to the beginning of the song associated with it.
+.PP
+The image below shows how a chapter aware player will display and handle
+chapter markers found in a MKV file. This is the \fBMedia Player
+Classic\fR (\fIhttps://sourceforge.net/projects/mpc-hc/\fR) on Windows 7.
+.PP
+\fIhttps://members.hellug.gr/sng/pyradio/pyradio-chapters.gif\fR
+.SS MKVToolNix installation
+.PP
+Why would I want to install yet another package / program, you may ask.
+.PP
+Here\[cq]s why:
+.IP "1." 3
+Through \fBMKVToolNix\fR it is possible to have the songs titles
+embedded in the recorded file itself.
+.IP "2." 3
+If the player used to reproduce the recorded file is chapters aware
+(most are), you can also navigate to the songs; their titles will be
+availabe at the \fBChapters\fR menu (wherever the application
+chooses to place it).
+.IP "3." 3
+If your player of choice for \fBpyradio\fR is \fBMPlayer\fR, you
+really should take the time to install \fBMKVToolNix\fR.
+
+The reason is that \fBMPlayer\fR will dump the audio data it
+receives to the file without any alteration.
+This means that even though the saved file will have the \fImkv\fR
+extension, the file will not be a valid Mastroka file; it will be an
+MP3, a FLAC, a AAC or whatever encoding is used by the station.
+
+Using \fBMKVToolNix\fR to add chapters to the file will actually
+create a valid \fImkv\fR file.
+.PP
+Having said that, let\[cq]s see how to install \fBMKVToolNix\fR.
+.SS Linux
+.PP
+On \fBLinux\fR you will have no problem installing the package; all
+distros will include it, either as \fImkvtoolnix\fR, or
+\fImkvtoolnix-cli\fR or whatever.
+.PP
+Just make sure that after the installation you can execute
+\fBmkvmerge\fR from a terminal.
+.SS MacOS
+.PP
+On \fBMacOS\fR, it all depends on your System Version, i guess.
+.PP
+First try to use \fBHomeBrew\fR (\fIhttps://brew.sh/\fR):
+.IP
+.nf
+\f[C]
+\fIbrew install mkvtoolnix
+\fR
+.fi
+.PP
+I do not know if using HomeBrew for the installation
+will place \fBmkvmerge\fR into your PATH, but if it does, you are
+done.
+.PP
+I was not able to install it on \fICatalina\fR using HomeBrew, so I
+ended up using the AppImage from
+\fBMKVToolNix\fR (\fIhttps://mkvtoolnix.download/downloads.html#macosx\fR).
+Just make sure you download the right version for your system.
+.PP
+Then, since the installed application was not in the PATH (so that
+\fBpyradio\fR finds \fBmkvmerge\fR), I just executed (in a
+terminal):
+.IP
+.nf
+\f[C]
+\fIsudo find / -name mkvmerge
+\fR
+.fi
+.PP
+and ended up with
+.IP
+.nf
+\f[C]
+\fI/System/Volumes/Data/Applications/MKVToolNix-54.0.0.app/Contents/MacOS/mkvmerge
+/Applications/MKVToolNix-54.0.0.app/Contents/MacOS/mkvmerge
+\fR
+.fi
+.PP
+Since I do not know the difference between the first and second result,
+I will just use the second one, just because it is shorter :)
+.PP
+So, finally:
+.IP
+.nf
+\f[C]
+\fImkdir -p \[ti]/.config/pyradio/data
+echo \[aq]#!/bin/bash\[aq] > \[ti]/.config/pyradio/data/mkvmerge
+echo \[aq]/Applications/MKVToolNix-54.0.0.app/Contents/MacOS/mkvmerge\  \[dq]$\[at]\[dq]\[aq] >> \[ti]/.config/pyradio/data/mkvmerge
+chmod +x \[ti]/.config/pyradio/data/mkvmerge
+\fR
+.fi
+.SS Files location
+.PP
+The file produced by the recording function will be placed in the
+\fBrecordings\fR directory, inside the \fIconfiguration
+directory\fR.
+.PP
+If \fBMKVToolNix\fR is not installed, the file will be downloaded in
+this directory and will not be altered by \fBpyradio\fR.
+.PP
+If \fBMKVToolNix\fR is installed, the file will initially be
+downloaded in the \[lq]\fIdata\fR\[rq] directory; the final file,
+after chapters addition, will be placed in the \fBrecordings\fR
+directory and the downloaded file will be deleted.
+.SS Pausing playback
+.PP
+After you have started recording a station, \fBpyradio\fR will
+connect to it and start downloading the station data and at the same
+time will produce sound for you to hear what\[cq]s downloaded.
+.PP
+You can then press \[lq]\fISpace\fR\[rq] to pause the playback, but
+still continue downloading the station\[cq]s data.
+.PP
+Pressing \[lq]\fISpace\fR\[rq] again will resume playback from where
+it left off.
+.PP
+As a consequence, listening to the end of a show that you have paused
+for say 10 minutes, and then stopping the station (both playback and
+recording), the file recorded will have an excess of 10 minutes of data,
+past the end of the actual show.
+.PP
+Finally, please keep in mind that all other keys relevant to starting,
+stopping and restarting a station\[cq]s playback remain the same; only
+the behavior of the \[lq]\fISpace\fR\[rq] key has changed when
+recording is on.
+
+.SH See also
+
+    pyradio(1)
+
+

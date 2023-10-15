@@ -36,11 +36,12 @@ ___
             * [Linux](#linux)
             * [MacOS](#macos)
             * [Windows](#windows)
+    * [Files location](#files-location)
     * [Pausing playback](#pausing-playback)
 
 <!-- vim-markdown-toc -->
 
-[[Return to main doc]](README.md)
+[[Return to main doc]](README.md#recording-stations)
 
 ## Intro
 
@@ -195,9 +196,27 @@ The image below shows how a chapter aware player will display and handle chapter
 
 #### MKVToolNix installation
 
+Why would I want to install yet another package / program, you may ask.
+
+Here's why:
+
+1. Through **MKVToolNix** it is possible to have the songs titles embedded in the recorded file itself.
+
+2. If the player used to reproduce the recorded file is chapters aware (most are), you can also navigate to the songs; their titles will be availabe at the **Chapters** menu (wherever the application chooses to place it).
+
+3. If your player of choice for **PyRadio** is **MPlayer**, you really should take the time to install **MKVToolNix**. \
+\
+The reason is that **MPlayer** will dump the audio data it receives to the file without any alteration. This means that even though the saved file will have the *mkv* extension, the file will not be a valid Mastroka file; it will be an MP3, a FLAC, a AAC or whatever encoding is used by the station. \
+\
+Using **MKVToolNix** to add chapters to the file will actually create a valid **mkv** file.
+
+Having said that, let's see how to install **MKVToolNix**.
+
 ##### Linux
 
 On **Linux** you will have no problem installing the package; all distros will include it, either as *mkvtoolnix*, or *mkvtoolnix-cli* or whatever.
+
+Just make sure that after the installation you can execute **mkvmerge** from a terminal.
 
 ##### MacOS
 
@@ -254,6 +273,17 @@ To do that, open **PyRadio** and press "*\\o*" to open the configuradio folder i
 3. Create a folder named "**mkvtoolnix**"
 
 4. Extract the **7z** file you previously downloaded, in the "**mkvtoolnix**" folder.
+
+### Files location
+
+The file produced by the recording function will be placed in the **recordings** directory, inside the *configuration directory*.
+
+If **MKVToolNix** is not installed, the file will be downloaded in this directory and will not be altered by **PyRadio**.
+
+If **MKVToolNix** is installed, the file will initially be downloaded in the "*data*" directory; the final file, after chapters addition, will be placed in the **recordings** directory and the downloaded file will be deleted.
+
+
+**Note:** On **Windows**, if **MKVToolNix** is installed, a dedicated routine will be executed at program's startup to remove all recording related files from the "*data*" folder.
 
 ### Pausing playback
 

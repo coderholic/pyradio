@@ -72,11 +72,12 @@ a:visited{color: SaddleBrown;}
 <li><a href="#windows">Windows</a></li>
 </ul></li>
 </ul></li>
+<li><a href="#files-location">Files location</a></li>
 <li><a href="#pausing-playback">Pausing playback</a></li>
 </ul></li>
 </ul>
 <!-- vim-markdown-toc -->
-<p><a href="README.html">[Return to main doc]</a></p>
+<p><a href="README.html#recording-stations">[Return to main doc]</a></p>
 <h2 id="intro">Intro <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio v. 0.9.2.8</strong> introduces the ability to record stations, a feature used mainly to facilitate another feature: the ability to <em>pause and resume playback</em>.</p>
 <p>All supported media players (<strong>MPV</strong>, <strong>MPlayer</strong> and <strong>VLC</strong>) support stream recording, each implementing it in a different way, which pose a challenge for the front end implementation.</p>
@@ -188,8 +189,21 @@ This means that, for whatever reason, a chapter marker may not exactly point to 
 <p><a href="https://members.hellug.gr/sng/pyradio/pyradio-chapters.gif" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-chapters.gif" alt="PyRadio Chapters" /></a></p>
 
 <h4 id="mkvtoolnix-installation">MKVToolNix installation</h4>
+<p>Why would I want to install yet another package / program, you may ask.</p>
+<p>Here’s why:</p>
+<ol type="1">
+<li><p>Through <strong>MKVToolNix</strong> it is possible to have the songs titles embedded in the recorded file itself.</p></li>
+<li><p>If the player used to reproduce the recorded file is chapters aware (most are), you can also navigate to the songs; their titles will be availabe at the <strong>Chapters</strong> menu (wherever the application chooses to place it).</p></li>
+<li><p>If your player of choice for <strong>PyRadio</strong> is <strong>MPlayer</strong>, you really should take the time to install <strong>MKVToolNix</strong>.<br />
+<br />
+The reason is that <strong>MPlayer</strong> will dump the audio data it receives to the file without any alteration. This means that even though the saved file will have the <em>mkv</em> extension, the file will not be a valid Mastroka file; it will be an MP3, a FLAC, a AAC or whatever encoding is used by the station.<br />
+<br />
+Using <strong>MKVToolNix</strong> to add chapters to the file will actually create a valid <strong>mkv</strong> file.</p></li>
+</ol>
+<p>Having said that, let’s see how to install <strong>MKVToolNix</strong>.</p>
 <h5 id="linux">Linux</h5>
 <p>On <strong>Linux</strong> you will have no problem installing the package; all distros will include it, either as <em>mkvtoolnix</em>, or <em>mkvtoolnix-cli</em> or whatever.</p>
+<p>Just make sure that after the installation you can execute <strong>mkvmerge</strong> from a terminal.</p>
 <h5 id="macos">MacOS</h5>
 <p>On <strong>MacOS</strong>, it all depends on your System Version, i guess.</p>
 <p>First try to use <a target="_blank" href="https://brew.sh/">HomeBrew</a>:</p>
@@ -222,6 +236,11 @@ To do that, open <strong>PyRadio</strong> and press “<em>\o</em>” to open th
 <li><p>Create a folder named “<strong>mkvtoolnix</strong>”</p></li>
 <li><p>Extract the <strong>7z</strong> file you previously downloaded, in the “<strong>mkvtoolnix</strong>” folder.</p></li>
 </ol>
+<h3 id="files-location">Files location</h3>
+<p>The file produced by the recording function will be placed in the <strong>recordings</strong> directory, inside the <em>configuration directory</em>.</p>
+<p>If <strong>MKVToolNix</strong> is not installed, the file will be downloaded in this directory and will not be altered by <strong>PyRadio</strong>.</p>
+<p>If <strong>MKVToolNix</strong> is installed, the file will initially be downloaded in the “<em>data</em>” directory; the final file, after chapters addition, will be placed in the <strong>recordings</strong> directory and the downloaded file will be deleted.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> On <strong>Windows</strong>, if <strong>MKVToolNix</strong> is installed, a dedicated routine will be executed at program’s startup to remove all recording related files from the “<em>data</em>” folder.</p>
 <h3 id="pausing-playback">Pausing playback</h3>
 <p>After you have started recording a station, <strong>PyRadio</strong> will connect to it and start downloading the station data and at the same time will produce sound for you to hear what’s downloaded.</p>
 <p>You can then press “<strong>Space</strong>” to pause the playback, but still continue downloading the station’s data.</p>
