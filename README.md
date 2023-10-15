@@ -92,6 +92,7 @@ If you face this situation, please refer to [this page](pip-error.md) to resolve
 * [Reporting bugs](#reporting-bugs)
 * [Packaging PyRadio](#packaging-pyradio)
     * [Distro Specific Files](#distro-specific-files)
+    * [MKVToolNix cli installation](#mkvtoolnix-cli-installation)
 * [TODO](#todo)
 * [Acknowledgment](#acknowledgment)
 * [Special thanks](#special-thanks)
@@ -127,6 +128,7 @@ and much more...
     - python-dateutil
     - netifaces (optional)
 * MPV, MPlayer or VLC installed and in your path
+* MKVToolNix (cli files) to insert tags and chapters to recordings (optional)
 
 <!-- Changelog -->
 
@@ -1479,6 +1481,14 @@ sed -i "s,' -t ',' -d /path/to/desktop_file' + &," pyradio/main.py
 **2. Package Icon**
 
 As of **v. 0.9.1**, **PyRadio** includes the icon in its distribution files, so no further action is necessary.
+
+### MKVToolNix cli installation
+
+Another thing to consider is whether you should mark **MKVToolNix** command line utilities as a dependency for **PyRadio**.
+
+I would suggest to do so, in order to provide your users the best experience possible. If unsure, please refer to section [Chapters](recording.md#chapters) in the relevant document.
+
+In case you decide to do so, please make sure you mark as a dependency the **command line utilities**, not the GUI program, if that's on a different package on your distro. For examle, Arch Linux provides both a *mkvtoolnix-cli* and a *mkvtoolnix-gui* package; the first one should be used. Same thing with Debian Linux; it provides a *mkvtoolnix* and a *mkvtoolnix-gui* package.
 
 ## TODO
 

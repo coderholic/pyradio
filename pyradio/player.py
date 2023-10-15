@@ -426,7 +426,8 @@ class Player(object):
                         version=self._cnf.current_pyradio_version,
                         playlist=self._cnf.station_path,
                         )
-        self._chapters.look_for_mkvmerge()
+        else:
+            self._chapters.look_for_mkvmerge()
         f = datetime.now().strftime('%Y-%m-%d %H-%M-%S') + " " + name  + extension
         if self._chapters.HAS_MKVTOOLNIX:
             return os.path.join(self._cnf.data_dir, f)
@@ -1899,7 +1900,11 @@ class Player(object):
         opts, self.monitor_opts = self._buildStartOpts(streamUrl, isPlayList)
         self.stop_mpv_status_update_thread = False
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Executing command: {}'.format(' '.join(opts)))
+            try:
+                # python 2 exception with non-englsh chars
+                logger.info('Executing command: {}'.format(' '.join(opts)))
+            except:
+                pass
         if platform.startswith('win') and self.PLAYER_NAME == 'vlc':
             self.stop_win_vlc_status_update_thread = False
             ''' Launches vlc windowless '''
@@ -3667,7 +3672,7 @@ class PyRadioChapters(object):
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('starting mkvmerge!')
                 threading.Thread(
-                        target=self._write_chapters_to_file_thread(input_file)
+                        target=self.write_chapters_to_file_thread(input_file)
                     )
             else:
                 if logger.isEnabledFor(logging.INFO):
@@ -3676,7 +3681,7 @@ class PyRadioChapters(object):
             if logger.isEnabledFor(logging.INFO):
                 logger.info('empty input file provided! Exiting!')
 
-    def _write_chapters_to_file_thread(self, input_file):
+    def write_chapters_to_file_thread(self, input_file):
         if not input_file:
             return False
         if self.create_chapter_file(input_file):
@@ -3702,11 +3707,6 @@ class PyRadioChapters(object):
             outs, err = p.communicate()
             # logger.error('outs = "{0}", err = "{1}"'.format(outs, err))
             if p.returncode == 0:
-                for n in self._mkv_file, self._chapters_file, self._tag_file:
-                    try:
-                        os.remove(n)
-                    except:
-                        pass
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('MKV merge successful!')
                 for n in self._chapters_file, self._tag_file, self._mkv_file:
@@ -3723,8 +3723,8 @@ class PyRadioChapters(object):
     def create_chapter_file(self, input_file):
         if not input_file:
             return False
-        logger.error('HAS_MKVTOOLNIX = {}'.format(self.HAS_MKVTOOLNIX))
-        logger.error('input_file = "{}"'.format(input_file))
+        # logger.error('HAS_MKVTOOLNIX = {}'.format(self.HAS_MKVTOOLNIX))
+        # logger.error('input_file = "{}"'.format(input_file))
         if self.HAS_MKVTOOLNIX and \
                 os.path.exists(input_file):
             # input_file.endswith('.mkv'):

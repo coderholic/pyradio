@@ -38,7 +38,7 @@ purl = (
         https://sourceforge.net/projects/mpv-player-windows/files/latest/download
 '''
 zurl = [
-    'https://sourceforge.com/projects/mpv-player-windows/files/64bit/mpv-x86_64-20231001-git-e969072.7z/download',
+    'https://sourceforge.com/projects/mpv-player-windows/files/64bit/mpv-x86_64-20231015-git-78d4374.7z/download',
     'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder/r38151/mplayer-svn-38151-x86_64.7z/download'
 ]
 
@@ -741,9 +741,9 @@ def find_and_remove_recording_data(data_dir):
         ).start()
 
 def find_and_remove_recording_data_thread(data_dir):
-    files = glob.glob('*.mkv', root_dir=data_dir)
-    txt= glob.glob('*.txt', root_dir=data_dir)
-    xml = glob.glob('*.xml', root_dir=data_dir)
+    files = glob.glob(join(data_dir, '*.mkv'))
+    txt = glob.glob(join(data_dir, '*.txt'))
+    xml = glob.glob(join(data_dir, '*.xml'))
 
     for i in range(len(txt)-1, -1, -1):
         if txt[i].startswith('search-'):
