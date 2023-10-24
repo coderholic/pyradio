@@ -408,6 +408,7 @@ class SimpleCursesString(SimpleCursesWidget):
 
     def show(self, parent=None):
         if parent:
+            logger.error('parent = {}'.format(parent))
             self._win = self._parent = parent
         if self._full_selection and self._enabled and self._focused:
             self._print_full_line(self._color_focused)

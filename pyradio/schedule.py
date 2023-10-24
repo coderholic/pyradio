@@ -31,7 +31,7 @@ class PyRadioScheduleItemType(object):
     TYPE_START = 1
     TYPE_END = 2
 
-    items = 0, 1, 2
+    items = TYPE_START_END, TYPE_START, TYPE_END
 
     @classmethod
     def to_string(cls, a_type):
@@ -119,9 +119,33 @@ class PyRadioScheduleItem(object):
         if self._item is None:
            self._item = self.default_item
 
+    def __str__(self):
+        out = ['Current _item:']
+        for n in self._item.keys():
+            s = "  " + "'{}':  ".format(n).rjust(20)
+            if n == 'type':
+                out.append(s + "{} (".format(self._item[n]) + \
+                        PyRadioScheduleItemType.to_string(self._item['type']) +
+                           ')  -> '  + str(type(self.item[n]))
+                )
+            elif n in ('start_type', 'end_type'):
+                out.append(s + "{} (".format(self._item[n]) + \
+                        PyRadioScheduleTimeType.to_string(self._item[n]) \
+                        + ')  -> ' + str(type(self._item[n]))
+                )
+            elif n in ('start_time', 'end_time', 'start_duration', 'end_duration'):
+                t = self._item[n][-1]
+                x = self._item[n][:-1]
+                out.append(s + str(x)[:-1] + \
+                        ', {0} ({1})]  -> {2}'.format(t, PyRadioTime.to_string(t), type(self._item[n])))
+            else:
+                out.append(s + str(self._item[n]) + '  -> ' + str(type(self._item[n])))
+        return '\n'.join(out)
+
     @property
-    def item(self):
-        st, en = self.get_active_dates()
+    def active_item(self):
+        '''return the item after calculating all relative values'''
+        st, en, _, _, _ = self.get_active_item()
         out = {
             'type': self._item['type'],
             'start_type': 0,
@@ -136,6 +160,10 @@ class PyRadioScheduleItem(object):
             'station': self._item['station']
         }
         return out
+
+    @property
+    def item(self):
+        return self._item
 
     @item.setter
     def item(self, val):
@@ -152,22 +180,29 @@ class PyRadioScheduleItem(object):
                 self.item = self.default_item
                 raise ValueError('Item is missing keys')
 
+        '''make sure duration times are of NO_AM_PM_FORMAT'''
+        self._item['start_duration'][-1] = 0
+        self._item['end_duration'][-1] = 0
+
     @property
     def default_item(self):
         n_date, n_time = self._get_today_plus_one_hour()
         t_date, t_time = self._get_today()
         return {
-            'type': 2,
-            'start_type': 0,
-            'start_date':  t_date,
-            'start_time': t_time,
-            'start_duration': [0, 0, 0, 0],
-            'end_type': 0,
+            'type': 2, # TYPE_START_END, TYPE_START, TYPE_END
+            'start_type': 0, # TIME_ABSOLUTE, TIME_RELATIVE
+            'start_date':  t_date, # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'start_time': t_time, # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'start_duration': [0, 0, 0, 0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'end_type': 0, # TIME_ABSOLUTE, TIME_RELATIVE
             'end_date': n_date,
-            'end_time': n_time,
-            'end_duration': [0, 0, 0, 0],
-            'playlist': 'stations',
-            'station': ''
+            'end_time': n_time, # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'end_duration': [0, 0, 0, 0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'recording': 0,
+            'buffering': 0,
+            'repeat': None,
+            'playlist': None,
+            'station': None
         }
 
     @property
@@ -190,10 +225,31 @@ class PyRadioScheduleItem(object):
 
     @start_type.setter
     def start_type(self, val):
-        if self._check_start_end_type(val):
-            self._item['start_type'] = val
-        else:
-            raise ValueError('Invalid item start_type')
+        self._item['start_type'] = val
+
+    @property
+    def start_date(self):
+        return self._item['start_date']
+
+    @start_date.setter
+    def start_date(self, val):
+        self._item['start_date'] = val
+
+    @property
+    def start_time(self):
+        return self._item['start_time']
+
+    @start_time.setter
+    def start_time(self, val):
+        self._item['start_time'] = val
+
+    @property
+    def start_duration(self):
+        return self._item['start_duration']
+
+    @start_duration.setter
+    def start_duration(self, val):
+        self._item['start_duration'] = val
 
     @property
     def end_type(self):
@@ -201,10 +257,71 @@ class PyRadioScheduleItem(object):
 
     @end_type.setter
     def end_type(self, val):
-        if self._check_start_end_type(val):
-            self._item['end_type'] = val
-        else:
-            raise ValueError('Invalid item end_type')
+        self._item['end_type'] = val
+
+    @property
+    def end_date(self):
+        return self._item['end_date']
+
+    @end_date.setter
+    def end_date(self, val):
+        self._item['end_date'] = val
+
+    @property
+    def end_time(self):
+        return self._item['end_time']
+
+    @end_time.setter
+    def end_time(self, val):
+        self._item['end_time'] = val
+
+    @property
+    def end_duration(self):
+        return self._item['end_duration']
+
+    @end_duration.setter
+    def end_duration(self, val):
+        self._item['end_duration'] = val
+
+    @property
+    def recording(self):
+        return self._item['recording']
+
+    @recording.setter
+    def recording(self, val):
+        self._item['recording'] = val
+
+    @property
+    def buffering(self):
+        return self._item['buffering']
+
+    @buffering.setter
+    def buffering(self, val):
+        self._item['buffering'] = val
+
+    @property
+    def repeat(self):
+        return self._item['repeat']
+
+    @repeat.setter
+    def repeat(self, val):
+        self._item['repeat'] = val
+
+    @property
+    def playlist(self):
+        return self._item['playlist']
+
+    @playlist.setter
+    def playlist(self, val):
+        self._item['playlist'] = val
+
+    @property
+    def station(self):
+        return self._item['station']
+
+    @station.setter
+    def station(self, val):
+        self._item['station'] = val
 
     def _check_start_end_type(self, val):
         try:
@@ -218,53 +335,82 @@ class PyRadioScheduleItem(object):
             pass
         return False
 
-    def get_active_dates(self):
+    def get_active_item(self):
         '''
         return a tuple of datetimes representing
-        the (starting date-time, ending date-time)
+        (
+            starting date-time,
+            ending date-time,
+            type (start/stop/both)
+            playlist (None if TYPE_END)
+            station (None if TYPE_END)
+            recording (0 if TYPE_END)
+            buffering (0 if TYPE_END
+            repeat (None if TYPE_END)
+        )
         '''
         today = datetime.now().replace(microsecond=0)
-        if self._item['start_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
-            start_date = datetime(
-                year=self._item[ 'start_date' ][0],
-                month=self._item[ 'start_date' ][1],
-                day=self._item[ 'start_date' ][2],
-            ) + PyRadioTime.pyradio_time_to_timedelta(
-                self._item['start_time']
-            )
-        else:
-            start_date = today + PyRadioTime.pyradio_time_to_timedelta(
-                self._item['start_duration']
-            )
-
-        if self._item['end_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
-            end_date = datetime(
-                self._item['end_date'][0],
-                self._item['end_date'][1],
-                self._item['end_date'][1]
-            ) + timedelta(
-                hours=self._item['end_time'][0],
-                minutes=self._item['end_time'][1],
-                seconds=self._item['end_time'][2],
-            )
-        else:
-            if self._item['type'] == PyRadioScheduleItemType.TYPE_END:
-                use_date = today
+        if self._item['type'] in (
+                PyRadioScheduleItemType.TYPE_START_END,
+                PyRadioScheduleItemType.TYPE_START
+        ):
+            if self._item['start_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
+                start_date = datetime(
+                    year=self._item['start_date'][0],
+                    month=self._item['start_date'][1],
+                    day=self._item['start_date'][2],
+                ) + PyRadioTime.pyradio_time_to_timedelta(
+                    self._item['start_time']
+                )
             else:
-                use_date = start_date
-            end_date = use_date + timedelta(
-                hours=self._item['end_duration'][0],
-                minutes=self._item['end_duration'][1],
-                seconds=self._item['end_duration'][2]
-            )
+                start_date = today + PyRadioTime.pyradio_time_to_timedelta(
+                    self._item['start_duration']
+                )
 
-        return start_date, end_date
+
+        if self._item['type'] in (
+                PyRadioScheduleItemType.TYPE_START_END,
+                PyRadioScheduleItemType.TYPE_END
+        ):
+            if self._item['end_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
+                end_date = datetime(
+                    self._item['end_date'][0],
+                    self._item['end_date'][1],
+                    self._item['end_date'][1]
+                ) + timedelta(
+                    hours=self._item['end_time'][0],
+                    minutes=self._item['end_time'][1],
+                    seconds=self._item['end_time'][2],
+                )
+            else:
+                if self._item['type'] == PyRadioScheduleItemType.TYPE_END:
+                    use_date = today
+                else:
+                    use_date = start_date
+                end_date = use_date + timedelta(
+                    hours=self._item['end_duration'][0],
+                    minutes=self._item['end_duration'][1],
+                    seconds=self._item['end_duration'][2]
+                )
+
+        if self._item['type'] == PyRadioScheduleItemType.TYPE_START:
+            end_date = start_date
+        elif self._item['type'] == PyRadioScheduleItemType.TYPE_END:
+            start_date = end_date
+        return (start_date, end_date,
+                self._item['type'],
+                self._item['playlist'] if self._item['type'] != PyRadioScheduleItemType.TYPE_END else None,
+                self._item['station'] if self._item['type'] != PyRadioScheduleItemType.TYPE_END else None,
+                self._item['recording'],
+                self._item['buffering'],
+                self._item['repeat']
+                )
 
     def _get_today(self):
         ''' get today as pyradio date and time '''
         today = datetime.now()
         return [today.year, today.month, today.day], \
-            [today.hour, today.minute, 0, 0]
+                [today.hour, today.minute, 0, 0]
 
     def _get_today_plus_one_hour(self):
         today = datetime.now() + relativedelta(hours=+1)
@@ -313,6 +459,14 @@ class PyRadioTime(object):
         if self.time is None:
             self.time = PyRadioTime.string_to_pyradio_time(datetime.now().strftime('%H:%M%S'))
         return self.date.strftime('%Y-%m-%d') + ' ' + PyRadioTime.pyradio_time_to_string(self.time)
+
+    @classmethod
+    def to_string(cls, a_time_format):
+        if a_time_format == 1:
+            return 'AM_FORMAT'
+        elif a_time_format == 2:
+            return 'PM_FORMAT'
+        return 'NO_AM_PM_FORMAT'
 
     def set_date_and_time(self, a_date_time_string):
         sp = a_date_time_string.split(' ')
@@ -588,12 +742,15 @@ if __name__ == '__main__':
         'type': PyRadioScheduleItemType.TYPE_START_END,
         'start_type': 0,                            # TIME_ABSOLUTE, TYPE_RELATIVE
         'start_date':  [2022, 10, 15],
-        'start_time': [11, 15, 12, 2],              # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
-        'start_duration': [0, 0, 0, 0],
+        'start_time': [8, 15, 12, 2],              # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+        'start_duration': [1, 0, 0, 0],
         'end_type': 1,                              # TIME_ABSOLUTE, TYPE_RELATIVE
         'end_date': [2023, 1, 1],
         'end_time': [3, 12, 2, 1],                  # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
-        'end_duration': [2, 15, 11, 0],
+        'end_duration': [5, 15, 11, 0],
+        'recording': 0,
+        'buffering': 0,
+        'repeat': None,
         'playlist': 'myplaylist',
         'station': 'mystation'
     }
@@ -603,8 +760,12 @@ if __name__ == '__main__':
     print('\n\n============')
 
     b = PyRadioScheduleItem(an_item)
-    x, y = b.get_active_dates()
-    print('start_date:', str(x))
-    print('  end_date:', str(y))
-    for n,k in b.item.items():
-        print(n, ":", k)
+    print('b =', b)
+    u = b.get_active_item()
+    print('\n\n')
+    print(b.get_active_item())
+    print('start_date:', str(u[0]))
+    print('  end_date:', str(u[1]))
+    print('      type:', PyRadioScheduleItemType.to_string(u[2]))
+    print('  playlist:', u[3])
+    print('   station:', u[4])

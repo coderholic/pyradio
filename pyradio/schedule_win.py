@@ -23,28 +23,34 @@ class PyRadioSimpleScheduleWindow(object):
     _global_functions = {}
     _showed = False
 
-    '''       0  1  2  3   4   5   6   7  8   9  10 11 12  13  14  15  16'''
-    _up =   (14, 0, 1, 11, 2, 3, 15,  16, 4,  5, 8, 9,  6,  7, 10, 12, 13)
+    '''     0  1  2   3  4  5   6   7  8  9  10 11 12 13 14  15  16  17  18  19  20  21  22'''
+    _up = (20, 0, 1, 19, 2, 3, 21, 22, 4, 5, 8, 9, 6, 7, 10, 14, 11, 15, 17, 16, 18, 12, 13)
 
     lock = threading.Lock()
     _tips = (
         'The playlist to open',
         'The stations to play',
-        'Enable Start Timer (time to start playback).',
-        'The date ',
-        'Absolute time to start playback.',
-        'Absolute time to start playback.',
+        'Enable Start Timer (time to start playback)',
+        'The date the playback will start',
+        'Absolute time to start playback',
+        'Absolute time to start playback',
         'Start playback XX:XX:XX after the time "OK" is pressed',
         'Start playback XX:XX:XX after the time "OK" is pressed',
-        'Enable Stop Timer (time to stop playback).',
-        'The date',
-        'Absolute time to stop playback.',
-        'Absolute time to stop playback.',
-        'Stop playback XX:XX:XX after the time "OK" is pressed.',
-        'Stop playback XX:XX:XX after the time "OK" is pressed.',
-        'Remove this schedule.',
-        'Save changes to this schedule item.',
-        'Cancel changes to this schedule item.'
+        'Enable Stop Timer (time to stop playback)',
+        'The date the playback will stop',
+        'Absolute time to stop playback',
+        'Absolute time to stop playback',
+        'Stop playback XX:XX:XX after the time "OK" is pressed',
+        'Stop playback XX:XX:XX after the time "OK" is pressed',
+        'The player to use',
+        'Enable recording the station to a file',
+        'Play no sound while recording',
+        'Enable buffering (using default parameters)',
+        'Enable recurrence for this setup',
+        'Recurrence parameter for this setup',
+        'Remove this schedule',
+        'Save changes to this schedule item',
+        'Cancel changes to this schedule item'
     )
     def __init__(
             self, parent,
@@ -57,50 +63,57 @@ class PyRadioSimpleScheduleWindow(object):
         self._station = station
         self._maxX = 60
         self._displacement = 3
-        self._maxY = 17
+        self._maxY = 18
         self._global_functions = global_functions
         self._get_parent(parent)
-        self._focus = 9
+        self._focus = 8
+        self.set_item(schedule_item, playlist, station)
+
+    def set_item(self, schedule_item=None, playlist=None, station=None):
         if schedule_item is None:
-            pl = self._playlist
-            if pl is None:
-                pl = ''
-            st = self._station
-            if st is None:
-                st = ''
-            ''' create a schedule item '''
-            a_date = datetime.now() + timedelta(hours=1)
-            a_date_str = a_date.strftime('%Y-%m-%d %H:%M:%S')
-            logger.error('a_date_str = "{}"'.format(a_date_str))
-            it_str = 'E`|`' + a_date_str + '`|`A`|`' + a_date_str + '`|`A`|`'  + pl + '`|`' + st
-            logger.error('it_str = {}'.format(it_str))
             self._schedule_item = PyRadioScheduleItem()
-            # TODO !!!
-            # self._schedule_item.set_item(it_str)
-            self._focus = 8
+            self._schedule_item.item['end_date'] = [2023, 11, 12]
+            self._schedule_item.item['end_time'] = [20, 1, 2, 0]
+            self._schedule_item.item['end_duration'] = [3, 15, 2, 0]
+            if playlist:
+                self._schedule_item.playlist = playlist
+            if station:
+                self._schedule_item.station = station
             self._remove_enabled = False
         else:
-            self._schedule_item = schedule_item
+            self._schedule_item = PyRadioScheduleItem(schedule_item)
             self._remove_enabled = True
 
         ''' parse and assign values '''
 
     def _move_widgets(self):
-        self._widgets[0].move(0 + self._Y, 2 + self._X)
-        self._widgets[1].move(1 + self._Y, 2 + self._X)
+        # self._widgets[0].move(1,2)
+        # self._widgets[1].move(2,2)
+        # Start
         self._widgets[2].move(4 + self._Y, 5 + self._X)
-        self._widgets[3].move(5 + self._Y, 9 + self._X)
-        self._widgets[4].move(4 + self._Y, self._widgets[1].X + self._widgets[1].width)
-        self._widgets[5].move(5 + self._Y, self._widgets[2].X + self._widgets[2].width + 4)
-        self._widgets[6].move(5 + self._Y, self._widgets[3].X + self._widgets[3].width)
-        self._widgets[7].move(6 + self._Y, 5 + self._X)
-        self._widgets[8].move(4 + self._displacement + self._Y, 9 + self._X)
-        self._widgets[9].move(3 + self._displacement + self._Y, self._widgets[6].X + self._widgets[6].width)
-        self._widgets[10].move(4 + self._displacement + self._Y, self._widgets[7].X + self._widgets[7].width + 4)
-        self._widgets[11].move(4 + self._displacement + self._Y, self._widgets[8].X + self._widgets[8].width)
-        self._widgets[12].move(6 + self._displacement + self._Y, self._X + 2)
-        self._widgets[13].move(self._widgets[10].Y, self._X + self._maxX - 19)
-        self._widgets[14].move(self._widgets[10].Y, self._X + self._maxX - (len(self._widgets[12].caption) + 6))
+        self._widgets[3].move(4, self._widgets[2].X + self._widgets[2].width - self._X)
+        self._widgets[4].move(5 + self._Y, 9 + self._X)
+        self._widgets[5].move(5, self._widgets[4].X + self._widgets[4].width - self._X)
+        self._widgets[6].move(5 + self._Y, self._X + self._widgets[5].X + self._widgets[5].width + 4)
+        self._widgets[7].move(5, self._widgets[6].X + self._widgets[6].width - self._X)
+        # End
+        self._widgets[8].move(6 + self._Y, 5 + self._X)
+        self._widgets[9].move(6, self._widgets[8].X + self._widgets[8].width - self._X)
+        self._widgets[10].move(7 + self._Y, 9 + self._X)
+        self._widgets[11].move(7, self._widgets[10].X + self._widgets[10].width - self._X)
+        self._widgets[12].move(7 + self._Y, self._X + self._widgets[11].X + self._widgets[11].width + 4)
+        self._widgets[13].move(7, self._widgets[12].X + self._widgets[12].width - self._X)
+        # options
+        # self._widgets[14].move(8, 3)
+        self._widgets[15].move(6 + self._displacement + self._Y, self._X + 9)
+        self._widgets[16].move(6 + self._displacement + self._Y, self._widgets[15].X + self._widgets[15].width)
+        self._widgets[17].move(7 + self._displacement + self._Y, self._X + 9)
+        self._widgets[18].move(8 + self._displacement + self._Y, self._X + 5)
+        self._widgets[19].move(8 + self._displacement + self._Y, self._widgets[17].X + self._widgets[18].width)
+        # Buttons
+        self._widgets[20].move(10 + self._displacement + self._Y, self._X + 2)
+        self._widgets[21].move(self._widgets[20].Y, self._X + self._maxX - 19)
+        self._widgets[22].move(self._widgets[20].Y, self._X + self._maxX - (len(self._widgets[13].caption) + 12))
 
     def _get_parent(self, parent):
         self._parent = parent
@@ -111,6 +124,7 @@ class PyRadioSimpleScheduleWindow(object):
             self._Y = new_Y
             self._X = new_X
         self._win = curses.newwin(self._maxY, self._maxX, self._Y, self._X)
+        logger.error('This is the Window! get_parrent: self._win = {}'.format(self._win))
         self._init_win()
 
     def _init_win(self):
@@ -134,228 +148,294 @@ class PyRadioSimpleScheduleWindow(object):
         if self._win:
             self._win.mvwin(self._Y, self._X)
 
+    def _add_widgets(self):
+        self._widgets = []
+
+        ''' id 0 playlist string '''
+        logger.error('passing win to widgets = {}'.format(self._win))
+        self._widgets.append(
+            SimpleCursesString(
+                Y=1,X=2,
+                parent=self._win,
+                caption='Playlist: ',
+                string='Any playlist',
+                color=curses.color_pair(10),
+                color_focused=curses.color_pair(9),
+                color_not_focused=curses.color_pair(11),
+                color_disabled=curses.color_pair(10),
+            )
+        )
+        self._widgets[-1].w_id = 0
+
+        ''' id 1 stations string '''
+        self._widgets.append(
+            SimpleCursesString(
+                Y=2, X=2,
+                parent=self._win,
+                caption=' Station: ',
+                string='Any station',
+                color=curses.color_pair(10),
+                color_focused=curses.color_pair(9),
+                color_not_focused=curses.color_pair(11),
+                color_disabled=curses.color_pair(10),
+            )
+        )
+        self._widgets[-1].w_id = 1
+
+        ''' id 2 start check box '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                4 + self._Y, 5 + self._X, 'Start playback on: ',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 2
+
+        ''' id 3 start at date box '''
+        self._widgets.append(
+            SimpleCursesDate(
+                Y=4, X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                window=self._win,
+                color=curses.color_pair(10),
+                color_focused=curses.color_pair(9),
+                next_widget_func=self._next_widget,
+                previous_widget_func=self._previous_widget,
+                global_functions=self._global_functions
+            )
+        )
+        self._widgets[-1].w_id = 3
+
+        ''' id 4 start at check box '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                5 + self._Y, 9 + self._X, 'At: ',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 4
+
+        ''' id 5 start at time '''
+        self._widgets.append(
+            SimpleCursesTime(
+                Y=5, X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                window=self._win,
+                color=curses.color_pair(10),
+                show_am_pm=True,
+                color_focused=curses.color_pair(9),
+                next_widget_func=self._next_widget,
+                previous_widget_func=self._previous_widget,
+                global_functions=self._global_functions,
+                string=PyRadioTime.pyradio_time_to_string(self._schedule_item.item['start_time'])
+            )
+        )
+        self._widgets[-1].w_id = 5
+
+        ''' id 6 start in check box '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                5 + self._Y,
+                self._widgets[-1].X + self._widgets[-1].width + 14, 'In: ',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 6
+
+        ''' id 7 start in time '''
+        self._widgets.append(
+            SimpleCursesTime(
+                Y=5, X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                window=self._win,
+                color=curses.color_pair(10),
+                color_focused=curses.color_pair(9),
+                next_widget_func=self._next_widget,
+                previous_widget_func=self._previous_widget,
+                global_functions=self._global_functions,
+                string=PyRadioTime.pyradio_time_to_string(self._schedule_item.item['start_duration'])
+            )
+        )
+        self._widgets[-1].w_id = 7
+
+        ''' id 8 stop check box '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                6 + self._Y, 5 + self._X, 'End playback on: ',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 8
+
+        ''' id 9 stop at date box '''
+        self._widgets.append(
+            SimpleCursesDate(
+                Y=6, X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                window=self._win,
+                color=curses.color_pair(10),
+                color_focused=curses.color_pair(9),
+                next_widget_func=self._next_widget,
+                previous_widget_func=self._previous_widget,
+                global_functions=self._global_functions
+            )
+        )
+        self._widgets[-1].w_id = 9
+
+        ''' id 10 stop at check box '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                4 + self._displacement + self._Y, 9 + self._X, 'At: ',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 10
+
+        ''' id 11 stop at time '''
+        self._widgets.append(
+            SimpleCursesTime(
+                Y=7, X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                window=self._win,
+                show_am_pm=True,
+                color=curses.color_pair(10),
+                color_focused=curses.color_pair(9),
+                next_widget_func=self._next_widget,
+                previous_widget_func=self._previous_widget,
+                global_functions=self._global_functions,
+                string=PyRadioTime.pyradio_time_to_string(self._schedule_item.item['end_time'])
+            )
+        )
+        self._widgets[-1].w_id = 11
+
+        ''' id 12 stop in check box '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                4 + self._displacement + self._Y,
+                self._widgets[-1].X + self._widgets[-1].width + 14, 'In: ',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 12
+
+        ''' id 13 stop in time '''
+        self._widgets.append(
+            SimpleCursesTime(
+                Y=7,X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                window=self._win,
+                color=curses.color_pair(10),
+                color_focused=curses.color_pair(9),
+                next_widget_func=self._next_widget,
+                previous_widget_func=self._previous_widget,
+                global_functions=self._global_functions,
+                string=PyRadioTime.pyradio_time_to_string(self._schedule_item.item['end_duration'])
+            )
+        )
+        self._widgets[-1].w_id = 13
+
+
+        ''' id 14 player '''
+        self._widgets.append(
+            SimpleCursesString(
+                Y=8, X=3,
+                parent=self._win,
+                caption='Player: ',
+                string='mpv',
+                color=curses.color_pair(10),
+                color_focused=curses.color_pair(9),
+                color_not_focused=curses.color_pair(11),
+                color_disabled=curses.color_pair(10),
+            )
+        )
+        self._widgets[-1].w_id = 14
+
+        ''' id 15 recording '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                6 + self._displacement + self._Y, 9 + self._X, 'Record to file',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 15
+
+        ''' id 16 silent recording '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                6 + self._displacement + self._Y,
+                self._widgets[-1].X + self._widgets[-1].width + 4, 'Silent recording',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 16
+
+        ''' id 17 buffering '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                7 + self._displacement + self._Y, 9 + self._X, 'Use buffering',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 17
+
+        ''' id 18 cancel scheduling button '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                8 + self._displacement + self._Y, 5 + self._X, 'Repeat every:',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 18
+
+        ''' id 19 silent recording '''
+        self._widgets.append(
+            SimpleCursesCheckBox(
+                8 + self._displacement + self._Y,
+                self._widgets[-1].X + self._widgets[-1].width + 1, 'Never',
+                curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
+            )
+        )
+        self._widgets[-1].w_id = 19
+
+        ''' id 20 cancel scheduling button '''
+        cap = 'Remove Schedule'
+        self._widgets.append(SimpleCursesPushButton(
+            Y=10 + self._displacement + self._Y,
+            X=self._X + 2,
+            caption=cap,
+            color_focused=curses.color_pair(9),
+            color=curses.color_pair(11),
+            bracket_color=curses.color_pair(10),
+            parent=self._parent))
+        self._widgets[-1].w_id = 20
+
+        ''' id 21 ok button '''
+        cap = 'OK'
+        self._widgets.append(SimpleCursesPushButton(
+            Y=10 + self._displacement + self._Y,
+            X=self._X + self._maxX - 19,
+            caption=cap,
+            color_focused=curses.color_pair(9),
+            color=curses.color_pair(11),
+            bracket_color=curses.color_pair(10),
+            parent=self._parent))
+        self._widgets[-1].w_id = 21
+
+        ''' id 22 cancel button '''
+        cap = 'Cancel'
+        self._widgets.append(SimpleCursesPushButton(
+            Y=10 + self._displacement + self._Y,
+            X=self._X + self._maxX - (len(cap) + 6),
+            caption=cap,
+            color_focused=curses.color_pair(9),
+            color=curses.color_pair(11),
+            bracket_color=curses.color_pair(10),
+            parent=self._parent))
+        self._widgets[-1].w_id = 22
+
+
     def show(self, parent=None):
         if parent:
+            logger.error('windows passed to show! = {}'.format(parent))
             self._get_parent(parent)
             if self._showed:
                 self._move_widgets()
-
         if self._widgets == None:
-            self._widgets = []
-
-            ''' id 0 playlist string '''
-            self._widgets.append(
-                SimpleCursesString(
-                    Y=0+self._Y, X=2+self._X,
-                    parent=self._win,
-                    caption='Playlist: ',
-                    string='Any playlist',
-                    color=curses.color_pair(10),
-                    color_focused=curses.color_pair(9),
-                    color_not_focused=curses.color_pair(11),
-                    color_disabled=curses.color_pair(10),
-                )
-            )
-            self._widgets[-1].w_id = 0
-
-            ''' id 1 stations string '''
-            self._widgets.append(
-                SimpleCursesString(
-                    Y=1+self._Y, X=2+self._X,
-                    parent=self._win,
-                    caption=' Station: ',
-                    string='Any station',
-                    color=curses.color_pair(10),
-                    color_focused=curses.color_pair(9),
-                    color_not_focused=curses.color_pair(11),
-                    color_disabled=curses.color_pair(10),
-                )
-            )
-            self._widgets[-1].w_id = 1
-
-            ''' id 2 start check box '''
-            self._widgets.append(
-                SimpleCursesCheckBox(
-                    4 + self._Y, 5 + self._X, 'Start playback on: ',
-                    curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
-                )
-            )
-            self._widgets[-1].w_id = 2
-
-            ''' id 3 start at date box '''
-            self._widgets.append(
-                SimpleCursesDate(
-                    Y=3 + self._Y, X=self._widgets[-1].X + self._widgets[-1].width,
-                    window=self._win,
-                    color=curses.color_pair(10),
-                    color_focused=curses.color_pair(9),
-                    next_widget_func=self._next_widget,
-                    previous_widget_func=self._previous_widget,
-                    global_functions=self._global_functions
-                )
-            )
-            self._widgets[-1].w_id = 3
-
-            ''' id 4 start at check box '''
-            self._widgets.append(
-                SimpleCursesCheckBox(
-                    5 + self._Y, 9 + self._X, 'At: ',
-                    curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
-                )
-            )
-            self._widgets[-1].w_id = 4
-
-            ''' id 5 start at time '''
-            self._widgets.append(
-                SimpleCursesTime(
-                    Y=4 + self._Y, X=self._widgets[-1].X + self._widgets[-1].width,
-                    window=self._win,
-                    color=curses.color_pair(10),
-                    show_am_pm=True,
-                    color_focused=curses.color_pair(9),
-                    next_widget_func=self._next_widget,
-                    previous_widget_func=self._previous_widget,
-                    global_functions=self._global_functions
-                )
-            )
-            self._widgets[-1].w_id = 5
-
-            ''' id 6 start in check box '''
-            self._widgets.append(
-                SimpleCursesCheckBox(
-                    5 + self._Y,
-                    self._widgets[-1].X + self._widgets[-1].width + 4, 'In: ',
-                    curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
-                )
-            )
-            self._widgets[-1].w_id = 6
-
-            ''' id 7 start in time '''
-            self._widgets.append(
-                SimpleCursesTime(
-                    Y=4 + self._Y, X=self._widgets[-1].X + self._widgets[-1].width,
-                    window=self._win,
-                    color=curses.color_pair(10),
-                    color_focused=curses.color_pair(9),
-                    next_widget_func=self._next_widget,
-                    previous_widget_func=self._previous_widget,
-                    global_functions=self._global_functions,
-                    string='00:00:00'
-                )
-            )
-            self._widgets[-1].w_id = 7
-
-            ''' id 8 stop check box '''
-            self._widgets.append(
-                SimpleCursesCheckBox(
-                    7 + self._Y, 5 + self._X, 'End playback on: ',
-                    curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
-                )
-            )
-            self._widgets[-1].w_id = 8
-
-            ''' id 9 stop at date box '''
-            self._widgets.append(
-                SimpleCursesDate(
-                    Y=6 + self._Y, X=self._widgets[-1].X + self._widgets[-1].width,
-                    window=self._win,
-                    color=curses.color_pair(10),
-                    color_focused=curses.color_pair(9),
-                    next_widget_func=self._next_widget,
-                    previous_widget_func=self._previous_widget,
-                    global_functions=self._global_functions
-                )
-            )
-            self._widgets[-1].w_id = 9
-
-            ''' id 10 stop at check box '''
-            self._widgets.append(
-                SimpleCursesCheckBox(
-                    5 + self._displacement + self._Y, 9 + self._X, 'At: ',
-                    curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
-                )
-            )
-            self._widgets[-1].w_id = 10
-
-            ''' id 11 stop at time '''
-            self._widgets.append(
-                SimpleCursesTime(
-                    Y=4 + self._displacement + self._Y,
-                    X=self._widgets[-1].X + self._widgets[-1].width,
-                    window=self._win,
-                    show_am_pm=True,
-                    color=curses.color_pair(10),
-                    color_focused=curses.color_pair(9),
-                    next_widget_func=self._next_widget,
-                    previous_widget_func=self._previous_widget,
-                    global_functions=self._global_functions,
-                    string=PyRadioTime.pyradio_time_to_string(self._schedule_item.item['end_time'])
-                )
-            )
-            self._widgets[-1].w_id = 11
-
-            ''' id 12 stop in check box '''
-            self._widgets.append(
-                SimpleCursesCheckBox(
-                    5 + self._displacement + self._Y,
-                    self._widgets[-1].X + self._widgets[-1].width + 4, 'In: ',
-                    curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
-                )
-            )
-            self._widgets[-1].w_id = 12
-
-            ''' id 13 stop in time '''
-            self._widgets.append(
-                SimpleCursesTime(
-                    Y=4 + self._displacement + self._Y,
-                    X=self._widgets[-1].X + self._widgets[-1].width,
-                    window=self._win,
-                    color=curses.color_pair(10),
-                    color_focused=curses.color_pair(9),
-                    next_widget_func=self._next_widget,
-                    previous_widget_func=self._previous_widget,
-                    global_functions=self._global_functions,
-                    string='01:00:00'
-                )
-            )
-            self._widgets[-1].w_id = 13
-
-            ''' id 14 cancel scheduling button '''
-            cap = 'Remove Schedule'
-            self._widgets.append(SimpleCursesPushButton(
-                Y=9 + self._displacement + self._Y,
-                X=self._X + 2,
-                caption=cap,
-                color_focused=curses.color_pair(9),
-                color=curses.color_pair(11),
-                bracket_color=curses.color_pair(10),
-                parent=self._parent))
-            self._widgets[-1].w_id = 14
-
-            ''' id 15 ok button '''
-            cap = 'OK'
-            self._widgets.append(SimpleCursesPushButton(
-                Y=9 + self._displacement + self._Y,
-                X=self._X + self._maxX - 19,
-                caption=cap,
-                color_focused=curses.color_pair(9),
-                color=curses.color_pair(11),
-                bracket_color=curses.color_pair(10),
-                parent=self._parent))
-            self._widgets[-1].w_id = 15
-
-            ''' id 16 cancel button '''
-            cap = 'Cancel'
-            self._widgets.append(SimpleCursesPushButton(
-                Y=9 + self._displacement + self._Y,
-                X=self._X + self._maxX - (len(cap) + 6),
-                caption=cap,
-                color_focused=curses.color_pair(9),
-                color=curses.color_pair(11),
-                bracket_color=curses.color_pair(10),
-                parent=self._parent))
-            self._widgets[-1].w_id = 16
-
+            self._add_widgets()
         with self.lock:
             try:
                 self._win.addstr(self._maxY-3, 2, '─' * (self._maxX - 4), curses.color_pair(3))
@@ -370,17 +450,21 @@ class PyRadioSimpleScheduleWindow(object):
             self._win.addstr(self._maxY-2, 2, disp_msg.ljust(self._maxX-4), curses.color_pair(10))
             self._win.refresh()
 
+        logger.error('1 self._win = {}'.format(self._win))
         if self._widgets:
             if not self._showed:
                 self._dummy_enable()
+            logger.error('2 self._win = {}'.format(self._win))
             self._fix_focus()
-            for n, i in enumerate(self._widgets):
+            logger.error('3 self._win = {}'.format(self._win))
+            for n in range(0, len(self._widgets)):
                 try:
                     with self.lock:
-                        i.show(self._parent)
+                        self._widgets[n].show(self._win)
                 except:
+                    logger.error('exception!')
                     with self.lock:
-                        i.show()
+                        self._widgets[n].show()
 
         # # self._win.addstr(1, 2, 'Playlist: ', curses.color_pair(10))
         # stop_only = self._stop_only()
@@ -412,27 +496,55 @@ class PyRadioSimpleScheduleWindow(object):
         #                            self.lock,
         #                            ]
         #                      ).start()
-
+        logger.info('here')
+        self._win.refresh()
         self._showed = True
 
     def _dummy_enable(self):
         logger.error('\n\n{}\n\n'.format(self._schedule_item.item))
+        ''' assign values '''
+        self._widgets[3].date = self._schedule_item.item['start_date']
+        self._widgets[5].time = self._schedule_item.item['start_time']
+        self._widgets[7].time = self._schedule_item.item['start_duration']
+        self._widgets[9].date = self._schedule_item.item['end_date']
+        self._widgets[11].time = self._schedule_item.item['end_time']
+        self._widgets[13].time = self._schedule_item.item['end_duration']
+        if self._schedule_item.item['recording'] == 1:
+            self._widgets[15].checked = True
+            self._widgets[16].checked = False
+        elif self._schedule_item.item['recording'] == 2:
+            self._widgets[15].checked = True
+            self._widgets[16].checked = True
+        else:
+            self._widgets[15].checked = False
+            self._widgets[16].checked = False
+        if self._schedule_item.item['buffering'] == 0:
+            self._widgets[17].checked = False
+        else:
+            self._widgets[17].checked = True
+        if self._schedule_item.item['repeat'] is None:
+            self._widgets[18].checked = False
+            self._widgets[19].checked = False
+        else:
+            self._widgets[18].checked = True
+            self._widgets[19].checked = False
+
         if self._schedule_item.item['type'] == PyRadioScheduleItemType.TYPE_END:
-            self._widgets[2].enabled = True
-            self._widgets[2].checked = False
             self._widgets[8].enabled = True
             self._widgets[8].checked = True
             for i in range(3, 8):
                 self._widgets[i].enabled = False
+            for i in range(14, 20):
+                self._widgets[i].enabled = False
             for i in range(9, 14):
                 self._widgets[i].enabled = True
-            if self._schedule_item.end_type == 'A':
+            if self._schedule_item.item['end_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
                 self._widgets[10].checked = True
                 self._focus = 10
             else:
                 self._widgets[13].checked = True
                 self._focus = 13
-            self._widgets[14].enabled = self._remove_enabled
+            self._widgets[20].enabled = self._remove_enabled
         else:
             self._widgets[2].checked = True
             self._widgets[4].checked = True
@@ -452,13 +564,30 @@ class PyRadioSimpleScheduleWindow(object):
         return False
 
     def _fix_focus(self):
+        logger.info('entering _fix_focus')
         for i in (2, 8):
             for k in range(1, 6):
+                # logger.error('setting {}'.format(i+k))
                 self._widgets[i+k].enabled = self._widgets[i].checked
+
+        for i in range(14, 20):
+            # logger.debug('{0} enabled is now {1}'.format(i, self._widgets[2].checked))
+            self._widgets[i].enabled = self._widgets[2].checked
 
         self._widgets[-2].enabled = self._widgets[2].checked or self._widgets[8].checked
 
         for i in (4, 6, 10, 12):
+            if self._widgets[i].enabled:
+                self._widgets[i+1].enabled = self._widgets[i].checked
+
+        # for n in ((6,3), (12, 9)):
+        #     if self._widgets[n[0]].enabled and \
+        #             self._widgets[n[0]].checked:
+        #         self._widgets[n[1]].enabled = False
+        #     else:
+        #         self._widgets[n[1]].enabled = True
+
+        for i in (15, 18):
             if self._widgets[i].enabled:
                 self._widgets[i+1].enabled = self._widgets[i].checked
 
@@ -467,13 +596,6 @@ class PyRadioSimpleScheduleWindow(object):
                 self._widgets[i].focused = True
             else:
                 self._widgets[i].focused = False
-
-        for n in ((6,3), (12, 9)):
-            if self._widgets[n[0]].enabled and \
-                    self._widgets[n[0]].checked:
-                self._widgets[n[1]].enabled = False
-            else:
-                self._widgets[n[1]].enabled = True
 
     def _next_widget(self):
         old_focus = self._focus
@@ -535,11 +657,14 @@ class PyRadioSimpleScheduleWindow(object):
             return -1
 
         elif char in (ord('j'), curses.KEY_UP):
+            logger.error('===================================')
+            logger.error('start self._focus = {}'.format(self._focus))
             self._focus = self._up[self._focus]
             while not self._widgets[self._focus].enabled:
                 self._focus = self._up[self._focus]
             if self._focus in (5, 7, 11, 13):
                 self._widgets[self._focus].reset_selection()
+            logger.error('final self._focus = {}'.format(self._focus))
 
         elif char in (ord('k'), curses.KEY_DOWN):
             self._focus = self._up.index(self._focus)
@@ -562,16 +687,17 @@ class PyRadioSimpleScheduleWindow(object):
 
         else:
             ret = self._widgets[self._focus].keypress(char)
-            if self._widgets[self._focus].w_id == 16 \
+            logger.error('ret = {}'.format(ret))
+            if self._widgets[self._focus].w_id == 22 \
                     and not ret:
                 ''' Cancel '''
                 return -1
-            elif self._widgets[self._focus].w_id == 15 \
+            elif self._widgets[self._focus].w_id == 21 \
                     and not ret:
                 ''' OK '''
                 self._validate_selection()
                 return 1
-            elif self._widgets[self._focus].w_id == 14 \
+            elif self._widgets[self._focus].w_id == 20 \
                     and not ret:
                 ''' Remove schedule '''
                 return 2

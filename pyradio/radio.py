@@ -717,7 +717,7 @@ class PyRadio(object):
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
             # ord('d'): self._html_song_title,
-            # ord('b'): self._show_schedule_player_stop,
+            ord('b'): self._show_schedule_player_stop,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -6106,6 +6106,8 @@ __|Remote Control Server| cannot be started!__
     def _show_schedule_player_stop(self):
         # return
         logger.error('_show_schedule_player_stop() !!!')
+        logger.info('self.outerBodyWin = {}'.format(self.outerBodyWin))
+        logger.info('self.bodyWin = {}'.format(self.bodyWin))
         logger.error(self._last_played_station)
         if self.player.isPlaying():
             station = None
