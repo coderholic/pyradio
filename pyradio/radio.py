@@ -6122,6 +6122,8 @@ __|Remote Control Server| cannot be started!__
                 parent=self.outerBodyWin,
                 playlist=self._cnf.station_title,
                 station=station,
+                current_player=self.player.PLAYER_NAME,
+                supported_players=self._cnf.SUPPORTED_PLAYERS,
                 global_functions=self._global_functions
             )
             self.ws.operation_mode = self.ws.SCHEDULE_PLAYER_STOP_MODE

@@ -6,6 +6,7 @@ from time import sleep
 import curses
 import logging
 import threading
+import platform
 
 from .simple_curses_widgets import DisabledWidget, SimpleCursesCheckBox, SimpleCursesPushButton, SimpleCursesTime, SimpleCursesString, SimpleCursesDate
 from .cjkwrap import cjklen, cjkslices
@@ -54,6 +55,8 @@ class PyRadioSimpleScheduleWindow(object):
     )
     def __init__(
             self, parent,
+            supported_players,
+            current_player,
             playlist=None, station=None,
             schedule_item=None,
             global_functions={}
@@ -61,12 +64,18 @@ class PyRadioSimpleScheduleWindow(object):
         self._exit = False
         self._playlist = playlist
         self._station = station
+        self._supported_players = supported_players
         self._maxX = 60
         self._displacement = 3
         self._maxY = 18
         self._global_functions = global_functions
         self._get_parent(parent)
         self._focus = 8
+        try:
+            self._current_player_id = supported_players.index(current_player)
+        except ValueError:
+            self._current_player_id = 0
+        self._player_id = self._current_player_id
         self.set_item(schedule_item, playlist, station)
 
     def set_item(self, schedule_item=None, playlist=None, station=None):
@@ -106,7 +115,7 @@ class PyRadioSimpleScheduleWindow(object):
         # options
         # self._widgets[14].move(8, 3)
         self._widgets[15].move(6 + self._displacement + self._Y, self._X + 9)
-        self._widgets[16].move(6 + self._displacement + self._Y, self._widgets[15].X + self._widgets[15].width)
+        self._widgets[16].move(6 + self._displacement + self._Y, self._widgets[15].X + self._widgets[15].width + 4)
         self._widgets[17].move(7 + self._displacement + self._Y, self._X + 9)
         self._widgets[18].move(8 + self._displacement + self._Y, self._X + 5)
         self._widgets[19].move(8 + self._displacement + self._Y, self._widgets[17].X + self._widgets[18].width)
@@ -185,7 +194,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 2 start check box '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                4 + self._Y, 5 + self._X, 'Start playback on: ',
+                0, 0, 'Start playback on: ',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -194,7 +203,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 3 start at date box '''
         self._widgets.append(
             SimpleCursesDate(
-                Y=4, X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                Y=0, X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
@@ -208,7 +217,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 4 start at check box '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                5 + self._Y, 9 + self._X, 'At: ',
+                0, 0, 'At: ',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -217,7 +226,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 5 start at time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=5, X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                Y=5, X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 show_am_pm=True,
@@ -233,8 +242,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 6 start in check box '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                5 + self._Y,
-                self._widgets[-1].X + self._widgets[-1].width + 14, 'In: ',
+                0, 0, 'In: ',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -243,7 +251,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 7 start in time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=5, X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                Y=5, X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
@@ -258,7 +266,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 8 stop check box '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                6 + self._Y, 5 + self._X, 'End playback on: ',
+                0,0, 'End playback on: ',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -267,7 +275,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 9 stop at date box '''
         self._widgets.append(
             SimpleCursesDate(
-                Y=6, X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                Y=6, X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
@@ -281,7 +289,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 10 stop at check box '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                4 + self._displacement + self._Y, 9 + self._X, 'At: ',
+                0, 0, 'At: ',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -290,7 +298,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 11 stop at time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=7, X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                Y=7, X=0,
                 window=self._win,
                 show_am_pm=True,
                 color=curses.color_pair(10),
@@ -306,8 +314,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 12 stop in check box '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                4 + self._displacement + self._Y,
-                self._widgets[-1].X + self._widgets[-1].width + 14, 'In: ',
+                0, 0, 'In: ',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -316,7 +323,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 13 stop in time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=7,X=self._widgets[-1].X + self._widgets[-1].width - self._X,
+                Y=7,X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
@@ -335,7 +342,7 @@ class PyRadioSimpleScheduleWindow(object):
                 Y=8, X=3,
                 parent=self._win,
                 caption='Player: ',
-                string='mpv',
+                string=self._supported_players[self._current_player_id],
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
                 color_not_focused=curses.color_pair(11),
@@ -347,7 +354,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 15 recording '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                6 + self._displacement + self._Y, 9 + self._X, 'Record to file',
+                0, 0, 'Record to file',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -356,8 +363,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 16 silent recording '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                6 + self._displacement + self._Y,
-                self._widgets[-1].X + self._widgets[-1].width + 4, 'Silent recording',
+                0, 0, 'Silent recording',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -366,7 +372,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 17 buffering '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                7 + self._displacement + self._Y, 9 + self._X, 'Use buffering',
+                0, 0, 'Use buffering',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -375,7 +381,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 18 cancel scheduling button '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                8 + self._displacement + self._Y, 5 + self._X, 'Repeat every:',
+                0, 0, 'Repeat every:',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -384,8 +390,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 19 silent recording '''
         self._widgets.append(
             SimpleCursesCheckBox(
-                8 + self._displacement + self._Y,
-                self._widgets[-1].X + self._widgets[-1].width + 1, 'Never',
+                0, 0, 'Never',
                 curses.color_pair(9), curses.color_pair(11), curses.color_pair(10)
             )
         )
@@ -406,8 +411,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 21 ok button '''
         cap = 'OK'
         self._widgets.append(SimpleCursesPushButton(
-            Y=10 + self._displacement + self._Y,
-            X=self._X + self._maxX - 19,
+            Y=0, X=0,
             caption=cap,
             color_focused=curses.color_pair(9),
             color=curses.color_pair(11),
@@ -418,14 +422,15 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 22 cancel button '''
         cap = 'Cancel'
         self._widgets.append(SimpleCursesPushButton(
-            Y=10 + self._displacement + self._Y,
-            X=self._X + self._maxX - (len(cap) + 6),
+            Y=0, X=0,
             caption=cap,
             color_focused=curses.color_pair(9),
             color=curses.color_pair(11),
             bracket_color=curses.color_pair(10),
             parent=self._parent))
         self._widgets[-1].w_id = 22
+
+        self._move_widgets()
 
 
     def show(self, parent=None):
@@ -591,6 +596,8 @@ class PyRadioSimpleScheduleWindow(object):
             if self._widgets[i].enabled:
                 self._widgets[i+1].enabled = self._widgets[i].checked
 
+        self._fix_recording_from_player_selection()
+
         for i in range(0, len(self._widgets)):
             if self._focus == i:
                 self._widgets[i].focused = True
@@ -631,6 +638,19 @@ class PyRadioSimpleScheduleWindow(object):
 
             return 3
         return 1
+
+    def _fix_recording_from_player_selection(self):
+        if platform.system().lower().startswith('win') and \
+                self._widgets[14].string == 'vlc':
+            self._widgets[15].enabled = False
+            self._widgets[16].enabled = False
+        else:
+            self._widgets[15].enabled = self._widgets[2].checked
+            if self._widgets[15].enabled and \
+                    self._widgets[15].checked:
+                self._widgets[16].enabled = True
+            else:
+                self._widgets[16].enabled = False
 
     def keypress(self, char):
         '''
@@ -709,6 +729,19 @@ class PyRadioSimpleScheduleWindow(object):
                 '''
                 pass
 
+            elif self._widgets[self._focus].w_id == 14:
+                if char in (ord('l'), curses.KEY_RIGHT):
+                    self._current_player_id += 1
+                    if self._current_player_id == len(self._supported_players):
+                        self._current_player_id = 0
+                    self._widgets[14].string = self._supported_players[self._current_player_id]
+                    # self._fix_recording_from_player_selection()
+                elif char in (ord('h'), curses.KEY_LEFT):
+                    self._current_player_id -= 1
+                    if self._current_player_id < 0:
+                        self._current_player_id = len(self._supported_players) - 1
+                    self._widgets[14].string = self._supported_players[self._current_player_id]
+                    # self._fix_recording_from_player_selection()
             else:
                 ''' Check Boxes '''
                 if self._widgets[self._focus].checked:
