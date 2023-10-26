@@ -203,6 +203,9 @@ class Log(object):
                             # if logger.isEnabledFor(logging.ERROR):
                             #     logger.error('Error updating the Status Bar')
 
+                    if msg:
+                        if msg.startswith('[Vol:') or msg.startswith('[Muted]'):
+                            msg = msg.split('] ')[-1]
                     with self._song_title_lock:
                         if msg:
                             if msg.startswith('Title: '):

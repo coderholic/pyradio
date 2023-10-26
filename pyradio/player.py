@@ -425,6 +425,7 @@ class Player(object):
                         self._cnf.stations_dir,
                         version=self._cnf.current_pyradio_version,
                         playlist=self._cnf.station_path,
+                        chapter_time=lambda: self._chapter_time
                         )
         else:
             self._chapters.look_for_mkvmerge()
@@ -853,6 +854,7 @@ class Player(object):
             out = self.process.stdout
             while(True):
                 subsystemOutRaw = out.readline()
+                self._chapter_time = datetime.now()
                 with recording_lock:
                     try:
                         subsystemOut = subsystemOutRaw.decode(self._station_encoding, 'replace')
@@ -1258,6 +1260,7 @@ class Player(object):
                             data = sock.recvmsg(4096)
                         except:
                             data = b''
+                    self._chapter_time = datetime.now()
                     a_data = self._fix_returned_data(data)
                     # logger.error('DE Received: "{!r}"'.format(a_data))
                     if a_data == b'' or stop():
@@ -1399,6 +1402,7 @@ class Player(object):
             while(True):
                 if stop():
                     break
+                # self._chapter_time = datetime.now()
                 subsystemOut = fp.readline()
                 subsystemOut = subsystemOut.strip().replace(u'\ufeff', '')
                 subsystemOut = subsystemOut.replace('\r', '').replace('\n', '')
@@ -1979,6 +1983,7 @@ class Player(object):
                         self._cnf.stations_dir,
                         version=self._cnf.current_pyradio_version,
                         playlist=self._cnf.station_path,
+                        chapter_time=lambda: self._chapter_time
                         )
             self._chapters.clear()
             self.log.add_chapters_function = self._chapters.add_function()
@@ -3595,11 +3600,13 @@ class PyRadioChapters(object):
             stations_dir,
             version,
             playlist,
+            chapter_time,
             encoding='urf-8'
             ):
         self._stations_dir = stations_dir
         self._version = version
         self._playlist = os.path.basename(playlist)[:-4]
+        self._chapters_time_function = chapter_time
         self._encoding = encoding
         self.mkvmerge = ''
         self._output_dir = os.path.join(stations_dir, 'recordings')
@@ -3657,7 +3664,11 @@ class PyRadioChapters(object):
                 if self._list:
                     if self._list[-1][1] == a_title:
                         return
-                self._list.append([datetime.now(), a_title])
+                # self._list.append([datetime.now(), a_title])
+                try:
+                    self._list.append([self._chapters_time_function(), a_title])
+                except AttributeError:
+                    self._list.append([datetime.now(), a_title])
 
     def clear(self):
         self._list = []
