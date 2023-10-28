@@ -539,12 +539,16 @@ class PyRadioSimpleScheduleWindow(object):
         if self._schedule_item.item['type'] == PyRadioScheduleItemType.TYPE_END:
             self._widgets[0].string = 'Any playlist'
             self._widgets[1].string = 'Any station'
+            self._widgets[0].enabled = False
+            self._widgets[1].enabled = False
             rec = False
             start_fields = False
             end_fields = True
         else:
             self._widgets[0].string = self._schedule_item.item['playlist']
             self._widgets[1].string = self._schedule_item.item['station']
+            self._widgets[0].enabled = True
+            self._widgets[0].enabled = True
             rec = True
             start_fields = True
             end_fields = True
@@ -785,6 +789,8 @@ class PyRadioSimpleScheduleWindow(object):
                     if self._focus == 2:
                         self._widgets[0].string = self._schedule_item.item['playlist']
                         self._widgets[1].string = self._schedule_item.item['station']
+                        self._widgets[0].enabled = True
+                        self._widgets[1].enabled = True
                     elif self._focus == 4:
                         self._widgets[6].checked = False
                     elif self._focus == 6:
@@ -797,6 +803,8 @@ class PyRadioSimpleScheduleWindow(object):
                     if self._focus == 2:
                         self._widgets[0].string = 'Any playlist'
                         self._widgets[1].string = 'Any station'
+                        self._widgets[0].enabled = False
+                        self._widgets[1].enabled = False
                     elif self._focus == 4:
                         self._widgets[6].checked = True
                     elif self._focus == 6:

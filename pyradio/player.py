@@ -3703,6 +3703,19 @@ class PyRadioChapters(object):
                 opts.extend([
                     '--chapters', self._chapters_file,
                     ])
+            t_dir_dir = os.path.dirname(self._output_file)
+            for n in (os.path.join(t_dir_dir, 'recording.png'), \
+                    os.path.join(t_dir_dir, 'pyradio.png')):
+                logger.error('looking for: "{}"'.format(n))
+                if os.path.exists(n):
+                    cover_file = n
+                    break
+            if cover_file:
+                opts.extend([
+                    '--attachment-mime-type', 'image/png',
+                    '--attachment-name', 'cover',
+                    '--attach-file', cover_file
+                    ])
             opts.extend([
                 '-o', self._output_file,
                 self._mkv_file
