@@ -216,12 +216,13 @@ class PyRadioStations(object):
             copy it from the icons dir
         '''
         if not path.exists(path.join(self.data_dir, 'pyradio.png')):
-            from_file = path.join(path.dirname(__file__), 'icons', 'pyradio.png')
-            to_file = path.join(self.data_dir, 'pyradio.png')
-            try:
-                copyfile(from_file, to_file)
-            except:
-                pass
+            for an_icon in ('pyradio.png', 'recording.png'):
+                from_file = path.join(path.dirname(__file__), 'icons', an_icon)
+                to_file = path.join(self.data_dir, an_icon)
+                try:
+                    copyfile(from_file, to_file)
+                except:
+                    pass
 
         ''' make sure that the icon is under ~/.config/pyradio/data
             (the previous section may install it to a different location,
@@ -229,8 +230,9 @@ class PyRadioStations(object):
         '''
         default_icon_location = path.join(getenv('HOME', '~'), '.config', 'pyradio', 'data')
         if default_icon_location != self.data_dir:
-            to_file = path.join(default_icon_location, 'pyradio.png')
-            if not path.exists(to_file):
+            for an_icon in ('pyradio.png', 'recording.png'):
+                from_file = path.join(path.dirname(__file__), 'icons', an_icon)
+                to_file = path.join(default_icon_location, an_icon)
                 try:
                     copyfile(from_file, to_file)
                 except:

@@ -3677,75 +3677,80 @@ class PyRadioChapters(object):
         self._chapters_file = None
 
     def write_chapters_to_file(self, input_file):
-        if input_file:
-            logger.error('input_file = "{}"'.format(input_file))
+        logger.error('input_file: "{}"'.format(input_file))
+        if input_file is None or input_file == '':
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('empty input file provided! Exiting!')
+        else:
             if self.HAS_MKVTOOLNIX:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('starting mkvmerge!')
+                    logger.info('input_file: "{}"'.format(input_file))
                 threading.Thread(
                         target=self.write_chapters_to_file_thread(input_file)
                     )
             else:
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('mkvmerge not found!')
-        else:
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('empty input file provided! Exiting!')
 
     def write_chapters_to_file_thread(self, input_file):
-        if not input_file:
-            return False
+        opts = []
+        self._tag_file = input_file[:-4] + '.xml'
+        opts = [self.mkvmerge,
+                '--global-tags', self._tag_file,
+                ]
         if self.create_chapter_file(input_file):
-            opts = [self.mkvmerge,
-                    '--global-tags', self._tag_file,
-                    ]
             if len(self._list) > 1:
                 opts.extend([
                     '--chapters', self._chapters_file,
                     ])
-            t_dir_dir = os.path.dirname(self._output_file)
-            for n in (os.path.join(t_dir_dir, 'recording.png'), \
-                    os.path.join(t_dir_dir, 'pyradio.png')):
-                logger.error('looking for: "{}"'.format(n))
-                if os.path.exists(n):
-                    cover_file = n
-                    break
-            if cover_file:
-                opts.extend([
-                    '--attachment-mime-type', 'image/png',
-                    '--attachment-name', 'cover',
-                    '--attach-file', cover_file
-                    ])
-            opts.extend([
-                '-o', self._output_file,
-                self._mkv_file
-                ])
+        t_dir_dir = os.path.dirname(self._tag_file)
+        cover_file = None
+        for n in (os.path.join(t_dir_dir, 'user-recording.png'), \
+                os.path.join(t_dir_dir, 'recording.png')):
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('merge options = {}'.format(opts))
-            p = subprocess.Popen(
-                    opts, shell=False,
-                    stdout=subprocess.PIPE,
-                    stdin=subprocess.PIPE,
-                    stderr=subprocess.PIPE
-                    )
-            outs, err = p.communicate()
-            # logger.error('outs = "{0}", err = "{1}"'.format(outs, err))
-            if p.returncode == 0:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('MKV merge successful!')
-                for n in self._chapters_file, self._tag_file, self._mkv_file:
-                    try:
-                        os.remove(n)
-                    except:
-                        pass
-                return True
-            else:
-                if logger.isEnabledFor(logging.ERROR):
-                    logger.error('MKV merge failed!')
-                return False
+                    logger.debug('cover file is: "{}"'.format(n))
+            if os.path.exists(n):
+                cover_file = n
+                break
+        if cover_file:
+            opts.extend([
+                '--attachment-mime-type', 'image/png',
+                '--attachment-name', 'cover',
+                '--attach-file', cover_file
+                ])
+        opts.extend([
+            '-o', self._output_file,
+            self._mkv_file
+            ])
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('merge options = {}'.format(opts))
+        p = subprocess.Popen(
+                opts, shell=False,
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.PIPE
+                )
+        outs, err = p.communicate()
+        # logger.error('outs = "{0}", err = "{1}"'.format(outs, err))
+        if p.returncode == 0:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('MKV merge successful!')
+            for n in self._chapters_file, self._tag_file, self._mkv_file:
+                try:
+                    os.remove(n)
+                except:
+                    pass
+            return True
+        else:
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('MKV merge failed with error:\n{}'.format(err))
+            return False
 
     def create_chapter_file(self, input_file):
         if not input_file:
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('input file not found!!!')
             return False
         # logger.error('HAS_MKVTOOLNIX = {}'.format(self.HAS_MKVTOOLNIX))
         # logger.error('input_file = "{}"'.format(input_file))
@@ -3754,7 +3759,6 @@ class PyRadioChapters(object):
             # input_file.endswith('.mkv'):
             self._mkv_file = input_file
             self._chapters_file = input_file[:-4] + '-chapters.txt'
-            self._tag_file = input_file[:-4] + '.xml'
             self._output_file = os.path.join(
                 self._output_dir,
                 os.path.basename(self._mkv_file)
