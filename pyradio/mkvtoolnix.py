@@ -7,6 +7,7 @@ from shutil import which
 from datetime import datetime, timedelta
 from glob import glob
 import locale
+import logging
 
 locale.setlocale(locale.LC_ALL, "")
 logger = logging.getLogger(__name__)
