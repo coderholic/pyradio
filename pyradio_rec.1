@@ -1,4 +1,4 @@
-.TH pyradio_rec 1 "October 2023" pyradio
+.TH pyradio_rec 1 "November 2023" pyradio
 
 .SH Name
 .PP
@@ -145,7 +145,7 @@ _
 T{
 \fI|\fR\ (\fIpipe symbol\fR)
 T}@T{
-Toggle recording on and off
+Toggle recording on/off
 T}
 T{
 \fISpace
@@ -261,13 +261,33 @@ received, plus any overhead added by \fBpyradio\fR.
 
 This means that, for whatever reason, a chapter marker may not exactly
 point to the beginning of the song associated with it.
+
+.SS Cover image
+.PP
+\f[B]PyRadio\f[R] will insert a cover image to every recorded file when
+\fIMKVToolNix\fB has been detected.
+.PP
+The default image is named \[lq]\f[I]cover.png\f[R]\[rq] and is located
+in the \[lq]\f[I]data\f[R]\[rq] folder, within the configuration
+directory.
+.PP
+There are two way to change this cover image:
+.IP "1." 3
+To permanently change the cover image for all recordings, create a
+\f[B]PNG\f[R] file named \[lq]\f[B]user-cover.png\f[R]\[rq] in the
+\[lq]\f[I]data\f[R]\[rq] folder withing the configuration directory.
+.IP "2." 3
+After you have stopped the recording, set any \f[B]PNG\f[R] file as a
+cover image for the recorded file, using the procedure explained in
+section Changing the cover.
+
+
 .PP
 The image below shows how a chapter aware player will display and handle
-chapter markers found in a MKV file. This is the \fBMedia Player
-Classic\fR (\fIhttps://sourceforge.net/projects/mpc-hc/\fR) on Windows 7.
+chapter markers found in a MKV file. The file also uses the default cover image.. This is the \fBMedia Player Classic\fR (\fIhttps://sourceforge.net/projects/mpc-hc/\fR) on Windows 7.
 .PP
 \fIhttps://members.hellug.gr/sng/pyradio/pyradio-chapters.gif\fR
-.SS MKVToolNix installation
+.SH MKVToolNix installation
 .PP
 Why would I want to install yet another package / program, you may ask.
 .PP
@@ -389,6 +409,166 @@ Finally, please keep in mind that all other keys relevant to starting,
 stopping and restarting a station\[cq]s playback remain the same; only
 the behavior of the \[lq]\fISpace\fR\[rq] key has changed when
 recording is on.
+
+.SH Post recording
+.PP
+After recording a station, there are some action one may want to perform on the recorded file:
+
+.IP "1." 3
+change the cover image provided by \f[B]PyRadio\f[R]
+.IP "2." 3
+correct the timing of captured chapters
+
+.SS Changing the cover
+.PP
+As already stated, \f[B]PyRadio\f[R] will embed a \f[B]cover\f[R] to
+every recording (provided that MKVToolNix (\fIhttps://mkvtoolnix.download/\fR)
+is installed).
+.PP
+The default image is a PNG file named \[lq]\f[B]cover.png\f[R]\[rq]
+located under the \f[B]data\f[R] folder in the configuration directory.
+.PP
+One can change this cover image using the following command:
+.IP
+.nf
+\f[C]
+\fIpyradio -mkv recorded.mkv -scv image.png
+\f[R]
+.fi
+.PP
+Both \f[I]recorded.mkv\f[R] and \f[I]image.png\f[R] can be inserted
+either as an absolute path/filename or as a relative one.
+In the later case, the relevant file can either be in the current
+directory or under the \[lq]\f[B]recordings\f[R]\[rq] folder.
+.SS Correcting chapter markers
+.PP
+\f[B]PyRadio\f[R] does provide a way to correct these misplaced chapter
+markers.
+.PP
+The way to do it is:
+.IP "1." 3
+extract a \f[I]SRT\f[R] file from a recorded \f[B]MKV\f[R] file,
+containing the chapter names as subtitles.
+.IP "2." 3
+edit the \f[I]SRT\f[R] file and coreectly place the subtitles.
+.IP "3." 3
+insert the \f[I]SRT\f[R] file to the original \f[B]MKV\f[R] file,
+transforming the subtitles timing and test to chapters.
+.PP
+The following image shows this procedure.
+
+\fIhttps://members.hellug.gr/sng/pyradio/mkv-srt-to-chapters.png\fR
+
+.PP
+In detail:
+
+.PP
+\fB1. Extract the SRT\fR
+.RS 3
+.PP
+Execute the command:
+.IP
+.nf
+\f[C]
+\fIpyradio -mkv file.mkv -srt
+\f[R]
+.fi
+.PP
+The file produced by this command will be named \f[B]file.srt\f[R] (the
+input file name, after replacing the \[lq]\f[I]mkv\f[R]\[rq] extension
+with the \[lq]\f[I]srt\f[R]\[rq] extension).
+.RE
+.PP
+\fB2. Edit the SRT file\fR
+.RS 3
+.PP
+At this point, the SRT file can be edited with any Subtitle Editor, and
+subtitles\[cq] timing can be adjusted, entries added or deleted, etc.
+.PP
+Although any Subtitle Editor will do, I would recommend using Subtitle
+Edit (\fIhttps://github.com/SubtitleEdit/subtitleedit/releases\fR) to edit the
+subtitles.
+The only reason is that this free (open source) program is capable of
+displaying the waveform of the edited file, which is very helpful in our
+case, since there is no video stream in the recorded files.
+Although this is a Windows program, it does run on Linux as well; for
+more info please refer to Subtitle Edit on
+Linux (\fIhttps://www.nikse.dk/subtitleedit/help#linux\fR).
+.RE
+.PP
+\fB3. SRT to Chapters\fR
+.RS 3
+.PP
+After the SRT file has been edited, it can be \[lq]inserted\[rq] into
+the original \f[B]MKV\f[R] file.
+This will actually convert the subtitle entries to chapter marker
+entries and insert them to the \f[B]MKV\f[R] file, replacing the older
+ones.
+.PP
+The command to run is:
+.IP
+.nf
+\f[C]
+\fIpyradio -mkv file.mkv -ach
+\f[R]
+.fi
+.RE
+.SS Listing recordings and the -mkv command line option
+.PP
+The \f[B]-mkv\f[R] command line option used above, will specify the
+\f[B]MKV\f[R] file to use with subsequent commands, but there is a
+problem here; recorded file names are too complicated to pass as
+arguments, written by hand or otherwise.
+.PP
+\f[B]PyRadio\f[R] addresses this issue by accepting a \f[B]number\f[R]
+instead of a file name as a parameter to **-mkv*; this number is
+actually the index of the required file in the alphabetically sorted
+list of existing files.
+.PP
+To get the \f[B]index\f[R] number, one would just use the \f[B]-lr\f[R]
+command line option:
+.IP
+.nf
+\f[C]
+\fI$ pyradio -lr
+List of files under recordings
+┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ Name                                                    ┃
+┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1 │ 2023-11-02 17-06-03 Lounge (Illinois Street Lounge).mkv │
+│ 2 │ 2023-11-02 14-37-17 Pop (PopTron! - SomaFM).mkv         │
+│ 3 │ 2023-10-31 20-15-41 ΕΡΑ - Κέρκυρα (Περιφερειακός).mkv   │
+│ 4 │ 2023-10-31 15-22-57 Celtic Sounds.mkv                   │
+│ 5 │ 2023-10-31 11-14-43 La Top - 107.7 FM.mkv               │
+└───┴─────────────────────────────────────────────────────────┘
+\f[R]
+.fi
+.PP
+This way, the command:
+.IP
+.nf
+\f[C]
+\fIpyradio -mkv \\
+\[aq]2023-11-02 17-06-03 Lounge (Illinois Street Lounge).mkv\[aq] -srt
+\f[R]
+.fi
+.PP
+could actually be inserted as
+.IP
+.nf
+\f[C]
+\fIpyradio -mkv 1 -srt
+\f[R]
+.fi
+.PP
+In this case, \f[B]1\f[R] is the index of the file in the list provided
+by the \f[B]-lr\f[R] command.
+.PP
+As a convenience, negative numbers can also be used; \f[I]-1\f[R] means
+the last file, \f[I]-2\f[R] the second from last, etc.
+This way, to work with the last recorded file, one would just use
+\[lq]\f[B]-mkv -1\f[R]\[rq] on all the necessary commands.
+
 
 .SH See also
 

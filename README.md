@@ -128,7 +128,7 @@ and much more...
     - python-dateutil
     - netifaces (optional)
 * MPV, MPlayer or VLC installed and in your path
-* MKVToolNix (cli files) to insert tags and chapters to recordings (optional)
+* MKVToolNix (cli files) to insert tags, chapters and cover to recordings (optional)
 
 <!-- Changelog -->
 
@@ -143,40 +143,62 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 ```
 $ pyradio -h
 
-Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
-               [-a] [-ls] [-l] [-t THEME] [--show-themes] [--no-themes]
+Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-a]
+               [-l] [-lt] [-sd] [-od] [-d] [-ul] [-us] [-U] [-R] [-V] [-ls]
+               [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes] [--no-themes]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
-               [--terminal-param TERMINAL_PARAM] [-tlp] [-sd] [-od] [-or]
-               [-oc] [-sc] [-cc] [-gc] [-us] [-lt] [-r] [-d] [-ul] [-U] [-R]
-               [-V]
+               [--terminal-param TERMINAL_PARAM] [-oc] [-sc] [-cc] [-gc] [-r]
+               [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt] [-ach]
 
 Curses based Internet radio player
 
-Options:
+General options:
   -h, --help            Show this help message and exit
   -c CONFIG_DIR, --config-dir CONFIG_DIR
                         Use specified configuration directory instead of the
                         default one. PyRadio will try to create it, if it does
                         not exist. Not available on Windows.
-  -s STATIONS, --stations STATIONS
-                        Use specified station CSV file.
-  -p [PLAY], --play [PLAY]
+  -p [STATION_NUMBER], --play [STATION_NUMBER]
                         Start and play.The value is num station or empty for
                         random.
-  -u USE_PLAYER, --use-player USE_PLAYER
+  -u PLAYER, --use-player PLAYER
                         Use specified player. A comma-separated list can be
                         used to specify detection order. Supported players:
                         mpv, mplayer, vlc.
   -a, --add             Add station to list.
+  -l, --list            List of available stations in a playlist.
+  -lt, --log-titles     Log titles to file.
+  -sd, --show-config-dir
+                        Print config directory [CONFIG DIR] location and exit.
+  -od, --open-config-dir
+                        Open config directory [CONFIG DIR] with default file
+                        manager.
+  -d, --debug           Start PyRadio in debug mode.
+  -ul, --unlock         Remove sessions' lock file.
+  -us, --update-stations
+                        Update "stations.csv" (if needed).
+  -U, --update          Update PyRadio.
+  -R, --uninstall       Uninstall PyRadio.
+  -V, --version         Display version information.
+
+Playlist selection:
   -ls, --list-playlists
                         List of available playlists in config dir.
-  -l, --list            List of available stations in a playlist.
+  -s PLAYLIST, --stations PLAYLIST
+                        Load the specified playlist instead of the default
+                        one.
+  -tlp, --toggle-load-last-playlist
+                        Toggle autoload last opened playlist.
+
+Themes:
   -t THEME, --theme THEME
                         Use specified theme.
   --show-themes         Show Internal and System Themes names.
   --no-themes           Disable themes (use default theme).
   --write-theme IN_THEME OUT_THEME,
                         Write an Internal or System Theme to themes directory.
+
+Terminal selection:
   --terminal TERMINAL   Use this terminal for Desktop file instead of the
                         auto-detected one. Use "none" to reset to the default
                         terminal or "auto" to reset to the auto-detected one.
@@ -185,29 +207,40 @@ Options:
                         Please replace hyphens with underscores when passing
                         the parameter, for example: --terminal-param "_p 3 _t
                         light" (which will result to "pyradio -p 3 -t light").
-  -tlp, --toggle-load-last-playlist
-                        Toggle autoload last opened playlist.
-  -sd, --show-config-dir
-                        Print config directory [CONFIG DIR] location and exit.
-  -od, --open-config-dir
-                        Open config directory [CONFIG DIR] with default file
-                        manager.
-  -or, --open-recordings
-                        Open the Recordings folder.
+
+Cache:
   -oc, --open-cache     Open the Cache folder.
   -sc, --show-cache     Show Cache contents.
   -cc, --clear-cache    Clear Cache contents.
   -gc, --get-cache      Download source code, keep it in the cache and exit.
-  -us, --update-stations
-                        Update "stations.csv" (if needed).
-  -lt, --log-titles     Log titles to file.
+
+Recording stations:
   -r, --record          Turn recording on (not available for VLC player on
                         Windows).
-  -d, --debug           Start PyRadio in debug mode.
-  -ul, --unlock         Remove sessions' lock file.
-  -U, --update          Update PyRadio.
-  -R, --uninstall       Uninstall PyRadio.
-  -V, --version         Display version information.
+  -or, --open-recordings
+                        Open the Recordings folder.
+  -lr, --list-recordings
+                        List recorded files.
+  -mkv MKV_FILE, --mkv-file MKV_FILE
+                        Specify a previously recorded MKV file to be used with
+                        one of the following options. The MKV_FILE can either
+                        be an absolute or a relative path, or a number
+                        provided by the -lr command line paremater. If it is a
+                        relative path, it should be found in the current or in
+                        the Recordings directory.
+  -scv PNG_FILE, --set-mkv-cover PNG_FILE
+                        Add or change the cover image of a previously recorded
+                        MKV file. PNG_FILE can either be an absolute or a
+                        relative path. If relative, it should be found in the
+                        current or in the Recordings directory.
+  -srt, --export-srt    Export a previously recorded MKV file chapters to an
+                        SRT file. The file produced will have the name of the
+                        input file with the "mkv" extension replaced by "srt".
+  -ach, --add-chapters  Add (or replace) chapter markers to a previously
+                        recorded MKV file. The chapters file will be a SRT
+                        file, much like the one produced by the previous
+                        command line parameter.
+
 ```
 
 ## Controls

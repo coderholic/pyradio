@@ -68,16 +68,17 @@ class MyArgParser(ArgumentParser):
         if PY3:
             print(self._add_colors(self.format_help()))
         else:
-            print(self.format_help())
+            print(self.format_help().replace('• ', ''))
 
     def _add_colors(self, txt):
-        t = txt.replace('show this help', 'Show this help').replace('usage:', 'Usage:').replace('options:', 'Options:').replace('[', '|').replace(']', '||')
+        t = txt.replace('show this help', 'Show this help').replace('usage:', '• Usage:').replace('options:', '• General options:').replace('[', '|').replace(']', '||')
         x = re.sub(r'([^a-zZ-Z0-9])(--*[^ ,\t|]*)', r'\1[red]\2[/red]', t)
         t = re.sub(r'([A-Z_][A-Z_]+)', r'[green]\1[/green]', x)
         x = re.sub('([^"]pyradio)', r'[magenta]\1[/magenta]', t, flags=re.I)
         t = re.sub(r'(player_name:[a-z:_]+)', r'[plum2]\1[/plum2]', x)
-        x = t.replace('mpv', '[green]mpv[/green]').replace('mplayer', '[green]mplayer[/green]').replace('vlc', '[green]vlc[/green]')
-        return '[bold]' + x.replace('||', r']').replace('|', r'\[') + '[/bold]'
+        x = re.sub(r'(•.*:)', r'[orange_red1]\1[/orange_red1]', t)
+        t = x.replace('mpv', '[green]mpv[/green]').replace('mplayer', '[green]mplayer[/green]').replace('vlc', '[green]vlc[/green]')
+        return '[bold]' + t.replace('||', r']').replace('|', r'\[').replace('• ', '') + '[/bold]'
 
 @contextmanager
 def pyradio_config_file(a_dir):
@@ -175,36 +176,20 @@ If nothing else works, try the following command:
                             help='Use specified configuration directory instead of the default one. '
                             'PyRadio will try to create it, if it does not exist. '
                             'Not available on Windows.')
-    parser.add_argument('-s', '--stations', default='',
-                        help='Use specified station CSV file.')
-    parser.add_argument('-p', '--play', nargs='?', default='False',
+    parser.add_argument('-p', '--play', nargs='?', default='False', metavar=('STATION_NUMBER', ),
                         help='Start and play.'
                         'The value is num station or empty for random.')
-    parser.add_argument('-u', '--use-player', default='',
+    parser.add_argument('-u', '--use-player', default='', metavar=('PLAYER', ),
             help='Use specified player. '
             'A comma-separated list can be used to specify detection order. '
             'Supported players: mpv, mplayer, vlc.')
     parser.add_argument('-a', '--add', action='store_true',
                         help='Add station to list.')
-    parser.add_argument('-ls', '--list-playlists', action='store_true',
-                        help='List of available playlists in config dir.')
     parser.add_argument('-l', '--list', action='store_true',
                         help='List of available stations in a playlist.')
-    parser.add_argument('-t', '--theme', default='', help='Use specified theme.')
-    parser.add_argument('--show-themes', action='store_true',
-                       help='Show Internal and System Themes names.')
-    parser.add_argument('--no-themes', action='store_true',
-                       help='Disable themes (use default theme).')
-    parser.add_argument('--write-theme', nargs=2, metavar=('IN_THEME', 'OUT_THEME,'),
-                        help='Write an Internal or System Theme to themes directory.')
 
-    if not system().lower().startswith('darwin') and \
-            not system().lower().startswith('win'):
-        parser.add_argument('--terminal', help='Use this terminal for Desktop file instead of the auto-detected one. Use "none" to reset to the default terminal or "auto" to reset to the auto-detected one.')
-        parser.add_argument('--terminal-param', help='Use this as PyRadio parameter in the Desktop File. Please replace hyphens with underscores when passing the parameter, for example: --terminal-param "_p 3 _t light" (which will result to "pyradio -p 3 -t light").')
-
-    parser.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
-                        help='Toggle autoload last opened playlist.')
+    parser.add_argument('-lt', '--log-titles', action='store_true',
+                        help='Log titles to file.')
     parser.add_argument('-sd', '--show-config-dir', action='store_true',
                         help='Print config directory [CONFIG DIR] location and exit.')
     parser.add_argument('-od', '--open-config-dir', action='store_true',
@@ -212,33 +197,13 @@ If nothing else works, try the following command:
     if platform.startswith('win'):
         parser.add_argument('--exe', action='store_true', default=False,
                             help='Show EXE file location (Windows only).')
-    parser.add_argument('-or', '--open-recordings', action='store_true',
-                       help='Open the Recordings folder.')
-    if HAS_PIPX:
-        parser.add_argument('-oc', '--open-cache', action='store_true',
-                           help='Open the Cache folder.')
-        parser.add_argument('-sc', '--show-cache', action='store_true',
-                           help='Show Cache contents.')
-        parser.add_argument('-cc', '--clear-cache', action='store_true',
-                           help='Clear Cache contents.')
-        parser.add_argument('-gc', '--get-cache', action='store_true',
-                            help='Download source code, keep it in the cache and exit.')
-    else:
-        parser.add_argument('-oc', '--open-cache', action='store_true', help=SUPPRESS)
-        parser.add_argument('-sc', '--show-cache', action='store_true', help=SUPPRESS)
-        parser.add_argument('-cc', '--clear-cache', action='store_true', help=SUPPRESS)
-        parser.add_argument('-gc', '--get-cache', action='store_true', help=SUPPRESS)
 
-    parser.add_argument('-us', '--update-stations', action='store_true',
-                        help='Update "stations.csv" (if needed).')
-    parser.add_argument('-lt', '--log-titles', action='store_true',
-                        help='Log titles to file.')
-    parser.add_argument('-r', '--record', action='store_true',
-                        help='Turn recording on (not available for VLC player on Windows).')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Start PyRadio in debug mode.')
     parser.add_argument('-ul', '--unlock', action='store_true',
                         help="Remove sessions' lock file.")
+    parser.add_argument('-us', '--update-stations', action='store_true',
+                        help='Update "stations.csv" (if needed).')
     parser.add_argument('-U', '--update', action='store_true',
                         help='Update PyRadio.')
     parser.add_argument('-R', '--uninstall', action='store_true',
@@ -258,6 +223,66 @@ If nothing else works, try the following command:
     parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--devel', action='store_true', help=SUPPRESS)
     parser.add_argument('--force-update', default='', help=SUPPRESS)
+
+    pl_group = parser.add_argument_group('• Playlist selection')
+    pl_group.add_argument('-ls', '--list-playlists', action='store_true',
+                        help='List of available playlists in config dir.')
+    pl_group.add_argument('-s', '--stations', default='', metavar=('PLAYLIST', ),
+                        help='Load the specified playlist instead of the default one.')
+    pl_group.add_argument('-tlp', '--toggle-load-last-playlist', action='store_true',
+                        help='Toggle autoload last opened playlist.')
+
+
+
+    th_group = parser.add_argument_group('• Themes')
+    th_group.add_argument('-t', '--theme', default='', help='Use specified theme.')
+    th_group.add_argument('--show-themes', action='store_true',
+                       help='Show Internal and System Themes names.')
+    th_group.add_argument('--no-themes', action='store_true',
+                       help='Disable themes (use default theme).')
+    th_group.add_argument('--write-theme', nargs=2, metavar=('IN_THEME', 'OUT_THEME,'),
+                        help='Write an Internal or System Theme to themes directory.')
+
+    if not system().lower().startswith('darwin') and \
+            not system().lower().startswith('win'):
+        term_group = parser.add_argument_group('• Terminal selection')
+        term_group.add_argument('--terminal', help='Use this terminal for Desktop file instead of the auto-detected one. Use "none" to reset to the default terminal or "auto" to reset to the auto-detected one.')
+        term_group.add_argument('--terminal-param', help='Use this as PyRadio parameter in the Desktop File. Please replace hyphens with underscores when passing the parameter, for example: --terminal-param "_p 3 _t light" (which will result to "pyradio -p 3 -t light").')
+
+
+    if HAS_PIPX:
+        cache_group = parser.add_argument_group('• Cache')
+        cache_group.add_argument('-oc', '--open-cache', action='store_true',
+                           help='Open the Cache folder.')
+        cache_group.add_argument('-sc', '--show-cache', action='store_true',
+                           help='Show Cache contents.')
+        cache_group.add_argument('-cc', '--clear-cache', action='store_true',
+                           help='Clear Cache contents.')
+        cache_group.add_argument('-gc', '--get-cache', action='store_true',
+                            help='Download source code, keep it in the cache and exit.')
+    else:
+        parser.add_argument('-oc', '--open-cache', action='store_true', help=SUPPRESS)
+        parser.add_argument('-sc', '--show-cache', action='store_true', help=SUPPRESS)
+        parser.add_argument('-cc', '--clear-cache', action='store_true', help=SUPPRESS)
+        parser.add_argument('-gc', '--get-cache', action='store_true', help=SUPPRESS)
+
+
+
+    gr_recording = parser.add_argument_group('• Recording stations')
+    gr_recording.add_argument('-r', '--record', action='store_true',
+                        help='Turn recording on (not available for VLC player on Windows).')
+    gr_recording.add_argument('-or', '--open-recordings', action='store_true',
+                       help='Open the Recordings folder.')
+    gr_recording.add_argument('-lr', '--list-recordings', action='store_true',
+                       help='List recorded files.')
+    gr_recording.add_argument('-mkv', '--mkv-file', default='',
+            help='Specify a previously recorded MKV file to be used with one of the following options. The MKV_FILE can either be an absolute or a relative path, or a number provided by the -lr command line paremater. If it is a relative path, it should be found in the current or in the Recordings directory.')
+    gr_recording.add_argument('-scv', '--set-mkv-cover', default='', metavar=('PNG_FILE', ),
+                        help='Add or change the cover image of a previously recorded MKV file. PNG_FILE can either be an absolute or a relative path. If relative, it should be found in the current or in the Recordings directory.')
+    gr_recording.add_argument('-srt', '--export-srt', action='store_true',
+                              help='Export a previously recorded MKV file chapters to an SRT file. The file produced will have the name of the input file with the "mkv" extension replaced by "srt".')
+    gr_recording.add_argument('-ach', '--add-chapters', default='', action='store_true',
+                              help='Add (or replace) chapter markers to a previously recorded MKV file. The chapters file will be a SRT file, much like the one produced by the previous command line parameter.')
     args = parser.parse_args()
     sys.stdout.flush()
 
@@ -530,7 +555,9 @@ If nothing else works, try the following command:
                 args.add is False and \
                 args.show_cache is False and \
                 args.clear_cache is False and \
-                args.open_cache is False:
+                args.open_cache is False and \
+                args.list_recordings is False and \
+                args.set_mkv_cover == []:
             print('Reading config...')
         if not config_already_read:
             read_config(pyradio_config)
@@ -581,6 +608,35 @@ If nothing else works, try the following command:
             upd._get_cache = True
             upd.user = is_pyradio_user_installed()
             upd.update_pyradio()
+            sys.exit()
+
+        mkvtoolnix = None
+        if args.mkv_file or args.list_recordings:
+            from .mkvtoolnix import MKVToolNix
+            mkvtoolnix = MKVToolNix(pyradio_config.stations_dir)
+            if not mkvtoolnix.HAS_MKVTOOLNIX:
+                if HAS_RICH:
+                    print('[red]Error:[/red] [bold magenta]MKVToolNix[/bold magenta] not found!')
+                else:
+                    print('Error: MKVToolNix not found!')
+                sys.exit(1)
+            mkvtoolnix.mkv_file = args.mkv_file
+
+            if args.list_recordings:
+                mkvtoolnix.list_mkv_files()
+                sys.exit()
+
+            if args.set_mkv_cover:
+                mkvtoolnix.cover_file = args.set_mkv_cover
+
+            if args.add_chapters:
+                mkvtoolnix.chapters = True
+
+            if args.export_srt:
+                mkvtoolnix.srt = True
+
+        if mkvtoolnix:
+            mkvtoolnix.execute()
             sys.exit()
 
         if args.no_themes:

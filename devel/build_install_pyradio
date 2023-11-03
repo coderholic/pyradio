@@ -521,7 +521,7 @@ then
     fi
     mkdir -p ~/.config/pyradio/data
     cp devel/pyradio.png ~/.config/pyradio/data
-    cp devel/recording.png ~/.config/pyradio/data
+    cp devel/cover.png ~/.config/pyradio/data
     [ -z $PIPX  ] || create_installation_type_file
 else
     do_exit

@@ -165,7 +165,9 @@ do
         sed -i -e '/server-on.jpg/s/src=/style="width: 574px" src=/' "$out"
     fi
     if [ "$out" = "recording.html" ];then
-        sed -i -e '/pyradio-recording.\.jpg/s/src=/style="width: 698px" src=/' "$out"
+        sed -i -e '/pyradio-recording.\.jpg/s/src=/style="width: 698px" src=/' \
+            -e '/mkv-srt-to-chapters\.png/s/src=/style="width: 350px" src=/' \
+            "$out"
     fi
 
     sed -i '/^<[Aa]/s|.*|<p>&</p>|' "$out"

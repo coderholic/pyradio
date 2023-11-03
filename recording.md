@@ -32,12 +32,20 @@ ___
     * [File location](#file-location)
     * [File type](#file-type)
     * [Chapters](#chapters)
+    * [Cover image](#cover-image)
         * [MKVToolNix installation](#mkvtoolnix-installation)
             * [Linux](#linux)
             * [MacOS](#macos)
             * [Windows](#windows)
     * [Files location](#files-location)
     * [Pausing playback](#pausing-playback)
+* [Post recording](#post-recording)
+    * [Changing the cover](#changing-the-cover)
+    * [Correcting chapter markers](#correcting-chapter-markers)
+        * [1. Extract the SRT](#1.-extract-the-srt)
+        * [2. Edit the SRT file](#2.-edit-the-srt-file)
+        * [3. SRT to Chapters](#3.-srt-to-chapters)
+* [Listing recordings and the -mkv command line option](#listing-recordings-and-the--mkv-command-line-option)
 
 <!-- vim-markdown-toc -->
 
@@ -188,9 +196,21 @@ Things to consider:
 
 - Chapters markers timing depends on the time the *ICY Titles* are received, plus any overhead added by **PyRadio**. \
 \
-This means that, for whatever reason, a chapter marker may not exactly point to the beginning of the song associated with it.
+This means that, for whatever reason, a chapter marker may not exactly point to the beginning of the song associated with it. To change or correct chapter markers, please refer to section [Correcting chapter markers](#correcting-chapter-markers).
 
-The image below shows how a chapter aware player will display and handle chapter markers found in a MKV file. This is the [Media Player Classic](https://sourceforge.net/projects/mpc-hc/) on Windows 7.
+### Cover image
+
+**PyRadio** will insert a cover image to every recorded file when [MKVToolNix](https://mkvtoolnix.download/) has been detected.
+
+The default image is named "*cover.png*" and is located in the "*data*" folder, within the configuration directory.
+
+There are two way to change this cover image:
+
+1. To permanently change the cover image for all recordings, create a **PNG** file named "**user-cover.png**" in the "*data*" folder withing the configuration directory.
+
+2. After you have stopped the recording, set any **PNG** file as a cover image for the recorded file, using the procedure explained in section [Changing the cover](#changing-the-cover).
+
+The image below shows how a chapter aware player will display and handle chapter markers found in a MKV file. The file also uses the default cover image. This is the [Media Player Classic](https://sourceforge.net/projects/mpc-hc/) on Windows 7.
 
 ![PyRadio Chapters](https://members.hellug.gr/sng/pyradio/pyradio-chapters.gif)
 
@@ -296,3 +316,107 @@ Pressing "**Space**" again will resume playback from where it left off.
 As a consequence, listening to the end of a show that you have paused for say 10 minutes, and then stopping the station (both playback and recording), the file recorded will have an excess of 10 minutes of data, past the end of the actual show.
 
 Finally, please keep in mind that all other keys relevant to starting, stopping and restarting a station's playback remain the same; only the behavior of the "**Space**" key has changed when recording is on.
+
+## Post recording
+
+After recording a station, there are some action one may want to perform on the recorded file:
+
+1. change the cover image provided by **PyRadio**
+
+2. correct the timing of captured chapters
+
+### Changing the cover
+
+As already stated, **PyRadio** will embed a **cover** to every recording (provided that [MKVToolNix](https://mkvtoolnix.download/) is installed).
+
+The default image is a PNG file named "**cover.png**" located under the **data** folder in the configuration directory.
+
+One can change this cover image using the following command:
+
+```
+pyradio -mkv recorded.mkv -scv image.png
+```
+
+Both **recorded.mkv** and **image.png** can be inserted either as an absolute path/filename or as a relative one. In the later case, the relevant file can either be in the current directory or under the "**recordings**" folder.
+
+### Correcting chapter markers
+
+**PyRadio** does provide a way to correct these misplaced chapter markers.
+
+The way to do it is:
+
+1. extract a **SRT** file from a recorded *MKV* file, containing the chapter names as subtitles.
+
+2. edit the *SRT* file and coreectly place the subtitles.
+
+3. insert the *SRT* file to the original **MKV** file, transforming the subtitles timing and test to chapters.
+
+The following image shows this procedure.
+
+![MKV SRT to Chapters](https://members.hellug.gr/sng/pyradio/mkv-srt-to-chapters.png)
+
+In detail:
+
+#### 1. Extract the SRT
+
+Execute the command:
+
+```
+pyradio -mkv file.mkv -srt
+```
+
+The file produced by this command will be named **file.srt** (the input file name, after replacing the "*mkv*" extension with the "*srt*" extension).
+
+#### 2. Edit the SRT file
+
+At this point, the SRT file can be edited with any Subtitle Editor, and subtitles' timing can be adjusted, entries added or deleted, etc.
+
+Although any Subtitle Editor will do, I would recommend using [Subtitle Edit](https://github.com/SubtitleEdit/subtitleedit/releases)  to edit the subtitles. The only reason is that this free (open source) program is capable of displaying the waveform of the edited file, which is very helpful in our case, since there is no video stream in the recorded files. Although this is a Windows program, it does run on Linux as well; for more info please refer to [Subtitle Edit on Linux](https://www.nikse.dk/subtitleedit/help#linux).
+
+#### 3. SRT to Chapters
+
+After the SRT file has been edited, it can be "inserted" into the original **MKV** file. This will actually convert the subtitle entries to chapter marker entries and insert them to the **MKV** file, replacing the older ones.
+
+The command to run is:
+
+```
+pyradio -mkv file.mkv -ach
+```
+
+## Listing recordings and the -mkv command line option
+
+The **-mkv** command line option used above, will specify the **MKV** file to use with subsequent commands, but there is a problem here; recorded file names are too complicated to pass as arguments, written by hand or otherwise.
+
+**PyRadio** addresses this issue by accepting a **number** instead of a file name as a parameter to **-mkv*; this number is actually the index of the required file in the alphabetically sorted list of existing files.
+
+To get the **index** number, one would just use the **-lr** command line option:
+
+```
+$ pyradio -lr
+    List of files under recordings
+    ┏━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ # ┃ Name                                                             ┃
+    ┡━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+    │ 1 │ 2023-11-02 17-06-03 Lounge (Illinois Street Lounge - SomaFM).mkv │
+    │ 2 │ 2023-11-02 14-37-17 Pop (PopTron! - SomaFM).mkv                  │
+    │ 3 │ 2023-10-31 20-15-41 ΕΡΑ - Κέρκυρα (Περιφερειακός σταθμός).mkv    │
+    │ 4 │ 2023-10-31 15-22-57 Celtic Sounds.mkv                            │
+    │ 5 │ 2023-10-31 11-14-43 La Top - 107.7 FM - Grupo Invosa.mkv         │
+    └───┴──────────────────────────────────────────────────────────────────┘
+```
+
+This way, the command:
+```
+pyradio -mkv '2023-11-02 17-06-03 Lounge (Illinois Street Lounge - SomaFM).mkv' -srt
+```
+
+could actually be inserted as
+
+```
+pyradio -mkv 1 -srt
+```
+
+In this case, **1** is the index of the file in the list provided by the **-lr** command.
+
+As a convenience, negative numbers can also be used; **-1** means the last file, **-2** the second from last, etc. This way, to work with the last recorded file, one would just use "**-mkv -1**" on all the necessary commands.
+

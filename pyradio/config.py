@@ -216,7 +216,7 @@ class PyRadioStations(object):
             copy it from the icons dir
         '''
         if not path.exists(path.join(self.data_dir, 'pyradio.png')):
-            for an_icon in ('pyradio.png', 'recording.png'):
+            for an_icon in ('pyradio.png', 'cover.png'):
                 from_file = path.join(path.dirname(__file__), 'icons', an_icon)
                 to_file = path.join(self.data_dir, an_icon)
                 try:
@@ -230,7 +230,7 @@ class PyRadioStations(object):
         '''
         default_icon_location = path.join(getenv('HOME', '~'), '.config', 'pyradio', 'data')
         if default_icon_location != self.data_dir:
-            for an_icon in ('pyradio.png', 'recording.png'):
+            for an_icon in ('pyradio.png', 'cover.png'):
                 from_file = path.join(path.dirname(__file__), 'icons', an_icon)
                 to_file = path.join(default_icon_location, an_icon)
                 try:

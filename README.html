@@ -208,11 +208,21 @@ a:visited{color: SaddleBrown;}
 <li>netifaces (optional)</li>
 </ul></li>
 <li>MPV, MPlayer or VLC installed and in your path</li>
-<li>MKVToolNix (cli files) to insert tags and chapters to recordings (optional)</li>
+<li>MKVToolNix (cli files) to insert tags, chapters and cover to recordings (optional)</li>
 </ul>
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
+
+2023-11-03 s-n-g
+    * version 0.9.2.17
+    * Recorded MKV files will have a cover image by default
+      (when MKVToolNix is installed)
+    * Adding -mkv, -scv, -srt, -ach and -lr command line parameters
+      (applicable when MKVToolNix is installed)
+    * Rearranging and grouping options in the program's help screen
+    * Working on scheduler (not applicable yet)
+    * Updating docs
 
 2023-10-15 s-n-g
     * version 0.9.2.16
@@ -224,7 +234,7 @@ a:visited{color: SaddleBrown;}
       recording folder
     * buffering can now be disabled (in 0.9.2.15, once buffering was
       enabled, it could not be disabled until program termination)
-    * fixing a couple of race confitions (threading lock files not being
+    * fixing a couple of race conditions (threading lock files not being
       released) that would lead to a freeze
     * fixing players crash detection routines
     * fixing config players parsing
@@ -1110,40 +1120,62 @@ a:visited{color: SaddleBrown;}
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre>$ pyradio -h
 
-Usage: pyradio [-h] [-c CONFIG_DIR] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER]
-               [-a] [-ls] [-l] [-t THEME] [--show-themes] [--no-themes]
+Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-a]
+               [-l] [-lt] [-sd] [-od] [-d] [-ul] [-us] [-U] [-R] [-V] [-ls]
+               [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes] [--no-themes]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
-               [--terminal-param TERMINAL_PARAM] [-tlp] [-sd] [-od] [-or]
-               [-oc] [-sc] [-cc] [-gc] [-us] [-lt] [-r] [-d] [-ul] [-U] [-R]
-               [-V]
+               [--terminal-param TERMINAL_PARAM] [-oc] [-sc] [-cc] [-gc] [-r]
+               [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt] [-ach]
 
 Curses based Internet radio player
 
-Options:
+General options:
   -h, --help            Show this help message and exit
   -c CONFIG_DIR, --config-dir CONFIG_DIR
                         Use specified configuration directory instead of the
                         default one. PyRadio will try to create it, if it does
                         not exist. Not available on Windows.
-  -s STATIONS, --stations STATIONS
-                        Use specified station CSV file.
-  -p [PLAY], --play [PLAY]
+  -p [STATION_NUMBER], --play [STATION_NUMBER]
                         Start and play.The value is num station or empty for
                         random.
-  -u USE_PLAYER, --use-player USE_PLAYER
+  -u PLAYER, --use-player PLAYER
                         Use specified player. A comma-separated list can be
                         used to specify detection order. Supported players:
                         mpv, mplayer, vlc.
   -a, --add             Add station to list.
+  -l, --list            List of available stations in a playlist.
+  -lt, --log-titles     Log titles to file.
+  -sd, --show-config-dir
+                        Print config directory [CONFIG DIR] location and exit.
+  -od, --open-config-dir
+                        Open config directory [CONFIG DIR] with default file
+                        manager.
+  -d, --debug           Start PyRadio in debug mode.
+  -ul, --unlock         Remove sessions&#39; lock file.
+  -us, --update-stations
+                        Update &quot;stations.csv&quot; (if needed).
+  -U, --update          Update PyRadio.
+  -R, --uninstall       Uninstall PyRadio.
+  -V, --version         Display version information.
+
+Playlist selection:
   -ls, --list-playlists
                         List of available playlists in config dir.
-  -l, --list            List of available stations in a playlist.
+  -s PLAYLIST, --stations PLAYLIST
+                        Load the specified playlist instead of the default
+                        one.
+  -tlp, --toggle-load-last-playlist
+                        Toggle autoload last opened playlist.
+
+Themes:
   -t THEME, --theme THEME
                         Use specified theme.
   --show-themes         Show Internal and System Themes names.
   --no-themes           Disable themes (use default theme).
   --write-theme IN_THEME OUT_THEME,
                         Write an Internal or System Theme to themes directory.
+
+Terminal selection:
   --terminal TERMINAL   Use this terminal for Desktop file instead of the
                         auto-detected one. Use &quot;none&quot; to reset to the default
                         terminal or &quot;auto&quot; to reset to the auto-detected one.
@@ -1152,29 +1184,40 @@ Options:
                         Please replace hyphens with underscores when passing
                         the parameter, for example: --terminal-param &quot;_p 3 _t
                         light&quot; (which will result to &quot;pyradio -p 3 -t light&quot;).
-  -tlp, --toggle-load-last-playlist
-                        Toggle autoload last opened playlist.
-  -sd, --show-config-dir
-                        Print config directory [CONFIG DIR] location and exit.
-  -od, --open-config-dir
-                        Open config directory [CONFIG DIR] with default file
-                        manager.
-  -or, --open-recordings
-                        Open the Recordings folder.
+
+Cache:
   -oc, --open-cache     Open the Cache folder.
   -sc, --show-cache     Show Cache contents.
   -cc, --clear-cache    Clear Cache contents.
   -gc, --get-cache      Download source code, keep it in the cache and exit.
-  -us, --update-stations
-                        Update &quot;stations.csv&quot; (if needed).
-  -lt, --log-titles     Log titles to file.
+
+Recording stations:
   -r, --record          Turn recording on (not available for VLC player on
                         Windows).
-  -d, --debug           Start PyRadio in debug mode.
-  -ul, --unlock         Remove sessions&#39; lock file.
-  -U, --update          Update PyRadio.
-  -R, --uninstall       Uninstall PyRadio.
-  -V, --version         Display version information.</pre>
+  -or, --open-recordings
+                        Open the Recordings folder.
+  -lr, --list-recordings
+                        List recorded files.
+  -mkv MKV_FILE, --mkv-file MKV_FILE
+                        Specify a previously recorded MKV file to be used with
+                        one of the following options. The MKV_FILE can either
+                        be an absolute or a relative path, or a number
+                        provided by the -lr command line paremater. If it is a
+                        relative path, it should be found in the current or in
+                        the Recordings directory.
+  -scv PNG_FILE, --set-mkv-cover PNG_FILE
+                        Add or change the cover image of a previously recorded
+                        MKV file. PNG_FILE can either be an absolute or a
+                        relative path. If relative, it should be found in the
+                        current or in the Recordings directory.
+  -srt, --export-srt    Export a previously recorded MKV file chapters to an
+                        SRT file. The file produced will have the name of the
+                        input file with the &quot;mkv&quot; extension replaced by &quot;srt&quot;.
+  -ach, --add-chapters  Add (or replace) chapter markers to a previously
+                        recorded MKV file. The chapters file will be a SRT
+                        file, much like the one produced by the previous
+                        command line parameter.
+</pre>
 <h2 id="controls">Controls <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre>                  Main window                                      Playlists window                   Themes window
 -------------------------------------------------------------------------------------------------------------------------------------

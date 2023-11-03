@@ -1,3 +1,13 @@
+2023-11-03 s-n-g
+    * version 0.9.2.17
+    * Recorded MKV files will have a cover image by default
+      (when MKVToolNix is installed)
+    * Adding -mkv, -scv, -srt, -ach and -lr command line parameters
+      (applicable when MKVToolNix is installed)
+    * Rearranging and grouping options in the program's help screen
+    * Working on scheduler (not applicable yet)
+    * Updating docs
+
 2023-10-15 s-n-g
     * version 0.9.2.16
     * install.py: will terminate if python not in PATH
@@ -8,7 +18,7 @@
       recording folder
     * buffering can now be disabled (in 0.9.2.15, once buffering was
       enabled, it could not be disabled until program termination)
-    * fixing a couple of race confitions (threading lock files not being
+    * fixing a couple of race conditions (threading lock files not being
       released) that would lead to a freeze
     * fixing players crash detection routines
     * fixing config players parsing

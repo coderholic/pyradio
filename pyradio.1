@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2023 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "October 2023" pyradio
+.TH pyradio 1 "November 2023" pyradio
 
 .SH Name
 .PP
@@ -69,6 +69,14 @@ Update "\fIstations.csv\fR" (if needed).
 Log titles to file.
 .IP \fB-r\fR,\ \fB--record\fR
 Turn recording on (not available for VLC player on Windows).
+.IP \fB-mkv\ \fIMKV_FILE\fR,\ \fB--mkv-file\ \fIMKV_FILE
+Specify a previously recorded MKV file to be used with one of the following options. The \fIMKV_FILE\fR can either be an absolute or a relative path, or a number provided by the \fB-lr\fR command line paremater. If it is a relative path, it should be found in the current or in the Recordings directory.
+.IP \fB-scv\fR\ \fIPNG_FILE\fR,\ \fB--set-mkv-cover\ \fIPNG_FILE
+Add or change the cover image of a previously recorded \fBMKV\fR file. \fIPNG_FILE\fR can either be an absolute or a relative path. If relative, it should be found in the current or in the Recordings directory.
+.IP \fB-srt\fR,\ \fB--export-srt
+Export a previously recorded \fBMKV\fR file chapters to an \fISRT\fR file. The file produced will have the name of the input file with the "\fImkv\fR" extension replaced by "\fIsrt\fR".
+.IP \fB-ach\fR,\ \fB--add-chapters
+Add (or replace) chapter markers to a previously recorded \fBMKV\fR file. The chapters file will be a \fISRT\fR file, much like the one produced by the previous command line parameter.
 .IP \fB-d\fR,\fB\ \--debug
 Enable \fBDEBUG MODE\fR.
 .IP \fB-ul\fR,\ \fB--unlock\fR
