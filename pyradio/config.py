@@ -212,19 +212,28 @@ class PyRadioStations(object):
                         sys.exit(1)
 
     def _copy_icon(self):
-        ''' if i still do not have the icon in the data dir
+        ''' if i still do not have the icons in the data dir
             copy it from the icons dir
         '''
-        if not path.exists(path.join(self.data_dir, 'pyradio.png')):
-            for an_icon in ('pyradio.png', 'cover.png'):
+        upd = path.join(self.data_dir, 'UPDATE_ICON')
+        # # remove the file, I do not need it anymore
+        # if path.exists(upd):
+        #     os.remove(upd)
+
+        for an_icon in ('pyradio.png', 'cover.png'):
+            if not path.exists(path.join(self.data_dir, an_icon)) or \
+                    not path.exists(upd):
                 from_file = path.join(path.dirname(__file__), 'icons', an_icon)
                 to_file = path.join(self.data_dir, an_icon)
                 try:
                     copyfile(from_file, to_file)
                 except:
                     pass
+        # create file so that icons will not be forced copied
+        with open(upd, 'w') as f:
+            f.write('\n')
 
-        ''' make sure that the icon is under ~/.config/pyradio/data
+        ''' make sure that the icons are under ~/.config/pyradio/data
             (the previous section may install it to a different location,
             if --config-dir is used).
         '''

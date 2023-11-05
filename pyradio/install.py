@@ -15,7 +15,7 @@ from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 ''' This is PyRadio version this
     install.py was released for
 '''
-PyRadioInstallPyReleaseVersion = '0.9.2.18'
+PyRadioInstallPyReleaseVersion = '0.9.2.19'
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -812,7 +812,8 @@ class PythonExecutable(object):
             self._python[version - 2] = 'python' + str(version)
 
         if self._terminate_if_not_found and \
-                not self.can_use():
+                not self.can_use() and \
+                self.requested_python_version == version:
             print('''
 
 Python {} was not found in your system.

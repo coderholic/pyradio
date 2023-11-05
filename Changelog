@@ -1,3 +1,10 @@
+2023-11-06 s-n-g
+    * version 0.9.2.19 (BUG FIX release)
+    * cover.png updated
+    * make sure cover.png is in the data folder
+    * fix "No chapters found" message when recorded file has
+      less than 3 chapter markers
+
 2023-11-03 s-n-g
     * version 0.9.2.18
     * fixing a crash on mkvtoolnix.py

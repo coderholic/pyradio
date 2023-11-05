@@ -339,8 +339,6 @@ class MKVToolNix:
             for i, n in enumerate(search_str):
                 ex = re.compile(n + r'[^\n]*')
                 out.append(ex.findall(s))
-                if len(out[0]) < 3:
-                    return None
             out[0] = [x[:-6] for x in out[0]]
             for n in 0, 1:
                 out [n] = [ x[len(search_str[n]):] for x in out[n] ]
