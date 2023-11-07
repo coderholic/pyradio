@@ -645,7 +645,8 @@ class PyRadioThemeReadWrite(object):
                 'Border' not in names.keys():
             names['Border'] = [names['Stations'][0]]
 
-        logger.error('\n\nnames = {}\n\n'.format(names))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('theme names = {}'.format(names))
         self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 2}
         for name in names.keys():
             if name != 'transparency':
@@ -667,7 +668,7 @@ class PyRadioThemeReadWrite(object):
                     self._temp_colors['transparency'] = 2
                 if not self._temp_colors['transparency'] in range(0,3):
                     self._temp_colors['transparency'] = 2
-                logger.error('\n\nset transparency: {}\n\n'.format(self._temp_colors['transparency']))
+                # logger.error('\n\nset transparency: {}\n\n'.format(self._temp_colors['transparency']))
 
         if self._theme_is_incomplete():
             if logger.isEnabledFor(logging.ERROR):
@@ -692,11 +693,13 @@ class PyRadioThemeReadWrite(object):
         self._temp_colors['Name'] = theme_name
         self._temp_colors['Path'] = theme_path
         self._cnf.active_transparency = self._temp_colors['transparency']
-        logger.error('\n\nself._temp_colors\n{}\n\n'.format(self._temp_colors))
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('self._temp_colors\n{}'.format(self._temp_colors))
         return 0, self._temp_colors
 
     def _calculate_fifteenth_color(self):
-        logger.debug('Stations background color: {}'.format(self._temp_colors['css'][2]))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Stations background color: {}'.format(self._temp_colors['css'][2]))
         self._temp_colors['data'][15] = calculate_fifteenth_color(self._temp_colors['data'], self._cnf.opts['calculated_color_factor'][1])
         self._temp_colors['css'][15] = rgb_to_hex(tuple(self._temp_colors['data'][15]))
 

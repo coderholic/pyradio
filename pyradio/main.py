@@ -93,20 +93,17 @@ def pyradio_config_file(a_dir):
                     if PY3:
                         print('Lock file removed: "[red]{}[/red]"'.format(lfile))
                     else:
-                        if PY3:
-                            print('Lock file removed: "[red]{}[/red]"'.format(lfile))
-                        else:
-                            print('Lock file removed: "{}"'.format(lfile))
+                        print('Lock file removed: "{}"'.format(lfile))
                 elif ret == 1:
                     if PY3:
                         print('Failed to remove Lock file: "[red]{}[/red]"'.format(lfile))
                     else:
                         print('Failed to remove Lock file: "{}"'.format(lfile))
                 else:
-                 if PY3:
-                     print('Lock file not found: "[red]{}[/red]"'.format(lfile))
-                 else:
-                     print('Lock file not found: "{}"'.format(lfile))
+                    if PY3:
+                        print('Lock file not found: "[red]{}[/red]"'.format(lfile))
+                    else:
+                        print('Lock file not found: "{}"'.format(lfile))
         except:
             pass
 

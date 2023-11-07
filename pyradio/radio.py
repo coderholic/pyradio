@@ -394,6 +394,8 @@ class PyRadio(object):
 
     _buffering_win = None           # Cache editing window
 
+    _schedule_playlist_select_win = None
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -471,6 +473,7 @@ class PyRadio(object):
             self.ws.SELECT_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
             self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
             self.ws.SELECT_PLAYLIST_MODE: self._playlist_select_win_refresh_and_resize,
+            self.ws.SCHEDULE_PLAYER_SELECT_MODE: self._schedule_playlist_select_win_refresh_and_resize,
             self.ws.PASTE_MODE: self._playlist_select_paste_win_refresh_and_resize,
             self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
             self.ws.MAIN_HELP_MODE: self._show_main_help,
@@ -717,7 +720,7 @@ class PyRadio(object):
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
             # ord('d'): self._html_song_title,
-            # ord('b'): self._show_schedule_player_stop,
+            ord('b'): self._show_schedule_player_stop,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -5503,6 +5506,7 @@ __|Remote Control Server| cannot be started!__
             self._browser_config_win = None
             self._player_select_win = None
             self._playlist_select_win = None
+            self._schedule_playlist_select_win = None
             self._station_editor = None
             self._station_select_win = None
             self._theme_selector = None
@@ -6660,6 +6664,23 @@ __|Remote Control Server| cannot be started!__
             )
         self._group_selection_window.show(parent=self.bodyWin)
 
+    def _read_first_station(self, a_playlist):
+        ''' read the first station of a playlist
+            to be used with self._simple_schedule
+            returns '1' if error, '0' if playlist is empty
+        '''
+        try:
+            with open(os.path.join(self._cnf.stations_dir, a_playlist + '.csv'), 'r', encoding='utf-8') as f:
+                r = csv.reader(f)
+                for n in r:
+                    if not n[0].startswith('#'):
+                        return n[0]
+        except:
+            # error
+            return '1'
+        # no stations in plqaylist
+        return '0'
+
     def keypress(self, char):
         # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
         # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
@@ -7342,6 +7363,24 @@ __|Remote Control Server| cannot be started!__
                 self._simple_schedule = None
                 self.ws.close_window()
                 self.refreshBody()
+            elif ret == 4:
+                ''' Schedule > Select Playlist '''
+                self.ws.operation_mode = self.ws.SCHEDULE_PLAYER_SELECT_MODE
+                if self._schedule_playlist_select_win is None:
+                    self._schedule_playlist_select_win = PyRadioSelectPlaylist(
+                        self.bodyWin,
+                        self._cnf.stations_dir,
+                        self._simple_schedule.playlist,
+                        global_functions=self._global_functions
+                    )
+                else:
+                    self._schedule_playlist_select_win._parent_maxY, self._schedule_playlist_select_win._parent_maxX = self.bodyWin.getmaxyx()
+                self._schedule_playlist_select_win.init_window()
+                self._schedule_playlist_select_win.refresh_win()
+                self._schedule_playlist_select_win.setPlaylist(self._simple_schedule.playlist)
+            elif ret == 5:
+                # open station selection window
+                pass
 
         elif self.ws.operation_mode == self.ws.BUFFER_SET_MODE:
             ret, buf = self._buffering_win.keypress(char)
@@ -7950,6 +7989,37 @@ __|Remote Control Server| cannot be started!__
                 self.ws.close_window()
                 self._config_win.refresh_config_win()
             return
+
+        elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYER_SELECT_MODE and \
+                char not in self._chars_to_bypass and \
+                char not in self._chars_to_bypass_for_search:
+            ''' In Config window; select playlist '''
+            ret, ret_playlist = self._schedule_playlist_select_win.keypress(char)
+            logger.error('ret = {}'.format(ret))
+            if ret >= 0:
+                if ret == 0:
+                    station = self._read_first_station(ret_playlist)
+                    if station == '0':
+                        # No stations in playlist
+                        self._show_notification_with_delay(
+                                txt='___No stations in playlist!___',
+                                mode_to_set=self.ws.operation_mode,
+                                callback_function=self.refreshBody)
+                    elif station == '1':
+                        # error reading playlist
+                        self._show_notification_with_delay(
+                                txt='___Error reading playlist!___',
+                                mode_to_set=self.ws.operation_mode,
+                                callback_function=self.refreshBody)
+                    else:
+                        self._simple_schedule.playlist = ret_playlist
+                        self._simple_schedule.station = station
+                        self.ws.close_window()
+                        self._simple_schedule.show(self.outerBodyWin)
+                elif ret == 1:
+                    self.ws.close_window()
+                    self.refreshBody()
+            # return
 
         elif self.ws.operation_mode == self.ws.SELECT_PLAYLIST_MODE and \
                 char not in self._chars_to_bypass and \
@@ -10152,6 +10222,10 @@ __|Remote Control Server| cannot be started!__
     def _playlist_select_win_refresh_and_resize(self):
         if not self._config_win.too_small:
             self._playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
+
+    def _schedule_playlist_select_win_refresh_and_resize(self):
+        if not self._simple_schedule.too_small:
+            self._schedule_playlist_select_win.refresh_and_resize(self.bodyWin.getmaxyx())
 
     def _redisplay_encoding_select_win_refresh_and_resize(self):
         if self._config_win:

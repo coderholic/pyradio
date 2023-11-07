@@ -347,7 +347,7 @@ The way to do it is:
 
 1. extract a **SRT** file from a recorded *MKV* file, containing the chapter names as subtitles.
 
-2. edit the *SRT* file and coreectly place the subtitles.
+2. edit the *SRT* file and correctly place the subtitles.
 
 3. insert the *SRT* file to the original **MKV** file, transforming the subtitles timing and test to chapters.
 
