@@ -3150,7 +3150,6 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                         self._groups_ids[i] += 2
             if not self._is_from_schedule:
                 self._items.reverse()
-        # logger.error('group ids: {}'.format(self._groups_ids))
         index = 0
         if self._is_from_schedule:
             if a_station:
@@ -3174,7 +3173,10 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                 self._orig_playlist == 'Random' or \
                 self._orig_playlist is None:
             or_pl = 0
-        col = curses.color_pair(10)
+        if i in self._groups_ids:
+            col = curses.color_pair(3)
+        else:
+            col = curses.color_pair(10)
         displ = 0 if self._is_from_schedule else 1
         if i + self.startPos == int(or_pl) + displ:
             if i + self.startPos == self._selected_playlist_id:
@@ -3182,23 +3184,43 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
             else:
                 col = curses.color_pair(11)
         elif i + self.startPos == self._selected_playlist_id:
-            col = curses.color_pair(6)
+            if i in self._groups_ids:
+                col = curses.color_pair(9)
+            else:
+                col = curses.color_pair(6)
         return col
 
     def _format_line(self, i, pad):
         ''' PyRadioSelectStation format line '''
         fixed_pad = pad
         if self._is_from_schedule:
-            line = '{0}. {1}'.format(str(i + self.startPos + 1).rjust(fixed_pad),
-                    self._items[i + self.startPos])
+            if i + self.startPos in self._groups_ids:
+                line = self._format_group_line(i,fixed_pad)
+            else:
+                line = '{0}. {1}'.format(str(i + self.startPos + 1).rjust(fixed_pad),
+                        self._items[i + self.startPos])
         else:
             if i + self.startPos < 2:
                 line = '{0}  {1}'.format(' '.rjust(fixed_pad),
                     self._items[i + self.startPos])
             else:
-                line = '{0}. {1}'.format(str(i + self.startPos - 1).rjust(fixed_pad),
-                        self._items[i + self.startPos])
+                if i + self.startPos in self._groups_ids:
+                    line = self._format_group_line(i,fixed_pad)
+                else:
+                    line = '{0}. {1}'.format(str(i + self.startPos - 1).rjust(fixed_pad),
+                            self._items[i + self.startPos])
         return line, pad
+
+    def _format_group_line(self, i, pad):
+        if self._is_from_schedule:
+            pad_string = str(i + self.startPos + 1).rjust(pad)
+        else:
+            pad_string = str(i + self.startPos - 1).rjust(pad)
+        length = self.maxX - 2 - len(pad_string) - 6
+        pad_char = '_' if version_info.major == 2 else '─'
+        return '{0}. {1}'.format(pad_string,
+                (' ' + self._items[i + self.startPos] + ' ').center(length, pad_char) + 6 * pad_char
+                                 )
 
     def keypress(self, char):
         if char in (ord('r'), ):
