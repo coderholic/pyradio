@@ -772,17 +772,15 @@ class PyRadioSimpleScheduleWindow(object):
             return -1
 
         elif self._focus == 0 and char in (
-                ord(' '), curses.KEY_ENTER,
-                curses.KEY_RIGHT, ord('l')
+                ord(' '), curses.KEY_ENTER, ord('\n'),
+                curses.KEY_RIGHT, ord('l'), ord('\r'),
                 ) and self._widgets[2].checked:
-            logger.error('Select playlist')
             return 4
 
         elif self._focus == 1 and char in (
-                ord(' '), curses.KEY_ENTER,
-                curses.KEY_RIGHT, ord('l')
+                ord(' '), curses.KEY_ENTER, ord('\n'),
+                curses.KEY_RIGHT, ord('l'), ord('\r'),
                 ) and self._widgets[2].checked:
-            logger.error('Select station')
             return 5
 
         elif self._focus == 19 and char in (
@@ -831,15 +829,18 @@ class PyRadioSimpleScheduleWindow(object):
                     and not ret:
                 ''' Cancel '''
                 return -1
+
             elif self._widgets[self._focus].w_id == 21 \
                     and not ret:
                 ''' OK '''
                 self._validate_selection()
                 return 1
+
             elif self._widgets[self._focus].w_id == 20 \
                     and not ret:
                 ''' Remove schedule '''
                 return 2
+
             elif self._widgets[self._focus].w_id in (3, 5, 7, 9, 11, 13):
                 ''' Time
                       -1: Cancel
@@ -861,7 +862,8 @@ class PyRadioSimpleScheduleWindow(object):
                         self._current_player_id = len(self._supported_players) - 1
                     self._widgets[14].string = self._supported_players[self._current_player_id]
                     # self._fix_recording_from_player_selection()
-            else:
+
+            elif self._focus in (2, 4, 6, 10, 12):
                 ''' Check Boxes '''
                 if self._widgets[self._focus].checked:
                     if self._focus == 2:

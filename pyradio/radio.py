@@ -6669,7 +6669,8 @@ __|Remote Control Server| cannot be started!__
             with open(os.path.join(self._cnf.stations_dir, a_playlist + '.csv'), 'r', encoding='utf-8') as f:
                 r = csv.reader(f)
                 for n in r:
-                    if not n[0].startswith('#'):
+                    if not n[0].startswith('#') and \
+                            not n[1] == '-':
                         return n[0]
         except:
             # error

@@ -2960,6 +2960,9 @@ class PyRadioSelectPlaylist(object):
         elif char in (curses.KEY_ENTER, ord('\n'),
                       ord('\r'), ord(' '), ord('l'),
                       curses.KEY_RIGHT):
+            if type(self) is PyRadioSelectStation:
+                if self._selected_playlist_id in self._groups_ids:
+                    return -1, ''
             return self._get_result()
 
         elif char in (curses.KEY_DOWN, ord('j')):
@@ -3120,6 +3123,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
 
     def _read_items(self, a_station=None):
         self._items = []
+        self._groups_ids = []
         stationFile = path.join(self._config_path, self._default_playlist + '.csv')
         if path.exists(stationFile):
             with open(stationFile, 'r', encoding='utf-8') as cfgfile:
@@ -3128,17 +3132,25 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                         if not row:
                             continue
                         try:
-                            name, _ = [s.strip() for s in row]
+                            name, url = [s.strip() for s in row]
                         except ValueError:
                             try:
-                                name, _, _ = [s.strip() for s in row]
+                                name, url, _ = [s.strip() for s in row]
                             except ValueError:
-                                name, _, _, _ = [s.strip() for s in row]
+                                name, url, _, _ = [s.strip() for s in row]
                         self._items.append(name)
+                        if url == '-':
+                            self._groups_ids.append(name)
                 except:
                     pass
+            if self._groups_ids:
+                for i, n in enumerate(self._groups_ids):
+                    self._groups_ids[i] = self._items.index(n)
+                    if not self._is_from_schedule:
+                        self._groups_ids[i] += 2
             if not self._is_from_schedule:
                 self._items.reverse()
+        # logger.error('group ids: {}'.format(self._groups_ids))
         index = 0
         if self._is_from_schedule:
             if a_station:
