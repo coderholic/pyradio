@@ -387,7 +387,7 @@ pyradio -mkv file.mkv -ach
 
 The **-mkv** command line option used above, will specify the **MKV** file to use with subsequent commands, but there is a problem here; recorded file names are too complicated to pass as arguments, written by hand or otherwise.
 
-**PyRadio** addresses this issue by accepting a **number** instead of a file name as a parameter to **-mkv*; this number is actually the index of the required file in the alphabetically sorted list of existing files.
+**PyRadio** addresses this issue by accepting a **number** instead of a file name as a parameter to **-mkv**; this number is actually the index of the required file in the alphabetically sorted list of existing files.
 
 To get the **index** number, one would just use the **-lr** command line option:
 

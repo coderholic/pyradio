@@ -2694,8 +2694,9 @@ class PyRadioSelectPlaylist(object):
         self._error_win = None
         self._items = None
 
-    def init_window(self):
-        self._read_items()
+    def init_window(self, read_items=True):
+        if read_items:
+            self._read_items()
         self.maxY = self._num_of_items + 2
         if self.maxY > self._parent_maxY - 2:
             self.maxY = self._parent_maxY - 2
@@ -3062,11 +3063,17 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
     _default_playlist = ''
 
     def __init__(self, parent, config_path, default_playlist, default_station,
-                 global_functions=None):
+                 global_functions=None, is_from_schedule=False):
         self._default_playlist = default_playlist
         self._orig_default_playlist = default_playlist
         if logger.isEnabledFor(logging.INFO):
             logger.info('displaying stations from: "{}"'.format(default_playlist))
+        # if self._is_from_schedule is True, we need to read the playlist here
+        # so that default_station goes from str -> int (index)
+        self._is_from_schedule = is_from_schedule
+        if self._is_from_schedule:
+            self._config_path = config_path
+            default_station = self._read_items(a_station=default_station)
         PyRadioSelectPlaylist.__init__(self, parent, config_path, default_station)
         self._global_functions = set_global_functions(global_functions)
         self._title = ' Station Selection '
@@ -3102,14 +3109,16 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                 self.setPlaylist(a_station)
 
     def _get_result(self):
-        if self._selected_playlist_id == 0:
-            return 0, 'False'
-        elif self._selected_playlist_id == 1:
-            return 0, 'Random'
-        else:
-            return 0, str(self._selected_playlist_id - 1)
+        if not self._is_from_schedule:
+            if self._selected_playlist_id == 0:
+                return 0, 'False'
+            elif self._selected_playlist_id == 1:
+                return 0, 'Random'
+            else:
+                return 0, str(self._selected_playlist_id - 1)
+        return 0, self._items[self._selected_playlist_id]
 
-    def _read_items(self):
+    def _read_items(self, a_station=None):
         self._items = []
         stationFile = path.join(self._config_path, self._default_playlist + '.csv')
         if path.exists(stationFile):
@@ -3128,12 +3137,22 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                         self._items.append(name)
                 except:
                     pass
+            if not self._is_from_schedule:
+                self._items.reverse()
+        index = 0
+        if self._is_from_schedule:
+            if a_station:
+                try:
+                    index = self._items.index(a_station)
+                except IndexError:
+                    pass
+        else:
+            self._items.append('Play a Random station on startup')
+            self._items.append('Do not play a station on startup')
             self._items.reverse()
-        self._items.append('Play a Random station on startup')
-        self._items.append('Do not play a station on startup')
-        self._items.reverse()
         self._num_of_items = len(self._items)
         self._max_len = cjklen(max(self._items, key=cjklen))
+        return index
 
     def _get_color(self, i):
         or_pl = self._orig_playlist
@@ -3144,7 +3163,8 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
                 self._orig_playlist is None:
             or_pl = 0
         col = curses.color_pair(10)
-        if i + self.startPos == int(or_pl) + 1:
+        displ = 0 if self._is_from_schedule else 1
+        if i + self.startPos == int(or_pl) + displ:
             if i + self.startPos == self._selected_playlist_id:
                 col = curses.color_pair(9)
             else:
@@ -3156,12 +3176,16 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
     def _format_line(self, i, pad):
         ''' PyRadioSelectStation format line '''
         fixed_pad = pad
-        if i + self.startPos < 2:
-            line = '{0}  {1}'.format(' '.rjust(fixed_pad),
-                self._items[i + self.startPos])
-        else:
-            line = '{0}. {1}'.format(str(i + self.startPos - 1).rjust(fixed_pad),
+        if self._is_from_schedule:
+            line = '{0}. {1}'.format(str(i + self.startPos + 1).rjust(fixed_pad),
                     self._items[i + self.startPos])
+        else:
+            if i + self.startPos < 2:
+                line = '{0}  {1}'.format(' '.rjust(fixed_pad),
+                    self._items[i + self.startPos])
+            else:
+                line = '{0}. {1}'.format(str(i + self.startPos - 1).rjust(fixed_pad),
+                        self._items[i + self.startPos])
         return line, pad
 
     def keypress(self, char):

@@ -36,12 +36,12 @@ python -m pip install --user dateutil
 import logging
 from sys import version_info, platform, version
 try:
-    from .cjkwrap import PY3, is_wide, cjklen, cjkljust
+    from .cjkwrap import PY3, is_wide, cjklen, cjkljust, cjkslices
     from .schedule import PyRadioTime
 except:
-    from cjkwrap import PY3, is_wide, cjklen, cjkljust
+    from cjkwrap import PY3, is_wide, cjklen, cjkljust, cjkslices
     from schedule import PyRadioTime
-# from .cjkwrap import PY3, is_wide, cjklen, cjkljust
+# from .cjkwrap import PY3, is_wide, cjklen, cjkljust, cjkslices
 # from .schedule import PyRadioTime
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -302,6 +302,9 @@ class SimpleCursesString(SimpleCursesWidget):
             if not None, it should be a tuple:
                 (go left from self._X, numbder of chars to print)
             draw selection cursor as a full line
+        max_selection
+            limit string to this number of characters
+            not to be used with ful_selection
     '''
 
 
@@ -317,7 +320,8 @@ class SimpleCursesString(SimpleCursesWidget):
         color_disabled,
         right_arrow_selects=True,
         callback_function_on_activation=None,
-        full_selection=None
+        full_selection=None,
+        max_selection=0
     ):
         self._Y = Y
         self._X = X
@@ -333,6 +337,7 @@ class SimpleCursesString(SimpleCursesWidget):
         self._right_arrow_selects = right_arrow_selects
         self._callback_function_on_activation = callback_function_on_activation
         self._full_selection = full_selection
+        self._max_selection = max_selection
 
     @property
     def caption(self):
@@ -419,15 +424,20 @@ class SimpleCursesString(SimpleCursesWidget):
                     (self._full_selection[1] ) * ' ',
                     self._color
                 )
+            if self._max_selection > 0:
+                self._max_string = self._max_selection
+                disp_string = cjkslices(self._string, self._max_selection)[0]
+            else:
+                disp_string = self._string
             if self._enabled:
                 self._win.addstr(self._Y, self._X, self._caption, self._color)
                 if self._focused:
-                    self._win.addstr(self._string.ljust(self._max_string), self._color_focused)
+                    self._win.addstr(disp_string.ljust(self._max_string), self._color_focused)
                 else:
-                    self._win.addstr(self._string.ljust(self._max_string), self._color_not_focused)
+                    self._win.addstr(disp_string.ljust(self._max_string), self._color_not_focused)
             else:
                 self._win.addstr(self._Y, self._X, self._caption, self._color_disabled)
-                self._win.addstr(self._string.ljust(self._max_string), self._color_disabled)
+                self._win.addstr(disp_string.ljust(self._max_string), self._color_disabled)
 
 
 class SimpleCursesDate(SimpleCursesWidget):

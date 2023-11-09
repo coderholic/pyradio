@@ -171,7 +171,6 @@ class PyRadioSimpleScheduleWindow(object):
             self._Y = new_Y
             self._X = new_X
         self._win = curses.newwin(self._maxY, self._maxX, self._Y, self._X)
-        logger.error('This is the Window! get_parrent: self._win = {}'.format(self._win))
         self._init_win()
 
     def _init_win(self):
@@ -199,7 +198,6 @@ class PyRadioSimpleScheduleWindow(object):
         self._widgets = []
 
         ''' id 0 playlist string '''
-        logger.error('passing win to widgets = {}'.format(self._win))
         self._widgets.append(
             SimpleCursesString(
                 Y=1,X=2,
@@ -210,6 +208,7 @@ class PyRadioSimpleScheduleWindow(object):
                 color_focused=curses.color_pair(9),
                 color_not_focused=curses.color_pair(11),
                 color_disabled=curses.color_pair(10),
+                max_selection = 46
             )
         )
         self._widgets[-1].w_id = 0
@@ -225,6 +224,7 @@ class PyRadioSimpleScheduleWindow(object):
                 color_focused=curses.color_pair(9),
                 color_not_focused=curses.color_pair(11),
                 color_disabled=curses.color_pair(10),
+                max_selection = 46
             )
         )
         self._widgets[-1].w_id = 1
@@ -385,6 +385,7 @@ class PyRadioSimpleScheduleWindow(object):
                 color_focused=curses.color_pair(9),
                 color_not_focused=curses.color_pair(11),
                 color_disabled=curses.color_pair(10),
+                max_selection = 10
             )
         )
         self._widgets[-1].w_id = 14
@@ -437,6 +438,7 @@ class PyRadioSimpleScheduleWindow(object):
                 color_focused=curses.color_pair(9),
                 color_not_focused=curses.color_pair(11),
                 color_disabled=curses.color_pair(10),
+                max_selection = 10
             )
         )
         self._widgets[-1].w_id = 19
@@ -479,7 +481,6 @@ class PyRadioSimpleScheduleWindow(object):
 
     def show(self, parent=None):
         if parent:
-            logger.error('windows passed to show! = {}'.format(parent))
             self._get_parent(parent)
             if self._showed:
                 self._move_widgets()
