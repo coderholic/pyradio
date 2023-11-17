@@ -452,7 +452,7 @@ class SimpleCursesDate(SimpleCursesWidget):
                 format is YYYY-MM-DD
         date_tuple
             Date as a tuple
-                Format (YYYY, M, D) od int
+                Format (YYYY, M, D) of int
         color
             text color
         color_focused
@@ -509,6 +509,10 @@ class SimpleCursesDate(SimpleCursesWidget):
             self._set_date(date_string=val)
         else:
             self._set_date(date_tuple=val)
+
+    @property
+    def date_tuple(self):
+        return self._date.year, self._date.month, self._date.day
 
     def increase(self, delta=1):
         if self.selected == 0:

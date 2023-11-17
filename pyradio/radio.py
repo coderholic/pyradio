@@ -571,8 +571,8 @@ class PyRadio(object):
             self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_win_manage_players,
             self.ws.WIN_PRINT_EXE_LOCATION_MODE: self._show_win_print_exe_paths,
             self.ws.UNKNOWN_BROWSER_SERVICE_ERROR: self._print_unknown_browser_service,
-            self.ws.SCHEDULE_PLAYER_STOP_MODE: self._show_schedule_player_stop,
-            self.ws.SCHEDULE_PLAYER_STOP_HELP_MODE: self._show_schedule_player_stop_help,
+            self.ws.SCHEDULE_EDIT_MODE: self._show_schedule_editor,
+            self.ws.SCHEDULE_EDIT_HELP_MODE: self._show_schedule_editor_help,
             self.ws.NO_THEMES_MODE: self._show_no_themes,
             self.ws.REMOTE_CONTROL_SERVER_START_ERROR_MODE: self._print_remote_control_server_error,
             self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE: self._print_remote_control_server_dead_error,
@@ -589,6 +589,7 @@ class PyRadio(object):
             self.ws.RECORD_WINDOW_MODE: self._show_recording_toggle_window,
             self.ws.WIN_VLC_NO_RECORD_MODE: self._show_win_no_record,
             self.ws.BUFFER_SET_MODE: self._show_buffer_set,
+            self.ws.SCHEDULE_ERROR_MODE: self._show_schedule_error,
         }
 
         ''' list of help functions '''
@@ -722,7 +723,7 @@ class PyRadio(object):
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
             # ord('d'): self._html_song_title,
-            ord('b'): self._show_schedule_player_stop,
+            ord('b'): self._show_schedule_editor,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -6109,7 +6110,7 @@ __|Remote Control Server| cannot be started!__
             self.playSelection()
             self.refreshBody()
 
-    def _show_schedule_player_stop(self):
+    def _show_schedule_editor(self):
         if self.player.isPlaying():
             station = None
         else:
@@ -6127,13 +6128,31 @@ __|Remote Control Server| cannot be started!__
                 supported_players=self._cnf.SUPPORTED_PLAYERS,
                 global_functions=self._global_functions
             )
-            self.ws.operation_mode = self.ws.SCHEDULE_PLAYER_STOP_MODE
+            self.ws.operation_mode = self.ws.SCHEDULE_EDIT_MODE
             self._simple_schedule.show()
         else:
             self._simple_schedule.show(parent=self.outerBodyWin)
 
-    def _show_schedule_player_stop_help(self):
-        pass
+    def _show_schedule_editor_help(self):
+        txt = '''Tab|, |L| / |Sh-Tab|, |H  |Go to next / previous field.
+                 j|, |Up| / |k|, |Down     |Go to next / previous field vertivally.
+                 ____________________|Go to next / previous field (when
+                 ____________________|applicable). Also, change counter value.
+                 Space               |Toggle check buttons.
+                 ____________________|Toggle multiple selection.
+                 Enter               |Perform search / cancel (on push buttons).
+                 s                   |Perform search (not on Line editor).
+                 Esc                 |Cancel operation.
+                 _
+                 |Search history navigation works with normal keys as well
+                 |(|^N| is the same as |n| when not in a line editor).
+                 %_Global functions (with \ on Line editor)_
+                 -|/|+| or |,|/|.       |Change volume.
+                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                 W| / |w            |Toggle title log / like a station'''
+        self._show_help(txt,
+                        mode_to_set=self.ws.SCHEDULE_EDIT_HELP_MODE,
+                        caption=' Schedule Editor Help ')
 
     def _update_stations_result(self):
         '''
@@ -6363,6 +6382,14 @@ __|Remote Control Server| cannot be started!__
                         caption=' Recording not supported! ',
                         prompt='',
                         is_message=True)
+
+    def _show_schedule_error(self):
+        txt = '\n___|' + self._simple_schedule.get_error_message() + '___\n'
+        caption = ' Schedule error '
+        self._show_help(txt,
+                        mode_to_set=self.ws.SCHEDULE_ERROR_MODE,
+                        caption=caption,
+                        is_message=False)
 
     def _show_recording_toggle_window(self):
         if self.player.recording > 0:
@@ -7354,12 +7381,15 @@ __|Remote Control Server| cannot be started!__
                 self.refreshBody()
             return
 
-        elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYER_STOP_MODE:
+        elif self.ws.operation_mode == self.ws.SCHEDULE_EDIT_MODE:
             ret = self._simple_schedule.keypress(char)
             if ret == -1:
                 self._simple_schedule = None
                 self.ws.close_window()
                 self.refreshBody()
+            elif ret == 2:
+                ''' Show Help  '''
+                self._show_schedule_editor_help()
             elif ret == 4:
                 ''' Schedule > Select Playlist '''
                 self.ws.operation_mode = self.ws.SCHEDULE_PLAYER_SELECT_MODE
@@ -7396,6 +7426,8 @@ __|Remote Control Server| cannot be started!__
                 self._schedule_station_select_win.init_window(read_items=False)
                 self._schedule_station_select_win.refresh_win()
                 self._schedule_station_select_win.setStation(self._simple_schedule.station)
+            elif ret in (3, 6, 7, 8):
+                self._show_schedule_error()
 
         elif self.ws.operation_mode == self.ws.BUFFER_SET_MODE:
             ret, buf = self._buffering_win.keypress(char)

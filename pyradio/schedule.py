@@ -2,13 +2,41 @@
 from sys import version_info as python_version
 from datetime import date as ddate, datetime, timedelta
 from dateutil.relativedelta import *
+from dateutil.rrule import *
+from dateutil.parser import *
+from datetime import *
 from calendar import monthrange
+from random import choice
+from string import printable
 import logging
+import json
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
+
+
+a_file = '/home/spiros/.config/pyradio/data/test.json'
+
+def datetime_to_my_time(a_date):
+    t = a_date.ctime().split()
+    now = datetime.now()
+    if a_date.date() == now.date():
+        return 'At ' + t[-2]
+    now = now.replace(day=now.day+1)
+    print('now +1 =', now)
+    print('data =', a_date)
+    if a_date.date() == now.date():
+        return 'Tomorrow, at ' + t[-2]
+
+    if datetime.now().year == a_date.year:
+        return t[0] + ', ' + t[1] + ' ' + t[2] + ', ' + t[-2]
+    else:
+        return t[0] + ', ' + t[1] + ' ' + t[2] + ' ' + t[-1] +', ' + t[-2]
+
+def random_string(length=10):
+    return ''.join(choice(printable) for i in range(length))
 
 def format_date_to_iso8851(a_date=None):
     ''' format a datetime.date in ISO-8851 format
@@ -61,6 +89,239 @@ class PyRadioScheduleTimeType(object):
         else:
             return 'UNKNOUN'
 
+
+class PyRadioScheduleList(object):
+
+    _list = []              # initial list of dicts
+    _schedule_list = []     # lisr of PyRadioScheduleItem
+    _sorted = []            # list (sorted) of tasks (dicts)
+    _info = False
+
+    def __init__(self, a_file, a_list=None):
+        '''
+            a_file : file to read
+            a_list : list of dicts of (as output of self._read_list)
+        '''
+        self._json_file = a_file
+        self._a_list = a_list
+        self._read_list()
+
+    def _read_list(self):
+        ''' read json file to self._list '''
+        if self._a_list:
+            self._list = []
+            for i in range(len(self._a_list)):
+                self._list.append(self._a_list[i])
+                if self._list[-1]['token'] == '':
+                    self._list[-1]['token'] = random_string()
+        else:
+            try:
+                with open(self._json_file, 'r', encoding='utf-8') as f:
+                    self._list = json.load(f)
+            except:
+                self._list = []
+
+    def _list_to_schedule_items(self):
+        self._schedule_list = []
+        for i in range(0, len(self._list)):
+             self._schedule_list.append(
+                 PyRadioScheduleItem(self._list[i])
+             )
+
+    def get_info_of_items(self):
+        ''' Returns a list of items comming from self._schedule_list
+            (which is a list of PyRadioScheduleItem), to be presented
+            to the user
+        '''
+        out = []
+        for i, n in enumerate(self._schedule_list):
+            x = n.get_active_item()
+            out.append('Item {}'.format(i+1))
+            if x[2] == 0 or x[2] == 1:
+                out.append('  Start playback on: ' + datetime_to_my_time(x[0]))
+            if x[2] == 0 or x[2] == 2:
+                out.append('   Stop playback on: ' + datetime_to_my_time(x[1]))
+            if x[2] == 0 or x[2] == 1:
+                out.append('  From playlist: ' + x[-3])
+                out.append('        Station: ' + x[-2])
+                out.append('  Player: ' + x[3])
+                if x[-4]:
+                    out.append('  Repeat every: ' + x[-4])
+                if x[-6] == 0:
+                    tmp = '  Recording is off,'
+                elif x[-6] == 1:
+                    tmp = '  Recording id on,'
+                elif x[-6] == 2:
+                    tmp = '  Recording id on (silent),'
+                if x[-5] == 0:
+                    tmp += ' with no buffering'
+                else:
+                    tmp += ' with buffering'
+                out.append(tmp)
+        return out
+
+    def get_repeating_dates(self, in_date):
+        days = {
+            'Sunday': SU,
+            'Monday': MO,
+            'Tuesday': TU,
+            'Wednesday': WE,
+            'Thursday': TH,
+            'Friday': FR,
+            'Saturday': SA
+        }
+
+        start_date = in_date[0]
+        now = datetime.now()
+        if start_date < now:
+            start_date = start_date.replace(year=now.year, month=now.month, day=now.day)
+        now_with_correct_time = now.replace(hour=in_date[0].hour, minute=in_date[0].minute, second=in_date[0].minute)
+        now_plus_seven_days = now_with_correct_time + timedelta(days=7)
+        if in_date[-4] == 'day':
+            ll = list(rrule(DAILY, count=12, dtstart=start_date))
+        elif in_date[-4] == 'week':
+            ll = list(rrule(WEEKLY, dtstart=in_date[0], until=now + timedelta(days=14)))[-2:]
+        elif in_date[-4] == 'month':
+            ll = list(rrule(MONTHLY, dtstart=in_date[0], until=now + timedelta(days=65)))[-3:]
+            for n in range(len(ll)-1, -1,-1):
+                if ll[n] <= now_with_correct_time:
+                    ll.pop(n)
+            pass
+        elif in_date[-4] in days.keys():
+            ll = list(rrule(WEEKLY, count=3, wkst=SU, byweekday=(days[in_date[-4]],), dtstart=start_date))
+        for n in range(len(ll)-1, -1,-1):
+            if ll[n] > now_plus_seven_days:
+                ll.pop(n)
+        out = []
+        if ll:
+            d = in_date[1] - in_date[0]
+            for i in range(len(ll)):
+                out.append(list(in_date))
+                out[-1][0] = ll[i]
+                out[-1][1] = out[-1][0] + d
+        return out
+
+    def get_info_of_tasks(self, to_dict=False):
+        ''' Returns a list of tasks comming from self._sorted
+            to be presented to the user
+        '''
+        self.get_list_of_tasks()
+        out = []
+        if to_dict:
+            links_found = 0
+            for i, n in enumerate(self._sorted):
+                if 'player' in n:
+                    tmp = {
+                            'id': str(i+1),
+                            'link': '',
+                            'start': datetime_to_my_time(n['date']),
+                            'stop': '',
+                            'player': n['player'],
+                            'playlist': n['playlist'],
+                            'station': n['station'],
+                            'recording': '' if n['recording'] == 0  else ' X ',
+                            'buffering': '' if n['buffering'] == 0 else ' X '
+                    }
+                    if n['recording'] == 2:
+                        tmp['recording'] = 'sil'
+                else:
+                    if out:
+                        link = self._get_linked_task(n['link'], True)
+                        if link:
+                            out[int(link)-links_found-1]['stop'] = datetime_to_my_time(n['date'])
+                            links_found += 1
+                            continue
+                    tmp = {
+                            'id': str(i+1),
+                            'link': self._get_linked_task(n['link'], to_dict),
+                            'start': '',
+                            'stop': datetime_to_my_time(n['date']),
+                            'player': '',
+                            'playlist': '',
+                            'station': '',
+                            'recording': '',
+                            'buffering': ''
+                    }
+                out.append(tmp)
+            for i in range(len(out)):
+                if out[i]['stop'][:13] == out[i]['start'][:13]:
+                    out[i]['stop'] = out[i]['stop'][13:]
+        else:
+            for i, n in enumerate(self._sorted):
+                if 'player' in n:
+                    out.append('Task: {}'.format(i+1))
+                    out.append('  Start playback on: ' + datetime_to_my_time(n['date']))
+                    out.append('  From playlist: ' + n['playlist'])
+                    out.append('        Station: ' + n['station'])
+                    if n['recording'] == 0:
+                        tmp = '  Recording is off,'
+                    elif n['recording'] == 1:
+                        tmp = '  Recording id on,'
+                    elif n['recording'] == 2:
+                        tmp = '  Recording id on (silent),'
+                    if n['buffering'] == 0:
+                        tmp += ' with no buffering'
+                    else:
+                        tmp += ' with buffering'
+                    out.append(tmp)
+                else:
+                    out.append('Task: {0} {1}'.format(i+1, self._get_linked_task(n['link'])))
+                    out.append('   Stop playback on: ' + datetime_to_my_time(n['date']))
+        return out
+
+    def _get_linked_task(self, a_link, to_dict=False):
+        for i, n in enumerate(self._sorted):
+            if a_link == n['link']:
+                if to_dict:
+                    return str(i + 1)
+                else:
+                    return '(linked to Task {})'.format(i + 1)
+        return ''
+
+    def get_list_of_tasks(self):
+        self._sorted = []
+        if self._schedule_list == []:
+            self._list_to_schedule_items()
+
+        a_list= []
+        for i in range(0, self.count()):
+            if self._schedule_list[i].repeat is None:
+                a_list.append(
+                    self._schedule_list[i].get_active_item()
+                )
+            else:
+                a_list.extend(
+                    self.get_repeating_dates(
+                        self._schedule_list[i].get_active_item()
+                    )
+                )
+        if a_list:
+            a_list.sort(key=lambda x: x[0])
+            for n in a_list:
+                self._sorted.append({
+                    'date': n[0],
+                    'player': n[3],
+                    'recording': n[4],
+                    'buffering': n[5],
+                    'playlist': n[7],
+                    'station': n[8],
+                    'token': n[-1] if n[-1] else random_string(),
+                    'link': random_string() if n[2] == 0 else ''
+                })
+                if n[2] == 0:
+                    self._sorted.append({
+                        'date': n[1],
+                        'token': self._sorted[-1]['token'],
+                        'link': self._sorted[-1]['link']
+                    })
+
+    def item(self, index):
+        if index < len(self._list):
+            return self._list[index]
+        return None
+
+    def count(self):
+        return len(self._schedule_list)
 
 class PyRadioScheduleItem(object):
     '''
@@ -145,9 +406,9 @@ class PyRadioScheduleItem(object):
     @property
     def active_item(self):
         '''return the item after calculating all relative values'''
-        st, en, _, _, _ = self.get_active_item()
+        st, en, it_type, rec, buf, rep, playlist, station = self.get_active_item()
         out = {
-            'type': self._item['type'],
+            'type': it_type,
             'start_type': 0,
             'start_date': [st.year, st.month, st.day],
             'start_time': [st.hour, st.minute, st.second, 0],
@@ -156,8 +417,12 @@ class PyRadioScheduleItem(object):
             'end_date': [en.year, en.month, en.day],
             'end_time': [en.hour, en.minute, en.second, 0],
             'end_duration': [0, 0, 0, 0],
-            'playlist': self._item['playlist'],
-            'station': self._item['station']
+            'playlist': playlist,
+            'station': station,
+            'recording': rec,
+            'buffering': buf,
+            'repeat': rep,
+            'token': ''
         }
         return out
 
@@ -198,11 +463,13 @@ class PyRadioScheduleItem(object):
             'end_date': n_date,
             'end_time': n_time, # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
             'end_duration': [0, 0, 0, 0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'player': '',
             'recording': 0,
             'buffering': 0,
             'repeat': None,
             'playlist': None,
-            'station': None
+            'station': None,
+            'token': random_string()
         }
 
     @property
@@ -323,6 +590,10 @@ class PyRadioScheduleItem(object):
     def station(self, val):
         self._item['station'] = val
 
+    @property
+    def string(self):
+        return json.dumps(self._item)
+
     def _check_start_end_type(self, val):
         try:
             if val in (
@@ -342,11 +613,13 @@ class PyRadioScheduleItem(object):
             starting date-time,
             ending date-time,
             type (start/stop/both)
-            playlist (None if TYPE_END)
-            station (None if TYPE_END)
+            player to use
             recording (0 if TYPE_END)
             buffering (0 if TYPE_END
             repeat (None if TYPE_END)
+            playlist (None if TYPE_END)
+            station (None if TYPE_END)
+            token
         )
         '''
         today = datetime.now().replace(microsecond=0)
@@ -376,7 +649,7 @@ class PyRadioScheduleItem(object):
                 end_date = datetime(
                     self._item['end_date'][0],
                     self._item['end_date'][1],
-                    self._item['end_date'][1]
+                    self._item['end_date'][2]
                 ) + timedelta(
                     hours=self._item['end_time'][0],
                     minutes=self._item['end_time'][1],
@@ -397,13 +670,18 @@ class PyRadioScheduleItem(object):
             end_date = start_date
         elif self._item['type'] == PyRadioScheduleItemType.TYPE_END:
             start_date = end_date
+        rep = self._item['repeat']
+        if rep is not None:
+            rep = rep.strip()
         return (start_date, end_date,
                 self._item['type'],
-                self._item['playlist'] if self._item['type'] != PyRadioScheduleItemType.TYPE_END else None,
-                self._item['station'] if self._item['type'] != PyRadioScheduleItemType.TYPE_END else None,
+                self._item['player'],
                 self._item['recording'],
                 self._item['buffering'],
-                self._item['repeat']
+                rep,
+                self._item['playlist'] if self._item['type'] != PyRadioScheduleItemType.TYPE_END else None,
+                self._item['station'] if self._item['type'] != PyRadioScheduleItemType.TYPE_END else None,
+                self._item['token']
                 )
 
     def _get_today(self):
@@ -735,37 +1013,52 @@ class PyRadioTime(object):
 
 
 if __name__ == '__main__':
-    print(format_date_to_iso8851(datetime.now()))
+    # print(format_date_to_iso8851(datetime.now()))
 
-    print('\n\n============')
-    an_item = {
-        'type': PyRadioScheduleItemType.TYPE_START_END,
-        'start_type': 0,                            # TIME_ABSOLUTE, TYPE_RELATIVE
-        'start_date':  [2022, 10, 15],
-        'start_time': [8, 15, 12, 2],              # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
-        'start_duration': [1, 0, 0, 0],
-        'end_type': 1,                              # TIME_ABSOLUTE, TYPE_RELATIVE
-        'end_date': [2023, 1, 1],
-        'end_time': [3, 12, 2, 1],                  # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
-        'end_duration': [5, 15, 11, 0],
-        'recording': 0,
-        'buffering': 0,
-        'repeat': None,
-        'playlist': 'myplaylist',
-        'station': 'mystation'
-    }
+    # print('\n\n============')
+    # an_item = {
+    #     'type': PyRadioScheduleItemType.TYPE_START_END,
+    #     'start_type': 0,                            # TIME_ABSOLUTE, TYPE_RELATIVE
+    #     'start_date':  [2022, 10, 15],
+    #     'start_time': [8, 15, 12, 2],              # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+    #     'start_duration': [1, 0, 0, 0],
+    #     'end_type': 1,                              # TIME_ABSOLUTE, TYPE_RELATIVE
+    #     'end_date': [2023, 1, 1],
+    #     'end_time': [3, 12, 2, 1],                  # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+    #     'end_duration': [5, 15, 11, 0],
+    #     'player': 'mpv',
+    #     'recording': 0,
+    #     'buffering': 0,
+    #     'repeat': None,
+    #     'playlist': 'myplaylist',
+    #     'station': 'mystation',
+    #     'token': random_string()
+    # }
 
-    for n,k in an_item.items():
-        print(n, ":", k)
-    print('\n\n============')
+    # for n,k in an_item.items():
+    #     print(n, ":", k)
+    # print('\n\n============')
 
-    b = PyRadioScheduleItem(an_item)
-    print('b =', b)
-    u = b.get_active_item()
-    print('\n\n')
-    print(b.get_active_item())
-    print('start_date:', str(u[0]))
-    print('  end_date:', str(u[1]))
-    print('      type:', PyRadioScheduleItemType.to_string(u[2]))
-    print('  playlist:', u[3])
-    print('   station:', u[4])
+    # b = PyRadioScheduleItem(an_item)
+    # print('b =', b)
+    # u = b.get_active_item()
+    # print('\n\n')
+    # print(b.get_active_item())
+    # print('start_date:', str(u[0]))
+    # print('  end_date:', str(u[1]))
+    # print('      type:', PyRadioScheduleItemType.to_string(u[2]))
+    # print('  playlist:', u[3])
+    # print('   station:', u[4])
+
+    # print('\n\n{}'.format(b.string))
+
+    x = PyRadioScheduleList(a_file)
+    # x.get_list_of_tasks()
+    # print('\n\n')
+    # for n in x._sorted:
+    #     print(n)
+
+    out = x.get_info_of_tasks(True)
+    # print('\n'.join(out))
+    for n in out:
+        print(n)

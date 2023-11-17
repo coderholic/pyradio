@@ -78,14 +78,14 @@ function remove_pip_sudo_install(){
 function uninstall(){
     echo 'Uninstalling PyRadio'
     echo -n '  ** Removing python files ... '
-    pipx list 2>/dev/null 1>&2 && PIPX=1
+    python"${TO_PYTHON}" -m pipx list 2>/dev/null 1>&2 && PIPX=1
     if [ -z "${PIPX}" ]
     then
         python -m pip uninstall -y pyradio 2>/dev/null 1>&2
         python2 -m pip uninstall -y pyradio 2>/dev/null 1>&2
         python3 -m pip uninstall -y pyradio 2>/dev/null 1>&2
     else
-        pipx uninstall pyradio 2>/dev/null 1>&2
+        python"${TO_PYTHON}" -m pipx uninstall pyradio 2>/dev/null 1>&2
     fi
     echo 'done'
     echo -n '  ** Removing help files ... '
@@ -306,6 +306,10 @@ do
             REMOVE_DIR=$(dirname "$PWD")
             shift
             TO_PYTHON=${1/python/}
+            if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ]
+            then
+                TO_PYTHON=3
+            fi
             TO_PYTHON_FROM_X=1
             shift
             ;;
@@ -381,7 +385,7 @@ then
     done
 else
     # Use pipx by default, if installed
-    pipx list 2>/dev/null 1>&2 && PIPX=1
+    python"${TO_PYTHON}" -m pipx list 2>/dev/null 1>&2 && PIPX=1
 fi
 
 

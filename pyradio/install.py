@@ -1372,8 +1372,9 @@ if __name__ == '__main__':
                                 help='Download source code, keep it in the cache and exit.')
         else:
             parser.add_argument('-gc', '--get-cache', action='store_true', help=SUPPRESS)
-        parser.add_argument('--python2', action='store_true',
-                            help='Install using python 2.')
+        if not platform.system().lower().startswith('darwin'):
+            parser.add_argument('--python2', action='store_true',
+                                help='Install using python 2.')
     else:
         parser.add_argument('-oc', '--open-cache', action='store_true', help=SUPPRESS)
         parser.add_argument('-sc', '--show-cache', action='store_true', help=SUPPRESS)
@@ -1478,6 +1479,8 @@ if __name__ == '__main__':
             print_python2()
 
     python_version_to_use = 2 if args.python2 else 3
+    if platform.system().lower().startswith('darwin'):
+        python_version_to_use = 3
     python_exec = PythonExecutable(
             python_version_to_use,
             terminate_if_not_found=True

@@ -21,7 +21,7 @@ from .install import PyRadioUpdate, PyRadioUpdateOnWindows, PyRadioCache, \
 from .cjkwrap import cjklen, cjkslices, fill
 from .log import Log
 from .common import StationsChanges
-
+from .schedule import PyRadioScheduleList
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
@@ -138,6 +138,43 @@ def print_session_is_locked():
     print('       Please exist any other instances of the program')
     print('       that are currently running and try again.')
     sys.exit(1)
+
+def print_active_schedule(a_file):
+    x = PyRadioScheduleList(a_file)
+    tasks = x.get_info_of_tasks(HAS_PIPX)
+    if tasks:
+        if HAS_PIPX:
+            console = Console()
+            table = Table(show_header=True, header_style="bold magenta")
+            table.title = '[bold magenta]PyRadio Active Schedule[/bold magenta]'
+            centered_table = Align.center(table)
+            table.row_styles = ['', 'plum4']
+            table.add_column("#", justify='right')
+            table.add_column("Start Playback")
+            table.add_column("Stop Playback")
+            table.add_column("Playlist")
+            table.add_column("Station")
+            table.add_column("Player")
+            table.add_column("Rec")
+            table.add_column("Buf")
+
+            for i, n in enumerate(tasks):
+                table.add_row(
+                    str(i+1),
+                    n['start'],
+                    n['stop'],
+                    n['playlist'],
+                    n['station'],
+                    n['player'],
+                    n['recording'],
+                    n['buffering'],
+                )
+            console.print(centered_table)
+        else:
+            print('  --== PyRadio Active Schedule ==--')
+            print('\n'.join(tasks))
+    else:
+        print('No Active Schedule available...')
 
 def shell():
     version_too_old = False
@@ -280,6 +317,10 @@ If nothing else works, try the following command:
                               help='Export a previously recorded MKV file chapters to an SRT file. The file produced will have the name of the input file with the "mkv" extension replaced by "srt".')
     gr_recording.add_argument('-ach', '--add-chapters', default='', action='store_true',
                               help='Add (or replace) chapter markers to a previously recorded MKV file. The chapters file will be a SRT file, much like the one produced by the previous command line parameter.')
+
+    sc_group = parser.add_argument_group('• Scheduler')
+    sc_group.add_argument('-si', '--show-schedule-items', action='store_true',
+                          help='Show schedule.')
     args = parser.parse_args()
     sys.stdout.flush()
 
@@ -438,6 +479,10 @@ If nothing else works, try the following command:
             if args.exe:
                 print_exe_paths()
                 sys.exit()
+
+        if args.show_schedule_items:
+            print_active_schedule(pyradio_config.schedule_file)
+            sys.exit()
 
         if args.toggle_load_last_playlist:
             if pyradio_config.locked:

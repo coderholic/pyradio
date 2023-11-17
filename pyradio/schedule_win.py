@@ -26,6 +26,14 @@ class PyRadioSimpleScheduleWindow(object):
 
     too_small = False
 
+    _error_num = 0
+    _error_messages = {
+        3: 'Item is invalid!',
+        6: 'Start time is in the past!',
+        7: 'End time is in the past!',
+        8: 'Start time is after End time!'
+    }
+
     _repeat = (
         'day',
         'week',
@@ -112,6 +120,9 @@ class PyRadioSimpleScheduleWindow(object):
     def station(self, val):
         self._schedule_item.item['station'] = val
         self._widgets[1].string = val
+
+    def get_error_message(self):
+        return self._error_messages[self._error_num]
 
     def set_item(self, schedule_item=None, playlist=None, station=None):
         if schedule_item is None:
@@ -725,12 +736,90 @@ class PyRadioSimpleScheduleWindow(object):
         self.show()
 
     def _validate_selection(self):
-        if self._widgets[3].checked and \
-                self._widgets[7].checked:
-            ''' type B '''
+        ''' validate form input
+            Return
+              0: All ok
+              3: Invalid item
+              6: Start time is in the past
+              7: Stop time is in the past
+              8: Stop time before Start time
+        '''
+        if not self._widgets[2].checked and not self._widgets[8].checked:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Invalid item')
+                return 3
+        rec = 1 if self._widgets[15].checked else 0
+        rep = None
+        if self._widgets[18].checked:
+            rep = self._widgets[19].string.strip()
+        if rec == 1 and self._widgets[16].checked:
+            rec = 2
+        if self._widgets[2].checked:
+            ''' start and stop '''
+            playlist = self._widgets[0].string
+            station = self._widgets[1].string
+            if self._widgets[8].checked:
+                the_type = 0
+            else:
+                the_type = 1
 
-            return 3
-        return 1
+        else:
+            ''' stop only '''
+            the_type = 2
+            playlist = None
+            station = None
+        tmp_item = PyRadioScheduleItem({
+            'type': the_type, # TYPE_START_END, TYPE_START, TYPE_END
+            'start_type': 0 if self._widgets[4].checked else 1, # TIME_ABSOLUTE, TIME_RELATIVE
+            'start_date':  list(self._widgets[3].date_tuple),
+            'start_time': self._widgets[5].get_time()[0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'start_duration': self._widgets[7].get_time()[0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'end_type': 0 if self._widgets[10].checked else 1, # TIME_ABSOLUTE, TIME_RELATIVE
+            'end_date': list(self._widgets[9].date_tuple),
+            'end_time': self._widgets[11].get_time()[0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'end_duration': self._widgets[13].get_time()[0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'player': self._widgets[14].string,
+            'recording': rec,
+            'buffering': 1 if self._widgets[17].checked else 0,
+            'repeat': rep,
+            'playlist': playlist,
+            'station': station
+        })
+        logger.error('--== item ==--')
+        for n in tmp_item.item:
+            logger.error('{0}: {1}'.format(n, tmp_item.item[n]))
+        logger.error('--== active item ==--')
+        for n in tmp_item.active_item:
+            logger.error('{0}: {1}'.format(n, tmp_item.active_item[n]))
+        ac_tmp_item = tmp_item.get_active_item()
+        logger.error(ac_tmp_item)
+
+        if the_type == 2:
+            # stop playback
+            if ac_tmp_item[0] <= datetime.now():
+                if ac_tmp_item[-3] is None:
+                    # no repeat
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Stop time is in the past')
+                    return 7
+        elif ac_tmp_item[-4] is None:
+            # start or start and stop
+            if ac_tmp_item[0] <= datetime.now():
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Start time is in the past')
+                return 6
+            if the_type == 0:
+                # start and stop
+                if ac_tmp_item[1] <= datetime.now():
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Stop time is in the past')
+                    return 7
+                elif ac_tmp_item[0] >= ac_tmp_item[1]:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Start time < end time')
+                    return 8
+        self._schedule_item = tmp_item
+        return 0
 
     def _fix_recording_from_player_selection(self):
         if platform.system().lower().startswith('win') and \
@@ -756,10 +845,18 @@ class PyRadioSimpleScheduleWindow(object):
              1: Get result
              2: Remove Schedule
              2: Show Help
-             3: Invalid date range
+             3: Invalid item
              4: Open playlist selection window
              5: Open station selection window
+             6: Start time is in the past
+             7: Stop time is in the past
+             8: Start time < end time
         '''
+        if char == ord('0'):
+            self._error_num = self._validate_selection()
+            logger.error('self._error_num = {}'.format(self._error_num))
+            return self._error_num
+
         if char in self._global_functions.keys():
             self._global_functions[char]()
             return 0

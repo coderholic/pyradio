@@ -146,6 +146,7 @@ class PyRadioStations(object):
                 self.stations_dir = user_config_dir
             self.registers_dir = path.join(self.stations_dir, '.registers')
         self.data_dir = path.join(self.stations_dir, 'data')
+        self.schedule_file = path.join(self.stations_dir, 'data', 'schedule.json')
         self.recording_dir = path.join(self.stations_dir, 'recordings')
         ''' Make sure config dirs exists '''
         for a_dir in (self.stations_dir,
