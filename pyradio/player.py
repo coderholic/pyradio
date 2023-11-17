@@ -3233,6 +3233,10 @@ class VlcPlayer(Player):
                     opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
                             '-Irc', '-vv']
 
+        if platform.lower().startswith('dar'):
+            # MacOS VLC does not support --no-one-instance
+            opts.pop(1)
+
         if self._cnf.buffering_data:
             opts.extend(self._cnf.buffering_data)
 

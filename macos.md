@@ -42,7 +42,7 @@ If this is the player you prefer, you will have to take one more step before it 
 
 Open a terminal and type:
 
-    ln -s /Applications/VLC.app/Contents/MacOS/VLC ~/.local/bin
+    ln -s /Applications/VLC.app/Contents/MacOS/VLC ~/.local/bin/cvlc
 
 
 **2\. MPV or MPlayer**
