@@ -141,9 +141,9 @@ def print_session_is_locked():
 
 def print_active_schedule(a_file):
     x = PyRadioScheduleList(a_file)
-    tasks = x.get_info_of_tasks(HAS_PIPX)
+    tasks = x.get_info_of_tasks(HAS_RICH)
     if tasks:
-        if HAS_PIPX:
+        if HAS_RICH:
             console = Console()
             table = Table(show_header=True, header_style="bold magenta")
             table.title = '[bold magenta]PyRadio Active Schedule[/bold magenta]'
@@ -171,7 +171,7 @@ def print_active_schedule(a_file):
                 )
             console.print(centered_table)
         else:
-            print('  --== PyRadio Active Schedule ==--')
+            print('           --== PyRadio Active Schedule ==--')
             print('\n'.join(tasks))
     else:
         print('No Active Schedule available...')

@@ -8,8 +8,10 @@ from datetime import *
 from calendar import monthrange
 from random import choice
 from string import printable
+from platform import system
 import logging
 import json
+import sys
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -17,18 +19,25 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 logger = logging.getLogger(__name__)
 
 
-a_file = '/home/spiros/.config/pyradio/data/test.json'
+a_file = '/home/spiros/.config/pyradio/data/schedule.json'
 
-def datetime_to_my_time(a_date):
+
+def is_date_before(a_date, b_date):
+    if (a_date - b_date).days < 0:
+        return True
+
+def is_date_after(a_date, b_date):
+    return not is_date_before(a_date, b_date)
+
+def datetime_to_my_time(a_date, shorten=True):
     t = a_date.ctime().split()
     now = datetime.now()
-    if a_date.date() == now.date():
-        return 'At ' + t[-2]
-    now = now.replace(day=now.day+1)
-    print('now +1 =', now)
-    print('data =', a_date)
-    if a_date.date() == now.date():
-        return 'Tomorrow, at ' + t[-2]
+    if shorten:
+        if a_date.date() == now.date():
+            return 'At ' + t[-2]
+        now = now.replace(day=now.day+1)
+        if a_date.date() == now.date():
+            return 'Tomorrow, at ' + t[-2]
 
     if datetime.now().year == a_date.year:
         return t[0] + ', ' + t[1] + ' ' + t[2] + ', ' + t[-2]
@@ -109,9 +118,9 @@ class PyRadioScheduleList(object):
     def _read_list(self):
         ''' read json file to self._list '''
         if self._a_list:
-            self._list = []
-            for i in range(len(self._a_list)):
-                self._list.append(self._a_list[i])
+            logger.error('\n\nself._list\n{}\n\n'.format(self._a_list))
+            self._list = self._a_list
+            for i in range(len(self._list)):
                 if self._list[-1]['token'] == '':
                     self._list[-1]['token'] = random_string()
         else:
@@ -127,6 +136,21 @@ class PyRadioScheduleList(object):
              self._schedule_list.append(
                  PyRadioScheduleItem(self._list[i])
              )
+        for i in range(len(self._schedule_list)-1, -1, -1):
+            ac = self._schedule_list[i].get_active_item()
+            now = datetime.now()
+            if is_date_before(ac[0], now) and is_date_before(ac[1], now):
+                self._schedule_list.pop(i)
+        # logger.error('\n\nself._schedule_list\n{}'.format(self._schedule_list))
+
+    def get_list_of_active_items(self):
+        if self._schedule_list == []:
+            logger.error('len(self._list) = {}'.format(len(self._list)))
+            for i in range(0, len(self._list)):
+                 self._schedule_list.append(
+                     PyRadioScheduleItem(self._list[i])
+                 )
+        return [x.get_active_item() for x in self._schedule_list]
 
     def get_info_of_items(self):
         ''' Returns a list of items comming from self._schedule_list
@@ -150,9 +174,9 @@ class PyRadioScheduleList(object):
                 if x[-6] == 0:
                     tmp = '  Recording is off,'
                 elif x[-6] == 1:
-                    tmp = '  Recording id on,'
+                    tmp = '  Recording is on,'
                 elif x[-6] == 2:
-                    tmp = '  Recording id on (silent),'
+                    tmp = '  Recording is on (silent),'
                 if x[-5] == 0:
                     tmp += ' with no buffering'
                 else:
@@ -186,12 +210,12 @@ class PyRadioScheduleList(object):
             for n in range(len(ll)-1, -1,-1):
                 if ll[n] <= now_with_correct_time:
                     ll.pop(n)
-            pass
         elif in_date[-4] in days.keys():
             ll = list(rrule(WEEKLY, count=3, wkst=SU, byweekday=(days[in_date[-4]],), dtstart=start_date))
         for n in range(len(ll)-1, -1,-1):
             if ll[n] > now_plus_seven_days:
                 ll.pop(n)
+
         out = []
         if ll:
             d = in_date[1] - in_date[0]
@@ -209,6 +233,7 @@ class PyRadioScheduleList(object):
         out = []
         if to_dict:
             links_found = 0
+            tick = ' X ' if system().lower().startswith('win') else ' ✔ '
             for i, n in enumerate(self._sorted):
                 if 'player' in n:
                     tmp = {
@@ -219,8 +244,8 @@ class PyRadioScheduleList(object):
                             'player': n['player'],
                             'playlist': n['playlist'],
                             'station': n['station'],
-                            'recording': '' if n['recording'] == 0  else ' X ',
-                            'buffering': '' if n['buffering'] == 0 else ' X '
+                            'recording': '' if n['recording'] == 0  else tick,
+                            'buffering': '' if n['buffering'] == 0 else tick
                     }
                     if n['recording'] == 2:
                         tmp['recording'] = 'sil'
@@ -250,15 +275,15 @@ class PyRadioScheduleList(object):
             for i, n in enumerate(self._sorted):
                 if 'player' in n:
                     out.append('Task: {}'.format(i+1))
-                    out.append('  Start playback on: ' + datetime_to_my_time(n['date']))
-                    out.append('  From playlist: ' + n['playlist'])
-                    out.append('        Station: ' + n['station'])
+                    out.append('    Start playback on: ' + datetime_to_my_time(n['date']))
+                    out.append('    From playlist: ' + n['playlist'])
+                    out.append('          Station: ' + n['station'])
                     if n['recording'] == 0:
-                        tmp = '  Recording is off,'
+                        tmp = '    Recording is off,'
                     elif n['recording'] == 1:
-                        tmp = '  Recording id on,'
+                        tmp = '    Recording is on,'
                     elif n['recording'] == 2:
-                        tmp = '  Recording id on (silent),'
+                        tmp = '    Recording is on (silent),'
                     if n['buffering'] == 0:
                         tmp += ' with no buffering'
                     else:
@@ -266,7 +291,7 @@ class PyRadioScheduleList(object):
                     out.append(tmp)
                 else:
                     out.append('Task: {0} {1}'.format(i+1, self._get_linked_task(n['link'])))
-                    out.append('   Stop playback on: ' + datetime_to_my_time(n['date']))
+                    out.append('     Stop playback on: ' + datetime_to_my_time(n['date']))
         return out
 
     def _get_linked_task(self, a_link, to_dict=False):
@@ -275,7 +300,7 @@ class PyRadioScheduleList(object):
                 if to_dict:
                     return str(i + 1)
                 else:
-                    return '(linked to Task {})'.format(i + 1)
+                    return '  ->   linked to Task {}'.format(i + 1)
         return ''
 
     def get_list_of_tasks(self):
@@ -283,8 +308,13 @@ class PyRadioScheduleList(object):
         if self._schedule_list == []:
             self._list_to_schedule_items()
 
+        logger.error('\n\nself._schedule_list')
+        for n in self._schedule_list:
+            logger.error(n)
+        logger.error('\n\n')
+
         a_list= []
-        for i in range(0, self.count()):
+        for i in range(0, len(self._schedule_list)):
             if self._schedule_list[i].repeat is None:
                 a_list.append(
                     self._schedule_list[i].get_active_item()
@@ -292,9 +322,15 @@ class PyRadioScheduleList(object):
             else:
                 a_list.extend(
                     self.get_repeating_dates(
-                        self._schedule_list[i].get_active_item()
+                        self._schedule_list[i].get_active_item(),
                     )
                 )
+
+            logger.info('\n\na_list')
+            for n in a_list:
+                logger.error('\n{}'.format(n))
+            logger.info('\n\n')
+
         if a_list:
             a_list.sort(key=lambda x: x[0])
             for n in a_list:
@@ -314,6 +350,11 @@ class PyRadioScheduleList(object):
                         'token': self._sorted[-1]['token'],
                         'link': self._sorted[-1]['link']
                     })
+
+        logger.error('\n\nself._sorted')
+        for n in self._sorted:
+            logger.error(n)
+        logger.error('\n\n')
 
     def item(self, index):
         if index < len(self._list):
@@ -406,7 +447,9 @@ class PyRadioScheduleItem(object):
     @property
     def active_item(self):
         '''return the item after calculating all relative values'''
-        st, en, it_type, rec, buf, rep, playlist, station = self.get_active_item()
+        st, en, it_type, pl, rec, buf, rep, playlist, station, token = self.get_active_item()
+        if token == '':
+            token = random_string()
         out = {
             'type': it_type,
             'start_type': 0,
@@ -419,10 +462,11 @@ class PyRadioScheduleItem(object):
             'end_duration': [0, 0, 0, 0],
             'playlist': playlist,
             'station': station,
+            'player': pl,
             'recording': rec,
             'buffering': buf,
             'repeat': rep,
-            'token': ''
+            'token': token
         }
         return out
 
@@ -767,7 +811,6 @@ class PyRadioTime(object):
             self.date = ddate.today()
 
     def set_time(self, a_time_string):
-        # print('    a_time_string:', a_time_string)
         valid = True
         is_12_format = self.NO_AM_PM_FORMAT
         if a_time_string is None:
@@ -781,10 +824,7 @@ class PyRadioTime(object):
                 my_string = a_time_string[:-3]
             else:
                 my_string = a_time_string
-            # print('    is_12_format:', is_12_format)
-            # print('    my_string:', my_string)
             sp = my_string.split(':')
-            # print('    sp =', sp)
             if len(sp) > 3:
                 valid = False
             if len(sp) < 3:
@@ -796,10 +836,6 @@ class PyRadioTime(object):
             except ValueError:
                 valid = False
 
-        # print('    hour: ', hour)
-        # print('    minute: ', minute)
-        # print('    seconds: ', seconds)
-        # print('    valid =', valid)
         if valid:
             if is_12_format == self.PM_FORMAT:
                 ''' pm '''
@@ -813,7 +849,6 @@ class PyRadioTime(object):
                 if hour > 12:
                     valid = False
 
-        # print('    valid =', valid)
         if not valid:
             a_date_time = datetime.now()
             hour = a_date_time.hour
@@ -821,7 +856,6 @@ class PyRadioTime(object):
             seconds = a_date_time.second
 
         self.time = [hour, minute, seconds, is_12_format]
-        # print('!!! self.time =', self.time)
 
     @classmethod
     def number_of_days_in_month(self, year, month):
@@ -1052,13 +1086,31 @@ if __name__ == '__main__':
 
     # print('\n\n{}'.format(b.string))
 
-    x = PyRadioScheduleList(a_file)
+
+    my_list = [{
+        'type': 0,
+        'start_type': 0,
+        'start_date': [2023, 11, 19],
+        'start_time': (18, 23, 0, 0),
+        'start_duration': (1, 32, 15, 0),
+        'end_type': 0,
+        'end_date': [2023, 11, 19],
+        'end_time': (20, 1, 2, 0),
+        'end_duration': (3, 15, 2, 0),
+        'player': 'mpv',
+        'recording': 0,
+        'buffering': 0,
+        'repeat': 'month',
+        'playlist': 'reversed',
+        'station': 'The UK 1940s Radio Station  1920s 1930s 1940s',
+        'token': 'LhhO\x0c@>BET'
+    }]
+    x = PyRadioScheduleList(a_file='', a_list=my_list)
+    out = x.get_list_of_active_items()
+    for n in out:
+        print(n)
     # x.get_list_of_tasks()
     # print('\n\n')
     # for n in x._sorted:
     #     print(n)
 
-    out = x.get_info_of_tasks(True)
-    # print('\n'.join(out))
-    for n in out:
-        print(n)

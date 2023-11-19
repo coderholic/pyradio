@@ -590,6 +590,7 @@ class PyRadio(object):
             self.ws.WIN_VLC_NO_RECORD_MODE: self._show_win_no_record,
             self.ws.BUFFER_SET_MODE: self._show_buffer_set,
             self.ws.SCHEDULE_ERROR_MODE: self._show_schedule_error,
+            self.ws.SCHEDULE_INFO_MODE: self._show_schedule_info,
         }
 
         ''' list of help functions '''
@@ -6383,6 +6384,14 @@ __|Remote Control Server| cannot be started!__
                         prompt='',
                         is_message=True)
 
+    def _show_schedule_info(self):
+        txt = self._simple_schedule._info_result
+        caption = ' Schedule Item Info '
+        self._show_help(txt,
+                        mode_to_set=self.ws.SCHEDULE_INFO_MODE,
+                        caption=caption,
+                        is_message=True)
+
     def _show_schedule_error(self):
         txt = '\n___|' + self._simple_schedule.get_error_message() + '___\n'
         caption = ' Schedule error '
@@ -7428,6 +7437,8 @@ __|Remote Control Server| cannot be started!__
                 self._schedule_station_select_win.setStation(self._simple_schedule.station)
             elif ret in (3, 6, 7, 8):
                 self._show_schedule_error()
+            elif ret == 10:
+                self._show_schedule_info()
 
         elif self.ws.operation_mode == self.ws.BUFFER_SET_MODE:
             ret, buf = self._buffering_win.keypress(char)

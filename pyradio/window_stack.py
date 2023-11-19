@@ -62,6 +62,7 @@ class Window_Stack_Constants(object):
     BUFFER_SET_MODE = 78
     SCHEDULE_PLAYER_SELECT_MODE = 79
     SCHEDULE_STATION_SELECT_MODE = 80
+    SCHEDULE_INFO_MODE = 81
     MAIN_HELP_MODE = 100
     MAIN_HELP_MODE_PAGE_2 = 101
     MAIN_HELP_MODE_PAGE_3 = 102
@@ -292,6 +293,7 @@ class Window_Stack_Constants(object):
         WIN_VLC_NO_RECORD_MODE: 'WIN_VLC_NO_RECORD_MODE',
         BUFFER_SET_MODE: 'BUFFER_SET_MODE',
         SCHEDULE_ERROR_MODE: 'SCHEDULE_ERROR_MODE',
+        SCHEDULE_INFO_MODE: 'SCHEDULE_INFO_MODE',
     }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -379,6 +381,7 @@ class Window_Stack_Constants(object):
         WIN_VLC_NO_RECORD_MODE,
         SCHEDULE_EDIT_HELP_MODE,
         SCHEDULE_ERROR_MODE,
+        SCHEDULE_INFO_MODE,
     )
 
     def __init__(self):

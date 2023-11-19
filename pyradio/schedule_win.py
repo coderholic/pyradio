@@ -10,7 +10,7 @@ import platform
 
 from .simple_curses_widgets import DisabledWidget, SimpleCursesCheckBox, SimpleCursesPushButton, SimpleCursesTime, SimpleCursesString, SimpleCursesDate
 from .cjkwrap import cjklen, cjkslices
-from .schedule import PyRadioScheduleItem, PyRadioScheduleItemType, PyRadioScheduleTimeType, PyRadioTime, format_date_to_iso8851
+from .schedule import PyRadioScheduleItem, PyRadioScheduleItemType, PyRadioScheduleTimeType, PyRadioTime, PyRadioScheduleList, format_date_to_iso8851, random_string, datetime_to_my_time, is_date_before
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -141,6 +141,10 @@ class PyRadioSimpleScheduleWindow(object):
         else:
             self._schedule_item = PyRadioScheduleItem(schedule_item)
             self._remove_enabled = True
+
+        logger.error('set_item')
+        for n in self._schedule_item.item:
+            logger.error('{0}: {1}'.format(n, self._schedule_item.item[n]))
 
         ''' parse and assign values '''
 
@@ -735,19 +739,7 @@ class PyRadioSimpleScheduleWindow(object):
             self._widgets[self._focus].reset_selection(last=True)
         self.show()
 
-    def _validate_selection(self):
-        ''' validate form input
-            Return
-              0: All ok
-              3: Invalid item
-              6: Start time is in the past
-              7: Stop time is in the past
-              8: Stop time before Start time
-        '''
-        if not self._widgets[2].checked and not self._widgets[8].checked:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Invalid item')
-                return 3
+    def _form_to_item(self):
         rec = 1 if self._widgets[15].checked else 0
         rep = None
         if self._widgets[18].checked:
@@ -763,9 +755,13 @@ class PyRadioSimpleScheduleWindow(object):
             else:
                 the_type = 1
 
+            buf = 1 if self._widgets[17].checked else 0
         else:
             ''' stop only '''
             the_type = 2
+            rep = None
+            buf = 0
+            rec = 0
             playlist = None
             station = None
         tmp_item = PyRadioScheduleItem({
@@ -780,17 +776,141 @@ class PyRadioSimpleScheduleWindow(object):
             'end_duration': self._widgets[13].get_time()[0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
             'player': self._widgets[14].string,
             'recording': rec,
-            'buffering': 1 if self._widgets[17].checked else 0,
+            'buffering': buf,
             'repeat': rep,
             'playlist': playlist,
-            'station': station
+            'station': station,
+            'token': self._schedule_item.item['token']
         })
         logger.error('--== item ==--')
         for n in tmp_item.item:
             logger.error('{0}: {1}'.format(n, tmp_item.item[n]))
+        return tmp_item
+
+    def _show_info(self):
+        ret = 10
+        if not self._widgets[2].checked and not self._widgets[8].checked:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Invalid item')
+                self._info_result = '''
+                    ________--== |Invalid item| ==--
+                    ___No |Start| or |Stop| time specified___
+                '''
+                return 10
+        tmp_item = self._form_to_item()
+        ac_tmp_item = tmp_item.get_active_item()
         logger.error('--== active item ==--')
         for n in tmp_item.active_item:
             logger.error('{0}: {1}'.format(n, tmp_item.active_item[n]))
+        ac_tmp_item = tmp_item.get_active_item()
+        logger.error(ac_tmp_item)
+
+        err_out = []
+        error = False
+        logger.error('tmp_item.item["repeat"] = {}'.format(tmp_item.item['repeat']))
+        if tmp_item.item['repeat'] is None:
+            if tmp_item.item['type'] == 0:
+                if is_date_before(ac_tmp_item[1], ac_tmp_item[0]):
+                    if not error:
+                        err_out.append('--== |Invalid item| ==--')
+                        error = True
+                    err_out.append('|Start time| is after |End time|!')
+                elif is_date_before(ac_tmp_item[0], datetime.now()):
+                    if not error:
+                        err_out.append('--== |Invalid item| ==--')
+                        error = True
+                    err_out.append('|Start time| is in the |past|!')
+                    error = True
+                    if is_date_before(ac_tmp_item[1], datetime.now()):
+                        if not error:
+                            err_out.append('--== |Invalid item| ==--')
+                            error = True
+                        err_out.append('|Stop time| is in the |past|!')
+            elif tmp_item.item['type'] == 1:
+                if is_date_before(ac_tmp_item[0], datetime.now()):
+                    err_out.append('--== |Invalid item| ==--')
+                    err_out.append('|Start time| is in the |past|!')
+                    error = True
+            elif tmp_item.item['type'] == 2:
+                if is_date_before(ac_tmp_item[1], datetime.now()):
+                    err_out.append('--== |Invalid item| ==--')
+                    err_out.append('|Stop time| is in the |past|!')
+                    error = True
+        else:
+            if tmp_item.item['type'] == 0:
+                if is_date_before(ac_tmp_item[1], ac_tmp_item[0]):
+                    err_out.append('--== |Invalid item| ==--')
+                    err_out.append('|Start time| is after |End time|!')
+                    error = True
+
+
+        out = []
+
+        if tmp_item.item['repeat'] is None or error:
+            out.extend(self._format_info_lines(tmp_item.item['type'], ac_tmp_item))
+        else:
+            # get list of occurancies
+            it_count=3 if tmp_item.item['type'] == 0 else 6
+            logger.error('\n\n{}\n\n'.format(it_count))
+            the_r_list = PyRadioScheduleList(a_file='', a_list=[tmp_item.item])
+            the_list = the_r_list.get_list_of_tasks()
+            logger.error('\n\n{}\n\n'.format(the_list))
+            for n in the_list:
+                out.append('__# Start: |' + datetime_to_my_time(n[0]) + '__')
+                if n[2] == 0:
+                    out.append('_____Stop: |' + datetime_to_my_time(n[1]) + '__')
+
+        if err_out:
+            length = max([len(x) for x in out])
+            for i in range(len(err_out)):
+                num = int((length - len(err_out[i].replace('|', ''))) / 2)
+                err_out[i] = num * '_' + err_out[i]
+            err_out.append('')
+            out = err_out + out
+
+        while max([len(x) for x in out]) < 40:
+            for i in range(len(out)):
+                out[i] = '__' + out[i] + '__'
+
+        if out[0] != '':
+            out.reverse()
+            out.append('')
+            out.reverse()
+        if out[-1] != '':
+            out.append('')
+        self._info_result = '\n'.join(out)
+        logger.error('self._info_result\n{}'.format(self._info_result))
+        logger.error('ret = {}'.format(ret))
+
+    def _format_info_lines(self, the_type, item):
+        out = []
+        if the_type == 0:
+            out.append('__# Start: |' + datetime_to_my_time(item[0]) + '__')
+            out.append('_____Stop: |' + datetime_to_my_time(item[1]) + '__')
+        elif the_type == 1:
+            out.append('__# Start: |' + datetime_to_my_time(item[0]) + '__')
+        elif the_type == 2:
+            out.append('__#__Stop: |' + datetime_to_my_time(item[1]) + '__')
+        return out
+
+    def _validate_selection(self):
+        ''' validate form input
+            Return
+              0: All ok
+              3: Invalid item
+              6: Start time is in the past
+              7: Stop time is in the past
+              8: Stop time before Start time
+        '''
+        if not self._widgets[2].checked and not self._widgets[8].checked:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Invalid item')
+                return 3
+        tmp_item = self._form_to_item()
+        logger.error('--== active item ==--')
+        for n in tmp_item.active_item:
+            logger.error('{0}: {1}'.format(n, tmp_item.active_item[n]))
+        logger.error('\n\n{}\n\n'.format(tmp_item))
         ac_tmp_item = tmp_item.get_active_item()
         logger.error(ac_tmp_item)
 
@@ -918,6 +1038,10 @@ class PyRadioSimpleScheduleWindow(object):
                 self._widgets[self._focus].keypress(char)
             else:
                 self._previous_widget()
+
+        elif char == ord('i'):
+            self._show_info()
+            return 10
 
         else:
             ret = self._widgets[self._focus].keypress(char)
