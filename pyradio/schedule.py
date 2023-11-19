@@ -184,7 +184,15 @@ class PyRadioScheduleList(object):
                 out.append(tmp)
         return out
 
-    def get_repeating_dates(self, in_date):
+    def get_list_of_repeating_dates(self, count):
+        if self._schedule_list == []:
+            self._list_to_schedule_items()
+        rep = self.get_repeating_dates(self._schedule_list[0].get_active_item(), count=count)
+        return [(datetime_to_my_time(x[0]), datetime_to_my_time(x[1])) for x in rep]
+
+
+
+    def get_repeating_dates(self, in_date, count=-1):
         days = {
             'Sunday': SU,
             'Monday': MO,
@@ -201,20 +209,32 @@ class PyRadioScheduleList(object):
             start_date = start_date.replace(year=now.year, month=now.month, day=now.day)
         now_with_correct_time = now.replace(hour=in_date[0].hour, minute=in_date[0].minute, second=in_date[0].minute)
         now_plus_seven_days = now_with_correct_time + timedelta(days=7)
-        if in_date[-4] == 'day':
-            ll = list(rrule(DAILY, count=12, dtstart=start_date))
-        elif in_date[-4] == 'week':
-            ll = list(rrule(WEEKLY, dtstart=in_date[0], until=now + timedelta(days=14)))[-2:]
-        elif in_date[-4] == 'month':
-            ll = list(rrule(MONTHLY, dtstart=in_date[0], until=now + timedelta(days=65)))[-3:]
+        if count == -1:
+            if in_date[-4] == 'day':
+                ll = list(rrule(DAILY, count=12, dtstart=start_date))
+            elif in_date[-4] == 'week':
+                ll = list(rrule(WEEKLY, dtstart=in_date[0], until=now + timedelta(days=14)))[-2:]
+            elif in_date[-4] == 'month':
+                ll = list(rrule(MONTHLY, dtstart=in_date[0], until=now + timedelta(days=65)))[-3:]
+                for n in range(len(ll)-1, -1,-1):
+                    if ll[n] <= now_with_correct_time:
+                        ll.pop(n)
+            elif in_date[-4] in days.keys():
+                ll = list(rrule(WEEKLY, count=3, wkst=SU, byweekday=(days[in_date[-4]],), dtstart=start_date))
             for n in range(len(ll)-1, -1,-1):
-                if ll[n] <= now_with_correct_time:
+                if ll[n] > now_plus_seven_days:
                     ll.pop(n)
-        elif in_date[-4] in days.keys():
-            ll = list(rrule(WEEKLY, count=3, wkst=SU, byweekday=(days[in_date[-4]],), dtstart=start_date))
-        for n in range(len(ll)-1, -1,-1):
-            if ll[n] > now_plus_seven_days:
-                ll.pop(n)
+        else:
+            if in_date[-4] == 'day':
+                ll = list(rrule(DAILY, count=count, dtstart=start_date))
+            elif in_date[-4] == 'week':
+                ll = list(rrule(WEEKLY, dtstart=in_date[0], count=count))
+            elif in_date[-4] == 'month':
+                ll = list(rrule(MONTHLY, dtstart=in_date[0], count=count))
+            elif in_date[-4] in days.keys():
+                ll = list(rrule(WEEKLY, count=count, wkst=SU, byweekday=(days[in_date[-4]],), dtstart=start_date))
+
+        # print('\n\nll\n{}'.format(ll))
 
         out = []
         if ll:
@@ -1088,7 +1108,7 @@ if __name__ == '__main__':
 
 
     my_list = [{
-        'type': 0,
+        'type': 1,
         'start_type': 0,
         'start_date': [2023, 11, 19],
         'start_time': (18, 23, 0, 0),
@@ -1109,8 +1129,34 @@ if __name__ == '__main__':
     out = x.get_list_of_active_items()
     for n in out:
         print(n)
+    print('\n\n')
+
+
+    if x._schedule_list == []:
+        x._list_to_schedule_items()
+
+    print('active_item')
+    print(x._schedule_list[0].get_active_item())
+
+
+    print('Repeating dates')
+    rep = x.get_repeating_dates(x._schedule_list[0].get_active_item(), count=6)
+    print('\n\n')
+    for n in rep:
+        print(n)
     # x.get_list_of_tasks()
     # print('\n\n')
     # for n in x._sorted:
     #     print(n)
+    print('\n\n')
+
+    for n in rep:
+        print(datetime_to_my_time(n[0]))
+        print(datetime_to_my_time(n[1]))
+        print('')
+
+    r = x.get_list_of_repeating_dates(6)
+    print('\n\n')
+    for n in r:
+        print(n)
 

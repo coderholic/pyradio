@@ -849,16 +849,16 @@ class PyRadioSimpleScheduleWindow(object):
         if tmp_item.item['repeat'] is None or error:
             out.extend(self._format_info_lines(tmp_item.item['type'], ac_tmp_item))
         else:
-            # get list of occurancies
+            # get list of occurrences
             it_count=3 if tmp_item.item['type'] == 0 else 6
             logger.error('\n\n{}\n\n'.format(it_count))
             the_r_list = PyRadioScheduleList(a_file='', a_list=[tmp_item.item])
-            the_list = the_r_list.get_list_of_tasks()
-            logger.error('\n\n{}\n\n'.format(the_list))
+            the_list = the_r_list.get_list_of_repeating_dates(it_count)
+            out.append('Displaying |{}| subsequent occurrences:'.format(it_count))
             for n in the_list:
-                out.append('__# Start: |' + datetime_to_my_time(n[0]) + '__')
-                if n[2] == 0:
-                    out.append('_____Stop: |' + datetime_to_my_time(n[1]) + '__')
+                out.append('__|#| Start: |' + n[0] + '__')
+                if tmp_item.item['type'] == 0:
+                    out.append('_____Stop: |' + n[1] + '__')
 
         if err_out:
             length = max([len(x) for x in out])
