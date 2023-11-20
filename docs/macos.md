@@ -1,7 +1,5 @@
 # PyRadio macOS installation
 
-**PyRadio**: Command line internet radio player.
-
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
@@ -17,7 +15,7 @@
 
 <!-- vim-markdown-toc -->
 
-[[Return to PyRadio Build Instructions]](build.md)
+[ [Return to PyRadio Build Instructions](build.md#installation-guides) ]
 
 ## Preface
 

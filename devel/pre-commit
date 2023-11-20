@@ -42,13 +42,14 @@ fi
 sed -i 's/\t/    /g' Changelog
 
 
+cd docs
 # Create HTML file from md files
-for afile in README.md build.md windows.md windows-mplayer.md windows-mpv.md radio-browser.md desktop-notification.md server.md linux.md linux-pipx.md macos.md pip-error.md recording.md
+for afile in index.md build.md windows.md windows-mplayer.md windows-mpv.md radio-browser.md desktop-notification.md server.md linux.md linux-pipx.md macos.md pip-error.md recording.md packagers-info.md themes.md
 do
 #[ -z "$(git status | grep ${afile})" ] || {
     out=${afile/%.md/.html}
-    if [ "$afile" = "README.md" ];then
-        echo '% PyRadio README' > tmp.md
+    if [ "$afile" = "index.md" ];then
+        echo '% PyRadio Documentation' > tmp.md
     elif [ "$afile" = "build.md" ];then
         echo '% PyRadio Build Instructions' > tmp.md
     elif [ "$afile" = "windows.md" ];then
@@ -73,6 +74,10 @@ do
         echo '% What happened?' > tmp.md
     elif [ "$afile" = "recording.md" ];then
         echo '% Recording stations' > tmp.md
+    elif [ "$afile" = "packagers-info.md" ];then
+        echo '% Packaging PyRadio' > tmp.md
+    elif [ "$afile" = "themes.md" ];then
+        echo '% PyRadio Themes' > tmp.md
     fi
     cat ${afile} >> tmp.md
     pandoc --wrap=none -s -t html tmp.md -o ${out} || {
@@ -147,26 +152,35 @@ do
     # sed -i 's|^<li>\(.*\)</p>$|<li>\1</li>|' ${out}
     # sed -i 's|^<li><p>\(.*\)</p>$|<li>\1</li>|' ${out}
 
-    if [ "$out" = "README.html" ];then
-        sed -i -e '/http-force.jpg/s/src=/style="width: 600px" src=/' "$out"
-        sed -i -e '/pyradio-buffering-win.jpg/s/src=/style="width: 300px" src=/' "$out"
-        sed -i -e '/pyradio-b.jpg/s/src=/style="width: 450px" src=/' "$out"
+    if [ "$out" = "index.html" ];then
+        sed -i -e '/pyradio.png/s/src=/style="width: 600px" src=/' "$out"
+        sed -i -e '/pyradio-limited-display.jpg/s/src=/style="width: 450px" src=/' "$out"
+        sed -i -e '/http-force.jpg/s/src=/style="width: 450px" src=/' "$out"
+        sed -i -e '/pyradio-buffering-win.jpg/s/src=/style="width: 250px" src=/' "$out"
+        sed -i -e '/pyradio-b.jpg/s/src=/style="width: 350px" src=/' "$out"
+        sed -i -e '/pyradio-editor.jpg/s/src=/style="width: 600px" src=/' "$out"
+        sed -i -e '/pyradio-player-selection.jpg/s/src=/style="width: 600px" src=/' "$out"
+        sed -i -e '/pyradio-station-info.jpg/s/src=/style="width: 600px" src=/' "$out"
     fi
-
     if [ "$out" = "desktop-notification.html" ];then
-        sed -i -e '/pyradio-notif.jpg/s/src=/style="width: 411px" src=/' "$out"
+        sed -i -e '/pyradio-notif.jpg/s/src=/style="width: 380px" src=/' "$out"
         sed -i -e '/mac-notif.jpg/s/src=/style="width: 411px" src=/' "$out"
-        sed -i -e '/win-notif/s/src=/style="width: 411px" src=/' "$out"
-        sed -i -e '/win7-notif/s/src=/style="width: 411px" src=/' "$out"
+        sed -i -e '/win-notif/s/src=/style="width: 380px" src=/' "$out"
+        sed -i -e '/win7-notif/s/src=/style="width: 380px" src=/' "$out"
         sed -i -e '/win-python-props/s/src=/style="width: 574px" src=/' "$out"
         sed -i -e '/win7-icons.jpg/s/src=/style="width: 482px" src=/' "$out"
     fi
     if [ "$out" = "server.html" ];then
-        sed -i -e '/server-on.jpg/s/src=/style="width: 574px" src=/' "$out"
+        sed -i -e '/server-on.jpg/s/src=/style="width: 350px" src=/' "$out"
+        sed -i -e '/phone.jpg/s/src=/style="width: 550px" src=/' "$out"
     fi
     if [ "$out" = "recording.html" ];then
-        sed -i -e '/pyradio-recording.\.jpg/s/src=/style="width: 698px" src=/' \
-            -e '/mkv-srt-to-chapters\.png/s/src=/style="width: 350px" src=/' \
+        sed -i -e '/pyradio-recording.\.jpg/s/src=/style="width: 550px" src=/' \
+            -e '/mkv-srt-to-chapters\.png/s/src=/style="width: 250px" src=/' \
+            "$out"
+    fi
+    if [ "$out" = "radio-browser.html" ];then
+        sed -i -e '/<img /s/src=/style="width: 550px" src=/' \
             "$out"
     fi
 
@@ -180,17 +194,18 @@ cat << STOP_HERE > pre
 <pre style="height: 200px;">
 
 STOP_HERE
-cat Changelog >> pre
+cat ../Changelog >> pre
 echo '</pre>' >> pre
 
-sed -n '1,/<!-- Changelog -->/p' README.html > 1.txt
-sed -n '/<!-- Changelog -->/,$p' README.html > 2.txt
-cat 1.txt pre 2.txt > README.html
+sed -n '1,/<!-- Changelog -->/p' index.html > 1.txt
+sed -n '/<!-- Changelog -->/,$p' index.html > 2.txt
+cat 1.txt pre 2.txt > index.html
 rm 1.txt 2.txt pre
 
 sed -i '/<li><a href="#requirements">Requirements/ a\
-<li><a href="#changelog">Changelog</a></li>' README.html
-git add README.html
+<li><a href="#changelog">Changelog</a></li>' index.html
+git add index.html
+cd ..
 
 # chmod +x devel/update_win_mplayer
 # devel/update_win_mplayer && {

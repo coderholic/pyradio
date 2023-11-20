@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>PyRadio README</title>
+  <title>PyRadio Documentation</title>
     <style> 
     body {padding: 2em;} 
     @media screen and (max-width: 770px) { 
@@ -40,10 +40,10 @@ a:visited{color: SaddleBrown;}
 </header>
 <h1 style="color: SaddleBrown" id="pyradio">PyRadio</h1>
 <p>Command line internet radio player.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio.png" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio.png" alt="Pyradio" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio.png" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/pyradio.png" alt="Pyradio" /></a></p>
 
 <h2 id="important">IMPORTANT <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><strong>PyRadio</strong> may fail to install/update on some linux distros (mainly Ubuntu 23.04, Debian Testing and derivatives, etc.) due to a change to the underlined python installation.</p>
+<p><strong>PyRadio</strong> may fail to install/update on some linux distros (mainly Ubuntu 23.04, Debian and derivatives, etc.) due to a change to the underlined python installation.</p>
 <p>If you face this situation, please refer to <a href="pip-error.html">this page</a> to resolve the problem.</p>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
@@ -112,35 +112,7 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
-<li><a href="#pyradio-themes">PyRadio Themes</a>
-<ul>
-<li><a href="#virtual-terminal-restrictions">Virtual terminal restrictions</a></li>
-<li><a href="#css-color-themes-restrictions">CSS color themes restrictions</a></li>
-<li><a href="#secondary-windows-background">Secondary windows background</a>
-<ul>
-<li><a href="#theme-defined-secondary-windows-color">Theme defined secondary windows color</a></li>
-<li><a href="#calculated-secondary-windows-color">Calculated secondary windows color</a></li>
-</ul></li>
-<li><a href="#alternative-main-window-border-color">Alternative Main Window border color</a></li>
-<li><a href="#user-themes">User themes</a>
-<ul>
-<li><a href="#converting-old-themes">Converting old themes</a></li>
-</ul></li>
-<li><a href="#using-transparency">Using transparency</a></li>
-<li><a href="#updating-themes-automatically">Updating themes automatically</a></li>
-<li><a href="#using-project-themes">Using Project Themes</a>
-<ul>
-<li><a href="#base16">base16</a>
-<ul>
-<li><a href="#using-the-themes-without-base16">Using the themes without base16</a></li>
-</ul></li>
-<li><a href="#pywal">pywal</a></li>
-<li><a href="#theme.sh">theme.sh</a>
-<ul>
-<li><a href="#using-the-themes-without-theme.sh">Using the themes without theme.sh</a></li>
-</ul></li>
-</ul></li>
-</ul></li>
+<li><a href="#pyradio-themes">PyRadio Themes</a></li>
 <li><a href="#recording-stations">Recording stations</a></li>
 <li><a href="#mouse-support">Mouse support</a></li>
 <li><a href="#title-logging">Title logging</a>
@@ -168,14 +140,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#cleaning-up">Cleaning up</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
 <li><a href="#reporting-bugs">Reporting bugs</a></li>
-<li><a href="#packaging-pyradio">Packaging PyRadio</a>
-<ul>
-<li><a href="#distro-specific-files">Distro Specific Files</a></li>
-<li><a href="#mkvtoolnix-cli-installation">MKVToolNix cli installation</a></li>
-</ul></li>
-<li><a href="#todo">TODO</a></li>
-<li><a href="#acknowledgment">Acknowledgment</a></li>
-<li><a href="#special-thanks">Special thanks</a></li>
+<li><a href="#packaging-pyradio">Packaging PyRadio</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <h2 id="features">Features <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
@@ -1126,7 +1091,7 @@ a:visited{color: SaddleBrown;}
 </pre>
 <!-- Changelog -->
 <h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (e.g. <em>Arch Linux</em> and derivatives can install <a target="_blank" href="https://aur.archlinux.org/packages/?K=pyradio">any of these packages</a> from the AUR).</p>
+<p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (<em>Arch Linux</em> and derivatives can install <a target="_blank" href="https://aur.archlinux.org/packages/?K=pyradio">any of these packages</a> from the AUR, <em>FreeBSD</em> users will find it in the <a target="_blank" href="https://www.freshports.org/audio/py-pyradio/">ports</a>, etc.).</p>
 <p>In any other case, and since <strong>PyRadio</strong> is currently not available via pip, you will have to <a href="build.html">build it from source</a>.</p>
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre>$ pyradio -h
@@ -1355,7 +1320,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 <li><p>When the width gets below 20 columns, the <strong>Limited display</strong> will be activated.</p></li>
 </ul></li>
 </ol>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" alt="Pyradio reduced to the “Limited display”" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" target="_blank"><img style="width: 450px" src="https://members.hellug.gr/sng/pyradio/pyradio-limited-display.jpg" alt="Pyradio reduced to the “Limited display”" /></a></p>
 
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> These two modes do not work on Windows, either 7 or 10. The “<em>Console</em>”window will shrink as desired, but will not always notify <strong>PyRadio</strong> about it, so results will vary.</p>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
@@ -1525,7 +1490,7 @@ $ pyradio -s 5</pre>
 <h3 id="cjk-characters-support">CJK characters support</h3>
 <p>The <em>Line editor</em> supports the insertion of <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs">CJK Unified Ideographs</a>, as described on <a target="_blank" href="https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)">CJK Unified Ideographs (Unicode block)</a> also known as URO, abbreviation of Unified Repertoire and Ordering. These characters, although encoded as a single code-point (character), actually take up a 2-character space, when rendered on the terminal.</p>
 <p>A depiction of the editor’s behavior can be seen at this image:</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg" alt="CJK Characters on Pyradio" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/pyradio-editor.jpg" alt="CJK Characters on Pyradio" /></a></p>
 
 <h2 id="moving-stations-around">Moving stations around <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Rearranging the order of the stations in the playlist is another feature <strong>PyRadio</strong> offers.</p>
@@ -1608,7 +1573,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p><strong>PyRadio</strong> provides a way for the user to add extra parameters to the player, either by a command line option, or the “<em>Configuration Window</em>” (under “<em>Player:</em>”).</p>
 <h4 id="using-the-configuration-window">Using the Configuration Window</h4>
 <p>When the user uses the configuration window (shown in the following image), he is presented with an interface which will permit him to select the player to use with <strong>PyRadio</strong> and edit its extra parameters.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" alt="PyRadio Player Selection Window" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/pyradio-player-selection.jpg" alt="PyRadio Player Selection Window" /></a></p>
 
 <p>For each of the supported players the existing profiles (not for <em>VLC</em>) and existing extra parameters will be displayed.</p>
 <p>The user can add (“<strong>a</strong>”) a new parameter, edit (“<strong>e</strong>”) an existing set and delete (“<strong>x</strong>” or “<strong>DEL</strong>”) one; profiles cannot be edited or deleted, though.</p>
@@ -1622,7 +1587,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Changes made using the “<em>Connection Type</em>” window are not stored; next time the program is executed, it will use whatever value the configuration parameter holds. Furthermore, changing the configuration stored value, will not affect the “working” value of the parameter.</p>
 <h3 id="visual-reminder">Visual reminder</h3>
 <p>When this option is activated, either through the config or the keyboard, a “<em>[http forced (z)]</em>”message appears on the top right corner of the window, as shown in the following image.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/http-force.jpg" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/http-force.jpg" alt="http force" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/http-force.jpg" target="_blank"><img style="width: 450px" src="https://members.hellug.gr/sng/pyradio/http-force.jpg" alt="http force" /></a></p>
 
 <p>The “<strong>z</strong>” in parenthesis is just a hint to remind the user that he can change the behavior by pressing “<strong>z</strong>”.</p>
 <p>As the window shrinks in width, the message becomes a “<em>[h]</em>”; when it shrinks even more, it disappears completely.</p>
@@ -1660,7 +1625,7 @@ volume=50</pre>
 <p>When a station is slow (or the internet connection is slow), one might get to a situation where the connection timeout will run out before the connection with the station can be established. Even worse, <strong>PyRadio</strong> will connect to the station, but the sound will be choppy and crackling.</p>
 <p>The solution is to use a large enough <strong>buffer</strong> to connect to the station; this will effectively make <strong>PyRadio</strong> connect to the station and start receiving data, but will not start playback until the buffer is full.</p>
 <p>All <strong>PyRadio</strong> supported support buffering, using a number of command line parameters to actually set it up. <strong>PyRadio</strong> will remove all this complexity by making is as simple as inserting a single value to the “<em>Buffering</em>” window, shown below.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg" target="_blank"><img style="width: 300px" src="https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg" alt="PyRadio Buffering Window" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg" target="_blank"><img style="width: 250px" src="https://members.hellug.gr/sng/pyradio/pyradio-buffering-win.jpg" alt="PyRadio Buffering Window" /></a></p>
 
 <p>The window opens by pressing “<strong>\B</strong>” while in the <strong>Main</strong> mode.</p>
 <p>It will display the current buffer size (0 means no buffering), and will permit to adjust it, or use the previously used value (pressing “<strong>r</strong>”).</p>
@@ -1715,7 +1680,7 @@ volume=50</pre>
 <p>As long as the word “<strong>cache</strong>” is contained in the profile’s name, <strong>PyRadio</strong> will understand this is a buffering profile and act accordingly. But it’s up to the user to make sure this presupposition is honored.</p>
 <h3 id="how-it-works">How it works</h3>
 <p>When buffering is enabled, and a connection to a station initializes, <strong>PyRadio</strong> will display a “<strong>[B]</strong>” at the top left corner of the window, and display “<strong>Buffering:</strong>” and the name of the station in the status bar, until it get a token that the buffering has stopped.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" target="_blank"><img style="width: 450px" src="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" alt="PyRadio Buffering" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" target="_blank"><img style="width: 350px" src="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" alt="PyRadio Buffering" /></a></p>
 
 <p>An example is shown in the image above.</p>
 <p>Now, this behaviour depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.</p>
@@ -1729,7 +1694,7 @@ volume=50</pre>
 <p><strong>PyRadio</strong> can receive, decode and display this data, and even help the user to identify an unknown station. This is the way to do it:</p>
 <p>After a connection to a station has been established (after playback has started), just press “<strong>i</strong>” to display the station’s info.</p>
 <p>The window that appears includes the “<em>Playlist Name</em>” (the station name we have in the playlist) and the “<em>Reported Name</em>” (the name the station transmitted to us) among other fields; an example can bee seen here:</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg" alt="PyRadio Station Info Window" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg" target="_blank"><img style="width: 600px" src="https://members.hellug.gr/sng/pyradio/pyradio-station-info.jpg" alt="PyRadio Station Info Window" /></a></p>
 
 <p>If these two names are not identical, the user can press “<strong>r</strong>” to rename the station in the playlist using the “<em>Reported Name</em>”. This way an unknown station (when only the URL is known) can be correctly identified (after being inserted in a playlist with a dummy station name).</p>
 <h2 id="copying-and-pasting---registers">Copying and pasting - Registers <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
@@ -1759,274 +1724,13 @@ volume=50</pre>
 <li><p>“<strong>\p</strong>” in the “<em>Playlist Selection</em> or the”<em>Registers</em>” window.</p></li>
 </ul>
 <h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><strong>PyRadio</strong> comes with 6 preconfigured (hard coded) themes:</p>
-<ol type="1">
-<li><strong>dark</strong> (8 color theme).<br />
-This is the appearance <strong>PyRadio</strong> has always had. Enabled by default.</li>
-<li><strong>light</strong><br />
-A theme for light terminal background settings.</li>
-<li><strong>dark_16_colors</strong><br />
-“<strong>dark</strong>” theme alternative.</li>
-<li><strong>light_16_colors</strong><br />
-“<strong>light</strong>” them alternative.</li>
-<li><strong>white_on_black</strong> or <strong>wob</strong> (b&amp;w theme).<br />
-A theme for dark terminal background settings.</li>
-<li><strong>black_on_white</strong> or <strong>bow</strong> (b&amp;w theme).<br />
-A theme for light terminal background settings.</li>
-</ol>
-<p>Furthermore, a number of themes (these are actual files saved in the <strong>themes</strong> installation directory) are also available:</p>
+<p><strong>PyRadio</strong> supports <strong>CSS themes</strong>; it comes with a number of predefined ones and can use external programs that can provide automatically created and updated themes.</p>
+<p>To set a theme you just press “<strong>t</strong>” and</p>
 <ul>
-<li><strong>AM_by_amski1</strong><br />
-A simple green on dark theme, created for Window.</li>
-<li><strong>blue-by-boxer</strong><br />
-A reddish on blue theme by user <strong>Boxer</strong> at <a target="_blank" href="https://forum.maboxlinux.org/">Mabox Forum</a>.</li>
-<li><strong>catppuccin-frappe</strong>, <strong>catppuccin-latte</strong>, <strong>catppuccin-macchiato</strong> and <strong>catppuccin-mocha</strong><br />
-Four themes by the <a target="_blank" href="https://github.com/catppuccin">Catppuccin community</a>.</li>
-<li><strong>classic_by_obsdg</strong><br />
-A clasic theme by <a target="_blank" href="https://github.com/OpenBSDGuy">The OpenBSD Guy</a>, originally created on <a target="_blank" href="https://www.openbsd.org/">OpenBSD</a>.</li>
-<li><strong>cupcake_by_edunfelt</strong> and <strong>fairyflossy_by_edunfelt</strong><br />
-Two themes by <a target="_blank" href="https://github.com/edunfelt">edunfelt</a> inspired by the <a target="_blank" href="https://github.com/base16-project">base16</a> project.</li>
-<li><strong>gruvbox_dark_by_sng</strong> and <strong>gruvbox_light_by_sng</strong><br />
-Two themes based on the <a target="_blank" href="https://github.com/morhetz/gruvbox">gruvbox</a> theme.</li>
-<li><strong>minima_by_ben_chile</strong><br />
-A theme by user <a target="_blank" href="https://forum.maboxlinux.org/u/ben_chile">ben_chile</a> created on the <a target="_blank" href="https://maboxlinux.org">Mabox Linux</a> Forum.</li>
-<li><strong>pastel_based_by_sng</strong><br />
-A dim but colorful theme.</li>
+<li><p>select a theme and press the <strong>Right Arrow</strong> to activate it.</p></li>
+<li><p>when you have found a theme you like, press <strong>Space</strong> to make it the default one.</p></li>
 </ul>
-<p>Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual CSS colors can now be defined.</p>
-<p>Theme sample / template:</p>
-<pre># Main foreground and background
-Stations            #8b8198 #fbf1f2
-
-# Playing station text color
-# (background color will come from Stations)
-Active Station      #d57e85
-
-# Status bar foreground and background
-Status Bar          #fbf1f2 #d57e85
-
-# Normal cursor foreground and background
-Normal Cursor       #fbf1f2 #dcb16c
-
-# Cursor foreground and background
-# when cursor on playing station
-Active Cursor       #fbf1f2 #d57e85
-
-# Cursor foreground and background
-# This is the Line Editor cursor
-Edit Cursor         #fbf1f2 #bfb9c6
-
-# Text color for extra function indication
-# and jump numbers within the status bar
-# (background color will come from Stations)
-Extra Func          #69a9a7
-
-# Text color for URL
-# (background color will come from Stations)
-PyRadio URL         #a3b367
-
-# Message window border foreground and background.
-# The background color can be left unset.
-# Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#secondary-windows-background
-#
-Messages Border     #a3b367
-
-# Theme Transparency
-# Values are:
-#   0: No transparency
-#   1: Theme is transparent
-#   2: Obey config setting (default)
-transparency        0</pre>
-<p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the theme selected in the “<em>Theme selection window</em>”, (or requested using the “<strong>-t</strong>” command line option), is in any way invalid, or is of the old format, <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme and will display a relevant message.</p>
-<p>The window will display the current state of the <strong>Use transparency</strong> and <strong>Force transparency</strong> configuration options in its bottom right corner:</p>
-<ul>
-<li>A <strong>[T]</strong> means that the <strong>Use transparency</strong> option is enabled.</li>
-<li>A <strong>[F]</strong> means that the <strong>Force transparency</strong> option is enabled.</li>
-<li>A <strong>[TF]</strong> means that the both options are enabled.</li>
-</ul>
-<p>One can get more info about these options in the “<a href="#using-transparency">Using Transparency</a>” section, bellow.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> the options indication will not be visible when the window is opened withing the <strong>PyRadio</strong>’s “<em>Configuration Window</em>”.</p>
-<p>The “<em>Theme selection window</em>” will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
-<p>Pressing “<strong>SPACE</strong>”, will apply the theme and make it default, and pressing “<strong>c</strong>” will apply the theme and make it default and start a file watch function on the file, so that if the file changes, <strong>PyRadio</strong> will automatically update itself.</p>
-<h3 id="virtual-terminal-restrictions">Virtual terminal restrictions</h3>
-<p>After introducing CSS color themes, it has come to my attention that <strong>PyRadio</strong> will not display colors correctly when executed within specific terminals, <em>konsole</em>, <em>yakuake</em>, <em>deepin-teminal</em>, <em>qterminal</em> and <em>terminology</em>, just to name a few.</p>
-<p>Now, I do not know whether this is because of the terminals themselves, python curses implementation or whatever, but that’s that.</p>
-<p><strong>PyRadio</strong> will try to detect these terminals and disable themes (after displaying a relative message). Then the default theme will be used.</p>
-<p>Some of the terminals that work ok, are: <em>gnome-terminal</em>, <em>mate-terminal</em>, <em>xfce4-terminal</em>, <em>lxterminal</em>, <em>terminator</em>, <em>termite</em>, <em>kitty</em>, <em>alacritty</em>, <em>sakura</em>, <em>roxterm</em>, <em>tilix</em>, <em>lilyterm</em>, <em>st</em>, <em>xst</em>, <em>rxvt</em>, <em>urxvt</em>, <em>uxterm</em>, <em>xterm</em>.</p>
-<p>If you want to make <strong>PyRadio</strong> start in one of these terminal, just follow the instructions given at <a href="#specifying-the-terminal-to-use">Desktop File: Specifying the terminal to use</a>.</p>
-<h3 id="css-color-themes-restrictions">CSS color themes restrictions</h3>
-<p>Using CSS colors imposes a couple of restrictions on the type of terminals <strong>PyRadio</strong> will be able to run:</p>
-<ol type="1">
-<li><p>The TERM variable must be set <em>(Linux and MacOs only)</em>.<br />
-<br />
-<strong>PyRadio</strong> will set it to “<em>xterm-256color</em>” if not set.<br />
-<br />
-Furthermore, if TERM is set to anything like “<strong>xterm</strong>”, “<strong>screen</strong>” or “<strong>tmux</strong>”, <strong>PyRadio</strong> will set it to “<em>xterm-256color</em>” as well.</p></li>
-<li><p>Terminals that do not support at least 16 colors will not be able to display any of the new themes. The same goes for terminals that do not support changing their colors (through the <strong>curses</strong> library).<br />
-<br />
-These terminal will default to the old “<strong>dark</strong>” theme, displaying whatever colors the active palette dictates.</p></li>
-<li><p>There are a couple of terminals (that I know of) which will permit changing their colors but will not be able to present the changed color on the fly.<br />
-<br />
-This means that, in order for a theme change to take full effect, <strong>PyRadio</strong> will have to be restarted.</p></li>
-</ol>
-<h3 id="secondary-windows-background">Secondary windows background</h3>
-<p>Secondary windows (such as messages, questions, the “<em>Theme Selection window</em>” the “<em>Encoding Selection window</em>”, etc.) originally use the same background color as the “<em>Main window</em>”.</p>
-<p>It is now possible to use a different background color for these windows, to get better visual result.</p>
-<p>There are two way to do that:</p>
-<ol type="1">
-<li><p>Defined in a theme</p></li>
-<li><p>Using a calculated color</p></li>
-</ol>
-<h4 id="theme-defined-secondary-windows-color">Theme defined secondary windows color</h4>
-<p>Themes have the following entry</p>
-<pre># Message window border foreground and background.
-# The background color can be left unset.
-# Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#secondary-windows-background
-#
-Messages Border     #a3b367</pre>
-<p>It is possible to define a background color as well, like so</p>
-<pre>Messages Border     #a3b367 #F5DBDE</pre>
-<p>In this case, this color will be used as the Secondary Windows background color.</p>
-<p>Although one can use any color here, it is recommended to follow these guidelines for best visual result:</p>
-<ol type="1">
-<li>The color should be 1-20% lighter or darker than the “<em>Stations Background</em>” color setting of the theme.<br />
-<br />
-One can use <a target="_blank" href="http://www.workwithcolor.com/hsl-color-picker-01.htm">this page</a> (or a similar one) to insert the base color and adjust the “<em>L</em>” component as needed.<br />
-<br />
-A terminal alternative is <a target="_blank" href="https://github.com/sharkdp/pastel">pastel</a>, which can be used like so:</li>
-</ol>
-<pre>pastel color &#39;#fbf1f2&#39;              # show color info
-pastel lighten .1 &#39;#fbf1f2&#39;         # color lightened by 10%
-pastel darken .1 &#39;#fbf1f2&#39;          # color darkened by 10%</pre>
-<ol start="2" type="1">
-<li>If the “<em>Stations Background</em>” color is dark, create a lighter version of it; if it’s light, create a darker version of it.<br />
-<br />
-This is just a recomenration, though; just get a color that combines well with existing ones (border foreground, stations foreground and active station).</li>
-</ol>
-<p>This information is actually relevant to creating a new <strong>PyRadio</strong> theme, but it’s very important in order to understand how the calculated background color works.</p>
-<h4 id="calculated-secondary-windows-color">Calculated secondary windows color</h4>
-<p><strong>PyRadio</strong> will use the same background color for all windows by default, provided that the theme used does not define a “<em>Messages Border</em>” background color.</p>
-<p>In order to use a “<em>Messages Border</em>” background color different than the “<em>Stations background</em>” color, when “<em>Messages Border</em>” background color is not defined in the selected theme, a config option is available; “<strong>Calculated color</strong>”.</p>
-<p>This config option takes a value that’s between 0 and 0.2.</p>
-<p>If it is 0, no color change will occur.</p>
-<p>Otherwise, the value acts as a percentage (a <strong>factor</strong>), which indicates how much the luminance of the “<em>Stations background</em>” color will change to produce the new background color.</p>
-<p>This is how this works: <strong>PyRadio</strong> will calculate the “<em>Stations background</em>” color perceived brightness, which will indicate whether the color is dark or light. Then depending on that, will add or subtract <strong>factor</strong> percent from its luminance value.</p>
-<p>Finally, a check will be made to see if this color is close to “<em>Messages Border</em>” foreground color, and re-adjusted as possible.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a calculated background color is used, pressing “<strong>~</strong>” (<strong>tilde</strong>) will toggle it on and off. This setting will be valid until <strong>PyRadio</strong> terminates, or a new theme is loaded.</p>
-<h3 id="alternative-main-window-border-color">Alternative Main Window border color</h3>
-<p>It is also possible to change the <strong>Main Window</strong> border color. This is a feature that has been requested and implemented, but not used by default.</p>
-<p>To provide an alternative border color, one would just add the following to a theme file:</p>
-<pre># Border color for the Main Window
-# (background color will come from Stations)
-Border              #69a9a7</pre>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This color will be used <strong>only</strong> when the trerminal supports more than 16 colors. This is because <strong>Pyradio</strong> already uses colors 0-15, and this border color will be declaread as color No 16.</p>
-<h3 id="user-themes">User themes</h3>
-<p>Users can easiliy create their own themes, using for example <a target="_blank" href="https://www.cssportal.com/css3-color-names/">CSS color names</a> as a resource, and</p>
-<ol type="1">
-<li><p>Save the theme provided as a template above in their themes folder using any (short) file name and a “<strong>.pyradio-theme</strong>” file extension.<br />
-<br />
-For this reason, a folder called “<strong>themes</strong>” will probably have to be created in <strong>PyRadio</strong> config directory (<strong>~/.config/pyradio</strong> or <strong>%APPDATA%\pyradio</strong> on Windows)</p></li>
-<li><p>Customize it as desired</p></li>
-<li><p>Load it from the “<em>Theme selection window</em>” (it will be found under “<strong>User Themes</strong>”).</p></li>
-</ol>
-<h4 id="converting-old-themes">Converting old themes</h4>
-<p>An old theme (using the old format) can be asily converted to the new format, using the script found at <a target="_blank" href="https://gist.github.com/s-n-g/65aa6ae12e135481bf3a503ece4e92d2">this gist</a>.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> In order to get the color intended to be used, the same palette as the one used when the original theme was created, must be used.</p>
-<h3 id="using-transparency">Using transparency</h3>
-<p>For <strong>PyRadio</strong>, transparency means that a theme’s background actually disappears, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
-<p>Not all themes look good when transparency is ON, so themes can now declare whether they want to use transparency or not. This is the “<strong>transparency</strong>” variable of the theme, which can have these values:</p>
-<ul>
-<li>0 means that the theme will be opaque (no transparency)</li>
-<li>1 means that the theme will be transparent</li>
-<li>2 means that the theme looks good either way (the default), and the global transparency setting value (defined in <strong>PyRadio</strong> config file) will be used.</li>
-</ul>
-<p>Please note that this behavior has changed since <strong>v. 0.9.2.7</strong>: theme transparency will always be honored, regardless of the global config value.</p>
-<p>This means that a theme which is set to be transparent (by its creator) will always be transparent, no matter if the global transparency is on or off. Similarly, if a theme is set to be opaque, it will be so regardless of the global transparency value.</p>
-<p>The only case when global transparency will come into play is when the theme does not care about it (theme transparency set to 2 - Obey config setting).</p>
-<p>Since <strong>v. 0.9.2.14</strong>, it is also possible to <strong>force</strong> the use of the Transparency setting; the “<strong>Force Transparency</strong>” configuration option. When enabled, it will effectively make all themes behave as if their <strong>transparency</strong> setting was set to 2 (Obey config setting).</p>
-<p>The following table illustrates how things work:</p>
-<table>
-<colgroup>
-<col style="width: 13%" />
-<col style="width: 18%" />
-<col style="width: 14%" />
-<col style="width: 26%" />
-<col style="width: 26%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>Force transparency</th>
-<th>Theme setting</th>
-<th>PyRadio honors</th>
-<th>If Config Transparency<br>is ON, you get</th>
-<th>If Config Transparency is OFF, you get</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>False<br>(the default)</td>
-<td>0 - Do not use transparency</td>
-<td>Theme setting</td>
-<td>Opaque window</td>
-<td>Opaque window</td>
-</tr>
-<tr class="even">
-<td></td>
-<td>1 - Theme is transparent</td>
-<td>Theme setting</td>
-<td>Transparent window</td>
-<td>Transparent window</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td>2 - Don't care</td>
-<td>Config Transparency</td>
-<td>Transparent window</td>
-<td>Opaque window</td>
-</tr>
-<tr class="even">
-<td>True</td>
-<td>Any (0, 1 or 2)</td>
-<td>Config Transparency</td>
-<td>Transparent window</td>
-<td>Opaque window</td>
-</tr>
-</tbody>
-</table>
-<p>So, pressing “<strong>T</strong>” when <strong>Force Transparency</strong> is enabled, or the theme’s <strong>transparency</strong> value is set to 2, will toggle the window’s transparency.</p>
-<h3 id="updating-themes-automatically">Updating themes automatically</h3>
-<p>Terminal users have been using all kind of software to change / update / adapt their terminal colors and palettes, such as <a target="_blank" href="https://github.com/chriskempson/base16">bASE16</a>, <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a>, <a target="_blank" href="https://github.com/deviantfero/wpgtk">wpgtk</a>, <a target="_blank" href="https://github.com/lemnos/theme.sh">theme.sh</a>, to name a few.</p>
-<p><strong>PyRadio</strong> is now able to “watch” a given theme for changes and update its colors whenever the theme changes.</p>
-<p>To set up a theme for auto update, one would just open the “<em>Theme Selection</em>” window, navigate to a theme under “<strong>User Themes</strong>” and press “<strong>c</strong>”. To create a <strong>user theme</strong> just follow the procedure described in section <a href="#user-themes">User themes</a>.</p>
-<p>Consecuently, the default theme name will be preceded by:</p>
-<ul>
-<li>“<strong>*</strong>” if the theme is the default one (the way it has always been).</li>
-<li>“<strong>+</strong>” if the theme is the default one, and <strong>PyRadio</strong> will watch it for changes.</li>
-</ul>
-<h3 id="using-project-themes">Using Project Themes</h3>
-<p><strong>PyRadio</strong> is able to use (and watch) the output of certain projects that modify terminal colors.</p>
-<p><strong>PyRadio</strong> will detect theses projects (programs installed and initialized), and will add them under the “<strong>Ext. Themes Projects</strong>” section of the “<em>Themes Selection Window</em>.”</p>
-<p>If loading any of these themes fails, the default <strong>dark</strong> theme will be loaded, but contrary to a local theme being invalid, the selection will persist (so that the theme gets loaded wheneve it is available).</p>
-<p>Currently, the following projects are supported:</p>
-<h4 id="base16">base16</h4>
-<p>Thanks to the wonderful work by user <a target="_blank" href="https://github.com/edunfelt">edunfelt</a>, there is now a <strong>PyRadio</strong> <a target="_blank" href="https://github.com/base16-project">base16</a> template in place, and themes have been produced based on the project (there are more than 900 themes available).</p>
-<p>This implementation will add four entries in the theme selection menu (with alternative and variant forms of the main theme).</p>
-<p>Then, any of the themes can either be activated or watched; in which case <strong>PyRadio</strong> will download and apply the corresponding theme.</p>
-<h5 id="using-the-themes-without-base16">Using the themes without base16</h5>
-<p>In case one wants to use any of these themes, but not install or use <a target="_blank" href="https://github.com/base16-project">base16</a>, one can get them <a target="_blank" href="https://github.com/edunfelt/base16-pyradio">from this repo</a>, and use the “<em>cycle_themes.py</em>” and “<em>install_themes.py</em>” scripts to inspect and install them.</p>
-<p>For Windows users, this is the only way to use any of these “<em>Project Themes</em>”, since their generation works on non-windows platforms only.</p>
-<h4 id="pywal">pywal</h4>
-<p>When detected, two themes will be added to the menu; the main and the alternative form.</p>
-<p>Since these themes are generated on the fly, as the wallpaper changes, there is no way to use them if <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a> is not in use.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a> themes are activated but not watched, the theme will be corrupted when the wallpaper changes, and will have to be manually reloaded. So, it’s better to just always watch these themes.</p>
-<h4 id="theme.sh">theme.sh</h4>
-<p>When detected, four themes will be added to the menu; the main and the alternative forms (there are 400 plus themes available, which makes a stuggering number of around 1800 themes for <strong>PyRadio</strong>!)</p>
-<h5 id="using-the-themes-without-theme.sh">Using the themes without theme.sh</h5>
-<p>In case one wants to use any of these themes, but not install or use <a target="_blank" href="https://github.com/lemnos/theme.sh">theme.sh</a>, one can download <a target="_blank" href="https://github.com/s-n-g/theme-sh-pyradio">this repo</a>, and use the “<em>create_themes.py</em>” script to create the themes, and “<em>cycle_themes.py</em>” and “<em>install_themes.py</em>” scripts to inspect and install them.</p>
-<p>For Windows users, this is the only way to use any of these “<em>Project Themes</em>”, since their generation works on non-windows platforms only.</p>
+<p>To get more info about using and creating a <strong>PyRadio theme</strong>, please refer to <a href="themes.html">this page</a>.</p>
 <h2 id="recording-stations">Recording stations <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> supports recording of stations, as much as this feature is provided by the players it supports.</p>
 <hr />
@@ -2179,64 +1883,6 @@ $ pyradio -d</pre>
 <p>Then try to reproduce the bug and exit <strong>pyradio</strong>.</p>
 <p>Finally, include the file produced in your report.</p>
 <h2 id="packaging-pyradio">Packaging PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>If you are a packager and would like to produce a package for your distribution please do follow this mini guide.</p>
-<p>First of all, make sure you declare the pacakges’s requirements to the relevant section of your manifest (or whatever) file. These are:</p>
-<ol type="1">
-<li>setuptools</li>
-<li>wheel</li>
-<li>requests</li>
-<li>dnspython</li>
-<li>psutil</li>
-<li>rich</li>
-<li>netifaces</li>
-<li>dateutils</li>
-</ol>
-<p>After that, you will have to modify some files, because <strong>PyRadio</strong> is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; <strong>PyRadio</strong> should be updated and uninstalled using the distro package manager.</p>
-<p>In order to accomplice that, you just have to change the <strong>distro</strong> configuration parameter in the <strong>config</strong> file. <strong>PyRadio</strong> will read this parameter and will disable updating and uninstalling, when set to anything other than “<strong>None</strong>”. So, here’s how you do that:</p>
-<p>Once you are in the sources top level directory (typically “<em>pyradio</em>”), you execute the command:</p>
-<pre>sed -i &#39;s/distro = None/distro = YOUR DISTRO NAME/&#39; pyradio/config</pre>
-<p>Then you go on to produce the package as you would normally do.</p>
-<p>For example, an <strong>Arch Linux</strong> packager would use this command:</p>
-<pre>sed -i &#39;s/distro = None/distro = Arch Linux/&#39; pyradio/config</pre>
-<p>The distro name you insert here will appear in <strong>PyRadio</strong>’s “<em>Configuration Window</em>”. In addition to that it will appear in the log file, so that I know where the package came from while debugging.</p>
-<p>Having said that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using “<em>xxx</em>” will do the job, but provides no useful information).</p>
-<p>Then, if you want to enable <strong>Desktop Notifications</strong>, do a</p>
-<pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 0/&#39; pyradio/config</pre>
-<p>or</p>
-<pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 60/&#39; pyradio/config</pre>
-<p>to have notifications every 60 seconds, for example. You can use any value here, starting from 30 to 300 (meaning every 30 seconds up to 5 minutes), using a step of 30.</p>
-<h3 id="distro-specific-files">Distro Specific Files</h3>
-<p><strong>1. Desktop File</strong></p>
-<p>If the Desktop File is not installed in <em>/usr/share/applications</em> or <em>/usr/local/share/applications</em>, it will have to be passed as a parameter to the script that will handle it, like so:</p>
-<pre>sed -i &quot;s,&#39; -t &#39;,&#39; -d /path/to/desktop_file&#39; + &amp;,&quot; pyradio/main.py</pre>
-<p><strong>2. Package Icon</strong></p>
-<p>As of <strong>v. 0.9.1</strong>, <strong>PyRadio</strong> includes the icon in its distribution files, so no further action is necessary.</p>
-<h3 id="mkvtoolnix-cli-installation">MKVToolNix cli installation</h3>
-<p>Another thing to consider is whether you should mark <strong>MKVToolNix</strong> command line utilities as a dependency for <strong>PyRadio</strong>.</p>
-<p>I would suggest to do so, in order to provide your users the best experience possible. If unsure, please refer to section <a href="recording.html#chapters">Chapters</a> in the relevant document.</p>
-<p>In case you decide to do so, please make sure you mark as a dependency the <strong>command line utilities</strong>, not the GUI program, if that’s on a different package on your distro. For examle, Arch Linux provides both a <em>mkvtoolnix-cli</em> and a <em>mkvtoolnix-gui</em> package; the first one should be used. Same thing with Debian Linux; it provides a <em>mkvtoolnix</em> and a <em>mkvtoolnix-gui</em> package.</p>
-<h2 id="todo">TODO <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<ul class="task-list">
-<li><label><input type="checkbox" />Any user request I find interesting :)</label></li>
-<li><label><input type="checkbox" />Use some kind of a scheduler</label></li>
-<li><label><input type="checkbox" checked="" />Use Radio Browser service (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/80">#80</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/93">#93</a> <a target="_blank" href="https://github.com/coderholic/pyradio/issues/112">#112</a>) - v 0.9.0</label></li>
-<li><label><input type="checkbox" />Use some OPML service, <a target="_blank" href="https://opml.radiotime.com">https://opml.radiotime.com</a> for example</label></li>
-<li><label><input type="checkbox" checked="" />Notify the user that the package’s stations.csv has changed -v 0.8.9</label></li>
-<li><label><input type="checkbox" checked="" />Update / uninstall using command line options (-U / -R) - v. 0.8.9</label></li>
-<li><label><input type="checkbox" checked="" />Basic mouse support (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/119">#119</a>) - v. 0.8.8.3</label></li>
-<li><label><input type="checkbox" checked="" />Players extra parameters (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</label></li>
-<li><label><input type="checkbox" checked="" />New player selection configuration window (<a target="_blank" href="https://github.com/coderholic/pyradio/issues/118">#118</a>) - v. 0.8.8.3</label></li>
-</ul>
-<h2 id="acknowledgment">Acknowledgment <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><strong>PyRadio</strong> uses code from the following projects:</p>
-<ol type="1">
-<li><p><a target="_blank" href="https://gitlab.com/fgallaire/cjkwrap">CJKwrap</a> by Florent Gallaire - A library for wrapping and filling UTF-8 CJK text.</p></li>
-<li><p><a target="_blank" href="https://ranger.github.io/">ranger</a> - A console file manager with VI key bindings.</p></li>
-<li><p><a target="_blank" href="https://vifm.info/">Vifm</a> - A file manager with curses interface, which provides a Vi[m]-like environment.</p></li>
-</ol>
-<h2 id="special-thanks">Special thanks <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<ol type="1">
-<li><a target="_blank" href="https://github.com/edunfelt">edunfelt</a>, for her wonderful work on <a target="_blank" href="https://github.com/edunfelt/base16-pyradio">base16 themes</a>, and ideas regarding theming and such.</li>
-</ol>
+<p>If you are a packager and would like to produce a package for your distribution please do follow <a href="packagers-info.html">this mini guide</a>.</p>
 </body>
 </html>

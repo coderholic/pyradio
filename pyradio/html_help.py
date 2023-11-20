@@ -11,7 +11,7 @@ locale.setlocale(locale.LC_ALL, "")
 
 class HtmlHelp(object):
 
-    _files = ('README.html', 'radio-browser.html')
+    _files = ('index.html', 'radio-browser.html')
 
     if platform.lower().startswith('win'):
         _paths = (path.join(path.expandvars('%APPDATA%'), 'pyradio', 'help'), )

@@ -38,8 +38,7 @@ a:visited{color: SaddleBrown;}
 <body>
 <header id="title-block-header">
 </header>
-<h1 style="color: SaddleBrown" id="recording-stations">Recording stations</h1>
-<p><strong>PyRadio</strong>: Command line internet radio player.</p>
+<h1 style="color: SaddleBrown" id="pyradio-stations-recording">PyRadio Stations Recording</h1>
 <hr />
 <p><strong>Berfore you continue, read this!</strong></p>
 <p>Generally, recording a radio streaming broadcast is considered legit, if the recording is to be used for personal use only (i.e. to listen to the broadcast at a later time).</p>
@@ -89,7 +88,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#listing-recordings-and-the--mkv-command-line-option">Listing recordings and the -mkv command line option</a></li>
 </ul>
 <!-- vim-markdown-toc -->
-<p><a href="README.html#recording-stations">[Return to main doc]</a></p>
+<p><a href="index.html#recording-stations">[Return to main doc]</a></p>
 <h2 id="intro">Intro <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio v. 0.9.2.8</strong> introduces the ability to record stations, a feature used mainly to facilitate another feature: the ability to <em>pause and resume playback</em>.</p>
 <p>All supported media players (<strong>MPV</strong>, <strong>MPlayer</strong> and <strong>VLC</strong>) support stream recording, each implementing it in a different way, which pose a challenge for the front end implementation.</p>
@@ -158,12 +157,12 @@ This means that the front end (<strong>PyRadio</strong>) will have to use two <e
 </tbody>
 </table>
 <p>In order to record a station, recording has to be enabled <strong>beforehand</strong>, by pressing the <em>“pipe symbol</em>” or “<em>vetical line</em>” (“<strong>|</strong>”). Then the following message appears:</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-recording1.jpg" target="_blank"><img style="width: 698px" src="https://members.hellug.gr/sng/pyradio/pyradio-recording1.jpg" alt="Enable recording" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-recording1.jpg" target="_blank"><img style="width: 550px" src="https://members.hellug.gr/sng/pyradio/pyradio-recording1.jpg" alt="Enable recording" /></a></p>
 
 <p>When this is done an “<strong>[r]</strong>” will be displayed at the top left corner of the window. This means that recording is enabled, but <strong>PyRadio</strong> is not currently recording to a file.</p>
 <p>When playback is started (i.e. start playing a station), an “<strong>[R]</strong>” will be displayed at the top left corner of the window (replacing the “<strong>[r]</strong>” that was already there), which means that <strong>PyRadio</strong> is actually recording the station to a file.</p>
 <p>The following image is a mockup presenting the difference.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-recording2.jpg" target="_blank"><img style="width: 698px" src="https://members.hellug.gr/sng/pyradio/pyradio-recording2.jpg" alt="Recording mockup" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-recording2.jpg" target="_blank"><img style="width: 550px" src="https://members.hellug.gr/sng/pyradio/pyradio-recording2.jpg" alt="Recording mockup" /></a></p>
 
 <p>Pressing the <em>“pipe symbol</em>” or “<em>vetical line</em>” (“<strong>|</strong>”) again will disable recording and nothing will be displayed at the top left corner of the window. The actual recording of the station will still be active, until the station is stopped.</p>
 <p>It must be made clear that toggling the recording status for <strong>PyRadio</strong> will actually take effect after a station has been started or stopped. This is because of the way the players get the recording command; through command line arguments, which can only be passed when the player is executed.</p>
@@ -288,7 +287,7 @@ To do that, open <strong>PyRadio</strong> and press “<em>\o</em>” to open th
 <li><p>insert the <em>SRT</em> file to the original <strong>MKV</strong> file, transforming the subtitles timing and test to chapters.</p></li>
 </ol>
 <p>The following image shows this procedure.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/mkv-srt-to-chapters.png" target="_blank"><img style="width: 350px" src="https://members.hellug.gr/sng/pyradio/mkv-srt-to-chapters.png" alt="MKV SRT to Chapters" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/mkv-srt-to-chapters.png" target="_blank"><img style="width: 250px" src="https://members.hellug.gr/sng/pyradio/mkv-srt-to-chapters.png" alt="MKV SRT to Chapters" /></a></p>
 
 <p>In detail:</p>
 <h4 id="extract-the-srt">1. Extract the SRT</h4>

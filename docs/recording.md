@@ -1,6 +1,4 @@
-# Recording stations
-
-**PyRadio**: Command line internet radio player.
+# PyRadio Stations Recording
 
 ___
 
@@ -49,7 +47,7 @@ ___
 
 <!-- vim-markdown-toc -->
 
-[[Return to main doc]](README.md#recording-stations)
+[[Return to main doc]](index.md#recording-stations)
 
 ## Intro
 

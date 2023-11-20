@@ -139,7 +139,7 @@ IF NOT EXIST "%APPDATA%\pyradio\*" (
     SET INSTALL_PLAYER=yes
 )
 IF NOT EXIST "%APPDATA%\pyradio\help\*" MKDIR %APPDATA%\pyradio\help
-COPY /Y *.html %APPDATA%\pyradio\help >NUL
+COPY /Y docs\*.html %APPDATA%\pyradio\help >NUL
 COPY /Y devel\pyradio.* %APPDATA%\pyradio\help >NUL
 COPY /Y devel\*.lnk %APPDATA%\pyradio\help >NUL
 python devel\reg.py

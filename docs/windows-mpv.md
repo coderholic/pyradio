@@ -1,7 +1,5 @@
 # MPV Installation on Windows
 
-**PyRadio**: Command line internet radio player.
-
 ## Table of Contents
 
 <!-- vim-markdown-toc Marked -->
@@ -10,7 +8,7 @@
 
 <!-- vim-markdown-toc -->
 
-[[Back to Build Instructions]](windows.md) [[Back to README]](README.md)
+[ [Back to Build Instructions](windows.md) ] | [ [Back to the main doc](index.md) ]
 
 ## MPV installation
 

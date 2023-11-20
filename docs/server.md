@@ -1,7 +1,5 @@
 # PyRadio Remote Control Server
 
-**PyRadio:** Command line internet radio player.
-
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
@@ -12,6 +10,8 @@
     * [Text vs. Web commands](#text-vs.-web-commands)
 
 <!-- vim-markdown-toc -->
+
+[ [Return to main doc](index.md#remote-control-server) ]
 
 ## Remote Control Server
 

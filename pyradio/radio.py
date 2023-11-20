@@ -6140,14 +6140,13 @@ __|Remote Control Server| cannot be started!__
                  ____________________|Go to next / previous field (when
                  ____________________|applicable). Also, change counter value.
                  Space               |Toggle check buttons.
-                 ____________________|Toggle multiple selection.
+                 i                   |Validate entry and show dates.
+                 n|, |p                |Go to |n|ext / |p|revious entry.
                  Enter               |Perform search / cancel (on push buttons).
                  s                   |Perform search (not on Line editor).
                  Esc                 |Cancel operation.
                  _
-                 |Search history navigation works with normal keys as well
-                 |(|^N| is the same as |n| when not in a line editor).
-                 %_Global functions (with \ on Line editor)_
+                 %_Global functions_
                  -|/|+| or |,|/|.       |Change volume.
                  m| / |v            ||M|ute player / Save |v|olume (not in vlc).
                  W| / |w            |Toggle title log / like a station'''

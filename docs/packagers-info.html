@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Packaging PyRadio</title>
+    <style> 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 150%;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 120%;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown" id="pyradio-packagers-info">PyRadio Packagers’ Info</h1>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<!-- vim-markdown-toc Marked -->
+<ul>
+<li><a href="#packaging-pyradio">Packaging PyRadio</a>
+<ul>
+<li><a href="#distro-specific-files">Distro Specific Files</a></li>
+<li><a href="#mkvtoolnix-cli-installation">MKVToolNix cli installation</a></li>
+</ul></li>
+</ul>
+<!-- vim-markdown-toc -->
+<p class="indented">[ <a href="index.html#packaging-pyradio">Back to main doc</a> ]</p>
+<h2 id="packaging-pyradio">Packaging PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>If you are a packager and would like to produce a package for your distribution please do follow this mini guide.</p>
+<p>First of all, make sure you declare the pacakges’s requirements to the relevant section of your manifest (or whatever) file. These are:</p>
+<ol type="1">
+<li>setuptools</li>
+<li>wheel</li>
+<li>requests</li>
+<li>dnspython</li>
+<li>psutil</li>
+<li>rich</li>
+<li>netifaces</li>
+<li>dateutils</li>
+</ol>
+<p>After that, you will have to modify some files, because <strong>PyRadio</strong> is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; <strong>PyRadio</strong> should be updated and uninstalled using the distro package manager.</p>
+<p>In order to accomplice that, you just have to change the <strong>distro</strong> configuration parameter in the <strong>config</strong> file. <strong>PyRadio</strong> will read this parameter and will disable updating and uninstalling, when set to anything other than “<strong>None</strong>”. So, here’s how you do that:</p>
+<p>Once you are in the sources top level directory (typically “<em>pyradio</em>”), you execute the command:</p>
+<pre>sed -i &#39;s/distro = None/distro = YOUR DISTRO NAME/&#39; pyradio/config</pre>
+<p>Then you go on to produce the package as you would normally do.</p>
+<p>For example, an <strong>Arch Linux</strong> packager would use this command:</p>
+<pre>sed -i &#39;s/distro = None/distro = Arch Linux/&#39; pyradio/config</pre>
+<p>The distro name you insert here will appear in <strong>PyRadio</strong>’s “<em>Configuration Window</em>”. In addition to that it will appear in the log file, so that I know where the package came from while debugging.</p>
+<p>Having said that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using “<em>xxx</em>” will do the job, but provides no useful information).</p>
+<p>Then, if you want to enable <strong>Desktop Notifications</strong>, do a</p>
+<pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 0/&#39; pyradio/config</pre>
+<p>or</p>
+<pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 60/&#39; pyradio/config</pre>
+<p>to have notifications every 60 seconds, for example. You can use any value here, starting from 30 to 300 (meaning every 30 seconds up to 5 minutes), using a step of 30.</p>
+<h3 id="distro-specific-files">Distro Specific Files</h3>
+<p><strong>1. Desktop File</strong></p>
+<p>If the Desktop File is not installed in <em>/usr/share/applications</em> or <em>/usr/local/share/applications</em>, it will have to be passed as a parameter to the script that will handle it, like so:</p>
+<pre>sed -i &quot;s,&#39; -t &#39;,&#39; -d /path/to/desktop_file&#39; + &amp;,&quot; pyradio/main.py</pre>
+<p><strong>2. Package Icon</strong></p>
+<p>As of <strong>v. 0.9.1</strong>, <strong>PyRadio</strong> includes the icon in its distribution files, so no further action is necessary.</p>
+<h3 id="mkvtoolnix-cli-installation">MKVToolNix cli installation</h3>
+<p>Another thing to consider is whether you should mark <strong>MKVToolNix</strong> command line utilities as a dependency for <strong>PyRadio</strong>.</p>
+<p>I would suggest to do so, in order to provide your users the best experience possible. If unsure, please refer to section <a href="recording.html#chapters">Chapters</a> in the relevant document.</p>
+<p>In case you decide to do so, please make sure you mark as a dependency the <strong>command line utilities</strong>, not the GUI program, if that’s on a different package on your distro. For examle, Arch Linux provides both a <em>mkvtoolnix-cli</em> and a <em>mkvtoolnix-gui</em> package; the first one should be used. Same thing with Debian Linux; it provides a <em>mkvtoolnix</em> and a <em>mkvtoolnix-gui</em> package.</p>
+</body>
+</html>

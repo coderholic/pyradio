@@ -1,7 +1,5 @@
 # PyRadio Build Instructions
 
-**PyRadio**: Command line internet radio player.
-
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
@@ -16,7 +14,7 @@
 
 <!-- vim-markdown-toc -->
 
-[[Return to main doc]](README.md)
+[ [Return to main doc](index.md#installation) ]
 
 ## Current state of the project
 
@@ -116,7 +114,7 @@ When you are done, proceed to  "[pip installation](linux.md) (the old way)", ada
 
 ### Installation on the BSDs
 
-If you are on any of the BSDs, please do install **bash** beforehand and try to follow the [pip installation guide](linux-pip.md).
+If you are on any of the BSDs, please do install **bash** beforehand and try to follow the [pip installation guide](linux.md).
 
 Please be aware that **PyRadio** is provided as a **port** on [FreeBSB](https://www.freshports.org/audio/py-pyradio/).
 

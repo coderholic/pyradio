@@ -25,7 +25,7 @@
     * [History Management](#history-management)
 
 <!-- vim-markdown-toc -->
-[[Return to main doc]](README.md)
+[ [Return to main doc](index.md#online-radio-directory-services) ]
 
 ## Opening RadioBrowser
 

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PyRadio Themes</title>
+    <style> 
+    body {padding: 2em;} 
+    @media screen and (max-width: 770px) { 
+        body {padding: 10px;} 
+    }
+    body {max-width: 750px; margin: auto;} 
+    h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
+    h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 150%;} 
+    h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 120%;} 
+    h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    STRONG {color: SaddleBrown;} 
+    dl {margin: 2em;} 
+    dd {margin: 1em;} 
+    dt {font-weight: bold;} 
+    TABLE {border: 1px solid SaddleBrown; border-collapse: collapse; margin-left: auto; margin-right: auto; border-radius: 5px; -moz-border-radius: 5px; border-collapse:separate; box-shadow: 5px 5px 15px #888888;} 
+    TH {text-align: left; vertical-align: top; padding: 5px;color: SaddleBrown;border: 1px solid SaddleBrown; background-color: SaddleBrown; color: white;} 
+    TD {text-align: left; vertical-align: top; padding: 5px 10px;border: 1px solid SaddleBrown;} 
+    pre { background-color: rgba(245, 245, 245, 1); color: #474747; padding: 1.5em; border: 1px solid #C7C7C7; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; overflow: auto; box-shadow: 5px 5px 15px #C7C7C7;} 
+    .task-list {list-style-type: none; padding: 0; margin: 0 0 0 1em ;} 
+    img{display: block; margin-left: auto; margin-right: auto; max-width: 750px; width: 100%;  background:transparent; padding:3px; border:1px solid #999999; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; box-shadow:5px 5px 15px #888888;} 
+    .indented {text-indent: -1.5em; padding-left: 1.5em; margin-left: 1em;} 
+    a{ color: SaddleBrown;}
+a:visited{color: SaddleBrown;}
+</style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+</header>
+<h1 style="color: SaddleBrown" id="pyradio-themes">PyRadio Themes</h1>
+<h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<!-- vim-markdown-toc Marked -->
+<ul>
+<li><a href="#pyradio-themes">PyRadio Themes</a>
+<ul>
+<li><a href="#virtual-terminal-restrictions">Virtual terminal restrictions</a></li>
+<li><a href="#css-color-themes-restrictions">CSS color themes restrictions</a></li>
+<li><a href="#secondary-windows-background">Secondary windows background</a>
+<ul>
+<li><a href="#theme-defined-secondary-windows-color">Theme defined secondary windows color</a></li>
+<li><a href="#calculated-secondary-windows-color">Calculated secondary windows color</a></li>
+</ul></li>
+<li><a href="#alternative-main-window-border-color">Alternative Main Window border color</a></li>
+<li><a href="#user-themes">User themes</a>
+<ul>
+<li><a href="#converting-old-themes">Converting old themes</a></li>
+</ul></li>
+<li><a href="#using-transparency">Using transparency</a></li>
+<li><a href="#updating-themes-automatically">Updating themes automatically</a></li>
+<li><a href="#using-project-themes">Using Project Themes</a>
+<ul>
+<li><a href="#base16">base16</a>
+<ul>
+<li><a href="#using-the-themes-without-base16">Using the themes without base16</a></li>
+</ul></li>
+<li><a href="#pywal">pywal</a></li>
+<li><a href="#theme.sh">theme.sh</a>
+<ul>
+<li><a href="#using-the-themes-without-theme.sh">Using the themes without theme.sh</a></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+<!-- vim-markdown-toc -->
+<p class="indented">[ <a href="index.html#pyradio-themes">Return to main doc</a> ]</p>
+<h2 id="pyradio-themes-1">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p><strong>PyRadio</strong> comes with 6 preconfigured (hard coded) themes:</p>
+<ol type="1">
+<li><strong>dark</strong> (8 color theme).<br />
+This is the appearance <strong>PyRadio</strong> has always had. Enabled by default.</li>
+<li><strong>light</strong><br />
+A theme for light terminal background settings.</li>
+<li><strong>dark_16_colors</strong><br />
+“<strong>dark</strong>” theme alternative.</li>
+<li><strong>light_16_colors</strong><br />
+“<strong>light</strong>” them alternative.</li>
+<li><strong>white_on_black</strong> or <strong>wob</strong> (b&amp;w theme).<br />
+A theme for dark terminal background settings.</li>
+<li><strong>black_on_white</strong> or <strong>bow</strong> (b&amp;w theme).<br />
+A theme for light terminal background settings.</li>
+</ol>
+<p>Furthermore, a number of themes (these are actual files saved in the <strong>themes</strong> installation directory) are also available:</p>
+<ul>
+<li><strong>AM_by_amski1</strong><br />
+A simple green on dark theme, created for Window.</li>
+<li><strong>blue-by-boxer</strong><br />
+A reddish on blue theme by user <strong>Boxer</strong> at <a target="_blank" href="https://forum.maboxlinux.org/">Mabox Forum</a>.</li>
+<li><strong>catppuccin-frappe</strong>, <strong>catppuccin-latte</strong>, <strong>catppuccin-macchiato</strong> and <strong>catppuccin-mocha</strong><br />
+Four themes by the <a target="_blank" href="https://github.com/catppuccin">Catppuccin community</a>.</li>
+<li><strong>classic_by_obsdg</strong><br />
+A clasic theme by <a target="_blank" href="https://github.com/OpenBSDGuy">The OpenBSD Guy</a>, originally created on <a target="_blank" href="https://www.openbsd.org/">OpenBSD</a>.</li>
+<li><strong>cupcake_by_edunfelt</strong> and <strong>fairyflossy_by_edunfelt</strong><br />
+Two themes by <a target="_blank" href="https://github.com/edunfelt">edunfelt</a> inspired by the <a target="_blank" href="https://github.com/base16-project">base16</a> project.</li>
+<li><strong>gruvbox_dark_by_sng</strong> and <strong>gruvbox_light_by_sng</strong><br />
+Two themes based on the <a target="_blank" href="https://github.com/morhetz/gruvbox">gruvbox</a> theme.</li>
+<li><strong>minima_by_ben_chile</strong><br />
+A theme by user <a target="_blank" href="https://forum.maboxlinux.org/u/ben_chile">ben_chile</a> created on the <a target="_blank" href="https://maboxlinux.org">Mabox Linux</a> Forum.</li>
+<li><strong>pastel_based_by_sng</strong><br />
+A dim but colorful theme.</li>
+</ul>
+<p>Contrary to the old styling method, which was terminal and palette dependent, a new styling method has been implemented; actual CSS colors can now be defined.</p>
+<p>Theme sample / template:</p>
+<pre># Main foreground and background
+Stations            #8b8198 #fbf1f2
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      #d57e85
+
+# Status bar foreground and background
+Status Bar          #fbf1f2 #d57e85
+
+# Normal cursor foreground and background
+Normal Cursor       #fbf1f2 #dcb16c
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       #fbf1f2 #d57e85
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         #fbf1f2 #bfb9c6
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          #69a9a7
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         #a3b367
+
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#secondary-windows-background
+#
+Messages Border     #a3b367
+
+# Theme Transparency
+# Values are:
+#   0: No transparency
+#   1: Theme is transparent
+#   2: Obey config setting (default)
+transparency        0</pre>
+<p>Pressing “<strong>t</strong>” will bring up the <em>Theme selection window</em>, which can be used to activate a theme and set the default one.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the theme selected in the “<em>Theme selection window</em>”, (or requested using the “<strong>-t</strong>” command line option), is in any way invalid, or is of the old format, <strong>PyRadio</strong> will fall-back to the “<strong>dark</strong>” theme and will display a relevant message.</p>
+<p>The window will display the current state of the <strong>Use transparency</strong> and <strong>Force transparency</strong> configuration options in its bottom right corner:</p>
+<ul>
+<li>A <strong>[T]</strong> means that the <strong>Use transparency</strong> option is enabled.</li>
+<li>A <strong>[F]</strong> means that the <strong>Force transparency</strong> option is enabled.</li>
+<li>A <strong>[TF]</strong> means that the both options are enabled.</li>
+</ul>
+<p>One can get more info about these options in the “<a href="#using-transparency">Using Transparency</a>” section, bellow.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> the options indication will not be visible when the window is opened withing the <strong>PyRadio</strong>’s “<em>Configuration Window</em>”.</p>
+<p>The “<em>Theme selection window</em>” will remain open after activating a theme, so that the user can inspect the visual result and easily change it, if desired. Then, when he is satisfied with the activated theme, the window will have to be manually closed (by pressing “<strong>q</strong>” or any other relevant key - pressing “<strong>?</strong>” will bring up its help).</p>
+<p>Pressing “<strong>SPACE</strong>”, will apply the theme and make it default, and pressing “<strong>c</strong>” will apply the theme and make it default and start a file watch function on the file, so that if the file changes, <strong>PyRadio</strong> will automatically update itself.</p>
+<h3 id="virtual-terminal-restrictions">Virtual terminal restrictions</h3>
+<p>After introducing CSS color themes, it has come to my attention that <strong>PyRadio</strong> will not display colors correctly when executed within specific terminals, <em>konsole</em>, <em>yakuake</em>, <em>deepin-teminal</em>, <em>qterminal</em> and <em>terminology</em>, just to name a few.</p>
+<p>Now, I do not know whether this is because of the terminals themselves, python curses implementation or whatever, but that’s that.</p>
+<p><strong>PyRadio</strong> will try to detect these terminals and disable themes (after displaying a relative message). Then the default theme will be used.</p>
+<p>Some of the terminals that work ok, are: <em>gnome-terminal</em>, <em>mate-terminal</em>, <em>xfce4-terminal</em>, <em>lxterminal</em>, <em>terminator</em>, <em>termite</em>, <em>kitty</em>, <em>alacritty</em>, <em>sakura</em>, <em>roxterm</em>, <em>tilix</em>, <em>lilyterm</em>, <em>st</em>, <em>xst</em>, <em>rxvt</em>, <em>urxvt</em>, <em>uxterm</em>, <em>xterm</em>.</p>
+<p>If you want to make <strong>PyRadio</strong> start in one of these terminal, just follow the instructions given at <a href="#specifying-the-terminal-to-use">Desktop File: Specifying the terminal to use</a>.</p>
+<h3 id="css-color-themes-restrictions">CSS color themes restrictions</h3>
+<p>Using CSS colors imposes a couple of restrictions on the type of terminals <strong>PyRadio</strong> will be able to run:</p>
+<ol type="1">
+<li><p>The TERM variable must be set <em>(Linux and MacOs only)</em>.<br />
+<br />
+<strong>PyRadio</strong> will set it to “<em>xterm-256color</em>” if not set.<br />
+<br />
+Furthermore, if TERM is set to anything like “<strong>xterm</strong>”, “<strong>screen</strong>” or “<strong>tmux</strong>”, <strong>PyRadio</strong> will set it to “<em>xterm-256color</em>” as well.</p></li>
+<li><p>Terminals that do not support at least 16 colors will not be able to display any of the new themes. The same goes for terminals that do not support changing their colors (through the <strong>curses</strong> library).<br />
+<br />
+These terminal will default to the old “<strong>dark</strong>” theme, displaying whatever colors the active palette dictates.</p></li>
+<li><p>There are a couple of terminals (that I know of) which will permit changing their colors but will not be able to present the changed color on the fly.<br />
+<br />
+This means that, in order for a theme change to take full effect, <strong>PyRadio</strong> will have to be restarted.</p></li>
+</ol>
+<h3 id="secondary-windows-background">Secondary windows background</h3>
+<p>Secondary windows (such as messages, questions, the “<em>Theme Selection window</em>” the “<em>Encoding Selection window</em>”, etc.) originally use the same background color as the “<em>Main window</em>”.</p>
+<p>It is now possible to use a different background color for these windows, to get better visual result.</p>
+<p>There are two way to do that:</p>
+<ol type="1">
+<li><p>Defined in a theme</p></li>
+<li><p>Using a calculated color</p></li>
+</ol>
+<h4 id="theme-defined-secondary-windows-color">Theme defined secondary windows color</h4>
+<p>Themes have the following entry</p>
+<pre># Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#secondary-windows-background
+#
+Messages Border     #a3b367</pre>
+<p>It is possible to define a background color as well, like so</p>
+<pre>Messages Border     #a3b367 #F5DBDE</pre>
+<p>In this case, this color will be used as the Secondary Windows background color.</p>
+<p>Although one can use any color here, it is recommended to follow these guidelines for best visual result:</p>
+<ol type="1">
+<li>The color should be 1-20% lighter or darker than the “<em>Stations Background</em>” color setting of the theme.<br />
+<br />
+One can use <a target="_blank" href="http://www.workwithcolor.com/hsl-color-picker-01.htm">this page</a> (or a similar one) to insert the base color and adjust the “<em>L</em>” component as needed.<br />
+<br />
+A terminal alternative is <a target="_blank" href="https://github.com/sharkdp/pastel">pastel</a>, which can be used like so:</li>
+</ol>
+<pre>pastel color &#39;#fbf1f2&#39;              # show color info
+pastel lighten .1 &#39;#fbf1f2&#39;         # color lightened by 10%
+pastel darken .1 &#39;#fbf1f2&#39;          # color darkened by 10%</pre>
+<ol start="2" type="1">
+<li>If the “<em>Stations Background</em>” color is dark, create a lighter version of it; if it’s light, create a darker version of it.<br />
+<br />
+This is just a recomenration, though; just get a color that combines well with existing ones (border foreground, stations foreground and active station).</li>
+</ol>
+<p>This information is actually relevant to creating a new <strong>PyRadio</strong> theme, but it’s very important in order to understand how the calculated background color works.</p>
+<h4 id="calculated-secondary-windows-color">Calculated secondary windows color</h4>
+<p><strong>PyRadio</strong> will use the same background color for all windows by default, provided that the theme used does not define a “<em>Messages Border</em>” background color.</p>
+<p>In order to use a “<em>Messages Border</em>” background color different than the “<em>Stations background</em>” color, when “<em>Messages Border</em>” background color is not defined in the selected theme, a config option is available; “<strong>Calculated color</strong>”.</p>
+<p>This config option takes a value that’s between 0 and 0.2.</p>
+<p>If it is 0, no color change will occur.</p>
+<p>Otherwise, the value acts as a percentage (a <strong>factor</strong>), which indicates how much the luminance of the “<em>Stations background</em>” color will change to produce the new background color.</p>
+<p>This is how this works: <strong>PyRadio</strong> will calculate the “<em>Stations background</em>” color perceived brightness, which will indicate whether the color is dark or light. Then depending on that, will add or subtract <strong>factor</strong> percent from its luminance value.</p>
+<p>Finally, a check will be made to see if this color is close to “<em>Messages Border</em>” foreground color, and re-adjusted as possible.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a calculated background color is used, pressing “<strong>~</strong>” (<strong>tilde</strong>) will toggle it on and off. This setting will be valid until <strong>PyRadio</strong> terminates, or a new theme is loaded.</p>
+<h3 id="alternative-main-window-border-color">Alternative Main Window border color</h3>
+<p>It is also possible to change the <strong>Main Window</strong> border color. This is a feature that has been requested and implemented, but not used by default.</p>
+<p>To provide an alternative border color, one would just add the following to a theme file:</p>
+<pre># Border color for the Main Window
+# (background color will come from Stations)
+Border              #69a9a7</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This color will be used <strong>only</strong> when the trerminal supports more than 16 colors. This is because <strong>Pyradio</strong> already uses colors 0-15, and this border color will be declaread as color No 16.</p>
+<h3 id="user-themes">User themes</h3>
+<p>Users can easiliy create their own themes, using for example <a target="_blank" href="https://www.cssportal.com/css3-color-names/">CSS color names</a> as a resource, and</p>
+<ol type="1">
+<li><p>Save the theme provided as a template above in their themes folder using any (short) file name and a “<strong>.pyradio-theme</strong>” file extension.<br />
+<br />
+For this reason, a folder called “<strong>themes</strong>” will probably have to be created in <strong>PyRadio</strong> config directory (<strong>~/.config/pyradio</strong> or <strong>%APPDATA%\pyradio</strong> on Windows)</p></li>
+<li><p>Customize it as desired</p></li>
+<li><p>Load it from the “<em>Theme selection window</em>” (it will be found under “<strong>User Themes</strong>”).</p></li>
+</ol>
+<h4 id="converting-old-themes">Converting old themes</h4>
+<p>An old theme (using the old format) can be asily converted to the new format, using the script found at <a target="_blank" href="https://gist.github.com/s-n-g/65aa6ae12e135481bf3a503ece4e92d2">this gist</a>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> In order to get the color intended to be used, the same palette as the one used when the original theme was created, must be used.</p>
+<h3 id="using-transparency">Using transparency</h3>
+<p>For <strong>PyRadio</strong>, transparency means that a theme’s background actually disappears, effectively making it to display whatever is on the terminal (color/picture/transparency). The visual result depends on terminal settings and whether a compositor is running.</p>
+<p>Not all themes look good when transparency is ON, so themes can now declare whether they want to use transparency or not. This is the “<strong>transparency</strong>” variable of the theme, which can have these values:</p>
+<ul>
+<li>0 means that the theme will be opaque (no transparency)</li>
+<li>1 means that the theme will be transparent</li>
+<li>2 means that the theme looks good either way (the default), and the global transparency setting value (defined in <strong>PyRadio</strong> config file) will be used.</li>
+</ul>
+<p>Please note that this behavior has changed since <strong>v. 0.9.2.7</strong>: theme transparency will always be honored, regardless of the global config value.</p>
+<p>This means that a theme which is set to be transparent (by its creator) will always be transparent, no matter if the global transparency is on or off. Similarly, if a theme is set to be opaque, it will be so regardless of the global transparency value.</p>
+<p>The only case when global transparency will come into play is when the theme does not care about it (theme transparency set to 2 - Obey config setting).</p>
+<p>Since <strong>v. 0.9.2.14</strong>, it is also possible to <strong>force</strong> the use of the Transparency setting; the “<strong>Force Transparency</strong>” configuration option. When enabled, it will effectively make all themes behave as if their <strong>transparency</strong> setting was set to 2 (Obey config setting).</p>
+<p>The following table illustrates how things work:</p>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 18%" />
+<col style="width: 14%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Force transparency</th>
+<th>Theme setting</th>
+<th>PyRadio honors</th>
+<th>If Config Transparency<br>is ON, you get</th>
+<th>If Config Transparency is OFF, you get</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>False<br>(the default)</td>
+<td>0 - Do not use transparency</td>
+<td>Theme setting</td>
+<td>Opaque window</td>
+<td>Opaque window</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>1 - Theme is transparent</td>
+<td>Theme setting</td>
+<td>Transparent window</td>
+<td>Transparent window</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>2 - Don't care</td>
+<td>Config Transparency</td>
+<td>Transparent window</td>
+<td>Opaque window</td>
+</tr>
+<tr class="even">
+<td>True</td>
+<td>Any (0, 1 or 2)</td>
+<td>Config Transparency</td>
+<td>Transparent window</td>
+<td>Opaque window</td>
+</tr>
+</tbody>
+</table>
+<p>So, pressing “<strong>T</strong>” when <strong>Force Transparency</strong> is enabled, or the theme’s <strong>transparency</strong> value is set to 2, will toggle the window’s transparency.</p>
+<h3 id="updating-themes-automatically">Updating themes automatically</h3>
+<p>Terminal users have been using all kind of software to change / update / adapt their terminal colors and palettes, such as <a target="_blank" href="https://github.com/chriskempson/base16">bASE16</a>, <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a>, <a target="_blank" href="https://github.com/deviantfero/wpgtk">wpgtk</a>, <a target="_blank" href="https://github.com/lemnos/theme.sh">theme.sh</a>, to name a few.</p>
+<p><strong>PyRadio</strong> is now able to “watch” a given theme for changes and update its colors whenever the theme changes.</p>
+<p>To set up a theme for auto update, one would just open the “<em>Theme Selection</em>” window, navigate to a theme under “<strong>User Themes</strong>” and press “<strong>c</strong>”. To create a <strong>user theme</strong> just follow the procedure described in section <a href="#user-themes">User themes</a>.</p>
+<p>Consecuently, the default theme name will be preceded by:</p>
+<ul>
+<li>“<strong>*</strong>” if the theme is the default one (the way it has always been).</li>
+<li>“<strong>+</strong>” if the theme is the default one, and <strong>PyRadio</strong> will watch it for changes.</li>
+</ul>
+<h3 id="using-project-themes">Using Project Themes</h3>
+<p><strong>PyRadio</strong> is able to use (and watch) the output of certain projects that modify terminal colors.</p>
+<p><strong>PyRadio</strong> will detect theses projects (programs installed and initialized), and will add them under the “<strong>Ext. Themes Projects</strong>” section of the “<em>Themes Selection Window</em>.”</p>
+<p>If loading any of these themes fails, the default <strong>dark</strong> theme will be loaded, but contrary to a local theme being invalid, the selection will persist (so that the theme gets loaded wheneve it is available).</p>
+<p>Currently, the following projects are supported:</p>
+<h4 id="base16">base16</h4>
+<p>Thanks to the wonderful work by user <a target="_blank" href="https://github.com/edunfelt">edunfelt</a>, there is now a <strong>PyRadio</strong> <a target="_blank" href="https://github.com/base16-project">base16</a> template in place, and themes have been produced based on the project (there are more than 900 themes available).</p>
+<p>This implementation will add four entries in the theme selection menu (with alternative and variant forms of the main theme).</p>
+<p>Then, any of the themes can either be activated or watched; in which case <strong>PyRadio</strong> will download and apply the corresponding theme.</p>
+<h5 id="using-the-themes-without-base16">Using the themes without base16</h5>
+<p>In case one wants to use any of these themes, but not install or use <a target="_blank" href="https://github.com/base16-project">base16</a>, one can get them <a target="_blank" href="https://github.com/edunfelt/base16-pyradio">from this repo</a>, and use the “<em>cycle_themes.py</em>” and “<em>install_themes.py</em>” scripts to inspect and install them.</p>
+<p>For Windows users, this is the only way to use any of these “<em>Project Themes</em>”, since their generation works on non-windows platforms only.</p>
+<h4 id="pywal">pywal</h4>
+<p>When detected, two themes will be added to the menu; the main and the alternative form.</p>
+<p>Since these themes are generated on the fly, as the wallpaper changes, there is no way to use them if <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a> is not in use.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If <a target="_blank" href="https://github.com/dylanaraps/pywal">pywal</a> themes are activated but not watched, the theme will be corrupted when the wallpaper changes, and will have to be manually reloaded. So, it’s better to just always watch these themes.</p>
+<h4 id="theme.sh">theme.sh</h4>
+<p>When detected, four themes will be added to the menu; the main and the alternative forms (there are 400 plus themes available, which makes a stuggering number of around 1800 themes for <strong>PyRadio</strong>!)</p>
+<h5 id="using-the-themes-without-theme.sh">Using the themes without theme.sh</h5>
+<p>In case one wants to use any of these themes, but not install or use <a target="_blank" href="https://github.com/lemnos/theme.sh">theme.sh</a>, one can download <a target="_blank" href="https://github.com/s-n-g/theme-sh-pyradio">this repo</a>, and use the “<em>create_themes.py</em>” script to create the themes, and “<em>cycle_themes.py</em>” and “<em>install_themes.py</em>” scripts to inspect and install them.</p>
+<p>For Windows users, this is the only way to use any of these “<em>Project Themes</em>”, since their generation works on non-windows platforms only.</p>
+</body>
+</html>

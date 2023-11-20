@@ -1,7 +1,5 @@
 # PyRadio on Windows
 
-**PyRadio**: Command line internet radio player.
-
 ## Table of Contents
 
 <!-- vim-markdown-toc Marked -->
@@ -30,7 +28,7 @@
 
 <!-- vim-markdown-toc -->
 
-[[Back to Build Instructions](build.md)] | [[Back to README](README.md)]
+[[Back to Build Instructions](build.md)]
 
 ## Running PyRadio on Windows
 
@@ -245,7 +243,7 @@ If this is your case, please follow the instructions found in "[Removing an old-
 
 #### Using the Title Logging feature
 
-If you want to use the [Title Logging](README.md#title-logging) feature, and your Country/Region is anything different than **English**, chances are you will have to correctly set your locale for non-unicode applications, which is something you should be doing regardless. Otherwise, the titles' log file may contain unreadable characters.
+If you want to use the [Title Logging](index.md#title-logging) feature, and your Country/Region is anything different than **English**, chances are you will have to correctly set your locale for non-unicode applications, which is something you should be doing regardless. Otherwise, the titles' log file may contain unreadable characters.
 
 If you want to go on and set your locale for non-unicode applications, just refer to the following image.
 

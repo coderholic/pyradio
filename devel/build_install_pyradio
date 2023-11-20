@@ -492,7 +492,7 @@ then
         DOC=~/.local/local/share/doc/pyradio
         mkdir "$DOC"
     fi
-    for n in *.md *.html
+    for n in docs/*.md docs/*.html
     do
         cp "$n" "$DOC"
     done

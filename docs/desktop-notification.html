@@ -39,7 +39,6 @@ a:visited{color: SaddleBrown;}
 <header id="title-block-header">
 </header>
 <h1 style="color: SaddleBrown" id="pyradio-desktop-notification">PyRadio Desktop Notification</h1>
-<p><strong>PyRadio</strong>: Command line internet radio player.</p>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
@@ -57,7 +56,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#on-windows-7">On Windows 7</a></li>
 </ul>
 <!-- vim-markdown-toc -->
-<p><a href="README.html">[Return to main doc]</a></p>
+<p class="indented">[ <a href="index.html#desktop-notifications">Return to main doc</a> ]</p>
 <h2 id="introduction">Introduction <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> can provide Desktop Notifications when a notification daemon is already present (on Linux and BSD), or through <strong>Windows Notification Service</strong> (<strong>WNS</strong>).</p>
 <p>The behavior and presentation of notifications greatly depends on the daemon/service and command line utility used to trigger a notification.</p>
@@ -87,7 +86,7 @@ a:visited{color: SaddleBrown;}
 <p>As a consequence, one could replace the icon found in the <em>configuration directory</em> (under <strong>data</strong> or <strong>Help</strong>) with a custom icon, preserving the icon name as appropriate (<em>pyradio.png</em>, or <em>pyradio.ico</em> on Windows).</p>
 <p>If the station defines a “<em>Station Icon URL</em>” (either on a local playlist or an online service; <strong>Radio Browser</strong> includes an icon for many stations, for example), <strong>PyRadio</strong> will used this one instead, provided that it is of <em>JPG</em> or <em>PNG</em> format. This does not apply to Windows; an <em>ICO</em> file is used instead for <strong>Desktop Notifications</strong>.</p>
 <h2 id="on-linux">On Linux <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-notif.jpg" target="_blank"><img style="width: 411px" src="https://members.hellug.gr/sng/pyradio/pyradio-notif.jpg" alt="Linux notification" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/pyradio-notif.jpg" target="_blank"><img style="width: 380px" src="https://members.hellug.gr/sng/pyradio/pyradio-notif.jpg" alt="Linux notification" /></a></p>
 
 <p>On Linux (and the BSDs), <strong>PyRadio</strong> uses the <em>notification daemon</em> that’s already present and whatever command line helper program it provides to send notifications to the daemon.</p>
 <p>By default, <strong>PyRadio</strong> uses the following command to issue notifications:</p>
@@ -134,7 +133,7 @@ TITLE
 ICON</pre>
 <p>and you are done!</p>
 <h2 id="on-windows">On Windows <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><a href="https://members.hellug.gr/sng/pyradio/win-notif.jpg" target="_blank"><img style="width: 411px" src="https://members.hellug.gr/sng/pyradio/win-notif.jpg" alt="Windows notification" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/win-notif.jpg" target="_blank"><img style="width: 380px" src="https://members.hellug.gr/sng/pyradio/win-notif.jpg" alt="Windows notification" /></a></p>
 
 <p>As already stated <strong>PyRadio</strong> will display notifications throught <strong>Windows Notification Service</strong> (<strong>WNS</strong>).</p>
 <p>All that you have to do is enable the notifications in the config window.</p>
@@ -143,7 +142,7 @@ ICON</pre>
 <p>By default, a sound is played when a notification is displayed, which is very annoying when using <strong>PyRadio</strong> to listen to music and such.</p>
 <p>To change the setting, just hover your mouse over a notification and click on the three dots displayed next to the “<em>X</em>”.</p>
 <p>Then you will get the menu that’s shown in the next image.</p>
-<p><a href="https://members.hellug.gr/sng/pyradio/win-notif-edit.jpg" target="_blank"><img style="width: 411px" src="https://members.hellug.gr/sng/pyradio/win-notif-edit.jpg" alt="Windows notification edit" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/win-notif-edit.jpg" target="_blank"><img style="width: 380px" src="https://members.hellug.gr/sng/pyradio/win-notif-edit.jpg" alt="Windows notification edit" /></a></p>
 
 <p>Click on “<em>Go to notification settings</em>” to open the window that’s shown below.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Please be careful not to click on “*Turn off all notifications for Python”; if you do, it won’t be easy to get notifications back, especially on Window 10 and 11.</p>
@@ -151,7 +150,7 @@ ICON</pre>
 
 <p>Please replicate the settings you see in the image above, and enjoy!</p>
 <h2 id="on-windows-7">On Windows 7 <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><a href="https://members.hellug.gr/sng/pyradio/win7-notif.jpg" target="_blank"><img style="width: 411px" src="https://members.hellug.gr/sng/pyradio/win7-notif.jpg" alt="Windows 7 notification" /></a></p>
+<p><a href="https://members.hellug.gr/sng/pyradio/win7-notif.jpg" target="_blank"><img style="width: 380px" src="https://members.hellug.gr/sng/pyradio/win7-notif.jpg" alt="Windows 7 notification" /></a></p>
 
 <p>If you are on <strong>Windows 7</strong>, you will have a differently looking notification (shown above).</p>
 <p>If you click on the little tool-like “icon” next to the “X”, you get to the “<strong>Notification Area Icons</strong>”, the notifications configuration window. A couple of options are available, and again, I do not know how easy it will be to enable the notification if disabled once.</p>

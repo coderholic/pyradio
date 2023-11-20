@@ -466,6 +466,19 @@ class SimpleCursesDate(SimpleCursesWidget):
             to previous widget. If set to None, go to
             seconds field
     '''
+
+    _minus = {
+        ord('!'): 1,
+        ord('@'): 2,
+        ord('#'): 3,
+        ord('$'): 4,
+        ord('%'): 5,
+        ord('^'): 6,
+        ord('&'): 7,
+        ord('*'): 8,
+        ord('('): 9,
+    }
+
     def __init__(
         self, Y, X, window,
         color, color_focused,
@@ -620,6 +633,8 @@ class SimpleCursesDate(SimpleCursesWidget):
              0: Continue
              1: Show help
         '''
+        logger.error('char = {}'.format(char))
+
         if char in self._global_functions.keys():
             self._global_functions[char]()
             return 0
@@ -678,6 +693,15 @@ class SimpleCursesDate(SimpleCursesWidget):
                 if self.selected < 0:
                     self.selected = 2
             self.show()
+
+        elif char in range(49, 58):
+            self.increase(char-48)
+
+        elif char in self._minus:
+            self.decrease(self._minus[char])
+
+        elif char in (ord('0'), ord('=')):
+            self._date = datetime.now()
 
         return 0
     pass

@@ -1,7 +1,5 @@
 # PyRadio Desktop Notification
 
-**PyRadio**: Command line internet radio player.
-
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
@@ -16,7 +14,7 @@
 
 <!-- vim-markdown-toc -->
 
-[[Return to main doc]](README.md)
+[ [Return to main doc](index.md#desktop-notifications) ]
 
 ## Introduction
 

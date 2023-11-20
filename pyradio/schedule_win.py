@@ -972,10 +972,10 @@ class PyRadioSimpleScheduleWindow(object):
              7: Stop time is in the past
              8: Start time < end time
         '''
-        if char == ord('0'):
-            self._error_num = self._validate_selection()
-            logger.error('self._error_num = {}'.format(self._error_num))
-            return self._error_num
+        # if char == ord('0'):
+        #     self._error_num = self._validate_selection()
+        #     logger.error('self._error_num = {}'.format(self._error_num))
+        #     return self._error_num
 
         if char in self._global_functions.keys():
             self._global_functions[char]()
