@@ -84,7 +84,7 @@ This will display the program's window with a list of predefined radio stations 
 
 In case the list of predefined stations are not enough for you, you can press "**O**" (capital "**o**") to access **RadioBrowser** online directory; you will probably have to read [this page](docs/radio-browser.md) to learn how to navigate the interface.
 
-Finally, when you are ready to dive into the program's numerous features, you can refer to the [detailed documentation](docs/index.html).
+Finally, when you are ready to dive into the program's numerous features, you can refer to the [detailed documentation](docs/index.md).
 
 ## Update notification
 
