@@ -28,7 +28,7 @@ meta = dict(
     author_email='ben.m.dowling@gmail.com',
     url=' http://github.com/coderholic/pyradio',
     include_package_data=True,
-    packages=find_namespace_packages(exclude=['devel', 'favicon'], include=['pyradio.__pycache__']),
+    packages=find_namespace_packages(exclude=['devel', 'favicon']).append('pyradio.__pycache__'),
     entry_points={
         'console_scripts': [
             'pyradio = pyradio.main:shell',
