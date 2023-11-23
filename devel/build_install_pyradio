@@ -350,7 +350,7 @@ for prog in sed ;do
     ${prog} --version 2>/dev/null 1>&2 || {
         if [ "${prog}" = "sed" ]
         then
-            sed 's/a/b/' LICENCE > /dev/null ||{
+            sed 's/a/b/' LICENSE > /dev/null ||{
                 echo "Error: ${prog} not found."
                 echo "       Please install it and try again."
                 exit 1
@@ -439,12 +439,21 @@ fi
 if [ -z "$PIPX" ]
 then
     # Normanl, old style installation
+    if [ "${TO_PYTHON}" = "2" ]
+    then
+        cp setup.py setup.py.orig
+        sed -i \
+            -e 's/, find_namespace_packages/, find_packages/' \
+            -e 's/find_namespace_packages.*/find_packages(),/' \
+            setup.py
+    fi
     if [ -e requirements.txt ]
     then
         python"${TO_PYTHON}" -m pip install -r requirements.txt . || pip_error
     else
         python"${TO_PYTHON}" -m pip install . || pip_error
     fi
+    [ -e setup.py.orig ] && cp setup.py.orig setup.py
 else
     # pipx installation
     # MacOS will always permorm an fully isolated installation
@@ -475,6 +484,7 @@ do_undev
 if [ $? -eq 0 ]
 then
     [ -z "${NO_DEV}" ] && [ -e pyradio/config.py.dev ] && mv pyradio/config.py.dev pyradio/config.py
+    cd docs
     gzip -k pyradio.1
     gzip -k pyradio_rb.1
     gzip -k pyradio_rec.1
@@ -492,18 +502,19 @@ then
         DOC=~/.local/local/share/doc/pyradio
         mkdir "$DOC"
     fi
-    for n in docs/*.md docs/*.html
+    for n in *.md *.html
     do
         cp "$n" "$DOC"
     done
-    # copy LICENCE
+    cd ..
+    # copy LICENSE
     mkdir -p ~/.local/share/licenses 2>/dev/null
     if [ "$DOC" = "~/.local/share/doc/pyradio" ]
     then
         mkdir -p ~/.local/share/licenses/pyradio 2>/dev/null
-        cp LICENCE ~/.local/share/licenses/pyradio
+        cp LICENSE ~/.local/share/licenses/pyradio
     else
-        cp LICENCE "$DOC"
+        cp LICENSE "$DOC"
     fi
     if [ $(uname -s) != "Darwin" ] && [ $(uname -s) != "darwin" ]
     then

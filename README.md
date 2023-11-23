@@ -27,6 +27,8 @@ If you face this situation, please refer to [this page](docs/pip-error.md) to re
 
 <!-- vim-markdown-toc -->
 
+* Please follow this link for the [Detailed documentation](docs/index.md)
+
 ## Features
 
 **PyRadio** provides the following features:
@@ -72,7 +74,7 @@ After a successful installation, the command to execute is:
 
     pyradio
 
-This will display the program's window with a list of predefined radio stations ready to play.
+This will display the program's window with a list of predefined radio stations ready to be played.
 
  - Select one of the station (using the arrow keys) and press "**ENTER**" to start playback.
 

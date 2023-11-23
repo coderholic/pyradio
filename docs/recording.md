@@ -286,7 +286,7 @@ If you have decided to use one of the **portable** versions of [MKVToolNix](http
 
 2. "Install" it in **PyRadio Configuration Folder**. \
 \
-To do that, open **PyRadio** and press "*\\o*" to open the configuradio folder in the File Explorer. \
+To do that, either press "*\\o*" in **PyRadio**, or execute `pyradio -od`, to open the configuration folder in the File Explorer.
 
 3. Create a folder named "**mkvtoolnix**"
 
@@ -416,5 +416,5 @@ pyradio -mkv 1 -srt
 
 In this case, **1** is the index of the file in the list provided by the **-lr** command.
 
-As a convenience, negative numbers can also be used; **-1** means the last file, **-2** the second from last, etc. This way, to work with the last recorded file, one would just use "**-mkv -1**" on all the necessary commands.
+As a convenience, negative numbers can also be used; **-1** means the last file, **-2** the second to last, etc. This way, to work with the last recorded file, one would just use "**-mkv -1**" on all the necessary commands.
 
