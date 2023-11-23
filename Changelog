@@ -1,3 +1,11 @@
+2023-11-23 s-n-g
+    * version 0.9.2.20
+    * Creating the docs folder and moving files there
+    * Updating pyproject.toml and setup.py for the latest
+      Installation method changes
+    * Working on scheduler (not applicable yet)
+    * Updating docs
+
 2023-11-06 s-n-g
     * version 0.9.2.19 (BUG FIX release)
     * cover.png updated

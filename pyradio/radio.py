@@ -724,7 +724,7 @@ class PyRadio(object):
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
             # ord('d'): self._html_song_title,
-            ord('b'): self._show_schedule_editor,
+            # ord('b'): self._show_schedule_editor,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
