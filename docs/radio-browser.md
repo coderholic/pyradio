@@ -4,8 +4,6 @@
 
 **PyRadio** uses the API provided to integrate it and provide its users the possibility to enjoy this great project.
 
-**Note:** As of the writing of this, the implementation is not yet complete, but it is usable (accessing and querying the service is up and running). Whenever a feature is not implemented yet, it will be explicitly marked as such.
-
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
 
@@ -52,7 +50,7 @@ Upon activation, the "**default search term**" is used to automatically query a 
 
 Once the results are fetched, they act as a special kind of playlist (some of the features of a local playlist are not functional, such as station renaming and such), and other features are introduced (such as the sort function and the station database info function).
 
-Each search result, i.e. each station, has more data attached to it than just its name and URL (bitrate, votes, clicks, etc.). This data is displayed in field columns; the number of visible columns depend on the terminal of the window. The name of the column that matches the sorting criteria is "highlighted".
+Each search result, i.e. each station, has more data attached to it than just its name and URL (bitrate, votes, clicks, etc.). This data is displayed in field columns; the number of visible columns depend on the width of the terminal's window. The name of the column that matches the sorting criteria is "highlighted".
 
 ### Searching in the list of stations
 

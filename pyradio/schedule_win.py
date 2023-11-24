@@ -23,9 +23,9 @@ class PyRadioSimpleScheduleWindow(object):
     _widgets = _win = None
     _global_functions = {}
     _showed = False
-
-    too_small = False
-
+    _too_small = False
+    _stop = False
+    _thread_date = None
     _error_num = 0
     _error_messages = {
         3: 'Item is invalid!',
@@ -78,21 +78,26 @@ class PyRadioSimpleScheduleWindow(object):
         'Save changes to this schedule item',
         'Cancel changes to this schedule item'
     )
+
     def __init__(
             self, parent,
             supported_players,
             current_player,
+            my_op_mode,
+            cur_op_mode,
             playlist=None, station=None,
             schedule_item=None,
             global_functions={}
     ):
         self._exit = False
+        self._my_op_mode = my_op_mode
+        self._cur_op_mode = cur_op_mode
         self._playlist = playlist
         self._station = station
         self._supported_players = supported_players
         self._maxX = 60
         self._displacement = 3
-        self._maxY = 18
+        self._maxY = 19
         self._global_functions = global_functions
         self._get_parent(parent)
         self._focus = 8
@@ -102,6 +107,14 @@ class PyRadioSimpleScheduleWindow(object):
             self._current_player_id = 0
         self._player_id = self._current_player_id
         self.set_item(schedule_item, playlist, station)
+
+    def __del__(self):
+        self._exit = True
+        self._stop = True
+
+    def exit(self):
+        self._stop = True
+        self._exit = True
 
     @property
     def playlist(self):
@@ -152,28 +165,28 @@ class PyRadioSimpleScheduleWindow(object):
         # self._widgets[0].move(1,2)
         # self._widgets[1].move(2,2)
         # Start
-        self._widgets[2].move(4 + self._Y, 5 + self._X)
-        self._widgets[3].move(4, self._widgets[2].X + self._widgets[2].width - self._X)
-        self._widgets[4].move(5 + self._Y, 9 + self._X)
-        self._widgets[5].move(5, self._widgets[4].X + self._widgets[4].width - self._X)
-        self._widgets[6].move(5 + self._Y, self._X + self._widgets[5].X + self._widgets[5].width + 4)
-        self._widgets[7].move(5, self._widgets[6].X + self._widgets[6].width - self._X)
+        self._widgets[2].move(5 + self._Y, 5 + self._X)
+        self._widgets[3].move(5, self._widgets[2].X + self._widgets[2].width - self._X)
+        self._widgets[4].move(6 + self._Y, 9 + self._X)
+        self._widgets[5].move(6, self._widgets[4].X + self._widgets[4].width - self._X)
+        self._widgets[6].move(6 + self._Y, self._X + self._widgets[5].X + self._widgets[5].width + 4)
+        self._widgets[7].move(6, self._widgets[6].X + self._widgets[6].width - self._X)
         # End
-        self._widgets[8].move(6 + self._Y, 5 + self._X)
-        self._widgets[9].move(6, self._widgets[8].X + self._widgets[8].width - self._X)
-        self._widgets[10].move(7 + self._Y, 9 + self._X)
-        self._widgets[11].move(7, self._widgets[10].X + self._widgets[10].width - self._X)
-        self._widgets[12].move(7 + self._Y, self._X + self._widgets[11].X + self._widgets[11].width + 4)
-        self._widgets[13].move(7, self._widgets[12].X + self._widgets[12].width - self._X)
+        self._widgets[8].move(7 + self._Y, 5 + self._X)
+        self._widgets[9].move(7, self._widgets[8].X + self._widgets[8].width - self._X)
+        self._widgets[10].move(8 + self._Y, 9 + self._X)
+        self._widgets[11].move(8, self._widgets[10].X + self._widgets[10].width - self._X)
+        self._widgets[12].move(8 + self._Y, self._X + self._widgets[11].X + self._widgets[11].width + 4)
+        self._widgets[13].move(8, self._widgets[12].X + self._widgets[12].width - self._X)
         # options
         # self._widgets[14].move(8, 3)
-        self._widgets[15].move(6 + self._displacement + self._Y, self._X + 9)
-        self._widgets[16].move(6 + self._displacement + self._Y, self._widgets[15].X + self._widgets[15].width + 4)
-        self._widgets[17].move(7 + self._displacement + self._Y, self._X + 9)
-        self._widgets[18].move(8 + self._displacement + self._Y, self._X + 5)
+        self._widgets[15].move(7 + self._displacement + self._Y, self._X + 9)
+        self._widgets[16].move(7 + self._displacement + self._Y, self._widgets[15].X + self._widgets[15].width + 4)
+        self._widgets[17].move(8 + self._displacement + self._Y, self._X + 9)
+        self._widgets[18].move(9 + self._displacement + self._Y, self._X + 5)
         # self._widgets[19].move(8 + self._displacement + self._Y, self._widgets[17].X + self._widgets[18].width)
         # Buttons
-        self._widgets[20].move(10 + self._displacement + self._Y, self._X + 2)
+        self._widgets[20].move(11 + self._displacement + self._Y, self._X + 2)
         self._widgets[21].move(self._widgets[20].Y, self._X + self._maxX - 19)
         self._widgets[22].move(self._widgets[20].Y, self._X + self._maxX - (len(self._widgets[13].caption) + 12))
 
@@ -215,7 +228,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 0 playlist string '''
         self._widgets.append(
             SimpleCursesString(
-                Y=1,X=2,
+                Y=2,X=2,
                 parent=self._win,
                 caption='Playlist: ',
                 string='Any playlist',
@@ -231,7 +244,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 1 stations string '''
         self._widgets.append(
             SimpleCursesString(
-                Y=2, X=2,
+                Y=3, X=2,
                 parent=self._win,
                 caption=' Station: ',
                 string='Any station',
@@ -279,7 +292,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 5 start at time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=5, X=0,
+                Y=6, X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 show_am_pm=True,
@@ -304,7 +317,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 7 start in time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=5, X=0,
+                Y=6, X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
@@ -351,7 +364,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 11 stop at time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=7, X=0,
+                Y=8, X=0,
                 window=self._win,
                 show_am_pm=True,
                 color=curses.color_pair(10),
@@ -376,7 +389,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 13 stop in time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=7,X=0,
+                Y=8,X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
@@ -392,7 +405,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 14 player '''
         self._widgets.append(
             SimpleCursesString(
-                Y=8, X=3,
+                Y=9, X=3,
                 parent=self._win,
                 caption='Player: ',
                 string=self._supported_players[self._current_player_id],
@@ -444,7 +457,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 19 silent recording '''
         self._widgets.append(
             SimpleCursesString(
-                Y=11,
+                Y=12,
                 X=23,
                 parent=self._win,
                 caption='',
@@ -461,7 +474,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 20 cancel scheduling button '''
         cap = 'Remove Schedule'
         self._widgets.append(SimpleCursesPushButton(
-            Y=10 + self._displacement + self._Y,
+            Y=11 + self._displacement + self._Y,
             X=self._X + 2,
             caption=cap,
             color_focused=curses.color_pair(9),
@@ -527,39 +540,26 @@ class PyRadioSimpleScheduleWindow(object):
                     logger.error('exception!')
                     with self.lock:
                         self._widgets[n].show()
-
-        # # self._win.addstr(1, 2, 'Playlist: ', curses.color_pair(10))
-        # stop_only = self._stop_only()
-        # occupied = self._maxX -4 - len('Playlist: ')
-        # if stop_only:
-        #     disp_playlist = 'Any Playlist'
-        # else:
-        #     disp_playlist = cjkslices(self._playlist, occupied)[0]
-        # # self._win.addstr(disp_playlist.ljust(occupied), curses.color_pair(11))
-
-        # occupied = self._maxX -4 - len('Station: ')
-        # # self._win.addstr(2, 2, 'Station: ', curses.color_pair(10))
-        # if self._stop_only():
-        #     disp_station = 'Any Station'
-        # else:
-        #     if self._station:
-        #         disp_station = cjkslices(self._station, occupied)[0]
-        #     else:
-        #         disp_station = 'Any Station'
-        # # self._win.addstr(disp_station.ljust(occupied), curses.color_pair(11))
-        # self._win.refresh()
-
-        # if not self._showed:
-        #     threading.Thread(target=self._display_time,
-        #                      args=[lambda: self._exit,
-        #                            lambda: self._parent,
-        #                            lambda: self._Y + 2,
-        #                            lambda: self._X + 1,
-        #                            self.lock,
-        #                            ]
-        #                      ).start()
         self._win.refresh()
         self._showed = True
+        if self._thread_date is None:
+            self._thread_date = threading.Thread(
+                target=self._thread_show_date,
+                args =(
+                    lambda: self._win,
+                    self.lock,
+                    lambda: self._can_show_date,
+                    lambda: self._stop
+                )
+            )
+            self._thread_date.start()
+
+    def _can_show_date(self):
+        if self._too_small:
+            return False
+        if self._my_op_mode == self._cur_op_mode():
+            return True
+        return False
 
     def _apply_repeat_to_widget(self, repeat):
         if repeat is None:
@@ -843,9 +843,7 @@ class PyRadioSimpleScheduleWindow(object):
                     err_out.append('|Start time| is after |End time|!')
                     error = True
 
-
         out = []
-
         if tmp_item.item['repeat'] is None or error:
             out.extend(self._format_info_lines(tmp_item.item['type'], ac_tmp_item))
         else:
@@ -954,6 +952,48 @@ class PyRadioSimpleScheduleWindow(object):
             else:
                 self._widgets[16].enabled = False
 
+    def _thread_show_date(self, win, lock, go_on, stop):
+        ''' display current date
+
+            Parameters
+            win     function to return the window to print to
+            lock    threading lock
+            go_on   function to indicate if we can print string
+            stop    function to make the thread stop
+        '''
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('_thread_show_date started!')
+        d = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        while True:
+            if go_on()():
+                now = datetime.now()
+                now_str = ' ' + now.strftime('%Y-%m-%d %H:%M:%S') + ', a ' + d[now.weekday()] + ' '
+                X = int((self._maxX - len(now_str)) / 2) - 4
+                if stop():
+                    break
+                w = win()
+                if w:
+                    with lock:
+                        try:
+                            self._win.addstr(4, 2, '─' * (self._maxX - 4), curses.color_pair(11))
+                        except:
+                            self._win.addstr(4, 2, '─'.encode('utf-8') * (self._maxX - 4), curses.color_pair(12))
+                        if stop():
+                            break
+                        w.addstr(4, X, ' Now is:', curses.color_pair(10))
+                        w.addstr(now_str, curses.color_pair(3))
+                        w.refresh()
+                for n in range(5):
+                    if stop():
+                        break
+                    sleep(.1)
+            else:
+                if stop():
+                    break
+                sleep(.1)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('_thread_show_date terminated!')
+
     def keypress(self, char):
         '''
         PyRadioSimpleScheduleWindow keypress
@@ -985,6 +1025,7 @@ class PyRadioSimpleScheduleWindow(object):
             return 2
 
         elif char in (curses.KEY_EXIT, ord('q'), 27):
+            self._stop = True
             self._exit = True
             return -1
 

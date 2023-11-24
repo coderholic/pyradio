@@ -724,7 +724,7 @@ class PyRadio(object):
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
             # ord('d'): self._html_song_title,
-            # ord('b'): self._show_schedule_editor,
+            ord('b'): self._show_schedule_editor,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -1953,6 +1953,9 @@ class PyRadio(object):
                 self.log._stop_desktop_notification_thread = True
         except:
             self.log._stop_desktop_notification_thread = True
+        if self._simple_schedule:
+            self._simple_schedule.exit()
+            self._simple_schedule = None
 
     def _goto_playing_station(self, changing_playlist=False):
         ''' make sure playing station is visible '''
@@ -6123,6 +6126,8 @@ __|Remote Control Server| cannot be started!__
         if self._simple_schedule is None:
             self._simple_schedule = PyRadioSimpleScheduleWindow(
                 parent=self.outerBodyWin,
+                my_op_mode=self.ws.SCHEDULE_EDIT_MODE,
+                cur_op_mode=lambda: self.ws.operation_mode,
                 playlist=self._cnf.station_title,
                 station=station,
                 current_player=self.player.PLAYER_NAME,
