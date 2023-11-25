@@ -97,7 +97,7 @@ class PyRadioSimpleScheduleWindow(object):
         self._supported_players = supported_players
         self._maxX = 60
         self._displacement = 3
-        self._maxY = 19
+        self._maxY = 20
         self._global_functions = global_functions
         self._get_parent(parent)
         self._focus = 8
@@ -169,28 +169,28 @@ class PyRadioSimpleScheduleWindow(object):
         # self._widgets[0].move(1,2)
         # self._widgets[1].move(2,2)
         # Start
-        self._widgets[2].move(5 + self._Y, 5 + self._X)
-        self._widgets[3].move(5, self._widgets[2].X + self._widgets[2].width - self._X)
-        self._widgets[4].move(6 + self._Y, 9 + self._X)
-        self._widgets[5].move(6, self._widgets[4].X + self._widgets[4].width - self._X)
-        self._widgets[6].move(6 + self._Y, self._X + self._widgets[5].X + self._widgets[5].width + 4)
-        self._widgets[7].move(6, self._widgets[6].X + self._widgets[6].width - self._X)
+        self._widgets[2].move(6 + self._Y, 5 + self._X)
+        self._widgets[3].move(6, self._widgets[2].X + self._widgets[2].width - self._X)
+        self._widgets[4].move(7 + self._Y, 9 + self._X)
+        self._widgets[5].move(7, self._widgets[4].X + self._widgets[4].width - self._X)
+        self._widgets[6].move(7 + self._Y, self._X + self._widgets[5].X + self._widgets[5].width + 4)
+        self._widgets[7].move(7, self._widgets[6].X + self._widgets[6].width - self._X)
         # End
-        self._widgets[8].move(7 + self._Y, 5 + self._X)
-        self._widgets[9].move(7, self._widgets[8].X + self._widgets[8].width - self._X)
-        self._widgets[10].move(8 + self._Y, 9 + self._X)
-        self._widgets[11].move(8, self._widgets[10].X + self._widgets[10].width - self._X)
-        self._widgets[12].move(8 + self._Y, self._X + self._widgets[11].X + self._widgets[11].width + 4)
-        self._widgets[13].move(8, self._widgets[12].X + self._widgets[12].width - self._X)
+        self._widgets[8].move(8 + self._Y, 5 + self._X)
+        self._widgets[9].move(8, self._widgets[8].X + self._widgets[8].width - self._X)
+        self._widgets[10].move(9 + self._Y, 9 + self._X)
+        self._widgets[11].move(9, self._widgets[10].X + self._widgets[10].width - self._X)
+        self._widgets[12].move(9 + self._Y, self._X + self._widgets[11].X + self._widgets[11].width + 4)
+        self._widgets[13].move(9, self._widgets[12].X + self._widgets[12].width - self._X)
         # options
         # self._widgets[14].move(8, 3)
-        self._widgets[15].move(7 + self._displacement + self._Y, self._X + 9)
-        self._widgets[16].move(7 + self._displacement + self._Y, self._widgets[15].X + self._widgets[15].width + 4)
-        self._widgets[17].move(8 + self._displacement + self._Y, self._X + 9)
-        self._widgets[18].move(9 + self._displacement + self._Y, self._X + 5)
+        self._widgets[15].move(8 + self._displacement + self._Y, self._X + 9)
+        self._widgets[16].move(8 + self._displacement + self._Y, self._widgets[15].X + self._widgets[15].width + 4)
+        self._widgets[17].move(9 + self._displacement + self._Y, self._X + 9)
+        self._widgets[18].move(10 + self._displacement + self._Y, self._X + 5)
         # self._widgets[19].move(8 + self._displacement + self._Y, self._widgets[17].X + self._widgets[18].width)
         # Buttons
-        self._widgets[20].move(11 + self._displacement + self._Y, self._X + 2)
+        self._widgets[20].move(12 + self._displacement + self._Y, self._X + 2)
         self._widgets[21].move(self._widgets[20].Y, self._X + self._maxX - 19)
         self._widgets[22].move(self._widgets[20].Y, self._X + self._maxX - (len(self._widgets[13].caption) + 12))
 
@@ -296,7 +296,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 5 start at time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=6, X=0,
+                Y=7, X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 show_am_pm=True,
@@ -321,7 +321,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 7 start in time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=6, X=0,
+                Y=7, X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
@@ -345,7 +345,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 9 stop at date box '''
         self._widgets.append(
             SimpleCursesDate(
-                Y=6, X=0,
+                Y=7, X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
@@ -368,7 +368,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 11 stop at time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=8, X=0,
+                Y=9, X=0,
                 window=self._win,
                 show_am_pm=True,
                 color=curses.color_pair(10),
@@ -393,7 +393,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 13 stop in time '''
         self._widgets.append(
             SimpleCursesTime(
-                Y=8,X=0,
+                Y=9,X=0,
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
@@ -409,7 +409,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 14 player '''
         self._widgets.append(
             SimpleCursesString(
-                Y=9, X=3,
+                Y=10, X=3,
                 parent=self._win,
                 caption='Player: ',
                 string=self._supported_players[self._current_player_id],
@@ -461,7 +461,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 19 silent recording '''
         self._widgets.append(
             SimpleCursesString(
-                Y=12,
+                Y=13,
                 X=23,
                 parent=self._win,
                 caption='',
@@ -478,7 +478,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 20 cancel scheduling button '''
         cap = 'Remove Schedule'
         self._widgets.append(SimpleCursesPushButton(
-            Y=11 + self._displacement + self._Y,
+            Y=12 + self._displacement + self._Y,
             X=self._X + 2,
             caption=cap,
             color_focused=curses.color_pair(9),
@@ -981,12 +981,12 @@ class PyRadioSimpleScheduleWindow(object):
                 if w:
                     with lock:
                         try:
-                            self._win.addstr(4, 2, '─' * (self._maxX - 4), curses.color_pair(11))
+                            self._win.addstr(5, 2, '─' * (self._maxX - 4), curses.color_pair(11))
                         except:
-                            self._win.addstr(4, 2, '─'.encode('utf-8') * (self._maxX - 4), curses.color_pair(12))
+                            self._win.addstr(5, 2, '─'.encode('utf-8') * (self._maxX - 4), curses.color_pair(12))
                         if stop():
                             break
-                        w.addstr(4, X, ' Now is:', curses.color_pair(10))
+                        w.addstr(5, X, ' Now is:', curses.color_pair(10))
                         w.addstr(now_str, curses.color_pair(3))
                         w.refresh()
                 for n in range(5):

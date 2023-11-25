@@ -86,6 +86,14 @@ This will display the program's window with a list of predefined radio stations 
 
 In case the list of predefined stations are not enough for you, you can press "**O**" (capital "**o**") to access **RadioBrowser** online directory; you will probably have to read [this page](docs/radio-browser.md) to learn how to navigate the interface.
 
+**PyRadio** comes with a number of themes; press "**t**" to get a list of themes, and
+
+- press the **right arrow** to activate the selected theme, and...
+
+- when you find a theme you like, press **space** to make it default. \
+\
+To get more info on theming, including how to create your own one, read the [relevant page](docs/themes.md).
+
 Finally, when you are ready to dive into the program's numerous features, you can refer to the [detailed documentation](docs/index.md).
 
 ## Update notification
