@@ -633,7 +633,7 @@ class SimpleCursesDate(SimpleCursesWidget):
              0: Continue
              1: Show help
         '''
-        logger.error('char = {}'.format(char))
+        # logger.error('char = {}'.format(char))
 
         if char in self._global_functions.keys():
             self._global_functions[char]()
@@ -3867,7 +3867,6 @@ class SimpleCursesLineEdit(object):
         self._edit_win.erase()
 
         ''' opening '''
-        # logger.error('opening = {}'.format(opening))
         if opening:
             if self._restore_data:
                 self._string = self._restore_data[0]
@@ -3879,8 +3878,6 @@ class SimpleCursesLineEdit(object):
             else:
                 self.string = self._displayed_string = ''
                 self._curs_pos = self._disp_curs_pos = self._first = 0
-        # logger.error('string = "{}"'.format(self._string))
-        # logger.error('displayed string = "{}"'.format(self._displayed_string))
         if self._enabled:
             self._edit_win.addstr(0, 0, self._displayed_string, active_edit_color)
 

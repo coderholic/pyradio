@@ -8,7 +8,7 @@ import logging
 import threading
 import platform
 
-from .simple_curses_widgets import DisabledWidget, SimpleCursesCheckBox, SimpleCursesPushButton, SimpleCursesTime, SimpleCursesString, SimpleCursesDate
+from .simple_curses_widgets import DisabledWidget, SimpleCursesCheckBox, SimpleCursesPushButton, SimpleCursesTime, SimpleCursesString, SimpleCursesDate, SimpleCursesLineEdit
 from .cjkwrap import cjklen, cjkslices
 from .schedule import PyRadioScheduleItem, PyRadioScheduleItemType, PyRadioScheduleTimeType, PyRadioTime, PyRadioScheduleList, format_date_to_iso8851, random_string, datetime_to_my_time, is_date_before
 
@@ -49,8 +49,8 @@ class PyRadioSimpleScheduleWindow(object):
     _max_repeat_len = max([len(x) for x in _repeat])
     _repeat_index = 0
 
-    '''     0  1  2   3  4  5   6   7  8  9  10 11 12 13 14  15  16  17  18  19  20  21  22'''
-    _up = (20, 0, 1, 19, 2, 3, 21, 22, 4, 5, 8, 9, 6, 7, 10, 14, 11, 15, 17, 16, 18, 12, 13)
+    '''     0  1  2   3  4  5   6   7  8  9  10 11 12 13 14  15  16  17  18  19  20  21  22 23'''
+    _up = (23, 0, 1, 19, 2, 3, 21, 22, 4, 5, 8, 9, 6, 7, 10, 14, 11, 15, 17, 16, 18, 12, 13, 20)
 
     lock = threading.Lock()
     _tips = (
@@ -76,7 +76,8 @@ class PyRadioSimpleScheduleWindow(object):
         'Recurrence parameter for this setup',
         'Remove this schedule',
         'Save changes to this schedule item',
-        'Cancel changes to this schedule item'
+        'Cancel changes to this schedule item',
+        'Optional name for this item'
     )
 
     def __init__(
@@ -193,6 +194,11 @@ class PyRadioSimpleScheduleWindow(object):
         self._widgets[20].move(12 + self._displacement + self._Y, self._X + 2)
         self._widgets[21].move(self._widgets[20].Y, self._X + self._maxX - 19)
         self._widgets[22].move(self._widgets[20].Y, self._X + self._maxX - (len(self._widgets[13].caption) + 12))
+        self._widgets[23].move(
+                self._win,
+                self._Y + self._widgets[0].Y - 1,
+                self._X + 12,
+                )
 
     def _get_parent(self, parent):
         self._parent = parent
@@ -509,7 +515,29 @@ class PyRadioSimpleScheduleWindow(object):
             parent=self._parent))
         self._widgets[-1].w_id = 22
 
-
+        self._widgets.append(SimpleCursesLineEdit(
+            parent=self._win,
+            width=46,
+            begin_y=self._Y + self._widgets[0].Y - 1,
+            begin_x=self._X + 12,
+            boxed=False,
+            has_history=False,
+            caption='',
+            box_color=curses.color_pair(9),
+            caption_color=curses.color_pair(11),
+            edit_color=curses.color_pair(9),
+            cursor_color=curses.color_pair(8),
+            unfocused_color=curses.color_pair(10),
+            key_up_function_handler=self._go_up,
+            key_down_function_handler=self._go_down,
+            key_tab_function_handler=self._next_widget,
+            key_stab_function_handler=self._previous_widget
+            )
+        )
+        ''' enables direct insersion of ? and \ '''
+        self._widgets[-1]._paste_mode = False
+        self._widgets[-1].w_id = 23
+        self._widgets[-1].string = self._schedule_item.item['name']
 
         self._move_widgets()
 
@@ -531,6 +559,7 @@ class PyRadioSimpleScheduleWindow(object):
         #         not self._stop_only():
         #     disp_msg = self._tips[self._focus].replace('the time "OK" is pressed.', 'starting playback.')
         with self.lock:
+            self._win.addstr(1, 6, 'Name: ',  curses.color_pair(10))
             self._win.addstr(self._maxY-2, 2, disp_msg.ljust(self._maxX-4), curses.color_pair(10))
             self._win.refresh()
 
@@ -539,13 +568,16 @@ class PyRadioSimpleScheduleWindow(object):
                 self._dummy_enable()
             self._fix_focus()
             for n in range(0, len(self._widgets)):
-                try:
-                    with self.lock:
-                        self._widgets[n].show(self._win)
-                except:
-                    logger.error('exception!')
-                    with self.lock:
-                        self._widgets[n].show()
+                if n == len(self._widgets) -1:
+                    self._widgets[n].show(parent_win=self._win, opening=False)
+                else:
+                    try:
+                        with self.lock:
+                            self._widgets[n].show(self._win)
+                    except:
+                        logger.error('exception!')
+                        with self.lock:
+                            self._widgets[n].show()
         self._win.refresh()
         self._showed = True
         if self._thread_date is None:
@@ -717,6 +749,20 @@ class PyRadioSimpleScheduleWindow(object):
                 self._widgets[i].focused = True
             else:
                 self._widgets[i].focused = False
+
+    def _go_up(self):
+        self._focus = self._up[self._focus]
+        while not self._widgets[self._focus].enabled:
+            self._focus = self._up[self._focus]
+        if self._focus in (5, 7, 11, 13):
+            self._widgets[self._focus].reset_selection()
+
+    def _go_down(self):
+        self._focus = self._up.index(self._focus)
+        while not self._widgets[self._focus].enabled:
+            self._focus = self._up.index(self._focus)
+        if self._focus in (5, 7, 11, 13):
+            self._widgets[self._focus].reset_selection()
 
     def _next_widget(self):
         old_focus = self._focus
@@ -1023,7 +1069,18 @@ class PyRadioSimpleScheduleWindow(object):
         #     logger.error('self._error_num = {}'.format(self._error_num))
         #     return self._error_num
 
-        if char in self._global_functions.keys():
+        if self._widgets[self._focus].w_id == 23:
+            ret = self._widgets[23].keypress(self._win, char)
+            logger.error('return = {}'.format(ret))
+            if ret == -1:
+                self._stop = True
+                self._exit = True
+                return -1
+            elif ret == 2:
+                # line editor help
+                return 9
+
+        elif char in self._global_functions.keys():
             self._global_functions[char]()
             return 0
 
@@ -1061,18 +1118,10 @@ class PyRadioSimpleScheduleWindow(object):
             self._widgets[19].string = self._repeat[self._repeat_index].ljust(self._max_repeat_len)
 
         elif char in (ord('j'), curses.KEY_UP):
-            self._focus = self._up[self._focus]
-            while not self._widgets[self._focus].enabled:
-                self._focus = self._up[self._focus]
-            if self._focus in (5, 7, 11, 13):
-                self._widgets[self._focus].reset_selection()
+            self._go_up()
 
         elif char in (ord('k'), curses.KEY_DOWN):
-            self._focus = self._up.index(self._focus)
-            while not self._widgets[self._focus].enabled:
-                self._focus = self._up.index(self._focus)
-            if self._focus in (5, 7, 11, 13):
-                self._widgets[self._focus].reset_selection()
+            self._go_down()
 
         elif char in (9, ord('L')):
             if self._widgets[self._focus].w_id in (3, 5, 7, 9, 11, 13):
@@ -1093,6 +1142,7 @@ class PyRadioSimpleScheduleWindow(object):
         else:
             ret = self._widgets[self._focus].keypress(char)
             logger.error('ret = {}'.format(ret))
+
             if self._widgets[self._focus].w_id == 22 \
                     and not ret:
                 ''' Cancel '''

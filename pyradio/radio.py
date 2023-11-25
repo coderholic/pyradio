@@ -7368,6 +7368,7 @@ __|Remote Control Server| cannot be started!__
                 self.ws.operation_mode not in self.ws.PASSIVE_WINDOWS and \
                 not self.is_search_mode(self.ws.operation_mode) and \
                 self.ws.window_mode not in (self.ws.CONFIG_MODE, ) and \
+                self.ws.operation_mode not in (self.ws.SCHEDULE_EDIT_MODE, ) and \
                 self._can_show_theme_window_in_browser_search():
             self._reset_status_bar_right()
             self._config_win = None
@@ -7454,6 +7455,8 @@ __|Remote Control Server| cannot be started!__
                 self._schedule_station_select_win.setStation(self._simple_schedule.station)
             elif ret in (3, 6, 7, 8):
                 self._show_schedule_error()
+            elif ret == 9:
+                self._show_line_editor_help()
             elif ret == 10:
                 self._show_schedule_info()
 
@@ -8342,7 +8345,6 @@ __|Remote Control Server| cannot be started!__
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER:
-            logger.error('DE =========================')
             if char in self._global_functions.keys():
                 self._global_functions[char]()
             elif char in (ord('y'), ord('n')):

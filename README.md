@@ -92,7 +92,7 @@ In case the list of predefined stations are not enough for you, you can press "*
 
 - when you find a theme you like, press **space** to make it default. \
 \
-To get more info on theming, including how to create your own one, read the [relevant page](docs/themes.md).
+To get more info on theming, including how to create your own, read the [relevant page](docs/themes.md).
 
 Finally, when you are ready to dive into the program's numerous features, you can refer to the [detailed documentation](docs/index.md).
 
