@@ -117,6 +117,10 @@ class PyRadioSimpleScheduleWindow(object):
         self._exit = True
 
     @property
+    def too_small(self):
+        return self._too_small
+
+    @property
     def playlist(self):
         return self._schedule_item.item['playlist']
 
@@ -504,6 +508,8 @@ class PyRadioSimpleScheduleWindow(object):
             bracket_color=curses.color_pair(10),
             parent=self._parent))
         self._widgets[-1].w_id = 22
+
+
 
         self._move_widgets()
 

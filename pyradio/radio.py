@@ -474,7 +474,7 @@ class PyRadio(object):
             self.ws.SELECT_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
             self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
             self.ws.SELECT_PLAYLIST_MODE: self._playlist_select_win_refresh_and_resize,
-            self.ws.SCHEDULE_PLAYER_SELECT_MODE: self._schedule_playlist_select_win_refresh_and_resize,
+            self.ws.SCHEDULE_PLAYLIST_SELECT_MODE: self._schedule_playlist_select_win_refresh_and_resize,
             self.ws.SCHEDULE_STATION_SELECT_MODE: self._schedule_station_select_win_refresh_and_resize,
             self.ws.PASTE_MODE: self._playlist_select_paste_win_refresh_and_resize,
             self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
@@ -516,6 +516,8 @@ class PyRadio(object):
             self.ws.SEARCH_THEME_MODE: self._redisplay_search_show,
             self.ws.SEARCH_SELECT_STATION_MODE: self._redisplay_search_show,
             self.ws.SEARCH_SELECT_PLAYLIST_MODE: self._redisplay_search_show,
+            self.ws.SCHEDULE_STATION_SEARCH_MODE: self._redisplay_search_show,
+            self.ws.SCHEDULE_PLAYLIST_SEARCH_MODE: self._redisplay_search_show,
             self.ws.GROUP_SEARCH_MODE: self._redisplay_search_show,
             self.ws.THEME_MODE: self._redisplay_theme_mode,
             self.ws.PLAYLIST_RECOVERY_ERROR_MODE: self._print_playlist_recovery_error,
@@ -645,8 +647,10 @@ class PyRadio(object):
         self._mode_to_search = {
             self.ws.NORMAL_MODE: 0,
             self.ws.SELECT_STATION_MODE: 0,
+            self.ws.SCHEDULE_STATION_SELECT_MODE: 0,
             self.ws.PLAYLIST_MODE: 1,
             self.ws.SELECT_PLAYLIST_MODE: 1,
+            self.ws.SCHEDULE_PLAYLIST_SELECT_MODE: 1,
             self.ws.THEME_MODE: 2,
             self.ws.PASTE_MODE: 3,
             self.ws.GROUP_SELECTION_MODE: 4,
@@ -661,6 +665,8 @@ class PyRadio(object):
             self.ws.PASTE_MODE: self.ws.SEARCH_SELECT_PLAYLIST_MODE,
             self.ws.SELECT_STATION_MODE: self.ws.SEARCH_SELECT_STATION_MODE,
             self.ws.GROUP_SELECTION_MODE: self.ws.GROUP_SEARCH_MODE,
+            self.ws.SCHEDULE_PLAYLIST_SELECT_MODE: self.ws.SCHEDULE_PLAYLIST_SEARCH_MODE,
+            self.ws.SCHEDULE_STATION_SELECT_MODE: self.ws.SCHEDULE_STATION_SEARCH_MODE,
         }
 
         ''' search modes opened from main windows '''
@@ -5410,8 +5416,11 @@ __|Remote Control Server| cannot be started!__
                 self._station_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.operation_mode in (self.ws.GROUP_SELECTION_MODE, self.ws.GROUP_SEARCH_MODE):
                 self._group_selection_window.selection = ret
+            elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYLIST_SEARCH_MODE:
+                self._schedule_playlist_select_win.setPlaylistById(ret, adjust=True)
+            elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SEARCH_MODE:
+                self._schedule_station_select_win.setPlaylistById(ret, adjust=True)
             self.refreshBody()
-
         else:
             if self.ws.operation_mode in self.search_main_window_modes:
                 _apply_main_windows(ret)
@@ -5424,6 +5433,10 @@ __|Remote Control Server| cannot be started!__
                 self._station_select_win.setPlaylistById(ret, adjust=True)
             elif self.ws.operation_mode in (self.ws.GROUP_SELECTION_MODE, self.ws.GROUP_SEARCH_MODE):
                 self._group_selection_window.selection = ret
+            elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYLIST_SEARCH_MODE:
+                self._schedule_playlist_select_win.setPlaylistById(ret, adjust=True)
+            elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SEARCH_MODE:
+                self._schedule_station_select_win.setPlaylistById(ret, adjust=True)
             self.ws.close_window()
             self.refreshBody()
 
@@ -7405,7 +7418,7 @@ __|Remote Control Server| cannot be started!__
                 self._show_schedule_editor_help()
             elif ret == 4:
                 ''' Schedule > Select Playlist '''
-                self.ws.operation_mode = self.ws.SCHEDULE_PLAYER_SELECT_MODE
+                self.ws.operation_mode = self.ws.SCHEDULE_PLAYLIST_SELECT_MODE
                 if self._schedule_playlist_select_win is None:
                     self._schedule_playlist_select_win = PyRadioSelectPlaylist(
                         self.bodyWin,
@@ -8052,7 +8065,7 @@ __|Remote Control Server| cannot be started!__
                 self._config_win.refresh_config_win()
             return
 
-        elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYER_SELECT_MODE and \
+        elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYLIST_SELECT_MODE and \
                 char not in self._chars_to_bypass and \
                 char not in self._chars_to_bypass_for_search:
             ''' In Config window; select playlist '''
@@ -8454,6 +8467,12 @@ __|Remote Control Server| cannot be started!__
             elif self.ws.operation_mode == self.ws.GROUP_SELECTION_MODE:
                 self._search_list = self._group_selection_window._items
                 sel = self._group_selection_window.selection + 1
+            elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYLIST_SELECT_MODE:
+                self._search_list = self._schedule_playlist_select_win._items
+                sel = self._schedule_playlist_select_win.selection + 1
+            elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
+                self._search_list = self._schedule_station_select_win._items
+                sel = self._schedule_station_select_win.selection + 1
 
             if self.search.string:
                 if sel == len(self._search_list):
@@ -8495,6 +8514,12 @@ __|Remote Control Server| cannot be started!__
             elif self.ws.operation_mode == self.ws.GROUP_SELECTION_MODE:
                 self._search_list = self._group_selection_window._items
                 sel = self._group_selection_window.selection - 1
+            elif self.ws.operation_mode == self.ws.SCHEDULE_PLAYLIST_SELECT_MODE:
+                self._search_list = self._schedule_playlist_select_win._items
+                sel = self._schedule_playlist_select_win.selection + 1
+            elif self.ws.operation_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
+                self._search_list = self._schedule_station_select_win._items
+                sel = self._schedule_station_select_win.selection + 1
 
             if self.search.string:
                 if sel < 0:
@@ -8536,6 +8561,12 @@ __|Remote Control Server| cannot be started!__
                 elif self.ws.previous_operation_mode == self.ws.GROUP_SELECTION_MODE:
                     self._search_list = self._group_selection_window._items
                     sel = self._group_selection_window.selection + 1
+                elif self.ws.previous_operation_mode == self.ws.SCHEDULE_PLAYLIST_SELECT_MODE:
+                    self._search_list = self._schedule_playlist_select_win._items
+                    sel = self._schedule_playlist_select_win.selection + 1
+                elif self.ws.previous_operation_mode == self.ws.SCHEDULE_STATION_SELECT_MODE:
+                    self._search_list = self._schedule_station_select_win._items
+                    sel = self._schedule_station_select_win.selection + 1
 
                 ''' perform search '''
                 if sel == len(self._search_list):
