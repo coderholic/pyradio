@@ -3236,8 +3236,8 @@ __|Remote Control Server| cannot be started!__
                         caption=' Line Editor Help ')
 
     def _show_line_editor_help(self):
-        if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE) \
-                or  self.ws.previous_operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE):
+        if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \
+                or  self.ws.previous_operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE):
             if platform.lower().startswith('darwin'):
                 txt = '''Left| / |Right        |Move to next / previous character.
                 HOME|,|^A| / |END|,|^E    |Move to start / end of line.
@@ -3265,6 +3265,11 @@ __|Remote Control Server| cannot be started!__
 
                 |Global functions work when preceded with a "|\|".
                 '''
+            if self._simple_schedule is not None:
+                txt = txt.replace(
+                    '|Global functions work when preceded with a "|\|"',
+                    '|Global functions do not work while in line editor'
+                )
         else:
             if platform.lower().startswith('darwin'):
                 txt = '''Left| / |Right        |Move to next / previous character.

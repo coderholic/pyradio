@@ -4347,7 +4347,6 @@ class SimpleCursesLineEdit(object):
                         self._mode_changed()
             return 2
 
-
         elif char == curses.ascii.CAN and \
                 self._has_history:
             self._backslash_pressed = False
