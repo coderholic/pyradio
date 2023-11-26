@@ -515,6 +515,7 @@ class PyRadioSimpleScheduleWindow(object):
             parent=self._parent))
         self._widgets[-1].w_id = 22
 
+        ''' id 23 name line editor '''
         self._widgets.append(SimpleCursesLineEdit(
             parent=self._win,
             width=46,
@@ -527,7 +528,7 @@ class PyRadioSimpleScheduleWindow(object):
             caption_color=curses.color_pair(11),
             edit_color=curses.color_pair(9),
             cursor_color=curses.color_pair(8),
-            unfocused_color=curses.color_pair(10),
+            unfocused_color=curses.color_pair(11),
             key_up_function_handler=self._go_up,
             key_down_function_handler=self._go_down,
             key_tab_function_handler=self._next_widget,

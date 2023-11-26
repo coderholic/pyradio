@@ -150,6 +150,7 @@ def print_active_schedule(a_file):
             centered_table = Align.center(table)
             table.row_styles = ['', 'plum4']
             table.add_column("#", justify='right')
+            table.add_column("Name")
             table.add_column("Start Playback")
             table.add_column("Stop Playback")
             table.add_column("Playlist")
@@ -161,6 +162,7 @@ def print_active_schedule(a_file):
             for i, n in enumerate(tasks):
                 table.add_row(
                     str(i+1),
+                    n['name'],
                     n['start'],
                     n['stop'],
                     n['playlist'],

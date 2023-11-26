@@ -139,13 +139,15 @@ class PyRadioScheduleList(object):
         for i in range(len(self._schedule_list)-1, -1, -1):
             ac = self._schedule_list[i].get_active_item()
             now = datetime.now()
-            if is_date_before(ac[0], now) and is_date_before(ac[1], now):
+            if is_date_before(ac[1], now) and \
+                    is_date_before(ac[2], now) and \
+                    ac[7] is None:
                 self._schedule_list.pop(i)
         # logger.error('\n\nself._schedule_list\n{}'.format(self._schedule_list))
 
     def get_list_of_active_items(self):
         if self._schedule_list == []:
-            logger.error('len(self._list) = {}'.format(len(self._list)))
+            # logger.error('len(self._list) = {}'.format(len(self._list)))
             for i in range(0, len(self._list)):
                  self._schedule_list.append(
                      PyRadioScheduleItem(self._list[i])
@@ -188,7 +190,7 @@ class PyRadioScheduleList(object):
         if self._schedule_list == []:
             self._list_to_schedule_items()
         rep = self.get_repeating_dates(self._schedule_list[0].get_active_item(), count=count)
-        return [(datetime_to_my_time(x[0]), datetime_to_my_time(x[1])) for x in rep]
+        return [(datetime_to_my_time(x[1]), datetime_to_my_time(x[2])) for x in rep]
 
 
 
@@ -203,11 +205,11 @@ class PyRadioScheduleList(object):
             'Saturday': SA
         }
 
-        start_date = in_date[0]
+        start_date = in_date[1]
         now = datetime.now()
         if start_date < now:
             start_date = start_date.replace(year=now.year, month=now.month, day=now.day)
-        now_with_correct_time = now.replace(hour=in_date[0].hour, minute=in_date[0].minute, second=in_date[0].minute)
+        now_with_correct_time = now.replace(hour=in_date[1].hour, minute=in_date[1].minute, second=in_date[1].minute)
         now_plus_seven_days = now_with_correct_time + timedelta(days=7)
         if count == -1:
             if in_date[-4] == 'day':
@@ -238,11 +240,11 @@ class PyRadioScheduleList(object):
 
         out = []
         if ll:
-            d = in_date[1] - in_date[0]
+            d = in_date[2] - in_date[1]
             for i in range(len(ll)):
                 out.append(list(in_date))
-                out[-1][0] = ll[i]
-                out[-1][1] = out[-1][0] + d
+                out[-1][1] = ll[i]
+                out[-1][2] = out[-1][1] + d
         return out
 
     def get_info_of_tasks(self, to_dict=False):
@@ -258,6 +260,7 @@ class PyRadioScheduleList(object):
                 if 'player' in n:
                     tmp = {
                             'id': str(i+1),
+                            'name': n['name'],
                             'link': '',
                             'start': datetime_to_my_time(n['date']),
                             'stop': '',
@@ -295,6 +298,7 @@ class PyRadioScheduleList(object):
             for i, n in enumerate(self._sorted):
                 if 'player' in n:
                     out.append('Task: {}'.format(i+1))
+                    out.append('    Name: ' + n['name'])
                     out.append('    Start playback on: ' + datetime_to_my_time(n['date']))
                     out.append('    From playlist: ' + n['playlist'])
                     out.append('          Station: ' + n['station'])
@@ -328,10 +332,9 @@ class PyRadioScheduleList(object):
         if self._schedule_list == []:
             self._list_to_schedule_items()
 
-        logger.error('\n\nself._schedule_list')
-        for n in self._schedule_list:
-            logger.error(n)
-        logger.error('\n\n')
+        # for n in self._schedule_list:
+        #     logger.error(n)
+        # logger.error('\n\n')
 
         a_list= []
         for i in range(0, len(self._schedule_list)):
@@ -346,35 +349,36 @@ class PyRadioScheduleList(object):
                     )
                 )
 
-            logger.info('\n\na_list')
-            for n in a_list:
-                logger.error('\n{}'.format(n))
-            logger.info('\n\n')
+            # logger.info('\n\na_list')
+            # for n in a_list:
+            #     logger.error('\n{}'.format(n))
+            # logger.info('\n\n')
 
         if a_list:
             a_list.sort(key=lambda x: x[0])
             for n in a_list:
                 self._sorted.append({
-                    'date': n[0],
-                    'player': n[3],
-                    'recording': n[4],
-                    'buffering': n[5],
-                    'playlist': n[7],
-                    'station': n[8],
+                    'name': n[0],
+                    'date': n[1],
+                    'player': n[4],
+                    'recording': n[5],
+                    'buffering': n[6],
+                    'playlist': n[8],
+                    'station': n[9],
                     'token': n[-1] if n[-1] else random_string(),
-                    'link': random_string() if n[2] == 0 else ''
+                    'link': random_string() if n[3] == 0 else ''
                 })
-                if n[2] == 0:
+                if n[3] == 0:
                     self._sorted.append({
-                        'date': n[1],
+                        'date': n[2],
                         'token': self._sorted[-1]['token'],
                         'link': self._sorted[-1]['link']
                     })
 
-        logger.error('\n\nself._sorted')
-        for n in self._sorted:
-            logger.error(n)
-        logger.error('\n\n')
+        # logger.error('\n\nself._sorted')
+        # for n in self._sorted:
+        #     logger.error(n)
+        # logger.error('\n\n')
 
     def item(self, index):
         if index < len(self._list):
@@ -676,6 +680,7 @@ class PyRadioScheduleItem(object):
         '''
         return a tuple of datetimes representing
         (
+            name
             starting date-time,
             ending date-time,
             type (start/stop/both)
@@ -739,7 +744,8 @@ class PyRadioScheduleItem(object):
         rep = self._item['repeat']
         if rep is not None:
             rep = rep.strip()
-        return (start_date, end_date,
+        return (self._item['name'],
+                start_date, end_date,
                 self._item['type'],
                 self._item['player'],
                 self._item['recording'],
@@ -747,7 +753,7 @@ class PyRadioScheduleItem(object):
                 rep,
                 self._item['playlist'] if self._item['type'] != PyRadioScheduleItemType.TYPE_END else None,
                 self._item['station'] if self._item['type'] != PyRadioScheduleItemType.TYPE_END else None,
-                self._item['token']
+                self._item['token'],
                 )
 
     def _get_today(self):
@@ -1127,7 +1133,8 @@ if __name__ == '__main__':
         'station': 'The UK 1940s Radio Station  1920s 1930s 1940s',
         'token': 'LhhO\x0c@>BET'
     }]
-    x = PyRadioScheduleList(a_file='', a_list=my_list)
+    # x = PyRadioScheduleList(a_file='', a_list=my_list)
+    x = PyRadioScheduleList(a_file='/home/spiros/.config/pyradio/data/schedule.json')
     out = x.get_list_of_active_items()
     for n in out:
         print(n)
@@ -1153,8 +1160,8 @@ if __name__ == '__main__':
     print('\n\n')
 
     for n in rep:
-        print(datetime_to_my_time(n[0]))
         print(datetime_to_my_time(n[1]))
+        print(datetime_to_my_time(n[2]))
         print('')
 
     r = x.get_list_of_repeating_dates(6)
