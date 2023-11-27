@@ -25,6 +25,7 @@ a_file = '/home/spiros/.config/pyradio/data/schedule.json'
 def is_date_before(a_date, b_date):
     if (a_date - b_date).days < 0:
         return True
+    return False
 
 def is_date_after(a_date, b_date):
     return not is_date_before(a_date, b_date)
@@ -471,11 +472,11 @@ class PyRadioScheduleItem(object):
     @property
     def active_item(self):
         '''return the item after calculating all relative values'''
-        st, en, it_type, pl, rec, buf, rep, playlist, station, token = self.get_active_item()
+        name, st, en, it_type, pl, rec, buf, rep, playlist, station, token = self.get_active_item()
         if token == '':
             token = random_string()
         out = {
-            'name': self._item['name'],
+            'name': name,
             'type': it_type,
             'start_type': 0,
             'start_date': [st.year, st.month, st.day],

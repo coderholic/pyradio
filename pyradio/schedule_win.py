@@ -28,10 +28,10 @@ class PyRadioSimpleScheduleWindow(object):
     _thread_date = None
     _error_num = 0
     _error_messages = {
-        3: 'Item is invalid!',
-        6: 'Start time is in the past!',
-        7: 'End time is in the past!',
-        8: 'Start time is after End time!'
+        3: '________Item is |invalid|!\n__|No |Start| or |Stop| time specified!',
+        6: '____Item is |invalid|!\n__Start time| is in the |past|!',
+        7: '____Item is |invalid|!\n__End time| is in the |past|!',
+        8: '_______Item is |invalid|!\n__Start time| is after |End time|!'
     }
 
     _repeat = (
@@ -570,7 +570,8 @@ class PyRadioSimpleScheduleWindow(object):
             self._fix_focus()
             for n in range(0, len(self._widgets)):
                 if n == len(self._widgets) -1:
-                    self._widgets[n].show(parent_win=self._win, opening=False)
+                    with self.lock:
+                        self._widgets[n].show(parent_win=self._win, opening=False)
                 else:
                     try:
                         with self.lock:
@@ -579,7 +580,8 @@ class PyRadioSimpleScheduleWindow(object):
                         logger.error('exception!')
                         with self.lock:
                             self._widgets[n].show()
-        self._win.refresh()
+        with self.lock:
+            self._win.refresh()
         self._showed = True
         if self._thread_date is None:
             self._thread_date = threading.Thread(
@@ -818,6 +820,7 @@ class PyRadioSimpleScheduleWindow(object):
             playlist = None
             station = None
         tmp_item = PyRadioScheduleItem({
+            'name': self._widgets[23].string,
             'type': the_type, # TYPE_START_END, TYPE_START, TYPE_END
             'start_type': 0 if self._widgets[4].checked else 1, # TIME_ABSOLUTE, TIME_RELATIVE
             'start_date':  list(self._widgets[3].date_tuple),
@@ -835,9 +838,10 @@ class PyRadioSimpleScheduleWindow(object):
             'station': station,
             'token': self._schedule_item.item['token']
         })
-        logger.error('--== item ==--')
-        for n in tmp_item.item:
-            logger.error('{0}: {1}'.format(n, tmp_item.item[n]))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('--== item ==--')
+            for n in tmp_item.item:
+                logger.debug('{0}: {1}'.format(n, tmp_item.item[n]))
         return tmp_item
 
     def _show_info(self):
@@ -852,57 +856,56 @@ class PyRadioSimpleScheduleWindow(object):
                 return 10
         tmp_item = self._form_to_item()
         ac_tmp_item = tmp_item.get_active_item()
-        logger.error('--== active item ==--')
-        for n in tmp_item.active_item:
-            logger.error('{0}: {1}'.format(n, tmp_item.active_item[n]))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('--== active item ==--')
+            for n in tmp_item.active_item:
+                logger.debug('{0}: {1}'.format(n, tmp_item.active_item[n]))
         ac_tmp_item = tmp_item.get_active_item()
-        logger.error(ac_tmp_item)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('ac_tmp_item = {}'.format(ac_tmp_item))
 
         err_out = []
         error = False
-        logger.error('tmp_item.item["repeat"] = {}'.format(tmp_item.item['repeat']))
         if tmp_item.item['repeat'] is None:
             if tmp_item.item['type'] == 0:
-                if is_date_before(ac_tmp_item[1], ac_tmp_item[0]):
+                if is_date_before(ac_tmp_item[2], ac_tmp_item[1]):
                     if not error:
                         err_out.append('--== |Invalid item| ==--')
                         error = True
                     err_out.append('|Start time| is after |End time|!')
-                elif is_date_before(ac_tmp_item[0], datetime.now()):
+                elif is_date_before(ac_tmp_item[1], datetime.now()):
                     if not error:
                         err_out.append('--== |Invalid item| ==--')
                         error = True
                     err_out.append('|Start time| is in the |past|!')
                     error = True
-                    if is_date_before(ac_tmp_item[1], datetime.now()):
+                    if is_date_before(ac_tmp_item[2], datetime.now()):
                         if not error:
                             err_out.append('--== |Invalid item| ==--')
                             error = True
                         err_out.append('|Stop time| is in the |past|!')
             elif tmp_item.item['type'] == 1:
-                if is_date_before(ac_tmp_item[0], datetime.now()):
+                if is_date_before(ac_tmp_item[1], datetime.now()):
                     err_out.append('--== |Invalid item| ==--')
                     err_out.append('|Start time| is in the |past|!')
                     error = True
             elif tmp_item.item['type'] == 2:
-                if is_date_before(ac_tmp_item[1], datetime.now()):
+                if is_date_before(ac_tmp_item[2], datetime.now()):
                     err_out.append('--== |Invalid item| ==--')
                     err_out.append('|Stop time| is in the |past|!')
                     error = True
         else:
             if tmp_item.item['type'] == 0:
-                if is_date_before(ac_tmp_item[1], ac_tmp_item[0]):
+                if is_date_before(ac_tmp_item[2], ac_tmp_item[1]):
                     err_out.append('--== |Invalid item| ==--')
                     err_out.append('|Start time| is after |End time|!')
                     error = True
-
         out = []
         if tmp_item.item['repeat'] is None or error:
             out.extend(self._format_info_lines(tmp_item.item['type'], ac_tmp_item))
         else:
             # get list of occurrences
-            it_count=3 if tmp_item.item['type'] == 0 else 6
-            logger.error('\n\n{}\n\n'.format(it_count))
+            it_count = 3 if tmp_item.item['type'] == 0 else 6
             the_r_list = PyRadioScheduleList(a_file='', a_list=[tmp_item.item])
             the_list = the_r_list.get_list_of_repeating_dates(it_count)
             out.append('Displaying |{}| subsequent occurrences:'.format(it_count))
@@ -930,18 +933,19 @@ class PyRadioSimpleScheduleWindow(object):
         if out[-1] != '':
             out.append('')
         self._info_result = '\n'.join(out)
-        logger.error('self._info_result\n{}'.format(self._info_result))
-        logger.error('ret = {}'.format(ret))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('self._info_result\n{}'.format(self._info_result))
+            logger.debug('ret = {}'.format(ret))
 
     def _format_info_lines(self, the_type, item):
         out = []
         if the_type == 0:
-            out.append('__# Start: |' + datetime_to_my_time(item[0]) + '__')
-            out.append('_____Stop: |' + datetime_to_my_time(item[1]) + '__')
+            out.append('__# Start: |' + datetime_to_my_time(item[1]) + '__')
+            out.append('_____Stop: |' + datetime_to_my_time(item[2]) + '__')
         elif the_type == 1:
-            out.append('__# Start: |' + datetime_to_my_time(item[0]) + '__')
+            out.append('__# Start: |' + datetime_to_my_time(item[1]) + '__')
         elif the_type == 2:
-            out.append('__#__Stop: |' + datetime_to_my_time(item[1]) + '__')
+            out.append('__#__Stop: |' + datetime_to_my_time(item[2]) + '__')
         return out
 
     def _validate_selection(self):
@@ -958,38 +962,38 @@ class PyRadioSimpleScheduleWindow(object):
                 logger.debug('Invalid item')
                 return 3
         tmp_item = self._form_to_item()
-        logger.error('--== active item ==--')
-        for n in tmp_item.active_item:
-            logger.error('{0}: {1}'.format(n, tmp_item.active_item[n]))
-        logger.error('\n\n{}\n\n'.format(tmp_item))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('--== active item ==--')
+            for n in tmp_item.active_item:
+                logger.debug('{0}: {1}'.format(n, tmp_item.active_item[n]))
+            logger.debug('tmp_item ={}'.format(tmp_item))
         ac_tmp_item = tmp_item.get_active_item()
-        logger.error(ac_tmp_item)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('ac_tmp_item = {}'.format(ac_tmp_item))
 
-        if the_type == 2:
-            # stop playback
-            if ac_tmp_item[0] <= datetime.now():
-                if ac_tmp_item[-3] is None:
-                    # no repeat
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Stop time is in the past')
-                    return 7
-        elif ac_tmp_item[-4] is None:
-            # start or start and stop
-            if ac_tmp_item[0] <= datetime.now():
+        the_type = ac_tmp_item[3]
+        rep = ac_tmp_item[-4]
+
+        logger.error('\nthe_type = {}'.format(the_type))
+        logger.error('rep = {}\n'.format(rep))
+
+        if the_type in (0, 1) and rep is None:
+            if is_date_before(ac_tmp_item[1], datetime.now()):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Start time is in the past')
                 return 6
-            if the_type == 0:
-                # start and stop
-                if ac_tmp_item[1] <= datetime.now():
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Stop time is in the past')
-                    return 7
-                elif ac_tmp_item[0] >= ac_tmp_item[1]:
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Start time < end time')
-                    return 8
-        self._schedule_item = tmp_item
+
+        if the_type in (0, 2) and rep is None:
+            if is_date_before(ac_tmp_item[2], datetime.now()):
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Stop time is in the past')
+                return 7
+
+        if is_date_before(ac_tmp_item[2], ac_tmp_item[1]):
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Start time < end time')
+            return 8
+
         return 0
 
     def _fix_recording_from_player_selection(self):
@@ -1070,6 +1074,11 @@ class PyRadioSimpleScheduleWindow(object):
         #     logger.error('self._error_num = {}'.format(self._error_num))
         #     return self._error_num
 
+        if char == ord('1'):
+            self._error_num = self._validate_selection()
+            logger.error('self._error_num = {}'.format(self._error_num))
+            return self._error_num
+
         if self._widgets[self._focus].w_id == 23:
             ret = self._widgets[23].keypress(self._win, char)
             logger.error('return = {}'.format(ret))
@@ -1142,7 +1151,7 @@ class PyRadioSimpleScheduleWindow(object):
 
         else:
             ret = self._widgets[self._focus].keypress(char)
-            logger.error('ret = {}'.format(ret))
+            # logger.error('ret = {}'.format(ret))
 
             if self._widgets[self._focus].w_id == 22 \
                     and not ret:
