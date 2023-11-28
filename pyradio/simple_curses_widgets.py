@@ -518,7 +518,9 @@ class SimpleCursesDate(SimpleCursesWidget):
 
     @date.setter
     def date(self, val):
-        if isinstance(val, str):
+        if isinstance(val, datetime):
+            self._set_date(date_string=val.strftime('%Y-%m-%d'))
+        elif isinstance(val, str):
             self._set_date(date_string=val)
         else:
             self._set_date(date_tuple=val)
@@ -747,6 +749,7 @@ class SimpleCursesTime(SimpleCursesWidget):
         show_am_pm=False,
         check_box_char='✔',
         time_format=PyRadioTime.NO_AM_PM_FORMAT,
+        lock=None,
         time_format_changed_func=None,
         next_widget_func=None,
         previous_widget_func=None,
@@ -762,6 +765,9 @@ class SimpleCursesTime(SimpleCursesWidget):
         self.date = None
         self.datetime = None
         self.time_format = time_format
+        self.lock = lock
+        if self.lock is None:
+            self.lock = threading.Lock()
         self._time_format_changed_func = time_format_changed_func
         self._next_func = next_widget_func
         self._previous_func = previous_widget_func
@@ -807,6 +813,16 @@ class SimpleCursesTime(SimpleCursesWidget):
         self._showed = False
 
     @property
+    def active_time(self):
+        t_time = (
+            self._num[0][0],
+            self._num[1][0],
+            self._num[2][0],
+            self.time_format
+        )
+        return t_time
+
+    @property
     def show_am_pm(self):
         return self._show_am_pm
 
@@ -817,8 +833,13 @@ class SimpleCursesTime(SimpleCursesWidget):
 
     def set_time_pyradio_time(self, t_time):
         self.time = t_time
+        self._num[0][0] = self.time[0]
+        self._num[1][0] = self.time[1]
+        self._num[2][0] = self.time[2]
+        self.time_format = t_time[-1]
         if self._showed:
-            self.show()
+            with self.lock:
+                self.show()
 
     def get_time(self):
         '''
@@ -849,8 +870,6 @@ class SimpleCursesTime(SimpleCursesWidget):
         # logger.info('2 num[0] = {}'.format(self._num[0]))
         self._time_format_changed(old_time_format)
         # logger.info('3 num[0] = {}'.format(self._num[0]))
-        if self._showed:
-            self.show()
         # logger.info('4 num[0] = {0}\ntime format = {1}'.format(self._num[0], self.time_format))
 
 
@@ -859,7 +878,8 @@ class SimpleCursesTime(SimpleCursesWidget):
         self.time_format = t_time_format
         self._time_format_changed(old_time_format)
         if self._showed:
-            self.show()
+            with self.lock:
+                self.show()
 
     def _apply_time_format(self):
         if self.time_format == PyRadioTime.NO_AM_PM_FORMAT:

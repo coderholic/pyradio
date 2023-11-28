@@ -808,7 +808,7 @@ class PyRadioTime(object):
         if self.date is None:
             self.date = date.today()
         if self.time is None:
-            self.time = PyRadioTime.string_to_pyradio_time(datetime.now().strftime('%H:%M%S'))
+            self.time = PyRadioTime.string_to_pyradio_time(datetime.now().strftime('%H:%M:%S'))
         return self.date.strftime('%Y-%m-%d') + ' ' + PyRadioTime.pyradio_time_to_string(self.time)
 
     @classmethod
@@ -1169,4 +1169,12 @@ if __name__ == '__main__':
     print('\n\n')
     for n in r:
         print(n)
+
+    print('\n\n\n')
+
+    t = PyRadioTime()
+    print(t)
+
+    t.time = [11, 15, 34, 1]
+    print(t)
 

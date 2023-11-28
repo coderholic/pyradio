@@ -6164,6 +6164,7 @@ __|Remote Control Server| cannot be started!__
                  ____________________|applicable). Also, change counter value.
                  Space               |Toggle check buttons.
                  i                   |Validate entry and show dates.
+                 t| / |f               |Copy date/time |t|o/|f|rom complementary field.
                  n|, |p                |Go to |n|ext / |p|revious entry.
                  Enter               |Perform search / cancel (on push buttons).
                  s                   |Perform search (not on Line editor).

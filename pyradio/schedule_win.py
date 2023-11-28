@@ -307,6 +307,7 @@ class PyRadioSimpleScheduleWindow(object):
                 color=curses.color_pair(10),
                 show_am_pm=True,
                 color_focused=curses.color_pair(9),
+                lock=self.lock,
                 next_widget_func=self._next_widget,
                 previous_widget_func=self._previous_widget,
                 global_functions=self._global_functions,
@@ -331,6 +332,7 @@ class PyRadioSimpleScheduleWindow(object):
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
+                lock=self.lock,
                 next_widget_func=self._next_widget,
                 previous_widget_func=self._previous_widget,
                 global_functions=self._global_functions,
@@ -379,6 +381,7 @@ class PyRadioSimpleScheduleWindow(object):
                 show_am_pm=True,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
+                lock=self.lock,
                 next_widget_func=self._next_widget,
                 previous_widget_func=self._previous_widget,
                 global_functions=self._global_functions,
@@ -403,6 +406,7 @@ class PyRadioSimpleScheduleWindow(object):
                 window=self._win,
                 color=curses.color_pair(10),
                 color_focused=curses.color_pair(9),
+                lock=self.lock,
                 next_widget_func=self._next_widget,
                 previous_widget_func=self._previous_widget,
                 global_functions=self._global_functions,
@@ -1093,6 +1097,39 @@ class PyRadioSimpleScheduleWindow(object):
         elif char in self._global_functions.keys():
             self._global_functions[char]()
             return 0
+
+        elif char in (ord('t'), ord('f')) and self._focus in (3, 5, 7, 9, 11, 13):
+            # make date / time equal
+            if self._focus == 3:
+                if char == ord('t'):
+                    self._widgets[9].date = str(self._widgets[3])
+                else:
+                    self._widgets[3].date = str(self._widgets[9])
+            elif self._focus == 9:
+                if char == ord('f'):
+                    self._widgets[9].date = str(self._widgets[3])
+                else:
+                    self._widgets[3].date = str(self._widgets[9])
+            elif self._focus == 5:
+                if char == ord('t'):
+                    self._widgets[11].set_time_pyradio_time(self._widgets[5].active_time)
+                else:
+                    self._widgets[5].set_time_pyradio_time(self._widgets[11].active_time)
+            elif self._focus == 11:
+                if char == ord('f'):
+                    self._widgets[11].set_time_pyradio_time(self._widgets[5].active_time)
+                else:
+                    self._widgets[5].set_time_pyradio_time(self._widgets[11].active_time)
+            elif self._focus == 7:
+                if char == ord('t'):
+                    self._widgets[13].set_time_pyradio_time(self._widgets[7].active_time)
+                else:
+                    self._widgets[7].set_time_pyradio_time(self._widgets[13].active_time)
+            elif self._focus == 13:
+                if char == ord('f'):
+                    self._widgets[13].set_time_pyradio_time(self._widgets[7].active_time)
+                else:
+                    self._widgets[7].set_time_pyradio_time(self._widgets[13].active_time)
 
         elif char == ord('?'):
             return 2
