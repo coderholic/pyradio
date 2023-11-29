@@ -1098,6 +1098,44 @@ class PyRadioSimpleScheduleWindow(object):
             self._global_functions[char]()
             return 0
 
+        elif char == ord('n') and self._focus in range(2,14):
+            # now
+            now = datetime.now()
+            displ = 0 if self._focus < 8 else 6
+            enable = range(2 + displ, 7 + displ)
+            disable = (7 + displ, )
+            checked = (2 + displ, 4 + displ)
+            notchecked = (6 + displ, )
+            f_date = 3 + displ
+            f_time = f_date + 2
+            f_dur = f_time + 2
+
+            for n in enable:
+                self._widgets[n].enabled = True
+            for n in disable:
+                self._widgets[n].enabled = False
+            for n in checked:
+                self._widgets[n].checked = True
+            for n in notchecked:
+                self._widgets[n].checked = False
+
+            self._widgets[f_date].set_date_tupple((
+                        now.year,
+                        now.month,
+                        now.day
+                    )
+            )
+
+            self._widgets[f_time].set_time_pyradio_time((
+                    now.hour,
+                    now.minute,
+                    now.second,
+                    0
+                )
+            )
+
+            self._widgets[f_dur].set_time_pyradio_time((0, 0, 0, 0))
+
         elif char in (ord('t'), ord('f')) and self._focus in (3, 5, 7, 9, 11, 13):
             # make date / time equal
             if self._focus == 3:

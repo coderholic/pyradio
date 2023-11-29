@@ -6165,7 +6165,7 @@ __|Remote Control Server| cannot be started!__
                  Space               |Toggle check buttons.
                  i                   |Validate entry and show dates.
                  t| / |f               |Copy date/time |t|o/|f|rom complementary field.
-                 n|, |p                |Go to |n|ext / |p|revious entry.
+                 n                   |Set current date and time to section.
                  Enter               |Perform search / cancel (on push buttons).
                  s                   |Perform search (not on Line editor).
                  Esc                 |Cancel operation.
