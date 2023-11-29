@@ -738,6 +738,12 @@ class PyRadioSimpleScheduleWindow(object):
             if self._widgets[i].enabled:
                 self._widgets[i+1].enabled = self._widgets[i].checked
 
+        for i in (6, 12):
+            if self._widgets[i].checked:
+                self._widgets[i-3].enabled = False
+            else:
+                self._widgets[i-3].enabled = True
+
         # for n in ((6,3), (12, 9)):
         #     if self._widgets[n[0]].enabled and \
         #             self._widgets[n[0]].checked:
@@ -1055,6 +1061,46 @@ class PyRadioSimpleScheduleWindow(object):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('_thread_show_date terminated!')
 
+    def _set_start_session_date_time(self, a_date=None, time_delta=0):
+        if a_date is None:
+            time_delta = 0
+            a_date = datetime.now()
+
+        displ = 0 if self._focus < 8 else 6
+        enable = range(2 + displ, 7 + displ)
+        disable = (7 + displ, )
+        checked = (2 + displ, 4 + displ)
+        notchecked = (6 + displ, )
+        f_date = 3 + displ
+        f_time = f_date + 2
+        f_dur = f_time + 2
+
+        for n in enable:
+            self._widgets[n].enabled = True
+        for n in disable:
+            self._widgets[n].enabled = False
+        for n in checked:
+            self._widgets[n].checked = True
+        for n in notchecked:
+            self._widgets[n].checked = False
+
+        self._widgets[f_date].set_date_tupple((
+                    a_date.year,
+                    a_date.month,
+                    a_date.day
+                )
+        )
+
+        self._widgets[f_time].set_time_pyradio_time((
+                a_date.hour,
+                a_date.minute,
+                a_date.second,
+                0
+            )
+        )
+
+        self._widgets[f_dur].set_time_pyradio_time((time_delta, 0, 0, 0))
+
     def keypress(self, char):
         '''
         PyRadioSimpleScheduleWindow keypress
@@ -1078,10 +1124,10 @@ class PyRadioSimpleScheduleWindow(object):
         #     logger.error('self._error_num = {}'.format(self._error_num))
         #     return self._error_num
 
-        if char == ord('1'):
-            self._error_num = self._validate_selection()
-            logger.error('self._error_num = {}'.format(self._error_num))
-            return self._error_num
+        # if char == ord('1'):
+        #     self._error_num = self._validate_selection()
+        #     logger.error('self._error_num = {}'.format(self._error_num))
+        #     return self._error_num
 
         if self._widgets[self._focus].w_id == 23:
             ret = self._widgets[23].keypress(self._win, char)
@@ -1100,41 +1146,68 @@ class PyRadioSimpleScheduleWindow(object):
 
         elif char == ord('n') and self._focus in range(2,14):
             # now
+            self._set_start_session_date_time()
+            if self._focus < 8:
+                self._focus = 5
+            else:
+                self._focus = 11
+
+        elif char in range(48, 58) and self._focus in range(2,14):
             now = datetime.now()
+            time_delta = char - 48
             displ = 0 if self._focus < 8 else 6
-            enable = range(2 + displ, 7 + displ)
-            disable = (7 + displ, )
-            checked = (2 + displ, 4 + displ)
-            notchecked = (6 + displ, )
-            f_date = 3 + displ
-            f_time = f_date + 2
-            f_dur = f_time + 2
-
-            for n in enable:
-                self._widgets[n].enabled = True
-            for n in disable:
-                self._widgets[n].enabled = False
-            for n in checked:
-                self._widgets[n].checked = True
-            for n in notchecked:
-                self._widgets[n].checked = False
-
-            self._widgets[f_date].set_date_tupple((
-                        now.year,
-                        now.month,
-                        now.day
+            if self._focus < 8:
+                now = now + timedelta(hours=time_delta)
+                self._set_start_session_date_time(now, time_delta)
+            else:
+                enable = (8, 10, 12, 13)
+                disable = (9, 11 )
+                checked = (8, 12)
+                notchecked = (10, )
+                f_date = 9
+                f_time = 11
+                f_dur = 13
+                self._focus = 12
+                if self._widgets[4].checked:
+                    t_date = list(self._widgets[3].date_tuple)
+                    t_time = list(self._widgets[5].active_time)
+                    if t_time[-1] == 2:
+                        t_time[0] += 12
+                    now = datetime(
+                            year=t_date[0],
+                            month=t_date[1],
+                            day=t_date[2],
+                            hour=t_time[0],
+                            minute=t_time[1],
+                            second=t_time[2]
                     )
-            )
+                    now = now + timedelta(hours=time_delta)
 
-            self._widgets[f_time].set_time_pyradio_time((
-                    now.hour,
-                    now.minute,
-                    now.second,
-                    0
+                for n in enable:
+                    self._widgets[n].enabled = True
+                for n in disable:
+                    self._widgets[n].enabled = False
+                for n in checked:
+                    self._widgets[n].checked = True
+                for n in notchecked:
+                    self._widgets[n].checked = False
+
+                self._widgets[f_date].set_date_tupple((
+                            now.year,
+                            now.month,
+                            now.day
+                        )
                 )
-            )
 
-            self._widgets[f_dur].set_time_pyradio_time((0, 0, 0, 0))
+                self._widgets[f_time].set_time_pyradio_time((
+                        now.hour,
+                        now.minute,
+                        now.second,
+                        0
+                    )
+                )
+
+                self._widgets[f_dur].set_time_pyradio_time((time_delta, 0, 0, 0))
 
         elif char in (ord('t'), ord('f')) and self._focus in (3, 5, 7, 9, 11, 13):
             # make date / time equal
@@ -1202,10 +1275,10 @@ class PyRadioSimpleScheduleWindow(object):
                     self._repeat_index = 0
             self._widgets[19].string = self._repeat[self._repeat_index].ljust(self._max_repeat_len)
 
-        elif char in (ord('j'), curses.KEY_UP):
+        elif char in (ord('k'), curses.KEY_UP):
             self._go_up()
 
-        elif char in (ord('k'), curses.KEY_DOWN):
+        elif char in (ord('j'), curses.KEY_DOWN):
             self._go_down()
 
         elif char in (9, ord('L')):

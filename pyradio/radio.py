@@ -6163,9 +6163,10 @@ __|Remote Control Server| cannot be started!__
                  ____________________|Go to next / previous field (when
                  ____________________|applicable). Also, change counter value.
                  Space               |Toggle check buttons.
-                 i                   |Validate entry and show dates.
-                 t| / |f               |Copy date/time |t|o/|f|rom complementary field.
                  n                   |Set current date and time to section.
+                 0|-|9                 |Add hours to |Start| or |Stop| section.
+                 t| / |f               |Copy date/time |t|o/|f|rom complementary field.
+                 i                   |Validate entry and show dates.
                  Enter               |Perform search / cancel (on push buttons).
                  s                   |Perform search (not on Line editor).
                  Esc                 |Cancel operation.
