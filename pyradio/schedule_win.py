@@ -28,10 +28,10 @@ class PyRadioSimpleScheduleWindow(object):
     _thread_date = None
     _error_num = 0
     _error_messages = {
-        3: '________Item is |invalid|!\n__|No |Start| or |Stop| time specified!',
-        6: '____Item is |invalid|!\n__Start time| is in the |past|!',
-        7: '____Item is |invalid|!\n__End time| is in the |past|!',
-        8: '_______Item is |invalid|!\n__Start time| is after |End time|!'
+        3: '_______Entry is |invalid|!\n__|No |Start| or |Stop| time specified!',
+        6: '___Entry is |invalid|!\n__Start time| is in the |past|!',
+        7: '___Entry is |invalid|!\n__End time| is in the |past|!',
+        8: '______Entry is |invalid|!\n__Start time| is after |End time|!'
     }
 
     _repeat = (
@@ -45,12 +45,13 @@ class PyRadioSimpleScheduleWindow(object):
         'Friday',
         'Saturday',
         'Sunday'
-            )
+    )
+
     _max_repeat_len = max([len(x) for x in _repeat])
     _repeat_index = 0
 
-    '''     0  1  2   3  4  5   6   7  8  9  10 11 12 13 14  15  16  17  18  19  20  21  22 23'''
-    _up = (23, 0, 1, 19, 2, 3, 21, 22, 4, 5, 8, 9, 6, 7, 10, 14, 11, 15, 17, 16, 18, 12, 13, 20)
+    '''     0  1  2   3  4  5   6   7  8  9  10 11 12 13 14  15  16  17  18  19  20  21  22 '''
+    _up = (22, 0, 1, 19, 2, 3, 20, 21, 4, 5, 8, 9, 6, 7, 10, 14, 11, 15, 17, 16, 12, 13, 18)
 
     lock = threading.Lock()
     _tips = (
@@ -66,18 +67,17 @@ class PyRadioSimpleScheduleWindow(object):
         'The date the playback will stop',
         'Absolute time to stop playback',
         'Absolute time to stop playback',
-        'Stop playback XX:XX:XX after the time "OK" is pressed',
-        'Stop playback XX:XX:XX after the time "OK" is pressed',
+        'Stop playback XX:XX:XX after the "Start" time',
+        'Stop playback XX:XX:XX after the "Start" time',
         'The player to use',
         'Enable recording the station to a file',
         'Play no sound while recording',
-        'Enable buffering (using default parameters)',
-        'Enable recurrence for this setup',
-        'Recurrence parameter for this setup',
-        'Remove this schedule',
-        'Save changes to this schedule item',
-        'Cancel changes to this schedule item',
-        'Optional name for this item'
+        'Enable buffering (default parameters will be used)',
+        'Enable recurrence for this schedule entry',
+        'Recurrence parameter for this schedule entry',
+        'Save changes to this schedule schedule entry',
+        'Cancel changes to this schedule entry',
+        'A descriptive name for this schedule entry'
     )
 
     def __init__(
@@ -90,6 +90,7 @@ class PyRadioSimpleScheduleWindow(object):
             schedule_item=None,
             global_functions={}
     ):
+        self._entry = None
         self._exit = False
         self._my_op_mode = my_op_mode
         self._cur_op_mode = cur_op_mode
@@ -116,6 +117,10 @@ class PyRadioSimpleScheduleWindow(object):
     def exit(self):
         self._stop = True
         self._exit = True
+
+    @property
+    def entry(self):
+        return self._entry
 
     @property
     def too_small(self):
@@ -185,16 +190,18 @@ class PyRadioSimpleScheduleWindow(object):
         self._widgets[13].move(9, self._widgets[12].X + self._widgets[12].width - self._X)
         # options
         # self._widgets[14].move(8, 3)
-        self._widgets[15].move(8 + self._displacement + self._Y, self._X + 9)
-        self._widgets[16].move(8 + self._displacement + self._Y, self._widgets[15].X + self._widgets[15].width + 4)
-        self._widgets[17].move(9 + self._displacement + self._Y, self._X + 9)
-        self._widgets[18].move(10 + self._displacement + self._Y, self._X + 5)
+        self._widgets[15].move(9 + self._displacement + self._Y, self._X + 9)
+        self._widgets[16].move(9 + self._displacement + self._Y, self._widgets[15].X + self._widgets[15].width + 4)
+        self._widgets[17].move(10 + self._displacement + self._Y, self._X + 9)
+        self._widgets[18].move(11 + self._displacement + self._Y, self._X + 5)
         # self._widgets[19].move(8 + self._displacement + self._Y, self._widgets[17].X + self._widgets[18].width)
         # Buttons
-        self._widgets[20].move(12 + self._displacement + self._Y, self._X + 2)
-        self._widgets[21].move(self._widgets[20].Y, self._X + self._maxX - 19)
-        self._widgets[22].move(self._widgets[20].Y, self._X + self._maxX - (len(self._widgets[13].caption) + 12))
-        self._widgets[23].move(
+        self._widgets[20].move(12 + self._displacement + self._Y, self._X + self._maxX - 19)
+        self._widgets[21].move(self._widgets[20].Y, self._X + self._maxX - (len(self._widgets[13].caption) + 12))
+
+
+        # self._widgets[21].move(12 + self._displacement + self._Y, self._X + self.maxX - self._widgets[21].width)
+        self._widgets[22].move(
                 self._win,
                 self._Y + self._widgets[0].Y - 1,
                 self._X + 12,
@@ -419,7 +426,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 14 player '''
         self._widgets.append(
             SimpleCursesString(
-                Y=10, X=3,
+                Y=11, X=3,
                 parent=self._win,
                 caption='Player: ',
                 string=self._supported_players[self._current_player_id],
@@ -471,7 +478,7 @@ class PyRadioSimpleScheduleWindow(object):
         ''' id 19 silent recording '''
         self._widgets.append(
             SimpleCursesString(
-                Y=13,
+                Y=14,
                 X=23,
                 parent=self._win,
                 caption='',
@@ -485,11 +492,10 @@ class PyRadioSimpleScheduleWindow(object):
         )
         self._widgets[-1].w_id = 19
 
-        ''' id 20 cancel scheduling button '''
-        cap = 'Remove Schedule'
+        ''' id 20 ok button '''
+        cap = 'OK'
         self._widgets.append(SimpleCursesPushButton(
-            Y=12 + self._displacement + self._Y,
-            X=self._X + 2,
+            Y=0, X=0,
             caption=cap,
             color_focused=curses.color_pair(9),
             color=curses.color_pair(11),
@@ -497,8 +503,8 @@ class PyRadioSimpleScheduleWindow(object):
             parent=self._parent))
         self._widgets[-1].w_id = 20
 
-        ''' id 21 ok button '''
-        cap = 'OK'
+        ''' id 21 cancel button '''
+        cap = 'Cancel'
         self._widgets.append(SimpleCursesPushButton(
             Y=0, X=0,
             caption=cap,
@@ -508,18 +514,7 @@ class PyRadioSimpleScheduleWindow(object):
             parent=self._parent))
         self._widgets[-1].w_id = 21
 
-        ''' id 22 cancel button '''
-        cap = 'Cancel'
-        self._widgets.append(SimpleCursesPushButton(
-            Y=0, X=0,
-            caption=cap,
-            color_focused=curses.color_pair(9),
-            color=curses.color_pair(11),
-            bracket_color=curses.color_pair(10),
-            parent=self._parent))
-        self._widgets[-1].w_id = 22
-
-        ''' id 23 name line editor '''
+        ''' id 22 name line editor '''
         self._widgets.append(SimpleCursesLineEdit(
             parent=self._win,
             width=46,
@@ -541,7 +536,7 @@ class PyRadioSimpleScheduleWindow(object):
         )
         ''' enables direct insersion of ? and \ '''
         self._widgets[-1]._paste_mode = False
-        self._widgets[-1].w_id = 23
+        self._widgets[-1].w_id = 22
         self._widgets[-1].string = self._schedule_item.item['name']
 
         self._move_widgets()
@@ -830,7 +825,7 @@ class PyRadioSimpleScheduleWindow(object):
             playlist = None
             station = None
         tmp_item = PyRadioScheduleItem({
-            'name': self._widgets[23].string,
+            'name': self._widgets[22].string,
             'type': the_type, # TYPE_START_END, TYPE_START, TYPE_END
             'start_type': 0 if self._widgets[4].checked else 1, # TIME_ABSOLUTE, TIME_RELATIVE
             'start_date':  list(self._widgets[3].date_tuple),
@@ -858,9 +853,9 @@ class PyRadioSimpleScheduleWindow(object):
         ret = 10
         if not self._widgets[2].checked and not self._widgets[8].checked:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Invalid item')
+                logger.debug('Invalid entry')
                 self._info_result = '''
-                    ________--== |Invalid item| ==--
+                    _______--== |Invalid entry| ==--
                     ___No |Start| or |Stop| time specified___
                 '''
                 return 10
@@ -880,23 +875,23 @@ class PyRadioSimpleScheduleWindow(object):
             if tmp_item.item['type'] == 0:
                 if is_date_before(ac_tmp_item[2], ac_tmp_item[1]):
                     if not error:
-                        err_out.append('--== |Invalid item| ==--')
+                        err_out.append('--== |Invalid entry| ==--')
                         error = True
                     err_out.append('|Start time| is after |End time|!')
                 elif is_date_before(ac_tmp_item[1], datetime.now()):
                     if not error:
-                        err_out.append('--== |Invalid item| ==--')
+                        err_out.append('--== |Invalid entry| ==--')
                         error = True
                     err_out.append('|Start time| is in the |past|!')
                     error = True
                     if is_date_before(ac_tmp_item[2], datetime.now()):
                         if not error:
-                            err_out.append('--== |Invalid item| ==--')
+                            err_out.append('--== |Invalid entry| ==--')
                             error = True
                         err_out.append('|Stop time| is in the |past|!')
             elif tmp_item.item['type'] == 1:
                 if is_date_before(ac_tmp_item[1], datetime.now()):
-                    err_out.append('--== |Invalid item| ==--')
+                    err_out.append('--== |Invalid entry| ==--')
                     err_out.append('|Start time| is in the |past|!')
                     error = True
             elif tmp_item.item['type'] == 2:
@@ -907,7 +902,7 @@ class PyRadioSimpleScheduleWindow(object):
         else:
             if tmp_item.item['type'] == 0:
                 if is_date_before(ac_tmp_item[2], ac_tmp_item[1]):
-                    err_out.append('--== |Invalid item| ==--')
+                    err_out.append('--== |Invalid entry| ==--')
                     err_out.append('|Start time| is after |End time|!')
                     error = True
         out = []
@@ -962,14 +957,16 @@ class PyRadioSimpleScheduleWindow(object):
         ''' validate form input
             Return
               0: All ok
-              3: Invalid item
+                 Entry is set to self.entry
+              3: Invalid entry
               6: Start time is in the past
               7: Stop time is in the past
               8: Stop time before Start time
         '''
+        self._entry = None
         if not self._widgets[2].checked and not self._widgets[8].checked:
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug('Invalid item')
+                logger.debug('Invalid entry')
                 return 3
         tmp_item = self._form_to_item()
         if logger.isEnabledFor(logging.DEBUG):
@@ -1004,6 +1001,7 @@ class PyRadioSimpleScheduleWindow(object):
                 logger.debug('Start time < end time')
             return 8
 
+        self._entry = tmp_item
         return 0
 
     def _fix_recording_from_player_selection(self):
@@ -1112,7 +1110,7 @@ class PyRadioSimpleScheduleWindow(object):
              1: Get result
              2: Remove Schedule
              2: Show Help
-             3: Invalid item
+             3: Invalid entry
              4: Open playlist selection window
              5: Open station selection window
              6: Start time is in the past
@@ -1129,8 +1127,8 @@ class PyRadioSimpleScheduleWindow(object):
         #     logger.error('self._error_num = {}'.format(self._error_num))
         #     return self._error_num
 
-        if self._widgets[self._focus].w_id == 23:
-            ret = self._widgets[23].keypress(self._win, char)
+        if self._widgets[self._focus].w_id == 22:
+            ret = self._widgets[22].keypress(self._win, char)
             logger.error('return = {}'.format(ret))
             if ret == -1:
                 self._stop = True
@@ -1301,21 +1299,21 @@ class PyRadioSimpleScheduleWindow(object):
             ret = self._widgets[self._focus].keypress(char)
             # logger.error('ret = {}'.format(ret))
 
-            if self._widgets[self._focus].w_id == 22 \
+            if self._widgets[self._focus].w_id == 21 \
                     and not ret:
                 ''' Cancel '''
                 return -1
 
-            elif self._widgets[self._focus].w_id == 21 \
-                    and not ret:
-                ''' OK '''
-                self._validate_selection()
-                return 1
-
             elif self._widgets[self._focus].w_id == 20 \
                     and not ret:
-                ''' Remove schedule '''
-                return 2
+                ''' OK '''
+                self._error_num= self._validate_selection()
+                if self._error_num== 0:
+                    logger.error('return 1')
+                    # TODO: create an entry
+                    return 1
+                logger.error('return {}'.format(self._error_num))
+                return self._error_num
 
             elif self._widgets[self._focus].w_id in (3, 5, 7, 9, 11, 13):
                 ''' Time

@@ -36,7 +36,8 @@ def datetime_to_my_time(a_date, shorten=True):
     if shorten:
         if a_date.date() == now.date():
             return 'At ' + t[-2]
-        now = now.replace(day=now.day+1)
+        # now = now.replace(day=now.day+1)
+        now = now + timedelta(days=1)
         if a_date.date() == now.date():
             return 'Tomorrow, at ' + t[-2]
 
@@ -1161,6 +1162,8 @@ if __name__ == '__main__':
     print('\n\n')
 
     for n in rep:
+        print('n[1] =', n[1])
+        print('type(n[1]) =', type(n[1]))
         print(datetime_to_my_time(n[1]))
         print(datetime_to_my_time(n[2]))
         print('')
@@ -1177,4 +1180,8 @@ if __name__ == '__main__':
 
     t.time = [11, 15, 34, 1]
     print(t)
+
+    print('\n\n{}'.format(datetime_to_my_time(datetime.now())))
+
+    print('\n\n{}'.format(datetime_to_my_time(datetime.now() + timedelta(days=1))))
 

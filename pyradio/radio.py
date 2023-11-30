@@ -6410,7 +6410,7 @@ __|Remote Control Server| cannot be started!__
 
     def _show_schedule_info(self):
         txt = self._simple_schedule._info_result
-        caption = ' Schedule Item Info '
+        caption = ' Schedule Entry Info '
         self._show_help(txt,
                         mode_to_set=self.ws.SCHEDULE_INFO_MODE,
                         caption=caption,
@@ -7417,6 +7417,8 @@ __|Remote Control Server| cannot be started!__
 
         elif self.ws.operation_mode == self.ws.SCHEDULE_EDIT_MODE:
             ret = self._simple_schedule.keypress(char)
+            logger.error('Got {}'.format(ret))
+            logger.error('Entry: {}'.format(self._simple_schedule.entry))
             if ret == -1:
                 self._simple_schedule = None
                 self.ws.close_window()

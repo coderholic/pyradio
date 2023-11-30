@@ -77,6 +77,9 @@ class DisabledWidget(object):
     def show(self, parent=None):
         pass
 
+    def move(self, newY=-1, newX=-1, parent=None):
+        pass
+
 class SimpleCursesWidget(object):
     '''An abstract widget class '''
     _win = _parent = _callback_function = None
