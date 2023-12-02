@@ -1375,6 +1375,8 @@ if __name__ == '__main__':
         if not platform.system().lower().startswith('darwin'):
             parser.add_argument('--python2', action='store_true',
                                 help='Install using python 2.')
+        else:
+            parser.add_argument('--python2', action='store_true', help=SUPPRESS)
     else:
         parser.add_argument('-oc', '--open-cache', action='store_true', help=SUPPRESS)
         parser.add_argument('-sc', '--show-cache', action='store_true', help=SUPPRESS)

@@ -61,6 +61,22 @@ logger = logging.getLogger(__name__)
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
+def to_ip_port(string):
+    host = 'localhost'
+    port = '11111'
+    if string:
+        sp = string.lower().split(':')
+        if sp:
+            if sp[0] == 'lan' or sp[0] == 'localhost':
+                host = sp[0]
+                try:
+                    x = int(sp[1])
+                    if x > 1025:
+                        port = sp[1]
+                except ValueError:
+                    host = 'localhost'
+    return host, port
+
 class PyRadioStations(object):
     ''' PyRadio stations file management '''
     #station_path = ''
@@ -173,7 +189,7 @@ class PyRadioStations(object):
 
         self._ps = PyRadioPlaylistStack()
 
-        if not self.locked:
+        if not self.locked and not self.headless:
             ''' If a station.csv file exitst, which is wrong,
                 we rename it to stations.csv '''
             if path.exists(path.join(self.stations_dir, 'station.csv')):
@@ -1341,7 +1357,8 @@ class PyRadioConfig(PyRadioStations):
 
     buffering_data = []
 
-    def __init__(self, user_config_dir=None):
+    def __init__(self, user_config_dir=None, headless=False):
+        self._headless = headless
         self.backup_player_params = None
         self.player = ''
         self.requested_player = ''
@@ -1390,6 +1407,19 @@ class PyRadioConfig(PyRadioStations):
 
         ''' function to return a player instance '''
         player_instance = None
+
+    @property
+    def headless(self):
+        if self._headless is None:
+            return False
+        return True
+
+    @property
+    def remote_control_server_report_file(self):
+        if self.headless:
+            return path.join(self.data_dir, 'server-headless.txt')
+        else:
+            return path.join(self.data_dir, 'server.txt')
 
     @property
     def open_last_playlist(self):
@@ -1803,11 +1833,12 @@ class PyRadioConfig(PyRadioStations):
             else:
                 self.locked = True
         else:
-            try:
-                with open(self._session_lock_file, 'w', encoding='utf-8') as f:
+            if not self.headless:
+                try:
+                    with open(self._session_lock_file, 'w', encoding='utf-8') as f:
+                        pass
+                except:
                     pass
-            except:
-                pass
 
     def remove_session_lock_file(self):
         ''' remove session lock file, if session is not locked '''
@@ -2092,6 +2123,16 @@ class PyRadioConfig(PyRadioStations):
         self.opts['dirty_config'][1] = False
         self.saved_params = deepcopy(self.params)
 
+        if self.headless:
+            self.opts['remote_control_server_ip'][1], self.opts['remote_control_server_port'][1] = to_ip_port(self._headless)
+            self.opts['remote_control_server_auto_start'][1] = True
+            self.opts['theme'][1] = 'dark'
+            self.opts['auto_update_theme'][1] = False
+            self.opts['use_transparency'][1] = False
+            self.opts['force_transparency'][1] = False
+            self.opts['enable_mouse'][1] = False
+            self.opts['calculated_color_factor'][1] = '0'
+
         ''' check if default playlist exists '''
         if self.opts['default_playlist'][1] != 'stations':
             ch = path.join(self.stations_dir, self.opts['default_playlist'][1] + '.csv')
@@ -2100,10 +2141,12 @@ class PyRadioConfig(PyRadioStations):
                     logger.info('Default playlist "({}") does not exist; reverting to "stations"'.format(self.opts['default_station'][1]))
                 self.opts['default_playlist'][1] = 'stations'
                 self.opts['default_station'][1] = 'False'
-        # for n in self.opts.keys():
-        #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
-        # for n in self.opts.keys():
-        #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
+        # # for n in self.opts.keys():
+        # #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
+        # # for n in self.opts.keys():
+        # #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
+        # for n in self.opts:
+        #     print('{0}: {1}'.format(n, self.opts[n]))
         return 0
 
     def get_last_playlist(self):
@@ -2223,6 +2266,12 @@ class PyRadioConfig(PyRadioStations):
             if not from_command_line and \
                     logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (session locked)')
+            return 1
+
+        if self.headless:
+            if not from_command_line and \
+                    logger.isEnabledFor(logging.INFO):
+                logger.info('Config not saved (session is headless)')
             return 1
 
         ''' Check if parameters are changed

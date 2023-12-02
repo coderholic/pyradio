@@ -463,6 +463,42 @@ class PyRadio(object):
             pass_last_item_funct=self._show_last_station_history_notification
         )
 
+        self._remote_control_server_commands = {
+            '/volumesave': self._volume_save,
+            '/html_volumesave': self._html_volume_save,
+            '/volumeup': self._volume_up,
+            '/html_volumeup': self._html_volume_up,
+            '/volumedown': self._volume_down,
+            '/html_volumedown': self._html_volume_down,
+            '/mute': self._volume_mute,
+            '/html_mute': self._html_volume_mute,
+            '/histprev': self._stations_history_previous,
+            '/html_histprev': self._html_stations_history_previous,
+            '/histnext': self._stations_history_next,
+            '/html_histnext': self._html_stations_history_next,
+            '/previous': self._play_previous_station,
+            '/html_previous': self._html_play_previous_station,
+            '/next': self._play_next_station,
+            '/html_next': self._html_play_next_station,
+            '/stop': self._stop_player,
+            '/html_stop': self._html_stop_player,
+            '/start': self._start_player,
+            '/html_start': self._html_start_player,
+            '/jump': self._jump_and_play_selection,
+            'open_history': self._open_playlist_and_station_from_station_history,
+            '/log': self._toggle_titles_logging,
+            '/html_log': self._html_toggle_titles_logging,
+            '/like': self._tag_a_title,
+            '/html_like': self._html_tag_a_title,
+            '/title': self._html_song_title,
+            '/html_info': self._html_info,
+            '/text_info': self._text_info,
+            '/html_is_stopped': self._html_is_player_stopped,
+            '/html_init': self._html_init_song_title,
+            '/volume': self._get_text_volume,
+            '/set_volume': self._set_text_volume,
+        }
+
         ''' list of functions to open for entering
         or redisplaying a mode '''
         self._redisplay = {
@@ -730,7 +766,7 @@ class PyRadio(object):
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
             # ord('d'): self._html_song_title,
-            ord('b'): self._show_schedule_editor,
+            # ord('b'): self._show_schedule_editor,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -890,7 +926,8 @@ class PyRadio(object):
             self._theme._transparent = self._cnf.use_transparency
             self._theme.config_dir = self._cnf.stations_dir
             ''' In case we have to download a theme, and it takes too long  '''
-            if not self._cnf.locked:
+            if not self._cnf.locked and \
+                    not self._cnf.headless:
                 if self._cnf.is_project_theme:
                     stdscr.addstr(0, 0, 'Downloading default theme...', curses.color_pair(0))
                     stdscr.refresh()
@@ -1131,6 +1168,10 @@ class PyRadio(object):
             if self._cnf.locked:
                 self.headWin.addstr('[', curses.color_pair(4))
                 self.headWin.addstr('Session Locked', curses.color_pair(4))
+                self.headWin.addstr('] ', curses.color_pair(4))
+            elif self._cnf.headless:
+                self.headWin.addstr('[', curses.color_pair(4))
+                self.headWin.addstr('Headless Session', curses.color_pair(4))
                 self.headWin.addstr('] ', curses.color_pair(4))
             else:
                 self.headWin.addstr(' ', curses.color_pair(4))
@@ -1751,6 +1792,9 @@ class PyRadio(object):
                 if self._cnf.locked:
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('(detectUpdateThread): session locked. Not starting!!!')
+                elif self._cnf.headless:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('(detectUpdateThread): session is headless. Not starting!!!')
                 else:
                     distro_package_found = False
                     if self._cnf.distro != 'None' and not platform.startswith('win'):
@@ -1770,6 +1814,10 @@ class PyRadio(object):
                 self._update_stations_thread = None
                 if logger.isEnabledFor(logging.INFO):
                     logger.info('(detectUpdateStationsThread): not starting; session is locked!!!')
+            elif self._cnf.headless:
+                self._update_stations_thread = None
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('(detectUpdateStationsThread): not starting; session is headless!!!')
             elif not self._cnf.user_csv_found:
                 self._update_stations_thread = None
                 self._cls_update_stations.stations_csv_needs_sync(print_messages=False)
@@ -7384,7 +7432,14 @@ __|Remote Control Server| cannot be started!__
                 # TODO show msg
                 self._show_colors_cannot_change()
                 return
-            if self._cnf.locked:
+            if self._cnf.headless:
+                self._show_notification_with_delay(
+                        txt='__Sorry, you cannot change themes__\n______on a headless session...',
+                        delay=1.5,
+                        mode_to_set=self.ws.operation_mode,
+                        callback_function=self.refreshBody)
+                return
+            elif self._cnf.locked:
                 self._show_notification_with_delay(
                         txt='__Sorry, you cannot change themes__\n___when the session is locked...',
                         delay=1.5,
@@ -9237,6 +9292,14 @@ __|Remote Control Server| cannot be started!__
                         if self._cnf.locked:
                             self._print_session_locked()
                             return
+                        elif self._cnf.headless:
+                            self._show_notification_with_delay(
+                                    txt='____Operation not supported____\n_____on a headless session',
+                                    delay=1.5,
+                                    mode_to_set=self.ws.operation_mode,
+                                    callback_function=self.refreshBody)
+                            return
+
                         self._old_config_encoding = self._cnf.opts['default_encoding'][1]
                         ''' open config window '''
                         #self.ws.operation_mode = self.ws.window_mode = self.ws.CONFIG_MODE
@@ -10871,41 +10934,7 @@ __|Remote Control Server| cannot be started!__
         self._remote_control_server = PyRadioServer(
             bind_ip=self._cnf.active_remote_control_server_ip,
             bind_port=int(self._cnf.active_remote_control_server_port),
-            commands={
-                '/volumesave': self._volume_save,
-                '/html_volumesave': self._html_volume_save,
-                '/volumeup': self._volume_up,
-                '/html_volumeup': self._html_volume_up,
-                '/volumedown': self._volume_down,
-                '/html_volumedown': self._html_volume_down,
-                '/mute': self._volume_mute,
-                '/html_mute': self._html_volume_mute,
-                '/histprev': self._stations_history_previous,
-                '/html_histprev': self._html_stations_history_previous,
-                '/histnext': self._stations_history_next,
-                '/html_histnext': self._html_stations_history_next,
-                '/previous': self._play_previous_station,
-                '/html_previous': self._html_play_previous_station,
-                '/next': self._play_next_station,
-                '/html_next': self._html_play_next_station,
-                '/stop': self._stop_player,
-                '/html_stop': self._html_stop_player,
-                '/start': self._start_player,
-                '/html_start': self._html_start_player,
-                '/jump': self._jump_and_play_selection,
-                'open_history': self._open_playlist_and_station_from_station_history,
-                '/log': self._toggle_titles_logging,
-                '/html_log': self._html_toggle_titles_logging,
-                '/like': self._tag_a_title,
-                '/html_like': self._html_tag_a_title,
-                '/title': self._html_song_title,
-                '/html_info': self._html_info,
-                '/text_info': self._text_info,
-                '/html_is_stopped': self._html_is_player_stopped,
-                '/html_init': self._html_init_song_title,
-                '/volume': self._get_text_volume,
-                '/set_volume': self._set_text_volume,
-            }
+            commands=self._remote_control_server_commands
         )
         if not self._remote_control_server.has_netifaces:
             self._remote_control_server = None

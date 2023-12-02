@@ -525,16 +525,16 @@ class PyRadioScheduleItem(object):
         n_date, n_time = self._get_today_plus_one_hour()
         t_date, t_time = self._get_today()
         return {
-            'name': 'Default schedule item',
+            'name': 'Default schedule entry',
             'type': 2, # TYPE_START_END, TYPE_START, TYPE_END
             'start_type': 0, # TIME_ABSOLUTE, TIME_RELATIVE
             'start_date':  t_date, # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
             'start_time': t_time, # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
             'start_duration': [0, 0, 0, 0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
-            'end_type': 0, # TIME_ABSOLUTE, TIME_RELATIVE
+            'end_type': 1, # TIME_ABSOLUTE, TIME_RELATIVE
             'end_date': n_date,
             'end_time': n_time, # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
-            'end_duration': [0, 0, 0, 0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
+            'end_duration': [1, 0, 0, 0], # NO_AM_PM_FORMAT, AM_FORMAT, PM_FORMAT
             'player': '',
             'recording': 0,
             'buffering': 0,

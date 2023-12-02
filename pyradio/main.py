@@ -81,8 +81,8 @@ class MyArgParser(ArgumentParser):
         return '[bold]' + t.replace('||', r']').replace('|', r'\[').replace('• ', '') + '[/bold]'
 
 @contextmanager
-def pyradio_config_file(a_dir):
-    cf = PyRadioConfig(user_config_dir=a_dir)
+def pyradio_config_file(a_dir, headless=None):
+    cf = PyRadioConfig(user_config_dir=a_dir, headless=headless)
     try:
         yield cf
     finally:
@@ -323,6 +323,16 @@ If nothing else works, try the following command:
     sc_group = parser.add_argument_group('• Scheduler')
     sc_group.add_argument('-si', '--show-schedule-items', action='store_true',
                           help='Show schedule.')
+
+    if system().lower().startswith('win'):
+        parser.add_argument('--headless', default=None, help=SUPPRESS)
+        parser.add_argument('--address', help=SUPPRESS)
+    else:
+        gr_headless = parser.add_argument_group('• Headless operation')
+        gr_headless.add_argument('--headless', default=None, metavar=('IP_AND_PORT', ),
+                                 help='Start in headless mode. IP_AND_PORT can be a) auto (use localhost:11111), b) localhost:XXXXX (access the web server through localhost) or c) lan:XXXXX (access the web server through the LAN). XXXXX can be any port number above 1025. Please make sure it is different than the one set in the configuration file.')
+        gr_headless.add_argument('--address', action='store_true',
+                                help='Show remote control server address')
     args = parser.parse_args()
     sys.stdout.flush()
 
@@ -373,7 +383,7 @@ If nothing else works, try the following command:
             remove(r[0])
             sys.exit()
 
-    with pyradio_config_file(user_config_dir) as pyradio_config:
+    with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
         if args.write_theme:
             if args.write_theme[0]:
                 from .themes import PyRadioTheme
@@ -683,6 +693,31 @@ If nothing else works, try the following command:
             mkvtoolnix.execute()
             sys.exit()
 
+        if args.address:
+            disp = []
+            paths = (
+                    path.join(pyradio_config.data_dir, 'server-headless.txt'),
+                    path.join(pyradio_config.data_dir, 'server.txt')
+            )
+            tok = ('Headless server', 'Server')
+            out = '''  {0}
+    Text address: http://{1}
+    HTML address: http://{1}/html
+'''
+            for n in 0, 1:
+                if path.exists(paths[n]):
+                    try:
+                        with open(paths[n], 'r') as f:
+                            addr = f.read()
+                            disp.append(out.format(tok[n], addr))
+                    except:
+                        pass
+            if disp:
+                print('PyRadio Remote Control Server\n' +  ''.join(disp))
+            else:
+                print('No PyRadio remote control servers running\n')
+            sys.exit()
+
         if args.no_themes:
             pyradio_config.use_themes = False
             pyradio_config.no_themes_from_command_line = True
@@ -846,6 +881,7 @@ If nothing else works, try the following command:
 
         pyradio_config.active_remote_control_server_ip = pyradio_config.remote_control_server_ip
         pyradio_config.active_remote_control_server_port = pyradio_config.remote_control_server_port
+
         pyradio = PyRadio(
             pyradio_config,
             play=args.play,

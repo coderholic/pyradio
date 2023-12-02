@@ -78,7 +78,12 @@ function remove_pip_sudo_install(){
 function uninstall(){
     echo 'Uninstalling PyRadio'
     echo -n '  ** Removing python files ... '
-    python"${TO_PYTHON}" -m pipx list 2>/dev/null 1>&2 && PIPX=1
+    echo -n "Looking for pipx ... "
+    PIPX_VERSION=$(python"${TO_PYTHON}" -m pipx --version)
+    [ -z "$PIPX_VERSION" ] || PIPX=1
+    [ -z "$PIPX_VERSION" ] && {
+        echo "Command used: python"${TO_PYTHON}" -m pipx --version 2>/dev/null"
+    } || echo "$PIPX_VERSION"
     if [ -z "${PIPX}" ]
     then
         python -m pip uninstall -y pyradio 2>/dev/null 1>&2
@@ -384,10 +389,15 @@ then
         sed -i '/##### NO PYTHON2/,/##### END NO PYTHON2/d' "${a_file}"
     done
 else
+    #
     # Use pipx by default, if installed
-    python"${TO_PYTHON}" -m pipx list 2>/dev/null 1>&2 && PIPX=1
+    echo -n "Looking for pipx ... "
+    PIPX_VERSION=$(python"${TO_PYTHON}" -m pipx --version)
+    [ -z "$PIPX_VERSION" ] || PIPX=1
+    [ -z "$PIPX_VERSION" ] && {
+        echo "Command used: python"${TO_PYTHON}" -m pipx --version 2>/dev/null"
+    } || echo "$PIPX_VERSION"
 fi
-
 
 if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ]
 then

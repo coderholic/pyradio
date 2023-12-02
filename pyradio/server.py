@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import socket
 import logging
-from os.path import basename
+from os import remove
+from os.path import basename, exists
 from sys import platform, version_info
 import requests
 from time import sleep
@@ -689,6 +690,7 @@ Restricted Commands (Main mode only)
     ):
         self._path = ''
         self.config = config
+        self.report_file = config().remote_control_server_report_file
         self.lists = lists
         self.playlist_in_editor = playlist_in_editor
         self.can_send_command = can_send_command
@@ -701,6 +703,7 @@ Restricted Commands (Main mode only)
         self._selected = -1
         self.muted = muted
         self.lock = lock
+        self._remove_report_file()
         try:
             server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -723,6 +726,7 @@ Restricted Commands (Main mode only)
         if logger.isEnabledFor(logging.INFO):
             logger.info('Remote Control Server listening on {}:{}'.format(self._bind_ip, self._bind_port))
 
+        self._create_report_file()
         while True:
             try:
                 self.client_socket, address = server.accept()
@@ -730,6 +734,7 @@ Restricted Commands (Main mode only)
             except socket.error as e:
                 if logger.isEnabledFor(logger.ERROR):
                     logger.error('Server accept error: "{}"'.format(e))
+                self._remove_report_file()
                 dead_func(e)
                 break
             self.error = None
@@ -740,10 +745,27 @@ Restricted Commands (Main mode only)
                 break
             if self._path == '/quit':
                 self.client_socket.close()
+                self._remove_report_file()
                 break
         server.close()
         if logger.isEnabledFor(logging.INFO):
             logger.info('Remote Control Server exiting...')
+        # just in case...
+        self._remove_report_file()
+
+    def _create_report_file(self):
+        try:
+            with open(self.report_file, 'w', encoding='utf-8') as f:
+                f.write('{0}:{1}'.format(self._bind_ip, self._bind_port))
+        except:
+            pass
+
+    def _remove_report_file(self):
+        if exists(self.report_file):
+            try:
+                remove(self.report_file)
+            except:
+                pass
 
     def _handle_client_connection(self, address, request):
         # logger.error ('Received {}'.format(request))

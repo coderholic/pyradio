@@ -102,7 +102,7 @@ class PyRadioSimpleScheduleWindow(object):
         self._maxY = 20
         self._global_functions = global_functions
         self._get_parent(parent)
-        self._focus = 8
+        self._focus = 22
         try:
             self._current_player_id = supported_players.index(current_player)
         except ValueError:
@@ -150,12 +150,12 @@ class PyRadioSimpleScheduleWindow(object):
     def set_item(self, schedule_item=None, playlist=None, station=None):
         if schedule_item is None:
             self._schedule_item = PyRadioScheduleItem()
-            self._schedule_item.item['type'] = 0
-            self._schedule_item.item['end_date'] = [2023, 11, 12]
-            self._schedule_item.item['end_time'] = [20, 1, 2, 0]
-            self._schedule_item.item['start_duration'] = [1, 32, 15, 0]
-            self._schedule_item.item['end_duration'] = [3, 15, 2, 0]
-            self._schedule_item.item['repeat'] = 'Sunday'
+            # self._schedule_item.item['type'] = 0
+            # self._schedule_item.item['end_date'] = [2023, 11, 12]
+            # self._schedule_item.item['end_time'] = [20, 1, 2, 0]
+            # self._schedule_item.item['start_duration'] = [1, 32, 15, 0]
+            # self._schedule_item.item['end_duration'] = [3, 15, 2, 0]
+            # self._schedule_item.item['repeat'] = 'Sunday'
             if playlist:
                 self._schedule_item.playlist = playlist
             if station:
@@ -225,7 +225,7 @@ class PyRadioSimpleScheduleWindow(object):
         self._print_header()
 
     def _print_header(self):
-        msg = ' Simple Scheduling '
+        msg = ' Schedule editor '
         self._win.addstr(
             0, int((self._maxX - len(msg)) / 2),
             msg, curses.color_pair(11)
@@ -565,7 +565,7 @@ class PyRadioSimpleScheduleWindow(object):
 
         if self._widgets:
             if not self._showed:
-                self._dummy_enable()
+                self._item_to_form()
             self._fix_focus()
             for n in range(0, len(self._widgets)):
                 if n == len(self._widgets) -1:
@@ -614,7 +614,7 @@ class PyRadioSimpleScheduleWindow(object):
                 self._repeat_index = 0
         self._widgets[19].string = self._repeat[self._repeat_index].ljust(self._max_repeat_len)
 
-    def _dummy_enable(self):
+    def _item_to_form(self):
         logger.error('\n\n{}\n\n'.format(self._schedule_item.item))
         ''' assign values '''
         self._widgets[3].date = self._schedule_item.item['start_date']
@@ -623,6 +623,7 @@ class PyRadioSimpleScheduleWindow(object):
         self._widgets[9].date = self._schedule_item.item['end_date']
         self._widgets[11].time = self._schedule_item.item['end_time']
         self._widgets[13].time = self._schedule_item.item['end_duration']
+
         if self._schedule_item.item['recording'] == 1:
             self._widgets[15].checked = True
             self._widgets[16].checked = False
@@ -632,10 +633,12 @@ class PyRadioSimpleScheduleWindow(object):
         else:
             self._widgets[15].checked = False
             self._widgets[16].checked = False
+
         if self._schedule_item.item['buffering'] == 0:
             self._widgets[17].checked = False
         else:
             self._widgets[17].checked = True
+
         if self._schedule_item.item['repeat'] is None:
             self._widgets[18].checked = False
             self._widgets[19].checked = False
@@ -659,39 +662,87 @@ class PyRadioSimpleScheduleWindow(object):
             rec = True
             start_fields = True
             end_fields = True
-        # enable: set start fields
-        for i in range(3, 8):
-            self._widgets[i].enabled = start_fields
-        # enable: set end fields
-        for i in range(9, 14):
-            self._widgets[i].enabled = end_fields
+
+        if self._schedule_item.item['type'] == 0:
+            self._widgets[2].checked = self._widgets[8].checked = True
+        elif self._schedule_item.item['type'] == 1:
+            self._widgets[2].checked = True
+            self._widgets[8].checked = False
+        elif self._schedule_item.item['type'] == 2:
+            self._widgets[2].checked = False
+            self._widgets[8].checked = True
+
+        if self._schedule_item.item['start_type'] == 0:
+            self._widgets[4].checked = self._widgets[5].enabled = True
+            self._widgets[6].checked = self._widgets[7].enabled = False
+        else:
+            self._widgets[4].checked = self._widgets[5].enabled = False
+            self._widgets[6].checked = self._widgets[7].enabled = True
+
+        if self._schedule_item.item['end_type'] == 0:
+            self._widgets[10].checked = self._widgets[11].enabled = True
+            self._widgets[12].checked = self._widgets[13].enabled = False
+        else:
+            self._widgets[10].checked = self._widgets[11].enabled = False
+            self._widgets[12].checked = self._widgets[13].enabled = True
+
+        if self._schedule_item.item['start_type'] == 0 and \
+                self._schedule_item.item['type'] < 2:
+            self._widgets[3].enabled = True
+        else:
+            self._widgets[3].enabled = False
+        if self._schedule_item.item['end_type'] == 0 and \
+                self._schedule_item.item['type'] < 2:
+            self._widgets[9].enabled = True
+        else:
+            self._widgets[9].enabled = False
+
+
+
+
+
+
+        # # enable: set start fields
+        # for i in range(3, 8):
+        #     logger.error('start: setting {0} enabled to {1}'.format(i, start_fields))
+        #     self._widgets[i].enabled = start_fields
+        # # enable: set end fields
+        # for i in range(9, 14):
+        #     logger.error('stop: setting {0} enabled to {1}'.format(i, end_fields))
+        #     self._widgets[i].enabled = end_fields
         # enable: set recording, buffering, repeat
-        for i in range(14, 20):
-            self._widgets[i].enabled = rec
+        # for i in range(14, 20):
+        #     self._widgets[i].enabled = rec
+        return
+        self._widgets[4].enabled = self._widgets[8].enabled = True
 
         self._apply_repeat_to_widget(self._schedule_item.item['repeat'])
         if self._schedule_item.item['type'] == PyRadioScheduleItemType.TYPE_END:
-            self._widgets[4].checked = True
-            self._widgets[8].enabled = True
-            self._widgets[8].checked = True
             if self._schedule_item.item['end_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
+                logger.error('1')
+                self._widgets[9].enabled = True
                 self._widgets[10].checked = True
-                self._focus = 10
+                self._widgets[12].checked = False
+                self._widgets[13].enabled = False
+                self._widgets[11].enabled = True
             else:
-                self._widgets[13].checked = True
-                self._focus = 13
-            self._widgets[18].enabled = False
-            self._widgets[20].enabled = self._remove_enabled
+                logger.error('2')
+                self._widgets[9].enabled = False
+                self._widgets[10].checked = False
+                self._widgets[12].checked = True
+                self._widgets[13].enabled = True
+                self._widgets[11].enabled = False
+
         elif self._schedule_item.item['type'] == PyRadioScheduleItemType.TYPE_START:
             self._widgets[10].checked = True
             self._widgets[2].enabled = True
             self._widgets[2].checked = True
             if self._schedule_item.item['start_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
                 self._widgets[4].checked = True
-                self._focus = 4
+                # self._focus = 4
             else:
                 self._widgets[6].checked = True
-                self._focus = 6
+                # self._focus = 6
         else:
             self._widgets[4].checked = True
             self._widgets[8].enabled = True
@@ -705,10 +756,10 @@ class PyRadioSimpleScheduleWindow(object):
             self._widgets[2].checked = True
             if self._schedule_item.item['start_type'] == PyRadioScheduleTimeType.TIME_ABSOLUTE:
                 self._widgets[4].checked = True
-                self._focus = 4
+                # self._focus = 4
             else:
                 self._widgets[6].checked = True
-                self._focus = 6
+                # self._focus = 6
 
     def _stop_only(self):
         if ((not self._widgets[2].checked) and \
@@ -719,35 +770,33 @@ class PyRadioSimpleScheduleWindow(object):
 
     def _fix_focus(self):
         for i in (2, 8):
-            for k in range(1, 6):
-                # logger.error('setting {}'.format(i+k))
+            for k in range(2, 6):
+                logger.error('setting {0} enabled to {1}'.format(i+k, self._widgets[i].checked))
                 self._widgets[i+k].enabled = self._widgets[i].checked
 
         for i in range(14, 20):
             # logger.debug('{0} enabled is now {1}'.format(i, self._widgets[2].checked))
+            logger.error('setting {0} enabled to {1}'.format(i, self._widgets[2].checked))
             self._widgets[i].enabled = self._widgets[2].checked
 
-        self._widgets[-2].enabled = self._widgets[2].checked or self._widgets[8].checked
+        # self._widgets[-2].enabled = self._widgets[2].checked or self._widgets[8].checked
 
         for i in (4, 6, 10, 12):
             if self._widgets[i].enabled:
+                logger.error('setting {0} enabled to {1} - {2}'.format(i, i, self._widgets[i].checked))
                 self._widgets[i+1].enabled = self._widgets[i].checked
 
-        for i in (6, 12):
-            if self._widgets[i].checked:
-                self._widgets[i-3].enabled = False
-            else:
-                self._widgets[i-3].enabled = True
-
-        # for n in ((6,3), (12, 9)):
-        #     if self._widgets[n[0]].enabled and \
-        #             self._widgets[n[0]].checked:
-        #         self._widgets[n[1]].enabled = False
+        # for i in (6, 12):
+        #     if self._widgets[i].checked:
+        #         logger.error('setting {} enabled to False'.format(i-3))
+        #         self._widgets[i-3].enabled = False
         #     else:
-        #         self._widgets[n[1]].enabled = True
+        #         logger.error('setting {} enabled to True'.format(i-3))
+        #         self._widgets[i-3].enabled = True
 
         for i in (15, 18):
             if self._widgets[i].enabled:
+                logger.error('setting {0} enabled to {1}'.format(i+1, self._widgets[i].checked))
                 self._widgets[i+1].enabled = self._widgets[i].checked
 
         self._fix_recording_from_player_selection()
@@ -1074,12 +1123,16 @@ class PyRadioSimpleScheduleWindow(object):
         f_dur = f_time + 2
 
         for n in enable:
+            logger.error('setting {0} enabled to {1}'.format(n, True))
             self._widgets[n].enabled = True
         for n in disable:
+            logger.error('setting {0} enabled to {1}'.format(n, False))
             self._widgets[n].enabled = False
         for n in checked:
+            logger.error('setting {0} checked to {1}'.format(n, True))
             self._widgets[n].checked = True
         for n in notchecked:
+            logger.error('setting {0} checked to {1}'.format(n, False))
             self._widgets[n].checked = False
 
         self._widgets[f_date].set_date_tupple((
@@ -1186,8 +1239,10 @@ class PyRadioSimpleScheduleWindow(object):
                 for n in disable:
                     self._widgets[n].enabled = False
                 for n in checked:
+                    logger.error('setting {0} checked to {1}'.format(n, True))
                     self._widgets[n].checked = True
                 for n in notchecked:
+                    logger.error('setting {0} checked to {1}'.format(n, False))
                     self._widgets[n].checked = False
 
                 self._widgets[f_date].set_date_tupple((
