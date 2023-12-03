@@ -395,6 +395,10 @@ class RadioBrowser(PyRadioStationsBrowser):
         return self._default_search_history_index
 
     @property
+    def search_history_index(self):
+        return self._search_history_index
+
+    @property
     def add_to_title(self):
         return self._server.split('.')[0]
 

@@ -327,12 +327,15 @@ If nothing else works, try the following command:
     if system().lower().startswith('win'):
         parser.add_argument('--headless', default=None, help=SUPPRESS)
         parser.add_argument('--address', help=SUPPRESS)
+        parser.add_argument('-fd', '--free-dead-headless-server', action='store_true', help=SUPPRESS)
     else:
         gr_headless = parser.add_argument_group('• Headless operation')
         gr_headless.add_argument('--headless', default=None, metavar=('IP_AND_PORT', ),
                                  help='Start in headless mode. IP_AND_PORT can be a) auto (use localhost:11111), b) localhost:XXXXX (access the web server through localhost) or c) lan:XXXXX (access the web server through the LAN). XXXXX can be any port number above 1025. Please make sure it is different than the one set in the configuration file.')
         gr_headless.add_argument('--address', action='store_true',
                                 help='Show remote control server address')
+        gr_headless.add_argument('-fd', '--free-dead-headless-server', action='store_true',
+                                 help='Use this if your headless server has terminated unexpectedly, and you cannot start a new one (you get a message that it is already running).')
     args = parser.parse_args()
     sys.stdout.flush()
 
@@ -395,6 +398,33 @@ If nothing else works, try the following command:
                 )
                 print(msg)
                 sys.exit()
+
+        if args.headless:
+            # Is there another headless instance?
+            if not config_already_read:
+                read_config(pyradio_config)
+                config_already_read = True
+            if path.exists(pyradio_config.remote_control_server_report_file):
+                print('Error: Headless Server already running...\n')
+                sys.exit(1)
+
+        if args.free_dead_headless_server:
+            if not config_already_read:
+                read_config(pyradio_config)
+                config_already_read = True
+            if path.exists(pyradio_config.remote_control_server_report_file):
+                try:
+                    os.remove(pyradio_config.remote_control_server_report_file)
+                    print('Headless Server lock files removed!\n')
+                    sys.exit()
+                except:
+                    print('Error: Cannot remove Headless Server lock file...\n')
+                    sys.exit(1)
+            else:
+                print('Headless Server lock file not found\n')
+                sys.exit(1)
+
+
 
         if args.version:
             pyradio_config.get_pyradio_version()

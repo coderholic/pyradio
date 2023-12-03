@@ -4894,11 +4894,20 @@ __|Remote Control Server| cannot be started!__
     def _get_rb_search_strings(self):
         if self._cnf.browsing_station_service:
             ret = self._cnf.online_browser.get_strings()
-            logger.error('search list\n{}'.format(ret))
+            # logger.error('search list\n{}'.format(ret))
             out = ['RadioBrowser Search Items']
             pad = len(str(len(ret)))
+            # logger.error('def = {}'.format(self._cnf.online_browser.default_search_history_index -1))
+            # logger.error('cur = {}'.format(self._cnf.online_browser.search_history_index - 1))
             for i, n in enumerate(ret):
-                default = '+ ' if i == self._cnf.online_browser.default_search_history_index - 1 else '  '
+                default = '  '
+                if i == self._cnf.online_browser.default_search_history_index -1 and \
+                        i == self._cnf.online_browser.search_history_index - 1:
+                    default = '+>'
+                elif i == self._cnf.online_browser.default_search_history_index -1:
+                    default = '+ '
+                elif i == self._cnf.online_browser.search_history_index -1:
+                    default = '> '
                 out.append(
                     default + (str(i+1)).rjust(pad) + '. ' + n
                 )
