@@ -494,9 +494,15 @@ class PyRadio(object):
             '/html_info': self._html_info,
             '/text_info': self._text_info,
             '/html_is_stopped': self._html_is_player_stopped,
+            '/html_is_radio_browser': self._html_is_radio_browser,
             '/html_init': self._html_init_song_title,
             '/volume': self._get_text_volume,
             '/set_volume': self._set_text_volume,
+            '/html_open_radio_browser': self._open_html_rb,
+            '/open_radio_browser': self._open_text_rb,
+            '/html_close_radio_browser': self._open_playlist_from_history,
+            '/close_radio_browser': self._open_playlist_from_history,
+            '/list_radio_browser': self._get_rb_search_strings,
         }
 
         ''' list of functions to open for entering
@@ -800,7 +806,10 @@ class PyRadio(object):
         out = []
         out.append('PyRadio {}'.format(self._cnf.current_pyradio_version))
         out.append('Player: {}'.format(self.player.PLAYER_NAME))
-        out.append('Playlist: "{}"'.format(basename(self._playlist_in_editor)[:-4]))
+        if self._cnf.browsing_station_service:
+            out.append('Service: ' + self._cnf.online_browser.TITLE)
+        else:
+            out.append('Playlist: "{}"'.format(basename(self._playlist_in_editor)[:-4]))
         if self.player.isPlaying():
             out.append('Status: In playback {}'.format('(muted)' if self.player.muted else ''))
             out.append('  Station (id={0}): "{1}"'.format(self.playing+1, self.stations[self.playing][0]))
@@ -814,7 +823,10 @@ class PyRadio(object):
         out.append('<div class="alert alert-info">')
         out.append('<b>PyRadio {}</b><br>'.format(self._cnf.current_pyradio_version))
         out.append('<span style="padding-left: 1em;">Player: <b>{}</b></span><br>'.format(self.player.PLAYER_NAME))
-        out.append('<span style="padding-left: 1em;">Playlist: <b>{}</b></span><br>'.format(basename(self._playlist_in_editor)[:-4]))
+        if self._cnf.browsing_station_service:
+            out.append('<span style="padding-left: 1em;">Service: <b>{}</b></span><br>'.format(self._cnf.online_browser.TITLE))
+        else:
+            out.append('<span style="padding-left: 1em;">Playlist: <b>{}</b></span><br>'.format(basename(self._playlist_in_editor)[:-4]))
         if self.player.isPlaying():
             out.append('<span style="padding-left: 1em;">Status: <b>In playback {}</b></span><br>'.format('(muted)' if self.player.muted else ''))
             out.append('<span style="padding-left: 1em;">Station: <b>{}</b></span><br>'.format(self.stations[self.playing][0]))
@@ -823,6 +835,26 @@ class PyRadio(object):
             out.append('<span style="padding-left: 1em;">Selection: <b>{}</b></span><br>'.format(self.stations[self.selection][0]))
         out.append('</div>')
         return '\n'.join(out)
+
+    def _open_html_rb(self):
+        if self._cnf.browsing_station_service:
+            return '<div class="alert alert-danger">Already connected to <b>Radio Browser</b>!</div>'
+        logger.error('==== brefore open command')
+        self._open_radio_browser()
+        logger.error('==== after open command : {}'.format(self._cnf.browsing_station_service))
+        if self._cnf.browsing_station_service:
+            return '<div class="alert alert-danger">Connection to <b>Radio Browser</b> established!</div>'
+        return '<div class="alert alert-danger">Cannot connect to <b>Radio Browser</b></div>'
+
+    def _open_text_rb(self):
+        if self._cnf.browsing_station_service:
+            return 'Already connected to Radio Browser!'
+        logger.error('==== brefore open command')
+        self._open_radio_browser()
+        logger.error('==== after open command : {}'.format(self._cnf.browsing_station_service))
+        if self._cnf.browsing_station_service:
+            return 'Connection to Radio Browser established!'
+        return 'Cannot connect to Radio Browser!'
 
     def _set_text_volume(self, vol):
         if self.player.isPlaying() and \
@@ -4111,6 +4143,9 @@ __|Remote Control Server| cannot be started!__
             )
 
     def _print_service_connection_error(self):
+        if self._cnf.headless:
+            self.refreshBody()
+            return
         txt = '''
         Service temporarily unavailable.
 
@@ -4855,6 +4890,21 @@ __|Remote Control Server| cannot be started!__
             the 'no result' message'
         '''
         self._cnf._online_browser.first_search = False
+
+    def _get_rb_search_strings(self):
+        if self._cnf.browsing_station_service:
+            ret = self._cnf.online_browser.get_strings()
+            logger.error('search list\n{}'.format(ret))
+            out = ['RadioBrowser Search Items']
+            pad = len(str(len(ret)))
+            for i, n in enumerate(ret):
+                default = '+ ' if i == self._cnf.online_browser.default_search_history_index - 1 else '  '
+                out.append(
+                    default + (str(i+1)).rjust(pad) + '. ' + n
+                )
+            out.append('First column')
+            out.append('  [+ ]: Default, [> ]: Active, [+>]: Both')
+            return '\n'.join(out)
 
     def _open_playlist_from_history(self,
                                     reset=False,
@@ -6629,6 +6679,11 @@ __|Remote Control Server| cannot be started!__
             return '1'
         return '0'
 
+    def _html_is_radio_browser(self):
+        if self._cnf.browsing_station_service:
+            return '1'
+        return '0'
+
     def _html_stations_history_next(self):
         if self.ws.window_mode == self.ws.PLAYLIST_MODE:
             return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
@@ -6785,6 +6840,12 @@ __|Remote Control Server| cannot be started!__
             return '1'
         # no stations in plqaylist
         return '0'
+
+    def _open_radio_browser(self):
+        self._reset_status_bar_right()
+        if not self._cnf.browsing_station_service:
+            self._cnf.browsing_station_service = True
+            self.playSelectionBrowser(a_url='api.radio-browser.info')
 
     def keypress(self, char):
         # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
@@ -6944,6 +7005,7 @@ __|Remote Control Server| cannot be started!__
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                     self.ws.PLAYLIST_MODE):
             ''' \ pressed '''
+            logger.error('=== here 3')
             self._update_status_bar_right(backslash=True, status_suffix='\\')
             self._do_display_notify()
             self.jumpnr = ''
@@ -7084,6 +7146,7 @@ __|Remote Control Server| cannot be started!__
 
             elif char == ord('\\'):
                 ''' \\ pressed - go back in history '''
+                logger.error('=== here 4')
                 if self._cnf.dirty_playlist:
                     if self._cnf.auto_save_playlist:
                         ''' save playlist '''
@@ -8773,6 +8836,7 @@ __|Remote Control Server| cannot be started!__
                     else:
                         self._goto_history_back_handler()
                 elif char in (curses.KEY_EXIT, ord('q'), 27):
+                    logger.error('==== here 1')
                     self.bodyWin.nodelay(True)
                     char = self.bodyWin.getch()
                     self.bodyWin.nodelay(False)
@@ -9042,6 +9106,7 @@ __|Remote Control Server| cannot be started!__
                             return
                         elif self._cnf.browsing_station_service:
                             ''' go back to playlist history '''
+                            logger.error('==== here 2')
                             if self._cnf.online_browser.is_config_dirty():
                                 self._ask_to_save_browser_config_to_exit()
                             else:
@@ -9341,10 +9406,7 @@ __|Remote Control Server| cannot be started!__
                         If a second one is implemented in the future,
                         this should display a selection list.
                     '''
-                    self._reset_status_bar_right()
-                    if not self._cnf.browsing_station_service:
-                        self._cnf.browsing_station_service = True
-                        self.playSelectionBrowser(a_url='api.radio-browser.info')
+                    self._open_radio_browser()
                     return
 
                 elif char in (ord('o'), ):

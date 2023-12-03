@@ -391,6 +391,10 @@ class RadioBrowser(PyRadioStationsBrowser):
         return self._server
 
     @property
+    def default_search_history_index(self):
+        return self._default_search_history_index
+
+    @property
     def add_to_title(self):
         return self._server.split('.')[0]
 
@@ -1199,6 +1203,52 @@ class RadioBrowser(PyRadioStationsBrowser):
             for n in range(0, len(columns_separotors)):
                 columns_separotors[n] -= adjust
         return columns_separotors
+
+    def _format_term_for_get_strings(self, aterm):
+        a_string = aterm
+        if aterm.startswith('bytag'):
+            a_string ='Tag'
+        elif aterm.startswith('bycountry'):
+            a_string = 'Country'
+        elif aterm.startswith('byname'):
+            a_string = 'Name'
+        elif aterm.startswith('bycodec'):
+            a_string = 'Codec'
+        elif aterm.startswith('topvote'):
+            a_string = 'Top voted'
+        elif aterm.startswith('bystate'):
+            a_string = 'State'
+        elif aterm.startswith('bylanguage'):
+            a_string = 'Language'
+        elif aterm.startswith('lastchange'):
+            a_string = 'Last changed stations'
+
+        return a_string + (' (exact)' if aterm.endswith('exact') else '')
+
+    def get_strings(self):
+        strings = []
+        for i, n in enumerate(self._search_history):
+            if i > 0:
+                out = []
+                if 'type' in n:
+                    if n['type'] and 'term' in n:
+                        if n['type'] != 'search':
+                            out.append('{0}: {1}'.format(
+                                self._format_term_for_get_strings(n['type']),
+                                n['term']
+                                )
+                            )
+                if 'post_data' in n:
+                    for k in n['post_data']:
+                        out.append('{0}: {1}'.format(
+                            k.title().replace('exact', ' (exact)'),
+                            n['post_data'][k]
+                            )
+                        )
+
+                if out:
+                    strings.append(', '.join(out))
+        return strings
 
     def get_history_from_search(self):
         if self._search_win:

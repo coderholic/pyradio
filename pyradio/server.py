@@ -209,11 +209,12 @@ div[id^='a_']:hover { underline: none;}
         <div id="all_buttons" class="row">
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
-                    <button onclick="js_send_simple_command_with_stop('/html/next', 1500);" type="button" class="btn btn-warning">Play<br>Next</button>
-                    <button onclick="js_send_simple_command_with_stop('/html/previous', 1500);" type="button" class="btn btn-warning">Play<br>Previous</button>
-                    <button onclick="js_send_simple_command_with_stop('/html/histnext', 1500);" type="button" class="btn btn-success">Play Hist.<br> Next</button>
-                    <button onclick="js_send_simple_command_with_stop('/html/histprev', 1500);" type="button" class="btn btn-success">Play Hist.<br>Previous</button>
-                    <button onclick="js_send_simple_command_with_stop('/html/toggle', 1500);" type="button" class="btn btn-danger">Toggle<br>Playback</button>
+                    <button id="rb" onclick="js_toggle_radio_browser();" type="button" class="btn btn-info">Radio<br>Browser</button>
+                    <button id="next" onclick="js_send_simple_command_with_stop('/html/next', 1500);" type="button" class="btn btn-warning">Play<br>Next</button>
+                    <button id="prev" onclick="js_send_simple_command_with_stop('/html/previous', 1500);" type="button" class="btn btn-warning">Play<br>Previous</button>
+                    <button id="hnext" onclick="js_send_simple_command_with_stop('/html/histnext', 1500);" type="button" class="btn btn-success">Play Hist.<br> Next</button>
+                    <button id="hprev" onclick="js_send_simple_command_with_stop('/html/histprev', 1500);" type="button" class="btn btn-success">Play Hist.<br>Previous</button>
+                    <button id="tplay" onclick="js_send_simple_command_with_stop('/html/toggle', 1500);" type="button" class="btn btn-danger">Toggle<br>Playback</button>
                 </div>
             </div>
             <div class="col-xs-4 col-lg-4">
@@ -226,10 +227,10 @@ div[id^='a_']:hover { underline: none;}
             </div>
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
-                    <button onclick="js_send_simple_command('/html/st', 0);" type="button" class="btn btn-success">Stations<br>List</button>
+                    <button id="st" onclick="js_send_simple_command('/html/st', 0);" type="button" class="btn btn-success">Stations<br>List</button>
                     <button id="group" type="button" class="btn">Groups<br>List</button>
-                    <button onclick="js_send_simple_command('/html/pl', 0);" type="button" class="btn btn-primary">Show<br>Playlists</button>
-                    <button onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
+                    <button id="pl" onclick="js_send_simple_command('/html/pl', 0);" type="button" class="btn btn-primary">Show<br>Playlists</button>
+                    <button id="info" onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
                     <button id="logging" onclick="js_toggle_titles_logging();" type="button" class="btn btn-warning">Enable<br>Title Log</button>
                     <button id="like" onclick="js_send_simple_command('/html/like', 1500);" type="button" class="btn btn-info">Like<br>Title</button>
                 </div>
@@ -314,6 +315,8 @@ div[id^='a_']:hover { underline: none;}
     var msg_timeout = 0;
     var url_to_reload = "";
     var last_title = "";
+    var get_rb_status = 0;
+    var radio_browser = 0;
 
     var selection = -1;
 
@@ -335,6 +338,11 @@ div[id^='a_']:hover { underline: none;}
             js_disable_buttons_on_stopped(true);
         } else {
             js_disable_buttons_on_stopped(false);
+        }
+        console.log("get_rb_status", get_rb_status)
+        if ( get_rb_status == 1 ){
+            js_fix_radio_browser();
+            window.get_rb_status = 0;
         }
     });
 
@@ -362,7 +370,25 @@ div[id^='a_']:hover { underline: none;}
 
     function js_send_simple_command(the_command, the_timeout){
 
-        // console.log("the_command =", the_command);
+        console.log("the_command =", the_command);
+        if ( ( the_command == "/html/open_radio_browser" ) || ( the_command == "/html/close_radio_browser" ) ) {
+            clearTimeout(msg_timeout);
+            if ( window.radio_browser == 0 ){
+                rb_msg = '<div class="alert alert-info">Connecting to <b>Radio Browser</b>...</div>'
+            }else{
+                rb_msg = '<div class="alert alert-info">Disconnecting from <b>Radio Browser</b>...</div>'
+            }
+            js_set_title("#msg_text", rb_msg, the_command);
+            js_show_element("msg");
+            // if (the_timeout > 0){
+            //     msg_timeout = setTimeout(js_hide_msg, the_timeout);
+            // }
+
+           ////// Trigger to read radio_browser
+           window.get_rb_status = 1;
+           console.log("* get_rb_status", window.get_rb_status);
+        }
+        console.log("get_rb_status", window.get_rb_status);
         // console.log("startsWith /html/pl/ :", the_command.startsWith("/html/pl/"));
         // console.log("length =:", the_command.length);
         if ( the_command == '/html/st' || ( ( the_command.startsWith("/html/pl/" ) && ( the_command.length > 9 )) )){
@@ -376,7 +402,7 @@ div[id^='a_']:hover { underline: none;}
         //     js_get_selection();
         // }
         $.get(the_command, function(result){
-            // console.log(the_command, result, typeof result);
+            console.log(the_command, result, typeof result);
             //
             //  Check for html to display
             //
@@ -397,6 +423,10 @@ div[id^='a_']:hover { underline: none;}
                     result = '<div class="alert alert-success">Playback <b>toggled!</b></div>'
                 } else if ( the_command == "/html/mute"  ) {
                     result = '<div class="alert alert-success">Player mute state <b>toggled!</b></div>'
+                } else if ( the_command == "/html/open_radio_browser"  ) {
+                    result = '<div class="alert alert-success">Connection to <b>Radio Browser</b> established!</div>'
+                } else if ( the_command == "/html/close_radio_browser"  ) {
+                    result = '<div class="alert alert-success"><b>Local</b> Playlist restored</div>'
                 } else {
                     //console.log("next or previous command!");
                     var x = result.indexOf("Connecting");
@@ -531,6 +561,55 @@ div[id^='a_']:hover { underline: none;}
         }
     }
 
+    function js_disable_all_buttons(enable){
+        if (enable){
+            // disable all buttons
+            let b_id = ["rb", "next", "prev", "hnext", "hprev", "tplay", "vu", "vd", "vs", "mute", "st", "group", "pl", "info", "logging", "like"];
+            for (let i in b_id) {
+                var element = document.getElementById(b_id[i]);
+                // console.log("async:", data);
+                element.disabled = true;
+            }
+        }else{
+            let b_id = ["rb", "next", "prev", "hnext", "hprev", "tplay", "st", "info", "vu", "vd", "vs", "group", "like"];
+            for (let i in b_id) {
+                var element = document.getElementById(b_id[i]);
+                // console.log("async:", data);
+                element.disabled = false;
+            }
+            // enable / disable button based on state
+            js_fix_muted();
+            js_fix_logging_titles();
+        }
+    }
+
+    function js_fix_history_buttons(){
+        var el_n = document.getElementById("hnext");
+        var el_p = document.getElementById("hprev");
+        if ( window.radio_browser == 0 ){
+            el_n.innerHTML = "Play Hist.<br>Next";
+            el_p.innerHTML = "Play Hist.<br>Previous"
+        }else{
+            el_n.innerHTML = "Next<br>Search";
+            el_p.innerHTML = "Previous<br>Search"
+        }
+    }
+
+    function js_toggle_radio_browser(){
+        js_hide_msg();
+        js_disable_all_buttons(true);
+        var element = document.getElementById("rb");
+        element.disabled = true;
+        if ( window.radio_browser == 0 ){
+            js_send_simple_command('/html/open_radio_browser', 1500)
+        }else{
+            js_send_simple_command('/html/close_radio_browser', 1500)
+        }
+        element.disabled = true;
+        js_disable_all_buttons(false);
+        js_fix_history_buttons();
+    }
+
     function js_toggle_titles_logging(){
         js_send_simple_command('/html/log', 1500);
         js_fix_logging_titles();
@@ -572,6 +651,29 @@ div[id^='a_']:hover { underline: none;}
         getMuted();
     }
 
+    function js_fix_radio_browser(){
+        const getRadioBrowser = async () => {
+            const response = await fetch("/html/is_radio_browser");
+            const data = await response.text();
+
+            console.log("js_fix_radio_browser async:", data);
+            var element = document.getElementById("rb");
+            if ( data == 0 ){
+                element.className = "btn btn-info";
+                element.innerHTML = "Local<br>Playlist";
+                window.radio_browser = 0
+            } else {
+                element.className = "btn btn-danger";
+                element.innerHTML = "Radio<br>Browser";
+                window.radio_browser = 1
+            }
+            console.log("set radio_browser: ", radio_browser);
+            js_fix_history_buttons();
+            element.disabled = false;
+        }
+        getRadioBrowser();
+    }
+
     function js_hide_msg(){
         var element = document.getElementById("msg");
         element.style.display = "none";
@@ -590,6 +692,7 @@ div[id^='a_']:hover { underline: none;}
     function js_init(){
         url_to_reload = window.location.href;
         js_fix_muted();
+        js_fix_radio_browser();
         js_fix_logging_titles();
         js_fix_stopped();
         js_disable_group_button(true);
@@ -802,6 +905,9 @@ Restricted Commands (Main mode only)
             pass
         elif self._path == '/get_selection' and self._is_html:
             self._send_raw(str(self._selected))
+        elif self._path == '/is_radio_browser' and self._is_html:
+            received = self._commands['/html_is_radio_browser']()
+            self._send_raw(received)
         elif self._path == '/is_stopped' and self._is_html:
             received = self._commands['/html_is_stopped']()
             self._send_raw(received)
@@ -1036,6 +1142,28 @@ Restricted Commands (Main mode only)
                     self._send_raw('<div class="alert alert-danger">' + self._text['/perm'] + '</div>')
                 else:
                     self._send_text(self._text['/perm'])
+        elif self._path == '/open_radio_browser' or self._path == '/orb':
+            if self._is_html:
+                received = self._commands['/html_open_radio_browser']()
+                self._send_raw(received)
+            else:
+                received = self._commands['/open_radio_browser']()
+                # self._send_text(received)
+        elif self._path == '/close_radio_browser' or self._path == '/crb':
+            if self._is_html:
+                received = self._commands['/html_close_radio_browser']()
+                # self._send_raw(received)
+            else:
+                received = self._commands['/close_radio_browser']()
+                # self._send_text('Local playlist opened!')
+        elif self._path == '/list_radio_browser' or self._path == '/lrb':
+            if self._is_html:
+                pass
+                # received = self._commands['/html_close_radio_browser']()
+                # self._send_raw(received)
+            else:
+                received = self._commands['/list_radio_browser']()
+                self._send_text(received)
         elif self._path == '/volume' or self._path == '/v':
             ''' get volume '''
             if self._is_html:
@@ -1273,6 +1401,9 @@ Content-Length: {}
                 pass
 
     def _send_raw(self, msg):
+        logger.error('msg = "{}"'.format(msg))
+        if msg is None:
+            msg = 'Unknown reply...'
         if msg.startswith('retry: '):
             return
         f_msg = msg + '\n'
@@ -1306,6 +1437,7 @@ Content-Length: {}
     ):
         if msg.startswith('retry: '):
             return
+        logger.error('_send_text(): "{}"'.format(msg))
         if self._is_html:
             self._send_html(put_script=put_script)
             return
