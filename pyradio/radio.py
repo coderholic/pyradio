@@ -4891,10 +4891,17 @@ __|Remote Control Server| cannot be started!__
         '''
         self._cnf._online_browser.first_search = False
 
+    def _get_rb_html_search_strings(self):
+        if self._cnf.online_browser:
+            return self._cnf.online_browser.search_history_index, self._cnf.online_browser.get_strings()
+        return -1, None
+
     def _get_rb_search_strings(self):
         if self._cnf.browsing_station_service:
             ret = self._cnf.online_browser.get_strings()
             # logger.error('search list\n{}'.format(ret))
+            if len(ret) == 0:
+                return 'No Search Items found\n'
             out = ['RadioBrowser Search Items']
             pad = len(str(len(ret)))
             # logger.error('def = {}'.format(self._cnf.online_browser.default_search_history_index -1))
@@ -4911,9 +4918,11 @@ __|Remote Control Server| cannot be started!__
                 out.append(
                     default + (str(i+1)).rjust(pad) + '. ' + n
                 )
+            out.append('')
             out.append('First column')
             out.append('  [+ ]: Default, [> ]: Active, [+>]: Both')
             return '\n'.join(out)
+        return 'RadioBrowser is not active\n'
 
     def _open_playlist_from_history(self,
                                     reset=False,
@@ -6865,6 +6874,19 @@ __|Remote Control Server| cannot be started!__
             if logger.isEnabledFor(logging.debug):
                 logger.debug('keypress: Asked to stop. Stoping...')
             return -1
+
+        if self._cnf.headless and char not in (
+            ord('O'),
+            ord('q'),
+        ):
+            self._show_notification_with_delay(
+                    txt='''________Operation not supported____
+                         _________on a headless session
+                         ___"q" is the only key that works...___''',
+                    delay=1.5,
+                    mode_to_set=self.ws.operation_mode,
+                    callback_function=self.refreshBody)
+            return
 
         if char in (ord('#'), curses.KEY_RESIZE):
             self._i_am_resizing = True
@@ -9366,13 +9388,6 @@ __|Remote Control Server| cannot be started!__
                         if self._cnf.locked:
                             self._print_session_locked()
                             return
-                        elif self._cnf.headless:
-                            self._show_notification_with_delay(
-                                    txt='____Operation not supported____\n_____on a headless session',
-                                    delay=1.5,
-                                    mode_to_set=self.ws.operation_mode,
-                                    callback_function=self.refreshBody)
-                            return
 
                         self._old_config_encoding = self._cnf.opts['default_encoding'][1]
                         ''' open config window '''
@@ -11020,6 +11035,7 @@ __|Remote Control Server| cannot be started!__
                 lambda: self._playlist_in_editor,
                 lambda: self.player.muted,
                 self._can_receive_remote_command,
+                self._get_rb_html_search_strings,
                 self._print_remote_control_server_error,
                 self._print_remote_control_server_dead_error,
                 lambda: self.log.song_title,

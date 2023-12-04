@@ -412,17 +412,16 @@ If nothing else works, try the following command:
             if not config_already_read:
                 read_config(pyradio_config)
                 config_already_read = True
-            if path.exists(pyradio_config.remote_control_server_report_file):
+            ff = path.join(pyradio_config.data_dir, 'server-headless.txt')
+            if path.exists(ff):
                 try:
-                    os.remove(pyradio_config.remote_control_server_report_file)
-                    print('Headless Server lock files removed!\n')
-                    sys.exit()
+                    remove(ff)
+                    print('Headless Server lock file removed!\n')
                 except:
                     print('Error: Cannot remove Headless Server lock file...\n')
-                    sys.exit(1)
             else:
                 print('Headless Server lock file not found\n')
-                sys.exit(1)
+            sys.exit()
 
 
 

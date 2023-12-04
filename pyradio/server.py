@@ -119,6 +119,8 @@ class PyRadioServer(object):
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
         <style>
 html, body, td, a, a:hover, a:visited{color: #333333;}
+html {min-height: 101vh;}
+body {min-height: 101vh;}
 .btn {margin: 1px; width: 80px; border-radius: 6px;}
 #the_blocking_box {
     position: absolute;
@@ -223,6 +225,7 @@ div[id^='a_']:hover { underline: none;}
                     <button id="vd" onclick="js_send_simple_command('/html/volumedown', 500);" type="button" class="btn btn-primary">Volume<br>Down</button>
                     <button id="vs" onclick="js_send_simple_command('/html/volumesave', 1500);" type="button" class="btn btn-success">Save<br>Volume</button>
                     <button id="mute" onclick="js_send_simple_command('/html/mute', 500);" type="button" class="btn btn-warning">Mute<br>Player</button>
+                    <button id="info" onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
                 </div>
             </div>
             <div class="col-xs-4 col-lg-4">
@@ -230,13 +233,12 @@ div[id^='a_']:hover { underline: none;}
                     <button id="st" onclick="js_send_simple_command('/html/st', 0);" type="button" class="btn btn-success">Stations<br>List</button>
                     <button id="group" type="button" class="btn">Groups<br>List</button>
                     <button id="pl" onclick="js_send_simple_command('/html/pl', 0);" type="button" class="btn btn-primary">Show<br>Playlists</button>
-                    <button id="info" onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
+                    <button id="search" onclick="js_send_simple_command('/html/lrb', 0);" type="button" class="btn btn-danger">Browser<br>Search</button>
                     <button id="logging" onclick="js_toggle_titles_logging();" type="button" class="btn btn-warning">Enable<br>Title Log</button>
                     <button id="like" onclick="js_send_simple_command('/html/like', 1500);" type="button" class="btn btn-info">Like<br>Title</button>
                 </div>
             </div>
         </div>
-
 
         <div id="msg" class="row" style="margin-top: 40px;">
             <div class="col-lg-4">
@@ -374,9 +376,9 @@ div[id^='a_']:hover { underline: none;}
         if ( ( the_command == "/html/open_radio_browser" ) || ( the_command == "/html/close_radio_browser" ) ) {
             clearTimeout(msg_timeout);
             if ( window.radio_browser == 0 ){
-                rb_msg = '<div class="alert alert-info">Connecting to <b>Radio Browser</b>...</div>'
+                rb_msg = '<div class="alert alert-info">Connecting to <b>Radio Browser</b>...</div>';
             }else{
-                rb_msg = '<div class="alert alert-info">Disconnecting from <b>Radio Browser</b>...</div>'
+                rb_msg = '<div class="alert alert-info">Disconnecting from <b>Radio Browser</b>...</div>';
             }
             js_set_title("#msg_text", rb_msg, the_command);
             js_show_element("msg");
@@ -461,12 +463,12 @@ div[id^='a_']:hover { underline: none;}
                 //    console.log("the_counter =", the_counter);
                 //}
                 td = document.getElementsByTagName('td');
-                for(i=the_counter; i<td.length; i++){
+                for (i=the_counter; i<td.length; i++){
                     try{
                         var x = td[i].getAttribute('style');
                         // console.log("x =", x);
-                        if(i>0){
-                            if(x == "color: white;"){
+                        if (i>0){
+                            if (x == "color: white;"){
                                 // console.log("found at", i, "id =", td[i].getAttribute('id'));
                                 var this_id = td[i+1].getAttribute('id');
                                 if (i>6){
@@ -586,12 +588,15 @@ div[id^='a_']:hover { underline: none;}
     function js_fix_history_buttons(){
         var el_n = document.getElementById("hnext");
         var el_p = document.getElementById("hprev");
+        var s = document.getElementById("search");
         if ( window.radio_browser == 0 ){
-            el_n.innerHTML = "Play Hist.<br>Next";
-            el_p.innerHTML = "Play Hist.<br>Previous"
+            el_n.disabled = false;
+            el_p.disabled = false;
+            s.disabled = true
         }else{
-            el_n.innerHTML = "Next<br>Search";
-            el_p.innerHTML = "Previous<br>Search"
+            el_n.disabled = true;
+            el_p.disabled = true;
+            s.disabled = false
         }
     }
 
@@ -786,6 +791,7 @@ Restricted Commands (Main mode only)
             playlist_in_editor,
             muted,
             can_send_command,
+            rb_html_search_strings,
             error_func,
             dead_func,
             song_title,
@@ -797,6 +803,7 @@ Restricted Commands (Main mode only)
         self.lists = lists
         self.playlist_in_editor = playlist_in_editor
         self.can_send_command = can_send_command
+        self.rb_html_search_strings = rb_html_search_strings
         self.song_title = song_title
         '''
         sel = (self.selection, self.playing)
@@ -1158,9 +1165,20 @@ Restricted Commands (Main mode only)
                 # self._send_text('Local playlist opened!')
         elif self._path == '/list_radio_browser' or self._path == '/lrb':
             if self._is_html:
-                pass
-                # received = self._commands['/html_close_radio_browser']()
-                # self._send_raw(received)
+                sel, a_list = self.rb_html_search_strings()
+                if a_list:
+                    self._send_raw(
+                        self._format_html_table(
+                            a_list, 3,
+                            sel=sel-1
+                        )
+                    )
+                else:
+                    out = []
+                    out.append('<div class="alert alert-danger">')
+                    out.append('No <b>Search Items</b> found!')
+                    out.append('</div>')
+                    self._send_raw('\n'.join(out))
             else:
                 received = self._commands['/list_radio_browser']()
                 self._send_text(received)
@@ -1628,7 +1646,7 @@ Content-Length: {}
             else:
                 out[i] = tok + pad_str.format(i+1) + out[i]
         if stations is None:
-            return 'Stations List for Playlist: "' + p_name + '"\n' +  '\n'.join(out) + '\nFirst column\n  [> ]: Selected, [+ ]: Playing, [+>]: Both'
+            return 'Stations List for Playlist: "' + p_name + '"\n' +  '\n'.join(out) + '\n\nFirst column\n  [> ]: Selected, [+ ]: Playing, [+>]: Both'
         else:
             return 'Stations List for Playlist: "' + p_name + '"\n' +  '\n'.join(out)
 
@@ -1650,7 +1668,7 @@ Content-Length: {}
                 tok = '> '
             out[i] = tok + pad_str.format(i+1) + out[i]
 
-        return 'Available Playlists\n' + '\n'.join(out) + '\nFirst column:\n  [>]: Playlist loaded'
+        return 'Available Playlists\n' + '\n'.join(out) + '\n\nFirst column\n  [>]: Playlist loaded'
 
     def _insert_html_script(self, msg):
         script = '''        <script>
@@ -1682,22 +1700,24 @@ Content-Length: {}
         '''
         head_captions = [
             'Stations (current playlist)',
-            'List of Playlists',
-            'Stations from Playlist: "{}"'.format(self.lists()[1][-1][playlist_index][0]) if playlist_index is not None else ''
+            'Playlists',
+            'Stations from Playlist: "{}"'.format(self.lists()[1][-1][playlist_index][0]) if playlist_index is not None else '',
+            'RadioBrowser Search Items'
         ]
-        url = ['/html/st/{}', '/html/pl/{}', '/html/pl/{0},{1}']
-        timeout = ('1500', '0', '1500')
+        url = ['/html/st/{}', '/html/pl/{}', '/html/pl/{0},{1}', '/html/srb/{}']
+        search_term = ('station', 'playlist', 'station', 'term')
+        timeout = ('1500', '0', '1500', '1500')
         head = '''                    <h5>Search field</h5>
-                    <input class="form-control" id="myInput" type="text" placeholder="Type to search for a station...">
+                    <input class="form-control" id="myInput" type="text" placeholder="Type to search for a {0}...">
                     <br>
                     <table class="table table-bordered">
                         <thead>
                             <tr class="btn-success">
-                                <td colspan="2" style="color: white; font-weight: bolder;">{}</td>
+                                <td colspan="2" style="color: white; font-weight: bolder;">{1}</td>
                             </tr>
                         </thead>
                         <tbody id="myTable">
-'''.format(head_captions[index])
+'''.format(search_term[index], head_captions[index])
         out = []
         for i, n in enumerate(in_list):
             header = False
@@ -1717,7 +1737,7 @@ Content-Length: {}
             if header:
                 out.append('                               <td id="n' + str(i+1) + '" class="text-center group-header" colspan="2">' + n + '</td>')
             else:
-                if index < 2:
+                if index in (0, 1, 3):
                     t_url = url[index].format(i+1)
                 else:
                     t_url = url[2].format(playlist_index+1, i+1)
