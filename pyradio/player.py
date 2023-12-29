@@ -423,6 +423,7 @@ class Player(object):
         if self._chapters is None:
                 self._chapters = PyRadioChapters(
                         self._cnf.stations_dir,
+                        self._cnf.data_dir,
                         version=self._cnf.current_pyradio_version,
                         playlist=self._cnf.station_path,
                         chapter_time=lambda: self._chapter_time
@@ -1987,6 +1988,7 @@ class Player(object):
             if self._chapters is None:
                 self._chapters = PyRadioChapters(
                         self._cnf.stations_dir,
+                        self._cnf.data_dir,
                         version=self._cnf.current_pyradio_version,
                         playlist=self._cnf.station_path,
                         chapter_time=lambda: self._chapter_time
@@ -3608,12 +3610,14 @@ class PyRadioChapters(object):
     def __init__(
             self,
             stations_dir,
+            cover_dir,
             version,
             playlist,
             chapter_time,
             encoding='urf-8'
             ):
         self._stations_dir = stations_dir
+        self._cover_dir = cover_dir
         self._version = version
         self._playlist = os.path.basename(playlist)[:-4]
         self._chapters_time_function = chapter_time
@@ -3718,8 +3722,8 @@ class PyRadioChapters(object):
                     ])
         t_dir_dir = os.path.dirname(self._tag_file)
         cover_file = None
-        for n in (os.path.join(t_dir_dir, 'user-cover.png'), \
-                os.path.join(t_dir_dir, 'cover.png')):
+        for n in (os.path.join(self._cover_dir, 'user-cover.png'), \
+                os.path.join(self._cover_dir, 'cover.png')):
             if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('cover file is: "{}"'.format(n))
             if os.path.exists(n):
