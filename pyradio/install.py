@@ -99,7 +99,7 @@ def print_pipx_error():
     if PY3:
         print(msg)
     else:
-        print(re.sub('\[[^\[]+\]', '', msg))
+        print(re.sub(r'\[[^\[]+\]', '', msg))
 
 def print_distro_packages():
     msg = '''To succesfully complete [magenta]PyRadio[/magenta]'s installation, please refer to this page:
@@ -108,7 +108,7 @@ def print_distro_packages():
     if PY3:
         print(msg)
     else:
-        print(re.sub('\[[^\[]+\]', '', msg))
+        print(re.sub(r'\[[^\[]+\]', '', msg))
 
 def is_externally_managed():
     files = [
@@ -123,7 +123,7 @@ def is_externally_managed():
     return False
 
 def print_pyradio_on():
-    msg = '''[bold magenta]
+    msg = r'''[bold magenta]
                      _____       _____           _ _
                     |  __ \     |  __ \         | (_)
                     | |__) |   _| |__) |__ _  __| |_  ___
@@ -142,7 +142,7 @@ def print_pyradio_on():
         print(msg.replace('[bold]', '').replace('[/bold]', '').replace('[bold magenta]', '').replace('[/bold magenta]', ''))
 
 def print_python2():
-    print('''                   _____       _   _                    ___
+    print(r'''                   _____       _   _                    ___
                   |  __ \     | | | |                  |__ \\
                   | |__) |   _| |_| |__   ___  _ __       ) |
                   |  ___/ | | | __| '_ \ / _ \| '_ \     / /
@@ -155,7 +155,7 @@ def print_python2():
     ''')
 
 def print_python3():
-    msg = '''[bold green]                   _____       _   _                    ____
+    msg = r'''[bold green]                   _____       _   _                    ____
                   |  __ \     | | | |                  |___ \\
                   | |__) |   _| |_| |__   ___  _ __      __) |
                   |  ___/ | | | __| '_ \ / _ \| '_ \    |__ <
@@ -513,7 +513,7 @@ class PyRadioCache(object):
             Parameters:
                 if none is specified, use
                     ~/.config/pyradio/data/.cache     or
-                    %APPDATA%\pyradio\data\_cache
+                    %APPDATA%\\pyradio\\data\\_cache
                 parced in this order
             config_dir
                 PyRadio config dir

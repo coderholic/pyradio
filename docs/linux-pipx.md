@@ -95,7 +95,8 @@ sudo apt-get install \
     python3-full \
     python3-pip \
     python3-rich \
-    python3-requests
+    python3-requests \
+    libpython3-all-dev
 ```
 
 Then install `pipx`:

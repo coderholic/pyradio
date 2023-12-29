@@ -652,8 +652,8 @@ def get_path(exe):
             chk.append(join(x, 'Scripts', exe))
             # print('adding: "{}"'.format(join(x, exe)).replace('\site-packages', ''))
             # print('adding: "{}"'.format(join(x, 'Scripts', exe)).replace('\site-packages', ''))
-            chk.append(join(x, exe).replace('\site-packages', ''))
-            chk.append(join(x, 'Scripts', exe).replace('\site-packages', ''))
+            chk.append(join(x, exe).replace(r'\site-packages', ''))
+            chk.append(join(x, 'Scripts', exe).replace(r'\site-packages', ''))
     else:
         for n in site.getusersitepackages():
             # print('adding: "{}"'.format(join(n, exe)))

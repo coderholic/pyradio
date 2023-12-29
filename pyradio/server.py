@@ -390,6 +390,15 @@ div[id^='a_']:hover { underline: none;}
            window.get_rb_status = 1;
            console.log("* get_rb_status", window.get_rb_status);
         }
+        if ( ( the_command.startsWith("/html/search_radio_browser") ) || ( the_command.startsWith("/html/srb") ) ) {
+            console.log("RadioBrowser Search!")
+            js_hide_msg();
+            clearTimeout(msg_timeout);
+            srb_msg = '<div class="alert alert-info">Performing <b>Radio Browser</b> search...</div>';
+            js_set_title("#msg_text", srb_msg, the_command);
+            js_show_element("msg");
+        }
+
         console.log("get_rb_status", window.get_rb_status);
         // console.log("startsWith /html/pl/ :", the_command.startsWith("/html/pl/"));
         // console.log("length =:", the_command.length);
@@ -429,6 +438,15 @@ div[id^='a_']:hover { underline: none;}
                     result = '<div class="alert alert-success">Connection to <b>Radio Browser</b> established!</div>'
                 } else if ( the_command == "/html/close_radio_browser"  ) {
                     result = '<div class="alert alert-success"><b>Local</b> Playlist restored</div>'
+                } else if ( ( the_command.startsWith("/html/search_radio_browser") ) || ( the_command.startsWith("/html/srb") ) ) {
+                    console.log("RadioBrowser Search result!")
+                    result = '<div class="alert alert-success">Search performed!</div>'
+                //     //// js_hide_msg();
+                //     // js_hide_msg();
+                //     // clearTimeout(msg_timeout);
+                //     // srb_msg = '<div class="alert alert-info">Performing <b>Radio Browser</b> search...</div>';
+                //     // js_set_title("#msg_text", srb_msg, the_command);
+                //     // js_show_element("msg");
                 } else {
                     //console.log("next or previous command!");
                     var x = result.indexOf("Connecting");
@@ -904,6 +922,7 @@ Restricted Commands (Main mode only)
             self._path = self._path[5:]
         else:
             self._is_html = False
+        logger.error('self._path = "{}"'.format(self._path))
         if self._path == '/init':
             self._commands['/html_init']()
         elif self._path == '/title':
@@ -1163,6 +1182,37 @@ Restricted Commands (Main mode only)
             else:
                 received = self._commands['/close_radio_browser']()
                 # self._send_text('Local playlist opened!')
+
+        elif self._path.startswith('/search_radio_browser') or \
+                    self._path.startswith('/srb'):
+                logger.error('here')
+                p = self._path.replace(
+                        '/search_radio_browser/', ''
+                    ).replace(
+                        '/srb/', ''
+                    )
+                logger.error('p = "{}"'.format(p))
+                try:
+                    x = int(p)
+                    logger.error('x = {}'.format(x))
+                except ValueError:
+                    if self._is_html:
+                        pass
+                        logger.error('HTML ERROR')
+                        self._send_raw('<div class="alert txt-center alert-danger">Error in parameter</div>')
+                    else:
+                        logger.error('TEXT ERROR')
+                        self._send_text('Error in command\n')
+                    return
+                if self._is_html:
+                    pass
+                    ret = self._commands['/html_search_radio_browser'](x)
+                else:
+                    ret = self._commands['/search_radio_browser'](x)
+                    if ret != '':
+                        self._send_text(ret)
+
+
         elif self._path == '/list_radio_browser' or self._path == '/lrb':
             if self._is_html:
                 sel, a_list = self.rb_html_search_strings()

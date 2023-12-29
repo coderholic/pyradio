@@ -18,7 +18,6 @@ If you face this situation, please refer to [this page](docs/pip-error.md) to re
 * [Installation](#installation)
 * [Basic usage](#basic-usage)
 * [Update notification](#update-notification)
-    * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
 * [Reporting bugs](#reporting-bugs)
 * [Packaging PyRadio](#packaging-pyradio)
 * [TODO](#todo)
@@ -102,23 +101,7 @@ Finally, when you are ready to dive into the program's numerous features, you ca
 
 If so, a notification message will be displayed, informing the user about it and asking to proceed with updating the program (provided this is not a distribution package).
 
-### Updating a pre 0.8.9 installation
-
-First thing you do is get the installation script. Open a **terminal** and type:
-
-    cd
-    wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py
-
-or using curl:
-
-    cd
-    curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py -o install.py
-
-**Note**: If you have neither *wget* or *curl* installed, or you are on Windows, just right click on [this link](https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py) and use your browser "**Save link as**" menu entry to save the file in your home folder.
-
-Finally, execute the command:
-
-    python install.py --force
+**Note:** Packages coming from a distribution repository will display no notification; it's up to the distro to update / uninstall **PyRadio**, as stated in [Packaging PyRadio](docs/packaging.md).
 
 ## Reporting bugs
 

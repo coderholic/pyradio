@@ -399,7 +399,7 @@ class PyRadioEditor(object):
                 self._win.addstr(20 + step, 5, '─' * (self.maxX - 10), curses.color_pair(12))
             except:
                 self._win.addstr(20 + step, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
-            self._win.addstr(20 + step, int((self.maxX - 42) / 2), ' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
+            self._win.addstr(20 + step, int((self.maxX - 42) / 2), r' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
 
             self._win.addstr(21 + step, 5, '-', curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
@@ -436,10 +436,10 @@ class PyRadioEditor(object):
                 self._line_editor[ed].show(self._win, opening=False)
 
             if self._focus == 1:
-                ''' Tip: Press \p before pasting here '''
+                ''' Tip: Press \\p before pasting here '''
                 self._win.addstr(6, self.maxX - 41, 'Tip: ', curses.color_pair(4))
                 self._win.addstr('Press ', curses.color_pair(5))
-                self._win.addstr('\\p', curses.color_pair(4))
+                self._win.addstr(r'\p', curses.color_pair(4))
                 self._win.addstr(' before pasting a URL here', curses.color_pair(5))
                 self._win.addstr(7, self.maxX - 32, 'or type a ', curses.color_pair(5))
                 self._win.addstr('- ', curses.color_pair(4))
@@ -447,10 +447,10 @@ class PyRadioEditor(object):
                 self._win.addstr('Group Header', curses.color_pair(4))
                 self._win.refresh()
             elif self._focus == 2:
-                ''' Tip: Press \p before pasting here '''
+                ''' Tip: Press \\p before pasting here '''
                 self._win.addstr(9, self.maxX - 41, 'Tip: ', curses.color_pair(4))
                 self._win.addstr('Press ', curses.color_pair(5))
-                self._win.addstr('\\p', curses.color_pair(4))
+                self._win.addstr(r'\p', curses.color_pair(4))
                 self._win.addstr(' before pasting a URL here', curses.color_pair(5))
                 self._win.refresh()
 
@@ -1024,7 +1024,7 @@ class PyRadioRenameFile(object):
                 self._win.addstr(18 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(12))
             except:
                 self._win.addstr(18 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
-            self._win.addstr(18 + adjust_line_Y, int((self.maxX - 42) / 2), ' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
+            self._win.addstr(18 + adjust_line_Y, int((self.maxX - 42) / 2), r' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
 
             self._win.addstr(19 + adjust_line_Y, 5, '-', curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))

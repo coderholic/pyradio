@@ -3552,8 +3552,8 @@ class SimpleCursesLineEdit(object):
     ''' True if backlash has been pressed '''
     _backslash_pressed = False
 
-    ''' Behaviour of ? key regarding \
-        If True, display ? (\? to display help)
+    ''' Behaviour of ? key regarding \\
+        If True, display ? (\\? to display help)
         If False, display help '''
     _show_help_with_backslash_pressed = False
 

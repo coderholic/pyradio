@@ -36,7 +36,7 @@ def win_del_old_inst():
         if not os.path.exists(TARGET):
             os.makedirs(TARGET)
 
-        msg = '''@ECHO OFF
+        msg = r'''@ECHO OFF
 SETLOCAL EnableDelayedExpansion
 
 IF EXIST DEV (SET NO_DEV=0) ELSE (SET NO_DEV=1)

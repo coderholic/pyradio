@@ -534,7 +534,7 @@ class PyRadioSimpleScheduleWindow(object):
             key_stab_function_handler=self._previous_widget
             )
         )
-        ''' enables direct insersion of ? and \ '''
+        ''' enables direct insersion of ? and \\ '''
         self._widgets[-1]._paste_mode = False
         self._widgets[-1].w_id = 22
         self._widgets[-1].string = self._schedule_item.item['name']

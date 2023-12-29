@@ -162,6 +162,7 @@ class PyRadioStations(object):
                 self.stations_dir = user_config_dir
             self.registers_dir = path.join(self.stations_dir, '.registers')
         self.data_dir = path.join(self.stations_dir, 'data')
+        self.old_data_dir = path.join(self.stations_dir, 'data')
         self.schedule_file = path.join(self.stations_dir, 'data', 'schedule.json')
         self.recording_dir = path.join(self.stations_dir, 'recordings')
         ''' Make sure config dirs exists '''
@@ -1775,6 +1776,14 @@ class PyRadioConfig(PyRadioStations):
         # if self._distro != 'None':
         #     self.info += '({})'.format(self._distro)
         return ret
+
+
+    def remove_remote_control_server_report_file(self):
+        if path.exists(self.remote_control_server_report_file):
+            try:
+                remove(self.remote_control_server_report_file)
+            except:
+                pass
 
     def setup_mouse(self):
         if self.enable_mouse:

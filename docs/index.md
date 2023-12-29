@@ -69,9 +69,7 @@ If you face this situation, please refer to [this page](pip-error.md) to resolve
 * [Session Locking](#session-locking)
     * [Session unlocking](#session-unlocking)
 * [Update notification](#update-notification)
-    * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
 * [Remote Control Server](#remote-control-server)
-* [Cleaning up](#cleaning-up)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
 * [Packaging PyRadio](#packaging-pyradio)
@@ -1074,33 +1072,13 @@ If for any reason **PyRadio** always starts in "*locked mode*", one can **unlock
 
 If so, a notification message will be displayed, informing the user about it and asking to proceed with updating the program (provided this is not a distribution package).
 
-### Updating a pre 0.8.9 installation
-
-First thing you do is get the installation script. Open a **terminal** and type:
-
-    cd
-    wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py
-
-or using curl:
-
-    cd
-    curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py -o install.py
-
-**Note**: If you have neither *wget* or *curl* installed, or you are on Windows, just right click on [this link](https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py) and use your browser "**Save link as**" menu entry to save the file in your home folder.
-
-Finally, execute the command:
-
-    python install.py --force
+**Note:** Packages coming from a distribution repository will display no notification; it's up to the distro to update / uninstall **PyRadio**, as stated in [Packaging PyRadio](docs/packaging.md).
 
 ## Remote Control Server
 
 **PyRadio** can be controlled remotely using normal http requests either form the command line (with *curl* for example) or from a browser.
 
 For more information, please refer to [the relevant page](server.md).
-
-## Cleaning up
-
-**PyRadio** will uninstall all previously installed versions when updated (using the **-U** command line option), so no extra steps are needed any more to house keep your system.
 
 ## Debug mode
 
@@ -1127,5 +1105,5 @@ Finally, include the file produced in your report.
 
 ## Packaging PyRadio
 
-If you are a packager and would like to produce a package for your distribution please do follow [this mini guide](packagers-info.md).
+If you are a packager and would like to produce a package for your distribution please do follow [this mini guide](packaging.md).
 

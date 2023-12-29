@@ -1,0 +1,14 @@
+This directory is here for pep 517 integration...
+Depending on the build system, it may cause problems.
+For example:
+
+1. on Acch Linux this will cause the build to fail
+   Solution: the directory is deleted before build
+
+2. On other Linux distros (Gentoo, for example) and MacOs
+   it will heve to be present
+
+3. There is this README file in the directory; if this
+   causes any problems, just remove the README file
+   before build
+

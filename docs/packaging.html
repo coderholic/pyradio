@@ -13,10 +13,11 @@
     body {max-width: 750px; margin: auto;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
     h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
-    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 150%;} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;} 
     h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
-    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 120%;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;;} 
     h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    h1, h2, h3, h4, h5 {margin-left: -.7em;} 
     STRONG {color: SaddleBrown;} 
     dl {margin: 2em;} 
     dd {margin: 1em;} 
@@ -38,32 +39,43 @@ a:visited{color: SaddleBrown;}
 <body>
 <header id="title-block-header">
 </header>
-<h1 style="color: SaddleBrown" id="pyradio-packagers-info">PyRadio Packagers’ Info</h1>
+<h1 style="color: SaddleBrown" id="packaging-pyradio">Packaging PyRadio</h1>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
-<li><a href="#packaging-pyradio">Packaging PyRadio</a>
+<li><a href="#dependencies">Dependencies</a></li>
+<li><a href="#files-to-change">Files to change</a>
 <ul>
-<li><a href="#distro-specific-files">Distro Specific Files</a></li>
-<li><a href="#mkvtoolnix-cli-installation">MKVToolNix cli installation</a></li>
+<li><a href="#distro-name-(must-do)">distro name (must do)</a></li>
+<li><a href="#desktop-notifications-(optional)">Desktop Notifications (optional)</a></li>
+<li><a href="#desktop-file-location">Desktop File location</a></li>
+<li><a href="#pyradio/__pycache__">pyradio/__pycache__</a></li>
 </ul></li>
+<li><a href="#mkvtoolnix-cli-installation">MKVToolNix cli installation</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p class="indented">[ <a href="index.html#packaging-pyradio">Back to main doc</a> ]</p>
-<h2 id="packaging-pyradio">Packaging PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>If you are a packager and would like to produce a package for your distribution please do follow this mini guide.</p>
-<p>First of all, make sure you declare the pacakges’s requirements to the relevant section of your manifest (or whatever) file. These are:</p>
+<h2 id="dependencies">Dependencies <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>First of all, you have to decide on the player that’s going to be used. Three players are supported:</p>
 <ol type="1">
-<li>setuptools</li>
-<li>wheel</li>
+<li>mpv</li>
+<li>plmayer</li>
+<li>vlc</li>
+</ol>
+<p>Make sure one of them is included in the dependencies.</p>
+<p>Then you have to add the following python modules to the relevant section of your manifest (or whatever) file:</p>
+<ol type="1">
 <li>requests</li>
 <li>dnspython</li>
 <li>psutil</li>
 <li>rich</li>
 <li>netifaces</li>
-<li>dateutils</li>
+<li>dateutil</li>
 </ol>
-<p>After that, you will have to modify some files, because <strong>PyRadio</strong> is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; <strong>PyRadio</strong> should be updated and uninstalled using the distro package manager.</p>
+<h2 id="files-to-change">Files to change <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>You will have to modify a couple of files to tailor <strong>PyRadio</strong>’ to your needs and liking.</p>
+<h3 id="distro-name-must-do">distro name (must do)</h3>
+<p><strong>PyRadio</strong> is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; <strong>PyRadio</strong> should be updated and uninstalled using the distro package manager.</p>
 <p>In order to accomplice that, you just have to change the <strong>distro</strong> configuration parameter in the <strong>config</strong> file. <strong>PyRadio</strong> will read this parameter and will disable updating and uninstalling, when set to anything other than “<strong>None</strong>”. So, here’s how you do that:</p>
 <p>Once you are in the sources top level directory (typically “<em>pyradio</em>”), you execute the command:</p>
 <pre>sed -i &#39;s/distro = None/distro = YOUR DISTRO NAME/&#39; pyradio/config</pre>
@@ -72,20 +84,29 @@ a:visited{color: SaddleBrown;}
 <pre>sed -i &#39;s/distro = None/distro = Arch Linux/&#39; pyradio/config</pre>
 <p>The distro name you insert here will appear in <strong>PyRadio</strong>’s “<em>Configuration Window</em>”. In addition to that it will appear in the log file, so that I know where the package came from while debugging.</p>
 <p>Having said that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using “<em>xxx</em>” will do the job, but provides no useful information).</p>
-<p>Then, if you want to enable <strong>Desktop Notifications</strong>, do a</p>
+<h3 id="desktop-notifications-optional">Desktop Notifications (optional)</h3>
+<p>If you want to enable <a href="index.html#desktop-notifications">Desktop Notifications</a>, do a</p>
 <pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 0/&#39; pyradio/config</pre>
-<p>or</p>
+<p>to display titles whenever they are received, or</p>
 <pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 60/&#39; pyradio/config</pre>
 <p>to have notifications every 60 seconds, for example. You can use any value here, starting from 30 to 300 (meaning every 30 seconds up to 5 minutes), using a step of 30.</p>
-<h3 id="distro-specific-files">Distro Specific Files</h3>
-<p><strong>1. Desktop File</strong></p>
+<h3 id="desktop-file-location">Desktop File location</h3>
 <p>If the Desktop File is not installed in <em>/usr/share/applications</em> or <em>/usr/local/share/applications</em>, it will have to be passed as a parameter to the script that will handle it, like so:</p>
 <pre>sed -i &quot;s,&#39; -t &#39;,&#39; -d /path/to/desktop_file&#39; + &amp;,&quot; pyradio/main.py</pre>
-<p><strong>2. Package Icon</strong></p>
-<p>As of <strong>v. 0.9.1</strong>, <strong>PyRadio</strong> includes the icon in its distribution files, so no further action is necessary.</p>
-<h3 id="mkvtoolnix-cli-installation">MKVToolNix cli installation</h3>
+<h3 id="pyradio__pycache__">pyradio/__pycache__</h3>
+<p>This is a directory that is needed for some build systems to succesfully build <strong>PyRadio</strong>.</p>
+<p>Depending on the build system:</p>
+<ol type="1">
+<li><p>It may be needed (in the case of Gentoo, MacOS and Windows).<br />
+In this case, you have nothing to do.<br />
+<br />
+Please keep in mind that there is a REDME file in the directory; in case this file causes any problems, just remove the file before the build command.</p></li>
+<li><p>It may not be needed (for example on Arch Linux).<br />
+In this case, just delete it before the build command.</p></li>
+</ol>
+<h2 id="mkvtoolnix-cli-installation">MKVToolNix cli installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Another thing to consider is whether you should mark <strong>MKVToolNix</strong> command line utilities as a dependency for <strong>PyRadio</strong>.</p>
 <p>I would suggest to do so, in order to provide your users the best experience possible. If unsure, please refer to section <a href="recording.html#chapters">Chapters</a> in the relevant document.</p>
-<p>In case you decide to do so, please make sure you mark as a dependency the <strong>command line utilities</strong>, not the GUI program, if that’s on a different package on your distro. For examle, Arch Linux provides both a <em>mkvtoolnix-cli</em> and a <em>mkvtoolnix-gui</em> package; the first one should be used. Same thing with Debian Linux; it provides a <em>mkvtoolnix</em> and a <em>mkvtoolnix-gui</em> package.</p>
+<p>In case you decide to do so, please make sure you mark as a dependency the <strong>command line utilities</strong>, not the GUI program, if that’s on a different package on your distro. For examle, Arch Linux provides both a <em>mkvtoolnix-cli</em> and a <em>mkvtoolnix-gui</em> package; the first one should be used. Same thing with Debian Linux; it provides both a <em>mkvtoolnix</em> and a <em>mkvtoolnix-gui</em> package; in which case you’d use the later.</p>
 </body>
 </html>

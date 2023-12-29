@@ -88,10 +88,10 @@ class PyRadioConfigWindow(object):
     '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to save a modified playlist whenever it needs saving.', '|', 'Default value: False'])
     _help_text.append(None)
-    _help_text.append(['This is the IP for the Remote Control Server.', '|', 'Available options:', '- localhost', '  PyRadio will be accessible from within the current system only.', '- LAN', '  PyRadio will be accessible from any computer in the local network.', '|', 'One can see the active IP using the "\s" command from the program\'s Main Window.', '|', 'Use "Space", "Enter", "l/Right" to change the value.','|', 'Default value: localhost'])
+    _help_text.append(['This is the IP for the Remote Control Server.', '|', 'Available options:', '- localhost', '  PyRadio will be accessible from within the current system only.', '- LAN', '  PyRadio will be accessible from any computer in the local network.', '|', r'One can see the active IP using the "\s" command from the program\'s Main Window.', '|', 'Use "Space", "Enter", "l/Right" to change the value.','|', 'Default value: localhost'])
     _help_text.append(
         ['This is the port used by the Remote Control Server (the port the server is listening to).', '|', 'Please make sure that a "free" port is specified here, to avoid any conflicts with existing services and daemons.', '|', 'If an invalid port number is inserted, the cursor will not move to another field.', '|', 'Valid values: 1025-65535', 'Default value: 9998'])
-    _help_text.append(['If set to True, the Server wiil be automatically started when PyRadio starts.', 'If set to False, one can start the Server using the "\s" command from the Main program window.', '|', 'Default value: False'])
+    _help_text.append(['If set to True, the Server wiil be automatically started when PyRadio starts.', r'If set to False, one can start the Server using the "\s" command from the Main program window.', '|', 'Default value: False'])
     _help_text.append(None)
     _help_text.append(['This options will open the configuration window for the RadioBrowser Online Stations Directory.', '|', "In order to use RadioBrowser, python's requests module must be installed."])
 
@@ -593,8 +593,16 @@ class PyRadioConfigWindow(object):
     def _go_end(self):
         if self._is_port_invalid():
             return
+        # logger.error('self._start = {}'.format(self._start))
+        # logger.error('self.__selection = {}'.format(self.__selection))
+        # logger.error('self.number_of_items = {}'.format(self.number_of_items))
         self.__selection = self.number_of_items - 1
-        self._start = self.__selection - self.maxY + 2
+        # fixing #215
+        if self.number_of_items > self.maxY:
+            self._start = self.__selection - self.maxY + 2
+        # logger.error('self.maxY = {}'.format(self.maxY))
+        # logger.error('self._start = {}'.format(self._start))
+        # logger.error('self.__selection = {}'.format(self.__selection))
         self._put_cursor(0)
         self.refresh_selection()
 
@@ -1075,7 +1083,7 @@ class ExtraParametersEditor(object):
         self._widgets[0]._use_paste_mode = True
         self._widgets[0]._mode_changed = self._show_alternative_modes
         self._widgets[0].set_global_functions(self._global_functions)
-        ''' enables direct insersion of ? and \ '''
+        ''' enables direct insersion of ? and \\ '''
         self._widgets[0]._paste_mode = False
         self._line_editor = self._widgets[0]
 
@@ -2667,7 +2675,7 @@ class PyRadioSelectPlaylist(object):
         and permit playlist only selection.
         Returns: state, playlist title
 
-        if it is True, it is used in \p (paste) function and
+        if it is True, it is used in \\p (paste) function and
         permits playlist and register selection.
         default_playlist is removed from the list.
         Returns: state, playlist/register path

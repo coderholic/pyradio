@@ -452,8 +452,8 @@ class Player(object):
         config_files = []
         config_files = [expanduser("~") + "/.mplayer/config"]
         if platform.startswith('win'):
-            if os.path.exists('C:\\mplayer\\mplayer.exe'):
-                config_files[0] = 'C:\\mplayer\mplayer\\config'
+            if os.path.exists(r'C:\\mplayer\\mplayer.exe'):
+                config_files[0] = r'C:\\mplayer\mplayer\\config'
             elif os.path.exists(os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer.exe")):
                 config_files[0] = os.path.join(os.getenv('USERPROFILE'), "mplayer", "mplayer", "config")
             elif os.path.exists(os.path.join(os.getenv('APPDATA'), "pyradio", "mplayer", "mplayer.exe")):
@@ -854,6 +854,7 @@ class Player(object):
             out = self.process.stdout
             while(True):
                 subsystemOutRaw = out.readline()
+                # logger.error('DE subsystemOut = "{0}"'.format(subsystemOutRaw))
                 self._chapter_time = datetime.now()
                 with recording_lock:
                     try:
@@ -1265,10 +1266,12 @@ class Player(object):
                     # logger.error('DE Received: "{!r}"'.format(a_data))
                     if a_data == b'' or stop():
                         break
-
                     if a_data:
                         all_data = a_data.split(b'\n')
+                        d = None
                         for n in all_data:
+                            if n == b'':
+                                continue
                             if self._get_mpv_metadata(n, stop, enable_crash_detection_function):
                                 self._request_mpv_info_data(sock)
                             else:
@@ -1276,7 +1279,6 @@ class Player(object):
                                     if stop():
                                         break
                                     d = json.loads(n)
-                                    # logger.error('d = {}'.format(d))
                                     if 'event' in d.keys():
                                         # logger.info('metadata-update\n\n')
                                         if d['event'] == 'metadata-update':
@@ -1647,9 +1649,13 @@ class Player(object):
         a_data = args[0]
         stop = args[1]
         enable_crash_detection_function = args[2]
-        if b'"icy-title":"' in a_data:
+        if b'"icy-title":"' in a_data or \
+                b'"title":"' in a_data:
             if version_info > (3, 0):
-                title = a_data.split(b'"icy-title":"')[1].split(b'"}')[0]
+                if b'"icy-title":"' in a_data:
+                    title = a_data.split(b'"icy-title":"')[1].split(b'"}')[0]
+                else:
+                    title = a_data.split(b'"title":"')[1].split(b'"}')[0].split(b'","')[0]
                 if title:
                     if title == b'-' or title == b' - ':
                         if logger.isEnabledFor(logging.DEBUG):
@@ -2299,7 +2305,7 @@ class MpvPlayer(Player):
     if executable_found:
         ''' items of this tuple are considered icy-title
             and get displayed after first icy-title is received '''
-        icy_tokens = ('icy-title: ', )
+        icy_tokens = ('icy-title: ', 'Title: ')
 
         icy_audio_tokens = {}
 

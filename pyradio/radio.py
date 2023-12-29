@@ -503,6 +503,8 @@ class PyRadio(object):
             '/html_close_radio_browser': self._open_playlist_from_history,
             '/close_radio_browser': self._open_playlist_from_history,
             '/list_radio_browser': self._get_rb_search_strings,
+            '/search_radio_browser': self.search_radio_browser_headless,
+            '/html_search_radio_browser': self.search_radio_browser_headless,
         }
 
         ''' list of functions to open for entering
@@ -3013,7 +3015,7 @@ __|Remote Control Server| cannot be started!__
                         caption=' PyRadio ')
 
     def _show_radio_browser_search_help(self):
-        txt = '''Tab| / |Sh-Tab     |Go to next / previous field.
+        txt = r'''Tab| / |Sh-Tab     |Go to next / previous field.
                  j|, |Up| / |k|, |Down  |Go to next / previous field vertivally.
                  h|, |Left| / |l|, |Right
                  _________________|Go to next / previous field (when
@@ -3035,7 +3037,7 @@ __|Remote Control Server| cannot be started!__
                         caption=' RadioBrowser Search Help ')
 
     def _show_radio_browser_config_help(self):
-        txt = '''Tab| / |Sh-Tab
+        txt = r'''Tab| / |Sh-Tab
                  j|, |Up| / |k|, |Down  |Go to next / previous field.
                  h|, |Left| / |l|, |Right
                  _________________|Change |auto save| and |counters| value.
@@ -3056,7 +3058,7 @@ __|Remote Control Server| cannot be started!__
                         caption=' RadioBrowser Config Help ')
 
     def _show_group_help(self):
-        txt = '''Up|,|j|,|PgUp|,
+        txt = r'''Up|,|j|,|PgUp|,
                  Down|,|k|,|PgDown    |Change Group Header selection.
                  g G              |Go to first / last Group Header.
                  H M L            |Go to top / middle / bottom of screen.
@@ -3073,7 +3075,7 @@ __|Remote Control Server| cannot be started!__
                         caption=' Group Selection Help ')
 
     def _show_main_help(self, from_keyboard=False):
-        txt = '''Up|,|j|,|PgUp|,
+        txt = r'''Up|,|j|,|PgUp|,
                  Down|,|k|,|PgDown    |Change station selection.
                  <n>g| / |<n>G      |Jump to first /last or n-th station.
                  H M L            |Go to top / middle / bottom of screen.
@@ -3171,7 +3173,7 @@ __|Remote Control Server| cannot be started!__
                         reset_metrics=False)
 
     def _show_main_help_page_5(self, from_keyboard=False):
-        txt = '''!Recording
+        txt = r'''!Recording
                  Veritcal line    |Enable / disable |recording|.
                  Space            |Pause / resume playback.
                  !Change Player
@@ -3200,7 +3202,7 @@ __|Remote Control Server| cannot be started!__
             self._main_help_id = 3
 
     def _show_playlist_help(self):
-        txt = '''Up|,|j|,|PgUp|,
+        txt = r'''Up|,|j|,|PgUp|,
                  Down|,|k|,|PgDown    |Change register selection.
                  <n>g| / |<n>G      |Jump to first /last or n-th station.
                  M| / |P            |Jump to |M|iddle / loaded register.
@@ -3226,7 +3228,7 @@ __|Remote Control Server| cannot be started!__
                             caption=' Playlist Help ')
 
     def _show_theme_help(self):
-            txt = '''Up|,|j|,|PgUp|,
+            txt = r'''Up|,|j|,|PgUp|,
                      Down|,|k|,|PgDown    |Change theme selection.
                      g| / |<n>G         |Jump to first or n-th / last theme.
                      Enter|,|Right|,|l    |Apply selected theme.
@@ -3247,7 +3249,7 @@ __|Remote Control Server| cannot be started!__
 
     def _show_search_help(self):
         if platform.lower().startswith('darwin'):
-            txt = '''Left| / |Right        |Move to next / previous character.
+            txt = r'''Left| / |Right        |Move to next / previous character.
             HOME|,|^A| / |END|,|^E    |Move to start / end of line.
             ^W| / |^K             |Clear to start / end of line.
             ^U                  |Clear line.
@@ -3260,7 +3262,7 @@ __|Remote Control Server| cannot be started!__
             |Global functions work when preceded with a "|\|".
             '''
         else:
-            txt = '''Left| / |Right        |Move to next / previous character.
+            txt = r'''Left| / |Right        |Move to next / previous character.
             Up| / |Down           |Cycle within history.
             M-F| / |M-B           |Move to next / previous word.
             HOME|,|^A| / |END|,|^E    |Move to start / end of line.
@@ -3283,7 +3285,7 @@ __|Remote Control Server| cannot be started!__
 
     def _show_params_ediror_help(self):
         if platform.lower().startswith('darwin'):
-            txt = '''Left| / |Right        |Move to next / previous character.
+            txt = r'''Left| / |Right        |Move to next / previous character.
             HOME|,|^A| / |END|,|^E    |Move to start / end of line.
             ^W| / |^K             |Clear to start / end of line.
             ^U                  |Clear line.
@@ -3296,7 +3298,7 @@ __|Remote Control Server| cannot be started!__
             |Global functions work when preceded with a "|\|".
             '''
         else:
-            txt = '''Left| / |Right        |Move to next / previous character.
+            txt = r'''Left| / |Right        |Move to next / previous character.
             M-F| / |M-B           |Move to next / previous word.
             HOME|,|^A| / |END|,|^E    |Move to start / end of line.
             ^W| / |M-D|,|^K         |Clear to start / end of line.
@@ -3319,7 +3321,7 @@ __|Remote Control Server| cannot be started!__
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \
                 or  self.ws.previous_operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE):
             if platform.lower().startswith('darwin'):
-                txt = '''Left| / |Right        |Move to next / previous character.
+                txt = r'''Left| / |Right        |Move to next / previous character.
                 HOME|,|^A| / |END|,|^E    |Move to start / end of line.
                 ^W| / |^K             |Clear to start / end of line.
                 ^U                  |Clear line.
@@ -3332,7 +3334,7 @@ __|Remote Control Server| cannot be started!__
                 |Global functions work when preceded with a "|\|".
                 '''
             else:
-                txt = '''Left| / |Right        |Move to next / previous character.
+                txt = r'''Left| / |Right        |Move to next / previous character.
                 M-F| / |M-B           |Move to next / previous word.
                 HOME|,|^A| / |END|,|^E    |Move to start / end of line.
                 ^W| / |M-D|,|^K         |Clear to start / end of line.
@@ -3347,12 +3349,12 @@ __|Remote Control Server| cannot be started!__
                 '''
             if self._simple_schedule is not None:
                 txt = txt.replace(
-                    '|Global functions work when preceded with a "|\|"',
-                    '|Global functions do not work while in line editor'
+                    r'|Global functions work when preceded with a "|\|"',
+                    r'|Global functions do not work while in line editor'
                 )
         else:
             if platform.lower().startswith('darwin'):
-                txt = '''Left| / |Right        |Move to next / previous character.
+                txt = r'''Left| / |Right        |Move to next / previous character.
                 HOME|,|^A| / |END|,|^E    |Move to start / end of line.
                 ^W| / |^K             |Clear to start / end of line.
                 ^U                  |Clear line.
@@ -3367,7 +3369,7 @@ __|Remote Control Server| cannot be started!__
                 |Global functions work when preceded with a "|\|".
                 '''
             else:
-                txt = '''Left| / |Right        |Move to next / previous character.
+                txt = r'''Left| / |Right        |Move to next / previous character.
                 M-F| / |M-B           |Move to next / previous word.
                 HOME|,|^A| / |END|,|^E    |Move to start / end of line.
                 ^W| / |M-D|,|^K         |Clear to start / end of line.
@@ -3389,7 +3391,7 @@ __|Remote Control Server| cannot be started!__
                         caption=' Line Editor Help ')
 
     def _show_config_help(self):
-            txt = '''Up|,|j|,|PgUp|,
+            txt = r'''Up|,|j|,|PgUp|,
                      Down|,|k|,|PgDown          |Change option selection.
                      g|,|Home| / |G|,|End         |Jump to first / last option.
                      Enter|,|Space|,|Right|,|l    |Change option value.
@@ -3409,7 +3411,7 @@ __|Remote Control Server| cannot be started!__
         if self._player_select_win.editing > 0:
             self._show_line_editor_help()
         elif self._player_select_win.focus:
-            txt = '''TAB              |Move selection to |Extra Parameters| column.
+            txt = r'''TAB              |Move selection to |Extra Parameters| column.
                      Up|,|j|,|Down|,|k      |Change player selection.
                      Enter|,|Space
                      Right|,|l          |Enable / disable player.
@@ -3426,7 +3428,7 @@ __|Remote Control Server| cannot be started!__
                             caption=' Player Selection Help ')
         else:
             if self._player_select_win.from_config:
-                txt = ''' TAB              |Move selection to |Player Selection| column.
+                txt = r''' TAB              |Move selection to |Player Selection| column.
                          Up|,|j|,|Down|,|k
                          PgUp|, |PgDn       |Change selection.
                          g| / |G            |Move to first / last item.
@@ -3441,7 +3443,7 @@ __|Remote Control Server| cannot be started!__
                          m| / |v            ||M|ute player / Save |v|olume (not in vlc).
                          W| / |w            |Toggle title log / like a station.'''
             else:
-                txt = '''Up|,|j|,|Down|,|k
+                txt = r'''Up|,|j|,|Down|,|k
                          PgUp|, |PgDn       |Change selection.
                          g| / |G            |Move to first / last item.
                          Enter|,|Space
@@ -3456,7 +3458,7 @@ __|Remote Control Server| cannot be started!__
                             caption=' Player Extra Parameters Help ')
 
     def _show_config_playlist_help(self):
-            txt = '''Up|,|j|,|PgUp|,
+            txt = r'''Up|,|j|,|PgUp|,
                      Down|,|k|,|PgDown    |Change playlist selection.
                      g| / |<n>G         |Jump to first or n-th / last playlist.
                      Enter|,|Space|,
@@ -3473,7 +3475,7 @@ __|Remote Control Server| cannot be started!__
                             caption=' Playlist Selection Help ')
 
     def _show_config_station_help(self):
-            txt = '''Up|,|j|,|PgUp|,
+            txt = r'''Up|,|j|,|PgUp|,
                      Down|,|k|,|PgDown    |Change station selection.
                      g| / |<n>G         |Jump to first or n-th / last station.
                      M                |Jump to the middle of the list.
@@ -3491,7 +3493,7 @@ __|Remote Control Server| cannot be started!__
                             caption=' Station Selection Help ')
 
     def _show_config_encoding_help(self):
-            txt = '''Arrows|,|h|,|j|,|k|,|l|,|PgUp|,|,PgDn
+            txt = r'''Arrows|,|h|,|j|,|k|,|l|,|PgUp|,|,PgDn
                      g|,|Home|,|G|,|End     |Change encoding selection.
                      Enter|,|Space|,|s    |Save encoding.
                      r c              |Revert to station / |c|onfig value.
@@ -3518,7 +3520,7 @@ __|Remote Control Server| cannot be started!__
         if self.ws.operation_mode == self.ws.NORMAL_MODE or \
                 (self.ws.operation_mode == self.ws.EXTRA_COMMANDS_HELP_MODE and \
                  self.ws.previous_operation_mode == self.ws.NORMAL_MODE):
-            txt = '''\\      |Open previous playlist.
+            txt = r'''\\      |Open previous playlist.
                      ]      |Open first opened playlist.
                      b B    |Set player |b|uffering.
                      l      |Toggle |Open last playlist|.
@@ -3675,7 +3677,7 @@ __|Remote Control Server| cannot be started!__
     def _print_remote_control_server_error(self, msg=None):
         if msg:
             self._server_error_msg = str(msg)
-        txt = '''
+        txt = r'''
             The Remote Control Server |failed| to start!
             The error message is:
             __|{}
@@ -4842,6 +4844,7 @@ __|Remote Control Server| cannot be started!__
                         False if from opening browser
         '''
 
+        logger.error('ret\n{}'.format(ret))
         if self.ws.operation_mode in (
             self.ws.BROWSER_OPEN_MODE,
             self.ws.BROWSER_PERFORMING_SEARCH_MODE,
@@ -4856,11 +4859,13 @@ __|Remote Control Server| cannot be started!__
 
         ''' get stations with online field '''
         tmp_stations = self._cnf._online_browser.stations(2)
+        logger.error('tmp_stations\n{}'.format(tmp_stations))
 
         ''' set browser parent so that it resizes correctly '''
         if self._cnf.browsing_station_service:
             self._cnf._online_browser.parent = self.bodyWin
 
+        self._number_of_radio_browser_search_results = ret[1]
         if ret[1] == 0 and not self._cnf._online_browser.first_search:
             logger.error('DE --== no items found ==--\noperating mode = {}'.format(self.ws.operation_mode))
             ''' go back to search mode '''
@@ -6274,7 +6279,7 @@ __|Remote Control Server| cannot be started!__
             self._simple_schedule.show(parent=self.outerBodyWin)
 
     def _show_schedule_editor_help(self):
-        txt = '''Tab|, |L| / |Sh-Tab|, |H  |Go to next / previous field.
+        txt = r'''Tab|, |L| / |Sh-Tab|, |H  |Go to next / previous field.
                  j|, |Up| / |k|, |Down     |Go to next / previous field vertivally.
                  ____________________|Go to next / previous field (when
                  ____________________|applicable). Also, change counter value.
@@ -6506,7 +6511,7 @@ __|Remote Control Server| cannot be started!__
                         is_message=True)
 
     def _show_win_no_record(self):
-        txt = '''
+        txt = r'''
                 |VLC| on |Windows| does not support recording.
 
                 If you really need to record a station, please use one
@@ -6744,7 +6749,7 @@ __|Remote Control Server| cannot be started!__
 
     def _show_remote_control_server_active(self):
         if self._remote_control_server is not None:
-            txt = '''
+            txt = r'''
                    |PyRadio Remote Control Server| is active!
 
                    ||Text Address: |http://{0}
@@ -6865,6 +6870,31 @@ __|Remote Control Server| cannot be started!__
             self._cnf.browsing_station_service = True
             self.playSelectionBrowser(a_url='api.radio-browser.info')
 
+    def search_radio_browser_headless(self, index):
+        if self._cnf.headless and self._cnf.online_browser:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Performing RabioBrowser headles search with index {}'.format(index))
+            self._cnf.online_browser.search_by_index(
+                    index,
+                    go_back_in_history=False
+                )
+            # if self._number_of_radio_browser_search_results == 0:
+            #     logger.info('return 0 stations info')
+            #     return '<div class="alert alert-danger">0 stations returned!</div>'
+            # logger.info('return number of stations')
+            # return '<div class="alert alert-success">Number of stations: {}</div>'.format(self._number_of_radio_browser_search_results)
+        elif not self._cnf.headless:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.error('RadioBrowser headles search: not a headless session')
+            return 'RadioBrowser headles search: not a headless session\n'
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.error('RadioBrowser headles search: browser is not active')
+            return 'RadioBrowser is not active\n'
+        # success
+        return ''
+
+
     def keypress(self, char):
         # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
         # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
@@ -6874,6 +6904,10 @@ __|Remote Control Server| cannot be started!__
             if logger.isEnabledFor(logging.debug):
                 logger.debug('keypress: Asked to stop. Stoping...')
             return -1
+
+        if char == ord('1'):
+            self.search_radio_browser_headless(1)
+            return
 
         if self._cnf.headless and char not in (
             ord('O'),
@@ -7035,7 +7069,7 @@ __|Remote Control Server| cannot be started!__
         elif not self._backslash_pressed and char == ord('\\') and \
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                     self.ws.PLAYLIST_MODE):
-            ''' \ pressed '''
+            ''' \\ pressed '''
             logger.error('=== here 3')
             self._update_status_bar_right(backslash=True, status_suffix='\\')
             self._do_display_notify()
@@ -7276,7 +7310,7 @@ __|Remote Control Server| cannot be started!__
                     return
 
             else:
-                ''' ESC or invalid char pressed - leave \ mode '''
+                ''' ESC or invalid char pressed - leave \\ mode '''
                 self._update_status_bar_right(status_suffix='')
             return
 
@@ -8159,7 +8193,9 @@ __|Remote Control Server| cannot be started!__
             ret = self._cnf._online_browser.keypress(char)
             if ret == 0:
                 ''' Ok, search term is valid '''
+                logger.error('\n\n\n\n\n\n\n\n\n\n')
                 self._cnf._online_browser.get_history_from_search()
+                logger.error('\n\n\n\n\n\n\n\n\n\n')
                 self.ws.close_window()
                 self.refreshBody()
                 self._show_performing_search_message()

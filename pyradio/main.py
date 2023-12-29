@@ -106,6 +106,8 @@ def pyradio_config_file(a_dir, headless=None):
                         print('Lock file not found: "{}"'.format(lfile))
         except:
             pass
+    if headless:
+        cf.remove_remote_control_server_report_file()
 
 def do_update_stations(pyradio_config):
     stations_change = StationsChanges(pyradio_config)
@@ -119,9 +121,11 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
         if debug and not pyradio_config.log_degub:
             if platform.startswith('win'):
                 if PY3:
-                    print('Debug mode activated\n  printing messages to file: "[red]{}\pyradio.log[/red]"'.format(getenv('USERPROFILE')))
+                    print(r'''Debug mode activated
+  printing messages to file: "[red]{}\pyradio.log[/red]"'''.format(getenv('USERPROFILE')))
                 else:
-                    print('Debug mode activated\n  printing messages to file: "{}\pyradio.log"'.format(getenv('USERPROFILE')))
+                    print(r'''Debug mode activated
+  printing messages to file: "{}\pyradio.log"'''.format(getenv('USERPROFILE')))
             else:
                 if PY3:
                     print('Debug mode activated; printing messages to file: "[red]~/pyradio.log[/red]"')

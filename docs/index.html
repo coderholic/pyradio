@@ -13,10 +13,11 @@
     body {max-width: 750px; margin: auto;} 
     h2 {margin-top: 2.5em; border-bottom:1px solid SaddleBrown; color: SaddleBrown;} 
     h3 {margin-top: 2em; color: SaddleBrown; text-decoration: underline SaddleBrown} 
-    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 150%;} 
+    h4 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;} 
     h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
-    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 120%;} 
+    h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;;} 
     h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
+    h1, h2, h3, h4, h5 {margin-left: -.7em;} 
     STRONG {color: SaddleBrown;} 
     dl {margin: 2em;} 
     dd {margin: 1em;} 
@@ -132,12 +133,8 @@ a:visited{color: SaddleBrown;}
 <ul>
 <li><a href="#session-unlocking">Session unlocking</a></li>
 </ul></li>
-<li><a href="#update-notification">Update notification</a>
-<ul>
-<li><a href="#updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</a></li>
-</ul></li>
+<li><a href="#update-notification">Update notification</a></li>
 <li><a href="#remote-control-server">Remote Control Server</a></li>
-<li><a href="#cleaning-up">Cleaning up</a></li>
 <li><a href="#debug-mode">Debug mode</a></li>
 <li><a href="#reporting-bugs">Reporting bugs</a></li>
 <li><a href="#packaging-pyradio">Packaging PyRadio</a></li>
@@ -1863,21 +1860,10 @@ Apr 18 (Mon) 15:38 | === Logging stopped</pre>
 <h2 id="update-notification">Update notification <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> will periodically (once every 10 days) check whether a new version has been released.</p>
 <p>If so, a notification message will be displayed, informing the user about it and asking to proceed with updating the program (provided this is not a distribution package).</p>
-<h3 id="updating-a-pre-0.8.9-installation">Updating a pre 0.8.9 installation</h3>
-<p>First thing you do is get the installation script. Open a <strong>terminal</strong> and type:</p>
-<pre>cd
-wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py</pre>
-<p>or using curl:</p>
-<pre>cd
-curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py -o install.py</pre>
-<p><strong>Note</strong>: If you have neither <em>wget</em> or <em>curl</em> installed, or you are on Windows, just right click on <a target="_blank" href="https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py">this link</a> and use your browser “<strong>Save link as</strong>” menu entry to save the file in your home folder.</p>
-<p>Finally, execute the command:</p>
-<pre>python install.py --force</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Packages coming from a distribution repository will display no notification; it’s up to the distro to update / uninstall <strong>PyRadio</strong>, as stated in <a href="docs/packaging.html">Packaging PyRadio</a>.</p>
 <h2 id="remote-control-server">Remote Control Server <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> can be controlled remotely using normal http requests either form the command line (with <em>curl</em> for example) or from a browser.</p>
 <p>For more information, please refer to <a href="server.html">the relevant page</a>.</p>
-<h2 id="cleaning-up">Cleaning up <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><strong>PyRadio</strong> will uninstall all previously installed versions when updated (using the <strong>-U</strong> command line option), so no extra steps are needed any more to house keep your system.</p>
 <h2 id="debug-mode">Debug mode <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Adding the “<strong>-d</strong>” option to the command line will instruct <strong>PyRadio</strong> to enter <em>Debug mode</em>, which means that it will print debug messages to a file. This file will always reside in the user’s home directory and will be named <em>pyradio.log</em>.</p>
 <p>In case of a bug or a glitch, please include this file to the issue you will <a target="_blank" href="https://github.com/coderholic/pyradio/issues">open at github</a>.</p>
@@ -1891,6 +1877,6 @@ $ pyradio -d</pre>
 <p>Then try to reproduce the bug and exit <strong>pyradio</strong>.</p>
 <p>Finally, include the file produced in your report.</p>
 <h2 id="packaging-pyradio">Packaging PyRadio <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>If you are a packager and would like to produce a package for your distribution please do follow <a href="packagers-info.html">this mini guide</a>.</p>
+<p>If you are a packager and would like to produce a package for your distribution please do follow <a href="packaging.html">this mini guide</a>.</p>
 </body>
 </html>

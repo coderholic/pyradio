@@ -593,6 +593,10 @@ class RadioBrowser(PyRadioStationsBrowser):
         # logger.error('DE \n\n{}\n\n'.format(ret))
         return ret, ''
 
+    def search_by_index(self, index, go_back_in_history=True):
+        self._search_history_index = index
+        self.search(go_back_in_history)
+
     def search(self, go_back_in_history=True):
         ''' Search for stations with parameters.
             Result is limited to 100 stations by default (use the
