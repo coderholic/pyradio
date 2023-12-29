@@ -741,7 +741,7 @@ def find_and_remove_recording_data(data_dir):
         ).start()
 
 def find_and_remove_recording_data_thread(data_dir):
-    files = glob.glob(join(data_dir, '*.mkv'))
+    files = glob.glob(join(data_dir, 'tmp_*.mkv'))
     txt = glob.glob(join(data_dir, '*.txt'))
     xml = glob.glob(join(data_dir, '*.xml'))
 

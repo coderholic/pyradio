@@ -258,8 +258,8 @@ To do that, either press “<em>\o</em>” in <strong>PyRadio</strong>, or execu
 <h3 id="files-location">Files location</h3>
 <p>The file produced by the recording function will be placed in the <strong>recordings</strong> directory, inside the <em>configuration directory</em>.</p>
 <p>If <strong>MKVToolNix</strong> is not installed, the file will be downloaded in this directory and will not be altered by <strong>PyRadio</strong>.</p>
-<p>If <strong>MKVToolNix</strong> is installed, the file will initially be downloaded in the “<em>data</em>” directory; the final file, after chapters addition, will be placed in the <strong>recordings</strong> directory and the downloaded file will be deleted.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> On <strong>Windows</strong>, if <strong>MKVToolNix</strong> is installed, a dedicated routine will be executed at program’s startup to remove all recording related files from the “<em>data</em>” folder.</p>
+<p>If <strong>MKVToolNix</strong> is installed, a “<em>tmp_</em>” prefix will be added to the recorded filename, which will be removed after chapters addition.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> On <strong>Windows</strong>, if <strong>MKVToolNix</strong> is installed, a dedicated routine will be executed at program’s startup to remove all “<em>tmp_</em>” recorded files.</p>
 <h3 id="pausing-playback">Pausing playback</h3>
 <p>After you have started recording a station, <strong>PyRadio</strong> will connect to it and start downloading the station data and at the same time will produce sound for you to hear what’s downloaded.</p>
 <p>You can then press “<strong>Space</strong>” to pause the playback, but still continue downloading the station’s data.</p>

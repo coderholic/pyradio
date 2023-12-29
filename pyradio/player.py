@@ -431,7 +431,7 @@ class Player(object):
             self._chapters.look_for_mkvmerge()
         f = datetime.now().strftime('%Y-%m-%d %H-%M-%S') + " " + name  + extension
         if self._chapters.HAS_MKVTOOLNIX:
-            return os.path.join(self._cnf.data_dir, f)
+            return os.path.join(self._cnf.recording_dir, 'tmp_' + f)
         else:
             return os.path.join(self._cnf.recording_dir, f)
 
@@ -3706,6 +3706,8 @@ class PyRadioChapters(object):
     def write_chapters_to_file_thread(self, input_file):
         opts = []
         self._tag_file = input_file[:-4] + '.xml'
+        # remove tmp_ from begining of filename
+        self._tag_file = self._remove_starting_tmp_string(self._tag_file)
         opts = [self.mkvmerge,
                 '--global-tags', self._tag_file,
                 ]
@@ -3757,6 +3759,13 @@ class PyRadioChapters(object):
                 logger.error('MKV merge failed with error:\n{}'.format(err))
             return False
 
+    def _remove_starting_tmp_string(self, a_string):
+        sp = a_string.split(os.sep)
+        if sp[-1].startswith('tmp_'):
+            sp[-1] = sp[-1][4:]
+            return os.sep.join(sp)
+        return a_string
+
     def create_chapter_file(self, input_file):
         if not input_file:
             if logger.isEnabledFor(logging.ERROR):
@@ -3768,11 +3777,9 @@ class PyRadioChapters(object):
                 os.path.exists(input_file):
             # input_file.endswith('.mkv'):
             self._mkv_file = input_file
-            self._chapters_file = input_file[:-4] + '-chapters.txt'
-            self._output_file = os.path.join(
-                self._output_dir,
-                os.path.basename(self._mkv_file)
-            )
+            self._chapters_file = self._remove_starting_tmp_string(input_file[:-4] + '-chapters.txt')
+            # remove tmp_ from begining of filename
+            self._output_file = self._remove_starting_tmp_string(self._mkv_file)
             # logger.error('self._mkv_file\n{}'.format(self._mkv_file))
             # logger.error('self._chapters_file\n{}'.format(self._chapters_file))
             # logger.error('self._tag_file\n{}'.format(self._tag_file))

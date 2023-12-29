@@ -298,10 +298,9 @@ The file produced by the recording function will be placed in the **recordings**
 
 If **MKVToolNix** is not installed, the file will be downloaded in this directory and will not be altered by **PyRadio**.
 
-If **MKVToolNix** is installed, the file will initially be downloaded in the "*data*" directory; the final file, after chapters addition, will be placed in the **recordings** directory and the downloaded file will be deleted.
+If **MKVToolNix** is installed, a "*tmp_*" prefix will be added to the recorded filename, which will be removed after chapters addition.
 
-
-**Note:** On **Windows**, if **MKVToolNix** is installed, a dedicated routine will be executed at program's startup to remove all recording related files from the "*data*" folder.
+**Note:** On **Windows**, if **MKVToolNix** is installed, a dedicated routine will be executed at program's startup to remove all "*tmp_*" recorded files.
 
 ### Pausing playback
 
