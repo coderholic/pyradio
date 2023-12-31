@@ -104,10 +104,10 @@ def pyradio_config_file(a_dir, headless=None):
                         print('Lock file not found: "[red]{}[/red]"'.format(lfile))
                     else:
                         print('Lock file not found: "{}"'.format(lfile))
+            if headless:
+                cf.remove_remote_control_server_report_file()
         except:
             pass
-    if headless:
-        cf.remove_remote_control_server_report_file()
 
 def do_update_stations(pyradio_config):
     stations_change = StationsChanges(pyradio_config)

@@ -225,17 +225,16 @@ div[id^='a_']:hover { underline: none;}
                     <button id="vd" onclick="js_send_simple_command('/html/volumedown', 500);" type="button" class="btn btn-primary">Volume<br>Down</button>
                     <button id="vs" onclick="js_send_simple_command('/html/volumesave', 1500);" type="button" class="btn btn-success">Save<br>Volume</button>
                     <button id="mute" onclick="js_send_simple_command('/html/mute', 500);" type="button" class="btn btn-warning">Mute<br>Player</button>
-                    <button id="info" onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
                 </div>
             </div>
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
-                    <button id="st" onclick="js_send_simple_command('/html/st', 0);" type="button" class="btn btn-success">Stations<br>List</button>
-                    <button id="group" type="button" class="btn">Groups<br>List</button>
-                    <button id="pl" onclick="js_send_simple_command('/html/pl', 0);" type="button" class="btn btn-primary">Show<br>Playlists</button>
-                    <button id="search" onclick="js_send_simple_command('/html/lrb', 0);" type="button" class="btn btn-danger">Browser<br>Search</button>
+                    <button id="st" onclick="js_send_simple_command('/html/st', 0);" type="button" class="btn btn-success">Show<br>Stations</button>
+                    <button id="group" type="button" class="btn">Show<br>Groups</button>
+                    <button id="pl" onclick="js_list_playlists_or_searches();" type="button" class="btn btn-primary">Show<br>Playlists</button>
                     <button id="logging" onclick="js_toggle_titles_logging();" type="button" class="btn btn-warning">Enable<br>Title Log</button>
                     <button id="like" onclick="js_send_simple_command('/html/like', 1500);" type="button" class="btn btn-info">Like<br>Title</button>
+                    <button id="info" onclick="js_send_simple_command('/html/info', 0);" type="button" class="btn btn-danger">System<br>Info</button>
                 </div>
             </div>
         </div>
@@ -552,6 +551,14 @@ div[id^='a_']:hover { underline: none;}
         getStopped();
     }
 
+    function js_list_playlists_or_searches(){
+        if ( window.radio_browser == 0 ){
+            js_send_simple_command('/html/pl', 0);
+        }else{
+            js_send_simple_command('/html/lrb', 0);
+        }
+    }
+
     function js_get_selection(){
         const getSelection = async () => {
             const response = await fetch("/html/get_selection");
@@ -591,7 +598,7 @@ div[id^='a_']:hover { underline: none;}
                 element.disabled = true;
             }
         }else{
-            let b_id = ["rb", "next", "prev", "hnext", "hprev", "tplay", "st", "info", "vu", "vd", "vs", "group", "like"];
+            let b_id = ["rb", "next", "prev", "hnext", "hprev", "tplay", "st", "info", "vu", "vd", "vs", "group", "like", "pl"];
             for (let i in b_id) {
                 var element = document.getElementById(b_id[i]);
                 // console.log("async:", data);
@@ -606,15 +613,19 @@ div[id^='a_']:hover { underline: none;}
     function js_fix_history_buttons(){
         var el_n = document.getElementById("hnext");
         var el_p = document.getElementById("hprev");
-        var s = document.getElementById("search");
+        var s = document.getElementById("pl");
         if ( window.radio_browser == 0 ){
             el_n.disabled = false;
             el_p.disabled = false;
-            s.disabled = true
+            //s.disabled = true
+            s.innerHTML = "Show<br>Playlists";
+            // s.className = "btn btn-primary";
         }else{
             el_n.disabled = true;
             el_p.disabled = true;
-            s.disabled = false
+            //s.disabled = false
+            s.innerHTML = "Show<br>Searches";
+            // s.className = "btn btn-danger";
         }
     }
 

@@ -50,9 +50,16 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#installation">Installation</a>
 <ul>
+<li><a href="#using-tmux">Using tmux</a>
+<ul>
 <li><a href="#systemd">systemd</a></li>
 </ul></li>
-<li><a href="#using-screen-instead-of-tmux">Using screen instead of tmux</a></li>
+<li><a href="#using-screen">Using screen</a>
+<ul>
+<li><a href="#systemd">systemd</a></li>
+</ul></li>
+<li><a href="#things-to-consider-for-systemd">Things to consider for systemd</a></li>
+</ul></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p class="indented">[ <a href="index.html#installation">Return to main doc</a> ]</p>
@@ -75,10 +82,15 @@ The server will be accessible only by programs running in the system. The ip is 
 <li><strong>lan</strong><br />
 The server will be accessible by any system on the LAN. The ip is the one assigned to the network interface of the system.</li>
 </ol>
-<p>For example: - using <strong>–headless lan:12345</strong><br />
-will make the web server listen to the network interface IP address, port 12345. - using <strong>–headless localhost:23456</strong><br />
-will make the web server listen to 127.0.0.1, port 23456 - using <strong>–headless auto</strong><br />
-will make the web server listen to 127.0.0.1, port 11111; this is the default and fallback configuration.</p>
+<p>For example:</p>
+<ul>
+<li><p>using <strong>–headless lan:12345</strong><br />
+will make the web server listen to the network interface IP address, port 12345.</p></li>
+<li><p>using <strong>–headless localhost:23456</strong><br />
+will make the web server listen to 127.0.0.1, port 23456</p></li>
+<li><p>using <strong>–headless auto</strong><br />
+will make the web server listen to 127.0.0.1, port 11111; this is the default and fallback configuration.</p></li>
+</ul>
 <p>To get the server ip and port, execute on a terminal</p>
 <pre>pyradio --addr</pre>
 <p>Which will return something like:</p>
@@ -98,34 +110,39 @@ will make the web server listen to 127.0.0.1, port 11111; this is the default an
 <p>When <strong>PyRadio</strong> is executed with the <strong>–headles</strong> command line option, it will basically start the web server and wait for connections.</p>
 <p>To make it less memory hungry, the default (aka “<em>dark</em>” theme) will be loaded, and access to themes and the configuration window will be restricted.</p>
 <p>Additionally, it will not create a “<em>session lock file</em>”, so that other instances of the program can be executed normally (in a terminal), and be able to function properly.</p>
-<p>It will create a “headless server lock file”, though, so that a) we cannot start a second headless server, and b) we can get info about the server running.</p>
-<p>To get access to the program, execute:</p>
-<pre>tmux attach-session -t pyradio-session</pre>
-<p>To detach the session press <strong>C-b d</strong> (default key binding).</p>
+<p>It will create a “headless server lock file”, though, so that</p>
+<ul>
+<li><p>we cannot start a second headless server, and</p></li>
+<li><p>we can get info about the server running.</p></li>
+</ul>
 <h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> the instructions in this section focus on using <strong>tmux</strong>; differences regarding using <strong>screen</strong> will follow.</p>
 <p>By the term “installation”, we mean that we set up things in such a way, that after we log into the system, we find <strong>PyRadio</strong> ready to accept connections.</p>
 <p>So, the installation can be as easy as adding a line in a configuration file (or the startup section of the <em>desktop environment</em>) or as hard as adding a system service.</p>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> All commands start by removing the “headless server lock file”, just in case <strong>PyRadio</strong> was not able to remove it itself the last time it terminated… this should be acceptable, since these commands are supposed to be running once, at system boot.</p>
-<p>For example, if <strong>bash</strong> is the default shell, this would do the trick:</p>
-<pre>echo &quot;rm /home/spiros/.config/pyradio/data/server-headless.txt 2&gt;/dev/null
-      /usr/bin/tmux new-session \
+<h3 id="using-tmux">Using tmux</h3>
+<p>If <strong>bash</strong> is the default shell, this would do the trick:</p>
+<pre>echo &quot;/usr/bin/tmux new-session \
         -dA -s pyradio-session /home/spiros/.local/bin/pyradio \
         --headless auto&quot; &gt;&gt; ~/.profile</pre>
 <p>In case a <em>Window manager</em> is used, adding a line in its <strong>autostart</strong> file would be enough. For example, this would work for <strong>openbox</strong>:</p>
-<pre>echo &quot;(sleep 10; rm /home/spiros/.config/pyradio/data/server-headless.txt 2&gt;/dev/null; /usr/bin/tmux new-session -dA -s pyradio-session /home/spiros/.local/bin/pyradio --headless auto)&quot; &gt;&gt; ~/.config/openbox/autostart</pre>
+<pre>echo &quot;(sleep 10; /usr/bin/tmux new-session -dA -s pyradio-session /home/spiros/.local/bin/pyradio --headless auto)&quot; &gt;&gt; ~/.config/openbox/autostart</pre>
 <p>And so on, and so forth…</p>
-<h3 id="systemd">systemd</h3>
+<h4 id="systemd">systemd</h4>
 <p>The first thing you do is create the log file:</p>
 <pre>touch ~/pyradio.log</pre>
 <p>Then create the start file:</p>
 <pre>mkdir ~/.local/bin
 echo &quot;#!/bin/bash&quot; &gt; ~/.local/bin/start-headless-pyradio.sh
-echo &quot;rm /home/spiros/.config/pyradio/data/server-headless.txt 2&gt;/dev/null&quot; &gt;&gt; ~/.local/bin/start-headless-pyradio.sh
 echo &quot;/usr/bin/tmux new-session -dA -s pyradio-session /home/spiros/.local/bin/pyradio --headless auto&quot; &gt;&gt; ~/.local/bin/start-headless-pyradio.sh
 chmod +x ~/.local/bin/start-headless-pyradio.sh</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> You will want to replace the word “<em>spiros</em>” with your <strong>username</strong> in this file.</p>
+<p>Then create the stop file:</p>
+<pre>echo &quot;#!/bin/bash&quot; &gt; ~/.local/bin/stop-headless-pyradio.sh
+echo &quot;/usr/bin/tmux send-keys -t pyradio-session q&quot; &gt;&gt; ~/.local/bin/stop-headless-pyradio.sh
+echo &quot;sleep 1&quot; &gt;&gt; ~/.local/bin/stop-headless-pyradio.sh
+echo &quot;/usr/bin/tmux send-keys -t pyradio-session q&quot; &gt;&gt; ~/.local/bin/stop-headless-pyradio.sh
+chmod +x ~/.local/bin/stop-headless-pyradio.sh</pre>
 <p>Finally create the service:</p>
-<p>File /lib/systemd/system/pyradio.service</p>
+<p>File <em>/lib/systemd/system/pyradio.service</em></p>
 <pre>[Unit]
 Description=PyRadio Service
 After=multi-user.target
@@ -138,7 +155,7 @@ Environment=&quot;PULSE_RUNTIME_PATH=/run/user/1000/pulse/&quot;
 StandardOutput=append:/home/spiros/pyradio.log
 StandardError=append:/home/spiros/pyradio.log
 ExecStart=/home/spiros/.local/bin/start-headless-pyradio.sh
-ExecStop=/usr/bin/tmux kill-session -t pyradio-session
+ExecStop=/home/spiros/.local/bin/stop-headless-pyradio.sh
 
 [Install]
 WantedBy=multi-user.target</pre>
@@ -146,52 +163,59 @@ WantedBy=multi-user.target</pre>
 <pre>$ sudo chmod 644 /lib/systemd/system/pyradio.service
 $ sudo systemctl daemon-reload
 $ sudo systemctl enable pyradio # enabling the autostart on every boot</pre>
-<p>And get the status:</p>
-<pre>$ sudo systemctl status pyradio
-● pyradio.service - PyRadio Service
-     Loaded: loaded (/usr/lib/systemd/system/pyradio.service; enabled; preset: disabled)
-     Active: active (running) since Fri 2023-12-01 11:33:02 EET; 2min 47s ago
-    Process: 10829 ExecStart=/home/spiros/.local/bin/start-headless-pyradio.sh (code=exited, status=0/SUCCESS)
-   Main PID: 10831 (tmux: server)
-      Tasks: 23 (limit: 9395)
-     Memory: 103.3M
-        CPU: 2.629s
-     CGroup: /system.slice/pyradio.service
-             ├─10831 /usr/bin/tmux new-session -dA -s pyradio-session /home/spiros/.local/bin/pyradio --headless auto
-             ├─10941 /home/spiros/.local/pipx/venvs/pyradio/bin/python /home/spiros/.local/bin/pyradio --headless auto
-             └─11126 mpv --no-video --quiet https://icecast.walmradio.com:8443/christmas --input-ipc-server=/tmp/mpvsocket.10941 --profile=pyradio
+<h3 id="using-screen">Using screen</h3>
+<p>If <strong>bash</strong> is the default shell, this would do the trick:</p>
+<pre>echo &quot;/usr/bin/screen -U -S pyradio-session -d -m \
+        pyradio-session /home/spiros/.local/bin/pyradio \
+        --headless auto&quot; &gt;&gt; ~/.profile</pre>
+<p>In case a <em>Window manager</em> is used, adding a line in its <strong>autostart</strong> file would be enough. For example, this would work for <strong>openbox</strong>:</p>
+<pre>echo &quot;(sleep 10; /usr/bin/screen -U -S pyradio-session -d -m pyradio-session /home/spiros/.local/bin/pyradio --headless auto)&quot; &gt;&gt; ~/.config/openbox/autostart</pre>
+<p>And so on, and so forth…</p>
+<h4 id="systemd-1">systemd</h4>
+<p>The first thing you do is create the log file:</p>
+<pre>touch ~/pyradio.log</pre>
+<p>Then create the start file:</p>
+<pre>mkdir ~/.local/bin
+echo &quot;#!/bin/bash&quot; &gt; ~/.local/bin/start-headless-pyradio.sh
+echo &quot;/usr/bin/screen -U -S pyradio-session -d -m pyradio-session /home/spiros/.local/bin/pyradio --headless auto&quot; &gt;&gt; ~/.local/bin/start-headless-pyradio.sh
+chmod +x ~/.local/bin/start-headless-pyradio.sh</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> You will want to replace the word “<em>spiros</em>” with your <strong>username</strong> in this file.</p>
+<p>Then create the stop file:</p>
+<pre>echo &quot;#!/bin/bash&quot; &gt; ~/.local/bin/stop-headless-pyradio.sh
+echo &quot;/usr/bin/screen -S pyradio-session -p 0 -X stuff q&quot; &gt;&gt; ~/.local/bin/stop-headless-pyradio.sh
+echo &quot;sleep 1&quot; &gt;&gt; ~/.local/bin/stop-headless-pyradio.sh
+echo &quot;/usr/bin/screen -S pyradio-session -p 0 -X stuff q&quot; &gt;&gt; ~/.local/bin/stop-headless-pyradio.sh
+chmod +x ~/.local/bin/stop-headless-pyradio.sh</pre>
+<p>Finally create the service:</p>
+<p>File <em>/lib/systemd/system/pyradio.service</em></p>
+<pre>[Unit]
+Description=PyRadio Service
+After=multi-user.target
 
-Dec 01 11:33:02 py systemd[1]: Starting PyRadio Service...
-Dec 01 11:33:02 py systemd[1]: Started PyRadio Service.</pre>
-<p>The service can be stopped:</p>
-<pre>sudo systemctl stop pyradio</pre>
-<p>And this is its state:</p>
-<pre>$ sudo systemctl status pyradio
-○ pyradio.service - PyRadio Service
-     Loaded: loaded (/usr/lib/systemd/system/pyradio.service; enabled; preset: disabled)
-     Active: inactive (dead) since Fri 2023-12-01 11:37:51 EET; 21s ago
-   Duration: 4min 49.355s
-    Process: 10829 ExecStart=/home/spiros/.local/bin/start-headless-pyradio.sh (code=exited, status=0/SUCCESS)
-    Process: 11353 ExecStop=/usr/bin/tmux kill-session -t pyradio-session (code=exited, status=0/SUCCESS)
-   Main PID: 10831 (code=exited, status=0/SUCCESS)
-        CPU: 4.097s
+[Service]
+Type=forking
+User=spiros
+Environment=&quot;XDG_RUNTIME_DIR=/run/user/1000&quot;
+Environment=&quot;PULSE_RUNTIME_PATH=/run/user/1000/pulse/&quot;
+StandardOutput=append:/home/spiros/pyradio.log
+StandardError=append:/home/spiros/pyradio.log
+ExecStart=/home/spiros/.local/bin/start-headless-pyradio.sh
+ExecStop=/home/spiros/.local/bin/stop-headless-pyradio.sh
 
-Dec 01 11:33:02 py systemd[1]: Starting PyRadio Service...
-Dec 01 11:33:02 py systemd[1]: Started PyRadio Service.
-Dec 01 11:37:51 py systemd[1]: Stopping PyRadio Service...
-Dec 01 11:37:51 py systemd[1]: pyradio.service: Deactivated successfully.
-Dec 01 11:37:51 py systemd[1]: Stopped PyRadio Service.
-Dec 01 11:37:51 py systemd[1]: pyradio.service: Consumed 4.097s CPU time.</pre>
-<h2 id="using-screen-instead-of-tmux">Using screen instead of tmux <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>The difference is actually the command to start the detached session.</p>
-<p>This means that you just have to replace the</p>
-<pre>/usr/bin/tmux new-session -dA -s pyradio-session</pre>
-<p>part, with</p>
-<pre>/usr/bin/screen -U -S pyradio-session -d -m</pre>
-<p>in the commands above.</p>
-<p>To get access to the program, you’d execute:</p>
-<pre>screen -r pyradio-session</pre>
-<p>and press “<strong>C-a d</strong>” to detach it again.</p>
-<p>Other than that, the behavior should be the same.</p>
+[Install]
+WantedBy=multi-user.target</pre>
+<p>Then execute:</p>
+<pre>$ sudo chmod 644 /lib/systemd/system/pyradio.service
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable pyradio # enabling the autostart on every boot</pre>
+<h3 id="things-to-consider-for-systemd">Things to consider for systemd</h3>
+<ol type="1">
+<li><p>You will want to replace the word “<em>spiros</em>” with your <strong>username</strong> in the <em>/lib/systemd/system/pyradio.service</em> file.</p></li>
+<li><p>The service file has two lines starting with “<em>Environment=</em>”<br />
+<br />
+These two lines provide an environment for <em>systemd</em>; I’ve found out that on Arch Linux, for example, <strong>PyRadio</strong> would produce no sound at all without them (actually not connection to the sound server).<br />
+<br />
+On other systems, on Raspberry Pi for example, they can be omitted altogether.</p></li>
+</ol>
 </body>
 </html>

@@ -3722,11 +3722,16 @@ class PyRadioChapters(object):
                     ])
         t_dir_dir = os.path.dirname(self._tag_file)
         cover_file = None
-        for n in (os.path.join(self._cover_dir, 'user-cover.png'), \
-                os.path.join(self._cover_dir, 'cover.png')):
-            if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('cover file is: "{}"'.format(n))
+        for n in (
+                os.path.join(t_dir_dir, 'user-cover.png'), \
+                os.path.join(t_dir_dir, 'cover.png'), \
+                os.path.join(self._cover_dir, 'user-cover.png'), \
+                os.path.join(self._cover_dir, 'cover.png'), \
+                os.path.join(os.path.dirname(__file__), 'icons', 'cover.png')
+        ):
             if os.path.exists(n):
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('cover file is: "{}"'.format(n))
                 cover_file = n
                 break
         if cover_file:
