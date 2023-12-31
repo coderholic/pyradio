@@ -212,8 +212,8 @@ div[id^='a_']:hover { underline: none;}
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
                     <button id="rb" onclick="js_toggle_radio_browser();" type="button" class="btn btn-info">Radio<br>Browser</button>
-                    <button id="next" onclick="js_send_simple_command_with_stop('/html/next', 1500);" type="button" class="btn btn-warning">Play<br>Next</button>
-                    <button id="prev" onclick="js_send_simple_command_with_stop('/html/previous', 1500);" type="button" class="btn btn-warning">Play<br>Previous</button>
+                    <button id="next" onclick="js_play_next();" type="button" class="btn btn-warning">Play<br>Next</button>
+                    <button id="prev" onclick="js_play_previous();" type="button" class="btn btn-warning">Play<br>Previous</button>
                     <button id="hnext" onclick="js_send_simple_command_with_stop('/html/histnext', 1500);" type="button" class="btn btn-success">Play Hist.<br> Next</button>
                     <button id="hprev" onclick="js_send_simple_command_with_stop('/html/histprev', 1500);" type="button" class="btn btn-success">Play Hist.<br>Previous</button>
                     <button id="tplay" onclick="js_send_simple_command_with_stop('/html/toggle', 1500);" type="button" class="btn btn-danger">Toggle<br>Playback</button>
@@ -370,7 +370,7 @@ div[id^='a_']:hover { underline: none;}
         }
 
     function js_send_simple_command(the_command, the_timeout){
-
+        // js_disable_all_buttons(true);
         console.log("the_command =", the_command);
         if ( ( the_command == "/html/open_radio_browser" ) || ( the_command == "/html/close_radio_browser" ) ) {
             clearTimeout(msg_timeout);
@@ -435,6 +435,7 @@ div[id^='a_']:hover { underline: none;}
                     result = '<div class="alert alert-success">Player mute state <b>toggled!</b></div>'
                 } else if ( the_command == "/html/open_radio_browser"  ) {
                     result = '<div class="alert alert-success">Connection to <b>Radio Browser</b> established!</div>'
+                    js_fix_radio_browser();
                 } else if ( the_command == "/html/close_radio_browser"  ) {
                     result = '<div class="alert alert-success"><b>Local</b> Playlist restored</div>'
                 } else if ( ( the_command.startsWith("/html/search_radio_browser") ) || ( the_command.startsWith("/html/srb") ) ) {
@@ -504,7 +505,18 @@ div[id^='a_']:hover { underline: none;}
                 }
         }
         // console.log("--------");
+        js_disable_all_buttons(false);
         });
+    }
+
+    function js_play_next(){
+        js_disable_all_buttons(true);
+        js_send_simple_command_with_stop('/html/next', 1500)
+    }
+
+    function js_play_previous(){
+        js_disable_all_buttons(true);
+        js_send_simple_command_with_stop('/html/previous', 1500)
     }
 
     function js_set_title(a_tag, a_title, the_command=''){
@@ -576,7 +588,7 @@ div[id^='a_']:hover { underline: none;}
 
     function js_disable_group_button(enable){
         var element = document.getElementById("group");
-        element.disabled = enable;
+        // DIS element.disabled = enable;
     }
 
     function js_disable_buttons_on_stopped(enable){
@@ -584,7 +596,7 @@ div[id^='a_']:hover { underline: none;}
         for (let i in b_id) {
             var element = document.getElementById(b_id[i]);
             // console.log("async:", data);
-            element.disabled = enable;
+            // DIS element.disabled = enable;
         }
     }
 
@@ -598,7 +610,7 @@ div[id^='a_']:hover { underline: none;}
                 element.disabled = true;
             }
         }else{
-            let b_id = ["rb", "next", "prev", "hnext", "hprev", "tplay", "st", "info", "vu", "vd", "vs", "group", "like", "pl"];
+            let b_id = ["rb", "next", "prev", "hnext", "hprev", "tplay", "vu", "vd", "vs", "mute", "st", "group", "pl", "info", "logging", "like"];
             for (let i in b_id) {
                 var element = document.getElementById(b_id[i]);
                 // console.log("async:", data);
@@ -615,14 +627,14 @@ div[id^='a_']:hover { underline: none;}
         var el_p = document.getElementById("hprev");
         var s = document.getElementById("pl");
         if ( window.radio_browser == 0 ){
-            el_n.disabled = false;
-            el_p.disabled = false;
+            // DIS el_n.disabled = false;
+            // DIS el_p.disabled = false;
             //s.disabled = true
             s.innerHTML = "Show<br>Playlists";
             // s.className = "btn btn-primary";
         }else{
-            el_n.disabled = true;
-            el_p.disabled = true;
+            // DIS el_n.disabled = true;
+            // DIS el_p.disabled = true;
             //s.disabled = false
             s.innerHTML = "Show<br>Searches";
             // s.className = "btn btn-danger";
@@ -633,15 +645,17 @@ div[id^='a_']:hover { underline: none;}
         js_hide_msg();
         js_disable_all_buttons(true);
         var element = document.getElementById("rb");
-        element.disabled = true;
+        // DIS element.disabled = true;
         if ( window.radio_browser == 0 ){
             js_send_simple_command('/html/open_radio_browser', 1500)
         }else{
             js_send_simple_command('/html/close_radio_browser', 1500)
         }
-        element.disabled = true;
-        js_disable_all_buttons(false);
-        js_fix_history_buttons();
+        // DIS element.disabled = true;
+        //js_disable_all_buttons(false);
+        //js_fix_logging_titles();
+        //js_fix_muted();
+        //js_fix_history_buttons();
     }
 
     function js_toggle_titles_logging(){
@@ -702,8 +716,11 @@ div[id^='a_']:hover { underline: none;}
                 window.radio_browser = 1
             }
             console.log("set radio_browser: ", radio_browser);
+            js_disable_all_buttons(false);
+            js_fix_muted();
             js_fix_history_buttons();
-            element.disabled = false;
+            js_fix_logging_titles();
+            // DIS element.disabled = false;
         }
         getRadioBrowser();
     }
