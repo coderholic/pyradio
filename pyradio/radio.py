@@ -6877,7 +6877,8 @@ __|Remote Control Server| cannot be started!__
             self.playSelectionBrowser(a_url='api.radio-browser.info')
 
     def search_radio_browser_headless(self, index):
-        if self._cnf.headless and self._cnf.online_browser:
+        #if self._cnf.headless and self._cnf.online_browser:
+        if self._cnf.online_browser:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Performing RabioBrowser headles search with index {}'.format(index))
             self._cnf.online_browser.search_by_index(
@@ -6889,10 +6890,6 @@ __|Remote Control Server| cannot be started!__
             #     return '<div class="alert alert-danger">0 stations returned!</div>'
             # logger.info('return number of stations')
             # return '<div class="alert alert-success">Number of stations: {}</div>'.format(self._number_of_radio_browser_search_results)
-        elif not self._cnf.headless:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.error('RadioBrowser headles search: not a headless session')
-            return 'RadioBrowser headles search: not a headless session\n'
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.error('RadioBrowser headles search: browser is not active')
