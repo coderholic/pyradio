@@ -37,7 +37,7 @@ Now, **PyRadio** is a **terminal application**; it actually **needs** a terminal
 
 ### Usage
 
-After the program is started, the only way (well, not really, more on this below) to interact with it is through its integrated web server.
+After the program is started, the only way to interact with it is through its integrated web server. Please refref to the relevant document for more info on the [remote control server](server.md).
 
 The web server can be accessed either through a terminal (address **http://ip:port**) using `wget` or `curl`, or through a web browser (address **http://ip:port/html**).
 

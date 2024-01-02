@@ -841,9 +841,9 @@ class PyRadio(object):
     def _open_html_rb(self):
         if self._cnf.browsing_station_service:
             return '<div class="alert alert-danger">Already connected to <b>Radio Browser</b>!</div>'
-        logger.error('==== brefore open command')
+        # logger.error('==== brefore open command')
         self._open_radio_browser()
-        logger.error('==== after open command : {}'.format(self._cnf.browsing_station_service))
+        # logger.error('==== after open command : {}'.format(self._cnf.browsing_station_service))
         if self._cnf.browsing_station_service:
             return '<div class="alert alert-danger">Connection to <b>Radio Browser</b> established!</div>'
         return '<div class="alert alert-danger">Cannot connect to <b>Radio Browser</b></div>'
@@ -851,9 +851,10 @@ class PyRadio(object):
     def _open_text_rb(self):
         if self._cnf.browsing_station_service:
             return 'Already connected to Radio Browser!'
-        logger.error('==== brefore open command')
+        # logger.error('==== brefore open command')
+        # self._remote_control_server._send_text('Command executed...')
         self._open_radio_browser()
-        logger.error('==== after open command : {}'.format(self._cnf.browsing_station_service))
+        # logger.error('==== after open command : {}'.format(self._cnf.browsing_station_service))
         if self._cnf.browsing_station_service:
             return 'Connection to Radio Browser established!'
         return 'Cannot connect to Radio Browser!'
@@ -4155,11 +4156,16 @@ __|Remote Control Server| cannot be started!__
         failed, or that the service has failed, in which
         case you should try again later.
         '''
-        self._show_help(txt,
-                        self.ws.SERVICE_CONNECTION_ERROR,
-                        caption=' Service Unavailable ',
-                        prompt=' Press any key ',
-                        is_message=True)
+        # self._show_help(txt,
+        #                 self.ws.SERVICE_CONNECTION_ERROR,
+        #                 caption=' Service Unavailable ',
+        #                 prompt=' Press any key ',
+        #                 is_message=True)
+        self._show_notification_with_delay(
+                txt=txt,
+                delay=2,
+                mode_to_set=self.ws.NORMAL_MODE,
+                callback_function=self.refreshBody)
 
     def _print_servers_unreachable(self):
         txt = '''
@@ -4844,14 +4850,14 @@ __|Remote Control Server| cannot be started!__
                         False if from opening browser
         '''
 
-        logger.error('ret\n{}'.format(ret))
+        # logger.error('ret\n{}'.format(ret))
         if self.ws.operation_mode in (
             self.ws.BROWSER_OPEN_MODE,
             self.ws.BROWSER_PERFORMING_SEARCH_MODE,
         ):
             self.ws.close_window()
         if not ret[0]:
-            logger.error('DE operation mode = {}'.format(self.ws.operation_mode))
+            # logger.error('DE operation mode = {}'.format(self.ws.operation_mode))
             if ret[2]:
                 self._goto_history_back_handler()
             self._print_service_connection_error()
@@ -4859,7 +4865,7 @@ __|Remote Control Server| cannot be started!__
 
         ''' get stations with online field '''
         tmp_stations = self._cnf._online_browser.stations(2)
-        logger.error('tmp_stations\n{}'.format(tmp_stations))
+        # logger.error('tmp_stations\n{}'.format(tmp_stations))
 
         ''' set browser parent so that it resizes correctly '''
         if self._cnf.browsing_station_service:
@@ -4927,7 +4933,7 @@ __|Remote Control Server| cannot be started!__
             out.append('First column')
             out.append('  [+ ]: Default, [> ]: Active, [+>]: Both')
             return '\n'.join(out)
-        return 'RadioBrowser is not active\n'
+        return 'RadioBrowser is not active'
 
     def _open_playlist_from_history(self,
                                     reset=False,
@@ -6905,9 +6911,9 @@ __|Remote Control Server| cannot be started!__
                 logger.debug('keypress: Asked to stop. Stoping...')
             return -1
 
-        if char == ord('1'):
-            self.search_radio_browser_headless(1)
-            return
+        # if char == ord('1'):
+        #     self.search_radio_browser_headless(1)
+        #     return
 
         if self._cnf.headless and char not in (
             ord('O'),
@@ -7070,7 +7076,6 @@ __|Remote Control Server| cannot be started!__
                 self.ws.operation_mode in (self.ws.NORMAL_MODE,
                     self.ws.PLAYLIST_MODE):
             ''' \\ pressed '''
-            logger.error('=== here 3')
             self._update_status_bar_right(backslash=True, status_suffix='\\')
             self._do_display_notify()
             self.jumpnr = ''
@@ -7211,7 +7216,6 @@ __|Remote Control Server| cannot be started!__
 
             elif char == ord('\\'):
                 ''' \\ pressed - go back in history '''
-                logger.error('=== here 4')
                 if self._cnf.dirty_playlist:
                     if self._cnf.auto_save_playlist:
                         ''' save playlist '''
@@ -7600,8 +7604,8 @@ __|Remote Control Server| cannot be started!__
 
         elif self.ws.operation_mode == self.ws.SCHEDULE_EDIT_MODE:
             ret = self._simple_schedule.keypress(char)
-            logger.error('Got {}'.format(ret))
-            logger.error('Entry: {}'.format(self._simple_schedule.entry))
+            # logger.error('Got {}'.format(ret))
+            # logger.error('Entry: {}'.format(self._simple_schedule.entry))
             if ret == -1:
                 self._simple_schedule = None
                 self.ws.close_window()
@@ -8193,9 +8197,9 @@ __|Remote Control Server| cannot be started!__
             ret = self._cnf._online_browser.keypress(char)
             if ret == 0:
                 ''' Ok, search term is valid '''
-                logger.error('\n\n\n\n\n\n\n\n\n\n')
+                # logger.error('\n\n\n\n\n\n\n\n\n\n')
                 self._cnf._online_browser.get_history_from_search()
-                logger.error('\n\n\n\n\n\n\n\n\n\n')
+                # logger.error('\n\n\n\n\n\n\n\n\n\n')
                 self.ws.close_window()
                 self.refreshBody()
                 self._show_performing_search_message()
@@ -8903,7 +8907,6 @@ __|Remote Control Server| cannot be started!__
                     else:
                         self._goto_history_back_handler()
                 elif char in (curses.KEY_EXIT, ord('q'), 27):
-                    logger.error('==== here 1')
                     self.bodyWin.nodelay(True)
                     char = self.bodyWin.getch()
                     self.bodyWin.nodelay(False)
@@ -9173,7 +9176,6 @@ __|Remote Control Server| cannot be started!__
                             return
                         elif self._cnf.browsing_station_service:
                             ''' go back to playlist history '''
-                            logger.error('==== here 2')
                             if self._cnf.online_browser.is_config_dirty():
                                 self._ask_to_save_browser_config_to_exit()
                             else:
@@ -10312,12 +10314,14 @@ __|Remote Control Server| cannot be started!__
                     if ret_string:
                         self.log.write(msg=ret_string)
                         self.player.threadUpdateTitle()
+                        return True
         else:
             if self.ws.operation_mode in self.ws.PASSIVE_WINDOWS:
                 self.ws.close_window()
                 self.refreshBody()
             if logger.isEnabledFor(logging.INFO):
                 logger.info('Volume save inhibited because playback is off')
+        return False
 
     def _find_playlists_after_rename(self, old_file, new_file, copy, open_file, old_file_is_reg):
         ''' Find new selection, startPos, playing after a rename action
@@ -11056,6 +11060,7 @@ __|Remote Control Server| cannot be started!__
         self._remote_control_server = PyRadioServer(
             bind_ip=self._cnf.active_remote_control_server_ip,
             bind_port=int(self._cnf.active_remote_control_server_port),
+            config=self._cnf,
             commands=self._remote_control_server_commands
         )
         if not self._remote_control_server.has_netifaces:

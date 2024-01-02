@@ -1080,6 +1080,8 @@ If so, a notification message will be displayed, informing the user about it and
 
 For more information, please refer to [the relevant page](server.md).
 
+If you'd like to set up a "headless" **PyRadio** operation for your linux box, please refer to the [Headless](headless.md) page.
+
 ## Debug mode
 
 Adding the "**-d**" option to the command line will instruct **PyRadio** to enter *Debug mode*, which means that it will print debug messages to a file. This file will always reside in the user's home directory and will be named *pyradio.log*.

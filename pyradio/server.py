@@ -763,31 +763,37 @@ div[id^='a_']:hover { underline: none;}
         '/': '''PyRadio Remote Service
 
 Global Commands
-Long             Short      Description
---------------------------------------------------------------------
-/info            /i         display PyRadio info
-/volume          /v         show volume (text only)
-/set_volume/x    /sv/x      set volume to x% (text only)
-/volumeup        /vu        increase volume
-/volumedown      /vd        decrease volume
-/volumesave      /vs        save volume
-/mute            /m         toggle mute
-/log             /g         toggle stations logging
-/like            /l         tag (like) station
+Long                        Short      Description
+-------------------------------------------------------------------------------
+/info                       /i         display PyRadio info
+/volume                     /v         show volume (text only)
+/set_volume/x               /sv/x      set volume to x% (text only)
+/volumeup                   /vu        increase volume
+/volumedown                 /vd        decrease volume
+/volumesave                 /vs        save volume
+/mute                       /m         toggle mute
+/log                        /g         toggle stations logging
+/like                       /l         tag (like) station
+/title                                 get title (HTML format)
 
 Restricted Commands (Main mode only)
---------------------------------------------------------------------
-/toggle          /t         toggle playback
-/playlists       /pl        get playlists list
-/playlists/x     /pl/x      get stations list from playlist id x
-                            (x comes from command /pl)
-/playlists/x,y   /pl/x,y    play station id y from playlist id x
-/stations        /st        get stations list from current playlist
-/stations/x      /st/x      play station id x from current playlist
-/next            /n         play next station
-/previous        /p         play previous station
-/histnext        /hn        play next station from history
-/histprev        /hp        play previous station from history''',
+---------------------------------------------------------------------------
+/toggle                     /t         toggle playback
+/playlists                  /pl        get playlists list
+/playlists/x                /pl/x      get stations list from playlist id x
+                                         (x comes from command /pl)
+/playlists/x,y              /pl/x,y    play station id y from playlist id x
+/stations                   /st        get stations list from current playlist
+/stations/x                 /st/x      play station id x from current playlist
+/next                       /n         play next station
+/previous                   /p         play previous station
+/histnext                   /hn        play next station from history
+/histprev                   /hp        play previous station from history
+/open_radio_browser         /orb       open Radio Browser
+/close_radio_browser        /crb       close Radio Browser
+/list_radio_browser         /lrb       list Radio Browser search items
+/search_radio_browser/x     /srb/x     execute search item x
+                                         (x comes from /lrb)''',
         '/quit': 'PyRadio Remote Service exiting!\nCheers!',
         '/volumeup': 'Volume increased!',
         '/volumedown': 'Volume decreased!',
@@ -810,7 +816,7 @@ Restricted Commands (Main mode only)
         '/like': 'Station tagged (liked)',
     }
 
-    def __init__(self, bind_ip, bind_port, commands):
+    def __init__(self, bind_ip, bind_port, config, commands):
         self.has_netifaces = HAS_NETIFACES
         self._bind_ip = bind_ip
         if bind_ip.lower() == 'localhost':
@@ -820,6 +826,7 @@ Restricted Commands (Main mode only)
             self._bind_ip = sys_ip.IPs[1]
         self._bind_port = bind_port
         self._commands = commands
+        self._cnf = config
 
     @property
     def ip(self):
@@ -1001,7 +1008,7 @@ Restricted Commands (Main mode only)
                 self._send_raw(received)
             else:
                 if self.sel()[1] > -1:
-                    self._send_text('Player mute toggled!')
+                    # self._send_text('Player mute toggled!')
                     self._commands['/mute']()
                 else:
                     self._send_text(self._text['/idle'])
@@ -1016,10 +1023,10 @@ Restricted Commands (Main mode only)
                         self._send_text('Player is muted!')
                     else:
                         out = self._commands['/volumesave']()
-                        if out:
-                            self._send_text('Volume saved')
-                        else:
-                            self._send_text('Volume not saved')
+                        # if out:
+                        #     self._send_text('Volume saved!')
+                        # else:
+                        #     self._send_text('Volume not saved!')
                 else:
                     self._send_text(self._text['/idle'])
         elif self._path in ('/volumeup', '/vu'):
@@ -1032,8 +1039,8 @@ Restricted Commands (Main mode only)
                     if self.muted():
                         self._send_text('Player is muted!')
                     else:
+                        # self._send_text(self._text['/volumeup'])
                         self._commands['/volumeup']()
-                        self._send_text(self._text['/volumeup'])
                 else:
                     self._send_text(self._text['/idle'])
         elif self._path in ('/volumedown', '/vd'):
@@ -1046,8 +1053,8 @@ Restricted Commands (Main mode only)
                     if self.muted():
                         self._send_text('Player is muted!')
                     else:
+                        # self._send_text(self._text['/volumedown'])
                         self._commands['/volumedown']()
-                        self._send_text(self._text['/volumedown'])
                 else:
                     self._send_text(self._text['/idle'])
         elif self._path == '/quit':
@@ -1201,35 +1208,41 @@ Restricted Commands (Main mode only)
                 received = self._commands['/html_open_radio_browser']()
                 self._send_raw(received)
             else:
-                received = self._commands['/open_radio_browser']()
+                logger.error('get text orb!')
+
+                if self._cnf.browsing_station_service:
+                    self._send_text('RadioBrowser already active!')
+                else:
+                    received = self._commands['/open_radio_browser']()
                 # self._send_text(received)
         elif self._path == '/close_radio_browser' or self._path == '/crb':
             if self._is_html:
                 received = self._commands['/html_close_radio_browser']()
                 # self._send_raw(received)
             else:
-                received = self._commands['/close_radio_browser']()
+                if self._cnf.browsing_station_service:
+                    received = self._commands['/close_radio_browser']()
+                else:
+                    self._send_text('Local playlist already opened!')
                 # self._send_text('Local playlist opened!')
 
         elif self._path.startswith('/search_radio_browser') or \
                     self._path.startswith('/srb'):
-                logger.error('here')
                 p = self._path.replace(
                         '/search_radio_browser/', ''
                     ).replace(
                         '/srb/', ''
                     )
-                logger.error('p = "{}"'.format(p))
+                # logger.error('p = "{}"'.format(p))
                 try:
                     x = int(p)
-                    logger.error('x = {}'.format(x))
+                    # logger.error('x = {}'.format(x))
                 except ValueError:
                     if self._is_html:
-                        pass
-                        logger.error('HTML ERROR')
+                        # logger.error('HTML ERROR')
                         self._send_raw('<div class="alert txt-center alert-danger">Error in parameter</div>')
                     else:
-                        logger.error('TEXT ERROR')
+                        # logger.error('TEXT ERROR')
                         self._send_text('Error in command\n')
                     return
                 if self._is_html:
@@ -1497,7 +1510,7 @@ Content-Length: {}
                 pass
 
     def _send_raw(self, msg):
-        logger.error('msg = "{}"'.format(msg))
+        # logger.error('msg = "{}"'.format(msg))
         if msg is None:
             msg = 'Unknown reply...'
         if msg.startswith('retry: '):
@@ -1533,7 +1546,7 @@ Content-Length: {}
     ):
         if msg.startswith('retry: '):
             return
-        logger.error('_send_text(): "{}"'.format(msg))
+        # logger.error('_send_text(): "{}"'.format(msg))
         if self._is_html:
             self._send_html(put_script=put_script)
             return

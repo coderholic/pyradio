@@ -324,9 +324,9 @@ If nothing else works, try the following command:
     gr_recording.add_argument('-ach', '--add-chapters', default='', action='store_true',
                               help='Add (or replace) chapter markers to a previously recorded MKV file. The chapters file will be a SRT file, much like the one produced by the previous command line parameter.')
 
-    sc_group = parser.add_argument_group('• Scheduler')
-    sc_group.add_argument('-si', '--show-schedule-items', action='store_true',
-                          help='Show schedule.')
+    # sc_group = parser.add_argument_group('• Scheduler')
+    # sc_group.add_argument('-si', '--show-schedule-items', action='store_true',
+    #                       help='Show schedule.')
 
     if system().lower().startswith('win'):
         parser.add_argument('--headless', default=None, help=SUPPRESS)
@@ -337,7 +337,7 @@ If nothing else works, try the following command:
         gr_headless.add_argument('--headless', default=None, metavar=('IP_AND_PORT', ),
                                  help='Start in headless mode. IP_AND_PORT can be a) auto (use localhost:11111), b) localhost:XXXXX (access the web server through localhost) or c) lan:XXXXX (access the web server through the LAN). XXXXX can be any port number above 1025. Please make sure it is different than the one set in the configuration file.')
         gr_headless.add_argument('--address', action='store_true',
-                                help='Show remote control server address')
+                                help='Show remote control server address.')
         gr_headless.add_argument('-fd', '--free-dead-headless-server', action='store_true',
                                  help='Use this if your headless server has terminated unexpectedly, and you cannot start a new one (you get a message that it is already running).')
     args = parser.parse_args()
@@ -525,9 +525,9 @@ If nothing else works, try the following command:
                 print_exe_paths()
                 sys.exit()
 
-        if args.show_schedule_items:
-            print_active_schedule(pyradio_config.schedule_file)
-            sys.exit()
+        # if args.show_schedule_items:
+        #     print_active_schedule(pyradio_config.schedule_file)
+        #     sys.exit()
 
         if args.toggle_load_last_playlist:
             if pyradio_config.locked:

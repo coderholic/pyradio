@@ -45,7 +45,10 @@ a:visited{color: SaddleBrown;}
 <ul>
 <li><a href="#remote-control-server">Remote Control Server</a>
 <ul>
-<li><a href="#using-the-web-server">Using the Web Server</a></li>
+<li><a href="#using-the-web-server">Using the Web Server</a>
+<ul>
+<li><a href="#web-interface-buttons">Web Interface buttons</a></li>
+</ul></li>
 <li><a href="#using-the-text-server">Using the Text Server</a></li>
 <li><a href="#examples">Examples</a></li>
 <li><a href="#text-vs.-web-commands">Text vs. Web commands</a></li>
@@ -81,7 +84,37 @@ This option is available in the config only. If set to True, the server will be 
 <p>The idea is that while <strong>PyRadio</strong> is running on the PC, people relaxing on the sofa, chilling with friends, listening to music from their favorite radio station, being able to increase / decrease the volume, change stations, etc. using their phones.</p>
 <p>The available commands are “encoded” in the buttons shown on the screen; the right part of the image shows the output of the “<strong>Stations List</strong>” button. To start a station, I would just click (well, tap) on its name, and viola!</p>
 <p>The <strong>Web</strong> interface will also show the song’s title, if availabe, or the name of the station that’s playing, if it’s not. In order to achieve this functionality, <em>javascript</em> is heavily used, so one should keep that in mind (in case <em>javascript</em> has been disabled in the browser, for example).</p>
-<h3 id="using-the-text-server">Using the Text Server</h3>
+<h4 id="web-interface-buttons">Web Interface buttons</h4>
+<p>The buttons shown in the web interface are:</p>
+<ul>
+<li><p><strong>Local Playlist</strong><br />
+This button will permit the user to toggle between opening a local playlist (default state) and a <strong>Radio Browser</strong> “playlist”, actually a search result set of players.</p></li>
+<li><p><strong>Play Next</strong> and <strong>Play Previous</strong><br />
+The buttons title says it all…<br />
+Subsequent clicks on a button will only be accepted after the player has “settled”, i.e. either started playing or failed to connect to the station.</p></li>
+<li><p><strong>Play Hist. Next</strong> and <strong>Play Hist. Previous</strong><br />
+Same as above, but stations will come from the “<strong>station history</strong>” instead of the current playlist.</p></li>
+<li><p><strong>Toggle Playback</strong><br />
+Nothing more to say here; start/stop the player.</p></li>
+<li><p><strong>Volume Up</strong> and <strong>Volume Down</strong>, <strong>Save Volume</strong>, <strong>Mute Player</strong><br />
+These are the volume adjustment, saving and muting the player functions.</p></li>
+<li><p><strong>Show Stations</strong><br />
+Clicking this buttons will present the list of stations in the current playlist (or search result). Clicking on a station name will start its playback.</p></li>
+<li><p><strong>Show Groups</strong><br />
+This will display, and permit the selection of the groups defined within a playlist. When a group name is selected, the list of players will be opened and scrolled to the beginning of the group.</p></li>
+<li><p><strong>Show Playlists</strong><br />
+This will show a list of the playlists already composed by the user. Clicking on a playlist’s name will open the playlist; the stations will be available through the <strong>Show Stations</strong>.<br />
+<br />
+When <strong>Radio Broeser</strong> is active, the button’s label will change to <strong>Show Searches</strong>. When clicked, the list of existing search items will be presented to the user; clicking on an item will preform the search and results can be displayed by clicking on the <strong>Show Stations</strong> button.<br />
+<br />
+No new items can be inserted using the web interface.</p></li>
+<li><p><strong>Enable Title Log</strong><br />
+This will enable or disable the titles logging function.</p></li>
+<li><p><strong>Like Title</strong><br />
+This will “like” the current (song).</p></li>
+<li><p><strong>System Info</strong><br />
+This will display useful info about <strong>PyRadio</strong>. ### Using the Text Server</p></li>
+</ul>
 <p>Why having the <strong>Text</strong> interface as well, one might ask…</p>
 <p>Well, first of all it’s lighter, then one can use it to locally control <strong>PyRadio</strong> from a script and provide a way to adjust the volume for example, using some assigned shortcut key combination.</p>
 <p>Inserting the <strong>Text</strong> address on a terminal using <em>curl</em> or <em>wget</em> or any similar software:</p>
@@ -89,32 +122,48 @@ This option is available in the config only. If set to True, the server will be 
 <p>or</p>
 <pre>$ wget http://192.168.122.4:9998  -q -O -</pre>
 <p>would result to displaying the list of available commands:</p>
-<pre>PyRadio Remote Service
+<pre>
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  1810  100  1810    0     0   392k      0 --:--:-- --:--:-- --:--:--  441k
+
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  1935  100  1935    0     0  1702k      0 --:--:-- --:--:-- --:--:-- 1889k
+PyRadio Remote Service
 
 Global Commands
-Long             Short      Description
---------------------------------------------------------------------
-/info            /i         display PyRadio info
-/volumeup        /vu        increase volume
-/volumedown      /vd        decrease volume
-/vulumesave      /vs        save volume
-/mute            /m         toggle mute
-/log             /g         toggle stations logging
-/like            /l         tag (like) station
+Long                        Short      Description
+-------------------------------------------------------------------------------
+/info                       /i         display PyRadio info
+/volume                     /v         show volume (text only)
+/set_volume/x               /sv/x      set volume to x% (text only)
+/volumeup                   /vu        increase volume
+/volumedown                 /vd        decrease volume
+/volumesave                 /vs        save volume
+/mute                       /m         toggle mute
+/log                        /g         toggle stations logging
+/like                       /l         tag (like) station
+/title                                 get title (HTML format)
 
 Restricted Commands (Main mode only)
---------------------------------------------------------------------
-/toggle          /t         toggle playback
-/playlists       /pl        get playlists list
-/playlists/x     /pl/x      get stations list from playlist id x
-                            (x comes from command /pl)
-/playlists/x,y   /pl/x,y    play station id y from playlist id x
-/stations        /st        get stations list from current playlist
-/stations/x      /st/x      play station id x from current playlist
-/next            /n         play next station
-/previous        /p         play previous station
-/histnext        /hn        play next station from history
-/histprev        /hp        play previous station from history</pre>
+---------------------------------------------------------------------------
+/toggle                     /t         toggle playback
+/playlists                  /pl        get playlists list
+/playlists/x                /pl/x      get stations list from playlist id x
+                                         (x comes from command /pl)
+/playlists/x,y              /pl/x,y    play station id y from playlist id x
+/stations                   /st        get stations list from current playlist
+/stations/x                 /st/x      play station id x from current playlist
+/next                       /n         play next station
+/previous                   /p         play previous station
+/histnext                   /hn        play next station from history
+/histprev                   /hp        play previous station from history
+/open_radio_browser         /orb       open Radio Browser
+/close_radio_browser        /crb       close Radio Browser
+/list_radio_browser         /lrb       list Radio Browser search items
+/search_radio_browser/x     /srb/x     execute search item x
+                                         (x comes from /lrb)</pre>
 <p>The “<strong>Restricted Commands</strong>” will not work in <strong>Playlist mode</strong>; the “<strong>Global Commands</strong>” will work everywhere.</p>
 <h3 id="examples">Examples</h3>
 <p>The following commands will increase / decrease the volume and mute the player:</p>
@@ -139,6 +188,29 @@ First column
   [&gt; ]: Selected, [+ ]: Playing, [+&gt;]: Both</pre>
 <p>so that in order to start playing station No 20, for example, one would just use the command:</p>
 <pre>$ curl http://192.168.122.4:9998/st/20</pre>
+<p>The following command will get the current song title:</p>
+<pre>$ curl http://192.168.122.4:9998/title
+
+retry: 150
+event: /html/title
+data: &lt;b&gt;The Carpenters - No Place Like Home For The Holidays&lt;/b&gt;
+</pre>
+<p>The <strong>data</strong> field will contain the HTML format of the title, which is easy to parse in a script.</p>
+<p>If the player is idle, the output will be</p>
+<pre>$ curl http://127.0.0.1:9998/title
+retry: 150
+event: /html/title
+data: &lt;b&gt;Player is stopped!&lt;/b&gt;</pre>
+<p>Several commands (such as <strong>/v</strong>, <strong>/vu</strong>, <strong>/vd</strong>, etc.) will return this info; this is a side effect of the way the server works, but provides useful info for the script issuing the command.</p>
+<p>One thing that should be made clear is that getting the above info does not mean that the command has succeeded; for example issuing the <strong>/orc</strong> (<strong>/open-radio-browser</strong>) command, will return the above info, but to make sure about the state of <strong>PyRadio</strong>, one should issue the <strong>/i</strong> (<strong>/info</strong>) command:</p>
+<pre>$ curl http://127.0.0.1:9998/i
+
+PyRadio 0.9.2.20
+Player: mpv
+Service: RadioBrowser (Austria)
+Status: In playback
+  Station (id=5): &quot;Classical Christmas FM&quot;
+Selection (id=5): &quot;Classical Christmas FM&quot;</pre>
 <h3 id="text-vs.-web-commands">Text vs. Web commands</h3>
 <p>On first glance, the difference between a <strong>Text</strong> and a <strong>Web</strong> command is the <em>/html</em> part that exists in the later.</p>
 <p>But things are actually more complex that that.</p>

@@ -1264,7 +1264,7 @@ class Player(object):
                             data = b''
                     self._chapter_time = datetime.now()
                     a_data = self._fix_returned_data(data)
-                    # logger.error('DE Received: "{!r}"'.format(a_data))
+                    logger.error('DE Received: "{!r}"'.format(a_data))
                     if a_data == b'' or stop():
                         break
                     if a_data:
@@ -1639,12 +1639,13 @@ class Player(object):
             =========
             self._icy_data
                 Fields:
-                    icy-title    : Title of song (python 3 only)
-                    icy-name     : Station name
-                    icy-url      : Station URL
-                    icy-genre    : Station genres
-                    icy-br       : Station bitrate
-                    audio_format : XXXXHx stereo/mono 1/2ch format
+                    icy-title        : Title of song (python 3 only)
+                    icy-name         : Station name
+                    icy-url          : Station URL
+                    icy-genre        : Station genres
+                    icy-br           : Station bitrate
+                    audio_format     : XXXXHx stereo/mono 1/2ch format
+                    artist, title    : Artist and Title of song (vorbis stations)
         '''
 
         a_data = args[0]
@@ -1662,10 +1663,17 @@ class Player(object):
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Icy-Title = " - ", not displaying...')
                     else:
-                        try:
-                            self.oldUserInput['Title'] = 'Title: ' + title.decode(self._station_encoding, 'replace')
-                        except:
-                            self.oldUserInput['Title'] = 'Title: ' + title.decode('utf-8', 'replace')
+                        if b'artist' in a_data:
+                            artist = a_data.split(b'"artist":"')[1].split(b'"}')[0].split(b'","')[0]
+                            try:
+                                self.oldUserInput['Title'] = 'Title: ' + artist.decode(self._station_encoding, 'replace') + ' - ' + title.decode(self._station_encoding, 'replace')
+                            except:
+                                self.oldUserInput['Title'] = 'Title: ' + artist.decode('utf-8', 'replace') + ' - ' + title.decode('utf-8', 'replace')
+                        else:
+                            try:
+                                self.oldUserInput['Title'] = 'Title: ' + title.decode(self._station_encoding, 'replace')
+                            except:
+                                self.oldUserInput['Title'] = 'Title: ' + title.decode('utf-8', 'replace')
                         string_to_show = self.title_prefix + self.oldUserInput['Title']
                         #logger.critical(string_to_show)
                         if stop():
