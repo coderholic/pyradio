@@ -807,17 +807,18 @@ class PyRadio(object):
     def _text_info(self):
         out = []
         out.append('PyRadio {}'.format(self._cnf.current_pyradio_version))
-        out.append('Player: {}'.format(self.player.PLAYER_NAME))
+        out.append('  Player: {}'.format(self.player.PLAYER_NAME))
         if self._cnf.browsing_station_service:
-            out.append('Service: ' + self._cnf.online_browser.TITLE)
+            out.append('  Service: ' + self._cnf.online_browser.TITLE)
+            out.append('    Search: ' + self._cnf.online_browser.get_current_history_string())
         else:
-            out.append('Playlist: "{}"'.format(basename(self._playlist_in_editor)[:-4]))
+            out.append('  Playlist: "{}"'.format(basename(self._playlist_in_editor)[:-4]))
         if self.player.isPlaying():
-            out.append('Status: In playback {}'.format('(muted)' if self.player.muted else ''))
-            out.append('  Station (id={0}): "{1}"'.format(self.playing+1, self.stations[self.playing][0]))
+            out.append('  Status: In playback {}'.format('(muted)' if self.player.muted else ''))
+            out.append('    Station (id={0}): "{1}"'.format(self.playing+1, self.stations[self.playing][0]))
         else:
-            out.append('Status: Idle')
-        out.append('Selection (id={0}): "{1}"'.format(self.selection+1, self.stations[self.selection][0]))
+            out.append('  Status: Idle')
+        out.append('  Selection (id={0}): "{1}"'.format(self.selection+1, self.stations[self.selection][0]))
         return '\n'.join(out)
 
     def _html_info(self):
@@ -827,6 +828,7 @@ class PyRadio(object):
         out.append('<span style="padding-left: 1em;">Player: <b>{}</b></span><br>'.format(self.player.PLAYER_NAME))
         if self._cnf.browsing_station_service:
             out.append('<span style="padding-left: 1em;">Service: <b>{}</b></span><br>'.format(self._cnf.online_browser.TITLE))
+            out.append('<span style="padding-left: 2em;">Search: <b>{}</b></span><br>'.format(self._cnf.online_browser.get_current_history_string()))
         else:
             out.append('<span style="padding-left: 1em;">Playlist: <b>{}</b></span><br>'.format(basename(self._playlist_in_editor)[:-4]))
         if self.player.isPlaying():

@@ -1234,29 +1234,31 @@ class RadioBrowser(PyRadioStationsBrowser):
         return a_string + (' (exact)' if aterm.endswith('exact') else '')
 
     def get_strings(self):
-        strings = []
-        for i, n in enumerate(self._search_history):
-            if i > 0:
-                out = []
-                if 'type' in n:
-                    if n['type'] and 'term' in n:
-                        if n['type'] != 'search':
-                            out.append('{0}: {1}'.format(
-                                self._format_term_for_get_strings(n['type']),
-                                n['term']
-                                )
-                            )
-                if 'post_data' in n:
-                    for k in n['post_data']:
-                        out.append('{0}: {1}'.format(
-                            k.title().replace('exact', ' (exact)'),
-                            n['post_data'][k]
-                            )
-                        )
+        return [self.get_a_search_string(n) for i, n in enumerate(self._search_history) if i > 0]
 
-                if out:
-                    strings.append(', '.join(out))
-        return strings
+    def get_a_search_string(self, a_search_item):
+        out = []
+        if 'type' in a_search_item:
+            if a_search_item['type'] and 'term' in a_search_item:
+                if a_search_item['type'] != 'search':
+                    out.append('{0}: {1}'.format(
+                        self._format_term_for_get_strings(a_search_item['type']),
+                        a_search_item['term']
+                        )
+                    )
+        if 'post_data' in a_search_item:
+            for k in a_search_item['post_data']:
+                out.append('{0}: {1}'.format(
+                    k.title().replace('exact', ' (exact)'),
+                    a_search_item['post_data'][k]
+                    )
+                )
+        if out:
+            return ', '.join(out)
+        return None
+
+    def get_current_history_string(self):
+        return self.get_a_search_string(self._search_history[self._search_history_index])
 
     def get_history_from_search(self):
         if self._search_win:

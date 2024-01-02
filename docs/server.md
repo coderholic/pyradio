@@ -209,7 +209,7 @@ $ curl http://192.168.122.4:9998/title
 
 retry: 150
 event: /html/title
-data: <b>The Carpenters - No Place Like Home For The Holidays</b>
+data: <b>Patti Page - Jingle bells</b>
 
 ```
 
@@ -230,13 +230,13 @@ One thing that should be made clear is that getting the above info does not mean
 
 ```
 $ curl http://127.0.0.1:9998/i
-
 PyRadio 0.9.2.20
-Player: mpv
-Service: RadioBrowser (Austria)
-Status: In playback
-  Station (id=5): "Classical Christmas FM"
-Selection (id=5): "Classical Christmas FM"
+  Player: mpv
+  Service: RadioBrowser (Netherlands)
+    Search: Name: christmas, Order: votes, Reverse: true
+  Status: In playback
+    Station (id=5): "Classical Christmas FM"
+  Selection (id=5): "Classical Christmas FM"
 ```
 
 ### Text vs. Web commands
