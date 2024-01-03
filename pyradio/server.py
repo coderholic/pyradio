@@ -71,13 +71,14 @@ class IPs(object):
         for n in interfaces:
             iface=netifaces.ifaddresses(n).get(netifaces.AF_INET)
             if iface:
-                # dirty way to get real interfaces
-                if 'broadcast' in str(iface):
-                    if version_info[0] > 2:
-                        out.append(iface[0]['addr'])
-                    else:
-                        out.append(iface[0]['addr'].encode('utf-8'))
-        return out
+                for entry in iface:
+                    # dirty way to get real interfaces
+                    if 'broadcast' in str(entry):
+                        if version_info[0] > 2:
+                            out.append(entry['addr'])
+                        else:
+                            out.append(entry['addr'].encode('utf-8'))
+        return sorted(list(set(out)))
 
     def _get_win_ips(self):
         out = ['127.0.0.1']
@@ -93,6 +94,55 @@ class IPs(object):
             s.close()
         return out
 
+
+class IPsWithNumbers(object):
+
+    def __init__(self, default_ip=None, fat=False):
+        self._ips = ['localhost', 'lan']
+        ips = IPs()
+        if fat or len(ips.IPs) > 2:
+            self._ips.extend(ips.IPs[1:])
+        self._index = 0
+        if default_ip:
+            try:
+                self._index = self._ips.index(default_ip.lower())
+            except ValueError:
+                pass
+
+    def set(self, new_ip):
+        try:
+            self._index = self._ips.index(new_ip.lower())
+        except ValueError:
+            pass
+        return self._ips[self._index]
+
+    def current(self):
+        return self._ips[self._index]
+
+    def next(self):
+        self._index += 1
+        if self._index >= len(self._ips):
+            self._index = 0
+        return self._ips[self._index]
+
+    def previous(self):
+        self._index -= 1
+        if self._index <0:
+            self._index = len(self._ips) - 1
+        return self._ips[self._index]
+
+    def ip_exists(self, ip):
+        try:
+            x = self._ips.index(ip.lower())
+            return True
+        except ValueError:
+            return False
+
+    def validate_ip(self, ip):
+        ''' if ip is in the list of ips, return it
+            else return localhost
+        '''
+        return ip.lower() if self.ip_exists(ip) else 'localhost'
 
 class PyRadioServer(object):
     _filter_string = '''

@@ -6,7 +6,7 @@ import glob
 import curses
 import collections
 import json
-import socket
+# import socket
 from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ, getpid
 from sys import platform
 from time import ctime, sleep
@@ -27,6 +27,7 @@ from .browser import PyRadioStationsBrowser, probeBrowsers
 from .install import get_github_long_description
 from .common import is_rasberrypi
 from .player import pywhich
+from .server import IPsWithNumbers
 HAS_REQUESTS = True
 
 try:
@@ -71,10 +72,18 @@ def to_ip_port(string):
             if sp[0] == 'lan' or sp[0] == 'localhost':
                 host = sp[0]
             else:
-                try:
-                    x = socket.inet_pton(socket.AF_INET, sp[0])
+                x = IPsWithNumbers(
+                        default_ip=sp[0],
+                        fat=True
+                )
+                if x.current() == sp[0]:
                     host = sp[0]
-                except:
+                    # try:
+                    #     x = socket.inet_pton(socket.AF_INET, sp[0])
+                    #     host = sp[0]
+                    # except:
+                    #     return 'localhost', '11111'
+                else:
                     return 'localhost', '11111'
             try:
                 x = int(sp[1])
@@ -2096,13 +2105,18 @@ class PyRadioConfig(PyRadioStations):
                            'vlc_parameter'):
                 self._config_to_params(sp)
             elif sp[0] == 'remote_control_server_ip':
-                hosts = ('localhost', 'LAN', 'lan')
+                # hosts = ('localhost', 'LAN', 'lan')
                 sp[1] = sp[1].strip()
-                x = [r for r in hosts if r == sp[1]]
-                if x:
-                    self.opts['remote_control_server_ip'][1] = x[0]
-                else:
-                    self.opts['remote_control_server_ip'][1] = 'localhost'
+                nip = IPsWithNumbers(
+                        default_ip=sp[1]
+                )
+                self.opts['remote_control_server_ip'][1] = nip.current()
+                nip = None
+                # x = [r for r in hosts if r == sp[1]]
+                # if x:
+                #     self.opts['remote_control_server_ip'][1] = x[0]
+                # else:
+                #     self.opts['remote_control_server_ip'][1] = 'localhost'
             elif sp[0] == 'remote_control_server_port':
                 try:
                      x = int(sp[1])

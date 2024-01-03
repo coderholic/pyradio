@@ -1,4 +1,4 @@
-# PyRadio Headless Operation
+\fR# PyRadio Headless Operation
 
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->
@@ -51,11 +51,16 @@ The `ip` can either be:
 The server will be accessible only by programs running in the system. The `ip` is 127.0.0.1.
 2. **lan** \
 The server will be accessible by any system on the LAN. The `ip` is the one assigned to the network interface of the system.
+3. An actual **IP** \
+This is in case when a machine has more than one network interfaces and the **lan* setting is ambigous.
 
 For example:
 
 - using **--headless lan:12345** \
 will make the web server listen to the network interface IP address, port 12345.
+
+- using **--headless 192.168.122.101:4567** \
+will make the web server listen to the IP 192.168.122.101, port 4567.
 
 - using **--headless localhost:23456** \
 will make the web server listen to 127.0.0.1, port 23456

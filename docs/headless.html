@@ -39,7 +39,7 @@ a:visited{color: SaddleBrown;}
 <body>
 <header id="title-block-header">
 </header>
-<h1 style="color: SaddleBrown" id="pyradio-headless-operation">PyRadio Headless Operation</h1>
+<p># PyRadio Headless Operation</p>
 <h2 id="table-of-contents">Table of Contents <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <!-- vim-markdown-toc Marked -->
 <ul>
@@ -83,11 +83,15 @@ a:visited{color: SaddleBrown;}
 The server will be accessible only by programs running in the system. The ip is 127.0.0.1.</li>
 <li><strong>lan</strong><br />
 The server will be accessible by any system on the LAN. The ip is the one assigned to the network interface of the system.</li>
+<li>An actual <strong>IP</strong><br />
+This is in case when a machine has more than one network interfaces and the **lan* setting is ambigous.</li>
 </ol>
 <p>For example:</p>
 <ul>
 <li><p>using <strong>–headless lan:12345</strong><br />
 will make the web server listen to the network interface IP address, port 12345.</p></li>
+<li><p>using <strong>–headless 192.168.122.101:4567</strong><br />
+will make the web server listen to the IP 192.168.122.101, port 4567.</p></li>
 <li><p>using <strong>–headless localhost:23456</strong><br />
 will make the web server listen to 127.0.0.1, port 23456</p></li>
 <li><p>using <strong>–headless auto</strong><br />

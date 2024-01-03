@@ -12,6 +12,7 @@ from .window_stack import Window_Stack_Constants
 from .cjkwrap import cjklen
 from .encodings import *
 from .themes import *
+from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
 import logging
 import locale
@@ -88,7 +89,7 @@ class PyRadioConfigWindow(object):
     '|', 'Default value: True'])
     _help_text.append(['Specify whether you will be asked to save a modified playlist whenever it needs saving.', '|', 'Default value: False'])
     _help_text.append(None)
-    _help_text.append(['This is the IP for the Remote Control Server.', '|', 'Available options:', '- localhost', '  PyRadio will be accessible from within the current system only.', '- LAN', '  PyRadio will be accessible from any computer in the local network.', '|', r'One can see the active IP using the "\s" command from the program\'s Main Window.', '|', 'Use "Space", "Enter", "l/Right" to change the value.','|', 'Default value: localhost'])
+    _help_text.append(['This is the IP for the Remote Control Server.', '|', 'Available options:', '- localhost : PyRadio will be accessible from within the current system only.', '- lsn : PyRadio will be accessible from any computer in the local network.', '- IP : In case the system has more than one interfaces.', '|', 'Use "Space", "Enter", "l/Right" to change the value.','|', 'Default value: localhost'])
     _help_text.append(
         ['This is the port used by the Remote Control Server (the port the server is listening to).', '|', 'Please make sure that a "free" port is specified here, to avoid any conflicts with existing services and daemons.', '|', 'If an invalid port number is inserted, the cursor will not move to another field.', '|', 'Valid values: 1025-65535', 'Default value: 9998'])
     _help_text.append(['If set to True, the Server wiil be automatically started when PyRadio starts.', r'If set to False, one can start the Server using the "\s" command from the Main program window.', '|', 'Default value: False'])
@@ -190,6 +191,9 @@ class PyRadioConfigWindow(object):
         for a_key in self._cnf.saved_params.keys():
             if self._cnf.saved_params[a_key] != self._cnf.params[a_key]:
                 self._cnf.dirty_config = True
+        self.nip = IPsWithNumbers(
+                default_ip=self._config_options['remote_control_server_ip'][1]
+        )
 
     def __del__(self):
         self._toggle_transparency_function = None
@@ -803,12 +807,14 @@ class PyRadioConfigWindow(object):
 
         elif val[0] == 'remote_control_server_ip':
             if char in (curses.KEY_RIGHT, ord('l'), ord(' '), ord('\n'), curses.KEY_ENTER):
-                if self._config_options[val[0]][1] == 'localhost':
-                    self._config_options[val[0]][1] = 'LAN'
-                    disp = 'LAN      '
-                else:
-                    self._config_options[val[0]][1] = 'localhost'
-                    disp = 'localhost'
+                self._config_options[val[0]][1] = self.nip.next()
+                disp = self._config_options[val[0]][1].ljust(15)
+                # if self._config_options[val[0]][1] == 'localhost':
+                #     self._config_options[val[0]][1] = 'LAN'
+                #     disp = 'LAN      '
+                # else:
+                #     self._config_options[val[0]][1] = 'localhost'
+                #     disp = 'localhost'
                 self._win.addstr(
                     Y, 3 + len(val[1][0]),
                     disp, curses.color_pair(6)

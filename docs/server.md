@@ -27,7 +27,9 @@ Setting the **Remote Control Server** options ins the config file, especially se
 The options one can set are:
 
 1. **Server IP** \
-This can either be **localhost** (the server will be accessible from the current system only) or **LAN** (the server will be accessible from any PC on the local network).
+This can either be **localhost** (the server will be accessible from the current system only) or **LAN** (the server will be accessible from any PC on the local network). \
+\
+If the machine has more that one interface (network card), the actual IPs will be available for selection.
 
 2. **Server Port** \
 This is the port the server is listening to. Any free port number between 1025 and 65535 can be set here (default value is 9998).

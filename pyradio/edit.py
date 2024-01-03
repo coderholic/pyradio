@@ -14,6 +14,7 @@ except:
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesCheckBox, SimpleCursesHorizontalPushButtons, DisabledWidget
 from .player import PlayerCache
 from .log import Log
+from .server import IPsWithNumbers
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -1472,6 +1473,8 @@ class PyRadioServerWindow(object):
 
     _win = _editor = None
 
+    _nips = None
+
     def __init__(
             self,
             parent,
@@ -1479,6 +1482,7 @@ class PyRadioServerWindow(object):
             port_number_error_message=None,
             global_functions=None
     ):
+        self._nips = IPsWithNumbers()
         self._cnf = config
         self._parent = parent
         self._win = None
@@ -1488,7 +1492,8 @@ class PyRadioServerWindow(object):
         self._showed = False
         self._selection = 0
         self._field_x = 4 +  len('Server Port: ')
-        self._the_ip = self._cnf.active_remote_control_server_ip
+        self._the_ip = self._nips.validate_ip(self._cnf.active_remote_control_server_ip)
+        self._nips.set(self._the_ip)
         self._the_port = self._cnf.active_remote_control_server_port
         self._editor = None
         self._port_number_error_message = port_number_error_message
@@ -1536,7 +1541,6 @@ class PyRadioServerWindow(object):
         else:
             self._win.addstr(self._the_ip.ljust(self._field_width, ' '), curses.color_pair(10))
         self._win.addstr(5, 4, 'Server Port: ', curses.color_pair(10))
-
 
         try:
             self._win.addstr(7, 3, '─' * (self.maxX - 6), curses.color_pair(3))
@@ -1628,25 +1632,31 @@ class PyRadioServerWindow(object):
                 char in (
                     ord(' '), ord('\n'),
                     curses.KEY_ENTER,
-                    ord('h'), ord('l'),
-                    curses.KEY_LEFT,
+                    ord('l'),
                     curses.KEY_RIGHT,
                 ):
-            if self._the_ip == 'localhost':
-                self._the_ip = 'LAN'
-            else:
-                self._the_ip = 'localhost'
+            self._the_ip = self._nips.next()
+            self._win.addstr(4, self._field_x, self._the_ip.ljust(self._field_width), curses.color_pair(6))
+            self._refresh()
+        elif self._selection == 0 and \
+                char in (
+                    ord('h'),
+                    curses.KEY_LEFT,
+                ):
+            self._the_ip = self._nips.previous()
             self._win.addstr(4, self._field_x, self._the_ip.ljust(self._field_width), curses.color_pair(6))
             self._refresh()
 
         elif char == ord('r'):
             self._the_ip = self._cnf.active_remote_control_server_ip
+            self._nips.set(self._the_ip)
             self._the_port = self._cnf.active_remote_control_server_port
             self._editor.string = self._the_port
             self._refresh()
 
         elif char == ord('d'):
             self._the_ip = 'localhost'
+            self._nips.set('localhost')
             self._the_port = '9998'
             self._editor.string = self._the_port
             self._refresh()
