@@ -1,4 +1,4 @@
-.TH pyradio_rec 1 "November 2023" pyradio
+.TH pyradio_rec 1 "January 2024" pyradio
 
 .SH Name
 .PP
@@ -384,10 +384,9 @@ directory\fR.
 If \fBMKVToolNix\fR is not installed, the file will be downloaded in
 this directory and will not be altered by \fBpyradio\fR.
 .PP
-If \fBMKVToolNix\fR is installed, the file will initially be
-downloaded in the \[lq]\fIdata\fR\[rq] directory; the final file,
-after chapters addition, will be placed in the \fBrecordings\fR
-directory and the downloaded file will be deleted.
+If \fBMKVToolNix\fR is installed, a “\fItmp_\fR” prefix will be added
+to the recorded filename, which will be removed after chapters addition.
+
 .SS Pausing playback
 .PP
 After you have started recording a station, \fBpyradio\fR will

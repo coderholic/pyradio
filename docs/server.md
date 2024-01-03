@@ -59,7 +59,7 @@ The **Web** interface will also show the song's title, if availabe, or the name 
 The buttons shown in the web interface are:
 
 - **Local Playlist** \
-This button will permit the user to toggle between opening a local playlist (default state) and a **Radio Browser** "playlist", actually a search result set of players.
+This button will permit the user to toggle between opening a local playlist (default state) and a **RadioBrowser** "playlist", actually a search result set of players.
 
 - **Play Next** and **Play Previous** \
 The buttons title says it all... \
@@ -83,7 +83,7 @@ This will display, and permit the selection of the groups defined within a playl
 - **Show Playlists** \
 This will show a list of the playlists already composed by the user. Clicking on a playlist's name will open the playlist; the stations will be available through the **Show Stations**. \
 \
-When **Radio Broeser** is active, the button's label will change to **Show Searches**. When clicked, the list of existing search items will be presented to the user; clicking on an item will preform the search and results can be displayed by clicking on the **Show Stations** button. \
+When **RadioBrowser** is active, the button's label will change to **Show Searches**. When clicked, the list of existing search items will be presented to the user; clicking on an item will preform the search and results can be displayed by clicking on the **Show Stations** button. \
 \
 No new items can be inserted using the web interface.
 
@@ -95,6 +95,7 @@ This will "like" the current (song).
 
 - **System Info** \
 This will display useful info about **PyRadio**.
+
 ### Using the Text Server
 
 Why having the **Text** interface as well, one might ask...
@@ -116,14 +117,6 @@ $ wget http://192.168.122.4:9998  -q -O -
 would result to displaying the list of available commands:
 
 ```
-
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  1810  100  1810    0     0   392k      0 --:--:-- --:--:-- --:--:--  441k
-
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  1935  100  1935    0     0  1702k      0 --:--:-- --:--:-- --:--:-- 1889k
 PyRadio Remote Service
 
 Global Commands
@@ -218,7 +211,7 @@ The **data** field will contain the HTML format of the title, which is easy to p
 If the player is idle, the output will be
 
 ```
-$ curl http://127.0.0.1:9998/title
+$ curl http://192.168.122.192.168.122.4tle
 retry: 150
 event: /html/title
 data: <b>Player is stopped!</b>
@@ -229,7 +222,7 @@ Several commands (such as **/v**, **/vu**, **/vd**, etc.) will return this info;
 One thing that should be made clear is that getting the above info does not mean that the command has succeeded; for example issuing the **/orc** (**/open-radio-browser**) command, will return the above info, but to make sure about the state of **PyRadio**, one should issue the **/i** (**/info**) command:
 
 ```
-$ curl http://127.0.0.1:9998/i
+$ curl http://192.168.122.4:9998/i
 PyRadio 0.9.2.20
   Player: mpv
   Service: RadioBrowser (Netherlands)

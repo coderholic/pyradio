@@ -7,11 +7,13 @@
     * [Usage](#usage)
     * [How it works](#how-it-works)
 * [Installation](#installation)
+    * [Notice](#notice)
     * [Using tmux](#using-tmux)
         * [systemd](#systemd)
     * [Using screen](#using-screen)
         * [systemd](#systemd)
-    * [Things to consider for systemd](#things-to-consider-for-systemd)
+    * [systemd service file](#systemd-service-file)
+    * [Notice for systemd installation](#notice-for-systemd-installation)
 
 <!-- vim-markdown-toc -->
 
@@ -108,6 +110,17 @@ By the term "installation", we mean that we set up things in such a way, that af
 
 So, the installation can be as easy as adding a line in a configuration file (or the startup section of the *desktop environment*) or as hard as adding a system service.
 
+### Notice
+
+The commands that follow use the following conventions:
+
+1. The username is **spiros**. \
+Please replace it with your username.
+
+2. **PyRadio** is installed from source; this means that its executable is **~/.local/bin/pyradio**. If this is not the case (using a distribution package, for example), please replace it with the correct one.
+
+3. Both **tmux** and **screen** are executed using their *absolute path* (**/usr/bin/tmux** and **/usr/bin/screen** respectively). If they are installed at a different location, please use the correct one instead.
+
 ### Using tmux
 
 If **bash** is the default shell, this would do the trick:
@@ -131,66 +144,43 @@ The first thing you do is create the log file:
 
     touch ~/pyradio.log
 
-Then create the start file:
+Then create the start file. Write this to **~/.local/bin/start-headless-pyradio.sh**
 
-    mkdir ~/.local/bin
-    echo "#!/bin/bash" > ~/.local/bin/start-headless-pyradio.sh
-    echo "/usr/bin/tmux new-session -dA -s pyradio-session /home/spiros/.local/bin/pyradio --headless auto" >> ~/.local/bin/start-headless-pyradio.sh
+```
+#!/bin/bash
+/usr/bin/tmux new-session -dA -s pyradio-session /home/spiros/.local/bin/pyradio --headless auto
+```
+
+Then create the stop file. Writhe this to **~/.local/bin/stop-headless-pyradio.sh**
+
+```
+#!/bin/bash
+[ -z "$(/usr/bin/tmux ls | grep pyradio-session)" ] || /usr/bin/tmux send-keys -t pyradio-session q
+sleep 2
+[ -z "$(/usr/bin/tmux ls | grep pyradio-session)" ] || /usr/bin/tmux send-keys -t pyradio-session q
+[ -e /home/spiros/.config/pyradio/data/server-headless.txt ] && rm /home/spiros/.config/pyradio/data/server-headless.txt
+```
+
+Make both files executable:
+
     chmod +x ~/.local/bin/start-headless-pyradio.sh
-
-**Note:** You will want to replace the word "*spiros*" with your **username** in this file.
-
-Then create the stop file:
-
-    echo "#!/bin/bash" > ~/.local/bin/stop-headless-pyradio.sh
-    echo "/usr/bin/tmux send-keys -t pyradio-session q" >> ~/.local/bin/stop-headless-pyradio.sh
-    echo "sleep 1" >> ~/.local/bin/stop-headless-pyradio.sh
-    echo "/usr/bin/tmux send-keys -t pyradio-session q" >> ~/.local/bin/stop-headless-pyradio.sh
     chmod +x ~/.local/bin/stop-headless-pyradio.sh
 
-Finally create the service:
-
-File */lib/systemd/system/pyradio.service*
-
-```
-[Unit]
-Description=PyRadio Service
-After=multi-user.target
-
-[Service]
-Type=forking
-User=spiros
-Environment="XDG_RUNTIME_DIR=/run/user/1000"
-Environment="PULSE_RUNTIME_PATH=/run/user/1000/pulse/"
-StandardOutput=append:/home/spiros/pyradio.log
-StandardError=append:/home/spiros/pyradio.log
-ExecStart=/home/spiros/.local/bin/start-headless-pyradio.sh
-ExecStop=/home/spiros/.local/bin/stop-headless-pyradio.sh
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Then execute:
-```
-$ sudo chmod 644 /lib/systemd/system/pyradio.service
-$ sudo systemctl daemon-reload
-$ sudo systemctl enable pyradio # enabling the autostart on every boot
-```
+Now you are ready to create the [service file](#systemd-service-file).
 
 ### Using screen
 
 If **bash** is the default shell, this would do the trick:
 ```
 echo "/usr/bin/screen -U -S pyradio-session -d -m \
-        pyradio-session /home/spiros/.local/bin/pyradio \
+        /home/spiros/.local/bin/pyradio \
         --headless auto" >> ~/.profile
 ```
 
 In case a *Window manager* is used, adding a line in its **autostart** file would be enough. For example, this would work for **openbox**:
 
 ```
-echo "(sleep 10; /usr/bin/screen -U -S pyradio-session -d -m pyradio-session /home/spiros/.local/bin/pyradio --headless auto)" >> ~/.config/openbox/autostart
+echo "(sleep 10; /usr/bin/screen -U -S pyradio-session -d -m /home/spiros/.local/bin/pyradio --headless auto)" >> ~/.config/openbox/autostart
 ```
 
 And so on, and so forth...
@@ -201,26 +191,34 @@ The first thing you do is create the log file:
 
     touch ~/pyradio.log
 
-Then create the start file:
+Then create the start file. Write this to **~/.local/bin/start-headless-pyradio.sh**
 
-    mkdir ~/.local/bin
-    echo "#!/bin/bash" > ~/.local/bin/start-headless-pyradio.sh
-    echo "/usr/bin/screen -U -S pyradio-session -d -m pyradio-session /home/spiros/.local/bin/pyradio --headless auto" >> ~/.local/bin/start-headless-pyradio.sh
+```
+#!/bin/bash
+/usr/bin/screen -U -S pyradio-session -d -m /home/spiros/.local/bin/pyradio --headless auto
+```
+
+Then create the stop file. Writhe this to **~/.local/bin/stop-headless-pyradio.sh**
+
+```
+#!/bin/bash
+[ -z "$(/usr/bin/screen -ls | grep pyradio-session)" ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
+sleep 2
+[ -z "$(/usr/bin/screen -ls | grep pyradio-session)" ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
+[ -e /home/spiros/.config/pyradio/data/server-headless.txt ] && rm /home/spiros/.config/pyradio/data/server-headless.txt
+
+```
+
+Make both files executable:
+
     chmod +x ~/.local/bin/start-headless-pyradio.sh
-
-**Note:** You will want to replace the word "*spiros*" with your **username** in this file.
-
-Then create the stop file:
-
-    echo "#!/bin/bash" > ~/.local/bin/stop-headless-pyradio.sh
-    echo "/usr/bin/screen -S pyradio-session -p 0 -X stuff q" >> ~/.local/bin/stop-headless-pyradio.sh
-    echo "sleep 1" >> ~/.local/bin/stop-headless-pyradio.sh
-    echo "/usr/bin/screen -S pyradio-session -p 0 -X stuff q" >> ~/.local/bin/stop-headless-pyradio.sh
     chmod +x ~/.local/bin/stop-headless-pyradio.sh
 
-Finally create the service:
+Now you are ready to create the service file
 
-File */lib/systemd/system/pyradio.service*
+### systemd service file
+
+Create the file **/lib/systemd/system/pyradio.service**
 
 ```
 [Unit]
@@ -243,18 +241,16 @@ WantedBy=multi-user.target
 
 Then execute:
 ```
-$ sudo chmod 644 /lib/systemd/system/pyradio.service
-$ sudo systemctl daemon-reload
-$ sudo systemctl enable pyradio # enabling the autostart on every boot
+sudo chmod 644 /lib/systemd/system/pyradio.service
+sudo systemctl daemon-reload
+sudo systemctl enable pyradio # enabling the autostart on every boot
 ```
 
-### Things to consider for systemd
+### Notice for systemd installation
 
-1. You will want to replace the word "*spiros*" with your **username** in the */lib/systemd/system/pyradio.service* file.
+The service file has two lines starting with "*Environment=*"
 
-2. The service file has two lines starting with "*Environment=*" \
-\
-These two lines provide an environment for *systemd*; I've found out that on Arch Linux, for example, **PyRadio** would produce no sound at all without them (actually not connection to the sound server). \
-\
+These two lines provide an environment for *systemd*; I've found out that on Arch Linux, for example, **PyRadio** would produce no sound at all without them (it would not be able to connect to the sound server).
+
 On other systems, on Raspberry Pi for example, they can be omitted altogether.
 

@@ -88,7 +88,7 @@ This option is available in the config only. If set to True, the server will be 
 <p>The buttons shown in the web interface are:</p>
 <ul>
 <li><p><strong>Local Playlist</strong><br />
-This button will permit the user to toggle between opening a local playlist (default state) and a <strong>Radio Browser</strong> “playlist”, actually a search result set of players.</p></li>
+This button will permit the user to toggle between opening a local playlist (default state) and a <strong>RadioBrowser</strong> “playlist”, actually a search result set of players.</p></li>
 <li><p><strong>Play Next</strong> and <strong>Play Previous</strong><br />
 The buttons title says it all…<br />
 Subsequent clicks on a button will only be accepted after the player has “settled”, i.e. either started playing or failed to connect to the station.</p></li>
@@ -105,7 +105,7 @@ This will display, and permit the selection of the groups defined within a playl
 <li><p><strong>Show Playlists</strong><br />
 This will show a list of the playlists already composed by the user. Clicking on a playlist’s name will open the playlist; the stations will be available through the <strong>Show Stations</strong>.<br />
 <br />
-When <strong>Radio Broeser</strong> is active, the button’s label will change to <strong>Show Searches</strong>. When clicked, the list of existing search items will be presented to the user; clicking on an item will preform the search and results can be displayed by clicking on the <strong>Show Stations</strong> button.<br />
+When <strong>RadioBrowser</strong> is active, the button’s label will change to <strong>Show Searches</strong>. When clicked, the list of existing search items will be presented to the user; clicking on an item will preform the search and results can be displayed by clicking on the <strong>Show Stations</strong> button.<br />
 <br />
 No new items can be inserted using the web interface.</p></li>
 <li><p><strong>Enable Title Log</strong><br />
@@ -113,8 +113,9 @@ This will enable or disable the titles logging function.</p></li>
 <li><p><strong>Like Title</strong><br />
 This will “like” the current (song).</p></li>
 <li><p><strong>System Info</strong><br />
-This will display useful info about <strong>PyRadio</strong>. ### Using the Text Server</p></li>
+This will display useful info about <strong>PyRadio</strong>.</p></li>
 </ul>
+<h3 id="using-the-text-server">Using the Text Server</h3>
 <p>Why having the <strong>Text</strong> interface as well, one might ask…</p>
 <p>Well, first of all it’s lighter, then one can use it to locally control <strong>PyRadio</strong> from a script and provide a way to adjust the volume for example, using some assigned shortcut key combination.</p>
 <p>Inserting the <strong>Text</strong> address on a terminal using <em>curl</em> or <em>wget</em> or any similar software:</p>
@@ -122,15 +123,7 @@ This will display useful info about <strong>PyRadio</strong>. ### Using the Text
 <p>or</p>
 <pre>$ wget http://192.168.122.4:9998  -q -O -</pre>
 <p>would result to displaying the list of available commands:</p>
-<pre>
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  1810  100  1810    0     0   392k      0 --:--:-- --:--:-- --:--:--  441k
-
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  1935  100  1935    0     0  1702k      0 --:--:-- --:--:-- --:--:-- 1889k
-PyRadio Remote Service
+<pre>PyRadio Remote Service
 
 Global Commands
 Long                        Short      Description
@@ -197,13 +190,13 @@ data: &lt;b&gt;Patti Page - Jingle bells&lt;/b&gt;
 </pre>
 <p>The <strong>data</strong> field will contain the HTML format of the title, which is easy to parse in a script.</p>
 <p>If the player is idle, the output will be</p>
-<pre>$ curl http://127.0.0.1:9998/title
+<pre>$ curl http://192.168.122.192.168.122.4tle
 retry: 150
 event: /html/title
 data: &lt;b&gt;Player is stopped!&lt;/b&gt;</pre>
 <p>Several commands (such as <strong>/v</strong>, <strong>/vu</strong>, <strong>/vd</strong>, etc.) will return this info; this is a side effect of the way the server works, but provides useful info for the script issuing the command.</p>
 <p>One thing that should be made clear is that getting the above info does not mean that the command has succeeded; for example issuing the <strong>/orc</strong> (<strong>/open-radio-browser</strong>) command, will return the above info, but to make sure about the state of <strong>PyRadio</strong>, one should issue the <strong>/i</strong> (<strong>/info</strong>) command:</p>
-<pre>$ curl http://127.0.0.1:9998/i
+<pre>$ curl http://192.168.122.4:9998/i
 PyRadio 0.9.2.20
   Player: mpv
   Service: RadioBrowser (Netherlands)

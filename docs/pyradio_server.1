@@ -1,7 +1,7 @@
-.\" Copyright (C) 2018-2023 Spiros Georgaras <sng@hellug.gr>
+.\" Copyright (C) 2018-2024 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio_server 1 "November 2023" pyradio
+.TH pyradio_server 1 "January 2024" pyradio
 
 .SH Name
 .PP
@@ -51,6 +51,49 @@ The \fBWeb\fR interface will show the song's title in the \fBtitle field\fR, if 
 
 In order to achieve this functionality, \fIjavascript\fR is heavily used, so one should keep that in mind (in case \fIjavascript\fR has been disabled in the browser, for example).
 
+
+\fBWeb Interface buttons
+
+\fRThe buttons shown in the web interface are:
+
+.IP \fILocal\ Playlist
+This button will permit the user to toggle between opening a local playlist (default state) and a \fBRadioBrowser\fR “playlist”, actually a search result set of players.
+
+.IP \fIPlay\ Next\fR\ and\ \fIPlay\ Previous
+The buttons title says it all…
+Subsequent clicks on a button will only be accepted after the player has “settled”, i.e. either started playing or failed to connect to the station.
+
+.IP \fIPlay\ Hist.\ Next\fR\ and\ \fIPlay\ Hist.\ Previous
+Same as above, but stations will come from the “station history” instead of the current playlist.
+
+.IP \fIToggle\ Playback
+Nothing more to say here; start/stop the player.
+
+.IP \fIVolume\ Up\ \fRand\ \fIVolume\ Down\fR,\ \fISave\ Volume\fR,\ \fIMute\ Player
+These are the volume adjustment, saving and muting the player functions.
+
+.IP \fIShow\ Stations
+Clicking this buttons will present the list of stations in the current playlist (or search result). Clicking on a station name will start its playback.
+
+.IP \fIShow\ Groups
+This will display, and permit the selection of the groups defined within a playlist. When a group name is selected, the list of players will be opened and scrolled to the beginning of the group.
+
+.IP \fIShow\ Playlists
+This will show a list of the playlists already composed by the user. Clicking on a playlist’s name will open the playlist; the stations will be available through the Show Stations.
+
+When \fBRadioBrowser \fRis active, the button’s label will change to \fIShow Searches\fR. When clicked, the list of existing search items will be presented to the user; clicking on an item will preform the search and results can be displayed by clicking on the \fIShow Stations\fR button.
+
+No new items can be inserted using the web interface.
+
+.IP \fIEnable\ Title\ Log
+This will enable or disable the titles logging function.
+
+.IP \fILike\ Title
+This will “like” the current (song).
+
+.IP \fISystem\ Info
+This will display useful info about \fBpyradio\fB.
+
 .SH Using the Text Server
 
 Why having the \fBText\fR interface as well, one might ask...
@@ -71,62 +114,72 @@ or
 
 would result to displaying the list of available commands:
 
-\fRPyRadio Remote Service
+\fIPyRadio Remote Service
 .br
-
 .br
 \fIGlobal Commands
 .br
-\fILong             Short      Description
+\fILong                        Short      Description
 .br
-\fI--------------------------------------------------------------------
+\fI______________________________________________________________________________
 .br
-\fB/info            /i         \fIdisplay PyRadio info
+\fB/info                       /i         \fIdisplay PyRadio info
 .br
-\fB/volume          /v         \fIshow volume (text only)
+\fB/volume                     /v         \fIshow volume (text only)
 .br
-\fB/set_volume/x    /sv/x      \fIset volume to x% (text only)
+\fB/set_volume/\fIx\fB               /sv/\fIx      \fIset volume to x% (text only)
 .br
-\fB/volumeup        /vu        \fIincrease volume
+\fB/volumeup                   /vu        \fIincrease volume
 .br
-\fB/volumedown      /vd        \fIdecrease volume
+\fB/volumedown                 /vd        \fIdecrease volume
 .br
-\fB/vulumesave      /vs        \fIsave volume
+\fB/vulumesave                 /vs        \fIsave volume
 .br
-\fB/mute            /m         \fItoggle mute
+\fB/mute                       /m         \fItoggle mute
 .br
-\fB/log             /g         \fItoggle stations logging
+\fB/log                        /g         \fItoggle stations logging
 .br
-\fB/like            /l         \fItag (like) station
+\fB/like                       /l         \fItag (like) station
+.br
+\fB/title                                 \fIget title (HTML format)
 .br
 \fB
 .br
 \fIRestricted Commands (Main mode only)
 .br
-\fI--------------------------------------------------------------------
+\fI______________________________________________________________________________
 .br
-\fB/toggle          /t         \fItoggle playback
+\fB/toggle                     /t         \fItoggle playback
 .br
-\fB/playlists       /pl        \fIget playlists list
+\fB/playlists                  /pl        \fIget playlists list
 .br
-\fB/playlists/x     /pl/x      \fIget stations list from playlist id x
+\fB/playlists/\fIx\fB                /pl/\fIx      \fIget stations list from playlist id x
 .br
-\fB                            \fI(x comes from command /pl)
+\fB                                         \fI(x comes from command \fB/pl\fI)
 .br
-\fB/playlists/x,y   /pl/x,y    \fIplay station id y from playlist id x
+\fB/playlists/\fIx\fR,\fIy\fB              /pl/\fIx\fR,\fIy    \fIplay station id y from playlist id x
 .br
-\fB/stations        /st        \fIget stations list from current playlist
+\fB/stations                   /st        \fIget stations list from current playlist
 .br
-\fB/stations/x      /st/x      \fIplay station id x from current playlist
+\fB/stations/\fIx\fB                 /st/\fIx      \fIplay station id x from current playlist
 .br
-\fB/next            /n         \fIplay next station
+\fB/next                       /n         \fIplay next station
 .br
-\fB/previous        /p         \fIplay previous station
+\fB/previous                   /p         \fIplay previous station
 .br
-\fB/histnext        /hn        \fIplay next station from history
+\fB/histnext                   /hn        \fIplay next station from history
 .br
-\fB/histprev        /hp        \fIplay previous station from history
+\fB/histprev                   /hp        \fIplay previous station from history
 .br
+\fB/open_radio_browser         /orb       \fIopen Radio Browser
+.br
+\fB/close_radio_browser        /crb       \fIclose Radio Browser
+.br
+\fB/list_radio_browser         /lrb       \fIlist Radio Browser search items
+.br
+\fB/search_radio_browser/\fIx\fB     /srb/\fIx     \fIexecute search item x
+.br
+                                         \fI(x comes from \fB/lrb\fI)
 \fR
 
 The \fBRestricted Commands\fR will not work in \fIPlaylist mode\fR; the \fBGlobal Commands\fR will work everywhere.
@@ -178,6 +231,49 @@ The stations will be numbered, like so:
 so that in order to start playing station No \fB20\fR, for example, one would just use the command:
 
 \fI$ curl http://192.168.122.4:9998\fB/st/20\fR
+
+The following command will get the current song title:
+
+\fI$ curl http://192.168.122.4:9998\fB/title\fI
+.br
+retry: 150
+.br
+event: /html/title
+.br
+data: <b>Patti Page - Jingle bells</b>
+.br
+
+\fRThe \fBdata\fR field will contain the HTML format of the title, which is easy to parse in a script.
+
+If the player is idle, the output will be
+
+\fI$ curl http://192.168.122.4:9998\fB/title\fI
+.br
+retry: 150
+.br
+event: /html/title
+.br
+data: <b>Player is stopped!</b>\fR
+
+Several commands (such as \fB/v\fR, \fB/vu\fR, \fB/vd\fR, etc.) will return this info; this is a side effect of the way the server works, but provides useful info for the script issuing the command.
+
+One thing that should be made clear is that getting the above info does not mean that the command has succeeded; for example issuing the \fB/orc\fR (\fB/open-radio-browser\fR) command, will return the above info, but to make sure about the state of \fBpyradio\fR, one should issue the \fB/i\fR (\fB/info\fR) command:
+
+\fI$ curl http://192.168.122.4:9998\fB/i\fI
+.br
+PyRadio 0.9.2.20
+.br
+  Player: mpv
+.br
+  Service: RadioBrowser (Netherlands)
+.br
+    Search: Name: christmas, Order: votes, Reverse: true
+.br
+  Status: In playback
+.br
+    Station (id=5): "Classical Christmas FM"
+.br
+  Selection (id=5): "Classical Christmas FM"\fB
 
 .SH Text vs. Web commands
 

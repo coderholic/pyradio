@@ -6,6 +6,7 @@ import glob
 import curses
 import collections
 import json
+import socket
 from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ, getpid
 from sys import platform
 from time import ctime, sleep
@@ -69,12 +70,20 @@ def to_ip_port(string):
         if sp:
             if sp[0] == 'lan' or sp[0] == 'localhost':
                 host = sp[0]
+            else:
                 try:
-                    x = int(sp[1])
-                    if x > 1025:
-                        port = sp[1]
-                except ValueError:
+                    x = socket.inet_pton(socket.AF_INET, sp[0])
+                    host = sp[0]
+                except:
+                    return 'localhost', '11111'
+            try:
+                x = int(sp[1])
+                if x > 1025:
+                    port = sp[1]
+                else:
                     host = 'localhost'
+            except ValueError:
+                host = 'localhost'
     return host, port
 
 class PyRadioStations(object):
