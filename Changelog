@@ -1,3 +1,28 @@
+2024-01-04 s-n-g
+    * version 0.9.2.21
+    * adding --headless command line parameter and functionality
+    * adding the --address command line parameter
+    * recorded files will always be saved in the recordings folder
+      If mkvtoolnix is present, a tmp_ prefix will be used to record
+      the raw file, which will be removed after chapters integration
+    * the message to indicate failure to connect to RadioBrowser will
+      be displayed for 2 seconds (instead of requiring a key press)
+    * mpv will read the "artist" and "title" fields from station response (#217)
+    * remote control server: adding functionality for RadioBrowser
+    * remote control server: do not disable individual buttons
+    * remote control server: will restart if crashed
+    * remote control server: can now accept real IPs (config option)
+    * introducing "remote control server lock" files
+    * trying to fix "pipx not found" on MacOS again
+    * fixing config window rendering bug (#215)
+    * fixing cover insertion to mkv files
+    * fixing escape character warnings for python 3.12
+    * fixing lock refresh issues
+    * working on scheculer (not available yet)
+    * updating win mplayer link
+    * creating issues templates
+    * updating documentation
+
 2023-11-23 s-n-g
     * version 0.9.2.20
     * Creating the docs folder and moving files there
