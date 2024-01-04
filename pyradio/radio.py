@@ -816,6 +816,8 @@ class PyRadio(object):
         if self.player.isPlaying():
             out.append('  Status: In playback {}'.format('(muted)' if self.player.muted else ''))
             out.append('    Station (id={0}): "{1}"'.format(self.playing+1, self.stations[self.playing][0]))
+            if self.stations[self.playing][0] not in self.log.song_title:
+                out.append('    Title: {}'.format(self.log.song_title))
         else:
             out.append('  Status: Idle')
         out.append('  Selection (id={0}): "{1}"'.format(self.selection+1, self.stations[self.selection][0]))
@@ -865,6 +867,7 @@ class PyRadio(object):
         if self.player.isPlaying() and \
                 not self.player.muted:
             ivol = int(vol)
+            # self._remote_control_server._send_text('Volume set!')
             self.player.set_volume(vol)
             sleep(.1)
             return 'Volume set to: {}'.format(vol)
@@ -3678,6 +3681,13 @@ __|Remote Control Server| cannot be started!__
                         is_message=True)
 
     def _print_remote_control_server_error(self, msg=None):
+        ''' restart the srver instead of displaying
+            a message and terminate '''
+        self._remote_control_server = self._remote_control_server_thread = None
+        self._restart_remote_control_server()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Remote Control server crashed! Restarting...')
+        return
         if msg:
             self._server_error_msg = str(msg)
         txt = r'''
@@ -3698,6 +3708,13 @@ __|Remote Control Server| cannot be started!__
         self._remote_control_server = self._remote_control_server_thread = None
 
     def _print_remote_control_server_dead_error(self, msg=None):
+        ''' restart the srver instead of displaying
+            a message and terminate '''
+        self._remote_control_server = self._remote_control_server_thread = None
+        self._restart_remote_control_server()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Remote Control server crashed! Restarting...')
+        return
         if msg:
             self._server_dead_msg = str(msg)
         txt = '''

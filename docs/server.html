@@ -50,6 +50,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#web-interface-buttons">Web Interface buttons</a></li>
 </ul></li>
 <li><a href="#using-the-text-server">Using the Text Server</a></li>
+<li><a href="#server-lock-file">Server lock file</a></li>
 <li><a href="#examples">Examples</a></li>
 <li><a href="#text-vs.-web-commands">Text vs. Web commands</a></li>
 </ul></li>
@@ -69,7 +70,7 @@ Setting the <strong>Remote Control Server</strong> options ins the config file, 
 <li><p><strong>Server IP</strong><br />
 This can either be <strong>localhost</strong> (the server will be accessible from the current system only) or <strong>LAN</strong> (the server will be accessible from any PC on the local network).<br />
 <br />
-If the machine has more that one interface (network card), the actual IPs will be available for selection.</p></li>
+If the machine has more that one interface (network card), the actual IPs will be available for selection as well.</p></li>
 <li><p><strong>Server Port</strong><br />
 This is the port the server is listening to. Any free port number between 1025 and 65535 can be set here (default value is 9998).</p></li>
 <li><p><strong>Auto-start Server</strong><br />
@@ -160,6 +161,8 @@ Restricted Commands (Main mode only)
 /search_radio_browser/x     /srb/x     execute search item x
                                          (x comes from /lrb)</pre>
 <p>The “<strong>Restricted Commands</strong>” will not work in <strong>Playlist mode</strong>; the “<strong>Global Commands</strong>” will work everywhere.</p>
+<h3 id="server-lock-file">Server lock file</h3>
+<p>When the server is up and running, a “server lock file” will be created; the file is named <strong>~/.config/pyradio/data/server.txt</strong> and contains the IP address and port the server is listening to; this is especially useful for user scripts that want to get hold of this information.</p>
 <h3 id="examples">Examples</h3>
 <p>The following commands will increase / decrease the volume and mute the player:</p>
 <pre>$ curl http://192.168.122.4:9998/vu
@@ -205,6 +208,7 @@ PyRadio 0.9.2.20
     Search: Name: christmas, Order: votes, Reverse: true
   Status: In playback
     Station (id=5): &quot;Classical Christmas FM&quot;
+    Title: Patti Page - Jingle bells
   Selection (id=5): &quot;Classical Christmas FM&quot;</pre>
 <h3 id="text-vs.-web-commands">Text vs. Web commands</h3>
 <p>On first glance, the difference between a <strong>Text</strong> and a <strong>Web</strong> command is the <em>/html</em> part that exists in the later.</p>

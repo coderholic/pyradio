@@ -7,6 +7,7 @@
     * [Using the Web Server](#using-the-web-server)
         * [Web Interface buttons](#web-interface-buttons)
     * [Using the Text Server](#using-the-text-server)
+    * [Server lock file](#server-lock-file)
     * [Examples](#examples)
     * [Text vs. Web commands](#text-vs.-web-commands)
 
@@ -29,7 +30,7 @@ The options one can set are:
 1. **Server IP** \
 This can either be **localhost** (the server will be accessible from the current system only) or **LAN** (the server will be accessible from any PC on the local network). \
 \
-If the machine has more that one interface (network card), the actual IPs will be available for selection.
+If the machine has more that one interface (network card), the actual IPs will be available for selection as well.
 
 2. **Server Port** \
 This is the port the server is listening to. Any free port number between 1025 and 65535 can be set here (default value is 9998).
@@ -157,6 +158,10 @@ Restricted Commands (Main mode only)
 
 The "**Restricted Commands**" will not work in **Playlist mode**; the "**Global Commands**" will work everywhere.
 
+### Server lock file
+
+When the server is up and running, a "server lock file" will be created; the file is named **~/.config/pyradio/data/server.txt** and contains the IP address and port the server is listening to; this is especially useful for user scripts that want to get hold of this information.
+
 ### Examples
 
 The following commands will increase / decrease the volume and mute the player:
@@ -231,6 +236,7 @@ PyRadio 0.9.2.20
     Search: Name: christmas, Order: votes, Reverse: true
   Status: In playback
     Station (id=5): "Classical Christmas FM"
+    Title: Patti Page - Jingle bells
   Selection (id=5): "Classical Christmas FM"
 ```
 

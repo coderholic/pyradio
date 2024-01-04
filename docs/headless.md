@@ -39,7 +39,7 @@ Now, **PyRadio** is a **terminal application**; it actually **needs** a terminal
 
 ### Usage
 
-After the program is started, the only way to interact with it is through its integrated web server. Please refref to the relevant document for more info on the [remote control server](server.md).
+After the program is started, the only way to interact with it is through its integrated web server. Please refer to the relevant document for more info on the [remote control server](server.md).
 
 The web server can be accessed either through a terminal (address **http://ip:port**) using `wget` or `curl`, or through a web browser (address **http://ip:port/html**).
 
@@ -52,7 +52,7 @@ The server will be accessible only by programs running in the system. The `ip` i
 2. **lan** \
 The server will be accessible by any system on the LAN. The `ip` is the one assigned to the network interface of the system.
 3. An actual **IP** \
-This is in case when a machine has more than one network interfaces and the **lan* setting is ambigous.
+This is in case when a machine has more than one network interfaces and the **lan** setting is ambiguous.
 
 For example:
 
@@ -60,7 +60,9 @@ For example:
 will make the web server listen to the network interface IP address, port 12345.
 
 - using **--headless 192.168.122.101:4567** \
-will make the web server listen to the IP 192.168.122.101, port 4567.
+will make the web server listen to the IP 192.168.122.101, port 4567. \
+\
+If the IP is not assigned to any network interfaces, the default (**localhost:1111**) will be silently used; please always check the server's address with the command: **pyradio --addr**.
 
 - using **--headless localhost:23456** \
 will make the web server listen to 127.0.0.1, port 23456
@@ -108,6 +110,8 @@ It will create a "headless server lock file", though, so that
 - we cannot start a second headless server, and
 
 - we can get info about the server running.
+
+The "headless server lock file" is saved as *~/.config/pyeadio/data/server-headles.txt* and will contain the IP address and port the servers is listening to. This is especially useful in case a user script needs to get this info (instead of parsing the output of the command **pyradio --addr**).
 
 ## Installation
 

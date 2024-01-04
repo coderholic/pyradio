@@ -945,15 +945,14 @@ Restricted Commands (Main mode only)
                 self.client_socket, address = server.accept()
                 request = self.client_socket.recv(1024)
             except socket.error as e:
-                if logger.isEnabledFor(logger.ERROR):
-                    logger.error('Server accept error: "{}"'.format(e))
                 self._remove_report_file()
                 dead_func(e)
                 break
             self.error = None
             self._handle_client_connection(address, request)
             if self.error is not None:
-                self.client_socket.close()
+                # self.client_socket.close()
+                self._remove_report_file()
                 dead_func(self.error)
                 break
             if self._path == '/quit':
