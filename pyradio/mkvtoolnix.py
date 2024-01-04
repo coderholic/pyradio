@@ -218,7 +218,7 @@ class MKVToolNix:
                 return None
         if not self._cover_file.endswith('.png'):
             if print_messages:
-                print('  File not supported: "{}"'.format(out[1]))
+                print('  File not supported: "{}"'.format(self._cover_file))
                 sys.exit(1)
             else:
                 return None

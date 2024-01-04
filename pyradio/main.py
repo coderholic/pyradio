@@ -335,7 +335,7 @@ If nothing else works, try the following command:
     else:
         gr_headless = parser.add_argument_group('• Headless operation')
         gr_headless.add_argument('--headless', default=None, metavar=('IP_AND_PORT', ),
-                                 help='Start in headless mode. IP_AND_PORT can be a) auto (use localhost:11111), b) localhost:XXXXX (access the web server through localhost), c) lan:XXXXX (access the web server through the LAN) or d) IP_ADDRESS:XXXX (the IP_ADDRESS must be an assigned to one of the network interfaces). XXXXX can be any port number above 1025. Please make sure it is different than the one set in the configuration file.')
+                                 help='Start in headless mode. IP_AND_PORT can be a) auto (use localhost:11111), b) localhost:XXXXX (access the web server through localhost), c) lan:XXXXX (access the web server through the LAN) or d) IP_ADDRESS:XXXX (the IP_ADDRESS must be already assigned to one of the network interfaces). XXXXX can be any port number above 1025. Please make sure it is different than the one set in the configuration file.')
         gr_headless.add_argument('--address', action='store_true',
                                 help='Show remote control server address.')
         gr_headless.add_argument('-fd', '--free-dead-headless-server', action='store_true',

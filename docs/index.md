@@ -120,12 +120,14 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 ```
 $ pyradio -h
 
+
 Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-a]
                [-l] [-lt] [-sd] [-od] [-d] [-ul] [-us] [-U] [-R] [-V] [-ls]
                [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes] [--no-themes]
                [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
                [--terminal-param TERMINAL_PARAM] [-oc] [-sc] [-cc] [-gc] [-r]
                [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt] [-ach]
+               [--headless IP_AND_PORT] [--address] [-fd]
 
 Curses based Internet radio player
 
@@ -217,6 +219,22 @@ Recording stations:
                         recorded MKV file. The chapters file will be a SRT
                         file, much like the one produced by the previous
                         command line parameter.
+
+Headless operation:
+  --headless IP_AND_PORT
+                        Start in headless mode. IP_AND_PORT can be a) auto
+                        (use localhost:11111), b) localhost:XXXXX (access the
+                        web server through localhost), c) lan:XXXXX (access
+                        the web server through the LAN) or d) IP_ADDRESS:XXXX
+                        (the IP_ADDRESS must be already assigned to one of the
+                        network interfaces). XXXXX can be any port number
+                        above 1025. Please make sure it is different than the
+                        one set in the configuration file.
+  --address             Show remote control server address.
+  -fd, --free-dead-headless-server
+                        Use this if your headless server has terminated
+                        unexpectedly, and you cannot start a new one (you get
+                        a message that it is already running).
 
 ```
 
