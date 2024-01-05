@@ -1,4 +1,4 @@
-\fR# PyRadio Headless Operation
+# PyRadio Headless Operation
 
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->

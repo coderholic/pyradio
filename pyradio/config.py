@@ -182,12 +182,10 @@ class PyRadioStations(object):
         self.data_dir = path.join(self.stations_dir, 'data')
         self.old_data_dir = path.join(self.stations_dir, 'data')
         self.schedule_file = path.join(self.stations_dir, 'data', 'schedule.json')
-        self.recording_dir = path.join(self.stations_dir, 'recordings')
         ''' Make sure config dirs exists '''
         for a_dir in (self.stations_dir,
                       self.registers_dir,
-                      self.data_dir,
-                      self.recording_dir
+                      self.data_dir
                       ):
             if not path.exists(a_dir):
                 try:
@@ -1295,6 +1293,7 @@ class PyRadioConfig(PyRadioStations):
     opts['enable_mouse'] = ['Enable mouse support: ', False]
     opts['enable_notifications'] = ['Enable notifications: ', '-1']
     opts['use_station_icon'] = ['    Use station icon: ', True]
+    opts['recording_dir'] = ['Recording dir: ', '']
     opts['conn_title'] = ['Connection Options: ', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
@@ -1706,6 +1705,15 @@ class PyRadioConfig(PyRadioStations):
     @property
     def remote_control_server_auto_start(self):
         return self.opts['remote_control_server_auto_start'][1]
+
+    @property
+    def recording_dir(self):
+        return self.opts['recording_dir'][1]
+
+    @recording_dir.setter
+    def recording_dir(self, val):
+        self.opts['recording_dir'][1] = val
+        self.dirty_config = True
 
     def is_default_file(self, a_theme_name):
         for n in self.auto_update_frameworks:
@@ -2135,6 +2143,10 @@ class PyRadioConfig(PyRadioStations):
                 ''' mark as dirty to force saving config to remove setting '''
                 # self.dirty_config = True
                 self._distro = sp[1].strip()
+            elif sp[0] == 'recording_dir':
+                self.opts['recording_dir'][1] = sp[1].strip()
+                if self.opts['recording_dir'][1] == 'recordings':
+                    self.opts['recording_dir'][1] = ''
 
         ''' read distro from package config file '''
         package_config_file = path.join(path.dirname(__file__), 'config')
@@ -2179,6 +2191,15 @@ class PyRadioConfig(PyRadioStations):
         # #     logger.error('  {0}: {1} '.format(n, self.opts[n]))
         # for n in self.opts:
         #     print('{0}: {1}'.format(n, self.opts[n]))
+
+        if self.opts['recording_dir'][1] == '':
+            self.opts['recording_dir'][1] = path.join(self.stations_dir, 'recordings')
+        if not path.exists(self.opts['recording_dir'][1]):
+            try:
+                makedirs(self.opts['recording_dir'][1])
+            except:
+                print('Error: Cannot create recordings directory: "{}"'.format(self.opts['recording_dir'][1]))
+                sys.exit(1)
         return 0
 
     def get_last_playlist(self):
@@ -2407,6 +2428,12 @@ enable_notifications = {6}
 # Default value: True
 use_station_icon = {7}
 
+# Recordings directory
+# This is the firectory where recorded files will be saved
+#
+# Default value: "recordings: in the configuration directory
+recording_dir = {8}
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server
 # message indicating that playback has actually started.
@@ -2417,7 +2444,7 @@ use_station_icon = {7}
 #
 # Valid values: 5 - 60, 0 disables check
 # Default value: 10
-connection_timeout = {8}
+connection_timeout = {9}
 
 # Force http connections
 # Most radio stations use plain old http protocol to broadcast, but
@@ -2426,7 +2453,7 @@ connection_timeout = {8}
 #
 # Valid values: True, true, False, false
 # Default value: False
-force_http = {9}
+force_http = {10}
 
 # Default theme
 # Hardcooded themes:
@@ -2440,7 +2467,7 @@ force_http = {9}
 # with an asterisk (i.e. '*my_theme')
 # This is applicable for user themes only!
 # Default value = 'dark'
-theme = {10}
+theme = {11}
 
 # Transparency setting
 # If False, theme colors will be used.
@@ -2449,7 +2476,7 @@ theme = {10}
 # not running, the terminal's background color will be used.
 # Valid values: True, true, False, false
 # Default value: False
-use_transparency = {11}
+use_transparency = {12}
 
 # Always obey config Transparency setting
 # Most themes will either be transparent of opaque by default.
@@ -2459,7 +2486,7 @@ use_transparency = {11}
 # their "transparency" option is set to 2 (Obey config setting).
 # Valid values: True, true, False, false
 # Default value: False
-force_transparency = {12}
+force_transparency = {13}
 
 # Calculated color factor
 # This is to produce Secondary Windows background color
@@ -2469,7 +2496,7 @@ force_transparency = {12}
 # https://github.com/coderholic/pyradio#secondary-windows-background
 # Valid values: 0-0.2
 # Default value: 0
-calculated_color_factor = {13}
+calculated_color_factor = {14}
 
 # Playlist management
 #
@@ -2477,32 +2504,32 @@ calculated_color_factor = {13}
 # every station deletion action
 # Valid values: True, true, False, false
 # Default value: True
-confirm_station_deletion = {14}
+confirm_station_deletion = {15}
 
 # Specify whether you will be asked to confirm
 # playlist reloading, when the playlist has not
 # been modified within PyRadio
 # Valid values: True, true, False, false
 # Default value: True
-confirm_playlist_reload = {15}
+confirm_playlist_reload = {16}
 
 # Specify whether you will be asked to save a
 # modified playlist whenever it needs saving
 # Valid values: True, true, False, false
 # Default value: False
-auto_save_playlist = {16}
+auto_save_playlist = {17}
 
 # When PyRadio determines that a restricted
 # terminal is used, it will display a message
 # every time it is lounched. To disable this
 # message, change the value to False.
 # Default value: True
-show_no_themes_message = {17}
+show_no_themes_message = {18}
 
 # When recording is turned on, a message will
 # be displayed if this option is True (default)
 #
-show_recording_message = {18}
+show_recording_message = {19}
 
 # Remote Control server
 # A simple http server that can accept remote
@@ -2514,9 +2541,9 @@ show_recording_message = {18}
 #
 # Default value: localhost:9998
 #                no auto start
-remote_control_server_ip = {19}
-remote_control_server_port = {20}
-remote_control_server_auto_start = {21}
+remote_control_server_ip = {20}
+remote_control_server_port = {21}
+remote_control_server_auto_start = {22}
 
 '''
         copyfile(self.config_file, self.config_file + '.restore')
@@ -2543,6 +2570,7 @@ remote_control_server_auto_start = {21}
                     self.opts['enable_mouse'][1],
                     self.opts['enable_notifications'][1],
                     self.opts['use_station_icon'][1],
+                    self.opts['recording_dir'][1],
                     self.opts['connection_timeout'][1],
                     self.opts['force_http'][1],
                     theme,

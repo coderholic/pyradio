@@ -32,6 +32,12 @@ default_station = False
 # Default value: False
 enable_mouse = False
 
+# Recordings directory
+# This is the firectory where recorded files will be saved
+#
+# Default value: "recordings: in the configuration directory
+recording_dir = recordings
+
 # Desktop notifications
 # If this option is enabled, a Desktop notification will be
 # displayed using the notification daemon / service.
