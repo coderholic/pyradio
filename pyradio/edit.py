@@ -877,6 +877,7 @@ class PyRadioRenameFile(object):
                 string_changed_handler=self._string_changed)
             self._widgets[0].bracket = False
             self._widgets[0].set_global_functions(self._global_functions)
+            self._widgets[0].id = 0
         self._line_editor = self._widgets[0]
         # add copy checkbox
         if self._widgets[1] is None:
@@ -887,6 +888,7 @@ class PyRadioRenameFile(object):
                         self._line_editor_yx[0] + 2, 2,
                         'Copy playlist instead of renaming it',
                         curses.color_pair(9), curses.color_pair(4), curses.color_pair(5))
+            self._widgets[1].id = 1
         # add open afterwards checkbox
         adjust_line_Y = -1
         if self._open_afterwards:
@@ -903,6 +905,7 @@ class PyRadioRenameFile(object):
                     self.initial_enabled[2] = True
         else:
             self._widgets[2] = DisabledWidget()
+        self._widgets[2].id = 2
         if self._create:
             adjust_line_Y = -1
         # add buttons
@@ -919,6 +922,8 @@ class PyRadioRenameFile(object):
             self._widgets[3]._focused = self._widgets[4].focused = False
         else:
             self._h_buttons.calculate_buttons_position(parent=self._win)
+        self._widgets[3].id = 3
+        self._widgets[4].id = 4
 
         if self._create:
             adjust_line_Y = -2
@@ -1085,22 +1090,34 @@ class PyRadioRenameFile(object):
                     x._focused = False
 
     def _focus_next(self):
+        # logger.error('nn i self.focus = {}'.format(self.focus))
         if self._focus == len(self._widgets) - 1:
             self.focus = 0
+            # logger.error('nn f self.focus = 0')
         else:
             focus = self.focus + 1
+            focus = self._widgets[focus].id
+            # logger.error('nn focus = {}'.format(focus))
             while not self._widgets[focus].enabled:
                 focus += 1
+                # logger.error('nn+ focus = {}'.format(focus))
             self.focus = focus
+        # logger.error('nn o self.focus = {}'.format(self.focus))
 
     def _focus_previous(self):
+        # logger.error('pp i self.focus = {}'.format(self.focus))
         if self._focus == 0:
             self.focus = len(self._widgets) - 1
+            # logger.error('pp l self.focus = {}'.format(self.focus))
         else:
             focus = self.focus - 1
+            focus = self._widgets[focus].id
+            logger.error('pp focus = {}'.format(focus))
             while not self._widgets[focus].enabled:
                 focus -= 1
+                # logger.error('pp+ focus = {}'.format(focus))
             self.focus = focus
+        # logger.error('pp o self.focus = {}'.format(self.focus))
 
     def _act_on_file(self):
         """Rename the playlist (if self._create is False)
@@ -1170,6 +1187,7 @@ class PyRadioRenameFile(object):
                 return -1, '', '', False, False, False
             return 0, '', '', False, False, False
         else:
+            logger.error('self.focus = {}'.format(self.focus))
             if char in (curses.KEY_EXIT, 27, ord('q')) and \
                     self.focus > 0:
                 return -1, '', '', False, False, False
@@ -1180,6 +1198,7 @@ class PyRadioRenameFile(object):
                 self._widgets[self._focus].toggle_checked()
                 if self._focus == 1 and self._opened_from_editor:
                     self._widgets[2].enabled = self._widgets[1].checked
+                logger.error('len widgets = {}'.format(len(self._widgets)))
             elif char in (ord('\t'), 9, curses.KEY_DOWN):
                 self._focus_next()
             elif char in (curses.KEY_UP, curses.KEY_BTAB):
@@ -1197,13 +1216,13 @@ class PyRadioRenameFile(object):
                     return self._get_result(ret)
                 elif self._focus == 4:
                     # cancel
-                    return -1, '', '', False, False
+                    return -1, '', '', False, False, False
             elif char == ord('s') and self._focus > 0:
                 # s, execute
                 if self._widgets[-2].enabled:
                     ret = self._act_on_file()
                     return self._get_result(ret)
-                return 0, '', '', False, False
+                return 0, '', '', False, False, False
             elif self._focus == 0:
                 """
                  Returns:
