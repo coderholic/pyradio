@@ -2559,6 +2559,10 @@ remote_control_server_auto_start = {22}
             trnsp = self.bck_opts['use_transparency']
             calcf = self.bck_opts['calculated_color_factor']
 
+        if self.opts['recording_dir'][1] == path.join(self.stations_dir, 'recordings'):
+            rec_dir = 'recordings'
+        else:
+            rec_dir = self.opts['recording_dir'][1]
         try:
             with open(self.config_file, 'w', encoding='utf-8') as cfgfile:
                 cfgfile.write(txt.format(
@@ -2570,7 +2574,7 @@ remote_control_server_auto_start = {22}
                     self.opts['enable_mouse'][1],
                     self.opts['enable_notifications'][1],
                     self.opts['use_station_icon'][1],
-                    self.opts['recording_dir'][1],
+                    rec_dir,
                     self.opts['connection_timeout'][1],
                     self.opts['force_http'][1],
                     theme,

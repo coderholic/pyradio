@@ -688,6 +688,7 @@ class PyRadioConfigWindow(object):
                  1  cancel saving config
                  2  cancel a dirty config (not active currently)
                  3  open online browser config
+                 4 open recording dir selection window
         '''
         if self.too_small:
             return 1, []
@@ -717,6 +718,9 @@ class PyRadioConfigWindow(object):
 
         if char in self._global_functions.keys():
             self._global_functions[char]()
+
+        elif val[0] == 'recording_dir':
+            return 4, []
 
         elif val[0] == 'radiobrowser':
             if char in (curses.KEY_RIGHT, ord('l'),

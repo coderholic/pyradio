@@ -637,6 +637,7 @@ class PyRadio(object):
             self.ws.BUFFER_SET_MODE: self._show_buffer_set,
             self.ws.SCHEDULE_ERROR_MODE: self._show_schedule_error,
             self.ws.SCHEDULE_INFO_MODE: self._show_schedule_info,
+            self.ws.INSERT_RECORDINGS_DIR: self._open_redordings_dir_select_win,
         }
 
         ''' list of help functions '''
@@ -6554,6 +6555,10 @@ __|Remote Control Server| cannot be started!__
                         prompt='',
                         is_message=True)
 
+    def _open_redordings_dir_select_win(self):
+        logger.error('_open_redordings_dir_select_win')
+        pass
+
     def _show_schedule_info(self):
         txt = self._simple_schedule._info_result
         caption = ' Schedule Entry Info '
@@ -7849,6 +7854,10 @@ __|Remote Control Server| cannot be started!__
                     ''' open RadioBrowser  browser config '''
                     self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
                     self._browser_init_config(init=True, browser_name='RadioBrowser ', distro=self._cnf.distro)
+                    return
+                elif ret == 4:
+                    ''' open Recordings Dir Selection Window '''
+                    self._open_redordings_dir_select_win()
                     return
 
                 # elif ret ==2:
