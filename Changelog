@@ -1,3 +1,10 @@
+2024-01-05 s-n-g
+    * version 0.9.2.22
+    * fixing bug #222 - Appending a radio station with A in a playlist
+      leads to a crash (when number stations is less than window height)
+    * fixing a crash that would occur when pressing ENTER on the Cancel
+      button of the "rename playlist" and "new playlist" window
+
 2024-01-04 s-n-g
     * version 0.9.2.21
     * adding --headless command line parameter and functionality
