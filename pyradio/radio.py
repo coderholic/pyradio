@@ -8006,6 +8006,8 @@ __|Remote Control Server| cannot be started!__
                         self._cnf.number_of_stations = self.number_of_items
                         self.selection = self.number_of_items - 1
                         self.startPos = self.number_of_items - self.bodyMaxY
+                        if self.startPos < 0:
+                            self.startPos = 0
                     else:
                         if self.number_of_items == 0:
                             self._cnf.stations = [self._station_editor.new_station]
@@ -10452,6 +10454,8 @@ __|Remote Control Server| cannot be started!__
                 self.bodyWin.erase()
         else:
             for lineNum in range(self.bodyMaxY):
+                if self.startPos < 0:
+                    self.startPos = 0
                 i = lineNum + self.startPos
                 if i < len(self.stations):
                     if not self._cnf.browsing_station_service and \
