@@ -1674,6 +1674,20 @@ class Player(object):
                                 self.oldUserInput['Title'] = 'Title: ' + title.decode(self._station_encoding, 'replace')
                             except:
                                 self.oldUserInput['Title'] = 'Title: ' + title.decode('utf-8', 'replace')
+                        if b'album' in a_data:
+                            album = a_data.split(b'"album":"')[1].split(b'"}')[0].split(b'","')[0]
+                            if b'year' in a_data:
+                                year = a_data.split(b'"year":"')[1].split(b'"}')[0].split(b'","')[0]
+                                try:
+                                    self.oldUserInput['Title'] += ' [' + album.decode(self._station_encoding, 'replace') + ', ' + year.decode('utf-8', 'replace') + ']'
+                                except:
+                                    self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ', ' + year.decode('utf-8', 'replace') + ']'
+                            else:
+                                try:
+                                    self.oldUserInput['Title'] += ' [' + album.decode(self._station_encoding, 'replace') + ']'
+                                except:
+                                    self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ']'
+
                         string_to_show = self.title_prefix + self.oldUserInput['Title']
                         #logger.critical(string_to_show)
                         if stop():
