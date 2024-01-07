@@ -720,7 +720,7 @@ class PyRadioConfigWindow(object):
             self._global_functions[char]()
 
         elif val[0] == 'recording_dir':
-            return 4, []
+            return self.n_u.INSERT_RECORDINGS_DIR_MODE, []
 
         elif val[0] == 'radiobrowser':
             if char in (curses.KEY_RIGHT, ord('l'),

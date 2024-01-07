@@ -36,7 +36,7 @@ from .common import *
 from .window_stack import Window_Stack
 from .config_window import *
 from .log import Log
-from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering
+from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering, PyRadioRecordingDir
 from .themes import *
 from .cjkwrap import cjklen, cjkcenter, cjkslices
 from . import player
@@ -396,6 +396,7 @@ class PyRadio(object):
 
     _schedule_playlist_select_win = None
     _schedule_station_select_win = None
+    _insert_recording_dir_win = None
 
     def ll(self, msg):
         logger.error('DE ==========')
@@ -637,7 +638,7 @@ class PyRadio(object):
             self.ws.BUFFER_SET_MODE: self._show_buffer_set,
             self.ws.SCHEDULE_ERROR_MODE: self._show_schedule_error,
             self.ws.SCHEDULE_INFO_MODE: self._show_schedule_info,
-            self.ws.INSERT_RECORDINGS_DIR: self._open_redordings_dir_select_win,
+            self.ws.INSERT_RECORDINGS_DIR_MODE: self._open_redordings_dir_select_win,
         }
 
         ''' list of help functions '''
@@ -6556,8 +6557,16 @@ __|Remote Control Server| cannot be started!__
                         is_message=True)
 
     def _open_redordings_dir_select_win(self):
-        logger.error('_open_redordings_dir_select_win')
-        pass
+        if self._insert_recording_dir_win is None:
+            self._insert_recording_dir_win = PyRadioRecordingDir(
+                dir_path = self._cnf.recording_dir,
+                parent=self.outerBodyWin,
+                global_functions=self._global_functions,
+            )
+            self.ws.operation_mode = self.ws.INSERT_RECORDINGS_DIR_MODE
+            self._insert_recording_dir_win.show()
+        else:
+            self._insert_recording_dir_win.set_parent(self.outerBodyWin)
 
     def _show_schedule_info(self):
         txt = self._simple_schedule._info_result
@@ -7701,7 +7710,9 @@ __|Remote Control Server| cannot be started!__
                 self._station_select_win = None
                 self._browser_config_win = None
             ret, ret_list = self._config_win.keypress(char)
-            if ret == self.ws.SELECT_PLAYER_MODE:
+            if ret == self.ws.INSERT_RECORDINGS_DIR_MODE:
+                self._open_redordings_dir_select_win()
+            elif ret == self.ws.SELECT_PLAYER_MODE:
                 ''' Config > Select Player '''
                 self.ws.operation_mode = self.ws.SELECT_PLAYER_MODE
                 if self._player_select_win is None:
@@ -7854,10 +7865,6 @@ __|Remote Control Server| cannot be started!__
                     ''' open RadioBrowser  browser config '''
                     self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
                     self._browser_init_config(init=True, browser_name='RadioBrowser ', distro=self._cnf.distro)
-                    return
-                elif ret == 4:
-                    ''' open Recordings Dir Selection Window '''
-                    self._open_redordings_dir_select_win()
                     return
 
                 # elif ret ==2:
@@ -8167,6 +8174,19 @@ __|Remote Control Server| cannot be started!__
                     self._server_selection_window = None
                     self.refreshBody()
             return
+
+        elif self.ws.operation_mode == self.ws.INSERT_RECORDINGS_DIR_MODE:
+            ret, new_dir, move_files = self._insert_recording_dir_win.keypress(char)
+            if ret == -1:
+                self.ws.close_window()
+                self._insert_recording_dir_win = None
+                self.refreshBody()
+            elif ret == 1:
+                # new location selected
+                self.ws.close_window()
+            elif ret == 2:
+                # show line editor help
+                pass
 
         elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE:
             ''' handle browser config '''

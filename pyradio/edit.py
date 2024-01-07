@@ -717,6 +717,414 @@ class PyRadioEditor(object):
                 n.backslash_pressed = False
 
 
+class PyRadioRecordingDir(object):
+    """ PyRadio insert recording dir dialog """
+
+    def __init__(self, dir_path, parent, global_functions=None):
+        self._invalid_chars = '<>|:"\\/?*'
+        self.maxY = self.maxX = 0
+        self._win = self._parent_win = self._line_editor = None
+        self._focus = 0
+        self._line_editor_yx = (4, 2)
+        self._create = self._too_small = False
+        self._error_string = ''
+        self._widgets = [None, None, None, None]
+        self._from_path = self.dir_path = dir_path
+        self._from_file = path.basename(self.dir_path).replace('.csv', '')
+        self._parent_win = parent
+        self.initial_enabled = [True, True, False, True]
+        self._title = ' Select Redordings Directory '
+        self._global_functions = global_functions
+        if self._global_functions is None:
+            self._global_functions = {}
+
+    def __del__(self):
+        try:
+            logger.error('DE deleting {}'.format(self._win))
+            del self._win
+            self._win = None
+            for x in self._widgets:
+                if x is not None:
+                    logger.error('DE deleting {}'.format(x))
+                    del x
+                    x = None
+        except:
+            pass
+            logger.error('DE error')
+
+    @property
+    def title(self):
+        return self.title
+
+    @title.setter
+    def title(self, val):
+        self._title = val
+
+    @property
+    def focus(self):
+        return self._focus
+
+    @focus.setter
+    def focus(self, val):
+        if val in range(0, len(self._widgets)):
+            self._focus = val
+        else:
+            if val < 0:
+                self._focus = len(self._widgets) - 1
+            else:
+                self._focus = 0
+        self.show()
+
+    def set_parent(self, val, refresh=True):
+        self._parent_win = val
+        if refresh:
+            self.show()
+
+    def _string_changed(self):
+        self._error_string = ''
+        first_char = ''
+        if self._widgets[0].string != '':
+            first_char = self._widgets[0].string[0]
+            if first_char in string_punctuation + ' ':
+                self._error_string = 'Invalid dir_path!!!'
+        stripped_string = self._widgets[0].string.strip()
+        if self._error_string == '':
+            if stripped_string:
+                check_file = path.join(self._to_path, stripped_string + '.csv')
+                if check_file == self.dir_path:
+                    if self._create:
+                        self._error_string = 'File already exists!!!'
+                    else:
+                        self._error_string = 'You must be joking!!!'
+                elif path.exists(check_file):
+                    self._error_string = 'File already exists!!!'
+                elif stripped_string.startswith('register_'):
+                    self._error_string = 'Register token inserted!!!'
+                else:
+                    for inv in self._invalid_chars:
+                        if inv in stripped_string:
+                            self._error_string = 'Invalid dir_path!!!'
+                            logger.error('DE inv = ' + inv)
+                            break
+                    #if self._error_string == '':
+                    #    for inv in range(1, 32):
+                    #        if str(inv) in stripped_string:
+                    #            self._error_string = 'Invalid dir_path!!!'
+        self._widgets[-2].enabled = False
+        if stripped_string and self._error_string == '':
+            self._widgets[-2].enabled = True
+        self.show()
+
+    def show(self):
+        parent_maxY, parent_maxX = self._parent_win.getmaxyx()
+
+        if self.maxY != parent_maxY or self.maxX != parent_maxX:
+            self._win = None
+            self._win = curses.newwin(parent_maxY, parent_maxX, 1, 0)
+            self.maxY, self.maxX = (parent_maxY, parent_maxX)
+        self._win.bkgdset(' ', curses.color_pair(12))
+        self._win.erase()
+        self._win.box()
+
+        # add editor
+        if self._widgets[0] is None:
+            self._widgets[0] = SimpleCursesLineEdit(
+                parent=self._win,
+                width=-2,
+                begin_y=self._line_editor_yx[0],
+                begin_x=self._line_editor_yx[1],
+                boxed=False,
+                has_history=False,
+                caption='',
+                box_color=curses.color_pair(9),
+                caption_color=curses.color_pair(4),
+                edit_color=curses.color_pair(9),
+                cursor_color=curses.color_pair(8),
+                unfocused_color=curses.color_pair(5),
+                string_changed_handler=self._string_changed)
+            self._widgets[0].bracket = False
+            self._widgets[0].set_global_functions(self._global_functions)
+            self._widgets[0].id = 0
+        self._line_editor = self._widgets[0]
+        # add copy checkbox
+        if self._widgets[1] is None:
+            self._widgets[1] = SimpleCursesCheckBox(
+                    self._line_editor_yx[0] + 2, 2,
+                    'Move existing files to new location',
+                    curses.color_pair(9), curses.color_pair(4), curses.color_pair(5),
+                    checked=True
+            )
+            self._widgets[1].id = 1
+        # add open afterwards checkbox
+        adjust_line_Y = -1
+        # add buttons
+        if self._widgets[2] is None:
+            self._h_buttons = SimpleCursesHorizontalPushButtons(
+                    Y=8 + adjust_line_Y,
+                    captions=('OK', 'Cancel'),
+                    color_focused=curses.color_pair(9),
+                    color=curses.color_pair(4),
+                    bracket_color=curses.color_pair(5),
+                    parent=self._win)
+            self._h_buttons.calculate_buttons_position()
+            self._widgets[2], self._widgets[3] = self._h_buttons.buttons
+            self._widgets[2]._focused = self._widgets[3].focused = False
+        else:
+            self._h_buttons.calculate_buttons_position(parent=self._win)
+        self._widgets[2].id = 2
+        self._widgets[3].id = 3
+
+        adjust_line_Y = 0
+        if self.initial_enabled:
+            # set startup enable status
+            zipped = zip(self._widgets, self.initial_enabled)
+            for n in zipped:
+                n[0].enabled = n[1]
+            self.initial_enabled = None
+
+        # logger.error('DE \n\nmaxY = {}, maxX = {}\n\n'.format(self.maxY, self.maxX))
+        if self.maxY < 22 + adjust_line_Y or self.maxX < 74:
+            if self.maxY < 11 or self.maxX < 44:
+                txt = ' Window too small to display content '
+                error_win = curses.newwin(3, len(txt) + 2, int(self.maxY / 2) - 1, int((self.maxX - len(txt)) / 2))
+                error_win.bkgdset(' ', curses.color_pair(12))
+                error_win.erase()
+                error_win.box()
+                error_win.addstr(1, 1, txt, curses.color_pair(4))
+                self._win.refresh()
+                error_win.refresh()
+                self._too_small = True
+                return 0
+            else:
+                self._too_small = False
+        else:
+            self._too_small = False
+
+        if self._error_string:
+            y = 2 if adjust_line_Y == 0 else 1
+            self._win.addstr(y, self.maxX - 2 - len(self._error_string),
+                             self._error_string,
+                             curses.color_pair(5))
+        else:
+            self._win.addstr(2, self.maxX - 26, 25 * ' ', curses.color_pair(5))
+        self._win.touchline(2, 1)
+
+        self._show_title()
+        self._win.addstr(1, 2, 'Current location: ', curses.color_pair(4))
+        self._win.addstr(
+            self.dir_path,
+            curses.color_pair(5)
+            )
+        self._win.addstr(2, 2, 'New location:', curses.color_pair(4))
+        inv_tit = 'Invalid chars: '
+        inv_chars = self._invalid_chars
+        invX = self.maxX - len(inv_tit) - len(inv_chars) - 2
+        y = 4 if adjust_line_Y == 0 else 3
+        self._win.addstr(y, invX, inv_tit, curses.color_pair(4))
+        self._win.addstr(inv_chars, curses.color_pair(5))
+
+        if self.maxY > 18 + adjust_line_Y and self.maxX > 76:
+            try:
+                self._win.addstr(10 + adjust_line_Y, 3, '─' * (self.maxX - 6), curses.color_pair(12))
+            except:
+                self._win.addstr(10 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 6), curses.color_pair(12))
+            self._win.addstr(10 + adjust_line_Y, int((self.maxX - 6) / 2), ' Help ', curses.color_pair(4))
+            self._win.addstr(11 + adjust_line_Y, 5, 'TAB', curses.color_pair(4))
+            self._win.addstr(', ', curses.color_pair(5))
+            self._win.addstr('Down', curses.color_pair(4))
+            self._win.addstr(' / ', curses.color_pair(5))
+            self._win.addstr('Up', curses.color_pair(4))
+            self._win.addstr('    Go to next / previous field.', curses.color_pair(5))
+            self._win.addstr(12 + adjust_line_Y, 5, 'ENTER', curses.color_pair(4))
+            self._win.addstr('             When in Line Editor, go to next field.', curses.color_pair(5))
+            self._win.addstr(13 + adjust_line_Y, 23, 'Otherwise, execute selected function.', curses.color_pair(5))
+
+
+            self._win.addstr(14 + adjust_line_Y, 5, 'Space', curses.color_pair(4))
+            self._win.addstr(', ', curses.color_pair(5))
+            self._win.addstr('l', curses.color_pair(4))
+            self._win.addstr(', ', curses.color_pair(5))
+            self._win.addstr('Left', curses.color_pair(4))
+            self._win.addstr('    Toggle check box state.', curses.color_pair(5))
+
+
+            self._win.addstr(15 + adjust_line_Y, 5, 'Esc', curses.color_pair(4))
+            self._win.addstr(15 + adjust_line_Y, 23, 'Cancel operation.', curses.color_pair(5))
+
+
+            self._win.addstr(16 + adjust_line_Y, 5, 's', curses.color_pair(4))
+            self._win.addstr(' / ', curses.color_pair(5))
+            self._win.addstr('q', curses.color_pair(4))
+            self._win.addstr(16 + adjust_line_Y, 23, 'Exeute / Cancel operation (not in Line Editor).', curses.color_pair(5))
+
+            self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
+            self._win.addstr(17 + adjust_line_Y, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
+
+        if self.maxY > 21 + adjust_line_Y and self.maxX > 76:
+            try:
+                self._win.addstr(18 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(12))
+            except:
+                self._win.addstr(18 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
+            self._win.addstr(18 + adjust_line_Y, int((self.maxX - 42) / 2), r' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
+
+            self._win.addstr(19 + adjust_line_Y, 5, '-', curses.color_pair(4))
+            self._win.addstr('/', curses.color_pair(5))
+            self._win.addstr('+', curses.color_pair(4))
+            self._win.addstr(' or ', curses.color_pair(5))
+            self._win.addstr(',', curses.color_pair(4))
+            self._win.addstr('/', curses.color_pair(5))
+            self._win.addstr('.', curses.color_pair(4))
+            self._win.addstr(19 + adjust_line_Y, 23, 'Change volume', curses.color_pair(5))
+            self._win.addstr(20 + adjust_line_Y, 5, 'm', curses.color_pair(4))
+            self._win.addstr(' / ', curses.color_pair(5))
+            self._win.addstr('v', curses.color_pair(4))
+            self._win.addstr(20 + adjust_line_Y, 23, 'M', curses.color_pair(4))
+            self._win.addstr('ute player / Save ', curses.color_pair(5))
+            self._win.addstr('v', curses.color_pair(4))
+            self._win.addstr('olume (not in vlc).', curses.color_pair(5))
+            if adjust_line_Y + 22 < self.maxY:
+                self._win.addstr(21 + adjust_line_Y, 5, 'W', curses.color_pair(4))
+                self._win.addstr(' / ', curses.color_pair(5))
+                self._win.addstr('w', curses.color_pair(4))
+                self._win.addstr(21 + adjust_line_Y, 23, 'Toggle title log / like a station', curses.color_pair(5))
+            if adjust_line_Y + 23 < self.maxY:
+                self._win.addstr(22 + adjust_line_Y, 5, 'T', curses.color_pair(4))
+                self._win.addstr(22 + adjust_line_Y, 23, 'Toggle transparency', curses.color_pair(5))
+
+        self._win.refresh()
+        self._update_focus()
+        if not self._too_small:
+            self._line_editor.show(self._win, opening=False)
+            for n in range(1,4):
+                self._widgets[n].show()
+
+    def _show_title(self, a_title=''):
+        if a_title:
+            title = a_title
+        else:
+            title = self._title
+        x = int((self.maxX - len(title)) / 2)
+        try:
+            self._win.addstr(0, x, title, curses.color_pair(4))
+        except:
+            self._win.addstr(0, x, title.encode('utf-8'), curses.color_pair(4))
+        self._win.refresh()
+
+    def _update_focus(self):
+        # use _focused here to avoid triggering
+        # widgets' refresh
+        for i, x in enumerate(self._widgets):
+            if x:
+                if self._focus == i:
+                    x._focused = True
+                else:
+                    x._focused = False
+
+    def _focus_next(self):
+        # logger.error('nn i self.focus = {}'.format(self.focus))
+        if self._focus == len(self._widgets) - 1:
+            self.focus = 0
+            # logger.error('nn f self.focus = 0')
+        else:
+            focus = self.focus + 1
+            focus = self._widgets[focus].id
+            # logger.error('nn focus = {}'.format(focus))
+            while not self._widgets[focus].enabled:
+                focus += 1
+                # logger.error('nn+ focus = {}'.format(focus))
+            self.focus = focus
+        # logger.error('nn o self.focus = {}'.format(self.focus))
+
+    def _focus_previous(self):
+        # logger.error('pp i self.focus = {}'.format(self.focus))
+        if self._focus == 0:
+            self.focus = len(self._widgets) - 1
+            # logger.error('pp l self.focus = {}'.format(self.focus))
+        else:
+            focus = self.focus - 1
+            focus = self._widgets[focus].id
+            logger.error('pp focus = {}'.format(focus))
+            while not self._widgets[focus].enabled:
+                focus -= 1
+                # logger.error('pp+ focus = {}'.format(focus))
+            self.focus = focus
+        # logger.error('pp o self.focus = {}'.format(self.focus))
+
+    def _get_result(self, ret):
+        return 1, self._widgets[0].string, self._widgets[1].checked
+
+    def keypress(self, char):
+        """ Returns:
+                -1: Cancel                      (-1, None, False)
+                 0: go on                       (0, None, False)
+                 1: New location ok             (1, new_location, move_files)
+                 2: display line editor help    (2, None, False)
+        """
+        ret = 0
+        if self._too_small:
+            if char in (curses.KEY_EXIT, 27, ord('q')):
+                return -1, None, False
+            return 0, None, False
+        else:
+            logger.error('self.focus = {}'.format(self.focus))
+            if char in (curses.KEY_EXIT, 27, ord('q')) and \
+                    self.focus > 0:
+                return -1, None, None
+            elif char in (ord(' '), ord('l'), curses.KEY_RIGHT,
+                          curses.KEY_ENTER, ord('\n'),
+                          ord('\r')) and self._focus == 1:
+                # check boxes
+                self._widgets[self._focus].toggle_checked()
+            elif char in (ord('\t'), 9, curses.KEY_DOWN, ord('L')):
+                self._focus_next()
+            elif char in (curses.KEY_UP, curses.KEY_BTAB, ord('H')):
+                self._focus_previous()
+            elif char in (curses.KEY_ENTER, ord('\n'), ord('\r')):
+                if self._focus == 0:
+                    # New location
+                    self._focus_next()
+                elif self._focus == 1:
+                    # check boxe
+                    self._widgets[1].toggle_checked()
+                elif self._focus == 2:
+                    # ok, execute
+                    return self._get_result(ret)
+                elif self._focus == 3:
+                    # cancel
+                    return -1, None, False
+            elif char == ord('s') and self._focus > 0:
+                # s, execute
+                if self._widgets[-2].enabled:
+                    return self._get_result(ret)
+                return 0, None, False
+            elif self._focus == 0:
+                """
+                 Returns:
+                    2: display help
+                    1: get next char
+                    0: exit edit mode, string isvalid
+                   -1: cancel
+                """
+                ret = self._line_editor.keypress(self._win, char)
+                if ret == 2:
+                    self._win.touchwin()
+                elif ret == 1:
+                    # get next char
+                    ret = 0
+                elif ret == 0:
+                    # exit, string is valid
+                    ret = -1
+                elif ret == -1:
+                    # cancel
+                    self._widgets[0].string = ''
+                    ret = -1
+            elif char in self._global_functions.keys():
+                self._global_functions[char]()
+        #self._show_title()
+        #self.show()
+        return 0, None, False
+
+
 class PyRadioRenameFile(object):
     """ PyRadio copy file dialog """
 
@@ -752,7 +1160,7 @@ class PyRadioRenameFile(object):
         self._parent_win = parent
         self._create = create
         if self._create:
-            self._line_editor_yx = (3, 2)
+            self._line_editor_yx = (4, 2)
             self.initial_enabled = [True, False, True, False, True]
         else:
             self.initial_enabled = [True, True, False, False, True]
