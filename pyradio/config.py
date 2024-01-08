@@ -2194,6 +2194,17 @@ class PyRadioConfig(PyRadioStations):
 
         if self.opts['recording_dir'][1] == '':
             self.opts['recording_dir'][1] = path.join(self.stations_dir, 'recordings')
+        ch_dir = CheckDir(
+            self.opts['recording_dir'][1],
+            path.join(self.stations_dir, 'recordings')
+        )
+        if not ch_dir.is_dir:
+            print('Error: Recordings directory is for a folder: "{}"'.format(self.opts['recording_dir'][1]))
+            sys.exit(1)
+        elif not ch_dir.is_writable:
+            print('Error: Recordings directory is not writable: "{}"'.format(self.opts['recording_dir'][1]))
+            sys.exit(1)
+
         if not path.exists(self.opts['recording_dir'][1]):
             try:
                 makedirs(self.opts['recording_dir'][1])
@@ -3825,7 +3836,6 @@ transparency        0
                 pass
             return False, None
 
-
     def _read_last_line_from_ln(self):
         last_line = ''
         with open(self._ln, "rb") as file:
@@ -3851,5 +3861,66 @@ transparency        0
                 if line.startswith(theme_name):
                     in_theme = True
         return lines
+
+
+class CheckDir(object):
+
+    def __init__(self, a_path, default=None):
+        self._is_writable = False
+        self.dir_path = self._replace_tilde(a_path)
+        if default:
+            if not self._validate_path():
+                expanded_default = self._replace_tilde(default)
+                self.dir_path = self._replace_tilde(expanded_default)
+
+    @property
+    def is_writable(self):
+        return self._is_writable
+
+    @property
+    def is_dir(self):
+        return path.isdir(self.dir_path)
+
+    @property
+    def is_valid(self):
+        return self._validate_path(self.dir_path)
+
+    def _replace_tilde(self, a_path):
+        if a_path.startswith('~/'):
+            self.dir_path = a_path.replace('~', path.expanduser('~'))
+        else:
+            self.dir_path = a_path
+        return self.dir_path
+
+    def _validate_path(self, a_path=None):
+        if a_path is None:
+            a_path = self.dir_path
+        # make sure path exists and is writable
+        self._is_writable = False
+        if path.exists(self.dir_path):
+            if path.isdir(self.dir_path):
+                # ok, it exists and it is a directory
+                # Can i write in it?
+                test_file = path.join(a_path, 'TEST_IF_WRITABLE')
+                try:
+                    with open(test_file, 'w') as f:
+                        pass
+                    remove(test_file)
+                    self._is_writable = True
+                    return True
+                except:
+                    return False
+            else:
+                return False
+        else:
+            # it does not exist, try to create it
+            try:
+                makedirs(self.dir_path)
+                self._is_writable = True
+                return True
+            except:
+                return False
+        return False
+
 
 
