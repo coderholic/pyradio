@@ -1646,6 +1646,7 @@ class Player(object):
                     icy-br           : Station bitrate
                     audio_format     : XXXXHx stereo/mono 1/2ch format
                     artist, title    : Artist and Title of song (vorbis stations)
+                    album, year      : Album and Year of song (vorbis stations)
         '''
 
         a_data = args[0]
@@ -1665,6 +1666,9 @@ class Player(object):
                     else:
                         if b'artist' in a_data:
                             artist = a_data.split(b'"artist":"')[1].split(b'"}')[0].split(b'","')[0]
+                        else:
+                            artist = None
+                        if artist:
                             try:
                                 self.oldUserInput['Title'] = 'Title: ' + artist.decode(self._station_encoding, 'replace') + ' - ' + title.decode(self._station_encoding, 'replace')
                             except:
@@ -1676,17 +1680,21 @@ class Player(object):
                                 self.oldUserInput['Title'] = 'Title: ' + title.decode('utf-8', 'replace')
                         if b'album' in a_data:
                             album = a_data.split(b'"album":"')[1].split(b'"}')[0].split(b'","')[0]
-                            if b'year' in a_data:
-                                year = a_data.split(b'"year":"')[1].split(b'"}')[0].split(b'","')[0]
-                                try:
-                                    self.oldUserInput['Title'] += ' [' + album.decode(self._station_encoding, 'replace') + ', ' + year.decode('utf-8', 'replace') + ']'
-                                except:
-                                    self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ', ' + year.decode('utf-8', 'replace') + ']'
-                            else:
-                                try:
-                                    self.oldUserInput['Title'] += ' [' + album.decode(self._station_encoding, 'replace') + ']'
-                                except:
-                                    self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ']'
+                            if album:
+                                if b'year' in a_data:
+                                    year = a_data.split(b'"year":"')[1].split(b'"}')[0].split(b'","')[0]
+                                else:
+                                    year = None
+                                if year:
+                                    try:
+                                        self.oldUserInput['Title'] += ' [' + album.decode(self._station_encoding, 'replace') + ', ' + year.decode('utf-8', 'replace') + ']'
+                                    except:
+                                        self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ', ' + year.decode('utf-8', 'replace') + ']'
+                                else:
+                                    try:
+                                        self.oldUserInput['Title'] += ' [' + album.decode(self._station_encoding, 'replace') + ']'
+                                    except:
+                                        self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ']'
 
                         string_to_show = self.title_prefix + self.oldUserInput['Title']
                         #logger.critical(string_to_show)

@@ -15,6 +15,7 @@ from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesCheckBox, S
 from .player import PlayerCache
 from .log import Log
 from .server import IPsWithNumbers
+from .cjkwrap import cjkslices
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -845,6 +846,7 @@ class PyRadioRecordingDir(object):
             self._widgets[0].bracket = False
             self._widgets[0].set_global_functions(self._global_functions)
             self._widgets[0].id = 0
+            self._widgets[0].string = self.dir_path
         self._line_editor = self._widgets[0]
         # add copy checkbox
         if self._widgets[1] is None:
@@ -911,8 +913,9 @@ class PyRadioRecordingDir(object):
 
         self._show_title()
         self._win.addstr(1, 2, 'Current location: ', curses.color_pair(4))
+        logger.error('_open_redordings_dir_select_win')
         self._win.addstr(
-            self.dir_path,
+            cjkslices(self.dir_path, self.maxX-4-18)[0],
             curses.color_pair(5)
             )
         self._win.addstr(2, 2, 'New location:', curses.color_pair(4))
