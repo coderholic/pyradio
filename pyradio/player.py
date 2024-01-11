@@ -1664,8 +1664,11 @@ class Player(object):
                         if logger.isEnabledFor(logging.DEBUG):
                             logger.debug('Icy-Title = " - ", not displaying...')
                     else:
-                        if b'artist' in a_data:
-                            artist = a_data.split(b'"artist":"')[1].split(b'"}')[0].split(b'","')[0]
+                        if b'"artist":"' in a_data:
+                            try:
+                                artist = a_data.split(b'"artist":"')[1].split(b'"}')[0].split(b'","')[0]
+                            except IndexError:
+                                artist = None
                         else:
                             artist = None
                         if artist:
@@ -1678,45 +1681,26 @@ class Player(object):
                                 self.oldUserInput['Title'] = 'Title: ' + title.decode(self._station_encoding, 'replace')
                             except:
                                 self.oldUserInput['Title'] = 'Title: ' + title.decode('utf-8', 'replace')
-                        if b'album' in a_data:
-                            album = a_data.split(b'"album":"')[1].split(b'"}')[0].split(b'","')[0]
-                            if album:
-                                if b'year' in a_data:
-                                    year = a_data.split(b'"year":"')[1].split(b'"}')[0].split(b'","')[0]
-                                else:
-                                    year = None
-                                if year:
-                                    try:
-                                        self.oldUserInput['Title'] += ' [' + album.decode(self._station_encoding, 'replace') + ', ' + year.decode('utf-8', 'replace') + ']'
-                                    except:
-                                        self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ', ' + year.decode('utf-8', 'replace') + ']'
-                                else:
-                                    try:
-                                        self.oldUserInput['Title'] += ' [' + album.decode(self._station_encoding, 'replace') + ']'
-                                    except:
-                                        self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ']'
-
-                        string_to_show = self.title_prefix + self.oldUserInput['Title']
-                        #logger.critical(string_to_show)
-                        if stop():
-                            return False
-                        self.outputStream.write(msg=string_to_show, counter='')
-                    if not self.playback_is_on:
-                        if stop():
-                            return False
-                        return self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
-                else:
-                    if (logger.isEnabledFor(logging.INFO)):
-                        logger.info('Icy-Title is NOT valid')
-                    self.buffering = False
-                    with self.buffering_lock:
-                        self.buffering_change_function()
-                    title = 'Playing: ' + self.name
-                    string_to_show = self.title_prefix + title
-                    if stop():
-                        return False
-                    self.outputStream.write(msg=string_to_show, counter='')
-                    self.oldUserInput['Title'] = title
+                        if b'"album":' in a_data:
+                            try:
+                                album = a_data.split(b'"album":"')[1].split(b'"}')[0].split(b'","')[0]
+                                if album:
+                                    if b'"year":' in a_data:
+                                        year = a_data.split(b'"year":"')[1].split(b'"}')[0].split(b'","')[0]
+                                    else:
+                                        year = None
+                                    if year:
+                                        try:
+                                            self.oldUserInput['Title'] += ' [' + album.decode(self._station_encoding, 'replace') + ', ' + year.decode('utf-8', 'replace') + ']'
+                                        except:
+                                            self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ', ' + year.decode('utf-8', 'replace') + ']'
+                                    else:
+                                        try:
+                                            self.oldUserInput['Title'] += ' [' + album.decode(self._station_encoding, 'replace') + ']'
+                                        except:
+                                            self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ']'
+                            except IndexError:
+                                pass
 
         # logger.info('DE a_data {}'.format(a_data))
         if b'icy-br' in a_data:

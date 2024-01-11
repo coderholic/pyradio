@@ -1,3 +1,8 @@
+2024-01-11 s-n-g
+    * version 0.9.2.23
+    * fixing issue #224 - crash when "artist", "album", "year"
+      string in received data
+
 2024-01-05 s-n-g
     * version 0.9.2.22
     * fixing bug #222 - Appending a radio station with A in a playlist
