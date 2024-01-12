@@ -178,7 +178,7 @@ def info_dict_to_list(info, fix_highlight, max_width):
     # logger.error('DE a_list\n\n{}\n\n'.format(a_list))
 
     ''' make sure title is not alone in line '''
-    for a_title in ('URL:', 'site:'):
+    for a_title in ('URL:', 'site:', 'Genre:'):
         for n, an_item in enumerate(a_list):
             if an_item.endswith(a_title):
                 url = a_list[n+1].split('_|')[1]
@@ -1654,6 +1654,10 @@ class Player(object):
         enable_crash_detection_function = args[2]
         if b'"icy-title":"' in a_data or \
                 b'"title":"' in a_data:
+            # if not self.playback_is_on:
+            #     if stop():
+            #         return False
+            #     self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
             if version_info > (3, 0):
                 if b'"icy-title":"' in a_data:
                     title = a_data.split(b'"icy-title":"')[1].split(b'"}')[0]
@@ -1701,6 +1705,27 @@ class Player(object):
                                             self.oldUserInput['Title'] += ' [' + album.decode('utf-8', 'replace') + ']'
                             except IndexError:
                                 pass
+                        string_to_show = self.title_prefix + self.oldUserInput['Title']
+                        #logger.critical(string_to_show)
+                        if stop():
+                            return False
+                        self.outputStream.write(msg=string_to_show, counter='')
+                    if not self.playback_is_on:
+                        if stop():
+                            return False
+                        return self._set_mpv_playback_is_on(stop, enable_crash_detection_function)
+                else:
+                    if (logger.isEnabledFor(logging.INFO)):
+                        logger.info('Icy-Title is NOT valid')
+                    self.buffering = False
+                    with self.buffering_lock:
+                        self.buffering_change_function()
+                    title = 'Playing: ' + self.name
+                    string_to_show = self.title_prefix + title
+                    if stop():
+                        return False
+                    self.outputStream.write(msg=string_to_show, counter='')
+                    self.oldUserInput['Title'] = title
 
         # logger.info('DE a_data {}'.format(a_data))
         if b'icy-br' in a_data:
