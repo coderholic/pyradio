@@ -679,11 +679,11 @@ class PyRadio(object):
 
         ''' the files that the search terms are stored to  '''
         self._search_files = (
-                path.join(self._cnf.data_dir, 'search-station.txt'),
-                path.join(self._cnf.data_dir, 'search-playlist.txt'),
-                path.join(self._cnf.data_dir, 'search-theme.txt'),
-                path.join(self._cnf.data_dir, 'search-paste.txt'),
-                path.join(self._cnf.data_dir, 'search-group.txt'),
+                path.join(self._cnf.state_dir, 'search-station.txt'),
+                path.join(self._cnf.state_dir, 'search-playlist.txt'),
+                path.join(self._cnf.state_dir, 'search-theme.txt'),
+                path.join(self._cnf.state_dir, 'search-paste.txt'),
+                path.join(self._cnf.state_dir, 'search-group.txt'),
                 )
 
         ''' points to list in which the search will be performed '''
@@ -5403,7 +5403,7 @@ __|Remote Control Server| cannot be started!__
                 except:
                     pass
 
-        def create_tadays_date_file(a_path):
+        def create_todays_date_file(a_path):
             d1 = datetime.now()
             now_str = d1.strftime('%Y-%m-%d')
             try:
@@ -5421,7 +5421,7 @@ __|Remote Control Server| cannot be started!__
 
         if logger.isEnabledFor(logging.INFO):
             logger.info('detectUpdateThread: Starting...')
-        a_path = config.stations_dir
+        a_path = config.state_dir
         if config.current_pyradio_version:
             this_version = config.current_pyradio_version
         else:
@@ -5436,7 +5436,7 @@ __|Remote Control Server| cannot be started!__
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('detectUpdateThread: Asked to stop. Stoping...')
             return
-        files = glob.glob(path.join(a_path, 'data', '.*.date'))
+        files = glob.glob(path.join(a_path, '.*.date'))
         if files:
             files.sort(reverse=True)
             if len(files) > 1:
@@ -5483,7 +5483,7 @@ __|Remote Control Server| cannot be started!__
                     logger.info('detectUpdateThread: Upstream version found: {}'.format(last_tag))
                 if this_version == last_tag:
                     clean_date_files(files, -1)
-                    create_tadays_date_file(path.join(a_path, 'data'))
+                    create_todays_date_file(a_path)
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('detectUpdateThread: No update found. Will check again in {} days. Terminating...'.format(check_days))
                     break
@@ -5526,7 +5526,7 @@ __|Remote Control Server| cannot be started!__
                             if self._update_version == '':
                                 a_lock.release()
                                 ''' create today's date file '''
-                                create_tadays_date_file(path.join(a_path, 'data'))
+                                create_todays_date_file(a_path)
                                 if logger.isEnabledFor(logging.INFO):
                                     logger.info('detectUpdateThread: Terminating after notification issued... I will check again in {} days'.format(check_days))
                                 return
@@ -6958,6 +6958,11 @@ __|Remote Control Server| cannot be started!__
                     callback_function=self.refreshBody)
             return
 
+        # if char == ord('1'):
+        #     logger.error('self._cnf.recording_dir = "/home/spiros/pyradio-mkvs"')
+        #     self._cnf.recording_dir = '/home/spiros/home-at-homepc/00000'
+        #     return
+
         if char in (ord('#'), curses.KEY_RESIZE):
             self._i_am_resizing = True
             self._normal_mode_resize()
@@ -7119,7 +7124,7 @@ __|Remote Control Server| cannot be started!__
             if char == ord('o'):
                 self._cnf.open_config_dir(self.player.recording)
 
-            if char == ord('m') and \
+            elif char == ord('m') and \
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
                 ''' change player  '''
                 self._update_status_bar_right(status_suffix='')
@@ -7310,7 +7315,7 @@ __|Remote Control Server| cannot be started!__
                 else:
                     x = PlayerCache(
                             self.player.PLAYER_NAME,
-                            self._cnf.data_dir,
+                            self._cnf.state_dir,
                             lambda: self.player.recording
                             )
                     x.enabled = False if self._cnf.buffering_data else True

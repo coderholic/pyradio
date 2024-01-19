@@ -1530,7 +1530,7 @@ class RadioBrowserConfig(object):
     ping_timeout = 1
 
     def __init__(self, stations_dir):
-        self.config_file = path.join(stations_dir, 'radio-browser-config')
+        self.config_file = path.join(stations_dir, 'radio-browser.conf')
 
     def read_config(self):
         ''' RadioBrowserConfig read config '''

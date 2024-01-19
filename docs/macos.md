@@ -45,9 +45,9 @@ Open a terminal and type:
 
 **2\. MPV or MPlayer**
 
-**MPV** and **MPlayer** can be installed using either [Homebrew](https://github.com/Homebrew/homebrew) or [MacPorts](https://www.macports.org/). Installation info can be found at the [end of this page](#installation-of-additional-package-managers).
+**MPV** and **MPlayer** can be installed using either [Homebrew](https://brew.sh) or [MacPorts](https://www.macports.org/). Installation info can be found at the [end of this page](#installation-of-additional-package-managers).
 
-After you have installed [Homebrew](https://github.com/Homebrew/homebrew) or [MacPorts](https://www.macports.org/), you can install the player of your choice.
+After you have installed [Homebrew](https://brew.sh) or [MacPorts](https://www.macports.org/), you can install the player of your choice.
 
 ***a)  MPV***
 
@@ -119,9 +119,9 @@ It goes without saying that it's enough to install only one of these package man
 
 ### Homebrew
 
-To install [Homebrew](https://github.com/Homebrew/homebrew) open a **terminal** and type:
+To install [Homebrew](https://brew.sh) open a **terminal** and type:
 
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 ### MacPorts
 

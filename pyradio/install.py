@@ -503,11 +503,7 @@ class PyRadioCache(object):
         'pyradio-master.zip'
     )
 
-    def __init__(self,
-                 config_path=None,
-                 data_path=None,
-                 cache_path=None
-        ):
+    def __init__(self):
         ''' Initialize a PyRadio Cache
 
             Parameters:
@@ -524,27 +520,28 @@ class PyRadioCache(object):
             cache_dir
                 cache dir = cache_dir
         '''
-        if config_path is not None:
+        if platform.system().lower().startswith('win'):
             self._cache_dir = os.path.join(
-                config_path, 'data', '.cache'
+                os.path.expanduser('APPDATA'),
+                'pyradio', 'data', '_cache'
             )
-        elif data_path is not None:
-            self._cache_dir = os.path.join(
-                data_path, '.cache'
-            )
-        elif cache_path is not None:
-            self._cache_dir = cache_dir
         else:
-            if platform.system().lower().startswith('win'):
-                self._cache_dir = os.path.join(
-                    os.path.expanduser('APPDATA'),
-                    'pyradio', 'data', '_cache'
-                )
-            else:
-                self._cache_dir = os.path.join(
+            chk = (
+                os.path.join(
                     os.path.expanduser('~'),
                     '.config', 'pyradio', 'data', '.cache'
+                ),
+                os.path.join(
+                    os.path.expanduser('~'),
+                    '.cache', 'pyradio'
                 )
+            )
+            for n in chk:
+                if os.path.exists(n):
+                    self._cache_dir = n
+                    break
+            if self._cache_dir is None:
+                self._cache_dir = chk[0]
         self._del_gits()
 
     def list(self):
@@ -1057,7 +1054,9 @@ class PyRadioUpdate(object):
 
         '''' get tmp dir '''
         if HAS_PIPX:
-            self._dir = os.path.join(os.path.expanduser('~'), '.config', 'pyradio', 'data', '.cache')
+            self._dir = os.path.join(os.path.expanduser('~'), '.cache', 'pyradio')
+            if not os.path.exists(self._dir):
+                self._dir = os.path.join(os.path.expanduser('~'), '.config', 'pyradio', 'data', '.cache')
         else:
             if os.path.isdir('/tmp'):
                 self._dir = os.path.join('/tmp', 'tmp-pyradio')

@@ -112,7 +112,7 @@ function uninstall(){
             echo 'done'
         }
     fi
-    rm ~/.config/pyradio/data/INSTALLATION_TYPE 2>/dev/null
+    rm "${DATA_DIR}"/INSTALLATION_TYPE 2>/dev/null
     echo "PyRadio successfully uninstalled"
 }
 
@@ -203,8 +203,8 @@ function check_installation_type(){
 }
 
 function create_installation_type_file(){
-    mkdir -p ~/.config/pyradio/data && \
-        echo "$inst_type" > ~/.config/pyradio/data/INSTALLATION_TYPE
+    mkdir -p "${DATA_DIR}" && \
+        echo "$inst_type" > "${DATA_DIR}"/INSTALLATION_TYPE
     if (( $inst_type > 0 ))
     then
         OLD=$(find ~/.local/lib -type d -name "pyradio*" 2>/dev/null | grep -v pipx | grep -v venvs)
@@ -246,7 +246,20 @@ function check_root(){
     fi
 }
 
+
+function get_data_dir(){
+    if [ -d ~/.config/pyradio/data ]
+    then
+        DATA_DIR=~/.config/pyradio/data
+    elif [ -d ~/.local/share/pyradio ]
+    then
+        DATA_DIR=~/.local/share/pyradio
+    fi
+    [ -z "$DATA_DIR" ] && DATA_DIR=~/.config/pyradio/data
+}
+
 check_root
+get_data_dir
 rm -rf build pyradio.egg-info 2>/dev/null
 TO_PYTHON=3
 TO_PYTHON_FROM_X=''
@@ -419,11 +432,11 @@ then
     test -e ~/.pyradio-editable && PIPX_EDITABLE="-e"
 
     inst_type=0
-    if [ -e ~/.config/pyradio/data/INSTALLATION_TYPE ]
+    if [ -e "${DATA_DIR}"/INSTALLATION_TYPE ]
     then
         # we have an update
         # read INSTALLATION_TYPE and identify installation file
-        read inst_type < ~/.config/pyradio/data/INSTALLATION_TYPE
+        read inst_type < "${DATA_DIR}"/INSTALLATION_TYPE
         if [ ! -z "$inst_type" ]
         then
             if [ "$inst_type" = "1" ]
@@ -544,9 +557,9 @@ then
             fi
         fi
     fi
-    mkdir -p ~/.config/pyradio/data
-    cp devel/pyradio.png ~/.config/pyradio/data
-    cp devel/cover.png ~/.config/pyradio/data
+    mkdir -p "${DATA_DIR}"
+    cp devel/pyradio.png "${DATA_DIR}"
+    cp devel/cover.png "${DATA_DIR}"
     [ -z $PIPX  ] || create_installation_type_file
 else
     do_exit

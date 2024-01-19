@@ -32,10 +32,8 @@ class MKVToolNix:
     _cover_file = None
     _remove_file = []
 
-    def __init__(self, stations_dir=None):
-        self._stations_dir = None
-        if stations_dir is not None:
-            self._stations_dir = stations_dir
+    def __init__(self, config):
+        self._cnf = config
         self._look_for_mkvtoolnix()
 
     @property
@@ -153,10 +151,7 @@ class MKVToolNix:
     def _get_mkv_file_from_id(self, index, return_list=False, print_messages=True):
         if index >= 0:
             index -= 1
-        files = glob(os.path.join(
-            self._stations_dir, 'recordings', '*.mkv'
-            )
-        )
+        files = glob(os.path.join(self._cnf.recording_dir, '*.mkv'))
         if files:
             files.sort()
         if return_list:
@@ -174,11 +169,8 @@ class MKVToolNix:
 
     def _file_valid(self, a_file, print_messages=True):
         if not os.path.exists(a_file):
-            for n in 'recordings', 'data':
-                test_file = os.path.join(
-                        self._stations_dir,
-                        n,
-                        a_file)
+            for n in self._cnf.recording_dir, self._cnf.data_dir:
+                test_file = os.path.join(n, a_file)
                 if os.path.exists(test_file):
                     return test_file
             if print_messages:
@@ -289,7 +281,7 @@ class MKVToolNix:
             s_path = (
                     r'C:\Program Files\MKVToolNix\mkvmerge.exe',
                     r'C:\Program Files (x86)\MKVToolNix\mkvmerge.exe',
-                    os.path.join(self._stations_dir, 'mkvtoolnix', 'mkvmerge.exe')
+                    os.path.join(self._cnf.stations_dir, 'mkvtoolnix', 'mkvmerge.exe')
                     )
             for n in s_path:
                 if os.path.exists(n):
@@ -311,7 +303,7 @@ class MKVToolNix:
                 else:
                     self.mkvmerge = r[0].decode('utf-8').strip()
             if not self.HAS_MKVTOOLNIX and sys.platform.lower().startswith('dar'):
-                mkvmerge_file = os.path.join(stations_dir, 'data', 'mkvmerge')
+                mkvmerge_file = os.path.join(self._cnf.data_dir, 'mkvmerge')
                 if os.path.exists(mkvmerge_file):
                     self.HAS_MKVTOOLNIX = True
                     self.mkvmerge = mkvmerge_file

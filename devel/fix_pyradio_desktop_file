@@ -45,6 +45,17 @@ the terminal \"my_term\" is \"-S\", execute as follows:
 "
 }
 
+function get_data_dir(){
+    if [ -d ~/.config/pyradio/data ]
+    then
+        DATA_DIR=~/.config/pyradio/data
+    elif [ -d ~/.local/share/pyradio ]
+    then
+        DATA_DIR=~/.local/share/pyradio
+    fi
+    [ -z "$DATA_DIR" ] && DATA_DIR=~/.config/pyradio/data
+}
+
 function write_desktop_file(){
     if [ -z "${REQ_TERMINAL}" ]
     then
@@ -71,7 +82,7 @@ Comment=Curses based Radio Player" > "${DESKTOP_FILE}"
         NEW_EXEC_LINE="${EXEC_LINE/ / $PARAM }"
         echo "$NEW_EXEC_LINE" >> "${DESKTOP_FILE}"
     fi
-    echo "Icon=/home/${USER}/.config/pyradio/data/pyradio.png" >> "${DESKTOP_FILE}"
+    echo "Icon=${DATA_DIR}/pyradio.png" >> "${DESKTOP_FILE}"
     echo "${TERMINAL_LINE}" >> "${DESKTOP_FILE}"
     echo "Categories=Network" >> "${DESKTOP_FILE}"
 
@@ -260,6 +271,7 @@ do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+get_data_dir
 echo "Installing Desktop file ...   "
 DESKTOP_FILE=~/.local/share/applications/pyradio.desktop
 # set -x

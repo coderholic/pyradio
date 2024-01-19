@@ -35,8 +35,8 @@ enable_mouse = False
 # Recordings directory
 # This is the firectory where recorded files will be saved
 #
-# Default value: "recordings: in the configuration directory
-recording_dir = recordings
+# Default value: "default"
+recording_dir = default
 
 # Desktop notifications
 # If this option is enabled, a Desktop notification will be
@@ -52,7 +52,7 @@ recording_dir = recordings
 enable_notifications = -1
 
 # Station icon
-# Radio Browser will provide an icon for some of its stations.
+# Some stations will advertise a station icon (logo).
 # This icon can be downloaded and used in Desktop Notifications,
 # if this option is True.
 # #

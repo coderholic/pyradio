@@ -61,7 +61,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#recording-implementation">Recording implementation</a>
 <ul>
 <li><a href="#starting-recording-from-the-command-line">Starting recording from the command line</a></li>
-<li><a href="#file-location">File location</a></li>
+<li><a href="#file-location">File location</a>
+<ul>
+<li><a href="#changing-recordings-location">Changing recordings location</a></li>
+</ul></li>
 <li><a href="#file-type">File type</a></li>
 <li><a href="#chapters">Chapters</a></li>
 <li><a href="#cover-image">Cover image</a>
@@ -174,9 +177,13 @@ This means that the front end (<strong>PyRadio</strong>) will have to use two <e
 <p>This command would open the default playlist (or the one last used, if set in the config), using the default player, and start playing and recording station No 3.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the default player is <strong>VLC</strong> on Windows, and the “<strong>–record</strong>” command line parameter is used, a message informing the user that recording is not supported, will be displayed.</p>
 <h3 id="file-location">File location</h3>
-<p>Files created by the recording feature will be saved under the “<strong>recordings</strong>” folder inside <strong>PyRadio</strong>’s configuration directory.</p>
+<p>Files created by the recording feature will be saved under the “<strong>pyradio-recordings</strong>” folder inside the user’s <strong>HOME</strong> directory, by default.</p>
 <p>The file will be named:</p>
 <pre>[date] [Station Name].mkv</pre>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Up to version <strong>0.9.2.24</strong>, <strong>PyRadio</strong> would save the recorded files in a folder named <strong>recordings</strong> inside its configuration directory. If this folder already exists, it will be automatically moved to the new default location.</p>
+<h4 id="changing-recordings-location">Changing recordings location</h4>
+<p>One could change the location (and name) of the recordings folder, using the “<em>Recording dir</em>” option in the <em>Configuration windows</em>.</p>
+<p>Upon saving the configuration, <strong>PyRadio</strong> will move the existing folder to the new location. If the new location’s folder already exists, the old folder will be moved inside it (in order to avoid overwriting any existing files).</p>
 <h3 id="file-type">File type</h3>
 <p><strong>PyRadio</strong> will produce a <strong>mkv</strong> file when recording a station.</p>
 <p>This is just a measure of convenience since the type of audio (mp3, aac, aac+, flac, etc.) the station will broadcast cannot be known beforehand (before starting the recording, that is).</p>

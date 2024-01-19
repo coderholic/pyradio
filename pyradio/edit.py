@@ -1694,7 +1694,7 @@ class PyRadioBuffering(object):
             self._limit = 100000
         self._cache_data = PlayerCache(
                 player.PLAYER_NAME,
-                self._cnf.data_dir,
+                self._cnf.state_dir,
                 lambda: self._player.recording
                 )
         if self._cnf.buffering_data:

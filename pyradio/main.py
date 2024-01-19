@@ -391,6 +391,7 @@ If nothing else works, try the following command:
             sys.exit()
 
     with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
+        read_config(pyradio_config)
         if args.write_theme:
             if args.write_theme[0]:
                 from .themes import PyRadioTheme
@@ -406,17 +407,13 @@ If nothing else works, try the following command:
         if args.headless:
             # Is there another headless instance?
             if not config_already_read:
-                read_config(pyradio_config)
                 config_already_read = True
             if path.exists(pyradio_config.remote_control_server_report_file):
                 print('Error: Headless Server already running...\n')
                 sys.exit(1)
 
         if args.free_dead_headless_server:
-            if not config_already_read:
-                read_config(pyradio_config)
-                config_already_read = True
-            ff = path.join(pyradio_config.data_dir, 'server-headless.txt')
+            ff = path.join(pyradio_config.state_dir, 'server-headless.txt')
             if path.exists(ff):
                 try:
                     remove(ff)
@@ -437,7 +434,6 @@ If nothing else works, try the following command:
             else:
                 print('PyRadio version: {}'.format(pyradio_config.current_pyradio_version))
                 print('Python version: {}'.format(sys.version.replace('\n', ' ').replace('\r', ' ')))
-            pyradio_config.read_config()
             if pyradio_config.distro != 'None':
                 if PY3:
                     print('Distribution: [green]{}[/green]'.format(pyradio_config.distro))
@@ -446,7 +442,6 @@ If nothing else works, try the following command:
             sys.exit()
 
         if args.show_themes:
-            pyradio_config.read_config()
             int_themes = [x for x in pyradio_config.internal_themes if x != 'wob' and x != 'bow']
             sys_themes = list(pyradio_config.system_themes)
             user_themes = glob.glob(path.join(pyradio_config.themes_dir, '*.pyradio-theme'))
@@ -534,7 +529,6 @@ If nothing else works, try the following command:
                 print_session_is_locked()
                 sys.exit(1)
             else:
-                read_config(pyradio_config)
                 pyradio_config.opts['open_last_playlist'][1] = not pyradio_config.opts['open_last_playlist'][1]
                 pyradio_config.opts['dirty_config'][1] =  True
                 if PY3:
@@ -552,9 +546,6 @@ If nothing else works, try the following command:
                 package = 2
             elif args.devel:
                 package = 3
-            if not config_already_read:
-                read_config(pyradio_config)
-                config_already_read = True
             if pyradio_config.distro != 'None' and \
                     not platform.startswith('win'):
                 no_update(args.uninstall)
@@ -632,23 +623,9 @@ If nothing else works, try the following command:
             sys.exit()
 
         if args.list_playlists:
-            if not config_already_read:
-                pyradio_config.read_config()
             config_already_read = True
             pyradio_config.list_playlists()
             sys.exit()
-
-        if args.list is False and \
-                args.add is False and \
-                args.show_cache is False and \
-                args.clear_cache is False and \
-                args.open_cache is False and \
-                args.list_recordings is False and \
-                args.set_mkv_cover == []:
-            print('Reading config...')
-        if not config_already_read:
-            read_config(pyradio_config)
-            config_already_read = True
 
         if args.update_stations:
             if pyradio_config.locked:
@@ -700,7 +677,7 @@ If nothing else works, try the following command:
         mkvtoolnix = None
         if args.mkv_file or args.list_recordings:
             from .mkvtoolnix import MKVToolNix
-            mkvtoolnix = MKVToolNix(pyradio_config.stations_dir)
+            mkvtoolnix = MKVToolNix(pyradio_config)
             if not mkvtoolnix.HAS_MKVTOOLNIX:
                 if HAS_RICH:
                     print('[red]Error:[/red] [bold magenta]MKVToolNix[/bold magenta] not found!')
@@ -729,8 +706,8 @@ If nothing else works, try the following command:
         if args.address:
             disp = []
             paths = (
-                    path.join(pyradio_config.data_dir, 'server-headless.txt'),
-                    path.join(pyradio_config.data_dir, 'server.txt')
+                    path.join(pyradio_config.state_dir, 'server-headless.txt'),
+                    path.join(pyradio_config.state_dir, 'server.txt')
             )
             tok = ('Headless server', 'Server')
             out = '''  {0}

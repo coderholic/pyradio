@@ -166,8 +166,8 @@ class StationsChanges(object):
 
     def __init__(self, config):
         self._cnf = config
-        self._last_sync_file = join(self._cnf.data_dir, 'last-sync')
-        self._asked_sync_file = join(self._cnf.data_dir, 'asked-sync')
+        self._last_sync_file = join(self._cnf.state_dir, 'last-sync')
+        self._asked_sync_file = join(self._cnf.state_dir, 'asked-sync')
 
         self.PLAYLIST_HAS_NAME_URL = 0
         self.PLAYLIST_HAS_NAME_URL_ENCODING = 1

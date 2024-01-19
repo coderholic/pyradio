@@ -421,13 +421,10 @@ class Player(object):
 
     def get_recording_filename(self, name, extension):
         if self._chapters is None:
-                self._chapters = PyRadioChapters(
-                        self._cnf.stations_dir,
-                        self._cnf.data_dir,
-                        version=self._cnf.current_pyradio_version,
-                        playlist=self._cnf.station_path,
-                        chapter_time=lambda: self._chapter_time
-                        )
+            self._chapters = PyRadioChapters(
+                    self._cnf,
+                    chapter_time=lambda: self._chapter_time
+                    )
         else:
             self._chapters.look_for_mkvmerge()
         f = datetime.now().strftime('%Y-%m-%d %H-%M-%S') + " " + name  + extension
@@ -465,7 +462,7 @@ class Player(object):
             config_files.append("/usr/local/etc/mplayer/mplayer.conf")
             config_files.append('/etc/mplayer/config')
         self.all_config_files['mplayer'] = config_files[:]
-        config_files = [os.path.join(self._cnf.data_dir, 'vlc.conf')]
+        config_files = [os.path.join(self._cnf.state_dir, 'vlc.conf')]
         self.all_config_files['vlc'] = config_files[:]
         self._restore_win_player_config_file()
         if not os.path.exists(self.all_config_files['vlc'][0]):
@@ -2026,10 +2023,7 @@ class Player(object):
             ''' start chapters logger '''
             if self._chapters is None:
                 self._chapters = PyRadioChapters(
-                        self._cnf.stations_dir,
-                        self._cnf.data_dir,
-                        version=self._cnf.current_pyradio_version,
-                        playlist=self._cnf.station_path,
+                        self._cnf,
                         chapter_time=lambda: self._chapter_time
                         )
             self._chapters.clear()
@@ -3648,21 +3642,17 @@ class PyRadioChapters(object):
 
     def __init__(
             self,
-            stations_dir,
-            cover_dir,
-            version,
-            playlist,
+            config,
             chapter_time,
             encoding='urf-8'
             ):
-        self._stations_dir = stations_dir
-        self._cover_dir = cover_dir
-        self._version = version
-        self._playlist = os.path.basename(playlist)[:-4]
+        # cover_dir is the data dir
+        self._cnf = config
+        self._playlist = os.path.basename(self._cnf.station_path)[:-4]
         self._chapters_time_function = chapter_time
         self._encoding = encoding
         self.mkvmerge = ''
-        self._output_dir = os.path.join(stations_dir, 'recordings')
+        self._output_dir = self._cnf.recording_dir
         self.look_for_mkvmerge()
 
     def look_for_mkvmerge(self):
@@ -3670,7 +3660,7 @@ class PyRadioChapters(object):
             s_path = (
                     r'C:\Program Files\MKVToolNix\mkvmerge.exe',
                     r'C:\Program Files (x86)\MKVToolNix\mkvmerge.exe',
-                    os.path.join(self._stations_dir, 'mkvtoolnix', 'mkvmerge.exe')
+                    os.path.join(self._cnf.stations_dir, 'mkvtoolnix', 'mkvmerge.exe')
                     )
             for n in s_path:
                 if os.path.exists(n):
@@ -3692,7 +3682,7 @@ class PyRadioChapters(object):
                 else:
                     self.mkvmerge = r[0].decode('utf-8').strip()
             if not self.HAS_MKVTOOLNIX and platform.lower().startswith('dar'):
-                mkvmerge_file = os.path.join(stations_dir, 'data', 'mkvmerge')
+                mkvmerge_file = os.path.join(self._cnf.data_dir, 'mkvmerge')
                 if os.path.exists(mkvmerge_file):
                     self.HAS_MKVTOOLNIX = True
                     self.mkvmerge = mkvmerge_file
@@ -3764,8 +3754,8 @@ class PyRadioChapters(object):
         for n in (
                 os.path.join(t_dir_dir, 'user-cover.png'), \
                 os.path.join(t_dir_dir, 'cover.png'), \
-                os.path.join(self._cover_dir, 'user-cover.png'), \
-                os.path.join(self._cover_dir, 'cover.png'), \
+                os.path.join(self._cnf.data_dir, 'user-cover.png'), \
+                os.path.join(self._cnf.data_dir, 'cover.png'), \
                 os.path.join(os.path.dirname(__file__), 'icons', 'cover.png')
         ):
             if os.path.exists(n):
@@ -3872,7 +3862,7 @@ class PyRadioChapters(object):
         </Simple>
     </Tag>
 </Tags>
-'''.format('PyRadio ' +self._version, self._playlist, self._list[0][1].strip())
+'''.format('PyRadio ' + self._cnf.current_pyradio_version, self._playlist, self._list[0][1].strip())
             try:
                 with open(self._tag_file, 'w', encoding='utf-8') as f:
                     f.writelines(tags)
@@ -3945,7 +3935,7 @@ class PlayerCache(object):
         'mpv': '0',
         'mplayer': '0',
         'vlc': '0'
-            }
+     }
 
     def __init__(self, player_name, data_dir, recording):
         self._player_name = player_name

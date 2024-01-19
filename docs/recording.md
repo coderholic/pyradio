@@ -28,6 +28,7 @@ ___
 * [Recording implementation](#recording-implementation)
     * [Starting recording from the command line](#starting-recording-from-the-command-line)
     * [File location](#file-location)
+        * [Changing recordings location](#changing-recordings-location)
     * [File type](#file-type)
     * [Chapters](#chapters)
     * [Cover image](#cover-image)
@@ -160,13 +161,21 @@ This command would open the default playlist (or the one last used, if set in th
 
 ### File location
 
-Files created by the recording feature will be saved under the "**recordings**" folder inside **PyRadio**'s configuration directory.
+Files created by the recording feature will be saved under the "**pyradio-recordings**" folder inside the user's **HOME** directory, by default.
 
 The file will be named:
 
 ```
 [date] [Station Name].mkv
 ```
+
+**Note:** Up to version **0.9.2.24**, **PyRadio** would save the recorded files in a folder named **recordings** inside its configuration directory. If this folder already exists, it will be automatically moved to the new default location.
+
+#### Changing recordings location
+
+One could change the location (and name) of the recordings folder, using the "*Recording dir*" option in the *Configuration windows*.
+
+Upon saving the configuration, **PyRadio** will move the existing folder to the new location. If the new location's folder already exists, the old folder will be moved inside it (in order to avoid overwriting any existing files).
 
 ### File type
 
