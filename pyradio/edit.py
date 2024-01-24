@@ -3,8 +3,8 @@ import curses
 import curses.ascii
 from time import sleep
 import logging
-from sys import version_info
-from os import path, remove
+from sys import version_info, platform
+from os import path, remove, sep
 from string import punctuation as string_punctuation
 try:
     # python 3
@@ -16,6 +16,7 @@ from .player import PlayerCache
 from .log import Log
 from .server import IPsWithNumbers
 from .cjkwrap import cjkslices
+from .config import CheckDir
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -722,7 +723,9 @@ class PyRadioRecordingDir(object):
     """ PyRadio insert recording dir dialog """
 
     def __init__(self, dir_path, parent, global_functions=None):
-        self._invalid_chars = '<>|:"\\/?*'
+        self._invalid_chars = '<>|:"*\\/\''.replace(sep, '')
+        if platform.startswith('win'):
+            self._invalid_chars = self._invalid_chars.replace(':', '')
         self.maxY = self.maxX = 0
         self._win = self._parent_win = self._line_editor = None
         self._focus = 0
@@ -730,7 +733,7 @@ class PyRadioRecordingDir(object):
         self._create = self._too_small = False
         self._error_string = ''
         self._widgets = [None, None, None, None]
-        self._from_path = self.dir_path = dir_path
+        self._orig_path = self._from_path = self.dir_path = dir_path
         self._from_file = path.basename(self.dir_path).replace('.csv', '')
         self._parent_win = parent
         self.initial_enabled = [True, True, False, True]
@@ -783,37 +786,19 @@ class PyRadioRecordingDir(object):
 
     def _string_changed(self):
         self._error_string = ''
-        first_char = ''
-        if self._widgets[0].string != '':
-            first_char = self._widgets[0].string[0]
-            if first_char in string_punctuation + ' ':
-                self._error_string = 'Invalid dir_path!!!'
         stripped_string = self._widgets[0].string.strip()
-        if self._error_string == '':
-            if stripped_string:
-                check_file = path.join(self._to_path, stripped_string + '.csv')
-                if check_file == self.dir_path:
-                    if self._create:
-                        self._error_string = 'File already exists!!!'
-                    else:
-                        self._error_string = 'You must be joking!!!'
-                elif path.exists(check_file):
-                    self._error_string = 'File already exists!!!'
-                elif stripped_string.startswith('register_'):
-                    self._error_string = 'Register token inserted!!!'
-                else:
-                    for inv in self._invalid_chars:
-                        if inv in stripped_string:
-                            self._error_string = 'Invalid dir_path!!!'
-                            logger.error('DE inv = ' + inv)
-                            break
-                    #if self._error_string == '':
-                    #    for inv in range(1, 32):
-                    #        if str(inv) in stripped_string:
-                    #            self._error_string = 'Invalid dir_path!!!'
-        self._widgets[-2].enabled = False
-        if stripped_string and self._error_string == '':
-            self._widgets[-2].enabled = True
+        if stripped_string == self._orig_path:
+            self._widgets[-2].enabled = False
+        else:
+            logger.error('stripped_string = "{}"'.format(stripped_string))
+            if self._error_string == '':
+                l= [x for x in self._invalid_chars if x in stripped_string]
+                logger.error('l = {}'.format(l))
+                if l:
+                    self._error_string = 'Invalid dir_path!!!'
+            self._widgets[-2].enabled = False
+            if stripped_string and self._error_string == '':
+                self._widgets[-2].enabled = True
         self.show()
 
     def show(self):
@@ -1054,7 +1039,11 @@ class PyRadioRecordingDir(object):
         # logger.error('pp o self.focus = {}'.format(self.focus))
 
     def _get_result(self, ret):
-        return 1, self._widgets[0].string, self._widgets[1].checked
+        check = CheckDir(self._widgets[0].string, remove_after_validation=True)
+        if check.is_valid:
+            return 1, self._widgets[0].string, self._widgets[1].checked
+        self.focus = 0
+        return 3, None, False
 
     def keypress(self, char):
         """ Returns:
@@ -1062,6 +1051,7 @@ class PyRadioRecordingDir(object):
                  0: go on                       (0, None, False)
                  1: New location ok             (1, new_location, move_files)
                  2: display line editor help    (2, None, False)
+                 3: display invalid dir         (3, None, False)
         """
         ret = 0
         if self._too_small:
@@ -1070,8 +1060,9 @@ class PyRadioRecordingDir(object):
             return 0, None, False
         else:
             logger.error('self.focus = {}'.format(self.focus))
-            if char in (curses.KEY_EXIT, 27, ord('q')) and \
-                    self.focus > 0:
+            if char == ord('?') and self.focus == 0:
+                return 2, None, False
+            elif char in (curses.KEY_EXIT, 27, ord('q')):
                 return -1, None, None
             elif char in (ord(' '), ord('l'), curses.KEY_RIGHT,
                           curses.KEY_ENTER, ord('\n'),
@@ -1087,7 +1078,7 @@ class PyRadioRecordingDir(object):
                     # New location
                     self._focus_next()
                 elif self._focus == 1:
-                    # check boxe
+                    # check box
                     self._widgets[1].toggle_checked()
                 elif self._focus == 2:
                     # ok, execute

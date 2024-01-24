@@ -398,6 +398,8 @@ class PyRadio(object):
     _schedule_station_select_win = None
     _insert_recording_dir_win = None
 
+    _asked_to_move_recordings_dir = False
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -639,6 +641,8 @@ class PyRadio(object):
             self.ws.SCHEDULE_ERROR_MODE: self._show_schedule_error,
             self.ws.SCHEDULE_INFO_MODE: self._show_schedule_info,
             self.ws.INSERT_RECORDINGS_DIR_MODE: self._open_redordings_dir_select_win,
+            self.ws.MOVE_RECORDINGS_DIR_MODE: self._show_moving_recordings_dir,
+            self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE: self._show_moving_recordings_dir_error,
         }
 
         ''' list of help functions '''
@@ -783,7 +787,6 @@ class PyRadio(object):
 
         self._cls_update_stations = None
         self._cls_update_stations_message = ''
-
 
     def __del__(self):
         self.transientWin = None
@@ -2865,6 +2868,37 @@ class PyRadio(object):
             self._player_select_win.refresh_win()
             self._player_select_win.refresh_list()
 
+    def _show_moving_recordings_dir(self):
+        txt = '''
+______Moving |Recordings Directory______
+____________Please wait...
+        '''
+        self._show_help(txt,
+                        self.ws.MOVE_RECORDINGS_DIR_MODE,
+                        caption='',
+                        prompt='',
+                        is_message=True)
+
+    def _show_moving_recordings_dir_error(self):
+        txt = '''
+______Moving |Recordings Directory| has |failed!!|______
+Moving from
+|{}|
+to
+|{}|
+
+Press any key to open the directories in file explorer...
+        '''.format(
+            self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS],
+            self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS],
+
+        )
+        self._show_help(txt,
+                        self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE,
+                        caption=' Error ',
+                        prompt='',
+                        is_message=True)
+
     def _show_remote_control_error(self):
         txt = '''
 ______This session is |locked|, so the
@@ -3336,7 +3370,7 @@ __|Remote Control Server| cannot be started!__
                 DEL|,|^D              |Delete character.
                 Backspace|,|^H        |Backspace (delete previous character).
                 Up| / |Down           |Go to previous / next field.
-                \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+                \?| / |\\             |Insert a "|?|" or a "|\|", respectively.
                 Esc                 |Cancel operation.
 
                 |Global functions work when preceded with a "|\|".
@@ -3350,7 +3384,7 @@ __|Remote Control Server| cannot be started!__
                 DEL|,|^D              |Delete character.
                 Backspace|,|^H        |Backspace (delete previous character).
                 Up| / |Down           |Go to previous / next field.
-                \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+                \?| / |\\             |Insert a "|?|" or a "|\\|", respectively.
                 Esc                 |Cancel operation.
 
                 |Global functions work when preceded with a "|\|".
@@ -3369,7 +3403,7 @@ __|Remote Control Server| cannot be started!__
                 DEL|,|^D              |Delete character.
                 Backspace|,|^H        |Backspace (delete previous character).
                 Up| / |Down           |Go to previous / next field.
-                \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+                \?| / |\\             |Insert a "|?|" or a "|\|", respectively.
                 \p                  |Enable |p|aste mode to correctly paste
                 ____________________|URLs (and stations' names).
                 Esc                 |Cancel operation.
@@ -3385,7 +3419,7 @@ __|Remote Control Server| cannot be started!__
                 DEL|,|^D              |Delete character.
                 Backspace|,|^H        |Backspace (delete previous character).
                 Up| / |Down           |Go to previous / next field.
-                \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
+                \?| / |\\             |Insert a "|?|" or a "|\|", respectively.
                 \p                  |Enable |p|aste mode to correctly paste
                 ____________________|URLs (and stations' names).
                 Esc                 |Cancel operation.
@@ -6942,6 +6976,9 @@ __|Remote Control Server| cannot be started!__
             return -1
 
         # if char == ord('1'):
+        #     self._show_moving_recordings_dir()
+        #     return
+        # if char == ord('1'):
         #     self.search_radio_browser_headless(1)
         #     return
 
@@ -6956,6 +6993,22 @@ __|Remote Control Server| cannot be started!__
                     delay=1.5,
                     mode_to_set=self.ws.operation_mode,
                     callback_function=self.refreshBody)
+            return
+
+        logger.error('self.ws.operation_mode = '.format(self.ws.operation_mode))
+        logger.error('self.ws.MOVE_RECORDINGS_DIR_MODE = '.format(self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE))
+        if self.ws.operation_mode == self.ws.MOVE_RECORDINGS_DIR_MODE:
+            return
+        elif self.ws.operation_mode == self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE:
+            ''' open directories'''
+            self.ws.close_window()
+            for n in self._cnf.xdg.last_rec_dirs:
+                if path.exists(n):
+                    op_dir = n
+                else:
+                    op_dir = path.dirname(n)
+                self._cnf.open_a_dir(op_dir)
+            self.refreshBody()
             return
 
         # if char == ord('1'):
@@ -7122,6 +7175,9 @@ __|Remote Control Server| cannot be started!__
                 self.ws.PLAYLIST_MODE):
 
             if char == ord('o'):
+                logger.error(r'\o pressed')
+                self._backslash_pressed = False
+                self._update_status_bar_right(status_suffix='')
                 self._cnf.open_config_dir(self.player.recording)
 
             elif char == ord('m') and \
@@ -7715,6 +7771,8 @@ __|Remote Control Server| cannot be started!__
                 self._station_select_win = None
                 self._browser_config_win = None
             ret, ret_list = self._config_win.keypress(char)
+            logger.error('ret = {}'.format(ret))
+            logger.error('ret_list = {}'.format(ret_list))
             if ret == self.ws.INSERT_RECORDINGS_DIR_MODE:
                 self._open_redordings_dir_select_win()
             elif ret == self.ws.SELECT_PLAYER_MODE:
@@ -7860,6 +7918,25 @@ __|Remote Control Server| cannot be started!__
                         if self._cnf.active_remote_control_server_ip != self._cnf.remote_control_server_ip or \
                                 self._cnf.active_remote_control_server_port != self._cnf.remote_control_server_port:
                             self._restart_remote_control_server()
+                        logger.info('\n    1 config options recording_dir : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
+                        logger.info('\n    1 saved config options recording_dir : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
+                        logger.info('\n1    xdg old recordings dir: "{}"'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
+                        logger.info('\n1    xdg new recordings dir: "{}"'.format(self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
+                        if self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] != self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]:
+                            logger.error('\n\nI need to move the directory\n\n')
+                            self._show_moving_recordings_dir()
+                            rret = self._cnf.xdg.set_recording_dir(
+                                    new_dir=None,
+                                    print_to_console=False,
+                                    migrate=True
+                            )
+                            logger.error('set_recording_dir ret = {}'.format(rret))
+                            self.ws.close_window()
+                            if rret:
+                                self.refreshBody()
+                            else:
+                                self._show_moving_recordings_dir_error()
+
                     elif ret == 1:
                         ''' config not modified '''
                         self._show_notification_with_delay(
@@ -8181,17 +8258,38 @@ __|Remote Control Server| cannot be started!__
             return
 
         elif self.ws.operation_mode == self.ws.INSERT_RECORDINGS_DIR_MODE:
-            ret, new_dir, move_files = self._insert_recording_dir_win.keypress(char)
+            ret, new_dir, self._asked_to_move_recordings_dir = self._insert_recording_dir_win.keypress(char)
             if ret == -1:
                 self.ws.close_window()
+                self._asked_to_move_recordings_dir = False
                 self._insert_recording_dir_win = None
                 self.refreshBody()
             elif ret == 1:
                 # new location selected
+                logger.error('\nret\t\t{0}\nnew_dir\t\t"{1}"\nMove dir\t{2}'.format(ret, new_dir, self._asked_to_move_recordings_dir))
+                logger.error('\nRecordings Directory Selected\n\n')
+                self._config_win._config_options['recording_dir'][1] = new_dir
+                logger.info('\n    config options recording_dir : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
+                logger.info('\n    saved config options recording_dir : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
+                # for n in self._config_win._config_options.keys():
+                #     logger.info('{0} : {1}'.format(n, self._config_win._config_options[n]))
+                # logger.info('\nsaved config options')
+                # for n in self._config_win._saved_config_options.keys():
+                #     logger.info('{0} : {1}'.format(n, self._config_win._saved_config_options[n]))
+
                 self.ws.close_window()
+                self._insert_recording_dir_win = None
+                self.refreshBody()
             elif ret == 2:
                 # show line editor help
-                pass
+                self._show_line_editor_help()
+            elif ret == 3:
+                # show invalid dir message
+                self._show_notification_with_delay(
+                        delay=1.5,
+                        txt='\n______Invalid directory specified!!!______\n',
+                        mode_to_set=self.ws.operation_mode,
+                        callback_function=self.refreshBody)
 
         elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE:
             ''' handle browser config '''

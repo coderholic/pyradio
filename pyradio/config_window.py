@@ -154,7 +154,7 @@ class PyRadioConfigWindow(object):
         self._port_line_editor._use_paste_mode = False
         self._port_line_editor.set_global_functions(self._global_functions)
         self._port_line_editor._paste_mode = False
-        self._port_line_editor.chars_to_accept = [ str(x) for x in range(0, 10)]
+        self._port_line_editor.chars_to_accept = [str(x) for x in range(0, 10)]
         self._port_line_editor.set_local_functions(self._fix_local_functions_for_editor())
 
         self._start = 0

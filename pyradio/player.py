@@ -3044,7 +3044,7 @@ class VlcPlayer(Player):
     if platform.startswith('win'):
         WIN = True
     if WIN:
-        # TODO: search and finde vlc.exe
+        # TODO: search and find vlc.exe
         # PLAYER_CMD = "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe"
         PLAYER_CMD = find_vlc_on_windows()
         if PLAYER_CMD:

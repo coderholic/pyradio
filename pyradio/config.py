@@ -7,7 +7,7 @@ import curses
 import collections
 import json
 # import socket
-from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ, getpid, listdir
+from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ, getpid, listdir, rmdir
 from sys import platform
 from time import ctime, sleep
 from datetime import datetime
@@ -161,8 +161,10 @@ class XdgDirs(object):
                 self._new_dirs[self.DATA] = self._old_dirs[self.DATA]
                 self._new_dirs[self.STATE] = self._old_dirs[self.STATE]
             self._new_dirs[self.CACHE] = path.join(path.expanduser('~'), '.cache', 'pyradio')
-        self._old_dirs[self.RECORDINGS] = path.join(self._old_dirs[self.STATIONS], 'recordings')
-        self._new_dirs[self.RECORDINGS] = path.join(path.expanduser('~'), 'pyradio-recordings')
+        if self._old_dirs[self.RECORDINGS] is None:
+            self._old_dirs[self.RECORDINGS] = path.join(self._old_dirs[self.STATIONS], 'recordings')
+        if self._new_dirs[self.RECORDINGS] is None:
+            self._new_dirs[self.RECORDINGS] = path.join(path.expanduser('~'), 'pyradio-recordings')
 
     def ensure_paths_exist(self):
         ''' Make sure config dirs exists '''
@@ -243,15 +245,43 @@ class XdgDirs(object):
 
     @recording_dir.setter
     def recording_dir(self, val):
-        logger.error('@recording_dir.setter: val = "{}"'.format(val))
+        self.set_recording_dir(new_dir=val, print_to_console=False)
+
+    def set_recording_dir(self, new_dir=None, print_to_console=True, migrate=True):
+        logger.error('@recording_dir.setter: migrate = "{}"'.format(migrate))
+        logger.error('@recording_dir.setter: new_dir = "{}"'.format(new_dir))
         logger.error('@recording_dir.setter: self._new_dirs[self.RECORDINGS] = "{}"'.format(self._new_dirs[self.RECORDINGS]))
-        if val != self._new_dirs[self.RECORDINGS]:
+        if new_dir is None:
+            ''' coming form save condfig
+                self._new_dirs[self.RECORDINGS]
+                is already set and checked
+            '''
+            if migrate:
+                ret = self.migrate_recordings(silent=not print_to_console)
+                self._set_last_rec_dirs(ret)
+                return ret
+            else:
+                return True
+        elif new_dir != self._new_dirs[self.RECORDINGS]:
             logger.error('@recording_dir.setter: 1')
-            if val != path.join(self.stations_dir, 'recordings'):
+            if new_dir != path.join(self.stations_dir, 'recordings'):
                 logger.error('@recording_dir.setter: 2')
-                self._new_dirs[self.RECORDINGS] = val
+                self._new_dirs[self.RECORDINGS] = new_dir
             logger.error('@recording_dir.setter: 3')
-            self.migrate_recordings(silent=True)
+            if migrate:
+                ret = self.migrate_recordings(silent=not print_to_console)
+                self._set_last_rec_dirs(ret)
+                return ret
+        return True
+
+    def _set_last_rec_dirs(self, val):
+        if val:
+            self.last_rec_dirs = ()
+        else:
+            self.last_rec_dirs = (
+                self._old_dirs[self.RECORDINGS],
+                self._new_dirs[self.RECORDINGS]
+            )
 
     def migrate_cache(self):
         ''' cache dir '''
@@ -288,7 +318,14 @@ class XdgDirs(object):
                     else:
                         print('Migrating recordings ')
                 parent_dir = path.dirname(self._new_dirs[self.RECORDINGS])
-                if not path.exists(parent_dir):
+                if path.exists(parent_dir):
+                    if path.exists(self._new_dirs[self.RECORDINGS]):
+                        if len(listdir(self._new_dirs[self.RECORDINGS])) == 0:
+                            try:
+                                rmdir(self._new_dirs[self.RECORDINGS])
+                            except:
+                                pass
+                else:
                     try:
                         makedirs(parent_dir)
                     except:
@@ -312,8 +349,8 @@ class XdgDirs(object):
                         remove_tree(self._old_dirs[self.RECORDINGS])
                     except:
                         pass
-                self._old_dirs[self.RECORDINGS] = self._new_dirs[self.RECORDINGS]
-                return True
+                # self._old_dirs[self.RECORDINGS] = self._new_dirs[self.RECORDINGS]
+                # return True
         if not path.exists(self._new_dirs[self.RECORDINGS]):
             try:
                 makedirs(self._new_dirs[self.RECORDINGS])
@@ -1649,6 +1686,7 @@ class PyRadioConfig(PyRadioStations):
     buffering_data = []
 
     def __init__(self, user_config_dir=None, headless=False):
+        self._first_read = True
         self._headless = headless
         self.backup_player_params = None
         self.player = ''
@@ -1986,7 +2024,7 @@ class PyRadioConfig(PyRadioStations):
     @recording_dir.setter
     def recording_dir(self, val):
         self.opts['recording_dir'][1] = val
-        self.xdg.recording_dir = val
+        # self.xdg.recording_dir = val
         self.dirty_config = True
 
     def is_default_file(self, a_theme_name):
@@ -2090,6 +2128,21 @@ class PyRadioConfig(PyRadioStations):
             curses.mousemask(curses.ALL_MOUSE_EVENTS
                              | curses.REPORT_MOUSE_POSITION)
             #curses.mouseinterval(0)
+
+    def open_a_dir(self, a_dir):
+        if system().lower() == 'windows':
+            startfile(a_dir)
+        elif system().lower() == 'darwin':
+            Popen(['open', a_dir])
+        else:
+            try:
+                Popen(
+                    ['xdg-open', a_dir],
+                    stderr=DEVNULL,
+                    stdout=DEVNULL
+                )
+            except:
+                Popen(['xdg-open', self.stations_dir])
 
     def open_config_dir(self, recording=0):
         a_dir = self.stations_dir if recording == 0 else self.recording_dir
@@ -2421,6 +2474,11 @@ class PyRadioConfig(PyRadioStations):
                 self.opts['recording_dir'][1] = sp[1].strip()
                 if self.opts['recording_dir'][1] == 'default':
                     self.opts['recording_dir'][1] = ''
+                if self.opts['recording_dir'][1].startswith('~'):
+                    self.opts['recording_dir'][1] = path.expanduser('~') + self.opts['recording_dir'][1][1:]
+                elif self.opts['recording_dir'][1].startswith('%homepath%') or \
+                        self.opts['recording_dir'][1].startswith('%HOMEPATH%'):
+                    self.opts['recording_dir'][1] = path.expanduser('~') + self.opts['recording_dir'][1][len('%homepath%'):]
             elif sp[0] == 'xdg_compliant':
                 if sp[1].lower() == 'true':
                     pass
@@ -2488,8 +2546,19 @@ class PyRadioConfig(PyRadioStations):
             except:
                 print('Error: Cannot create recordings directory: "{}"'.format(self.opts['recording_dir'][1]))
                 sys.exit(1)
-        self.xdg.recording_dir = self.opts['recording_dir'][1]
-        return 0
+        if self.opts['recording_dir'][1] == path.join(self.stations_dir, 'data', 'recordings'):
+            if self._first_read:
+                ''' On startup only move recordings dir
+                    from  ~/data/recordings
+                    to    ~/pyradio_recordings
+                            (also on Windows)
+                '''
+                self.xdg.set_recording_dir(
+                        new_dir=self.opts['recording_dir'][1],
+                        print_to_console=True,
+                        migrate=True
+                )
+        self._first_read = False
 
     def get_last_playlist(self):
         ''' read last opened playlist
@@ -2849,11 +2918,24 @@ remote_control_server_auto_start = {22}
             calcf = self.bck_opts['calculated_color_factor']
 
         if self.opts['recording_dir'][1] == path.join(path.expanduser('~'), 'pyradio-recordings'):
-            self.xdg.recording_dir = path.join(path.expanduser('~'), 'pyradio-recordings')
             rec_dir = 'default'
         else:
-            rec_dir = self.opts['recording_dir'][1]
-            self.xdg.recording_dir = rec_dir
+            rec_dir = self.opts['recording_dir'][1].replace(
+                    path.expanduser('~'),
+                    '%HOMEPATH%' if platform.startswith('win') else '~'
+                    )
+        self.xdg.set_recording_dir(
+                new_dir=self.opts['recording_dir'][1],
+                print_to_console=False,
+                migrate=False
+                )
+
+        # TODO: migrate recordings dir
+        # self.xdg.set_recording_dir(
+        #         new_dir=rec_dir,
+        #         print_to_console=False,
+        #         migrate=False
+        # )
         try:
             with open(self.config_file, 'w', encoding='utf-8') as cfgfile:
                 cfgfile.write(txt.format(
@@ -4145,10 +4227,13 @@ transparency        0
 
 class CheckDir(object):
 
-    def __init__(self, a_path, default=None):
+    def __init__(self, a_path, default=None, remove_after_validation=False):
+        self._remove_after_validation = remove_after_validation
+        logger.error('++ remove_after_validation = {}'.format(remove_after_validation))
         self._is_writable = False
         self.dir_path = self._replace_tilde(a_path)
         if default:
+            logger.error('++ default not None')
             if not self._validate_path():
                 expanded_default = self._replace_tilde(default)
                 self.dir_path = self._replace_tilde(expanded_default)
@@ -4173,34 +4258,53 @@ class CheckDir(object):
         return self.dir_path
 
     def _validate_path(self, a_path=None):
+        created = False
         if a_path is None:
             a_path = self.dir_path
         # make sure path exists and is writable
         self._is_writable = False
-        if path.exists(self.dir_path):
-            if path.isdir(self.dir_path):
-                # ok, it exists and it is a directory
-                # Can i write in it?
-                test_file = path.join(a_path, 'TEST_IF_WRITABLE')
-                try:
-                    with open(test_file, 'w') as f:
-                        pass
-                    remove(test_file)
-                    self._is_writable = True
-                    return True
-                except:
-                    return False
+        if not path.exists(self.dir_path):
+            if system().lower() == 'windows':
+                splited_path = self.dir_path.split(path.sep)
+                existing = splited_path[0]
+                for n in splited_path[1:]:
+                    existing = existing + path.sep + n
+                    if not path.exists(existing):
+                        break
             else:
-                return False
-        else:
+                splited_path = self.dir_path.split(path.sep)[1:]
+                existing = path.sep
+                for n in splited_path:
+                    existing = path.join(existing, n)
+                    if not path.exists(existing):
+                        break
             # it does not exist, try to create it
             try:
                 makedirs(self.dir_path)
-                self._is_writable = True
-                return True
+                created = True
             except:
                 return False
-        return False
+        ret = False
+        if path.isdir(self.dir_path):
+            # Can i write in it?
+            test_file = path.join(self.dir_path, r'TEST_IF_WRITABLE')
+            try:
+                with open(test_file, 'w') as f:
+                    pass
+                remove(test_file)
+                self._is_writable = True
+                ret = True
+            except:
+                pass
+        else:
+            pass
+        # asked to remove the dir i created?
+        if created and self._remove_after_validation:
+            try:
+                remove_tree(existing)
+            except:
+                pass
+        return ret
 
 
 
