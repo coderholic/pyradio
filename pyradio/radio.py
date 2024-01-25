@@ -36,7 +36,7 @@ from .common import *
 from .window_stack import Window_Stack
 from .config_window import *
 from .log import Log
-from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering, PyRadioRecordingDir
+from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering, PyRadioRecordingDir, PyRadioOpenDir
 from .themes import *
 from .cjkwrap import cjklen, cjkcenter, cjkslices
 from . import player
@@ -400,6 +400,8 @@ class PyRadio(object):
 
     _asked_to_move_recordings_dir = False
 
+    _open_dir_win = None
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -643,6 +645,8 @@ class PyRadio(object):
             self.ws.INSERT_RECORDINGS_DIR_MODE: self._open_redordings_dir_select_win,
             self.ws.MOVE_RECORDINGS_DIR_MODE: self._show_moving_recordings_dir,
             self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE: self._show_moving_recordings_dir_error,
+            self.ws.OPEN_DIR_MODE: self._show_open_dir_window,
+            self.ws.OPEN_DIR_HELP_MODE: self._show_open_dir_help,
         }
 
         ''' list of help functions '''
@@ -670,6 +674,7 @@ class PyRadio(object):
             self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
             self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
             self.ws.GROUP_HELP_MODE: self._show_group_help,
+            self.ws.OPEN_DIR_HELP_MODE: self._show_open_dir_help,
         }
 
         ''' search classes
@@ -3099,6 +3104,22 @@ __|Remote Control Server| cannot be started!__
                         mode_to_set=self.ws.RADIO_BROWSER_CONFIG_HELP_MODE,
                         caption=' RadioBrowser Config Help ')
 
+    def _show_open_dir_help(self):
+        txt = r'''Up|,|j|,|PgUp|,
+                 Down|,|k|,|PgDown    |Change Directory selection.
+                 g G              |Go to first / last Directory.
+                 Space|, |Right|, |l|, |Enter
+                 _________________|Open a Directory.
+                 1| - |{}            |Open corresponding Directory.
+                 Esc|,|q            |Cancel.
+                 %_Global functions_
+                 -|/|+| or |,|/|.       |Change volume.
+                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
+                 W| / |w            |Toggle title log / like a station.'''.format(len(self._open_dir_win.items))
+        self._show_help(txt,
+                        mode_to_set=self.ws.OPEN_DIR_HELP_MODE,
+                        caption=' Open Directory Help ')
+
     def _show_group_help(self):
         txt = r'''Up|,|j|,|PgUp|,
                  Down|,|k|,|PgDown    |Change Group Header selection.
@@ -3572,7 +3593,7 @@ __|Remote Control Server| cannot be started!__
                      r      ||R|ename current playlist.
                      C      ||C|lear all registers.
                      u      |Show |U|nnamed Register.
-                     o      ||O|pen  config dir in file manager.
+                     o      ||O|pen dirs in file manager.
 
                     |Any other key exits current mode.
                   '''
@@ -3586,7 +3607,7 @@ __|Remote Control Server| cannot be started!__
                          c      |Clear |c|urrent register.
                          C      ||C|lear all registers.
                          u      |Show |U|nnamed Register.
-                         o      ||O|pen  config dir in file manager.
+                         o      ||O|pen dirs in file manager.
 
                         |Any other key exits current mode.
                        '''
@@ -3595,7 +3616,7 @@ __|Remote Control Server| cannot be started!__
                          p      ||P|aste to current playlist.
                          r      ||R|ename current playlist.
                          u      |Show |U|nnamed Register.
-                         o      ||O|pen  config dir in file manager.
+                         o      ||O|pen dirs in file manager.
 
                         |Any other key exits current mode.
                        '''
@@ -6995,22 +7016,6 @@ __|Remote Control Server| cannot be started!__
                     callback_function=self.refreshBody)
             return
 
-        logger.error('self.ws.operation_mode = '.format(self.ws.operation_mode))
-        logger.error('self.ws.MOVE_RECORDINGS_DIR_MODE = '.format(self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE))
-        if self.ws.operation_mode == self.ws.MOVE_RECORDINGS_DIR_MODE:
-            return
-        elif self.ws.operation_mode == self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE:
-            ''' open directories'''
-            self.ws.close_window()
-            for n in self._cnf.xdg.last_rec_dirs:
-                if path.exists(n):
-                    op_dir = n
-                else:
-                    op_dir = path.dirname(n)
-                self._cnf.open_a_dir(op_dir)
-            self.refreshBody()
-            return
-
         # if char == ord('1'):
         #     logger.error('self._cnf.recording_dir = "/home/spiros/pyradio-mkvs"')
         #     self._cnf.recording_dir = '/home/spiros/home-at-homepc/00000'
@@ -7060,6 +7065,45 @@ __|Remote Control Server| cannot be started!__
                 else:
                     self._cnf.WIN_UNINSTALL = False
                     self.refreshBody()
+            return
+
+        if self.ws.operation_mode == self.ws.OPEN_DIR_MODE:
+            ret = self._open_dir_win.keypress(char)
+            ''' Returns:
+                    -1 - Cancel
+                     0 - Item selected
+                     1 - Continue
+                     2 - Display help
+            '''
+            if ret == -1:
+                ''' cancel '''
+                self.ws.close_window()
+                self._open_dir_win = None
+                self.refreshBody()
+            elif ret == 0:
+                ''' open dir '''
+                self._cnf.open_a_dir(self._open_dir_win.dir)
+            elif ret == 1:
+                ''' continue '''
+                pass
+            elif ret == 2:
+                ''' show help '''
+                self._show_open_dir_help()
+            return
+
+        elif self.ws.operation_mode == self.ws.MOVE_RECORDINGS_DIR_MODE:
+            return
+
+        elif self.ws.operation_mode == self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE:
+            ''' open directories'''
+            self.ws.close_window()
+            for n in self._cnf.xdg.last_rec_dirs:
+                if path.exists(n):
+                    op_dir = n
+                else:
+                    op_dir = path.dirname(n)
+                self._cnf.open_a_dir(op_dir)
+            self.refreshBody()
             return
 
         if self.ws.operation_mode == self.ws.WIN_PRINT_EXE_LOCATION_MODE:
@@ -7178,7 +7222,7 @@ __|Remote Control Server| cannot be started!__
                 logger.error(r'\o pressed')
                 self._backslash_pressed = False
                 self._update_status_bar_right(status_suffix='')
-                self._cnf.open_config_dir(self.player.recording)
+                self._show_open_dir_window()
 
             elif char == ord('m') and \
                     self.ws.operation_mode == self.ws.NORMAL_MODE:
@@ -10023,6 +10067,16 @@ __|Remote Control Server| cannot be started!__
         # if logger.isEnabledFor(logging.DEBUG):
         #     logger.debug('Display "Press ? for help": {}'.format(ret))
         return ret
+
+    def _show_open_dir_window(self):
+        if self._open_dir_win is None:
+            self._open_dir_win = PyRadioOpenDir(
+                    self._cnf,
+                    self.bodyWin,
+                    self._global_functions
+            )
+        self.ws.operation_mode = self.ws.OPEN_DIR_MODE
+        self._open_dir_win.show(parent=self.bodyWin)
 
     def _show_delayed_notification(self, txt, delay=.75):
         if not (self._limited_height_mode or self._limited_width_mode):

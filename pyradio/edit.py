@@ -11,7 +11,7 @@ try:
     from urllib.parse import urlparse
 except:
     from urlparse import urlparse
-from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesCheckBox, SimpleCursesHorizontalPushButtons, DisabledWidget
+from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesCheckBox, SimpleCursesHorizontalPushButtons, SimpleCursesMenu, DisabledWidget
 from .player import PlayerCache
 from .log import Log
 from .server import IPsWithNumbers
@@ -23,6 +23,95 @@ locale.setlocale(locale.LC_ALL, '')    # set your locale
 
 logger = logging.getLogger(__name__)
 
+
+class PyRadioOpenDir(SimpleCursesMenu):
+
+    def __init__(self, config, parent, global_functions):
+        self._cnf = config
+
+        if self._cnf.xdg_compliant:
+            self._items = (
+                    'Config Directory',
+                    'Data Directory',
+                    'State Directory'
+                    'Cache Directory',
+                    'Recordings Directory    ',
+            )
+            self._dir = (
+                    self._cnf.stations_dir,
+                    self._cnf.data_dir,
+                    self._cnf.state_dir,
+                    self._cbf.cache_dir,
+                    self._cnf.recording_dir
+            )
+            self._ord = (
+                ord('1'),
+                ord('2'),
+                ord('3'),
+                ord('4'),
+                ord('5')
+            )
+        else:
+            self._items = (
+                    'Config Directory',
+                    'Data Directory',
+                    'Cache Directory',
+                    'Recordings Directory        ',
+            )
+            self._dir = (
+                    self._cnf.stations_dir,
+                    self._cnf.data_dir,
+                    self._cnf.cache_dir,
+                    self._cnf.recording_dir
+            )
+            self._ord = (
+                ord('1'),
+                ord('2'),
+                ord('3'),
+                ord('4'),
+            )
+
+        for n in self._dir:
+            logger.error('dir: "{}"'.format(n))
+
+        SimpleCursesMenu.__init__(
+            self,
+            Y = -1, X = -1,
+            items=self.items,
+            parent=parent,
+            title=' Open Directory ',
+            display_count=True,
+            active=0, selection=0,
+            color=curses.color_pair(10),
+            color_title=curses.color_pair(11),
+            color_border=curses.color_pair(3),
+            color_active=curses.color_pair(11),
+            color_cursor_selection=curses.color_pair(6),
+            color_cursor_active=curses.color_pair(9),
+            window_type=SimpleCursesMenu.CENTERED,
+            margin=1,
+            global_functions=global_functions
+        )
+    # self._group_selection_window.show(parent=self.bodyWin)
+
+    def keypress(self, char):
+        ''' SimpleCursesMenuEntries keypress
+
+            Returns
+            -------
+               -1 - Cancel
+                0 - Item selected
+                1 - Continue
+                2 - Display help
+        '''
+        if char in self._ord:
+            self.dir = self._dir[char-ord('1')]
+            return 0
+        else:
+            ret = SimpleCursesMenu.keypress(self, char)
+            if ret == 0:
+                self.dir = self._dir[self.selection]
+            return ret
 
 class PyRadioSearch(SimpleCursesLineEdit):
 

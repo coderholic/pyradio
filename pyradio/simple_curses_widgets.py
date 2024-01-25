@@ -1850,6 +1850,7 @@ class SimpleCursesMenu(SimpleCursesWidget):
     _selection = _start_pos = 0
     _global_functions = _local_functions = {}
     _can_add_items = _can_delete_items = False
+
     def __init__(self,
                  Y, X,
                  parent,

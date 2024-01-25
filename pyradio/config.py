@@ -219,11 +219,8 @@ class XdgDirs(object):
             return self._old_dirs[self.DATA]
 
     @property
-    def cahce_dir(self):
-        if self._xdg_compliant:
-            return self._new_dirs[self.CACHE]
-        else:
-            return self._old_dirs[self.CACHE]
+    def cache_dir(self):
+        return self._new_dirs[self.CACHE]
 
     @property
     def state_dir(self):
@@ -313,10 +310,7 @@ class XdgDirs(object):
             files = [path.join(self._old_dirs[self.RECORDINGS], f) for f in listdir(self._old_dirs[self.RECORDINGS])]
             if files:
                 if not silent:
-                    if PY3:
-                        print('Migrating recordings ... ', end='', flush=True)
-                    else:
-                        print('Migrating recordings ')
+                    print('Migrating recordings ')
                 parent_dir = path.dirname(self._new_dirs[self.RECORDINGS])
                 if path.exists(parent_dir):
                     if path.exists(self._new_dirs[self.RECORDINGS]):
@@ -342,8 +336,6 @@ class XdgDirs(object):
                     else:
                         print('\nCannot copy files\nfrom: "{0}"\nto: {1}'.format(self._old_dirs[self.RECORDINGS], self._new_dirs[self.RECORDINGS]))
                         exit(1)
-                if not silent and PY3:
-                    print('done')
                 if path.exists(self._old_dirs[self.RECORDINGS]):
                     try:
                         remove_tree(self._old_dirs[self.RECORDINGS])
@@ -1702,6 +1694,7 @@ class PyRadioConfig(PyRadioStations):
         self.theme = 'dark'
         self.active_transparency = False
         self._distro = 'None'
+        self.xdg_compliant = False
 
         if self.params_changed:
             self.dirty_config = True
@@ -2142,7 +2135,11 @@ class PyRadioConfig(PyRadioStations):
                     stdout=DEVNULL
                 )
             except:
-                Popen(['xdg-open', self.stations_dir])
+                ''' pyrthon 2? '''
+                try:
+                    Popen(['xdg-open', a_dir])
+                except:
+                    Popen(['xdg-open', self.stations_dir])
 
     def open_config_dir(self, recording=0):
         a_dir = self.stations_dir if recording == 0 else self.recording_dir
@@ -2481,7 +2478,7 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['recording_dir'][1] = path.expanduser('~') + self.opts['recording_dir'][1][len('%homepath%'):]
             elif sp[0] == 'xdg_compliant':
                 if sp[1].lower() == 'true':
-                    pass
+                    self.xdg_compliant = True
 
         ''' read distro from package config file '''
         package_config_file = path.join(path.dirname(__file__), 'config')
