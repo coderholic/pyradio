@@ -180,11 +180,6 @@ class XdgDirs(object):
                     print('Error: Cannot create directory: "{}"'.format(a_dir))
                     sys.exit(1)
 
-    def _get_xdg_dirs(self):
-        xdg_cache = os.getenv('XDG_CACHE_HOME', os.path.join(path.expanduser('~'), '.cache'))
-        xdg_state = os.getenv('XDG_STATE_HOME', os.path.join(path.expanduser('~'), '.local', 'state'))
-
-
         # getenv('XDG_RUNTIME_DIR', '/run/user/1000')
 
     @property
@@ -244,11 +239,21 @@ class XdgDirs(object):
     def recording_dir(self, val):
         self.set_recording_dir(new_dir=val, print_to_console=False)
 
-    def set_recording_dir(self, new_dir=None, print_to_console=True, migrate=True):
+    def set_recording_dir(self, new_dir=None, print_to_console=True, migrate=True, first_read=None):
         logger.error('@recording_dir.setter: migrate = "{}"'.format(migrate))
         logger.error('@recording_dir.setter: new_dir = "{}"'.format(new_dir))
         logger.error('@recording_dir.setter: self._new_dirs[self.RECORDINGS] = "{}"'.format(self._new_dirs[self.RECORDINGS]))
-        if new_dir is None:
+        logger.error('@recording_dir.setter: self._old_dirs[self.RECORDINGS] = "{}"'.format(self._old_dirs[self.RECORDINGS]))
+        if first_read:
+            old_dir = self._old_dirs[self.RECORDINGS]
+            self._old_dirs[self.RECORDINGS] = first_read
+            self._new_dirs[self.RECORDINGS] = new_dir
+            logger.error('@ after recording_dir.setter: self._new_dirs[self.RECORDINGS] = "{}"'.format(self._new_dirs[self.RECORDINGS]))
+            logger.error('@ after recording_dir.setter: self._old_dirs[self.RECORDINGS] = "{}"'.format(self._old_dirs[self.RECORDINGS]))
+            ret = self.migrate_recordings(silent=not print_to_console)
+            self._old_dirs[self.RECORDINGS] = old_dir
+            self._set_last_rec_dirs(ret)
+        elif new_dir is None:
             ''' coming form save condfig
                 self._new_dirs[self.RECORDINGS]
                 is already set and checked
@@ -343,15 +348,18 @@ class XdgDirs(object):
                         pass
                 # self._old_dirs[self.RECORDINGS] = self._new_dirs[self.RECORDINGS]
                 # return True
-        if not path.exists(self._new_dirs[self.RECORDINGS]):
-            try:
-                makedirs(self._new_dirs[self.RECORDINGS])
-            except:
-                if silent:
-                    return False
-                else:
-                    print('\nCannot create dir: "{}"'.format(self._new_dirs[self.RECORDINGS]))
-                    exit(1)
+        #
+        # I do not need to do this here, the dir will be created as needed elsewhere
+        #
+        # if not path.exists(self._new_dirs[self.RECORDINGS]):
+        #     try:
+        #         makedirs(self._new_dirs[self.RECORDINGS])
+        #     except:
+        #         if silent:
+        #             return False
+        #         else:
+        #             print('\nCannot create dir: "{}"'.format(self._new_dirs[self.RECORDINGS]))
+        #             exit(1)
         self._old_dirs[self.RECORDINGS] = self._new_dirs[self.RECORDINGS]
         return True
 
@@ -1678,6 +1686,8 @@ class PyRadioConfig(PyRadioStations):
     buffering_data = []
 
     def __init__(self, user_config_dir=None, headless=False):
+        # keep old recording / new recording dir
+        self.rec_dirs = ()
         self._first_read = True
         self._headless = headless
         self.backup_player_params = None
@@ -2543,18 +2553,21 @@ class PyRadioConfig(PyRadioStations):
             except:
                 print('Error: Cannot create recordings directory: "{}"'.format(self.opts['recording_dir'][1]))
                 sys.exit(1)
-        if self.opts['recording_dir'][1] == path.join(self.stations_dir, 'data', 'recordings'):
-            if self._first_read:
-                ''' On startup only move recordings dir
-                    from  ~/data/recordings
-                    to    ~/pyradio_recordings
-                            (also on Windows)
-                '''
-                self.xdg.set_recording_dir(
-                        new_dir=self.opts['recording_dir'][1],
-                        print_to_console=True,
-                        migrate=True
-                )
+        logger.error('self.opts["recording_dir"][1] = "{}"'.format(self.opts['recording_dir'][1]))
+        if path.exists(path.join(self.stations_dir, 'data', 'recordings')) and \
+                    self._first_read:
+            print('++ Need to migrate')
+            ''' On startup only move recordings dir
+                from  [[STATIONS DIR]]data/recordings
+                to    ~/pyradio_recordings
+                        (also on Windows)
+            '''
+            self.xdg.set_recording_dir(
+                    new_dir=self.opts['recording_dir'][1],
+                    print_to_console=True,
+                    migrate=True,
+                    first_read=path.join(self.stations_dir, 'data', 'recordings')
+            )
         self._first_read = False
 
     def get_last_playlist(self):

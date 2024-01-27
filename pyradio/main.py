@@ -360,8 +360,6 @@ If nothing else works, try the following command:
                     print('Error in config path: "{}"\n      This directory cannot be used by PyRadio!'.format(args.config_dir))
                 sys.exit(1)
 
-    config_already_read = False
-
     if not system().lower().startswith('darwin') and \
             not system().lower().startswith('win'):
         if args.terminal:
@@ -395,7 +393,6 @@ If nothing else works, try the following command:
         if args.write_theme:
             if args.write_theme[0]:
                 from .themes import PyRadioTheme
-                read_config(pyradio_config)
                 theme = PyRadioTheme(pyradio_config)
                 ret, msg = theme.create_theme_from_theme(
                     args.write_theme[0],
@@ -406,8 +403,6 @@ If nothing else works, try the following command:
 
         if args.headless:
             # Is there another headless instance?
-            if not config_already_read:
-                config_already_read = True
             if path.exists(pyradio_config.remote_control_server_report_file):
                 print('Error: Headless Server already running...\n')
                 sys.exit(1)
@@ -623,7 +618,6 @@ If nothing else works, try the following command:
             sys.exit()
 
         if args.list_playlists:
-            config_already_read = True
             pyradio_config.list_playlists()
             sys.exit()
 

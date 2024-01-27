@@ -665,6 +665,8 @@ class PyRadioConfigWindow(object):
             self.need_to_update_theme = False
         else:
             self.need_to_update_theme = True
+        self._cnf.rec_dirs = (self._config_options['recording_dir'][1], self._saved_config_options['recording_dir'][1])
+        logger.error('rec_dirs\n{}'.format(self._cnf.rec_dirs))
         self._saved_config_options = deepcopy(self._config_options)
         if self._cnf.opts != self._saved_config_options:
             ''' check if player has changed '''

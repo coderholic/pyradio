@@ -7910,6 +7910,8 @@ __|Remote Control Server| cannot be started!__
                         self.log.write(msg=msg[0], help_msg=False, suffix=self._status_suffix)
                         self._print_config_save_error()
                     elif ret == 0:
+                        logger.info('\nConfSaved    config options recording_dir : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
+                        logger.info('\nConfSaved    saved config options recording_dir : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
                         ''' Config saved successfully '''
 
                         ''' sync backup parameters '''
@@ -7962,24 +7964,32 @@ __|Remote Control Server| cannot be started!__
                         if self._cnf.active_remote_control_server_ip != self._cnf.remote_control_server_ip or \
                                 self._cnf.active_remote_control_server_port != self._cnf.remote_control_server_port:
                             self._restart_remote_control_server()
-                        logger.info('\n    1 config options recording_dir : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
-                        logger.info('\n    1 saved config options recording_dir : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
-                        logger.info('\n1    xdg old recordings dir: "{}"'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
-                        logger.info('\n1    xdg new recordings dir: "{}"'.format(self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
-                        if self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] != self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]:
-                            logger.error('\n\nI need to move the directory\n\n')
-                            self._show_moving_recordings_dir()
-                            rret = self._cnf.xdg.set_recording_dir(
-                                    new_dir=None,
-                                    print_to_console=False,
-                                    migrate=True
-                            )
-                            logger.error('set_recording_dir ret = {}'.format(rret))
-                            self.ws.close_window()
-                            if rret:
-                                self.refreshBody()
+                        logger.info('\n    1 self._config_win._config_options : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
+                        logger.info('\n    1 self._config_win._saved_options : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
+                        logger.info('\n    1 xdg old recordings dir: "{}"'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
+                        logger.info('\n    1 xdg new recordings dir: "{}"'.format(self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
+                        logger.error('self._asked_to_move_recordings_dir = {}'.format(self._asked_to_move_recordings_dir))
+                        logger.error('rec_dirs\n{}'.format(self._cnf.rec_dirs))
+                        if self._asked_to_move_recordings_dir and self._cnf.rec_dirs:
+                            self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS] = self._cnf.rec_dirs[0]
+                            self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] = self._cnf.rec_dirs[1]
+                            if self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] != self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]:
+                                logger.error('\n\nI need to move the directory\n\n')
+                                self._show_moving_recordings_dir()
+                                rret = self._cnf.xdg.set_recording_dir(
+                                        new_dir=None,
+                                        print_to_console=False,
+                                        migrate=True
+                                )
+                                logger.error('set_recording_dir ret = {}'.format(rret))
+                                self.ws.close_window()
+                                if rret:
+                                    self.refreshBody()
+                                else:
+                                    self._show_moving_recordings_dir_error()
                             else:
-                                self._show_moving_recordings_dir_error()
+                                if logger.isEnabledFor(logging.DEBUG):
+                                    logger.debug('Asked to move recordings but source and target are the same\nsource: {0}\ntarget: {1}'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS], self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
 
                     elif ret == 1:
                         ''' config not modified '''
@@ -8313,8 +8323,10 @@ __|Remote Control Server| cannot be started!__
                 logger.error('\nret\t\t{0}\nnew_dir\t\t"{1}"\nMove dir\t{2}'.format(ret, new_dir, self._asked_to_move_recordings_dir))
                 logger.error('\nRecordings Directory Selected\n\n')
                 self._config_win._config_options['recording_dir'][1] = new_dir
-                logger.info('\n    config options recording_dir : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
-                logger.info('\n    saved config options recording_dir : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
+                logger.info('\n    self._config_win._config_options : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
+                logger.info('\n    self._config_win._saved_config_options : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
+                logger.info('\n    self.xdg._new_dirs[RECORDINGS] : "{}"'.format(self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
+                logger.info('\n    self.xdg._old_dirs[RECORDINGS] : "{}"'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
                 # for n in self._config_win._config_options.keys():
                 #     logger.info('{0} : {1}'.format(n, self._config_win._config_options[n]))
                 # logger.info('\nsaved config options')
