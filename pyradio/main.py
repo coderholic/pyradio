@@ -35,6 +35,12 @@ if PY3:
 else:
     HAS_PIPX = False
 
+try:
+    import netifaces
+    HAS_NETIFACES = True
+except:
+    HAS_NETIFACES = False
+
 HAS_RICH = False
 if PY3:
     try:
@@ -82,6 +88,27 @@ class MyArgParser(ArgumentParser):
 
 @contextmanager
 def pyradio_config_file(a_dir, headless=None):
+    if headless and not HAS_NETIFACES:
+        if PY3:
+            txt = '''Module "netifaces" not found!
+
+In order to use the [red]Remote Control Server[/red], the "netifaces"
+module must be installed.
+
+Please install the module (named "python-netifaces" or
+"python{}-netifaces") and try executing [magenta]PyRadio[/magenta] again.
+'''
+        else:
+            txt = '''Module "netifaces" not found!
+
+In order to use the "Remote Control Server", the "netifaces"
+module must be installed.
+
+Please install the module (named "python-netifaces" or
+"python{}-netifaces") and try executing "PyRadio" again.
+'''
+        print(txt.format('3' if PY3 else 2))
+        sys.exit(1)
     cf = PyRadioConfig(user_config_dir=a_dir, headless=headless)
     try:
         yield cf
