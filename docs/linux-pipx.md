@@ -96,6 +96,7 @@ sudo apt-get install \
     python3-pip \
     python3-rich \
     python3-requests \
+    python3-netifaces \
     libpython3-all-dev
 ```
 
@@ -157,6 +158,7 @@ sudo dnf install \
     python3-wheel \
     python3-rich \
     python3-requests \
+    python3-netifaces \
     pipx
 ```
 

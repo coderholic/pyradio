@@ -67,6 +67,8 @@ class IPs(object):
 
     def _get_linux_ips(self):
         out = ['127.0.0.1']
+        if not HAS_NETIFACES:
+            return out
         interfaces = netifaces.interfaces()
         for n in interfaces:
             iface=netifaces.ifaddresses(n).get(netifaces.AF_INET)
@@ -868,6 +870,8 @@ Restricted Commands (Main mode only)
 
     def __init__(self, bind_ip, bind_port, config, commands):
         self.has_netifaces = HAS_NETIFACES
+        if not self.has_netifaces:
+            return
         self._bind_ip = bind_ip
         if bind_ip.lower() == 'localhost':
             self._bind_ip = '127.0.0.1'

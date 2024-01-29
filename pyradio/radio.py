@@ -11281,9 +11281,11 @@ __|Remote Control Server| cannot be started!__
             config=self._cnf,
             commands=self._remote_control_server_commands
         )
+        # self._remote_control_server.has_netifaces = False
         if not self._remote_control_server.has_netifaces:
             self._remote_control_server = None
             self._no_netifaces = True
+            self._remote_control_server = None
             return
         self._remote_control_server_thread = threading.Thread(
             target=self._remote_control_server.start_remote_control_server,
