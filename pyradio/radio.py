@@ -8350,26 +8350,26 @@ __|Remote Control Server| cannot be started!__
                     # show error message
                     self._show_delete_playlist_error()
                     return
-            if self.selection < len(self.stations) - 1:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('deleting playlist {0}: {1}'.format(self.selection, self.stations[self.selection]))
-                self.stations.pop(self.selection)
-            else:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('deleting last playlist {0}: {1}'.format(self.selection, self.stations[self.selection]))
-                self.stations.pop()
-                self.selection -= 1
-                if self.selection == len(self.stations) - 1:
-                    self.startPos -= 1
-                    self.selection += 1
-                    if self.startPos < 0:
-                        self.startPos = 0
-            if self.selection < self.playing and self.playing > -1:
-                self.playing -= 1
-            if self.selection > 0:
-                self.selection -= 1
-            if self.startPos > self.selection:
-                self.startPos = self.selection
+                if self.selection < len(self.stations) - 1:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('deleting playlist {0}: {1}'.format(self.selection, self.stations[self.selection]))
+                    self.stations.pop(self.selection)
+                else:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('deleting last playlist {0}: {1}'.format(self.selection, self.stations[self.selection]))
+                    self.stations.pop()
+                    self.selection -= 1
+                    if self.selection == len(self.stations) - 1:
+                        self.startPos -= 1
+                        self.selection += 1
+                        if self.startPos < 0:
+                            self.startPos = 0
+                if self.selection < self.playing and self.playing > -1:
+                    self.playing -= 1
+                if self.selection > 0:
+                    self.selection -= 1
+                if self.startPos > self.selection:
+                    self.startPos = self.selection
             self.ws.close_window()
             self.refreshBody()
             return
@@ -9900,7 +9900,21 @@ __|Remote Control Server| cannot be started!__
                     self.stopPlayer()
 
                 elif char in (ord('x'), curses.KEY_DC):
+                    if self._cnf.locked:
+                        txt='___Cannot delete playlist!!!___\n______Session is locked'
+                        self._show_notification_with_delay(
+                                txt=txt,
+                                mode_to_set=self.ws.operation_mode,
+                                callback_function=self.refreshBody)
+                        return
                     # remove playlist
+                    if self.stations[self.selection][0] == 'stations':
+                        txt='\n___Cannot delete the default playlist!!!___\n'
+                        self._show_notification_with_delay(
+                                txt=txt,
+                                mode_to_set=self.ws.operation_mode,
+                                callback_function=self.refreshBody)
+                        return
                     if self._cnf.station_file_name == self.stations[self.selection][0] + '.csv':
                         # playlist is opened, cannot delete
                         self._show_cannot_delete_active_playlist()
