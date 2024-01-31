@@ -110,6 +110,8 @@ class Window_Stack_Constants(object):
     SCHEDULE_PLAYLIST_SEARCH_MODE = 140,
     SCHEDULE_STATION_SEARCH_MODE = 141,
     OPEN_DIR_HELP_MODE = 142,
+    DELETE_PLAYLIST_MODE = 143,
+    DELETE_PLAYLIST_ERROR_MODE = 144,
     # TODO: return values from opening theme
     PLAYLIST_RECOVERY_ERROR_MODE = 200
     PLAYLIST_NOT_FOUND_ERROR_MODE = 201
@@ -308,6 +310,8 @@ class Window_Stack_Constants(object):
         MOVE_RECORDINGS_DIR_ERROR_MODE: 'MOVE_RECORDINGS_DIR_ERROR_MODE',
         OPEN_DIR_MODE: 'OPEN_DIR_MODE',
         OPEN_DIR_HELP_MODE: 'OPEN_DIR_HELP_MODE',
+        DELETE_PLAYLIST_ERROR_MODE: 'DELETE_PLAYLIST_ERROR_MODE',
+        DELETE_PLAYLIST_MODE: 'DELETE_PLAYLIST_MODE',
     }
 
 
@@ -399,6 +403,7 @@ class Window_Stack_Constants(object):
         SCHEDULE_ERROR_MODE,
         SCHEDULE_INFO_MODE,
         OPEN_DIR_HELP_MODE,
+        DELETE_PLAYLIST_ERROR_MODE,
     )
 
     def __init__(self):

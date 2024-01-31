@@ -647,6 +647,8 @@ class PyRadio(object):
             self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE: self._show_moving_recordings_dir_error,
             self.ws.OPEN_DIR_MODE: self._show_open_dir_window,
             self.ws.OPEN_DIR_HELP_MODE: self._show_open_dir_help,
+            self.ws.DELETE_PLAYLIST_MODE: self._ask_to_delete_playlist,
+            self.ws.DELETE_PLAYLIST_ERROR_MODE: self._show_delete_playlist_error,
         }
 
         ''' list of help functions '''
@@ -2448,6 +2450,33 @@ class PyRadio(object):
                     logger.debug('+++ icon downloaded, but already exists...')
 
 
+    def _show_delete_playlist_error(self):
+        txt = '''
+        Cannot delete the playlist:
+        "|{}|"
+
+        Please close all other porgrams and try again...
+        '''
+
+        ''' truncate parameter to text width '''
+        self._show_help(txt.format(self.stations[self.selection][0]),
+                self.ws.DELETE_PLAYLIST_ERROR_MODE, caption=' Playlist Deletion Error ',
+                prompt=' Press any key to hide ', is_message=True)
+
+    def _ask_to_delete_playlist(self):
+        txt = '''
+        Are you sure you want to delete the playlist:
+        "|{}|"?
+        Please keep in mind that once it is deleted, there
+        is no way to get it back.
+
+        Press "|y|" to confirm, or any other key to cancel
+        '''
+
+        ''' truncate parameter to text width '''
+        self._show_help(txt.format(self.stations[self.selection][0]),
+                self.ws.DELETE_PLAYLIST_MODE, caption=' Playlist Deletion ',
+                prompt='', is_message=True)
 
     def _ask_to_remove_group(self):
         txt = '''
@@ -3195,7 +3224,7 @@ __|Remote Control Server| cannot be started!__
                  \\                |Open previous playlist.
                  ]                |Open first opened playlist.
                  n                |Create a |n|ew playlist.
-                 p                |Select playlist/register to |p|aste to.
+                 p                |Select playlist / register to |p|aste to.
                  r                ||R|ename current playlist.
                  C                ||C|lear all registers.
                  h                |Display |H|TML help.
@@ -3266,14 +3295,15 @@ __|Remote Control Server| cannot be started!__
 
     def _show_playlist_help(self):
         txt = r'''Up|,|j|,|PgUp|,
-                 Down|,|k|,|PgDown    |Change register selection.
-                 <n>g| / |<n>G      |Jump to first /last or n-th station.
-                 M| / |P            |Jump to |M|iddle / loaded register.
-                 Enter|,|Right|,|l    |Open selected register.
-                 r                |Re-read registers from disk.
-                 '                |Toggle between playlists / registers.
+                 Down|,|k|,|PgDown    |Change playlist selection.
+                 <n>g| / |<n>G      |Jump to first / last or n-th item.
+                 M| / |P            |Jump to |M|iddle / loaded playlist.
+                 Enter|,|Right|,|l    |Open selected playlist.
+                 x                |Delete current playlist.
+                 r                |Re-read playlists from disk.
+                 '                |Toggle between playlists.
                  /| / |n| / |N        |Search, go to next / previous result.
-                 \\                |Enter |Extra Commands| mode.
+                 \                |Enter |Extra Commands| mode.
                  Esc|,|q|,|Left|,|h     |Cancel.
                  %_Global functions (with \ on Line editor)_
                  -|/|+| or |,|/|.       |Change volume.
@@ -3282,7 +3312,7 @@ __|Remote Control Server| cannot be started!__
                  %_Other Keys_
                  t| / |T            |Load |t|heme / |T|oggle transparency.'''
         if self._cnf.open_register_list:
-            self._show_help(txt,
+            self._show_help(txt.replace('playlist', 'register'),
                             mode_to_set=self.ws.PLAYLIST_HELP_MODE,
                             caption=' Registers List Help ')
         else:
@@ -3589,7 +3619,7 @@ __|Remote Control Server| cannot be started!__
                      l      |Toggle |Open last playlist|.
                      m      |Cahnge |m|edia player.
                      n      |Create a |n|ew playlist.
-                     p      |Select playlist/register to |p|aste to.
+                     p      |Select playlist / register to |p|aste to.
                      r      ||R|ename current playlist.
                      C      ||C|lear all registers.
                      u      |Show |U|nnamed Register.
@@ -8311,6 +8341,39 @@ __|Remote Control Server| cannot be started!__
                     self.refreshBody()
             return
 
+        elif self.ws.operation_mode == self.ws.DELETE_PLAYLIST_MODE:
+            if char == ord('y'):
+                try:
+                    remove(self.stations[self.selection][-1])
+                except:
+                    self.ws.close_window()
+                    # show error message
+                    self._show_delete_playlist_error()
+                    return
+            if self.selection < len(self.stations) - 1:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('deleting playlist {0}: {1}'.format(self.selection, self.stations[self.selection]))
+                self.stations.pop(self.selection)
+            else:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('deleting last playlist {0}: {1}'.format(self.selection, self.stations[self.selection]))
+                self.stations.pop()
+                self.selection -= 1
+                if self.selection == len(self.stations) - 1:
+                    self.startPos -= 1
+                    self.selection += 1
+                    if self.startPos < 0:
+                        self.startPos = 0
+            if self.selection < self.playing and self.playing > -1:
+                self.playing -= 1
+            if self.selection > 0:
+                self.selection -= 1
+            if self.startPos > self.selection:
+                self.startPos = self.selection
+            self.ws.close_window()
+            self.refreshBody()
+            return
+
         elif self.ws.operation_mode == self.ws.INSERT_RECORDINGS_DIR_MODE:
             ret, new_dir, self._asked_to_move_recordings_dir = self._insert_recording_dir_win.keypress(char)
             if ret == -1:
@@ -9832,11 +9895,19 @@ __|Remote Control Server| cannot be started!__
             elif self.ws.operation_mode == self.ws.PLAYLIST_MODE:
                 self._random_requested = False
 
+                # logger.error('DE pl 1 active_stations = \n\n{}\n\n'.format(self.active_stations))
                 if char == ord(' '):
                     self.stopPlayer()
 
-                # logger.error('DE pl 1 active_stations = \n\n{}\n\n'.format(self.active_stations))
-                if char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
+                elif char in (ord('x'), curses.KEY_DC):
+                    # remove playlist
+                    if self._cnf.station_file_name == self.stations[self.selection][0] + '.csv':
+                        # playlist is opened, cannot delete
+                        self._show_cannot_delete_active_playlist()
+                    else:
+                        self._ask_to_delete_playlist()
+
+                elif char in (curses.KEY_ENTER, ord('\n'), ord('\r'),
                             curses.KEY_RIGHT, ord('l')):
                     self._update_status_bar_right(status_suffix='')
                     if self._cnf.open_register_list:
@@ -10098,6 +10169,13 @@ __|Remote Control Server| cannot be started!__
                 mode_to_set=self.ws.operation_mode,
                 callback_function=self.refreshBody
             )
+
+    def _show_cannot_delete_active_playlist(self):
+        self._show_notification_with_delay(
+                txt='\n____Cannot delete the active playlist___\n',
+                delay=1.5,
+                mode_to_set=self.ws.operation_mode,
+                callback_function=self.refreshBody)
 
     def _show_stations_history_playlist_modified(self):
         if self._limited_height_mode or self._limited_width_mode:
