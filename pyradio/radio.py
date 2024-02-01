@@ -795,6 +795,11 @@ class PyRadio(object):
         self._cls_update_stations = None
         self._cls_update_stations_message = ''
 
+        if platform.startswith('win'):
+            self._browser_page_chars = (curses.KEY_F3, curses.KEY_F2)
+        else:
+            self._browser_page_chars = (ord(']'), ord('['))
+
     def __del__(self):
         self.transientWin = None
 
@@ -1288,6 +1293,8 @@ class PyRadio(object):
                 txt = txt.replace('three', 'two')
             self.refreshNoPlayerBody(txt)
         else:
+            if self._cnf.browsing_station_service:
+                self._print_body_header()
             self._put_selection_in_the_middle()
             self.refreshBody()
 
@@ -1475,6 +1482,9 @@ class PyRadio(object):
 
             ''' show force http indication '''
             w_header = self._cnf.station_title
+            if self._cnf.browsing_station_service:
+                if self._cnf._online_browser.page > 0:
+                    w_header += ' - p. {}'.format(self._cnf._online_browser.page+1)
             w_conn = http_conn[self.player.force_http][0]
             if self._cnf.dirty_playlist:
                 align += 1
@@ -3253,13 +3263,15 @@ __|Remote Control Server| cannot be started!__
                  c                |Open |c|onfig window.
                  C                |Select server to |c|onnect to.
                  s                ||S|earch for stations.
+                 [| / |]            |Fetch previous / next page.
                  S                ||S|ort search results.
                  I                |Station |i|nfo (current selection).
                  V                ||V|ote for station.
-                 \\\\ q Escape      |Close Browser (go back in history).
-
+                 \ q Escape       |Close Browser (go back in history).
                  |Search history navigation works with normal keys as well
-                 |(|^N| is the same as |n| when not in a line editor).'''
+                 __|(|^N| is the same as |n| when not in a line editor).'''
+        if platform.startswith('win'):
+            txt = txt.replace('[', 'F2').replace(']  ', 'F3')
         self._show_help(txt,
                         mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_4,
                         reset_metrics=False)
@@ -4739,14 +4751,17 @@ __|Remote Control Server| cannot be started!__
                  ____Please wait...'''
         self._show_help(txt, self.ws.BROWSER_OPEN_MODE, caption=' ', prompt=' ', is_message=True)
 
-    def _show_performing_search_message(self):
+    def _show_performing_search_message(self, msg=None):
         ''' display a passive message telling the user
             to wait while performing search.
 
             To be used with onlines services only
         '''
-        txt = '''__Performing search.__
-                 ____Please wait...'''
+        if msg:
+            txt = msg
+        else:
+            txt = '''__Performing search.__
+                     ____Please wait...'''
         self._show_help(txt, self.ws.BROWSER_PERFORMING_SEARCH_MODE, caption=' ', prompt=' ', is_message=True)
 
     def _show_recording_status_in_header(
@@ -4984,7 +4999,8 @@ __|Remote Control Server| cannot be started!__
             self.ws.operation_mode = self.ws.BROWSER_SEARCH_MODE
             ''' display no results message '''
             self._show_no_browser_results()
-
+            if self._cnf._online_browser.page > 0:
+                self._cnf._online_browser._page -= 1
         else:
             self._cnf.stations = tmp_stations[:]
             self.stations = self._cnf.stations
@@ -8472,6 +8488,7 @@ __|Remote Control Server| cannot be started!__
                 self.ws.close_window()
                 self.refreshBody()
                 self._show_performing_search_message()
+                # logger.error('performing search, page = {}'.format(self._cnf._online_browser.page))
                 self._cnf._online_browser.search(go_back_in_history=False)
 
             elif ret == -1:
@@ -9375,6 +9392,23 @@ __|Remote Control Server| cannot be started!__
             # if logger.isEnabledFor(logging.DEBUG):
             #     logger.debug('current selection = {}'.format(self._current_selection))
             self._update_history_positions_in_list()
+
+
+            if self._cnf.browsing_station_service and char in self._browser_page_chars:
+                if char == self._browser_page_chars[0]:
+                    # next page
+                    ret = self._cnf._online_browser.next_page(self._show_performing_search_message)
+                else:
+                    # previous page
+                    ret = self._cnf._online_browser.previous_page(self._show_performing_search_message)
+                if ret is None:
+                    self.refreshBody()
+                else:
+                    self._show_notification_with_delay(
+                            txt=ret,
+                            mode_to_set=self.ws.NORMAL_MODE,
+                            callback_function=self.refreshBody)
+                return
 
             if char in (ord('?'), ):
                 self._update_status_bar_right()

@@ -160,7 +160,7 @@ class PyRadioStationsBrowser(object):
             Search parameters to be used instead of the default.
         '''
 
-        pass
+        self._page = 0
 
     def __del__(self):
         self._sort = None
@@ -217,6 +217,10 @@ class PyRadioStationsBrowser(object):
     @vote_callback.setter
     def vote_callback(self, val):
         self._vote_callback = val
+
+    @property
+    def page(self):
+        return self._page
 
     def stations(self, playlist_format=2):
         return []
@@ -374,6 +378,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._message_function = message_function
         self._search_return_function = search_return_function
         self._cannot_delete_function = cannot_delete_function
+        self._page = 0
 
     def reset_dirty_config(self):
         self.browser_config.dirty = False
@@ -594,8 +599,26 @@ class RadioBrowser(PyRadioStationsBrowser):
         return ret, ''
 
     def search_by_index(self, index, go_back_in_history=True):
+        self._page = 0
         self._search_history_index = index
         self.search(go_back_in_history)
+
+    def _get_post_data(self):
+        post_data = {}
+        if self._search_history[self._search_history_index]['post_data']:
+            post_data = deepcopy(self._search_history[self._search_history_index]['post_data'])
+
+        self._output_format = -1
+        if self._search_type > 0:
+            if 'limit' not in post_data.keys() and self._default_max_number_of_results > 0:
+                post_data['limit'] = self._default_max_number_of_results
+            else:
+                if post_data['limit'] == '0':
+                    post_data.pop('limit')
+
+        if 'hidebroken' not in post_data.keys():
+            post_data['hidebroken'] = 'true'
+        return post_data
 
     def search(self, go_back_in_history=True):
         ''' Search for stations with parameters.
@@ -638,20 +661,22 @@ class RadioBrowser(PyRadioStationsBrowser):
         self._old_search_by = self.search_by
         self._sort = None
         url = self._format_url(self._search_history[self._search_history_index])
-        post_data = {}
-        if self._search_history[self._search_history_index]['post_data']:
-            post_data = deepcopy(self._search_history[self._search_history_index]['post_data'])
+        post_data = self._get_post_data()
 
-        self._output_format = -1
-        if self._search_type > 0:
-            if 'limit' not in post_data.keys() and self._default_max_number_of_results > 0:
-                post_data['limit'] = self._default_max_number_of_results
+        if self._page > 0:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('fetching page {}'.format(self._page))
+            if 'limit' in post_data:
+                limit = post_data['limit']
             else:
-                if post_data['limit'] == '0':
-                    post_data.pop('limit')
-
-        if 'hidebroken' not in post_data.keys():
-            post_data['hidebroken'] = 'true'
+                limit = self._default_max_number_of_results
+            limit *= self._page
+            post_data['offset'] = limit
+            logger.info('offset added')
+        else:
+            if 'limit' in post_data:
+                post_data.pop('limit')
+                logger.info('offset removed')
 
         self._log_query(url, post_data)
 
@@ -679,6 +704,30 @@ class RadioBrowser(PyRadioStationsBrowser):
         if self._search_return_function:
             self._search_return_function(ret)
 
+    def next_page(self, msg_function=None):
+        self._page += 1
+        post_data = self._get_post_data()
+        if 'limit' in post_data:
+            limit = post_data['limit']
+        else:
+            limit = self._default_max_number_of_results
+        if limit > len(self._raw_stations):
+            self._page -= 1
+            return '\n___No more results available!___\n'
+        if msg_function:
+            msg_function('___Fetching page {}...___'.format(self._page+1))
+        self.search()
+        return None
+
+    def previous_page(self, msg_function=None):
+        self._page -= 1
+        if self._page < 0:
+            self._page = 0
+            return '\n___Already on first page!___\n'
+        if msg_function:
+            msg_function('___Fetching page {}...___'.format(self._page+1))
+        self.search()
+        return None
 
     def _log_query(self, url, post_data):
         if logger.isEnabledFor(logging.INFO):
@@ -1467,6 +1516,9 @@ class RadioBrowser(PyRadioStationsBrowser):
 
         return ret
 
+    def _reset_page_counter(self):
+        self._page = 0
+
     def line_editor_has_focus(self):
         if self._search_win:
             return self._search_win.line_editor_has_focus()
@@ -1477,6 +1529,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             self._search_win = RadioBrowserSearchWindow(
                 parent=parent,
                 config=self.browser_config,
+                reset_page_function=self._reset_page_counter,
                 limit=self._default_max_number_of_results,
                 init=init,
                 global_functions=self._global_functions
@@ -2439,12 +2492,14 @@ class RadioBrowserSearchWindow(object):
     def __init__(self,
                  parent,
                  config,
+                 reset_page_function,
                  limit=100,
                  init=False,
                  global_functions=None
                  ):
         self._parent = parent
         self._cnf = config
+        self._reset_page_function = reset_page_function
         self._default_limit = limit
         self._init = init
         self._too_small = False
@@ -3319,6 +3374,7 @@ class RadioBrowserSearchWindow(object):
 
             if char in (ord('s'), ):
                 ''' prerform search '''
+                self._reset_page_function()
                 ret = self._handle_new_or_existing_search_term()
                 return 0 if ret == 1 else ret
 

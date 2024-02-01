@@ -54,7 +54,7 @@ class PyRadioConfigWindow(object):
     'This is the eqivelant to the -u , --use-player command line option.', '|',
     'Example:', '  player = vlc', 'or', '  player = vlc,mpv, mplayer', '|',
     'Default value: mpv,mplayer,vlc'])
-    _help_text.append(['If this option is enabled, the last local playlist loaded before terminating, will be automatically opened the next time PyRadio is executed. Furthermore, playback will resume, if it was on when PyRadio exited. Otherwise, station selection will be restored.', '|', 'This option will take precedence over the "Def. playlist" configuration option and the "-s" command line option.', '|', 'It can also be toggled on the fly by perssing \\l while on Main mode.', '|', 'Default value: False'])
+    _help_text.append([r'If this option is enabled, the last local playlist loaded before terminating, will be automatically opened the next time PyRadio is executed. Furthermore, playback will resume, if it was on when PyRadio exited. Otherwise, station selection will be restored.', '|', 'This option will take precedence over the "Def. playlist" configuration option and the "-s" command line option.', '|', 'It can also be toggled on the fly by perssing \l while on Main mode.', '|', 'Default value: False'])
     _help_text.append(['This is the playlist to open at start up, if none is specified and "Open last playlist" is not set.', '|',
     'This is the equivalent to the -s, --stations command line option.', '|',
     'Default value: stations'])
@@ -1097,7 +1097,7 @@ class ExtraParametersEditor(object):
         self._widgets[0]._use_paste_mode = True
         self._widgets[0]._mode_changed = self._show_alternative_modes
         self._widgets[0].set_global_functions(self._global_functions)
-        ''' enables direct insersion of ? and \\ '''
+        ''' enables direct insersion of ? and \ '''
         self._widgets[0]._paste_mode = False
         self._line_editor = self._widgets[0]
 
