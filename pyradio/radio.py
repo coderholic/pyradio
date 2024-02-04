@@ -511,6 +511,8 @@ class PyRadio(object):
             '/search_radio_browser': self.search_radio_browser_headless,
             '/html_search_radio_browser': self.search_radio_browser_headless,
             '/radio_browser_page': self._get_rb_page,
+            '/radio_browser_next_page': self._next_page_rb,
+            '/radio_browser_previous_page': self._previous_page_rb,
         }
 
         ''' list of functions to open for entering
@@ -5029,6 +5031,22 @@ __|Remote Control Server| cannot be started!__
         if self._cnf.online_browser:
             return self._cnf.online_browser.search_history_index, self._cnf.online_browser.get_strings()
         return -1, None
+
+    def _next_page_rb(self):
+        if self._cnf.browsing_station_service:
+            ret = self._cnf._online_browser.next_page()
+            if ret is None:
+                return 'Next page loaded'
+            return ret.replace('\n', '').replace('_', '')
+        return 'RadioBrowser is not active'
+
+    def _previous_page_rb(self):
+        if self._cnf.browsing_station_service:
+            ret = self._cnf._online_browser.previous_page()
+            if ret is None:
+                return 'Previous page loaded'
+            return ret.replace('\n', '').replace('_', '')
+        return 'RadioBrowser is not active'
 
     def _get_rb_page(self):
         if self._cnf.browsing_station_service:

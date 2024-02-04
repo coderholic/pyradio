@@ -815,38 +815,40 @@ div[id^='a_']:hover { underline: none;}
         '/': '''PyRadio Remote Service
 
 Global Commands
-Long                        Short      Description
--------------------------------------------------------------------------------
-/info                       /i         display PyRadio info
-/volume                     /v         show volume (text only)
-/set_volume/x               /sv/x      set volume to x% (text only)
-/volumeup                   /vu        increase volume
-/volumedown                 /vd        decrease volume
-/volumesave                 /vs        save volume
-/mute                       /m         toggle mute
-/log                        /g         toggle stations logging
-/like                       /l         tag (like) station
-/title                                 get title (HTML format)
+Long                             Short      Description
+------------------------------------------------------------------------------------
+/info                            /i         display PyRadio info
+/volume                          /v         show volume (text only)
+/set_volume/x                    /sv/x      set volume to x% (text only)
+/volumeup                        /vu        increase volume
+/volumedown                      /vd        decrease volume
+/volumesave                      /vs        save volume
+/mute                            /m         toggle mute
+/log                             /g         toggle stations logging
+/like                            /l         tag (like) station
+/title                                      get title (HTML format)
 
 Restricted Commands (Main mode only)
 ---------------------------------------------------------------------------
-/toggle                     /t         toggle playback
-/playlists                  /pl        get playlists list
-/playlists/x                /pl/x      get stations list from playlist id x
-                                         (x comes from command /pl)
-/playlists/x,y              /pl/x,y    play station id y from playlist id x
-/stations                   /st        get stations list from current playlist
-/stations/x                 /st/x      play station id x from current playlist
-/next                       /n         play next station
-/previous                   /p         play previous station
-/histnext                   /hn        play next station from history
-/histprev                   /hp        play previous station from history
-/open_radio_browser         /orb       open RadioBrowser
-/close_radio_browser        /crb       close RadioBrowser
-/list_radio_browser         /lrb       list RadioBrowser search items
-/radio_browser_page         /grb       get RadioBrowser searh results page
-/search_radio_browser/x     /srb/x     execute search item x
-                                         (x comes from /lrb)''',
+/toggle                          /t         toggle playback
+/playlists                       /pl        get playlists list
+/playlists/x                     /pl/x      get stations list from playlist id x
+                                              (x comes from command /pl)
+/playlists/x,y                   /pl/x,y    play station id y from playlist id x
+/stations                        /st        get stations list from current playlist
+/stations/x                      /st/x      play station id x from current playlist
+/next                            /n         play next station
+/previous                        /p         play previous station
+/histnext                        /hn        play next station from history
+/histprev                        /hp        play previous station from history
+/open_radio_browser              /orb       open RadioBrowser
+/close_radio_browser             /crb       close RadioBrowser
+/list_radio_browser              /lrb       list RadioBrowser search items
+/search_radio_browser/x          /srb/x     execute RadioBrowser search item x
+                                              (x comes from /lrb)
+/radio_browser_page              /grb       get RadioBrowser searh results page number
+/radio_browser_next_page         /nrb       load RadioBrowser next results page
+/radio_browser_previous_page     /prb       load RadioBrowser previous results page''',
         '/quit': 'PyRadio Remote Service exiting!\nCheers!',
         '/volumeup': 'Volume increased!',
         '/volumedown': 'Volume decreased!',
@@ -1014,28 +1016,36 @@ Restricted Commands (Main mode only)
         logger.error('self._path = "{}"'.format(self._path))
         if self._path == '/init':
             self._commands['/html_init']()
+
         elif self._path == '/title':
             self.send_song_title(self.song_title())
+
         elif self._path == '/favicon.ico':
             pass
+
         elif self._path == '/get_selection' and self._is_html:
             self._send_raw(str(self._selected))
+
         elif self._path == '/is_radio_browser' and self._is_html:
             received = self._commands['/html_is_radio_browser']()
             self._send_raw(received)
+
         elif self._path == '/is_stopped' and self._is_html:
             received = self._commands['/html_is_stopped']()
             self._send_raw(received)
+
         elif self._path == '/is_muted' and self._is_html:
             if self.muted():
                 self._send_raw('0')
             else:
                 self._send_raw('1')
+
         elif self._path == '/is_logging_titles' and self._is_html:
             if self.config().titles_log.titles_handler is None:
                 self._send_raw('0')
             else:
                 self._send_raw('1')
+
         elif self._path in ('/log', '/g'):
             if self._is_html:
                 received = self._commands['/html_log']()
@@ -1044,6 +1054,7 @@ Restricted Commands (Main mode only)
             else:
                 self._commands['/log']()
                 self._send_text(self._text['/log'])
+
         elif self._path in ('/like', '/l'):
             if self._is_html:
                 received = self._commands['/html_like']()
@@ -1055,6 +1066,7 @@ Restricted Commands (Main mode only)
                     self._send_text(self._text['/like'])
                 else:
                     self._send_text(self._text['/idle'])
+
         elif self._path in ('/mute', '/m'):
             if self._is_html:
                 received = self._commands['/html_mute']()
@@ -1066,6 +1078,7 @@ Restricted Commands (Main mode only)
                     self._commands['/mute']()
                 else:
                     self._send_text(self._text['/idle'])
+
         elif self._path in ('/volumesave', '/vs'):
             if self._is_html:
                 received = self._commands['/html_volumesave']()
@@ -1083,6 +1096,7 @@ Restricted Commands (Main mode only)
                         #     self._send_text('Volume not saved!')
                 else:
                     self._send_text(self._text['/idle'])
+
         elif self._path in ('/volumeup', '/vu'):
             if self._is_html:
                 received = self._commands['/html_volumeup']()
@@ -1097,6 +1111,7 @@ Restricted Commands (Main mode only)
                         self._commands['/volumeup']()
                 else:
                     self._send_text(self._text['/idle'])
+
         elif self._path in ('/volumedown', '/vd'):
             if self._is_html:
                 received = self._commands['/html_volumedown']()
@@ -1111,15 +1126,18 @@ Restricted Commands (Main mode only)
                         self._commands['/volumedown']()
                 else:
                     self._send_text(self._text['/idle'])
+
         elif self._path == '/quit':
             if not self._is_html:
                 self._send_text(self._text['/quit'])
+
         elif self._path in  ('', '/'):
             if self._is_html:
                 self._send_text('')
                 self.send_song_title(self.song_title())
             else:
                 self._send_text(self._text['/'])
+
         elif self._path in ('/i', '/info'):
             if self._is_html:
                 received = self._commands['/html_info']()
@@ -1131,6 +1149,7 @@ Restricted Commands (Main mode only)
                     self._send_text(received)
                 else:
                     self._send_text(self._text['/perm'])
+
         elif self._path in ('/next', '/n'):
             if self._is_html:
                 received = self._commands['/html_next']()
@@ -1142,6 +1161,7 @@ Restricted Commands (Main mode only)
                     self._commands['/next']()
                 else:
                     self._send_text(self._text['/perm'])
+
         elif self._path in ('/previous', '/p'):
             if self._is_html:
                 received = self._commands['/html_previous']()
@@ -1153,6 +1173,7 @@ Restricted Commands (Main mode only)
                     self._commands['/previous']()
                 else:
                     self._send_text(self._text['/perm'])
+
         elif self._path in ('/histnext', '/hn'):
             if self._is_html:
                 received = self._commands['/html_histnext']()
@@ -1174,6 +1195,7 @@ Restricted Commands (Main mode only)
                         self._send_text('Already at last history item!')
                 else:
                     self._send_text(self._text['/perm'])
+
         elif self._path in ('/histprev', '/hp'):
             if self._is_html:
                 received = self._commands['/html_histprev']()
@@ -1196,6 +1218,7 @@ Restricted Commands (Main mode only)
                         self._send_text('Already at first history item!')
                 else:
                     self._send_text(self._text['/perm'])
+
         elif self._path in ('/toggle', '/t'):
             if self._is_html:
                 if self.sel()[1] > -1:
@@ -1216,6 +1239,7 @@ Restricted Commands (Main mode only)
                         self._commands['/start']()
                 else:
                     self._send_text(self._text['/perm'])
+
         elif self._path.startswith('/st/') or \
                 self._path.startswith('/stations/'):
             if self.can_send_command():
@@ -1257,6 +1281,7 @@ Restricted Commands (Main mode only)
                     self._send_raw('<div class="alert alert-danger">' + self._text['/perm'] + '</div>')
                 else:
                     self._send_text(self._text['/perm'])
+
         elif self._path == '/open_radio_browser' or self._path == '/orb':
             if self._is_html:
                 received = self._commands['/html_open_radio_browser']()
@@ -1269,6 +1294,7 @@ Restricted Commands (Main mode only)
                 else:
                     received = self._commands['/open_radio_browser']()
                 # self._send_text(received)
+
         elif self._path == '/close_radio_browser' or self._path == '/crb':
             if self._is_html:
                 received = self._commands['/html_close_radio_browser']()
@@ -1300,19 +1326,31 @@ Restricted Commands (Main mode only)
                         self._send_text('Error in command\n')
                     return
                 if self._is_html:
-                    pass
                     ret = self._commands['/html_search_radio_browser'](x)
                 else:
                     ret = self._commands['/search_radio_browser'](x)
                     if ret != '':
                         self._send_text(ret)
 
-
         elif self._path == '/radio_browser_page' or self._path == '/grb':
             if self._is_html:
                 pass
             else:
                 received = self._commands['/radio_browser_page']()
+                self._send_text(received)
+
+        elif self._path == '/radio_browser_next_page' or self._path == '/nrb':
+            if self._is_html:
+                pass
+            else:
+                received = self._commands['/radio_browser_next_page']()
+                self._send_text(received)
+
+        elif self._path == '/radio_browser_previous_page' or self._path == '/prb':
+            if self._is_html:
+                pass
+            else:
+                received = self._commands['/radio_browser_previous_page']()
                 self._send_text(received)
 
         elif self._path == '/list_radio_browser' or self._path == '/lrb':
@@ -1334,6 +1372,7 @@ Restricted Commands (Main mode only)
             else:
                 received = self._commands['/list_radio_browser']()
                 self._send_text(received)
+
         elif self._path == '/volume' or self._path == '/v':
             ''' get volume '''
             if self._is_html:
@@ -1366,6 +1405,7 @@ Restricted Commands (Main mode only)
                         self._send_raw(received)
                     else:
                         self._send_raw('Error: Volume must be 0-100')
+
         elif self._path.startswith('/playlists') or \
                 self._path.startswith('/pl') or \
                 self._path == '/stations' or \
@@ -1462,6 +1502,7 @@ Restricted Commands (Main mode only)
                                                     )
                                                 )
 
+
             else:
                 if not self.can_send_command():
                     if self._is_html:
@@ -1472,6 +1513,7 @@ Restricted Commands (Main mode only)
                     ret = self._parse()
                     if ret is None:
                         self._send_text(self._text['/error'])
+
                     elif ret.startswith('/'):
                         if ret == '/stations':
                             if self._is_html:
