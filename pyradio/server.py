@@ -427,9 +427,9 @@ div[id^='a_']:hover { underline: none;}
         if ( ( the_command == "/html/open_radio_browser" ) || ( the_command == "/html/close_radio_browser" ) ) {
             clearTimeout(msg_timeout);
             if ( window.radio_browser == 0 ){
-                rb_msg = '<div class="alert alert-info">Connecting to <b>Radio Browser</b>...</div>';
+                rb_msg = '<div class="alert alert-info">Connecting to <b>RadioBrowser</b>...</div>';
             }else{
-                rb_msg = '<div class="alert alert-info">Disconnecting from <b>Radio Browser</b>...</div>';
+                rb_msg = '<div class="alert alert-info">Disconnecting from <b>RadioBrowser</b>...</div>';
             }
             js_set_title("#msg_text", rb_msg, the_command);
             js_show_element("msg");
@@ -445,7 +445,7 @@ div[id^='a_']:hover { underline: none;}
             console.log("RadioBrowser Search!")
             js_hide_msg();
             clearTimeout(msg_timeout);
-            srb_msg = '<div class="alert alert-info">Performing <b>Radio Browser</b> search...</div>';
+            srb_msg = '<div class="alert alert-info">Performing <b>RadioBrowser</b> search...</div>';
             js_set_title("#msg_text", srb_msg, the_command);
             js_show_element("msg");
         }
@@ -486,7 +486,7 @@ div[id^='a_']:hover { underline: none;}
                 } else if ( the_command == "/html/mute"  ) {
                     result = '<div class="alert alert-success">Player mute state <b>toggled!</b></div>'
                 } else if ( the_command == "/html/open_radio_browser"  ) {
-                    result = '<div class="alert alert-success">Connection to <b>Radio Browser</b> established!</div>'
+                    result = '<div class="alert alert-success">Connection to <b>RadioBrowser</b> established!</div>'
                     js_fix_radio_browser();
                 } else if ( the_command == "/html/close_radio_browser"  ) {
                     result = '<div class="alert alert-success"><b>Local</b> Playlist restored</div>'
@@ -496,7 +496,7 @@ div[id^='a_']:hover { underline: none;}
                 //     //// js_hide_msg();
                 //     // js_hide_msg();
                 //     // clearTimeout(msg_timeout);
-                //     // srb_msg = '<div class="alert alert-info">Performing <b>Radio Browser</b> search...</div>';
+                //     // srb_msg = '<div class="alert alert-info">Performing <b>RadioBrowser</b> search...</div>';
                 //     // js_set_title("#msg_text", srb_msg, the_command);
                 //     // js_show_element("msg");
                 } else {
@@ -841,9 +841,10 @@ Restricted Commands (Main mode only)
 /previous                   /p         play previous station
 /histnext                   /hn        play next station from history
 /histprev                   /hp        play previous station from history
-/open_radio_browser         /orb       open Radio Browser
-/close_radio_browser        /crb       close Radio Browser
-/list_radio_browser         /lrb       list Radio Browser search items
+/open_radio_browser         /orb       open RadioBrowser
+/close_radio_browser        /crb       close RadioBrowser
+/list_radio_browser         /lrb       list RadioBrowser search items
+/radio_browser_page         /grb       get RadioBrowser searh results page
 /search_radio_browser/x     /srb/x     execute search item x
                                          (x comes from /lrb)''',
         '/quit': 'PyRadio Remote Service exiting!\nCheers!',
@@ -1306,6 +1307,13 @@ Restricted Commands (Main mode only)
                     if ret != '':
                         self._send_text(ret)
 
+
+        elif self._path == '/radio_browser_page' or self._path == '/grb':
+            if self._is_html:
+                pass
+            else:
+                received = self._commands['/radio_browser_page']()
+                self._send_text(received)
 
         elif self._path == '/list_radio_browser' or self._path == '/lrb':
             if self._is_html:

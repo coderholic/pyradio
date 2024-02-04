@@ -2338,7 +2338,8 @@ class RadioBrowserConfigWindow(object):
         if char in self._global_functions.keys():
             self._global_functions[char]()
             return 1
-        if char in (
+
+        elif char in (
             curses.KEY_EXIT, 27, ord('q')
         ):
             return -1
@@ -4498,7 +4499,7 @@ class RadioBrowserStationsStack(object):
 
 
 class RadioBrowserTermNavigator(SimpleCursesWidget):
-    """ A widget to show Radio Browser Search Terms
+    """ A widget to show RadioBrowser Search Terms
         Availabe actions:
             change default item
             delete item

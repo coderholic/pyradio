@@ -306,7 +306,7 @@ When focus is on a "*Line editor*", all shortcuts will work when preceded by a "
 
 [1] Function not available when in **Playlist** and **Registers** mode. More info on *PyRadio's modes* below.
 
-[2] Function not available in the **Radio Browser** Search window.
+[2] Function not available in the **RadioBrowser** Search window.
 
 ## HTML help
 
@@ -558,7 +558,7 @@ This problem is addressed with the "**Station history**" functionality, which is
 
 The user can go back and forth in this list using the "**<**" and "**>**" keys.
 
-The list is not saved between sessions (restarting the program will lead to an empty list). When an "**online service** is used (e.g. **Radio Browser**) the list is reseted with every search that is performed.
+The list is not saved between sessions (restarting the program will lead to an empty list). When an "**online service** is used (e.g. **RadioBrowser**) the list is reseted with every search that is performed.
 
 ## Search function
 

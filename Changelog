@@ -250,7 +250,7 @@
 
 2023-01-28 s-n-g
     * version 0.9.0
-    * finalizing Radio Browser service (adding config
+    * finalizing RadioBrowser service (adding config
       search term navigation), closing #93 and partially
       closing #80
     * adding search function to all stations/playlists
@@ -518,7 +518,7 @@
 
 2021-08-11 s-n-g
     * Version 0.8.9.4 (0.9-beta1)
-    * Radio Browser implementation is now usable (but still not complete)
+    * RadioBrowser implementation is now usable (but still not complete)
     * Implemented ^N,^P to play next/previous station as per (#135)
     * Several python2 fixes
     * Updating docs
@@ -531,8 +531,8 @@
     * Version 0.8.9.2
     * Screen flickering when moving within the stations' list eliminated
     * VLC player is available again (disabled by unreported bug)
-    * Advancing Radio Browser support
-    * Fixing python 2 return from Radio Browser TUI breakage
+    * Advancing RadioBrowser support
+    * Fixing python 2 return from RadioBrowser TUI breakage
     * Adding dnspython module availability check
 
 2021-04-14 s-n-g

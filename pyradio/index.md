@@ -328,7 +328,7 @@ When focus is on a "*Line editor*", all shortcuts will work when preceded by a "
 
 [1] Function not available when in **Playlist** and **Registers** mode. More info on *PyRadio's modes* below.
 
-[2] Function not available in the **Radio Browser** Search window.
+[2] Function not available in the **RadioBrowser** Search window.
 
 ## HTML help
 
@@ -580,7 +580,7 @@ This problem is addressed with the "**Station history**" functionality, which is
 
 The user can go back and forth in this list using the "**<**" and "**>**" keys.
 
-The list is not saved between sessions (restarting the program will lead to an empty list). When an "**online service** is used (e.g. **Radio Browser**) the list is reseted with every search that is performed.
+The list is not saved between sessions (restarting the program will lead to an empty list). When an "**online service** is used (e.g. **RadioBrowser**) the list is reseted with every search that is performed.
 
 ## Search function
 
@@ -1544,7 +1544,7 @@ In case you decide to do so, please make sure you mark as a dependency the **com
 
 - [ ] Any user request I find interesting :)
 - [ ] Use some kind of a scheduler
-- [x] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112)) - v 0.9.0
+- [x] Use RadioBrowser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112)) - v 0.9.0
 - [ ] Use some OPML service, [https://opml.radiotime.com](https://opml.radiotime.com) for example
 - [x] Notify the user that the package's stations.csv has changed -v 0.8.9
 - [x] Update / uninstall using command line options (-U / -R) - v. 0.8.9

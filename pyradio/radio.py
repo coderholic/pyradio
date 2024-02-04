@@ -510,6 +510,7 @@ class PyRadio(object):
             '/list_radio_browser': self._get_rb_search_strings,
             '/search_radio_browser': self.search_radio_browser_headless,
             '/html_search_radio_browser': self.search_radio_browser_headless,
+            '/radio_browser_page': self._get_rb_page,
         }
 
         ''' list of functions to open for entering
@@ -861,24 +862,24 @@ class PyRadio(object):
 
     def _open_html_rb(self):
         if self._cnf.browsing_station_service:
-            return '<div class="alert alert-danger">Already connected to <b>Radio Browser</b>!</div>'
+            return '<div class="alert alert-danger">Already connected to <b>RadioBrowser</b>!</div>'
         # logger.error('==== brefore open command')
         self._open_radio_browser()
         # logger.error('==== after open command : {}'.format(self._cnf.browsing_station_service))
         if self._cnf.browsing_station_service:
-            return '<div class="alert alert-danger">Connection to <b>Radio Browser</b> established!</div>'
-        return '<div class="alert alert-danger">Cannot connect to <b>Radio Browser</b></div>'
+            return '<div class="alert alert-danger">Connection to <b>RadioBrowser</b> established!</div>'
+        return '<div class="alert alert-danger">Cannot connect to <b>RadioBrowser</b></div>'
 
     def _open_text_rb(self):
         if self._cnf.browsing_station_service:
-            return 'Already connected to Radio Browser!'
+            return 'Already connected to RadioBrowser!'
         # logger.error('==== brefore open command')
         # self._remote_control_server._send_text('Command executed...')
         self._open_radio_browser()
         # logger.error('==== after open command : {}'.format(self._cnf.browsing_station_service))
         if self._cnf.browsing_station_service:
-            return 'Connection to Radio Browser established!'
-        return 'Cannot connect to Radio Browser!'
+            return 'Connection to RadioBrowser established!'
+        return 'Cannot connect to RadioBrowser!'
 
     def _set_text_volume(self, vol):
         if self.player.isPlaying() and \
@@ -5028,6 +5029,11 @@ __|Remote Control Server| cannot be started!__
         if self._cnf.online_browser:
             return self._cnf.online_browser.search_history_index, self._cnf.online_browser.get_strings()
         return -1, None
+
+    def _get_rb_page(self):
+        if self._cnf.browsing_station_service:
+            return 'RadioBrowser is on page: {}'.format(self._cnf._online_browser.page+1)
+        return 'RadioBrowser is not active'
 
     def _get_rb_search_strings(self):
         if self._cnf.browsing_station_service:

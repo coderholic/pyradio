@@ -428,7 +428,7 @@ a:visited{color: SaddleBrown;}
 
 2023-01-28 s-n-g
     * version 0.9.0
-    * finalizing Radio Browser service (adding config
+    * finalizing RadioBrowser service (adding config
       search term navigation), closing #93 and partially
       closing #80
     * adding search function to all stations/playlists
@@ -696,7 +696,7 @@ a:visited{color: SaddleBrown;}
 
 2021-08-11 s-n-g
     * Version 0.8.9.4 (0.9-beta1)
-    * Radio Browser implementation is now usable (but still not complete)
+    * RadioBrowser implementation is now usable (but still not complete)
     * Implemented ^N,^P to play next/previous station as per (#135)
     * Several python2 fixes
     * Updating docs
@@ -709,8 +709,8 @@ a:visited{color: SaddleBrown;}
     * Version 0.8.9.2
     * Screen flickering when moving within the stations' list eliminated
     * VLC player is available again (disabled by unreported bug)
-    * Advancing Radio Browser support
-    * Fixing python 2 return from Radio Browser TUI breakage
+    * Advancing RadioBrowser support
+    * Fixing python 2 return from RadioBrowser TUI breakage
     * Adding dnspython module availability check
 
 2021-04-14 s-n-g
@@ -1350,7 +1350,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p>When focus is on a “<em>Line editor</em>”, all shortcuts will work when preceded by a “<strong>\</strong>”.</p>
 <p><strong>Notes</strong></p>
 <p class="indented">[1] Function not available when in <strong>Playlist</strong> and <strong>Registers</strong> mode. More info on <em>PyRadio’s modes</em> below.</p>
-<p class="indented">[2] Function not available in the <strong>Radio Browser</strong> Search window.</p>
+<p class="indented">[2] Function not available in the <strong>RadioBrowser</strong> Search window.</p>
 <h2 id="html-help">HTML help <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>While in <strong>PyRadio</strong> main window, one can open the HTML (offline) help using “<strong>\h</strong>”.</p>
 <p>This is just a helper function for windows users who cannot use the man pages, but is still available for all platforms.</p>
@@ -1527,7 +1527,7 @@ $ pyradio -s 5</pre>
 <p>Playing several stations, sometimes among different playlists, and returning to them is sometimes a tedious operation.</p>
 <p>This problem is addressed with the “<strong>Station history</strong>” functionality, which is actually a list of stations which have been played back.</p>
 <p>The user can go back and forth in this list using the “<strong>&lt;</strong>” and “<strong>&gt;</strong>” keys.</p>
-<p>The list is not saved between sessions (restarting the program will lead to an empty list). When an “<strong>online service</strong> is used (e.g. <strong>Radio Browser</strong>) the list is reseted with every search that is performed.</p>
+<p>The list is not saved between sessions (restarting the program will lead to an empty list). When an “<strong>online service</strong> is used (e.g. <strong>RadioBrowser</strong>) the list is reseted with every search that is performed.</p>
 <h2 id="search-function">Search function <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>On any window presenting a list of items (stations, playlists, themes) a <strong>search function</strong> is available by pressing “<strong>/</strong>”.</p>
 <p>The <em>Search Window</em> supports normal and extend editing and in session history.</p>
