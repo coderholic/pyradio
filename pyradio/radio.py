@@ -7039,6 +7039,8 @@ __|Remote Control Server| cannot be started!__
         if self._cnf.online_browser:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Performing RabioBrowser headles search with index {}'.format(index))
+            if index is None:
+                index = self._cnf._online_browser._default_search_history_index
             self._cnf.online_browser.search_by_index(
                     index,
                     go_back_in_history=False

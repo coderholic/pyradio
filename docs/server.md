@@ -123,40 +123,41 @@ would result to displaying the list of available commands:
 PyRadio Remote Service
 
 Global Commands
-Long                             Short      Description
-------------------------------------------------------------------------------------
-/info                            /i         display PyRadio info
-/volume                          /v         show volume (text only)
-/set_volume/x                    /sv/x      set volume to x% (text only)
-/volumeup                        /vu        increase volume
-/volumedown                      /vd        decrease volume
-/volumesave                      /vs        save volume
-/mute                            /m         toggle mute
-/log                             /g         toggle stations logging
-/like                            /l         tag (like) station
-/title                                      get title (HTML format)
+Long                  Short        Description
+---------------------------------------------------------------------------
+/info                 /i           display PyRadio info
+/volume               /v           show volume (text only)
+/set_volume/x         /sv/x        set volume to x% (text only)
+/volumeup             /vu          increase volume
+/volumedown           /vd          decrease volume
+/volumesave           /vs          save volume
+/mute                 /m           toggle mute
+/log                  /g           toggle stations logging
+/like                 /l           tag (like) station
+/title                             get title (HTML format)
 
 Restricted Commands (Main mode only)
 ---------------------------------------------------------------------------
-/toggle                          /t         toggle playback
-/playlists                       /pl        get playlists list
-/playlists/x                     /pl/x      get stations list from playlist id x
-                                              (x comes from command /pl)
-/playlists/x,y                   /pl/x,y    play station id y from playlist id x
-/stations                        /st        get stations list from current playlist
-/stations/x                      /st/x      play station id x from current playlist
-/next                            /n         play next station
-/previous                        /p         play previous station
-/histnext                        /hn        play next station from history
-/histprev                        /hp        play previous station from history
-/open_radio_browser              /orb       open RadioBrowser
-/close_radio_browser             /crb       close RadioBrowser
-/list_radio_browser              /lrb       list RadioBrowser search items
-/search_radio_browser/x          /srb/x     execute RadioBrowser search item x
-                                              (x comes from /lrb)
-/radio_browser_page              /grb       get RadioBrowser searh results page number
-/radio_browser_next_page         /nrb       load RadioBrowser next results page
-/radio_browser_previous_page     /prb       load RadioBrowser previous results page
+/toggle               /t           toggle playback
+/playlists            /pl          get playlists list
+/playlists/x          /pl/x        get stations list from playlist id x
+                                     (x comes from command /pl)
+/playlists/x,y        /pl/x,y      play station id y from playlist id x
+/stations             /st          get stations list from current playlist
+/stations/[x]         /st/x        play station id x from current playlist
+/next                 /n           play next station
+/previous             /p           play previous station
+/histnext             /hn          play next station from history
+/histprev             /hp          play previous station from history
+/open_rb              /orb         open RadioBrowser
+/close_rb             /crb         close RadioBrowser
+/list_rb              /lrb         list RadioBrowser search items
+/search_rb/[x]        /srb/[x]     execute RadioBrowser search item x
+                                     (x comes from /lrb - execute default
+                                      search item if not specified)
+/rb_page              /grb         get RadioBrowser searh results page number
+/rb_next_page         /nrb         load RadioBrowser next results page
+/rb_previous_page     /prb         load RadioBrowser previous results page
 ```
 
 The "**Restricted Commands**" will not work in **Playlist mode**; the "**Global Commands**" will work everywhere.

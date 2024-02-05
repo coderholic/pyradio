@@ -815,40 +815,41 @@ div[id^='a_']:hover { underline: none;}
         '/': '''PyRadio Remote Service
 
 Global Commands
-Long                             Short      Description
-------------------------------------------------------------------------------------
-/info                            /i         display PyRadio info
-/volume                          /v         show volume (text only)
-/set_volume/x                    /sv/x      set volume to x% (text only)
-/volumeup                        /vu        increase volume
-/volumedown                      /vd        decrease volume
-/volumesave                      /vs        save volume
-/mute                            /m         toggle mute
-/log                             /g         toggle stations logging
-/like                            /l         tag (like) station
-/title                                      get title (HTML format)
+Long                  Short        Description
+---------------------------------------------------------------------------
+/info                 /i           display PyRadio info
+/volume               /v           show volume (text only)
+/set_volume/x         /sv/x        set volume to x% (text only)
+/volumeup             /vu          increase volume
+/volumedown           /vd          decrease volume
+/volumesave           /vs          save volume
+/mute                 /m           toggle mute
+/log                  /g           toggle stations logging
+/like                 /l           tag (like) station
+/title                             get title (HTML format)
 
 Restricted Commands (Main mode only)
 ---------------------------------------------------------------------------
-/toggle                          /t         toggle playback
-/playlists                       /pl        get playlists list
-/playlists/x                     /pl/x      get stations list from playlist id x
-                                              (x comes from command /pl)
-/playlists/x,y                   /pl/x,y    play station id y from playlist id x
-/stations                        /st        get stations list from current playlist
-/stations/x                      /st/x      play station id x from current playlist
-/next                            /n         play next station
-/previous                        /p         play previous station
-/histnext                        /hn        play next station from history
-/histprev                        /hp        play previous station from history
-/open_radio_browser              /orb       open RadioBrowser
-/close_radio_browser             /crb       close RadioBrowser
-/list_radio_browser              /lrb       list RadioBrowser search items
-/search_radio_browser/x          /srb/x     execute RadioBrowser search item x
-                                              (x comes from /lrb)
-/radio_browser_page              /grb       get RadioBrowser searh results page number
-/radio_browser_next_page         /nrb       load RadioBrowser next results page
-/radio_browser_previous_page     /prb       load RadioBrowser previous results page''',
+/toggle               /t           toggle playback
+/playlists            /pl          get playlists list
+/playlists/x          /pl/x        get stations list from playlist id x
+                                     (x comes from command /pl)
+/playlists/x,y        /pl/x,y      play station id y from playlist id x
+/stations             /st          get stations list from current playlist
+/stations/x           /st/x        play station id x from current playlist
+/next                 /n           play next station
+/previous             /p           play previous station
+/histnext             /hn          play next station from history
+/histprev             /hp          play previous station from history
+/open_rb              /orb         open RadioBrowser
+/close_rb             /crb         close RadioBrowser
+/list_rb              /lrb         list RadioBrowser search items
+/search_rb/[x]        /srb/[x]     execute RadioBrowser search item x
+                                     (x comes from /lrb - execute default
+                                      search item if not specified)
+/rb_page              /grb         get RadioBrowser searh results page number
+/rb_next_page         /nrb         load RadioBrowser next results page
+/rb_previous_page     /prb         load RadioBrowser previous results page''',
         '/quit': 'PyRadio Remote Service exiting!\nCheers!',
         '/volumeup': 'Volume increased!',
         '/volumedown': 'Volume decreased!',
@@ -1308,23 +1309,29 @@ Restricted Commands (Main mode only)
 
         elif self._path.startswith('/search_radio_browser') or \
                     self._path.startswith('/srb'):
-                p = self._path.replace(
-                        '/search_radio_browser/', ''
-                    ).replace(
-                        '/srb/', ''
-                    )
-                # logger.error('p = "{}"'.format(p))
-                try:
-                    x = int(p)
-                    # logger.error('x = {}'.format(x))
-                except ValueError:
-                    if self._is_html:
-                        # logger.error('HTML ERROR')
-                        self._send_raw('<div class="alert txt-center alert-danger">Error in parameter</div>')
-                    else:
-                        # logger.error('TEXT ERROR')
-                        self._send_text('Error in command\n')
-                    return
+                if self._path.endswith('srb') or \
+                        self._path.endswith('srb/') or \
+                        self._path.endswith('search_radio_browser') or \
+                        self._path.endswith('search_radio_browser/'):
+                    x = None
+                else:
+                    p = self._path.replace(
+                            '/search_radio_browser/', ''
+                        ).replace(
+                            '/srb/', ''
+                        )
+                    # logger.error('p = "{}"'.format(p))
+                    try:
+                        x = int(p)
+                        # logger.error('x = {}'.format(x))
+                    except ValueError:
+                        if self._is_html:
+                            # logger.error('HTML ERROR')
+                            self._send_raw('<div class="alert txt-center alert-danger">Error in parameter</div>')
+                        else:
+                            # logger.error('TEXT ERROR')
+                            self._send_text('Error in command\n')
+                        return
                 if self._is_html:
                     ret = self._commands['/html_search_radio_browser'](x)
                 else:

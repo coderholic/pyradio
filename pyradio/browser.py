@@ -674,8 +674,8 @@ class RadioBrowser(PyRadioStationsBrowser):
             post_data['offset'] = limit
             logger.info('offset added')
         else:
-            if 'limit' in post_data:
-                post_data.pop('limit')
+            if 'offset' in post_data:
+                post_data.pop('offset')
                 logger.info('offset removed')
 
         self._log_query(url, post_data)
