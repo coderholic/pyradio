@@ -6,6 +6,7 @@
 * [Remote Control Server](#remote-control-server)
     * [Using the Web Server](#using-the-web-server)
         * [Web Interface buttons](#web-interface-buttons)
+        * [Navigating through RadioBrowser results](#navigating-through-radiobrowser-results)
     * [Using the Text Server](#using-the-text-server)
     * [Server lock file](#server-lock-file)
     * [Examples](#examples)
@@ -55,7 +56,7 @@ The idea is that while **PyRadio** is running on the PC, people relaxing on the 
 
 The available commands are "encoded" in the buttons shown on the screen; the right part of the image shows the output of the "**Stations List**" button. To start a station, I would just click (well, tap) on its name, and viola!
 
-The **Web** interface will also show the song's title, if availabe, or the name of the station that's playing, if it's not. In order to achieve this functionality, *javascript* is heavily used, so one should keep that in mind (in case *javascript* has been disabled in the browser, for example).
+The **Web** interface will also show the song's title, if available, or the name of the station that's playing, if it's not. In order to achieve this functionality, *JavaScript* is heavily used, so one should keep that in mind (in case *JavaScript* has been disabled in the browser, for example).
 
 #### Web Interface buttons
 
@@ -98,6 +99,34 @@ This will "like" the current (song).
 
 - **System Info** \
 This will display useful info about **PyRadio**.
+
+#### Navigating through RadioBrowser results
+
+All **PyRadio** queries to **RadioBrowser** will use a return limit parameter (default is 200 stations).
+
+This means that the user is presented at most the first 200 stations (or whatever limit value he has set), but the actual result set may comprise hundreds of stations.
+
+**PyRadio** will permit the user to navigate through them by displaying the "*navigation buttons*" when the stations' list is requested, provided that there is a possibility for a subsequent page exist - **PyRadio** has no way of knowing that beforehand.
+
+An example can be seen in the following image.
+
+![Pyradio](https://members.hellug.gr/sng/pyradio/radiobrowser-pages.jpg)
+
+In this example, the user has already displayed the fourth "**page**" of results; the buttons displayed are:
+
+- **First Page** \
+Display the first page of results. \
+This button is displayed only when the third (and consequent) page is displayed.
+
+- **Previous Page** \
+Display the previous page of results. \
+This button is displayed only when the second (and consequent) page is displayed.
+
+- **Next Page** \
+Display the next page of results. \
+This button is visible only if the number of results in the current page is equal to the limit value set for the query. This way the user knows he has displayed the last page of results. \
+\
+Chances are the last page of results contain "*limit*" stations; in this case, clicking the button will produce no change (the existing page will be redisplayed). This is an indication that the last page of results has been reached.
 
 ### Using the Text Server
 

@@ -48,6 +48,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#using-the-web-server">Using the Web Server</a>
 <ul>
 <li><a href="#web-interface-buttons">Web Interface buttons</a></li>
+<li><a href="#navigating-through-radiobrowser-results">Navigating through RadioBrowser results</a></li>
 </ul></li>
 <li><a href="#using-the-text-server">Using the Text Server</a></li>
 <li><a href="#server-lock-file">Server lock file</a></li>
@@ -86,7 +87,7 @@ This option is available in the config only. If set to True, the server will be 
 
 <p>The idea is that while <strong>PyRadio</strong> is running on the PC, people relaxing on the sofa, chilling with friends, listening to music from their favorite radio station, being able to increase / decrease the volume, change stations, etc. using their phones.</p>
 <p>The available commands are “encoded” in the buttons shown on the screen; the right part of the image shows the output of the “<strong>Stations List</strong>” button. To start a station, I would just click (well, tap) on its name, and viola!</p>
-<p>The <strong>Web</strong> interface will also show the song’s title, if availabe, or the name of the station that’s playing, if it’s not. In order to achieve this functionality, <em>javascript</em> is heavily used, so one should keep that in mind (in case <em>javascript</em> has been disabled in the browser, for example).</p>
+<p>The <strong>Web</strong> interface will also show the song’s title, if available, or the name of the station that’s playing, if it’s not. In order to achieve this functionality, <em>JavaScript</em> is heavily used, so one should keep that in mind (in case <em>JavaScript</em> has been disabled in the browser, for example).</p>
 <h4 id="web-interface-buttons">Web Interface buttons</h4>
 <p>The buttons shown in the web interface are:</p>
 <ul>
@@ -117,6 +118,27 @@ This will enable or disable the titles logging function.</p></li>
 This will “like” the current (song).</p></li>
 <li><p><strong>System Info</strong><br />
 This will display useful info about <strong>PyRadio</strong>.</p></li>
+</ul>
+<h4 id="navigating-through-radiobrowser-results">Navigating through RadioBrowser results</h4>
+<p>All <strong>PyRadio</strong> queries to <strong>RadioBrowser</strong> will use a return limit parameter (default is 200 stations).</p>
+<p>This means that the user is presented at most the first 200 stations (or whatever limit value he has set), but the actual result set may comprise hundreds of stations.</p>
+<p><strong>PyRadio</strong> will permit the user to navigate through them by displaying the “<em>navigation buttons</em>” when the stations’ list is requested, provided that there is a possibility for a subsequent page exist - <strong>PyRadio</strong> has no way of knowing that beforehand.</p>
+<p>An example can be seen in the following image.</p>
+<p><a href="https://members.hellug.gr/sng/pyradio/radiobrowser-pages.jpg" target="_blank"><img src="https://members.hellug.gr/sng/pyradio/radiobrowser-pages.jpg" alt="Pyradio" /></a></p>
+
+<p>In this example, the user has already displayed the fourth “<strong>page</strong>” of results; the buttons displayed are:</p>
+<ul>
+<li><p><strong>First Page</strong><br />
+Display the first page of results.<br />
+This button is displayed only when the third (and consequent) page is displayed.</p></li>
+<li><p><strong>Previous Page</strong><br />
+Display the previous page of results.<br />
+This button is displayed only when the second (and consequent) page is displayed.</p></li>
+<li><p><strong>Next Page</strong><br />
+Display the next page of results.<br />
+This button is visible only if the number of results in the current page is equal to the limit value set for the query. This way the user knows he has displayed the last page of results.<br />
+<br />
+Chances are the last page of results contain “<em>limit</em>” stations; in this case, clicking the button will produce no change (the existing page will be redisplayed). This is an indication that the last page of results has been reached.</p></li>
 </ul>
 <h3 id="using-the-text-server">Using the Text Server</h3>
 <p>Why having the <strong>Text</strong> interface as well, one might ask…</p>

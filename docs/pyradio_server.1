@@ -1,7 +1,7 @@
 .\" Copyright (C) 2018-2024 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio_server 1 "January 2024" pyradio
+.TH pyradio_server 1 "February 2024" pyradio
 
 .SH Name
 .PP
@@ -95,6 +95,66 @@ This will “like” the current (song).
 
 .IP \fISystem\ Info
 This will display useful info about \fBpyradio\fB.
+
+.PP
+\fBNavigating through RadioBrowser results\bR
+.RS 4
+.PP
+All \f[B]PyRadio\f[R] queries to \f[B]RadioBrowser\f[R] will use a
+return limit parameter (default is 200 stations).
+.PP
+This means that the user is presented at most the first 200 stations (or
+whatever limit value he has set), but the actual result set may comprise
+hundreds of stations.
+.PP
+\f[B]PyRadio\f[R] will permit the user to navigate through them by
+displaying the \[lq]\f[I]navigation buttons\f[R]\[rq] when the
+stations\[cq] list is requested, provided that there is a possibility
+for a subsequent page exist - \f[B]PyRadio\f[R] has no way of knowing
+that beforehand.
+.PP
+An example can be seen in the following image.
+.PP
+\fIhttps://members.hellug.gr/sng/pyradio/radiobrowser-pages.jpg\fR
+
+.PP
+In this example, the user has already displayed the fourth
+\[lq]\f[B]page\f[R]\[rq] of results; the buttons displayed are:
+
+
+\fBFirst Page\fR
+
+.RS 4
+Display the first page of results.
+
+This button is displayed only when the third (and consequent) page is
+displayed.
+.RE
+
+\fBPrevious Page\fR
+
+.RS 4
+Display the previous page of results.
+
+This button is displayed only when the second (and consequent) page is
+displayed.
+.RE
+
+\fBNext Page\fR
+
+.RS 4
+Display the next page of results.
+
+This button is visible only if the number of results in the current page
+is equal to the limit value set for the query.
+This way the user knows he has displayed the last page of results.
+
+Chances are the last page of results contain \[lq]\f[I]limit\f[R]\[rq]
+stations; in this case, clicking the button will produce no change (the
+existing page will be redisplayed).
+This is an indication that the last page of results has been reached.
+.RE
+.RE
 
 .SH Using the Text Server
 

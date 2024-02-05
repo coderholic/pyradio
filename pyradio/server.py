@@ -424,7 +424,7 @@ div[id^='a_']:hover { underline: none;}
     function js_send_simple_command(the_command, the_timeout){
         // js_disable_all_buttons(true);
         console.log("the_command =", the_command);
-        if ( ( the_command == "/html/open_radio_browser" ) || ( the_command == "/html/close_radio_browser" ) ) {
+        if ( ( the_command == "/html/open_rb" ) || ( the_command == "/html/close_rb" ) ) {
             clearTimeout(msg_timeout);
             if ( window.radio_browser == 0 ){
                 rb_msg = '<div class="alert alert-info">Connecting to <b>RadioBrowser</b>...</div>';
@@ -485,7 +485,7 @@ div[id^='a_']:hover { underline: none;}
                     result = '<div class="alert alert-success">Playback <b>toggled!</b></div>'
                 } else if ( the_command == "/html/mute"  ) {
                     result = '<div class="alert alert-success">Player mute state <b>toggled!</b></div>'
-                } else if ( the_command == "/html/open_radio_browser"  ) {
+                } else if ( the_command == "/html/open_rb"  ) {
                     result = '<div class="alert alert-success">Connection to <b>RadioBrowser</b> established!</div>'
                     js_fix_radio_browser();
                 } else if ( the_command == "/html/close_radio_browser"  ) {
@@ -701,9 +701,9 @@ div[id^='a_']:hover { underline: none;}
         var element = document.getElementById("rb");
         // DIS element.disabled = true;
         if ( window.radio_browser == 0 ){
-            js_send_simple_command('/html/open_radio_browser', 1500)
+            js_send_simple_command('/html/open_rb', 1500)
         }else{
-            js_send_simple_command('/html/close_radio_browser', 1500)
+            js_send_simple_command('/html/close_rb', 1500)
         }
         // DIS element.disabled = true;
         //js_disable_all_buttons(false);
