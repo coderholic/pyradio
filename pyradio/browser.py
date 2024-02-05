@@ -407,6 +407,13 @@ class RadioBrowser(PyRadioStationsBrowser):
     def add_to_title(self):
         return self._server.split('.')[0]
 
+    @property
+    def current_search_limit(self):
+        post_data = self._get_post_data()
+        if 'limit' in post_data:
+            return int(post_data['limit'])
+        return self._default_max_number_of_results
+
     def _get_title(self):
         self.TITLE = 'RadioBrowser ({})'.format(country_from_server(self._server))
 
@@ -707,11 +714,7 @@ class RadioBrowser(PyRadioStationsBrowser):
     def next_page(self, msg_function=None):
         self._page += 1
         post_data = self._get_post_data()
-        if 'limit' in post_data:
-            limit = post_data['limit']
-        else:
-            limit = self._default_max_number_of_results
-        if limit > len(self._raw_stations):
+        if self.current_search_limit > len(self._raw_stations):
             self._page -= 1
             return '\n___No more results available!___\n'
         if msg_function:

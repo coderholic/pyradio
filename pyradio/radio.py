@@ -511,6 +511,7 @@ class PyRadio(object):
             '/search_radio_browser': self.search_radio_browser_headless,
             '/html_search_radio_browser': self.search_radio_browser_headless,
             '/radio_browser_page': self._get_rb_page,
+            '/radio_browser_first_page': self._first_page_rb,
             '/radio_browser_next_page': self._next_page_rb,
             '/radio_browser_previous_page': self._previous_page_rb,
         }
@@ -5001,9 +5002,9 @@ __|Remote Control Server| cannot be started!__
             ''' go back to search mode '''
             self.ws.operation_mode = self.ws.BROWSER_SEARCH_MODE
             ''' display no results message '''
-            self._show_no_browser_results()
             if self._cnf._online_browser.page > 0:
                 self._cnf._online_browser._page -= 1
+            self._show_no_browser_results()
         else:
             self._cnf.stations = tmp_stations[:]
             self.stations = self._cnf.stations
@@ -5032,11 +5033,30 @@ __|Remote Control Server| cannot be started!__
             return self._cnf.online_browser.search_history_index, self._cnf.online_browser.get_strings()
         return -1, None
 
+    def _first_page_rb(self):
+        if self._cnf.browsing_station_service:
+            if self._cnf._online_browser.page > 1:
+                self._cnf._online_browser._page = 1
+                ret = self._cnf._online_browser.previous_page()
+                if ret is None:
+                    return 'First page loaded'
+                return ret.replace('\n', '').replace('_', '')
+            else:
+                return 'Already on first page...'
+        return 'RadioBrowser is not active'
+
     def _next_page_rb(self):
         if self._cnf.browsing_station_service:
             ret = self._cnf._online_browser.next_page()
             if ret is None:
                 return 'Next page loaded'
+            return ret.replace('\n', '').replace('_', '')
+        return 'RadioBrowser is not active'
+
+        if self._cnf.browsing_station_service:
+            ret = self._cnf._online_browser.previous_page()
+            if ret is None:
+                return 'Previous page loaded'
             return ret.replace('\n', '').replace('_', '')
         return 'RadioBrowser is not active'
 

@@ -144,7 +144,7 @@ Restricted Commands (Main mode only)
                                      (x comes from command /pl)
 /playlists/x,y        /pl/x,y      play station id y from playlist id x
 /stations             /st          get stations list from current playlist
-/stations/[x]         /st/x        play station id x from current playlist
+/stations/x           /st/x        play station id x from current playlist
 /next                 /n           play next station
 /previous             /p           play previous station
 /histnext             /hn          play next station from history
@@ -156,6 +156,7 @@ Restricted Commands (Main mode only)
                                      (x comes from /lrb - execute default
                                       search item if not specified)
 /rb_page              /grb         get RadioBrowser searh results page number
+/rb_first_page        /frb         load RadioBrowser first results page
 /rb_next_page         /nrb         load RadioBrowser next results page
 /rb_previous_page     /prb         load RadioBrowser previous results page
 ```

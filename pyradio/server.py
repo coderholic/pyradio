@@ -532,6 +532,8 @@ div[id^='a_']:hover { underline: none;}
                 //    the_counter = 2 * selection;
                 //    console.log("the_counter =", the_counter);
                 //}
+                if ( the_command == '/html/st' ){
+                }
                 td = document.getElementsByTagName('td');
                 for (i=the_counter; i<td.length; i++){
                     try{
@@ -848,6 +850,7 @@ Restricted Commands (Main mode only)
                                      (x comes from /lrb - execute default
                                       search item if not specified)
 /rb_page              /grb         get RadioBrowser searh results page number
+/rb_first_page        /frb         load RadioBrowser first results page
 /rb_next_page         /nrb         load RadioBrowser next results page
 /rb_previous_page     /prb         load RadioBrowser previous results page''',
         '/quit': 'PyRadio Remote Service exiting!\nCheers!',
@@ -1255,7 +1258,8 @@ Restricted Commands (Main mode only)
                             self._send_raw(
                                 self._format_html_table(
                                 self._list_stations(html=True), 0,
-                                sel=self._selected
+                                sel=self._selected,
+                                show_page_navigation=self._cnf._online_browser is not None
                                 )
                             )
                         else:
@@ -1346,16 +1350,47 @@ Restricted Commands (Main mode only)
                 received = self._commands['/radio_browser_page']()
                 self._send_text(received)
 
+        elif self._path == '/radio_browser_first_page' or self._path == '/frb':
+            if self._is_html:
+                ret = self._commands['/radio_browser_first_page']()
+                self._selected = self.sel()[1]
+                self._send_raw(
+                    self._format_html_table(
+                    self._list_stations(html=True), 0,
+                    sel=self._selected,
+                    show_page_navigation=self._cnf._online_browser is not None
+                    )
+                )
+            else:
+                received = self._commands['/radio_browser_first_page']()
+                self._send_text(received)
+
         elif self._path == '/radio_browser_next_page' or self._path == '/nrb':
             if self._is_html:
-                pass
+                ret = self._commands['/radio_browser_next_page']()
+                self._selected = self.sel()[1]
+                self._send_raw(
+                    self._format_html_table(
+                    self._list_stations(html=True), 0,
+                    sel=self._selected,
+                    show_page_navigation=self._cnf._online_browser is not None
+                    )
+                )
             else:
                 received = self._commands['/radio_browser_next_page']()
                 self._send_text(received)
 
         elif self._path == '/radio_browser_previous_page' or self._path == '/prb':
             if self._is_html:
-                pass
+                ret = self._commands['/radio_browser_previous_page']()
+                self._selected = self.sel()[1]
+                self._send_raw(
+                    self._format_html_table(
+                    self._list_stations(html=True), 0,
+                    sel=self._selected,
+                    show_page_navigation=self._cnf._online_browser is not None
+                    )
+                )
             else:
                 received = self._commands['/radio_browser_previous_page']()
                 self._send_text(received)
@@ -1509,7 +1544,6 @@ Restricted Commands (Main mode only)
                                                     )
                                                 )
 
-
             else:
                 if not self.can_send_command():
                     if self._is_html:
@@ -1528,7 +1562,8 @@ Restricted Commands (Main mode only)
                                 self._send_raw(
                                     self._format_html_table(
                                         self._list_stations(html=True), 0,
-                                        sel=self._selected
+                                        sel=self._selected,
+                                        show_page_navigation=self._cnf._online_browser is not None
                                     )
                                 )
                             else:
@@ -1887,7 +1922,8 @@ Content-Length: {}
 
     def _format_html_table(
             self, in_list, index,
-            playlist_index=None, sel=-1
+            playlist_index=None, sel=-1,
+            show_page_navigation=False
         ):
         '''
         format html table for |CONTENT|
@@ -1899,6 +1935,32 @@ Content-Length: {}
         index           type of output (stations / playlist) and URL formatter
         playlist_index  playist index (only valid if index == 2)
         '''
+        if show_page_navigation:
+            out = []
+            show_prev_button = self._cnf._online_browser.page > 0
+            show_first_button = self._cnf._online_browser.page > 1
+            show_next_button = len(in_list) == self._cnf._online_browser.current_search_limit
+            if show_next_button or show_prev_button:
+                out.append(r'''
+<div id="page" class="row" style="margin-top: 40px;">
+        <div class="text-center">
+            <div id="gpage" style="margin-bottom: 2px;">Results page: <span style="color: red; font-weight: bold;">{}</span></div>
+'''.format(self._cnf._online_browser.page+1))
+                if show_first_button:
+                    out.append(r'''<button id="fpage" onclick="js_send_simple_command('/html/radio_browser_first_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-warning">First<br>Page</button>''')
+                if show_prev_button:
+                    out.append(r'''<button id="npage" onclick="js_send_simple_command('/html/radio_browser_previous_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-primary">Previous<br>Page</button>''')
+                if show_next_button:
+                    out.append(r'''<button id="ppage" onclick="js_send_simple_command('/html/radio_browser_next_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-primary">Next<br>Page</button>''')
+                out.append(r'''
+        </div>
+</div>''')
+                nav = ''.join(out)
+                out = []
+            else:
+                nav = ''
+        else:
+            nav = ''
         head_captions = [
             'Stations (current playlist)',
             'Playlists',
@@ -1949,7 +2011,7 @@ Content-Length: {}
             out.append('                            </tr>')
         out.append('                        </tbody>')
         out.append('                    </table>')
-        return head + '\n' + '\n'.join(out) + self._filter_string
+        return nav + head + '\n' + '\n'.join(out) + self._filter_string
 
     def _read_playlist(self, a_playlist):
         pass
