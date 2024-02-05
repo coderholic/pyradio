@@ -1947,11 +1947,11 @@ Content-Length: {}
             <div id="gpage" style="margin-bottom: 2px;">Results page: <span style="color: red; font-weight: bold;">{}</span></div>
 '''.format(self._cnf._online_browser.page+1))
                 if show_first_button:
-                    out.append(r'''<button id="fpage" onclick="js_send_simple_command('/html/radio_browser_first_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-warning">First<br>Page</button>''')
+                    out.append(r'''<button id="fpage" onclick="js_send_simple_command('/html/rb_first_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-warning">First<br>Page</button>''')
                 if show_prev_button:
-                    out.append(r'''<button id="npage" onclick="js_send_simple_command('/html/radio_browser_previous_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-primary">Previous<br>Page</button>''')
+                    out.append(r'''<button id="npage" onclick="js_send_simple_command('/html/rb_previous_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-primary">Previous<br>Page</button>''')
                 if show_next_button:
-                    out.append(r'''<button id="ppage" onclick="js_send_simple_command('/html/radio_browser_next_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-primary">Next<br>Page</button>''')
+                    out.append(r'''<button id="ppage" onclick="js_send_simple_command('/html/rb_next_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-primary">Next<br>Page</button>''')
                 out.append(r'''
         </div>
 </div>''')
