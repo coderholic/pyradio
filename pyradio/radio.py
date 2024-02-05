@@ -5035,7 +5035,7 @@ __|Remote Control Server| cannot be started!__
 
     def _first_page_rb(self):
         if self._cnf.browsing_station_service:
-            if self._cnf._online_browser.page > 1:
+            if self._cnf._online_browser.page > 0:
                 self._cnf._online_browser._page = 1
                 ret = self._cnf._online_browser.previous_page()
                 if ret is None:

@@ -1287,7 +1287,7 @@ Restricted Commands (Main mode only)
                 else:
                     self._send_text(self._text['/perm'])
 
-        elif self._path == '/open_radio_browser' or self._path == '/orb':
+        elif self._path == '/open_rb' or self._path == '/orb':
             if self._is_html:
                 received = self._commands['/html_open_radio_browser']()
                 self._send_raw(received)
@@ -1300,7 +1300,7 @@ Restricted Commands (Main mode only)
                     received = self._commands['/open_radio_browser']()
                 # self._send_text(received)
 
-        elif self._path == '/close_radio_browser' or self._path == '/crb':
+        elif self._path == '/close_rb' or self._path == '/crb':
             if self._is_html:
                 received = self._commands['/html_close_radio_browser']()
                 # self._send_raw(received)
@@ -1311,7 +1311,7 @@ Restricted Commands (Main mode only)
                     self._send_text('Local playlist already opened!')
                 # self._send_text('Local playlist opened!')
 
-        elif self._path.startswith('/search_radio_browser') or \
+        elif self._path.startswith('/search_rb') or \
                     self._path.startswith('/srb'):
                 if self._path.endswith('srb') or \
                         self._path.endswith('srb/') or \
@@ -1343,14 +1343,14 @@ Restricted Commands (Main mode only)
                     if ret != '':
                         self._send_text(ret)
 
-        elif self._path == '/radio_browser_page' or self._path == '/grb':
+        elif self._path == '/rb_page' or self._path == '/grb':
             if self._is_html:
                 pass
             else:
                 received = self._commands['/radio_browser_page']()
                 self._send_text(received)
 
-        elif self._path == '/radio_browser_first_page' or self._path == '/frb':
+        elif self._path == '/rb_first_page' or self._path == '/frb':
             if self._is_html:
                 ret = self._commands['/radio_browser_first_page']()
                 self._selected = self.sel()[1]
@@ -1365,7 +1365,7 @@ Restricted Commands (Main mode only)
                 received = self._commands['/radio_browser_first_page']()
                 self._send_text(received)
 
-        elif self._path == '/radio_browser_next_page' or self._path == '/nrb':
+        elif self._path == '/rb_next_page' or self._path == '/nrb':
             if self._is_html:
                 ret = self._commands['/radio_browser_next_page']()
                 self._selected = self.sel()[1]
@@ -1380,7 +1380,7 @@ Restricted Commands (Main mode only)
                 received = self._commands['/radio_browser_next_page']()
                 self._send_text(received)
 
-        elif self._path == '/radio_browser_previous_page' or self._path == '/prb':
+        elif self._path == '/rb_previous_page' or self._path == '/prb':
             if self._is_html:
                 ret = self._commands['/radio_browser_previous_page']()
                 self._selected = self.sel()[1]
@@ -1395,7 +1395,7 @@ Restricted Commands (Main mode only)
                 received = self._commands['/radio_browser_previous_page']()
                 self._send_text(received)
 
-        elif self._path == '/list_radio_browser' or self._path == '/lrb':
+        elif self._path == '/list_rb' or self._path == '/lrb':
             if self._is_html:
                 sel, a_list = self.rb_html_search_strings()
                 if a_list:
