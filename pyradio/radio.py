@@ -877,6 +877,9 @@ class PyRadio(object):
 
     def _open_html_rb(self):
         self._reset_status_bar_right()
+        if self.ws.operation_mode == self.ws.RECORD_WINDOW_MODE:
+            self.ws.close_window()
+            self.refreshBody()
         ret = self._html_check_op_mode()
         if ret is not None:
             return ret
@@ -890,6 +893,9 @@ class PyRadio(object):
         return '<div class="alert alert-danger">Cannot connect to <b>RadioBrowser</b></div>'
 
     def _open_text_rb(self):
+        if self.ws.operation_mode == self.ws.RECORD_WINDOW_MODE:
+            self.ws.close_window()
+            self.refreshBody()
         if self._cnf.browsing_station_service:
             return 'Already connected to RadioBrowser!'
         # logger.error('==== brefore open command')
@@ -11492,6 +11498,9 @@ __|Remote Control Server| cannot be started!__
         return self._scan_playlist_for_station(self._reading_stations, start, station_to_find)
 
     def _can_receive_remote_command(self):
+        if self.ws.operation_mode == self.ws.RECORD_WINDOW_MODE:
+            self.ws.close_window()
+            self.refreshBody()
         # if self.ws.window_mode in (
         if self.ws.operation_mode in (
             self.ws.NORMAL_MODE,

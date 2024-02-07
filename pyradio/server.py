@@ -442,7 +442,7 @@ div[id^='a_']:hover { underline: none;}
            window.get_rb_status = 1;
            // console.log("* get_rb_status", window.get_rb_status);
         }
-        if ( ( the_command.startsWith("/html/search_radio_browser") ) || ( the_command.startsWith("/html/srb") ) ) {
+        if ( ( the_command.startsWith("/html/search_rb") ) || ( the_command.startsWith("/html/srb") ) ) {
             // console.log("RadioBrowser Search!")
             js_hide_msg();
             clearTimeout(msg_timeout);
@@ -533,8 +533,6 @@ div[id^='a_']:hover { underline: none;}
                 //    the_counter = 2 * selection;
                 //    console.log("the_counter =", the_counter);
                 //}
-                if ( the_command == '/html/st' ){
-                }
                 td = document.getElementsByTagName('td');
                 for (i=the_counter; i<td.length; i++){
                     try{
@@ -559,6 +557,7 @@ div[id^='a_']:hover { underline: none;}
                     }
                 }
         }
+        js_fix_recording();
         // console.log("--------");
         js_disable_all_buttons(false);
         });
@@ -672,9 +671,9 @@ div[id^='a_']:hover { underline: none;}
                 element.disabled = false;
             }
             // enable / disable button based on state
-            js_fix_muted();
-            js_fix_recording();
-            js_fix_logging_titles();
+            // js_fix_muted();
+            // js_fix_recording();
+            // js_fix_logging_titles();
         }
     }
 
@@ -805,10 +804,10 @@ div[id^='a_']:hover { underline: none;}
             }
             // console.log("set radio_browser: ", radio_browser);
             js_disable_all_buttons(false);
-            js_fix_muted();
-            js_fix_recording();
-            js_fix_history_buttons();
-            js_fix_logging_titles();
+            // js_fix_muted();
+            // js_fix_recording();
+            // js_fix_history_buttons();
+            // js_fix_logging_titles();
             // DIS element.disabled = false;
         }
         getRadioBrowser();
@@ -844,6 +843,7 @@ div[id^='a_']:hover { underline: none;}
     }
 
     $(document).ready(js_init);
+
     </script>
     </body>
 </html>
