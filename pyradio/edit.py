@@ -987,7 +987,6 @@ class PyRadioRecordingDir(object):
 
         self._show_title()
         self._win.addstr(1, 2, 'Current location: ', curses.color_pair(4))
-        logger.error('_open_redordings_dir_select_win')
         self._win.addstr(
             cjkslices(self.dir_path, self.maxX-4-18)[0],
             curses.color_pair(5)
@@ -1148,7 +1147,6 @@ class PyRadioRecordingDir(object):
                 return -1, None, False
             return 0, None, False
         else:
-            logger.error('self.focus = {}'.format(self.focus))
             if char == ord('?') and self.focus == 0:
                 return 2, None, False
             elif char in (curses.KEY_EXIT, 27, ord('q')):

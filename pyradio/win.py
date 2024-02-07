@@ -355,7 +355,7 @@ def download_player(output_folder=None, package=1, do_not_exit=False):
     along with the archive named "{0}".'''.format(basename(out_file)))
             if player_name == 'mpv':
                 if exists(join(output_folder, 'mpv')):
-                    print('''    Please extract the archive in the "[dev]mpv[/red]" folder
+                    print('''    Please extract the archive in the "[rev]mpv[/red]" folder
     (overwriting any existing files).''')
                 else:
                     print('''    Please create a folder named "[red]mpv[/red]" and extract

@@ -514,6 +514,8 @@ class PyRadio(object):
             '/radio_browser_first_page': self._first_page_rb,
             '/radio_browser_next_page': self._next_page_rb,
             '/radio_browser_previous_page': self._previous_page_rb,
+            '/toggle_rec': self._toggle_recording_text,
+            '/html_toggle_rec': self._toggle_recording_html,
         }
 
         ''' list of functions to open for entering
@@ -832,10 +834,15 @@ class PyRadio(object):
         if self._cnf.browsing_station_service:
             out.append('  Service: ' + self._cnf.online_browser.TITLE)
             out.append('    Search: ' + self._cnf.online_browser.get_current_history_string())
+            if self._cnf._online_browser.page > 0:
+                out.append('    Results page: {}'.format(self._cnf._online_browser.page+1))
         else:
             out.append('  Playlist: "{}"'.format(basename(self._playlist_in_editor)[:-4]))
         if self.player.isPlaying():
-            out.append('  Status: In playback {}'.format('(muted)' if self.player.muted else ''))
+            out.append('  Status: In playback{0} {1}'.format(
+                ', recording' if self.player.currently_recording else '',
+                '(muted)' if self.player.muted else '')
+                )
             out.append('    Station (id={0}): "{1}"'.format(self.playing+1, self.stations[self.playing][0]))
             if self.stations[self.playing][0] not in self.log.song_title:
                 out.append('    Title: {}'.format(self.log.song_title))
@@ -852,10 +859,15 @@ class PyRadio(object):
         if self._cnf.browsing_station_service:
             out.append('<span style="padding-left: 1em;">Service: <b>{}</b></span><br>'.format(self._cnf.online_browser.TITLE))
             out.append('<span style="padding-left: 2em;">Search: <b>{}</b></span><br>'.format(self._cnf.online_browser.get_current_history_string()))
+            if self._cnf._online_browser.page > 0:
+                out.append('<span style="padding-left: 2em;">Results page: <b>{}</b></span><br>'.format(self._cnf._online_browser.page+1))
         else:
             out.append('<span style="padding-left: 1em;">Playlist: <b>{}</b></span><br>'.format(basename(self._playlist_in_editor)[:-4]))
         if self.player.isPlaying():
-            out.append('<span style="padding-left: 1em;">Status: <b>In playback {}</b></span><br>'.format('(muted)' if self.player.muted else ''))
+            out.append('<span style="padding-left: 1em;">Status: <b>In playback{0} {1}</b></span><br>'.format(
+                ', recording' if self.player.currently_recording else '',
+                '(muted)' if self.player.muted else '')
+                )
             out.append('<span style="padding-left: 1em;">Station: <b>{}</b></span><br>'.format(self.stations[self.playing][0]))
         else:
             out.append('<span style="padding-left: 1em;">Status: <b>Idle</b></span><br>')
@@ -864,6 +876,10 @@ class PyRadio(object):
         return '\n'.join(out)
 
     def _open_html_rb(self):
+        self._reset_status_bar_right()
+        ret = self._html_check_op_mode()
+        if ret is not None:
+            return ret
         if self._cnf.browsing_station_service:
             return '<div class="alert alert-danger">Already connected to <b>RadioBrowser</b>!</div>'
         # logger.error('==== brefore open command')
@@ -5060,6 +5076,51 @@ __|Remote Control Server| cannot be started!__
             return ret.replace('\n', '').replace('_', '')
         return 'RadioBrowser is not active'
 
+    def _toggle_recording_text(self):
+        ret = self._toggle_recording()
+        return ret
+
+    def _toggle_recording_html(self):
+        ret = self._toggle_recording(True)
+        return ret
+
+    def _toggle_recording(self, html=False):
+        self._reset_status_bar_right()
+        # if self.player.PLAYER_NAME != 'vlc':
+
+        if self.ws.operation_mode == self.ws.RECORD_WINDOW_MODE:
+            self.ws.close_window()
+            self.refreshBody()
+        if self.player.PLAYER_NAME == 'vlc' and \
+                platform.startswith('win'):
+            self._show_win_no_record()
+            if html:
+                return '<div class="alert alert-danger">Recording <b>not</b> supported</div>'
+            else:
+                return 'Recording not supported'
+        else:
+            self.player.recording = 1 if self.player.recording == 0 else 0
+            if self.player.recording > 0:
+                if self.player.isPlaying():
+                    self.player.already_playing = True
+                else:
+                    self.player.already_playing = False
+            else:
+                self.player.already_playing = False
+            with self._buffering_lock:
+                self._show_recording_status_in_header()
+            if self._cnf.show_recording_start_message:
+                self._show_recording_toggle_window()
+            else:
+                self.refreshBody()
+            if html:
+                return '<div class="alert alert-{0}">Recording in now <b>{1}</b></div>'.format(
+                        'info' if self.player.recording == 0 else 'success',
+                        'disabled' if self.player.recording == 0 else 'enabled'
+                        )
+            else:
+                return 'Recording in now {}'.format('disabled' if self.player.recording == 0 else 'enabled')
+
     def _previous_page_rb(self):
         if self._cnf.browsing_station_service:
             ret = self._cnf._online_browser.previous_page()
@@ -6371,11 +6432,17 @@ __|Remote Control Server| cannot be started!__
             self.setStation(self.selection + 1)
             self._handle_cursor_move_down()
 
+    def _html_check_op_mode(self):
+        if self.ws.window_mode == self.ws.NORMAL_MODE:
+            return None
+        return '<div class="alert alert-danger">Operation not permitted (not in <b>Normal Mode</b>)</div>'
+
     def _html_play_next_station(self):
         self._reset_status_bar_right()
-        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
-        elif self.player.connecting:
+        ret = self._html_check_op_mode()
+        if ret is not None:
+            return ret
+        if self.player.connecting:
             return '<div class="alert alert-success">Please wait for the player to settle...</div>'
         else:
             self._move_cursor_one_down()
@@ -6400,9 +6467,10 @@ __|Remote Control Server| cannot be started!__
 
     def _html_play_previous_station(self):
         self._reset_status_bar_right()
-        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
-        elif self.player.connecting:
+        ret = self._html_check_op_mode()
+        if ret is not None:
+            return ret
+        if self.player.connecting:
             return '<div class="alert alert-success">Please wait for the player to settle...</div>'
         else:
             self._move_cursor_one_up()
@@ -6854,9 +6922,11 @@ __|Remote Control Server| cannot be started!__
             )
 
     def _html_stations_history_previous(self):
-        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
-        elif self.player.connecting:
+        self._reset_status_bar_right()
+        ret = self._html_check_op_mode()
+        if ret is not None:
+            return ret
+        if self.player.connecting:
             return '<div class="alert alert-danger">Please wait for the player to settle...</div>'
         else:
             if self._cnf.stations_history.item == -1:
@@ -6892,9 +6962,11 @@ __|Remote Control Server| cannot be started!__
         return '0'
 
     def _html_stations_history_next(self):
-        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
-        elif self.player.connecting:
+        self._reset_status_bar_right()
+        ret = self._html_check_op_mode()
+        if ret is not None:
+            return ret
+        if self.player.connecting:
             return '<div class="alert alert-danger">Please wait for the player to settle...</div>'
         else:
             if self._cnf.stations_history.item == -1:
@@ -7907,8 +7979,6 @@ __|Remote Control Server| cannot be started!__
                 self._station_select_win = None
                 self._browser_config_win = None
             ret, ret_list = self._config_win.keypress(char)
-            logger.error('ret = {}'.format(ret))
-            logger.error('ret_list = {}'.format(ret_list))
             if ret == self.ws.INSERT_RECORDINGS_DIR_MODE:
                 self._open_redordings_dir_select_win()
             elif ret == self.ws.SELECT_PLAYER_MODE:
@@ -9578,26 +9648,7 @@ __|Remote Control Server| cannot be started!__
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
                 if char == ord('|'):
-                    self._reset_status_bar_right()
-                    # if self.player.PLAYER_NAME != 'vlc':
-                    if self.player.PLAYER_NAME == 'vlc' and \
-                            platform.startswith('win'):
-                        self._show_win_no_record()
-                    else:
-                        self.player.recording = 1 if self.player.recording == 0 else 0
-                        if self.player.recording > 0:
-                            if self.player.isPlaying():
-                                self.player.already_playing = True
-                            else:
-                                self.player.already_playing = False
-                        else:
-                            self.player.already_playing = False
-                        with self._buffering_lock:
-                            self._show_recording_status_in_header()
-                        if self._cnf.show_recording_start_message:
-                            self._show_recording_toggle_window()
-                        else:
-                            self.refreshBody()
+                    self._toggle_recording()
 
                 elif char == curses.ascii.BEL:
                     ''' ^G - show groups '''
@@ -10138,8 +10189,9 @@ __|Remote Control Server| cannot be started!__
 
     def _html_start_player(self):
         self._reset_status_bar_right()
-        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
+        ret = self._html_check_op_mode()
+        if ret is not None:
+            return ret
         if self.number_of_items > 0:
             self._start_player()
             return '<div class="alert alert-success">Playing <b>{}</b>!</div>'.format(self.stations[self.selection][0])
@@ -10158,8 +10210,9 @@ __|Remote Control Server| cannot be started!__
 
     def _html_stop_player(self):
         self._reset_status_bar_right()
-        if self.ws.window_mode == self.ws.PLAYLIST_MODE:
-            return '<div class="alert alert-danger">Operation not permitted (not in normal mode)</div>'
+        ret = self._html_check_op_mode()
+        if ret is not None:
+            return ret
         self._stop_player()
         return '<div class="alert alert-success">Player <b>stopped</b>!</div>'
 
@@ -11439,7 +11492,8 @@ __|Remote Control Server| cannot be started!__
         return self._scan_playlist_for_station(self._reading_stations, start, station_to_find)
 
     def _can_receive_remote_command(self):
-        if self.ws.window_mode in (
+        # if self.ws.window_mode in (
+        if self.ws.operation_mode in (
             self.ws.NORMAL_MODE,
         ):
             return True
@@ -11451,7 +11505,8 @@ __|Remote Control Server| cannot be started!__
             bind_ip=self._cnf.active_remote_control_server_ip,
             bind_port=int(self._cnf.active_remote_control_server_port),
             config=self._cnf,
-            commands=self._remote_control_server_commands
+            commands=self._remote_control_server_commands,
+            player=lambda: self.player
         )
         # self._remote_control_server.has_netifaces = False
         if not self._remote_control_server.has_netifaces:

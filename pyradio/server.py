@@ -273,10 +273,11 @@ div[id^='a_']:hover { underline: none;}
             </div>
             <div class="col-xs-4 col-lg-4">
                 <div class="text-center">
-                    <button id="vu" onclick="js_send_simple_command('/html/volumeup', 500);" type="button" class="btn btn-primary">Volume<br>Up</button>
-                    <button id="vd" onclick="js_send_simple_command('/html/volumedown', 500);" type="button" class="btn btn-primary">Volume<br>Down</button>
+                    <button id="vu" onclick="js_send_simple_command('/html/volumeup', 1500);" type="button" class="btn btn-primary">Volume<br>Up</button>
+                    <button id="vd" onclick="js_send_simple_command('/html/volumedown', 1500);" type="button" class="btn btn-primary">Volume<br>Down</button>
                     <button id="vs" onclick="js_send_simple_command('/html/volumesave', 1500);" type="button" class="btn btn-success">Save<br>Volume</button>
-                    <button id="mute" onclick="js_send_simple_command('/html/mute', 500);" type="button" class="btn btn-warning">Mute<br>Player</button>
+                    <button id="mute" onclick="js_send_simple_command('/html/mute', 1500);" type="button" class="btn btn-warning">Mute<br>Player</button>
+                    <button id="recording" onclick="js_send_simple_command('/html/trec', 1500);" type="button" class="btn btn-danger">REC<br>Disabled</button>
                 </div>
             </div>
             <div class="col-xs-4 col-lg-4">
@@ -392,7 +393,7 @@ div[id^='a_']:hover { underline: none;}
         } else {
             js_disable_buttons_on_stopped(false);
         }
-        console.log("get_rb_status", get_rb_status)
+        // console.log("get_rb_status", get_rb_status)
         if ( get_rb_status == 1 ){
             js_fix_radio_browser();
             window.get_rb_status = 0;
@@ -423,7 +424,7 @@ div[id^='a_']:hover { underline: none;}
 
     function js_send_simple_command(the_command, the_timeout){
         // js_disable_all_buttons(true);
-        console.log("the_command =", the_command);
+        // console.log("the_command =", the_command);
         if ( ( the_command == "/html/open_rb" ) || ( the_command == "/html/close_rb" ) ) {
             clearTimeout(msg_timeout);
             if ( window.radio_browser == 0 ){
@@ -439,10 +440,10 @@ div[id^='a_']:hover { underline: none;}
 
            ////// Trigger to read radio_browser
            window.get_rb_status = 1;
-           console.log("* get_rb_status", window.get_rb_status);
+           // console.log("* get_rb_status", window.get_rb_status);
         }
         if ( ( the_command.startsWith("/html/search_radio_browser") ) || ( the_command.startsWith("/html/srb") ) ) {
-            console.log("RadioBrowser Search!")
+            // console.log("RadioBrowser Search!")
             js_hide_msg();
             clearTimeout(msg_timeout);
             srb_msg = '<div class="alert alert-info">Performing <b>RadioBrowser</b> search...</div>';
@@ -450,7 +451,7 @@ div[id^='a_']:hover { underline: none;}
             js_show_element("msg");
         }
 
-        console.log("get_rb_status", window.get_rb_status);
+        // console.log("get_rb_status", window.get_rb_status);
         // console.log("startsWith /html/pl/ :", the_command.startsWith("/html/pl/"));
         // console.log("length =:", the_command.length);
         if ( the_command == '/html/st' || ( ( the_command.startsWith("/html/pl/" ) && ( the_command.length > 9 )) )){
@@ -464,7 +465,7 @@ div[id^='a_']:hover { underline: none;}
         //     js_get_selection();
         // }
         $.get(the_command, function(result){
-            console.log(the_command, result, typeof result);
+            // console.log(the_command, result, typeof result);
             //
             //  Check for html to display
             //
@@ -488,10 +489,10 @@ div[id^='a_']:hover { underline: none;}
                 } else if ( the_command == "/html/open_rb"  ) {
                     result = '<div class="alert alert-success">Connection to <b>RadioBrowser</b> established!</div>'
                     js_fix_radio_browser();
-                } else if ( the_command == "/html/close_radio_browser"  ) {
+                } else if ( the_command == "/html/close_rb"  ) {
                     result = '<div class="alert alert-success"><b>Local</b> Playlist restored</div>'
-                } else if ( ( the_command.startsWith("/html/search_radio_browser") ) || ( the_command.startsWith("/html/srb") ) ) {
-                    console.log("RadioBrowser Search result!")
+                } else if ( ( the_command.startsWith("/html/search_rb") ) || ( the_command.startsWith("/html/srb") ) ) {
+                    // console.log("RadioBrowser Search result!")
                     result = '<div class="alert alert-success">Search performed!</div>'
                 //     //// js_hide_msg();
                 //     // js_hide_msg();
@@ -610,7 +611,7 @@ div[id^='a_']:hover { underline: none;}
                     $("#song_title").html("<b>Player is stopped!</b>");
                 } else {
                     js_disable_buttons_on_stopped(false);
-                    setTimeout(js_init_title, 500);
+                    setTimeout(js_init_title, 1500);
                 }
             }
         }
@@ -637,7 +638,7 @@ div[id^='a_']:hover { underline: none;}
             }
         }
         getSelection();
-        console.log("==> selection =", selection);
+        // console.log("==> selection =", selection);
     }
 
     function js_disable_group_button(enable){
@@ -657,14 +658,14 @@ div[id^='a_']:hover { underline: none;}
     function js_disable_all_buttons(enable){
         if (enable){
             // disable all buttons
-            let b_id = ["rb", "next", "prev", "hnext", "hprev", "tplay", "vu", "vd", "vs", "mute", "st", "group", "pl", "info", "logging", "like"];
+            let b_id = ["rb", "next", "prev", "hnext", "hprev", "tplay", "vu", "vd", "vs", "mute", "st", "group", "pl", "info", "logging", "like", "recording"];
             for (let i in b_id) {
                 var element = document.getElementById(b_id[i]);
                 // console.log("async:", data);
                 element.disabled = true;
             }
         }else{
-            let b_id = ["rb", "next", "prev", "hnext", "hprev", "tplay", "vu", "vd", "vs", "mute", "st", "group", "pl", "info", "logging", "like"];
+            let b_id = ["rb", "next", "prev", "hnext", "hprev", "tplay", "vu", "vd", "vs", "mute", "st", "group", "pl", "info", "logging", "like", "recording"];
             for (let i in b_id) {
                 var element = document.getElementById(b_id[i]);
                 // console.log("async:", data);
@@ -672,6 +673,7 @@ div[id^='a_']:hover { underline: none;}
             }
             // enable / disable button based on state
             js_fix_muted();
+            js_fix_recording();
             js_fix_logging_titles();
         }
     }
@@ -735,6 +737,38 @@ div[id^='a_']:hover { underline: none;}
         getTitlesLogging();
     }
 
+    function js_fix_recording(){
+        const getRecordingStatus = async () => {
+            const response = await fetch("/html/rec_status");
+            const data = await response.text();
+
+            // console.log("async recording:", data);
+            var element = document.getElementById("recording");
+            if ( data == 0 ){
+                element.className = "btn btn-danger";
+                element.innerHTML = "REC<br>Disabled";
+                element.disabled = false;
+            }else if (data == 1 ){
+                element.className = "btn btn-danger";
+                element.innerHTML = "REC<br>Enabled";
+                element.disabled = false;
+            }else if (data == 2 ){
+                element.className = "btn btn-success";
+                element.innerHTML = "REC<br>Disabled";
+                element.disabled = false;
+            }else if (data == 3 ){
+                element.className = "btn btn-success";
+                element.innerHTML = "REC<br>Enabled";
+                element.disabled = false;
+            }else if (data == 4 ){
+                element.className = "btn btn-danger";
+                element.innerHTML = "REC<br>Disabled";
+                element.disabled = true;
+            }
+        }
+        getRecordingStatus();
+    }
+
     function js_fix_muted(){
         const getMuted = async () => {
             const response = await fetch("/html/is_muted");
@@ -758,7 +792,7 @@ div[id^='a_']:hover { underline: none;}
             const response = await fetch("/html/is_radio_browser");
             const data = await response.text();
 
-            console.log("js_fix_radio_browser async:", data);
+            // console.log("js_fix_radio_browser async:", data);
             var element = document.getElementById("rb");
             if ( data == 0 ){
                 element.className = "btn btn-info";
@@ -769,9 +803,10 @@ div[id^='a_']:hover { underline: none;}
                 element.innerHTML = "Radio<br>Browser";
                 window.radio_browser = 1
             }
-            console.log("set radio_browser: ", radio_browser);
+            // console.log("set radio_browser: ", radio_browser);
             js_disable_all_buttons(false);
             js_fix_muted();
+            js_fix_recording();
             js_fix_history_buttons();
             js_fix_logging_titles();
             // DIS element.disabled = false;
@@ -797,6 +832,7 @@ div[id^='a_']:hover { underline: none;}
     function js_init(){
         url_to_reload = window.location.href;
         js_fix_muted();
+        js_fix_recording();
         js_fix_radio_browser();
         js_fix_logging_titles();
         js_fix_stopped();
@@ -843,6 +879,8 @@ Restricted Commands (Main mode only)
 /previous             /p           play previous station
 /histnext             /hn          play next station from history
 /histprev             /hp          play previous station from history
+/rec_status           /srec        get recording status
+/toggle_rec           /trec        toggle recording
 /open_rb              /orb         open RadioBrowser
 /close_rb             /crb         close RadioBrowser
 /list_rb              /lrb         list RadioBrowser search items
@@ -870,12 +908,13 @@ Restricted Commands (Main mode only)
         '/list': 'Listing stations from playlist',
         '/idle': 'Player is idle; operation not applicable...',
         '/error': 'Error in parameter',
-        '/perm': 'Operation not permitted (not in normal mode)',
+        '/perm': 'Operation not permitted (not in Normal Mode)',
+        '/perm_html': '<div class="alert alert-danger">Operation not permitted (not in <b>Normal Mode</b>)</div>',
         '/log': 'Stations logging toggled',
         '/like': 'Station tagged (liked)',
     }
 
-    def __init__(self, bind_ip, bind_port, config, commands):
+    def __init__(self, bind_ip, bind_port, config, player, commands):
         self.has_netifaces = HAS_NETIFACES
         if not self.has_netifaces:
             return
@@ -888,6 +927,7 @@ Restricted Commands (Main mode only)
         self._bind_port = bind_port
         self._commands = commands
         self._cnf = config
+        self._player = player
 
     @property
     def ip(self):
@@ -1011,13 +1051,12 @@ Restricted Commands (Main mode only)
         if logger.isEnabledFor(logging.INFO):
             logger.info('Accepted connection from {0}:{1} -> {2}'.format(address[0], address[1], self._path))
 
-        self._is_html = True if self._path.startswith('/html') else False
+        # self._is_html = True if self._path.startswith('/html') else False
         if self._path.startswith('/html'):
             self._is_html = True
             self._path = self._path[5:]
         else:
             self._is_html = False
-        logger.error('self._path = "{}"'.format(self._path))
         if self._path == '/init':
             self._commands['/html_init']()
 
@@ -1037,6 +1076,44 @@ Restricted Commands (Main mode only)
         elif self._path == '/is_stopped' and self._is_html:
             received = self._commands['/html_is_stopped']()
             self._send_raw(received)
+
+        elif self._path == '/toggle_rec' or self._path == '/trec':
+            if self._is_html:
+                received = self._commands['/html_toggle_rec']()
+                self._send_raw(received)
+            else:
+                received = self._commands['/toggle_rec']()
+                self._send_text(received)
+
+        elif self._path == '/rec_status' or self._path == '/srec':
+            if platform.lower().startswith('win') and \
+                    self._player().PLAYER_NAME == 'vlc':
+                if self._is_html:
+                    self._send_raw('4')
+                else:
+                    self._send_text('Recording not supported')
+            if self._is_html:
+                ''' 0: rec disabled, not recording
+                    1: rec enabled, not recording
+                    2: rec disabled, recording
+                    3: rec enabled, recording
+                '''
+                if self._player().recording == 0:
+                    if self._player().currently_recording:
+                        self._send_raw('2')
+                    else:
+                        self._send_raw('0')
+                else:
+                    if self._player().currently_recording:
+                        self._send_raw('3')
+                    else:
+                        self._send_raw('1')
+            else:
+                rec = ', currently recording' if self._player().currently_recording else ''
+                if self._player().recording == 0:
+                    self._send_text('Redording is disabled' + rec)
+                else:
+                    self._send_text('Redording is enabled' + rec)
 
         elif self._path == '/is_muted' and self._is_html:
             if self.muted():
@@ -1156,9 +1233,12 @@ Restricted Commands (Main mode only)
 
         elif self._path in ('/next', '/n'):
             if self._is_html:
-                received = self._commands['/html_next']()
-                # logger.error('received = "{}"'.format(received))
-                self._send_raw(received)
+                if self.can_send_command():
+                    received = self._commands['/html_next']()
+                    # logger.error('received = "{}"'.format(received))
+                    self._send_raw(received)
+                else:
+                    self._send_raw(self._text['/perm_html'])
             else:
                 if self.can_send_command():
                     self._send_text(self._text['/next'])
@@ -1168,9 +1248,12 @@ Restricted Commands (Main mode only)
 
         elif self._path in ('/previous', '/p'):
             if self._is_html:
-                received = self._commands['/html_previous']()
-                # logger.error('received = "{}"'.format(received))
-                self._send_raw(received)
+                if self.can_send_command():
+                    received = self._commands['/html_previous']()
+                    # logger.error('received = "{}"'.format(received))
+                    self._send_raw(received)
+                else:
+                    self._send_raw(self._text['/perm_html'])
             else:
                 if self.can_send_command():
                     self._send_text(self._text['/previous'])
@@ -1180,9 +1263,12 @@ Restricted Commands (Main mode only)
 
         elif self._path in ('/histnext', '/hn'):
             if self._is_html:
-                received = self._commands['/html_histnext']()
-                # logger.error('received = "{}"'.format(received))
-                self._send_raw(received)
+                if self.can_send_command():
+                    received = self._commands['/html_histnext']()
+                    # logger.error('received = "{}"'.format(received))
+                    self._send_raw(received)
+                else:
+                    self._send_raw(self._text['/perm_html'])
             else:
                 if self.can_send_command():
                     go_on = False
@@ -1202,9 +1288,12 @@ Restricted Commands (Main mode only)
 
         elif self._path in ('/histprev', '/hp'):
             if self._is_html:
-                received = self._commands['/html_histprev']()
-                # logger.error('received = "{}"'.format(received))
-                self._send_raw(received)
+                if self.can_send_command():
+                    received = self._commands['/html_histprev']()
+                    # logger.error('received = "{}"'.format(received))
+                    self._send_raw(received)
+                else:
+                    self._send_raw(self._text['/perm_html'])
             else:
                 if self.can_send_command():
                     go_on = True
@@ -1225,14 +1314,17 @@ Restricted Commands (Main mode only)
 
         elif self._path in ('/toggle', '/t'):
             if self._is_html:
-                if self.sel()[1] > -1:
-                    received = self._commands['/html_stop']()
-                    # logger.error('received = "{}"'.format(received))
-                    self._send_raw(received)
+                if self.can_send_command():
+                    if self.sel()[1] > -1:
+                        received = self._commands['/html_stop']()
+                        # logger.error('received = "{}"'.format(received))
+                        self._send_raw(received)
+                    else:
+                        received = self._commands['/html_start']()
+                        # logger.error('received = "{}"'.format(received))
+                        self._send_raw(received)
                 else:
-                    received = self._commands['/html_start']()
-                    # logger.error('received = "{}"'.format(received))
-                    self._send_raw(received)
+                    self._send_raw(self._text['/perm_html'])
             else:
                 if self.can_send_command():
                     if self.sel()[1] > -1:
@@ -1283,7 +1375,7 @@ Restricted Commands (Main mode only)
                     has_error = False
             else:
                 if self._is_html:
-                    self._send_raw('<div class="alert alert-danger">' + self._text['/perm'] + '</div>')
+                    self._send_raw(self._text['/perm_html'])
                 else:
                     self._send_text(self._text['/perm'])
 
@@ -1292,9 +1384,9 @@ Restricted Commands (Main mode only)
                 received = self._commands['/html_open_radio_browser']()
                 self._send_raw(received)
             else:
-                logger.error('get text orb!')
-
-                if self._cnf.browsing_station_service:
+                if not self.can_send_command():
+                    self._send_text(self._text['/perm'])
+                elif self._cnf.browsing_station_service:
                     self._send_text('RadioBrowser already active!')
                 else:
                     received = self._commands['/open_radio_browser']()
@@ -1302,10 +1394,14 @@ Restricted Commands (Main mode only)
 
         elif self._path == '/close_rb' or self._path == '/crb':
             if self._is_html:
-                received = self._commands['/html_close_radio_browser']()
-                # self._send_raw(received)
+                if not self.can_send_command():
+                    self._send_raw(self._text['/perm_html'])
+                else:
+                    received = self._commands['/html_close_radio_browser']()
             else:
-                if self._cnf.browsing_station_service:
+                if not self.can_send_command():
+                    self._send_text(self._text['/perm'])
+                elif self._cnf.browsing_station_service:
                     received = self._commands['/close_radio_browser']()
                 else:
                     self._send_text('Local playlist already opened!')
@@ -1313,6 +1409,12 @@ Restricted Commands (Main mode only)
 
         elif self._path.startswith('/search_rb') or \
                     self._path.startswith('/srb'):
+                if not self.can_send_command():
+                    if self._is_html:
+                        self._send_raw(self._text['/perm_html'])
+                    else:
+                        self._send_text(self._text['/perm'])
+                    return
                 if self._path.endswith('srb') or \
                         self._path.endswith('srb/') or \
                         self._path.endswith('search_radio_browser') or \
@@ -1347,73 +1449,100 @@ Restricted Commands (Main mode only)
             if self._is_html:
                 pass
             else:
-                received = self._commands['/radio_browser_page']()
-                self._send_text(received)
+                if self.can_send_command():
+                    received = self._commands['/radio_browser_page']()
+                    self._send_text(received)
+                else:
+                    self._send_text(self._text['/perm'])
 
         elif self._path == '/rb_first_page' or self._path == '/frb':
             if self._is_html:
-                ret = self._commands['/radio_browser_first_page']()
-                self._selected = self.sel()[1]
-                self._send_raw(
-                    self._format_html_table(
-                    self._list_stations(html=True), 0,
-                    sel=self._selected,
-                    show_page_navigation=self._cnf._online_browser is not None
-                    )
-                )
-            else:
-                received = self._commands['/radio_browser_first_page']()
-                self._send_text(received)
-
-        elif self._path == '/rb_next_page' or self._path == '/nrb':
-            if self._is_html:
-                ret = self._commands['/radio_browser_next_page']()
-                self._selected = self.sel()[1]
-                self._send_raw(
-                    self._format_html_table(
-                    self._list_stations(html=True), 0,
-                    sel=self._selected,
-                    show_page_navigation=self._cnf._online_browser is not None
-                    )
-                )
-            else:
-                received = self._commands['/radio_browser_next_page']()
-                self._send_text(received)
-
-        elif self._path == '/rb_previous_page' or self._path == '/prb':
-            if self._is_html:
-                ret = self._commands['/radio_browser_previous_page']()
-                self._selected = self.sel()[1]
-                self._send_raw(
-                    self._format_html_table(
-                    self._list_stations(html=True), 0,
-                    sel=self._selected,
-                    show_page_navigation=self._cnf._online_browser is not None
-                    )
-                )
-            else:
-                received = self._commands['/radio_browser_previous_page']()
-                self._send_text(received)
-
-        elif self._path == '/list_rb' or self._path == '/lrb':
-            if self._is_html:
-                sel, a_list = self.rb_html_search_strings()
-                if a_list:
+                if self.can_send_command():
+                    ret = self._commands['/radio_browser_first_page']()
+                    self._selected = self.sel()[1]
                     self._send_raw(
                         self._format_html_table(
-                            a_list, 3,
-                            sel=sel-1
+                        self._list_stations(html=True), 0,
+                        sel=self._selected,
+                        show_page_navigation=self._cnf._online_browser is not None
                         )
                     )
                 else:
-                    out = []
-                    out.append('<div class="alert alert-danger">')
-                    out.append('No <b>Search Items</b> found!')
-                    out.append('</div>')
-                    self._send_raw('\n'.join(out))
+                    self._send_raw(self._text['/perm_html'])
             else:
-                received = self._commands['/list_radio_browser']()
-                self._send_text(received)
+                if self.can_send_command():
+                    received = self._commands['/radio_browser_first_page']()
+                    self._send_text(received)
+                else:
+                    self._send_text(self._text['/perm'])
+
+        elif self._path == '/rb_next_page' or self._path == '/nrb':
+            if self._is_html:
+                if self.can_send_command():
+                    ret = self._commands['/radio_browser_next_page']()
+                    self._selected = self.sel()[1]
+                    self._send_raw(
+                        self._format_html_table(
+                        self._list_stations(html=True), 0,
+                        sel=self._selected,
+                        show_page_navigation=self._cnf._online_browser is not None
+                        )
+                    )
+                else:
+                    self._send_raw(self._text['/perm_html'])
+            else:
+                if self.can_send_command():
+                    received = self._commands['/radio_browser_next_page']()
+                    self._send_text(received)
+                else:
+                    self._send_text(self._text['/perm'])
+
+        elif self._path == '/rb_previous_page' or self._path == '/prb':
+            if self._is_html:
+                if self.can_send_command():
+                    ret = self._commands['/radio_browser_previous_page']()
+                    self._selected = self.sel()[1]
+                    self._send_raw(
+                        self._format_html_table(
+                        self._list_stations(html=True), 0,
+                        sel=self._selected,
+                        show_page_navigation=self._cnf._online_browser is not None
+                        )
+                    )
+                else:
+                    self._send_raw(self._text['/perm_html'])
+            else:
+                if self.can_send_command():
+                    received = self._commands['/radio_browser_previous_page']()
+                    self._send_text(received)
+                else:
+                    self._send_text(self._text['/perm'])
+
+        elif self._path == '/list_rb' or self._path == '/lrb':
+            if self._is_html:
+                if self.can_send_command():
+                    sel, a_list = self.rb_html_search_strings()
+                    if a_list:
+                        self._send_raw(
+                            self._format_html_table(
+                                a_list, 3,
+                                sel=sel-1
+                            )
+                        )
+                    else:
+                        out = []
+                        out.append('<div class="alert alert-danger">')
+                        out.append('No <b>Search Items</b> found!')
+                        out.append('</div>')
+                        self._send_raw('\n'.join(out))
+                else:
+                    self._send_raw(self._text['/perm_html'])
+            else:
+                if self.can_send_command():
+                    received = self._commands['/list_radio_browser']()
+                    self._send_text(received)
+                else:
+                    self._send_text(self._text['/perm'])
 
         elif self._path == '/volume' or self._path == '/v':
             ''' get volume '''
@@ -1455,7 +1584,7 @@ Restricted Commands (Main mode only)
             if  ',' in self._path:
                 if not self.can_send_command():
                     if self._is_html:
-                        self._send_raw('<div class="alert alert-danger">' + self._text['/perm'] + '</div>')
+                        self._send_raw(self._text['/perm_html'])
                     else:
                         self._send_text(self._text['/perm'])
                 else:
@@ -1547,7 +1676,7 @@ Restricted Commands (Main mode only)
             else:
                 if not self.can_send_command():
                     if self._is_html:
-                        self._send_raw('<div class="alert alert-danger">' + self._text['/perm'] + '</div>')
+                        self._send_raw(self._text['/perm_html'])
                     else:
                         self._send_text(self._text['/perm'])
                 else:
@@ -1947,11 +2076,11 @@ Content-Length: {}
             <div id="gpage" style="margin-bottom: 2px;">Results page: <span style="color: red; font-weight: bold;">{}</span></div>
 '''.format(self._cnf._online_browser.page+1))
                 if show_first_button:
-                    out.append(r'''<button id="fpage" onclick="js_send_simple_command('/html/rb_first_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-warning">First<br>Page</button>''')
+                    out.append(r'''<button id="fpage" onclick="js_send_simple_command('/html/rb_first_page', 1500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-warning">First<br>Page</button>''')
                 if show_prev_button:
-                    out.append(r'''<button id="npage" onclick="js_send_simple_command('/html/rb_previous_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-primary">Previous<br>Page</button>''')
+                    out.append(r'''<button id="npage" onclick="js_send_simple_command('/html/rb_previous_page', 1500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-primary">Previous<br>Page</button>''')
                 if show_next_button:
-                    out.append(r'''<button id="ppage" onclick="js_send_simple_command('/html/rb_next_page', 500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-primary">Next<br>Page</button>''')
+                    out.append(r'''<button id="ppage" onclick="js_send_simple_command('/html/rb_next_page', 1500); js_send_simple_command('/html/st', 0);" type="button" class="btn btn-primary">Next<br>Page</button>''')
                 out.append(r'''
         </div>
 </div>''')

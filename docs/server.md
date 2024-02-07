@@ -78,6 +78,11 @@ Nothing more to say here; start/stop the player.
 - **Volume Up** and **Volume Down**, **Save Volume**, **Mute Player** \
 These are the volume adjustment, saving and muting the player functions.
 
+- **Recording** \
+Toggle recording button. \
+Its caption indicates whether recording is enabled or disabled. \
+Its background color indicates whether a file is currently being recorded (a station is being recorded), in which case the button's background color is green. If the color is red, no file is being recorded.
+
 - **Show Stations** \
 Clicking this buttons will present the list of stations in the current playlist (or search result). Clicking on a station name will start its playback.
 
@@ -178,6 +183,8 @@ Restricted Commands (Main mode only)
 /previous             /p           play previous station
 /histnext             /hn          play next station from history
 /histprev             /hp          play previous station from history
+/rec_status           /srec        get recording status
+/toggle_rec           /trec        toggle recording
 /open_rb              /orb         open RadioBrowser
 /close_rb             /crb         close RadioBrowser
 /list_rb              /lrb         list RadioBrowser search items

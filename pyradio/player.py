@@ -274,6 +274,8 @@ class Player(object):
 
     _chapters = None
 
+    currently_recording = False
+
     def __init__(self,
                  config,
                  outputStream,
@@ -2061,6 +2063,7 @@ class Player(object):
                 logger.debug('playback detection thread not starting (timeout is 0)')
         if logger.isEnabledFor(logging.INFO):
             logger.info('----==== {} player started ====----'.format(self.PLAYER_NAME))
+        self.currently_recording = True if self.recording > 0 else False
         if self.recording == self.RECORD_AND_LISTEN \
                 and self.PLAYER_NAME != 'mpv':
                     self.buffering = False
@@ -2114,11 +2117,13 @@ class Player(object):
 
     def close_from_windows(self):
         ''' kill player instance when window console is closed '''
+        self.currently_recording = False
         if self.process:
             self.close()
             self._stop()
 
     def close(self):
+        self.currently_recording = False
         ''' kill player instance '''
         self._no_mute_on_stop_playback()
 
@@ -2591,6 +2596,7 @@ class MpvPlayer(Player):
             self._close_pipe(sock)
 
     def _stop(self):
+        self.currently_recording = False
         ''' kill mpv instance '''
         self.stop_mpv_status_update_thread = True
         self._send_mpv_command('quit')
@@ -2985,6 +2991,7 @@ class MpPlayer(Player):
         self._sendCommand('p')
 
     def _stop(self):
+        self.currently_recording = False
         ''' kill mplayer instance '''
         self.stop_mpv_status_update_thread = True
         self._sendCommand('q')
@@ -3354,6 +3361,7 @@ class VlcPlayer(Player):
             self._sendCommand('pause\n')
 
     def _stop(self):
+        self.currently_recording = False
         ''' kill vlc instance '''
         self.stop_win_vlc_status_update_thread = True
         if logger.isEnabledFor(logging.INFO):
