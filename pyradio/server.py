@@ -375,7 +375,7 @@ div[id^='a_']:hover { underline: none;}
     var selection = -1;
 
     function js_refresh_page(){
-        window.location.href = url_to_reload;
+        window.location.href = url_to_reload.replace("#", "");
     }
 
     ////////////////////////////////////////////////////////////////////
@@ -564,12 +564,12 @@ div[id^='a_']:hover { underline: none;}
     }
 
     function js_play_next(){
-        js_disable_all_buttons(true);
+        // js_disable_all_buttons(true);
         js_send_simple_command_with_stop('/html/next', 1500)
     }
 
     function js_play_previous(){
-        js_disable_all_buttons(true);
+        // js_disable_all_buttons(true);
         js_send_simple_command_with_stop('/html/previous', 1500)
     }
 
@@ -793,13 +793,16 @@ div[id^='a_']:hover { underline: none;}
 
             // console.log("js_fix_radio_browser async:", data);
             var element = document.getElementById("rb");
+            var pl = document.getElementById("pl");
             if ( data == 0 ){
                 element.className = "btn btn-info";
                 element.innerHTML = "Local<br>Playlist";
+                pl.innerHTML = "Show<br>Playlists";
                 window.radio_browser = 0
             } else {
                 element.className = "btn btn-danger";
                 element.innerHTML = "Radio<br>Browser";
+                pl.innerHTML = "Show<br>Searchs";
                 window.radio_browser = 1
             }
             // console.log("set radio_browser: ", radio_browser);
