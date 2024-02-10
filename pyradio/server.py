@@ -558,6 +558,7 @@ div[id^='a_']:hover { underline: none;}
                 }
         }
         js_fix_recording();
+        // js_fix_muted();
         // console.log("--------");
         js_disable_all_buttons(false);
         });

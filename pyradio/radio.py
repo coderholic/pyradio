@@ -829,7 +829,7 @@ class PyRadio(object):
 
     def _text_info(self):
         out = []
-        out.append('PyRadio {}'.format(self._cnf.current_pyradio_version))
+        out.append('PyRadio {0}{1}'.format(self._cnf.current_pyradio_version, ' (headless)' if self._cnf.headless else ''))
         out.append('  Player: {}'.format(self.player.PLAYER_NAME))
         if self._cnf.browsing_station_service:
             out.append('  Service: ' + self._cnf.online_browser.TITLE)
@@ -844,6 +844,10 @@ class PyRadio(object):
                 '(muted)' if self.player.muted else '')
                 )
             out.append('    Station (id={0}): "{1}"'.format(self.playing+1, self.stations[self.playing][0]))
+            # logger.error('============================')
+            # logger.error('self.stations[self.playing][0]: {}'.format(self.stations[self.playing][0]))
+            # logger.error('self.log.song_title: {}'.format(self.log.song_title))
+            # logger.error('============================')
             if self.stations[self.playing][0] not in self.log.song_title:
                 out.append('    Title: {}'.format(self.log.song_title))
         else:
@@ -854,7 +858,7 @@ class PyRadio(object):
     def _html_info(self):
         out = []
         out.append('<div class="alert alert-info">')
-        out.append('<b>PyRadio {}</b><br>'.format(self._cnf.current_pyradio_version))
+        out.append('<b>PyRadio {0}{1}</b><br>'.format(self._cnf.current_pyradio_version, ' (headless)' if self._cnf.headless else ''))
         out.append('<span style="padding-left: 1em;">Player: <b>{}</b></span><br>'.format(self.player.PLAYER_NAME))
         if self._cnf.browsing_station_service:
             out.append('<span style="padding-left: 1em;">Service: <b>{}</b></span><br>'.format(self._cnf.online_browser.TITLE))
