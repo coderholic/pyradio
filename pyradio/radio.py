@@ -45,6 +45,7 @@ from .html_help import HtmlHelp
 from .browser import RadioBrowserConfig, RadioBrowserConfigWindow
 from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
+from .help import PyRadioHelp
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -402,6 +403,8 @@ class PyRadio(object):
 
     _open_dir_win = None
 
+    _new_help_window = PyRadioHelp()
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -534,6 +537,7 @@ class PyRadio(object):
             self.ws.PASTE_MODE: self._playlist_select_paste_win_refresh_and_resize,
             self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
             self.ws.MAIN_HELP_MODE: self._show_main_help,
+            self.ws.NEW_HELP_MODE: self._new_help,
             self.ws.MAIN_HELP_MODE_PAGE_2: self._show_main_help_page_2,
             self.ws.MAIN_HELP_MODE_PAGE_3: self._show_main_help_page_3,
             self.ws.MAIN_HELP_MODE_PAGE_4: self._show_main_help_page_4,
@@ -3205,6 +3209,14 @@ __|Remote Control Server| cannot be started!__
         self._show_help(txt,
                         mode_to_set=self.ws.GROUP_HELP_MODE,
                         caption=' Group Selection Help ')
+
+    def _new_help(self, help_key=None):
+        self._new_help_window.show(parent=self.bodyWin)
+
+    def _show_new_help(self, help_key=None):
+        self._new_help_window.set_text(parent=self.bodyWin, help_key=help_key)
+        self.ws.operation_mode = self.ws.NEW_HELP_MODE
+        self._new_help_window.show()
 
     def _show_main_help(self, from_keyboard=False):
         txt = r'''Up|,|j|,|PgUp|,
@@ -7170,9 +7182,9 @@ __|Remote Control Server| cannot be started!__
                 logger.debug('keypress: Asked to stop. Stoping...')
             return -1
 
-        # if char == ord('1'):
-        #     self._show_moving_recordings_dir()
-        #     return
+        if char == ord('1'):
+            self._show_new_help()
+            return
         # if char == ord('1'):
         #     self.search_radio_browser_headless(1)
         #     return
@@ -7202,6 +7214,13 @@ __|Remote Control Server| cannot be started!__
                 if not self._limited_height_mode:
                     self._do_display_notify()
             self._i_am_resizing = False
+            return
+
+        if self.ws.operation_mode == self.ws.NEW_HELP_MODE:
+            ret = self._new_help_window.keypress(char)
+            if ret:
+                self.ws.close_window()
+                self.refreshBody()
             return
 
         ''' if small exit '''
