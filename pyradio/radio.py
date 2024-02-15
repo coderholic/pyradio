@@ -2878,7 +2878,11 @@ class PyRadio(object):
 
     def _print_help(self):
         logger.error('DE \n\nself.ws.operation_mode = {}\n\n'.format(self.ws.operation_mode))
-        if self.ws.operation_mode in self._help_keys.keys():
+        if self.ws.operation_mode == self.ws.NORMAL_MODE and \
+                self._cnf.browsing_station_service:
+            if self._cnf._online_browser.BROWSER_NAME == 'RadioBrowser':
+                self._show_new_help(help_key='main', token='rb')
+        elif self.ws.operation_mode in self._help_keys.keys():
             logger.error('using _open_help_by_key')
             if self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE:
                 self._open_help_by_key('config-player', self._show_config_player_help)
@@ -3102,9 +3106,11 @@ __|Remote Control Server| cannot be started!__
     def _new_help(self, help_key=None):
         self._new_help_window.show(parent=self.bodyWin)
 
-    def _show_new_help(self, help_key=None):
+    def _show_new_help(self, help_key=None, token=None):
         self._new_help_window.set_text(self.bodyWin, help_key)
         self.ws.operation_mode = self.ws.HELP_MODE
+        if token is not None:
+            self._new_help_window.set_token(token)
         self._new_help_window.show()
 
     def _open_help_by_key(self, *args):
@@ -3115,12 +3121,6 @@ __|Remote Control Server| cannot be started!__
         logger.error('in _open_help_by_key 3')
         self._new_help_window.show()
         logger.error('in _open_help_by_key 4')
-
-    def _show_main_help_page_from_browser(self):
-        if self._cnf._online_browser.BROWSER_NAME == 'RadioBrowser':
-            self.ws.close_window()
-            self._show_main_help_page_4()
-            self._main_help_id = 3
 
     def _show_line_editor_help(self):
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \

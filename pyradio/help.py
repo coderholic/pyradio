@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import curses
+import re
 import logging
 from curses.ascii import ACK as KEY_ACK, STX as KEY_STX
 from sys import platform
@@ -16,6 +17,7 @@ class PyRadioHelp(object):
     _can_scroll= True
     _columns = {}
     _max_lens = {}
+    _tokens = {}
 
     def __init__(self, config, op_mode, prev_op_mode):
         self._main_win_width = 73
@@ -24,6 +26,13 @@ class PyRadioHelp(object):
         self._pad_height = 32767
         self._operation_mode = op_mode
         self._previous_operation_mode = prev_op_mode
+
+    def set_token(self, token):
+        self._active_token = None
+        logger.error('senf_tokens = {}'.format(self._tokens))
+        if token in self._tokens.keys():
+            self._active_token = self._tokens[token]
+            logger.info('setting self._pad_pos to {}'.format(self._pad_pos))
 
     def _get_txt(self, *args):
         '''
@@ -144,7 +153,7 @@ Middle click                        |*|  Toggle mute.
 Wheel                               |*|  Page up / down.
 Shift-Wheel                         |*|  Adjust volume.
 
-!RadioBrowser
+<!--rb-->!RadioBrowser
 O                                   |*|  Open |RadioBrowser|.
 c                                   |*|  Open |c|onfig window.
 C                                   |*|  Select server to |c|onnect to.
@@ -355,7 +364,7 @@ W| / |w                             |*| Toggle title log / like a station.'''
 
     'config-encoding': ('Encoding Selection Help',
 r'''Arrows|, |h|, |j|, |k|,         |*|
-l|, |PgUp|, |,PgDn                 |*|
+l|, |PgUp|, |,PgDn                  |*|
 g|, |Home|, |G|, |End               |*| Change encoding selection.
 Enter|, |Space|, |s                 |*| Save encoding.
 r c                                 |*| Revert to station / |c|onfig value.
@@ -531,7 +540,8 @@ take effect.
             if self._operation_mode() == Window_Stack_Constants.SELECT_ENCODING_MODE:
                 out = out.replace('r c  ', 'r    ').replace('Revert to station / |c|onfig value.', 'Revert to saved value.')
 
-        l = out.splitlines()
+        self._tokens, l = self._parse_strings(out.splitlines())
+        logger.error('\n\nself._tokens = {}'.format(self._tokens))
         # get max len
         if logger.isEnabledFor(logging.INFO):
             logger.info('help active key = "{}"'.format(active_help_key))
@@ -581,10 +591,32 @@ take effect.
             self._max_lens.pop(active_help_key)
         return cap, l, mmax
 
+    def _parse_strings(self, text):
+        token_dict = {}
+        cleaned_text = []
+
+        pattern = re.compile(r'<!--(.*?)-->')
+
+        for i, line in enumerate(text):
+            match = pattern.search(line)
+
+            while match:
+                token = match.group(1)
+                token_dict[token] = i
+
+                # Remove "<!--" + token + "-->" from the line
+                line = line[:match.start()] + line[match.end():]
+                match = pattern.search(line)
+
+            cleaned_text.append(line)
+
+        return token_dict, cleaned_text
+
     def set_text(self, parent, *args):
         '''
             args[0] = help_key
         '''
+        self._active_token = None
         self.col_txt = curses.color_pair(10)
         self.col_box = curses.color_pair(3)
         self.col_highlight = curses.color_pair(11)
@@ -729,6 +761,10 @@ take effect.
                 self._win.refresh()
         else:
             self._win.refresh()
+            logger.info('self._pad_pos = {}'.format(self._pad_pos))
+            if self._active_token is not None:
+                self._pad_pos = self._active_token
+                self._active_token = None
             if self._pad_pos > self._lines_count - self._maxY + 3:
                 #if self._lines_count - self._maxY - 4 >= self._pad_pos + self._maxY + 2:
                 self._pad_pos = self._lines_count - self._maxY + 3
