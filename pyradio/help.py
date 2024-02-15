@@ -540,7 +540,7 @@ take effect.
             if self._operation_mode() == Window_Stack_Constants.SELECT_ENCODING_MODE:
                 out = out.replace('r c  ', 'r    ').replace('Revert to station / |c|onfig value.', 'Revert to saved value.')
 
-        self._tokens, l = self._parse_strings(out.splitlines())
+        self._tokens, l = self._parse_strings_for_tokens(out.splitlines())
         logger.error('\n\nself._tokens = {}'.format(self._tokens))
         # get max len
         if logger.isEnabledFor(logging.INFO):
@@ -591,7 +591,7 @@ take effect.
             self._max_lens.pop(active_help_key)
         return cap, l, mmax
 
-    def _parse_strings(self, text):
+    def _parse_strings_for_tokens(self, text):
         token_dict = {}
         cleaned_text = []
 
