@@ -403,8 +403,6 @@ class PyRadio(object):
 
     _open_dir_win = None
 
-    _new_help_window = PyRadioHelp()
-
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -536,23 +534,10 @@ class PyRadio(object):
             self.ws.SCHEDULE_STATION_SELECT_MODE: self._schedule_station_select_win_refresh_and_resize,
             self.ws.PASTE_MODE: self._playlist_select_paste_win_refresh_and_resize,
             self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
-            self.ws.MAIN_HELP_MODE: self._show_main_help,
-            self.ws.NEW_HELP_MODE: self._new_help,
-            self.ws.MAIN_HELP_MODE_PAGE_2: self._show_main_help_page_2,
-            self.ws.MAIN_HELP_MODE_PAGE_3: self._show_main_help_page_3,
-            self.ws.MAIN_HELP_MODE_PAGE_4: self._show_main_help_page_4,
-            self.ws.MAIN_HELP_MODE_PAGE_5: self._show_main_help_page_5,
-            self.ws.PLAYLIST_HELP_MODE: self._show_playlist_help,
-            self.ws.THEME_HELP_MODE: self._show_theme_help,
-            self.ws.CONFIG_HELP_MODE: self._show_config_help,
-            self.ws.SELECT_PLAYER_HELP_MODE: self._show_config_player_help,
-            self.ws.SELECT_PLAYLIST_HELP_MODE: self._show_config_playlist_help,
-            self.ws.SELECT_STATION_HELP_MODE: self._show_config_station_help,
-            self.ws.SESSION_LOCKED_MODE: self._print_session_locked,
+            self.ws.HELP_MODE: self._new_help,
             self.ws.UPDATE_NOTIFICATION_MODE: self._print_update_notification,
             self.ws.UPDATE_NOTIFICATION_OK_MODE: self._print_update_ok_notification,
             self.ws.UPDATE_NOTIFICATION_NOK_MODE: self._print_update_nok_notification,
-            self.ws.SELECT_ENCODING_HELP_MODE: self._show_config_encoding_help,
             self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
             self.ws.EDIT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
             self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE: self._print_playlist_not_found_error,
@@ -581,10 +566,8 @@ class PyRadio(object):
             self.ws.THEME_MODE: self._redisplay_theme_mode,
             self.ws.PLAYLIST_RECOVERY_ERROR_MODE: self._print_playlist_recovery_error,
             self.ws.ASK_TO_CREATE_NEW_THEME_MODE: self._redisplay_ask_to_create_new_theme,
-            self.ws.SEARCH_HELP_MODE: self._show_search_help,
             self.ws.ADD_STATION_MODE: self._show_station_editor,
             self.ws.EDIT_STATION_MODE: self._show_station_editor,
-            self.ws.LINE_EDITOR_HELP_MODE: self._show_line_editor_help,
             self.ws.EDIT_STATION_NAME_ERROR: self._print_editor_name_error,
             self.ws.EDIT_STATION_URL_ERROR: self._print_editor_url_error,
             self.ws.EDIT_STATION_ICON_URL_ERROR: self._print_icon_url_error,
@@ -595,9 +578,6 @@ class PyRadio(object):
             self.ws.DNSPYTHON_MODULE_NOT_INSTALLED_ERROR: self._print_dnspython_not_installed_error,
             self.ws.CLEAR_REGISTER_MODE: self._print_clear_register,
             self.ws.CLEAR_ALL_REGISTERS_MODE: self._print_clear_all_registers,
-            self.ws.REGISTER_HELP_MODE: self._show_register_help,
-            self.ws.EXTRA_COMMANDS_HELP_MODE: self._show_extra_commands_help,
-            self.ws.YANK_HELP_MODE: self._show_yank_help,
             self.ws.STATION_INFO_ERROR_MODE: self._print_station_info_error,
             self.ws.STATION_INFO_MODE: self._show_station_info,
             self.ws.STATION_DATABASE_INFO_MODE: self._browser_station_info,
@@ -610,18 +590,14 @@ class PyRadio(object):
             self.ws.CONNECTION_MODE: self._show_http_connection,
             self.ws.UNNAMED_REGISTER_MODE: self._show_unnamed_register,
             self.ws.PLAYER_PARAMS_MODE: self._redisplay_player_select_win_refresh_and_resize,
-            self.ws.MOUSE_RESTART_INFO_MODE: self._print_mouse_restart_info,
             self.ws.IN_PLAYER_PARAMS_EDITOR: self._redisplay_player_select_win_refresh_and_resize,
             self.ws.USER_PARAMETER_ERROR: self._print_user_parameter_error,
-            self.ws.IN_PLAYER_PARAMS_EDITOR_HELP_MODE: self._show_params_ediror_help,
             self.ws.VOTE_RESULT_MODE: self._print_vote_result,
             self.ws.BROWSER_SEARCH_MODE: self._browser_search,
             self.ws.BROWSER_SORT_MODE: self._browser_sort,
             self.ws.BROWSER_SERVER_SELECTION_MODE: self._browser_server_selection,
             self.ws.SERVICE_CONNECTION_ERROR: self._print_service_connection_error,
             self.ws.BROWSER_OPEN_MODE: self._show_connect_to_server_message,
-            self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
-            self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
             self.ws.BROWSER_PERFORMING_SEARCH_MODE: self._show_performing_search_message,
             self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER: self._ask_to_save_browser_config_from_config,
             self.ws.RADIO_BROWSER_CONFIG_MODE: self._redisplay_browser_config,
@@ -646,7 +622,6 @@ class PyRadio(object):
             self.ws.UPDATE_STATIONS_CSV_RESULT_MODE: self._update_stations_result,
             self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE: self._ask_to_update_stations_csv,
             self.ws.GROUP_SELECTION_MODE: self._show_group_selection,
-            self.ws.GROUP_HELP_MODE: self._show_group_help,
             self.ws.RECORD_WINDOW_MODE: self._show_recording_toggle_window,
             self.ws.WIN_VLC_NO_RECORD_MODE: self._show_win_no_record,
             self.ws.BUFFER_SET_MODE: self._show_buffer_set,
@@ -656,37 +631,33 @@ class PyRadio(object):
             self.ws.MOVE_RECORDINGS_DIR_MODE: self._show_moving_recordings_dir,
             self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE: self._show_moving_recordings_dir_error,
             self.ws.OPEN_DIR_MODE: self._show_open_dir_window,
-            self.ws.OPEN_DIR_HELP_MODE: self._show_open_dir_help,
             self.ws.DELETE_PLAYLIST_MODE: self._ask_to_delete_playlist,
             self.ws.DELETE_PLAYLIST_ERROR_MODE: self._show_delete_playlist_error,
         }
 
+        self._help_keys = {
+            self.ws.NORMAL_MODE: 'main',
+            self.ws.PLAYLIST_MODE: 'playlist',
+            self.ws.THEME_MODE: 'theme',
+            self.ws.GROUP_SELECTION_MODE: 'group',
+            self.ws.CONFIG_MODE: 'config',
+            self.ws.SELECT_STATION_MODE: 'config-station',
+            self.ws.SELECT_PLAYLIST_MODE: 'config-playlist',
+            self.ws.PASTE_MODE:'config-playlist',
+            self.ws.RADIO_BROWSER_CONFIG_MODE: 'rb-config',
+            self.ws.BROWSER_SEARCH_MODE: 'rb-search',
+            self.ws.SEARCH_NORMAL_MODE: 'search',
+            self.ws.SEARCH_PLAYLIST_MODE: 'search',
+            self.ws.SELECT_STATION_ENCODING_MODE: 'config-encoding',
+            self.ws.SELECT_ENCODING_MODE: 'config-encoding',
+            self.ws.EDIT_STATION_ENCODING_MODE: 'config-encoding',
+            self.ws.IN_PLAYER_PARAMS_EDITOR: 'line-editor',
+            self.ws.SELECT_PLAYER_MODE: 'config-player',
+        }
+
         ''' list of help functions '''
         self._display_help = {
-            self.ws.NORMAL_MODE: self._show_main_help,
-            self.ws.PLAYLIST_MODE: self._show_playlist_help,
-            self.ws.THEME_MODE: self._show_theme_help,
-            self.ws.SEARCH_NORMAL_MODE: self._show_search_help,
-            self.ws.SEARCH_PLAYLIST_MODE: self._show_search_help,
-            self.ws.CONFIG_MODE: self._show_config_help,
-            self.ws.SELECT_PLAYER_MODE: self._show_config_player_help,
-            self.ws.SELECT_PLAYLIST_MODE: self._show_config_playlist_help,
-            self.ws.PASTE_MODE: self._show_config_playlist_help,
-            self.ws.SELECT_STATION_MODE: self._show_config_station_help,
-            self.ws.SELECT_STATION_ENCODING_MODE: self._show_config_encoding_help,
-            self.ws.SELECT_ENCODING_MODE: self._show_config_encoding_help,
-            self.ws.EDIT_STATION_ENCODING_MODE: self._show_config_encoding_help,
-            self.ws.LINE_EDITOR_HELP_MODE: self._show_line_editor_help,
-            self.ws.REGISTER_HELP_MODE: self._show_register_help,
-            self.ws.EXTRA_COMMANDS_HELP_MODE: self._show_extra_commands_help,
-            self.ws.YANK_HELP_MODE: self._show_yank_help,
-            self.ws.PLAYER_PARAMS_MODE: self._show_config_player_help,
-            self.ws.IN_PLAYER_PARAMS_EDITOR: self._show_params_ediror_help,
-            self.ws.RADIO_BROWSER_SEARCH_HELP_MODE: self._show_radio_browser_search_help,
-            self.ws.RADIO_BROWSER_CONFIG_HELP_MODE: self._show_radio_browser_config_help,
             self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
-            self.ws.GROUP_HELP_MODE: self._show_group_help,
-            self.ws.OPEN_DIR_HELP_MODE: self._show_open_dir_help,
         }
 
         ''' search classes
@@ -809,6 +780,12 @@ class PyRadio(object):
             self._browser_page_chars = (curses.KEY_F3, curses.KEY_F2)
         else:
             self._browser_page_chars = (ord(']'), ord('['))
+
+        self._new_help_window = PyRadioHelp(
+                self._cnf,
+                lambda: self.ws.operation_mode,
+                lambda: self.ws.previous_operation_mode
+        )
 
     def __del__(self):
         self.transientWin = None
@@ -2719,21 +2696,6 @@ class PyRadio(object):
                 del self._help_metrics[mode_to_set]
 
         ''' Display a help, info or question window.  '''
-        if mode_to_set == self.ws.MAIN_HELP_MODE:
-            caption = ' Help (1/5) '
-            prompt = ' Press n/p or any other key to hide '
-        elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_2:
-            caption = ' Help (2/5) '
-            prompt = ' Press n/p or any other key to hide '
-        elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_3:
-            caption = ' Help (3/5) '
-            prompt = ' Press n/p or any other key to hide '
-        elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_4:
-            caption = ' Help (4/5) '
-            prompt = ' Press n/p or any other key to hide '
-        elif mode_to_set == self.ws.MAIN_HELP_MODE_PAGE_5:
-            caption = ' Help (5/5) '
-            prompt = ' Press n/p or any other key to hide '
         self.helpWinContainer = None
         self.helpWin = None
         self.ws.operation_mode = mode_to_set
@@ -2752,13 +2714,9 @@ class PyRadio(object):
             outer_height = inner_height + 2
             outer_width = inner_width + 2
             self._help_metrics[mode_to_set] = [inner_height, inner_width, outer_height, outer_width]
-            if mode_to_set == self.ws.MAIN_HELP_MODE:
-                self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_2] = self._help_metrics[mode_to_set]
 
-        if ((self.ws.window_mode == self.ws.CONFIG_MODE and \
-                self.ws.operation_mode > self.ws.CONFIG_HELP_MODE) or \
-                (self.ws.window_mode == self.ws.NORMAL_MODE and \
-                self.ws.operation_mode == self.ws.SELECT_ENCODING_HELP_MODE)) and \
+        if (self.ws.window_mode == self.ws.CONFIG_MODE or \
+                self.ws.window_mode == self.ws.NORMAL_MODE) and \
                 self.ws.operation_mode != self.ws.ASK_TO_CREATE_NEW_THEME_MODE:
             use_empty_win = True
             height_to_use = outer_height
@@ -2919,9 +2877,16 @@ class PyRadio(object):
                 return line[:self.bodyMaxX]
 
     def _print_help(self):
-        # logger.error('DE \n\nself.ws.operation_mode = {}'.format(self.ws.operation_mode))
+        logger.error('DE \n\nself.ws.operation_mode = {}\n\n'.format(self.ws.operation_mode))
+        if self.ws.operation_mode in self._help_keys.keys():
+            logger.error('using _open_help_by_key')
+            if self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE:
+                self._open_help_by_key('config-player', self._show_config_player_help)
+            else:
+                self._open_help_by_key(self._help_keys[self.ws.operation_mode])
+            return
         if self.ws.operation_mode in self._display_help.keys():
-            self._display_help[self.ws.operation_mode]()
+                self._open_help_by_key(self._display_help[self.ws.operation_mode])
         else:
             self._redisplay[self.ws.operation_mode]()
 
@@ -3134,212 +3099,22 @@ __|Remote Control Server| cannot be started!__
                         mode_to_set=self.ws.WIN_REMOVE_OLD_INSTALLATION_MODE,
                         caption=' PyRadio ')
 
-    def _show_radio_browser_search_help(self):
-        txt = r'''Tab| / |Sh-Tab     |Go to next / previous field.
-                 j|, |Up| / |k|, |Down  |Go to next / previous field vertivally.
-                 h|, |Left| / |l|, |Right
-                 _________________|Go to next / previous field (when
-                 _________________|applicable). Also, change counter value.
-                 Space            |Toggle check buttons.
-                 _________________|Toggle multiple selection.
-                 Enter            |Perform search / cancel (on push buttons).
-                 s                |Perform search (not on Line editor).
-                 Esc              |Cancel operation.
-                 _
-                 |Search history navigation works with normal keys as well
-                 |(|^N| is the same as |n| when not in a line editor).
-                 %_Global functions (with \ on Line editor)_
-                 -|/|+| or |,|/|.       |Change volume.
-                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 W| / |w            |Toggle title log / like a station'''
-        self._show_help(txt,
-                        mode_to_set=self.ws.RADIO_BROWSER_SEARCH_HELP_MODE,
-                        caption=' RadioBrowser Search Help ')
-
-    def _show_radio_browser_config_help(self):
-        txt = r'''Tab| / |Sh-Tab
-                 j|, |Up| / |k|, |Down  |Go to next / previous field.
-                 h|, |Left| / |l|, |Right
-                 _________________|Change |auto save| and |counters| value.
-                 _________________|Navigate through |Search Terms|.
-                 g|, |G|, |Home|, |End|, |PgUp|, |PgDn|
-                 _________________|Navigate through |Search Terms|.
-                 Space|, |Enter     |Toggle |auto save|  value.
-                 _________________|Open |Server Selection| window.
-                 r| / |d            |Revert to |saved| / |default| values.
-                 s                |Save config.
-                 Esc              |Exit without saving.
-                 %_Global functions (with \ on Line editor)_
-                 -|/|+| or |,|/|.       |Change volume.
-                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 W| / |w            |Toggle title log / like a station.'''
-        self._show_help(txt,
-                        mode_to_set=self.ws.RADIO_BROWSER_CONFIG_HELP_MODE,
-                        caption=' RadioBrowser Config Help ')
-
-    def _show_open_dir_help(self):
-        txt = r'''Up|,|j|,|PgUp|,
-                 Down|,|k|,|PgDown    |Change Directory selection.
-                 g G              |Go to first / last Directory.
-                 Space|, |Right|, |l|, |Enter
-                 _________________|Open a Directory.
-                 1| - |{}            |Open corresponding Directory.
-                 Esc|,|q            |Cancel.
-                 %_Global functions_
-                 -|/|+| or |,|/|.       |Change volume.
-                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 W| / |w            |Toggle title log / like a station.'''.format(len(self._open_dir_win.items))
-        self._show_help(txt,
-                        mode_to_set=self.ws.OPEN_DIR_HELP_MODE,
-                        caption=' Open Directory Help ')
-
-    def _show_group_help(self):
-        txt = r'''Up|,|j|,|PgUp|,
-                 Down|,|k|,|PgDown    |Change Group Header selection.
-                 g G              |Go to first / last Group Header.
-                 H M L            |Go to top / middle / bottom of screen.
-                 / n N            |Perform search.
-                 Space|, |Left|, |Enter
-                 _________________|Select a Group Header.
-                 Esc|,|q            |Cancel.
-                 %_Global functions_
-                 -|/|+| or |,|/|.       |Change volume.
-                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 W| / |w            |Toggle title log / like a station.'''
-        self._show_help(txt,
-                        mode_to_set=self.ws.GROUP_HELP_MODE,
-                        caption=' Group Selection Help ')
-
     def _new_help(self, help_key=None):
         self._new_help_window.show(parent=self.bodyWin)
 
     def _show_new_help(self, help_key=None):
-        self._new_help_window.set_text(parent=self.bodyWin, help_key=help_key)
-        self.ws.operation_mode = self.ws.NEW_HELP_MODE
+        self._new_help_window.set_text(self.bodyWin, help_key)
+        self.ws.operation_mode = self.ws.HELP_MODE
         self._new_help_window.show()
 
-    def _show_main_help(self, from_keyboard=False):
-        txt = r'''Up|,|j|,|PgUp|,
-                 Down|,|k|,|PgDown    |Change station selection.
-                 <n>g| / |<n>G      |Jump to first /last or n-th station.
-                 H M L            |Go to top / middle / bottom of screen.
-                 P                |Go to |P|laying station.
-                 Enter|,|Right|,|l    |Play selected station.
-                 ^N| / |^P          |Play |N|ext or |P|revious station.
-                 i                |Display station |i|nfo (when playing).
-                 r                |Select and play a random station.
-                 Space|,|Left|,|h     |Stop / start playing selected station.
-                 Esc|,|q            |Quit.
-                 !Volume management
-                 -|/|+| or |,|/|.       |Change volume.
-                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 !Misc
-                 o| / |s| / |R        ||O|pen / |S|ave / |R|eload playlist.
-                 t| / |T| / |~        |Change |t|heme / |T|ransparency / Calc. Background.
-                 c                |Open Configuration window.'''
-        self._show_help(txt,
-                        mode_to_set=self.ws.MAIN_HELP_MODE,
-                        reset_metrics=False)
-        self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_2] = self._help_metrics[self.ws.MAIN_HELP_MODE]
-        self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_3] = self._help_metrics[self.ws.MAIN_HELP_MODE]
-        self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_4] = self._help_metrics[self.ws.MAIN_HELP_MODE]
-        self._help_metrics[self.ws.MAIN_HELP_MODE_PAGE_5] = self._help_metrics[self.ws.MAIN_HELP_MODE]
-        if self._cnf.browsing_station_service and not from_keyboard:
-            self._show_main_help_page_from_browser()
-
-    def _show_main_help_page_2(self, from_keyboard=False):
-        txt = '''!Playlist editing
-                 a| / |A            |Add / append new station.
-                 e                |Edit current station.
-                 E                |Change station's encoding.
-                 DEL|,|x            |Delete selected station.
-                 !Alternative modes
-                 \\                |Enter |Extra Commands| mode.
-                 y                |Enter |Copy| mode.
-                 '                |Enter |Register| mode.
-                 Esc|,|q            |Exit alternative mode.
-                 !Moving stations
-                 J                |Create a |J|ump tag.
-                 <n>^U|,|<n>^D      |Move station |U|p / |D|own.
-                 ||_________________|If a |jump tag| exists, move it there.
-                 !Searching
-                 /| / |n| / |N        |Search, go to next / previous result.
-                 !Stations' history
-                 < |/| >            |Move to previous / next station.'''
-        self._show_help(txt,
-                        mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_2,
-                        reset_metrics=False)
-
-    def _show_main_help_page_3(self, from_keyboard=False):
-        txt = '''p                |Paste unnamed register.
-                 !Extra Command mode (\\)
-                 \\                |Open previous playlist.
-                 ]                |Open first opened playlist.
-                 n                |Create a |n|ew playlist.
-                 p                |Select playlist / register to |p|aste to.
-                 r                ||R|ename current playlist.
-                 C                ||C|lear all registers.
-                 h                |Display |H|TML help.
-                 !Copy mode (y)
-                 ENTER            |Copy station to unnamed register.
-                 a-z| / |0-9        |Copy station to named register.
-                 !Registe mode (')
-                 '                |Open registers list.
-                 a-z| / |0-9        |Open named register.
-                 !Player Customization
-                 z                |Toggle "Force http connections"
-                 Z                |Extra player parameters'''
-        self._show_help(txt,
-                        mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_3,
-                        reset_metrics=False)
-
-    def _show_main_help_page_4(self, from_keyboard=False):
-        txt = '''!Mouse Support
-                 Click            |Change selection.
-                 Double click     |Start / stop the player.
-                 Middle click     |Toggle mute.
-                 Wheel            |Page up / down.
-                 Shift-Wheel      |Adjust volume.
-                 !RadioBrowser
-                 O                |Open |RadioBrowser|.
-                 c                |Open |c|onfig window.
-                 C                |Select server to |c|onnect to.
-                 s                ||S|earch for stations.
-                 [| / |]            |Fetch previous / next page.
-                 S                ||S|ort search results.
-                 I                |Station |i|nfo (current selection).
-                 V                ||V|ote for station.
-                 \ q Escape       |Close Browser (go back in history).
-                 |Search history navigation works with normal keys as well
-                 __|(|^N| is the same as |n| when not in a line editor).'''
-        if platform.startswith('win'):
-            txt = txt.replace('[', 'F2').replace(']  ', 'F3')
-        self._show_help(txt,
-                        mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_4,
-                        reset_metrics=False)
-
-    def _show_main_help_page_5(self, from_keyboard=False):
-        txt = r'''!Recording
-                 Veritcal line    |Enable / disable |recording|.
-                 Space            |Pause / resume playback.
-                 !Change Player
-                 \m               |Open the |Player Selection| window.
-                 !Remote Control Server
-                 \s               |Start/Stop the |Server|.
-                 !Title Logger
-                 W                |Toggle Logger on/off
-                 w                |Tag a station as liked
-                 !Group Management
-                 a A              |Add a |Group| (set |URL| = |-|).
-                 ^E |/ |^Y          |Go to next /previous |Group|.
-                 ^G               |Open the |Group Selection| window.
-                 !Windows Only
-                 F8               |Players management.
-                 F9               |Show |EXE| location.
-                 F10              |Uninstall |PyRadio|.'''
-        self._show_help(txt,
-                        mode_to_set=self.ws.MAIN_HELP_MODE_PAGE_5,
-                        reset_metrics=False)
+    def _open_help_by_key(self, *args):
+        logger.error('in _open_help_by_key 1, key = "{}"'.format(args[0]))
+        self._new_help_window.set_text(self.bodyWin, *args)
+        logger.error('in _open_help_by_key 2')
+        self.ws.operation_mode = self.ws.HELP_MODE
+        logger.error('in _open_help_by_key 3')
+        self._new_help_window.show()
+        logger.error('in _open_help_by_key 4')
 
     def _show_main_help_page_from_browser(self):
         if self._cnf._online_browser.BROWSER_NAME == 'RadioBrowser':
@@ -3347,152 +3122,35 @@ __|Remote Control Server| cannot be started!__
             self._show_main_help_page_4()
             self._main_help_id = 3
 
-    def _show_playlist_help(self):
-        txt = r'''Up|,|j|,|PgUp|,
-                 Down|,|k|,|PgDown    |Change playlist selection.
-                 <n>g| / |<n>G      |Jump to first / last or n-th item.
-                 M| / |P            |Jump to |M|iddle / loaded playlist.
-                 Enter|,|Right|,|l    |Open selected playlist.
-                 x                |Delete current playlist.
-                 r                |Re-read playlists from disk.
-                 '                |Toggle between playlists.
-                 /| / |n| / |N        |Search, go to next / previous result.
-                 \                |Enter |Extra Commands| mode.
-                 Esc|,|q|,|Left|,|h     |Cancel.
-                 %_Global functions (with \ on Line editor)_
-                 -|/|+| or |,|/|.       |Change volume.
-                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 W| / |w            |Toggle title log / like a station.
-                 %_Other Keys_
-                 t| / |T            |Load |t|heme / |T|oggle transparency.'''
-        if self._cnf.open_register_list:
-            self._show_help(txt.replace('playlist', 'register'),
-                            mode_to_set=self.ws.PLAYLIST_HELP_MODE,
-                            caption=' Registers List Help ')
-        else:
-            self._show_help(txt,
-                            mode_to_set=self.ws.PLAYLIST_HELP_MODE,
-                            caption=' Playlist Help ')
-
-    def _show_theme_help(self):
-            txt = r'''Up|,|j|,|PgUp|,
-                     Down|,|k|,|PgDown    |Change theme selection.
-                     g| / |<n>G         |Jump to first or n-th / last theme.
-                     Enter|,|Right|,|l    |Apply selected theme.
-                     Space            |Apply theme and make it default.
-                     c                |Make theme default and watch it for
-                     |                 changes (|User Themes| only).
-                     T                |Toggle theme transparency.
-                     r                |Rescan disk for user themes.
-                     /| / |n| / |N        |Search, go to next / previous result.
-                     Esc|,|q|,|Left|,|h     |Close window.
-                     %_Global functions (with \ on Line editor)_
-                     -|/|+| or |,|/|.       |Change volume.
-                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w            |Toggle title log / like a station.'''
-            self._show_help(txt,
-                            mode_to_set=self.ws.THEME_HELP_MODE,
-                            caption=' Themes Help ')
-
-    def _show_search_help(self):
-        if platform.lower().startswith('darwin'):
-            txt = r'''Left| / |Right        |Move to next / previous character.
-            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-            ^W| / |^K             |Clear to start / end of line.
-            ^U                  |Clear line.
-            DEL|,|^D              |Delete character.
-            Backspace|,|^H        |Backspace (delete previous character).
-            Up|,|^P| / |Down|,|^N     |Get previous / next history item.
-            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
-            Enter| / |Esc         |Perform / cancel search.
-
-            |Global functions work when preceded with a "|\|".
-            '''
-        else:
-            txt = r'''Left| / |Right        |Move to next / previous character.
-            Up| / |Down           |Cycle within history.
-            M-F| / |M-B           |Move to next / previous word.
-            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-            ^W| / |M-D|,|^K         |Clear to start / end of line.
-            ^U                  |Clear line.
-            ^X                  |Remove history item.
-            DEL|,|^D              |Delete character.
-            Backspace|,|^H        |Backspace (delete previous character).
-            Up|,|^P| / |Down|,|^N     |Get previous / next history item.
-            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
-            Enter| / |Esc         |Perform / cancel search.
-
-            |Global functions work when preceded with a "|\|".
-            '''
-            if platform.startswith('win'):
-                txt = txt.replace('M-', 'A-')
-        self._show_help(txt,
-                        mode_to_set=self.ws.SEARCH_HELP_MODE,
-                        caption=' Search Help ')
-
-    def _show_params_ediror_help(self):
-        if platform.lower().startswith('darwin'):
-            txt = r'''Left| / |Right        |Move to next / previous character.
-            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-            ^W| / |^K             |Clear to start / end of line.
-            ^U                  |Clear line.
-            DEL|,|^D              |Delete character.
-            Backspace|,|^H        |Backspace (delete previous character).
-            Up| / |Down           |Go to previous / next field.
-            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
-            Esc                 |Cancel operation.
-
-            |Global functions work when preceded with a "|\|".
-            '''
-        else:
-            txt = r'''Left| / |Right        |Move to next / previous character.
-            M-F| / |M-B           |Move to next / previous word.
-            HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-            ^W| / |M-D|,|^K         |Clear to start / end of line.
-            ^U                  |Clear line.
-            DEL|,|^D              |Delete character.
-            Backspace|,|^H        |Backspace (delete previous character).
-            Up| / |Down           |Go to previous / next field.
-            \\?| / |\\\\             |Insert a "|?|" or a "|\\|", respectively.
-            Esc                 |Cancel operation.
-
-            |Global functions work when preceded with a "|\|".
-            '''
-            if platform.startswith('win'):
-                txt = txt.replace('M-', 'A-')
-        self._show_help(txt,
-                        mode_to_set=self.ws.IN_PLAYER_PARAMS_EDITOR_HELP_MODE,
-                        caption=' Line Editor Help ')
-
     def _show_line_editor_help(self):
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \
                 or  self.ws.previous_operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE):
             if platform.lower().startswith('darwin'):
-                txt = r'''Left| / |Right        |Move to next / previous character.
-                HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-                ^W| / |^K             |Clear to start / end of line.
-                ^U                  |Clear line.
-                DEL|,|^D              |Delete character.
-                Backspace|,|^H        |Backspace (delete previous character).
-                Up| / |Down           |Go to previous / next field.
-                \?| / |\\             |Insert a "|?|" or a "|\|", respectively.
-                Esc                 |Cancel operation.
+                txt = r'''Left| / |Right            |*| Move to next / previous character.
+                HOME|, |^A| / |END|,i |^E           |*| Move to start / end of line.
+                ^W| / |^K                           |*| Clear to start / end of line.
+                ^U                                  |*| Clear line.
+                DEL|, |^D                           |*| Delete character.
+                Backspace|, |^H                     |*| Backspace (delete previous character).
+                Up| / |Down                         |*| Go to previous / next field.
+                \?| / |\\                           |*| Insert a "|?|" or a "|\|", respectively.
+                Esc                                 |*| Cancel operation.
 
-                |Global functions work when preceded with a "|\|".
+                Global functions work when preceded with a "|\|".
                 '''
             else:
-                txt = r'''Left| / |Right        |Move to next / previous character.
-                M-F| / |M-B           |Move to next / previous word.
-                HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-                ^W| / |M-D|,|^K         |Clear to start / end of line.
-                ^U                  |Clear line.
-                DEL|,|^D              |Delete character.
-                Backspace|,|^H        |Backspace (delete previous character).
-                Up| / |Down           |Go to previous / next field.
-                \?| / |\\             |Insert a "|?|" or a "|\\|", respectively.
-                Esc                 |Cancel operation.
+                txt = r'''Left| / |Right            |*| Move to next / previous character.
+                M-F| / |M-B                         |*| Move to next / previous word.
+                HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
+                ^W| / |M-D|, |^K                    |*| Clear to start / end of line.
+                ^U                                  |*| Clear line.
+                DEL|, |^D                           |*| Delete character.
+                Backspace|, |^H                     |*| Backspace (delete previous character).
+                Up| / |Down                         |*| Go to previous / next field.
+                \?| / |\\                           |*| Insert a "|?|" or a "|\|", respectively.
+                Esc                                 |*| Cancel operation.
 
-                |Global functions work when preceded with a "|\|".
+                Global functions work when preceded with a "|\|".
                 '''
             if self._simple_schedule is not None:
                 txt = txt.replace(
@@ -3501,212 +3159,85 @@ __|Remote Control Server| cannot be started!__
                 )
         else:
             if platform.lower().startswith('darwin'):
-                txt = r'''Left| / |Right        |Move to next / previous character.
-                HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-                ^W| / |^K             |Clear to start / end of line.
-                ^U                  |Clear line.
-                DEL|,|^D              |Delete character.
-                Backspace|,|^H        |Backspace (delete previous character).
-                Up| / |Down           |Go to previous / next field.
-                \?| / |\\             |Insert a "|?|" or a "|\|", respectively.
-                \p                  |Enable |p|aste mode to correctly paste
-                ____________________|URLs (and stations' names).
-                Esc                 |Cancel operation.
+                txt = r'''Left| / |Right            |*| Move to next / previous character.
+                HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
+                ^W| / |^K                           |*| Clear to start / end of line.
+                ^U                                  |*| Clear line.
+                DEL|, |^D                           |*| Delete character.
+                Backspace|, |^H                     |*| Backspace (delete previous character).
+                Up| / |Down                         |*| Go to previous / next field.
+                \?| / |\\                           |*| Insert a "|?|" or a "|\|", respectively.
+                \p                                  |*| Enable |p|aste mode to correctly paste
+                                                    |*| URLs (and stations' names).
+                Esc                                 |*| Cancel operation.
 
-                |Global functions work when preceded with a "|\|".
+                Global functions work when preceded with a "|\|".
                 '''
             else:
-                txt = r'''Left| / |Right        |Move to next / previous character.
-                M-F| / |M-B           |Move to next / previous word.
-                HOME|,|^A| / |END|,|^E    |Move to start / end of line.
-                ^W| / |M-D|,|^K         |Clear to start / end of line.
-                ^U                  |Clear line.
-                DEL|,|^D              |Delete character.
-                Backspace|,|^H        |Backspace (delete previous character).
-                Up| / |Down           |Go to previous / next field.
-                \?| / |\\             |Insert a "|?|" or a "|\|", respectively.
-                \p                  |Enable |p|aste mode to correctly paste
-                ____________________|URLs (and stations' names).
-                Esc                 |Cancel operation.
+                txt = r'''Left| / |Right            |*| Move to next / previous character.
+                M-F| / |M-B                         |*| Move to next / previous word.
+                HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
+                ^W| / |M-D|, |^K                    |*| Clear to start / end of line.
+                ^U                                  |*| Clear line.
+                DEL|, |^D                           |*| Delete character.
+                Backspace|, |^H                     |*| Backspace (delete previous character).
+                Up| / |Down                         |*| Go to previous / next field.
+                \?| / |\\                           |*| Insert a "|?|" or a "|\|", respectively.
+                \p                                  |*| Enable |p|aste mode to correctly paste
+                                                    |*| URLs (and stations' names).
+                Esc                                 |*| Cancel operation.
 
-                |Global functions work when preceded with a "|\|".
+                Global functions work when preceded with a "|\|".
                 '''
             if platform.startswith('win'):
                 txt = txt.replace('M-', 'A-')
-        self._show_help(txt,
-                        mode_to_set=self.ws.LINE_EDITOR_HELP_MODE,
-                        caption=' Line Editor Help ')
-
-    def _show_config_help(self):
-            txt = r'''Up|,|j|,|PgUp|,
-                     Down|,|k|,|PgDown          |Change option selection.
-                     g|,|Home| / |G|,|End         |Jump to first / last option.
-                     Enter|,|Space|,|Right|,|l    |Change option value.
-                     r                      |Revert to saved values.
-                     d                      |Load default values.
-                     s                      |Save config.
-                     Esc|,|q|,|Left|,|h           |Cancel.
-                     %_Global functions (with \ on Line editor)_
-                     -|/|+| or |,|/|.             |Change volume.
-                     m| / |v                  ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w                  |Toggle title log / like a station.'''
-            self._show_help(txt,
-                            mode_to_set=self.ws.CONFIG_HELP_MODE,
-                            caption=' Configuration Help ')
+        return txt
 
     def _show_config_player_help(self):
         if self._player_select_win.editing > 0:
-            self._show_line_editor_help()
+            self._open_help_by_key('external-line-editor', self._show_line_editor_help)
+            return None
         elif self._player_select_win.focus:
-            txt = r'''TAB              |Move selection to |Extra Parameters| column.
-                     Up|,|j|,|Down|,|k      |Change player selection.
-                     Enter|,|Space
-                     Right|,|l          |Enable / disable player.
-                     ^U|/|^D            |Move player |u|p or |d|own.
-                     r                |Revert to saved values.
-                     s                |Save players (selection and parameters).
-                     Esc|,|q|,|Left|,|h     |Cancel.
-                     %_Global functions (with \ on Line editor)_
-                     -|/|+| or |,|/|.       |Change volume.
-                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w            |Toggle title log / like a station.'''
-            self._show_help(txt,
-                            mode_to_set=self.ws.SELECT_PLAYER_HELP_MODE,
-                            caption=' Player Selection Help ')
+            txt = r'''TAB                           |*| Move selection to |Extra Parameters| column.
+                     Up|, |j|, |Down|, |k           |*| Change player selection.
+                     Enter|, |Space                 |*|
+                     Right|, |l                     |*| Enable / disable player.
+                     ^U| / |^D                      |*| Move player |u|p or |d|own.
+                     r                              |*| Revert to saved values.
+                     s                              |*| Save players (selection and parameters).
+                     Esc|, |q|, |Left|, |h          |*| Cancel.
+                     %Global functions (with \ on Line editor)
+                     -|/|+| or |,|/|.               |*| Change volume.
+                     m| / |v                        |*| |M|ute player / Save |v|olume (not in vlc).
+                     W| / |w                        |*| Toggle title log / like a station.'''
         else:
             if self._player_select_win.from_config:
-                txt = r''' TAB              |Move selection to |Player Selection| column.
-                         Up|,|j|,|Down|,|k
-                         PgUp|, |PgDn       |Change selection.
-                         g| / |G            |Move to first / last item.
-                         Enter|,|Space
-                         Right|,|l          |Activate current selection.
-                         a| / |e| / |x|,|DEL    ||A|dd / |e|dit / |d|elete item.
-                         r                |Revert to saved values.
-                         s                |Save players (selection and parameters).
-                         Esc|,|q|,|Left|,|h     |Cancel.
-                         %_Global functions (with \ on Line editor)_
-                         -|/|+| or |,|/|.       |Change volume.
-                         m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                         W| / |w            |Toggle title log / like a station.'''
+                txt = r''' TAB                      |*| Move selection to |Player Selection| column.
+                         Up|, |j|, |Down|, |k       |*|
+                         PgUp|, |PgDn               |*| Change selection.
+                         g| / |G                    |*| Move to first / last item.
+                         Enter|, |Space             |*|
+                         Right|, |l                 |*| Activate current selection.
+                         a| / |e| / |x|, |DEL       |*| |A|dd / |e|dit / |d|elete item.
+                         r                          |*| Revert to saved values.
+                         s                          |*| Save players (selection and parameters).
+                         Esc|, |q|, |Left|, |h      |*| Cancel.
+                         %Global functions (with \ on Line editor)
+                         -|/|+| or |,|/|.           |*| Change volume.
+                         m| / |v                    |*| |M|ute player / Save |v|olume (not in vlc).
+                         W| / |w                    |*| Toggle title log / like a station.'''
             else:
-                txt = r'''Up|,|j|,|Down|,|k
-                         PgUp|, |PgDn       |Change selection.
-                         g| / |G            |Move to first / last item.
-                         Enter|,|Space
-                         Right|,|l          |Activate current selection.
-                         Esc|,|q|,|Left|,|h     |Cancel.
-                         %_Global functions (with \ on Line editor)_
-                         -|/|+| or |,|/|.       |Change volume.
-                         m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                         W| / |w            |Toggle title log / like a station.'''
-            self._show_help(txt,
-                            mode_to_set=self.ws.SELECT_PLAYER_HELP_MODE,
-                            caption=' Player Extra Parameters Help ')
-
-    def _show_config_playlist_help(self):
-            txt = r'''Up|,|j|,|PgUp|,
-                     Down|,|k|,|PgDown    |Change playlist selection.
-                     g| / |<n>G         |Jump to first or n-th / last playlist.
-                     Enter|,|Space|,
-                     Right|,|l          |Select default playlist.
-                     /| / |n| / |N        |Search, go to next / previous result.
-                     r                |Revert to saved value.
-                     Esc|,|q|,|Left|,|h     |Canel.
-                     %_Global functions (with \ on Line editor)_
-                     -|/|+| or |,|/|.       |Change volume.
-                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w            |Toggle title log / like a station.'''
-            self._show_help(txt,
-                            mode_to_set=self.ws.SELECT_PLAYLIST_HELP_MODE,
-                            caption=' Playlist Selection Help ')
-
-    def _show_config_station_help(self):
-            txt = r'''Up|,|j|,|PgUp|,
-                     Down|,|k|,|PgDown    |Change station selection.
-                     g| / |<n>G         |Jump to first or n-th / last station.
-                     M                |Jump to the middle of the list.
-                     Enter|,|Space|,
-                     Right|,|l          |Select default station.
-                     /| / |n| / |N        |Search, go to next / previous result.
-                     r                |Revert to saved value.
-                     Esc|,|q|,|Left|,|h     |Canel.
-                     %_Global functions (with \ on Line editor)_
-                     -|/|+| or |,|/|.       |Change volume.
-                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w            |Toggle title log / like a station.'''
-            self._show_help(txt,
-                            mode_to_set=self.ws.SELECT_STATION_HELP_MODE,
-                            caption=' Station Selection Help ')
-
-    def _show_config_encoding_help(self):
-            txt = r'''Arrows|,|h|,|j|,|k|,|l|,|PgUp|,|,PgDn
-                     g|,|Home|,|G|,|End     |Change encoding selection.
-                     Enter|,|Space|,|s    |Save encoding.
-                     r c              |Revert to station / |c|onfig value.
-                     Esc|,|q            |Cancel.
-                     %_Global functions (with \ on Line editor)_
-                     -|/|+| or |,|/|.       |Change volume.
-                     m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                     W| / |w            |Toggle title log / like a station.'''
-            if self.ws.operation_mode == self.ws.SELECT_ENCODING_MODE:
-                txt = txt.replace('r c              |Revert to station / |c|onfig value.', 'r                |Revert to saved value.')
-            self._show_help(txt,
-                            mode_to_set=self.ws.SELECT_ENCODING_HELP_MODE,
-                            caption=' Encoding Selection Help ')
-
-    def _show_register_help(self):
-        txt = ''''            |Open registers list.
-                 a-z| / |0-9    |Open named register.
-
-                 |Any other key exits current mode.
-              '''
-        self._show_help(txt, mode_to_set=self.ws.REGISTER_HELP_MODE, caption=' Registers Mode Help ')
-
-    def _show_extra_commands_help(self):
-        if self.ws.operation_mode == self.ws.NORMAL_MODE or \
-                (self.ws.operation_mode == self.ws.EXTRA_COMMANDS_HELP_MODE and \
-                 self.ws.previous_operation_mode == self.ws.NORMAL_MODE):
-            txt = r'''\\      |Open previous playlist.
-                     ]      |Open first opened playlist.
-                     b B    |Set player |b|uffering.
-                     l      |Toggle |Open last playlist|.
-                     m      |Cahnge |m|edia player.
-                     n      |Create a |n|ew playlist.
-                     p      |Select playlist / register to |p|aste to.
-                     r      ||R|ename current playlist.
-                     C      ||C|lear all registers.
-                     u      |Show |U|nnamed Register.
-                     o      ||O|pen dirs in file manager.
-
-                    |Any other key exits current mode.
-                  '''
-            if self._cnf.is_register:
-                txt = txt.replace('C  ', 'c      |Clear |c|urrent register.\nC  ').replace('current playlist', 'current register')
-        else:
-            ''' we are on playlist view '''
-            if self._cnf.open_register_list:
-                txt = '''r      ||R|ename current register.
-                         p      ||P|aste to current register.
-                         c      |Clear |c|urrent register.
-                         C      ||C|lear all registers.
-                         u      |Show |U|nnamed Register.
-                         o      ||O|pen dirs in file manager.
-
-                        |Any other key exits current mode.
-                       '''
-            else:
-                txt = '''n      |Create a |n|ew playlist.
-                         p      ||P|aste to current playlist.
-                         r      ||R|ename current playlist.
-                         u      |Show |U|nnamed Register.
-                         o      ||O|pen dirs in file manager.
-
-                        |Any other key exits current mode.
-                       '''
-        self._show_help(txt,
-                        mode_to_set=self.ws.EXTRA_COMMANDS_HELP_MODE,
-                        caption=' Extra Commands Help ')
+                txt = r'''Up|, |j|, |Down|, |k      |*|
+                         PgUp|, |PgDn               |*| Change selection.
+                         g| / |G                    |*| Move to first / last item.
+                         Enter|,|Space              |*|
+                         Right|,|l                  |*| Activate current selection.
+                         Esc|, |q|, |Left|, |h      |*| Cancel.
+                         %Global functions (with \ on Line editor)
+                         -|/|+| or |,|/|.           |*| Change volume.
+                         m| / |v                    |*| |M|ute player / Save |v|olume (not in vlc).
+                         W| / |w                    |*| Toggle title log / like a station.'''
+        return txt
 
     def _show_unnamed_register(self):
         if self._unnamed_register:
@@ -3717,16 +3248,6 @@ __|Remote Control Server| cannot be started!__
                         mode_to_set=self.ws.UNNAMED_REGISTER_MODE,
                         caption=' Unnamed Register ',
                         prompt='')
-
-    def _show_yank_help(self):
-        txt = '''ENTER        |Copy station to unnamed register.
-                 a-z| / |0-9    |Copy station to named register.
-
-                 |Any other key exits current mode.
-                 '''
-        self._show_help(txt,
-                        mode_to_set=self.ws.YANK_HELP_MODE,
-                        caption=' Copy Mode Help')
 
     def _print_vote_result(self):
         txt = '''
@@ -3740,84 +3261,6 @@ __|Remote Control Server| cannot be started!__
                                    self._cnf._online_browser.vote_result[1]),
                         self.ws.VOTE_RESULT_MODE,
                         caption=' Station Vote Result ',
-                        prompt=' Press any key... ',
-                        is_message=True)
-
-    def _print_mouse_restart_info(self):
-        txt = '''
-                You have just changed the mouse support config
-                 option.
-
-                 |PyRadio| must be |restarted| for this change to
-                 take effect.
-                 '''
-        self._show_help(txt, self.ws.MOUSE_RESTART_INFO_MODE,
-                        caption=' Program Restart required ',
-                        prompt=' Press any key... ',
-                        is_message=True)
-
-    def _print_session_locked(self):
-        txt = '''
-                This session is |locked| by another |PyRadio instance|.
-
-                 You can still play stations, load and edit playlists,
-                 load and test themes, but any changes will |not| be
-                 recorded in the configuration file.
-
-                 If you are sure this is the |only| active |PyRadio|
-                 instance, exit |PyRadio| now and execute the following
-                 command: |pyradio --unlock|
-                 '''
-        self._show_help(txt, self.ws.SESSION_LOCKED_MODE,
-                        caption=' Session Locked ',
-                        prompt=' Press any key... ',
-                        is_message=True)
-
-        txt = '''
-                This session is |locked| by another |PyRadio instance|.
-
-                 You can still play stations, load and edit playlists,
-                 load and test themes, but any changes will |not| be
-                 recorded in the configuration file.
-
-                 If you are sure this is the |only| active |PyRadio|
-                 instance, exit |PyRadio| now and execute the following
-                 command: |pyradio --unlock|
-                 '''
-        self._show_help(txt, self.ws.SESSION_LOCKED_MODE,
-                        caption=' Session Locked ',
-                        prompt=' Press any key... ',
-                        is_message=True)
-
-        txt = '''
-                This session is |locked| by another |PyRadio instance|.
-
-                 You can still play stations, load and edit playlists,
-                 load and test themes, but any changes will |not| be
-                 recorded in the configuration file.
-
-                 If you are sure this is the |only| active |PyRadio|
-                 instance, exit |PyRadio| now and execute the following
-                 command: |pyradio --unlock|
-                 '''
-        self._show_help(txt, self.ws.SESSION_LOCKED_MODE,
-                        caption=' Session Locked ',
-                        prompt=' Press any key... ',
-                        is_message=True)
-
-        txt = '''
-                This session is |locked| by another |PyRadio instance|.
-
-                 You can still play stations, load and edit playlists,
-                 load and test themes, but any changes will |not| be
-                 recorded in the configuration file.
-
-                 If you are sure this is the |only| active |PyRadio|
-                 instance, exit |PyRadio| now and execute the following
-                 command: |pyradio --unlock|
-                 '''
-        self._show_help(txt, self.ws.SESSION_LOCKED_MODE,
-                        caption=' Session Locked ',
                         prompt=' Press any key... ',
                         is_message=True)
 
@@ -7216,7 +6659,7 @@ __|Remote Control Server| cannot be started!__
             self._i_am_resizing = False
             return
 
-        if self.ws.operation_mode == self.ws.NEW_HELP_MODE:
+        if self.ws.operation_mode == self.ws.HELP_MODE:
             ret = self._new_help_window.keypress(char)
             if ret:
                 self.ws.close_window()
@@ -7281,7 +6724,7 @@ __|Remote Control Server| cannot be started!__
                 pass
             elif ret == 2:
                 ''' show help '''
-                self._show_open_dir_help()
+                self._open_help_by_key('dir', len(self._open_dir_win.items))
             return
 
         elif self.ws.operation_mode == self.ws.MOVE_RECORDINGS_DIR_MODE:
@@ -7367,7 +6810,7 @@ __|Remote Control Server| cannot be started!__
         elif (self._register_open_pressed
                 and self.ws.operation_mode == self.ws.NORMAL_MODE):
             if char == ord('?'):
-                self._show_register_help()
+                self._open_help_by_key('registers')
                 return
             ''' get station to register - accept a-z, 0-9 and - '''
             if char == ord('\''):
@@ -7534,7 +6977,7 @@ __|Remote Control Server| cannot be started!__
                     self._paste(playlist=self.stations[self.selection][-1])
 
             elif char == ord('?'):
-                self._show_extra_commands_help()
+                self._open_help_by_key('extra')
                 return
 
             elif char == ord('u'):
@@ -7679,7 +7122,7 @@ __|Remote Control Server| cannot be started!__
                 self.ws.operation_mode == self.ws.NORMAL_MODE):
             ''' get station to register - accept a-z, 0-9 and - '''
             if char == ord('?'):
-                self._show_yank_help()
+                self._open_help_by_key('yank')
                 return
             self._update_status_bar_right(status_suffix='')
             ch = chr(char).lower()
@@ -7980,7 +7423,7 @@ __|Remote Control Server| cannot be started!__
             elif ret in (3, 6, 7, 8):
                 self._show_schedule_error()
             elif ret == 9:
-                self._show_line_editor_help()
+                self._open_help_by_key('external-line-editor', self._show_line_editor_help)
             elif ret == 10:
                 self._show_schedule_info()
 
@@ -8149,7 +7592,7 @@ __|Remote Control Server| cannot be started!__
                             self._cnf.player_changed = False
                         self.player.playback_timeout = int(self._cnf.connection_timeout)
                         if self._config_win.mouse_support_option_changed:
-                            self._print_mouse_restart_info()
+                            self._open_help_by_key('mouse-restart')
                         if self._config_win.need_to_update_theme:
                             self._theme.recalculate_theme(False)
                         if self._cnf.active_remote_control_server_ip != self._cnf.remote_control_server_ip or \
@@ -8256,7 +7699,7 @@ __|Remote Control Server| cannot be started!__
                     '''
                 elif ret == 2:
                     ''' display line editor help '''
-                    self._show_params_ediror_help()
+                    self._open_help_by_key('line-editor')
                 elif ret == 3:
                     ''' Got into paramater editor '''
                     self.ws.operation_mode = self.ws.IN_PLAYER_PARAMS_EDITOR
@@ -8376,7 +7819,7 @@ __|Remote Control Server| cannot be started!__
                     self.restartPlayer('*** Restarting playback due to encoding change ***')
             elif ret == 2:
                 ''' display line editor help '''
-                self._show_line_editor_help()
+                self._open_help_by_key('external-line-editor', self._show_line_editor_help)
             elif ret == 3:
                 ''' show encoding '''
                 if self._station_editor._encoding == '':
@@ -8450,7 +7893,7 @@ __|Remote Control Server| cannot be started!__
                 return
             elif ret == 2:
                 ''' display line editor help '''
-                self._show_line_editor_help()
+                self._open_help_by_key('external-line-editor', self._show_line_editor_help)
                 return
 
         elif self.ws.operation_mode == self.ws.EDIT_STATION_ENCODING_MODE and \
@@ -8562,7 +8005,7 @@ __|Remote Control Server| cannot be started!__
                 self.refreshBody()
             elif ret == 2:
                 # show line editor help
-                self._show_line_editor_help()
+                self._open_help_by_key('external-line-editor', self._show_line_editor_help)
             elif ret == 3:
                 # show invalid dir message
                 self._show_notification_with_delay(
@@ -8580,7 +8023,7 @@ __|Remote Control Server| cannot be started!__
             # logger.error('DE <<< RETURN FROM CONFIG ret = {} >>>'.format(ret))
 
             if ret == 2:
-                self._show_radio_browser_config_help()
+                self._open_help_by_key('rb-config')
             elif ret == 3:
                 ''' show config server selection window '''
                 self.ws.operation_mode = self.ws.BROWSER_SERVER_SELECTION_MODE
@@ -8642,10 +8085,10 @@ __|Remote Control Server| cannot be started!__
                 self.refreshBody()
             elif ret == 2:
                 ''' Display help '''
-                self._show_radio_browser_search_help()
+                self._open_help_by_key('rb-search')
             elif ret == 3:
                 ''' display help editor help '''
-                self._show_line_editor_help()
+                self._open_help_by_key('external-line-editor', self._show_line_editor_help)
             elif ret == 4:
                 ''' search parameter error '''
                 self._show_notification_with_delay(
@@ -8809,7 +8252,7 @@ __|Remote Control Server| cannot be started!__
                 char not in self._chars_to_bypass_for_search:
             ''' Return from station selection window for pasting '''
             if char == ord('?'):
-                self._show_config_playlist_help()
+                self._open_help_by_key('config-playlist')
             else:
                 ret, a_playlist = self._playlist_select_win.keypress(char)
                 if ret == 1:
@@ -9217,7 +8660,7 @@ __|Remote Control Server| cannot be started!__
                     self._apply_search_result(ret)
             elif ret == 2:
                 ''' display help '''
-                self._show_search_help()
+                self._open_help_by_key('search')
             elif ret == -1:
                 ''' cancel search '''
                 self.ws.close_window()
@@ -9242,16 +8685,12 @@ __|Remote Control Server| cannot be started!__
                 self.refreshBody()
             elif ret == 2:
                 ''' show help '''
-                self._show_group_help()
+                self._open_help_by_key('group')
             return
 
         elif char in (ord('T'), ):
             self._update_status_bar_right()
-            if self.ws.operation_mode == self.ws.SESSION_LOCKED_MODE:
-                self.ws.close_window()
-                self.refreshBody()
-            else:
-                self._toggle_transparency()
+            self._toggle_transparency()
             return
 
         elif char in self._global_functions.keys():
@@ -9477,9 +8916,10 @@ __|Remote Control Server| cannot be started!__
 
             elif ret == 1:
                 ''' Help '''
+                logger.error('\n\n\nHelp!\n\n\n')
                 self._player_select_win.focus = False
                 self._player_select_win.from_config = False
-                self._show_config_player_help()
+                self._open_help_by_key('config-player', self._show_config_player_help)
 
             elif ret > 1:
                 ''' error '''
@@ -9502,33 +8942,6 @@ __|Remote Control Server| cannot be started!__
             if char in self._global_functions.keys():
                 self._global_functions[char]()
                 return
-            if self.ws.operation_mode in (
-                    self.ws.MAIN_HELP_MODE,
-                    self.ws.MAIN_HELP_MODE_PAGE_2,
-                    self.ws.MAIN_HELP_MODE_PAGE_3,
-                    self.ws.MAIN_HELP_MODE_PAGE_4,
-                    self.ws.MAIN_HELP_MODE_PAGE_5):
-                if char in (ord('n'), ord('p'), ):
-                    self.helpWinContainer = None
-                    self.helpWin = None
-                    func = (self._show_main_help,
-                            self._show_main_help_page_2,
-                            self._show_main_help_page_3,
-                            self._show_main_help_page_4,
-                            self._show_main_help_page_5)
-                    if self._main_help_id >= len(func):
-                        self._main_help_id = len(func) - 1
-                    if char == ord('n'):
-                        self._main_help_id += 1
-                        if self._main_help_id == len(func):
-                            self._main_help_id = 0
-                    else:
-                        self._main_help_id -= 1
-                        if self._main_help_id < 0:
-                            self._main_help_id = len(func) - 1
-                    self.ws.close_window()
-                    func[self._main_help_id](from_keyboard=True)
-                    return
             self._handle_passive_windows()
             return
 
@@ -9853,7 +9266,7 @@ __|Remote Control Server| cannot be started!__
                         self._browser_init_config(init=True)
                     else:
                         if self._cnf.locked:
-                            self._print_session_locked()
+                            self._open_help_by_key('session-locked')
                             return
 
                         self._old_config_encoding = self._cnf.opts['default_encoding'][1]
