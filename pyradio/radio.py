@@ -45,7 +45,7 @@ from .html_help import HtmlHelp
 from .browser import RadioBrowserConfig, RadioBrowserConfigWindow
 from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
-from .help import PyRadioHelp
+from .messages_system import PyRadioMessagesSystem
 
 CAN_CHECK_FOR_UPDATES = True
 try:
@@ -428,7 +428,7 @@ class PyRadio(object):
             join(temp_dir, 'station.png'),
             join(temp_dir, 'station-icon.raw'),
         )
-
+        self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
         self._request_recording = record
         self._no_netifaces = False
         self._current_selection = 0
@@ -534,7 +534,7 @@ class PyRadio(object):
             self.ws.SCHEDULE_STATION_SELECT_MODE: self._schedule_station_select_win_refresh_and_resize,
             self.ws.PASTE_MODE: self._playlist_select_paste_win_refresh_and_resize,
             self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
-            self.ws.HELP_MODE: self._new_help,
+            self.ws.MESSAGING_MODE: self._new_help,
             self.ws.UPDATE_NOTIFICATION_MODE: self._print_update_notification,
             self.ws.UPDATE_NOTIFICATION_OK_MODE: self._print_update_ok_notification,
             self.ws.UPDATE_NOTIFICATION_NOK_MODE: self._print_update_nok_notification,
@@ -603,7 +603,6 @@ class PyRadio(object):
             self.ws.RADIO_BROWSER_CONFIG_MODE: self._redisplay_browser_config,
             self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
             self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG: self._ask_to_save_browser_config_from_config,
-            self.ws.SERVICE_SERVERS_UNREACHABLE: self._print_servers_unreachable,
             self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT: self._ask_to_save_browser_config_to_exit,
             self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_win_manage_players,
             self.ws.WIN_PRINT_EXE_LOCATION_MODE: self._show_win_print_exe_paths,
@@ -615,7 +614,6 @@ class PyRadio(object):
             self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE: self._print_remote_control_server_dead_error,
             self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
             self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE: self._show_remote_control_server_not_active,
-            self.ws.REMOTE_CONTROL_SERVER_ERROR_MODE: self._show_remote_control_error,
             self.ws.CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE: self._print_change_player_same_player_error,
             self.ws.CHANGE_PLAYER_ONE_PLAYER_ERROR_MODE: self._print_change_player_one_player_error,
             self.ws.CHANGE_PLAYER_MODE: self._redisplay_select_player,
@@ -781,7 +779,7 @@ class PyRadio(object):
         else:
             self._browser_page_chars = (ord(']'), ord('['))
 
-        self._new_help_window = PyRadioHelp(
+        self._new_help_window = PyRadioMessagesSystem(
                 self._cnf,
                 lambda: self.ws.operation_mode,
                 lambda: self.ws.previous_operation_mode
@@ -2588,19 +2586,8 @@ class PyRadio(object):
     def readPlaylists(self):
         num_of_playlists, playing = self._cnf.read_playlists()
         if num_of_playlists == 0 and not self._cnf.open_register_list:
-            txt = '''
-            No playlists found!!!
-
-            This should never have happened; PyRadio is missing its
-            default playlist. Therefore, it has to terminate now.
-            It will re-create it the next time it is lounched.
-            '''
-            self._show_help(
-                txt.format(self._cnf.station_file_name),
-                mode_to_set=self.ws.PLAYLIST_SCAN_ERROR_MODE,
-                caption=' Error ',
-                prompt=' Press any key to exit ',
-                is_message=True)
+            self._open_simple_help_by_key('no-playlist')
+            self.ws.operation_mode = self.ws.PLAYLIST_SCAN_ERROR_MODE
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('No playlists found!!!')
         return num_of_playlists, playing
@@ -2946,17 +2933,6 @@ Press any key to open the directories in file explorer...
                         prompt='',
                         is_message=True)
 
-    def _show_remote_control_error(self):
-        txt = '''
-______This session is |locked|, so the
-__|Remote Control Server| cannot be started!__
-        '''
-        self._show_help(txt,
-                        self.ws.SERVICE_SERVERS_UNREACHABLE,
-                        caption=' Not Available ',
-                        prompt=' Press any key ',
-                        is_message=True)
-
     def _show_port_number_invalid(self):
         self._show_notification_with_delay(
                 txt='___Invalid port number!!!___',
@@ -3108,19 +3084,25 @@ __|Remote Control Server| cannot be started!__
 
     def _show_new_help(self, help_key=None, token=None):
         self._new_help_window.set_text(self.bodyWin, help_key)
-        self.ws.operation_mode = self.ws.HELP_MODE
+        self.ws.operation_mode = self.ws.MESSAGING_MODE
         if token is not None:
             self._new_help_window.set_token(token)
         self._new_help_window.show()
 
+    def _open_simple_help_by_key_and_mode(self, mode, *args):
+        self._message_system_default_operation_mode = mode
+        self._new_help_window.simple_dialog = True
+        self._open_help_by_key(*args)
+        self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
+
+    def _open_simple_help_by_key(self, *args):
+        self._new_help_window.simple_dialog = True
+        self._open_help_by_key(*args)
+
     def _open_help_by_key(self, *args):
-        logger.error('in _open_help_by_key 1, key = "{}"'.format(args[0]))
         self._new_help_window.set_text(self.bodyWin, *args)
-        logger.error('in _open_help_by_key 2')
-        self.ws.operation_mode = self.ws.HELP_MODE
-        logger.error('in _open_help_by_key 3')
+        self.ws.operation_mode = self._message_system_default_operation_mode
         self._new_help_window.show()
-        logger.error('in _open_help_by_key 4')
 
     def _show_line_editor_help(self):
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \
@@ -3771,17 +3753,7 @@ __|Remote Control Server| cannot be started!__
                 callback_function=self.refreshBody)
 
     def _print_servers_unreachable(self):
-        txt = '''
-        No server responds to ping.
-
-        You will be able to edit the config file, but
-        you will not be able to select a default server.
-        '''
-        self._show_help(txt,
-                        self.ws.SERVICE_SERVERS_UNREACHABLE,
-                        caption=' Servers Unreachable ',
-                        prompt=' Press any key ',
-                        is_message=True)
+        self._open_simple_help_by_key('rb-no-ping')
 
     def _show_player_changed_in_config(self):
         txt = '''
@@ -5776,6 +5748,7 @@ __|Remote Control Server| cannot be started!__
             self._browser_config_win.show(parent=parent)
             if not self._browser_config_win.enable_servers:
                 self._print_servers_unreachable()
+            self._print_servers_unreachable()
 
     def _browser_init_search(self, parent):
         ''' Start browser search window
@@ -6455,9 +6428,19 @@ __|Remote Control Server| cannot be started!__
                 self._cnf.play_from_history = True
                 self._cnf.stations_history.play_next()
 
+    def _show_remote_control_server_active(self):
+        self._open_simple_help_by_key_and_mode(
+            self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE,
+            'rc-active',
+            self._remote_control_server.ip + \
+                    '|:|' + str(
+                        self._cnf.active_remote_control_server_port
+                    )
+        )
+
     def _show_remote_control_server_not_active(self):
         if self._cnf.locked:
-            self._show_remote_control_error()
+            self._open_simple_help_by_key('rc-locked')
         else:
             if self._remote_control_window is None:
                 self._remote_control_window = PyRadioServerWindow(
@@ -6467,27 +6450,6 @@ __|Remote Control Server| cannot be started!__
                 )
                 self.ws.operation_mode = self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE
             self._remote_control_window.show(self.outerBodyWin)
-
-    def _show_remote_control_server_active(self):
-        if self._remote_control_server is not None:
-            txt = r'''
-                   |PyRadio Remote Control Server| is active!
-
-                   ||Text Address: |http://{0}
-                   ||_Web Address: |http://{0}/html
-
-                   ||Press "|s|" to stop the server, or'''.format(
-                self._remote_control_server.ip + \
-                '|:|' + str(
-                    self._cnf.active_remote_control_server_port
-                )
-            )
-            self._show_help(
-                txt,
-                self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE,
-                caption=' Remote Control Enabled ',
-                is_message=True
-            )
 
     def _reload_playlist_after_confirmation(self, char=121):
         if char in (ord('y'), ord('Y')):
@@ -6659,7 +6621,7 @@ __|Remote Control Server| cannot be started!__
             self._i_am_resizing = False
             return
 
-        if self.ws.operation_mode == self.ws.HELP_MODE:
+        if self.ws.operation_mode == self.ws.MESSAGING_MODE:
             ret = self._new_help_window.keypress(char)
             if ret:
                 self.ws.close_window()
@@ -7592,7 +7554,7 @@ __|Remote Control Server| cannot be started!__
                             self._cnf.player_changed = False
                         self.player.playback_timeout = int(self._cnf.connection_timeout)
                         if self._config_win.mouse_support_option_changed:
-                            self._open_help_by_key('mouse-restart')
+                            self._open_simple_help_by_key('mouse-restart')
                         if self._config_win.need_to_update_theme:
                             self._theme.recalculate_theme(False)
                         if self._cnf.active_remote_control_server_ip != self._cnf.remote_control_server_ip or \
@@ -8916,7 +8878,6 @@ __|Remote Control Server| cannot be started!__
 
             elif ret == 1:
                 ''' Help '''
-                logger.error('\n\n\nHelp!\n\n\n')
                 self._player_select_win.focus = False
                 self._player_select_win.from_config = False
                 self._open_help_by_key('config-player', self._show_config_player_help)
@@ -9266,7 +9227,7 @@ __|Remote Control Server| cannot be started!__
                         self._browser_init_config(init=True)
                     else:
                         if self._cnf.locked:
-                            self._open_help_by_key('session-locked')
+                            self._open_simple_help_by_key('session-locked')
                             return
 
                         self._old_config_encoding = self._cnf.opts['default_encoding'][1]

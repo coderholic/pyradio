@@ -11,9 +11,10 @@ locale.setlocale(locale.LC_ALL, "")
 
 logger = logging.getLogger(__name__)
 
-class PyRadioHelp(object):
+class PyRadioMessagesSystem(object):
 
     too_small = False
+    simple_dialog = False
     _can_scroll= True
     _columns = {}
     _max_lens = {}
@@ -36,7 +37,7 @@ class PyRadioHelp(object):
 
     def _get_txt(self, *args):
         '''
-            args[0] = help_key
+            args[0] = message_key
 
             Format is:
                 (
@@ -315,6 +316,16 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
+    'rb-no-ping': ('Servers Unreachable',
+r'''
+No server |responds| to ping.
+
+You will be able to edit the config file, but
+you will |not| be able to select a default server.
+
+'''
+),
+
     'config': ('Configuration Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*| Change option selection.
@@ -480,13 +491,45 @@ take effect.
 
 '''
 ),
+
+    'no-playlist': ('Error',
+r'''
+|No playlists found!!!
+
+This should |never| have happened; |PyRadio| is missing its
+default playlist. Therefore, it has to |terminate| now.
+It will re-create it the next time it is lounched.
+'''
+),
+
+    'rc-active': ('Remote Control Enabled',
+r'''
+|PyRadio Remote Control Server| is active!
+
+Text Address: |http://{0}
+_Web Address: |http://{0}/html____
+
+Press "|s|" to stop the server, or'''
+),
+
+    'rc-not-not-active': ('',
+),
+
+    'rc-locked': ('Not Available',
+r'''
+______This session is |locked|, so the
+__|Remote Control Server| cannot be started!__
+
+'''
+),
         }
-        active_help_key = args[0] if args[0] else 'main'
-        ''' active_help_key transformation '''
-        if active_help_key == 'search' and \
+        # INSERT NEW ITEMS HERE
+        active_message_key = args[0] if args[0] else 'main'
+        ''' active_message_key transformation '''
+        if active_message_key == 'search' and \
                 platform.startswith('darwin'):
-            active_help_key = 'search-darwin'
-        elif active_help_key == 'extra':
+            active_message_key = 'search-darwin'
+        elif active_message_key == 'extra':
             if self._operation_mode() == Window_Stack_Constants.NORMAL_MODE or \
                         (self._operation_mode() == Window_Stack_Constants.HELP_MODE and \
                         self._previous_operation_mode() == Window_Stack_Constants.NORMAL_MODE):
@@ -496,79 +539,85 @@ take effect.
                                 '|C|lear all registers.', 'Clear |c|urrent register.')
             else:
                 if self._cnf.open_register_list:
-                    active_help_key = 'extra-registers-list'
+                    active_message_key = 'extra-registers-list'
                 else:
-                    active_help_key = 'extra-playlist'
-        elif active_help_key == 'lines-editor':
+                    active_message_key = 'extra-playlist'
+        elif active_message_key == 'lines-editor':
             if platform.lower().startswith('dar'):
-                active_help_key = 'line-editor-darwin'
-        elif active_help_key == 'external-line-editor':
+                active_message_key = 'line-editor-darwin'
+        elif active_message_key == 'external-line-editor':
             txt['external-line-editor'] = (
                     'Line Editor Help',
                     args[1]()
             )
-        elif active_help_key == 'config-player':
+        elif active_message_key == 'config-player':
             txt['config-player'] = (
                     'Player Extra Parameters Help',
                     args[1]()
             )
 
-        cap, out = txt[active_help_key]
+        cap, out = txt[active_message_key]
         if out is None:
             return None, None, 0
 
         ''' apply per item customization / variables '''
-        if active_help_key == 'main' and \
+        if active_message_key == 'main' and \
                 platform.startswith('win'):
-            out = txt[active_help_key][1].replace(
+            out = txt[active_message_key][1].replace(
                     '|opposite ', '|upward ').replace('[| / |]', 'F2| / |F3')
-        elif active_help_key == 'main' and \
+        elif active_message_key == 'main' and \
                 platform.lower().startswith('darwin'):
-            out = txt[active_help_key][1].replace(
+            out = txt[active_message_key][1].replace(
                     '|opposite ', '|upward ')
-        elif active_help_key == 'playlist':
+        elif active_message_key == 'playlist':
             if self._cnf.open_register_list:
-                out = txt[active_help_key][1].replace(
+                out = txt[active_message_key][1].replace(
                         'playlist', 'register')
                 cap=' Registers List Help '
-        elif active_help_key == 'dir':
-            out = txt[active_help_key][1].format(args[1])
-        elif (active_help_key == 'search' or active_help_key == 'line-editor') and \
+        elif active_message_key == 'dir':
+            out = txt[active_message_key][1].format(args[1])
+        elif (active_message_key == 'search' or active_message_key == 'line-editor') and \
                 platform.startswith('win'):
-            out = txt[active_help_key][1].replace('M-', 'A-')
-        elif active_help_key == 'config-encoding':
+            out = txt[active_message_key][1].replace('M-', 'A-')
+        elif active_message_key == 'config-encoding':
             if self._operation_mode() == Window_Stack_Constants.SELECT_ENCODING_MODE:
                 out = out.replace('r c  ', 'r    ').replace('Revert to station / |c|onfig value.', 'Revert to saved value.')
+        elif active_message_key == 'rc-active':
+            out = txt[active_message_key][1].format(args[1])
 
         self._tokens, l = self._parse_strings_for_tokens(out.splitlines())
         logger.error('\n\nself._tokens = {}'.format(self._tokens))
         # get max len
         if logger.isEnabledFor(logging.INFO):
-            logger.info('help active key = "{}"'.format(active_help_key))
-        if active_help_key == 'main':
+            logger.info('>>> Message System: setting key to "{}"'.format(active_message_key))
+            self._last_key = active_message_key
+        if active_message_key == 'main':
             mmax = self._main_win_width
             column = 22
         else:
             first_column = []
             last_column = []
-            if active_help_key in self._columns.keys():
-                column =  self._columns[active_help_key]
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('column from self._columns = {}'.format(column))
+            if self.simple_dialog:
+                column = 0
             else:
-                for n in l:
-                    x = n.split('|*|')
-                    if len(x) == 2:
-                        first_column.append(x[0].strip().replace('%', '').replace('!', '').replace('|', ''))
-                if first_column:
-                    column = max(len(x) for x in first_column) + 5
+                if active_message_key in self._columns.keys():
+                    column =  self._columns[active_message_key]
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('column from self._columns = {}'.format(column))
                 else:
-                    column = 0
-                self._columns[active_help_key] = column
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('column from calculation = {}'.format(column))
-            if active_help_key in self._max_lens.keys():
-                mmax =  self._max_lens[active_help_key]
+                    for n in l:
+                        x = n.split('|*|')
+                        if len(x) == 2:
+                            first_column.append(x[0].strip().replace('%', '').replace('!', '').replace('|', ''))
+                    if first_column:
+                        column = max(len(x) for x in first_column) + 5
+                    else:
+                        column = 0
+                    self._columns[active_message_key] = column
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('column from calculation = {}'.format(column))
+            if active_message_key in self._max_lens.keys():
+                mmax =  self._max_lens[active_message_key]
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('max len from self._max_lens = {}'.format(mmax))
             else:
@@ -582,39 +631,36 @@ take effect.
                         last_column[-1] += 4 * ' '
                 mmax = max(len(x) for x in last_column)
                 mmax += mmax % 2
-                self._max_lens[active_help_key] = mmax
+                self._max_lens[active_message_key] = mmax
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('max len from calculation = {}'.format(mmax))
         self._columnX = column
-        if active_help_key == 'config-player':
-            self._columns.pop(active_help_key)
-            self._max_lens.pop(active_help_key)
+        if active_message_key == 'config-player':
+            self._columns.pop(active_message_key)
+            self._max_lens.pop(active_message_key)
         return cap, l, mmax
 
     def _parse_strings_for_tokens(self, text):
         token_dict = {}
-        cleaned_text = []
-
-        pattern = re.compile(r'<!--(.*?)-->')
-
-        for i, line in enumerate(text):
-            match = pattern.search(line)
-
-            while match:
-                token = match.group(1)
-                token_dict[token] = i
-
-                # Remove "<!--" + token + "-->" from the line
-                line = line[:match.start()] + line[match.end():]
+        if self.simple_dialog:
+            cleaned_text = text
+        else:
+            cleaned_text = []
+            pattern = re.compile(r'<!--(.*?)-->')
+            for i, line in enumerate(text):
                 match = pattern.search(line)
-
-            cleaned_text.append(line)
-
+                while match:
+                    token = match.group(1)
+                    token_dict[token] = i
+                    # Remove "<!--" + token + "-->" from the line
+                    line = line[:match.start()] + line[match.end():]
+                    match = pattern.search(line)
+                cleaned_text.append(line)
         return token_dict, cleaned_text
 
     def set_text(self, parent, *args):
         '''
-            args[0] = help_key
+            args[0] = message_key
         '''
         self._active_token = None
         self.col_txt = curses.color_pair(10)
@@ -623,7 +669,7 @@ take effect.
         if parent is not None:
             self._parent = parent
         if args:
-            help_key = args[0]
+            message_key = args[0]
         self._caption, l, max_len = self._get_txt(*args)
         if l is None:
             return
@@ -649,6 +695,7 @@ take effect.
         )
         self._pad.bkgd(' ', self.col_txt)
         self._populate_pad(l)
+        self.simple_dialog = False
 
     def _get_win(self):
         p_height, p_width = self._parent.getmaxyx()
@@ -745,7 +792,7 @@ take effect.
                     # keys list
                     formated =  lines[0].split('|')
                     self._echo_line(i, 1, formated)
-                    # print help description
+                    # print item description
                     formated = lines[1].split('|')
                     self._echo_line(i, self._columnX, formated, reverse=True)
                 else:
@@ -753,6 +800,8 @@ take effect.
             self._pad_refresh()
 
     def show(self, parent=None):
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('>>> Message System: displaying key "{}"'.format(self._last_key))
         if parent is not None:
             self._parent = parent
             self._get_win()
@@ -764,7 +813,6 @@ take effect.
             logger.info('self._pad_pos = {}'.format(self._pad_pos))
             if self._active_token is not None:
                 self._pad_pos = self._active_token
-                self._active_token = None
             if self._pad_pos > self._lines_count - self._maxY + 3:
                 #if self._lines_count - self._maxY - 4 >= self._pad_pos + self._maxY + 2:
                 self._pad_pos = self._lines_count - self._maxY + 3
@@ -828,7 +876,7 @@ def main(scr):
     window.box()
     window.refresh()
 
-    x = PyRadioHelp()
+    x = PyRadioMessagesSystem()
     x.set_text(parent=window)
 
     x.show()
