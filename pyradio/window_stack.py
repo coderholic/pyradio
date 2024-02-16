@@ -264,7 +264,6 @@ class Window_Stack_Constants(object):
         MESSAGING_MODE: 'MESSAGING_MODE',
     }
 
-
     ''' When PASSIVE_WINDOWS target is one of them,
     also set window_mode '''
     MAIN_MODES = (

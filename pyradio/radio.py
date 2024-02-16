@@ -534,7 +534,7 @@ class PyRadio(object):
             self.ws.SCHEDULE_STATION_SELECT_MODE: self._schedule_station_select_win_refresh_and_resize,
             self.ws.PASTE_MODE: self._playlist_select_paste_win_refresh_and_resize,
             self.ws.SELECT_STATION_MODE: self._redisplay_station_select_win_refresh_and_resize,
-            self.ws.MESSAGING_MODE: self._new_help,
+            self.ws.MESSAGING_MODE: self._redisplay_message_win,
             self.ws.UPDATE_NOTIFICATION_MODE: self._print_update_notification,
             self.ws.UPDATE_NOTIFICATION_OK_MODE: self._print_update_ok_notification,
             self.ws.UPDATE_NOTIFICATION_NOK_MODE: self._print_update_nok_notification,
@@ -634,22 +634,22 @@ class PyRadio(object):
         }
 
         self._help_keys = {
-            self.ws.NORMAL_MODE: 'main',
-            self.ws.PLAYLIST_MODE: 'playlist',
-            self.ws.THEME_MODE: 'theme',
-            self.ws.GROUP_SELECTION_MODE: 'group',
-            self.ws.CONFIG_MODE: 'config',
-            self.ws.SELECT_STATION_MODE: 'config-station',
-            self.ws.SELECT_PLAYLIST_MODE: 'config-playlist',
-            self.ws.PASTE_MODE:'config-playlist',
-            self.ws.RADIO_BROWSER_CONFIG_MODE: 'rb-config',
-            self.ws.BROWSER_SEARCH_MODE: 'rb-search',
-            self.ws.SEARCH_NORMAL_MODE: 'search',
-            self.ws.SEARCH_PLAYLIST_MODE: 'search',
+            self.ws.NORMAL_MODE: 'h-main',
+            self.ws.PLAYLIST_MODE: 'h-playlist',
+            self.ws.THEME_MODE: 'h-theme',
+            self.ws.GROUP_SELECTION_MODE: 'h-group',
+            self.ws.CONFIG_MODE: 'h-config',
+            self.ws.SELECT_STATION_MODE: 'h-config-station',
+            self.ws.SELECT_PLAYLIST_MODE: 'h-config-playlist',
+            self.ws.PASTE_MODE:'h-config-playlist',
+            self.ws.RADIO_BROWSER_CONFIG_MODE: 'h-rb-config',
+            self.ws.BROWSER_SEARCH_MODE: 'h-rb-search',
+            self.ws.SEARCH_NORMAL_MODE: 'h-search',
+            self.ws.SEARCH_PLAYLIST_MODE: 'h-search',
             self.ws.SELECT_STATION_ENCODING_MODE: 'config-encoding',
             self.ws.SELECT_ENCODING_MODE: 'config-encoding',
             self.ws.EDIT_STATION_ENCODING_MODE: 'config-encoding',
-            self.ws.IN_PLAYER_PARAMS_EDITOR: 'line-editor',
+            self.ws.IN_PLAYER_PARAMS_EDITOR: 'h-line-editor',
             self.ws.SELECT_PLAYER_MODE: 'config-player',
         }
 
@@ -779,7 +779,7 @@ class PyRadio(object):
         else:
             self._browser_page_chars = (ord(']'), ord('['))
 
-        self._new_help_window = PyRadioMessagesSystem(
+        self._messaging_win = PyRadioMessagesSystem(
                 self._cnf,
                 lambda: self.ws.operation_mode,
                 lambda: self.ws.previous_operation_mode
@@ -2586,7 +2586,7 @@ class PyRadio(object):
     def readPlaylists(self):
         num_of_playlists, playing = self._cnf.read_playlists()
         if num_of_playlists == 0 and not self._cnf.open_register_list:
-            self._open_simple_help_by_key('no-playlist')
+            self._open_simple_message_by_key('m-no-playlist')
             self.ws.operation_mode = self.ws.PLAYLIST_SCAN_ERROR_MODE
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('No playlists found!!!')
@@ -2868,16 +2868,16 @@ class PyRadio(object):
         if self.ws.operation_mode == self.ws.NORMAL_MODE and \
                 self._cnf.browsing_station_service:
             if self._cnf._online_browser.BROWSER_NAME == 'RadioBrowser':
-                self._show_new_help(help_key='main', token='rb')
+                self._show_message_win(help_key='h-main', token='rb')
         elif self.ws.operation_mode in self._help_keys.keys():
-            logger.error('using _open_help_by_key')
+            logger.error('using _open_message_win_by_key')
             if self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE:
-                self._open_help_by_key('config-player', self._show_config_player_help)
+                self._open_message_win_by_key('config-player', self._show_config_player_help)
             else:
-                self._open_help_by_key(self._help_keys[self.ws.operation_mode])
+                self._open_message_win_by_key(self._help_keys[self.ws.operation_mode])
             return
         if self.ws.operation_mode in self._display_help.keys():
-                self._open_help_by_key(self._display_help[self.ws.operation_mode])
+                self._open_message_win_by_key(self._display_help[self.ws.operation_mode])
         else:
             self._redisplay[self.ws.operation_mode]()
 
@@ -3079,30 +3079,30 @@ Press any key to open the directories in file explorer...
                         mode_to_set=self.ws.WIN_REMOVE_OLD_INSTALLATION_MODE,
                         caption=' PyRadio ')
 
-    def _new_help(self, help_key=None):
-        self._new_help_window.show(parent=self.bodyWin)
+    def _redisplay_message_win(self, help_key=None):
+        self._messaging_win.show(parent=self.bodyWin)
 
-    def _show_new_help(self, help_key=None, token=None):
-        self._new_help_window.set_text(self.bodyWin, help_key)
+    def _show_message_win(self, help_key=None, token=None):
+        self._messaging_win.set_text(self.bodyWin, help_key)
         self.ws.operation_mode = self.ws.MESSAGING_MODE
         if token is not None:
-            self._new_help_window.set_token(token)
-        self._new_help_window.show()
+            self._messaging_win.set_token(token)
+        self._messaging_win.show()
 
-    def _open_simple_help_by_key_and_mode(self, mode, *args):
+    def _open_simple_message_by_key_and_mode(self, mode, *args):
         self._message_system_default_operation_mode = mode
-        self._new_help_window.simple_dialog = True
-        self._open_help_by_key(*args)
+        self._messaging_win.simple_dialog = True
+        self._open_message_win_by_key(*args)
         self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
 
-    def _open_simple_help_by_key(self, *args):
-        self._new_help_window.simple_dialog = True
-        self._open_help_by_key(*args)
+    def _open_simple_message_by_key(self, *args):
+        self._messaging_win.simple_dialog = True
+        self._open_message_win_by_key(*args)
 
-    def _open_help_by_key(self, *args):
-        self._new_help_window.set_text(self.bodyWin, *args)
+    def _open_message_win_by_key(self, *args):
+        self._messaging_win.set_text(self.bodyWin, *args)
         self.ws.operation_mode = self._message_system_default_operation_mode
-        self._new_help_window.show()
+        self._messaging_win.show()
 
     def _show_line_editor_help(self):
         if self.ws.operation_mode in (self.ws.RENAME_PLAYLIST_MODE, self.ws.CREATE_PLAYLIST_MODE, self.ws.SCHEDULE_EDIT_MODE) \
@@ -3177,7 +3177,7 @@ Press any key to open the directories in file explorer...
 
     def _show_config_player_help(self):
         if self._player_select_win.editing > 0:
-            self._open_help_by_key('external-line-editor', self._show_line_editor_help)
+            self._open_message_win_by_key('h-external-line-editor', self._show_line_editor_help)
             return None
         elif self._player_select_win.focus:
             txt = r'''TAB                           |*| Move selection to |Extra Parameters| column.
@@ -3753,7 +3753,7 @@ Press any key to open the directories in file explorer...
                 callback_function=self.refreshBody)
 
     def _print_servers_unreachable(self):
-        self._open_simple_help_by_key('rb-no-ping')
+        self._open_simple_message_by_key('h-rb-no-ping')
 
     def _show_player_changed_in_config(self):
         txt = '''
@@ -6429,9 +6429,9 @@ Press any key to open the directories in file explorer...
                 self._cnf.stations_history.play_next()
 
     def _show_remote_control_server_active(self):
-        self._open_simple_help_by_key_and_mode(
+        self._open_simple_message_by_key_and_mode(
             self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE,
-            'rc-active',
+            'd-rc-active',
             self._remote_control_server.ip + \
                     '|:|' + str(
                         self._cnf.active_remote_control_server_port
@@ -6440,7 +6440,7 @@ Press any key to open the directories in file explorer...
 
     def _show_remote_control_server_not_active(self):
         if self._cnf.locked:
-            self._open_simple_help_by_key('rc-locked')
+            self._open_simple_message_by_key('m-rc-locked')
         else:
             if self._remote_control_window is None:
                 self._remote_control_window = PyRadioServerWindow(
@@ -6588,7 +6588,7 @@ Press any key to open the directories in file explorer...
             return -1
 
         if char == ord('1'):
-            self._show_new_help()
+            self._show_message_win()
             return
         # if char == ord('1'):
         #     self.search_radio_browser_headless(1)
@@ -6622,7 +6622,7 @@ Press any key to open the directories in file explorer...
             return
 
         if self.ws.operation_mode == self.ws.MESSAGING_MODE:
-            ret = self._new_help_window.keypress(char)
+            ret = self._messaging_win.keypress(char)
             if ret:
                 self.ws.close_window()
                 self.refreshBody()
@@ -6686,7 +6686,7 @@ Press any key to open the directories in file explorer...
                 pass
             elif ret == 2:
                 ''' show help '''
-                self._open_help_by_key('dir', len(self._open_dir_win.items))
+                self._open_message_win_by_key('h-dir', len(self._open_dir_win.items))
             return
 
         elif self.ws.operation_mode == self.ws.MOVE_RECORDINGS_DIR_MODE:
@@ -6772,7 +6772,7 @@ Press any key to open the directories in file explorer...
         elif (self._register_open_pressed
                 and self.ws.operation_mode == self.ws.NORMAL_MODE):
             if char == ord('?'):
-                self._open_help_by_key('registers')
+                self._open_message_win_by_key('h-registers')
                 return
             ''' get station to register - accept a-z, 0-9 and - '''
             if char == ord('\''):
@@ -6939,7 +6939,7 @@ Press any key to open the directories in file explorer...
                     self._paste(playlist=self.stations[self.selection][-1])
 
             elif char == ord('?'):
-                self._open_help_by_key('extra')
+                self._open_message_win_by_key('h-extra')
                 return
 
             elif char == ord('u'):
@@ -7084,7 +7084,7 @@ Press any key to open the directories in file explorer...
                 self.ws.operation_mode == self.ws.NORMAL_MODE):
             ''' get station to register - accept a-z, 0-9 and - '''
             if char == ord('?'):
-                self._open_help_by_key('yank')
+                self._open_message_win_by_key('h-yank')
                 return
             self._update_status_bar_right(status_suffix='')
             ch = chr(char).lower()
@@ -7385,7 +7385,7 @@ Press any key to open the directories in file explorer...
             elif ret in (3, 6, 7, 8):
                 self._show_schedule_error()
             elif ret == 9:
-                self._open_help_by_key('external-line-editor', self._show_line_editor_help)
+                self._open_message_win_by_key('h-external-line-editor', self._show_line_editor_help)
             elif ret == 10:
                 self._show_schedule_info()
 
@@ -7554,7 +7554,7 @@ Press any key to open the directories in file explorer...
                             self._cnf.player_changed = False
                         self.player.playback_timeout = int(self._cnf.connection_timeout)
                         if self._config_win.mouse_support_option_changed:
-                            self._open_simple_help_by_key('mouse-restart')
+                            self._open_simple_message_by_key('m-mouse-restart')
                         if self._config_win.need_to_update_theme:
                             self._theme.recalculate_theme(False)
                         if self._cnf.active_remote_control_server_ip != self._cnf.remote_control_server_ip or \
@@ -7661,7 +7661,7 @@ Press any key to open the directories in file explorer...
                     '''
                 elif ret == 2:
                     ''' display line editor help '''
-                    self._open_help_by_key('line-editor')
+                    self._open_message_win_by_key('h-line-editor')
                 elif ret == 3:
                     ''' Got into paramater editor '''
                     self.ws.operation_mode = self.ws.IN_PLAYER_PARAMS_EDITOR
@@ -7781,7 +7781,7 @@ Press any key to open the directories in file explorer...
                     self.restartPlayer('*** Restarting playback due to encoding change ***')
             elif ret == 2:
                 ''' display line editor help '''
-                self._open_help_by_key('external-line-editor', self._show_line_editor_help)
+                self._open_message_win_by_key('h-external-line-editor', self._show_line_editor_help)
             elif ret == 3:
                 ''' show encoding '''
                 if self._station_editor._encoding == '':
@@ -7855,7 +7855,7 @@ Press any key to open the directories in file explorer...
                 return
             elif ret == 2:
                 ''' display line editor help '''
-                self._open_help_by_key('external-line-editor', self._show_line_editor_help)
+                self._open_message_win_by_key('h-external-line-editor', self._show_line_editor_help)
                 return
 
         elif self.ws.operation_mode == self.ws.EDIT_STATION_ENCODING_MODE and \
@@ -7967,7 +7967,7 @@ Press any key to open the directories in file explorer...
                 self.refreshBody()
             elif ret == 2:
                 # show line editor help
-                self._open_help_by_key('external-line-editor', self._show_line_editor_help)
+                self._open_message_win_by_key('h-external-line-editor', self._show_line_editor_help)
             elif ret == 3:
                 # show invalid dir message
                 self._show_notification_with_delay(
@@ -7985,7 +7985,7 @@ Press any key to open the directories in file explorer...
             # logger.error('DE <<< RETURN FROM CONFIG ret = {} >>>'.format(ret))
 
             if ret == 2:
-                self._open_help_by_key('rb-config')
+                self._open_message_win_by_key('h-rb-config')
             elif ret == 3:
                 ''' show config server selection window '''
                 self.ws.operation_mode = self.ws.BROWSER_SERVER_SELECTION_MODE
@@ -8047,10 +8047,10 @@ Press any key to open the directories in file explorer...
                 self.refreshBody()
             elif ret == 2:
                 ''' Display help '''
-                self._open_help_by_key('rb-search')
+                self._open_message_win_by_key('h-rb-search')
             elif ret == 3:
                 ''' display help editor help '''
-                self._open_help_by_key('external-line-editor', self._show_line_editor_help)
+                self._open_message_win_by_key('h-external-line-editor', self._show_line_editor_help)
             elif ret == 4:
                 ''' search parameter error '''
                 self._show_notification_with_delay(
@@ -8214,7 +8214,7 @@ Press any key to open the directories in file explorer...
                 char not in self._chars_to_bypass_for_search:
             ''' Return from station selection window for pasting '''
             if char == ord('?'):
-                self._open_help_by_key('config-playlist')
+                self._open_message_win_by_key('h-config-playlist')
             else:
                 ret, a_playlist = self._playlist_select_win.keypress(char)
                 if ret == 1:
@@ -8622,7 +8622,7 @@ Press any key to open the directories in file explorer...
                     self._apply_search_result(ret)
             elif ret == 2:
                 ''' display help '''
-                self._open_help_by_key('search')
+                self._open_message_win_by_key('h-search')
             elif ret == -1:
                 ''' cancel search '''
                 self.ws.close_window()
@@ -8647,7 +8647,7 @@ Press any key to open the directories in file explorer...
                 self.refreshBody()
             elif ret == 2:
                 ''' show help '''
-                self._open_help_by_key('group')
+                self._open_message_win_by_key('h-group')
             return
 
         elif char in (ord('T'), ):
@@ -8880,7 +8880,7 @@ Press any key to open the directories in file explorer...
                 ''' Help '''
                 self._player_select_win.focus = False
                 self._player_select_win.from_config = False
-                self._open_help_by_key('config-player', self._show_config_player_help)
+                self._open_message_win_by_key('config-player', self._show_config_player_help)
 
             elif ret > 1:
                 ''' error '''
@@ -9227,7 +9227,7 @@ Press any key to open the directories in file explorer...
                         self._browser_init_config(init=True)
                     else:
                         if self._cnf.locked:
-                            self._open_simple_help_by_key('session-locked')
+                            self._open_simple_message_by_key('m-session-locked')
                             return
 
                         self._old_config_encoding = self._cnf.opts['default_encoding'][1]

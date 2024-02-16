@@ -46,7 +46,7 @@ class PyRadioMessagesSystem(object):
                 )
         '''
         txt = {
-        'main': ('PyRadio Help',
+        'h-main': ('PyRadio Help',
 r'''__Welcome to |PyRadio Main Help
 __You can use the following keys to navigate: |j| (|Up|), |k| (|Down|),
 |PgUp| (|^B|), |PgDn| (|^F|) to scroll up/down.
@@ -169,7 +169,7 @@ Search history navigation works with normal keys as well
 __(|^N| is the same as |n| when not in a line editor).
 '''),
 
-        'playlist': ('Playlist Help',
+        'h-playlist': ('Playlist Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*|Change playlist selection.
 <n>g| / |<n>G                       |*|Jump to first / last or n-th item.
@@ -187,7 +187,7 @@ m| / |v                             |*||M|ute player / Save |v|olume (not in vlc
 W| / |w                             |*|Toggle title log / like a station.'''
 ),
 
-        'theme': ('Theme Help',
+        'h-theme': ('Theme Help',
 r'''Up| ,|j|, |PgUp|,              |*|
 Down|, |k|, |PgDown                |*| Change theme selection.
 g| / |<n>G                         |*| Jump to first or n-th / last theme.
@@ -206,7 +206,7 @@ W| / |w                            |*| Toggle title log / like a station.'''
 
 ),
 
-        'group': ('Group Selection Help',
+        'h-group': ('Group Selection Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*| Change Group Header selection.
 g G                                 |*| Go to first / last Group Header.
@@ -220,7 +220,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'yank': ('Copy Mode Help',
+    'h-yank': ('Copy Mode Help',
 r'''ENTER                           |*| Copy station to unnamed register.
 a-z| / |0-9                         |*| Copy station to named register.
 
@@ -229,7 +229,7 @@ Any other key exits current mode.
 '''
 ),
 
-    'registers': ('Registers Mode Help',
+    'h-registers': ('Registers Mode Help',
 r'''ENTER                           |*| Open registers list.
 a-z| / |0-9                         |*| Open named register.
 
@@ -238,7 +238,7 @@ Any other key exits current mode.
 '''
 ),
 
-    'extra': ('Extra Commands Help',
+    'h-extra': ('Extra Commands Help',
 r'''\                               |*| Open previous playlist.
 ]                                   |*| Open first opened playlist.
 b B                                 |*| Set player |b|uffering.
@@ -255,7 +255,7 @@ Any other key exits current mode.
 '''
 ),
 
-    'extra-registers-list': ('Extra Commands Help',
+    'h-extra-registers-list': ('Extra Commands Help',
 r'''r                               |*| |R|ename current register.
 p                                   |*| |P|aste to current register.
 c                                   |*| Clear |c|urrent register.
@@ -267,7 +267,7 @@ Any other key exits current mode.
 '''
 ),
 
-    'extra-playlist': ('Extra Commands Help',
+    'h-extra-playlist': ('Extra Commands Help',
 r'''n                               |*| Create a |n|ew playlist.
 p                                   |*| |P|aste to current playlist.
 r                                   |*| |R|ename current playlist.
@@ -278,7 +278,7 @@ o                                   |*| |O|pen dirs in file manager.
 '''
 ),
 
-    'rb-search': ('RadioBrowser Search Help',
+    'h-rb-search': ('RadioBrowser Search Help',
 r'''Tab| / |Sh-Tab                  |*| Go to next / previous field.
 j|, |Up| / |k|, |Down               |*| Go to next / previous field vertivally.
 h|, |Left| / |l|, |Right            |*|
@@ -298,7 +298,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station'''
 ),
 
-    'rb-config': ('RadioBrowser Config Help',
+    'h-rb-config': ('RadioBrowser Config Help',
 r'''Tab| / |Sh-Tab,                 |*|
 j|, |Up| / |k|, |Down               |*| Go to next / previous field.
 h|, |Left| / |l|, |Right            |*| Change |auto save| and |counters| value.
@@ -316,7 +316,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'rb-no-ping': ('Servers Unreachable',
+    'h-rb-no-ping': ('Servers Unreachable',
 r'''
 No server |responds| to ping.
 
@@ -326,7 +326,7 @@ you will |not| be able to select a default server.
 '''
 ),
 
-    'config': ('Configuration Help',
+    'h-config': ('Configuration Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*| Change option selection.
 g|, |Home| / |G|, |End              |*| Jump to first / last option.
@@ -342,7 +342,7 @@ W| / |w                             |*| Toggle title log / like a station.'''
 
 ),
 
-    'config-station': ('Station Selection Help',
+    'h-config-station': ('Station Selection Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*| Change station selection.
 g| / |<n>G                          |*| Jump to first or n-th / last station.
@@ -358,7 +358,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'config-playlist': ('Playlist Selection Help',
+    'h-config-playlist': ('Playlist Selection Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*| Change playlist selection.
 g| / |<n>G                          |*| Jump to first or n-th / last playlist.
@@ -373,7 +373,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'config-encoding': ('Encoding Selection Help',
+    'h-config-encoding': ('Encoding Selection Help',
 r'''Arrows|, |h|, |j|, |k|,         |*|
 l|, |PgUp|, |,PgDn                  |*|
 g|, |Home|, |G|, |End               |*| Change encoding selection.
@@ -386,7 +386,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'dir': ('Open Directory Help',
+    'h-dir': ('Open Directory Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                  |*| Change Directory selection.
 g G                                 |*| Go to first / last Directory.
@@ -400,7 +400,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'search': ('Search Help',
+    'h-search': ('Search Help',
 r'''Left| / |Right                  |*| Move to next / previous character.
 Up| / |Down                         |*| Cycle within history.
 M-F| / |M-B                         |*| Move to next / previous word.
@@ -418,7 +418,7 @@ Global functions work when preceded with a "|\|".
 '''
 ),
 
-    'search-darwin': ('Search Help',
+    'h-search-darwin': ('Search Help',
 r'''Left| / |Right                  |*| Move to next / previous character.
 HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
 ^W| / |^K                           |*| Clear to start / end of line.
@@ -433,7 +433,7 @@ Global functions work when preceded with a "|\|".
 '''
 ),
 
-    'line-editor': ('Line Editor Help',
+    'h-line-editor': ('Line Editor Help',
 r'''Left| / |Right                  |*| Move to next / previous character.
 HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
 ^W| / |^K                           |*| Clear to start / end of line.
@@ -449,7 +449,7 @@ Global functions work when preceded with a "|\|".
 '''
 ),
 
-    'line-editor-darwin': ('Line Editor Help',
+    'h-line-editor-darwin': ('Line Editor Help',
 r'''Left| / |Right                  |*| Move to next / previous character.
 M-F| / |M-B                         |*| Move to next / previous word.
 HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
@@ -466,7 +466,7 @@ Global functions work when preceded with a "|\|".
 '''
 ),
 
-    'session-locked': ('Session Locked',
+    'm-session-locked': ('Session Locked',
 '''
 This session is |locked| by another |PyRadio instance|.
 
@@ -481,7 +481,7 @@ command: |pyradio --unlock|
 '''
 ),
 
-    'mouse-restart': ('Program Restart required',
+    'm-mouse-restart': ('Program Restart required',
 r'''
 You have just changed the |mouse support| config
 option.
@@ -492,7 +492,7 @@ take effect.
 '''
 ),
 
-    'no-playlist': ('Error',
+    'm-no-playlist': ('Error',
 r'''
 |No playlists found!!!
 
@@ -502,7 +502,7 @@ It will re-create it the next time it is lounched.
 '''
 ),
 
-    'rc-active': ('Remote Control Enabled',
+    'd-rc-active': ('Remote Control Enabled',
 r'''
 |PyRadio Remote Control Server| is active!
 
@@ -512,10 +512,7 @@ _Web Address: |http://{0}/html____
 Press "|s|" to stop the server, or'''
 ),
 
-    'rc-not-not-active': ('',
-),
-
-    'rc-locked': ('Not Available',
+    'm-rc-locked': ('Not Available',
 r'''
 ______This session is |locked|, so the
 __|Remote Control Server| cannot be started!__
@@ -524,12 +521,12 @@ __|Remote Control Server| cannot be started!__
 ),
         }
         # INSERT NEW ITEMS HERE
-        active_message_key = args[0] if args[0] else 'main'
+        active_message_key = args[0] if args[0] else 'h-main'
         ''' active_message_key transformation '''
-        if active_message_key == 'search' and \
+        if active_message_key == 'h-search' and \
                 platform.startswith('darwin'):
-            active_message_key = 'search-darwin'
-        elif active_message_key == 'extra':
+            active_message_key = 'h-search-darwin'
+        elif active_message_key == 'h-extra':
             if self._operation_mode() == Window_Stack_Constants.NORMAL_MODE or \
                         (self._operation_mode() == Window_Stack_Constants.HELP_MODE and \
                         self._previous_operation_mode() == Window_Stack_Constants.NORMAL_MODE):
@@ -539,19 +536,19 @@ __|Remote Control Server| cannot be started!__
                                 '|C|lear all registers.', 'Clear |c|urrent register.')
             else:
                 if self._cnf.open_register_list:
-                    active_message_key = 'extra-registers-list'
+                    active_message_key = 'h-extra-registers-list'
                 else:
-                    active_message_key = 'extra-playlist'
-        elif active_message_key == 'lines-editor':
+                    active_message_key = 'h-extra-playlist'
+        elif active_message_key == 'h-lines-editor':
             if platform.lower().startswith('dar'):
-                active_message_key = 'line-editor-darwin'
-        elif active_message_key == 'external-line-editor':
-            txt['external-line-editor'] = (
+                active_message_key = 'h-line-editor-darwin'
+        elif active_message_key == 'h-external-line-editor':
+            txt['h-external-line-editor'] = (
                     'Line Editor Help',
                     args[1]()
             )
-        elif active_message_key == 'config-player':
-            txt['config-player'] = (
+        elif active_message_key == 'h-config-player':
+            txt['h-config-player'] = (
                     'Player Extra Parameters Help',
                     args[1]()
             )
@@ -561,28 +558,28 @@ __|Remote Control Server| cannot be started!__
             return None, None, 0
 
         ''' apply per item customization / variables '''
-        if active_message_key == 'main' and \
+        if active_message_key == 'h-main' and \
                 platform.startswith('win'):
             out = txt[active_message_key][1].replace(
                     '|opposite ', '|upward ').replace('[| / |]', 'F2| / |F3')
-        elif active_message_key == 'main' and \
+        elif active_message_key == 'h-main' and \
                 platform.lower().startswith('darwin'):
             out = txt[active_message_key][1].replace(
                     '|opposite ', '|upward ')
-        elif active_message_key == 'playlist':
+        elif active_message_key == 'h-playlist':
             if self._cnf.open_register_list:
                 out = txt[active_message_key][1].replace(
                         'playlist', 'register')
                 cap=' Registers List Help '
-        elif active_message_key == 'dir':
+        elif active_message_key == 'h-dir':
             out = txt[active_message_key][1].format(args[1])
-        elif (active_message_key == 'search' or active_message_key == 'line-editor') and \
+        elif (active_message_key == 'h-search' or active_message_key == 'h-line-editor') and \
                 platform.startswith('win'):
             out = txt[active_message_key][1].replace('M-', 'A-')
-        elif active_message_key == 'config-encoding':
+        elif active_message_key == 'h-config-encoding':
             if self._operation_mode() == Window_Stack_Constants.SELECT_ENCODING_MODE:
                 out = out.replace('r c  ', 'r    ').replace('Revert to station / |c|onfig value.', 'Revert to saved value.')
-        elif active_message_key == 'rc-active':
+        elif active_message_key == 'd-rc-active':
             out = txt[active_message_key][1].format(args[1])
 
         self._tokens, l = self._parse_strings_for_tokens(out.splitlines())
@@ -591,7 +588,7 @@ __|Remote Control Server| cannot be started!__
         if logger.isEnabledFor(logging.INFO):
             logger.info('>>> Message System: setting key to "{}"'.format(active_message_key))
             self._last_key = active_message_key
-        if active_message_key == 'main':
+        if active_message_key == 'h-main':
             mmax = self._main_win_width
             column = 22
         else:
@@ -635,7 +632,7 @@ __|Remote Control Server| cannot be started!__
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('max len from calculation = {}'.format(mmax))
         self._columnX = column
-        if active_message_key == 'config-player':
+        if active_message_key == 'h-config-player':
             self._columns.pop(active_message_key)
             self._max_lens.pop(active_message_key)
         return cap, l, mmax
@@ -894,7 +891,7 @@ def main(scr):
             window.refresh()
             x.show(parent=window)
         elif ch == ord('1'):
-            x.set_text('main')
+            x.set_text('h-main')
             window.refresh()
             x.show()
         elif ch == ord('2'):
