@@ -522,7 +522,6 @@ class PyRadio(object):
         ''' list of functions to open for entering
         or redisplaying a mode '''
         self._redisplay = {
-            self.ws.NOT_IMPLEMENTED_YET_MODE: self._print_not_implemented_yet,
             self.ws.NORMAL_MODE: self._redisplay_stations_and_playlists,
             self.ws.PLAYLIST_MODE: self._redisplay_stations_and_playlists,
             self.ws.CONFIG_MODE: self._redisplay_config,
@@ -537,7 +536,6 @@ class PyRadio(object):
             self.ws.MESSAGING_MODE: self._redisplay_message_win,
             self.ws.UPDATE_NOTIFICATION_MODE: self._print_update_notification,
             self.ws.UPDATE_NOTIFICATION_OK_MODE: self._print_update_ok_notification,
-            self.ws.UPDATE_NOTIFICATION_NOK_MODE: self._print_update_nok_notification,
             self.ws.SELECT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
             self.ws.EDIT_STATION_ENCODING_MODE: self._redisplay_encoding_select_win_refresh_and_resize,
             self.ws.PLAYLIST_NOT_FOUND_ERROR_MODE: self._print_playlist_not_found_error,
@@ -592,7 +590,6 @@ class PyRadio(object):
             self.ws.PLAYER_PARAMS_MODE: self._redisplay_player_select_win_refresh_and_resize,
             self.ws.IN_PLAYER_PARAMS_EDITOR: self._redisplay_player_select_win_refresh_and_resize,
             self.ws.USER_PARAMETER_ERROR: self._print_user_parameter_error,
-            self.ws.VOTE_RESULT_MODE: self._print_vote_result,
             self.ws.BROWSER_SEARCH_MODE: self._browser_search,
             self.ws.BROWSER_SORT_MODE: self._browser_sort,
             self.ws.BROWSER_SERVER_SELECTION_MODE: self._browser_server_selection,
@@ -601,7 +598,6 @@ class PyRadio(object):
             self.ws.BROWSER_PERFORMING_SEARCH_MODE: self._show_performing_search_message,
             self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER: self._ask_to_save_browser_config_from_config,
             self.ws.RADIO_BROWSER_CONFIG_MODE: self._redisplay_browser_config,
-            self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
             self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG: self._ask_to_save_browser_config_from_config,
             self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT: self._ask_to_save_browser_config_to_exit,
             self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_win_manage_players,
@@ -610,12 +606,8 @@ class PyRadio(object):
             self.ws.SCHEDULE_EDIT_MODE: self._show_schedule_editor,
             self.ws.SCHEDULE_EDIT_HELP_MODE: self._show_schedule_editor_help,
             self.ws.NO_THEMES_MODE: self._show_no_themes,
-            self.ws.REMOTE_CONTROL_SERVER_START_ERROR_MODE: self._print_remote_control_server_error,
-            self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE: self._print_remote_control_server_dead_error,
             self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
             self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE: self._show_remote_control_server_not_active,
-            self.ws.CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE: self._print_change_player_same_player_error,
-            self.ws.CHANGE_PLAYER_ONE_PLAYER_ERROR_MODE: self._print_change_player_one_player_error,
             self.ws.CHANGE_PLAYER_MODE: self._redisplay_select_player,
             self.ws.UPDATE_STATIONS_CSV_RESULT_MODE: self._update_stations_result,
             self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE: self._ask_to_update_stations_csv,
@@ -626,11 +618,9 @@ class PyRadio(object):
             self.ws.SCHEDULE_ERROR_MODE: self._show_schedule_error,
             self.ws.SCHEDULE_INFO_MODE: self._show_schedule_info,
             self.ws.INSERT_RECORDINGS_DIR_MODE: self._open_redordings_dir_select_win,
-            self.ws.MOVE_RECORDINGS_DIR_MODE: self._show_moving_recordings_dir,
             self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE: self._show_moving_recordings_dir_error,
             self.ws.OPEN_DIR_MODE: self._show_open_dir_window,
             self.ws.DELETE_PLAYLIST_MODE: self._ask_to_delete_playlist,
-            self.ws.DELETE_PLAYLIST_ERROR_MODE: self._show_delete_playlist_error,
         }
 
         self._help_keys = {
@@ -650,12 +640,7 @@ class PyRadio(object):
             self.ws.SELECT_ENCODING_MODE: 'config-encoding',
             self.ws.EDIT_STATION_ENCODING_MODE: 'config-encoding',
             self.ws.IN_PLAYER_PARAMS_EDITOR: 'h-line-editor',
-            self.ws.SELECT_PLAYER_MODE: 'config-player',
-        }
-
-        ''' list of help functions '''
-        self._display_help = {
-            self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE: self._print_browser_config_save_error,
+            self.ws.SELECT_PLAYER_MODE: 'h-config-player',
         }
 
         ''' search classes
@@ -2468,79 +2453,44 @@ class PyRadio(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon downloaded, but already exists...')
 
-
-    def _show_delete_playlist_error(self):
-        txt = '''
-        Cannot delete the playlist:
-        "|{}|"
-
-        Please close all other porgrams and try again...
-        '''
-
-        ''' truncate parameter to text width '''
-        self._show_help(txt.format(self.stations[self.selection][0]),
-                self.ws.DELETE_PLAYLIST_ERROR_MODE, caption=' Playlist Deletion Error ',
-                prompt=' Press any key to hide ', is_message=True)
-
     def _ask_to_delete_playlist(self):
-        txt = '''
-        Are you sure you want to delete the playlist:
-        "|{}|"?
-        Please keep in mind that once it is deleted, there
-        is no way to get it back.
-
-        Press "|y|" to confirm, or any other key to cancel
-        '''
-
-        ''' truncate parameter to text width '''
-        self._show_help(txt.format(self.stations[self.selection][0]),
-                self.ws.DELETE_PLAYLIST_MODE, caption=' Playlist Deletion ',
-                prompt='', is_message=True)
+        self._open_simple_message_by_key_and_mode(
+            self.ws.DELETE_PLAYLIST_MODE,
+            'd-playlist-delete-ask',
+            self.stations[self.selection][0]
+        )
 
     def _ask_to_remove_group(self):
-        txt = '''
-        Are you sure you want to delete this group header:
-        "|{}|"?
-
-        Press "|y|" to confirm, or any other key to cancel
-        '''
-
         ''' truncate parameter to text width '''
-        mwidth = self._get_message_width_from_string(txt)
-        msg = self.stations[self.selection][0]
-        if len(msg) > mwidth - 3:
-            msg = msg[:mwidth-6] + '...'
-        self._show_help(txt.format(msg),
-                self.ws.REMOVE_GROUP_MODE, caption=' Group Deletion ',
-                prompt='', is_message=True)
+        # mwidth = self._get_message_width_from_string(txt)
+        # msg = self.stations[self.selection][0]
+        # if len(msg) > mwidth - 3:
+        #     msg = msg[:mwidth-6] + '...'
+        self._open_simple_message_by_key_and_mode(
+            self.ws.REMOVE_GROUP_MODE,
+            'd-group-delete-ask',
+            self.stations[self.selection][0]
+        )
 
     def _ask_to_remove_station(self):
         if self._cnf.confirm_station_deletion and not self._cnf.is_register:
             if self._cnf.locked:
-                txt = '''
-                Are you sure you want to delete station:
-                "|{}|"?
-
-                Press "|y|" to confirm, or any other key to cancel
-                '''
+                self._open_simple_message_by_key_and_mode(
+                    self.ws.REMOVE_STATION_MODE,
+                    'd-station-delete-ask-locked',
+                    self.stations[self.selection][0]
+                )
             else:
-                txt = '''
-                Are you sure you want to delete station:
-                "|{}|"?
-
-                Press "|y|" to confirm, "|Y|" to confirm and not
-                be asked again, or any other key to cancel
-                '''
-
+                self._open_simple_message_by_key_and_mode(
+                    self.ws.REMOVE_STATION_MODE,
+                    'd-station-delete-ask',
+                    self.stations[self.selection][0]
+                )
             ''' truncate parameter to text width '''
-            mwidth = self._get_message_width_from_string(txt)
-            msg = self.stations[self.selection][0]
-            if len(msg) > mwidth - 3:
-                msg = msg[:mwidth-6] + '...'
-
-            self._show_help(txt.format(msg),
-                    self.ws.REMOVE_STATION_MODE, caption=' Station Deletion ',
-                    prompt='', is_message=True)
+            # mwidth = self._get_message_width_from_string(txt)
+            # msg = self.stations[self.selection][0]
+            # if len(msg) > mwidth - 3:
+            #     msg = msg[:mwidth-6] + '...'
         else:
             self.ws.operation_mode = self.ws.REMOVE_STATION_MODE
             self._remove_station()
@@ -2871,15 +2821,15 @@ class PyRadio(object):
                 self._show_message_win(help_key='h-main', token='rb')
         elif self.ws.operation_mode in self._help_keys.keys():
             logger.error('using _open_message_win_by_key')
+            logger.error('self.ws.operation_mode == {}'.format(self.ws.operation_mode))
             if self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE:
-                self._open_message_win_by_key('config-player', self._show_config_player_help)
+                logger.error('opening with argument')
+                self._open_message_win_by_key('h-config-player', self._show_config_player_help)
             else:
+                logger.error('opening WITHOUT argument')
                 self._open_message_win_by_key(self._help_keys[self.ws.operation_mode])
             return
-        if self.ws.operation_mode in self._display_help.keys():
-                self._open_message_win_by_key(self._display_help[self.ws.operation_mode])
-        else:
-            self._redisplay[self.ws.operation_mode]()
+        self._redisplay[self.ws.operation_mode]()
 
     def _show_player_parameter_editing_error(self, msg=None):
         ''' error function to indicate editing or deleting
@@ -2902,36 +2852,13 @@ class PyRadio(object):
             self._player_select_win.refresh_win()
             self._player_select_win.refresh_list()
 
-    def _show_moving_recordings_dir(self):
-        txt = '''
-______Moving |Recordings Directory______
-____________Please wait...
-        '''
-        self._show_help(txt,
-                        self.ws.MOVE_RECORDINGS_DIR_MODE,
-                        caption='',
-                        prompt='',
-                        is_message=True)
-
     def _show_moving_recordings_dir_error(self):
-        txt = '''
-______Moving |Recordings Directory| has |failed!!|______
-Moving from
-|{}|
-to
-|{}|
-
-Press any key to open the directories in file explorer...
-        '''.format(
-            self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS],
-            self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS],
-
-        )
-        self._show_help(txt,
-                        self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE,
-                        caption=' Error ',
-                        prompt='',
-                        is_message=True)
+        self._open_simple_message_by_key_and_mode(
+                self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE,
+                'm-rec-dir-move-error',
+                self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS],
+                self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]
+                )
 
     def _show_port_number_invalid(self):
         self._show_notification_with_delay(
@@ -3024,16 +2951,10 @@ Press any key to open the directories in file explorer...
 
     def _show_win_manage_players(self):
         ''' show message on Windows '''
-        txt = '''
-            |Players management |enabled|!
-
-            PyRadio| will now terminate so that you can
-            |manage installed players.
-        '''
-        self._show_help(txt,
-                        prompt=' Press any key to exit ',
-                        mode_to_set=self.ws.WIN_MANAGE_PLAYERS_MSG_MODE,
-                        caption=' Players Management ')
+        self._open_simple_message_by_key_and_mode(
+                self.ws.WIN_MANAGE_PLAYERS_MSG_MODE,
+                'm-manage-players-win'
+                )
 
     def _show_win_print_exe_paths(self):
         ''' show message on Windows '''
@@ -3059,25 +2980,17 @@ Press any key to open the directories in file explorer...
 
     def _show_win_uninstall(self):
         ''' show uninstall message on Windows '''
-        txt = '''
-            |Are you sure you want to uninstall |PyRadio|?
-
-            |Please press |y| to confirm or any other key to decline.
-        '''
-        self._show_help(txt,
-                        prompt='',
-                        mode_to_set=self.ws.WIN_UNINSTALL_MODE,
-                        caption=' Uninstall PyRadio ')
+        self._open_simple_message_by_key_and_mode(
+                self.ws.WIN_UNINSTALL_MODE,
+                'm-uninstall-win'
+                )
 
     def _show_win_remove_old_installation(self):
         ''' show old installation removal message '''
-        txt = '''
-            PyRadio| will now try to remove any files found on your
-            |system belonging to a pre |0.8.9.15| installation.
-        '''
-        self._show_help(txt,
-                        mode_to_set=self.ws.WIN_REMOVE_OLD_INSTALLATION_MODE,
-                        caption=' PyRadio ')
+        self._open_simple_message_by_key_and_mode(
+                self.ws.WIN_REMOVE_OLD_INSTALLATION_MODE,
+                'm-remove-old-installation'
+                )
 
     def _redisplay_message_win(self, help_key=None):
         self._messaging_win.show(parent=self.bodyWin)
@@ -3100,6 +3013,7 @@ Press any key to open the directories in file explorer...
         self._open_message_win_by_key(*args)
 
     def _open_message_win_by_key(self, *args):
+        logger.error('args = "{}"'.format(args))
         self._messaging_win.set_text(self.bodyWin, *args)
         self.ws.operation_mode = self._message_system_default_operation_mode
         self._messaging_win.show()
@@ -3223,28 +3137,19 @@ Press any key to open the directories in file explorer...
 
     def _show_unnamed_register(self):
         if self._unnamed_register:
-            txt = '\n|___' + self._unnamed_register[0] + '___\n'
+            txt = self._unnamed_register[0]
+            while len(txt) < len('   Unnamed Register   '):
+                txt = '_' + txt + '_'
         else:
-            txt = '\n|___----==== Empty ====----___\n'
-        self._show_help(txt,
-                        mode_to_set=self.ws.UNNAMED_REGISTER_MODE,
-                        caption=' Unnamed Register ',
-                        prompt='')
+            txt = '----==== Empty ====----'
+        self._open_simple_message_by_key('m-show-unnamed-register', txt)
 
     def _print_vote_result(self):
-        txt = '''
-                You have just voted for the following station:
-                ____|{0}|
-
-                 Voting result:
-                 ____|{1}|
-                 '''
-        self._show_help(txt.format(self._cnf._online_browser.vote_result[0],
-                                   self._cnf._online_browser.vote_result[1]),
-                        self.ws.VOTE_RESULT_MODE,
-                        caption=' Station Vote Result ',
-                        prompt=' Press any key... ',
-                        is_message=True)
+        self._open_simple_message_by_key(
+                'm-rb-vote-result',
+                self._cnf._online_browser.vote_result[0],
+                self._cnf._online_browser.vote_result[1]
+        )
 
     def _print_remote_control_server_error(self, msg=None):
         ''' restart the srver instead of displaying
@@ -3256,21 +3161,7 @@ Press any key to open the directories in file explorer...
         return
         if msg:
             self._server_error_msg = str(msg)
-        txt = r'''
-            The Remote Control Server |failed| to start!
-            The error message is:
-            __|{}
-
-            This is probably because another (|PyRadio?|) process
-            is already using the requested |Server Port|.
-
-            Close this window, press "|\s|", select a |different
-            |port| and try to start the |Server| again.
-        '''.format(self._server_error_msg)
-        self._show_help(txt, self.ws.REMOTE_CONTROL_SERVER_START_ERROR_MODE,
-                        caption=' Server Error ',
-                        prompt=' Press any key... ',
-                        is_message=True)
+        self._open_simple_message_by_key('m-rc-start-error', self._server_error_msg)
         self._remote_control_server = self._remote_control_server_thread = None
 
     def _print_remote_control_server_dead_error(self, msg=None):
@@ -3283,59 +3174,26 @@ Press any key to open the directories in file explorer...
         return
         if msg:
             self._server_dead_msg = str(msg)
-        txt = '''
-            The Remote Control Server |terminated| with
-            message:
-            __|{}
-
-        '''.format(self._server_dead_msg)
-        self._show_help(txt, self.ws.REMOTE_CONTROL_SERVER_DEAD_ERROR_MODE,
-                        caption=' Server Error ',
-                        prompt=' Press any key... ',
-                        is_message=True)
+        self._open_simple_message_by_key('m-rc-dead-error', self._server_dead_msg)
         self._remote_control_server = self._remote_control_server_thread = None
 
     def _print_change_player_one_player_error(self):
         players = [x.PLAYER_NAME for x in player.Player.__subclasses__() if x.PLAYER_NAME != self.player.PLAYER_NAME]
         logger.error('players = {}'.format(players))
-        txt = '''
-            You have requested to change the |Media Player| but
-            there's only one player detected.
-
-            If you have already installed any other player
-            (|{0}| or |{1}|), please make sure its executable
-            is in your PATH.
-        '''.format(
+        self._open_simple_message_by_key(
+                'm-change-player-one-error',
                 players[0],
                 players[1]
-        )
-        self._show_help(txt, self.ws.CHANGE_PLAYER_ONE_PLAYER_ERROR_MODE,
-                        caption=' PyRadio ',
-                        prompt=' Press any key... ',
-                        is_message=True)
+                )
 
     def _print_change_player_same_player_error(self):
-        txt = '''
-            |{}|: Media Player already active.
-
-            You have requested to change the |Media Player| to
-            the one that's already active.
-
-            Please try selecting a different |Media Player|.
-        '''.format(self.player.PLAYER_NAME)
-        self._show_help(txt, self.ws.CHANGE_PLAYER_SAME_PLAYER_ERROR_MODE,
-                        caption=' PyRadio ',
-                        prompt=' Press any key... ',
-                        is_message=True)
+        self._open_simple_message_by_key(
+                'm-change-player-the-same-error',
+                self.player.PLAYER_NAME
+                )
 
     def _print_not_implemented_yet(self):
-        txt = '''
-            This feature has not been implemented yet...
-        '''
-        self._show_help(txt, self.ws.NOT_IMPLEMENTED_YET_MODE,
-                        caption=' PyRadio ',
-                        prompt=' Press any key... ',
-                        is_message=True)
+        self._open_simple_message_by_key('m-not-implemented')
 
     def _print_handle_foreign_playlist(self):
         txt = '''
@@ -3941,29 +3799,7 @@ Press any key to open the directories in file explorer...
                         is_message=True)
 
     def _print_browser_config_save_error(self):
-        if platform.startswith('win'):
-            txt = '''
-                ___Saving your configuration has failed!!!___
-
-                ___Please make sure that the configuration file___
-                ___is not opened in another application and that___
-                ___there is enough free space in the drive and ___
-                ___try again.___
-
-                '''
-        else:
-            txt = '''
-                ___Saving your configuration has failed!!!___
-
-                ___Please make sure there is enought free space in___
-                ___the file system and try again.___
-
-                '''
-        self._show_help(txt,
-                        mode_to_set=self.ws.BROWSER_CONFIG_SAVE_ERROR_MODE,
-                        caption=' Config Saving Error ',
-                        prompt=' Press any key ',
-                        is_message=True)
+        self._open_simple_message_by_key('m-rb-config-save-error')
 
     def _print_ask_to_create_theme(self):
         txt = '''
@@ -3979,103 +3815,36 @@ Press any key to open the directories in file explorer...
                         is_message=True)
 
     def _print_config_save_error(self):
-        txt = '''An error occured while saving the configuration file!
-
-            |PyRadio| will try to |restore| your previous settings,
-            but in order to do so, it has to |terminate now!
-
-            '''
-        self._show_help(txt,
-                        mode_to_set=self.ws.CONFIG_SAVE_ERROR_MODE,
-                        caption=' Error Saving Config ',
-                        prompt=' Press any key to exit ',
-                        is_message=True)
+        self._open_simple_message_by_key_and_mode(
+            self.ws.CONFIG_SAVE_ERROR_MODE,
+            'm-config-save-error'
+        )
 
     def _print_update_notification(self):
-        txt = '''
-                A new |PyRadio| release (|{0}|) is available!
-
-                 You are strongly encouraged to update now, so that
-                 you enjoy new features and bug fixes.
-
-                 Press |y| to update or any other key to cancel.
-            '''
-        self._show_help(txt.format(self._update_version_do_display),
-                        mode_to_set=self.ws.UPDATE_NOTIFICATION_MODE,
-                        caption=' Update Notification ',
-                        prompt='',
-                        is_message=True)
+        self._open_simple_message_by_key_and_mode(
+            self.ws.UPDATE_NOTIFICATION_MODE,
+            'd-update-notification',
+            self._update_version_do_display
+        )
         self._update_version = ''
 
     def _print_update_ok_notification(self):
-        if platform.startswith('win'):
-            txt = '''
-                    |PyRadio| will now terminate and the update script
-                     will be created.
-
-                     When Explorer opens please double click on
-                     "|update.bat|" to start the update procedure.
-
-                     Press any key to exit |PyRadio|.
-                '''
-        else:
-            txt = '''
-                    |PyRadio| will now be updated!
-
-                     The program will now terminate so that the update_
-                     procedure can start.
-
-                     Press any key to exit |PyRadio|.
-                '''
-        self._show_help(txt.format(self._update_version_do_display),
-                        mode_to_set=self.ws.UPDATE_NOTIFICATION_OK_MODE,
-                        caption=' Update Notification ',
-                        prompt='',
-                        is_message=True)
-
-    def _print_update_nok_notification(self):
-        txt = '''
-                You have chosen not to update |PyRadio| at this time!
-
-                 Please keep in mind that you are able to update
-                 at any time using the command:
-
-                 ___________________|pyradio -U|
-            '''
-        self._show_help(txt.format(self._update_version_do_display),
-                        mode_to_set=self.ws.UPDATE_NOTIFICATION_NOK_MODE,
-                        caption=' Update Notification ',
-                        prompt=' Press any key to hide ',
-                        is_message=True)
-        # delete date file?
+        self._open_simple_message_by_key_and_mode(
+                self.ws.UPDATE_NOTIFICATION_OK_MODE,
+                'm-update-notification-ok'
+        )
 
     def _print_clear_register(self):
-        txt = '''
-            Are you sure you want to clear the contents
-            of this register?
-
-            This action is not recoverable!
-
-            Press "|y|" to confirm, or "|n|" to cancel
-            '''
-        self._show_help(txt, self.ws.CLEAR_REGISTER_MODE,
-                        caption=' Clear register ',
-                        prompt=' ',
-                        is_message=True)
+        self._open_simple_message_by_key_and_mode(
+            self.ws.CLEAR_REGISTER_MODE,
+            'd-register-clear'
+        )
 
     def _print_clear_all_registers(self):
-        txt = '''
-            Are you sure you want to clear the contents
-            of all the registers?
-
-            This action is not recoverable!
-
-            Press "|y|" to confirm, or "|n|" to cancel
-            '''
-        self._show_help(txt, self.ws.CLEAR_ALL_REGISTERS_MODE,
-                        caption=' Clear all registers ',
-                        prompt=' ',
-                        is_message=True)
+        self._open_simple_message_by_key_and_mode(
+            self.ws.CLEAR_ALL_REGISTERS_MODE,
+            'd-registers-clear-all'
+        )
 
     def _align_stations_and_refresh(self,
                                     cur_mode,
@@ -6124,88 +5893,45 @@ Press any key to open the directories in file explorer...
                         is_message=True)
 
     def _ask_to_update_stations_csv(self):
-        txt = '''
-                |PyRadio| default stations (file "|stations.csv|") has been
-                updated upstream.
-
-                Do you want to update your "|stations.csv|" file with the
-                upstream changes?
-
-                Press |y| to update, |n| to decline and not be asked again
-                for this version, or any other key to close this window and
-                be asked next time you execute |PyRadio|.
-                 '''
-        self._show_help(txt,
-                        self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE,
-                        caption=' Stations update ',
-                        prompt='',
-                        is_message=True)
+        self._open_simple_message_by_key_and_mode(
+            self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE,
+            'd-ask-to-update-stations-csv'
+        )
 
     def _ask_to_save_browser_config_to_exit(self):
         if self._cnf.online_browser:
             title = self._cnf.online_browser.BROWSER_NAME
         else:
             title = self._browser_config_win.BROWSER_NAME
-        txt = '''
-                |{}|'s configuration has been altered
-                but not saved. Do you want to save it now?
-
-                Press |y| to save it or |n| to disregard it.
-            '''
-        self._show_help(txt.format(title),
-                        mode_to_set=self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT,
-                        caption=' Online Browser Config not Saved! ',
-                        prompt='',
-                        is_message=True)
+        self._open_simple_message_by_key_and_mode(
+            self.ws.ASK_TO_SAVE_BROWSER_CONFIG_TO_EXIT,
+            'd-rb-ask-to-save-config-to-exit',
+            title
+        )
 
     def _ask_to_save_browser_config_from_config(self):
         if self._cnf.online_browser:
             title = self._cnf.online_browser.BROWSER_NAME
         else:
             title = self._browser_config_win.BROWSER_NAME
-        txt = '''
-                |{}|'s configuration has been altered
-                but not saved. Do you want to save it now?
-
-                Press |y| to save it or |n| to disregard it.
-            '''
-        self._show_help(txt.format(title),
-                        mode_to_set=self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG,
-                        caption=' Online Browser Config not Saved! ',
-                        prompt='',
-                        is_message=True)
+        self._open_simple_message_by_key_and_mode(
+            self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_CONFIG,
+            'd-rb-ask-to-save-config-from-config',
+            title
+        )
 
     def _ask_to_save_browser_config_from_browser(self):
-        txt = '''
-                |{}|'s configuration has been altered
-                but not saved. Do you want to save it now?
-
-                Press |y| to save it or |n| to disregard it.
-            '''
-        self._show_help(txt.format(self._cnf.online_browser.BROWSER_NAME),
-                        mode_to_set=self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER,
-                        caption=' Online Browser Config not Saved! ',
-                        prompt='',
-                        is_message=True)
+        self._open_simple_message_by_key_and_mode(
+            self.ws.ASK_TO_SAVE_BROWSER_CONFIG_FROM_BROWSER,
+            'd-rb-ask-to-save-config',
+            self._cnf.online_browser.BROWSER_NAME
+        )
 
     def _show_win_no_record(self):
-        txt = r'''
-                |VLC| on |Windows| does not support recording.
-
-                If you really need to record a station, please use one
-                of the other two supported players, preferably |MPV|.
-
-                To use one of them (|MPV| or |MPlayer|), close this window
-                and press |\m| to activate it.
-
-                If none of them is installed, close this window and
-                press |F8| to get to the player installation window.
-            '''
-        self._show_help(txt,
-                        mode_to_set=self.ws.WIN_VLC_NO_RECORD_MODE,
-                        caption=' Recording not supported! ',
-                        prompt='',
-                        is_message=True)
+        self._open_simple_message_by_key_and_mode(
+            self.ws.WIN_VLC_NO_RECORD_MODE,
+            'm-rec-not-supported'
+        )
 
     def _open_redordings_dir_select_win(self):
         if self._insert_recording_dir_win is None:
@@ -6237,31 +5963,20 @@ Press any key to open the directories in file explorer...
 
     def _show_recording_toggle_window(self):
         if self.player.recording > 0:
-            caption = ' Recording Enable '
-            txt = ''' _____Next time you play a station,
-                      _____it will be |written to a file|!
-
-                      A |[r]| at the right top corner of the window
-                      indicates that recording is |enabled|.
-                      A |[R]| indicates that a station is actually
-                      |being recorded| to a file.
-
-                     Press |x| to not show this message again, or'''
+            self._open_simple_message_by_key_and_mode(
+                self.ws.RECORD_WINDOW_MODE,
+                'm-rec-enabled'
+            )
         else:
             if self.player.isPlaying() and \
                     self.player.recording_filename != '':
-                caption = ' Recording Disabled '
-                txt = '''
-                          Recording will actually continue until
-                          you stop the playback of the station!
-                '''
+                self._open_simple_message_by_key_and_mode(
+                    self.ws.RECORD_WINDOW_MODE,
+                    'm-rec-disabled'
+                )
             else:
                 self.refreshBody()
                 return
-        self._show_help(txt,
-                        mode_to_set=self.ws.RECORD_WINDOW_MODE,
-                        caption=caption,
-                        is_message=True)
 
     def _return_from_server_selection(self, a_server):
         self._cnf._online_browser._config_win.get_server_value(a_server)
@@ -6687,9 +6402,6 @@ Press any key to open the directories in file explorer...
             elif ret == 2:
                 ''' show help '''
                 self._open_message_win_by_key('h-dir', len(self._open_dir_win.items))
-            return
-
-        elif self.ws.operation_mode == self.ws.MOVE_RECORDINGS_DIR_MODE:
             return
 
         elif self.ws.operation_mode == self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE:
@@ -7327,14 +7039,6 @@ Press any key to open the directories in file explorer...
             self._goto_playing_station()
             return
 
-        elif self.ws.operation_mode == self.ws.NOT_IMPLEMENTED_YET_MODE:
-            if char in self._global_functions.keys():
-                self._global_functions[char]()
-            else:
-                self.ws.close_window()
-                self.refreshBody()
-            return
-
         elif self.ws.operation_mode == self.ws.SCHEDULE_EDIT_MODE:
             ret = self._simple_schedule.keypress(char)
             # logger.error('Got {}'.format(ret))
@@ -7571,7 +7275,7 @@ Press any key to open the directories in file explorer...
                             self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] = self._cnf.rec_dirs[1]
                             if self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] != self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]:
                                 logger.error('\n\nI need to move the directory\n\n')
-                                self._show_moving_recordings_dir()
+                                self._open_simple_message_by_key('m-rec-dir-move')
                                 rret = self._cnf.xdg.set_recording_dir(
                                         new_dir=None,
                                         print_to_console=False,
@@ -7914,7 +7618,10 @@ Press any key to open the directories in file explorer...
                 except:
                     self.ws.close_window()
                     # show error message
-                    self._show_delete_playlist_error()
+                    self._open_simple_message_by_key(
+                        'm-playlist-delete-error',
+                        self.stations[self.selection][0]
+                    )
                     return
                 if self.selection < len(self.stations) - 1:
                     if logger.isEnabledFor(logging.DEBUG):
@@ -8445,7 +8152,7 @@ Press any key to open the directories in file explorer...
                 if char == ord('y'):
                     self._print_update_ok_notification()
                 else:
-                    self._print_update_nok_notification()
+                    self._open_simple_message_by_key('m-update-notification-nok')
                 self.refreshBody()
             return
 
@@ -8467,16 +8174,6 @@ Press any key to open the directories in file explorer...
                 self.stopPlayer(show_message=False, reset_playing=False)
             self.ctrl_c_handler(0, 0)
             return -1
-
-        elif self.ws.operation_mode == self.ws.UPDATE_NOTIFICATION_NOK_MODE:
-            if char in self._global_functions.keys():
-                self._global_functions[char]()
-            else:
-                self.helpWinContainer = None
-                self.helpWin = None
-                self.ws.close_window()
-                self.refreshBody()
-            return
 
         # elif char in (ord('n'), ) and \
         #         self.ws.operation_mode in self._search_modes.keys():
@@ -8880,7 +8577,7 @@ Press any key to open the directories in file explorer...
                 ''' Help '''
                 self._player_select_win.focus = False
                 self._player_select_win.from_config = False
-                self._open_message_win_by_key('config-player', self._show_config_player_help)
+                self._open_message_win_by_key('h-config-player', self._show_config_player_help)
 
             elif ret > 1:
                 ''' error '''
@@ -9219,10 +8916,7 @@ Press any key to open the directories in file explorer...
 
                 elif char == ord('c'):
                     ''' open config '''
-                    self._reset_status_bar_right()
                     if self._cnf.browsing_station_service:
-                        # self._print_not_implemented_yet()
-                        # return
                         self.ws.operation_mode = self.ws.RADIO_BROWSER_CONFIG_MODE
                         self._browser_init_config(init=True)
                     else:
