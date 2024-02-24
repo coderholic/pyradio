@@ -653,7 +653,6 @@ class PythonExecutable(object):
 
     def __init__(
             self,
-                 requested_python_version,
                  terminate_if_not_found=False):
         ''' Parameters
             ==========
@@ -664,18 +663,16 @@ class PythonExecutable(object):
                 If True, the program will terminate if python
                 is not found (default is False)
         '''
-        self.requested_python_version = requested_python_version
         self._terminate_if_not_found = terminate_if_not_found
         if not platform.system().lower().startswith('win'):
             self._check_if_is_debian_based()
         self._get_pythons()
 
     def __str__(self):
-        return 'Is Debian: {0}\nPython: {1}, {2}\nRequested version: {3}'.format(
+        return 'Is Debian: {0}\nPython: {1}, {2}'.format(
             self.is_debian,
             self._python[0],
             self._python[1],
-            self.requested_python_version
         )
 
     @property
@@ -1157,7 +1154,10 @@ class PyRadioUpdate(object):
     def _download_file(self, url, filename):
         print('  url: "{}"'.format(url))
         print('  filename: "{}"'.format(filename))
-        if os.path.exists(filename):
+        if os.path.exists(filename) and not (
+                filename.endswith('-master.zip') or \
+                filename.endswith('-devel.zip')
+                ):
             print('  [magenta]** file found in cache![/magenta]')
         else:
             try:
@@ -1397,7 +1397,6 @@ if __name__ == '__main__':
         VERSION = PyRadioInstallPyReleaseVersion
 
     if args.uninstall:
-        self._get_cache = False
         if platform.system().lower().startswith('win'):
             ''' ok, create BAT file on Windows'''
             uni = PyRadioUpdateOnWindows(package=package)
