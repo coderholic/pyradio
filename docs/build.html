@@ -50,7 +50,6 @@ a:visited{color: SaddleBrown;}
 <ul>
 <li><a href="#more-info">More info</a></li>
 </ul></li>
-<li><a href="#notice-for-python-2-users">Notice for Python 2 users</a></li>
 <li><a href="#installation-on-the-bsds">Installation on the BSDs</a></li>
 <li><a href="#rasberry-pi-installation">Rasberry Pi installation</a></li>
 </ul></li>
@@ -104,18 +103,6 @@ a:visited{color: SaddleBrown;}
 <li><p><a target="_blank" href="https://packaging.python.org/en/latest/specifications/externally-managed-environments/">Externally Managed Environments @ PyPA</a></p></li>
 <li><p><a target="_blank" href="https://peps.python.org/pep-0668/">PEP 668 – Marking Python base environments as “externally managed”</a></p></li>
 </ul>
-<h3 id="notice-for-python-2-users">Notice for Python 2 users</h3>
-<p>If you are still using <strong>Python 2</strong> in a linux system, plase make sure “<strong>pip</strong>” is installed. Execute the following command to verify its existance:</p>
-<pre>python[2] -m pip list</pre>
-<p>If you get a response, you are good to go. Otherwise, use your distro package manager to install it.</p>
-<p>If your distro does not provide it (some do not anymore), use the following commands to get it:</p>
-<pre>    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py \
-        --output get-pip.py
-    sudo python[2] get-pip.py</pre>
-<p>or</p>
-<pre>    wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
-    sudo python[2] get-pip.py</pre>
-<p>When you are done, proceed to “<a href="linux.html">pip installation</a> (the old way)”, adapting the commands to python2.</p>
 <h3 id="installation-on-the-bsds">Installation on the BSDs</h3>
 <p>If you are on any of the BSDs, please do install <strong>bash</strong> beforehand and try to follow the <a href="linux.html">pip installation guide</a>.</p>
 <p>Please be aware that <strong>PyRadio</strong> is provided as a <strong>port</strong> on <a target="_blank" href="https://www.freshports.org/audio/py-pyradio/">FreeBSB</a>.</p>

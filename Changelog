@@ -1,3 +1,8 @@
+2024-02-24 s-n-g
+    * version 0.9.2.25
+    * droping python 2 - PyRadio will only run on python 3
+    * fixing #228
+
 2024-01-12 s-n-g
     * version 0.9.2.24 (BUG FIX)
     * fixing mpv title parsing (once again)

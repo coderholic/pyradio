@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 function help(){
-echo "Usage: $0 [2/-R]"
+echo "Usage: $0 [-R/-t]"
 echo "
 Available options:
     -R   remove (uninstall) pyradio

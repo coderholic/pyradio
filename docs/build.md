@@ -7,7 +7,6 @@
     * [What does it all mean and why should you care](#what-does-it-all-mean-and-why-should-you-care)
     * [When do I need to install pipx?](#when-do-i-need-to-install-pipx?)
         * [More info](#more-info)
-    * [Notice for Python 2 users](#notice-for-python-2-users)
     * [Installation on the BSDs](#installation-on-the-bsds)
     * [Rasberry Pi installation](#rasberry-pi-installation)
 * [Installation guides](#installation-guides)
@@ -84,33 +83,6 @@ If you get that message, or a similar one, it is time to install `pipx`.
 
 - [PEP 668 – Marking Python base environments as “externally managed”](https://peps.python.org/pep-0668/)
 
-
-### Notice for Python 2 users
-
-If you are still using **Python 2** in a linux system, plase make sure "**pip**" is installed. Execute the following command to verify its existance:
-
-```
-python[2] -m pip list
-```
-
-If you get a response, you are good to go. Otherwise, use your distro package manager to install it.
-
-If your distro does not provide it (some do not anymore), use the following commands to get it:
-
-```
-    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py \
-        --output get-pip.py
-    sudo python[2] get-pip.py
-```
-
-or
-
-```
-    wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
-    sudo python[2] get-pip.py
-```
-
-When you are done, proceed to  "[pip installation](linux.md) (the old way)", adapting the commands to python2.
 
 ### Installation on the BSDs
 
