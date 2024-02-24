@@ -577,34 +577,20 @@ If nothing else works, try the following command:
                     print('Error reading online version.\nPlease make sure you are connected to the internet and try again.')
                     sys.exit(1)
 
-            python_version_to_use = 3 if PY3 else 2
             try:
-                upd = PyRadioUpdate(
-                    package=package,
-                    python_version_to_use=python_version_to_use
-                )
+                upd = PyRadioUpdate(package=package)
                 upd.update_pyradio()
             except RuntimeError:
-                upd = PyRadioUpdateOnWindows(
-                    package=package,
-                    python_version_to_use=python_version_to_use
-                )
+                upd = PyRadioUpdateOnWindows(package=package)
                 upd.update_or_uninstall_on_windows(mode='update-open')
             sys.exit()
 
         if args.uninstall:
-            python_version_to_use = 3 if PY3 else 2
             try:
-                upd = PyRadioUpdate(
-                    package=package,
-                    python_version_to_use=python_version_to_use
-                )
+                upd = PyRadioUpdate(package=package)
                 upd.remove_pyradio()
             except RuntimeError:
-                upd = PyRadioUpdateOnWindows(
-                    package=package,
-                    python_version_to_use=python_version_to_use
-                )
+                upd = PyRadioUpdateOnWindows(package=package)
                 upd.update_or_uninstall_on_windows(
                     mode='uninstall-open',
                     from_pyradio=True
@@ -689,7 +675,6 @@ If nothing else works, try the following command:
             upd = PyRadioUpdate(
                 package=0,      # always get latest stable release
                 github_long_description=None,
-                python_version_to_use=3,
                 pix_isolated=False
             )
             upd._get_cache = True

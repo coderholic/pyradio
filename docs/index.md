@@ -95,7 +95,7 @@ If you face this situation, please refer to [this page](pip-error.md) to resolve
 and much more...
 
 ## Requirements
-* python 2.7/3.5+
+* python 3.7+
     - setuptools
     - wheel
     - requests

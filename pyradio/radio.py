@@ -4436,19 +4436,35 @@ __|Remote Control Server| cannot be started!__
                         is_message=True)
 
     def _print_update_notification(self):
-        txt = '''
-                A new |PyRadio| release (|{0}|) is available!
+        if PY3:
+            txt = '''
+                    A new |PyRadio| release (|{0}|) is available!
 
-                 You are strongly encouraged to update now, so that
-                 you enjoy new features and bug fixes.
+                     You are strongly encouraged to update now, so that
+                     you enjoy new features and bug fixes.
 
-                 Press |y| to update or any other key to cancel.
-            '''
-        self._show_help(txt.format(self._update_version_do_display),
-                        mode_to_set=self.ws.UPDATE_NOTIFICATION_MODE,
-                        caption=' Update Notification ',
-                        prompt='',
-                        is_message=True)
+                     Press |y| to update or any other key to cancel.
+                '''
+            self._show_help(txt.format(self._update_version_do_display),
+                            mode_to_set=self.ws.UPDATE_NOTIFICATION_MODE,
+                            caption=' Update Notification ',
+                            prompt='',
+                            is_message=True)
+        else:
+            txt = '''
+                    A new |PyRadio| release (|{0}|) is available!
+
+                    |PyRadio| has dropped |Python2| support since
+                    version| 0.9.2.25|, but you are still using |Python2|.
+
+                    If you want to be able to use a newer version, please
+                    upgrade to |Python3|.
+               '''
+            self._show_help(txt.format(self._update_version_do_display),
+                            mode_to_set=self.ws.UPDATE_NOTIFICATION_MODE,
+                            caption=' Update Notification ',
+                            prompt='',
+                            is_message=True)
         self._update_version = ''
 
     def _print_update_ok_notification(self):
@@ -8624,10 +8640,11 @@ __|Remote Control Server| cannot be started!__
                 with self._update_notify_lock:
                     self._update_version = ''
                 self.ws.close_window()
-                if char == ord('y'):
-                    self._print_update_ok_notification()
-                else:
-                    self._print_update_nok_notification()
+                if PY3:
+                    if char == ord('y'):
+                        self._print_update_ok_notification()
+                    else:
+                        self._print_update_nok_notification()
                 self.refreshBody()
             return
 

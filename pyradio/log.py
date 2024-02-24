@@ -34,6 +34,14 @@ logger = logging.getLogger(__name__)
 if platform.lower().startswith('win'):
     import ctypes
 
+def fix_chars(s):
+    out = [s]
+    from_str = ('\r', '\n', '\\"', "\\'")
+    to_str = ('' , '', '"', "'")
+    for n in range(len(to_str)):
+        out.append(out[-1].replace(from_str[n], to_str[n]))
+    return out[-1].strip()
+
 
 class Log(object):
     ''' Log class that outputs text to a curses screen '''
@@ -192,11 +200,11 @@ class Log(object):
                     self.cursesScreen.erase()
                     d_msg = ''
                     try:
-                        d_msg = self.msg.strip()[0: self.width].replace('\r', '').replace('\n', '')
+                        d_msg = fix_chars(self.msg.strip()[0: self.width])
                         self.cursesScreen.addstr(0, 1, d_msg)
                     except:
                         try:
-                            d_msg = self.msg.encode('utf-8', 'replace').strip()[0: self.width].replace('\r', '').replace('\n', '')
+                            d_msg = fix_chars(self.msg.encode('utf-8', 'replace').strip()[0: self.width])
                             self.cursesScreen.addstr(0, 1, d_msg)
                         except:
                             pass
