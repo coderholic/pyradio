@@ -1,4 +1,26 @@
 #!/usr/bin/env python
+'''
+Look for:
+txt = self._playlist_error_message
+
+Left:
+_print_save_playlist_error_1
+
+
+==> x 1
+'M_PLAYLIST_DELETE_ERROR'
+'D_PLAYLIST_DELETE_ASK'
+'D_GROUP_DELETE_ASK'
+'D_STATION_DELETE_ASK'
+'D_STATION_DELETE_ASK_LOCKED'
+
+
+
+==> x 2
+'M_REC_DIR_MOVE_ERROR'
+'M_FOREIGN'
+
+'''
 import curses
 import re
 import logging
@@ -22,24 +44,59 @@ class PyRadioMessagesSystem(object):
     _columns = {}
     _max_lens = {}
     _tokens = {}
+    _universal_message = None
 
     ''' reset _columns and _tokens
         These keys will have non static content,
         so widths will have to be calculated every time
     '''
     _reset_metrics = (
-            'm-playlist-delete-error',
-            'd-playlist-delete-ask',
-            'd-group-delete-ask',
-            'd-station-delete-ask',
-            'd-station-delete-ask-locked',
-            'h-config-player',
-            'm-show-unnamed-register',
+            'M_PLAYLIST_DELETE_ERROR',
+            'D_PLAYLIST_DELETE_ASK',
+            'D_GROUP_DELETE_ASK',
+            'D_STATION_DELETE_ASK',
+            'D_STATION_DELETE_ASK_LOCKED',
+            'H_CONFIG_PLAYER',
+            'M_SHOW_UNNAMED_REGISTER',
+            )
+
+    _one_arg_list = (
+            'D_RC_ACTIVE',
+            'M_RC_START_ERROR',
+            'D_RB_ASK_TO_SAVE_CONFIG',
+            'D_RB_ASK_TO_SAVE_CONFIG_TO_EXIT',
+            'M_RC_DEAD_ERROR',
+            'D_UPDATE_NOTIFICATION',
+            'M_PLAYLIST_DELETE_ERROR',
+            'D_PLAYLIST_DELETE_ASK',
+            'D_GROUP_DELETE_ASK',
+            'D_STATION_DELETE_ASK',
+            'D_STATION_DELETE_ASK_LOCKED',
+            'M_SHOW_UNNAMED_REGISTER',
+            'M_CHANGE_PLAYER_THE_SAME_ERROR',
+            'M_DNSPYTHON_ERROR',
+            'M_NETIFACES_ERROR',
+            'M_REQUESTS_ERROR',
+            'M_REGISTER_SAVE_ERROR',
+            'M_PLAYLIST_SAVE_ERR_1'
+            'M_PLAYLIST_SAVE_ERR_2'
+            )
+
+    _two_arg_list = (
+            'M_RB_VOTE_RESULT',
+            'M_REC_DIR_MOVE_ERROR',
+            'M_CHANGE_PLAYER_ONE_ERROR',
+            'M_FOREIGN',
+            'M_PARAMETER_ERROR',
+            'M_RB_UNKNOWN_SERVICE',
+            'X_PLAYER_CHANGED',
             )
 
     def set_text(self, parent, *args):
         self._txt = {
-        'h-main': ('PyRadio Help',
+        'UNIVERSAL': (),
+
+        'H_MAIN': ('PyRadio Help',
 r'''__Welcome to |PyRadio Main Help
 __You can use the following keys to navigate: |j| (|Up|), |k| (|Down|),
 |PgUp| (|^B|), |PgDn| (|^F|) to scroll up/down.
@@ -162,7 +219,7 @@ Search history navigation works with normal keys as well
 __(|^N| is the same as |n| when not in a line editor).
 '''),
 
-'d-station-delete-ask': ('Station Deletion',
+'D_STATION_DELETE_ASK': ('Station Deletion',
 r'''
 Are you sure you want to delete station:
 "|{}|"?
@@ -173,7 +230,7 @@ be asked again, or any other key to cancel
 '''
 ),
 
-'d-station-delete-ask-locked': ('Station Deletion',
+'D_STATION_DELETE_ASK_LOCKED': ('Station Deletion',
 r'''
 Are you sure you want to delete station:
 "|{}|"?
@@ -183,7 +240,19 @@ Press "|y|" to confirm, or any other key to cancel
 '''
 ),
 
-        'h-playlist': ('Playlist Help',
+    'M_STATION_INFO_ERROR': ('Station Info Error',
+r'''
+Station info not available at this time,
+since it comes from the data provided by
+the station when connecting to it.
+
+Please play a station to get its info, (or
+wait until one actually starts playing).
+
+'''
+),
+
+        'H_PLAYLIST': ('Playlist Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*|Change playlist selection.
 <n>g| / |<n>G                       |*|Jump to first / last or n-th item.
@@ -201,7 +270,160 @@ m| / |v                             |*||M|ute player / Save |v|olume (not in vlc
 W| / |w                             |*|Toggle title log / like a station.'''
 ),
 
-        'd-playlist-delete-ask': ('Playlist Deletion',
+
+    'M_PLAYLIST_READ': ('',
+r'''
+___Reading playlists.___
+____Please wait...
+
+'''
+),
+
+    'D_PLAYLIST_RELOAD_CONFIRM': ('Playlist Reload',
+r'''
+This playlist has not been modified within
+PyRadio. Do you still want to reload it?
+
+Press "|y|" to confirm, "|Y|" to confirm and not
+be asked again, or any other key to cancel
+
+'''
+),
+
+    'D_PLAYLIST_RELOAD_CONFIRM_LOCKED': ('Playlist Reload',
+r'''
+This playlist has not been modified within
+PyRadio. Do you still want to reload it?
+
+Press "|y|" to confirm, or any other key to cancel
+
+'''
+),
+
+    'M_PLAYLIST_LOAD_ERROR': ('Error',
+),
+
+    'D_PLAYLIST_DIRTY_CONFIRM_LOCKED': ('Playlist Reload',
+r'''
+This playlist has been modified within PyRadio.
+If you reload it now, all modifications will be
+lost. Do you still want to reload it?
+
+Press "|y|" to confirm, or "|n|" to cancel
+
+'''
+),
+
+    'D_PLAYLIST_DIRTY_CONFIRM': ('Playlist Reload',
+r'''
+This playlist has been modified within PyRadio.
+If you reload it now, all modifications will be
+lost. Do you still want to reload it?
+
+Press "|y|" to confirm, "|Y|" to confirm and not be
+asked again, or "|n|" to cancel
+
+'''
+),
+
+    'D_PLAYLIST_MODIFIED': ('Playlist Modified',
+r'''
+This playlist has been modified within
+PyRadio. Do you want to save it?
+
+If you choose not to save it now, all
+modifications will be lost.
+
+Press "|y|" to confirm, "|Y|" to confirm and not
+be asked again, "|n|" to reject, or "|q|" or
+"|ESCAPE|" to cancel
+
+'''
+),
+
+    'D_PLAYLIST_MODIFIED_LOCKED': ('Playlist Modified',
+r'''
+This playlist has been modified within
+PyRadio. Do you want to save it?
+
+If you choose not to save it now, all
+modifications will be lost.
+
+Press "|y|" to confirm, "|n|" to reject,
+or "|q|" or "|ESCAPE|" to cancel
+
+'''
+),
+
+    'M_PLAYLIST_SAVE_ERR_1': ('Error'
+r'''
+Saving current playlist |failed|!
+
+Could not open file for writing
+"|{}|"
+
+'''
+),
+
+    'M_PLAYLIST_SAVE_ERR_2': ('Error'
+r'''
+Saving current playlist |failed|!
+
+You will find a copy of the saved playlist in
+"|{}|"
+
+PyRadio will open this file when the playlist
+is opened in the future.
+
+'''
+),
+
+    'M_PLAYLIST_NOT_FOUND_ERROR': ('Error',
+r'''
+Playlist |not| found!
+
+This means that the playlist file was deleted
+(or renamed) some time after you opened the
+Playlist Selection window.
+
+'''
+),
+
+    'M_PLAYLIST_RECOVERY_ERROR_1': ('Error',
+r'''
+Both a playlist file (|CSV|) and a playlist backup
+file (|TXT|) exist for the selected playlist. In
+this case, |PyRadio| would try to delete the |CSV|
+file, and then rename the |TXT| file to |CSV|.
+
+Unfortunately, deleting the |CSV| file has failed,
+so you have to manually address the issue.
+
+'''
+),
+
+    'M_PLAYLIST_RECOVERY_ERROR_2': ('Error',
+r'''
+A playlist backup file (|TXT|) has been found for
+the selected playlist. In this case, PyRadio would
+try to rename this file to |CSV|.
+
+Unfortunately, renaming this file has failed, so
+you have to manually address the issue.
+
+'''
+),
+
+    'M_PLAYLIST_NOT_SAVED': ('Playlist Modified',
+r'''
+Current playlist is modified and cannot be renamed.
+
+Please save the playlist and try again.
+
+'''
+),
+
+        'D_PLAYLIST_DELETE_ASK': ('Playlist Deletion',
 r'''
 Are you sure you want to delete the playlist:
 "|{}|"?
@@ -213,7 +435,7 @@ Press "|y|" to confirm, or any other key to cancel
 '''
 ),
 
-        'm-playlist-delete-error': ('Playlist Deletion Error',
+        'M_PLAYLIST_DELETE_ERROR': ('Playlist Deletion Error',
 r'''
 Cannot delete the playlist:
 "|{}|"
@@ -223,7 +445,18 @@ Please close all other porgrams and try again...
 '''
 ),
 
-        'h-theme': ('Theme Help',
+    'M_PLAYLIST_RELOAD_ERROR': ('Error',
+r'''
+Playlist reloading |failed|!
+
+You have probably edited the playlist with an
+external program. Please re-edit it and make
+sure that you save a valid |CSV| file.
+
+'''
+),
+
+        'H_THEME': ('Theme Help',
 r'''Up| ,|j|, |PgUp|,              |*|
 Down|, |k|, |PgDown                |*| Change theme selection.
 g| / |<n>G                         |*| Jump to first or n-th / last theme.
@@ -242,7 +475,18 @@ W| / |w                            |*| Toggle title log / like a station.'''
 
 ),
 
-        'h-group': ('Group Selection Help',
+    'D_THEME_CREATE_NEW_ASK': ('Read-only Theme',
+r'''
+You have requested to edit a |read-only| theme,
+which is not possible. Do you want to create a
+new theme instead?
+
+Press "|y|" to accept or any other key to cancel.
+
+'''
+),
+
+        'H_GROUP': ('Group Selection Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*| Change Group Header selection.
 g G                                 |*| Go to first / last Group Header.
@@ -256,7 +500,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'd-group-delete-ask': ('Group Deletion',
+    'D_GROUP_DELETE_ASK': ('Group Deletion',
 r'''
 Are you sure you want to delete this group header:
 "|{}|"?
@@ -266,7 +510,7 @@ Press "|y|" to confirm, or any other key to cancel
 '''
 ),
 
-    'h-yank': ('Copy Mode Help',
+    'H_YANK': ('Copy Mode Help',
 r'''ENTER                           |*| Copy station to unnamed register.
 a-z| / |0-9                         |*| Copy station to named register.
 
@@ -275,7 +519,7 @@ Any other key exits current mode.
 '''
 ),
 
-    'h-registers': ('Registers Mode Help',
+    'H_REGISTERS': ('Registers Mode Help',
 r'''ENTER                           |*| Open registers list.
 a-z| / |0-9                         |*| Open named register.
 
@@ -284,7 +528,7 @@ Any other key exits current mode.
 '''
 ),
 
-    'd-register-clear': ('Clear register',
+    'D_REGISTER_CLEAR': ('Clear register',
 r'''
 Are you sure you want to clear the contents
 of this register?
@@ -296,7 +540,7 @@ Press "|y|" to confirm, or "|n|" to cancel
 '''
 ),
 
-    'd-registers-clear-all': ('Clear All Registers',
+    'D_REGISTERS_CLEAR_ALL': ('Clear All Registers',
 r'''
 Are you sure you want to clear the contents
 of all the registers?
@@ -308,7 +552,15 @@ Press "|y|" to confirm, or "|n|" to cancel
 '''
 ),
 
-    'h-extra': ('Extra Commands Help',
+    'M_REGISTER_SAVE_ERROR': ('Error',
+r'''
+Error saving register file:
+__"|{}|"
+
+'''
+),
+
+    'H_EXTRA': ('Extra Commands Help',
 r'''\                               |*| Open previous playlist.
 ]                                   |*| Open first opened playlist.
 b B                                 |*| Set player |b|uffering.
@@ -325,7 +577,7 @@ Any other key exits current mode.
 '''
 ),
 
-    'h-extra-registers-list': ('Extra Commands Help',
+    'H_EXTRA_REGISTERS_LIST': ('Extra Commands Help',
 r'''r                               |*| |R|ename current register.
 p                                   |*| |P|aste to current register.
 c                                   |*| Clear |c|urrent register.
@@ -337,7 +589,7 @@ Any other key exits current mode.
 '''
 ),
 
-    'h-extra-playlist': ('Extra Commands Help',
+    'H_EXTRA_PLAYLIST': ('Extra Commands Help',
 r'''n                               |*| Create a |n|ew playlist.
 p                                   |*| |P|aste to current playlist.
 r                                   |*| |R|ename current playlist.
@@ -348,7 +600,21 @@ o                                   |*| |O|pen dirs in file manager.
 '''
 ),
 
-    'h-rb-search': ('RadioBrowser Search Help',
+    'M_RB_UNKNOWN_SERVICE': ('Unknown Service',
+r'''
+The service you are trying to use is not supported.
+
+The service "|{0}|"
+(url: "|{1}|")
+is not implemented (yet?)
+
+If you want to help implementing it, please open an
+issue at "|https://github.com/coderholic/pyradio/issues|".
+
+'''
+),
+
+    'H_RB_SEARCH': ('RadioBrowser Search Help',
 r'''Tab| / |Sh-Tab                  |*| Go to next / previous field.
 j|, |Up| / |k|, |Down               |*| Go to next / previous field vertivally.
 h|, |Left| / |l|, |Right            |*|
@@ -368,7 +634,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station'''
 ),
 
-    'h-rb-config': ('RadioBrowser Config Help',
+    'H_RB_CONFIG': ('RadioBrowser Config Help',
 r'''Tab| / |Sh-Tab,                 |*|
 j|, |Up| / |k|, |Down               |*| Go to next / previous field.
 h|, |Left| / |l|, |Right            |*| Change |auto save| and |counters| value.
@@ -386,7 +652,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'd-rb-ask-to-save-config': ('Online Browser Config not Saved!',
+    'D_RB_ASK_TO_SAVE_CONFIG': ('Online Browser Config not Saved!',
 r'''
 |{}|'s configuration has been altered
 but not saved. Do you want to save it now?
@@ -395,7 +661,7 @@ Press |y| to save it or |n| to disregard it.
 '''
 ),
 
-    'd-rb-ask-to-save-config-from-config': ('Online Browser Config not Saved!',
+    'D_RB_ASK_TO_SAVE_CONFIG_FROM_CONFIG': ('Online Browser Config not Saved!',
 r'''
 |{}|'s configuration has been altered
 but not saved. Do you want to save it now?
@@ -404,7 +670,7 @@ Press |y| to save it or |n| to disregard it.
 '''
 ),
 
-    'd-rb-ask-to-save-config-to-exit': ('Online Browser Config not Saved!',
+    'D_RB_ASK_TO_SAVE_CONFIG_TO_EXIT': ('Online Browser Config not Saved!',
 r'''
 |{}|'s configuration has been altered
 but not saved. Do you want to save it now?
@@ -413,7 +679,7 @@ Press |y| to save it or |n| to disregard it.
 '''
 ),
 
-    'm-rb-config-save-error': ('Config Saving Error',
+    'M_RB_CONFIG_SAVE_ERROR': ('Config Saving Error',
 r'''
 ___Saving your configuration has failed!!!___
 
@@ -423,7 +689,7 @@ ___the file system and try again.___
 '''
 ),
 
-    'm-rb-config-save-error-win': ('Config Saving Error',
+    'M_RB_CONFIG_SAVE_ERROR_WIN': ('Config Saving Error',
 r'''
 ___Saving your configuration has failed!!!___
 
@@ -435,17 +701,76 @@ ___try again.___
 '''
 ),
 
-    'm-rb-vote-result': ('Station Vote Result',
+    'M_RB_VOTE_RESULT': ('Station Vote Result',
 r'''
 You have just voted for the following station:
 ____|{0}|
 
 Voting result:
 ____|{1}|
+
 '''
 ),
 
-    'd-ask-to-update-stations-csv': ('Stations update',
+    'M_RB_VOTE': ('',
+r'''
+___Voting for station._____
+_____Please wait...'
+
+'''
+),
+
+    'M_RB_EDIT_URL_ERROR': ('Error',
+r'''
+____Errorenous Station Data provided!___
+
+_________Station URL is invalid!___
+___Please provide a valid Station URL.___
+
+'''
+),
+
+    'M_RB_EDIT_INCOMPLETE_ERROR': ('Error',
+r'''
+____Incomplete Station Data provided!___
+
+_________Station URL is empty!___
+___Please provide a valid Station URL.___
+
+'''
+),
+
+    'M_RB_EDIT_NAME_ERROR': ('Error',
+r'''
+___Incomplete Station Data provided!___
+
+____Please provide a Station Name.___
+
+'''
+),
+
+    'M_RB_EDIT_ICON_ERROR': ('Error',
+r'''
+______Errorenous Station Data provided!___
+
+________Station Icon URL is invalid!___
+___Please provide a valid Station Icon URL.___
+
+'''
+),
+
+    'M_RB_EDIT_ICON_GORMAT_ERROR': ('Error',
+r'''
+______Errorenous Station Data provided!___
+
+________Station Icon URL is invalid!___
+____It must point to a JPG or a PNG file.__
+___Please provide a valid Station Icon URL.___
+
+'''
+),
+
+    'D_ASK_TO_UPDATE_STATIONS_CSV': ('Stations update',
 r'''
 |PyRadio| default stations (file "|stations.csv|") has been
 updated upstream.
@@ -460,7 +785,7 @@ be asked next time you execute |PyRadio|.
 '''
 ),
 
-    'h-config': ('Configuration Help',
+    'H_CONFIG': ('Configuration Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*| Change option selection.
 g|, |Home| / |G|, |End              |*| Jump to first / last option.
@@ -476,7 +801,7 @@ W| / |w                             |*| Toggle title log / like a station.'''
 
 ),
 
-    'h-config-station': ('Station Selection Help',
+    'H_CONFIG_STATION': ('Station Selection Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*| Change station selection.
 g| / |<n>G                          |*| Jump to first or n-th / last station.
@@ -492,7 +817,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'h-config-playlist': ('Playlist Selection Help',
+    'H_CONFIG_PLAYLIST': ('Playlist Selection Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*| Change playlist selection.
 g| / |<n>G                          |*| Jump to first or n-th / last playlist.
@@ -507,7 +832,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'h-config-encoding': ('Encoding Selection Help',
+    'H_CONFIG_ENCODING': ('Encoding Selection Help',
 r'''Arrows|, |h|, |j|, |k|,         |*|
 l|, |PgUp|, |,PgDn                  |*|
 g|, |Home|, |G|, |End               |*| Change encoding selection.
@@ -520,7 +845,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'm-config-save-error': ('Error Saving Config',
+    'M_CONFIG_SAVE_ERROR': ('Error Saving Config',
 r'''An error occured while saving the configuration file!
 
 |PyRadio| will try to |restore| your previous settings,
@@ -529,7 +854,7 @@ but in order to do so, it has to |terminate now!
 '''
 ),
 
-    'h-dir': ('Open Directory Help',
+    'H_DIR': ('Open Directory Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                  |*| Change Directory selection.
 g G                                 |*| Go to first / last Directory.
@@ -543,7 +868,7 @@ m| / |v                             |*| |M|ute player / Save |v|olume (not in vl
 W| / |w                             |*| Toggle title log / like a station.'''
 ),
 
-    'h-search': ('Search Help',
+    'H_SEARCH': ('Search Help',
 r'''Left| / |Right                  |*| Move to next / previous character.
 Up| / |Down                         |*| Cycle within history.
 M-F| / |M-B                         |*| Move to next / previous word.
@@ -561,7 +886,7 @@ Global functions work when preceded with a "|\|".
 '''
 ),
 
-    'h-search-darwin': ('Search Help',
+    'H_SEARCH_DARWIN': ('Search Help',
 r'''Left| / |Right                  |*| Move to next / previous character.
 HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
 ^W| / |^K                           |*| Clear to start / end of line.
@@ -576,7 +901,7 @@ Global functions work when preceded with a "|\|".
 '''
 ),
 
-    'h-line-editor': ('Line Editor Help',
+    'H_LINE_EDITOR': ('Line Editor Help',
 r'''Left| / |Right                  |*| Move to next / previous character.
 HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
 ^W| / |^K                           |*| Clear to start / end of line.
@@ -592,7 +917,7 @@ Global functions work when preceded with a "|\|".
 '''
 ),
 
-    'h-line-editor-darwin': ('Line Editor Help',
+    'H_LINE_EDITOR_DARWIN': ('Line Editor Help',
 r'''Left| / |Right                  |*| Move to next / previous character.
 M-F| / |M-B                         |*| Move to next / previous word.
 HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
@@ -609,7 +934,7 @@ Global functions work when preceded with a "|\|".
 '''
 ),
 
-    'm-session-locked': ('Session Locked',
+    'M_SESSION_LOCKED': ('Session Locked',
 '''
 This session is |locked| by another |PyRadio instance|.
 
@@ -624,7 +949,7 @@ command: |pyradio --unlock|
 '''
 ),
 
-    'm-mouse-restart': ('Program Restart required',
+    'M_MOUSE_RESTART': ('Program Restart required',
 r'''
 You have just changed the |mouse support| config
 option.
@@ -635,7 +960,7 @@ take effect.
 '''
 ),
 
-    'm-no-playlist': ('Error',
+    'M_NO_PLAYLIST': ('Error',
 r'''
 |No playlists found!!!
 
@@ -645,7 +970,7 @@ It will re-create it the next time it is lounched.
 '''
 ),
 
-    'd-rc-active': ('Remote Control Enabled',
+    'D_RC_ACTIVE': ('Remote Control Enabled',
 r'''
 |PyRadio Remote Control Server| is active!
 
@@ -655,7 +980,7 @@ _Web Address: |http://{0}/html____
 Press "|s|" to stop the server, or'''
 ),
 
-    'm-rc-start-error': ('Server Error',
+    'M_RC_START_ERROR': ('Server Error',
 r'''
 The Remote Control Server |failed| to start!
 The error message is:
@@ -670,7 +995,7 @@ Close this window, press "|\s|", select a |different
 '''
 ),
 
-    'm-rc-dead-error': ('Server Error',
+    'M_RC_DEAD_ERROR': ('Server Error',
 r'''
 The Remote Control Server |terminated| with
 message:
@@ -679,7 +1004,7 @@ __|{}
 '''
 ),
 
-    'm-rc-locked': ('Not Available',
+    'M_RC_LOCKED': ('Not Available',
 r'''
 ______This session is |locked|, so the
 __|Remote Control Server| cannot be started!__
@@ -687,7 +1012,7 @@ __|Remote Control Server| cannot be started!__
 '''
 ),
 
-    'd-update-notification': ('',
+    'D_UPDATE_NOTIFICATION': ('',
 r'''
 A new |PyRadio| release (|{0}|) is available!
 
@@ -698,7 +1023,7 @@ Press |y| to update or any other key to cancel.
 '''
 ),
 
-    'm-update-notification-ok': ('Update Notification',
+    'M_UPDATE_NOTIFICATION_OK': ('Update Notification',
 r'''
 |PyRadio| will now be updated!
 
@@ -710,7 +1035,7 @@ Press any key to exit |PyRadio|.
 '''
 ),
 
-    'm-update-notification-ok-win': ('Update Notification',
+    'M_UPDATE_NOTIFICATION_OK_WIN': ('Update Notification',
 r'''
 |PyRadio| will now terminate and the update script
  will be created.
@@ -723,7 +1048,7 @@ Press any key to exit |PyRadio|.
 '''
 ),
 
-    'm-update-notification-nok': ('',
+    'M_UPDATE_NOTIFICATION_NOK': ('',
 r'''
 You have chosen not to update |PyRadio| at this time!
 
@@ -735,7 +1060,7 @@ ___________________|pyradio -U|
 '''
 ),
 
-    'm-rec-enabled': ('Recording Enable',
+    'M_REC_ENABLED': ('Recording Enable',
 r''' _____Next time you play a station,
 _____it will be |written to a file|!
 
@@ -747,7 +1072,7 @@ A |[R]| indicates that a station is actually
 Press |x| to not show this message again, or'''
 ),
 
-    'm-rec-disabled': ('Recording Disabled',
+    'M_REC_DISABLED': ('Recording Disabled',
 r'''
 Recording will actually continue until
 you stop the playback of the station!
@@ -755,7 +1080,7 @@ you stop the playback of the station!
 '''
 ),
 
-    'm-rec-not-supported': ('Recording not supported!',
+    'M_REC_NOT_SUPPORTED': ('Recording not supported!',
 r'''
 |VLC| on |Windows| does not support recording.
 
@@ -771,7 +1096,7 @@ press |F8| to get to the player installation window.
 '''
 ),
 
-    'm-rec-dir-move': ('',
+    'M_REC_DIR_MOVE': ('',
 r'''
 ______Moving |Recordings Directory______
 ____________Please wait...
@@ -779,7 +1104,7 @@ ____________Please wait...
 '''
 ),
 
-    'm-rec-dir-move-error': ('Error',
+    'M_REC_DIR_MOVE_ERROR': ('Error',
 r'''
 ______Moving |Recordings Directory| has |failed!!|______
 Moving from
@@ -792,7 +1117,7 @@ Press any key to open the directories in file explorer...
 '''
 ),
 
-    'm-manage-players-win': ('Players Management',
+    'M_MANAGE_PLAYERS_WIN': ('Players Management',
 r'''
 Players management |enabled|!
 
@@ -802,16 +1127,17 @@ Players management |enabled|!
 '''
 ),
 
-    'm-uninstall-win': ('Uninstall PyRadio',
+    'D_UNINSTALL_WIN': ('Uninstall PyRadio',
 r'''
 Are you sure you want to uninstall |PyRadio|?
 
-Please press |y| to confirm or any other key to decline.
+Please press |y| to confirm or any other key
+to decline.
 
 '''
 ),
 
-    'm-remove-old-installation': ('PyRadio',
+    'M_REMOVE_OLD_INSTALLATION': ('PyRadio',
 r'''
 |PyRadio| will now try to remove any files found on your
 system belonging to a pre |0.8.9.15| installation.
@@ -819,14 +1145,14 @@ system belonging to a pre |0.8.9.15| installation.
 '''
 ),
 
-    'm-show-unnamed-register': ('Unnamed Register',
+    'M_SHOW_UNNAMED_REGISTER': ('Unnamed Register',
 r'''
 ___{}___
 
 '''
 ),
 
-    'm-change-player-one-error': ('PyRadio',
+    'M_CHANGE_PLAYER_ONE_ERROR': ('PyRadio',
 r'''
 You have requested to change the |Media Player| but
 there's only one player detected.
@@ -838,7 +1164,7 @@ is in your PATH.
 '''
 ),
 
-    'm-change-player-the-same-error': ('PyRadio',
+    'M_CHANGE_PLAYER_THE_SAME_ERROR': ('PyRadio',
 r'''
 |{}|: Media Player already active.
 
@@ -850,15 +1176,159 @@ Please try selecting a different |Media Player|.
 '''
 ),
 
-    'm-not-implemented': ('PyRadio',
+    'M_NOT_IMPLEMENTED': ('PyRadio',
 r'''
 ___This feature has not been implemented yet...___
 
 '''
 ),
 
+    'M_FOREIGN': ('Foreign playlist',
+r'''
+A playlist by this name:
+__"|{0}|"
+already exists in the config directory.
+
+This playlist was saved as:
+__"|{1}|"
+
+'''
+),
+
+    'M_FOREIGN_ERROR': ('Error',
+r'''
+Foreign playlist copying |failed|!
+
+Make sure the file is not open with another
+application and try to load it again
+
+'''
+),
+
+    'D_FOREIGN_ASK': ('Foreign playlist',
+r'''
+This is a "|foreign|" playlist (i.e. it does not
+reside in PyRadio's config directory). If you
+want to be able to easily load it again in the
+future, it should be copied there.
+
+Do you want to copy it in the config directory?
+
+Press "|y|" to confirm or "|n|" to reject
+
+'''
+),
+
+    'M_NO_THEMES': ('Themes Disabled',
+r'''|Curses| (the library this program is based on), will not display
+colors |correctly| in this terminal, (after they have been |changed by
+PyRadio.
+
+Therefore, using |themes is disabled| and the |default theme| is used.
+
+For more info, please refer to:
+|https://github.com/coderholic/pyradio/#virtual-terminal-restrictions
+
+Press "|x|" to never display this message in the future, or
+'''
+),
+
+    'M_REQUESTS_ERROR':('Module Error',
+r'''
+Module "|requests|" not found!
+
+In order to use |RadioBrowser| stations directory
+service, the "|requests|" module must be installed.
+
+Exit |PyRadio| now, install the module (named
+|python-requests| or |python{}-requests|) and try
+executing |PyRadio| again.
+
+'''
+),
+
+    'M_NETIFACES_ERROR':('Module Error',
+r'''
+Module "|netifaces|" not found!
+
+In order to use |RadioBrowser| stations directory
+service, the "|netifaces|" module must be installed.
+
+Exit |PyRadio| now, install the module (named
+|python-netifaces| or |python{}-netifaces|) and try
+executing |PyRadio| again.
+
+'''
+),
+
+    'M_DNSPYTHON_ERROR':('Module Error',
+r'''
+Module "|dnspython|" not found!
+
+In order to use |RadioBrowser| stations directory
+service, the "|dnspython|" module must be installed.
+
+Exit |PyRadio| now, install the module (named
+|python-dnspython| or |python{}-dnspython|) and try
+executing |PyRadio| again.
+
+'''
+),
+
+    'M_PYTHON2_ASCII_ERROR': ('Error',
+r'''
+Non-ASCII characters editing is |not supported!|
+
+You are running |PyRadio| on |Python 2|. As a result,
+the station editor only supports |ASCII characters|,
+but the station name you are trying to edit contains
+|non-ASCII| characters.
+
+To edit this station, either run |PyRadio| on |Python 3|,
+or edit the playlist with an external editor and then
+reload the playlist.
+
+'''
+),
+
+    'X_THEME_DOWN_FAIL': ('',
+r'''
+____|Theme download failed!!!|____
+_____Loading |default| theme..._____
+
+'''
+),
+
+    'M_PARAMETER_ERROR': ('Parameter Set Error',
+r'''
+The player parameter set you specified does
+not exist!
+
+|{0}| currently has |{1}| sets of parameters.
+You can press "|Z|" to access them, after you
+close this window.
+
+'''
+),
+
+    'X_PLAYER_CHANGED':('',
+r'''
+|PyRadio| default player has changed from
+__"|{0}|"
+to
+__"|{1}|".
+
+This change may lead to changing the player used,
+and will take effect next time you open |PyRadio|.
+
+'''
+),
+
         }
         # INSERT NEW ITEMS ABOVE
+        if self._universal_message is not None:
+            self._txt['UNIVERSAL'] = self._universal_message
+            self._universal_message = None
         logger.error('args = "{}"'.format(args))
         '''
             args[0] = message_key
@@ -919,6 +1389,9 @@ ___This feature has not been implemented yet...___
         self._operation_mode = op_mode
         self._previous_operation_mode = prev_op_mode
 
+    def set_universal_message(self, msg):
+        self._universal_message = msg
+
     def set_token(self, token):
         self._active_token = None
         logger.error('senf_tokens = {}'.format(self._tokens))
@@ -942,48 +1415,30 @@ ___This feature has not been implemented yet...___
             return None, None, 0
 
         ''' apply per item customization / variables '''
-        if self.active_message_key == 'h-main' and \
+        if self.active_message_key == 'H_MAIN' and \
                 platform.startswith('win'):
             out = self._txt[self.active_message_key][1].replace(
                     '|opposite ', '|upward ').replace('[| / |]', 'F2| / |F3')
-        elif self.active_message_key == 'h-main' and \
+        elif self.active_message_key == 'H_MAIN' and \
                 platform.lower().startswith('darwin'):
             out = self._txt[self.active_message_key][1].replace(
                     '|opposite ', '|upward ')
-        elif self.active_message_key == 'h-playlist':
+        elif self.active_message_key == 'H_PLAYLIST':
             if self._cnf.open_register_list:
                 out = self._txt[self.active_message_key][1].replace(
                         'playlist', 'register')
                 cap=' Registers List Help '
-        elif self.active_message_key == 'h-dir':
+        elif self.active_message_key == 'H_DIR':
             out = self._txt[self.active_message_key][1].format(args[1])
-        elif (self.active_message_key == 'h-search' or self.active_message_key == 'h-line-editor') and \
+        elif (self.active_message_key == 'H_SEARCH' or self.active_message_key == 'H_LINE_EDITOR') and \
                 platform.startswith('win'):
             out = self._txt[self.active_message_key][1].replace('M-', 'A-')
-        elif self.active_message_key == 'h-config-encoding':
+        elif self.active_message_key == 'H_CONFIG_ENCODING':
             if self._operation_mode() == Window_Stack_Constants.SELECT_ENCODING_MODE:
                 out = out.replace('r c  ', 'r    ').replace('Revert to station / |c|onfig value.', 'Revert to saved value.')
-        elif self.active_message_key in (
-                'd-rc-active',
-                'm-rc-start-error',
-                'd-rb-ask-to-save-config',
-                'd-rb-ask-to-save-config-to-exit',
-                'm-rc-dead-error',
-                'd-update-notification',
-                'm-playlist-delete-error',
-                'd-playlist-delete-ask',
-                'd-group-delete-ask',
-                'd-station-delete-ask',
-                'd-station-delete-ask-locked',
-                'm-show-unnamed-register',
-                'm-change-player-the-same-error',
-                ):
+        elif self.active_message_key in self._one_arg_list:
             out = self._txt[self.active_message_key][1].format(args[1])
-        elif self.active_message_key in (
-                'm-rb-vote-result',
-                'm-rec-dir-move-error',
-                'm-change-player-one-error',
-                ):
+        elif self.active_message_key in self._two_arg_list:
             out = self._txt[self.active_message_key][1].format(args[1], args[2])
 
         self._tokens, l = self._parse_strings_for_tokens(out.splitlines())
@@ -992,7 +1447,7 @@ ___This feature has not been implemented yet...___
         if logger.isEnabledFor(logging.INFO):
             logger.info('>>> Message System: setting key to "{}"'.format(self.active_message_key))
             self._last_key = self.active_message_key
-        if self.active_message_key == 'h-main':
+        if self.active_message_key == 'H_MAIN':
             mmax = self._main_win_width
             column = 22
         else:
@@ -1046,7 +1501,7 @@ ___This feature has not been implemented yet...___
 
     def _get_active_message_key(self, *args):
         if args:
-            self.active_message_key = args[0] if args[0] else 'h-main'
+            self.active_message_key = args[0] if args[0] else 'H_MAIN'
             logger.error('\n\n\n')
             logger.error('args[0]'.format(args[0]))
             try:
@@ -1055,10 +1510,10 @@ ___This feature has not been implemented yet...___
                 logger.error('args[1] = N/A')
             logger.error('\n\n\n')
         ''' self.active_message_key transformation '''
-        if self.active_message_key == 'h-search' and \
+        if self.active_message_key == 'H_SEARCH' and \
                 platform.startswith('darwin'):
-            self.active_message_key = 'h-search-darwin'
-        elif self.active_message_key == 'h-extra':
+            self.active_message_key = 'H_SEARCH_DARWIN'
+        elif self.active_message_key == 'H_EXTRA':
             if self._operation_mode() == Window_Stack_Constants.NORMAL_MODE or \
                         (self._operation_mode() == Window_Stack_Constants.HELP_MODE and \
                         self._previous_operation_mode() == Window_Stack_Constants.NORMAL_MODE):
@@ -1068,28 +1523,28 @@ ___This feature has not been implemented yet...___
                                 '|C|lear all registers.', 'Clear |c|urrent register.')
             else:
                 if self._cnf.open_register_list:
-                    self.active_message_key = 'h-extra-registers-list'
+                    self.active_message_key = 'H_EXTRA_REGISTERS_LIST'
                 else:
-                    self.active_message_key = 'h-extra-playlist'
-        elif self.active_message_key == 'h-lines-editor':
+                    self.active_message_key = 'H_EXTRA_PLAYLIST'
+        elif self.active_message_key == 'H_LINES_EDITOR':
             if platform.lower().startswith('dar'):
-                self.active_message_key = 'h-line-editor-darwin'
-        elif self.active_message_key == 'h-external-line-editor':
-            self._txt['h-external-line-editor'] = (
+                self.active_message_key = 'H_LINE_EDITOR_DARWIN'
+        elif self.active_message_key == 'H_EXTERNAL_LINE_EDITOR':
+            self._txt['H_EXTERNAL_LINE_EDITOR'] = (
                     'Line Editor Help',
                     args[1]()
             )
-        elif self.active_message_key == 'h-config-player':
-            self._txt['h-config-player'] = (
+        elif self.active_message_key == 'H_CONFIG_PLAYER':
+            self._txt['H_CONFIG_PLAYER'] = (
                     'Player Extra Parameters Help',
                     args[1]()
             )
-        elif self.active_message_key == 'm-update-notification-ok' and \
+        elif self.active_message_key == 'M_UPDATE_NOTIFICATION_OK' and \
                 platform.startswith('win'):
-            self.active_message_key = 'm-update-notification-ok-win'
-        elif self.active_message_key == 'm-rb-config-save-error' and \
+            self.active_message_key = 'M_UPDATE_NOTIFICATION_OK_WIN'
+        elif self.active_message_key == 'M_RB_CONFIG_SAVE_ERROR' and \
                 platform.startswith('win'):
-            self.active_message_key = 'm-rb-config-save-error-win'
+            self.active_message_key = 'M_RB_CONFIG_SAVE_ERROR_WIN'
 
     def _parse_strings_for_tokens(self, text):
         token_dict = {}
@@ -1311,7 +1766,7 @@ def main(scr):
             window.refresh()
             x.show(parent=window)
         elif ch == ord('1'):
-            x.set_text('h-main')
+            x.set_text('H_MAIN')
             window.refresh()
             x.show()
         elif ch == ord('2'):

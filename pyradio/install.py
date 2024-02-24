@@ -15,7 +15,7 @@ from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 ''' This is PyRadio version this
     install.py was released for
 '''
-PyRadioInstallPyReleaseVersion = '0.9.2.24'
+PyRadioInstallPyReleaseVersion = '0.9.2.25'
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -46,18 +46,12 @@ VERSION = ''
 
 PY3 = sys.version[0] == '3'
 
-if PY3:
-    HAS_PIPX = True if shutil.which('pipx') else False
-else:
-    HAS_PIPX = False
+HAS_PIPX = True if shutil.which('pipx') else False
 
-
-##### NO PYTHON2
-if PY3:
-    try:
-        from rich import print
-    except:
-        print('''Error: Module "rich" not found!
+try:
+    from rich import print
+except:
+    print('''Error: Module "rich" not found!
 
 Please install the above module and try again.
 
@@ -81,8 +75,7 @@ or even
     python -m pip install --user rich
 
 ''')
-        sys.exit(1)
-##### END NO PYTHON2
+    sys.exit(1)
 
 # import logging
 # logger = logging.getLogger(__name__)
@@ -96,19 +89,13 @@ def print_pipx_error():
 
        Please install [bold green]pipx[/bold green] and try again.
 '''
-    if PY3:
-        print(msg)
-    else:
-        print(re.sub(r'\[[^\[]+\]', '', msg))
+    print(msg)
 
 def print_distro_packages():
     msg = '''To succesfully complete [magenta]PyRadio[/magenta]'s installation, please refer to this page:
     [plum]https://github.com/coderholic/pyradio/blob/master/build.md[/plum]
 '''
-    if PY3:
-        print(msg)
-    else:
-        print(re.sub(r'\[[^\[]+\]', '', msg))
+    print(msg)
 
 def is_externally_managed():
     files = [
@@ -133,45 +120,10 @@ def print_pyradio_on():
                             __/ |
                            |___/
 [/bold magenta]
-                               [bold]installation script
-                                   running on[/bold]
+                               [bold]installation script[/bold]
+
 '''
-    if PY3:
-        print(msg)
-    else:
-        print(msg.replace('[bold]', '').replace('[/bold]', '').replace('[bold magenta]', '').replace('[/bold magenta]', ''))
-
-def print_python2():
-    print(r'''                   _____       _   _                    ___
-                  |  __ \     | | | |                  |__ \\
-                  | |__) |   _| |_| |__   ___  _ __       ) |
-                  |  ___/ | | | __| '_ \ / _ \| '_ \     / /
-                  | |   | |_| | |_| | | | (_) | | | |   / /_
-                  |_|    \__, |\__|_| |_|\___/|_| |_|  |____|
-                          __/ |
-                         |___/
-
-
-    ''')
-
-def print_python3():
-    msg = r'''[bold green]                   _____       _   _                    ____
-                  |  __ \     | | | |                  |___ \\
-                  | |__) |   _| |_| |__   ___  _ __      __) |
-                  |  ___/ | | | __| '_ \ / _ \| '_ \    |__ <
-                  | |   | |_| | |_| | | | (_) | | | |   ___) |
-                  |_|    \__, |\__|_| |_|\___/|_| |_|  |____/
-                          __/ |
-                         |___/
-[/bold green]
-
-    '''
     print(msg)
-
-def print_no_python2():
-    print('''                                 not Supported!!!
-                             Please upgade to Python 3
-''')
 
 def print_trying_to_install():
     print('                              trying to install for')
@@ -331,11 +283,8 @@ def get_github_long_description(
                 url += '?sha=master'
             url += '&per_page=50'
         try:
-            if sys.version_info < (3, 0):
-                ret = urlopen(url).read()
-            else:
-                with urlopen(url) as https_response:
-                    ret = https_response.read()
+            with urlopen(url) as https_response:
+                ret = https_response.read()
         except:
             if do_not_exit:
                 ret = None
@@ -474,10 +423,7 @@ Please execute the installation script again, like so:
 def open_cache_dir():
     c = PyRadioCache()
     if not c.exists():
-        if PY3:
-            print('[magenta]PyRadio Cache[/magenta]: [red]not found[/red]\n')
-        else:
-            print('PyRadio Cache: not found\n')
+        print('[magenta]PyRadio Cache[/magenta]: [red]not found[/red]\n')
         sys.exit(1)
     if platform.system().lower() == 'windows':
         os.startfile(c.cache_dir)
@@ -548,42 +494,23 @@ class PyRadioCache(object):
         ''' return a string
         the string is a list of file in the cache
         '''
-        if PY3:
-            if self.exists():
-                from rich.console import Console
-                console = Console()
-                if self.files:
-                    max_len = max([len(x) for x in self._files]) + 4
-                    console.print('[magenta]PyRadio Cache[/magenta]:')
-                    for i, n in enumerate(self._files):
-                        if i < 5:
-                            s = os.path.join(self._cache_dir, n)
-                            console.print('  [green]{0}[/green]. {1} [bold]{2}MB[/bold]'.format(i+1, n.ljust(max_len), self.get_size(s, 'mb')), highlight=False)
-                        else:
-                            console.print('plus [green]{}[/green] more files'.format(len(self._files)-5), highlight=False)
-                            break
-                else:
-                    print('[magenta]PyRadio Cache[/magenta]: [bold cyan]empty[/bold cyan]')
+        if self.exists():
+            from rich.console import Console
+            console = Console()
+            if self.files:
+                max_len = max([len(x) for x in self._files]) + 4
+                console.print('[magenta]PyRadio Cache[/magenta]:')
+                for i, n in enumerate(self._files):
+                    if i < 5:
+                        s = os.path.join(self._cache_dir, n)
+                        console.print('  [green]{0}[/green]. {1} [bold]{2}MB[/bold]'.format(i+1, n.ljust(max_len), self.get_size(s, 'mb')), highlight=False)
+                    else:
+                        console.print('plus [green]{}[/green] more files'.format(len(self._files)-5), highlight=False)
+                        break
             else:
-                print('[magenta]PyRadio Cache[/magenta]: [bold red]not found[/bold red]')
+                print('[magenta]PyRadio Cache[/magenta]: [bold cyan]empty[/bold cyan]')
         else:
-            if self.exists():
-                if self.files:
-                    max_len = max([len(x) for x in self._files]) + 4
-                    print('PyRadio Cache:')
-                    for i, n in enumerate(self._files):
-                        if i < 5:
-                            s = os.path.join(self._cache_dir, n)
-                            print('  {0}. {1} {2}MB'.format(
-                                i+1, n.ljust(max_len), self.get_size(s, 'mb')
-                            ))
-                        else:
-                            print('plus {} more files'.format(len(self._files)-5))
-                            break
-                else:
-                    print('PyRadio Cache: empty')
-            else:
-                print('PyRadio Cache: not found')
+            print('[magenta]PyRadio Cache[/magenta]: [bold red]not found[/bold red]')
         print('')
 
     @property
@@ -696,18 +623,12 @@ class MyArgParser(ArgumentParser):
         if file is None:
             file = sys.stdout
         usage = self.format_usage()
-        if PY3:
-            print(self._add_colors(self.format_usage()))
-        else:
-            print(self.format_usage())
+        print(self._add_colors(self.format_usage()))
 
     def print_help(self, file=None):
         if file is None:
             file = sys.stdout
-        if PY3:
-            print(self._add_colors(self.format_help()))
-        else:
-            print(self.format_help())
+        print(self._add_colors(self.format_help()))
 
     def _add_colors(self, txt):
         t = txt.replace('show this help', 'Show this help').replace('usage:', 'Usage:').replace('options:', 'Options:').replace('[', '|').replace(']', '||')
@@ -729,7 +650,6 @@ class PythonExecutable(object):
 
     def __init__(
             self,
-                 requested_python_version,
                  terminate_if_not_found=False):
         ''' Parameters
             ==========
@@ -740,18 +660,16 @@ class PythonExecutable(object):
                 If True, the program will terminate if python
                 is not found (default is False)
         '''
-        self.requested_python_version = requested_python_version
         self._terminate_if_not_found = terminate_if_not_found
         if not platform.system().lower().startswith('win'):
             self._check_if_is_debian_based()
         self._get_pythons()
 
     def __str__(self):
-        return 'Is Debian: {0}\nPython: {1}, {2}\nRequested version: {3}'.format(
+        return 'Is Debian: {0}\nPython: {1}, {2}'.format(
             self.is_debian,
             self._python[0],
             self._python[1],
-            self.requested_python_version
         )
 
     @property
@@ -850,7 +768,6 @@ class PyRadioUpdate(object):
 
     install = False
     user = True
-    python2 = False
 
     _python_exec = None
 
@@ -862,7 +779,6 @@ class PyRadioUpdate(object):
                  package=0,
                  user=True,
                  github_long_description=None,
-                 python_version_to_use=3,
                  pix_isolated=False
                  ):
         if platform.system().lower().startswith('win'):
@@ -872,10 +788,8 @@ class PyRadioUpdate(object):
         self.user = user
         self._github_long_description = github_long_description
         self._python_exec = PythonExecutable(
-                python_version_to_use,
                 terminate_if_not_found=True
                 )
-        self.python2 = True if python_version_to_use == 2 else False
         self._pix_isolated = pix_isolated
 
     def update_pyradio(self, win_open_dir=False):
@@ -1085,7 +999,7 @@ class PyRadioUpdate(object):
 
         self._change_git_discription_in_config_py()
 
-        param = ' 2' if self.python2 else ''
+        param = ''
         isol = ' -i ' if self._pix_isolated else ' '
         if mode == 'update':
             ''' install pyradio '''
@@ -1210,10 +1124,7 @@ class PyRadioUpdate(object):
             r_dir = os.path.join(ddir, 'pyradio-source')
             shutil.rmtree(r_dir, ignore_errors=True)
             if os.path.exists(r_dir):
-                if PY3:
-                    print('[red]Error:[/red] Cannot remove "{}"'.format(r_dir))
-                else:
-                    print('Error: Cannot remove "{}"'.format(r_dir))
+                print('[red]Error:[/red] Cannot remove "{}"'.format(r_dir))
                 print('       Please close all open programs and try again...')
                 sys.exit(1)
         else:
@@ -1242,11 +1153,11 @@ class PyRadioUpdate(object):
     def _download_file(self, url, filename):
         print('  url: "{}"'.format(url))
         print('  filename: "{}"'.format(filename))
-        if os.path.exists(filename):
-            if PY3:
-                print('  [magenta]** file found in cache![/magenta]')
-            else:
-                print('  ** file found in cache!')
+        if os.path.exists(filename) and not (
+                filename.endswith('-master.zip') or \
+                filename.endswith('-devel.zip')
+                ):
+            print('  [magenta]** file found in cache![/magenta]')
         else:
             try:
                 r = requests.get(url)
@@ -1269,7 +1180,6 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
                  fromTUI=False,
                  package=0,
                  github_long_description=None,
-                 python_version_to_use=3,
                  pix_isolated=False
                  ):
         if not platform.system().lower().startswith('win'):
@@ -1279,10 +1189,8 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
         self._fromTUI = fromTUI
         self._github_long_description = github_long_description
         self._python_exec = PythonExecutable(
-                python_version_to_use,
                 terminate_if_not_found=True
                 )
-        self.python2 = True if python_version_to_use == 2 else False
         self._pix_isolated = pix_isolated
         self._get_cache = False
 
@@ -1327,20 +1235,6 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
 
 if __name__ == '__main__':
-    # x = PyRadioCache()
-    # x.list()
-    # sys.exit()
-    #exe = find_pyradio_win_exe()
-    #print(exe)
-    #sys.exit()
-    # l=get_github_long_description()
-    # print(l)
-    # print(get_devel_version())
-    # sys.exit()
-    #print_pyradio_on()
-    #print_python3() if PY3 else print_python2()
-    # print(get_devel_version())
-    # sys.exit()
     parser = MyArgParser(
         description='Curses based Internet radio player',
         epilog='When executed without an argument, it installs PyRadio (stable release).'
@@ -1352,7 +1246,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--force', action='store_true',
                         help='Force installation (even if already installed).')
     if not platform.system().lower().startswith('win'):
-        if PY3 and HAS_PIPX:
+        if HAS_PIPX:
             parser.add_argument('-i', '--isolate', action='store_true',
                                 help='Install using pipx in an fully Isolated Environment (all dependencies will be installed in a virtual environment); the default is to have pipx depend on distro python packages.')
             parser.add_argument('-oc', '--open-cache', action='store_true',
@@ -1371,17 +1265,11 @@ if __name__ == '__main__':
                                 help='Download source code, keep it in the cache and exit.')
         else:
             parser.add_argument('-gc', '--get-cache', action='store_true', help=SUPPRESS)
-        if not platform.system().lower().startswith('darwin'):
-            parser.add_argument('--python2', action='store_true',
-                                help='Install using python 2.')
-        else:
-            parser.add_argument('--python2', action='store_true', help=SUPPRESS)
     else:
         parser.add_argument('-oc', '--open-cache', action='store_true', help=SUPPRESS)
         parser.add_argument('-sc', '--show-cache', action='store_true', help=SUPPRESS)
         parser.add_argument('-cc', '--clear-cache', action='store_true', help=SUPPRESS)
         parser.add_argument('-i', '--isolate', action='store_true', help=SUPPRESS)
-        parser.add_argument('--python2', action='store_true', help=SUPPRESS)
     parser.add_argument('-R', '--uninstall', action='store_true',
                         help='Uninstall PyRadio.')
 
@@ -1426,27 +1314,18 @@ if __name__ == '__main__':
         if c.exists():
             if len(c.files) > 1:
                 c.clear()
-            if PY3:
-                print('[magenta]PyRadio Cache[/magenta]: [green]cleared[/green]\n')
-            else:
-                print('PyRadio Cache: cleared\n')
+            print('[magenta]PyRadio Cache[/magenta]: [green]cleared[/green]\n')
             sys.exit()
         c.list()
         sys.exit(1)
 
     if args.version:
-        if PY3:
-            print('[bold green]install.py[/bold green]: installation script for [bold magenta]PyRadio {}[/bold magenta]\n'.format(PyRadioInstallPyReleaseVersion ))
-        else:
-            print('install.py: installation script for PyRadio {}\n'.format(PyRadioInstallPyReleaseVersion ))
+        print('[bold green]install.py[/bold green]: installation script for [bold magenta]PyRadio {}[/bold magenta]\n'.format(PyRadioInstallPyReleaseVersion ))
         sys.exit()
 
     if not platform.system().lower().startswith('win'):
         if os.getuid() == 0 or os.getgid() == 0:
-            if PY3:
-                print('[red]Error:[/red] You must not run this script as [green]root[/green]\n')
-            else:
-                print('Error: You must not run this script as root\n')
+            print('[red]Error:[/red] You must not run this script as [green]root[/green]\n')
             sys.exit(1)
 
     if is_externally_managed() and \
@@ -1456,34 +1335,18 @@ if __name__ == '__main__':
         print_distro_packages()
         sys.exit()
     use_logo = False if args.no_logo else True
-    if platform.system().lower().startswith('darwin'):
-        ''' get python version '''
-        if sys.version_info < (3, 0):
-            print('Error: Python 2 is not supported any more!')
-            print('       Please install Python 3 and execute the command:')
-            print('\n           python3 install.py')
-            print('\n       to install PyRadio.\n\n')
-            sys.exit(1)
-
-    if platform.system().lower().startswith('win') and \
-            (not PY3 or args.python2):
-        print_pyradio_on()
-        print_python2()
-        print_no_python2()
+    ''' get python version '''
+    if not PY3:
+        print('Error: Python 2 is not supported any more!')
+        print('       Please install Python 3 and execute the command:')
+        print('\n           python3 install.py')
+        print('\n       to install PyRadio.\n\n')
         sys.exit(1)
 
     if use_logo and not args.open_cache:
         print_pyradio_on()
-        if PY3 and not args.python2:
-            print_python3()
-        else:
-            print_python2()
 
-    python_version_to_use = 2 if args.python2 else 3
-    if platform.system().lower().startswith('darwin'):
-        python_version_to_use = 3
     python_exec = PythonExecutable(
-            python_version_to_use,
             terminate_if_not_found=True
             )
 
@@ -1533,20 +1396,13 @@ if __name__ == '__main__':
         VERSION = PyRadioInstallPyReleaseVersion
 
     if args.uninstall:
-        self._get_cache = False
         if platform.system().lower().startswith('win'):
             ''' ok, create BAT file on Windows'''
-            uni = PyRadioUpdateOnWindows(
-                package=package,
-                python_version_to_use=python_version_to_use
-            )
+            uni = PyRadioUpdateOnWindows(package=package)
             uni.update_or_uninstall_on_windows(mode='uninstall-open')
             uni.print_uninstall_bat_created()
         else:
-            uni = PyRadioUpdate(
-                package=package,
-                python_version_to_use=python_version_to_use
-            )
+            uni = PyRadioUpdate(package=package)
             uni.remove_pyradio()
         sys.exit()
     elif args.update:
@@ -1555,7 +1411,6 @@ if __name__ == '__main__':
             upd = PyRadioUpdateOnWindows(
                 package=package,
                 github_long_description=github_long_description,
-                python_version_to_use=python_version_to_use,
                 pix_isolated=args.isolate
             )
             upd.update_or_uninstall_on_windows(mode='update-open')
@@ -1564,7 +1419,6 @@ if __name__ == '__main__':
             upd = PyRadioUpdate(
                 package=package,
                 github_long_description=github_long_description,
-                python_version_to_use=python_version_to_use,
                 pix_isolated=args.isolate
             )
             if args.get_cache and HAS_PIPX:
@@ -1576,7 +1430,6 @@ if __name__ == '__main__':
         ''' coming from uninstall BAT file on Windows'''
         uni = PyRadioUpdateOnWindows(
             package=package,
-            python_version_to_use=python_version_to_use,
             pix_isolated=args.isolate
         )
         uni.remove_pyradio()
@@ -1586,7 +1439,6 @@ if __name__ == '__main__':
         upd = PyRadioUpdateOnWindows(
             package=package,
             github_long_description=github_long_description,
-            python_version_to_use=python_version_to_use,
             pix_isolated=args.isolate
         )
         upd.update_pyradio()
@@ -1648,7 +1500,6 @@ Then try installing PyRadio again
         uni = PyRadioUpdateOnWindows(
             package=package,
             github_long_description=github_long_description,
-            python_version_to_use=python_version_to_use,
             pix_isolated=args.isolate
         )
         uni.update_or_uninstall_on_windows(
@@ -1679,7 +1530,6 @@ Then try installing PyRadio again
         uni = PyRadioUpdate(
             package=package,
             github_long_description=github_long_description,
-            python_version_to_use=python_version_to_use,
             pix_isolated=args.isolate
         )
         uni.install = True

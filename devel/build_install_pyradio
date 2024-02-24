@@ -3,7 +3,6 @@ function help(){
 echo "Usage: $0 [2/-R]"
 echo "
 Available options:
-     2   build using python v. 2.7 (linux only)
     -R   remove (uninstall) pyradio
     -t   Use this terminal for Desktop file (linux only)
 
@@ -44,10 +43,8 @@ exit 1
 function find_paths(){
 local APATH
 python devel/site.py 2>/dev/null
-python2 devel/site.py 2>/dev/null
 python3 devel/site.py 2>/dev/null
 APATH=$(python -m site --user-site 2>/dev/null) && echo "$APATH"
-APATH=$(python2 -m site --user-site 2>/dev/null) && echo "$APATH"
 APATH=$(python3 -m site --user-site 2>/dev/null) && echo "$APATH"
 }
 
@@ -262,6 +259,7 @@ check_root
 get_data_dir
 rm -rf build pyradio.egg-info 2>/dev/null
 TO_PYTHON=3
+[[ $(python --version 2>/dev/null) == *" 3."* ]] && TO_PYTHON=''
 TO_PYTHON_FROM_X=''
 NO_DEV=''
 while [[ $# -gt 0 ]]
@@ -302,15 +300,11 @@ do
             exit
             ;;
         2)
-            [ -z "${TO_PYTHON_FROM_X}" ] && TO_PYTHON=2
-            if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ]
-            then
-                echo
-                echo
-                echo "Error: PyRadio does not support python 2 any more."
-                echo "Please install python 3 and try again."
-                exit 1
-            fi
+            echo
+            echo
+            echo "Error: PyRadio does not support python 2 any more."
+            echo "Please install python 3 and try again."
+            exit 1
             shift
             ;;
         -x)
