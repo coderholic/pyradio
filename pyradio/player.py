@@ -617,7 +617,6 @@ class Player(object):
                     self._icy_data['icy-name'] and \
                     self._icy_data['icy-name'] != '(null)':
                 tail = '\n\nPress |r| to rename station to |Reported Name|, or'
-        # logger.error('DE ret\n{}\n'.format(ret))
         return ret + '\n\n|Highlighted values| are user specified.\nOther values are station provided (live) data.', tail
 
     def _do_save_volume(self, config_string):

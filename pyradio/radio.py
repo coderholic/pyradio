@@ -585,7 +585,6 @@ class PyRadio(object):
             self.ws.WIN_MANAGE_PLAYERS_MSG_MODE: self._show_win_manage_players,
             self.ws.WIN_PRINT_EXE_LOCATION_MODE: self._show_win_print_exe_paths,
             self.ws.SCHEDULE_EDIT_MODE: self._show_schedule_editor,
-            self.ws.SCHEDULE_EDIT_HELP_MODE: self._show_schedule_editor_help,
             self.ws.NO_THEMES_MODE: self._show_no_themes,
             self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
             self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE: self._show_remote_control_server_not_active,
@@ -596,8 +595,6 @@ class PyRadio(object):
             self.ws.RECORD_WINDOW_MODE: self._show_recording_toggle_window,
             self.ws.WIN_VLC_NO_RECORD_MODE: self._show_win_no_record,
             self.ws.BUFFER_SET_MODE: self._show_buffer_set,
-            self.ws.SCHEDULE_ERROR_MODE: self._show_schedule_error,
-            self.ws.SCHEDULE_INFO_MODE: self._show_schedule_info,
             self.ws.INSERT_RECORDINGS_DIR_MODE: self._open_redordings_dir_select_win,
             self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE: self._show_moving_recordings_dir_error,
             self.ws.OPEN_DIR_MODE: self._show_open_dir_window,
@@ -3501,20 +3498,10 @@ ____Using |fallback| theme.''')
                 self._update_version_do_display
             )
         else:
-            txt = '''
-                    A new |PyRadio| release (|{0}|) is available!
-
-                    |PyRadio| has dropped |Python2| support since
-                    version| 0.9.2.25|, but you are still using |Python2|.
-
-                    If you want to be able to use a newer version, please
-                    upgrade to |Python3|.
-               '''
-            self._show_help(txt.format(self._update_version_do_display),
-                            mode_to_set=self.ws.UPDATE_NOTIFICATION_MODE,
-                            caption=' Update Notification ',
-                            prompt='',
-                            is_message=True)
+            self._open_simple_message_by_key(
+                'M_UPDATE_NOTIF_2',
+                self._update_version_do_display
+            )
         self._update_version = ''
 
     def _print_update_ok_notification(self):
@@ -3662,22 +3649,21 @@ ____Using |fallback| theme.''')
 
             To be used with onlines services only
         '''
-        txt = '''Connecting to service.
-                 ____Please wait...'''
-        self._show_help(txt, self.ws.BROWSER_OPEN_MODE, caption=' ', prompt=' ', is_message=True)
+        self._open_simple_message_by_key_and_mode(
+                self.ws.BROWSER_OPEN_MODE,
+                'D_RB_OPEN'
+        )
 
-    def _show_performing_search_message(self, msg=None):
+    def _show_performing_search_message(self):
         ''' display a passive message telling the user
             to wait while performing search.
 
             To be used with onlines services only
         '''
-        if msg:
-            txt = msg
-        else:
-            txt = '''__Performing search.__
-                     ____Please wait...'''
-        self._show_help(txt, self.ws.BROWSER_PERFORMING_SEARCH_MODE, caption=' ', prompt=' ', is_message=True)
+        self._open_simple_message_by_key_and_mode(
+                self.ws.BROWSER_PERFORMING_SEARCH_MODE,
+                'D_RB_SEARCH'
+        )
 
     def _show_recording_status_in_header(
         self,
@@ -4419,41 +4405,48 @@ ____Using |fallback| theme.''')
                 self.ws.STATION_INFO_ERROR_MODE):
             if self.ws.operation_mode == self.ws.STATION_INFO_ERROR_MODE:
                 self.ws.close_window()
+            logger.error('\n\nself._show_station_info() from thread\n\n')
+            self.ws.close_window()
+            self.refreshBody()
             self._show_station_info()
 
     def _browser_station_info(self):
         max_width = self.bodyMaxX - 24
-        if max_width < 56:
-            max_width = 56
+        # if max_width < 56:
+        #     max_width = 56
         txt, tail = self._cnf._online_browser.get_info_string(
-            self.selection,
-            max_width=max_width)
+                self.selection,
+                max_width=max_width)
         self._station_rename_from_info = False
-        self._show_help(txt,
-                        mode_to_set=self.ws.STATION_DATABASE_INFO_MODE,
-                        caption=' Station Database Info ', is_message=True)
+        self._messaging_win.set_universal_message( ('Station Database Info', txt))
+        self._open_simple_message_by_key_and_mode(
+                self.ws.STATION_DATABASE_INFO_MODE,
+                'UNIVERSAL'
+                )
 
     def _show_station_info(self):
         max_width = self.bodyMaxX - 24
-        if max_width < 56:
-            max_width = 56
+        # if max_width < 56:
+        #     max_width = 56
         txt, tail = self.player.get_info_string(
             self._last_played_station,
             max_width=max_width)
 
-        if tail and not self._cnf.browsing_station_service:
-            self._station_rename_from_info = True
-            self._show_help(
-                txt + tail,
-                mode_to_set=self.ws.STATION_INFO_MODE,
-                caption=' Station Info ', is_message=True,
-                prompt=' Press any other key to hide ',
-                too_small_msg='Window too small to display info')
+        msg = txt + tail
+        logger.error('msg\n{}'.format(msg))
+        if self.bodyMaxY - 4 < len(msg.splitlines()):
+            self._messaging_win.set_station_info_message(('', 'Window too small'))
         else:
-            self._station_rename_from_info = False
-            self._show_help(txt,
-                            mode_to_set=self.ws.STATION_INFO_MODE,
-                            caption=' Station Info ', is_message=True)
+            if tail and not self._cnf.browsing_station_service:
+                self._station_rename_from_info = True
+                self._messaging_win.set_station_info_message(('Station Info', msg))
+            else:
+                self._station_rename_from_info = False
+                self._messaging_win.set_station_info_message(('Station Info', msg))
+        self._open_simple_message_by_key_and_mode(
+                self.ws.STATION_INFO_MODE,
+                'M_STATION_INFO'
+                )
 
     def detectUpdateStationsThread(self, check_function, a_lock, stop):
         ''' a thread to check if stations.csv is updated '''
@@ -5421,28 +5414,6 @@ ____Using |fallback| theme.''')
         else:
             self._simple_schedule.show(parent=self.outerBodyWin)
 
-    def _show_schedule_editor_help(self):
-        txt = r'''Tab|, |L| / |Sh-Tab|, |H  |Go to next / previous field.
-                 j|, |Up| / |k|, |Down     |Go to next / previous field vertivally.
-                 ____________________|Go to next / previous field (when
-                 ____________________|applicable). Also, change counter value.
-                 Space               |Toggle check buttons.
-                 n                   |Set current date and time to section.
-                 0|-|9                 |Add hours to |Start| or |Stop| section.
-                 t| / |f               |Copy date/time |t|o/|f|rom complementary field.
-                 i                   |Validate entry and show dates.
-                 Enter               |Perform search / cancel (on push buttons).
-                 s                   |Perform search (not on Line editor).
-                 Esc                 |Cancel operation.
-                 _
-                 %_Global functions_
-                 -|/|+| or |,|/|.       |Change volume.
-                 m| / |v            ||M|ute player / Save |v|olume (not in vlc).
-                 W| / |w            |Toggle title log / like a station'''
-        self._show_help(txt,
-                        mode_to_set=self.ws.SCHEDULE_EDIT_HELP_MODE,
-                        caption=' Schedule Editor Help ')
-
     def _update_stations_result(self):
         '''
         Value of self._need_to_update_stations_csv:
@@ -5640,22 +5611,6 @@ ____Using |fallback| theme.''')
             self._insert_recording_dir_win.show()
         else:
             self._insert_recording_dir_win.set_parent(self.outerBodyWin)
-
-    def _show_schedule_info(self):
-        txt = self._simple_schedule._info_result
-        caption = ' Schedule Entry Info '
-        self._show_help(txt,
-                        mode_to_set=self.ws.SCHEDULE_INFO_MODE,
-                        caption=caption,
-                        is_message=True)
-
-    def _show_schedule_error(self):
-        txt = '\n___|' + self._simple_schedule.get_error_message() + '___\n'
-        caption = ' Schedule error '
-        self._show_help(txt,
-                        mode_to_set=self.ws.SCHEDULE_ERROR_MODE,
-                        caption=caption,
-                        is_message=False)
 
     def _show_recording_toggle_window(self):
         if self.player.recording > 0:
@@ -6745,7 +6700,7 @@ ____Using |fallback| theme.''')
                 self.refreshBody()
             elif ret == 2:
                 ''' Show Help  '''
-                self._show_schedule_editor_help()
+                self._open_simple_message_by_key('M_SCHEDULE_EDIT_HELP')
             elif ret == 4:
                 ''' Schedule > Select Playlist '''
                 self.ws.operation_mode = self.ws.SCHEDULE_PLAYLIST_SELECT_MODE
@@ -6783,11 +6738,17 @@ ____Using |fallback| theme.''')
                 self._schedule_station_select_win.refresh_win()
                 self._schedule_station_select_win.setStation(self._simple_schedule.station)
             elif ret in (3, 6, 7, 8):
-                self._show_schedule_error()
+                self._open_simple_message_by_key(
+                        'M_SCHEDULE_ERROR',
+                        self._simple_schedule.get_error_message()
+                        )
             elif ret == 9:
                 self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR', self._show_line_editor_help)
             elif ret == 10:
-                self._show_schedule_info()
+                self._open_simple_message_by_key(
+                        'M_SCHEDULE_INFO',
+                        self._simple_schedule._info_result
+                        )
 
         elif self.ws.operation_mode == self.ws.BUFFER_SET_MODE:
             ret, buf = self._buffering_win.keypress(char)

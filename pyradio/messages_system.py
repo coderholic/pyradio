@@ -45,6 +45,7 @@ class PyRadioMessagesSystem(object):
     _max_lens = {}
     _tokens = {}
     _universal_message = None
+    _station_info_message = None
 
     ''' reset _columns and _tokens
         These keys will have non static content,
@@ -58,6 +59,8 @@ class PyRadioMessagesSystem(object):
             'D_STATION_DELETE_ASK_LOCKED',
             'H_CONFIG_PLAYER',
             'M_SHOW_UNNAMED_REGISTER',
+            'M_STATION_INFO',
+            'UNIVERSAL',
             )
 
     _one_arg_list = (
@@ -67,6 +70,7 @@ class PyRadioMessagesSystem(object):
             'D_RB_ASK_TO_SAVE_CONFIG_TO_EXIT',
             'M_RC_DEAD_ERROR',
             'D_UPDATE_NOTIFICATION',
+            'M_UPDATE_NOTIF_2',
             'M_PLAYLIST_DELETE_ERROR',
             'D_PLAYLIST_DELETE_ASK',
             'D_GROUP_DELETE_ASK',
@@ -80,6 +84,8 @@ class PyRadioMessagesSystem(object):
             'M_REGISTER_SAVE_ERROR',
             'M_PLAYLIST_SAVE_ERR_1'
             'M_PLAYLIST_SAVE_ERR_2'
+            'M_SCHEDULE_INFO',
+            'M_SCHEDULE_ERROR',
             )
 
     _two_arg_list = (
@@ -252,7 +258,9 @@ wait until one actually starts playing).
 '''
 ),
 
-        'H_PLAYLIST': ('Playlist Help',
+    'M_STATION_INFO': ('',),
+
+    'H_PLAYLIST': ('Playlist Help',
 r'''Up|, |j|, |PgUp|,               |*|
 Down|, |k|, |PgDown                 |*|Change playlist selection.
 <n>g| / |<n>G                       |*|Jump to first / last or n-th item.
@@ -598,6 +606,16 @@ o                                   |*| |O|pen dirs in file manager.
 
 |Any other key exits current mode.
 '''
+),
+
+    'D_RB_OPEN': ('',
+r'''Connecting to service.
+____Please wait...'''
+),
+
+    'D_RB_SEARCH': ('',
+r'''__Performing search.__
+ ____Please wait...'''
 ),
 
     'M_RB_UNKNOWN_SERVICE': ('Unknown Service',
@@ -1023,6 +1041,19 @@ Press |y| to update or any other key to cancel.
 '''
 ),
 
+    'M_UPDATE_NOTIF_2': ('',
+r'''
+A new |PyRadio| release (|{0}|) is available!
+
+|PyRadio| has dropped |Python2| support since
+version| 0.9.2.25|, but you are still using |Python2|.
+
+If you want to be able to use a newer version, please
+upgrade to |Python3|.
+
+'''
+),
+
     'M_UPDATE_NOTIFICATION_OK': ('Update Notification',
 r'''
 |PyRadio| will now be updated!
@@ -1324,8 +1355,43 @@ and will take effect next time you open |PyRadio|.
 '''
 ),
 
+    'M_SCHEDULE_INFO': ('Schedule Entry Info',
+r'''{}
+'''
+),
+
+    'M_SCHEDULE_ERROR': ('Schedule Error',
+r'''
+___|{}___
+
+'''
+),
+
+    'M_SCHEDULE_EDIT_HELP': ('Schedule Editor Help',
+r'''Tab|, |L| / |Sh-Tab|, |H        |*| Go to next / previous field.
+j|, |Up| / |k|, |Down               |*| Go to next / previous field vertivally.
+                                    |*| Go to next / previous field (when
+                                    |*| applicable). Also, change counter value.
+Space                               |*| Toggle check buttons.
+n                                   |*| Set current date and time to section.
+0|-|9                               |*| Add hours to |Start| or |Stop| section.
+t| / |f                             |*| Copy date/time |t|o/|f|rom complementary field.
+i                                   |*| Validate entry and show dates.
+Enter                               |*| Perform search / cancel (on push buttons).
+s                                   |*| Perform search (not on Line editor).
+Esc                                 |*| Cancel operation.
+
+%Global functions
+-|/|+| or |,|/|.                    |*| Change volume.
+m| / |v                             |*| |M|ute player / Save |v|olume (not in vlc).
+W| / |w                             |*| Toggle title log / like a station'''
+),
+
         }
         # INSERT NEW ITEMS ABOVE
+        if self._station_info_message is not None:
+            self._txt['M_STATION_INFO'] = self._station_info_message
+            self._station_info_message = None
         if self._universal_message is not None:
             self._txt['UNIVERSAL'] = self._universal_message
             self._universal_message = None
@@ -1359,8 +1425,8 @@ and will take effect next time you open |PyRadio|.
                 self._maxX = max_len
             else:
                 self._maxX = self._main_win_width
-            logger.error('self._caption = "{}"'.format(self._caption))
-            logger.error('max_len = {0}, self._maxY = {1}'.format(max_len, self._maxX))
+            # logger.error('self._caption = "{}"'.format(self._caption))
+            # logger.error('max_len = {0}, self._maxY = {1}'.format(max_len, self._maxX))
             for n in l:
                 logger.info(n)
             self._lines_count = len(l)
@@ -1389,6 +1455,9 @@ and will take effect next time you open |PyRadio|.
         self._operation_mode = op_mode
         self._previous_operation_mode = prev_op_mode
 
+    def set_station_info_message(self, msg):
+        self._station_info_message = msg
+
     def set_universal_message(self, msg):
         self._universal_message = msg
 
@@ -1411,6 +1480,7 @@ and will take effect next time you open |PyRadio|.
         '''
         logger.error('args = "{}"'.format(args))
         cap, out = self._txt[self.active_message_key]
+        logger.info('--> out\n{}'.format(out))
         if out is None:
             return None, None, 0
 
@@ -1503,9 +1573,9 @@ and will take effect next time you open |PyRadio|.
         if args:
             self.active_message_key = args[0] if args[0] else 'H_MAIN'
             logger.error('\n\n\n')
-            logger.error('args[0]'.format(args[0]))
+            logger.error('args[0] = {}'.format(args[0]))
             try:
-                logger.error('args[1]'.format(args[1]))
+                logger.error('args[1] = {}'.format(args[1]))
             except:
                 logger.error('args[1] = N/A')
             logger.error('\n\n\n')
