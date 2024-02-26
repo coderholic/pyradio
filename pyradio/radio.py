@@ -271,8 +271,6 @@ class PyRadio(object):
     ''' Help window
         also used for displaying messages,
         asking for confirmation etc. '''
-    helpWinContainer = None
-    helpWin = None
 
     ''' Window to display line number (jumpnr) '''
     transientWin = None
@@ -358,8 +356,6 @@ class PyRadio(object):
     _rename_playlist_dialog = None
 
     _force_exit = False
-
-    _help_metrics = {}
 
     _playlist_error_message = ''
 
@@ -589,7 +585,6 @@ class PyRadio(object):
             self.ws.REMOTE_CONTROL_SERVER_ACTIVE_MODE: self._show_remote_control_server_active,
             self.ws.REMOTE_CONTROL_SERVER_NOT_ACTIVE_MODE: self._show_remote_control_server_not_active,
             self.ws.CHANGE_PLAYER_MODE: self._redisplay_select_player,
-            self.ws.UPDATE_STATIONS_CSV_RESULT_MODE: self._update_stations_result,
             self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE: self._ask_to_update_stations_csv,
             self.ws.GROUP_SELECTION_MODE: self._show_group_selection,
             self.ws.RECORD_WINDOW_MODE: self._show_recording_toggle_window,
@@ -2606,133 +2601,6 @@ class PyRadio(object):
                 win.addstr(i + 1, 1, a_line.replace('_', ' ').replace('¸', '_'), txt_col)
         win.refresh()
 
-    def _show_help(self, txt,
-                   mode_to_set=0,
-                   caption=' Help ',
-                   prompt=' Press any key to hide ',
-                   too_small_msg='Window too small to show message',
-                   is_message=False,
-                   reset_metrics=True):
-        if reset_metrics:
-            if mode_to_set in self._help_metrics.keys():
-                del self._help_metrics[mode_to_set]
-
-        ''' Display a help, info or question window.  '''
-        self.helpWinContainer = None
-        self.helpWin = None
-        self.ws.operation_mode = mode_to_set
-        txt_col = curses.color_pair(10)
-        box_col = curses.color_pair(3)
-        caption_col = curses.color_pair(11)
-        lines = txt.split('\n')
-        st_lines = [item.replace('\r', '') for item in lines]
-        lines = [item.strip() for item in st_lines]
-
-        if mode_to_set in self._help_metrics.keys():
-            inner_height, inner_width, outer_height, outer_width = self._help_metrics[mode_to_set]
-        else:
-            inner_height = len(lines) + 2
-            inner_width = self._get_message_width_from_list(lines) + 4
-            outer_height = inner_height + 2
-            outer_width = inner_width + 2
-            self._help_metrics[mode_to_set] = [inner_height, inner_width, outer_height, outer_width]
-
-        if (self.ws.window_mode == self.ws.CONFIG_MODE or \
-                self.ws.window_mode == self.ws.NORMAL_MODE) and \
-                self.ws.operation_mode != self.ws.ASK_TO_CREATE_NEW_THEME_MODE:
-            use_empty_win = True
-            height_to_use = outer_height
-            width_to_use = outer_width
-        else:
-            use_empty_win = False
-            height_to_use = inner_height
-            width_to_use = inner_width
-        if self.maxY - 2 < outer_height or self.maxX < outer_width:
-            if self.ws.operation_mode == self.ws.STATION_INFO_MODE:
-                ''' reset view of main window '''
-                self.outerBodyWin.touchwin()
-                self.bodyWin.touchwin()
-                self.outerBodyWin.refresh()
-                self.bodyWin.refresh()
-            txt = too_small_msg
-            prompt = ''
-            caption = ''
-            inner_height = 3
-            inner_width = cjklen(txt) + 4
-            if use_empty_win:
-                height_to_use = inner_height + 2
-                width_to_use = inner_width + 2
-            else:
-                height_to_use = inner_height
-                width_to_use = inner_width
-            if self.maxX < width_to_use:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('  ***  Window too small even to show help warning  ***')
-                self.ws.close_window()
-                self.refreshBody()
-                return
-            lines = [txt, ]
-        if use_empty_win:
-            self.helpWinContainer = curses.newwin(height_to_use,width_to_use,
-                    int((self.maxY-height_to_use)/2),
-                    int((self.maxX-width_to_use)/2))
-            self.helpWinContainer.bkgdset(' ', box_col)
-            self.helpWinContainer.erase()
-        self.helpWin = curses.newwin(inner_height,inner_width,int((self.maxY-inner_height)/2),int((self.maxX-inner_width)/2))
-        self.helpWin.bkgdset(' ', box_col)
-        self.helpWin.erase()
-        self.helpWin.box()
-        if is_message:
-            start_with = txt_col
-            follow = caption_col
-        else:
-            start_with = caption_col
-            follow = txt_col
-        if caption.strip():
-            self.helpWin.addstr(0, int((inner_width-cjklen(caption))/2), caption, caption_col)
-        splited = []
-        for i, n in enumerate(lines):
-            #a_line = self._replace_starting_undesscore(n)
-            a_line = n
-            if a_line.startswith('%'):
-                self.helpWin.move(i + 1, 0)
-                try:
-                    self.helpWin.addstr('├', curses.color_pair(3))
-                    self.helpWin.addstr('─' * (inner_width - 2), curses.color_pair(3))
-                    self.helpWin.addstr('┤', curses.color_pair(3))
-                except:
-                    self.helpWin.addstr('├'.encode('utf-8'), curses.color_pair(3))
-                    self.helpWin.addstr('─'.encode('utf-8') * (inner_width - 2), curses.color_pair(3))
-                    self.helpWin.addstr('┤'.encode('utf-8'), curses.color_pair(3))
-                self.helpWin.addstr(i + 1, inner_width-cjklen(a_line[1:]) - 1, a_line[1:].replace('_', ' ').replace('¸', '_'), caption_col)
-                #self.helpWin.addstr(i + 1, int((inner_width-len(a_line[1:]))/2), a_line[1:].replace('_', ' '), caption_col)
-            elif a_line.startswith('!'):
-                self.helpWin.move(i + 1, 2)
-                lin = ' ' + a_line[1:] + ' '
-                llin = cjklen(lin)
-
-                wsp = inner_width - 4
-                try:
-                    self.helpWin.addstr('─' * wsp, curses.color_pair(3))
-                except:
-                    self.helpWin.addstr('─'.encode('utf-8') * wsp, curses.color_pair(3))
-                self.helpWin.addstr(i + 1, 5, lin, caption_col)
-
-            else:
-                splited = a_line.split('|')
-                self.helpWin.move(i + 1, 2)
-                for part, part_string in enumerate(splited):
-                    if part_string.strip():
-                        if part == 0 or part % 2 == 0:
-                            self.helpWin.addstr(splited[part].replace('_', ' ').replace('¸', '_'), start_with)
-                        else:
-                            self.helpWin.addstr(splited[part].replace('_', ' ').replace('¸', '_'), follow)
-        if prompt.strip():
-            self.helpWin.addstr(inner_height - 1, int(inner_width-cjklen(prompt)-1), prompt)
-        if use_empty_win:
-            self.helpWinContainer.refresh()
-        self.helpWin.refresh()
-
     def _replace_starting_undesscore(self, a_string):
         ret = ''
         for i, ch in enumerate(a_string):
@@ -3076,7 +2944,7 @@ ____Using |fallback| theme.''')
                 '''
             if platform.startswith('win'):
                 txt = txt.replace('M-', 'A-')
-        return txt
+        return 'Line Editor Help', txt
 
     def _show_config_player_help(self):
         if self._player_select_win.editing > 0:
@@ -3122,7 +2990,7 @@ ____Using |fallback| theme.''')
                          -|/|+| or |,|/|.           |*| Change volume.
                          m| / |v                    |*| |M|ute player / Save |v|olume (not in vlc).
                          W| / |w                    |*| Toggle title log / like a station.'''
-        return txt
+        return 'Player Extra Parameters Help', txt
 
     def _show_unnamed_register(self):
         if self._unnamed_register:
@@ -4774,8 +4642,6 @@ ____Using |fallback| theme.''')
             ):
                 self.ws.close_window()
             ''' close all windows '''
-            self.helpWinContainer = None
-            self.helpWin = None
             self._config_win = None
             self._browser_config_win = None
             self._player_select_win = None
@@ -5143,8 +5009,6 @@ ____Using |fallback| theme.''')
     def _handle_passive_windows(self):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Mode is in PASSIVE_WINDOWS')
-        self.helpWinContainer = None
-        self.helpWin = None
         self.ws.close_window()
         self.refreshBody()
         self._main_help_id = 0
@@ -5553,11 +5417,7 @@ ____Using |fallback| theme.''')
             txt = self._cls_update_stations_message
         else:
             return
-        self._show_help(txt,
-                        self.ws.UPDATE_STATIONS_CSV_RESULT_MODE,
-                        caption=caption,
-                        prompt=prompt,
-                        is_message=True)
+        return caption, txt
 
     def _ask_to_update_stations_csv(self):
         self._open_simple_message_by_key_and_mode(
@@ -6507,7 +6367,10 @@ ____Using |fallback| theme.''')
                             if self._update_stations_error_count > 4:
                                 self._update_stations_error_count += 1
                                 break
-                            self._update_stations_result()
+                            self._open_simple_message_by_key(
+                                    'M_UPDATE_STATIONS_RESULT',
+                                    self._update_stations_result
+                                    )
                             self.bodyWin.getch()
                         else:
                             break
@@ -6525,7 +6388,10 @@ ____Using |fallback| theme.''')
                         if self._update_stations_error_count > 4:
                             self._update_stations_error_count += 1
                             break
-                        self._update_stations_result()
+                        self._open_simple_message_by_key(
+                                'M_UPDATE_STATIONS_RESULT',
+                                self._update_stations_result
+                                )
                         self.bodyWin.getch()
                     else:
                         break
@@ -6533,7 +6399,10 @@ ____Using |fallback| theme.''')
                 self._need_to_update_stations_csv = -4        # next time
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
-            self._update_stations_result()
+            self._open_simple_message_by_key(
+                    'M_UPDATE_STATIONS_RESULT',
+                    self._update_stations_result
+                    )
             return
 
         elif self.ws.operation_mode == self.ws.CHANGE_PLAYER_MODE:
@@ -7824,8 +7693,6 @@ ____Using |fallback| theme.''')
             # ok
             self.detect_if_player_exited = False
             self._cnf.PROGRAM_UPDATE = True
-            self.helpWinContainer = None
-            self.helpWin = None
             self.ws.close_window()
             ''' exit program '''
             self.log.asked_to_stop = True

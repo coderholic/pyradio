@@ -98,6 +98,12 @@ class PyRadioMessagesSystem(object):
             'X_PLAYER_CHANGED',
             )
 
+    _second_arg_is_a_function = (
+            'SCHEDULE_ERROR_MODE',
+            'SCHEDULE_ERROR_MODE',
+            'M_UPDATE_STATIONS_RESULT',
+            )
+
     def set_text(self, parent, *args):
         self._txt = {
         'UNIVERSAL': (),
@@ -1505,11 +1511,16 @@ W| / |w                             |*| Toggle title log / like a station'''
             out = self._txt[self.active_message_key][1].replace('M-', 'A-')
         elif self.active_message_key == 'H_CONFIG_ENCODING':
             if self._operation_mode() == Window_Stack_Constants.SELECT_ENCODING_MODE:
-                out = out.replace('r c  ', 'r    ').replace('Revert to station / |c|onfig value.', 'Revert to saved value.')
+                out = out.replace('r c  ', 'r    ').replace(
+                        'Revert to station / |c|onfig value.',
+                        'Revert to saved value.'
+                        )
         elif self.active_message_key in self._one_arg_list:
             out = self._txt[self.active_message_key][1].format(args[1])
         elif self.active_message_key in self._two_arg_list:
             out = self._txt[self.active_message_key][1].format(args[1], args[2])
+        elif self.active_message_key in self._second_arg_is_a_function:
+            self._txt[self.active_message_key] = args[1]()
 
         self._tokens, l = self._parse_strings_for_tokens(out.splitlines())
         logger.error('\n\nself._tokens = {}'.format(self._tokens))
@@ -1599,16 +1610,6 @@ W| / |w                             |*| Toggle title log / like a station'''
         elif self.active_message_key == 'H_LINES_EDITOR':
             if platform.lower().startswith('dar'):
                 self.active_message_key = 'H_LINE_EDITOR_DARWIN'
-        elif self.active_message_key == 'H_EXTERNAL_LINE_EDITOR':
-            self._txt['H_EXTERNAL_LINE_EDITOR'] = (
-                    'Line Editor Help',
-                    args[1]()
-            )
-        elif self.active_message_key == 'H_CONFIG_PLAYER':
-            self._txt['H_CONFIG_PLAYER'] = (
-                    'Player Extra Parameters Help',
-                    args[1]()
-            )
         elif self.active_message_key == 'M_UPDATE_NOTIFICATION_OK' and \
                 platform.startswith('win'):
             self.active_message_key = 'M_UPDATE_NOTIFICATION_OK_WIN'
