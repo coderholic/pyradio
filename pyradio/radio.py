@@ -735,8 +735,10 @@ class PyRadio(object):
 
         if platform.startswith('win'):
             self._browser_page_chars = (curses.KEY_F3, curses.KEY_F2)
+            self._browser_first_page_chars = (278, )
         else:
             self._browser_page_chars = (ord(']'), ord('['))
+            self._browser_first_page_chars = (ord('{'), )
 
         self._messaging_win = PyRadioMessagesSystem(
                 self._cnf,
@@ -2574,33 +2576,6 @@ class PyRadio(object):
         lines = [item.strip() for item in st_lines]
         return self._get_message_width_from_list(lines)
 
-    def _show_msg(self, txt,
-                   mode_to_set=0,
-                   caption=' Help ',
-                   prompt=' Press any key to hide ',
-                   too_small_msg='Window too small to show message',
-                   is_message=False,
-                   reset_metrics=True):
-        txt_col = curses.color_pair(10)
-        box_col = curses.color_pair(3)
-        caption_col = curses.color_pair(11)
-        lines = txt.split('\n')
-        st_lines = [item.replace('\r', '') for item in lines]
-        lines = [item.strip() for item in st_lines]
-        inner_height = len(lines) + 2
-        inner_width = self._get_message_width_from_list(lines) + 4
-        outer_height = inner_height + 2
-        outer_width = inner_width + 2
-        if outer_width + 2 < self.bodyMaxX and outer_height + 2 < self.bodyMaxY:
-            win = curses.newwin(inner_height,inner_width - 2,int((self.maxY-inner_height)/2),int((self.maxX-inner_width)/2))
-            win.bkgdset(' ', box_col)
-            win.erase()
-            win.box()
-            for i, a_line in enumerate(lines):
-                #a_line = self._replace_starting_undesscore(n)
-                win.addstr(i + 1, 1, a_line.replace('_', ' ').replace('¸', '_'), txt_col)
-        win.refresh()
-
     def _replace_starting_undesscore(self, a_string):
         ret = ''
         for i, ch in enumerate(a_string):
@@ -2747,7 +2722,7 @@ class PyRadio(object):
     def _show_no_more_playlist_history(self):
         self._show_notification_with_delay(
                 txt='___Top of history reached!!!___',
-                mode_to_set=self.ws.HISTORY_EMPTY_NOTIFICATION,
+                mode_to_set=self.ws.operation_mode,
                 callback_function=self.closeTimedNotificationWindow)
 
     def closeTimedNotificationWindow(self):
@@ -2773,7 +2748,8 @@ class PyRadio(object):
         #     while len(tmp[2]) < len(tmp[1]):
         #         tmp[2] = '_' + tmp[2] + '_'
         #     txt = '\n'.join(tmp)
-        self._messaging_win.set_universal_message(
+        self._messaging_win.set_a_message(
+                'UNIVERSAL',
                 ('', '''Error loading selected theme!
 ____Using |fallback| theme.''')
                 )
@@ -2827,7 +2803,8 @@ ____Using |fallback| theme.''')
         else:
             add_msg = '|PyRadio EXE file:\n__{}'.format(exe[0] if exe[0] else exe[1])
 
-        self._messaging_win.set_universal_message(
+        self._messaging_win.set_a_message(
+                'UNIVERSAL',
                 ('EXE Location', txt.format(add_msg))
                 )
         self._open_simple_message_by_key_and_mode(
@@ -3077,7 +3054,8 @@ ____Using |fallback| theme.''')
 
     def _print_playlist_recovery_error(self):
         if self._playlist_error_message:
-            self._messaging_win.set_universal_message(
+            self._messaging_win.set_a_message(
+                    'UNIVERSAL',
                     ('Error', self._playlist_error_message)
                     )
             if logger.isEnabledFor(logging.DEBUG):
@@ -3099,7 +3077,8 @@ ____Using |fallback| theme.''')
 
     def _print_playlist_not_found_error(self):
         if self._playlist_error_message:
-            self._messaging_win.set_universal_message(
+            self._messaging_win.set_a_message(
+                    'UNIVERSAL',
                     ('Error', self._playlist_error_message)
                     )
             if logger.isEnabledFor(logging.DEBUG):
@@ -3116,7 +3095,8 @@ ____Using |fallback| theme.''')
 
     def _print_playlist_load_error(self):
         if self._playlist_error_message:
-            self._messaging_win.set_universal_message(
+            self._messaging_win.set_a_message(
+                    'UNIVERSAL',
                     ('Error', self._playlist_error_message)
                     )
             if logger.isEnabledFor(logging.DEBUG):
@@ -3192,7 +3172,8 @@ ____Using |fallback| theme.''')
             caption = ' Register Copy Error '
             txt = txt.replace('playlist', 'register')
 
-        self._messaging_win.set_universal_message(
+        self._messaging_win.set_a_message(
+                'UNIVERSAL',
             (caption, txt)
             )
         self._open_simple_message_by_key('UNIVERSAL')
@@ -3235,9 +3216,10 @@ ____Using |fallback| theme.''')
                 self._cnf._open_register_list):
             caption = ' Register Copy Error '
             txt = txt.replace('playlist', 'register')
-        self._messaging_win.set_universal_message(
-            (caption, txt)
-            )
+        self._messaging_win.set_a_message(
+                'UNIVERSAL',
+                (caption, txt)
+                )
         self._open_simple_message_by_key('UNIVERSAL')
         if logger.isEnabledFor(logging.DEBUG):
             logging.debug('Universal Message provided')
@@ -3522,12 +3504,23 @@ ____Using |fallback| theme.''')
                 'D_RB_OPEN'
         )
 
-    def _show_performing_search_message(self):
+    def _show_performing_search_message(self, txt=None):
         ''' display a passive message telling the user
             to wait while performing search.
 
             To be used with onlines services only
         '''
+        if txt is None:
+            self._messaging_win.set_a_message(
+                    'D_RB_SEARCH',
+                    ('', r'''__Performing search.__
+ ____Please wait...''')
+                    )
+        else:
+            self._messaging_win.set_a_message(
+                    'D_RB_SEARCH',
+                    ('', txt)
+                    )
         self._open_simple_message_by_key_and_mode(
                 self.ws.BROWSER_PERFORMING_SEARCH_MODE,
                 'D_RB_SEARCH'
@@ -3724,7 +3717,7 @@ ____Using |fallback| theme.''')
                     self.ws.close_window()
                     self._update_status_bar_right(status_suffix='')
                     self._show_notification_with_delay(
-                            txt='____All registers are empty!!!____',
+                            txt='____All registers are empty!!!_____',
                             mode_to_set=self.ws.NORMAL_MODE,
                             callback_function=self.refreshBody)
                     return
@@ -3771,12 +3764,18 @@ ____Using |fallback| theme.''')
         self._number_of_radio_browser_search_results = ret[1]
         if ret[1] == 0 and not self._cnf._online_browser.first_search:
             logger.error('DE --== no items found ==--\noperating mode = {}'.format(self.ws.operation_mode))
-            ''' go back to search mode '''
-            self.ws.operation_mode = self.ws.BROWSER_SEARCH_MODE
             ''' display no results message '''
             if self._cnf._online_browser.page > 0:
                 self._cnf._online_browser._page -= 1
-            self._show_no_browser_results()
+                txt='___No more results available!___'
+                self._show_notification_with_delay(
+                        txt=txt,
+                        mode_to_set=self.ws.operation_mode,
+                        callback_function=self.refreshBody)
+            else:
+                ''' go back to search mode '''
+                self.ws.operation_mode = self.ws.BROWSER_SEARCH_MODE
+                self._show_no_browser_results()
         else:
             self._cnf.stations = tmp_stations[:]
             self.stations = self._cnf.stations
@@ -4286,7 +4285,10 @@ ____Using |fallback| theme.''')
                 self.selection,
                 max_width=max_width)
         self._station_rename_from_info = False
-        self._messaging_win.set_universal_message( ('Station Database Info', txt))
+        self._messaging_win.set_a_message(
+                'UNIVERSAL',
+                ('Station Database Info', txt)
+                )
         self._open_simple_message_by_key_and_mode(
                 self.ws.STATION_DATABASE_INFO_MODE,
                 'UNIVERSAL'
@@ -4303,14 +4305,23 @@ ____Using |fallback| theme.''')
         msg = txt + tail
         logger.error('msg\n{}'.format(msg))
         if self.bodyMaxY - 4 < len(msg.splitlines()):
-            self._messaging_win.set_station_info_message(('', 'Window too small'))
+            self._messaging_win.set_a_message(
+                    'M_STATION_INFO',
+                    ('', 'Window too small')
+                    )
         else:
             if tail and not self._cnf.browsing_station_service:
                 self._station_rename_from_info = True
-                self._messaging_win.set_station_info_message(('Station Info', msg))
+                self._messaging_win.set_a_message(
+                    'M_STATION_INFO',
+                    ('Station Info', msg)
+                    )
             else:
                 self._station_rename_from_info = False
-                self._messaging_win.set_station_info_message(('Station Info', msg))
+                self._messaging_win.set_a_message(
+                    'M_STATION_INFO',
+                    ('Station Info', msg)
+                    )
         self._open_simple_message_by_key_and_mode(
                 self.ws.STATION_INFO_MODE,
                 'M_STATION_INFO'
@@ -4770,9 +4781,14 @@ ____Using |fallback| theme.''')
                                       callback_function,
                                       delay=.75,
                                       reset_metrics=True):
-        self._show_msg(txt, mode_to_set, caption='',
-                        prompt='', is_message=True,
-                        reset_metrics=reset_metrics)
+        self._messaging_win.set_a_message(
+                'D_WITH_DELAY',
+                ('', txt)
+                )
+        self._open_simple_message_by_key_and_mode(
+                mode_to_set,
+                'D_WITH_DELAY',
+                )
         th = threading.Timer(delay, callback_function)
         th.start()
         th.join()
@@ -5807,7 +5823,7 @@ ____Using |fallback| theme.''')
         # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
         # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
         # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
-        if self._system_asked_to_terminate:
+        # if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
             if logger.isEnabledFor(logging.debug):
                 logger.debug('keypress: Asked to stop. Stoping...')
@@ -8144,6 +8160,18 @@ ____Using |fallback| theme.''')
                             mode_to_set=self.ws.NORMAL_MODE,
                             callback_function=self.refreshBody)
                 return
+
+            if self._cnf.browsing_station_service and char in self._browser_first_page_chars:
+                ret = self._cnf._online_browser.first_page(self._show_performing_search_message)
+                if ret is None:
+                    self.refreshBody()
+                else:
+                    self._show_notification_with_delay(
+                            txt=ret,
+                            mode_to_set=self.ws.NORMAL_MODE,
+                            callback_function=self.refreshBody)
+                return
+
 
             if char in (ord('?'), ):
                 self._update_status_bar_right()

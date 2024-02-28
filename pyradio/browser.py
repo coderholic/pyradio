@@ -677,13 +677,15 @@ class RadioBrowser(PyRadioStationsBrowser):
                 limit = post_data['limit']
             else:
                 limit = self._default_max_number_of_results
-            limit *= self._page
-            post_data['offset'] = limit
-            logger.info('offset added')
+            offset = int(limit) * self._page
+            post_data['offset'] = offset
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('query offset added: {}'.format(offset))
         else:
             if 'offset' in post_data:
                 post_data.pop('offset')
-                logger.info('offset removed')
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('query offset removed')
 
         self._log_query(url, post_data)
 
@@ -716,19 +718,23 @@ class RadioBrowser(PyRadioStationsBrowser):
         post_data = self._get_post_data()
         if self.current_search_limit > len(self._raw_stations):
             self._page -= 1
-            return '\n___No more results available!___\n'
+            return '___No more results available!___'
         if msg_function:
-            msg_function('___Fetching page {}...___'.format(self._page+1))
+            msg_function('___Fetching page |{}|...___'.format(self._page+1))
         self.search()
         return None
+
+    def first_page(self, msg_function=None):
+        self._page = 1
+        return self.previous_page(msg_function)
 
     def previous_page(self, msg_function=None):
         self._page -= 1
         if self._page < 0:
             self._page = 0
-            return '\n___Already on first page!___\n'
+            return '___Already on first page!___'
         if msg_function:
-            msg_function('___Fetching page {}...___'.format(self._page+1))
+            msg_function('___Fetching page |{}|...___'.format(self._page+1))
         self.search()
         return None
 

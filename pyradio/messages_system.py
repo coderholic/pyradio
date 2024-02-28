@@ -46,7 +46,8 @@ class PyRadioMessagesSystem(object):
     _tokens = {}
     _universal_message = None
     _station_info_message = None
-
+    _delayed_message = None
+    _rb_search_message = None
     ''' reset _columns and _tokens
         These keys will have non static content,
         so widths will have to be calculated every time
@@ -60,6 +61,8 @@ class PyRadioMessagesSystem(object):
             'H_CONFIG_PLAYER',
             'M_SHOW_UNNAMED_REGISTER',
             'M_STATION_INFO',
+            'M_UPDATE_STATIONS_RESULT',
+            'D_WITH_DELAY',
             'UNIVERSAL',
             )
 
@@ -221,7 +224,7 @@ O                                   |*|  Open |RadioBrowser|.
 c                                   |*|  Open |c|onfig window.
 C                                   |*|  Select server to |c|onnect to.
 s                                   |*|  |S|earch for stations.
-[| / |]                             |*|  Fetch previous / next page.
+{| / |[| / |]                       |*|  Fetch first / previous / next page.
 S                                   |*|  |S|ort search results.
 I                                   |*|  Database Station |I|nfo (current selection).
 V                                   |*|  |V|ote for station.
@@ -265,6 +268,8 @@ wait until one actually starts playing).
 ),
 
     'M_STATION_INFO': ('',),
+
+    'D_WITH_DELAY': ('',),
 
     'H_PLAYLIST': ('Playlist Help',
 r'''Up|, |j|, |PgUp|,               |*|
@@ -1401,6 +1406,12 @@ W| / |w                             |*| Toggle title log / like a station'''
         if self._universal_message is not None:
             self._txt['UNIVERSAL'] = self._universal_message
             self._universal_message = None
+        if self._delayed_message is not None:
+            self._txt['D_WITH_DELAY'] = self._delayed_message
+            self._delayed_message = None
+        if self._rb_search_message is not None:
+            self._txt['D_RB_SEARCH'] = self._rb_search_message
+            self._rb_search_message = None
         logger.error('args = "{}"'.format(args))
         '''
             args[0] = message_key
@@ -1461,11 +1472,15 @@ W| / |w                             |*| Toggle title log / like a station'''
         self._operation_mode = op_mode
         self._previous_operation_mode = prev_op_mode
 
-    def set_station_info_message(self, msg):
-        self._station_info_message = msg
-
-    def set_universal_message(self, msg):
-        self._universal_message = msg
+    def set_a_message(self, index, msg):
+        if index == 'D_RB_SEARCH':
+            self._rb_search_message = msg
+        elif index == 'D_WITH_DELAY':
+            self._delayed_message = msg
+        elif index == 'M_STATION_INFO':
+            self._station_info_message = msg
+        elif index == 'UNIVERSAL':
+            self._universal_info_message = msg
 
     def set_token(self, token):
         self._active_token = None
@@ -1473,6 +1488,12 @@ W| / |w                             |*| Toggle title log / like a station'''
         if token in self._tokens.keys():
             self._active_token = self._tokens[token]
             logger.info('setting self._pad_pos to {}'.format(self._pad_pos))
+
+    def _remove_start_char(self, txt, char):
+        if txt.startswith(char):
+            return txt[1:]
+        else:
+            return txt
 
     def _get_txt(self, *args):
         '''
@@ -1494,7 +1515,7 @@ W| / |w                             |*| Toggle title log / like a station'''
         if self.active_message_key == 'H_MAIN' and \
                 platform.startswith('win'):
             out = self._txt[self.active_message_key][1].replace(
-                    '|opposite ', '|upward ').replace('[| / |]', 'F2| / |F3')
+                    '|opposite ', '|upward ').replace('{| / |[| / |]', 'Sh-F2| / |F2| / |F3')
         elif self.active_message_key == 'H_MAIN' and \
                 platform.lower().startswith('darwin'):
             out = self._txt[self.active_message_key][1].replace(
@@ -1545,7 +1566,8 @@ W| / |w                             |*| Toggle title log / like a station'''
                     for n in l:
                         x = n.split('|*|')
                         if len(x) == 2:
-                            first_column.append(x[0].strip().replace('%', '').replace('!', '').replace('|', ''))
+                            first_column.append(x[0].strip().replace('%', '').replace('|', ''))
+                            first_column[-1] = self._remove_start_char(first_column[-1], '!')
                     if first_column:
                         column = max(len(x) for x in first_column) + 5
                     else:
@@ -1561,9 +1583,13 @@ W| / |w                             |*| Toggle title log / like a station'''
                 for n in l:
                     x = n.split('|*|')
                     if len(x) == 2:
-                        first_column.append(x[0].strip().replace('%', '').replace('!', '').replace('|', ''))
+                        first_column.append(x[0].strip().replace('|', ''))
+                        first_column[-1] = self._remove_start_char(first_column[-1], '!')
+                        first_column[-1] = self._remove_start_char(first_column[-1], '%')
                         x[-1] = '-' * (column + 2) + x[-1]
-                    last_column.append(x[-1].strip().replace('%', '').replace('!', '').replace('|', ''))
+                    last_column.append(x[-1].strip().replace('|', ''))
+                    last_column[-1] = self._remove_start_char(last_column[-1], '!')
+                    last_column[-1] = self._remove_start_char(last_column[-1], '%')
                     if len(x) == 1 and last_column[-1]:
                         last_column[-1] += 4 * ' '
                     mmax = max(len(x) for x in last_column)
