@@ -156,16 +156,55 @@ def find_mplayer_on_windows():
             return a_path
     return 'mplayer'
 
+def info_dict_to_list1(info, fix_highlight, max_width):
+    logger.error(f'\n\ninfo_dict_to_list max_width = {max_width}\n\n')
+    result_dict = {}
+    max_label_length = max(len(label) for label in info.keys())
+    label_padding = 2  # for ": " separator
+    label_width = max_label_length + label_padding
+
+    for label, text in info.items():
+
+        if label == 'text':
+            # Wrap the text using cjkwrap.wrap
+            wrapped_lines = wrap(text, width=max_width)
+        else:
+
+            # Right-align the label
+            formatted_label = f"{label:>{label_width}}:"
+            # formatted_label = label.rjust(label_width, '_')
+
+            # Wrap the text using cjkwrap.wrap
+            wrapped_lines = wrap(text, width=max_width - label_width)
+            logger.error(f'\n\n\n"{text}"\n\n{wrapped_lines}\n============')
+
+            # Store the result in the dictionary
+        result_dict[label] = wrapped_lines
+
+    out = []
+    for label, wrapped_lines in result_dict.items():
+        logger.error('wrapped_lines\n{}'.format(wrapped_lines))
+        if label != 'text':
+            if wrapped_lines:
+                formatted_label = f"{label:_>{label_width-2}}"
+                if out:
+                    out.append((f"{formatted_label:>{label_width-2}}: |{wrapped_lines[0]}"))
+                else:
+                    out.append((f"{formatted_label:>{label_width-2}}: {wrapped_lines[0]}"))
+                for i in range(1, len(wrapped_lines)):
+                    out.append('_' * label_width + '|' + wrapped_lines[i])
+    if 'text' in result_dict.keys():
+        out.append('')
+        for n in result_dict['text']:
+            out.append(n)
+    logger.info('out\n{}\n\n'.format(out))
+    return out
+
 def info_dict_to_list(info, fix_highlight, max_width):
     max_len = 0
     for a_title in info.keys():
         if len(a_title) > max_len:
             max_len = len(a_title)
-        if version_info < (3, 0) and type(info[a_title]).__name__ != 'str':
-            try:
-                info[a_title] = info[a_title].encode('utf-8', 'replace')
-            except:
-                info[a_title] = ''
         info[a_title] = info[a_title].replace('_','¸')
     # logger.error('DE info\n{}\n\n'.format(info))
 
@@ -202,6 +241,7 @@ def info_dict_to_list(info, fix_highlight, max_width):
                     break
             for n in range(rep_name + 1, web_name):
                 a_list[n] = '|' + a_list[n]
+    # logger.error('DE a_list\n\n{}\n\n'.format(a_list))
     return a_list
 
 class Player(object):
@@ -609,6 +649,9 @@ class Player(object):
 
         if 'Codec:' not in a_list[-1]:
             a_list[n] = '|' + a_list[n]
+
+        if a_list[1].startswith('_'):
+            a_list[1] = '|' + a_list[1]
 
         ret = '|' + '\n'.join(a_list).replace('Encoding: |', 'Encoding: ').replace('URL: |', 'URL: ').replace('\n', '\n|')
         tail = ''

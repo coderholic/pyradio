@@ -4279,8 +4279,10 @@ ____Using |fallback| theme.''')
 
     def _browser_station_info(self):
         max_width = self.bodyMaxX - 24
-        # if max_width < 56:
-        #     max_width = 56
+        if max_width < 56:
+            max_width = 56
+        if max_width > 60:
+            max_width = 60
         txt, tail = self._cnf._online_browser.get_info_string(
                 self.selection,
                 max_width=max_width)
@@ -4296,8 +4298,10 @@ ____Using |fallback| theme.''')
 
     def _show_station_info(self):
         max_width = self.bodyMaxX - 24
-        # if max_width < 56:
-        #     max_width = 56
+        if max_width < 56:
+            max_width = 56
+        if max_width > 60:
+            max_width = 60
         txt, tail = self.player.get_info_string(
             self._last_played_station,
             max_width=max_width)
@@ -5818,12 +5822,11 @@ ____Using |fallback| theme.''')
         # success
         return ''
 
-
     def keypress(self, char):
         # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
         # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
         # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
-        # if self._system_asked_to_terminate:
+        if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
             if logger.isEnabledFor(logging.debug):
                 logger.debug('keypress: Asked to stop. Stoping...')
