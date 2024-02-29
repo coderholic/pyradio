@@ -1723,6 +1723,17 @@ W| / |w                             |*| Toggle title log / like a station'''
                         ' ' + self._caption + ' ',
                         self.col_highlight
                 )
+            if not (self.active_message_key.startswith('D') or \
+                    self.active_message_key.startswith('X') or \
+                    self._can_scroll
+                    ):
+                prompt = ' Press any key... '
+                self._win.addstr(
+                        self._maxY-1,
+                        self._maxX - len(prompt) - 1,
+                        prompt,
+                        self.col_box
+                        )
 
     def _echo_line(self, Y, X, formated, reverse=False):
         for k, l in enumerate(formated):
