@@ -2827,7 +2827,10 @@ ____Using |fallback| theme.''')
                 )
 
     def _redisplay_message_win(self, help_key=None):
-        self._messaging_win.show(parent=self.bodyWin)
+        if self._curses_key_resize:
+            self._messaging_win.show_args(parent=self.bodyWin)
+        else:
+            self._messaging_win.show(parent=self.bodyWin)
 
     def _show_message_win(self, help_key=None, token=None):
         self._messaging_win.set_text(self.bodyWin, help_key)
@@ -2837,12 +2840,14 @@ ____Using |fallback| theme.''')
         self._messaging_win.show()
 
     def _open_simple_message_by_key_and_mode(self, mode, *args):
+        logger.error('args = "{}"'.format(args))
         self._message_system_default_operation_mode = mode
         self._messaging_win.simple_dialog = True
         self._open_message_win_by_key(*args)
         self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
 
     def _open_simple_message_by_key(self, *args):
+        logger.error('args = "{}"'.format(args))
         self._messaging_win.simple_dialog = True
         self._open_message_win_by_key(*args)
 
@@ -4308,24 +4313,18 @@ ____Using |fallback| theme.''')
 
         msg = txt + tail
         logger.error('msg\n{}'.format(msg))
-        if self.bodyMaxY - 4 < len(msg.splitlines()):
+        if tail and not self._cnf.browsing_station_service:
+            self._station_rename_from_info = True
             self._messaging_win.set_a_message(
-                    'M_STATION_INFO',
-                    ('', 'Window too small')
-                    )
+                'M_STATION_INFO',
+                ('Station Info', msg)
+                )
         else:
-            if tail and not self._cnf.browsing_station_service:
-                self._station_rename_from_info = True
-                self._messaging_win.set_a_message(
-                    'M_STATION_INFO',
-                    ('Station Info', msg)
-                    )
-            else:
-                self._station_rename_from_info = False
-                self._messaging_win.set_a_message(
-                    'M_STATION_INFO',
-                    ('Station Info', msg)
-                    )
+            self._station_rename_from_info = False
+            self._messaging_win.set_a_message(
+                'M_STATION_INFO',
+                ('Station Info', msg)
+                )
         self._open_simple_message_by_key_and_mode(
                 self.ws.STATION_INFO_MODE,
                 'M_STATION_INFO'
@@ -5826,6 +5825,10 @@ ____Using |fallback| theme.''')
         # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
         # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
         # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
+        if char == curses.KEY_RESIZE:
+            logger.error('\n\nRESIZE\n\n')
+        self._curses_key_resize = char == curses.KEY_RESIZE
+
         if self._system_asked_to_terminate:
             ''' Make sure we exit when signal received '''
             if logger.isEnabledFor(logging.debug):
@@ -8964,7 +8967,7 @@ ____Using |fallback| theme.''')
 
     def _show_cannot_delete_active_playlist(self):
         self._show_notification_with_delay(
-                txt='\n____Cannot delete the active playlist___\n',
+                txt='\n____Cannot delete the active playlist___\n\n',
                 delay=1.5,
                 mode_to_set=self.ws.operation_mode,
                 callback_function=self.refreshBody)

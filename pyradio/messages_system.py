@@ -108,6 +108,7 @@ class PyRadioMessagesSystem(object):
             )
 
     def set_text(self, parent, *args):
+        self._args = args
         self._txt = {
         'UNIVERSAL': (),
 
@@ -1442,10 +1443,10 @@ W| / |w                             |*| Toggle title log / like a station'''
                 self._maxX = max_len
             else:
                 self._maxX = self._main_win_width
-            # logger.error('self._caption = "{}"'.format(self._caption))
-            # logger.error('max_len = {0}, self._maxY = {1}'.format(max_len, self._maxX))
-            for n in l:
-                logger.info(n)
+            # # logger.error('self._caption = "{}"'.format(self._caption))
+            # # logger.error('max_len = {0}, self._maxY = {1}'.format(max_len, self._maxX))
+            # for n in l:
+            #     logger.info(n)
             self._lines_count = len(l)
 
         self._get_win()
@@ -1460,7 +1461,10 @@ W| / |w                             |*| Toggle title log / like a station'''
                     self._maxY+self._winY-2, self._maxX+self._winX-2
             )
             self._pad.bkgd(' ', self.col_txt)
-            self._populate_pad(l)
+            try:
+                self._populate_pad(l)
+            except curses.error:
+                pass
         self.simple_dialog = False
         self._txt = {}
 
@@ -1671,6 +1675,7 @@ W| / |w                             |*| Toggle title log / like a station'''
             txt = ' Window too small '
             self._maxY = 3
             self._maxX = len(txt) + 2
+            logger.error(f'too small maxX = {self._maxX}')
             self._winY = int((p_height - 3) / 2) + self._parent.getbegyx()[0]
             self._winX = int((p_width - self._maxX) / 2)
             if p_height > self._winY and p_width > self._winX:
@@ -1689,6 +1694,7 @@ W| / |w                             |*| Toggle title log / like a station'''
         else:
             self.too_small = False
             pY, pX = self._parent.getbegyx()
+            p_height, p_width = self._parent.getmaxyx()
             if self._lines_count + 2 < self._maxY:
                 self._can_scroll = False
                 self._maxY = self._lines_count + 2
@@ -1743,7 +1749,7 @@ W| / |w                             |*| Toggle title log / like a station'''
                 col = self.col_txt if k % 2 else self.col_highlight
             if k == 0:
                 self._pad.addstr(Y, X, l.replace('_', ' '), col)
-                logger.error('printing: {0} - "{1}"'.format(X, l))
+                # logger.error('printing: {0} - "{1}"'.format(X, l))
             else:
                 if l:
                     self._pad.addstr(l.replace('_', ' '), col)
@@ -1753,13 +1759,7 @@ W| / |w                             |*| Toggle title log / like a station'''
         for i, n in enumerate(l):
             out = n.strip()
             if out.strip().startswith('%'):
-                logger.info('striped out = "{}"'.format(out))
                 self._pad.addstr(i, 1, '─' * (self._maxX-4), self.col_box)
-                logger.error('Y = {}'.format(i))
-                logger.error('Y = {}'.format(self._maxX - len(n) - 5))
-                logger.error('text   n: " {} "'.format(n[1:]))
-                logger.error('text out: " {} "'.format(out[1:]))
-                logger.error('len = {}'.format(len(out[1:])+2))
                 self._pad.addstr(i, self._maxX - len(out) - 5, ' ' + out[1:] + ' ', self.col_highlight)
             elif out.strip().startswith('!'):
                 self._pad.addstr(i, 1, '─── ', self.col_box)
@@ -1778,6 +1778,10 @@ W| / |w                             |*| Toggle title log / like a station'''
                 else:
                     self._echo_line(i, 1, [''] + lines[0].split('|'))
             self._pad_refresh()
+
+    def show_args(self, parent):
+        self.set_text(parent, *self._args)
+        self.show(parent)
 
     def show(self, parent=None):
         if logger.isEnabledFor(logging.INFO):
