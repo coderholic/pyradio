@@ -46,6 +46,7 @@ class PyRadioMessagesSystem(object):
     _tokens = {}
     _universal_message = None
     _station_info_message = None
+    _db_info_message = None
     _delayed_message = None
     _rb_search_message = None
     ''' reset _columns and _tokens
@@ -61,6 +62,7 @@ class PyRadioMessagesSystem(object):
             'H_CONFIG_PLAYER',
             'M_SHOW_UNNAMED_REGISTER',
             'M_STATION_INFO',
+            'M_DB_INFO',
             'M_UPDATE_STATIONS_RESULT',
             'D_WITH_DELAY',
             'UNIVERSAL',
@@ -269,6 +271,8 @@ wait until one actually starts playing).
 ),
 
     'M_STATION_INFO': ('',),
+
+    'M_DB_INFO': ('',),
 
     'D_WITH_DELAY': ('',),
 
@@ -1401,6 +1405,9 @@ W| / |w                             |*| Toggle title log / like a station'''
 
         }
         # INSERT NEW ITEMS ABOVE
+        if self._db_info_message is not None:
+            self._txt['M_DB_INFO'] = self._db_info_message
+            self._db_info_message = None
         if self._station_info_message is not None:
             self._txt['M_STATION_INFO'] = self._station_info_message
             self._station_info_message = None
@@ -1483,8 +1490,10 @@ W| / |w                             |*| Toggle title log / like a station'''
             self._delayed_message = msg
         elif index == 'M_STATION_INFO':
             self._station_info_message = msg
+        elif index == 'M_DB_INFO':
+            self._db_info_message = msg
         elif index == 'UNIVERSAL':
-            self._universal_info_message = msg
+            self._universal_message = msg
 
     def set_token(self, token):
         self._active_token = None
@@ -1509,7 +1518,6 @@ W| / |w                             |*| Toggle title log / like a station'''
                     r text (string)
                 )
         '''
-        logger.error('args = "{}"'.format(args))
         cap, out = self._txt[self.active_message_key]
         logger.info('--> out\n{}'.format(out))
         if out is None:
@@ -1613,7 +1621,6 @@ W| / |w                             |*| Toggle title log / like a station'''
     def _get_active_message_key(self, *args):
         if args:
             self.active_message_key = args[0] if args[0] else 'H_MAIN'
-            logger.error('\n\n\n')
             logger.error('args[0] = {}'.format(args[0]))
             try:
                 logger.error('args[1] = {}'.format(args[1]))
@@ -1665,31 +1672,35 @@ W| / |w                             |*| Toggle title log / like a station'''
                 cleaned_text.append(line)
         return token_dict, cleaned_text
 
+    def _show_too_small(self):
+        p_height, p_width = self._parent.getmaxyx()
+        self.too_small = True
+        self._can_scroll = False
+        txt = ' Window too small '
+        self._maxY = 3
+        self._maxX = len(txt) + 2
+        logger.error(f'too small maxX = {self._maxX}')
+        self._winY = int((p_height - 3) / 2) + self._parent.getbegyx()[0]
+        self._winX = int((p_width - self._maxX) / 2)
+        if p_height > self._winY and p_width > self._winX:
+            self._win = curses.newwin(
+                    self._maxY,
+                    self._maxX,
+                    self._winY,
+                    self._winX
+                )
+            self._win.bkgd(' ', self.col_box)
+            self._win.box()
+            self._win.addstr(1, 1, txt, self.col_txt)
+        else:
+            self._win = None
+
     def _get_win(self):
         p_height, p_width = self._parent.getmaxyx()
         self._maxY = p_height - 2
         # self._maxX = self._main_win_width
         if p_width < self._maxX or self._maxY < 10:
-            self.too_small = True
-            self._can_scroll = False
-            txt = ' Window too small '
-            self._maxY = 3
-            self._maxX = len(txt) + 2
-            logger.error(f'too small maxX = {self._maxX}')
-            self._winY = int((p_height - 3) / 2) + self._parent.getbegyx()[0]
-            self._winX = int((p_width - self._maxX) / 2)
-            if p_height > self._winY and p_width > self._winX:
-                self._win = curses.newwin(
-                        self._maxY,
-                        self._maxX,
-                        self._winY,
-                        self._winX
-                    )
-                self._win.bkgd(' ', self.col_box)
-                self._win.box()
-                self._win.addstr(1, 1, txt, self.col_txt)
-            else:
-                self._win = None
+            self._show_too_small()
             return
         else:
             self.too_small = False
@@ -1700,6 +1711,11 @@ W| / |w                             |*| Toggle title log / like a station'''
                 self._maxY = self._lines_count + 2
                 self._winY = int((p_height - self._maxY) / 2) + pY
             else:
+                if self.active_message_key in(
+                        'M_STATION_INFO',
+                        'M_DB_INFO'):
+                    self._show_too_small()
+                    return
                 self._can_scroll = True
                 self._winY = int((p_height - self._maxY) / 2) + pY
             # if not ( p_height % 2 ):
@@ -1794,7 +1810,6 @@ W| / |w                             |*| Toggle title log / like a station'''
                 self._win.refresh()
         else:
             self._win.refresh()
-            logger.info('self._pad_pos = {}'.format(self._pad_pos))
             if self._active_token is not None:
                 self._pad_pos = self._active_token
             if self._pad_pos > self._lines_count - self._maxY + 3:

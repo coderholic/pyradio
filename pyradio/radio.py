@@ -4292,13 +4292,14 @@ ____Using |fallback| theme.''')
                 self.selection,
                 max_width=max_width)
         self._station_rename_from_info = False
+        logger.error('txt\n{}'.format(txt))
         self._messaging_win.set_a_message(
-                'UNIVERSAL',
+                'M_DB_INFO',
                 ('Station Database Info', txt)
                 )
         self._open_simple_message_by_key_and_mode(
                 self.ws.STATION_DATABASE_INFO_MODE,
-                'UNIVERSAL'
+                'M_DB_INFO'
                 )
 
     def _show_station_info(self):
