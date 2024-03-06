@@ -544,12 +544,13 @@ class RadioBrowser(PyRadioStationsBrowser):
         if self._vote_callback:
             self._vote_callback()
 
-    def get_info_string(self, a_station, max_width=60):
+    def get_info_string(self, a_station, max_width, win_width):
         guide = [
             ('Name',  'name'),
             ('URL', 'url'),
             ('Resolved URL', 'url_resolved'),
             ('Website', 'homepage'),
+            ('Icon', 'favicon'),
             ('Tags', 'tags'),
             ('Votes', 'votes'),
             ('Clicks', 'clickcount'),
@@ -559,6 +560,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             ('Bitrate', 'bitrate'),
             ('Codec', 'codec')
         ]
+        logger.error('raw_stations\n{}'.format(self._raw_stations[a_station]))
         if self._raw_stations[a_station]['url'] == self._raw_stations[a_station]['url_resolved']:
             guide.pop(2)
         info = collections.OrderedDict()
@@ -575,7 +577,7 @@ class RadioBrowser(PyRadioStationsBrowser):
 
         a_list = []
         fix_highlight = []
-        a_list = info_dict_to_list(info, fix_highlight, max_width)
+        a_list = info_dict_to_list(info, fix_highlight, max_width, win_width)
         ret = '|' + '\n|'.join(a_list)
         # logger.error('DE \n\n{}\n\n'.format(ret))
         sp = ret.split('\n')

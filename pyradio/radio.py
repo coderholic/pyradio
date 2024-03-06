@@ -795,27 +795,43 @@ class PyRadio(object):
         out.append('  Selection (id={0}): "{1}"'.format(self.selection+1, self.stations[self.selection][0]))
         return '\n'.join(out)
 
+
+    def _transform_search_string(self, input_string):
+        pairs = [pair.strip() for pair in input_string.split(',')]
+        transformed_pairs = []
+
+        for pair in pairs:
+            key, value = pair.split(':')
+            transformed_pairs.append('<span style="color: Green;">{}</span>: {}'.format(key.strip(), value.strip()))
+
+        output_string = ', '.join(transformed_pairs)
+        return output_string
+
     def _html_info(self):
         out = []
         out.append('<div class="alert alert-info">')
-        out.append('<b>PyRadio {0}{1}</b><br>'.format(self._cnf.current_pyradio_version, ' (headless)' if self._cnf.headless else ''))
-        out.append('<span style="padding-left: 1em;">Player: <b>{}</b></span><br>'.format(self.player.PLAYER_NAME))
+        out.append('<table id="infot"><tbody>')
+        out.append('<tr><td colspan="2" style="padding-left: 0; text-align: left; font-weight: bold;">PyRadio {0}{1}</span>'.format(self._cnf.current_pyradio_version, ' (<span style="color: Green;">headless</span>)</td></tr>' if self._cnf.headless else '</td></tr>'))
+        out.append('<tr><td>Player:</td><td>{}</span></td></tr>'.format(self.player.PLAYER_NAME))
         if self._cnf.browsing_station_service:
-            out.append('<span style="padding-left: 1em;">Service: <b>{}</b></span><br>'.format(self._cnf.online_browser.TITLE))
-            out.append('<span style="padding-left: 2em;">Search: <b>{}</b></span><br>'.format(self._cnf.online_browser.get_current_history_string()))
+            out.append('<tr><td>Service:</td><td>{}</span></td></tr>'.format(self._cnf.online_browser.TITLE))
+            out.append('<tr><td>Search:</td><td>{}</span></td></tr>'.format(
+                self._transform_search_string(self._cnf.online_browser.get_current_history_string())
+                ))
             if self._cnf._online_browser.page > 0:
-                out.append('<span style="padding-left: 2em;">Results page: <b>{}</b></span><br>'.format(self._cnf._online_browser.page+1))
+                out.append('<tr><td>Page:</td><td>{}</span></td></tr>'.format(self._cnf._online_browser.page+1))
         else:
-            out.append('<span style="padding-left: 1em;">Playlist: <b>{}</b></span><br>'.format(basename(self._playlist_in_editor)[:-4]))
+            out.append('<tr><td>Playlist:</td><td>{}</span></td></tr>'.format(basename(self._playlist_in_editor)[:-4]))
         if self.player.isPlaying():
-            out.append('<span style="padding-left: 1em;">Status: <b>In playback{0} {1}</b></span><br>'.format(
+            out.append('<tr><td>Status:</td><td>In playback{0} {1}</span></td></tr>'.format(
                 ', recording' if self.player.currently_recording else '',
                 '(muted)' if self.player.muted else '')
                 )
-            out.append('<span style="padding-left: 1em;">Station: <b>{}</b></span><br>'.format(self.stations[self.playing][0]))
+            out.append('<tr><td>Station:</td><td>{}</span></td></tr>'.format(self.stations[self.playing][0]))
         else:
-            out.append('<span style="padding-left: 1em;">Status: <b>Idle</b></span><br>')
-            out.append('<span style="padding-left: 1em;">Selection: <b>{}</b></span><br>'.format(self.stations[self.selection][0]))
+            out.append('<tr><td>Status:</td><td>Idle</span></td></tr>')
+            out.append('<tr><td>Selection:</td><td>{}</span></td></tr>'.format(self.stations[self.selection][0]))
+        out.append('</tbody></table>')
         out.append('</div>')
         return '\n'.join(out)
 
@@ -4290,7 +4306,8 @@ ____Using |fallback| theme.''')
             max_width = 60
         txt, tail = self._cnf._online_browser.get_info_string(
                 self.selection,
-                max_width=max_width)
+                max_width=max_width,
+                win_width=self.bodyMaxX)
         self._station_rename_from_info = False
         logger.error('txt\n{}'.format(txt))
         self._messaging_win.set_a_message(
@@ -4310,7 +4327,8 @@ ____Using |fallback| theme.''')
             max_width = 60
         txt, tail = self.player.get_info_string(
             self._last_played_station,
-            max_width=max_width)
+            max_width=max_width,
+            win_width=self.bodyMaxX)
 
         msg = txt + tail
         logger.error('msg\n{}'.format(msg))

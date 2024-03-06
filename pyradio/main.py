@@ -209,15 +209,26 @@ def print_active_schedule(a_file):
     else:
         print('No Active Schedule available...')
 
+def _win_python_3_12():
+    import _curses
+    # This crashes on Python 3.12.
+        # setupterm(term=_os.environ.get("TERM", "unknown"),
+            # fd=_sys.__stdout__.fileno())
+    stdscr = _curses.initscr()
+    for key, value in _curses.__dict__.items():
+        if key[0:4] == 'ACS_' or key in ('LINES', 'COLS'):
+            setattr(curses, key, value)
+    return stdscr
+
 def shell():
     version_too_old = False
     if sys.version_info[0] == 2:
         if sys.version_info < (2, 7):
             version_too_old = True
-        elif sys.version_info.major == 3 and sys.version_info < (3, 5):
+        elif sys.version_info.major == 3 and sys.version_info < (3, 7):
             version_too_old = True
     if version_too_old:
-        print('PyRadio requires python 2.7 or 3.5+...')
+        print('PyRadio requires python 3.7+...')
         sys.exit(1)
 
     if not HAS_RICH and PY3:
@@ -927,7 +938,13 @@ If nothing else works, try the following command:
             find_and_remove_recording_data(pyradio_config.recording_dir)
 
         ''' curses wrapper '''
-        curses.wrapper(pyradio.setup)
+        if platform.startswith('win') and sys.version_info >= (3, 12):
+            ''' fix for windows python 3.12, base on
+                https://github.com/zephyrproject-rtos/windows-curses/issues/50#issuecomment-1840485627
+            '''
+            pyradio.setup(_win_python_3_12())
+        else:
+            curses.wrapper(pyradio.setup)
 
         ''' curses is off '''
         if pyradio.setup_return_status:

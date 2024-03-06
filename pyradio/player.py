@@ -200,7 +200,7 @@ def info_dict_to_list1(info, fix_highlight, max_width):
     logger.info('out\n{}\n\n'.format(out))
     return out
 
-def info_dict_to_list(info, fix_highlight, max_width):
+def info_dict_to_list(info, fix_highlight, max_width, win_width):
     max_len = 0
     for a_title in info.keys():
         if len(a_title) > max_len:
@@ -208,6 +208,16 @@ def info_dict_to_list(info, fix_highlight, max_width):
         info[a_title] = info[a_title].replace('_','¸')
     # logger.error('DE info\n{}\n\n'.format(info))
 
+    logger.error('\n\n\n')
+    logger.info(f'{max_width = }, {win_width = }')
+    logger.error(f'{info = }')
+    max_str = max([len(l[0]) + len(l[1]) + 2 for l in info.items()])
+    # logger.error(f'{max_str = }')
+    # max_str = max([len(l[1]) + 2 for l in info.items()])
+    logger.info(f'{max_str = }, {max_width = }, {win_width = }')
+    if win_width - 24 >= max_str:
+        max_width = max_str + 3
+    logger.error(f'{max_width = }')
     a_list = []
     for n in info.keys():
         a_list.extend(wrap(n.rjust(max_len, ' ') + ': |' + info[n],
@@ -452,13 +462,29 @@ class Player(object):
         ''' profile not found in config
             create a default profile
         '''
+        # fix for #229
+        base_path = os.path.dirname(self.config_files[0])
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Dir created: "{base_path}')
         try:
             with open(self.config_files[0], 'a', encoding='utf-8') as f:
                 f.write('\n[{}]\n'.format(a_profile_name))
                 f.write(self.NEW_PROFILE_STRING)
             self.PROFILE_FROM_USER = True
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Written "{}" profile in: "{}"'.format(
+                    self.NEW_PROFILE_STRING,
+                    self.config_files[0])
+                             )
             return 1, a_profile_name
         except:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Cannot write "{}" profile in: "{}"'.format(
+                    self.NEW_PROFILE_STRING,
+                    self.config_files[0])
+                             )
             return 0, profile
 
     def get_recording_filename(self, name, extension):
@@ -600,7 +626,7 @@ class Player(object):
             return False
         return True
 
-    def get_info_string(self, a_station, max_width=60):
+    def get_info_string(self, a_station, max_width, win_width):
         guide = (
             ('Reported Name',  'icy-name'),
             ('Website', 'icy-url'),
@@ -645,7 +671,11 @@ class Player(object):
                 ('Website:', 'Genre:'),
                 ('Genre:', 'Encoding:')
                 )
-        a_list = info_dict_to_list(info, fix_highlight, max_width)
+        a_list = info_dict_to_list(info, fix_highlight, max_width, win_width)
+
+        for n in a_list:
+            logger.debug(f'{n}')
+        logger.debug('\n\n\n')
 
         if 'Codec:' not in a_list[-1]:
             a_list[n] = '|' + a_list[n]
@@ -2265,6 +2295,12 @@ class Player(object):
         '''
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('No [silent] profile found!')
+        # fix for #229
+        base_path = os.path.dirname(self.config_files[0])
+        if not os.path.exists(base_path):
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'Dir created: "{base_path}')
+            os.makedirs(base_path)
         try:
             with open(self.config_files[0], 'a', encoding='utf-8') as f:
                 f.write('\n[{}]\n'.format('silent'))
@@ -2272,7 +2308,8 @@ class Player(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('Written [silent] profile in: "{}"'.format(self.config_files[0]))
         except:
-            pass
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Cannot wirte [silent] profile in: "{}"'.format(self.config_files[0]))
 
     def togglePause(self):
         if self.PLAYER_NAME == 'mpv':

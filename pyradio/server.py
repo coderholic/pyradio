@@ -226,6 +226,27 @@ body {min-height: 101vh;}
             cursor: pointer;
         }
 
+    #infot {
+        border-collapse: collapse;
+    }
+
+    #infot tr {
+        padding: 0;
+        margin: 0;
+    }
+
+    #infot td {
+        font-weight: bold;
+        vertical-align: top;
+        color: #31708F;
+    }
+    #infot td:first-child {
+        font-weight: normal;
+        text-align: right;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
 div[id^='a_']:hover { underline: none;}
         </style>
     <link rel="shortcut icon" href="https://raw.githubusercontent.com/coderholic/pyradio/master/devel/pyradio.ico"
