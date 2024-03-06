@@ -33,14 +33,14 @@ If you face this situation, please refer to [this page](docs/pip-error.md) to re
 **PyRadio** provides the following features:
 
  - vi like keys in addition to arrows and special keys
- - Station editor (add/edit) with [CJK characters support](#cjk-characters-support)
- - Configuration editor
+ - [RadioBrowser](docs/radio-browser.md) support
+ - Remote Control Server
  - Multiple playlist support
  - vi like station registers
- - Search function
  - Theming support
- - [RadioBrowser](docs/radio-browser.md) support
- - Remote Control
+ - Station editor (add/edit) with [CJK characters support](#cjk-characters-support)
+ - Configuration editor
+ - Search function
  - Easy installation / updating
  - Runs on Linux, macOS and Windows
 
@@ -149,3 +149,4 @@ If you are a packager and would like to produce a package for your distribution 
 ## Special thanks
 
 1. [edunfelt](https://github.com/edunfelt), for her wonderful work on [base16 themes](https://github.com/edunfelt/base16-pyradio), and ideas regarding theming and such.
+2. [amano-kenji](https://github.com/amano-kenji), for his suggestions and bug reports.

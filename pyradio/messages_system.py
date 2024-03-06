@@ -1446,7 +1446,8 @@ W| / |w                             |*| Toggle title log / like a station'''
             self._caption, l, max_len = self._get_txt(*args)
             if l is None:
                 return
-            if max_len < self._main_win_width:
+            if max_len < self._main_win_width or \
+                    self.active_message_key in ('M_STATION_INFO', 'M_DB_INFO'):
                 self._maxX = max_len
             else:
                 self._maxX = self._main_win_width
@@ -1616,6 +1617,7 @@ W| / |w                             |*| Toggle title log / like a station'''
         logger.error('self._max_lens\n{}'.format(self._max_lens))
         if mmax < len(cap) + 6:
             mmax = len(cap) + 6
+        logger.error('\n\n===> mmax = {}\n\n'.format(mmax))
         return cap, l, mmax
 
     def _get_active_message_key(self, *args):
@@ -1706,7 +1708,7 @@ W| / |w                             |*| Toggle title log / like a station'''
             self.too_small = False
             pY, pX = self._parent.getbegyx()
             p_height, p_width = self._parent.getmaxyx()
-            if self._lines_count + 2 < self._maxY:
+            if self._lines_count + 2 <= self._maxY:
                 self._can_scroll = False
                 self._maxY = self._lines_count + 2
                 self._winY = int((p_height - self._maxY) / 2) + pY

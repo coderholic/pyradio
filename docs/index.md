@@ -81,14 +81,14 @@ If you face this situation, please refer to [this page](pip-error.md) to resolve
 **PyRadio** provides the following features:
 
  - vi like keys in addition to arrows and special keys
- - Station editor (add/edit) with [CJK characters support](#cjk-characters-support)
- - Configuration editor
+ - [RadioBrowser](docs/radio-browser.md) support
+ - Remote Control Server
  - Multiple playlist support
  - vi like station registers
- - Search function
  - Theming support
- - [RadioBrowser](radio-browser.md) support
- - Remote Control
+ - Station editor (add/edit) with [CJK characters support](#cjk-characters-support)
+ - Configuration editor
+ - Search function
  - Easy installation / updating
  - Runs on Linux, macOS and Windows
 

@@ -671,6 +671,7 @@ class Player(object):
                 ('Website:', 'Genre:'),
                 ('Genre:', 'Encoding:')
                 )
+        logger.error('\n\n**** win_width = {}\n\n'.format(win_width))
         a_list = info_dict_to_list(info, fix_highlight, max_width, win_width)
 
         for n in a_list:
@@ -680,8 +681,12 @@ class Player(object):
         if 'Codec:' not in a_list[-1]:
             a_list[n] = '|' + a_list[n]
 
-        if a_list[1].startswith('_'):
-            a_list[1] = '|' + a_list[1]
+        # if a_list[1].startswith('_'):
+        #     a_list[1] = '|' + a_list[1]
+        # logger.error(f'a_list[1] = {a_list[1]}')
+        # if a_list[1].startswith('||'):
+        #     a_list[1] == a_list[1][1:]
+        # logger.error(f'a_list[1] = {a_list[1]}')
 
         ret = '|' + '\n'.join(a_list).replace('Encoding: |', 'Encoding: ').replace('URL: |', 'URL: ').replace('\n', '\n|')
         tail = ''

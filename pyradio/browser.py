@@ -577,6 +577,7 @@ class RadioBrowser(PyRadioStationsBrowser):
 
         a_list = []
         fix_highlight = []
+        logger.error('\n\n**** win_width = {}\n\n'.format(win_width))
         a_list = info_dict_to_list(info, fix_highlight, max_width, win_width)
         ret = '|' + '\n|'.join(a_list)
         # logger.error('DE \n\n{}\n\n'.format(ret))
