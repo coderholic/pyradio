@@ -917,6 +917,8 @@ class PyRadioRecordingDir(object):
                 cursor_color=curses.color_pair(8),
                 unfocused_color=curses.color_pair(5),
                 string_changed_handler=self._string_changed)
+            if platform.startswith('win'):
+                self._widgets[0].paste_mode_always_on = True
             self._widgets[0].bracket = False
             self._widgets[0].set_global_functions(self._global_functions)
             self._widgets[0].id = 0

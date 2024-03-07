@@ -3722,6 +3722,16 @@ class SimpleCursesLineEdit(object):
         self._use_paste_mode = val
 
     @property
+    def paste_mode_always_on(self):
+        return self._paste_mode_always_on
+
+    @paste_mode_always_on.setter
+    def paste_mode_always_on(self, val):
+        self._paste_mode_always_on = val
+        if val:
+            self._paste_mode = True
+
+    @property
     def width(self):
         if self._auto_width < 1:
             h, self._width = self._parent_win.getmaxyx()
