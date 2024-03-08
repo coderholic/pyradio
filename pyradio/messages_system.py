@@ -49,6 +49,7 @@ class PyRadioMessagesSystem(object):
     _db_info_message = None
     _delayed_message = None
     _rb_search_message = None
+    _external_line_editor = None
     ''' reset _columns and _tokens
         These keys will have non static content,
         so widths will have to be calculated every time
@@ -935,6 +936,8 @@ Global functions work when preceded with a "|\|".
 '''
 ),
 
+    'H_EXTERNAL_LINE_EDITOR': ('',),
+
     'H_LINE_EDITOR': ('Line Editor Help',
 r'''Left| / |Right                  |*| Move to next / previous character.
 HOME|, |^A| / |END|, |^E            |*| Move to start / end of line.
@@ -1420,6 +1423,9 @@ W| / |w                             |*| Toggle title log / like a station'''
         if self._rb_search_message is not None:
             self._txt['D_RB_SEARCH'] = self._rb_search_message
             self._rb_search_message = None
+        if self._external_line_editor is not None:
+            self._txt['H_EXTERNAL_LINE_EDITOR'] = self._external_line_editor
+            self._external_line_editor = None
         logger.error('args = "{}"'.format(args))
         '''
             args[0] = message_key
@@ -1495,6 +1501,8 @@ W| / |w                             |*| Toggle title log / like a station'''
             self._db_info_message = msg
         elif index == 'UNIVERSAL':
             self._universal_message = msg
+        elif index == 'H_EXTERNAL_LINE_EDITOR':
+            self._external_line_editor = msg
 
     def set_token(self, token):
         self._active_token = None
@@ -1798,7 +1806,10 @@ W| / |w                             |*| Toggle title log / like a station'''
             self._pad_refresh()
 
     def show_args(self, parent):
-        self.set_text(parent, *self._args)
+        if self._args:
+            if self._args[0] == 'H_EXTERNAL_LINE_EDITOR' and \
+                    len(self._args) > 1:
+                self.set_text(parent, *self._args)
         self.show(parent)
 
     def show(self, parent=None):

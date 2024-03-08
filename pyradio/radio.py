@@ -1336,7 +1336,7 @@ class PyRadio(object):
                 if logger.isEnabledFor(logging.DEBUG):
                     # logger.debug('Displaying mode {}'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
                     # if self.ws.MODE_NAMES[self._redisplay_list[n][0]] != 'PLAYER_PARAMS_MODE':
-                    self._redisplay[self._redisplay_list[n][0]]()
+                self._redisplay[self._redisplay_list[n][0]]()
 
         # logger.error('DE window mode = {}'.format(self.ws.window_mode))
         # logger.error('DE operation mode = {}'.format(self.ws.operation_mode))
@@ -2942,11 +2942,16 @@ ____Using |fallback| theme.''')
                 '''
             if platform.startswith('win'):
                 txt = txt.replace('M-', 'A-')
-        return 'Line Editor Help', txt
+        if txt:
+            self._messaging_win.set_a_message(
+                    'H_EXTERNAL_LINE_EDITOR',
+                    ('Line Editor Help', txt)
+                    )
+            self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR')
 
     def _show_config_player_help(self):
         if self._player_select_win.editing > 0:
-            self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR', self._show_line_editor_help)
+            self._show_line_editor_help()
             return None
         elif self._player_select_win.focus:
             txt = r'''TAB                           |*| Move selection to |Extra Parameters| column.
@@ -6653,7 +6658,7 @@ ____Using |fallback| theme.''')
                         self._simple_schedule.get_error_message()
                         )
             elif ret == 9:
-                self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR', self._show_line_editor_help)
+                self._show_line_editor_help()
             elif ret == 10:
                 self._open_simple_message_by_key(
                         'M_SCHEDULE_INFO',
@@ -7055,7 +7060,7 @@ ____Using |fallback| theme.''')
                     self.restartPlayer('*** Restarting playback due to encoding change ***')
             elif ret == 2:
                 ''' display line editor help '''
-                self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR', self._show_line_editor_help)
+                self._show_line_editor_help()
             elif ret == 3:
                 ''' show encoding '''
                 if self._station_editor._encoding == '':
@@ -7129,7 +7134,7 @@ ____Using |fallback| theme.''')
                 return
             elif ret == 2:
                 ''' display line editor help '''
-                self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR', self._show_line_editor_help)
+                self._show_line_editor_help()
                 return
 
         elif self.ws.operation_mode == self.ws.EDIT_STATION_ENCODING_MODE and \
@@ -7244,7 +7249,7 @@ ____Using |fallback| theme.''')
                 self.refreshBody()
             elif ret == 2:
                 # show line editor help
-                self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR', self._show_line_editor_help)
+                self._show_line_editor_help()
             elif ret == 3:
                 # show invalid dir message
                 self._show_notification_with_delay(
@@ -7327,7 +7332,7 @@ ____Using |fallback| theme.''')
                 self._open_message_win_by_key('H_RB_SEARCH')
             elif ret == 3:
                 ''' display help editor help '''
-                self._open_message_win_by_key('H_EXTERNAL_LINE_EDITOR', self._show_line_editor_help)
+                self._show_line_editor_help()
             elif ret == 4:
                 ''' search parameter error '''
                 self._show_notification_with_delay(
