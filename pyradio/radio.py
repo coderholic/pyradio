@@ -1333,9 +1333,8 @@ class PyRadio(object):
                         logger.debug('Not displaying stations, next mode is full screen')
                     display = False
             if display:
-                if logger.isEnabledFor(logging.DEBUG):
-                    # logger.debug('Displaying mode {}'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
-                    # if self.ws.MODE_NAMES[self._redisplay_list[n][0]] != 'PLAYER_PARAMS_MODE':
+                # if logger.isEnabledFor(logging.DEBUG):
+                #     logger.debug('Displaying mode {}'.format(self.ws.MODE_NAMES[self._redisplay_list[n][0]]))
                 self._redisplay[self._redisplay_list[n][0]]()
 
         # logger.error('DE window mode = {}'.format(self.ws.window_mode))
