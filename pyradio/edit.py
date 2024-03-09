@@ -35,6 +35,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
                     'Data Directory',
                     'State Directory'
                     'Cache Directory',
+                    'Code Directory',
                     'Recordings Directory    ',
             )
             self._dir = (
@@ -42,6 +43,30 @@ class PyRadioOpenDir(SimpleCursesMenu):
                     self._cnf.data_dir,
                     self._cnf.state_dir,
                     self._cbf.cache_dir,
+                    path.dirname(__file__),
+                    self._cnf.recording_dir
+            )
+            self._ord = (
+                ord('1'),
+                ord('2'),
+                ord('3'),
+                ord('4'),
+                ord('5'),
+                ord('6')
+            )
+        else:
+            self._items = (
+                    'Config Directory',
+                    'Data Directory',
+                    'Cache Directory',
+                    'Code Directory',
+                    'Recordings Directory        ',
+            )
+            self._dir = (
+                    self._cnf.stations_dir,
+                    self._cnf.data_dir,
+                    self._cnf.cache_dir,
+                    path.dirname(__file__),
                     self._cnf.recording_dir
             )
             self._ord = (
@@ -50,25 +75,6 @@ class PyRadioOpenDir(SimpleCursesMenu):
                 ord('3'),
                 ord('4'),
                 ord('5')
-            )
-        else:
-            self._items = (
-                    'Config Directory',
-                    'Data Directory',
-                    'Cache Directory',
-                    'Recordings Directory        ',
-            )
-            self._dir = (
-                    self._cnf.stations_dir,
-                    self._cnf.data_dir,
-                    self._cnf.cache_dir,
-                    self._cnf.recording_dir
-            )
-            self._ord = (
-                ord('1'),
-                ord('2'),
-                ord('3'),
-                ord('4'),
             )
 
         for n in self._dir:
