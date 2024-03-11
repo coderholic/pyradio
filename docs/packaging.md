@@ -6,6 +6,7 @@
 * [Dependencies](#dependencies)
 * [Files to change](#files-to-change)
     * [distro name (must do)](#distro-name-(must-do))
+    * [XDG Base Directory Specification Compliance](#xdg-base-directory-specification-compliance)
     * [Desktop Notifications (optional)](#desktop-notifications-(optional))
     * [Desktop File location](#desktop-file-location)
     * [pyradio/\_\_pycache\_\_](#pyradio/\_\_pycache\_\_)
@@ -58,6 +59,16 @@ For example, an **Arch Linux** packager would use this command:
 The distro name you insert here will appear in **PyRadio**'s "*Configuration Window*". In addition to that it will appear in the log file, so that I know where the package came from while debugging.
 
 Having said that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using "*xxx*" will do the job, but provides no useful information).
+
+### XDG Base Directory Specification Compliance
+
+By default, all **PyRadio** configuration, operational and state files are stored under "*~/.config/pyradio*".
+
+[XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) proposes a different arrangement, though. More info (and examples) can also be found at Arch's [XDG Base Directory](https://wiki.archlinux.org/title/XDG_Base_Directory).
+
+If you want to comply to this specification, just execute the following command from the sources top level directory (typically "*pyradio*"):
+
+    sed -i 's/xdg_compliant = False/xdg_compliant = True/' pyradio/config
 
 ### Desktop Notifications (optional)
 

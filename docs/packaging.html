@@ -47,6 +47,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#files-to-change">Files to change</a>
 <ul>
 <li><a href="#distro-name-(must-do)">distro name (must do)</a></li>
+<li><a href="#xdg-base-directory-specification-compliance">XDG Base Directory Specification Compliance</a></li>
 <li><a href="#desktop-notifications-(optional)">Desktop Notifications (optional)</a></li>
 <li><a href="#desktop-file-location">Desktop File location</a></li>
 <li><a href="#pyradio/__pycache__">pyradio/__pycache__</a></li>
@@ -84,6 +85,11 @@ a:visited{color: SaddleBrown;}
 <pre>sed -i &#39;s/distro = None/distro = Arch Linux/&#39; pyradio/config</pre>
 <p>The distro name you insert here will appear in <strong>PyRadio</strong>’s “<em>Configuration Window</em>”. In addition to that it will appear in the log file, so that I know where the package came from while debugging.</p>
 <p>Having said that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using “<em>xxx</em>” will do the job, but provides no useful information).</p>
+<h3 id="xdg-base-directory-specification-compliance">XDG Base Directory Specification Compliance</h3>
+<p>By default, all <strong>PyRadio</strong> configuration, operational and state files are stored under “<em>~/.config/pyradio</em>”.</p>
+<p><a target="_blank" href="https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html">XDG Base Directory Specification</a> proposes a different arrangement, though. More info (and examples) can also be found at Arch’s <a target="_blank" href="https://wiki.archlinux.org/title/XDG_Base_Directory">XDG Base Directory</a>.</p>
+<p>If you want to comply to this specification, just execute the following command from the sources top level directory (typically “<em>pyradio</em>”):</p>
+<pre>sed -i &#39;s/xdg_compliant = False/xdg_compliant = True/&#39; pyradio/config</pre>
 <h3 id="desktop-notifications-optional">Desktop Notifications (optional)</h3>
 <p>If you want to enable <a href="index.html#desktop-notifications">Desktop Notifications</a>, do a</p>
 <pre>sed -i &#39;s/enable_notifications = -1/enable_notifications = 0/&#39; pyradio/config</pre>

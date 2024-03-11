@@ -156,6 +156,14 @@ remote_control_server_ip = localhost
 remote_control_server_port = 9998
 remote_control_server_auto_start = False
 
+# Enable "XDG Base Directory Specification" compliance
+# Enabling this options will lead to operational
+# data files being dispersed to XDG directories
+#
+# This setting has no effect on Windows
+# Default value: False
+xdg_compliant = False
+
 # The name of the distribution providing the package.
 # If this parameter is set to anything other than "None"
 # PyRadio will not permit updating (-U command line

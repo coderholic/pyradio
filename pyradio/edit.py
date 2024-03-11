@@ -77,8 +77,10 @@ class PyRadioOpenDir(SimpleCursesMenu):
                 ord('5')
             )
 
-        for n in self._dir:
-            logger.error('dir: "{}"'.format(n))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('Open Directory Window')
+            for n in self._dir:
+                logger.debug('dir: "{}"'.format(n))
 
         SimpleCursesMenu.__init__(
             self,

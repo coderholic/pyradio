@@ -6085,7 +6085,7 @@ ____Using |fallback| theme.''')
                 self.ws.PLAYLIST_MODE):
 
             if char == ord('o'):
-                logger.error(r'\o pressed')
+                ''' open dir window '''
                 self._backslash_pressed = False
                 self._update_status_bar_right(status_suffix='')
                 self._show_open_dir_window()

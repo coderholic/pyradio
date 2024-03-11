@@ -2318,7 +2318,7 @@ class PyRadioConfig(PyRadioStations):
             return default_remote_control_server
         return val
 
-    def read_config(self):
+    def read_config(self, distro_config=False):
         lines = []
         try:
             with open(self.config_file, 'r', encoding='utf-8') as cfgfile:
@@ -2486,9 +2486,10 @@ class PyRadioConfig(PyRadioStations):
                 elif self.opts['recording_dir'][1].startswith('%homepath%') or \
                         self.opts['recording_dir'][1].startswith('%HOMEPATH%'):
                     self.opts['recording_dir'][1] = path.expanduser('~') + self.opts['recording_dir'][1][len('%homepath%'):]
-            elif sp[0] == 'xdg_compliant':
-                if sp[1].lower() == 'true':
-                    self.xdg_compliant = True
+            elif sp[0] == 'xdg_compliant' and \
+                    distro_config and \
+                    sp[1].lower() == 'true':
+                self.xdg_compliant = True
 
         ''' read distro from package config file '''
         package_config_file = path.join(path.dirname(__file__), 'config')
