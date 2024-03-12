@@ -276,6 +276,8 @@ If nothing else works, try the following command:
         parser.add_argument('--exe', action='store_true', default=False,
                             help='Show EXE file location (Windows only).')
 
+    parser.add_argument('-pc', '--print-config', action='store_true',
+                        help='Print PyRadio config.')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Start PyRadio in debug mode.')
     parser.add_argument('-ul', '--unlock', action='store_true',
@@ -457,7 +459,37 @@ If nothing else works, try the following command:
                 print('Headless Server lock file not found\n')
             sys.exit()
 
-
+        if args.print_config:
+            cnf = path.join(path.dirname(__file__), 'config')
+            with open(cnf, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            for i, l in enumerate(lines):
+                line = l.strip()
+                if line.startswith('#'):
+                    if i == 0:
+                        d_line = '[deep_sky_blue1]' + line + '[/deep_sky_blue1]\n' + \
+                            '[deep_sky_blue1]# displaying[/deep_sky_blue1] ' + \
+                            '[bold green]active[/bold green] ' + \
+                            '[deep_sky_blue1]values[/deep_sky_blue1]'
+                        d_line = d_line.replace('PyRadio', '[magenta]PyRadio[/magenta]')
+                    else:
+                        d_line = '[deep_sky_blue1]' + line + '[/deep_sky_blue1]'
+                else:
+                    d_line = line
+                    if '=' in line:
+                        sp = line.split(' = ')
+                        if len(sp) == 2:
+                            d_line = '[magenta]' + sp[0] + '[/magenta]' + ' = '
+                        if sp[0] in pyradio_config.opts.keys():
+                            d_line += '[bold green]' + str(pyradio_config.opts[sp[0]][1]) + '[/bold green]'
+                        else:
+                            if sp[0] == 'distro':
+                                d_line += '[bold green]' + str(pyradio_config.distro) + '[/bold green]'
+                            elif sp[0] == 'xdg_compliant':
+                                d_line += '[bold green]' + str(pyradio_config.xdg_compliant) + '[/bold green]'
+                print(d_line)
+            print('')
+            sys.exit()
 
         if args.version:
             pyradio_config.get_pyradio_version()

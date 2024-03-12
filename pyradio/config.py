@@ -2274,12 +2274,10 @@ class PyRadioConfig(PyRadioStations):
             except:
                 pass
 
-        ''' Copy package config into user dir '''
-        if not path.exists(user_config_file):
-            if is_rasberrypi():
-                self._convert_config_for_rasberrypi(package_config_file, user_config_file)
-            else:
-                copyfile(package_config_file, user_config_file)
+        ''' update pi config file '''
+        if not path.exists(user_config_file) and \
+                is_rasberrypi():
+            self._convert_config_for_rasberrypi(package_config_file, user_config_file)
 
     def _convert_config_for_rasberrypi(self, package_config_file, user_config_file):
         lines = []
@@ -2319,9 +2317,26 @@ class PyRadioConfig(PyRadioStations):
         return val
 
     def read_config(self, distro_config=False):
+        self._read_config(distro_config=True)
+        self.config_opts = deepcopy(self.opts)
+        logger.error('self.config_opts')
+        for n in self.config_opts.items():
+            logger.error('  {}: {}'.format(*n))
+        self._read_config()
+
+    def _read_config(self, distro_config=False):
+        if distro_config:
+            file_to_read = path.join(path.dirname(__file__), 'config')
+        else:
+            file_to_read = self.config_file
+            if not path.exists(file_to_read):
+                # user config does not exist, just return
+                self._make_sure_dirs_exist()
+                self._first_read = False
+                return
         lines = []
         try:
-            with open(self.config_file, 'r', encoding='utf-8') as cfgfile:
+            with open(file_to_read, 'r', encoding='utf-8') as cfgfile:
                 lines = [line.strip() for line in cfgfile if line.strip() and not line.startswith('#') ]
 
         except:
@@ -2473,10 +2488,6 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['remote_control_server_auto_start'][1] = True
                 else:
                     self.opts['remote_control_server_auto_start'][1] = False
-            elif sp[0] == 'distro':
-                ''' mark as dirty to force saving config to remove setting '''
-                # self.dirty_config = True
-                self._distro = sp[1].strip()
             elif sp[0] == 'recording_dir':
                 self.opts['recording_dir'][1] = sp[1].strip()
                 if self.opts['recording_dir'][1] == 'default':
@@ -2486,6 +2497,11 @@ class PyRadioConfig(PyRadioStations):
                 elif self.opts['recording_dir'][1].startswith('%homepath%') or \
                         self.opts['recording_dir'][1].startswith('%HOMEPATH%'):
                     self.opts['recording_dir'][1] = path.expanduser('~') + self.opts['recording_dir'][1][len('%homepath%'):]
+            elif sp[0] == 'distro' and \
+                    distro_config:
+                ''' mark as dirty to force saving config to remove setting '''
+                # self.dirty_config = True
+                self._distro = sp[1].strip()
             elif sp[0] == 'xdg_compliant' and \
                     distro_config and \
                     sp[1].lower() == 'true':
@@ -2535,6 +2551,11 @@ class PyRadioConfig(PyRadioStations):
         # for n in self.opts:
         #     print('{0}: {1}'.format(n, self.opts[n]))
 
+        self._make_sure_dirs_exist()
+        if not distro_config:
+            self._first_read = False
+
+    def _make_sure_dirs_exist(self):
         if self.opts['recording_dir'][1] == '':
             self.opts['recording_dir'][1] = path.join(path.expanduser('~'), 'pyradio-recordings')
         ch_dir = CheckDir(
@@ -2569,7 +2590,6 @@ class PyRadioConfig(PyRadioStations):
                     migrate=True,
                     first_read=path.join(self.stations_dir, 'data', 'recordings')
             )
-        self._first_read = False
 
     def get_last_playlist(self):
         ''' read last opened playlist
