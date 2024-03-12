@@ -1146,16 +1146,14 @@ a:visited{color: SaddleBrown;}
 <p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (<em>Arch Linux</em> and derivatives can install <a target="_blank" href="https://aur.archlinux.org/packages/?K=pyradio">any of these packages</a> from the AUR, <em>FreeBSD</em> users will find it in the <a target="_blank" href="https://www.freshports.org/audio/py-pyradio/">ports</a>, etc.).</p>
 <p>In any other case, and since <strong>PyRadio</strong> is currently not available via pip, you will have to <a href="build.html">build it from source</a>.</p>
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<pre>$ pyradio -h
-
-
-Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-a]
-               [-l] [-lt] [-sd] [-od] [-d] [-ul] [-us] [-U] [-R] [-V] [-ls]
-               [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes] [--no-themes]
-               [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
-               [--terminal-param TERMINAL_PARAM] [-oc] [-sc] [-cc] [-gc] [-r]
-               [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt] [-ach]
-               [--headless IP_AND_PORT] [--address] [-fd]
+<pre>Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-a]
+               [-l] [-lt] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R] [-V]
+               [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
+               [--no-themes] [--write-theme IN_THEME OUT_THEME,]
+               [--terminal TERMINAL] [--terminal-param TERMINAL_PARAM] [-oc]
+               [-sc] [-cc] [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE]
+               [-scv PNG_FILE] [-srt] [-ach] [--headless IP_AND_PORT]
+               [--address] [-fd]
 
 Curses based Internet radio player
 
@@ -1180,6 +1178,7 @@ General options:
   -od, --open-config-dir
                         Open config directory [CONFIG DIR] with default file
                         manager.
+  -pc, --print-config   Print PyRadio config.
   -d, --debug           Start PyRadio in debug mode.
   -ul, --unlock         Remove sessions&#39; lock file.
   -us, --update-stations
