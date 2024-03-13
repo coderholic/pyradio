@@ -6006,7 +6006,9 @@ ____Using |fallback| theme.''')
             self.ws.CONFIG_SAVE_ERROR_MODE
         ):
             ''' if no player or config error, don't serve keyboard '''
-            return
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('*** terminating due to op. mode: {}'.format(self.ws.MODE_NAMES[self.ws.operation_mode]))
+            return -1
 
         elif (self.jumpnr or self._cnf.jump_tag > -1) and \
                 char in (curses.KEY_EXIT, ord('q'), 27) and \

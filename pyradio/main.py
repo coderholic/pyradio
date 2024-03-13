@@ -467,11 +467,11 @@ If nothing else works, try the following command:
                 line = l.strip()
                 if line.startswith('#'):
                     if i == 0:
-                        d_line = '[deep_sky_blue1]' + line + '[/deep_sky_blue1]\n' + \
-                            '[deep_sky_blue1]# displaying[/deep_sky_blue1] ' + \
+                        d_line = '[deep_sky_blue1]' + line + '[/deep_sky_blue1]' + \
+                            '[deep_sky_blue1] displaying[/deep_sky_blue1] ' + \
                             '[bold green]active[/bold green] ' + \
                             '[deep_sky_blue1]values[/deep_sky_blue1]'
-                        d_line = d_line.replace('PyRadio', '[magenta]PyRadio[/magenta]')
+                        d_line = d_line.replace('PyRadio', '[magenta]PyRadio[/magenta]').replace(' File ', '')
                     else:
                         d_line = '[deep_sky_blue1]' + line + '[/deep_sky_blue1]'
                 else:
@@ -1017,16 +1017,10 @@ If nothing else works, try the following command:
 def read_config(pyradio_config):
     ret = pyradio_config.read_config()
     if ret == -1:
-        if PY3:
-            print('Error opening config: "[red]{}[/red]"'.format(pyradio_config.config_file))
-        else:
-            print('Error opening config: "{}"'.format(pyradio_config.config_file))
+        print('Error opening config: "[red]{}[/red]"'.format(pyradio_config.config_file))
         sys.exit(1)
     elif ret == -2:
-        if PY3:
-            print('Config file is malformed: "[red]{}[/red]"'.format(pyradio_config.config_file))
-        else:
-            print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
+        print('Config file is malformed: "[red]{}[/red]"'.format(pyradio_config.config_file))
         sys.exit(1)
     # for n in pyradio_config.opts.keys():
     #     print('{0}: {1}'.format(n, pyradio_config.opts[n]))

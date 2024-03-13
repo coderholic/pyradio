@@ -24,6 +24,8 @@ If you face this situation, please refer to [this page](pip-error.md) to resolve
     * [Secondary Modes](#secondary-modes)
     * [Tiling manager modes](#tiling-manager-modes)
 * [Config file](#config-file)
+    * [The package config file](#the-package-config-file)
+    * [The user config file](#the-user-config-file)
 * [About Playlist files](#about-playlist-files)
     * [Defining and using Groups](#defining-and-using-groups)
     * [Integrating new stations](#integrating-new-stations)
@@ -52,7 +54,7 @@ If you face this situation, please refer to [this page](pip-error.md) to resolve
     * [VLC](#vlc)
 * [Buffering](#buffering)
     * [Parameters used](#parameters-used)
-    * [Customizing the buffering behaviour](#customizing-the-buffering-behaviour)
+    * [Customizing the buffering behavior](#customizing-the-buffering-behavior)
     * [How it works](#how-it-works)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
@@ -361,9 +363,24 @@ These modes are specifically designed to be used with tiling window managers, tr
 
 ## Config file
 
-**PyRadio** upon its execution tries to read its configuration file (i.e. *~/.config/pyradio/config*). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and **PyRadio** will terminate.
+**PyRadio** upon its execution will first read its *package* configuration file and then will try to read the *user* configuration file. If an error occurs while parsing it, an error message will be displayed and **PyRadio** will terminate.
 
-The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see [here](pyradio/config)), so that manual editing is really easy. The best practice to manually edit this file is executing **PyRadio** with the **-ocd** command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.
+### The package config file
+The *package* configuration file contains the program's **default** parameters. These are the player to use, the playlist to load etc.
+
+It is heavily commented (as you can see [here](pyradio/config)), so that it can be used as a template in order to manual create the *user* configuration file.
+
+One can also get the configuration file with the **active parameter values** (i.e. after changed by the *user* config file), by executing the command:
+
+    pyradio -pc
+
+### The user config file
+
+This file (typically *~/.config/pyradio/config*) is created by **PyRadio** when needed.
+
+It will contain only the parameters whose value is different to the one set in the *package* configuration file.
+
+One can easily edit it manually, though. The best practice to do so is by executing **PyRadio** with the **-ocd** command line option, which will open the configuration directory in your file manager, and then edit (or create it) it using your preferable text editor. Don't forget you can get the list of parameters by executing **pyradio -pc**.
 
 The file can also be altered while **PyRadio** is running by pressing "**c**", which will open the "**Configuration window**". This window presents all **PyRadio** options and provide the way to change them and finally save them by pressing "**s**".
 
@@ -379,7 +396,7 @@ Optionally, two more columns can be used.
 
 The third column will define the encoding used by the station (more on this at [Specifying stations' encoding](#specifying-stations-encoding)).
 
-The fourth column will set an  *Icon URL*, to be used when displaying [Desktop Notifiacations](#desktop-notifications).
+The fourth column will set an  *Icon URL*, to be used when displaying [Desktop Notifications](#desktop-notifications).
 
 **PyRadio** will by default load the user's stations file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
 
@@ -831,7 +848,7 @@ The following table shows the command line parameters used by **PyRadio** when t
 
 \* disabled if more than 500KB of memory is free
 
-### Customizing the buffering behaviour
+### Customizing the buffering behavior
 
 In case one wants to use a different set of parameters (when using **mpv** or **mplayer**, but not **vlc**), one would just not use the integrated solution; one would just use a **profile**.
 
@@ -847,7 +864,7 @@ When buffering is enabled, and a connection to a station initializes, **PyRadio*
 
 An example is shown in the image above.
 
-Now, this behaviour depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.
+Now, this behavior depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.
 
 It should be noted that, no volume adjustment can be preformed while buffering.
 

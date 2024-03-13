@@ -1535,8 +1535,6 @@ class ExtraParameters(object):
 
     def _extract_profile(self, a_file):
         ''' extract profiles from a file '''
-        from sys import version as l_py_version
-        PY3 = l_py_version[0] == 3
         try:
             out = []
             with open(a_file, 'r') as f:
@@ -1547,7 +1545,7 @@ class ExtraParameters(object):
                             k.endswith(']'):
                         out.append(k[1:-1])
             return out
-        except (FileNotFoundError, PermissionError) if PY3 else IOError:
+        except (FileNotFoundError, PermissionError):
             return []
 
     def _extract_profiles(self, config_files, a_player_name=None):

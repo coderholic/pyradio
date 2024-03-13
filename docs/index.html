@@ -64,7 +64,11 @@ a:visited{color: SaddleBrown;}
 <li><a href="#secondary-modes">Secondary Modes</a></li>
 <li><a href="#tiling-manager-modes">Tiling manager modes</a></li>
 </ul></li>
-<li><a href="#config-file">Config file</a></li>
+<li><a href="#config-file">Config file</a>
+<ul>
+<li><a href="#the-package-config-file">The package config file</a></li>
+<li><a href="#the-user-config-file">The user config file</a></li>
+</ul></li>
 <li><a href="#about-playlist-files">About Playlist files</a>
 <ul>
 <li><a href="#defining-and-using-groups">Defining and using Groups</a></li>
@@ -108,7 +112,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#buffering">Buffering</a>
 <ul>
 <li><a href="#parameters-used">Parameters used</a></li>
-<li><a href="#customizing-the-buffering-behaviour">Customizing the buffering behaviour</a></li>
+<li><a href="#customizing-the-buffering-behavior">Customizing the buffering behavior</a></li>
 <li><a href="#how-it-works">How it works</a></li>
 </ul></li>
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
@@ -1393,8 +1397,16 @@ Esc/q/Left/h      -                                                Cancel / clos
 
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> These two modes do not work on Windows, either 7 or 10. The “<em>Console</em>”window will shrink as desired, but will not always notify <strong>PyRadio</strong> about it, so results will vary.</p>
 <h2 id="config-file">Config file <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p><strong>PyRadio</strong> upon its execution tries to read its configuration file (i.e. <em>~/.config/pyradio/config</em>). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and <strong>PyRadio</strong> will terminate.</p>
-<p>The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that manual editing is really easy. The best practice to manually edit this file is executing <strong>PyRadio</strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.</p>
+<p><strong>PyRadio</strong> upon its execution will first read its <em>package</em> configuration file and then will try to read the <em>user</em> configuration file. If an error occurs while parsing it, an error message will be displayed and <strong>PyRadio</strong> will terminate.</p>
+<h3 id="the-package-config-file">The package config file</h3>
+<p>The <em>package</em> configuration file contains the program’s <strong>default</strong> parameters. These are the player to use, the playlist to load etc.</p>
+<p>It is heavily commented (as you can see <a href="pyradio/config">here</a>), so that it can be used as a template in order to manual create the <em>user</em> configuration file.</p>
+<p>One can also get the configuration file with the <strong>active parameter values</strong> (i.e. after changed by the <em>user</em> config file), by executing the command:</p>
+<pre>pyradio -pc</pre>
+<h3 id="the-user-config-file">The user config file</h3>
+<p>This file (typically <em>~/.config/pyradio/config</em>) is created by <strong>PyRadio</strong> when needed.</p>
+<p>It will contain only the parameters whose value is different to the one set in the <em>package</em> configuration file.</p>
+<p>One can easily edit it manually, though. The best practice to do so is by executing <strong>PyRadio</strong> with the <strong>-ocd</strong> command line option, which will open the configuration directory in your file manager, and then edit (or create it) it using your preferable text editor. Don’t forget you can get the list of parameters by executing <strong>pyradio -pc</strong>.</p>
 <p>The file can also be altered while <strong>PyRadio</strong> is running by pressing “<strong>c</strong>”, which will open the “<strong>Configuration window</strong>”. This window presents all <strong>PyRadio</strong> options and provide the way to change them and finally save them by pressing “<strong>s</strong>”.</p>
 <p>In any case, <strong>PyRadio</strong> will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).</p>
 <p>If saving the configuration file fails, <strong>PyRadio</strong> will create a back up file and terminate. When restarted, <strong>PyRadio</strong> will try to restore previously used settings from the said back up file.</p>
@@ -1402,7 +1414,7 @@ Esc/q/Left/h      -                                                Cancel / clos
 <p><strong>PyRadio</strong> reads the stations to use from a CSV file, where each line contains two columns, the first being the station name and the second being the stream URL.</p>
 <p>Optionally, two more columns can be used.</p>
 <p>The third column will define the encoding used by the station (more on this at <a href="#specifying-stations-encoding">Specifying stations’ encoding</a>).</p>
-<p>The fourth column will set an <em>Icon URL</em>, to be used when displaying <a href="#desktop-notifications">Desktop Notifiacations</a>.</p>
+<p>The fourth column will set an <em>Icon URL</em>, to be used when displaying <a href="#desktop-notifications">Desktop Notifications</a>.</p>
 <p><strong>PyRadio</strong> will by default load the user’s stations file (e.g. <em>~/.config/pyradio/stations.csv</em>) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Older versions used to use <strong>~/.pyradio</strong> as default stations file. If this file is found, it will be copied to use’s config directory (e.g. <strong>~/.config/pyradio</strong>) and renamed to <strong>stations.csv</strong> or if this file exists, to <strong>pyradio.csv</strong>. In this case, this file will be the default one.</p>
 <h3 id="defining-and-using-groups">Defining and using Groups</h3>
@@ -1743,7 +1755,7 @@ volume=50</pre>
 </tbody>
 </table>
 <p>* disabled if more than 500KB of memory is free</p>
-<h3 id="customizing-the-buffering-behaviour">Customizing the buffering behaviour</h3>
+<h3 id="customizing-the-buffering-behavior">Customizing the buffering behavior</h3>
 <p>In case one wants to use a different set of parameters (when using <strong>mpv</strong> or <strong>mplayer</strong>, but not <strong>vlc</strong>), one would just not use the integrated solution; one would just use a <strong>profile</strong>.</p>
 <p>Please refer to the players’ documentation on profiles and the “<a href="#player-default-volume-level">Player default volume level</a>” section in this document.</p>
 <p>As long as the word “<strong>cache</strong>” is contained in the profile’s name, <strong>PyRadio</strong> will understand this is a buffering profile and act accordingly. But it’s up to the user to make sure this presupposition is honored.</p>
@@ -1752,7 +1764,7 @@ volume=50</pre>
 <p><a href="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" target="_blank"><img style="width: 350px" src="https://members.hellug.gr/sng/pyradio/pyradio-b.jpg" alt="PyRadio Buffering" /></a></p>
 
 <p>An example is shown in the image above.</p>
-<p>Now, this behaviour depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.</p>
+<p>Now, this behavior depends on the station, and the data it sends (or does not send) while it is buffering. For example, an ICY title may be received while buffering, which will be displayed in the status bar.</p>
 <p>It should be noted that, no volume adjustment can be preformed while buffering.</p>
 <h2 id="displaying-station-info">Displaying Station Info <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>When a connection to a radio station has been established, the station starts sending audio data for the user to listen to.</p>

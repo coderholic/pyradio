@@ -149,4 +149,4 @@ If you are a packager and would like to produce a package for your distribution 
 ## Special thanks
 
 1. [edunfelt](https://github.com/edunfelt), for her wonderful work on [base16 themes](https://github.com/edunfelt/base16-pyradio), and ideas regarding theming and such.
-2. [amano-kenji](https://github.com/amano-kenji), for his suggestions and bug reports.
+2. [amano-kenji](https://github.com/amano-kenji), for his valuable suggestions and bug reports.
