@@ -476,7 +476,7 @@ class PyRadioStations(object):
             self.xdg.build_paths()
             self.xdh.ensure_paths_exist()
         self.root_path = path.join(path.dirname(__file__), 'stations.csv')
-        self.player_params_file = path.join(self.data_dir, 'player_params.json')
+        self.player_params_file = path.join(self.data_dir, 'player-params.json')
         self.schedule_file = path.join(self.data_dir, 'schedule.json')
         self.themes_dir = path.join(self.stations_dir, 'themes')
         try:
@@ -2555,6 +2555,17 @@ class PyRadioConfig(PyRadioStations):
 
         self._make_sure_dirs_exist()
         if not distro_config:
+            if path.exists(self.player_params_file + '.restore'):
+                try:
+                    copyfile(self.player_params_file + '.restore', self.player_params_file)
+                except:
+                    pass
+            if path.exists(self.player_params_file):
+                try:
+                    with open(self.player_params_file, 'r', encoding='utf-8') as jf:
+                        self.params = json.load(jf)
+                except:
+                    pass
             self._first_read = False
 
     def _make_sure_dirs_exist(self):
@@ -3070,39 +3081,22 @@ class PyRadioConfig(PyRadioStations):
                 #     self.remote_control_server_auto_start
                 # ))
 
-                # ''' write extra player parameters to file '''
-                first_param = True
-                for a_set in self.saved_params.keys():
-                    if len(self.saved_params[a_set]) > 2:
-                        if first_param:
-                            txt = '''# Player Extra parameters section
-#
-# Each supported player can have any number of entries in this
-# section, specifying extra parameters to be used when it is executed.
-# The format is "[player name]_parameter=[parameters]"
-# An asterisk will indicate the parameter to be used as default.
-
-# {} extra parameters\n'''
-                            first_param = False
-
-                        else:
-                            txt = '''\n# {} extra parameters\n'''
-                        # logger.error('\n\n{}\n\n'.format(self.saved_params))
-                        cfgfile.write(txt.format(a_set))
-                        for i, a_param in enumerate(self.saved_params[a_set]):
-                            # logger.info('set: {0} - i = {1}, param = "{2}"'.format(a_set, i , a_param))
-                            if i == 0:
-                                default = a_param
-                            elif i > 1:
-                                if i == default:
-                                    txt = '*' + a_param
-                                    cfgfile.write('{}\n'.format(a_set + '_parameter=' + txt))
-                                    # logger.info('i= {0} == default : txt = "{1}"'.format(i, txt))
-                                else:
-                                    if not a_param.startswith('profile:'):
-                                        # logger.info('i= {0} != default : txt = "{1}"'.format(i, a_param))
-                                        cfgfile.write('{}\n'.format(a_set + '_parameter=' + a_param))
-
+            ''' write extra player parameters to file '''
+            if path.exists(self.player_params_file):
+                try:
+                    copyfile(self.player_params_file, self.player_params_file + '.restore')
+                except:
+                    pass
+            try:
+                with open(self.player_params_file, 'w', encoding='utf-8') as jf:
+                    jf.write(json.dumps(self.saved_params))
+                    if path.exists(self.player_params_file + '.restore'):
+                        try:
+                            remove(self.player_params_file + '.restore')
+                        except:
+                            pass
+            except:
+                pass
         except:
             if not from_command_line and \
                     logger.isEnabledFor(logging.ERROR):
