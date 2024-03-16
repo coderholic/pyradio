@@ -649,6 +649,15 @@ issue at "|https://github.com/coderholic/pyradio/issues|".
 '''
 ),
 
+    'H_RB_NO_PING': ('Servers Unreachable',
+r'''No server responds to ping.
+
+You will be able to edit the config file, but
+you will not be able to select a default server.
+
+'''
+),
+
     'H_RB_SEARCH': ('RadioBrowser Search Help',
 r'''Tab| / |Sh-Tab                  |*| Go to next / previous field.
 j|, |Up| / |k|, |Down               |*| Go to next / previous field vertivally.

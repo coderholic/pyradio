@@ -5,9 +5,10 @@ try:
 except:
     pass
 from copy import deepcopy
+from shutil import copyfile
 import random
 import json
-from os import path
+from os import path, remove
 import collections
 from operator import itemgetter
 try:
@@ -363,7 +364,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         '''
         self.first_search = True
         self._cnf = config
-        self.browser_config = RadioBrowserConfig(self._cnf.stations_dir)
+        self.browser_config = RadioBrowserConfig(self._cnf.stations_dir, self._cnf.data_dir)
 
         # logger.error('DE AUTO_SAVE_CONFIG = {}'.format(self.AUTO_SAVE_CONFIG))
 
@@ -1559,6 +1560,8 @@ class RadioBrowser(PyRadioStationsBrowser):
                 parent=parent,
                 config=self.browser_config,
                 dns_info=self._dns_info,
+                stations_dir=self._cnf.stations_dir,
+                data_dir=self._cnf.data_dir,
                 current_auto_save=self.AUTO_SAVE_CONFIG,
                 current_server=self._default_server,
                 current_history=self._search_history,
@@ -1594,11 +1597,18 @@ class RadioBrowserConfig(object):
     ping_count = 1
     ping_timeout = 1
 
-    def __init__(self, stations_dir):
+    def __init__(self, stations_dir, data_dir):
         self.config_file = path.join(stations_dir, 'radio-browser.conf')
+        self.search_terms_file = path.join(data_dir, 'radio-browser-search-terms')
 
     def read_config(self):
         ''' RadioBrowserConfig read config '''
+        for n in (self.config_file, self.search_terms_file):
+            if path.exists(n + '.restore'):
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(f'restoring RadioBrowser config file: "{n}"')
+                copyfile(n + '.restore', n)
+                remove(n + '.restore')
         self.terms = [{ 'type': '',
                   'term': '100',
                   'post_data': {}
@@ -1654,6 +1664,16 @@ class RadioBrowserConfig(object):
                         except:
                             self.ping_timeout = 1
 
+        if path.exists(self.search_terms_file):
+            try:
+                with open(self.search_terms_file, 'r', encoding='utf-8') as searchfile:
+                    lines = [line.strip() for line in searchfile if line.strip() and not line.startswith('#')]
+                term_str = []
+                for n in lines:
+                    term_str.append(n)
+            except:
+                pass
+
         if term_str:
             for n in range(0, len(term_str)):
                 if term_str[n].startswith('*'):
@@ -1700,13 +1720,16 @@ class RadioBrowserConfig(object):
                     default_ping_count,
                     default_ping_timeout,
                     default_max_number_of_results):
+        if path.exists(self.config_file):
+            copyfile(self.config_file, self.config_file + '.restore')
         self.auto_save = auto_save
         self.server = default_server if 'Random' not in default_server else ''
         self.default = default_max_number_of_results
         self.terms = deepcopy(search_history)
-        txt = '''##############################################################################
-#                    RadioBrowser config file for PyRadio                    #
-##############################################################################
+        txt = '''
+################################################################
+#             RadioBrowser config file for PyRadio             #
+################################################################
 #
 # Auto save config
 # If True, the config will be automatically saved upon
@@ -1748,25 +1771,6 @@ PING_COUNT = '''
 PING_TIMEOUT = '''
 
         txt += str(default_ping_timeout)
-
-        txt += '''
-
-# List of "search terms" (queries)
-# An asterisk specifies the default search term (the
-# one activated when RadioBrowser opens up)
-# Default = {'type': 'topvote',
-#            'term': '100',
-#            'post_data': {'reverse': 'true'}
-#           }
-#
-'''
-        for n in range(1, len(search_history)):
-            asterisk = '*' if n == search_default_history_index else ''
-            if PY3:
-                txt += 'SEARCH_TERM = ' + asterisk + str(search_history[n]) + '\n'
-            else:
-                txt += 'SEARCH_TERM = ' + asterisk + str(search_history[n]).replace('{u\'', '{\'').replace('u\'', '\'') + '\n'
-
         try:
             with open(self.config_file, 'w', encoding='utf-8') as cfgfile:
                 cfgfile.write(txt)
@@ -1774,9 +1778,25 @@ PING_TIMEOUT = '''
             if logger.isEnabledFor(logging.ERROR):
                 logger.error('Saving Online Browser config file failed')
             return False
+        if path.exists(self.config_file + '.restore'):
+            remove(self.config_file + '.restore')
         self.dirty = False
+
+        if path.exists(self.search_terms_file):
+            copyfile(self.search_terms_file, self.search_terms_file + '.restore')
+        try:
+            with open(self.search_terms_file, 'w', encoding='utf-8') as cfgfile:
+                for n in range(1, len(search_history)):
+                    asterisk = '*' if n == search_default_history_index else ''
+                    cfgfile.write(asterisk + str(search_history[n]) + '\n')
+            if path.exists(self.search_terms_file + '.restore'):
+                remove(self.search_terms_file + '.restore')
+        except:
+            if logger.isEnabledFor(logging.ERROR):
+                logger.error('Saving Online Browser search terms file failed')
+            return False
         if logger.isEnabledFor(logging.INFO):
-            logger.info('Saved Online Browser config file')
+            logger.info('Saved Online Browser config files')
         return True
 
 class RadioBrowserConfigWindow(object):
@@ -1814,6 +1834,7 @@ class RadioBrowserConfigWindow(object):
             current_limit=100,
             init=False,
             stations_dir=None,
+            data_dir=None,
             distro=None,
             global_functions=None,
             with_browser=False,
@@ -1866,7 +1887,7 @@ class RadioBrowserConfigWindow(object):
         if config:
             self._config = config
         else:
-            self._config = RadioBrowserConfig(stations_dir)
+            self._config = RadioBrowserConfig(stations_dir, data_dir)
             self._config.read_config()
         if dns_info:
             self._dns_info = dns_info

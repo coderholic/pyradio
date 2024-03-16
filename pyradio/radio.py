@@ -5095,8 +5095,9 @@ ____Using |fallback| theme.''')
                 self._show_connect_to_server_message()
                 self._browser_config_win = RadioBrowserConfigWindow(
                     parent=parent,
-                    stations_dir=self._cnf.stations_dir,
                     init=init,
+                    stations_dir=self._cnf.stations_dir,
+                    data_dir=self._cnf.data_dir,
                     distro=distro,
                     global_functions=self._global_functions,
                     cannot_delete_function=self._cannot_delete_function
@@ -5112,7 +5113,6 @@ ____Using |fallback| theme.''')
             self._browser_config_win.show(parent=parent)
             if not self._browser_config_win.enable_servers:
                 self._print_servers_unreachable()
-            self._print_servers_unreachable()
 
     def _browser_init_search(self, parent):
         ''' Start browser search window
