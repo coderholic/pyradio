@@ -98,8 +98,6 @@ def rgb_to_curses_rgb(rgb):
     return tuple(int(y *1000 / 255) for y in rgb)
 
 
-
-
 class StationsChanges(object):
     '''
     #########################################################################
@@ -114,9 +112,9 @@ class StationsChanges(object):
     #   The version the changes appeared (calculated)                       #
     #                                                                       #
     # It will also contain three lists:                                     #
-    #   added     - stations added                                          #
-    #   changed   - stations changed                                        #
-    #   deleted   - stations deleted                                        #
+    #   added     - list of stations added                                  #
+    #   changed   - list of stations changed                                #
+    #   deleted   - list of stations deleted                                #
     #                                                                       #
     # The "changed" list will be of format:                                 #
     #           [[ x , [station name, station url ]]                        #

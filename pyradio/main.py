@@ -430,6 +430,7 @@ If nothing else works, try the following command:
 
     with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
         read_config(pyradio_config)
+
         if args.write_theme:
             if args.write_theme[0]:
                 from .themes import PyRadioTheme
@@ -1024,6 +1025,8 @@ def read_config(pyradio_config):
         sys.exit(1)
     # for n in pyradio_config.opts.keys():
     #     print('{0}: {1}'.format(n, pyradio_config.opts[n]))
+    if pyradio_config.xdg_compliant:
+        pyradio_config.migrate_xdg()
 
 def save_config(pyradio_config):
     ret = pyradio_config.save_config(from_command_line=True)

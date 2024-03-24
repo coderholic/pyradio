@@ -1726,8 +1726,7 @@ class RadioBrowserConfig(object):
         self.server = default_server if 'Random' not in default_server else ''
         self.default = default_max_number_of_results
         self.terms = deepcopy(search_history)
-        txt = '''
-################################################################
+        txt = '''################################################################
 #             RadioBrowser config file for PyRadio             #
 ################################################################
 #

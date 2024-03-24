@@ -160,7 +160,14 @@ remote_control_server_auto_start = False
 # Enabling this options will lead to operational
 # data files being dispersed to XDG directories
 #
+# More info:
+# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+# https://wiki.archlinux.org/title/XDG_Base_Directory
+#
 # This setting has no effect on Windows
+#
+# Packagers should set this paramater as resired!
+#
 # Default value: False
 xdg_compliant = False
 

@@ -21,6 +21,8 @@ except ImportError:
 from platform import system
 if system().lower() == 'windows':
     from os import startfile
+else:
+    from os import getuid
 from pyradio import version, stations_updated
 
 from .browser import PyRadioStationsBrowser, probeBrowsers
@@ -28,6 +30,7 @@ from .install import get_github_long_description
 from .common import is_rasberrypi
 from .player import pywhich
 from .server import IPsWithNumbers
+from .xdg import XdgDirs, XdgMigrate, CheckDir
 HAS_REQUESTS = True
 
 try:
@@ -94,280 +97,6 @@ def to_ip_port(string):
             except ValueError:
                 host = 'localhost'
     return host, port
-
-class XdgDirs(object):
-    ''' A class to provide PyRadio directories compliant
-        to the XDG XDG Base Directory Specification (or not)
-
-        Links:
-            https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-            https://wiki.archlinux.org/title/XDG_Base_Directory
-        '''
-
-    HOME = 0
-    STATIONS = 1
-    REGISTERS = 2
-    DATA = 3
-    STATE = 4
-    CACHE = 5
-    RECORDINGS = 6
-
-    _old_dirs = [None, None, None, None, None, None, None]
-    _new_dirs = [None, None, None, None, None, None, None]
-
-    def __init__(self, config_dir=None, xdg_compliant=False):
-        ''' Parameters
-            ==========
-            config_dir
-                Use this Configuration directory instead of the default one
-                If provided, xdg_compliant is False (all subsequent
-                directories will be under the one provided)
-            xdg_compliant
-                If False (default), all subsequent directories will be
-                    under the Configuration directory
-                If True, follow the Specification
-        '''
-        if config_dir is not None:
-            self._xdg_compliant = False
-            self._new_dirs[self.STATIONS] = self._old_dirs[self.STATIONS] = config_dir
-        else:
-            self._xdg_compliant = xdg_compliant
-        self.build_paths()
-        if not platform.startswith('win'):
-            self.migrate_cache()
-        self.migrate_recordings()
-
-    def build_paths(self):
-        if platform.startswith('win'):
-            if self._new_dirs[self.HOME] is None:
-                self._old_dirs[self.HOME] = getenv('APPDATA')
-            self._old_dirs[self.STATIONS] = path.join(self._old_dirs[self.HOME], 'pyradio')
-            self._old_dirs[self.REGISTERS] = path.join(self._old_dirs[self.STATIONS], '_registers')
-            self._old_dirs[self.DATA] = self._old_dirs[self.STATE] = path.join(self._old_dirs[self.STATIONS], 'data')
-            self._old_dirs[self.CACHE] = path.join(self._old_dirs[self.DATA], '_cache')
-            self._new_dirs = self._old_dirs[:]
-        else:
-            self._new_dirs[self.HOME] = self._old_dirs[self.HOME] = self._old_dirs[self.HOME] = getenv('HOME', '~')
-            if self._new_dirs[self.STATIONS] is None:
-                self._new_dirs[self.STATIONS] = self._old_dirs[self.STATIONS] = path.join(self._new_dirs[self.HOME], '.config', 'pyradio')
-            self._old_dirs[self.REGISTERS] = self._new_dirs[self.REGISTERS] = path.join(self._new_dirs[self.STATIONS], '.registers')
-            self._old_dirs[self.DATA] = path.join(self._old_dirs[self.STATIONS], 'data')
-            self._old_dirs[self.STATE] = path.join(self._old_dirs[self.STATIONS], 'data')
-            self._old_dirs[self.CACHE] = path.join(self._old_dirs[self.DATA], '.cache')
-            if self._xdg_compliant:
-                self._new_dirs[self.DATA] = path.join(self._new_dirs[self.HOME], '.local', 'share', 'pyradio')
-                self._new_dirs[self.STATE] = path.join(self._new_dirs[self.HOME], '.local', 'state', 'pyradio')
-            else:
-                self._new_dirs[self.DATA] = self._old_dirs[self.DATA]
-                self._new_dirs[self.STATE] = self._old_dirs[self.STATE]
-            self._new_dirs[self.CACHE] = path.join(path.expanduser('~'), '.cache', 'pyradio')
-        if self._old_dirs[self.RECORDINGS] is None:
-            self._old_dirs[self.RECORDINGS] = path.join(self._old_dirs[self.STATIONS], 'recordings')
-        if self._new_dirs[self.RECORDINGS] is None:
-            self._new_dirs[self.RECORDINGS] = path.join(path.expanduser('~'), 'pyradio-recordings')
-
-    def ensure_paths_exist(self):
-        ''' Make sure config dirs exists '''
-        for a_dir in (self.stations_dir,
-                      self.registers_dir,
-                      self.data_dir,
-                      self.state_dir,
-                      ):
-            if not path.exists(a_dir):
-                try:
-                    makedirs(a_dir)
-                except:
-                    print('Error: Cannot create directory: "{}"'.format(a_dir))
-                    sys.exit(1)
-
-        # getenv('XDG_RUNTIME_DIR', '/run/user/1000')
-
-    @property
-    def need_to_migrate(self):
-        ''' If True, it should trigger a migration process to the new scheme '''
-        if not self._xdg_compliant:
-            return False
-        for n in range(len(self._old_dirs)):
-            if self._new_dirs[n] != self._old_dirs[n]:
-                return True
-        return False
-
-    @property
-    def home_dir(self):
-        if platform.startswith('win'):
-            return os.path.expanduser('~')
-        else:
-            return self._new_dirs[self.HOME]
-
-    @property
-    def stations_dir(self):
-        if self._xdg_compliant:
-            return self._new_dirs[self.STATIONS]
-        else:
-            return self._old_dirs[self.STATIONS]
-
-    @property
-    def data_dir(self):
-        if self._xdg_compliant:
-            return self._new_dirs[self.DATA]
-        else:
-            return self._old_dirs[self.DATA]
-
-    @property
-    def cache_dir(self):
-        return self._new_dirs[self.CACHE]
-
-    @property
-    def state_dir(self):
-        if self._xdg_compliant:
-            return self._new_dirs[self.STATE]
-        else:
-            return self._old_dirs[self.STATE]
-
-    @property
-    def registers_dir(self):
-        if self._xdg_compliant:
-            return self._new_dirs[self.REGISTERS]
-        else:
-            return self._old_dirs[self.REGISTERS]
-
-    @property
-    def recording_dir(self):
-        return self._new_dirs[self.RECORDINGS]
-
-    @recording_dir.setter
-    def recording_dir(self, val):
-        self.set_recording_dir(new_dir=val, print_to_console=False)
-
-    def set_recording_dir(self, new_dir=None, print_to_console=True, migrate=True, first_read=None):
-        logger.error('@recording_dir.setter: migrate = "{}"'.format(migrate))
-        logger.error('@recording_dir.setter: new_dir = "{}"'.format(new_dir))
-        logger.error('@recording_dir.setter: self._new_dirs[self.RECORDINGS] = "{}"'.format(self._new_dirs[self.RECORDINGS]))
-        logger.error('@recording_dir.setter: self._old_dirs[self.RECORDINGS] = "{}"'.format(self._old_dirs[self.RECORDINGS]))
-        if first_read:
-            old_dir = self._old_dirs[self.RECORDINGS]
-            self._old_dirs[self.RECORDINGS] = first_read
-            self._new_dirs[self.RECORDINGS] = new_dir
-            logger.error('@ after recording_dir.setter: self._new_dirs[self.RECORDINGS] = "{}"'.format(self._new_dirs[self.RECORDINGS]))
-            logger.error('@ after recording_dir.setter: self._old_dirs[self.RECORDINGS] = "{}"'.format(self._old_dirs[self.RECORDINGS]))
-            ret = self.migrate_recordings(silent=not print_to_console)
-            self._old_dirs[self.RECORDINGS] = old_dir
-            self._set_last_rec_dirs(ret)
-        elif new_dir is None:
-            ''' coming form save condfig
-                self._new_dirs[self.RECORDINGS]
-                is already set and checked
-            '''
-            if migrate:
-                ret = self.migrate_recordings(silent=not print_to_console)
-                self._set_last_rec_dirs(ret)
-                return ret
-            else:
-                return True
-        elif new_dir != self._new_dirs[self.RECORDINGS]:
-            logger.error('@recording_dir.setter: 1')
-            if new_dir != path.join(self.stations_dir, 'recordings'):
-                logger.error('@recording_dir.setter: 2')
-                self._new_dirs[self.RECORDINGS] = new_dir
-            logger.error('@recording_dir.setter: 3')
-            if migrate:
-                ret = self.migrate_recordings(silent=not print_to_console)
-                self._set_last_rec_dirs(ret)
-                return ret
-        return True
-
-    def _set_last_rec_dirs(self, val):
-        if val:
-            self.last_rec_dirs = ()
-        else:
-            self.last_rec_dirs = (
-                self._old_dirs[self.RECORDINGS],
-                self._new_dirs[self.RECORDINGS]
-            )
-
-    def migrate_cache(self):
-        ''' cache dir '''
-        if path.exists(self._old_dirs[self.CACHE]):
-            print('Migrating cache')
-            if path.exists(self._new_dirs[self.CACHE]):
-                try:
-                    remove_tree(self._new_dirs[self.CACHE])
-                except:
-                    pass
-            try:
-                move(self._old_dirs[self.CACHE], self._new_dirs[self.CACHE])
-            except:
-                print('Cannot move cache\nfrom: "{0}"\nto: "{1}"'.format(self._old_dirs[self.CACHE], self._new_dirs[self.CACHE]))
-                exit(1)
-        else:
-            if not path.exists(self._new_dirs[self.CACHE]):
-                try:
-                    makedirs(self._new_dirs[self.CACHE])
-                except:
-                    print('\nCannot create cache dir: "{}"'.format(self._new_dirs[self.CACHE]))
-                    exit(1)
-
-    def migrate_recordings(self, silent=False):
-        ''' recordings dir '''
-        if self._old_dirs[self.RECORDINGS] == self._new_dirs[self.RECORDINGS]:
-            return True
-        if path.exists(self._old_dirs[self.RECORDINGS]):
-            files = [path.join(self._old_dirs[self.RECORDINGS], f) for f in listdir(self._old_dirs[self.RECORDINGS])]
-            if files:
-                if not silent:
-                    print('Migrating recordings ')
-                parent_dir = path.dirname(self._new_dirs[self.RECORDINGS])
-                if path.exists(parent_dir):
-                    if path.exists(self._new_dirs[self.RECORDINGS]):
-                        if len(listdir(self._new_dirs[self.RECORDINGS])) == 0:
-                            try:
-                                rmdir(self._new_dirs[self.RECORDINGS])
-                            except:
-                                pass
-                else:
-                    try:
-                        makedirs(parent_dir)
-                    except:
-                        if silent:
-                            return False
-                        else:
-                            print("\nCannot create target's parent dir: {}".format(parent_dir))
-                            exit(1)
-                try:
-                    move(self._old_dirs[self.RECORDINGS], self._new_dirs[self.RECORDINGS])
-                except:
-                    if silent:
-                        return False
-                    else:
-                        print('\nCannot copy files\nfrom: "{0}"\nto: {1}'.format(self._old_dirs[self.RECORDINGS], self._new_dirs[self.RECORDINGS]))
-                        exit(1)
-                if path.exists(self._old_dirs[self.RECORDINGS]):
-                    try:
-                        remove_tree(self._old_dirs[self.RECORDINGS])
-                    except:
-                        pass
-                # self._old_dirs[self.RECORDINGS] = self._new_dirs[self.RECORDINGS]
-                # return True
-        #
-        # I do not need to do this here, the dir will be created as needed elsewhere
-        #
-        # if not path.exists(self._new_dirs[self.RECORDINGS]):
-        #     try:
-        #         makedirs(self._new_dirs[self.RECORDINGS])
-        #     except:
-        #         if silent:
-        #             return False
-        #         else:
-        #             print('\nCannot create dir: "{}"'.format(self._new_dirs[self.RECORDINGS]))
-        #             exit(1)
-        self._old_dirs[self.RECORDINGS] = self._new_dirs[self.RECORDINGS]
-        return True
-
-    def switch_to_xdg(self):
-        if not self._xdg_compliant:
-            self._xdg_compliant = True
-            self.build_paths()
-
 
 class PyRadioStations(object):
     ''' PyRadio stations file management '''
@@ -440,8 +169,6 @@ class PyRadioStations(object):
 
     show_no_themes_message = True
 
-    xdg = XdgDirs()
-
     def __init__(self, stationFile='', user_config_dir=None):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -458,23 +185,10 @@ class PyRadioStations(object):
         # self.data_dir = path.join(self.stations_dir, 'data')
         # self.state_dir = self.data_dir
 
-        if user_config_dir is None:
-            ''' Make sure config dirs exists '''
-            for a_dir in (self.stations_dir,
-                          self.registers_dir,
-                          self.data_dir,
-                          self.state_dir,
-                          ):
-                if not path.exists(a_dir):
-                    try:
-                        makedirs(a_dir)
-                    except:
-                        print('Error: Cannot create config directory: "{}"'.format(a_dir))
-                        sys.exit(1)
-        else:
+        if user_config_dir is not None:
             self.stations_dir = user_config_dir
             self.xdg.build_paths()
-            self.xdh.ensure_paths_exist()
+        self.xdg.ensure_paths_exist()
         self.root_path = path.join(path.dirname(__file__), 'stations.csv')
         self.player_params_file = path.join(self.data_dir, 'player-params.json')
         self.schedule_file = path.join(self.data_dir, 'schedule.json')
@@ -505,8 +219,6 @@ class PyRadioStations(object):
             if path.exists(rb_config):
                 new_rb_config = path.join(self.stations_dir, 'radio-browser.conf')
                 rename(rb_config, new_rb_config)
-
-        self._copy_icon()
 
     def _move_to_data(self):
         if not path.exists(self.data_dir):
@@ -744,7 +456,7 @@ class PyRadioStations(object):
         self.stations_history = self.normal_stations_history
 
     def save_last_playlist(self, sel):
-        lp = path.join(self.data_dir, 'last-playlist')
+        lp = path.join(self.state_dir, 'last-playlist')
         llp = self._ps.last_local_playlist
         out_pl = [llp[2], llp[4], llp[5]]
         if llp[2]:
@@ -790,7 +502,7 @@ class PyRadioStations(object):
             return
         else:
             copyfile(root, path.join(usr, 'stations.csv'))
-            with open(path.join(self.data_dir, 'last-sync'), 'w') as f:
+            with open(path.join(self.state_dir, 'last-sync'), 'w') as f:
                 self.get_pyradio_version()
                 v = self.current_pyradio_version.replace('.', ', ')
                 f.write(v)
@@ -1705,12 +1417,8 @@ class PyRadioConfig(PyRadioStations):
         self.theme = 'dark'
         self.active_transparency = False
         self._distro = 'None'
-        self.xdg_compliant = False
-
-        if self.params_changed:
-            self.dirty_config = True
-        else:
-            self.dirty_config = False
+        self.xdg = XdgDirs()
+        self.dirty_config = True if self.params_changed else False
         ''' True if player changed by config window '''
         self.player_changed = False
         ''' [ old player, new player ] '''
@@ -1740,6 +1448,14 @@ class PyRadioConfig(PyRadioStations):
 
         ''' function to return a player instance '''
         player_instance = None
+
+    @property
+    def xdg_compliant(self):
+        return self.xdg.xdg_compliant
+
+    @xdg_compliant.setter
+    def xdg_compliant(self, val):
+        self.xdg.xdg_compliant = val
 
     @property
     def headless(self):
@@ -2317,6 +2033,20 @@ class PyRadioConfig(PyRadioStations):
             return default_remote_control_server
         return val
 
+    def migrate_xdg(self):
+        mXdg = XdgMigrate(config=self)
+        mXdg.rename_files()
+        self._copy_icon()
+        if self.xdg_compliant:
+            dpath = path.join(getenv('HOME'), '.config', 'pyradio', 'data')
+            if path.exists(dpath):
+                flist = listdir(dpath)
+                if len(flist) == 0:
+                    try:
+                        remove_tree(dpath)
+                    except:
+                        pass
+
     def read_config(self, distro_config=False):
         self._read_config(distro_config=True)
         self.config_opts = deepcopy(self.opts)
@@ -2504,8 +2234,9 @@ class PyRadioConfig(PyRadioStations):
                 # self.dirty_config = True
                 self._distro = sp[1].strip()
             elif sp[0] == 'xdg_compliant' and \
-                    distro_config and \
+                    not platform.startswith('win') and \
                     sp[1].lower() == 'true':
+                print(f'{self.xdg.xdg_compliant = }')
                 self.xdg_compliant = True
 
         logger.error('\n\nself.params{}\n\n'.format(self.params))
@@ -3648,7 +3379,7 @@ class PyRadioLog(object):
             if titles and not self.log_titles:
                 self.titles_handler = logging.handlers.RotatingFileHandler(
                     path.join(
-                        self._stations_dir,
+                        getenv('HOME', '~') if self.xdg_compliant else self._stations_dir,
                         'pyradio-titles.log'),
                     maxBytes=50000,
                     backupCount=5)
@@ -4326,88 +4057,5 @@ transparency        0
                 if line.startswith(theme_name):
                     in_theme = True
         return lines
-
-
-class CheckDir(object):
-
-    def __init__(self, a_path, default=None, remove_after_validation=False):
-        self._remove_after_validation = remove_after_validation
-        logger.error('++ remove_after_validation = {}'.format(remove_after_validation))
-        self._is_writable = False
-        self.dir_path = self._replace_tilde(a_path)
-        if default:
-            logger.error('++ default not None')
-            if not self._validate_path():
-                expanded_default = self._replace_tilde(default)
-                self.dir_path = self._replace_tilde(expanded_default)
-
-    @property
-    def is_writable(self):
-        return self._is_writable
-
-    @property
-    def is_dir(self):
-        return path.isdir(self.dir_path)
-
-    @property
-    def is_valid(self):
-        return self._validate_path(self.dir_path)
-
-    def _replace_tilde(self, a_path):
-        if a_path.startswith('~/'):
-            self.dir_path = a_path.replace('~', path.expanduser('~'))
-        else:
-            self.dir_path = a_path
-        return self.dir_path
-
-    def _validate_path(self, a_path=None):
-        created = False
-        if a_path is None:
-            a_path = self.dir_path
-        # make sure path exists and is writable
-        self._is_writable = False
-        if not path.exists(self.dir_path):
-            if system().lower() == 'windows':
-                splited_path = self.dir_path.split(path.sep)
-                existing = splited_path[0]
-                for n in splited_path[1:]:
-                    existing = existing + path.sep + n
-                    if not path.exists(existing):
-                        break
-            else:
-                splited_path = self.dir_path.split(path.sep)[1:]
-                existing = path.sep
-                for n in splited_path:
-                    existing = path.join(existing, n)
-                    if not path.exists(existing):
-                        break
-            # it does not exist, try to create it
-            try:
-                makedirs(self.dir_path)
-                created = True
-            except:
-                return False
-        ret = False
-        if path.isdir(self.dir_path):
-            # Can i write in it?
-            test_file = path.join(self.dir_path, r'TEST_IF_WRITABLE')
-            try:
-                with open(test_file, 'w') as f:
-                    pass
-                remove(test_file)
-                self._is_writable = True
-                ret = True
-            except:
-                pass
-        else:
-            pass
-        # asked to remove the dir i created?
-        if created and self._remove_after_validation:
-            try:
-                remove_tree(existing)
-            except:
-                pass
-        return ret
-
 
 

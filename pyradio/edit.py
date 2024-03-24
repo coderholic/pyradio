@@ -16,7 +16,7 @@ from .player import PlayerCache
 from .log import Log
 from .server import IPsWithNumbers
 from .cjkwrap import cjkslices
-from .config import CheckDir
+from .xdg import CheckDir
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -33,7 +33,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
             self._items = (
                     'Config Directory',
                     'Data Directory',
-                    'State Directory'
+                    'State Directory',
                     'Cache Directory',
                     'Code Directory',
                     'Recordings Directory    ',
@@ -42,7 +42,7 @@ class PyRadioOpenDir(SimpleCursesMenu):
                     self._cnf.stations_dir,
                     self._cnf.data_dir,
                     self._cnf.state_dir,
-                    self._cbf.cache_dir,
+                    self._cnf.cache_dir,
                     path.dirname(__file__),
                     self._cnf.recording_dir
             )
