@@ -4,9 +4,11 @@ cBold="[1m"
 colorGreen=2
 colorRed=1
 colorYellow=3
+colorBlue=4
 cGreen="[0;3${colorGreen}m"${cBold}
 cRed="[1;3${colorRed}m"${cBold}
 cYellow="[1;3${colorYellow}m"${cBold}
+cBlue="[1;3${colorBlue}m"${cBold}
 
 function images_to_links(){
 awk '{if($0 ~ /img src=/){
@@ -62,7 +64,20 @@ sed -i 's/\t/    /g' Changelog
 
 cd docs
 # Create HTML file from md files
-for afile in index.md build.md windows.md windows-mplayer.md windows-mpv.md radio-browser.md desktop-notification.md server.md linux.md linux-pipx.md macos.md pip-error.md recording.md packaging.md themes.md headless.md
+for afile in index.md \
+    build.md windows.md \
+    windows-mplayer.md \
+    windows-mpv.md \
+    radio-browser.md \
+    desktop-notification.md \
+    server.md linux.md \
+    linux-pipx.md macos.md \
+    pip-error.md \
+    recording.md \
+    packaging.md \
+    themes.md \
+    headless.md \
+    rec-dir.md
 do
 #[ -z "$(git status | grep ${afile})" ] || {
     out=${afile/%.md/.html}
@@ -98,6 +113,8 @@ do
         echo '% PyRadio Themes' > tmp.md
     elif [ "$afile" = "headless.md" ];then
         echo '% PyRadio Headless Operation' > tmp.md
+    elif [ "$afile" = "rec-dir.md" ];then
+        echo '% PyRadio Recordings Directory' > tmp.md
     fi
     cat ${afile} >> tmp.md
     pandoc --wrap=none -s -t html tmp.md -o ${out} || {
@@ -124,7 +141,7 @@ do
     h4:before {content: "# "; font-weight: bold; vertical-align: middle;} \
     h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;;} \
     h5:before {content: "## "; font-weight: bold; vertical-align: middle;} \
-    h1, h2, h3, h4, h5 {margin-left: -.7em;} \
+    p, table, ol, ul {margin-left: .8em;} \
     STRONG {color: SaddleBrown;} \
     dl {margin: 2em;} \
     dd {margin: 1em;} \
@@ -235,12 +252,26 @@ cd ..
 # }
 
 
-echo -en "pyproject.toml ${cGreen}"
-grep version pyproject.toml
-echo -en "${cReset}__init.py ${cRed}"
+echo -e "${cBlue}Version:${cReset}"
+AVER=$(grep version pyproject.toml | sed -e 's/"//'g -e 's/version = //')
+echo -en "  pyproject.toml:  ${cGreen}"
+echo "version = \"$AVER\""
+
+# update version string in __init__.py
+XVER=${AVER//./, }
+sed -i "s/version_info =.*/version_info = ($XVER)/" pyradio/__init__.py
+
+# update version in install.py
+sed -i "s/PyRadioInstallPyReleaseVersion = .*/PyRadioInstallPyReleaseVersion = '$AVER'/" pyradio/install.py
+
+echo -en "${cReset}     __init__.py:  ${cRed}"
 grep '^version_info ' pyradio/__init__.py
-echo -en "${cReset}install.py ${cYellow}"
+echo -en "${cReset}      install.py:  ${cYellow}"
 grep '^PyRadioInstallPyReleaseVersion '  pyradio/install.py
+
+echo -e "${cReset}To change the version, just change the version in ${cGreen}pyproject.toml${cReset}
+and all version strings will be updated automatically."
+
 
 echo -e "${cReset}
 You should also run

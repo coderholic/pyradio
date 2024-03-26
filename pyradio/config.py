@@ -1398,6 +1398,8 @@ class PyRadioConfig(PyRadioStations):
 
     buffering_data = []
 
+    _fixed_recording_dir = None
+
     def __init__(self, user_config_dir=None, headless=False):
         # keep old recording / new recording dir
         self.rec_dirs = ()
@@ -1417,7 +1419,7 @@ class PyRadioConfig(PyRadioStations):
         self.theme = 'dark'
         self.active_transparency = False
         self._distro = 'None'
-        self.xdg = XdgDirs()
+        self.xdg = XdgDirs(a_dir_fix_function=self._save_config_from_fixed_rec_dir)
         self.dirty_config = True if self.params_changed else False
         ''' True if player changed by config window '''
         self.player_changed = False
@@ -2284,6 +2286,11 @@ class PyRadioConfig(PyRadioStations):
         # for n in self.opts:
         #     print('{0}: {1}'.format(n, self.opts[n]))
 
+        if not distro_config and self._fixed_recording_dir is not None:
+            self.opts['recording_dir'][1] = self._fixed_recording_dir
+            self._fixed_recording_dir = None
+            self.opts['dirty_config'][1] = True
+
         self._make_sure_dirs_exist()
         if not distro_config:
             if path.exists(self.player_params_file + '.restore'):
@@ -2404,7 +2411,8 @@ class PyRadioConfig(PyRadioStations):
     def set_backup_params_from_session(self):
         # logger.error('DE ==== set_backup_params_from_session  ====')
         # logger.error('DE backup params before = {}'.format(self.backup_player_params))
-        self.backup_player_params[1] = self.params[self.PLAYER_NAME][:]
+        if self.backup_player_params is not None:
+            self.backup_player_params[1] = self.params[self.PLAYER_NAME][:]
         # logger.error('DE backup params  after = {}'.format(self.backup_player_params))
 
     def get_player_params_from_backup(self, param_type=0):
@@ -2415,7 +2423,8 @@ class PyRadioConfig(PyRadioStations):
             the_param_type = 1
         # logger.error('DE param_type = "{0}", {1}'.format(param_type, the_param_type))
         # logger.error('DE params before = {}'.format(self.params))
-        self.params[self.PLAYER_NAME] = self.backup_player_params[the_param_type][:]
+        if self.backup_player_params is not None:
+            self.params[self.PLAYER_NAME] = self.backup_player_params[the_param_type][:]
         # logger.error('DE params  after = {}'.format(self.params))
         # logger.error('DE backup_player_params = {}'.format(self.backup_player_params))
 
@@ -2460,6 +2469,7 @@ class PyRadioConfig(PyRadioStations):
             if self.config_opts[a_key][-1] == calcf:
                 return None
         elif a_key == 'recording_dir':
+            logger.error('\n\nself.config_opts[a_key][-1]: {} == rec_dir: {}\n\n'.format(self.config_opts[a_key][-1], rec_dir))
             if self.config_opts[a_key][-1] == rec_dir:
                 return None
         if self.config_opts[a_key][-1] == self.opts[a_key][-1]:
@@ -2508,6 +2518,9 @@ class PyRadioConfig(PyRadioStations):
         logger.error(out)
         return out
 
+    def _save_config_from_fixed_rec_dir(self, a_path):
+        self._fixed_recording_dir = a_path
+
     def save_config(self, from_command_line=False):
         ''' Save config file
 
@@ -2538,10 +2551,12 @@ class PyRadioConfig(PyRadioStations):
             self.get_player_params_from_backup()
         if self.check_parameters():
             self.saved_params = deepcopy(self.params)
-            if logger.isEnabledFor(logging.DEBUG):
-                # logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
+            # if logger.isEnabledFor(logging.DEBUG):
+            #     logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
+            if self.backup_player_params is not None:
                 self.backup_player_params[1] = self.backup_player_params[0][:]
-                # logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
+            # if logger.isEnabledFor(logging.DEBUG):
+            #    logger.info('* self.backup_player_params {}'.format(self.backup_player_params))
         if not from_command_line and \
                 logger.isEnabledFor(logging.DEBUG):
                     logger.debug('saved params = {}'.format(self.saved_params))
@@ -2762,6 +2777,7 @@ class PyRadioConfig(PyRadioStations):
             trnsp = self.bck_opts['use_transparency']
             calcf = self.bck_opts['calculated_color_factor']
 
+        logger.error(f"{self.opts['recording_dir'][1]}")
         if self.opts['recording_dir'][1] == path.join(path.expanduser('~'), 'pyradio-recordings'):
             rec_dir = 'default'
         else:

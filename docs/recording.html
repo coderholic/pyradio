@@ -17,7 +17,7 @@
     h4:before {content: "# "; font-weight: bold; vertical-align: middle;} 
     h5 {margin: 2em 0 1em 0; color: SaddleBrown; font-size: 1em;;} 
     h5:before {content: "## "; font-weight: bold; vertical-align: middle;} 
-    h1, h2, h3, h4, h5 {margin-left: -.7em;} 
+    p, table, ol, ul {margin-left: .8em;} 
     STRONG {color: SaddleBrown;} 
     dl {margin: 2em;} 
     dd {margin: 1em;} 
@@ -184,6 +184,7 @@ This means that the front end (<strong>PyRadio</strong>) will have to use two <e
 <h4 id="changing-recordings-location">Changing recordings location</h4>
 <p>One could change the location (and name) of the recordings folder, using the “<em>Recording dir</em>” option in the <em>Configuration windows</em>.</p>
 <p>Upon saving the configuration, <strong>PyRadio</strong> will move the existing folder to the new location. If the new location’s folder already exists, the old folder will be moved inside it (in order to avoid overwriting any existing files).</p>
+<p>You can get more info at <a href="rec-dir.html">Recording Directory</a>.</p>
 <h3 id="file-type">File type</h3>
 <p><strong>PyRadio</strong> will produce a <strong>mkv</strong> file when recording a station.</p>
 <p>This is just a measure of convenience since the type of audio (mp3, aac, aac+, flac, etc.) the station will broadcast cannot be known beforehand (before starting the recording, that is).</p>

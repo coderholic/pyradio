@@ -30,9 +30,15 @@ class HtmlHelp(object):
 
     def open_file(self, browser=False):
         a_file = self._files[1] if browser else self._files[0]
-        this_platform = platform.lower()
+        self._open_file(a_file)
+
+    def open_filename(self, a_file):
+        self._open_file(a_file)
+
+    def _open_file(self, a_file):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('HtmlHelp: opening "{}"'.format(path.join(self._path, a_file)))
+        this_platform = platform.lower()
         if this_platform.startswith('win'):
             from os import startfile
             startfile(path.join(self._path, a_file))

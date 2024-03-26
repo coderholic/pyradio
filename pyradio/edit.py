@@ -17,6 +17,7 @@ from .log import Log
 from .server import IPsWithNumbers
 from .cjkwrap import cjkslices
 from .xdg import CheckDir
+from .html_help import HtmlHelp
 
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -1008,7 +1009,8 @@ class PyRadioRecordingDir(object):
         y = 4 if adjust_line_Y == 0 else 3
         self._win.addstr(y, invX, inv_tit, curses.color_pair(4))
         self._win.addstr(inv_chars, curses.color_pair(5))
-
+        adjust_line_Y -= 1
+        logger.error('\n\nadjust_line_Y = {}\n\n'.format(adjust_line_Y ))
         if self.maxY > 18 + adjust_line_Y and self.maxX > 76:
             try:
                 self._win.addstr(10 + adjust_line_Y, 3, '─' * (self.maxX - 6), curses.color_pair(12))
@@ -1046,36 +1048,39 @@ class PyRadioRecordingDir(object):
             self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
             self._win.addstr(17 + adjust_line_Y, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
 
-        if self.maxY > 21 + adjust_line_Y and self.maxX > 76:
-            try:
-                self._win.addstr(18 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(12))
-            except:
-                self._win.addstr(18 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
-            self._win.addstr(18 + adjust_line_Y, int((self.maxX - 42) / 2), r' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
+            self._win.addstr(18 + adjust_line_Y, 5, 'h', curses.color_pair(4))
+            self._win.addstr(18 + adjust_line_Y, 23, 'Display HTML help (not in Line Editor).', curses.color_pair(5))
 
-            self._win.addstr(19 + adjust_line_Y, 5, '-', curses.color_pair(4))
+        if self.maxY > 22 + adjust_line_Y and self.maxX > 76:
+            try:
+                self._win.addstr(19 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(12))
+            except:
+                self._win.addstr(19 + adjust_line_Y, 3, '─'.encode('utf-8') * (self.maxX - 10), curses.color_pair(12))
+            self._win.addstr(19 + adjust_line_Y, int((self.maxX - 42) / 2), r' Global Functions (with \ in Line Editor) ', curses.color_pair(4))
+
+            self._win.addstr(20 + adjust_line_Y, 5, '-', curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
             self._win.addstr('+', curses.color_pair(4))
             self._win.addstr(' or ', curses.color_pair(5))
             self._win.addstr(',', curses.color_pair(4))
             self._win.addstr('/', curses.color_pair(5))
             self._win.addstr('.', curses.color_pair(4))
-            self._win.addstr(19 + adjust_line_Y, 23, 'Change volume', curses.color_pair(5))
-            self._win.addstr(20 + adjust_line_Y, 5, 'm', curses.color_pair(4))
+            self._win.addstr(20 + adjust_line_Y, 23, 'Change volume', curses.color_pair(5))
+            self._win.addstr(21 + adjust_line_Y, 5, 'm', curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
-            self._win.addstr(20 + adjust_line_Y, 23, 'M', curses.color_pair(4))
+            self._win.addstr(21 + adjust_line_Y, 23, 'M', curses.color_pair(4))
             self._win.addstr('ute player / Save ', curses.color_pair(5))
             self._win.addstr('v', curses.color_pair(4))
             self._win.addstr('olume (not in vlc).', curses.color_pair(5))
-            if adjust_line_Y + 22 < self.maxY:
-                self._win.addstr(21 + adjust_line_Y, 5, 'W', curses.color_pair(4))
+            if adjust_line_Y + 23 < self.maxY:
+                self._win.addstr(22 + adjust_line_Y, 5, 'W', curses.color_pair(4))
                 self._win.addstr(' / ', curses.color_pair(5))
                 self._win.addstr('w', curses.color_pair(4))
-                self._win.addstr(21 + adjust_line_Y, 23, 'Toggle title log / like a station', curses.color_pair(5))
-            if adjust_line_Y + 23 < self.maxY:
-                self._win.addstr(22 + adjust_line_Y, 5, 'T', curses.color_pair(4))
-                self._win.addstr(22 + adjust_line_Y, 23, 'Toggle transparency', curses.color_pair(5))
+                self._win.addstr(22 + adjust_line_Y, 23, 'Toggle title log / like a station.', curses.color_pair(5))
+            if adjust_line_Y + 24 < self.maxY:
+                self._win.addstr(23 + adjust_line_Y, 5, 'T', curses.color_pair(4))
+                self._win.addstr(23 + adjust_line_Y, 23, 'Toggle transparency.', curses.color_pair(5))
 
         self._win.refresh()
         self._update_focus()
@@ -1157,7 +1162,9 @@ class PyRadioRecordingDir(object):
                 return -1, None, False
             return 0, None, False
         else:
-            if char == ord('?') and self.focus == 0:
+            if char in (curses.KEY_EXIT, 27, ord('q')):
+                return -1, None, False
+            elif char == ord('?') and self.focus == 0:
                 return 2, None, False
             elif char in (curses.KEY_EXIT, 27, ord('q')):
                 return -1, None, None
@@ -1188,6 +1195,9 @@ class PyRadioRecordingDir(object):
                 if self._widgets[-2].enabled:
                     return self._get_result(ret)
                 return 0, None, False
+            elif char == ord('h') and self._focus > 0:
+                html = HtmlHelp()
+                html.open_filename('rec-dir.html')
             elif self._focus == 0:
                 """
                  Returns:

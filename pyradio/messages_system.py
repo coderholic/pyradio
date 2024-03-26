@@ -823,11 +823,13 @@ Do you want to update your "|stations.csv|" file with the
 upstream changes?
 
 Press |y| to update, |n| to decline and not be asked again
-for this version, or any other key to close this window and
-be asked next time you execute |PyRadio|.
+for this version, or any other key to close this window
+and be asked next time you execute |PyRadio|.
 
 '''
 ),
+
+    'M_UPDATE_STATIONS_RESULT': ('', ''),
 
     'H_CONFIG': ('Configuration Help',
 r'''Up|, |j|, |PgUp|,               |*|
@@ -1536,6 +1538,7 @@ W| / |w                             |*| Toggle title log / like a station'''
                     r text (string)
                 )
         '''
+        logger.error('before')
         cap, out = self._txt[self.active_message_key]
         logger.info('--> out\n{}'.format(out))
         if out is None:
@@ -1571,7 +1574,9 @@ W| / |w                             |*| Toggle title log / like a station'''
         elif self.active_message_key in self._two_arg_list:
             out = self._txt[self.active_message_key][1].format(args[1], args[2])
         elif self.active_message_key in self._second_arg_is_a_function:
+            logger.error('\n\nsetting {} text to result of {}\n\n'.format(self.active_message_key, args[1]))
             self._txt[self.active_message_key] = args[1]()
+            out = self._txt[self.active_message_key][1]
 
         self._tokens, l = self._parse_strings_for_tokens(out.splitlines())
         logger.error('\n\nself._tokens = {}'.format(self._tokens))
@@ -1610,6 +1615,7 @@ W| / |w                             |*| Toggle title log / like a station'''
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('max len from self._max_lens = {}'.format(mmax))
             else:
+                logger.error(f'{l = }')
                 for n in l:
                     x = n.split('|*|')
                     if len(x) == 2:

@@ -177,6 +177,8 @@ One could change the location (and name) of the recordings folder, using the "*R
 
 Upon saving the configuration, **PyRadio** will move the existing folder to the new location. If the new location's folder already exists, the old folder will be moved inside it (in order to avoid overwriting any existing files).
 
+You can get more info at [Recording Directory](rec-dir.md).
+
 ### File type
 
 **PyRadio** will produce a **mkv** file when recording a station.

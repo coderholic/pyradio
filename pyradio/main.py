@@ -28,12 +28,7 @@ locale.setlocale(locale.LC_ALL, "")
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 PATTERN_TITLE = '%(asctime)s | %(message)s'
 
-PY3 = sys.version[0] == '3'
-
-if PY3:
-    HAS_PIPX = True if shutil.which('pipx') else False
-else:
-    HAS_PIPX = False
+HAS_PIPX = True if shutil.which('pipx') else False
 
 try:
     import netifaces
@@ -42,15 +37,14 @@ except:
     HAS_NETIFACES = False
 
 HAS_RICH = False
-if PY3:
-    try:
-        from rich.console import Console
-        from rich.table import Table
-        from rich.align import Align
-        from rich import print
-        HAS_RICH = True
-    except:
-        pass
+try:
+    from rich.console import Console
+    from rich.table import Table
+    from rich.align import Align
+    from rich import print
+    HAS_RICH = True
+except:
+    pass
 
 class MyArgParser(ArgumentParser):
 
@@ -63,18 +57,12 @@ class MyArgParser(ArgumentParser):
         if file is None:
             file = sys.stdout
         usage = self.format_usage()
-        if PY3:
-            print(self._add_colors(self.format_usage()))
-        else:
-            print(self.format_usage())
+        print(self._add_colors(self.format_usage()))
 
     def print_help(self, file=None):
         if file is None:
             file = sys.stdout
-        if PY3:
-            print(self._add_colors(self.format_help()))
-        else:
-            print(self.format_help().replace('• ', ''))
+        print(self._add_colors(self.format_help()))
 
     def _add_colors(self, txt):
         t = txt.replace('show this help', 'Show this help').replace('usage:', '• Usage:').replace('options:', '• General options:').replace('[', '|').replace(']', '||')
@@ -89,25 +77,14 @@ class MyArgParser(ArgumentParser):
 @contextmanager
 def pyradio_config_file(a_dir, headless=None):
     if headless and not HAS_NETIFACES:
-        if PY3:
-            txt = '''Module "netifaces" not found!
+        print(r'''Module "netifaces" not found!
 
 In order to use the [red]Remote Control Server[/red], the "netifaces"
 module must be installed.
 
 Please install the module (named "python-netifaces" or
-"python{}-netifaces") and try executing [magenta]PyRadio[/magenta] again.
-'''
-        else:
-            txt = '''Module "netifaces" not found!
-
-In order to use the "Remote Control Server", the "netifaces"
-module must be installed.
-
-Please install the module (named "python-netifaces" or
-"python{}-netifaces") and try executing "PyRadio" again.
-'''
-        print(txt.format('3' if PY3 else 2))
+"python3-netifaces") and try executing [magenta]PyRadio[/magenta] again.
+''')
         sys.exit(1)
     cf = PyRadioConfig(user_config_dir=a_dir, headless=headless)
     try:
@@ -117,47 +94,27 @@ Please install the module (named "python-netifaces" or
             ret, lfile = cf.remove_session_lock_file()
             if cf.force_to_remove_lock_file:
                 if ret == 0:
-                    if PY3:
-                        print('Lock file removed: "[red]{}[/red]"'.format(lfile))
-                    else:
-                        print('Lock file removed: "{}"'.format(lfile))
+                    print('Lock file removed: "[red]{}[/red]"'.format(lfile))
                 elif ret == 1:
-                    if PY3:
-                        print('Failed to remove Lock file: "[red]{}[/red]"'.format(lfile))
-                    else:
-                        print('Failed to remove Lock file: "{}"'.format(lfile))
+                    print('Failed to remove Lock file: "[red]{}[/red]"'.format(lfile))
                 else:
-                    if PY3:
-                        print('Lock file not found: "[red]{}[/red]"'.format(lfile))
-                    else:
-                        print('Lock file not found: "{}"'.format(lfile))
+                    print('Lock file not found: "[red]{}[/red]"'.format(lfile))
             if headless:
                 cf.remove_remote_control_server_report_file()
         except:
             pass
-
-def do_update_stations(pyradio_config):
-    stations_change = StationsChanges(pyradio_config)
-    if stations_change.stations_csv_needs_sync():
-        stations_change.update_stations_csv()
-    sys.exit()
+        if cf.dirty_config:
+            cf.save_config()
 
 def __configureLogger(pyradio_config, debug=None, titles=None):
     if debug or titles:
 
         if debug and not pyradio_config.log_degub:
             if platform.startswith('win'):
-                if PY3:
-                    print(r'''Debug mode activated
+                print(r'''Debug mode activated
   printing messages to file: "[red]{}\pyradio.log[/red]"'''.format(getenv('USERPROFILE')))
-                else:
-                    print(r'''Debug mode activated
-  printing messages to file: "{}\pyradio.log"'''.format(getenv('USERPROFILE')))
             else:
-                if PY3:
-                    print('Debug mode activated; printing messages to file: "[red]~/pyradio.log[/red]"')
-                else:
-                    print('Debug mode activated; printing messages to file: "~/pyradio.log"')
+                print('Debug mode activated; printing messages to file: "[red]~/pyradio.log[/red]"')
 
         pyradio_config.titles_log.configure_logger(
             debug=debug,
@@ -168,7 +125,6 @@ def print_session_is_locked():
     print_simple_error('Error: This session is locked!')
     print('       Please exist any other instances of the program')
     print('       that are currently running and try again.')
-    sys.exit(1)
 
 def print_active_schedule(a_file):
     x = PyRadioScheduleList(a_file)
@@ -231,7 +187,7 @@ def shell():
         print('PyRadio requires python 3.7+...')
         sys.exit(1)
 
-    if not HAS_RICH and PY3:
+    if not HAS_RICH:
         print('''Module "rich" not found!
 
 Please install it and try executing PyRadio again.
@@ -387,17 +343,11 @@ If nothing else works, try the following command:
     if not system().lower().startswith('win'):
         if args.config_dir:
             if '..' in args.config_dir:
-                if PY3:
-                    print('Error in config path: "[red]{}[/red]"\n      Please do not use "[green]..[/green]" in the path!'.format(args.config_dir))
-                else:
-                    print('Error in config path: "{}"\n      Please do not use ".." in the path!'.format(args.config_dir))
+                print('Error in config path: "[red]{}[/red]"\n      Please do not use "[green]..[/green]" in the path!'.format(args.config_dir))
                 sys.exit(1)
             user_config_dir = validate_user_config_dir(args.config_dir)
             if user_config_dir is None:
-                if PY3:
-                    print('Error in config path: "[red]{}[/red]"\n      This directory cannot be used by [magenta]PyRadio[/magenta]!'.format(args.config_dir))
-                else:
-                    print('Error in config path: "{}"\n      This directory cannot be used by PyRadio!'.format(args.config_dir))
+                print('Error in config path: "[red]{}[/red]"\n      This directory cannot be used by [magenta]PyRadio[/magenta]!'.format(args.config_dir))
                 sys.exit(1)
 
     if not system().lower().startswith('darwin') and \
@@ -440,13 +390,13 @@ If nothing else works, try the following command:
                     args.write_theme[1]
                 )
                 print(msg)
-                sys.exit()
+                return
 
         if args.headless:
             # Is there another headless instance?
             if path.exists(pyradio_config.remote_control_server_report_file):
                 print('Error: Headless Server already running...\n')
-                sys.exit(1)
+                return
 
         if args.free_dead_headless_server:
             ff = path.join(pyradio_config.state_dir, 'server-headless.txt')
@@ -458,7 +408,7 @@ If nothing else works, try the following command:
                     print('Error: Cannot remove Headless Server lock file...\n')
             else:
                 print('Headless Server lock file not found\n')
-            sys.exit()
+            return
 
         if args.print_config:
             cnf = path.join(path.dirname(__file__), 'config')
@@ -490,22 +440,15 @@ If nothing else works, try the following command:
                                 d_line += '[bold green]' + str(pyradio_config.xdg_compliant) + '[/bold green]'
                 print(d_line)
             print('')
-            sys.exit()
+            return
 
         if args.version:
             pyradio_config.get_pyradio_version()
-            if PY3:
-                print('PyRadio version: [green]{}[/green]'.format(pyradio_config.current_pyradio_version))
-                print('Python version: [green]{}[/green]'.format(sys.version.replace('\n', ' ').replace('\r', ' ')))
-            else:
-                print('PyRadio version: {}'.format(pyradio_config.current_pyradio_version))
-                print('Python version: {}'.format(sys.version.replace('\n', ' ').replace('\r', ' ')))
+            print('PyRadio version: [green]{}[/green]'.format(pyradio_config.current_pyradio_version))
+            print('Python version: [green]{}[/green]'.format(sys.version.replace('\n', ' ').replace('\r', ' ')))
             if pyradio_config.distro != 'None':
-                if PY3:
-                    print('Distribution: [green]{}[/green]'.format(pyradio_config.distro))
-                else:
-                    print('Distribution: {}'.format(pyradio_config.distro))
-            sys.exit()
+                print('Distribution: [green]{}[/green]'.format(pyradio_config.distro))
+            return
 
         if args.show_themes:
             int_themes = [x for x in pyradio_config.internal_themes if x != 'wob' and x != 'bow']
@@ -526,65 +469,47 @@ If nothing else works, try the following command:
                     user_themes.remove(n.default_filename_only)
                 else:
                     projects_data[-1].append('-')
-            if PY3:
-                console = Console()
-                table = Table(show_header=True, header_style="bold magenta")
-                table.title = '[bold magenta]PyRadio Themes[/bold magenta]'
-                centered_table = Align.center(table)
-                table.add_column("Internal Themes")
-                table.add_column("System Themes")
-                table.add_column("User Themes")
-                x = max(len(int_themes), len(sys_themes), len(user_themes))
-                while len(int_themes) < x:
-                    int_themes.append('')
-                while len(sys_themes) < x:
-                    sys_themes.append('')
-                while len(user_themes) < x:
-                    user_themes.append('')
-                for n in zip(
-                        int_themes,
-                        sys_themes,
-                        user_themes
-                ):
-                    table.add_row(n[0], n[1], n[2])
-                console.print(centered_table)
+            console = Console()
+            table = Table(show_header=True, header_style="bold magenta")
+            table.title = '[bold magenta]PyRadio Themes[/bold magenta]'
+            centered_table = Align.center(table)
+            table.add_column("Internal Themes")
+            table.add_column("System Themes")
+            table.add_column("User Themes")
+            x = max(len(int_themes), len(sys_themes), len(user_themes))
+            while len(int_themes) < x:
+                int_themes.append('')
+            while len(sys_themes) < x:
+                sys_themes.append('')
+            while len(user_themes) < x:
+                user_themes.append('')
+            for n in zip(
+                    int_themes,
+                    sys_themes,
+                    user_themes
+            ):
+                table.add_row(n[0], n[1], n[2])
+            console.print(centered_table)
 
-                table1 = Table(show_header=True, header_style="bold magenta")
-                centered_table1 = Align.center(table1)
-                table1.title = '[bold magenta]Ext. Projects Themes[/bold magenta]'
-                table1.add_column('Projects')
-                table1.add_column('Can auto-update', justify='center')
-                table1.add_column('Theme name')
-                for n in projects_data:
-                    table1.add_row(
-                        '[bold magenta]' + n[0].replace(' Project', '') + '[/bold magenta]',
-                        '[green]' + n[1] + '[/green]' if n[1] == 'Yes' else '[red]' + n[1] + '[/red]',
-                        '[red]' + n[2] + '[/red]' if n[2] == '-' else n[2]
-                    )
-                console.print(centered_table1)
-            else:
-                print('Internal Themes')
-                for n in int_themes:
-                    if n not in ('bow', 'wob'):
-                        print('  ' + n)
-                print('System Themes')
-                for n in sys_themes:
-                    print('  ' + n)
-                print('User Themes')
-                if user_themes:
-                    for n in user_themes:
-                        print('  ' + n)
-                print('Ext. Projects Themes')
-                for n in projects_data:
-                    print('  Theme name: ' + n[2])
-                    print('    Project name: ' + n[0])
-                    print('    Can auto-update: ' + n[1])
-            sys.exit()
+            table1 = Table(show_header=True, header_style="bold magenta")
+            centered_table1 = Align.center(table1)
+            table1.title = '[bold magenta]Ext. Projects Themes[/bold magenta]'
+            table1.add_column('Projects')
+            table1.add_column('Can auto-update', justify='center')
+            table1.add_column('Theme name')
+            for n in projects_data:
+                table1.add_row(
+                    '[bold magenta]' + n[0].replace(' Project', '') + '[/bold magenta]',
+                    '[green]' + n[1] + '[/green]' if n[1] == 'Yes' else '[red]' + n[1] + '[/red]',
+                    '[red]' + n[2] + '[/red]' if n[2] == '-' else n[2]
+                )
+            console.print(centered_table1)
+            return
 
         if platform.startswith('win'):
             if args.exe:
                 print_exe_paths()
-                sys.exit()
+                return
 
         # if args.show_schedule_items:
         #     print_active_schedule(pyradio_config.schedule_file)
@@ -593,16 +518,13 @@ If nothing else works, try the following command:
         if args.toggle_load_last_playlist:
             if pyradio_config.locked:
                 print_session_is_locked()
-                sys.exit(1)
+                return
             else:
                 pyradio_config.opts['open_last_playlist'][1] = not pyradio_config.opts['open_last_playlist'][1]
                 pyradio_config.opts['dirty_config'][1] =  True
-                if PY3:
-                    print('Setting auto load last playlist to: "[red]{}[/red]"'.format(pyradio_config.opts['open_last_playlist'][1]))
-                else:
-                    print('Setting auto load last playlist to: {}'.format(pyradio_config.opts['open_last_playlist'][1]))
+                print('Setting auto load last playlist to: "[red]{}[/red]"'.format(pyradio_config.opts['open_last_playlist'][1]))
                 save_config()
-            sys.exit(0)
+            return
 
         package = 0
         if args.uninstall or args.update:
@@ -614,25 +536,23 @@ If nothing else works, try the following command:
                 package = 3
             if pyradio_config.distro != 'None' and \
                     not platform.startswith('win'):
-                no_update(args.uninstall)
+                action = 'uninstall' if args.uninstall else 'update'
+                print('[magenta]PyRadio[/magenta] has been installed using either [green]pip[/green] or your [green]distribution\'s\npackage manager[/green]. Please use that to {} it.\n'.format(action))
+                return
 
         if args.update:
             if package == 0:
                 pyradio_config.get_pyradio_version()
                 last_tag = get_github_tag()
                 if last_tag:
-                    if PY3:
-                        print('Released version   :  [green]{}[/green]'.format(last_tag))
-                        print('Installed version  :  [red]{}[/red]'.format(pyradio_config.current_pyradio_version))
-                    else:
-                        print('Released version   :  {}'.format(last_tag))
-                        print('Installed version  :  {}'.format(pyradio_config.current_pyradio_version))
+                    print('Released version   :  [green]{}[/green]'.format(last_tag))
+                    print('Installed version  :  [red]{}[/red]'.format(pyradio_config.current_pyradio_version))
                     if version_string_to_list(last_tag) <= version_string_to_list(pyradio_config.current_pyradio_version):
                         print('Latest version already installed. Nothing to do....')
-                        sys.exit()
+                        return
                 else:
                     print('Error reading online version.\nPlease make sure you are connected to the internet and try again.')
-                    sys.exit(1)
+                    return
 
             try:
                 upd = PyRadioUpdate(package=package)
@@ -640,7 +560,7 @@ If nothing else works, try the following command:
             except RuntimeError:
                 upd = PyRadioUpdateOnWindows(package=package)
                 upd.update_or_uninstall_on_windows(mode='update-open')
-            sys.exit()
+            return
 
         if args.uninstall:
             try:
@@ -652,31 +572,28 @@ If nothing else works, try the following command:
                     mode='uninstall-open',
                     from_pyradio=True
                 )
-            sys.exit()
+            return
 
         if args.unlock:
             pyradio_config.locked = False
             pyradio_config.force_to_remove_lock_file = True
-            sys.exit()
+            return
 
         if args.show_config_dir:
-            if PY3:
-                print('[magenta]PyRadio[/magenta] config dir: "[red]{}[/red]"'.format(pyradio_config.stations_dir))
-            else:
-                print('PyRadio config dir: "{}"'.format(pyradio_config.stations_dir))
-            sys.exit()
+            print('[magenta]PyRadio[/magenta] config dir: "[red]{}[/red]"'.format(pyradio_config.stations_dir))
+            return
 
         if args.open_config_dir:
             open_conf_dir(pyradio_config)
-            sys.exit()
+            return
 
         if args.open_recordings:
             open_conf_dir(pyradio_config, pyradio_config.recording_dir)
-            sys.exit()
+            return
 
         if args.list_playlists:
             pyradio_config.list_playlists()
-            sys.exit()
+            return
 
         if args.update_stations:
             if pyradio_config.locked:
@@ -687,31 +604,31 @@ If nothing else works, try the following command:
                 stations_change .stations_csv_needs_sync(print_messages=False)
                 stations_change.write_synced_version()
                 print_simple_error('Error: "stations.csv" already up to date!')
-                sys.exit(1)
+                return
             else:
-                do_update_stations(pyradio_config)
+                stations_change = StationsChanges(pyradio_config)
+                if stations_change.stations_csv_needs_sync():
+                    stations_change.update_stations_csv()
+                return
 
         if args.open_cache:
             open_cache_dir()
-            sys.exit()
+            return
 
         if args.show_cache:
             c = PyRadioCache()
             c.list()
-            sys.exit()
+            return
 
         if args.clear_cache:
             c = PyRadioCache()
             if c.exists():
                 if len(c.files) > 1:
                     c.clear()
-                if PY3:
-                    print('[magenta]PyRadio Cache[/magenta]: [green]cleared[/green]\n')
-                else:
-                    print('PyRadio Cache: cleared\n')
-                sys.exit()
+                print('[magenta]PyRadio Cache[/magenta]: [green]cleared[/green]\n')
+                return
             c.list()
-            sys.exit(1)
+            return
 
         if args.get_cache:
             upd = PyRadioUpdate(
@@ -722,7 +639,7 @@ If nothing else works, try the following command:
             upd._get_cache = True
             upd.user = is_pyradio_user_installed()
             upd.update_pyradio()
-            sys.exit()
+            return
 
         mkvtoolnix = None
         if args.mkv_file or args.list_recordings:
@@ -733,12 +650,12 @@ If nothing else works, try the following command:
                     print('[red]Error:[/red] [bold magenta]MKVToolNix[/bold magenta] not found!')
                 else:
                     print('Error: MKVToolNix not found!')
-                sys.exit(1)
+                return
             mkvtoolnix.mkv_file = args.mkv_file
 
             if args.list_recordings:
                 mkvtoolnix.list_mkv_files()
-                sys.exit()
+                return
 
             if args.set_mkv_cover:
                 mkvtoolnix.cover_file = args.set_mkv_cover
@@ -751,7 +668,7 @@ If nothing else works, try the following command:
 
         if mkvtoolnix:
             mkvtoolnix.execute()
-            sys.exit()
+            return
 
         if args.address:
             disp = []
@@ -776,7 +693,7 @@ If nothing else works, try the following command:
                 print('PyRadio Remote Control Server\n' +  ''.join(disp))
             else:
                 print('No PyRadio remote control servers running\n')
-            sys.exit()
+            return
 
         if args.no_themes:
             pyradio_config.use_themes = False
@@ -814,59 +731,43 @@ If nothing else works, try the following command:
                 if i < 2:
                     if a_param.strip() == '':
                         print('** Error: No {} entered. Aborting...'.format(msg[i]))
-                        sys.exit(1)
+                        return
             ret = pyradio_config.append_station(params, args.stations)
             if ret < 0:
                 print_playlist_selection_error(args.stations, pyradio_config, ret)
-            sys.exit()
+            return
 
         if args.list:
-            if PY3:
-                console = Console()
+            console = Console()
 
-                table = Table(show_header=True, header_style="bold magenta")
-                table.title = 'Playlist: [bold magenta]{}[/bold magenta]'.format(pyradio_config.station_title)
-                table.title_justify = "left"
-                table.row_styles = ['', 'plum4']
-                centered_table = Align.center(table)
-                table.add_column("#", justify="right")
-                table.add_column("Name")
-                table.add_column("URL")
-                table.add_column("Encoding")
-                for i, n in enumerate(pyradio_config.stations):
-                    if n[1] == '-':
-                        table.add_row(
-                            '[green]' + str(i+1) + '[/green]',
-                            '[green]' + n[0] + '[/green]',
-                            '[green]Group Header[/green]'
-                            '',
-                            style = 'bold'
-                        )
-                    else:
-                        table.add_row(
-                            str(i+1),
-                            n[0],
-                            n[1],
-                            'utf-8' if not n[2] else n[2],
-                            style = '' if not n[2] else 'bold'
-                        )
-                console.print(centered_table)
-            else:
-                m_len, header_format_string, format_string = get_format_string(pyradio_config.stations)
-                header_string = header_format_string.format('[Name]','[URL]','[Encoding]')
-                print(header_string)
-                print(len(header_string) * '-')
-                for num, a_station in enumerate(pyradio_config.stations):
-                    station_name = pad_string(a_station[0], m_len)
-                    if a_station[1] == '-':
-                        print(format_string.format(str(num+1), '>>> ' + station_name, '', ''))
-                    else:
-                        if a_station[2]:
-                            encoding = a_station[2]
-                        else:
-                            encoding = pyradio_config.default_encoding
-                        print(format_string.format(str(num+1), station_name, a_station[1], encoding))
-            sys.exit()
+            table = Table(show_header=True, header_style="bold magenta")
+            table.title = 'Playlist: [bold magenta]{}[/bold magenta]'.format(pyradio_config.station_title)
+            table.title_justify = "left"
+            table.row_styles = ['', 'plum4']
+            centered_table = Align.center(table)
+            table.add_column("#", justify="right")
+            table.add_column("Name")
+            table.add_column("URL")
+            table.add_column("Encoding")
+            for i, n in enumerate(pyradio_config.stations):
+                if n[1] == '-':
+                    table.add_row(
+                        '[green]' + str(i+1) + '[/green]',
+                        '[green]' + n[0] + '[/green]',
+                        '[green]Group Header[/green]'
+                        '',
+                        style = 'bold'
+                    )
+                else:
+                    table.add_row(
+                        str(i+1),
+                        n[0],
+                        n[1],
+                        'utf-8' if not n[2] else n[2],
+                        style = '' if not n[2] else 'bold'
+                    )
+            console.print(centered_table)
+            return
 
         #pyradio_config.log.configure_logger(titles=True)
         if args.debug or args.log_titles:
@@ -894,11 +795,8 @@ If nothing else works, try the following command:
             try:
                 check_int = int(args.play)
             except:
-                if PY3:
-                    print('[red]Error:[/red] Invalid parameter ([green]-p[/green] [red]' + args.play + '[/red])')
-                else:
-                    print('Error: Invalid parameter (-p ' + args.play + ')')
-                sys.exit(1)
+                print('[red]Error:[/red] Invalid parameter ([green]-p[/green] [red]' + args.play + '[/red])')
+                return
         if args.play == '-1':
             args.play = 'False'
 
@@ -921,18 +819,12 @@ If nothing else works, try the following command:
             term = getenv('TERM')
             # print('TERM = {}'.format(term))
             if term is None:
-                if PY3:
-                    print('[plum4]== Warning: [green]TERM[/green] is not set. Using "[green]xterm-256color[/green]"[/plum4]')
-                else:
-                    print('== Warning: TERM is not set. Using "xterm-256color"')
+                print('[plum4]== Warning: [green]TERM[/green] is not set. Using "[green]xterm-256color[/green]"[/plum4]')
                 environ['TERM'] = 'xterm-256color'
             elif term == 'xterm' \
                     or term.startswith('screen') \
                     or term.startswith('tmux'):
-                if PY3:
-                    print('[plum4]== Warning: [green]TERM[/green] is set to [green]{}[/green]. Using "[green]xterm-256color[/green]"[/plum4]'.format(term))
-                else:
-                    print('== Warning: TERM is set to "{}". Using "xterm-256color"'.format(term))
+                print('[plum4]== Warning: [green]TERM[/green] is set to [green]{}[/green]. Using "[green]xterm-256color[/green]"[/plum4]'.format(term))
                 environ['TERM'] = 'xterm-256color'
             # this is for linux console (i.e. init 3)
             if term == 'linux':
@@ -985,7 +877,7 @@ If nothing else works, try the following command:
                 # doing it this way so that python2 does not break (#153)
                 from .win import win_press_any_key_to_unintall
                 win_press_any_key_to_unintall()
-                sys.exit()
+                return
 
             if pyradio_config.WIN_PRINT_PATHS and platform.startswith('win'):
                 ''' print exe path '''
@@ -1008,10 +900,7 @@ If nothing else works, try the following command:
                     upd.user = is_pyradio_user_installed()
                     upd.update_pyradio()
             else:
-                if PY3:
-                    print('\nThank you for using [magenta]PyRadio[/magenta]. Cheers!')
-                else:
-                    print('\nThank you for using PyRadio. Cheers!')
+                print('\nThank you for using [magenta]PyRadio[/magenta]. Cheers!')
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
 
@@ -1034,26 +923,14 @@ def save_config(pyradio_config):
         print('Error saving config!')
         sys.exit(1)
 
-def no_update(uninstall):
-    action = 'uninstall' if uninstall else 'update'
-    if PY3:
-        print('[magenta]PyRadio[/magenta] has been installed using either [green]pip[/green] or your [green]distribution\'s\npackage manager[/green]. Please use that to {} it.\n'.format(action))
-    else:
-        print('PyRadio has been installed using either pip or your distribution\'s\npackage manager. Please use that to {} it.\n'.format(action))
-    sys.exit(1)
-
 def print_simple_error(msg):
-    if PY3:
-        msg = msg.replace('Error: ', '[red]Error: [/red]').replace('PyRadio', '[magenta]PyRadio[/magenta]')
+    msg = msg.replace('Error: ', '[red]Error: [/red]').replace('PyRadio', '[magenta]PyRadio[/magenta]')
     print(msg)
 
 def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True):
     if exit_if_malformed:
         if ret == -1:
-            if PY3:
-                print('[red]Error:[/red] playlist is malformed: "[magenta]{}[/magenta]"'.format(a_selection))
-            else:
-                print('Error: playlist is malformed: "{}"'.format(a_selection))
+            print('[red]Error:[/red] playlist is malformed: "[magenta]{}[/magenta]"'.format(a_selection))
             sys.exit(1)
 
     if ret == -2:
@@ -1086,10 +963,7 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
             to CSV.\n
             Unfortunately, renaming this file has failed, so you have to
             manually address the issue.'''
-        if PY3:
-            print(txt.replace('TXT', '[red]TXT[/red]').replace('CSV', '[green]CSV[/green]').replace('PyRadio', '[magenta]PyRadio[/magenta]'))
-        else:
-            print(msg)
+        print(txt.replace('TXT', '[red]TXT[/red]').replace('CSV', '[green]CSV[/green]').replace('PyRadio', '[magenta]PyRadio[/magenta]'))
         #open_conf_dir(cnf)
         sys.exit(1)
     elif ret == -8:
@@ -1097,7 +971,7 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
         sys.exit(1)
 
 def validate_user_config_dir(a_dir):
-    if '~' in a_dir:
+    if a_dir.startswith('~'):
         exp_dir = a_dir.replace('~', path.expanduser('~'))
     else:
         exp_dir = a_dir

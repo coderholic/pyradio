@@ -4384,6 +4384,7 @@ ____Using |fallback| theme.''')
                         logger.debug('detectUpdateStationsThread: Asked to stop. Stoping...')
                     return
                 else:
+                    logger.error('\n\nsetting need to update stations\n\n')
                     self._need_to_update_stations_csv = 2
         else:
             if logger.isEnabledFor(logging.DEBUG):
@@ -5366,11 +5367,11 @@ ____Using |fallback| theme.''')
         elif self._need_to_update_stations_csv == -1:
             caption = ' Stations Update Error '
             txt = '''
-                There was an error reading your "|stations.csv|" file.
-                This should not be happening!
+                There was an error reading your "|stations.csv|"
+                file.  This should not be happening!
 
-                Please close all open programs and restart |PyRadio| now,
-                to try again.
+                Please close all open programs and restart
+                |PyRadio| now, to try again.
             '''
         elif self._need_to_update_stations_csv == -2:
             caption = ' Stations Update Error '
@@ -5384,32 +5385,34 @@ ____Using |fallback| theme.''')
         elif self._need_to_update_stations_csv == -3:
             caption=' Stations not updated '
             txt = '''
-                    You have chosen not to update "|stations.csv|" at this time.
+                    You have chosen not to update "|stations.csv|"
+                    at this time.
 
-                    You will not be asked to do so until |PyRadio| updates its
-                    default stations again.
+                    You will not be asked to do so until |PyRadio|
+                    updates its default stations again.
 
-                    You can always update them manually with the following
-                    command:
-                    _______________________|pyradio -us|
+                    You can always update them manually with the
+                    following command:
+                    ________________|pyradio -us|
                      '''
         elif self._need_to_update_stations_csv == -4:
             caption=' Stations not updated '
             txt = '''
-                    You have chosen not to update "|stations.csv|" at this time.
-                    You can always update it manually with the following command:
-                    _______________________|pyradio -us|
+                    You have chosen not to update "|stations.csv|" at
+                    this time.  You can always update it manually
+                    with the following command:
+                    ____________________|pyradio -us|
                      '''
         elif self._need_to_update_stations_csv == -5 and \
                 self._update_stations_error_count < 6:
             caption = ' Error writing file ({}/5) '.format(self._update_stations_error_count)
             txt = '''
                 |PyRadio| cannot write the "|asked_sync|" file.
-                This means that you will be asked to sync the stations next time
-                the program is executed.
+                This means that you will be asked to sync the
+                stations next time the program is executed.
 
-                Please close all open programs and documents and press any key to
-                try to write it again.
+                Please close all open programs and documents and
+                press any key to try to write it again.
             '''
         elif self._need_to_update_stations_csv == -5 and \
                 self._update_stations_error_count >= 6:
@@ -5433,12 +5436,12 @@ ____Using |fallback| theme.''')
             caption = ' Error writing file ({}/5) '.format(self._update_stations_error_count)
             txt = '''
                 |PyRadio| cannot write the "|last_sync|" file.
-                This means that although stations have been synced, |PyRadio|
-                will try to sync them again next time, which means that you
-                may end up with duplicates.
+                This means that although stations have been synced,
+                |PyRadio| will try to sync them again next time,
+                which means that you may end up with duplicates.
 
-                Please close all open programs and documents and press any key
-                to try to write it again.
+                Please close all open programs and documents and
+                press any key to try to write it again.
             '''
         elif self._need_to_update_stations_csv == -6 and \
                 self._update_stations_error_count >= 6:
@@ -5459,6 +5462,7 @@ ____Using |fallback| theme.''')
             txt = self._cls_update_stations_message
         else:
             return
+        logger.error('caption = "{}"\ntxt = "{}"'.format(caption, txt))
         return caption, txt
 
     def _ask_to_update_stations_csv(self):
@@ -6398,6 +6402,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE:
+            logger.error('\n\noperation mode = self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE\n\n')
             self.ws.close_window()
             self.refreshBody()
             ret = -1
@@ -6408,7 +6413,9 @@ ____Using |fallback| theme.''')
                     while True:
                         ret = self._need_to_update_stations_csv = self._cls_update_stations.write_synced_version()
                         if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('\n\n')
                             logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
+                            logger.debug('\n\n')
                         if self._need_to_update_stations_csv == -6:
                             self._update_stations_error_count += 1
                             if self._update_stations_error_count > 4:
@@ -6427,7 +6434,9 @@ ____Using |fallback| theme.''')
             elif char == ord('n'):
                 self._update_stations_error_count = 0
                 while True:
+                    logger.error('\n\ncalling self._cls_update_stations.write_synced_version\n\n')
                     ret = self._need_to_update_stations_csv = self._cls_update_stations.write_synced_version(asked=True)
+                    logger.error('\n\nret = self._need_to_update_stations_csv = {}\n\n'.format(self._need_to_update_stations_csv))
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
                     if self._need_to_update_stations_csv == -5:
@@ -6442,6 +6451,7 @@ ____Using |fallback| theme.''')
                         self.bodyWin.getch()
                     else:
                         break
+            logger.error(f'{ret = }')
             if ret == -1:
                 self._need_to_update_stations_csv = -4        # next time
             if logger.isEnabledFor(logging.DEBUG):

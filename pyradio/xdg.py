@@ -228,7 +228,13 @@ class XdgDirs(object):
     _old_dirs = [None, None, None, None, None, None, None]
     _new_dirs = [None, None, None, None, None, None, None]
 
-    def __init__(self, config_dir=None, xdg_compliant=False):
+    ''' function to execute when the directory has been
+        moved inside the target directory, instead of
+        renaming it (because it's not empty)
+    '''
+    dir_fixed_function = None
+
+    def __init__(self, config_dir=None, xdg_compliant=False, a_dir_fix_function=None):
         ''' Parameters
             ==========
             config_dir
@@ -248,6 +254,7 @@ class XdgDirs(object):
         self.build_paths()
         if not platform.startswith('win'):
             self.migrate_cache()
+        self.dir_fixed_function = a_dir_fix_function
         self.migrate_recordings()
 
     @property
@@ -392,6 +399,7 @@ class XdgDirs(object):
             self._new_dirs[self.RECORDINGS] = new_dir
             logger.error('@ after recording_dir.setter: self._new_dirs[self.RECORDINGS] = "{}"'.format(self._new_dirs[self.RECORDINGS]))
             logger.error('@ after recording_dir.setter: self._old_dirs[self.RECORDINGS] = "{}"'.format(self._old_dirs[self.RECORDINGS]))
+            logger.error('self.migrate_recordings 2')
             ret = self.migrate_recordings(silent=not print_to_console)
             self._old_dirs[self.RECORDINGS] = old_dir
             self._set_last_rec_dirs(ret)
@@ -401,6 +409,7 @@ class XdgDirs(object):
                 is already set and checked
             '''
             if migrate:
+                logger.error('self.migrate_recordings 3')
                 ret = self.migrate_recordings(silent=not print_to_console)
                 self._set_last_rec_dirs(ret)
                 return ret
@@ -413,6 +422,7 @@ class XdgDirs(object):
                 self._new_dirs[self.RECORDINGS] = new_dir
             logger.error('@recording_dir.setter: 3')
             if migrate:
+                logger.error('self.migrate_recordings 4')
                 ret = self.migrate_recordings(silent=not print_to_console)
                 self._set_last_rec_dirs(ret)
                 return ret
@@ -451,6 +461,7 @@ class XdgDirs(object):
 
     def migrate_recordings(self, silent=False):
         ''' recordings dir '''
+        dir_is_fixed = False
         if self._old_dirs[self.RECORDINGS] == self._new_dirs[self.RECORDINGS]:
             return True
         if path.exists(self._old_dirs[self.RECORDINGS]):
@@ -465,7 +476,14 @@ class XdgDirs(object):
                             try:
                                 rmdir(self._new_dirs[self.RECORDINGS])
                             except:
-                                pass
+                                if silent:
+                                    return False
+                                else:
+                                    print("\nCannot remove empty target dir: {}".format(self._new_dirs[self.RECORDINGS]))
+                                    exit(1)
+                        else:
+                            self._new_dirs[self.RECORDINGS] = path.join(self._new_dirs[self.RECORDINGS], 'pyradio-recordings')
+                            dir_is_fixed = True
                 else:
                     try:
                         makedirs(parent_dir)
@@ -483,6 +501,9 @@ class XdgDirs(object):
                     else:
                         print('\nCannot copy files\nfrom: "{0}"\nto: {1}'.format(self._old_dirs[self.RECORDINGS], self._new_dirs[self.RECORDINGS]))
                         exit(1)
+                if dir_is_fixed and self.dir_fixed_function is not None:
+                    # save config if dir is "fixed"
+                    self.dir_fixed_function(self._new_dirs[self.RECORDINGS])
                 if path.exists(self._old_dirs[self.RECORDINGS]):
                     try:
                         remove_tree(self._old_dirs[self.RECORDINGS])
@@ -490,6 +511,11 @@ class XdgDirs(object):
                         pass
                 # self._old_dirs[self.RECORDINGS] = self._new_dirs[self.RECORDINGS]
                 # return True
+            else:
+                try:
+                    rmdir(self._old_dirs[self.RECORDINGS])
+                except:
+                    pass
         #
         # I do not need to do this here, the dir will be created as needed elsewhere
         #
