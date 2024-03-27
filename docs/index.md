@@ -109,6 +109,10 @@ and much more...
 * MPV, MPlayer or VLC installed and in your path
 * MKVToolNix (cli files) to insert tags, chapters and cover to recordings (optional)
 
+Linux users will have to install the "**xdg-utils**" package (may be named differently in your distro) which will provide "**xdg-open**", the utility to open directories, html pages, etc.
+
+Linux and macOS users will have to have installed a font that supports the "**Unicode Geometric Shapes Block**". Any font mentioned in the [Font Support for Unicode Block 'Geometric Shapes'](https://www.fileformat.info/info/unicode/block/geometric_shapes/fontsupport.htm) page will do; as you can see these include **DejaVu**, **FreeMono**, **Unifont**, etc, some of which will fopefully be installed by default.
+
 <!-- Changelog -->
 
 ## Installation

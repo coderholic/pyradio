@@ -1162,12 +1162,18 @@ class PyRadioRecordingDir(object):
                 return -1, None, False
             return 0, None, False
         else:
-            if char in (curses.KEY_EXIT, 27, ord('q')):
+            if char in (curses.KEY_EXIT, 27):
+                self._win.nodelay(True)
+                char_esc = self._win.getch()
+                self._win.nodelay(False)
+                if char_esc == -1:
+                    ''' ESCAPE '''
+                    return -1, None, False
+                curses.ungetch(char_esc)
+            if char == ord('q') and self._focus > 0:
                 return -1, None, False
             elif char == ord('?') and self.focus == 0:
                 return 2, None, False
-            elif char in (curses.KEY_EXIT, 27, ord('q')):
-                return -1, None, None
             elif char in (ord(' '), ord('l'), curses.KEY_RIGHT,
                           curses.KEY_ENTER, ord('\n'),
                           ord('\r')) and self._focus == 1:
