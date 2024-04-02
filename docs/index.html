@@ -183,14 +183,41 @@ a:visited{color: SaddleBrown;}
 <pre style="height: 200px;">
 
 2024-02-24 s-n-g
+    * version 0.9.2.26
+    * user config file will not be automatically created; it will be
+      created only when some parameter value is different to the one
+      set in the package config file
+    * adding -pc (--print-config) command line option
+    * RadioBrowser: presetn next previous result pages
+    * RadioBrowser: adding Icon to station DB info
+    * Remote Control Server: adding commands relevant to RadioBrowser results
+      page navigation (text interface) and relevant web interface buttons
+    * Remote Control Server: adding REC button to web interface
+    * Remote Control Server: the output of the /info command will report
+      headless operation and if RadioBrowser is active, search term used and
+      page number
+    * introducing the Messaging System; most messages displayed to the user
+      have been transfered to messages_system.py
+    * moving Pyradio cache contents to ~/.cache (not on Windows)
+    * moving the recordings directory to home folder and renaming it to
+      "pyradio-recordings".
+    * adding recording_dir config parameter and window to customize it
+    * titles log files will be saved in the recordings directory
+    * if netifaces module is not installed, headless operation will be aborted
+    * fixing #229: Crash when $HOME/.mplayer directory does not exist
+    * fixing escaped chars in window title
+    * adding a Windows python 3.12 workaround to the "curses silently exits"
+      bug
+
+2024-02-24 s-n-g
     * version 0.9.2.25
-    * droping python 2 - PyRadio will only run on python 3
+    * dropping python 2 - PyRadio will only run on python 3
     * fixing #228
 
 2024-01-12 s-n-g
     * version 0.9.2.24 (BUG FIX)
     * fixing mpv title parsing (once again)
-    * fixing "Genre" field wrapping on Starion Info window
+    * fixing "Genre" field wrapping on Station Info window
 
 2024-01-11 s-n-g
     * version 0.9.2.23 (BUG FIX)
@@ -224,7 +251,7 @@ a:visited{color: SaddleBrown;}
     * fixing cover insertion to mkv files
     * fixing escape character warnings for python 3.12
     * fixing lock refresh issues
-    * working on scheculer (not available yet)
+    * working on scheduler (not available yet)
     * updating win mplayer link
     * creating issues templates
     * updating documentation
@@ -290,7 +317,7 @@ a:visited{color: SaddleBrown;}
     * [B] will be displayed at top left corner of the window
       when player is buffering
     * adding "Force transparency" config option (as per #201)
-    * redisigning players' extra parameters window
+    * redesigning players' extra parameters window
     * removing command line parameters -ep, -ap, lp
       and changing -ocd etc.
     * Windows: MPV installation will check CPU flags to

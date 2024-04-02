@@ -1829,6 +1829,11 @@ W| / |w                             |*| Toggle title log / like a station'''
                 self.set_text(parent, *self._args)
         self.show(parent)
 
+    def erase(self):
+        self._win.bkgdset(' ', curses.color_pair(13))
+        self._win.erase()
+        self._win.refresh()
+
     def show(self, parent=None):
         if logger.isEnabledFor(logging.INFO):
             logger.info('>>> Message System: displaying key "{}"'.format(self._last_key))

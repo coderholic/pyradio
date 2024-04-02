@@ -1306,6 +1306,10 @@ class PyRadio(object):
         if not self._redisplay_list:
             self._redisplay_list = [0, 0]
 
+    def refreshBody_after_Message(self):
+        self._messaging_win.erase()
+        self.refreshBody()
+
     def refreshBody(self, start=0):
         if self.player.ctrl_c_pressed:
             return
@@ -7280,9 +7284,9 @@ ____Using |fallback| theme.''')
                 # show invalid dir message
                 self._show_notification_with_delay(
                         delay=1.5,
-                        txt='\n______Invalid directory specified!!!______\n',
+                        txt='______Invalid directory specified!!!______\n',
                         mode_to_set=self.ws.operation_mode,
-                        callback_function=self.refreshBody)
+                        callback_function=self.refreshBody_after_Message)
 
         elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE:
             ''' handle browser config '''
