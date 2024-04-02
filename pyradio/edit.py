@@ -78,10 +78,10 @@ class PyRadioOpenDir(SimpleCursesMenu):
                 ord('5')
             )
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Open Directory Window')
-            for n in self._dir:
-                logger.debug('dir: "{}"'.format(n))
+        # if logger.isEnabledFor(logging.DEBUG):
+        #     logger.debug('Open Directory Window')
+        #     for n in self._dir:
+        #         logger.debug('dir: "{}"'.format(n))
 
         SimpleCursesMenu.__init__(
             self,
@@ -842,17 +842,17 @@ class PyRadioRecordingDir(object):
 
     def __del__(self):
         try:
-            logger.error('DE deleting {}'.format(self._win))
+            # logger.error('DE deleting {}'.format(self._win))
             del self._win
             self._win = None
             for x in self._widgets:
                 if x is not None:
-                    logger.error('DE deleting {}'.format(x))
+                    # logger.error('DE deleting {}'.format(x))
                     del x
                     x = None
         except:
             pass
-            logger.error('DE error')
+            # logger.error('DE error')
 
     @property
     def title(self):
@@ -888,10 +888,10 @@ class PyRadioRecordingDir(object):
         if stripped_string == self._orig_path:
             self._widgets[-2].enabled = False
         else:
-            logger.error('stripped_string = "{}"'.format(stripped_string))
+            # logger.error('stripped_string = "{}"'.format(stripped_string))
             if self._error_string == '':
-                l= [x for x in self._invalid_chars if x in stripped_string]
-                logger.error('l = {}'.format(l))
+                l = [x for x in self._invalid_chars if x in stripped_string]
+                # logger.error('l = {}'.format(l))
                 if l:
                     self._error_string = 'Invalid dir_path!!!'
             self._widgets[-2].enabled = False
@@ -1010,7 +1010,7 @@ class PyRadioRecordingDir(object):
         self._win.addstr(y, invX, inv_tit, curses.color_pair(4))
         self._win.addstr(inv_chars, curses.color_pair(5))
         adjust_line_Y -= 1
-        logger.error('\n\nadjust_line_Y = {}\n\n'.format(adjust_line_Y ))
+        # logger.error('\n\nadjust_line_Y = {}\n\n'.format(adjust_line_Y ))
         if self.maxY > 18 + adjust_line_Y and self.maxX > 76:
             try:
                 self._win.addstr(10 + adjust_line_Y, 3, '─' * (self.maxX - 6), curses.color_pair(12))
@@ -1134,7 +1134,7 @@ class PyRadioRecordingDir(object):
         else:
             focus = self.focus - 1
             focus = self._widgets[focus].id
-            logger.error('pp focus = {}'.format(focus))
+            # logger.error('pp focus = {}'.format(focus))
             while not self._widgets[focus].enabled:
                 focus -= 1
                 # logger.error('pp+ focus = {}'.format(focus))
@@ -1192,13 +1192,18 @@ class PyRadioRecordingDir(object):
                     self._widgets[1].toggle_checked()
                 elif self._focus == 2:
                     # ok, execute
-                    return self._get_result(ret)
+                    if self._line_editor.string.startswith(self._orig_path):
+                        return 3, None, False
+                    else:
+                        return self._get_result(ret)
                 elif self._focus == 3:
                     # cancel
                     return -1, None, False
             elif char == ord('s') and self._focus > 0:
                 # s, execute
-                if self._widgets[-2].enabled:
+                if self._line_editor.string.startswith(self._orig_path):
+                    return 3, None, False
+                elif self._widgets[-2].enabled:
                     return self._get_result(ret)
                 return 0, None, False
             elif char == ord('h') and self._focus > 0:

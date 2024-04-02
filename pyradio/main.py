@@ -117,6 +117,7 @@ def __configureLogger(pyradio_config, debug=None, titles=None):
                 print('Debug mode activated; printing messages to file: "[red]~/pyradio.log[/red]"')
 
         pyradio_config.titles_log.configure_logger(
+            recording_dir=pyradio_config.recording_dir,
             debug=debug,
             titles=titles
         )
@@ -769,7 +770,6 @@ If nothing else works, try the following command:
             console.print(centered_table)
             return
 
-        #pyradio_config.log.configure_logger(titles=True)
         if args.debug or args.log_titles:
             __configureLogger(debug=args.debug,
                               titles=args.log_titles,

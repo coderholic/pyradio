@@ -157,7 +157,7 @@ def find_mplayer_on_windows():
     return 'mplayer'
 
 def info_dict_to_list1(info, fix_highlight, max_width):
-    logger.error(f'\n\ninfo_dict_to_list max_width = {max_width}\n\n')
+    # logger.error(f'\n\ninfo_dict_to_list max_width = {max_width}\n\n')
     result_dict = {}
     max_label_length = max(len(label) for label in info.keys())
     label_padding = 2  # for ": " separator
@@ -176,14 +176,14 @@ def info_dict_to_list1(info, fix_highlight, max_width):
 
             # Wrap the text using cjkwrap.wrap
             wrapped_lines = wrap(text, width=max_width - label_width)
-            logger.error(f'\n\n\n"{text}"\n\n{wrapped_lines}\n============')
+            # logger.error(f'\n\n\n"{text}"\n\n{wrapped_lines}\n============')
 
             # Store the result in the dictionary
         result_dict[label] = wrapped_lines
 
     out = []
     for label, wrapped_lines in result_dict.items():
-        logger.error('wrapped_lines\n{}'.format(wrapped_lines))
+        # logger.error('wrapped_lines\n{}'.format(wrapped_lines))
         if label != 'text':
             if wrapped_lines:
                 formatted_label = f"{label:_>{label_width-2}}"
@@ -197,7 +197,7 @@ def info_dict_to_list1(info, fix_highlight, max_width):
         out.append('')
         for n in result_dict['text']:
             out.append(n)
-    logger.info('out\n{}\n\n'.format(out))
+    #logger.info('out\n{}\n\n'.format(out))
     return out
 
 def info_dict_to_list(info, fix_highlight, max_width, win_width):
@@ -208,16 +208,15 @@ def info_dict_to_list(info, fix_highlight, max_width, win_width):
         info[a_title] = info[a_title].replace('_','¸')
     # logger.error('DE info\n{}\n\n'.format(info))
 
-    logger.error('\n\n\n')
-    logger.info(f'{max_width = }, {win_width = }')
-    logger.error(f'{info = }')
+    # logger.info(f'{max_width = }, {win_width = }')
+    # logger.error(f'{info = }')
     max_str = max([len(l[0]) + len(l[1]) + 2 for l in info.items()])
-    # logger.error(f'{max_str = }')
-    # max_str = max([len(l[1]) + 2 for l in info.items()])
-    logger.info(f'{max_str = }, {max_width = }, {win_width = }')
+    # # logger.error(f'{max_str = }')
+    # # max_str = max([len(l[1]) + 2 for l in info.items()])
+    # logger.info(f'{max_str = }, {max_width = }, {win_width = }')
     if win_width - 24 >= max_str:
         max_width = max_str + 3
-    logger.error(f'{max_width = }')
+    # logger.error(f'{max_width = }')
     a_list = []
     for n in info.keys():
         a_list.extend(wrap(n.rjust(max_len, ' ') + ': |' + info[n],
@@ -671,12 +670,12 @@ class Player(object):
                 ('Website:', 'Genre:'),
                 ('Genre:', 'Encoding:')
                 )
-        logger.error('\n\n**** win_width = {}\n\n'.format(win_width))
+        # logger.error('\n\n**** win_width = {}\n\n'.format(win_width))
         a_list = info_dict_to_list(info, fix_highlight, max_width, win_width)
 
-        for n in a_list:
-            logger.debug(f'{n}')
-        logger.debug('\n\n\n')
+        # for n in a_list:
+        #     logger.debug(f'{n}')
+        # logger.debug('\n\n\n')
 
         if 'Codec:' not in a_list[-1]:
             a_list[n] = '|' + a_list[n]

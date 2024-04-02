@@ -1,7 +1,7 @@
 from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_CUR, environ, getpid, listdir, rmdir, walk
 from sys import platform, exit
 from rich import print
-from shutil import copyfile, move, Error as shutil_Error, rmtree as remove_tree
+from shutil import copy, copyfile, move, Error as shutil_Error, rmtree as remove_tree
 import logging
 
 from platform import system
@@ -33,10 +33,6 @@ state_files = [
     'server.txt',
     'server-headless.txt',
     'vlc.conf',
-]
-
-home_files = [
-    'pyradio-titles.log',
 ]
 
 logger = logging.getLogger(__name__)
@@ -106,18 +102,16 @@ class XdgMigrate(object):
         files_in_path = self._list_files_in_path(self.path_to_scan)
         self.files_to_data = [[x, self._replace_dir_in_path(x, self.data_dir) ]  for x in files_in_path for y in data_files if x.endswith(y)]
         self.files_to_state = [[x, self._replace_dir_in_path(x, self.state_dir) ]  for x in files_in_path for y in state_files if x.endswith(y)]
-        self.files_to_home = [[x, self._replace_dir_in_path(x, self.home_dir) ]  for x in files_in_path for y in home_files if x.endswith(y)]
 
         flag_files = [x[0] for x in self.files_to_data]
         flag_files.extend([x[0] for x in self.files_to_state])
-        flag_files.extend([x[0] for x in self.files_to_home])
 
         self.files_to_other = [[x, self._replace_dir_in_path(x, self.other_dir) ] for x in files_in_path if x not in flag_files]
 
     def _get_max_length(self):
         to_print = []
         max_length = 0
-        for n in self.files_to_data, self.files_to_state, self.files_to_home, self.files_to_other:
+        for n in self.files_to_data, self.files_to_state, self.files_to_other:
             if n:
                 n_max_length = max(len(internal_list[0]) for internal_list in n)
                 if n_max_length > max_length:
@@ -127,20 +121,18 @@ class XdgMigrate(object):
     def rename_files(self, to_console=True):
         if to_console:
             caption = (
-                '> Copying files to "home" dir',
                 '> Copying files to "data" dir',
                 '> Copying files to "state" dir',
                 '> Copying files to "pytadio-not-migrated" dir',
             )
 
             no_files_caption = (
-                '> Nothing to copy to "home" dir',
                 '> Nothing to copy to "data" dir',
                 '> Nothing to copy to "state" dir',
                 '> Nothing to copy to "pytadio-not-migrated" dir',
             )
         go_on = False
-        for n in self.files_to_home, self.files_to_data, self.files_to_state, self.files_to_other:
+        for n in self.files_to_data, self.files_to_state, self.files_to_other:
             if n:
                 go_on = True
                 break
@@ -156,7 +148,7 @@ class XdgMigrate(object):
             max_length = self._get_max_length()
             if to_console:
                 print('[bold magenta]PyRadio[/bold magenta]: moving files to [green]XDG[/green] directories')
-            for n in self.files_to_home, self.files_to_data, self.files_to_state, self.files_to_other:
+            for n in self.files_to_data, self.files_to_state, self.files_to_other:
                 i += 1
                 if to_console:
                     if n:
@@ -180,7 +172,7 @@ class XdgMigrate(object):
                 input('Press ENTER to continue... ')
 
     def _remove_old_files_on_success(self):
-        for n in self.files_to_home, self.files_to_data, self.files_to_state, self.files_to_other:
+        for n in self.files_to_data, self.files_to_state, self.files_to_other:
             for k in n:
                 self._remove_file(k[0])
         old_data_dir = path.join(self.path_to_scan, 'data')
@@ -191,7 +183,7 @@ class XdgMigrate(object):
                 pass
 
     def _remove_new_files_on_failure(self):
-        for n in self.files_to_home, self.files_to_data, self.files_to_state, self.files_to_other:
+        for n in self.files_to_data, self.files_to_state, self.files_to_other:
             for k in n:
                 self._remove_file(k[1])
         for n in self.data_dir, self.state_dir, self.other_dir:
@@ -234,6 +226,8 @@ class XdgDirs(object):
     '''
     dir_fixed_function = None
 
+    titles_log_file = None
+
     def __init__(self, config_dir=None, xdg_compliant=False, a_dir_fix_function=None):
         ''' Parameters
             ==========
@@ -256,6 +250,7 @@ class XdgDirs(object):
             self.migrate_cache()
         self.dir_fixed_function = a_dir_fix_function
         self.migrate_recordings()
+        self.migrate_titles()
 
     @property
     def xdg_compliant(self):
@@ -267,7 +262,7 @@ class XdgDirs(object):
         self.build_paths()
 
     def build_paths(self):
-        print(f'{self._xdg_compliant = }')
+        # print(f'{self._xdg_compliant = }')
         if platform.startswith('win'):
             if self._new_dirs[self.HOME] is None:
                 self._old_dirs[self.HOME] = getenv('APPDATA')
@@ -295,9 +290,9 @@ class XdgDirs(object):
             self._old_dirs[self.RECORDINGS] = path.join(self._old_dirs[self.STATIONS], 'recordings')
         if self._new_dirs[self.RECORDINGS] is None:
             self._new_dirs[self.RECORDINGS] = path.join(path.expanduser('~'), 'pyradio-recordings')
-        for n in range(len(self._old_dirs)):
-            print('Item {}\n{}\n{}'.format(n, self._old_dirs[n], self._new_dirs[n]))
-        print('\n\n')
+        # for n in range(len(self._old_dirs)):
+        #     print('Item {}\n{}\n{}'.format(n, self._old_dirs[n], self._new_dirs[n]))
+        # print('\n\n')
 
     def _get_xdg_dir(self, xdg_var):
         xdg = getenv(xdg_var)
@@ -389,17 +384,18 @@ class XdgDirs(object):
         self.set_recording_dir(new_dir=val, print_to_console=False)
 
     def set_recording_dir(self, new_dir=None, print_to_console=True, migrate=True, first_read=None):
-        logger.error('@recording_dir.setter: migrate = "{}"'.format(migrate))
-        logger.error('@recording_dir.setter: new_dir = "{}"'.format(new_dir))
-        logger.error('@recording_dir.setter: self._new_dirs[self.RECORDINGS] = "{}"'.format(self._new_dirs[self.RECORDINGS]))
-        logger.error('@recording_dir.setter: self._old_dirs[self.RECORDINGS] = "{}"'.format(self._old_dirs[self.RECORDINGS]))
+        ret = True
+        # logger.error('@recording_dir.setter: migrate = "{}"'.format(migrate))
+        # logger.error('@recording_dir.setter: new_dir = "{}"'.format(new_dir))
+        # logger.error('@recording_dir.setter: self._new_dirs[self.RECORDINGS] = "{}"'.format(self._new_dirs[self.RECORDINGS]))
+        # logger.error('@recording_dir.setter: self._old_dirs[self.RECORDINGS] = "{}"'.format(self._old_dirs[self.RECORDINGS]))
         if first_read:
             old_dir = self._old_dirs[self.RECORDINGS]
             self._old_dirs[self.RECORDINGS] = first_read
             self._new_dirs[self.RECORDINGS] = new_dir
-            logger.error('@ after recording_dir.setter: self._new_dirs[self.RECORDINGS] = "{}"'.format(self._new_dirs[self.RECORDINGS]))
-            logger.error('@ after recording_dir.setter: self._old_dirs[self.RECORDINGS] = "{}"'.format(self._old_dirs[self.RECORDINGS]))
-            logger.error('self.migrate_recordings 2')
+            # logger.error('@ after recording_dir.setter: self._new_dirs[self.RECORDINGS] = "{}"'.format(self._new_dirs[self.RECORDINGS]))
+            # logger.error('@ after recording_dir.setter: self._old_dirs[self.RECORDINGS] = "{}"'.format(self._old_dirs[self.RECORDINGS]))
+            # logger.error('self.migrate_recordings 2')
             ret = self.migrate_recordings(silent=not print_to_console)
             self._old_dirs[self.RECORDINGS] = old_dir
             self._set_last_rec_dirs(ret)
@@ -409,24 +405,15 @@ class XdgDirs(object):
                 is already set and checked
             '''
             if migrate:
-                logger.error('self.migrate_recordings 3')
                 ret = self.migrate_recordings(silent=not print_to_console)
                 self._set_last_rec_dirs(ret)
-                return ret
-            else:
-                return True
         elif new_dir != self._new_dirs[self.RECORDINGS]:
-            logger.error('@recording_dir.setter: 1')
             if new_dir != path.join(self.stations_dir, 'recordings'):
-                logger.error('@recording_dir.setter: 2')
                 self._new_dirs[self.RECORDINGS] = new_dir
-            logger.error('@recording_dir.setter: 3')
             if migrate:
-                logger.error('self.migrate_recordings 4')
                 ret = self.migrate_recordings(silent=not print_to_console)
                 self._set_last_rec_dirs(ret)
-                return ret
-        return True
+        return ret
 
     def _set_last_rec_dirs(self, val):
         if val:
@@ -440,7 +427,7 @@ class XdgDirs(object):
     def migrate_cache(self):
         ''' cache dir '''
         if path.exists(self._old_dirs[self.CACHE]):
-            print('Migrating cache')
+            print('Migrating cache...')
             if path.exists(self._new_dirs[self.CACHE]):
                 try:
                     remove_tree(self._new_dirs[self.CACHE])
@@ -468,7 +455,7 @@ class XdgDirs(object):
             files = [path.join(self._old_dirs[self.RECORDINGS], f) for f in listdir(self._old_dirs[self.RECORDINGS])]
             if files:
                 if not silent:
-                    print('Migrating recordings ')
+                    print('Migrating recordings...')
                 parent_dir = path.dirname(self._new_dirs[self.RECORDINGS])
                 if path.exists(parent_dir):
                     if path.exists(self._new_dirs[self.RECORDINGS]):
@@ -531,15 +518,50 @@ class XdgDirs(object):
         self._old_dirs[self.RECORDINGS] = self._new_dirs[self.RECORDINGS]
         return True
 
+    def migrate_titles(self):
+        # Create the destination directory if it doesn't exist
+        if not path.exists(self.recording_dir):
+            makedirs(self.recording_dir, exist_ok=True)
+        if not path.exists(self.recording_dir):
+            # if I cannot create the new dir (and file),use the old file
+            self.titles_log_file = old_title_file
+
+        # Construct the path to the pyradio-titles.log file
+        old_title_path = path.join(path.expanduser('~'), '.config', 'pyradio')
+        old_title_file = path.join(old_title_path, 'pyradio-titles.log')
+        # Check if titles.log exists
+        if path.exists(old_title_file):
+            # Find all "pyradio-titles.*" files
+            titles_files = [f for f in listdir(old_title_path) if f.startswith('pyradio-titles.')]
+            try:
+                # Copy titles files to recording_dir
+                for title_file in titles_files:
+                    copy(path.join(old_title_path, title_file), self.recording_dir)
+                # Delete the original titles files
+                for title_file in titles_files:
+                    remove(path.join(old_title_path, title_file))
+            except Exception as e:
+                # If an error occurs during copying, delete all pyradio-titles.* files from recording_dir
+                for title_file in titles_files:
+                    try:
+                        remove(path.join(self.recording_dir, title_file))
+                    except Exception as ex:
+                        pass
+                self.titles_log_file = old_title_file
+                return
+
+        self.titles_log_file = path.join(self.recording_dir, 'pyradio-titles.log')
+
+
 class CheckDir(object):
 
     def __init__(self, a_path, default=None, remove_after_validation=False):
         self._remove_after_validation = remove_after_validation
-        logger.error('++ remove_after_validation = {}'.format(remove_after_validation))
+        # logger.error('++ remove_after_validation = {}'.format(remove_after_validation))
         self._is_writable = False
         self.dir_path = self._replace_tilde(a_path)
         if default:
-            logger.error('++ default not None')
+            # logger.error('++ default not None')
             if not self._validate_path():
                 expanded_default = self._replace_tilde(default)
                 self.dir_path = self._replace_tilde(expanded_default)

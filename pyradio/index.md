@@ -1313,7 +1313,7 @@ The function can be enabled:
 1. using the `-lt` (`--log-titles`) command line option, or
 2. by pressing "**W**" while in the **Main**, the **Playlist** or the **Register** mode.
 
-The titles are written in a file called *pyradio-titles.log* which is saved at **PyRadio** configuration directory.
+The titles are written in a file called *pyradio-titles.log* which is saved inseide the **Recordings** directory.
 
 Log file sample:
 

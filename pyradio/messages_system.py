@@ -1437,7 +1437,7 @@ W| / |w                             |*| Toggle title log / like a station'''
         if self._external_line_editor is not None:
             self._txt['H_EXTERNAL_LINE_EDITOR'] = self._external_line_editor
             self._external_line_editor = None
-        logger.error('args = "{}"'.format(args))
+        # logger.error('args = "{}"'.format(args))
         '''
             args[0] = message_key
         '''
@@ -1453,9 +1453,9 @@ W| / |w                             |*| Toggle title log / like a station'''
 
         # self._same_content = self.active_message_key == self._last_key
         self._same_content  = False
-        logger.info('self.active_message_key = {} '.format(self.active_message_key))
-        logger.info('self._last_key = {} '.format(self._last_key))
-        logger.info('self._same_content = {} '.format(self._same_content))
+        # logger.info('self.active_message_key = {} '.format(self.active_message_key))
+        # logger.info('self._last_key = {} '.format(self._last_key))
+        # logger.info('self._same_content = {} '.format(self._same_content))
         if  self._same_content:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Redisplaying last Messaging System Active key...')
@@ -1517,10 +1517,12 @@ W| / |w                             |*| Toggle title log / like a station'''
 
     def set_token(self, token):
         self._active_token = None
-        logger.error('senf_tokens = {}'.format(self._tokens))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('tokens = {}'.format(self._tokens))
         if token in self._tokens.keys():
             self._active_token = self._tokens[token]
-            logger.info('setting self._pad_pos to {}'.format(self._pad_pos))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('setting self._pad_pos to {}'.format(self._pad_pos))
 
     def _remove_start_char(self, txt, char):
         if txt.startswith(char):
@@ -1538,9 +1540,8 @@ W| / |w                             |*| Toggle title log / like a station'''
                     r text (string)
                 )
         '''
-        logger.error('before')
         cap, out = self._txt[self.active_message_key]
-        logger.info('--> out\n{}'.format(out))
+        # logger.info('--> out\n{}'.format(out))
         if out is None:
             return None, None, 0
 
@@ -1574,12 +1575,14 @@ W| / |w                             |*| Toggle title log / like a station'''
         elif self.active_message_key in self._two_arg_list:
             out = self._txt[self.active_message_key][1].format(args[1], args[2])
         elif self.active_message_key in self._second_arg_is_a_function:
-            logger.error('\n\nsetting {} text to result of {}\n\n'.format(self.active_message_key, args[1]))
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('setting {} text to result of {}'.format(self.active_message_key, args[1]))
             self._txt[self.active_message_key] = args[1]()
             out = self._txt[self.active_message_key][1]
 
         self._tokens, l = self._parse_strings_for_tokens(out.splitlines())
-        logger.error('\n\nself._tokens = {}'.format(self._tokens))
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('tokens = {}'.format(self._tokens))
         # get max len
         if logger.isEnabledFor(logging.INFO):
             logger.info('>>> Message System: setting key to "{}"'.format(self.active_message_key))
@@ -1615,7 +1618,7 @@ W| / |w                             |*| Toggle title log / like a station'''
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('max len from self._max_lens = {}'.format(mmax))
             else:
-                logger.error(f'{l = }')
+                # logger.error(f'{l = }')
                 for n in l:
                     x = n.split('|*|')
                     if len(x) == 2:
@@ -1637,21 +1640,20 @@ W| / |w                             |*| Toggle title log / like a station'''
         if self.active_message_key in self._reset_metrics:
             self._columns.pop(self.active_message_key, None)
             self._max_lens.pop(self.active_message_key, None)
-        logger.error('self._max_lens\n{}'.format(self._max_lens))
+        # logger.error('self._max_lens\n{}'.format(self._max_lens))
         if mmax < len(cap) + 6:
             mmax = len(cap) + 6
-        logger.error('\n\n===> mmax = {}\n\n'.format(mmax))
+        # logger.error('\n\n===> mmax = {}\n\n'.format(mmax))
         return cap, l, mmax
 
     def _get_active_message_key(self, *args):
         if args:
             self.active_message_key = args[0] if args[0] else 'H_MAIN'
-            logger.error('args[0] = {}'.format(args[0]))
-            try:
-                logger.error('args[1] = {}'.format(args[1]))
-            except:
-                logger.error('args[1] = N/A')
-            logger.error('\n\n\n')
+            # logger.error('args[0] = {}'.format(args[0]))
+            # try:
+            #     logger.error('args[1] = {}'.format(args[1]))
+            # except:
+            #     logger.error('args[1] = N/A')
         ''' self.active_message_key transformation '''
         if self.active_message_key == 'H_SEARCH' and \
                 platform.startswith('darwin'):
@@ -1704,7 +1706,7 @@ W| / |w                             |*| Toggle title log / like a station'''
         txt = ' Window too small '
         self._maxY = 3
         self._maxX = len(txt) + 2
-        logger.error(f'too small maxX = {self._maxX}')
+        # logger.error(f'too small maxX = {self._maxX}')
         self._winY = int((p_height - 3) / 2) + self._parent.getbegyx()[0]
         self._winX = int((p_width - self._maxX) / 2)
         if p_height > self._winY and p_width > self._winX:
@@ -1746,7 +1748,7 @@ W| / |w                             |*| Toggle title log / like a station'''
             # if not ( p_height % 2 ):
             #     self._winY += 1
             self._winX = int((p_width - self._maxX) / 2) + pX
-            logger.error('newwin maxX = {}'.format(self._maxX))
+            # logger.error('newwin maxX = {}'.format(self._maxX))
             self._win = curses.newwin(
                     self._maxY,
                     self._maxX,

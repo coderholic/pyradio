@@ -1419,6 +1419,7 @@ class PyRadioConfig(PyRadioStations):
         self.theme = 'dark'
         self.active_transparency = False
         self._distro = 'None'
+        logger.error('setting up XdgDirs')
         self.xdg = XdgDirs(a_dir_fix_function=self._save_config_from_fixed_rec_dir)
         self.dirty_config = True if self.params_changed else False
         ''' True if player changed by config window '''
@@ -1978,7 +1979,7 @@ class PyRadioConfig(PyRadioStations):
         self.opts['auto_update_theme'][1] = False
         self.opts['calculated_color_factor'][1] = "0"
         self._show_colors_cannot_change = show_colors_cannot_change
-        logger.error('bck_opts = {}'.format(self.bck_opts))
+        # logger.error('bck_opts = {}'.format(self.bck_opts))
 
     def _check_config_file(self, usr):
         ''' Make sure a config file exists in the config dir '''
@@ -2052,9 +2053,9 @@ class PyRadioConfig(PyRadioStations):
     def read_config(self, distro_config=False):
         self._read_config(distro_config=True)
         self.config_opts = deepcopy(self.opts)
-        logger.error('self.config_opts')
-        for n in self.config_opts.items():
-            logger.error('  {}: {}'.format(*n))
+        # logger.error('self.config_opts')
+        # for n in self.config_opts.items():
+        #     logger.error('  {}: {}'.format(*n))
         self._read_config()
 
     def _read_config(self, distro_config=False):
@@ -2241,7 +2242,7 @@ class PyRadioConfig(PyRadioStations):
                 print(f'{self.xdg.xdg_compliant = }')
                 self.xdg_compliant = True
 
-        logger.error('\n\nself.params{}\n\n'.format(self.params))
+        # logger.error('\n\nself.params{}\n\n'.format(self.params))
         ''' read distro from package config file '''
         package_config_file = path.join(path.dirname(__file__), 'config')
         try:
@@ -2326,7 +2327,7 @@ class PyRadioConfig(PyRadioStations):
             except:
                 print('Error: Cannot create recordings directory: "{}"'.format(self.opts['recording_dir'][1]))
                 sys.exit(1)
-        logger.error('self.opts["recording_dir"][1] = "{}"'.format(self.opts['recording_dir'][1]))
+        # logger.error('self.opts["recording_dir"][1] = "{}"'.format(self.opts['recording_dir'][1]))
         if path.exists(path.join(self.stations_dir, 'data', 'recordings')) and \
                     self._first_read:
             print('++ Need to migrate')
@@ -2469,7 +2470,7 @@ class PyRadioConfig(PyRadioStations):
             if self.config_opts[a_key][-1] == calcf:
                 return None
         elif a_key == 'recording_dir':
-            logger.error('\n\nself.config_opts[a_key][-1]: {} == rec_dir: {}\n\n'.format(self.config_opts[a_key][-1], rec_dir))
+            # logger.error('\n\nself.config_opts[a_key][-1]: {} == rec_dir: {}\n\n'.format(self.config_opts[a_key][-1], rec_dir))
             if self.config_opts[a_key][-1] == rec_dir:
                 return None
         if self.config_opts[a_key][-1] == self.opts[a_key][-1]:
@@ -2513,9 +2514,9 @@ class PyRadioConfig(PyRadioStations):
             out.append('# PyRadio User Configuration File')
             out.reverse()
 
-        for i, n in enumerate(out):
-            logger.error(f'out[{i}] : {n}')
-        logger.error(out)
+        # for i, n in enumerate(out):
+        #     logger.error(f'out[{i}] : {n}')
+        # logger.error(out)
         return out
 
     def _save_config_from_fixed_rec_dir(self, a_path):
@@ -2567,202 +2568,6 @@ class PyRadioConfig(PyRadioStations):
                     logger.isEnabledFor(logging.INFO):
                 logger.info('Config not saved (not modified)')
             return 1
-        # txt ='''# PyRadio Configuration File
-
-        #     # Player selection
-        #     # This is the equivalent to the -u , --use-player command line parameter
-        #     # Specify the player to use with PyRadio, or the player detection order
-        #     # Example:
-        #     #   player = vlc
-        #     # or
-        #     #   player = vlc,mpv, mplayer
-        #     # Default value: mpv,mplayer,vlc
-        #     player = {0}
-
-        #     # Open last playlist
-        #     # If this option is enabled, the last opened playlist will be opened
-        #     # the next time PyRadio is opened. This option will take precedence
-        #     # over the "Def. playlist" option and the "-s" commans line parameter.
-        #     # Default value: False
-        #     open_last_playlist = {1}
-
-        #     # Default playlist
-        #     # This is the playlist to open if none is specified
-        #     # You can specify full path to CSV file, or if the playlist is in the
-        #     # config directory, playlist name (filename without extension) or
-        #     # playlist number (as reported by -ls command line option)
-        #     # Default value: stations
-        #     default_playlist = {2}
-
-        #     # Default station
-        #     # This is the equivalent to the -p , --play command line parameter
-        #     # The station number within the default playlist to play
-        #     # Value is 1..number of stations, "-1" or "False" means no auto play
-        #     # "0" or "Random" means play a random station
-        #     # Default value: False
-        #     default_station = {3}
-
-        #     # Default encoding
-        #     # This is the encoding used by default when reading data provided by
-        #     # a station (such as song title, etc.) If reading said data ends up
-        #     # in an error, 'utf-8' will be used instead.
-        #     #
-        #     # A valid encoding list can be found at:
-        #     #   https://docs.python.org/2.7/library/codecs.html#standard-encodings
-        #     # replacing 2.7 with specific version:
-        #     #   3.0 up to current python version.
-        #     #
-        #     # Default value: utf-8
-        #     default_encoding = {4}
-
-        #     # Enable mouse
-        #     # If this options is enabled, the mouse can be used to scroll the
-        #     # playlist, start, stop and mute the player, adjust its volume etc.
-        #     # Mouse integration is highly terminal dependent, that's why it
-        #     # is disabled by default.
-        #     #
-        #     # Default value: False
-        #     enable_mouse = {5}
-
-        #     # Desktop notifications
-        #     # If this option is enabled, a Desktop Notification will be
-        #     # displayed using the notification daemon / service.
-        #     # If enabled but no notification is displayed, please refer to
-        #     # https://github.com/coderholic/pyradio/desktop-notification.md
-        #     # Valid values are:
-        #     #    -1: disabled
-        #     #     0: enabled (no repetition)
-        #     #     x: enabled and repeat every x seconds
-        #     #
-        #     # Default value: -1
-        #     enable_notifications = {6}
-
-        #     # Station icon
-        #     # Some stations will advertise a station icon (logo).
-        #     # This icon can be downloaded and used in Desktop Notifications,
-        #     # if this option is True.
-        #     #
-        #     # Default value: True
-        #     use_station_icon = {7}
-
-        #     # Recordings directory
-        #     # This is the firectory where recorded files will be saved
-        #     #
-        #     # Default value: "default"
-        #     recording_dir = {8}
-
-        #     # Connection timeout
-        #     # PyRadio will wait for this number of seconds to get a station/server
-        #     # message indicating that playback has actually started.
-        #     # If this does not happen (within this number of seconds after the
-        #     # connection is initiated), PyRadio will consider the station
-        #     # unreachable, and display the "Failed to connect to: [station]"
-        #     # message.
-        #     #
-        #     # Valid values: 5 - 60, 0 disables check
-        #     # Default value: 10
-        #     connection_timeout = {9}
-
-        #     # Force http connections
-        #     # Most radio stations use plain old http protocol to broadcast, but
-        #     # some of them use https. If this is enabled,  all connections will
-        #     # use http; results depend on the combination of station/player.
-        #     #
-        #     # Valid values: True, true, False, false
-        #     # Default value: False
-        #     force_http = {10}
-
-        #     # Default theme
-        #     # Hardcooded themes:
-        #     #   dark (default) (8 colors)
-        #     #   light (8 colors)
-        #     #   dark_16_colors (16 colors dark theme alternative)
-        #     #   light_16_colors (16 colors light theme alternative)
-        #     #   black_on_white (bow) (256 colors)
-        #     #   white_on_black (wob) (256 colors)
-        #     # If theme is watched for changes, prepend its name
-        #     # with an asterisk (i.e. '*my_theme')
-        #     # This is applicable for user themes only!
-        #     # Default value = 'dark'
-        #     theme = {11}
-
-        #     # Transparency setting
-        #     # If False, theme colors will be used.
-        #     # If True and a compositor is running, the stations' window
-        #     # background will be transparent. If True and a compositor is
-        #     # not running, the terminal's background color will be used.
-        #     # Valid values: True, true, False, false
-        #     # Default value: False
-        #     use_transparency = {12}
-
-        #     # Always obey config Transparency setting
-        #     # Most themes will either be transparent of opaque by default.
-        #     # This means that these themes will never be allowed to change
-        #     # the transparency setting within PyRadio.
-        #     # Enabling this option will make all themes to behave as if
-        #     # their "transparency" option is set to 2 (Obey config setting).
-        #     # Valid values: True, true, False, false
-        #     # Default value: False
-        #     force_transparency = {13}
-
-        #     # Calculated color factor
-        #     # This is to produce Secondary Windows background color
-        #     # A value of 0 dissables it, otherwise it is the factor
-        #     # to change (lighten or darken) the base color.
-        #     # For more info, please refer to
-        #     # https://github.com/coderholic/pyradio#secondary-windows-background
-        #     # Valid values: 0-0.2
-        #     # Default value: 0
-        #     calculated_color_factor = {14}
-
-        #     # Playlist management
-        #     #
-        #     # Specify whether you will be asked to confirm
-        #     # every station deletion action
-        #     # Valid values: True, true, False, false
-        #     # Default value: True
-        #     confirm_station_deletion = {15}
-
-        #     # Specify whether you will be asked to confirm
-        #     # playlist reloading, when the playlist has not
-        #     # been modified within PyRadio
-        #     # Valid values: True, true, False, false
-        #     # Default value: True
-        #     confirm_playlist_reload = {16}
-
-        #     # Specify whether you will be asked to save a
-        #     # modified playlist whenever it needs saving
-        #     # Valid values: True, true, False, false
-        #     # Default value: False
-        #     auto_save_playlist = {17}
-
-        #     # When PyRadio determines that a restricted
-        #     # terminal is used, it will display a message
-        #     # every time it is lounched. To disable this
-        #     # message, change the value to False.
-        #     # Default value: True
-        #     show_no_themes_message = {18}
-
-        #     # When recording is turned on, a message will
-        #     # be displayed if this option is True (default)
-        #     #
-        #     show_recording_message = {19}
-
-        #     # Remote Control server
-        #     # A simple http server that can accept remote
-        #     # connections and pass commands to PyRadio
-        #     #
-        #     # Valid values:
-        #     #   remote_control_server_ip: localhost, LAN, lan
-        #     #   remote_control_server_port: 1025-65535
-        #     #
-        #     # Default value: localhost:9998
-        #     #                no auto start
-        #     remote_control_server_ip = {20}
-        #     remote_control_server_port = {21}
-        #     remote_control_server_auto_start = {22}
-
-        #     '''
         if path.exists(self.config_file):
             copyfile(self.config_file, self.config_file + '.restore')
         if self.opts['default_station'][1] is None:
@@ -2777,7 +2582,7 @@ class PyRadioConfig(PyRadioStations):
             trnsp = self.bck_opts['use_transparency']
             calcf = self.bck_opts['calculated_color_factor']
 
-        logger.error(f"{self.opts['recording_dir'][1]}")
+        # logger.error(f"{self.opts['recording_dir'][1]}")
         if self.opts['recording_dir'][1] == path.join(path.expanduser('~'), 'pyradio-recordings'):
             rec_dir = 'default'
         else:
@@ -3370,7 +3175,7 @@ class PyRadioLog(object):
         self._cnf = pyradio_config
         self._stations_dir = pyradio_config.stations_dir
 
-    def configure_logger(self, debug=None, titles=None):
+    def configure_logger(self, recording_dir=None, debug=None, titles=None):
         logger = logging.getLogger('pyradio')
         logger.setLevel(logging.DEBUG)
         if debug or titles:
@@ -3393,9 +3198,10 @@ class PyRadioLog(object):
                 self.log_degub = True
 
             if titles and not self.log_titles:
+                logger.error('setting up pyradio-titles.py')
                 self.titles_handler = logging.handlers.RotatingFileHandler(
                     path.join(
-                        getenv('HOME', '~') if self.xdg_compliant else self._stations_dir,
+                        recording_dir,
                         'pyradio-titles.log'),
                     maxBytes=50000,
                     backupCount=5)
@@ -3408,6 +3214,8 @@ class PyRadioLog(object):
                 logger.addHandler(self.titles_handler)
                 self.log_titles = True
                 logger.critical('=== Logging started')
+                if logger.isEnabledFor(logging.INFO):
+                    logger.info('starting titles logg on: "{}"'.format(recording_dir))
 
         if (not titles) and self.log_titles:
             if self.titles_handler:

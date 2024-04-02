@@ -184,6 +184,7 @@ class PyRadioConfigWindow(object):
         self.init_config_win()
         self.refresh_config_win()
         self._old_use_transparency = self._config_options['use_transparency'][1]
+        self._old_recording_dir = self._config_options['recording_dir'][1]
 
         self._cnf.get_player_params_from_backup()
 
@@ -666,7 +667,7 @@ class PyRadioConfigWindow(object):
         else:
             self.need_to_update_theme = True
         self._cnf.rec_dirs = (self._config_options['recording_dir'][1], self._saved_config_options['recording_dir'][1])
-        logger.error('rec_dirs\n{}'.format(self._cnf.rec_dirs))
+        # logger.error('rec_dirs\n{}'.format(self._cnf.rec_dirs))
         self._saved_config_options = deepcopy(self._config_options)
         if self._cnf.opts != self._saved_config_options:
             ''' check if player has changed '''

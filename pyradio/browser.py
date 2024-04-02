@@ -561,7 +561,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             ('Bitrate', 'bitrate'),
             ('Codec', 'codec')
         ]
-        logger.error('raw_stations\n{}'.format(self._raw_stations[a_station]))
+        # logger.error('raw_stations\n{}'.format(self._raw_stations[a_station]))
         if self._raw_stations[a_station]['url'] == self._raw_stations[a_station]['url_resolved']:
             guide.pop(2)
         info = collections.OrderedDict()
@@ -578,7 +578,7 @@ class RadioBrowser(PyRadioStationsBrowser):
 
         a_list = []
         fix_highlight = []
-        logger.error('\n\n**** win_width = {}\n\n'.format(win_width))
+        # logger.error('\n\n**** win_width = {}\n\n'.format(win_width))
         a_list = info_dict_to_list(info, fix_highlight, max_width, win_width)
         ret = '|' + '\n|'.join(a_list)
         # logger.error('DE \n\n{}\n\n'.format(ret))
@@ -789,7 +789,6 @@ class RadioBrowser(PyRadioStationsBrowser):
                 self.search_by = 'name'
             elif a_type == 'topvote':
                 self.search_by = 'votes'
-                logger.error('DE search by is votes')
             elif a_type == 'clickcount':
                 self.search_by = 'clickcount'
             elif a_type == 'bitrate':
@@ -884,7 +883,7 @@ class RadioBrowser(PyRadioStationsBrowser):
             break "term to widgets" assignment
         '''
         a_search_copy = deepcopy(a_search)
-        logger.error('_format_url(): a_search_copy = {}'.format(a_search_copy))
+        # logger.error('_format_url(): a_search_copy = {}'.format(a_search_copy))
         if a_search_copy['type'] in RADIO_BROWSER_DISPLAY_TERMS.keys():
             url = 'http://{0}{1}'.format(
                 self._server,

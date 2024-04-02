@@ -236,6 +236,8 @@ class Log(object):
                     if self._add_chapter_function is not None and msg:
                         if msg.startswith('Title: '):
                             self._add_chapter_function(msg.replace('Title: ', ''))
+                    if msg:
+                        msg = fix_chars(msg)
                     self.set_win_title(d_msg if d_msg else msg)
                     self._write_title_to_log(msg if msg else 'No')
                     self._show_notification(msg)

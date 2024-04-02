@@ -2657,19 +2657,21 @@ class PyRadio(object):
                 return line[:self.bodyMaxX]
 
     def _print_help(self):
-        logger.error('DE \n\nself.ws.operation_mode = {}\n\n'.format(self.ws.operation_mode))
+        # logger.error('DE \n\nself.ws.operation_mode = {}\n\n'.format(self.ws.operation_mode))
         if self.ws.operation_mode == self.ws.NORMAL_MODE and \
                 self._cnf.browsing_station_service:
             if self._cnf._online_browser.BROWSER_NAME == 'RadioBrowser':
                 self._show_message_win(help_key='H_MAIN', token='rb')
         elif self.ws.operation_mode in self._help_keys.keys():
-            logger.error('using _open_message_win_by_key')
-            logger.error('self.ws.operation_mode == {}'.format(self.ws.operation_mode))
+            # logger.error('using _open_message_win_by_key')
+            # logger.error('self.ws.operation_mode == {}'.format(self.ws.operation_mode))
             if self.ws.operation_mode == self.ws.SELECT_PLAYER_MODE:
-                logger.error('opening with argument')
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('opening with argument')
                 self._open_message_win_by_key('H_CONFIG_PLAYER', self._show_config_player_help)
             else:
-                logger.error('opening WITHOUT argument')
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('opening WITHOUT argument')
                 self._open_message_win_by_key(self._help_keys[self.ws.operation_mode])
             return
         self._redisplay[self.ws.operation_mode]()
@@ -2855,19 +2857,19 @@ ____Using |fallback| theme.''')
         self._messaging_win.show()
 
     def _open_simple_message_by_key_and_mode(self, mode, *args):
-        logger.error('args = "{}"'.format(args))
+        # logger.error('args = "{}"'.format(args))
         self._message_system_default_operation_mode = mode
         self._messaging_win.simple_dialog = True
         self._open_message_win_by_key(*args)
         self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
 
     def _open_simple_message_by_key(self, *args):
-        logger.error('args = "{}"'.format(args))
+        # logger.error('args = "{}"'.format(args))
         self._messaging_win.simple_dialog = True
         self._open_message_win_by_key(*args)
 
     def _open_message_win_by_key(self, *args):
-        logger.error('args = "{}"'.format(args))
+        # logger.error('args = "{}"'.format(args))
         self._messaging_win.set_text(self.bodyWin, *args)
         self.ws.operation_mode = self._message_system_default_operation_mode
         self._messaging_win.show()
@@ -4297,7 +4299,7 @@ ____Using |fallback| theme.''')
                 self.ws.STATION_INFO_ERROR_MODE):
             if self.ws.operation_mode == self.ws.STATION_INFO_ERROR_MODE:
                 self.ws.close_window()
-            logger.error('\n\nself._show_station_info() from thread\n\n')
+            # logger.error('\n\nself._show_station_info() from thread\n\n')
             self.ws.close_window()
             self.refreshBody()
             self._show_station_info()
@@ -4313,7 +4315,7 @@ ____Using |fallback| theme.''')
                 max_width=max_width,
                 win_width=self.bodyMaxX)
         self._station_rename_from_info = False
-        logger.error('txt\n{}'.format(txt))
+        # logger.error('txt\n{}'.format(txt))
         self._messaging_win.set_a_message(
                 'M_DB_INFO',
                 ('Station Database Info', txt)
@@ -4335,7 +4337,7 @@ ____Using |fallback| theme.''')
             win_width=self.bodyMaxX)
 
         msg = txt + tail
-        logger.error('msg\n{}'.format(msg))
+        #logger.error('msg\n{}'.format(msg))
         if tail and not self._cnf.browsing_station_service:
             self._station_rename_from_info = True
             self._messaging_win.set_a_message(
@@ -4384,7 +4386,7 @@ ____Using |fallback| theme.''')
                         logger.debug('detectUpdateStationsThread: Asked to stop. Stoping...')
                     return
                 else:
-                    logger.error('\n\nsetting need to update stations\n\n')
+                    # logger.error('\n\nsetting need to update stations\n\n')
                     self._need_to_update_stations_csv = 2
         else:
             if logger.isEnabledFor(logging.DEBUG):
@@ -5462,7 +5464,7 @@ ____Using |fallback| theme.''')
             txt = self._cls_update_stations_message
         else:
             return
-        logger.error('caption = "{}"\ntxt = "{}"'.format(caption, txt))
+        #logger.error('caption = "{}"\ntxt = "{}"'.format(caption, txt))
         return caption, txt
 
     def _ask_to_update_stations_csv(self):
@@ -5849,11 +5851,11 @@ ____Using |fallback| theme.''')
         return ''
 
     def keypress(self, char):
-        # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
-        # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
-        # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
-        if char == curses.KEY_RESIZE:
-            logger.error('\n\nRESIZE\n\n')
+        # # logger.error('\n\nparams\n{}\n\n'.format(self._cnf.params))
+        # # logger.error('\n\nsaved params\n{}\n\n'.format(self._cnf.saved_params))
+        # # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
+        # if char == curses.KEY_RESIZE:
+        #     logger.error('\n\nRESIZE\n\n')
         self._curses_key_resize = char == curses.KEY_RESIZE
 
         if self._system_asked_to_terminate:
@@ -6402,7 +6404,7 @@ ____Using |fallback| theme.''')
             return
 
         elif self.ws.operation_mode == self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE:
-            logger.error('\n\noperation mode = self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE\n\n')
+            # logger.error('\n\noperation mode = self.ws.ASK_TO_UPDATE_STATIONS_CSV_MODE\n\n')
             self.ws.close_window()
             self.refreshBody()
             ret = -1
@@ -6413,9 +6415,7 @@ ____Using |fallback| theme.''')
                     while True:
                         ret = self._need_to_update_stations_csv = self._cls_update_stations.write_synced_version()
                         if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('\n\n')
                             logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
-                            logger.debug('\n\n')
                         if self._need_to_update_stations_csv == -6:
                             self._update_stations_error_count += 1
                             if self._update_stations_error_count > 4:
@@ -6434,9 +6434,9 @@ ____Using |fallback| theme.''')
             elif char == ord('n'):
                 self._update_stations_error_count = 0
                 while True:
-                    logger.error('\n\ncalling self._cls_update_stations.write_synced_version\n\n')
+                    # logger.error('\n\ncalling self._cls_update_stations.write_synced_version\n\n')
                     ret = self._need_to_update_stations_csv = self._cls_update_stations.write_synced_version(asked=True)
-                    logger.error('\n\nret = self._need_to_update_stations_csv = {}\n\n'.format(self._need_to_update_stations_csv))
+                    # logger.error('\n\nret = self._need_to_update_stations_csv = {}\n\n'.format(self._need_to_update_stations_csv))
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
                     if self._need_to_update_stations_csv == -5:
@@ -6451,7 +6451,7 @@ ____Using |fallback| theme.''')
                         self.bodyWin.getch()
                     else:
                         break
-            logger.error(f'{ret = }')
+            # logger.error(f'{ret = }')
             if ret == -1:
                 self._need_to_update_stations_csv = -4        # next time
             if logger.isEnabledFor(logging.DEBUG):
@@ -6793,8 +6793,10 @@ ____Using |fallback| theme.''')
                         self.log.write(msg=msg[0], help_msg=False, suffix=self._status_suffix)
                         self._print_config_save_error()
                     elif ret == 0:
-                        logger.info('\nConfSaved    config options recording_dir : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
-                        logger.info('\nConfSaved    saved config options recording_dir : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
+                        if logger.isEnabledFor(logging.INFO):
+                            logger.info('\nConfSaved    old rec dir: "{}"'.format(self._config_win._old_recording_dir))
+                            logger.info('\nConfSaved    config options recording_dir : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
+                            logger.info('\nConfSaved    saved config options recording_dir : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
                         ''' Config saved successfully '''
 
                         ''' sync backup parameters '''
@@ -6850,27 +6852,40 @@ ____Using |fallback| theme.''')
                         if self._cnf.active_remote_control_server_ip != self._cnf.remote_control_server_ip or \
                                 self._cnf.active_remote_control_server_port != self._cnf.remote_control_server_port:
                             self._restart_remote_control_server()
-                        logger.info('\n    1 self._config_win._config_options : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
-                        logger.info('\n    1 self._config_win._saved_options : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
-                        logger.info('\n    1 xdg old recordings dir: "{}"'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
-                        logger.info('\n    1 xdg new recordings dir: "{}"'.format(self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
-                        logger.error('self._asked_to_move_recordings_dir = {}'.format(self._asked_to_move_recordings_dir))
-                        logger.error('rec_dirs\n{}'.format(self._cnf.rec_dirs))
+                        # logger.info('\n    1 self._config_win._config_options : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
+                        # logger.info('\n    1 self._config_win._saved_options : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
+                        # logger.info('\n    1 xdg old recordings dir: "{}"'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
+                        # logger.info('\n    1 xdg new recordings dir: "{}"'.format(self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
+                        # logger.error('self._asked_to_move_recordings_dir = {}'.format(self._asked_to_move_recordings_dir))
+                        # logger.error('rec_dirs\n{}'.format(self._cnf.rec_dirs))
                         if self._asked_to_move_recordings_dir and self._cnf.rec_dirs:
                             self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS] = self._cnf.rec_dirs[0]
                             self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] = self._cnf.rec_dirs[1]
                             if self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS] != self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]:
-                                logger.error('\n\nI need to move the directory\n\n')
+                                if logger.isEnabledFor(logging.INFO):
+                                    logger.info('I need to move the directory: "{}'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
                                 self._open_simple_message_by_key('M_REC_DIR_MOVE')
                                 rret = self._cnf.xdg.set_recording_dir(
                                         new_dir=None,
                                         print_to_console=False,
                                         migrate=True
                                 )
-                                logger.error('set_recording_dir ret = {}'.format(rret))
+                                # logger.error('set_recording_dir ret = {}'.format(rret))
                                 self.ws.close_window()
                                 if rret:
                                     self.refreshBody()
+                                    if self._config_win._old_recording_dir != self._config_win._config_options['recording_dir'][1]:
+                                        ''' check if titles log is enabled
+                                            if it is, restart it
+                                        '''
+                                        if self._cnf.titles_log.titles_handler:
+                                            self.toggle_titles_logging()
+                                            self.toggle_titles_logging()
+                                            if logger.isEnabledFor(logging.INFO):
+                                                logger.info('restarting titles log\nfrom "{}"\nto "{}"'.format(
+                                                    self._config_win._old_recording_dir,
+                                                    self._config_win._config_options['recording_dir'][1]
+                                                    ))
                                 else:
                                     self._show_moving_recordings_dir_error()
                             else:
@@ -7242,13 +7257,13 @@ ____Using |fallback| theme.''')
                 self.refreshBody()
             elif ret == 1:
                 # new location selected
-                logger.error('\nret\t\t{0}\nnew_dir\t\t"{1}"\nMove dir\t{2}'.format(ret, new_dir, self._asked_to_move_recordings_dir))
-                logger.error('\nRecordings Directory Selected\n\n')
+                # logger.error('\nret\t\t{0}\nnew_dir\t\t"{1}"\nMove dir\t{2}'.format(ret, new_dir, self._asked_to_move_recordings_dir))
+                # logger.error('\nRecordings Directory Selected\n\n')
                 self._config_win._config_options['recording_dir'][1] = new_dir
-                logger.info('\n    self._config_win._config_options : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
-                logger.info('\n    self._config_win._saved_config_options : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
-                logger.info('\n    self.xdg._new_dirs[RECORDINGS] : "{}"'.format(self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
-                logger.info('\n    self.xdg._old_dirs[RECORDINGS] : "{}"'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
+                # logger.info('\n    self._config_win._config_options : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
+                # logger.info('\n    self._config_win._saved_config_options : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
+                # logger.info('\n    self.xdg._new_dirs[RECORDINGS] : "{}"'.format(self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
+                # logger.info('\n    self.xdg._old_dirs[RECORDINGS] : "{}"'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
                 # for n in self._config_win._config_options.keys():
                 #     logger.info('{0} : {1}'.format(n, self._config_win._config_options[n]))
                 # logger.info('\nsaved config options')
@@ -9793,7 +9808,10 @@ ____Using |fallback| theme.''')
             return True
 
     def toggle_titles_logging(self):
-        self._cnf.titles_log.configure_logger(titles=not self._cnf.titles_log.log_titles)
+        self._cnf.titles_log.configure_logger(
+                recording_dir=self._cnf.recording_dir,
+                titles=not self._cnf.titles_log.log_titles
+                )
 
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     Windows only section
