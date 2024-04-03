@@ -1316,7 +1316,7 @@ class PyRadioConfig(PyRadioStations):
     opts['enable_mouse'] = ['Enable mouse support: ', False]
     opts['enable_notifications'] = ['Enable notifications: ', '-1']
     opts['use_station_icon'] = ['    Use station icon: ', True]
-    opts['recording_dir'] = ['Recording dir: ', '']
+    opts['recording_dir'] = ['Recordings dir: ', '']
     opts['conn_title'] = ['Connection Options: ', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
@@ -1419,8 +1419,9 @@ class PyRadioConfig(PyRadioStations):
         self.theme = 'dark'
         self.active_transparency = False
         self._distro = 'None'
-        logger.error('setting up XdgDirs')
-        self.xdg = XdgDirs(a_dir_fix_function=self._save_config_from_fixed_rec_dir)
+        self.xdg = XdgDirs(
+                a_dir_fix_function=self._save_config_from_fixed_rec_dir
+                )
         self.dirty_config = True if self.params_changed else False
         ''' True if player changed by config window '''
         self.player_changed = False
@@ -1429,6 +1430,8 @@ class PyRadioConfig(PyRadioStations):
 
         self._session_lock_file = ''
         self._get_lock_file()
+        if user_config_dir is None:
+            self.xdg.migrate(self.locked or self.headless)
 
         PyRadioStations.__init__(self, user_config_dir=user_config_dir)
 
@@ -1892,6 +1895,7 @@ class PyRadioConfig(PyRadioStations):
             If it exists, locked becomes True
             Otherwise, the file is created
         '''
+        self.locked = False
         if path.exists('/run/user'):
             from os import geteuid
             self._session_lock_file = path.join('/run/user', str(geteuid()), 'pyradio.lock')
@@ -1906,21 +1910,17 @@ class PyRadioConfig(PyRadioStations):
                 self._session_lock_file = path.join(getenv('APPDATA'), 'pyradio', 'data', 'pyradio.lock')
             else:
                 self._session_lock_file = path.join(getenv('HOME'), '.config', 'pyradio', '.pyradio.lock')
+            win_lock = path.join(getenv('APPDATA'), 'pyradio', 'data', '_windows.lock')
+            if path.exists(win_lock):
+                ''' pyradio lock file was probably not deleted the last
+                    time Windows terminated. It should be safe to use it
+                '''
+                try:
+                    remove(win_lock)
+                except:
+                    pass
         if path.exists(self._session_lock_file):
-            if platform == 'win32':
-                win_lock = path.join(getenv('APPDATA'), 'pyradio', 'data', '_windows.lock')
-                if path.exists(win_lock):
-                    ''' pyradio lock file was probably not deleted the last
-                        time Windows terminated. It should be safe to use it
-                    '''
-                    try:
-                        remove(win_lock)
-                    except:
-                        pass
-                else:
-                    self.locked = True
-            else:
-                self.locked = True
+            self.locked = True
         else:
             if not self.headless:
                 try:
@@ -2460,6 +2460,7 @@ class PyRadioConfig(PyRadioStations):
             if it has, return its value
             otherwise return None
         '''
+        comment = ''
         if a_key == 'theme':
             if self.config_opts[a_key][-1] == theme:
                 return None
@@ -2470,12 +2471,16 @@ class PyRadioConfig(PyRadioStations):
             if self.config_opts[a_key][-1] == calcf:
                 return None
         elif a_key == 'recording_dir':
+            comment = r'''# Please do not change this paramter manually
+# Use the in program Window instead
+# (Config / General Options / Recordings dir)
+'''
             # logger.error('\n\nself.config_opts[a_key][-1]: {} == rec_dir: {}\n\n'.format(self.config_opts[a_key][-1], rec_dir))
             if self.config_opts[a_key][-1] == rec_dir:
                 return None
         if self.config_opts[a_key][-1] == self.opts[a_key][-1]:
             return None
-        return a_key + ' = ' + str(self.opts[a_key][-1])
+        return comment + a_key + ' = ' + str(self.opts[a_key][-1])
 
     def _get_sting_to_save(self, theme, trnsp, calcf, rec_dir):
         out = []

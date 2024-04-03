@@ -246,11 +246,14 @@ class XdgDirs(object):
         else:
             self._xdg_compliant = xdg_compliant
         self.build_paths()
-        if not platform.startswith('win'):
-            self.migrate_cache()
         self.dir_fixed_function = a_dir_fix_function
-        self.migrate_recordings()
-        self.migrate_titles()
+
+    def migrate(self, locked):
+        if not locked:
+            if not platform.startswith('win'):
+                self.migrate_cache()
+            self.migrate_recordings()
+            self.migrate_titles()
 
     @property
     def xdg_compliant(self):

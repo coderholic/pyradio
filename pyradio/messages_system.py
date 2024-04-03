@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class PyRadioMessagesSystem(object):
 
+    _win = None
     too_small = False
     simple_dialog = False
     _same_content = False
@@ -1830,9 +1831,10 @@ W| / |w                             |*| Toggle title log / like a station'''
         self.show(parent)
 
     def erase(self):
-        self._win.bkgdset(' ', curses.color_pair(13))
-        self._win.erase()
-        self._win.refresh()
+        if self._win:
+            self._win.bkgdset(' ', curses.color_pair(13))
+            self._win.erase()
+            self._win.refresh()
 
     def show(self, parent=None):
         if logger.isEnabledFor(logging.INFO):

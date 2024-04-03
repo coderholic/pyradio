@@ -1311,6 +1311,9 @@ class PyRadio(object):
         self.refreshBody()
 
     def refreshBody(self, start=0):
+        # if self.ws.operation_mode == self.ws.INSERT_RECORDINGS_DIR_MODE:
+        #     logger.error(f'{self.ws.previous_operation_mode = }')
+        #     self._messaging_win.erase()
         if self.player.ctrl_c_pressed:
             return
         if self._limited_height_mode or self._limited_width_mode:

@@ -907,8 +907,8 @@ class PyRadioRecordingDir(object):
             self._win = curses.newwin(parent_maxY, parent_maxX, 1, 0)
             self.maxY, self.maxX = (parent_maxY, parent_maxX)
             self._win.bkgdset(' ', curses.color_pair(12))
-            self._win.erase()
-            self._win.box()
+        self._win.erase()
+        self._win.box()
 
         # add editor
         if self._widgets[0] is None:

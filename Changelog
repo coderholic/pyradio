@@ -4,7 +4,10 @@
       created only when some parameter value is different to the one
       set in the package config file
     * adding -pc (--print-config) command line option
-    * RadioBrowser: presetn next previous result pages
+    * adding the xdg_compliant config option (packagers option)
+      if set to True, config dir contents will be moved to XDG Base
+      dir (https://wiki.archlinux.org/title/XDG_Base_Directory)
+    * RadioBrowser: present next previous result pages
     * RadioBrowser: adding Icon to station DB info
     * Remote Control Server: adding commands relevant to RadioBrowser results
       page navigation (text interface) and relevant web interface buttons
@@ -21,9 +24,9 @@
     * titles log files will be saved in the recordings directory
     * if netifaces module is not installed, headless operation will be aborted
     * fixing #229: Crash when $HOME/.mplayer directory does not exist
-    * fixing escaped chars in window title
-    * adding a Windows python 3.12 workaround to the "curses silently exits"
-      bug
+    * fixing escaped chars in window title and litles log file
+    * adding a Windows python 3.12 workaround to the "curses silently exits" bug
+    * updating documentation
 
 2024-02-24 s-n-g
     * version 0.9.2.25

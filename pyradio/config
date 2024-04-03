@@ -11,23 +11,26 @@ player = mpv, mplayer, vlc
 
 # Default playlist
 # This is the playlist to open if none is specified
-# You can scecify full path to CSV file, or if the playlist is in the
-# config directory, playlist name (filename without extension or
-# playlist number (as reported by -ls command line option)
+# You can scecify full path to CSV file, or if the playlist is in the config
+# directory, playlist name (filename without extension or playlist number (as
+# reported by -ls command line option)
+#
+# Default value: stations
 default_playlist = stations
 
 # Default station
 # This is the equivalent to the -p , --play command line parameter
-# The station number within the default playlist to play
-# Value is 1..number of stations, "-1" or "False" means no auto play,
-# "0" or "Random" means play a random station
+# The station number within the default playlist to play.Value is 1..number
+# of stations, "-1" or "False" means no auto play, "0" or "Random" means play
+# a random station
+#
+# Default value: False
 default_station = False
 
 # Enable mouse
-# If this options is enabled, the mouse can be used to scroll the
-# playlist, start playback, etc.
-# Mouse integration is highly terminal dependent, that's why it
-# is disabled by default.
+# If this options is enabled, the mouse can be used to scroll the playlist,
+# start playback, etc. Mouse integration is highly terminal dependent, that's
+# why it is disabled by default.
 #
 # Default value: False
 enable_mouse = False
@@ -35,13 +38,17 @@ enable_mouse = False
 # Recordings directory
 # This is the firectory where recorded files will be saved
 #
-# Default value: "default"
+# Please do not change this parameter manually in the user's configuration file
+# as it will cause problems. Use the in program Window instead:
+# (Config / General Options / Recordings dir)
+#
+# Default value: default
 recording_dir = default
 
 # Desktop notifications
-# If this option is enabled, a Desktop notification will be
-# displayed using the notification daemon / service.
-# If enabled but no notification is displayed, please refer to
+# If this option is enabled, a Desktop notification will be displayed using the
+# notification daemon / service. If enabled but no notification is displayed,
+# please refer to
 # https://github.com/coderholic/pyradio/desktop-notification.md
 # Valid values are:
 #   -1: disabled
@@ -53,30 +60,28 @@ enable_notifications = -1
 
 # Station icon
 # Some stations will advertise a station icon (logo).
-# This icon can be downloaded and used in Desktop Notifications,
-# if this option is True.
+# This icon can be downloaded and used in Desktop Notifications, if this option
+# is True.
 # #
 # Default value: True
 use_station_icon = True
 
 # Connection timeout
-# PyRadio will wait for this number of seconds to get a station/server
-# message indicating that playback has actually started.
-# If this does not happen (within this number of seconds after the
-# connection is initiated), PyRadio will consider the station
-# unreachable, and display the "Failed to connect to: [station]"
-# message.
+# PyRadio will wait for this number of seconds to get a station/server message
+# indicating that playback has actually started. If this does not happen
+# (within this number of seconds after the connection is initiated), PyRadio
+# will consider the station unreachable, and display the "Failed to connect to:
+# [station]" message.
 #
 # Valid values: 5 - 60, 0 disables check
 # Default value: 10
 connection_timeout = 10
 
 # Force http connections
-# Most radio stations use plain old http protocol to broadcast, but
-# some of them use https. If this is enabled,  all connections will
-# use http; results depend on the combination of station/player.
+# Most radio stations use plain old http protocol to broadcast, but some of
+# them use https. If this is enabled,  all connections will use http; results
+# depend on the combination of station/player.
 #
-# Valid values: True, true, False, false
 # Default value: False
 force_http = False
 
@@ -88,37 +93,37 @@ force_http = False
 #   light_16_colors (16 colors light theme alternative)
 #   black_on_white (bow) (256 colors)
 #   white_on_black (wob) (256 colors)
-# If theme is watched for changes, prepend its name
-# with an asterisk (i.e. '*my_theme')
+# If theme is watched for changes, prepend its name with an asterisk
+# (i.e. '*my_theme')
 # This is applicable for user themes only!
-# Default value = 'dark'
+#
+# Default value = dark
 theme = dark
 
 # Transparency setting
 # If False, theme colors will be used.
-# If True and a compositor is running, the stations' window
-# background will be transparent. If True and a compositor is
-# not running, the terminal's background color will be used.
-# Valid values: True, true, False, false
+# If True and a compositor is running, the stations' window background will be
+# transparent. If True and a compositor is not running, the terminal's
+# background color will be used.
+#
 # Default value: False
 use_transparency = False
 
 # Always obey config Transparency setting
-# Most themes will either be transparent of opaque by default.
-# This means that these themes will never be allowed to change
-# the transparency setting within PyRadio.
-# Enabling this option will make all themes to behave as if
-# their "transparency" option is set to 2 (Obey config setting).
-# Valid values: True, true, False, false
+# Most themes will either be transparent of opaque by default. This means that
+# these themes will never be allowed to change the transparency setting within
+# PyRadio. Enabling this option will make all themes to behave as if their
+# "transparency" option is set to 2 (Obey config setting).
+#
 # Default value: False
 force_transparency = False
 
 # Calculated color factor
-# This is to produce Secondary Windows background color
-# A value of 0 dissables it, otherwise it is the factor
-# to change (lighten or darken) the base color.
+# This is to produce Secondary Windows background color. A value of 0 dissables
+# it, otherwise it is the factor to change (lighten or darken) the base color.
 # For more info, please refer to
 # https://github.com/coderholic/pyradio#secondary-windows-background
+#
 # Valid values: 0-0.2
 # Default value: 0
 calculated_color_factor = 0
@@ -126,25 +131,26 @@ calculated_color_factor = 0
 
 # Playlist management
 #
-# Specify whether you will be asked to confirm
-# every station deletion action
-# Valid values: True, true, False, false
+# Specify whether you will be asked to confirm every station deletion action
+#
+# Default value: True
 confirm_station_deletion = True
 
-# Specify whether you will be asked to confirm
-# playlist reloading, when the playlist has not
-# been modified within PyRadio
-# Valid values: True, true, False, false
+# Specify whether you will be asked to confirm playlist reloading, when the
+# playlist has not been modified within PyRadio
+#
+# Default value: True
 confirm_playlist_reload = True
 
-# Specify whether you will be asked to save a
-# modified playlist whenever it needs saving
-# Valid values: True, true, False, false
+# Specify whether you will be asked to save a modified playlist whenever it
+# needs saving
+#
+# Default value: True
 auto_save_playlist = False
 
 # Remote Control server
-# A simple http server that can accept remote
-# connections and pass commands to PyRadio
+# A simple http server that can accept remote connections and pass commands
+# to PyRadio
 #
 # Valid values:
 #   remote_control_server_ip: localhost, LAN, lan
@@ -156,9 +162,8 @@ remote_control_server_ip = localhost
 remote_control_server_port = 9998
 remote_control_server_auto_start = False
 
-# Enable "XDG Base Directory Specification" compliance
-# Enabling this options will lead to operational
-# data files being dispersed to XDG directories
+# Enable "XDG Base Directory Specification" compliance. Enabling this options
+# will lead to operational data files being dispersed to XDG directories
 #
 # More info:
 # https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
@@ -171,12 +176,11 @@ remote_control_server_auto_start = False
 # Default value: False
 xdg_compliant = False
 
-# The name of the distribution providing the package.
-# If this parameter is set to anything other than "None"
-# PyRadio will not permit updating (-U command line
-# parameter) or removing the package (-R command line
-# parameter).
+# The name of the distribution providing the package. If this parameter is set
+# to anything other than "None" PyRadio will not permit updating (-U command
+# line parameter) or removing the package (-R command line parameter).
 #
 # Packagers must populate this paramater as needed!
 #
+# Default value: None
 distro = None
