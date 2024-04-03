@@ -2476,8 +2476,13 @@ class PyRadioConfig(PyRadioStations):
 # (Config / General Options / Recordings dir)
 '''
             # logger.error('\n\nself.config_opts[a_key][-1]: {} == rec_dir: {}\n\n'.format(self.config_opts[a_key][-1], rec_dir))
-            if self.config_opts[a_key][-1] == rec_dir:
+            if self._dir_to_shorthand(self.config_opts[a_key][-1]) == rec_dir or \
+                    rec_dir == 'default':
+                # logger.error('returning None')
                 return None
+            else:
+                # logger.error('returning {}'.format(comment + a_key + ' = ' + rec_dir))
+                return comment + a_key + ' = ' + rec_dir
         if self.config_opts[a_key][-1] == self.opts[a_key][-1]:
             return None
         return comment + a_key + ' = ' + str(self.opts[a_key][-1])
@@ -2523,6 +2528,13 @@ class PyRadioConfig(PyRadioStations):
         #     logger.error(f'out[{i}] : {n}')
         # logger.error(out)
         return out
+
+    def _dir_to_shorthand(self, a_dir):
+            ret = a_dir.replace(
+                    path.expanduser('~'),
+                    '%HOMEPATH%' if platform.startswith('win') else '~'
+                    )
+            return ret
 
     def _save_config_from_fixed_rec_dir(self, a_path):
         self._fixed_recording_dir = a_path
@@ -2587,14 +2599,10 @@ class PyRadioConfig(PyRadioStations):
             trnsp = self.bck_opts['use_transparency']
             calcf = self.bck_opts['calculated_color_factor']
 
-        # logger.error(f"{self.opts['recording_dir'][1]}")
         if self.opts['recording_dir'][1] == path.join(path.expanduser('~'), 'pyradio-recordings'):
             rec_dir = 'default'
         else:
-            rec_dir = self.opts['recording_dir'][1].replace(
-                    path.expanduser('~'),
-                    '%HOMEPATH%' if platform.startswith('win') else '~'
-                    )
+            rec_dir = self._dir_to_shorthand(self.opts['recording_dir'][1])
         self.xdg.set_recording_dir(
                 new_dir=self.opts['recording_dir'][1],
                 print_to_console=False,
