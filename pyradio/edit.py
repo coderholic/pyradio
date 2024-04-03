@@ -890,10 +890,13 @@ class PyRadioRecordingDir(object):
         else:
             # logger.error('stripped_string = "{}"'.format(stripped_string))
             if self._error_string == '':
-                l = [x for x in self._invalid_chars if x in stripped_string]
-                # logger.error('l = {}'.format(l))
-                if l:
+                if stripped_string.startswith(self._orig_path + sep):
                     self._error_string = 'Invalid dir_path!!!'
+                else:
+                    l = [x for x in self._invalid_chars if x in stripped_string]
+                    # logger.error('l = {}'.format(l))
+                    if l:
+                        self._error_string = 'Invalid dir_path!!!'
             self._widgets[-2].enabled = False
             if stripped_string and self._error_string == '':
                 self._widgets[-2].enabled = True
@@ -1192,7 +1195,7 @@ class PyRadioRecordingDir(object):
                     self._widgets[1].toggle_checked()
                 elif self._focus == 2:
                     # ok, execute
-                    if self._line_editor.string.startswith(self._orig_path):
+                    if self._line_editor.string.startswith(self._orig_path + sep):
                         return 3, None, False
                     else:
                         return self._get_result(ret)

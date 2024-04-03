@@ -7262,6 +7262,8 @@ ____Using |fallback| theme.''')
                 self._asked_to_move_recordings_dir = False
                 self._insert_recording_dir_win = None
                 self.refreshBody()
+            elif ret == 0:
+                return
             elif ret == 1:
                 # new location selected
                 # logger.error('\nret\t\t{0}\nnew_dir\t\t"{1}"\nMove dir\t{2}'.format(ret, new_dir, self._asked_to_move_recordings_dir))
