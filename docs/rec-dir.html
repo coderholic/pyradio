@@ -42,7 +42,7 @@ a:visited{color: SaddleBrown;}
 <h1 style="color: SaddleBrown" id="pyradio-recordings-directory">PyRadio Recordings Directory</h1>
 <p><strong>PyRadio</strong> will record stations to files (when <a href="recording.html">recording</a> is enabled) and save the resulting files in a dedicated directory.</p>
 <p>This directory used to be inside the “<strong>configuration directory</strong>”, but since <strong>v. 0.9.2.26</strong> it will be located in the user’s home directory and will be named “<strong>pyradio-recordings</strong>”, by default.</p>
-<p>Also, since <strong>v. 0.9.2.26</strong>, the directory is user selectable, providing maximum flexibility this way.</p>
+<p>Also, since <strong>v. 0.9.3</strong>, the directory is user selectable, providing this way maximum flexibility.</p>
 <p>When the new directory is selected (actually typed or pasted in the relevant dialog), and saved, <strong>PyRadio</strong> will try to <strong>move</strong> the existing directory to the new location.</p>
 <p>This is a case table of how this will work.</p>
 <table>
@@ -83,5 +83,9 @@ a:visited{color: SaddleBrown;}
 <p>Please make sure you do not specify a commonly OS used folder here, such as “<em>Downloads</em>”, “<em>Documents</em>” or “<em>Pictures</em>”, as it may be <strong>overwritten</strong>.</p>
 <h3 id="new-directory-exists-but-it-is-not-empty">3. New directory exists but it is not empty</h3>
 <p>This is when it gets tricky; the original directory will be renamed to “<strong>pyradio-recordings</strong>” and will be moved inside the user specified folder. <strong>PyRadio</strong> will use this moved directory to save recorded files instead of the one specified by the user (which will actually be the parent directory of the “<em>pyradio-recordings</em>” directory.)</p>
+<h2 id="pre-0.9.3-installation-behavior">Pre 0.9.3 installation behavior <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Pre 0.9.3 installations will use ~/.config/pyradio/data/recordings as the recording directory, by default.</p>
+<p>After updating to v. 0.9.3 (and newer), <strong>PyRadio</strong> will move this directory to the user’s home folder and rename it to “<strong>pyradio-recordings</strong>”.</p>
+<p>Then the user can change the folder’s location from <em>Config / General options / Recording dir</em>.</p>
 </body>
 </html>

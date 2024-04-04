@@ -46,14 +46,20 @@ the terminal \"my_term\" is \"-S\", execute as follows:
 }
 
 function get_data_dir(){
-    if [ -d ~/.config/pyradio/data ]
+    SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+    CFG_FILE=$(dirname $"$SCRIPT_DIR")"/pyradio/config"
+    if [ -e "$CFG_FILE" ]
+    then
+        XDG="$(sed 's/[A-Z]/\l&/' "$CFG_FILE" | grep 'xdg_compliant = true')"
+    fi
+    if [ -z "$XDG" ]
     then
         DATA_DIR=~/.config/pyradio/data
-    elif [ -d ~/.local/share/pyradio ]
-    then
-        DATA_DIR=~/.local/share/pyradio
+    else
+        DATA_DIR="$XDG_DATA_HOME"
+        [ -z "$DATA_DIR" ] && DATA_DIR=~/.local/share/pyradio
     fi
-    [ -z "$DATA_DIR" ] && DATA_DIR=~/.config/pyradio/data
+    mkdir -p "$DATA_DIR" 2>/dev/null
 }
 
 function write_desktop_file(){
@@ -65,7 +71,7 @@ function write_desktop_file(){
         TERMINAL_LINE="Terminal=false"
     fi
 
-echo "[Desktop Entry]
+    echo "[Desktop Entry]
 Version=1.0
 Type=Application
 Name=PyRadio

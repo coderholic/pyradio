@@ -105,7 +105,7 @@ and much more...
     - psutil
     - rich
     - python-dateutil
-    - netifaces (optional)
+    - netifaces
 * MPV, MPlayer or VLC installed and in your path
 * MKVToolNix (cli files) to insert tags, chapters and cover to recordings (optional)
 
@@ -370,6 +370,7 @@ These modes are specifically designed to be used with tiling window managers, tr
 **PyRadio** upon its execution will first read its *package* configuration file and then will try to read the *user* configuration file. If an error occurs while parsing it, an error message will be displayed and **PyRadio** will terminate.
 
 ### The package config file
+
 The *package* configuration file contains the program's **default** parameters. These are the player to use, the playlist to load etc.
 
 It is heavily commented (as you can see [here](pyradio/config)), so that it can be used as a template in order to manual create the *user* configuration file.
@@ -512,8 +513,6 @@ To use the playlist number, one would execute the commands:
 
     $ pyradio -s 5
 
-**Note:** Python 2 output is much simpler, but the functionality is the same.
-
 **Note:** The default playlist to load can also be set in **PyRadio**'s [configuration file](#config-file), parameter **default_playlist** (default value is **stations**).
 
 ### Autoloading playlists
@@ -595,12 +594,6 @@ All search widgets provide a "*search history*" function; pressing the **Up** or
 ## Line editor
 
 **PyRadio** "*Search function*" and "*Station editor*" use a *Line editor* to permit typing and editing stations' data.
-
-The *Line editor* works both on **Python 2** and **Python 3**, but does not provide the same functionality for both versions:
-
-
-* In **Python 2**, only ASCII characters can be inserted.
-* In **Python 3**, no such restriction exists. Furthermore, using CJK characters is also supported.
 
 One can always display help by pressing "**?**", but that pauses a drawback; one cannot actually have a "**?**" withing the string.
 
@@ -990,7 +983,7 @@ Then, the mouse can be used as follows:
 
 Version **0.8.9.17** adds to **PyRadio** the ability to log the titles displayed at the bottom of its window, in a log file, for reference.
 
-The logger, which works independently from the "*debug*" function, is actually a [Rotating File Handler](https://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler), configured to write up to 5 files of around 50KB each (parameters **maxBytes=50000** and **backupCount=5**).
+The logger, which is a special kind of *debug logger*, but works independently from the "*debug*" function, is actually a [Rotating File Handler](https://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler), configured to write up to 5 files of around 50KB each (parameters **maxBytes=50000** and **backupCount=5**).
 
 The way this works, according to the documentation, is that one "can use the **maxBytes** and **backupCount** values to allow the file to rollover at a predetermined size. When the size is about to be exceeded, the file is closed and a new file is silently opened for output. Rollover occurs whenever the current log file is nearly **maxBytes** in length… When **backupCount** is non-zero, the system will save old log files by appending the extensions ‘.1’, ‘.2’ etc., to the filename. For example, with a backupCount of 5 and a base file name of **app.log**, you would get *app.log*, *app.log.1*, *app.log.2*, up to *app.log.5*. The file being written to is always **app.log**. When this file is filled, it is closed and renamed to *app.log.1*, and if files *app.log.1*, *app.log.2*, etc. exist, then they are renamed to *app.log.2*, *app.log.3* etc. respectively.
 
@@ -999,7 +992,7 @@ The function can be enabled:
 1. using the `-lt` (`--log-titles`) command line option, or
 2. by pressing "**W**" while in the **Main**, the **Playlist** or the **Register** mode.
 
-The titles are written in a file called *pyradio-titles.log* which is saved at **PyRadio** configuration directory.
+The titles are written in a file called *pyradio-titles.log* which is located in the **Recordings Directory**.
 
 Log file sample:
 

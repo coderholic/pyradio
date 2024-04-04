@@ -207,7 +207,7 @@ python3 install.py</pre>
 <p>or even all pipx installed packages:</p>
 <pre>pipx reinstall-all</pre>
 <p>For these last commands to work, <strong>PyRadio</strong> source code must be available and present at the location it receded when the original installation took place.</p>
-<p><strong>PyRadio</strong> will keep a <strong>cache</strong> of ZIP files and a folder called <strong>pyradio-source</strong> in its data folder; all files will be kept in a folder called <strong>.cache</strong> (**_cache** on Windows).</p>
+<p><strong>PyRadio</strong> will keep a <strong>cache</strong> of ZIP files and a folder called <strong>pyradio-source</strong> in its cache folder (typically <em>~/.cache/pyradio</em>) or in its data folder, on Windows; all files will be kept in a folder called **_cache**.</p>
 <p>Normally, just one ZIP file has to be present in the <strong>cache</strong>; the ZIP with the latest <strong>PyRadio</strong> version code. If more ZIP files are present in the cache, they can safely be deleted.</p>
 <p>To see the contents of the cache (provided you have downloaded <a href="#get-the-installation-script">the latest install.py</a>), execute:</p>
 <pre>python install.py -sc</pre>

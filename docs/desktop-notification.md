@@ -43,7 +43,7 @@ Available values are:
     x: enabled and repeat every x seconds
 ```
 
-**PyRadio** supports notifications repetition, so that even when used with `quake` or `yakuake` and the like, you still have some info on what's going on with it.
+**PyRadio** supports notifications repetition, so that even when used with `quake` or `yakuake` and the like or in a "headless" operation, you still have some info on what's going on with it.
 
 Notifications can be set to repeat every "*x*" seconds, with "*x*" ranging from 30 to 300 (30 seconds to 5 minutes), in 30 seconds steps.
 
@@ -53,10 +53,10 @@ The icon that is displayed in the notification message is by default **PyRadio**
 
 **PyRadio** will search for this icon, named *pyradio.png*  (or *pyradio.ico* on Windows) in the following locations:
 
-1. In the *configuration directory*, under **data** (or **Help** folder on Windows).
+1. In the *configuration directory*, under **data**, or under **XDG_DATA_HOME** (typically *~/.local/share/pyradio*) if *xdg_compliant* is set to True (or **Help** folder on Windows).
 2. In the distribution directory (under the **icons** folder).
 
-As a consequence, one could replace the icon found in the *configuration directory* (under **data** or **Help**) with a custom icon, preserving the icon name as appropriate (*pyradio.png*, or *pyradio.ico* on Windows).
+As a consequence, one could replace the icon found in the locations stated above with a custom icon, preserving the icon name as appropriate (*pyradio.png*, or *pyradio.ico* on Windows).
 
 If the station defines a "*Station Icon URL*" (either on a local playlist or an online service; **RadioBrowser** includes an icon for many stations, for example), **PyRadio** will used this one instead, provided that it is of *JPG* or *PNG* format. This does not apply to Windows; an *ICO* file is used instead for **Desktop Notifications**.
 

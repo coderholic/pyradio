@@ -1,26 +1,5 @@
-#!/usr/bin/env python
-'''
-Look for:
-txt = self._playlist_error_message
-
-Left:
-_print_save_playlist_error_1
-
-
-==> x 1
-'M_PLAYLIST_DELETE_ERROR'
-'D_PLAYLIST_DELETE_ASK'
-'D_GROUP_DELETE_ASK'
-'D_STATION_DELETE_ASK'
-'D_STATION_DELETE_ASK_LOCKED'
-
-
-
-==> x 2
-'M_REC_DIR_MOVE_ERROR'
-'M_FOREIGN'
-
-'''
+# -*- coding: utf-8 -*-
+#
 import curses
 import re
 import logging

@@ -39,11 +39,9 @@ Moving to the **pipx** means:
 
 2. If a Linux distribution does not provide a pipx package, you can still use the `pip` installation method.
 
-3. Python 2 is still supported on a Linux system, in which case a `pip` installation will be performed.
+3. **PyRadio** on **Windows** will still use the `pip` installation method.
 
-4. **PyRadio** on **Windows** will still use the `pip` installation method. *Python 2* is not supported anymore.
-
-5. **PyRadio** will only be installed using `pipx` on **Python 3** on **MacOS**. *Python 2* is not supported anymore.
+4. **PyRadio** will only be installed using `pipx` on **Python 3** on **MacOS**.
 
 
 ### When do I need to install pipx?
@@ -106,7 +104,7 @@ Please follow the installation guides for your OS.
     - [pip installation](linux.md) (the old way) \
 Not valid for **Debian** and **Ubuntu 23.04**
     - [pipx installation](linux-pipx.md) (the new way) \
-Valid for **Debian** and **Ubuntu 23.04**
+Valid for **Debian** and **Ubuntu 23.04** and newer
 2. MacOS \
 Follow the instructions on [this page](macos.md).
 3. Windows \

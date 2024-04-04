@@ -66,7 +66,7 @@ a:visited{color: SaddleBrown;}
 <!-- vim-markdown-toc -->
 <p class="indented">[ <a href="index.html#installation">Return to main doc</a> ]</p>
 <h2 id="goal">Goal <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>This is a document that provides info on running <strong>PyRadio</strong> in <em>headless</em> mode (well, kind of), on a Linux, BSD, or Pi system.</p>
+<p>This is a document that provides info on running <strong>PyRadio</strong> in “<em>headless</em>” mode (well, kind of), on a Linux, BSD, or Pi system.</p>
 <p>Now, <strong>PyRadio</strong> is a <strong>terminal application</strong>; it actually <strong>needs</strong> a terminal to run. But there is a way to make it run on a “terminal” and at the same time run in the background, being “invisible” so to speak, or run as a weird kind of a daemon; the way to do that is run it in a <strong>tmux detached session</strong> or a <strong>screen detached session</strong>.</p>
 <p><strong>tmux</strong> man page reads:</p>
 <p>“<strong>tmux</strong> is a terminal multiplexer: it enables a number of terminals to be created, accessed, and controlled from a single screen. tmux may be <strong>detached from a screen</strong> and continue running in the background, then later reattached.”</p>
@@ -123,7 +123,7 @@ will make the web server listen to 127.0.0.1, port 11111; this is the default an
 <li><p>we cannot start a second headless server, and</p></li>
 <li><p>we can get info about the server running.</p></li>
 </ul>
-<p>The “headless server lock file” is saved as <em>~/.config/pyeadio/data/server-headles.txt</em> and will contain the IP address and port the servers is listening to. This is especially useful in case a user script needs to get this info (instead of parsing the output of the command <strong>pyradio –addr</strong>).</p>
+<p>The “headless server lock file” is saved as <em>~/.config/pyeadio/data/server-headles.txt</em> (or <em>~/.local/share/pyradio</em> if <strong>xdg_compliant</strong> is set to True), and will contain the IP address and port the servers is listening to. This is especially useful in case a user script needs to get this info (instead of parsing the output of the command <strong>pyradio –addr</strong>).</p>
 <h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>By the term “installation”, we mean that we set up things in such a way, that after we log into the system, we find <strong>PyRadio</strong> ready to accept connections.</p>
 <p>So, the installation can be as easy as adding a line in a configuration file (or the startup section of the <em>desktop environment</em>) or as hard as adding a system service.</p>
@@ -144,12 +144,21 @@ Please replace it with your username.</p></li>
 <pre>echo &quot;(sleep 10; /usr/bin/tmux new-session -dA -s pyradio-session /home/spiros/.local/bin/pyradio --headless auto)&quot; &gt;&gt; ~/.config/openbox/autostart</pre>
 <p>And so on, and so forth…</p>
 <h4 id="systemd">systemd</h4>
-<p>The first thing you do is create the log file:</p>
-<pre>touch ~/pyradio.log</pre>
-<p>Then create the start file. Write this to <strong>~/.local/bin/start-headless-pyradio.sh</strong></p>
+<p>The first thing you do is to create the start file. Write this to <strong>~/.local/bin/start-headless-pyradio.sh</strong></p>
 <pre>#!/bin/bash
+touch ~/pyradio.log
 /usr/bin/tmux new-session -dA -s pyradio-session /home/spiros/.local/bin/pyradio --headless auto</pre>
 <p>Then create the stop file. Writhe this to <strong>~/.local/bin/stop-headless-pyradio.sh</strong></p>
+<p>Execute the following command:</p>
+<pre>pyradio -pc</pre>
+<p>and examine the value of the config parameter <strong>xdg_compliant</strong>.</p>
+<p>If <strong>xdg_compliant</strong> is <em>True</em>, write this code to the file:</p>
+<pre>#!/bin/bash
+[ -z &quot;$(/usr/bin/tmux ls | grep pyradio-session)&quot; ] || /usr/bin/tmux send-keys -t pyradio-session q
+sleep 2
+[ -z &quot;$(/usr/bin/tmux ls | grep pyradio-session)&quot; ] || /usr/bin/tmux send-keys -t pyradio-session q
+[ -e /home/spiros/.local/state/pyradio/server-headless.txt ] &amp;&amp; rm /home/spiros/.local/state/pyradio/server-headless.txt</pre>
+<p>If <strong>xdg_compliant</strong> is <em>False</em>, write this code to the file, instead:</p>
 <pre>#!/bin/bash
 [ -z &quot;$(/usr/bin/tmux ls | grep pyradio-session)&quot; ] || /usr/bin/tmux send-keys -t pyradio-session q
 sleep 2
@@ -174,6 +183,17 @@ chmod +x ~/.local/bin/stop-headless-pyradio.sh</pre>
 <pre>#!/bin/bash
 /usr/bin/screen -U -S pyradio-session -d -m /home/spiros/.local/bin/pyradio --headless auto</pre>
 <p>Then create the stop file. Writhe this to <strong>~/.local/bin/stop-headless-pyradio.sh</strong></p>
+<p>Execute the following command:</p>
+<pre>pyradio -pc</pre>
+<p>and examine the value of the config parameter <strong>xdg_compliant</strong>.</p>
+<p>If <strong>xdg_compliant</strong> is <em>True</em>, write this code to the file:</p>
+<pre>#!/bin/bash
+[ -z &quot;$(/usr/bin/screen -ls | grep pyradio-session)&quot; ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
+sleep 2
+[ -z &quot;$(/usr/bin/screen -ls | grep pyradio-session)&quot; ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
+[ -e /home/spiros/.local/state/pyradio/server-headless.txt ] &amp;&amp; rm /home/spiros/.local/state/pyradio/server-headless.txt
+</pre>
+<p>If <strong>xdg_compliant</strong> is <em>False</em>, write this code to the file, instead:</p>
 <pre>#!/bin/bash
 [ -z &quot;$(/usr/bin/screen -ls | grep pyradio-session)&quot; ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
 sleep 2
@@ -209,6 +229,7 @@ sudo systemctl enable pyradio # enabling the autostart on every boot</pre>
 <h3 id="notice-for-systemd-installation">Notice for systemd installation</h3>
 <p>The service file has two lines starting with “<em>Environment=</em>”</p>
 <p>These two lines provide an environment for <em>systemd</em>; I’ve found out that on Arch Linux, for example, <strong>PyRadio</strong> would produce no sound at all without them (it would not be able to connect to the sound server).</p>
+<p>Note that you may have to change the value <strong>1000</strong> to the one given by the <em>id</em> command; this is actually your <strong>uid</strong> (user id), which is set to 1000 by default on many distros.</p>
 <p>On other systems, on Raspberry Pi for example, they can be omitted altogether.</p>
 </body>
 </html>

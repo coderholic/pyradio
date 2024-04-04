@@ -210,7 +210,9 @@ This means that, for whatever reason, a chapter marker may not exactly point to 
 <p>The default image is named “<em>cover.png</em>” and is located in the “<em>data</em>” folder, within the configuration directory.</p>
 <p>There are two way to change this cover image:</p>
 <ol type="1">
-<li><p>To permanently change the cover image for all recordings, create a <strong>PNG</strong> file named “<strong>user-cover.png</strong>” in the “<em>data</em>” folder withing the configuration directory.</p></li>
+<li><p>To permanently change the cover image for all recordings, create a <strong>PNG</strong> file named “<strong>user-cover.png</strong>” in the “<em>data</em>” folder.<br />
+<br />
+<strong>Tip:</strong> to get to the folder, execute <strong>pyradio</strong>, press “***” and “<strong>2</strong>”.</p></li>
 <li><p>After you have stopped the recording, set any <strong>PNG</strong> file as a cover image for the recorded file, using the procedure explained in section <a href="#changing-the-cover">Changing the cover</a>.</p></li>
 </ol>
 <p>The image below shows how a chapter aware player will display and handle chapter markers found in a MKV file. The file also uses the default cover image. This is the <a target="_blank" href="https://sourceforge.net/projects/mpc-hc/">Media Player Classic</a> on Windows 7.</p>
@@ -264,7 +266,7 @@ To do that, either press “<em>\o</em>” in <strong>PyRadio</strong>, or execu
 <li><p>Extract the <strong>7z</strong> file you previously downloaded, in the “<strong>mkvtoolnix</strong>” folder.</p></li>
 </ol>
 <h3 id="files-location">Files location</h3>
-<p>The file produced by the recording function will be placed in the <strong>recordings</strong> directory, inside the <em>configuration directory</em>.</p>
+<p>The file produced by the recording function will be placed in the <strong>recordings</strong> directory.</p>
 <p>If <strong>MKVToolNix</strong> is not installed, the file will be downloaded in this directory and will not be altered by <strong>PyRadio</strong>.</p>
 <p>If <strong>MKVToolNix</strong> is installed, a “<em>tmp_</em>” prefix will be added to the recorded filename, which will be removed after chapters addition.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> On <strong>Windows</strong>, if <strong>MKVToolNix</strong> is installed, a dedicated routine will be executed at program’s startup to remove all “<em>tmp_</em>” recorded files.</p>

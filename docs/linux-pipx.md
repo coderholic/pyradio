@@ -278,7 +278,7 @@ pipx reinstall-all
 
 For these last commands to work, **PyRadio** source code must be available and present at the location it receded when the original installation took place.
 
-**PyRadio** will keep a **cache** of ZIP files and a folder called **pyradio-source** in its data folder; all files will be kept in a folder called **.cache** (**_cache** on Windows).
+**PyRadio** will keep a **cache** of ZIP files and a folder called **pyradio-source** in its cache folder (typically *~/.cache/pyradio*) or in its data folder, on Windows; all files will be kept in a folder called **_cache**.
 
 Normally, just one ZIP file has to be present in the **cache**; the ZIP with the latest **PyRadio** version code. If more ZIP files are present in the cache, they can safely be deleted.
 

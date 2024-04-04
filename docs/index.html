@@ -171,7 +171,7 @@ a:visited{color: SaddleBrown;}
 <li>psutil</li>
 <li>rich</li>
 <li>python-dateutil</li>
-<li>netifaces (optional)</li>
+<li>netifaces</li>
 </ul></li>
 <li>MPV, MPlayer or VLC installed and in your path</li>
 <li>MKVToolNix (cli files) to insert tags, chapters and cover to recordings (optional)</li>
@@ -1540,7 +1540,6 @@ Already synced: &quot;stations.csv&quot;</pre>
        └────┴──────────┴─────────┴──────────────────────────┘
 
 $ pyradio -s 5</pre>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> Python 2 output is much simpler, but the functionality is the same.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The default playlist to load can also be set in <strong>PyRadio</strong>’s <a href="#config-file">configuration file</a>, parameter <strong>default_playlist</strong> (default value is <strong>stations</strong>).</p>
 <h3 id="autoloading-playlists">Autoloading playlists</h3>
 <p>As already stated, <strong>PyRadio</strong> will normally load its default playlist (called “<strong>stations</strong>”) upon startup.</p>
@@ -1584,11 +1583,6 @@ $ pyradio -s 5</pre>
 <p>All search widgets provide a “<em>search history</em>” function; pressing the <strong>Up</strong> or <strong>Down</strong> arrow will cycle through previously used search terms (maximum number remembered is 20). Pressing <strong>^X</strong> will remove an item from the history.</p>
 <h2 id="line-editor">Line editor <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> “<em>Search function</em>” and “<em>Station editor</em>” use a <em>Line editor</em> to permit typing and editing stations’ data.</p>
-<p>The <em>Line editor</em> works both on <strong>Python 2</strong> and <strong>Python 3</strong>, but does not provide the same functionality for both versions:</p>
-<ul>
-<li>In <strong>Python 2</strong>, only ASCII characters can be inserted.</li>
-<li>In <strong>Python 3</strong>, no such restriction exists. Furthermore, using CJK characters is also supported.</li>
-</ul>
 <p>One can always display help by pressing “<strong>?</strong>”, but that pauses a drawback; one cannot actually have a “<strong>?</strong>” withing the string.</p>
 <p>To do that, one would have to use the backslash key “<strong>\</strong>” and then press “<strong>?</strong>”.</p>
 <p>To sum it all up:</p>
@@ -1897,14 +1891,14 @@ volume=50</pre>
 </table>
 <h2 id="title-logging">Title logging <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Version <strong>0.8.9.17</strong> adds to <strong>PyRadio</strong> the ability to log the titles displayed at the bottom of its window, in a log file, for reference.</p>
-<p>The logger, which works independently from the “<em>debug</em>” function, is actually a <a target="_blank" href="https://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler">Rotating File Handler</a>, configured to write up to 5 files of around 50KB each (parameters <strong>maxBytes=50000</strong> and <strong>backupCount=5</strong>).</p>
+<p>The logger, which is a special kind of <em>debug logger</em>, but works independently from the “<em>debug</em>” function, is actually a <a target="_blank" href="https://docs.python.org/3/library/logging.handlers.html#logging.handlers.RotatingFileHandler">Rotating File Handler</a>, configured to write up to 5 files of around 50KB each (parameters <strong>maxBytes=50000</strong> and <strong>backupCount=5</strong>).</p>
 <p>The way this works, according to the documentation, is that one “can use the <strong>maxBytes</strong> and <strong>backupCount</strong> values to allow the file to rollover at a predetermined size. When the size is about to be exceeded, the file is closed and a new file is silently opened for output. Rollover occurs whenever the current log file is nearly <strong>maxBytes</strong> in length… When <strong>backupCount</strong> is non-zero, the system will save old log files by appending the extensions ‘.1’, ‘.2’ etc., to the filename. For example, with a backupCount of 5 and a base file name of <strong>app.log</strong>, you would get <em>app.log</em>, <em>app.log.1</em>, <em>app.log.2</em>, up to <em>app.log.5</em>. The file being written to is always <strong>app.log</strong>. When this file is filled, it is closed and renamed to <em>app.log.1</em>, and if files <em>app.log.1</em>, <em>app.log.2</em>, etc. exist, then they are renamed to <em>app.log.2</em>, <em>app.log.3</em> etc. respectively.</p>
 <p>The function can be enabled:</p>
 <ol type="1">
 <li>using the -lt (--log-titles) command line option, or</li>
 <li>by pressing “<strong>W</strong>” while in the <strong>Main</strong>, the <strong>Playlist</strong> or the <strong>Register</strong> mode.</li>
 </ol>
-<p>The titles are written in a file called <em>pyradio-titles.log</em> which is saved at <strong>PyRadio</strong> configuration directory.</p>
+<p>The titles are written in a file called <em>pyradio-titles.log</em> which is located in the <strong>Recordings Directory</strong>.</p>
 <p>Log file sample:</p>
 <pre>Apr 18 (Mon) 13:12 | &gt;&gt;&gt; Station: Lounge (Illinois Street Lounge - SomaFM)
 Apr 18 (Mon) 13:12 |     Jack Costanzo - La Cumparsa, Harlem Nocturne

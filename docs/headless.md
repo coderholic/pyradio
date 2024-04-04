@@ -22,7 +22,7 @@
 
 ## Goal
 
-This is a document that provides info on running **PyRadio** in *headless* mode (well, kind of), on a Linux, BSD, or Pi system.
+This is a document that provides info on running **PyRadio** in "*headless*" mode (well, kind of), on a Linux, BSD, or Pi system.
 
 Now, **PyRadio** is a **terminal application**; it actually **needs** a terminal to run. But there is a way to make it run on a "terminal" and at the same time run in the background, being "invisible" so to speak, or run as a weird kind of a daemon; the way to do that is run it in a **tmux detached session** or a **screen detached session**.
 
@@ -111,7 +111,7 @@ It will create a "headless server lock file", though, so that
 
 - we can get info about the server running.
 
-The "headless server lock file" is saved as *~/.config/pyeadio/data/server-headles.txt* and will contain the IP address and port the servers is listening to. This is especially useful in case a user script needs to get this info (instead of parsing the output of the command **pyradio --addr**).
+The "headless server lock file" is saved as *~/.config/pyeadio/data/server-headles.txt* (or *~/.local/share/pyradio* if **xdg_compliant** is set to True), and will contain the IP address and port the servers is listening to. This is especially useful in case a user script needs to get this info (instead of parsing the output of the command **pyradio --addr**).
 
 ## Installation
 
@@ -149,18 +149,33 @@ And so on, and so forth...
 
 #### systemd
 
-The first thing you do is create the log file:
-
-    touch ~/pyradio.log
-
-Then create the start file. Write this to **~/.local/bin/start-headless-pyradio.sh**
+The first thing you do is to create the start file. Write this to **~/.local/bin/start-headless-pyradio.sh**
 
 ```
 #!/bin/bash
+touch ~/pyradio.log
 /usr/bin/tmux new-session -dA -s pyradio-session /home/spiros/.local/bin/pyradio --headless auto
 ```
 
 Then create the stop file. Writhe this to **~/.local/bin/stop-headless-pyradio.sh**
+
+Execute the following command:
+
+    pyradio -pc
+
+and examine the value of the config parameter **xdg_compliant**.
+
+If **xdg_compliant** is *True*, write this code to the file:
+
+```
+#!/bin/bash
+[ -z "$(/usr/bin/tmux ls | grep pyradio-session)" ] || /usr/bin/tmux send-keys -t pyradio-session q
+sleep 2
+[ -z "$(/usr/bin/tmux ls | grep pyradio-session)" ] || /usr/bin/tmux send-keys -t pyradio-session q
+[ -e /home/spiros/.local/state/pyradio/server-headless.txt ] && rm /home/spiros/.local/state/pyradio/server-headless.txt
+```
+
+If **xdg_compliant** is *False*, write this code to the file, instead:
 
 ```
 #!/bin/bash
@@ -208,6 +223,25 @@ Then create the start file. Write this to **~/.local/bin/start-headless-pyradio.
 ```
 
 Then create the stop file. Writhe this to **~/.local/bin/stop-headless-pyradio.sh**
+
+Execute the following command:
+
+    pyradio -pc
+
+and examine the value of the config parameter **xdg_compliant**.
+
+If **xdg_compliant** is *True*, write this code to the file:
+
+```
+#!/bin/bash
+[ -z "$(/usr/bin/screen -ls | grep pyradio-session)" ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
+sleep 2
+[ -z "$(/usr/bin/screen -ls | grep pyradio-session)" ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
+[ -e /home/spiros/.local/state/pyradio/server-headless.txt ] && rm /home/spiros/.local/state/pyradio/server-headless.txt
+
+```
+
+If **xdg_compliant** is *False*, write this code to the file, instead:
 
 ```
 #!/bin/bash
@@ -260,6 +294,8 @@ sudo systemctl enable pyradio # enabling the autostart on every boot
 The service file has two lines starting with "*Environment=*"
 
 These two lines provide an environment for *systemd*; I've found out that on Arch Linux, for example, **PyRadio** would produce no sound at all without them (it would not be able to connect to the sound server).
+
+Note that you may have to change the value **1000** to the one given by the *id* command; this is actually your **uid** (user id), which is set to 1000 by default on many distros.
 
 On other systems, on Raspberry Pi for example, they can be omitted altogether.
 

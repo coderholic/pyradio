@@ -215,7 +215,9 @@ The default image is named "*cover.png*" and is located in the "*data*" folder, 
 
 There are two way to change this cover image:
 
-1. To permanently change the cover image for all recordings, create a **PNG** file named "**user-cover.png**" in the "*data*" folder withing the configuration directory.
+1. To permanently change the cover image for all recordings, create a **PNG** file named "**user-cover.png**" in the "*data*" folder. \
+\
+**Tip:** to get to the folder, execute **pyradio**, press "**\o**" and "**2**".
 
 2. After you have stopped the recording, set any **PNG** file as a cover image for the recorded file, using the procedure explained in section [Changing the cover](#changing-the-cover).
 
@@ -305,7 +307,7 @@ To do that, either press "*\\o*" in **PyRadio**, or execute `pyradio -od`, to op
 
 ### Files location
 
-The file produced by the recording function will be placed in the **recordings** directory, inside the *configuration directory*.
+The file produced by the recording function will be placed in the **recordings** directory.
 
 If **MKVToolNix** is not installed, the file will be downloaded in this directory and will not be altered by **PyRadio**.
 

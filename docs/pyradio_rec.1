@@ -1,4 +1,4 @@
-.TH pyradio_rec 1 "March 2024" pyradio
+.TH pyradio_rec 1 "April 2024" pyradio
 
 .SH Name
 .PP
@@ -212,8 +212,7 @@ displayed.
 .SS File location
 .PP
 Files created by the recording feature will be saved under the
-\[lq]\fBrecordings\fR\[rq] folder inside \fBpyradio\fR\[cq]s
-configuration directory.
+\[lq]\fBrecordings\fR\[rq] folder.
 .PP
 The file will be named:
 .IP
@@ -268,14 +267,21 @@ point to the beginning of the song associated with it.
 \fIMKVToolNix\fB has been detected.
 .PP
 The default image is named \[lq]\f[I]cover.png\f[R]\[rq] and is located
-in the \[lq]\f[I]data\f[R]\[rq] folder, within the configuration
-directory.
+in the \[lq]\f[I]data\f[R]\[rq] folder.
+
+.RS 2
+\fBTip:\fR
+.RS 4
+To get to the folder, execute \fBpyradio\fR, press "\fI\\o\fR" and "\fI2\fR".
+.RE
+.RE
+
 .PP
 There are two way to change this cover image:
 .IP "1." 3
 To permanently change the cover image for all recordings, create a
 \f[B]PNG\f[R] file named \[lq]\f[B]user-cover.png\f[R]\[rq] in the
-\[lq]\f[I]data\f[R]\[rq] folder withing the configuration directory.
+\[lq]\f[I]data\f[R]\[rq] folder.
 .IP "2." 3
 After you have stopped the recording, set any \f[B]PNG\f[R] file as a
 cover image for the recorded file, using the procedure explained in
@@ -378,8 +384,7 @@ chmod +x \[ti]/.config/pyradio/data/mkvmerge
 .SS Files location
 .PP
 The file produced by the recording function will be placed in the
-\fBrecordings\fR directory, inside the \fIconfiguration
-directory\fR.
+\fBrecordings\fR directory.
 .PP
 If \fBMKVToolNix\fR is not installed, the file will be downloaded in
 this directory and will not be altered by \fBpyradio\fR.
@@ -425,7 +430,7 @@ every recording (provided that MKVToolNix (\fIhttps://mkvtoolnix.download/\fR)
 is installed).
 .PP
 The default image is a PNG file named \[lq]\f[B]cover.png\f[R]\[rq]
-located under the \f[B]data\f[R] folder in the configuration directory.
+located under the \f[B]data\f[R] folder.
 .PP
 One can change this cover image using the following command:
 .IP

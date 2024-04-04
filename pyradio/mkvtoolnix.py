@@ -11,13 +11,10 @@ import logging
 
 locale.setlocale(locale.LC_ALL, "")
 logger = logging.getLogger(__name__)
-HAS_RICH = False
-if sys.version_info.major >= 3:
-    from rich.console import Console
-    from rich.table import Table
-    from rich.align import Align
-    from rich import print
-    HAS_RICH = True
+from rich.console import Console
+from rich.table import Table
+from rich.align import Align
+from rich import print
 
 class MKVToolNix:
 
@@ -123,28 +120,20 @@ class MKVToolNix:
         files = self._get_mkv_file_from_id(0, return_list=True)
 
         if files:
-            if HAS_RICH:
-                console = Console()
+            console = Console()
 
-                table = Table(show_header=True, header_style="bold magenta")
-                table.title = 'List of files under [bold magenta]recordings[/bold magenta]'
-                table.title_justify = "left"
-                table.row_styles = ['', 'plum4']
-                centered_table = Align.center(table)
-                table.add_column("#", justify="right")
-                table.add_column("Name")
-                for i, n in enumerate(files):
-                    table.add_row(str(i+1), os.path.basename(n))
-                console.print(centered_table)
-            else:
-                print('List of files under "recordings"')
-                pad = len(str(len(files)))
-                for i, n in enumerate(files):
-                    print('{0}. {1}'.format(
-                        str(i+1).rjust( pad ),
-                        os.path.basename(n)
-                        )
+            table = Table(show_header=True, header_style="bold magenta")
+            table.title = 'List of files under [bold magenta]{}[/bold magenta]'.format(
+                    os.path.basename(self._cnf.recording_dir)
                     )
+            table.title_justify = "left"
+            table.row_styles = ['', 'plum4']
+            centered_table = Align.center(table)
+            table.add_column("#", justify="right")
+            table.add_column("Name")
+            for i, n in enumerate(files):
+                table.add_row(str(i+1), os.path.basename(n))
+            console.print(centered_table)
         else:
             print('No recorded files found!')
 
@@ -160,11 +149,7 @@ class MKVToolNix:
             return files[index]
         except IndexError:
             if print_messages:
-                if HAS_RICH:
-                    print('[red]Error:[/red] Index {} not found!'.format(index))
-                else:
-                    print('Error: Index {} not found!'.format(index))
-                sys.exit(1)
+                print('[red]Error:[/red] Index {} not found!'.format(index))
             return None
 
     def _file_valid(self, a_file, print_messages=True):
@@ -188,10 +173,7 @@ class MKVToolNix:
             else:
                 return None
         if print_messages:
-            if HAS_RICH:
-                print('[magenta]Setting MKV file cover image...[/magenta]')
-            else:
-                print('Setting MKV file cover image...')
+            print('[magenta]Setting MKV file cover image...[/magenta]')
         self._cover_file = self._file_valid(self._cover_file)
         # scan MKV file for existing cover
         r = subprocess.Popen(
@@ -233,10 +215,7 @@ class MKVToolNix:
 
     def chapters_to_srt(self, print_messages=True):
         if print_messages:
-            if HAS_RICH:
-                print('[magenta]Chapters to SRT[/magenta]')
-            else:
-                print('Chapters to SRT')
+            print('[magenta]Chapters to SRT[/magenta]')
         chapters = self._read_chapters(self._mkv_file)
         if chapters:
             out = []
@@ -340,10 +319,7 @@ class MKVToolNix:
 
     def srt_to_chapters(self, print_messages=True):
         if print_messages:
-            if HAS_RICH:
-                print('[magenta]Updating MKV chapters...[/magenta]')
-            else:
-                print('Setting MKV file cover image...')
+            print('[magenta]Updating MKV chapters...[/magenta]')
         srt_file = self._mkv_file[:-4] + '.srt'
         if print_messages:
             print('  (r) SRT file: "{}"'.format(os.path.basename(srt_file)))
@@ -353,10 +329,7 @@ class MKVToolNix:
                 l = f.readlines()
         else:
             if print_messages:
-                if HAS_RICH:
-                    print('[red]Error:[/red] [bold magenta]SRT[/bold magents] file not found: "{}"'.format(srt_file))
-                else:
-                    print('Error: SRT file not found: "{}"'.format(srt_file))
+                print('[red]Error:[/red] [bold magenta]SRT[/bold magents] file not found: "{}"'.format(srt_file))
                 sys.exit(1)
             else:
                 return None
@@ -378,10 +351,7 @@ class MKVToolNix:
                 f.write('\n'.join(out))
         except:
             if print_messages:
-                if HAS_RICH:
-                    print('[red]Error:[/red] Cannot write [bold magenta]Chapters[/bold magents] file "{}"'.format(txt_file))
-                else:
-                    print('Error: Cannot write Chapters file: "{}"'.format(txt_file))
+                print('[red]Error:[/red] Cannot write [bold magenta]Chapters[/bold magents] file "{}"'.format(txt_file))
                 sys.exit(1)
             else:
                 return None
@@ -391,7 +361,3 @@ class MKVToolNix:
         return txt_file
 
 
-if __name__ == '__main__':
-    x = MKVToolNix(stations_dir='/home/spiros/.config/pyradio')
-    # print(x._get_mkv_file_from_id(1))
-    x.list_mkv_files()
