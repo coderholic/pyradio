@@ -13,8 +13,6 @@ logger = logging.getLogger(__name__)
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
-PY3 = sys_version[0] == '3'
-
 """ Theming constants """
 def FOREGROUND(): return 0
 def BACKGROUND(): return 1
@@ -419,10 +417,7 @@ class StationsChanges(object):
                     if found:
                         for an_item in found:
                             if print_messages:
-                                if PY3:
-                                    print('[red]    --- deleting: "[green]{}[/green]"[/red]'.format(an_item[0]))
-                                else:
-                                    print('    --- deleting: "{}"'.format(an_item[0]))
+                                print('[red]    --- deleting: "[green]{}[/green]"[/red]'.format(an_item[0]))
                             self.counts[2] += 1
                             self._stations.pop(self._stations.index(an_item))
                 for n in self.versions[k][1]:
@@ -433,10 +428,7 @@ class StationsChanges(object):
                         found = [x for x in self._stations if x[1] == n[1][1] and x[0] != n[1][0]]
                     if found:
                         if print_messages:
-                            if PY3:
-                                print('[plum4]    +/- updating: "[green]{}[/green]"[/plum4]'.format(found[0][0]))
-                            else:
-                                print('    +/- updating: "{}"'.format(found[0][0]))
+                            print('[plum4]    +/- updating: "[green]{}[/green]"[/plum4]'.format(found[0][0]))
                         self.counts[1] += 1
                         index = self._stations.index(found[0])
                         self._stations[index] = self._format_playlist_row_in(n[1])
@@ -444,10 +436,7 @@ class StationsChanges(object):
                     found = [x for x in self._stations if x[0] == n[0]]
                     if not found:
                         if print_messages:
-                            if PY3:
-                                print('[magenta]    +++   adding: "[green]{}[/green]"[/magenta]'.format(n[0]))
-                            else:
-                                print('    +++   adding: "{}"'.format(n[0]))
+                            print('[magenta]    +++   adding: "[green]{}[/green]"[/magenta]'.format(n[0]))
                         self.counts[0] += 1
                         self._stations.append(self._format_playlist_row_in(n))
 
@@ -455,9 +444,7 @@ class StationsChanges(object):
                 ret = self.write_synced_version()
                 if ret == -6:
                     if print_messages:
-
-                        if PY3:
-                            txt = '''
+                        txt = '''
 [red]Error:[/red] [magenta]PyRadio[/magenta] could not write the "last_sync" file.
 This means that although stations have been synced, [magenta]PyRadio[/magenta] will try
 to sync them again next time, which means that you may end up with
@@ -471,28 +458,10 @@ and write in it
                             self._last_sync_file,
                             self.version_to_write
                         )
-                        else:
-                            txt = '''
-Error: PyRadio could not write the "last_sync" file.
-This means that although stations have been synced, PyRadio will try
-to sync them again next time, which means that you may end up with
-duplicate stations.
-
-Please close all open programs and documents and create the file
-{0}
-and write in it
-      "{1}" (no quotes).
-                        '''.format(
-                            self._last_sync_file,
-                            self.version_to_write
-                        )
-                    print(txt)
+                        print(txt)
 
                 elif print_messages:
-                    if PY3:
-                        print('\n[bold]Summary[/bold]\n[magenta]    +++ added   :[/magenta]  {0}\n[plum4]    +/- updated :[/plum4]  {1}\n[red]    --- deleted :[/red]  {2}'.format(self.counts[0], self.counts[1], self.counts[2]))
-                    else:
-                        print('\nSummary:\n    +++ added   :  {0}\n    +/- updated :  {1}\n    --- deleted :  {2}'.format(self.counts[0], self.counts[1], self.counts[2]))
+                    print('\n[bold]Summary[/bold]\n[magenta]    +++ added   :[/magenta]  {0}\n[plum4]    +/- updated :[/plum4]  {1}\n[red]    --- deleted :[/red]  {2}'.format(self.counts[0], self.counts[1], self.counts[2]))
                 return ret
             return -2
         return 1

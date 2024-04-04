@@ -3375,17 +3375,11 @@ ____Using |fallback| theme.''')
         )
 
     def _print_update_notification(self):
-        if PY3:
-            self._open_simple_message_by_key_and_mode(
-                self.ws.UPDATE_NOTIFICATION_MODE,
-                'D_UPDATE_NOTIFICATION',
-                self._update_version_do_display
-            )
-        else:
-            self._open_simple_message_by_key(
-                'M_UPDATE_NOTIF_2',
-                self._update_version_do_display
-            )
+        self._open_simple_message_by_key_and_mode(
+            self.ws.UPDATE_NOTIFICATION_MODE,
+            'D_UPDATE_NOTIFICATION',
+            self._update_version_do_display
+        )
         self._update_version = ''
 
     def _print_update_ok_notification(self):
@@ -7759,11 +7753,8 @@ ____Using |fallback| theme.''')
                 with self._update_notify_lock:
                     self._update_version = ''
                 self.ws.close_window()
-                if PY3:
-                    if char == ord('y'):
-                        self._print_update_ok_notification()
-                    else:
-                        self._open_simple_message_by_key('M_UPDATE_NOTIFICATION_NOK')
+                if char == ord('y'):
+                    self._print_update_ok_notification()
                 self.refreshBody()
             return
 

@@ -17,8 +17,6 @@ logger = logging.getLogger(__name__)
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
-PY3 = sys.version[0] == '3'
-
 def isLightOrDark(rgbColor=[0,128,255]):
     [r,g,b]=rgbColor
     '''

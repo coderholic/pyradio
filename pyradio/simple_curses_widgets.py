@@ -36,12 +36,12 @@ python -m pip install --user dateutil
 import logging
 from sys import version_info, platform, version
 try:
-    from .cjkwrap import PY3, is_wide, cjklen, cjkljust, cjkslices
+    from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
     from .schedule import PyRadioTime
 except:
-    from cjkwrap import PY3, is_wide, cjklen, cjkljust, cjkslices
+    from cjkwrap import is_wide, cjklen, cjkljust, cjkslices
     from schedule import PyRadioTime
-# from .cjkwrap import PY3, is_wide, cjklen, cjkljust, cjkslices
+# from .cjkwrap import is_wide, cjklen, cjkljust, cjkslices
 # from .schedule import PyRadioTime
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -4775,11 +4775,10 @@ class SimpleCursesLineEdit(object):
             buf = bytearray(bytes)
             out = self._decode_string(buf)
             if out:
-                if PY3:
-                    if is_wide(out) and not self._cjk:
-                        self._cjk = True
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('=== CJK editing is ON ===')
+                if is_wide(out) and not self._cjk:
+                    self._cjk = True
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('=== CJK editing is ON ===')
             else:
                 out = None
         return out

@@ -44,8 +44,6 @@ except:
 
 VERSION = ''
 
-PY3 = sys.version[0] == '3'
-
 HAS_PIPX = True if shutil.which('pipx') else False
 
 try:
@@ -1330,18 +1328,10 @@ if __name__ == '__main__':
 
     if is_externally_managed() and \
             not HAS_PIPX:
-        # PY3 = False
         print_pipx_error()
         print_distro_packages()
         sys.exit()
     use_logo = False if args.no_logo else True
-    ''' get python version '''
-    if not PY3:
-        print('Error: Python 2 is not supported any more!')
-        print('       Please install Python 3 and execute the command:')
-        print('\n           python3 install.py')
-        print('\n       to install PyRadio.\n\n')
-        sys.exit(1)
 
     if use_logo and not args.open_cache:
         print_pyradio_on()

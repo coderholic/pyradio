@@ -56,7 +56,6 @@ class PyRadioMessagesSystem(object):
             'D_RB_ASK_TO_SAVE_CONFIG_TO_EXIT',
             'M_RC_DEAD_ERROR',
             'D_UPDATE_NOTIFICATION',
-            'M_UPDATE_NOTIF_2',
             'M_PLAYLIST_DELETE_ERROR',
             'D_PLAYLIST_DELETE_ASK',
             'D_GROUP_DELETE_ASK',
@@ -1051,19 +1050,6 @@ Press |y| to update or any other key to cancel.
 '''
 ),
 
-    'M_UPDATE_NOTIF_2': ('',
-r'''
-A new |PyRadio| release (|{0}|) is available!
-
-|PyRadio| has dropped |Python2| support since
-version| 0.9.2.25|, but you are still using |Python2|.
-
-If you want to be able to use a newer version, please
-upgrade to |Python3|.
-
-'''
-),
-
     'M_UPDATE_NOTIFICATION_OK': ('Update Notification',
 r'''
 |PyRadio| will now be updated!
@@ -1085,18 +1071,6 @@ When Explorer opens please double click on
 "|update.bat|" to start the update procedure.
 
 Press any key to exit |PyRadio|.
-
-'''
-),
-
-    'M_UPDATE_NOTIFICATION_NOK': ('',
-r'''
-You have chosen not to update |PyRadio| at this time!
-
-Please keep in mind that you are able to update
-at any time using the command:
-
-___________________|pyradio -U|
 
 '''
 ),

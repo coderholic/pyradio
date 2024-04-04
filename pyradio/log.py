@@ -12,7 +12,7 @@ import threading
 import subprocess
 from tempfile import gettempdir
 from .common import player_start_stop_token
-from .cjkwrap import cjklen, PY3
+from .cjkwrap import cjklen
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
@@ -25,9 +25,8 @@ try:
 except:
     HAS_WIN10TOAST = False
 
-if not PY3:
-    import warnings
-    warnings.simplefilter("ignore")
+import warnings
+warnings.simplefilter("ignore")
 
 logger = logging.getLogger(__name__)
 

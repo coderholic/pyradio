@@ -50,16 +50,10 @@ try:
 except:
     HAS_PSUTIL = False
 
-PY3 = sys.version[0] == '3'
-
-if PY3:
-    try:
-        from rich.console import Console
-        from rich.table import Table
-        from rich.align import Align
-        from rich import print
-    except:
-        pass
+from rich.console import Console
+from rich.table import Table
+from rich.align import Align
+from rich import print
 
 logger = logging.getLogger(__name__)
 
@@ -1167,34 +1161,27 @@ class PyRadioStations(object):
 
     def list_playlists(self):
         num_of_playlists, selected_playlist = self.read_playlists()
-        if PY3:
-            console = Console()
+        console = Console()
 
-            table = Table(show_header=True, header_style="bold magenta")
-            #table.title = 'Playlist: [bold magenta]{}[/bold magenta]'.format(pyradio_config.station_title)
-            table.title_justify = "left"
-            table.row_styles = ['', 'plum4']
-            centered_table = Align.center(table)
-            table.title = 'Playlists found in "[magenta]{}[/magenta]"'.format(self.stations_dir)
-            table.title_justify = "left"
-            table.add_column("#", justify="right")
-            table.add_column("Name")
-            table.add_column("Size", justify="right")
-            table.add_column("Date")
-            for i, n in enumerate(self.playlists):
-                table.add_row(
-                    str(i+1),
-                    n[0],
-                    n[2],
-                    n[1],
-                )
-            console.print(centered_table)
-
-        else:
-            print('Playlists found in "{}"'.format(self.stations_dir))
-            pad = len(str(num_of_playlists))
-            for i, a_playlist in enumerate(self.playlists):
-                print('  {0}. {1}'.format(str(i+1).rjust(pad), a_playlist[0]))
+        table = Table(show_header=True, header_style="bold magenta")
+        #table.title = 'Playlist: [bold magenta]{}[/bold magenta]'.format(pyradio_config.station_title)
+        table.title_justify = "left"
+        table.row_styles = ['', 'plum4']
+        centered_table = Align.center(table)
+        table.title = 'Playlists found in "[magenta]{}[/magenta]"'.format(self.stations_dir)
+        table.title_justify = "left"
+        table.add_column("#", justify="right")
+        table.add_column("Name")
+        table.add_column("Size", justify="right")
+        table.add_column("Date")
+        for i, n in enumerate(self.playlists):
+            table.add_row(
+                str(i+1),
+                n[0],
+                n[2],
+                n[1],
+            )
+        console.print(centered_table)
 
     def current_playlist_index(self):
         if not self.playlists:
@@ -1712,10 +1699,7 @@ class PyRadioConfig(PyRadioStations):
 
     @property
     def system_themes(self):
-        if PY3:
-            return tuple(sorted([path.basename(x).replace('.pyradio-theme', '') for x in glob.glob(path.join(path.dirname(__file__), 'themes', '*.pyradio-theme'), recursive = False)]))
-        else:
-            return tuple(sorted([path.basename(x).replace('.pyradio-theme', '') for x in glob.glob(path.join(path.dirname(__file__), 'themes', '*.pyradio-theme'))]))
+        return tuple(sorted([path.basename(x).replace('.pyradio-theme', '') for x in glob.glob(path.join(path.dirname(__file__), 'themes', '*.pyradio-theme'), recursive = False)]))
 
     def is_project_theme(self, a_theme_name):
         ''' Check if a theme name is in auto_update_frameworks

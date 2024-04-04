@@ -18,7 +18,7 @@ except:
 import threading
 import logging
 from .player import info_dict_to_list
-from .cjkwrap import cjklen, PY3
+from .cjkwrap import cjklen
 from .countries import countries
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesWidgetColumns, SimpleCursesCheckBox, SimpleCursesCounter, SimpleCursesBoolean, DisabledWidget, SimpleCursesString, SimpleCursesWidget
 from .ping import ping
@@ -948,13 +948,7 @@ class RadioBrowser(PyRadioStationsBrowser):
         name_width = width-len(out[1])
         out[0] = ' ' * name_width
 
-        if PY3:
-            return -1, '{0}{1}'.format(*out)
-        else:
-            return -1 , '{0}{1}'.format(
-                out[0],
-                out[1].encode('utf-8', 'replace')
-            )
+        return -1, '{0}{1}'.format(*out)
 
 
     def format_station_line(self, id_in_list, pad, width):
@@ -1066,10 +1060,7 @@ class RadioBrowser(PyRadioStationsBrowser):
                 str(self._raw_stations[id_in_list]['bitrate']).rjust(self._columns_width['bitrate']-2)[:self._columns_width['bitrate']-2]
             )
 
-        if PY3:
-            return out[0] + self._raw_stations[id_in_list]['name'], ' ' + out[2]
-        else:
-            return out[0] + self._raw_stations[id_in_list]['name'].encode('utf-8', 'replace'), ' ' + out[2].encode('utf-8', 'replace')
+        return out[0] + self._raw_stations[id_in_list]['name'], ' ' + out[2]
 
     def set_encoding(self, id_in_list, new_encoding):
         if id_in_list < len(self._raw_stations):

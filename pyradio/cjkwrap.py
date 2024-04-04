@@ -33,12 +33,7 @@ import sys
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
-PY3 = sys.version[0] == '3'
-
-if PY3:
-    text_type = str
-else:
-    text_type = unicode
+text_type = str
 
 
 def is_wide(char):
