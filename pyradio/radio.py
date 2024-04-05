@@ -5340,11 +5340,12 @@ ____Using |fallback| theme.''')
             -5 : Cannot write last_asked file
             -6 : Cannot write last_synced file
         '''
-        logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
-        try:
-            logger.debug('stations update counter = {}'.format(self._update_stations_error_count))
-        except:
-            pass
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('stations update result = {}'.format(self._need_to_update_stations_csv))
+            try:
+                logger.debug('stations update counter = {}'.format(self._update_stations_error_count))
+            except:
+                pass
         prompt=' Press any key... '
         if self._need_to_update_stations_csv == 1:
             caption = ' PyRadio '

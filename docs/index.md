@@ -4,11 +4,49 @@ Command line internet radio player.
 
 ![Pyradio](https://members.hellug.gr/sng/pyradio/pyradio.png)
 
-## IMPORTANT
+## IMPORTANT NOTICE 1
 
 **PyRadio** may fail to install/update on some linux distros (mainly Ubuntu 23.04, Debian and derivatives, etc.) due to a change to the underlined python installation.
 
 If you face this situation, please refer to [this page](pip-error.md) to resolve the problem.
+
+## IMPORTANT NOTICE 2 (v. 0.9.3)
+
+This is a big update, with heavy refactoring and introducing a lot of new concepts, so I expect to have a lot of BUG reports.
+
+Please be kind ;)
+
+Once you execute **PyRadio v. 0.9.3** these things will happen:
+
+1. Your *recordings* dir will be moved to your home folder and renamed to *pyradio-recordings*.
+
+2. Your **titles log** files will be moved to the new **Recordings Dir**.
+
+3. **PyRadio's** cache will be moved to *~/.cache/pyradio* (**not on Windows**).
+
+If you are using a **Linux Distro Package**, there's a chance the packager has decided to enable support for the [XDG Base Directory specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html).
+
+In this case:
+
+1. most of the files that reside in *~/config/pyradio* and *~/.config/pyradio/data* will be moved to **~/.local/share/pyradio** or  **~/.local/state/pyradio**.
+
+2. Any file that you may have saved under *~/.config/pyradio* and has not been created by **PyRadio**, will be moved into a folder called **pyradio-not-migrated** in your home folder.
+
+3. Your *~/.config/pyradio/data* folder will be removed.
+
+4. All your playlists and the main configuraton files will remain in *~/.config/pyradio*.
+
+## IMPORTANT NOTICE 3 (headles v. 0.9.3)
+
+If you use the "headless" functionality and upgrading to v. 0.9.3, please keep in mind that a headless session will not perform any of the tasks described in **NOTICE 2**, leading to unpredictable result.
+
+To ensure the correct operation, please take these actions:
+
+1. Terminate headless instance of **PyRadio**.
+
+2. Execute **PyRadio** in a terminal at least once, permitting the directory changes to take effect.
+
+3. Start a new headless instance of **PyRadio**.
 
 ## Table of Contents
 <!-- vim-markdown-toc Marked -->

@@ -25,7 +25,6 @@ state_files = [
     'buffers',
     'last-sync',
     'last-playlist',
-    'pyradio-recording.txt',
     'search-group.txt',
     'search-playlist.txt',
     'search-station.txt',

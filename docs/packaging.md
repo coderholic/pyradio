@@ -10,6 +10,7 @@
     * [Desktop Notifications (optional)](#desktop-notifications-(optional))
     * [Desktop File location](#desktop-file-location)
     * [pyradio/\_\_pycache\_\_](#pyradio/\_\_pycache\_\_)
+* [Recordings Directory](#recordings-directory)
 * [MKVToolNix cli installation](#mkvtoolnix-cli-installation)
 
 <!-- vim-markdown-toc -->
@@ -107,6 +108,28 @@ Please keep in mind that there is a REDME file in the directory; in case this fi
 
 2. It may not be needed (for example on Arch Linux). \
 In this case, just delete it before the build command.
+
+## Recordings Directory
+
+Parameter **recording_dir** in the config will point to the directory to save recorded files.
+
+It may seem like a good idea to change it to something meaningful but there is a catch.
+
+**PyRadio 0.9.3** (and newer) will nornaly use the *default* location, which is *~/pyradio-recordings*. Furthermore, it will move the pre-0.9.3 default recordings dir (~/.config/pyradio/recordings) and titles log (from *~/.config/pyradio*) to this new default location.
+
+If you, the packager, provide a different default **recording_dir** in the package config file, your users will probably end up in the following situation:
+
+1. Pro existing recordings and titles logs will end up in *~/pyradio-recordings*.
+
+2. New recordings and titles logs will be saved in the new default location you have provided.
+
+This means that your users will eventaually have to **manually** move the files from *~/pyradio-recordings* to the new location.
+
+If this is acceptable for you, and you have a way to inform your users about it, go no and
+
+    sed -i 's|recording_dir = default|recording_dir = ~/whatever|' config
+
+In any other case, I would suggest you leave this parameter as is and let the user select customize their setup.
 
 ## MKVToolNix cli installation
 

@@ -157,7 +157,17 @@ class StationsChanges(object):
             ],
 
             []
-        ]
+        ],
+
+        (0, 9, 3):
+        [
+            [
+                ['Radio Levač (Serbian Folk & Country)', 'http://213.239.205.210:8046/stream'],
+                ['Radio 35 (Serbian and English Pop, Folk, Country & Hits)', 'http://stream.radio035.net:8010/listen.pls']
+            ],
+            [],
+            [],
+        ],
     }
 
     def __init__(self, config):

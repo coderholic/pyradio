@@ -52,6 +52,7 @@ a:visited{color: SaddleBrown;}
 <li><a href="#desktop-file-location">Desktop File location</a></li>
 <li><a href="#pyradio/__pycache__">pyradio/__pycache__</a></li>
 </ul></li>
+<li><a href="#recordings-directory">Recordings Directory</a></li>
 <li><a href="#mkvtoolnix-cli-installation">MKVToolNix cli installation</a></li>
 </ul>
 <!-- vim-markdown-toc -->
@@ -112,6 +113,19 @@ Please keep in mind that there is a REDME file in the directory; in case this fi
 <li><p>It may not be needed (for example on Arch Linux).<br />
 In this case, just delete it before the build command.</p></li>
 </ol>
+<h2 id="recordings-directory">Recordings Directory <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Parameter <strong>recording_dir</strong> in the config will point to the directory to save recorded files.</p>
+<p>It may seem like a good idea to change it to something meaningful but there is a catch.</p>
+<p><strong>PyRadio 0.9.3</strong> (and newer) will nornaly use the <em>default</em> location, which is <em><sub>/pyradio-recordings<em>. Furthermore, it will move the pre-0.9.3 default recordings dir (~/.config/pyradio/recordings) and titles log (from </em></sub>/.config/pyradio</em>) to this new default location.</p>
+<p>If you, the packager, provide a different default <strong>recording_dir</strong> in the package config file, your users will probably end up in the following situation:</p>
+<ol type="1">
+<li><p>Pro existing recordings and titles logs will end up in <em>~/pyradio-recordings</em>.</p></li>
+<li><p>New recordings and titles logs will be saved in the new default location you have provided.</p></li>
+</ol>
+<p>This means that your users will eventaually have to <strong>manually</strong> move the files from <em>~/pyradio-recordings</em> to the new location.</p>
+<p>If this is acceptable for you, and you have a way to inform your users about it, go no and</p>
+<pre>sed -i &#39;s|recording_dir = default|recording_dir = ~/whatever|&#39; config</pre>
+<p>In any other case, I would suggest you leave this parameter as is and let the user select customize their setup.</p>
 <h2 id="mkvtoolnix-cli-installation">MKVToolNix cli installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Another thing to consider is whether you should mark <strong>MKVToolNix</strong> command line utilities as a dependency for <strong>PyRadio</strong>.</p>
 <p>I would suggest to do so, in order to provide your users the best experience possible. If unsure, please refer to section <a href="recording.html#chapters">Chapters</a> in the relevant document.</p>

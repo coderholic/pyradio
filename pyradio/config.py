@@ -846,16 +846,6 @@ class PyRadioStations(object):
 
         st_new_file = st_file.replace('.csv', '.txt')
 
-        # tmp_stations = self.stations[:]
-        # Do not write comment about iheart.com
-        #tmp_stations.reverse()
-        #if self._playlist_version == self.PLAYLIST_HAS_NAME_URL:
-        #    tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '' ])
-        #elif self._playlist_version == self.PLAYLIST_HAS_NAME_URL_ENCODING:
-        #    tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '', '' ])
-        #else:
-        #    tmp_stations.append([ '# Find lots more stations at http://www.iheart.com' , '', '', '' ])
-        #tmp_stations.reverse()
         try:
             with open(st_new_file, 'w', encoding='utf-8') as cfgfile:
                 writter = csv.writer(cfgfile)
@@ -1892,17 +1882,17 @@ class PyRadioConfig(PyRadioStations):
         else:
             if platform == 'win32':
                 self._session_lock_file = path.join(getenv('APPDATA'), 'pyradio', 'data', 'pyradio.lock')
+                win_lock = path.join(getenv('APPDATA'), 'pyradio', 'data', '_windows.lock')
+                if path.exists(win_lock):
+                    ''' pyradio lock file was probably not deleted the last
+                        time Windows terminated. It should be safe to use it
+                    '''
+                    try:
+                        remove(win_lock)
+                    except:
+                        pass
             else:
                 self._session_lock_file = path.join(getenv('HOME'), '.config', 'pyradio', '.pyradio.lock')
-            win_lock = path.join(getenv('APPDATA'), 'pyradio', 'data', '_windows.lock')
-            if path.exists(win_lock):
-                ''' pyradio lock file was probably not deleted the last
-                    time Windows terminated. It should be safe to use it
-                '''
-                try:
-                    remove(win_lock)
-                except:
-                    pass
         if path.exists(self._session_lock_file):
             self.locked = True
         else:
