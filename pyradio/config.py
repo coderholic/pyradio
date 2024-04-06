@@ -2031,6 +2031,7 @@ class PyRadioConfig(PyRadioStations):
         # for n in self.config_opts.items():
         #     logger.error('  {}: {}'.format(*n))
         self._read_config()
+        self.xdg.ensure_paths_exist()
 
     def _read_config(self, distro_config=False):
         if distro_config:
@@ -2213,7 +2214,6 @@ class PyRadioConfig(PyRadioStations):
             elif sp[0] == 'xdg_compliant' and \
                     not platform.startswith('win') and \
                     sp[1].lower() == 'true':
-                print(f'{self.xdg.xdg_compliant = }')
                 self.xdg_compliant = True
 
         # logger.error('\n\nself.params{}\n\n'.format(self.params))

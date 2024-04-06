@@ -1,3 +1,8 @@
+2024-04-06 s-n-g
+    * version 0.9.3.1
+    * fixing #231 - [BUG] pyradio-0.9.3 cannot be executed
+    * closing #232 - [BUG] self.xdg.xdg_compliant = False
+
 2024-04-05 s-n-g
     * version 0.9.3
     * user config file will not be automatically created; it will be
