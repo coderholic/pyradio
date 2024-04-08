@@ -6765,6 +6765,7 @@ ____Using |fallback| theme.''')
                     self._station_select_win = PyRadioSelectStation(
                         self.bodyWin,
                         self._cnf.stations_dir,
+                        self._cnf.registers_dir,
                         self._config_win._config_options['default_playlist'][1],
                         self._config_win._config_options['default_station'][1],
                         global_functions=self._global_functions

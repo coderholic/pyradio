@@ -575,6 +575,11 @@ class RadioBrowser(PyRadioStationsBrowser):
                 info[n[0]] = self._raw_stations[a_station][n[1]].encode('utf-8', 'replace')
             if n[1] == 'bitrate':
                 info[n[0]] += ' kb/s'
+            # elif n[1] == 'favicon':
+            #     ext = info[n[0]][-3:].lower()
+            #     if ext != 'png' and ext != 'jpg':
+            #         info[n[0]] = ''
+
 
         a_list = []
         fix_highlight = []

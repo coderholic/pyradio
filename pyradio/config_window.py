@@ -2872,10 +2872,8 @@ class PyRadioSelectPlaylist(object):
             if self._items[self._selected_playlist_id].startswith('Register: '):
                 ret = self._items[self._selected_playlist_id].replace('Register: ', 'register_')
                 ret = path.join(self._registers_path, ret + '.csv')
-                logger.error(f'ret 1: {ret = }')
             else:
-                ret = path.join(self._registers_path, self._items[self._selected_playlist_id] + '.csv')
-                logger.error(f'ret 2: {ret = }')
+                ret = path.join(self._config_path, self._items[self._selected_playlist_id] + '.csv')
             # if platform == 'win32':
             #     ret.replace('.registers', '_registers')
             return 0, ret

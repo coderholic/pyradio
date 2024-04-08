@@ -358,7 +358,7 @@ If nothing else works, try the following command:
         gr_headless.add_argument('-fd', '--free-dead-headless-server', action='store_true',
                                  help='Use this if your headless server has terminated unexpectedly, and you cannot start a new one (you get a message that it is already running).')
         # gr_headless.add_argument('-gss', '--generate-systemd-service-files', action='store_true',
-                                 help='Create systemd service files to enable / disable headless operation using tmux or screen.')
+        #                          help='Create systemd service files to enable / disable headless operation using tmux or screen.')
     args = parser.parse_args()
     sys.stdout.flush()
 

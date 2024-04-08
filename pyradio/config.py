@@ -999,6 +999,8 @@ class PyRadioStations(object):
                  -5: Error writing file
                  -6: Error renaming file
         '''
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f'pasting to "{a_playlist}"')
         if path.exists(a_playlist):
             m_station = a_station[:]
             ch = ('  ', ',')

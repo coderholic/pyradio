@@ -1,5 +1,11 @@
+2024-04-08 s-n-g
+    * version 0.9.3.2 (BUG FIX)
+    * fixing #233 (move .registers to state dir)
+    * fixing stations.csv (from erroneous PR #227)
+    * updating headless.md
+
 2024-04-06 s-n-g
-    * version 0.9.3.1
+    * version 0.9.3.1 (BUG FIX)
     * fixing #231 - [BUG] pyradio-0.9.3 cannot be executed
     * closing #232 - [BUG] self.xdg.xdg_compliant = False
 

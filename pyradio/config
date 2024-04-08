@@ -174,7 +174,7 @@ remote_control_server_auto_start = False
 # Packagers should set this paramater as resired!
 #
 # Default value: False
-xdg_compliant = True
+xdg_compliant = False
 
 # The name of the distribution providing the package. If this parameter is set
 # to anything other than "None" PyRadio will not permit updating (-U command
