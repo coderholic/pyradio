@@ -158,21 +158,12 @@ Please replace it with your username.</p></li>
 touch ~/pyradio.log
 /usr/bin/tmux new-session -dA -s pyradio-session /home/spiros/.local/bin/pyradio --headless auto</pre>
 <p>Then create the stop file. Writhe this to <strong>~/.local/bin/stop-headless-pyradio.sh</strong></p>
-<p>Execute the following command:</p>
-<pre>pyradio -pc</pre>
-<p>and examine the value of the config parameter <strong>xdg_compliant</strong>.</p>
-<p>If <strong>xdg_compliant</strong> is <em>True</em>, write this code to the file:</p>
 <pre>#!/bin/bash
 [ -z &quot;$(/usr/bin/tmux ls | grep pyradio-session)&quot; ] || /usr/bin/tmux send-keys -t pyradio-session q
 sleep 2
 [ -z &quot;$(/usr/bin/tmux ls | grep pyradio-session)&quot; ] || /usr/bin/tmux send-keys -t pyradio-session q
+[ -e /home/spiros/.config/pyradio/data/server-headless.txt ] &amp;&amp; rm /home/spiros/.config/pyradio/data/server-headless.txt
 [ -e /home/spiros/.local/state/pyradio/server-headless.txt ] &amp;&amp; rm /home/spiros/.local/state/pyradio/server-headless.txt</pre>
-<p>If <strong>xdg_compliant</strong> is <em>False</em>, write this code to the file, instead:</p>
-<pre>#!/bin/bash
-[ -z &quot;$(/usr/bin/tmux ls | grep pyradio-session)&quot; ] || /usr/bin/tmux send-keys -t pyradio-session q
-sleep 2
-[ -z &quot;$(/usr/bin/tmux ls | grep pyradio-session)&quot; ] || /usr/bin/tmux send-keys -t pyradio-session q
-[ -e /home/spiros/.config/pyradio/data/server-headless.txt ] &amp;&amp; rm /home/spiros/.config/pyradio/data/server-headless.txt</pre>
 <p>Make both files executable:</p>
 <pre>chmod +x ~/.local/bin/start-headless-pyradio.sh
 chmod +x ~/.local/bin/stop-headless-pyradio.sh</pre>
@@ -192,22 +183,12 @@ chmod +x ~/.local/bin/stop-headless-pyradio.sh</pre>
 <pre>#!/bin/bash
 /usr/bin/screen -U -S pyradio-session -d -m /home/spiros/.local/bin/pyradio --headless auto</pre>
 <p>Then create the stop file. Writhe this to <strong>~/.local/bin/stop-headless-pyradio.sh</strong></p>
-<p>Execute the following command:</p>
-<pre>pyradio -pc</pre>
-<p>and examine the value of the config parameter <strong>xdg_compliant</strong>.</p>
-<p>If <strong>xdg_compliant</strong> is <em>True</em>, write this code to the file:</p>
-<pre>#!/bin/bash
-[ -z &quot;$(/usr/bin/screen -ls | grep pyradio-session)&quot; ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
-sleep 2
-[ -z &quot;$(/usr/bin/screen -ls | grep pyradio-session)&quot; ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
-[ -e /home/spiros/.local/state/pyradio/server-headless.txt ] &amp;&amp; rm /home/spiros/.local/state/pyradio/server-headless.txt
-</pre>
-<p>If <strong>xdg_compliant</strong> is <em>False</em>, write this code to the file, instead:</p>
 <pre>#!/bin/bash
 [ -z &quot;$(/usr/bin/screen -ls | grep pyradio-session)&quot; ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
 sleep 2
 [ -z &quot;$(/usr/bin/screen -ls | grep pyradio-session)&quot; ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
 [ -e /home/spiros/.config/pyradio/data/server-headless.txt ] &amp;&amp; rm /home/spiros/.config/pyradio/data/server-headless.txt
+[ -e /home/spiros/.local/state/pyradio/server-headless.txt ] &amp;&amp; rm /home/spiros/.local/state/pyradio/server-headless.txt
 </pre>
 <p>Make both files executable:</p>
 <pre>chmod +x ~/.local/bin/start-headless-pyradio.sh

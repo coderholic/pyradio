@@ -49,10 +49,17 @@ class XdgMigrate(object):
             self.data_dir =  path.join(self.home_dir, '.local/share/pyradio')
             self.state_dir = path.join(self.home_dir, '.local/state/pyradio')
             self.path_to_scan = path.join(self.home_dir, '.config/pyradio')
+            if platform.startswith('win'):
+                self.old_registers_dir = path.join(getenv('APPDATA'), 'pyradio', '_registers')
+            else:
+                self.old_registers_dir = path.join(self.home_dir, '.config', 'pyradio', '.registers')
+            self.new_registers_dir = path.join(self.state_dir, 'registers')
         else:
             self.data_dir = config.data_dir
             self.state_dir = config.state_dir
             self.path_to_scan = config.stations_dir
+            self.old_registers_dir = config.xdg._old_dirs[config.xdg.REGISTERS]
+            self.new_registers_dir = config.xdg._new_dirs[config.xdg.REGISTERS]
         self._get_files()
 
     def _print_file(self, an_item, max_length):
@@ -131,17 +138,42 @@ class XdgMigrate(object):
                 '> Nothing to copy to "pytadio-not-migrated" dir',
             )
         go_on = False
+        move_registers = False
         for n in self.files_to_data, self.files_to_state, self.files_to_other:
             if n:
                 go_on = True
                 break
+        # check if registers dir needs to be moved
+        if path.exists(self.old_registers_dir):
+            if listdir(self.old_registers_dir):
+                # remove existing XDG registers dir
+                if path.exists(self.new_registers_dir):
+                    try:
+                        remove_tree(self.new_registers_dir)
+                    except:
+                        if to_console:
+                            print('[red]Error:[/red] CannCannot remove dir: "{}"'.format(self.new_registers_dir))
+                        exit(1)
+                    go_on = move_registers = True
+            else:
+                # remove empty .registers dir
+                try:
+                    remove_tree(self.old_registers_dir)
+                except:
+                    pass
+                # try to create new registers dir
+                try:
+                    makedirs(self.new_registers_dir, exist_ok=True)
+                except:
+                    pass
+
         if go_on:
             for n in self.data_dir, self.state_dir, self.other_dir:
                 try:
                     makedirs(n, exist_ok=True)
                 except:
                     if to_console:
-                        print('[red][/red]: Cannot create dir: "{}"'.format(n))
+                        print('[red]Error:[/red] Cannot create dir: "{}"'.format(n))
                     exit(1)
             i = -1
             max_length = self._get_max_length()
@@ -153,22 +185,47 @@ class XdgMigrate(object):
                     if n:
                         print(caption[i])
                     else:
-                        print(no_files_caption[i])
+                        if i == 1:
+                            if move_registers:
+                                print(caption[i])
+                            else:
+                                print(no_files_caption[i])
+                        else:
+                            if i < len(no_files_caption) - 1:
+                                print(no_files_caption[i])
+                if i == 1 and move_registers:
+                    if to_console:
+                        print(f'  {self.old_registers_dir:{max_length}} -> {self.new_registers_dir}')
+                    try:
+                        move(self.old_registers_dir, self.new_registers_dir)
+                    except:
+                        self._print_error_wit_ask_enter()
                 for k in n:
                     if to_console:
                         print(f"  {k[0]:{max_length}} -> {k[1]}")
                     try:
                         copyfile(k[0], k[1])
                     except OSError:
-                        print('[red]Error:[/red] moving files to [green]XDG[/green] directories failed...\nCleaning up...')
-                        self._remove_new_files_on_failure()
-                        input('Press ENTER to exit... ')
-                        exit(1)
+                        self._print_error_wit_ask_enter()
             if to_console:
                 print('Cleaning up...')
             self._remove_old_files_on_success()
             if to_console:
                 input('Press ENTER to continue... ')
+
+    def _print_error_wit_ask_enter(self):
+        print('[red]Error:[/red] moving files to [green]XDG[/green] directories failed...\nCleaning up...')
+        self._remove_new_files_on_failure()
+        input('Press ENTER to exit... ')
+        exit(1)
+
+    def _move_registers_dir(self):
+        # try to move registers dir
+        try:
+            move(self.old_registers_dir, self.new_registers_dir)
+        except:
+            return False
+        return True
 
     def _remove_old_files_on_success(self):
         for n in self.files_to_data, self.files_to_state, self.files_to_other:
@@ -284,6 +341,7 @@ class XdgDirs(object):
             if self._xdg_compliant:
                 self._new_dirs[self.DATA] = path.join(self._get_xdg_dir('XDG_DATA_HOME'), 'pyradio')
                 self._new_dirs[self.STATE] = path.join(self._get_xdg_dir('XDG_STATE_HOME'), 'pyradio')
+                self._new_dirs[self.REGISTERS] = path.join(self._new_dirs[self.STATE], 'registers')
             else:
                 self._new_dirs[self.DATA] = self._old_dirs[self.DATA]
                 self._new_dirs[self.STATE] = self._old_dirs[self.STATE]
@@ -636,9 +694,3 @@ class CheckDir(object):
                 pass
         return ret
 
-
-
-if __name__ == '__main__':
-    x = XdgMigrate()
-    # x.print_files()
-    x.rename_files()

@@ -177,6 +177,26 @@ def _win_python_3_12():
             setattr(curses, key, value)
     return stdscr
 
+def create_systemd_service_files():
+    file_names = ('start-headless-pyradio.sh', 'stop-headless-pyradio.sh', 'pyradio.service')
+    if program == 'tmux':
+        files = (
+r'''#!|SHELL|
+touch |HOME|/pyradio.log
+|PROGRAM| new-session -dA -s pyradio-session |PYRADIO| --headless auto
+''',
+r'''#!|SHELL|
+[ -z "$(|PROGRAM| ls | grep pyradio-session)" ] || |PROGRAM| send-keys -t pyradio-session q
+sleep 2
+[ -z "$(|PROGRAM| ls | grep pyradio-session)" ] || |PROGRAM| sennd-keys -t pyradio-session q
+[ -e |HOME|/.config/pyradio/data/server-headless.txt ] && rm |HOME|/.config/pyradio/data/server-headless.txt
+[ -e |HOME|/.local/state/pyradio/server-headless.txt ] && rm |HOME|/.local/state/pyradio/server-headless.txt
+'''
+                )
+        pass
+    else:
+        pass
+
 def shell():
     version_too_old = False
     if sys.version_info[0] == 2:
@@ -337,6 +357,8 @@ If nothing else works, try the following command:
                                 help='Show remote control server address.')
         gr_headless.add_argument('-fd', '--free-dead-headless-server', action='store_true',
                                  help='Use this if your headless server has terminated unexpectedly, and you cannot start a new one (you get a message that it is already running).')
+        # gr_headless.add_argument('-gss', '--generate-systemd-service-files', action='store_true',
+                                 help='Create systemd service files to enable / disable headless operation using tmux or screen.')
     args = parser.parse_args()
     sys.stdout.flush()
 
@@ -353,6 +375,10 @@ If nothing else works, try the following command:
 
     if not system().lower().startswith('darwin') and \
             not system().lower().startswith('win'):
+        # if args.generate_systemd_service_files:
+        #     create_systemd_service_files()
+        #     sys.exit()
+        # elif args.terminal:
         if args.terminal:
             try:
                 from urllib.request import urlretrieve

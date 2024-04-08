@@ -171,30 +171,13 @@ touch ~/pyradio.log
 
 Then create the stop file. Writhe this to **~/.local/bin/stop-headless-pyradio.sh**
 
-Execute the following command:
-
-    pyradio -pc
-
-and examine the value of the config parameter **xdg_compliant**.
-
-If **xdg_compliant** is *True*, write this code to the file:
-
-```
-#!/bin/bash
-[ -z "$(/usr/bin/tmux ls | grep pyradio-session)" ] || /usr/bin/tmux send-keys -t pyradio-session q
-sleep 2
-[ -z "$(/usr/bin/tmux ls | grep pyradio-session)" ] || /usr/bin/tmux send-keys -t pyradio-session q
-[ -e /home/spiros/.local/state/pyradio/server-headless.txt ] && rm /home/spiros/.local/state/pyradio/server-headless.txt
-```
-
-If **xdg_compliant** is *False*, write this code to the file, instead:
-
 ```
 #!/bin/bash
 [ -z "$(/usr/bin/tmux ls | grep pyradio-session)" ] || /usr/bin/tmux send-keys -t pyradio-session q
 sleep 2
 [ -z "$(/usr/bin/tmux ls | grep pyradio-session)" ] || /usr/bin/tmux send-keys -t pyradio-session q
 [ -e /home/spiros/.config/pyradio/data/server-headless.txt ] && rm /home/spiros/.config/pyradio/data/server-headless.txt
+[ -e /home/spiros/.local/state/pyradio/server-headless.txt ] && rm /home/spiros/.local/state/pyradio/server-headless.txt
 ```
 
 Make both files executable:
@@ -236,31 +219,13 @@ Then create the start file. Write this to **~/.local/bin/start-headless-pyradio.
 
 Then create the stop file. Writhe this to **~/.local/bin/stop-headless-pyradio.sh**
 
-Execute the following command:
-
-    pyradio -pc
-
-and examine the value of the config parameter **xdg_compliant**.
-
-If **xdg_compliant** is *True*, write this code to the file:
-
-```
-#!/bin/bash
-[ -z "$(/usr/bin/screen -ls | grep pyradio-session)" ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
-sleep 2
-[ -z "$(/usr/bin/screen -ls | grep pyradio-session)" ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
-[ -e /home/spiros/.local/state/pyradio/server-headless.txt ] && rm /home/spiros/.local/state/pyradio/server-headless.txt
-
-```
-
-If **xdg_compliant** is *False*, write this code to the file, instead:
-
 ```
 #!/bin/bash
 [ -z "$(/usr/bin/screen -ls | grep pyradio-session)" ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
 sleep 2
 [ -z "$(/usr/bin/screen -ls | grep pyradio-session)" ] || /usr/bin/screen -S pyradio-session -p 0 -X stuff q
 [ -e /home/spiros/.config/pyradio/data/server-headless.txt ] && rm /home/spiros/.config/pyradio/data/server-headless.txt
+[ -e /home/spiros/.local/state/pyradio/server-headless.txt ] && rm /home/spiros/.local/state/pyradio/server-headless.txt
 
 ```
 

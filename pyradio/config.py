@@ -167,18 +167,6 @@ class PyRadioStations(object):
         if platform.startswith('win'):
             self._open_string_id = 1
 
-        # if sys.platform.startswith('win'):
-        #     self.stations_dir = path.join(getenv('APPDATA'), 'pyradio')
-        #     self.registers_dir = path.join(self.stations_dir, '_registers')
-        # else:
-        #     if user_config_dir is None:
-        #         self.stations_dir = path.join(getenv('HOME', '~'), '.config', 'pyradio')
-        #     else:
-        #         self.stations_dir = user_config_dir
-        #     self.registers_dir = path.join(self.stations_dir, '.registers')
-        # self.data_dir = path.join(self.stations_dir, 'data')
-        # self.state_dir = self.data_dir
-
         if user_config_dir is not None:
             self.stations_dir = user_config_dir
             self.xdg.build_paths()

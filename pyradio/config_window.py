@@ -2677,6 +2677,7 @@ class PyRadioSelectPlaylist(object):
     def __init__(self,
                  parent,
                  config_path,
+                 registers_path,
                  default_playlist,
                  include_registers=False,
                  global_functions=None):
@@ -2700,6 +2701,7 @@ class PyRadioSelectPlaylist(object):
             ''' revert to old behavior '''
             self._parent_Y = 1
         self._config_path = config_path
+        self._registers_path = registers_path
         self.playlist = default_playlist
         self._orig_playlist = default_playlist
         self._selected_playlist = default_playlist
@@ -2802,9 +2804,9 @@ class PyRadioSelectPlaylist(object):
         if len(self._items) > 0:
             self._items.sort()
         if self._include_registers:
-            self._registers_path = path.join(self._config_path, '.registers')
-            if platform == 'win32':
-                self._registers_path.replace('.reg', '_reg')
+            # self._registers_path = path.join(self._config_path, '.registers')
+            # if platform == 'win32':
+            #     self._registers_path.replace('.reg', '_reg')
             r_items = glob.glob(path.join(self._registers_path, '*.csv'))
             if r_items:
                 r_items.sort()
@@ -2869,11 +2871,13 @@ class PyRadioSelectPlaylist(object):
         if self._include_registers:
             if self._items[self._selected_playlist_id].startswith('Register: '):
                 ret = self._items[self._selected_playlist_id].replace('Register: ', 'register_')
-                ret = path.join(self._config_path, '.registers', ret + '.csv')
+                ret = path.join(self._registers_path, ret + '.csv')
+                logger.error(f'ret 1: {ret = }')
             else:
-                ret = path.join(self._config_path, self._items[self._selected_playlist_id] + '.csv')
-            if platform == 'win32':
-                ret.replace('.registers', '_registers')
+                ret = path.join(self._registers_path, self._items[self._selected_playlist_id] + '.csv')
+                logger.error(f'ret 2: {ret = }')
+            # if platform == 'win32':
+            #     ret.replace('.registers', '_registers')
             return 0, ret
 
         stationFile = path.join(self._config_path, self._items[self._selected_playlist_id] + '.csv')
@@ -3086,7 +3090,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
 
     _default_playlist = ''
 
-    def __init__(self, parent, config_path, default_playlist, default_station,
+    def __init__(self, parent, config_path, registers_dir, default_playlist, default_station,
                  global_functions=None, is_from_schedule=False):
         self._default_playlist = default_playlist
         self._orig_default_playlist = default_playlist
@@ -3098,7 +3102,7 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
         if self._is_from_schedule:
             self._config_path = config_path
             default_station = self._read_items(a_station=default_station)
-        PyRadioSelectPlaylist.__init__(self, parent, config_path, default_station)
+        PyRadioSelectPlaylist.__init__(self, parent, config_path, registers_dir, default_station)
         self._global_functions = set_global_functions(global_functions)
         self._title = ' Station Selection '
         ''' adding 2 to padding calculation

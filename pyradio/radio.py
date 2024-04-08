@@ -1991,8 +1991,8 @@ class PyRadio(object):
         # ok
         if self._cnf.titles_log.titles_handler:
             logger.critical('=== Logging stopped')
-        logger.error('signum = {}'.format(signum))
-        logger.error('frame = {}'.format(frame))
+        # logger.error('signum = {}'.format(signum))
+        # logger.error('frame = {}'.format(frame))
         search_cls = [x for x in self._search_classes if x is not None]
         for n in range(len(search_cls)):
             search_cls[n].save_search_history()
@@ -6203,6 +6203,7 @@ ____Using |fallback| theme.''')
                         self._playlist_select_win = PyRadioSelectPlaylist(
                             self.bodyWin,
                             self._cnf.stations_dir,
+                            self._cnf.registers_dir,
                             self._cnf.station_title,
                             include_registers=True,
                             global_functions=self._global_functions
@@ -6636,6 +6637,7 @@ ____Using |fallback| theme.''')
                     self._schedule_playlist_select_win = PyRadioSelectPlaylist(
                         self.bodyWin,
                         self._cnf.stations_dir,
+                        self._cnf.registers_dir,
                         self._simple_schedule.playlist,
                         global_functions=self._global_functions
                     )
@@ -6746,6 +6748,7 @@ ____Using |fallback| theme.''')
                     self._playlist_select_win = PyRadioSelectPlaylist(
                         self.bodyWin,
                         self._cnf.stations_dir,
+                        self._cnf.registers_dir,
                         self._config_win._config_options['default_playlist'][1],
                         global_functions=self._global_functions
                     )
