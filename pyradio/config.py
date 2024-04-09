@@ -462,7 +462,7 @@ class PyRadioStations(object):
             config folder and rename it to stations.csv, or if
             that exists, to pyradio.csv '''
 
-        src = path.join(getenv('HOME', '~'), '.pyradio')
+        src = path.join(path.expanduser('~'), '.pyradio')
         dst = path.join(usr, 'pyradio.csv')
         dst1 = path.join(usr, 'stations.csv')
         if path.exists(src) and path.isfile(src):
@@ -1313,7 +1313,7 @@ class PyRadioConfig(PyRadioStations):
     if platform == 'win32':
         th_path = path.join(getenv('APPDATA'), 'pyradio', 'themes', 'auto.pyradio-themes')
     else:
-        th_path = path.join(getenv('HOME', '~'), '.config', 'pyradio', 'themes', 'auto.pyradio-themes')
+        th_path = path.join(path.expanduser('~'), '.config', 'pyradio', 'themes', 'auto.pyradio-themes')
     opts['auto_update_theme'] = ['',  False]
 
     original_mousemask = (0, 0)
@@ -1882,7 +1882,7 @@ class PyRadioConfig(PyRadioStations):
                     except:
                         pass
             else:
-                self._session_lock_file = path.join(getenv('HOME'), '.config', 'pyradio', '.pyradio.lock')
+                self._session_lock_file = path.join(path.expanduser('~'), '.config', 'pyradio', '.pyradio.lock')
         if path.exists(self._session_lock_file):
             self.locked = True
         else:
@@ -2005,7 +2005,7 @@ class PyRadioConfig(PyRadioStations):
         mXdg.rename_files()
         self._copy_icon()
         if self.xdg_compliant:
-            dpath = path.join(getenv('HOME'), '.config', 'pyradio', 'data')
+            dpath = path.join(path.expanduser('~'), '.config', 'pyradio', 'data')
             if path.exists(dpath):
                 flist = listdir(dpath)
                 if len(flist) == 0:
@@ -3242,7 +3242,7 @@ class PyRadioBase16Themes(object):
     ''' last used theme name (no "base16-", no extension) '''
     _last_used_theme = None
     '''  link to last used base16 theme '''
-    _ln = path.join(getenv('HOME', '~'), '.config/base16-project/base16_shell_theme')
+    _ln = path.join(path.expanduser('~'), '.config/base16-project/base16_shell_theme')
     ''' pyradio base16 file for auto download '''
     _default_theme_file = None
     ''' the default base16 file, without path and extension '''
@@ -3403,7 +3403,7 @@ class PyRadioPyWalThemes(PyRadioBase16Themes):
         'pywal-pyradio-default-alt',
     )
     '''  link to last used base16 theme '''
-    _ln = path.join(getenv('HOME', '~'), '.cache/wal/colors.json')
+    _ln = path.join(path.expanduser('~'), '.cache', 'wal', 'colors.json')
 
     def __init__(self, config):
         self._cnf = config
@@ -3582,7 +3582,7 @@ class PyRadioThemesShThemes(PyRadioBase16Themes):
         if xdg:
             self._ln = path.join(xdg, '.theme_history')
         else:
-            self._ln = path.join(getenv('HOME', '~'), '.theme_history')
+            self._ln = path.join(path.expanduser('~'), '.theme_history')
 
     @property
     def can_auto_update(self):

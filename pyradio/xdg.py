@@ -42,7 +42,7 @@ locale.setlocale(locale.LC_ALL, "")
 class XdgMigrate(object):
 
     def __init__(self, config=None):
-        self.home_dir = getenv('HOME', '~')
+        self.home_dir = path.expanduser('~')
         self.other_dir = path.join(self.home_dir, 'pyradio-not-migrated')
         if config is None:
             # test values
@@ -331,9 +331,10 @@ class XdgDirs(object):
             self._old_dirs[self.CACHE] = path.join(self._old_dirs[self.DATA], '_cache')
             self._new_dirs = self._old_dirs[:]
         else:
-            self._new_dirs[self.HOME] = self._old_dirs[self.HOME] = self._old_dirs[self.HOME] = getenv('HOME', '~')
+            self._new_dirs[self.HOME] = self._old_dirs[self.HOME] = self._old_dirs[self.HOME] = path.expanduser('~')
             if self._new_dirs[self.STATIONS] is None:
-                self._new_dirs[self.STATIONS] = self._old_dirs[self.STATIONS] = path.join(self._new_dirs[self.HOME], '.config', 'pyradio')
+                self._old_dirs[self.STATIONS] = path.join(self._new_dirs[self.HOME], '.config', 'pyradio')
+                self._new_dirs[self.STATIONS] = path.join(self._get_xdg_dir('XDG_CONFIG_HOME'), 'pyradio')
             self._old_dirs[self.REGISTERS] = self._new_dirs[self.REGISTERS] = path.join(self._new_dirs[self.STATIONS], '.registers')
             self._old_dirs[self.DATA] = path.join(self._old_dirs[self.STATIONS], 'data')
             self._old_dirs[self.STATE] = path.join(self._old_dirs[self.STATIONS], 'data')
@@ -361,7 +362,7 @@ class XdgDirs(object):
         else:
             # build dirs
             not_set = {}
-            not_set['HOME'] = getenv('HOME', '~')
+            not_set['HOME'] = path.expanduser('~')
             not_set['XDG_CONFIG_HOME'] = path.join(not_set['HOME'], '.config')
             not_set['XDG_DATA_HOME'] = path.join(not_set['HOME'], '.local', 'share')
             not_set['XDG_STATE_HOME'] = path.join(not_set['HOME'], '.local', 'state')

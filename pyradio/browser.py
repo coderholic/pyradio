@@ -2410,7 +2410,12 @@ class RadioBrowserConfigWindow(object):
 
         else:
             if self._focused < 4:
-                ret = self._widgets[self._focused].keypress(char)
+                if self._widgets is None:
+                    return 0
+                if self._widgets[self._focused]:
+                    ret = self._widgets[self._focused].keypress(char)
+                else:
+                    return 0
                 if ret == 0:
 
                     if self._focused == 0:
@@ -4639,6 +4644,10 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
                 # self._log('changing parent!\n')
                 self._parent = parent
                 self._get_win()
+
+        Y, X = self._parent.getmaxyx()
+        if X < 80 or Y < 22:
+            return
 
         limit = term = None
         if self._items:
