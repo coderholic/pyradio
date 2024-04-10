@@ -247,10 +247,8 @@ class StationsChanges(object):
             with open(self._out_stations_file, 'w', encoding='utf-8') as cfgfile:
                 writter = csv.writer(cfgfile)
                 for a_station in self._stations:
-                    logger.error('before a_station = "{}"'.format(a_station))
                     if a_station[3] != '':
                         a_station[3] = a_station[3]['image']
-                        logger.error(' after a_station = "{}"'.format(a_station))
                     writter.writerow(self._format_playlist_row_out(a_station))
         except:
             print('Error: Cannot create the updated stations file.')

@@ -2352,6 +2352,12 @@ class RadioBrowserConfigWindow(object):
                3: Display server selection window
                4: Return from server selection window
         '''
+        if self._too_small:
+            if char in (
+                curses.KEY_EXIT, 27, ord('q')
+            ):
+                return -1
+            return 1
         if self._server_selection_window:
             # ret = self._server_selection_window.keypress(char)
             if self._server_selection_window.return_value < 1:
@@ -4104,6 +4110,7 @@ class RadioBrowserServersSelect(object):
             If Y is None
               keypress returns 0 and self.server is set
         '''
+        self._too_small = False
         self._parent = parent
         self.items = list(servers)
         self.server = current_server
@@ -4119,7 +4126,7 @@ class RadioBrowserServersSelect(object):
         self.maxX = self.servers.maxX + 2
         self._Y = Y
         self._X = X
-        logger.error('DE self._Y ={0}, self._X = {1}'.format(self._Y, self._X))
+        # logger.error('DE self._Y ={0}, self._X = {1}'.format(self._Y, self._X))
 
     def move(self, Y, X, parent=None):
         self._Y = Y
@@ -4137,7 +4144,7 @@ class RadioBrowserServersSelect(object):
         self._too_small = False
         pY, pX = self._parent.getmaxyx()
         Y, X = self._parent.getbegyx()
-        if self.maxY > pY or self.maxX > pX -2:
+        if pX < 80 or pY < 22:
             self._too_small = True
             msg = 'Window too small to display content!'
             if pX < len(msg) + 2:
@@ -4194,6 +4201,11 @@ class RadioBrowserServersSelect(object):
                  0: Done, result is in ....
                  1: Continue
         '''
+
+        if self._too_small:
+            if char in (curses.KEY_EXIT, 27, ord('q')):
+                return -1
+            return 1
 
         self.return_value = self.servers.keypress(char)
 
@@ -4569,6 +4581,7 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
                 change default term
                 delete terms
         """
+        self._too_small = False
         self._ungetch = 0
         if log_file:
             self._log_file = log_file
@@ -4647,8 +4660,9 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
 
         Y, X = self._parent.getmaxyx()
         if X < 80 or Y < 22:
+            self._too_small = True
             return
-
+        self._too_small = False
         limit = term = None
         if self._items:
             if 'type' in self._items[self._selection].keys():
@@ -4835,6 +4849,10 @@ class RadioBrowserTermNavigator(SimpleCursesWidget):
                 1    : go on
                 2    : help
         """
+        if self._too_small:
+            if char in (curses.KEY_EXIT, 27, ord('q')):
+                return -1
+            return 1
         if char == ord('?'):
             return 2
         elif char == ord('x'):

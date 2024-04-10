@@ -470,14 +470,17 @@ class PyRadioCache(object):
                 'pyradio', 'data', '_cache'
             )
         else:
+            cache_dir = os.getenv('XDG_CACHE_HOME')
+            if cach_dir is None:
+                cache_dir = os.path.join(
+                    os.path.expanduser('~'),
+                    '.cache', 'pyradio'
+                )
             chk = (
+                cach_dir,
                 os.path.join(
                     os.path.expanduser('~'),
                     '.config', 'pyradio', 'data', '.cache'
-                ),
-                os.path.join(
-                    os.path.expanduser('~'),
-                    '.cache', 'pyradio'
                 )
             )
             for n in chk:
@@ -486,6 +489,10 @@ class PyRadioCache(object):
                     break
             if self._cache_dir is None:
                 self._cache_dir = chk[0]
+                try:
+                    os.makedirs(self._cache_dir, exist_ok=True)
+                except:
+                    pass
         self._del_gits()
 
     def list(self):
@@ -966,7 +973,11 @@ class PyRadioUpdate(object):
 
         '''' get tmp dir '''
         if HAS_PIPX:
-            self._dir = os.path.join(os.path.expanduser('~'), '.cache', 'pyradio')
+            cache_dir = os.getenv('XDG_CACHE_HOME')
+            if cach_dir is None:
+                self._dir = os.path.join(os.path.expanduser('~'), '.cache', 'pyradio')
+            else:
+                self._dir =  os.path.join(cache_dir, 'pyradio')
             if not os.path.exists(self._dir):
                 self._dir = os.path.join(os.path.expanduser('~'), '.config', 'pyradio', 'data', '.cache')
         else:

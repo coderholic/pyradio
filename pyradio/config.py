@@ -1860,29 +1860,40 @@ class PyRadioConfig(PyRadioStations):
             Otherwise, the file is created
         '''
         self.locked = False
-        if path.exists('/run/user'):
-            from os import geteuid
-            self._session_lock_file = path.join('/run/user', str(geteuid()), 'pyradio.lock')
-            ''' remove old style session lock file (if it exists) '''
-            if path.exists(path.join(self.stations_dir, '.lock')):
+        if platform == 'win32':
+            self._session_lock_file = path.join(self.state_dir, 'pyradio.lock')
+            win_lock = path.join(self.state_dir, 'data', '_windows.lock')
+            if path.exists(win_lock):
+                ''' pyradio lock file was probably not deleted the last
+                    time Windows terminated. It should be safe to use it
+                '''
                 try:
-                    remove(path.join(self.stations_dir, '.lock'))
+                    remove(win_lock)
                 except:
                     pass
         else:
-            if platform == 'win32':
-                self._session_lock_file = path.join(getenv('APPDATA'), 'pyradio', 'data', 'pyradio.lock')
-                win_lock = path.join(getenv('APPDATA'), 'pyradio', 'data', '_windows.lock')
-                if path.exists(win_lock):
-                    ''' pyradio lock file was probably not deleted the last
-                        time Windows terminated. It should be safe to use it
-                    '''
-                    try:
-                        remove(win_lock)
-                    except:
-                        pass
-            else:
-                self._session_lock_file = path.join(path.expanduser('~'), '.config', 'pyradio', '.pyradio.lock')
+            xdg_runtime_dir = getenv('XDG_RUNTIME_DIR')
+            if xdg_runtime_dir:
+                self._session_lock_file = path.join(xdg_runtime_dir, 'pyradio.lock')
+            elif path.exists('/run/user'):
+                from os import geteuid
+                self._session_lock_file = path.join('/run/user', str(geteuid()), 'pyradio.lock')
+                if not path.exists(self._session_lock_file):
+                    self._session_lock_file = None
+            if self._session_lock_file is None:
+                self._session_lock_file = path.join(self.state_dir, '.pyradio.lock')
+        try:
+            makedirs(self.state_dir, exist_ok=True)
+        except:
+            print(f'[red]Error:[/red] Cannot create dir: "{self.state_dir}"')
+            sys.exit(1)
+
+        ''' remove old style session lock file (if it exists) '''
+        if path.exists(path.join(self.stations_dir, '.lock')):
+            try:
+                remove(path.join(self.stations_dir, '.lock'))
+            except:
+                pass
         if path.exists(self._session_lock_file):
             self.locked = True
         else:
@@ -2005,6 +2016,7 @@ class PyRadioConfig(PyRadioStations):
         mXdg.rename_files()
         self._copy_icon()
         if self.xdg_compliant:
+            # I need to have ~/.config/pyradio/data hardcoded here
             dpath = path.join(path.expanduser('~'), '.config', 'pyradio', 'data')
             if path.exists(dpath):
                 flist = listdir(dpath)
@@ -3583,6 +3595,11 @@ class PyRadioThemesShThemes(PyRadioBase16Themes):
             self._ln = path.join(xdg, '.theme_history')
         else:
             self._ln = path.join(path.expanduser('~'), '.theme_history')
+        new_ln = path.join(self._cnf.state_dir, 'theme_history')
+        if path.exists(self._ln) and \
+                path.exists(self._cnf.state_dir):
+            move(self._ln, new_ln)
+        self._ln = new_ln
 
     @property
     def can_auto_update(self):

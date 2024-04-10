@@ -53,6 +53,7 @@ class PyRadioMessagesSystem(object):
             'D_RC_ACTIVE',
             'M_RC_START_ERROR',
             'D_RB_ASK_TO_SAVE_CONFIG',
+            'D_RB_ASK_TO_SAVE_CONFIG_FROM_CONFIG',
             'D_RB_ASK_TO_SAVE_CONFIG_TO_EXIT',
             'M_RC_DEAD_ERROR',
             'D_UPDATE_NOTIFICATION',
@@ -100,7 +101,7 @@ __You can use the following keys to navigate: |j| (|Up|), |k| (|Down|),
 |PgUp| (|^B|), |PgDn| (|^F|) to scroll up/down.
 __You can also use |g| (|HOME|) / |G| (|END|) to scroll to the top / bottom.
 
-__ You will have noticed the two |opposite arrows| at the top right
+__ You will have noticed the two |upward arrows| at the top right
 corner of this window; they indicate that the text is |scrollable| and
 the keys mentioned above are |valid|; if the arrows are not there, the
 text is not scrollable and pressing any key will |close the window|.
@@ -1713,13 +1714,15 @@ W| / |w                             |*| Toggle title log / like a station'''
             self._win.erase()
             self._win.box()
             if self._can_scroll:
-                if platform.startswith('win') or \
-                        platform.lower().startswith('darwin'):
-                    self._win.addstr(0, self._maxX-1, '^', self.col_box)
-                    self._win.addstr(1, self._maxX-1, '^', self.col_box)
-                else:
-                    self._win.addstr(0, self._maxX-1, '⮝', self.col_box)
-                    self._win.addstr(1, self._maxX-1, '⮟', self.col_box)
+                # if platform.startswith('win') or \
+                #         platform.lower().startswith('darwin'):
+                #     self._win.addstr(0, self._maxX-1, '^', self.col_box)
+                #     self._win.addstr(1, self._maxX-1, '^', self.col_box)
+                # else:
+                #     self._win.addstr(0, self._maxX-1, '⮝', self.col_box)
+                #     self._win.addstr(1, self._maxX-1, '⮟', self.col_box)
+                self._win.addstr(0, self._maxX-1, '^', self.col_box)
+                self._win.addstr(1, self._maxX-1, '^', self.col_box)
             if self._caption:
                 self._win.addstr(
                         0, int((self._maxX - len(self._caption)) / 2) - 2,
