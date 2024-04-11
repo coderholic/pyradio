@@ -11,7 +11,7 @@ from os import path, getenv, makedirs, remove, rename, readlink, SEEK_END, SEEK_
 from sys import platform
 from time import ctime, sleep
 from datetime import datetime
-from shutil import copyfile, move, Error as shutil_Error, rmtree as remove_tree
+from shutil import which, copyfile, move, Error as shutil_Error, rmtree as remove_tree
 import threading
 from copy import deepcopy
 try:
@@ -31,6 +31,7 @@ from .common import is_rasberrypi
 from .player import pywhich
 from .server import IPsWithNumbers
 from .xdg import XdgDirs, XdgMigrate, CheckDir
+from .install import run_tool
 HAS_REQUESTS = True
 
 try:
@@ -1367,6 +1368,8 @@ class PyRadioConfig(PyRadioStations):
 
     _fixed_recording_dir = None
 
+    _linux_run_tool = None
+
     def __init__(self, user_config_dir=None, headless=False):
         # keep old recording / new recording dir
         self.rec_dirs = ()
@@ -1421,6 +1424,10 @@ class PyRadioConfig(PyRadioStations):
 
         ''' function to return a player instance '''
         player_instance = None
+
+    @property
+    def linux_run_tool(self):
+        return self._linux_run_tool
 
     @property
     def xdg_compliant(self):
@@ -1823,36 +1830,36 @@ class PyRadioConfig(PyRadioStations):
         if system().lower() == 'windows':
             startfile(a_dir)
         elif system().lower() == 'darwin':
-            Popen(['open', a_dir])
+            Popen([which('open'), a_dir])
         else:
-            try:
-                Popen(
-                    ['xdg-open', a_dir],
-                    stderr=DEVNULL,
-                    stdout=DEVNULL
-                )
-            except:
-                ''' pyrthon 2? '''
+            xdg_open_path = self._linux_run_tool if self._linux_run_tool else run_tool()
+            if xdg_open_path:
                 try:
-                    Popen(['xdg-open', a_dir])
-                except:
-                    Popen(['xdg-open', self.stations_dir])
+                    Popen(
+                        [*xdg_open_path, a_dir],
+                        stderr=DEVNULL,
+                        stdout=DEVNULL
+                    )
+                except (FileNotFoundError, PermissionError):
+                    pass
 
     def open_config_dir(self, recording=0):
         a_dir = self.stations_dir if recording == 0 else self.recording_dir
         if system().lower() == 'windows':
             startfile(a_dir)
         elif system().lower() == 'darwin':
-            Popen(['open', a_dir])
+            Popen([which('open'), a_dir])
         else:
-            try:
-                Popen(
-                    ['xdg-open', a_dir],
-                    stderr=DEVNULL,
-                    stdout=DEVNULL
-                )
-            except:
-                Popen(['xdg-open', self.stations_dir])
+            xdg_open_path = self._linux_run_tool if self._linux_run_tool else run_tool()
+            if xdg_open_path:
+                try:
+                    Popen(
+                        [*xdg_open_path, a_dir],
+                        stderr=DEVNULL,
+                        stdout=DEVNULL
+                    )
+                except (FileNotFoundError, PermissionError):
+                    pass
 
     def _get_lock_file(self):
         ''' Populate self._session_lock_file

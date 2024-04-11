@@ -1211,7 +1211,7 @@ class PyRadioRecordingDir(object):
                 return 0, None, False
             elif char == ord('h') and self._focus > 0:
                 html = HtmlHelp()
-                html.open_filename('rec-dir.html')
+                html.open_filename(a_file='rec-dir.html')
             elif self._focus == 0:
                 """
                  Returns:

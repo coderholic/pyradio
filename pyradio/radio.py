@@ -6132,7 +6132,10 @@ ____Using |fallback| theme.''')
                 ''' open html help '''
                 self._update_status_bar_right(status_suffix='')
                 html = HtmlHelp()
-                html.open_file(self._cnf.browsing_station_service)
+                html.open_file(
+                        linux_run_tool=self._cnf.linux_run_tool,
+                        browser=self._cnf.browsing_station_service
+                        )
 
             elif char == ord('r'):
                 ''' rename playlist '''

@@ -22,6 +22,7 @@ from .cjkwrap import cjklen, cjkslices, fill
 from .log import Log
 from .common import StationsChanges
 from .schedule import PyRadioScheduleList
+from .install import run_tool
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
@@ -611,11 +612,17 @@ If nothing else works, try the following command:
             return
 
         if args.open_config_dir:
-            open_conf_dir(pyradio_config)
+            open_conf_dir(
+                    pyradio_config,
+                    msg='[magenta]PyRadio[/magenta] Config dir: "[red]{}[/red]"'
+                )
             return
 
         if args.open_recordings:
-            open_conf_dir(pyradio_config, pyradio_config.recording_dir)
+            open_conf_dir(
+                    pyradio_config,
+                    msg='[magenta]PyRadio[/magenta] Recordings dir: "[red]{}[/red]"',
+                    a_dir=pyradio_config.recording_dir)
             return
 
         if args.list_playlists:
@@ -1029,7 +1036,7 @@ def validate_user_config_dir(a_dir):
         return None
     return this_dir
 
-def open_conf_dir(cnf, a_dir=None):
+def open_conf_dir(cnf, msg=None, a_dir=None):
     import subprocess
     import os
     import platform
@@ -1040,16 +1047,22 @@ def open_conf_dir(cnf, a_dir=None):
     if platform.system().lower() == 'windows':
         os.startfile(op_dir)
     elif platform.system().lower() == 'darwin':
-        subprocess.Popen(['open', op_dir])
+        subprocess.Popen([shutil.which('open'), op_dir])
     else:
-        try:
-            subprocess.Popen(
-                ['xdg-open', op_dir],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-        except:
-            subprocess.Popen(['xdg-open', op_dir])
+        prog = cnf.linux_run_tool if cnf.linux_run_tool else run_tool()
+        if prog:
+            try:
+                subprocess.Popen(
+                    [*prog, op_dir],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+            except (FileNotFoundError, PermissionError):
+                pass
+    if msg is None:
+        print(f'Dir is: "{op_dir}"')
+    else:
+        print(msg.format(op_dir))
 
 def get_format_string(stations):
     len0 = len1 = 0

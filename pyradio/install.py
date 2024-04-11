@@ -11,6 +11,7 @@ import site
 import glob
 import re
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS
+from shutil import which
 
 ''' This is PyRadio version this
     install.py was released for
@@ -418,6 +419,32 @@ Please execute the installation script again, like so:
     else:
         return True
 
+def run_tool():
+    ''' return an resource open tool from a list
+        the list comes from "Resource openers"
+        https://wiki.archlinux.org/title/default_applications
+
+        returns
+            - a list of the program's name / argument
+            - None if no program is found
+
+    '''
+    programs = (
+            ('xdg-open', None),
+            ('gio', 'open'),
+            ('mimeopen', '-n'),
+            ('mimeo', None),
+            ('handlr', 'open'),
+            )
+    for a_prog in programs:
+        which_str = which(a_prog[0])
+        if which_str:
+            if a_prog[1]:
+                return [which_str] + a_prog[1].split(' ')
+            else:
+                return [which_str]
+        return None
+
 def open_cache_dir():
     c = PyRadioCache()
     if not c.exists():
@@ -426,16 +453,19 @@ def open_cache_dir():
     if platform.system().lower() == 'windows':
         os.startfile(c.cache_dir)
     elif platform.system().lower() == 'darwin':
-        subprocess.Popen(['open', c.cache_dir])
+        subprocess.Popen([which('open'), c.cache_dir])
     else:
-        try:
-            subprocess.Popen(
-                ['xdg-open', c.cache_dir],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-        except:
-            subprocess.Popen(['xdg-open', c.cache_dir])
+        prog = run_tool()
+        if prog:
+            try:
+                subprocess.Popen(
+                    [*prog, c.cache_dir],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+            except (FileNotFoundError, PermissionError):
+                pass
+    print(f'[magenta]PyRadio[/magenta] Cache dir: "{c.cache_dir}"')
 
 
 class PyRadioCache(object):
@@ -471,13 +501,13 @@ class PyRadioCache(object):
             )
         else:
             cache_dir = os.getenv('XDG_CACHE_HOME')
-            if cach_dir is None:
+            if cache_dir is None:
                 cache_dir = os.path.join(
                     os.path.expanduser('~'),
                     '.cache', 'pyradio'
                 )
             chk = (
-                cach_dir,
+                cache_dir,
                 os.path.join(
                     os.path.expanduser('~'),
                     '.config', 'pyradio', 'data', '.cache'
