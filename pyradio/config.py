@@ -2472,29 +2472,12 @@ class PyRadioConfig(PyRadioStations):
 
     def _get_sting_to_save(self, theme, trnsp, calcf, rec_dir):
         out = []
-        prm = (
-                'player',
-                'open_last_playlist',
-                'default_playlist',
-                'default_station',
-                'default_encoding',
-                'enable_mouse',
-                'enable_notifications',
-                'use_station_icon',
-                'recording_dir',
-                'connection_timeout',
-                'force_http',
-                'theme',
-                'use_transparency',
-                'force_transparency',
-                'calculated_color_factor',
-                'confirm_station_deletion',
-                'confirm_playlist_reload',
-                'auto_save_playlist',
-                'remote_control_server_ip',
-                'remote_control_server_port',
-                'remote_control_server_auto_start',
-                )
+        prm = []
+        for n in self.config_opts.keys():
+            if self.config_opts[n][0] != '' and \
+                    self.config_opts[n][-1] != '-' and \
+                    self.config_opts[n][-1] != '':
+                prm.append(n)
         for n in prm:
             chk = self._validate_config_key(n, theme, trnsp, calcf, rec_dir)
             if chk:

@@ -518,7 +518,7 @@ class PyRadioConfigWindow(object):
         self._config_options['enable_mouse'][1] = 'False'
         self._config_options['enable_notifications'][1] = '-1'
         self._config_options['use_station_icon'][1] = 'True'
-        self._config_options['recording_dir'][1] = path.join(self._cnf.stations_dir, 'recordings')
+        self._config_options['recording_dir'][1] = path.join(path.expanduser('~'), 'pyradio-recordings')
         self._config_options['connection_timeout'][1] = '10'
         self._config_options['theme_title'][1] = ''
         ''' Transparency '''
