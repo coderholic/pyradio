@@ -7294,6 +7294,8 @@ ____Using |fallback| theme.''')
                         txt='______Invalid directory specified!!!______\n',
                         mode_to_set=self.ws.operation_mode,
                         callback_function=self.refreshBody_after_Message)
+            elif ret == 4:
+                self._open_message_win_by_key('M_REC_DIR_HELP')
 
         elif self.ws.operation_mode == self.ws.RADIO_BROWSER_CONFIG_MODE:
             ''' handle browser config '''

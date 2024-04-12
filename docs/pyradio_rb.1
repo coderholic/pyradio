@@ -66,6 +66,8 @@ These are the \fBRadioBrowser\fR specific keys one can use in addition to local 
 .RS 10
 .IP \fIO
 Open RadioBrowser
+.IP \fI{\ [\ ]
+Load the first / previous / next result page. Each page will have as many stations as the max. number of results used  for the request; the last page will have less than that number (which actually indicates it is the last page)
 .IP \fIc
 Open config window
 .IP \fIC
@@ -353,7 +355,7 @@ Finally, include the file produced in your report.
 
 .SH Files
 
-\fI~/.config/pyradio/radio-browser-config\fR
+\fI~/.config/pyradio/radio-browser.config\fR
 
 .SH See also
 

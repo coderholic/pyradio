@@ -1112,6 +1112,26 @@ press |F8| to get to the player installation window.
 '''
 ),
 
+    'M_REC_DIR_HELP': ('Recordings Dir Help',
+r'''|PyRadio| will record stations to files and save them in the
+directory specified here.
+
+When a new directory is specified, |PyRadio| will try to |move| the
+existing directory to the new location.
+
+If the new directory
+1. |does not exist|
+___|PyRadio| will move the original directory to the new location
+___and optionally rename it.
+2. |already exists and it is empty|
+___|PyRadio| will |delete| the new directory and |move| the original
+___directory to the new location and optionally rename it.
+3. |PyRadio| will |move| the original directory |inside| the new
+___directory and optionally rename it.
+
+'''
+),
+
     'M_REC_DIR_MOVE': ('',
 r'''
 ______Moving |Recordings Directory______

@@ -344,15 +344,40 @@ When the width gets \fIbelow 40 columns\fR, all windows will be closed and the m
 When the width gets \fIbelow 20 columns\fR, the \fBLimited display\fR will be activated.
 
 .SH Config File
-\fBpyradio\fR upon its execution tries to read its configuration file (i.e. \fI~/.config/pyradio/config\fR). If this file is not found, it will be created. If an error occurs while parsing it, an error message will be displayed and \fBpyradio\fR will terminate.
 
-The file contains parameters such as the player to use, the playlist to load etc. It is heavily commented, so that manual editing is really easy. The best practice to manually edit this file is executing \fBpyradio\fR with the \fB-ocd\fR command line option, which will open the configuration directory in your file manager, and then edit it using your preferable text editor.
 
-The file can also be altered while \fBpyradio\fR is running, by pressing "\fIc\fR", which will open the "\fIConfiguration window\fR". This window presents all \fBpyradio\fR options and provide the way to change them and finally save them by pressing "\fIs\fR".
+\fBpyradio\fR upon its execution will first read its package configuration file and then will try to read the user configuration file. If an error occurs while parsing it, an error message will be displayed and \fBpyradio\fR will terminate.
+
+\fBThe package config file\fR
+
+.RS
+The \fIpackage\fR configuration file contains the program’s \fBdefault\fR parameters. These are the player to use, the playlist to load etc.
+
+It is heavily commented, so that it can be used as a template in order to manual create the user configuration file.
+
+One can also get the configuration file with the \fIactive parameter values\fR (i.e. after changed by the user config file), by executing the command:
+
+.RS
+\fIpyradio -pc\fR
+.RE
+.RE
+
+\fBThe user config file\fR
+
+.RS
+
+This file (typically \fI~/.config/pyradio/config\fR) is created by \fBpyradio\fR when needed.
+
+It will contain only the parameters whose value is different to the one set in the \fIpackage\fR configuration file.
+
+One can easily edit it manually, though. The best practice to do so is by executing \fBpyradio\fR with the \fI-ocd\fR command line option, which will open the configuration directory in your file manager, and then edit (or create it) it using your preferable text editor. Don’t forget you can get the list of parameters by executing \fIpyradio -pc\fR.
+
+The file can also be altered while \fBpyradio\fR is running by pressing “\fIc\fR”, which will open the “\fIConfiguration window\fR”. This window presents all \fBpyradio\fR options and provide the way to change them and finally save them by pressing “\fIs\fR”.
 
 In any case, \fBpyradio\fR will save the file before exiting (or in case Ctrl-C is pressed) if needed (e.g. if a config parameter has been changed during its execution).
 
 If saving the configuration file fails, \fBpyradio\fR will create a back up file and terminate. When restarted, \fBpyradio\fR will try to restore previously used settings from the said back up file.
+.RE
 
 .SH About Playlist Files
 .PP
@@ -1889,7 +1914,7 @@ On \fBMac OS\fR, these file may be installed in \fI/usr/local/share/doc/pyradio\
 .PP
 \fBPeter Stevenson (2E0PGS)\fR\ \<\fIhttps://github.com/2E0PGS\fR\>,\ (2018)
 .PP
-\fBSpiros Georgaras\fR\ \<\fIhttps://github.com/s-n-g\fR\>,\ (2018-2023)
+\fBSpiros Georgaras\fR\ \<\fIhttps://github.com/s-n-g\fR\>,\ (2018-2024)
 .PP
 You can see a complete list of contributors at
    \fIhttps://github.com/coderholic/pyradio/graphs/contributors\fR
@@ -1898,6 +1923,8 @@ You can see a complete list of contributors at
 
 .IP \fI1. 3
 \fBedunfelt\fR (\fIhttps://github.com/edunfelt\fR), for her wonderful work on \fBbase16 themes\fR (\fIhttps://github.com/edunfelt/base16-pyradio\fR), and ideas regarding theming and such.
+.IP \fI2. 3
+\fBamano-kenji\fR (\fIhttps://github.com/amano-kenji\fR), for his valuable suggestions and bug reports.
 
 .SH See also
 

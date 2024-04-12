@@ -1049,7 +1049,7 @@ class PyRadioRecordingDir(object):
             self._win.addstr(16 + adjust_line_Y, 23, 'Exeute / Cancel operation (not in Line Editor).', curses.color_pair(5))
 
             self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
-            self._win.addstr(17 + adjust_line_Y, 23, 'Line editor help (in Line Editor).', curses.color_pair(5))
+            self._win.addstr(17 + adjust_line_Y, 23, 'Help or Line editor help.', curses.color_pair(5))
 
             self._win.addstr(18 + adjust_line_Y, 5, 'h', curses.color_pair(4))
             self._win.addstr(18 + adjust_line_Y, 23, 'Display HTML help (not in Line Editor).', curses.color_pair(5))
@@ -1158,6 +1158,7 @@ class PyRadioRecordingDir(object):
                  1: New location ok             (1, new_location, move_files)
                  2: display line editor help    (2, None, False)
                  3: display invalid dir         (3, None, False)
+                 4: display rec dir help        (4, None, False)
         """
         ret = 0
         if self._too_small:
@@ -1177,6 +1178,8 @@ class PyRadioRecordingDir(object):
                 return -1, None, False
             elif char == ord('?') and self.focus == 0:
                 return 2, None, False
+            elif char == ord('?') and self.focus > 0:
+                return 4, None, False
             elif char in (ord(' '), ord('l'), curses.KEY_RIGHT,
                           curses.KEY_ENTER, ord('\n'),
                           ord('\r')) and self._focus == 1:
