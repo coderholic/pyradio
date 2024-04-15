@@ -45,6 +45,17 @@ enable_mouse = False
 # Default value: default
 recording_dir = default
 
+# Resource Opener
+# This is a Linux (et al) only parameter. It has no effect on Windows or MacOS.
+# A Resource Opener is a program used to open files passed to it as arguments.
+# PyRadio will use it to open either directories or HTML files.
+# Default value is "auto", in which case, PyRadio will try to use xdg-open,
+# gio, mimeopen, mimeo or handlr, in that order of detection.  If none if found,
+# the requested file will simply not open.
+# To set a custom Opener, insert the absolute path to its executable, followed
+# by any parameter required, for example: "/usr/bin/gio open".
+resource_opener = auto
+
 # Desktop notifications
 # If this option is enabled, a Desktop notification will be displayed using the
 # notification daemon / service. If enabled but no notification is displayed,

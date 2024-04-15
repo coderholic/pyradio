@@ -678,7 +678,7 @@ class Player(object):
         # logger.debug('\n\n\n')
 
         if 'Codec:' not in a_list[-1]:
-            a_list[n] = '|' + a_list[n]
+            a_list.append('        Codec:')
 
         # if a_list[1].startswith('_'):
         #     a_list[1] = '|' + a_list[1]

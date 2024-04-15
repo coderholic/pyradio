@@ -6133,7 +6133,7 @@ ____Using |fallback| theme.''')
                 self._update_status_bar_right(status_suffix='')
                 html = HtmlHelp()
                 html.open_file(
-                        linux_run_tool=self._cnf.linux_run_tool,
+                        linux_resource_opener=self._cnf.linux_resource_opener,
                         browser=self._cnf.browsing_station_service
                         )
 

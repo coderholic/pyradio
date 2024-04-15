@@ -419,7 +419,7 @@ Please execute the installation script again, like so:
     else:
         return True
 
-def run_tool():
+def get_a_linux_resource_opener():
     ''' return an resource open tool from a list
         the list comes from "Resource openers"
         https://wiki.archlinux.org/title/default_applications
@@ -455,7 +455,7 @@ def open_cache_dir():
     elif platform.system().lower() == 'darwin':
         subprocess.Popen([which('open'), c.cache_dir])
     else:
-        prog = run_tool()
+        prog = get_a_linux_resource_opener()
         if prog:
             try:
                 subprocess.Popen(

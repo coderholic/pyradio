@@ -2,8 +2,9 @@
 import io
 import csv
 from sys import version as sys_version
-from os import rename, remove
+from os import rename, remove, access, X_OK
 from os.path import exists, dirname, join
+from shutil import which
 from copy import deepcopy
 from rich import print
 import logging
@@ -478,3 +479,17 @@ and write in it
         # for n in self._stations:
         #     print(n)
 
+def validate_resource_opener_path(a_file):
+    # Check if the file exists
+    if not exists(a_file):
+        # If the file doesn't exist, try to find it using shutil.which
+        full_path = which(a_file)
+        if full_path is None:
+            return None
+        else:
+            a_file = full_path
+    # Check if the file is executable
+    if not access(a_file, X_OK):
+        return None
+    # Return the validated path
+    return a_file

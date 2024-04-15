@@ -22,7 +22,7 @@ from .cjkwrap import cjklen, cjkslices, fill
 from .log import Log
 from .common import StationsChanges
 from .schedule import PyRadioScheduleList
-from .install import run_tool
+from .install import get_a_linux_resource_opener
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
@@ -1049,7 +1049,7 @@ def open_conf_dir(cnf, msg=None, a_dir=None):
     elif platform.system().lower() == 'darwin':
         subprocess.Popen([shutil.which('open'), op_dir])
     else:
-        prog = cnf.linux_run_tool if cnf.linux_run_tool else run_tool()
+        prog = cnf.linux_resource_opener if cnf.linux_resource_opener else get_a_linux_resource_opener()
         if prog:
             try:
                 subprocess.Popen(

@@ -25,13 +25,14 @@ else:
     from os import getuid
 from pyradio import version, stations_updated
 
+from .common import validate_resource_opener_path
 from .browser import PyRadioStationsBrowser, probeBrowsers
 from .install import get_github_long_description
 from .common import is_rasberrypi
 from .player import pywhich
 from .server import IPsWithNumbers
 from .xdg import XdgDirs, XdgMigrate, CheckDir
-from .install import run_tool
+from .install import get_a_linux_resource_opener
 HAS_REQUESTS = True
 
 try:
@@ -1285,6 +1286,7 @@ class PyRadioConfig(PyRadioStations):
     opts['enable_notifications'] = ['Enable notifications: ', '-1']
     opts['use_station_icon'] = ['    Use station icon: ', True]
     opts['recording_dir'] = ['Recordings dir: ', '']
+    opts['resource_opener'] = ['Resource Opener: ', 'auto']
     opts['conn_title'] = ['Connection Options: ', '']
     opts['connection_timeout'] = ['Connection timeout: ', '10']
     opts['force_http'] = ['Force http connections: ', False]
@@ -1368,7 +1370,7 @@ class PyRadioConfig(PyRadioStations):
 
     _fixed_recording_dir = None
 
-    _linux_run_tool = None
+    _linux_resource_opener = None
 
     def __init__(self, user_config_dir=None, headless=False):
         # keep old recording / new recording dir
@@ -1426,8 +1428,8 @@ class PyRadioConfig(PyRadioStations):
         player_instance = None
 
     @property
-    def linux_run_tool(self):
-        return self._linux_run_tool
+    def linux_resource_opener(self):
+        return self._linux_resource_opener
 
     @property
     def xdg_compliant(self):
@@ -1832,7 +1834,7 @@ class PyRadioConfig(PyRadioStations):
         elif system().lower() == 'darwin':
             Popen([which('open'), a_dir])
         else:
-            xdg_open_path = self._linux_run_tool if self._linux_run_tool else run_tool()
+            xdg_open_path = self._linux_resource_opener if self._linux_resource_opener else get_a_linux_resource_opener()
             if xdg_open_path:
                 try:
                     Popen(
@@ -1850,7 +1852,7 @@ class PyRadioConfig(PyRadioStations):
         elif system().lower() == 'darwin':
             Popen([which('open'), a_dir])
         else:
-            xdg_open_path = self._linux_run_tool if self._linux_run_tool else run_tool()
+            xdg_open_path = self._linux_resource_opener if self._linux_resource_opener else get_a_linux_resource_opener()
             if xdg_open_path:
                 try:
                     Popen(
@@ -2052,6 +2054,7 @@ class PyRadioConfig(PyRadioStations):
                 self._make_sure_dirs_exist()
                 self._first_read = False
                 return
+        self._linux_resource_opener = None
         lines = []
         try:
             with open(file_to_read, 'r', encoding='utf-8') as cfgfile:
@@ -2224,6 +2227,14 @@ class PyRadioConfig(PyRadioStations):
                     not platform.startswith('win') and \
                     sp[1].lower() == 'true':
                 self.xdg_compliant = True
+            elif sp[0] == 'resource_opener' and \
+                    not platform.startswith('win'):
+                if self.opts['resource_opener'][1] != 'auto':
+                    tmp = self.opts['resource_opener'][1].split(' ')
+                    prog = validate_resource_opener_path(tmp[0])
+                    if prog is not None:
+                        tmp[0] = prog
+                        self._linux_resource_opener = ' '.join(tmp)
 
         # logger.error('\n\nself.params{}\n\n'.format(self.params))
         ''' read distro from package config file '''
