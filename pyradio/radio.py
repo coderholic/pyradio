@@ -40,7 +40,7 @@ from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnec
 from .themes import *
 from .cjkwrap import cjklen, cjkcenter, cjkslices
 from . import player
-from .install import version_string_to_list, get_github_tag, fix_pyradio_win_exe
+from .install import version_string_to_list, get_github_tag, fix_pyradio_win_exe, get_a_linux_resource_opener
 from .html_help import HtmlHelp
 from .browser import RadioBrowserConfig, RadioBrowserConfigWindow
 from .schedule_win import PyRadioSimpleScheduleWindow
@@ -9007,6 +9007,11 @@ ____Using |fallback| theme.''')
         return ret
 
     def _show_open_dir_window(self):
+        if not platform.startswith('win'):
+            prog = self._cnf.linux_resource_opener if self._cnf.linux_resource_opener else get_a_linux_resource_opener()
+            if prog is None:
+                self._show_dirs_list()
+                return
         if self._open_dir_win is None:
             self._open_dir_win = PyRadioOpenDir(
                     self._cnf,
@@ -9015,6 +9020,21 @@ ____Using |fallback| theme.''')
             )
         self.ws.operation_mode = self.ws.OPEN_DIR_MODE
         self._open_dir_win.show(parent=self.bodyWin)
+
+    def _show_dirs_list(self):
+        out = ['|____Config Dir:| ' + self._cnf.stations_dir]
+        out.append('|______Data Dir:| ' + self._cnf.data_dir)
+        if self._cnf.data_dir != self._cnf.state_dir:
+            out.append('|_____State Dir:| ' + self._cnf.state_dir)
+        out.append('|______Code Dir:| ' + path.dirname(__file__))
+        out.append('|Recordings Dir:| ' + self._cnf.recording_dir)
+        txt = '\n'.join(out)
+        self._messaging_win.set_a_message(
+                'UNIVERSAL', (
+                    'PyRadio Dirs',
+                    '\n' + txt.replace(path.expanduser('~'), '~') + '\n\n')
+                )
+        self._open_simple_message_by_key('UNIVERSAL')
 
     def _show_delayed_notification(self, txt, delay=.75):
         if not (self._limited_height_mode or self._limited_width_mode):
