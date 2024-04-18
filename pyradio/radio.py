@@ -7301,11 +7301,11 @@ ____Using |fallback| theme.''')
                 # show invalid dir message
                 self._show_notification_with_delay(
                         delay=1.5,
-                        txt='______Invalid directory specified!!!______\n',
+                        txt='______Invalid file specified!!!______\n',
                         mode_to_set=self.ws.operation_mode,
                         callback_function=self.refreshBody_after_Message)
             elif ret == 4:
-                self._open_message_win_by_key('M_REC_DIR_HELP')
+                self._open_message_win_by_key('M_RESOURCE_OPENER')
 
         elif self.ws.operation_mode == self.ws.INSERT_RECORDINGS_DIR_MODE:
             ret, new_dir, self._asked_to_move_recordings_dir = self._insert_recording_dir_win.keypress(char)

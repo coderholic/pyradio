@@ -1483,9 +1483,7 @@ class PyRadioResourceOpener(object):
             self._win.addstr(16 + adjust_line_Y, 5, '?', curses.color_pair(4))
             self._win.addstr(16 + adjust_line_Y, 23, 'Help or Line editor help.', curses.color_pair(5))
 
-            self._win.addstr(17 + adjust_line_Y, 5, 'h', curses.color_pair(4))
-            self._win.addstr(17 + adjust_line_Y, 23, 'Display HTML help (not in Line Editor).', curses.color_pair(5))
-
+        adjust_line_Y -= 1
         if self.maxY > 22 + adjust_line_Y and self.maxX > 76:
             try:
                 self._win.addstr(19 + adjust_line_Y, 5, '─' * (self.maxX - 10), curses.color_pair(12))
@@ -1633,9 +1631,6 @@ class PyRadioResourceOpener(object):
             elif char == ord('s') and self._focus > 0:
                 # s, execute
                 return self._get_result(ret)
-            elif char == ord('h') and self._focus > 0:
-                html = HtmlHelp()
-                html.open_filename(a_file='rec-dir.html')
             elif self._focus == 0:
                 """
                  Returns:

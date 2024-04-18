@@ -729,7 +729,10 @@ class PyRadioConfigWindow(object):
             self._global_functions[char]()
 
         elif val[0] == 'resource_opener':
-            return self.n_u.INSERT_RESOURCE_OPENER, []
+            if not (platform.startswith('win') or \
+                platform.startswith('dar')):
+                return self.n_u.INSERT_RESOURCE_OPENER, []
+            return -1, []
 
         elif val[0] == 'recording_dir':
             return self.n_u.INSERT_RECORDINGS_DIR_MODE, []

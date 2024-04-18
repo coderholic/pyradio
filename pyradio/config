@@ -53,7 +53,7 @@ recording_dir = default
 # gio, mimeopen, mimeo or handlr, in that order of detection.  If none if found,
 # the requested file will simply not open.
 # To set a custom Opener, insert its name (either absolute path to its executable
-# or its name, if it is in your PATH), followedi by any parameter required,
+# or its name, if it is in your PATH), followed by any parameter required,
 # for example: "/usr/bin/gio open", "mimeopen -n".
 resource_opener = auto
 

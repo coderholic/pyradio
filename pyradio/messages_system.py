@@ -1112,6 +1112,24 @@ press |F8| to get to the player installation window.
 '''
 ),
 
+    'M_RESOURCE_OPENER': ('Resource Opener Help',
+r'''A |Resource Opener| is a program used to open files passed to it
+as arguments.
+
+|PyRadio| will use it to open either directories or HTML files.
+
+Default value is "|auto|", in which case, |PyRadio| will try to use
+|xdg-open|, |gio|, |mimeopen|, |mimeo| or |handlr|, in that order of
+detection. If none if found, the requested file will simply not
+open.
+
+To set a |Custom Opener|, insert its name (either absolute path
+to its executable or its name, if it is in your |PATH|), followed
+by any parameter required, for example: "|/usr/bin/gio open|",
+"|mimeopen -n|", "|xdg-open|".
+'''
+),
+
     'M_REC_DIR_HELP': ('Recordings Dir Help',
 r'''|PyRadio| will record stations to files and save them in the
 directory specified here.
