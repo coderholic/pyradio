@@ -101,10 +101,10 @@ __You can use the following keys to navigate: |j| (|Up|), |k| (|Down|),
 |PgUp| (|^B|), |PgDn| (|^F|) to scroll up/down.
 __You can also use |g| (|HOME|) / |G| (|END|) to scroll to the top / bottom.
 
-__ You will have noticed the two |upward arrows| at the top right
-corner of this window; they indicate that the text is |scrollable| and
-the keys mentioned above are |valid|; if the arrows are not there, the
-text is not scrollable and pressing any key will |close the window|.
+__ You will have noticed an |upward arrow| at the top right corner of
+this window; it indicates that the text is |scrollable| and the keys
+mentioned above are |valid|; if the arrow is not there, the text is
+not scrollable and pressing any key will |close the window|.
 
 !Gerneral Help
 Up|, |j|, |PgUp|,                   |*|
@@ -1742,7 +1742,7 @@ W| / |w                             |*| Toggle title log / like a station'''
                 #     self._win.addstr(0, self._maxX-1, '⮝', self.col_box)
                 #     self._win.addstr(1, self._maxX-1, '⮟', self.col_box)
                 self._win.addstr(0, self._maxX-1, '^', self.col_box)
-                self._win.addstr(1, self._maxX-1, '^', self.col_box)
+                # self._win.addstr(1, self._maxX-1, '^', self.col_box)
             if self._caption:
                 self._win.addstr(
                         0, int((self._maxX - len(self._caption)) / 2) - 2,

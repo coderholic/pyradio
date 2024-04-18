@@ -646,7 +646,10 @@ If nothing else works, try the following command:
                 return
 
         if args.open_cache:
-            open_cache_dir()
+            open_conf_dir(
+                    pyradio_config,
+                    msg='[magenta]PyRadio[/magenta] Cache dir: "[red]{}[/red]"',
+                    a_dir=pyradio_config.cache_dir)
             return
 
         if args.show_cache:
@@ -1051,6 +1054,8 @@ def open_conf_dir(cnf, msg=None, a_dir=None):
     else:
         prog = cnf.linux_resource_opener if cnf.linux_resource_opener else get_a_linux_resource_opener()
         if prog:
+            if isinstance(prog, str):
+                prog = prog.split(' ')
             try:
                 subprocess.Popen(
                     [*prog, op_dir],

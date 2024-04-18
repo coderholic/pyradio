@@ -145,11 +145,9 @@ and much more...
     - python-dateutil
     - netifaces
 * MPV, MPlayer or VLC installed and in your path
-* MKVToolNix (cli files) to insert tags, chapters and cover to recordings (optional)
+* MKVToolNix (cli files) to insert tags, chapters and cover to recordings (optional, if MPV or VLC is to be used, but mandatory in the case of MPlayer)
 
-Linux users will have to install the "**xdg-utils**" package (may be named differently in your distro) which will provide "**xdg-open**", the utility to open directories, html pages, etc.
-
-Linux and macOS users will have to have installed a font that supports the "**Unicode Geometric Shapes Block**". Any font mentioned in the [Font Support for Unicode Block 'Geometric Shapes'](https://www.fileformat.info/info/unicode/block/geometric_shapes/fontsupport.htm) page will do; as you can see these include **DejaVu**, **FreeMono**, **Unifont**, etc, some of which will fopefully be installed by default.
+Linux users will have to install a [resource opener](https://wiki.archlinux.org/title/default_applications#Resource_openers) package, a utility to open directories, html pages, etc. **PyRadio** will look for *xdg-open*, *gio*, *mimeopen*, *mimeo* or *handlr*, in that order of detection. If a different *resource opener* is used, one can declare it in the **Configuration Window**.
 
 <!-- Changelog -->
 

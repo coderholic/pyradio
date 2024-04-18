@@ -457,6 +457,8 @@ def open_cache_dir():
     else:
         prog = get_a_linux_resource_opener()
         if prog:
+            if isinstance(prog, str):
+                prog = prog.split(' ')
             try:
                 subprocess.Popen(
                     [*prog, c.cache_dir],
@@ -1004,7 +1006,7 @@ class PyRadioUpdate(object):
         '''' get tmp dir '''
         if HAS_PIPX:
             cache_dir = os.getenv('XDG_CACHE_HOME')
-            if cach_dir is None:
+            if cache_dir is None:
                 self._dir = os.path.join(os.path.expanduser('~'), '.cache', 'pyradio')
             else:
                 self._dir =  os.path.join(cache_dir, 'pyradio')

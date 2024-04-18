@@ -56,7 +56,11 @@ class HtmlHelp(object):
                     if logger.isEnabledFor(logging.INFO):
                         logger.info('HtmlHelp: Cannot find a run tool for Linux!')
                     return
+                if isinstance(tool, str):
+                    tool = tool.split(' ')
                 cmd = [*tool , path.join(self._path, a_file)]
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('HtmlHelp: executing: "{}"'.format(cmd))
             try:
                 p = subprocess.Popen(
                         cmd,

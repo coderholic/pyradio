@@ -1717,6 +1717,10 @@ class PyRadioConfig(PyRadioStations):
         return self.opts['remote_control_server_auto_start'][1]
 
     @property
+    def resource_opener(self):
+        return self.opts['resource_opener'][1]
+
+    @property
     def recording_dir(self):
         return self.opts['recording_dir'][1]
 
@@ -2054,7 +2058,6 @@ class PyRadioConfig(PyRadioStations):
                 self._make_sure_dirs_exist()
                 self._first_read = False
                 return
-        self._linux_resource_opener = None
         lines = []
         try:
             with open(file_to_read, 'r', encoding='utf-8') as cfgfile:
@@ -2228,13 +2231,15 @@ class PyRadioConfig(PyRadioStations):
                     sp[1].lower() == 'true':
                 self.xdg_compliant = True
             elif sp[0] == 'resource_opener' and \
-                    not platform.startswith('win'):
-                if self.opts['resource_opener'][1] != 'auto':
-                    tmp = self.opts['resource_opener'][1].split(' ')
+                    not (platform.startswith('win') or \
+                        platform.startswith('dar')):
+                if sp[1] != 'auto':
+                    tmp = sp[1].split(' ')
                     prog = validate_resource_opener_path(tmp[0])
                     if prog is not None:
                         tmp[0] = prog
                         self._linux_resource_opener = ' '.join(tmp)
+                        self.opts['resource_opener'][1] = sp[1]
 
         # logger.error('\n\nself.params{}\n\n'.format(self.params))
         ''' read distro from package config file '''
@@ -2657,6 +2662,7 @@ class PyRadioConfig(PyRadioStations):
             logger.info('Config saved')
         self.dirty_config = False
         self.params_changed = False
+        self._linux_resource_opener = self.resource_opener
         return 0
 
     def read_playlist_file(

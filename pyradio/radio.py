@@ -36,7 +36,9 @@ from .common import *
 from .window_stack import Window_Stack
 from .config_window import *
 from .log import Log
-from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering, PyRadioRecordingDir, PyRadioOpenDir
+from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, \
+    PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering, \
+    PyRadioRecordingDir, PyRadioResourceOpener, PyRadioOpenDir
 from .themes import *
 from .cjkwrap import cjklen, cjkcenter, cjkslices
 from . import player
@@ -394,6 +396,7 @@ class PyRadio(object):
     _schedule_playlist_select_win = None
     _schedule_station_select_win = None
     _insert_recording_dir_win = None
+    _insert_resource_opener_win = None
 
     _asked_to_move_recordings_dir = False
 
@@ -591,6 +594,7 @@ class PyRadio(object):
             self.ws.WIN_VLC_NO_RECORD_MODE: self._show_win_no_record,
             self.ws.BUFFER_SET_MODE: self._show_buffer_set,
             self.ws.INSERT_RECORDINGS_DIR_MODE: self._open_redordings_dir_select_win,
+            self.ws.INSERT_RESOURCE_OPENER: self._open_resource_opener_select_win,
             self.ws.MOVE_RECORDINGS_DIR_ERROR_MODE: self._show_moving_recordings_dir_error,
             self.ws.OPEN_DIR_MODE: self._show_open_dir_window,
             self.ws.DELETE_PLAYLIST_MODE: self._ask_to_delete_playlist,
@@ -5522,6 +5526,18 @@ ____Using |fallback| theme.''')
         else:
             self._insert_recording_dir_win.set_parent(self.outerBodyWin)
 
+    def _open_resource_opener_select_win(self):
+        if self._insert_resource_opener_win is None:
+            self._insert_resource_opener_win = PyRadioResourceOpener(
+                opener=self._cnf.resource_opener,
+                parent=self.outerBodyWin,
+                global_functions=self._global_functions,
+            )
+            self.ws.operation_mode = self.ws.INSERT_RESOURCE_OPENER
+            self._insert_resource_opener_win.show()
+        else:
+            self._insert_resource_opener_win.set_parent(self.outerBodyWin)
+
     def _show_recording_toggle_window(self):
         if self.player.recording > 0:
             self._open_simple_message_by_key_and_mode(
@@ -5865,13 +5881,6 @@ ____Using |fallback| theme.''')
             if logger.isEnabledFor(logging.debug):
                 logger.debug('keypress: Asked to stop. Stoping...')
             return -1
-
-        if char == ord('1'):
-            self._show_message_win()
-            return
-        # if char == ord('1'):
-        #     self.search_radio_browser_headless(1)
-        #     return
 
         if self._cnf.headless and char not in (
             ord('O'),
@@ -6709,6 +6718,8 @@ ____Using |fallback| theme.''')
             ret, ret_list = self._config_win.keypress(char)
             if ret == self.ws.INSERT_RECORDINGS_DIR_MODE:
                 self._open_redordings_dir_select_win()
+            elif ret == self.ws.INSERT_RESOURCE_OPENER:
+                self._open_resource_opener_select_win()
             elif ret == self.ws.SELECT_PLAYER_MODE:
                 ''' Config > Select Player '''
                 self.ws.operation_mode = self.ws.SELECT_PLAYER_MODE
@@ -7256,6 +7267,45 @@ ____Using |fallback| theme.''')
             self.ws.close_window()
             self.refreshBody()
             return
+
+        elif self.ws.operation_mode == self.ws.INSERT_RESOURCE_OPENER:
+            ret, new_opener = self._insert_resource_opener_win.keypress(char)
+            if ret == -1:
+                self.ws.close_window()
+                self._insert_resource_opener_win = None
+                self.refreshBody()
+            elif ret == 0:
+                return
+            elif ret == 1:
+                # new location selected
+                # logger.error('\nret\t\t{0}\nnew_dir\t\t"{1}"\nMove dir\t{2}'.format(ret, new_dir, self._asked_to_move_recordings_dir))
+                # logger.error('\nRecordings Directory Selected\n\n')
+                self._config_win._config_options['resource_opener'][1] = new_opener
+                # logger.info('\n    self._config_win._config_options : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
+                # logger.info('\n    self._config_win._saved_config_options : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
+                # logger.info('\n    self.xdg._new_dirs[RECORDINGS] : "{}"'.format(self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
+                # logger.info('\n    self.xdg._old_dirs[RECORDINGS] : "{}"'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS]))
+                # for n in self._config_win._config_options.keys():
+                #     logger.info('{0} : {1}'.format(n, self._config_win._config_options[n]))
+                # logger.info('\nsaved config options')
+                # for n in self._config_win._saved_config_options.keys():
+                #     logger.info('{0} : {1}'.format(n, self._config_win._saved_config_options[n]))
+
+                self.ws.close_window()
+                self._insert_resource_opener_win = None
+                self.refreshBody()
+            elif ret == 2:
+                # show line editor help
+                self._show_line_editor_help()
+            elif ret == 3:
+                # show invalid dir message
+                self._show_notification_with_delay(
+                        delay=1.5,
+                        txt='______Invalid directory specified!!!______\n',
+                        mode_to_set=self.ws.operation_mode,
+                        callback_function=self.refreshBody_after_Message)
+            elif ret == 4:
+                self._open_message_win_by_key('M_REC_DIR_HELP')
 
         elif self.ws.operation_mode == self.ws.INSERT_RECORDINGS_DIR_MODE:
             ret, new_dir, self._asked_to_move_recordings_dir = self._insert_recording_dir_win.keypress(char)
@@ -9007,7 +9057,8 @@ ____Using |fallback| theme.''')
         return ret
 
     def _show_open_dir_window(self):
-        if not platform.startswith('win'):
+        if not (platform.lower().startswith('win') or \
+                platform.lower().startswith('darwin')):
             prog = self._cnf.linux_resource_opener if self._cnf.linux_resource_opener else get_a_linux_resource_opener()
             if prog is None:
                 self._show_dirs_list()
@@ -9022,6 +9073,8 @@ ____Using |fallback| theme.''')
         self._open_dir_win.show(parent=self.bodyWin)
 
     def _show_dirs_list(self):
+        if logger.isEnabledFor(logging.INFO):
+            logger.info('No resource opener found; displaying dirs list...')
         out = ['|____Config Dir:| ' + self._cnf.stations_dir]
         out.append('|______Data Dir:| ' + self._cnf.data_dir)
         if self._cnf.data_dir != self._cnf.state_dir:
