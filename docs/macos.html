@@ -44,17 +44,17 @@ a:visited{color: SaddleBrown;}
 <!-- vim-markdown-toc Marked -->
 <ul>
 <li><a href="#preface">Preface</a></li>
-<li><a href="#install-a-media-player">Install a media player</a></li>
+<li><a href="#preparation">Preparation</a>
+<ul>
+<li><a href="#homebrew-installation">Homebrew installation</a></li>
+<li><a href="#python-installation">Python Installation</a></li>
+<li><a href="#media-player-installation">Media player installation</a></li>
 <li><a href="#get-the-installation-script">Get the installation script</a></li>
-<li><a href="#python3-installation">Python3 installation</a>
+</ul></li>
+<li><a href="#pyradio-installation">PyRadio installation</a>
 <ul>
 <li><a href="#dependencies-installation">Dependencies installation</a></li>
-<li><a href="#pyradio-installation">PyRadio installation</a></li>
-</ul></li>
-<li><a href="#installation-of-additional-package-managers">Installation of Additional Package Managers</a>
-<ul>
-<li><a href="#homebrew">Homebrew</a></li>
-<li><a href="#macports">MacPorts</a></li>
+<li><a href="#performing-the-installation">Performing the installation</a></li>
 </ul></li>
 </ul>
 <!-- vim-markdown-toc -->
@@ -64,53 +64,54 @@ a:visited{color: SaddleBrown;}
 <p>Furtermore, the pipx installation will be a fully isolated one, which means that all dependencies will be installed along with <strong>PyRadio</strong> in a virtual environment.</p>
 <p>That is a one-way street to follow since the combination of macOS versions, python installation methods and player installation methods is too complex to provide a complete installation guide for <strong>PyRadio</strong>.</p>
 <p><a target="_blank" href="https://pypa.github.io/pipx/">pipx</a> provides a standardization of the whole procedure which leads to an acceptable (enjoyable even) user experience.</p>
-<h2 id="install-a-media-player">Install a media player <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>First of all you will install a supported media player (<strong>MPV</strong>, <strong>MPLayer</strong> or <strong>VLC</strong>). You are free to install any one of them or even more than one. The steps to follow from now on depends entirely on you, meaning depends entirely on the media player(s) you want to install and use with <strong>PyRadio</strong>.</p>
+<h2 id="preparation">Preparation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>These are the steps required before actually installing <strong>PyRadio</strong>.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> The following installation instructions were performed on a freshly installed <strong>Ventura</strong> (macOS 13) system. Things may be a bit different for older macOs versions, but it will be the same for <strong>Sonoma</strong> (macOS 14).</p>
+<h3 id="homebrew-installation">Homebrew installation</h3>
+<p>This is the method <a target="_blank" href="https://brew.sh">Homebrew</a> recommends, so we just go with it.</p>
+<p>Open a terminal and execute:</p>
+<!-- START OF BREW LINK-->
+<pre>/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;</pre>
+<!-- END OF BREW LINK-->
+<h3 id="python-installation">Python Installation</h3>
+<p>Your system comes with a pre-installed version of Python, but it would be better to install the one provided by <strong>Homebrew</strong>.</p>
+<pre>brew install python3</pre>
+<p>This will also install “<em>Apple’s Command Line Developer Tools</em>” (if they are not already installed).</p>
+<p>Then, adjust your <strong>PATH</strong>, so that the newly installed Python will be the default one.</p>
+<pre>cat &lt;&lt; END &gt;&gt; ~/.zshrc
+export PATH=/usr/local/bin:&quot;$PATH&quot;
+END
+source ~/.zshrc</pre>
+<h3 id="media-player-installation">Media player installation</h3>
+<p>The next step is to install a supported media player (<strong>MPV</strong>, <strong>MPLayer</strong> or <strong>VLC</strong>). You are free to install any one of them or even more than one. The steps to follow from now on depends entirely on you, meaning depends entirely on the media player(s) you want to install and use with <strong>PyRadio</strong>.</p>
 <p><strong>1. VLC</strong></p>
-<p><strong>VLC</strong> provides a MacOS package, so you can just go get it from <a target="_blank" href="https://www.videolan.org/vlc/">its site</a>. This is the cleaner way and I would recommend it.</p>
+<p><strong>VLC</strong> provides a macOS package, so you can just go get it from <a target="_blank" href="https://www.videolan.org/vlc/">its site</a>. This is the cleaner way and I would recommend it.</p>
 <p>If this is the player you prefer, you will have to take one more step before it can be used with <strong>PyRadio</strong>.</p>
 <p>Open a terminal and type:</p>
 <pre>ln -s /Applications/VLC.app/Contents/MacOS/VLC ~/.local/bin/cvlc</pre>
 <p><strong>2. MPV or MPlayer</strong></p>
-<p><strong>MPV</strong> and <strong>MPlayer</strong> can be installed using either <a target="_blank" href="https://brew.sh">Homebrew</a> or <a target="_blank" href="https://www.macports.org/">MacPorts</a>. Installation info can be found at the <a href="#installation-of-additional-package-managers">end of this page</a>.</p>
-<p>After you have installed <a target="_blank" href="https://brew.sh">Homebrew</a> or <a target="_blank" href="https://www.macports.org/">MacPorts</a>, you can install the player of your choice.</p>
+<p><strong>MPV</strong> and <strong>MPlayer</strong> can be installed using <a target="_blank" href="https://brew.sh">Homebrew</a>.</p>
 <p><strong><em>a) MPV</em></strong></p>
 <pre>brew install mpv</pre>
-<p>or</p>
-<pre>sudo port install mpv</pre>
 <p><strong><em>b) MPlayer</em></strong></p>
 <pre>brew install mplayer</pre>
-<p>or</p>
-<pre>sudo port install MPlayer</pre>
-<h2 id="get-the-installation-script">Get the installation script <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<h3 id="get-the-installation-script">Get the installation script</h3>
 <p>Open a terminal and execute:</p>
 <pre>cd
 curl -L \
     https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py \
     -o install.py</pre>
-<h2 id="python3-installation">Python3 installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>Execute:</p>
-<pre>python3</pre>
-<p>If this is the first time python3 is executed you will be prompted to allow the installation of “<em>Apple’s Command Line Developer Tools</em>”. Accept the installation, wait for it to complete, and reboot.</p>
-<p>When the system is up again, please check for updates (open <strong>App Store</strong> and click on <strong>Updates</strong>). Install any pending update and reboot.</p>
+<h2 id="pyradio-installation">PyRadio installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>Your system is ready now for <strong>PyRadio</strong> to be installed.</p>
 <h3 id="dependencies-installation">Dependencies installation</h3>
 <p>Open a terminal and type:</p>
-<pre>python3 -m pip install requests rich pipx
-python3 -m pipx ensurepath</pre>
-<p>Log out and log in again for the changes to take effect.</p>
-<h3 id="pyradio-installation">PyRadio installation</h3>
-<p>Once you are logged in again, open a terminal and type:</p>
-<pre>cd
-python3 install.py</pre>
+<pre>python3 -m pip install requests rich pipx --break-system-packages</pre>
+<p>Finally, type:</p>
+<pre>python3 -m pipx ensurepath
+source ~/.zshrc</pre>
+<h3 id="performing-the-installation">Performing the installation</h3>
+<p>Execute the following command:</p>
+<pre>python3 install.py</pre>
 <p>Enjoy!</p>
-<h2 id="installation-of-additional-package-managers">Installation of Additional Package Managers <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<p>These instructions must be followed only in case you want to use <strong>MPV</strong> or <strong>MPlayer</strong> with <strong>PyRadio</strong>.</p>
-<p>It goes without saying that it’s enough to install only one of these package managers.</p>
-<h3 id="homebrew">Homebrew</h3>
-<p>To install <a target="_blank" href="https://brew.sh">Homebrew</a> open a <strong>terminal</strong> and type:</p>
-<pre>/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;</pre>
-<h3 id="macports">MacPorts</h3>
-<p><a target="_blank" href="https://www.macports.org/">MacPorts</a> provide installation packages for each MacOS version, so just get to their <a target="_blank" href="https://www.macports.org/install.php">site</a> and get the one suitable for you.</p>
 </body>
 </html>

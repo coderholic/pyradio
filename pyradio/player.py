@@ -3338,8 +3338,8 @@ class VlcPlayer(Player):
                 if ok_to_go_on:
                     break
 
-            opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
-                '-Irc', '--rc-host', '127.0.0.1:' + str(self._port),
+            opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
+                '--no-volume-save', '-Irc', '--rc-host', '127.0.0.1:' + str(self._port),
                 '--file-logging', '--logmode', 'text', '--log-verbose', '3',
                 '--logfile', self._vlc_stdout_log_file, '-vv',
                 self._url_to_use(streamUrl)]
@@ -3351,18 +3351,18 @@ class VlcPlayer(Player):
         else:
             if self.recording == self.NO_RECORDING:
                 if self.WIN:
-                    opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
-                            '-Irc', '-vv', self._vlc_url]
+                    opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
+                            '--no-volume-save', '-Irc', '-vv', self._vlc_url]
                 else:
-                    opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
-                            '-Irc', '-vv']
+                    opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
+                            '--no-volume-save', '-Irc', '-vv']
             else:
                 if self.WIN:
-                    opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
-                            '-Irc', '-vv', self._vlc_url]
+                    opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
+                            '--no-volume-save', '-Irc', '-vv', self._vlc_url]
                 else:
-                    opts = [self.PLAYER_CMD, '--no-one-instance', '--no-volume-save',
-                            '-Irc', '-vv']
+                    opts = [self.PLAYER_CMD, '--no-video', '--no-one-instance',
+                            '--no-volume-save', '-Irc', '-vv']
 
         if platform.lower().startswith('dar'):
             # MacOS VLC does not support --no-one-instance

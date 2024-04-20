@@ -390,26 +390,14 @@ done
 # echo "***** installing for user..."
 do_dev
 
-if [ "${TO_PYTHON}" == "2" ];
-then
-    tar czf pyradio.tar.gz pyradio
-    for a_file in pyradio/*.py
-    do
-        sed -i "/open/s/, encoding='utf-8'//" "${a_file}"
-        sed -i 's/console.print/# &/' "${a_file}"
-        sed -i 's/from rich import print/# &/' "${a_file}"
-        sed -i '/##### NO PYTHON2/,/##### END NO PYTHON2/d' "${a_file}"
-    done
-else
-    #
-    # Use pipx by default, if installed
-    echo -n "Looking for pipx ... "
-    PIPX_VERSION=$(python"${TO_PYTHON}" -m pipx --version)
-    [ -z "$PIPX_VERSION" ] || PIPX=1
-    [ -z "$PIPX_VERSION" ] && {
-        echo "Command used: python"${TO_PYTHON}" -m pipx --version 2>/dev/null"
-    } || echo "$PIPX_VERSION"
-fi
+#
+# Use pipx by default, if installed
+echo -n "Looking for pipx ... "
+PIPX_VERSION=$(python"${TO_PYTHON}" -m pipx --version)
+[ -z "$PIPX_VERSION" ] || PIPX=1
+[ -z "$PIPX_VERSION" ] && {
+    echo "Command used: python"${TO_PYTHON}" -m pipx --version 2>/dev/null"
+} || echo "$PIPX_VERSION"
 
 if [ $(uname -s) = "Darwin" ] || [ $(uname -s) = "darwin" ]
 then
@@ -461,14 +449,6 @@ fi
 if [ -z "$PIPX" ]
 then
     # Normanl, old style installation
-    if [ "${TO_PYTHON}" = "2" ]
-    then
-        cp setup.py setup.py.orig
-        sed -i \
-            -e 's/, find_namespace_packages/, find_packages/' \
-            -e 's/find_namespace_packages.*/find_packages(),/' \
-            setup.py
-    fi
     if [ -e requirements.txt ]
     then
         python"${TO_PYTHON}" -m pip install -r requirements.txt . || pip_error
@@ -478,7 +458,7 @@ then
     [ -e setup.py.orig ] && cp setup.py.orig setup.py
 else
     # pipx installation
-    # MacOS will always permorm an fully isolated installation
+    # MacOS will always permorm a fully isolated installation
     if [ $(uname -s) == "Darwin" ] || [ $(uname -s) == "darwin" ]
     then
         PIPX_ISOLATE=1
@@ -490,15 +470,9 @@ else
     else
         python3 -m pipx install $PIPX_EDITABLE --force . || pipx_error
         [ -z "$PIPX_EDITABLE" ] && \
-            cat requirements_pipx.txt | sed -e 's/#.*//' | xargs pipx inject pyradio
+            cat requirements_pipx.txt | sed -e 's/#.*//' | xargs python3 -m pipx inject pyradio
         inst_type=2
     fi
-fi
-
-if [ "${TO_PYTHON}" == "2" ];
-then
-    tar xzf pyradio.tar.gz
-    rm pyradio.tar.gz
 fi
 
 do_undev
