@@ -173,6 +173,14 @@ class PyRadioConfigWindow(object):
         self._reset_parameters_function = reset_parameters_function
         self._saved_config_options = deepcopy(config.opts)
         self._config_options = deepcopy(config.opts)
+        self._default_config_opts = config.config_opts
+
+        self._orig_redording_dir = self._config_options['recording_dir'][1]
+        # for n in self._default_config_opts, self._saved_config_options, self._config_options:
+        #     logger.info('=============')
+        #     for k in n.keys():
+        #         logger.info('{}: {}'.format(k, n[k]))
+
         self._old_theme = self._config_options['theme'][1]
         if logger.isEnabledFor(logging.INFO):
             if self._saved_config_options == self._config_options:
@@ -523,8 +531,9 @@ class PyRadioConfigWindow(object):
         self._config_options['enable_mouse'][1] = 'False'
         self._config_options['enable_notifications'][1] = '-1'
         self._config_options['use_station_icon'][1] = 'True'
-        self._config_options['recording_dir'][1] = path.join(path.expanduser('~'), 'pyradio-recordings')
-        opts['resource_opener'] = ['Resource Opener: ', 'auto']
+        ''' exclude recording dir from getting its default value '''
+        # self._config_options['recording_dir'][1] = path.join(path.expanduser('~'), 'pyradio-recordings')
+        self._config_options['resource_opener'] = ['Resource Opener: ', 'auto']
         self._config_options['connection_timeout'][1] = '10'
         self._config_options['theme_title'][1] = ''
         ''' Transparency '''
@@ -626,10 +635,11 @@ class PyRadioConfigWindow(object):
             logger.info('Default options loaded')
 
     def _go_saved(self):
+        old_theme = self._config_options['theme'][1]
+        old_transparency = self._config_options['use_transparency'][1]
+        self._config_options = deepcopy(self._saved_config_options)
+        self._config_options['recording_dir'][1] = self._orig_redording_dir
         if self._cnf.use_themes:
-            old_theme = self._config_options['theme'][1]
-            old_transparency = self._config_options['use_transparency'][1]
-            self._config_options = deepcopy(self._saved_config_options)
             self._port_line_editor.string = self._config_options['remote_control_server_port'][1]
             ''' Transparency '''
             self._config_options['use_transparency'][1] = self._old_use_transparency
@@ -643,10 +653,21 @@ class PyRadioConfigWindow(object):
             self._config_options['theme'][1] = self._old_theme
             self._saved_config_options['theme'][1] = self._old_theme
             self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
+        else:
+            self._config_options['use_transparency'][1] = False
+            self._config_options['force_transparency'][1] = False
+            self._config_options['theme'][1] = 'dark'
+            self._config_options['auto_update_theme'][1] = False
+            self._config_options['calculated_color_factor'][1] = "0"
+
         self._reset_parameters_function()
         self.refresh_selection()
-        if logger.isEnabledFor(logging.INFO):
-            logger.info('Saved options loaded')
+        if self._cnf.use_themes:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Saved options loaded')
+        else:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('No themes saved options loaded')
 
     def _go_exit(self):
         self._win.nodelay(True)

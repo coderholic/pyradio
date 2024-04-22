@@ -1,22 +1,37 @@
 #!/bin/bash
+cReset="[0m"
+cBold="[1m"
+colorBlack=0
+colorRed=1
+colorGreen=2
+colorYellow=3
+colorBlue=4
+colorMagenta=5
+colorCyan=6
+colorWhite=7
+colorDefault=9
+cGreen="[0;3${colorGreen}m"${cBold}
+cRed="[1;3${colorRed}m"${cBold}
+cYellow="[1;3${colorYellow}m"${cBold}
+cBlue="[1;3${colorBlue}m"${cBold}
+cMagenta="[1;3${colorMagenta}m"${cBold}
+
 function get_mplayer(){
     local EXISTING
     local FOUND
     local TO_USE
-    echo '>>> MPlayer'
-    echo -n "  Reading in file MPlayer version    ... "
+    echo -e ">>> ${cMagenta}MPlayer${cReset}"
+    echo -en "  Reading in file ${cMagenta}MPlayer${cReset} version    ... "
     EXISTING=$(sed -n '/svn-[0-9]/p' pyradio/win.py | sed -e 's/.*svn-//' -e 's/-.*//')
 
-    echo r${EXISTING}
+    echo -e "${cYellow}r${EXISTING}${cReset}"
 
-    echo -n "  Reading published MPlayer versions ... "
+    echo -en "  Reading published ${cMagenta}MPlayer${cReset} versions ... "
 
     FOUND=$(curl -s -L 'https://sourceforge.net/projects/mplayerwin/files/MPlayer-MEncoder' 2>/dev/null | grep '<tr title' | sed -e 's/<tr title="//' -e 's/".*//'|grep -e '^r')
 
-    if [ $? -eq 0 ]
+    if [ $? -ne 0 ]
     then
-        echo "$FOUND" | sed '2,$d'
-    else
         echo -e '\n  Error accessing SourceForge...'
         exit 1
     fi
@@ -29,9 +44,11 @@ function get_mplayer(){
         then
             if [ r"${EXISTING}" = "$n" ]
             then
-                echo "Latest MPlayer version already used..."
+                echo -e "$FOUND" | sed -e '2,$d' -e "s/.*/${cYellow}&${cReset}/"
+                echo -e "Latest ${cMagenta}MPlayer${cReset} version already used..."
                 return
             else
+                echo -e "$FOUND" | sed -e '2,$d' -e "s/.*/${cRes}&${cReset}/"
                 TO_USE="${n/r/}"
                 break
             fi
@@ -44,22 +61,22 @@ function get_mplayer(){
         echo "Version to use: ${TO_USE}"
     fi
 
-    echo -n "  Updating in file MPlayer version ... "
+    echo -en "  Updating in file ${cMagenta}MPlayer${cReset} version ... "
     sed -i "/MPlayer-MEncoder/s/$EXISTING/$TO_USE/g" pyradio/win.py
-    echo "done"
+    echo -e "${cGreen}done"${cReset}
 }
 
 function get_mpv(){
     local EXISTING
     local FOUND
     local TO_USE
-    echo '>>> MPV'
-    echo -n '  Reading in file MPV version ... '
+    echo -e ">>> ${cMagenta}MPV${cReset}"
+    echo -en "  Reading in file ${cMagenta}MPV${cReset} version ... "
     EXISTING=$(grep mpv-player-windows pyradio/win.py | grep download | grep -v latest | sed -e "s/.*'h/h/" -e "s/',//")
     EXISTING=$(basename $(dirname "$EXISTING"))
-    echo "$EXISTING"
+    echo -e "${cYellow}$EXISTING${cReset}"
 
-    echo -n '  Reading latest MPV version  ... '
+    echo -en "  Reading latest ${cMagenta}MPV${cReset} version  ... "
     FOUND=$(curl -s -L https://sourceforge.net/projects/mpv-player-windows/files/64bit/ 2>/dev/null | grep '"url":"/projects' | sed 's/"url":/\n&/g'  |grep '^"url"' | sed '2,$d' | sed -e 's/"url":"//' -e 's|/","full_path":".*||')
 
     if [ $? -ne 0 ]
@@ -68,19 +85,21 @@ function get_mpv(){
         exit 1
     fi
     FOUND=$(basename "$FOUND")
-    echo "$FOUND"
 
     if [ "$FOUND" != "$EXISTING" ]
     then
-        echo -n "  Updating in file MPV version ... "
+        echo "${cRed}$FOUND"
+        echo -ne "  Updating in file ${cMagenta}MPV${cReset} version ... "
         sed -i "s/$EXISTING/$FOUND/" pyradio/win.py
-        echo "done"
+        echo -e "${cGreen}done${cReset}"
     else
-        echo "Latest MPV version already used..."
+        echo "${cYellow}$FOUND${cReset}"
+        echo -e "Latest ${cMagenta}MPV${cReset} version already used..."
     fi
 }
 
-echo "Working on pyradio/win.py"
+echo -e "Updating ${cBlue}Windows Players Links${cReset}"
+echo -e "Working on ${cGreen}pyradio/win.py${cReset}"
 get_mpv
 get_mplayer
 exit 0

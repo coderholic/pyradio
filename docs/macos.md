@@ -39,11 +39,11 @@ This is the method [Homebrew](https://brew.sh) recommends, so we just go with it
 
 Open a terminal and execute:
 
-<!-- START OF BREW LINK-->
+<!-- START OF BREW LINK -->
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
-<!-- END OF BREW LINK-->
+<!-- END OF BREW LINK -->
 
 ### Python Installation
 

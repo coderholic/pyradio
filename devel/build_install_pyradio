@@ -458,7 +458,7 @@ then
     [ -e setup.py.orig ] && cp setup.py.orig setup.py
 else
     # pipx installation
-    # MacOS will always permorm a fully isolated installation
+    # MacOS will always perform a fully isolated installation
     if [ $(uname -s) == "Darwin" ] || [ $(uname -s) == "darwin" ]
     then
         PIPX_ISOLATE=1

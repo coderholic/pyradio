@@ -2498,6 +2498,21 @@ class PyRadioConfig(PyRadioStations):
             chk = self._validate_config_key(n, theme, trnsp, calcf, rec_dir)
             if chk:
                 out.append(chk)
+        if not self.show_no_themes_message:
+            out.append('#')
+            out.append('# User option (response to a message window)')
+            out.append('# Show a message if themes are disabled')
+            out.append('#')
+            out.append('# Default value: True')
+            out.append('show_no_themes_message = False')
+        if not self.show_recording_start_message:
+            out.append('#')
+            out.append('# User option (response to a message window)')
+            out.append('# Show a message when recording is enabled')
+            out.append('#')
+            out.append('# Default value: True')
+            out.append('show_recording_message = False')
+
         if out:
             out.reverse()
             out.append('#')

@@ -442,6 +442,20 @@ If nothing else works, try the following command:
             cnf = path.join(path.dirname(__file__), 'config')
             with open(cnf, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
+            if not pyradio_config.show_no_themes_message:
+                lines.append('')
+                lines.append('# User option (response to a message window)')
+                lines.append('# Show a message if themes are disabled')
+                lines.append('#')
+                lines.append('# Default value: True')
+                lines.append('show_no_themes_message = [bold green]False[/bold green]')
+            if not pyradio_config.show_recording_start_message:
+                lines.append('')
+                lines.append('# User option (response to a message window)')
+                lines.append('# Show a message when recording is enabled')
+                lines.append('#')
+                lines.append('# Default value: True')
+                lines.append('show_recording_message = [bold green]False[/bold green]')
             for i, l in enumerate(lines):
                 line = l.strip()
                 if line.startswith('#'):
@@ -466,6 +480,8 @@ If nothing else works, try the following command:
                                 d_line += '[bold green]' + str(pyradio_config.distro) + '[/bold green]'
                             elif sp[0] == 'xdg_compliant':
                                 d_line += '[bold green]' + str(pyradio_config.xdg_compliant) + '[/bold green]'
+                            elif sp[0] in ('show_no_themes_message','show_recording_message'):
+                                d_line += sp[1]
                 print(d_line)
             print('')
             return

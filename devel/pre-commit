@@ -1,14 +1,54 @@
 #!/usr/bin/env bash
 cReset="[0m"
 cBold="[1m"
-colorGreen=2
+colorBlack=0
 colorRed=1
+colorGreen=2
 colorYellow=3
 colorBlue=4
+colorMagenta=5
+colorCyan=6
+colorWhite=7
+colorDefault=9
 cGreen="[0;3${colorGreen}m"${cBold}
 cRed="[1;3${colorRed}m"${cBold}
 cYellow="[1;3${colorYellow}m"${cBold}
 cBlue="[1;3${colorBlue}m"${cBold}
+cMagenta="[1;3${colorMagenta}m"${cBold}
+
+function update_brew_link(){
+    local INSERT
+    local MACOS_FILE
+    echo -n 'Updating brew link ... '
+    INSERT=$(curl -s https://brew.sh/ | grep '<figure class="highlight"><pre>' | sed '2,$d' | sed 's/<[^>]*>//g')
+
+    # Check if INSERT is not empty
+    if [ -z "$INSERT" ]; then
+        echo -e "${cRed}failed${cReset}"
+    else
+        # Define the MACOS file path
+        MACOS_FILE="macos.md"
+
+        # Use
+        awk -v insert="$INSERT" '
+        /<!-- START OF BREW LINK -->/ {
+            print;
+            print "```";
+            getline;
+            print insert;
+            while (getline > 0 && !/<!-- END OF BREW LINK -->/) {}
+            print "```";
+            print
+            next
+        }
+        {print}
+    ' "$MACOS_FILE" > "$MACOS_FILE.tmp" && \
+            mv "$MACOS_FILE.tmp" "$MACOS_FILE" && \
+            echo -e "${cGreen}done${cReset}"
+#         sed -i '/<!-- START OF BREW LINK -->/ a \
+# ```' "$MACOS_FILE"
+    fi
+}
 
 function images_to_links(){
 awk '{if($0 ~ /img src=/){
@@ -30,6 +70,18 @@ awk '{if($0 ~ /img src=/){
 } else
 print $0}' "$1" | sed 's/<figcaption.*figcaption>//' | sed '/figure>$/d' > "$1".tmp && mv "$1".tmp "$1"
 }
+
+while getopts ":ah" opt; do
+  case ${opt} in
+    a )
+      RUN_ALL_PROGRAMS=1
+      ;;
+    h )
+      echo "Usage: $0 [-a/-h]"
+      exit
+      ;;
+  esac
+done
 
 mkdir pyradio/__pycache__ 2>/dev/null
 rm -rf pyradio/__pycache__/*
@@ -62,7 +114,14 @@ fi
 sed -i 's/\t/    /g' Changelog
 
 
+[ -z "$RUN_ALL_PROGRAMS" ] || ./devel/update_win_players
+
 cd docs
+# update brew link in macos.md
+[ -z "$RUN_ALL_PROGRAMS" ] ||  update_brew_link
+
+echo -ne "Updating files ... "
+
 # Create HTML file from md files
 for afile in index.md \
     build.md windows.md \
@@ -71,7 +130,8 @@ for afile in index.md \
     radio-browser.md \
     desktop-notification.md \
     server.md linux.md \
-    linux-pipx.md macos.md \
+    linux-pipx.md \
+    macos.md \
     pip-error.md \
     recording.md \
     packaging.md \
@@ -251,10 +311,12 @@ cd ..
 #     git add devel/update_win_mplayer
 # }
 
+echo -e "${cGreen}done${sReset}
+"
 
 echo -e "${cBlue}Version:${cReset}"
 AVER=$(grep version pyproject.toml | sed -e 's/"//'g -e 's/version = //')
-echo -en "  pyproject.toml:  ${cGreen}"
+echo -en "${cBlue}  pyproject.toml${cReset}:  ${cGreen}"
 echo "version = \"$AVER\""
 
 # update version string in __init__.py
@@ -264,19 +326,19 @@ sed -i "s/version_info =.*/version_info = ($XVER)/" pyradio/__init__.py
 # update version in install.py
 sed -i "s/PyRadioInstallPyReleaseVersion = .*/PyRadioInstallPyReleaseVersion = '$AVER'/" pyradio/install.py
 
-echo -en "${cReset}     __init__.py:  ${cRed}"
+echo -en "${cMagenta}     __init__.py${cReset}:  ${cRed}"
 grep '^version_info ' pyradio/__init__.py
-echo -en "${cReset}      install.py:  ${cYellow}"
+echo -en "${cMagenta}      install.py${cReset}:  ${cYellow}"
 grep '^PyRadioInstallPyReleaseVersion '  pyradio/install.py
 
 echo -e "${cReset}To change the version, just change the version in ${cGreen}pyproject.toml${cReset}
 and all version strings will be updated automatically."
 
-
-echo -e "${cReset}
+if [ -z "$RUN_ALL_PROGRAMS" ]
+then
+    echo -e "${cReset}
 You should also run
-    ${cGreen}devel/update_win_players${cReset}
-at this point, if you are ready to
-publish a new release"
-
+    ${cGreen}${0} -a${cReset}
+when you are ready to publish a new release"
+fi
 
