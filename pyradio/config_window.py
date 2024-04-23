@@ -173,10 +173,12 @@ class PyRadioConfigWindow(object):
         self._reset_parameters_function = reset_parameters_function
         self._saved_config_options = deepcopy(config.opts)
         self._config_options = deepcopy(config.opts)
-        self._default_config_opts = config.config_opts
+        self._default_config_options = config.config_opts
 
         self._orig_redording_dir = self._config_options['recording_dir'][1]
-        # for n in self._default_config_opts, self._saved_config_options, self._config_options:
+        # for n in self._default_config_options, \
+        #         self._saved_config_options, \
+        #         self._config_options:
         #     logger.info('=============')
         #     for k in n.keys():
         #         logger.info('{}: {}'.format(k, n[k]))
@@ -522,42 +524,20 @@ class PyRadioConfigWindow(object):
         #    logger.debug('self._num_of_help_lines = {}'.format(self._num_of_help_lines))
 
     def _load_default_values(self):
-        self._config_options['general_title'][1] = ''
-        self._config_options['player'][1] = 'mpv,mplayer,vlc'
-        self._config_options['open_last_playlist'][1] = 'False'
-        self._config_options['default_playlist'][1] = 'stations'
-        self._config_options['default_station'][1] = 'False'
-        self._config_options['default_encoding'][1] = 'utf-8'
-        self._config_options['enable_mouse'][1] = 'False'
-        self._config_options['enable_notifications'][1] = '-1'
-        self._config_options['use_station_icon'][1] = 'True'
-        ''' exclude recording dir from getting its default value '''
-        # self._config_options['recording_dir'][1] = path.join(path.expanduser('~'), 'pyradio-recordings')
-        self._config_options['resource_opener'] = ['Resource Opener: ', 'auto']
-        self._config_options['connection_timeout'][1] = '10'
-        self._config_options['theme_title'][1] = ''
-        ''' Transparency '''
-        #self._old_use_transparency = self._config_options['use_transparency'][1]
-        self._config_options['use_transparency'][1] = False
-        self._config_options['force_transparency'][1] = False
-        self._config_options['calculated_color_factor'][1] = '0'
-        self._config_options['force_http'][1] = False
-        self._toggle_transparency_function(changed_from_config_window=True, force_value=False)
-        self._config_options['playlist_manngement_title'][1] = ''
-        self._config_options['confirm_station_deletion'][1] = True
-        self._config_options['confirm_playlist_reload'][1] = True
-        self._config_options['auto_save_playlist'][1] = False
-        self._config_options['requested_player'][1] = ''
-        self._config_options['remote_control_server_ip'][1] = 'localhost'
-        self._config_options['remote_control_server_port'][1] = '9998'
-        self._port_line_editor.string = '9998'
-        self._config_options['remote_control_server_auto_start'][1] = False
+        for n in self._default_config_options.keys():
+            if n != 'theme' and \
+                    n != 'recording_dir':
+                self._config_options[n][1] = self._default_config_options[n][1]
+        self._toggle_transparency_function(
+                changed_from_config_window=True,
+                force_value=False
+                )
         ''' Theme
             Put this AFTER applying transparency, so that _do_init_pairs in
             _toggle_transparency does not overwrite pairs with applied theme values
         '''
-        self._config_options['theme'][1] = 'dark'
-        self._apply_a_theme('dark', False)
+        self._config_options['theme'][1] = self._default_config_options['theme'][1]
+        self._apply_a_theme(self._config_options['theme'][1], False)
         self._check_if_config_is_dirty()
 
     def _check_if_config_is_dirty(self):
@@ -652,13 +632,13 @@ class PyRadioConfigWindow(object):
             '''
             self._config_options['theme'][1] = self._old_theme
             self._saved_config_options['theme'][1] = self._old_theme
+            self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
         else:
             self._config_options['use_transparency'][1] = False
             self._config_options['force_transparency'][1] = False
             self._config_options['theme'][1] = 'dark'
             self._config_options['auto_update_theme'][1] = False
             self._config_options['calculated_color_factor'][1] = "0"
-        self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
         self._reset_parameters_function()
         self.refresh_selection()
         if self._cnf.use_themes:

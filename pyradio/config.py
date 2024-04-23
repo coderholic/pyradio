@@ -2042,7 +2042,6 @@ class PyRadioConfig(PyRadioStations):
     def read_config(self, distro_config=False):
         self._read_config(distro_config=True)
         self.config_opts = deepcopy(self.opts)
-        # logger.error('self.config_opts')
         # for n in self.config_opts.items():
         #     logger.error('  {}: {}'.format(*n))
         self._read_config()

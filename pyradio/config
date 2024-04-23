@@ -72,8 +72,8 @@ enable_notifications = -1
 
 # Station icon
 # Some stations will advertise a station icon (logo).
-# This icon can be downloaded and used in Desktop Notifications, if this option
-# is True.
+# This icon can be downloaded and used in Desktop Notifications,
+# if this option is True.
 # #
 # Default value: True
 use_station_icon = True
