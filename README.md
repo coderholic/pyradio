@@ -4,6 +4,27 @@ Command line internet radio player.
 
 ![Pyradio](https://members.hellug.gr/sng/pyradio/pyradio.png)
 
+## Version 0.9.3.3 may fail to update
+
+If you try to update from **version 0.9.3.3**, you may find that the update script does not work.
+
+This is a known bug, fixed in subsequent releases.
+
+To update your **0.9.3.3** installation, open a terminal and execute:
+
+```
+rm install.py
+curl -L \
+    https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py \
+    -o install.py
+```
+
+Finally, execute:
+
+```
+python3 install.py -U -f
+```
+
 ## IMPORTANT NOTICE 1
 
 **PyRadio** may fail to install/update on some linux distros (mainly Ubuntu 23.04, Debian and derivatives, etc.) due to a change to the underlined python installation.

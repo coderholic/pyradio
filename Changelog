@@ -1,3 +1,13 @@
+2024-04-23 s-n-g
+    * version 0.9.3.4 (BUG FIX)
+    * adding --no-video command line parameter for vlc
+    * removing more python 2 code
+    * updating macOS installation instructions (based on Ventura)
+    * fixing #239 - Pyradio doesn't remember warning message was already shown
+    * fixing loading saved and default config options in Config Window,
+      Recording Dir is excluded from change
+    * updating docs
+
 2024-04-18 s-n-g
     * version 0.9.3.3 (BUG FIX)
     * adding a resource opener parameter for linux installations

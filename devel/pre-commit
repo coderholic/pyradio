@@ -19,7 +19,8 @@ cMagenta="[1;3${colorMagenta}m"${cBold}
 function update_brew_link(){
     local INSERT
     local MACOS_FILE
-    echo -n 'Updating brew link ... '
+    echo -e "Working on ${cBlue}docs/macos.md${cReset}"
+    echo -n '  Updating brew link ... '
     INSERT=$(curl -s https://brew.sh/ | grep '<figure class="highlight"><pre>' | sed '2,$d' | sed 's/<[^>]*>//g')
 
     # Check if INSERT is not empty
