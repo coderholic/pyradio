@@ -570,7 +570,7 @@ class PyRadioConfigWindow(object):
         theme = PyRadioTheme(self._cnf)
         theme.readAndApplyTheme(a_theme, use_transparency=use_transparency)
         self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
-        self._cnf.update_calculated_colors()
+        self._cnf.update_calculated_colors(theme)
         theme = None
         curses.doupdate()
 
@@ -652,14 +652,13 @@ class PyRadioConfigWindow(object):
             '''
             self._config_options['theme'][1] = self._old_theme
             self._saved_config_options['theme'][1] = self._old_theme
-            self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
         else:
             self._config_options['use_transparency'][1] = False
             self._config_options['force_transparency'][1] = False
             self._config_options['theme'][1] = 'dark'
             self._config_options['auto_update_theme'][1] = False
             self._config_options['calculated_color_factor'][1] = "0"
-
+        self._apply_a_theme(self._config_options['theme'][1], self._old_use_transparency)
         self._reset_parameters_function()
         self.refresh_selection()
         if self._cnf.use_themes:

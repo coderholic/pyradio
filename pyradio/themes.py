@@ -349,6 +349,11 @@ class PyRadioTheme(object):
                     curse_rgb[1],
                     curse_rgb[2],
                 )
+                # logger.error('pair {}, rgb: {}, curses_rgb: {}'.format(
+                #     k,
+                #     self._colors['data'][k],
+                #     curse_rgb
+                #     ))
 
     def recalculate_theme(self, inhibit_if_color15_exists=True):
         if logger.isEnabledFor(logging.DEBUG):

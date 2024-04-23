@@ -4259,9 +4259,13 @@ ____Using |fallback| theme.''')
         self._cnf.use_calculated_colors = not self._cnf.use_calculated_colors
         self._update_calculated_colors()
 
-    def _update_calculated_colors(self):
-        self._theme._do_init_pairs()
-        self._theme._update_colors()
+    def _update_calculated_colors(self, a_theme=None):
+        if a_theme is None:
+            cur_theme = self._theme
+        else:
+            cur_theme = a_theme
+        cur_theme._do_init_pairs()
+        cur_theme._update_colors()
         try:
             self.headWin.refresh()
             self.outerBodyWin.refresh()
