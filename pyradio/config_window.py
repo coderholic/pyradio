@@ -86,7 +86,7 @@ class PyRadioConfigWindow(object):
     '|', 'Default value = dark'])
     _help_text.append(['This option will work when a theme\'s transparency value is set to 2 (Obey config setting), the default. Otherwise, it\'s up to the theme to handle transparency.', '|', 'If False, theme colors will be used.', '|',
     "If True and a compositor is running, the stations' window background will be transparent.", '|', "If True and a compositor is not running, the terminal's background color will be used.", '|', 'Default value: False'])
-    _help_text.append(['This option, when enabled, will make all themes behave as if their transparency setting was set to 2 (Obey config setting), in which case the windows\'s transparency will depend entirely on the value of the "Use transparency" setting (the one above this one).', '|', 'Default value: False'])
+    _help_text.append(['This option, when enabled, will make all themes behave as if their transparency setting was set to 2 (Obey config setting), in which case the windows\'s transparency will depend entirely on the value of the "Use transparency" setting (the option above this one).', '|', 'Default value: False'])
     _help_text.append(['Pyradio can calculate and use an alternative color for secondary windows.', '|', 'This option will determine if this color will be used (value > 0) or not (value = 0), provided that the theme used does not already provide it.', '|', 'The value of this option is actually the factor to darken or lighten the main (stations) background color.', '|', 'You can get more info on this at https://github.com/coderholic/pyradio#secondary-windows-background', '|', 'Valid Values: 0-0.2', 'Default value: 0'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.',
@@ -922,27 +922,33 @@ class PyRadioConfigWindow(object):
                 # #         self._cnf.save_last_playlist()
                 self.refresh_selection()
             elif sel == 'force_transparency':
-                #self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]
-                self._config_options['force_transparency'][1] = not self._config_options['force_transparency'][1]
-                self._update_transparency_function(
-                    changed_from_config_window=True,
-                    calculate_transparency_function=self.calculate_transparency
-                )
-                self.refresh_selection()
+                if self._cnf.use_themes:
+                    #self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]
+                    self._config_options['force_transparency'][1] = not self._config_options['force_transparency'][1]
+                    self._update_transparency_function(
+                        changed_from_config_window=True,
+                        calculate_transparency_function=self.calculate_transparency
+                    )
+                    self.refresh_selection()
+                else:
+                    self._cnf._show_colors_cannot_change()
             elif sel == 'use_transparency':
-                self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]
-                self._cnf.use_transparency = not self._cnf.use_transparency
-                self._config_options[ 'use_transparency' ][1] = self._old_use_transparency
-                self._update_transparency_function(
-                    changed_from_config_window=True,
-                    calculate_transparency_function=self.calculate_transparency
-                )
-                self.refresh_selection()
-                # self._toggle_transparency_function(
-                #     changed_from_config_window=True,
-                #     force_value = not self._config_options['use_transparency'][1]
-                # )
-                # self.refresh_selection()
+                if self._cnf.use_themes:
+                    self._old_use_transparency = not self._config_options[ 'use_transparency' ][1]
+                    self._cnf.use_transparency = not self._cnf.use_transparency
+                    self._config_options[ 'use_transparency' ][1] = self._old_use_transparency
+                    self._update_transparency_function(
+                        changed_from_config_window=True,
+                        calculate_transparency_function=self.calculate_transparency
+                    )
+                    self.refresh_selection()
+                    # self._toggle_transparency_function(
+                    #     changed_from_config_window=True,
+                    #     force_value = not self._config_options['use_transparency'][1]
+                    # )
+                    # self.refresh_selection()
+                else:
+                    self._cnf._show_colors_cannot_change()
 
         return -1, []
 
