@@ -2453,21 +2453,24 @@ class PyRadioConfig(PyRadioStations):
                 return True
         return False
 
-    def _validate_config_key(self, a_key, theme, trnsp, calcf, rec_dir):
-        ''' check if a config parameter has changed
-            if it has, return its value
-            otherwise return None
+    def _validate_config_key(
+            self, a_key, theme, trnsp,
+            f_trnsp, calcf, auto, rec_dir
+            ):
+        ''' check if a config parameter is different to the one in the config file
+            if it has return "key = value", otherwise return None
         '''
         comment = ''
         if a_key == 'theme':
-            if self.config_opts[a_key][-1] == theme:
-                return None
+            return None if self.config_opts[a_key][-1] == theme else a_key + ' = ' + str(theme)
         elif a_key == 'use_transparency':
-            if self.config_opts[a_key][-1] == trnsp:
-                return None
+            return None if self.config_opts[a_key][-1] == trnsp else a_key + ' = ' + str(trnsp)
+        elif a_key == 'force_transparency':
+            return None if self.config_opts[a_key][-1] == f_trnsp else a_key + ' = ' + str(f_trnsp)
         elif a_key == 'calculated_color_factor':
-            if self.config_opts[a_key][-1] == calcf:
-                return None
+            return None if self.config_opts[a_key][-1] == calcf else a_key + ' = ' + str(calcf)
+        elif a_key == 'auto_update_theme':
+            return None if self.config_opts[a_key][-1] == auto else a_key + ' = ' + str(auto)
         elif a_key == 'recording_dir':
             comment = r'''# Please do not change this paramter manually
 # Use the in program Window instead
@@ -2481,11 +2484,14 @@ class PyRadioConfig(PyRadioStations):
             else:
                 # logger.error('returning {}'.format(comment + a_key + ' = ' + rec_dir))
                 return comment + a_key + ' = ' + rec_dir
-        if self.config_opts[a_key][-1] == self.opts[a_key][-1]:
+        elif self.config_opts[a_key][-1] == self.opts[a_key][-1]:
             return None
         return comment + a_key + ' = ' + str(self.opts[a_key][-1])
 
-    def _get_sting_to_save(self, theme, trnsp, calcf, rec_dir):
+    def _get_sting_to_save(
+            self, theme, trnsp,
+            f_trnsp, calcf, auto, rec_dir
+            ):
         out = []
         prm = []
         for n in self.config_opts.keys():
@@ -2494,7 +2500,10 @@ class PyRadioConfig(PyRadioStations):
                     self.config_opts[n][-1] != '':
                 prm.append(n)
         for n in prm:
-            chk = self._validate_config_key(n, theme, trnsp, calcf, rec_dir)
+            chk = self._validate_config_key(
+                    n, theme, trnsp, f_trnsp,
+                    calcf, auto, rec_dir
+                    )
             if chk:
                 out.append(chk)
         if not self.show_no_themes_message:
@@ -2589,11 +2598,15 @@ class PyRadioConfig(PyRadioStations):
         if self.use_themes:
             theme = self.opts['theme'][1] if not self.opts['auto_update_theme'][1] else '*' + self.opts['theme'][1]
             trnsp = self.opts['use_transparency'][1]
+            f_trnsp = self.opts['force_transparency']
             calcf = self.opts['calculated_color_factor'][1]
+            auto = self.opts['auto_update_theme']
         else:
             theme = self.bck_opts['theme'] if not self.bck_opts['auto_update_theme'] else '*' + self.bck_opts['theme']
             trnsp = self.bck_opts['use_transparency']
+            f_trnsp = self.bck_opts['force_transparency']
             calcf = self.bck_opts['calculated_color_factor']
+            auto = self.bck_opts['auto_update_theme']
 
         if self.opts['recording_dir'][1] == path.join(path.expanduser('~'), 'pyradio-recordings'):
             rec_dir = 'default'
@@ -2612,7 +2625,7 @@ class PyRadioConfig(PyRadioStations):
         #         migrate=False
         # )
         try:
-            out = self._get_sting_to_save(theme, trnsp, calcf, rec_dir)
+            out = self._get_sting_to_save(theme, trnsp, f_trnsp, calcf, auto, rec_dir)
             with open(self.config_file, 'w', encoding='utf-8') as cfgfile:
                 if out:
                     cfgfile.write('\n'.join(out) + '\n')
