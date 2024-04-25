@@ -11,6 +11,27 @@ logger = logging.getLogger(__name__)
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
+def convert_to_md(a_file):
+    tmp_file = a_file[:-4] + 'md'
+    return tmp_file if path.exists(tmp_file) else a_file
+
+def is_graphical_environment_running():
+    # Check if Xorg is running
+    xorg_process = subprocess.run(['pgrep', '-x', 'Xorg'], stdout=subprocess.PIPE)
+    if xorg_process.returncode == 0:
+        return True
+
+    # Check if Wayland is running
+    wayland_process = subprocess.run(['pgrep', '-x', 'wayland'], stdout=subprocess.PIPE)
+    if wayland_process.returncode == 0:
+        return True
+
+    # Check if DISPLAY environment variable is set
+    if 'DISPLAY' in os.environ:
+        return True
+
+    return False
+
 class HtmlHelp(object):
 
     _files = ('index.html', 'radio-browser.html')
@@ -48,6 +69,9 @@ class HtmlHelp(object):
             if this_platform.startswith('darwin'):
                 cmd = [which('open'),  path.join(self._path, a_file)]
             else:
+                ''' linux '''
+                if is_graphical_environment_running():
+                    return
                 if linux_resource_opener is None:
                     tool = get_a_linux_resource_opener()
                 else:
@@ -58,6 +82,7 @@ class HtmlHelp(object):
                     return
                 if isinstance(tool, str):
                     tool = tool.split(' ')
+                # a_file = convert_to_md(a_file)
                 cmd = [*tool , path.join(self._path, a_file)]
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('HtmlHelp: executing: "{}"'.format(cmd))

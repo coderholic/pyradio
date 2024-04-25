@@ -43,7 +43,7 @@ from .themes import *
 from .cjkwrap import cjklen, cjkcenter, cjkslices
 from . import player
 from .install import version_string_to_list, get_github_tag, fix_pyradio_win_exe, get_a_linux_resource_opener
-from .html_help import HtmlHelp
+from .html_help import HtmlHelp, is_graphical_environment_running
 from .browser import RadioBrowserConfig, RadioBrowserConfigWindow
 from .schedule_win import PyRadioSimpleScheduleWindow
 from .simple_curses_widgets import SimpleCursesMenu
@@ -9065,7 +9065,10 @@ ____Using |fallback| theme.''')
     def _show_open_dir_window(self):
         if not (platform.lower().startswith('win') or \
                 platform.lower().startswith('darwin')):
-            prog = self._cnf.linux_resource_opener if self._cnf.linux_resource_opener else get_a_linux_resource_opener()
+            if is_graphical_environment_running():
+                prog = self._cnf.linux_resource_opener if self._cnf.linux_resource_opener else get_a_linux_resource_opener()
+            else:
+                prog = None
             if prog is None:
                 self._show_dirs_list()
                 return
