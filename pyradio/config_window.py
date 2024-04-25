@@ -104,6 +104,8 @@ class PyRadioConfigWindow(object):
 
     _config_options = None
 
+    load_default_or_saved_parameters = False
+
     def __init__(self, parent, config,
                  toggle_transparency_function,
                  update_transparency_function,
@@ -524,14 +526,27 @@ class PyRadioConfigWindow(object):
         #    logger.debug('self._num_of_help_lines = {}'.format(self._num_of_help_lines))
 
     def _load_default_values(self):
+        self.load_default_or_saved_parameters = True
         for n in self._default_config_options.keys():
             if n != 'theme' and \
                     n != 'recording_dir':
                 self._config_options[n][1] = self._default_config_options[n][1]
+        # logger.error('\n\nself._config_options before transparency toggle')
+        # for n in 'theme', 'use_transparency', 'force_transparency', 'calculated_color_factor':
+        #     if n == 'calculated_color_factor':
+        #         logger.error('{}: {}\n'.format(n , self._config_options[n]))
+        #     else:
+        #         logger.error('{}: {}'.format(n , self._config_options[n]))
         self._toggle_transparency_function(
                 changed_from_config_window=True,
                 force_value=False
                 )
+        # logger.error('\n\nself._config_options after transparency toggle')
+        # for n in 'theme', 'use_transparency', 'force_transparency', 'calculated_color_factor':
+        #     if n == 'calculated_color_factor':
+        #         logger.error('{}: {}\n'.format(n , self._config_options[n]))
+        #     else:
+        #         logger.error('{}: {}'.format(n , self._config_options[n]))
         ''' Theme
             Put this AFTER applying transparency, so that _do_init_pairs in
             _toggle_transparency does not overwrite pairs with applied theme values
@@ -539,6 +554,13 @@ class PyRadioConfigWindow(object):
         self._config_options['theme'][1] = self._default_config_options['theme'][1]
         self._apply_a_theme(self._config_options['theme'][1], False)
         self._check_if_config_is_dirty()
+        # logger.error('\n\nself._config_options final')
+        # for n in 'theme', 'use_transparency', 'force_transparency', 'calculated_color_factor':
+        #     if n == 'calculated_color_factor':
+        #         logger.error('{}: {}\n'.format(n , self._config_options[n]))
+        #     else:
+        #         logger.error('{}: {}'.format(n , self._config_options[n]))
+        self.load_default_or_saved_parameters = False
 
     def _check_if_config_is_dirty(self):
         if self._config_options == self._saved_config_options:
@@ -615,6 +637,7 @@ class PyRadioConfigWindow(object):
             logger.info('Default options loaded')
 
     def _go_saved(self):
+        self.load_default_or_saved_parameters = True
         old_theme = self._config_options['theme'][1]
         old_transparency = self._config_options['use_transparency'][1]
         self._config_options = deepcopy(self._saved_config_options)
@@ -647,6 +670,7 @@ class PyRadioConfigWindow(object):
         else:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('No themes saved options loaded')
+        self.load_default_or_saved_parameters = False
 
     def _go_exit(self):
         self._win.nodelay(True)

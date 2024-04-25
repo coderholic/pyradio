@@ -4228,13 +4228,18 @@ ____Using |fallback| theme.''')
         if self.ws.window_mode == self.ws.CONFIG_MODE and not changed_from_config_window:
             return
         if not self._cnf.use_themes:
-            # TODO show msg
             self._show_colors_cannot_change()
             return
         logger.error('\n==========================\nself._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
         logger.error('force_value = {}'.format(force_value))
+        logger.error('self._cnf.use_transparency = {}'.format(self._cnf.use_transparency))
         if calculate_transparency_function is None:
-            self._cnf.use_transparency = not self._cnf.use_transparency
+            toggle_it = True
+            if self._config_win:
+                if self._config_win.load_default_or_saved_parameters:
+                    toggle_it = False
+            if toggle_it:
+                self._cnf.use_transparency = not self._cnf.use_transparency
             self._theme.restoreActiveTheme()
         else:
             self._theme.restoreActiveTheme(calculate_transparency_function)
@@ -4260,10 +4265,7 @@ ____Using |fallback| theme.''')
         self._update_calculated_colors()
 
     def _update_calculated_colors(self, a_theme=None):
-        if a_theme is None:
-            cur_theme = self._theme
-        else:
-            cur_theme = a_theme
+        cur_theme = self._theme if a_theme is None else a_theme
         cur_theme._do_init_pairs()
         cur_theme._update_colors()
         try:
