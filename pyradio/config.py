@@ -33,6 +33,7 @@ from .player import pywhich
 from .server import IPsWithNumbers
 from .xdg import XdgDirs, XdgMigrate, CheckDir
 from .install import get_a_linux_resource_opener
+from .html_help import is_graphical_environment_running
 HAS_REQUESTS = True
 
 try:
@@ -1494,7 +1495,9 @@ class PyRadioConfig(PyRadioStations):
 
     @property
     def enable_notifications(self):
-        return self.opts['enable_notifications'][1]
+        if is_graphical_environment_running():
+            return self.opts['enable_notifications'][1]
+        return False
 
     @enable_notifications.setter
     def enable_notifications(self, val):

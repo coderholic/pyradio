@@ -141,8 +141,8 @@ force_transparency = False
 calculated_color_factor = 0
 
 # Console theme
-# This is the theme to be used when a PyRasio is executed either in a linux
-# virtual console, or on a terminal that does not support color change.
+# This is the theme to be used when a PyRadio is executed either in a Linux
+# Virtual Console, or on a terminal that does not support color change.
 # Possible values: dark / light
 #
 # Default value: dark

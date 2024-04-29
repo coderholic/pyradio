@@ -466,7 +466,8 @@ class Log(object):
                                 self._repeat_notification.reset_timer()
 
             else:
-                if self._cnf._notification_command:
+                if self._cnf._notification_command and \
+                        self._cnf.enable_notifications:
                     d_title, d_msg = self._get_desktop_notification_data(msg)
                     if d_msg:
                         if self._cnf._current_notification_message != d_msg:

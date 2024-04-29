@@ -2,7 +2,7 @@
 import subprocess
 import logging
 from sys import platform
-from os import path, environ, listdir
+from os import path, environ, listdir, getenv
 from shutil import which
 from .install import get_a_linux_resource_opener
 try:
@@ -29,6 +29,9 @@ def convert_to_md(a_file):
 
 def is_graphical_environment_running():
     global HAS_GRAPHICAL_ENV
+    if getenv('TERM') == 'linux':
+        HAS_GRAPHICAL_ENV = 2
+        return False
     if HAS_GRAPHICAL_ENV == 1:
         return True
     elif HAS_GRAPHICAL_ENV == 2:
