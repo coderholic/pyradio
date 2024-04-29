@@ -41,6 +41,8 @@ locale.setlocale(locale.LC_ALL, "")
 
 class XdgMigrate(object):
 
+    _verbose = False
+
     def __init__(self, config=None):
         self.home_dir = path.expanduser('~')
         self.other_dir = path.join(self.home_dir, 'pyradio-not-migrated')
@@ -178,10 +180,10 @@ class XdgMigrate(object):
             i = -1
             max_length = self._get_max_length()
             if to_console:
-                print('[bold magenta]PyRadio[/bold magenta]: moving files to [green]XDG[/green] directories')
+                print('Moving files to [green]XDG[/green] directories ...')
             for n in self.files_to_data, self.files_to_state, self.files_to_other:
                 i += 1
-                if to_console:
+                if to_console and self._verbose:
                     if n:
                         print(caption[i])
                     else:
@@ -194,23 +196,23 @@ class XdgMigrate(object):
                             if i < len(no_files_caption) - 1:
                                 print(no_files_caption[i])
                 if i == 1 and move_registers:
-                    if to_console:
+                    if to_console and self._verbose:
                         print(f'  {self.old_registers_dir:{max_length}} -> {self.new_registers_dir}')
                     try:
                         move(self.old_registers_dir, self.new_registers_dir)
                     except:
                         self._print_error_wit_ask_enter()
                 for k in n:
-                    if to_console:
+                    if to_console and self._verbose:
                         print(f"  {k[0]:{max_length}} -> {k[1]}")
                     try:
                         copyfile(k[0], k[1])
                     except OSError:
                         self._print_error_wit_ask_enter()
-            if to_console:
+            if to_console and self._verbose:
                 print('Cleaning up...')
             self._remove_old_files_on_success()
-            if to_console:
+            if to_console and self._verbose:
                 input('Press ENTER to continue... ')
 
     def _print_error_wit_ask_enter(self):

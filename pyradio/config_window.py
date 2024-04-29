@@ -88,6 +88,7 @@ class PyRadioConfigWindow(object):
     "If True and a compositor is running, the stations' window background will be transparent.", '|', "If True and a compositor is not running, the terminal's background color will be used.", '|', 'Default value: False'])
     _help_text.append(['This option, when enabled, will make all themes behave as if their transparency setting was set to 2 (Obey config setting), in which case the windows\'s transparency will depend entirely on the value of the "Use transparency" setting (the option above this one).', '|', 'Default value: False'])
     _help_text.append(['Pyradio can calculate and use an alternative color for secondary windows.', '|', 'This option will determine if this color will be used (value > 0) or not (value = 0), provided that the theme used does not already provide it.', '|', 'The value of this option is actually the factor to darken or lighten the main (stations) background color.', '|', 'You can get more info on this at https://github.com/coderholic/pyradio#secondary-windows-background', '|', 'Valid Values: 0-0.2', 'Default value: 0'])
+    _help_text.append(['The console theme is the one used when PyRadio is executed either from the Linux Virtual Console or the terminal used does not support color changes.', '|', 'This change will take effect after PyRadio is restarted.', '|', 'Default value: dark'])
     _help_text.append(None)
     _help_text.append(['Specify whether you will be asked to confirm every station deletion action.',
     '|', 'Default value: True'])
@@ -881,6 +882,17 @@ class PyRadioConfigWindow(object):
                 self._print_title()
                 self._win.refresh()
                 return -1, []
+
+        elif val[0] == 'console_theme':
+            if char in (
+                    curses.KEY_RIGHT, ord('l'), ord(' ')
+                        ):
+                if self._config_options['console_theme'][1] == 'dark':
+                    self._config_options['console_theme'][1] = 'light'
+                else:
+                    self._config_options['console_theme'][1] = 'dark'
+            self.refresh_selection()
+            return -1, []
 
         elif val[0] == 'connection_timeout':
             if char in (curses.KEY_RIGHT, ord('l')):

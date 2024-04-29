@@ -1295,6 +1295,7 @@ class PyRadioConfig(PyRadioStations):
     opts['use_transparency'] = ['Use transparency: ', False]
     opts['force_transparency'] = ['  Force transparency: ', False]
     opts['calculated_color_factor'] = ['Calculated color: ', '0']
+    opts['console_theme'] = ['Console theme: ', 'dark']
     opts['playlist_manngement_title'] = ['Playlist Management Options', '']
     opts['confirm_station_deletion'] = ['Confirm station deletion: ', True]
     opts['confirm_playlist_reload'] = ['Confirm playlist reload: ', True]
@@ -1658,6 +1659,17 @@ class PyRadioConfig(PyRadioStations):
         self.opts['dirty_config'][1] = True
 
     @property
+    def console_theme(self):
+        return self.opts['console_theme'][1]
+
+    @console_theme.setter
+    def console_theme(self, val):
+        if val in ('dark', 'light'):
+            if val != self.opts['console_theme'][1]:
+                self.opts['dirty_config'][1] = True
+            self.opts['console_theme'][1] = val
+
+    @property
     def theme_path(self):
         return path.join(self.stations_dir, 'themes', self.opts['theme'][1] + '.pyradio-theme')
 
@@ -1939,21 +1951,38 @@ class PyRadioConfig(PyRadioStations):
                 return -1, self._session_lock_file
 
     def change_to_no_theme_mode(self, show_colors_cannot_change):
-        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-        curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(6, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
-        curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_GREEN)
-        curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
-        curses.init_pair(10, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(11, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(13, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(14, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(15, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        if self.console_theme == 'light':
+            curses.init_pair(1, curses.COLOR_MAGENTA, curses.COLOR_WHITE )
+            curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_WHITE)
+            curses.init_pair(3, curses.COLOR_RED, curses.COLOR_WHITE)
+            curses.init_pair(4, curses.COLOR_RED, curses.COLOR_WHITE)
+            curses.init_pair(5, curses.COLOR_BLACK, curses.COLOR_WHITE)
+            curses.init_pair(6, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
+            curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_BLUE)
+            curses.init_pair(8, curses.COLOR_BLACK, curses.COLOR_WHITE)
+            curses.init_pair(9, curses.COLOR_WHITE, curses.COLOR_BLUE)
+            curses.init_pair(10, curses.COLOR_BLACK, curses.COLOR_WHITE)
+            curses.init_pair(11, curses.COLOR_RED, curses.COLOR_WHITE)
+            curses.init_pair(12, curses.COLOR_BLACK, curses.COLOR_WHITE)
+            curses.init_pair(13, curses.COLOR_BLACK, curses.COLOR_WHITE)
+            curses.init_pair(14, curses.COLOR_BLACK, curses.COLOR_WHITE)
+            curses.init_pair(15, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        else:
+            curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+            curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
+            curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+            curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
+            curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            curses.init_pair(6, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
+            curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_GREEN)
+            curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_GREEN)
+            curses.init_pair(10, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            curses.init_pair(11, curses.COLOR_GREEN, curses.COLOR_BLACK)
+            curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            curses.init_pair(13, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            curses.init_pair(14, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            curses.init_pair(15, curses.COLOR_WHITE, curses.COLOR_BLACK)
         ''' Theme values backup '''
         self.bck_opts['use_transparency'] = self.opts['use_transparency'][1]
         self.bck_opts['force_transparency'] = self.opts['force_transparency'][1]
@@ -1963,7 +1992,7 @@ class PyRadioConfig(PyRadioStations):
         ''' No theme values '''
         self.opts['use_transparency'][1] = False
         self.opts['force_transparency'][1] = False
-        self.opts['theme'][1] = 'dark'
+        self.opts['theme'][1] = self.console_theme
         self.opts['auto_update_theme'][1] = False
         self.opts['calculated_color_factor'][1] = "0"
         self._show_colors_cannot_change = show_colors_cannot_change
@@ -2107,6 +2136,12 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['auto_update_theme'][1] = True
                 else:
                     self.opts['auto_update_theme'][1] = False
+            elif sp[0] == 'console_theme':
+                tmp = sp[1].strip()
+                if not tmp in ('dark', 'light'):
+                    self.opts['console_theme'][1] = 'dark'
+                else:
+                    self.opts['console_theme'][1] = tmp
             elif sp[0] == 'default_playlist':
                 self.opts['default_playlist'][1] = sp[1].strip()
             elif sp[0] == 'default_station':
@@ -2598,9 +2633,9 @@ class PyRadioConfig(PyRadioStations):
         if self.use_themes:
             theme = self.opts['theme'][1] if not self.opts['auto_update_theme'][1] else '*' + self.opts['theme'][1]
             trnsp = self.opts['use_transparency'][1]
-            f_trnsp = self.opts['force_transparency']
+            f_trnsp = self.opts['force_transparency'][1]
             calcf = self.opts['calculated_color_factor'][1]
-            auto = self.opts['auto_update_theme']
+            auto = self.opts['auto_update_theme'][1]
         else:
             theme = self.bck_opts['theme'] if not self.bck_opts['auto_update_theme'] else '*' + self.bck_opts['theme']
             trnsp = self.bck_opts['use_transparency']

@@ -141,11 +141,11 @@ This will display the program's window with a list of predefined radio stations 
 
 - Press "**+**" (or "**.**") and "**-**" (or "**,**") to adjust the volume, and "**v**" to save it.
 
-- Pressing "**?**" will give you access to the help screens; "**\\h**" will give you access to the help pages.
+- Pressing "**?**" will give you access to the help screens; "**\\h**" will give you access to the HTML help pages.
 
 - "**Esc**" or "**q**" will exit the program.
 
-In case the list of predefined stations are not enough for you, you can press "**O**" (capital "**o**") to access **RadioBrowser** online directory; you will probably have to read [this page](docs/radio-browser.md) to learn how to navigate the interface.
+In case the list of predefined stations is not enough for you, you can press "**O**" (capital "**o**") to access **RadioBrowser** online directory; you will probably have to read [this page](docs/radio-browser.md) to learn how to navigate the interface.
 
 **PyRadio** comes with a number of themes; press "**t**" to get a list of themes, and
 
@@ -211,4 +211,5 @@ If you are a packager and would like to produce a package for your distribution 
 ## Special thanks
 
 1. [edunfelt](https://github.com/edunfelt), for her wonderful work on [base16 themes](https://github.com/edunfelt/base16-pyradio), and ideas regarding theming and such.
+
 2. [amano-kenji](https://github.com/amano-kenji), for his valuable suggestions and bug reports.

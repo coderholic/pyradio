@@ -121,7 +121,7 @@ cd docs
 # update brew link in macos.md
 [ -z "$RUN_ALL_PROGRAMS" ] ||  update_brew_link
 
-echo -ne "Updating files ... "
+echo -ne "Updating ${cBlue}HTML${cReset} files "
 
 # Create HTML file from md files
 for afile in index.md \
@@ -140,6 +140,7 @@ for afile in index.md \
     headless.md \
     rec-dir.md
 do
+    echo -ne '.'
 #[ -z "$(git status | grep ${afile})" ] || {
     out=${afile/%.md/.html}
     if [ "$afile" = "index.md" ];then
@@ -311,8 +312,7 @@ cd ..
 #     git add pyradio/win.py
 #     git add devel/update_win_mplayer
 # }
-
-echo -e "${cGreen}done${sReset}
+echo -e "${cGreen} done${sReset}
 "
 
 echo -e "${cBlue}Version:${cReset}"
@@ -340,6 +340,9 @@ then
     echo -e "${cReset}
 You should also run
     ${cGreen}${0} -a${cReset}
-when you are ready to publish a new release"
+when you are ready to publish a new release
+"
+else
+    echo
 fi
 

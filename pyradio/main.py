@@ -23,6 +23,7 @@ from .log import Log
 from .common import StationsChanges
 from .schedule import PyRadioScheduleList
 from .install import get_a_linux_resource_opener
+from .html_help import is_graphical_environment_running
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
@@ -952,7 +953,18 @@ If nothing else works, try the following command:
                     upd.user = is_pyradio_user_installed()
                     upd.update_pyradio()
             else:
-                print('\nThank you for using [magenta]PyRadio[/magenta]. Cheers!')
+                st = en = ''
+                if platform.startswith('win') or \
+                        platform.lower().startswith('dar'):
+                    st = '\n'
+                else:
+                    if is_graphical_environment_running():
+                        st = '\n'
+                    else:
+                        import subprocess
+                        subprocess.call('clear')
+                        en = '\n'
+                print(st + 'Thank you for using [magenta]PyRadio[/magenta]. Cheers!' + en)
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
 

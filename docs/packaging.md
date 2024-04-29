@@ -12,6 +12,7 @@
     * [pyradio/\_\_pycache\_\_](#pyradio/\_\_pycache\_\_)
 * [Recordings Directory](#recordings-directory)
 * [MKVToolNix cli installation](#mkvtoolnix-cli-installation)
+* [Resource opener (Linux only)](#resource-opener-(linux-only))
 
 <!-- vim-markdown-toc -->
 
@@ -35,11 +36,6 @@ Then you have to add the following python modules to the relevant section of you
 5. rich
 5. netifaces
 6. dateutil
-
-Linux users will have to install the "**xdg-utils**" package (may be named differently in your distro) which will provide "**xdg-open**", the utility to open directories, html pages, etc.
-
-Linux and macOS users will have to have installed a font that supports the "**Unicode Geometric Shapes Block**". Any font mentioned in the [Font Support for Unicode Block 'Geometric Shapes'](https://www.fileformat.info/info/unicode/block/geometric_shapes/fontsupport.htm) page will do; as you can see these include **DejaVu**, **FreeMono**, **Unifont**, etc, some of which will fopefully be installed by default.
-
 
 ## Files to change
 
@@ -139,4 +135,20 @@ I would suggest to do so, in order to provide your users the best experience pos
 
 In case you decide to do so, please make sure you mark as a dependency the **command line utilities**, not the GUI program, if that's on a different package on your distro. For examle, Arch Linux provides both a *mkvtoolnix-cli* and a *mkvtoolnix-gui* package; the first one should be used. Same thing with Debian Linux; it provides both a *mkvtoolnix* and a *mkvtoolnix-gui* package; in which case you'd use the later.
 
+## Resource opener (Linux only)
 
+A [resource opener](https://wiki.archlinux.org/title/default_applications#Resource_openers) is a utility to open directories, html pages, etc.
+
+**PyRadio** running on Linux will look for *xdg-open*, *gio*, *mimeopen*, *mimeo* or *handlr*, in that order of detection.
+
+If none of the above if found, the requested file will simply not open.
+
+Most Linux distros will probably have *xdg-open* (from *xdg-utils* package) installed or available (or any of the ones in the list above), so no action will be nesesary.
+
+In case a different *resource opener* is to be used, one can declare it like so:
+
+    sed -i 's/resource_opener = auto/resource_opener = MY_RESOURCE_OPENER/' config
+
+This will instruct **PyRadio** to use the file **MY_RESOURCE_OPENER** as a *resource opener*.
+
+**MY_RESOURCE_OPENER** can be just the name of the file (if it is in the *PATH*), or an absolute path to a file, it it's not.

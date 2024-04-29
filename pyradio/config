@@ -11,7 +11,7 @@ player = mpv, mplayer, vlc
 
 # Default playlist
 # This is the playlist to open if none is specified
-# You can scecify full path to CSV file, or if the playlist is in the config
+# You can specify full path to CSV file, or if the playlist is in the config
 # directory, playlist name (filename without extension or playlist number (as
 # reported by -ls command line option)
 #
@@ -98,7 +98,7 @@ connection_timeout = 10
 force_http = False
 
 # Default theme
-# Hardcooded themes:
+# Hard coded themes:
 #   dark (default) (8 colors)
 #   light (8 colors)
 #   dark_16_colors (16 colors dark theme alternative)
@@ -131,7 +131,7 @@ use_transparency = False
 force_transparency = False
 
 # Calculated color factor
-# This is to produce Secondary Windows background color. A value of 0 dissables
+# This is to produce Secondary Windows background color. A value of 0 disables
 # it, otherwise it is the factor to change (lighten or darken) the base color.
 # For more info, please refer to
 # https://github.com/coderholic/pyradio#secondary-windows-background
@@ -139,6 +139,14 @@ force_transparency = False
 # Valid values: 0-0.2
 # Default value: 0
 calculated_color_factor = 0
+
+# Console theme
+# This is the theme to be used when a PyRasio is executed either in a linux
+# virtual console, or on a terminal that does not support color change.
+# Possible values: dark / light
+#
+# Default value: dark
+console_theme = dark
 
 
 # Playlist management
@@ -186,7 +194,7 @@ remote_control_server_auto_start = False
 # Packagers should set this paramater as resired!
 #
 # Default value: False
-xdg_compliant = False
+xdg_compliant = True
 
 # The name of the distribution providing the package. If this parameter is set
 # to anything other than "None" PyRadio will not permit updating (-U command

@@ -2,7 +2,7 @@
 import subprocess
 import logging
 from sys import platform
-from os import path, environ
+from os import path, environ, listdir
 from shutil import which
 from .install import get_a_linux_resource_opener
 try:
@@ -16,22 +16,36 @@ logger = logging.getLogger(__name__)
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
+'''
+    0 : perform detection
+    1 : Graphical Environment running
+    2 : Graphical Environment not running
+'''
+HAS_GRAPHICAL_ENV = 0
+
 def convert_to_md(a_file):
     tmp_file = a_file[:-4] + 'md'
     return tmp_file if path.exists(tmp_file) else a_file
 
 def is_graphical_environment_running():
+    global HAS_GRAPHICAL_ENV
+    if HAS_GRAPHICAL_ENV == 1:
+        return True
+    elif HAS_GRAPHICAL_ENV == 2:
+        return False
     if which('pgrep'):
         # Check if Xorg is running
         xorg_process = subprocess.run(['pgrep', '-x', 'Xorg'], stdout=subprocess.PIPE)
         if xorg_process.returncode == 0:
+            HAS_GRAPHICAL_ENV = 1
             return True
         # Check if Wayland is running
         wayland_process = subprocess.run(['pgrep', '-x', 'wayland'], stdout=subprocess.PIPE)
         if wayland_process.returncode == 0:
+            HAS_GRAPHICAL_ENV = 1
             return True
     elif path.exists('/proc'):
-        for pid in os.listdir('/proc'):
+        for pid in listdir('/proc'):
             if pid.isdigit():
                 try:
                     with open(f'/proc/{pid}/cmdline', 'rb') as f:
@@ -45,12 +59,15 @@ def is_graphical_environment_running():
         for proc in psutil.process_iter(['pid', 'name']):
             if proc.info['name'] == 'Xorg' \
                     or proc.info['name'] == 'wayland':
+                HAS_GRAPHICAL_ENV = 1
                 return True
 
     # Check if DISPLAY environment variable is set
     if 'DISPLAY' in environ:
+        HAS_GRAPHICAL_ENV = 1
         return True
 
+    HAS_GRAPHICAL_ENV = 2
     return False
 
 class HtmlHelp(object):
