@@ -2343,6 +2343,16 @@ class PyRadioConfig(PyRadioStations):
                     pass
             self._first_read = False
 
+        ''' detect previous XDG Base installation '''
+        if not platform.startswith('win')  and \
+                not self.xdg_compliant and \
+                distro_config:
+            d_dir = XdgDirs.get_xdg_dir('XDG_DATA_HOME')
+            s_dir = XdgDirs.get_xdg_dir('XDG_STATE_HOME')
+            if path.exists(d_dir) and path.exists(s_dir):
+                print('[magenta]XDG Dirs[/magenta] found; enabling [magenta]XDG Base compliant[/magenta] operation')
+                self.xdg_compliant = True
+
     def _make_sure_dirs_exist(self):
         if self.opts['recording_dir'][1] == '':
             self.opts['recording_dir'][1] = path.join(path.expanduser('~'), 'pyradio-recordings')

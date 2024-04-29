@@ -336,14 +336,14 @@ class XdgDirs(object):
             self._new_dirs[self.HOME] = self._old_dirs[self.HOME] = self._old_dirs[self.HOME] = path.expanduser('~')
             if self._new_dirs[self.STATIONS] is None:
                 self._old_dirs[self.STATIONS] = path.join(self._new_dirs[self.HOME], '.config', 'pyradio')
-                self._new_dirs[self.STATIONS] = path.join(self._get_xdg_dir('XDG_CONFIG_HOME'), 'pyradio')
+                self._new_dirs[self.STATIONS] = path.join(self.get_xdg_dir('XDG_CONFIG_HOME'), 'pyradio')
             self._old_dirs[self.REGISTERS] = self._new_dirs[self.REGISTERS] = path.join(self._new_dirs[self.STATIONS], '.registers')
             self._old_dirs[self.DATA] = path.join(self._old_dirs[self.STATIONS], 'data')
             self._old_dirs[self.STATE] = path.join(self._old_dirs[self.STATIONS], 'data')
             self._old_dirs[self.CACHE] = path.join(self._old_dirs[self.DATA], '.cache')
             if self._xdg_compliant:
-                self._new_dirs[self.DATA] = path.join(self._get_xdg_dir('XDG_DATA_HOME'), 'pyradio')
-                self._new_dirs[self.STATE] = path.join(self._get_xdg_dir('XDG_STATE_HOME'), 'pyradio')
+                self._new_dirs[self.DATA] = path.join(self.get_xdg_dir('XDG_DATA_HOME'), 'pyradio')
+                self._new_dirs[self.STATE] = path.join(self.get_xdg_dir('XDG_STATE_HOME'), 'pyradio')
                 self._new_dirs[self.REGISTERS] = path.join(self._new_dirs[self.STATE], 'registers')
             else:
                 self._new_dirs[self.DATA] = self._old_dirs[self.DATA]
@@ -353,11 +353,24 @@ class XdgDirs(object):
             self._old_dirs[self.RECORDINGS] = path.join(self._old_dirs[self.STATIONS], 'recordings')
         if self._new_dirs[self.RECORDINGS] is None:
             self._new_dirs[self.RECORDINGS] = path.join(path.expanduser('~'), 'pyradio-recordings')
-        # for n in range(len(self._old_dirs)):
-        #     print('Item {}\n{}\n{}'.format(n, self._old_dirs[n], self._new_dirs[n]))
-        # print('\n\n')
 
-    def _get_xdg_dir(self, xdg_var):
+    def log_dirs(self):
+        out = ['\n']
+        cap = (
+            'home',
+            'config',
+            'registers',
+            'data',
+            'state',
+            'cache',
+            'recording'
+                )
+        for n in range(len(self._old_dirs)):
+            out.append('{}\n  {}\n  {}'.format(cap[n], self._old_dirs[n], self._new_dirs[n]))
+        logger.info('\n'.join(out))
+
+    @classmethod
+    def get_xdg_dir(cls, xdg_var):
         xdg = getenv(xdg_var)
         if xdg:
             return xdg

@@ -1027,6 +1027,8 @@ class PyRadio(object):
             ''' no player '''
             self.ws.operation_mode = self.ws.NO_PLAYER_ERROR_MODE
 
+        # self._cnf.xdg.log_dirs()
+
         self._cls_update_stations = StationsChanges(self._cnf)
         if self.ws.operation_mode != self.ws.NO_PLAYER_ERROR_MODE:
             if self._cnf.backup_player_params is None:

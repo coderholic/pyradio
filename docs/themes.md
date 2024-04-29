@@ -153,7 +153,7 @@ Furthermore, if TERM is set to anything like "**xterm**", "**screen**" or "**tmu
 
 2. Terminals that do not support at least 16 colors will not be able to display any of the new themes. The same goes for terminals that do not support changing their colors (through the **curses** library). \
 \
-These terminal will default to the old "**dark**" theme, displaying whatever colors the active palette dictates.
+These terminal will default to either the "**dark**" or the "**light**" theme (determined by the configuration parameter **console_theme**), displaying whatever colors the active palette dictates.
 
 3. There are a couple of terminals (that I know of) which will permit changing their colors but will not be able to present the changed color on the fly. \
 \

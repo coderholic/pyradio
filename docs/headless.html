@@ -132,7 +132,7 @@ will make the web server listen to 127.0.0.1, port 11111; this is the default an
 <li><p>we cannot start a second headless server, and</p></li>
 <li><p>we can get info about the server running.</p></li>
 </ul>
-<p>The “headless server lock file” is saved as <em>~/.config/pyeadio/data/server-headles.txt</em> (or <em>~/.local/share/pyradio</em> if <strong>xdg_compliant</strong> is set to True), and will contain the IP address and port the servers is listening to. This is especially useful in case a user script needs to get this info (instead of parsing the output of the command <strong>pyradio –addr</strong>).</p>
+<p>The “headless server lock file” is saved as <em>~/.config/pyradio/data/server-headles.txt</em> (or <em>~/.local/share/pyradio/server-headles.txt</em> if <strong>xdg_compliant</strong> is set to True), and will contain the IP address and port the servers is listening to. This is especially useful in case a user script needs to get this info (instead of parsing the output of the command <strong>pyradio –addr</strong>).</p>
 <h2 id="installation">Installation <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>By the term “installation”, we mean that we set up things in such a way, that after we log into the system, we find <strong>PyRadio</strong> ready to accept connections.</p>
 <p>So, the installation can be as easy as adding a line in a configuration file (or the startup section of the <em>desktop environment</em>) or as hard as adding a system service.</p>

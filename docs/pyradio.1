@@ -1248,7 +1248,7 @@ Furthermore, if TERM is set to anything like "\fIxterm*\fR", "\fIscreen*\fR" or 
 .IP 2. 3
 Terminals that do not support at least 16 colors will not be able to display any of the new themes. The same goes for terminals that do not support changing their colors (through the \fBcurses\fR library).
 
-These terminal will default to the old "\fBdark\fR" theme, displaying whatever colors the active palette dictates.
+These terminal will default to either the "\fBdark\fR" or the "\fBlight\fR theme (determined by the configuration parameter \fIconsole_theme\fR), displaying whatever colors the active palette dictates.
 
 .IP 3. 3
 There are a couple of terminals (that I know of) which will permit changing their colors but will not be able to present the changed color on the fly.

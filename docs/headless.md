@@ -123,7 +123,7 @@ It will create a "headless server lock file", though, so that
 
 - we can get info about the server running.
 
-The "headless server lock file" is saved as *~/.config/pyeadio/data/server-headles.txt* (or *~/.local/share/pyradio* if **xdg_compliant** is set to True), and will contain the IP address and port the servers is listening to. This is especially useful in case a user script needs to get this info (instead of parsing the output of the command **pyradio --addr**).
+The "headless server lock file" is saved as *~/.config/pyradio/data/server-headles.txt* (or *~/.local/share/pyradio/server-headles.txt* if **xdg_compliant** is set to True), and will contain the IP address and port the servers is listening to. This is especially useful in case a user script needs to get this info (instead of parsing the output of the command **pyradio --addr**).
 
 ## Installation
 

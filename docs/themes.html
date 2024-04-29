@@ -183,7 +183,7 @@ transparency        0</pre>
 Furthermore, if TERM is set to anything like “<strong>xterm</strong>”, “<strong>screen</strong>” or “<strong>tmux</strong>”, <strong>PyRadio</strong> will set it to “<em>xterm-256color</em>” as well.</p></li>
 <li><p>Terminals that do not support at least 16 colors will not be able to display any of the new themes. The same goes for terminals that do not support changing their colors (through the <strong>curses</strong> library).<br />
 <br />
-These terminal will default to the old “<strong>dark</strong>” theme, displaying whatever colors the active palette dictates.</p></li>
+These terminal will default to either the “<strong>dark</strong>” or the “<strong>light</strong>” theme (determined by the configuration parameter <strong>console_theme</strong>), displaying whatever colors the active palette dictates.</p></li>
 <li><p>There are a couple of terminals (that I know of) which will permit changing their colors but will not be able to present the changed color on the fly.<br />
 <br />
 This means that, in order for a theme change to take full effect, <strong>PyRadio</strong> will have to be restarted.</p></li>
