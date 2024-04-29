@@ -1,3 +1,27 @@
+2024-04-30 s-n-g
+    * version 0.9.3.5 (BUG FIX)
+    * Config Window: do not use hardcoded values when loading default params
+    * Config Window: do not change transparency settings when themes are not
+      being used
+    * Config Window: do not toggle transparency when repeatedly pressing r / d
+    * Config Window: when r / d (revert to saved / default params) is typed,
+      correctly load the corresponding theme
+    * Config Window: preserve theming config options when a terminal that does
+      not support color change is used and config is saved
+    * suppress list of files moved when migrating to XDG dirs
+    * if both XDG_DATA_HOME and XDG_STATE_HOME directories already exist,
+      xdg_compliant will be set to True, even if not set in the configuration
+      file (it means an XDG migration has been performed in the past; using the
+      non-XDG dirs will lead to data loss)
+    * adding config option console_theme; this way eiter thr dark or the light
+      theme can be used if PyRadio is executed in a Linux Virtual Console or
+      using a terminal that cannot change colors * if PyRadio is executed in a
+      Linux Virtual Console, do not open html files,
+      display list of dirs when \o is pressed and desktop notifications will
+      not be issued
+    * updating packagers info page
+    * updating docs
+
 2024-04-23 s-n-g
     * version 0.9.3.4 (BUG FIX)
     * adding --no-video command line parameter for vlc
