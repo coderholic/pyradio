@@ -54,6 +54,7 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#recordings-directory">Recordings Directory</a></li>
 <li><a href="#mkvtoolnix-cli-installation">MKVToolNix cli installation</a></li>
+<li><a href="#resource-opener-(linux-only)">Resource opener (Linux only)</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 <p class="indented">[ <a href="index.html#packaging-pyradio">Back to main doc</a> ]</p>
@@ -74,8 +75,6 @@ a:visited{color: SaddleBrown;}
 <li>netifaces</li>
 <li>dateutil</li>
 </ol>
-<p>Linux users will have to install the “<strong>xdg-utils</strong>” package (may be named differently in your distro) which will provide “<strong>xdg-open</strong>”, the utility to open directories, html pages, etc.</p>
-<p>Linux and macOS users will have to have installed a font that supports the “<strong>Unicode Geometric Shapes Block</strong>”. Any font mentioned in the <a target="_blank" href="https://www.fileformat.info/info/unicode/block/geometric_shapes/fontsupport.htm">Font Support for Unicode Block ‘Geometric Shapes’</a> page will do; as you can see these include <strong>DejaVu</strong>, <strong>FreeMono</strong>, <strong>Unifont</strong>, etc, some of which will fopefully be installed by default.</p>
 <h2 id="files-to-change">Files to change <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p>You will have to modify a couple of files to tailor <strong>PyRadio</strong>’ to your needs and liking.</p>
 <h3 id="distro-name-must-do">distro name (must do)</h3>
@@ -130,5 +129,14 @@ In this case, just delete it before the build command.</p></li>
 <p>Another thing to consider is whether you should mark <strong>MKVToolNix</strong> command line utilities as a dependency for <strong>PyRadio</strong>.</p>
 <p>I would suggest to do so, in order to provide your users the best experience possible. If unsure, please refer to section <a href="recording.html#chapters">Chapters</a> in the relevant document.</p>
 <p>In case you decide to do so, please make sure you mark as a dependency the <strong>command line utilities</strong>, not the GUI program, if that’s on a different package on your distro. For examle, Arch Linux provides both a <em>mkvtoolnix-cli</em> and a <em>mkvtoolnix-gui</em> package; the first one should be used. Same thing with Debian Linux; it provides both a <em>mkvtoolnix</em> and a <em>mkvtoolnix-gui</em> package; in which case you’d use the later.</p>
+<h2 id="resource-opener-linux-only">Resource opener (Linux only) <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>A <a target="_blank" href="https://wiki.archlinux.org/title/default_applications#Resource_openers">resource opener</a> is a utility to open directories, html pages, etc.</p>
+<p><strong>PyRadio</strong> running on Linux will look for <em>xdg-open</em>, <em>gio</em>, <em>mimeopen</em>, <em>mimeo</em> or <em>handlr</em>, in that order of detection.</p>
+<p>If none of the above if found, the requested file will simply not open.</p>
+<p>Most Linux distros will probably have <em>xdg-open</em> (from <em>xdg-utils</em> package) installed or available (or any of the ones in the list above), so no action will be nesesary.</p>
+<p>In case a different <em>resource opener</em> is to be used, one can declare it like so:</p>
+<pre>sed -i &#39;s/resource_opener = auto/resource_opener = MY_RESOURCE_OPENER/&#39; config</pre>
+<p>This will instruct <strong>PyRadio</strong> to use the file <strong>MY_RESOURCE_OPENER</strong> as a <em>resource opener</em>.</p>
+<p><strong>MY_RESOURCE_OPENER</strong> can be just the name of the file (if it is in the <em>PATH</em>), or an absolute path to a file, it it’s not.</p>
 </body>
 </html>
