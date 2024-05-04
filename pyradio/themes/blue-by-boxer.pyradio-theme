@@ -32,9 +32,16 @@ PyRadio URL         #FD5902
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#secondary-windows-background
+# https://github.com/coderholic/pyradio/blob/master/docs/themes.md#secondary-windows-background
 #
 Messages Border     #FD5902
+
+# Luminance Color Factor
+# The factor to lighten or darken Stations background
+# color, to get a calculated color used as background
+# for secondary windows
+# Valid values: 0 - 0.2
+Color Factor        0.05
 
 # Theme Transparency
 # Values are:

@@ -188,6 +188,22 @@ class PyRadioTheme(object):
                 transp = calculate_transparency_function()
 
             border_color = 16  if curses.COLORS > 16 else 1
+            if not self._cnf.use_calculated_colors and \
+                    self._colors['color_factor'] > 0:
+                if logger.isEnabledFor(logging.INFO):
+                    logger.debug('Theme has a color_factor, setting use_calculated_colors = True')
+                self._cnf.use_calculated_colors = True
+            # if not self._cnf.enable_calculated_colors and \
+            #         self._cnf.use_calculated_colors:
+            #     if logger.isEnabledFor(logging.INFO):
+            #         logger.debug('Theme has a color_factor, setting use_calculated_colors = True')
+            #     self._cnf.use_calculated_colors = False
+            if self._cnf.use_calculated_colors:
+                self._cnf.use_calculated_colors = self._cnf.enable_calculated_colors
+                if not self._cnf.enable_calculated_colors:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.debug(f'Setting use_calculated_colors = False due to enable_calculated_colors')
+
             if self._cnf.use_calculated_colors or \
                    self._cnf.has_border_background:
                 if transp:
@@ -360,12 +376,18 @@ class PyRadioTheme(object):
             logger.debug('Recalculating color15...')
             logger.debug('Stations background color: {}'.format(self._colors['css'][2]))
         self._cnf.use_calculated_colors = False if self._cnf.opts['calculated_color_factor'][1] == '0' else True
+        # logger.error('\n\nself._colors before recalculate\n{}\n\n'.format(self._colors))
+        if self._colors['color_factor'] == 0:
+            fact = self._cnf.opts['calculated_color_factor'][1]
+        else:
+            fact = self._colors['color_factor']
         self._colors['data'][15] = calculate_fifteenth_color(
             self._colors['data'],
-            self._cnf.opts['calculated_color_factor'][1],
+            fact,
             inhibit_if_color15_exists
-        )
+            )
         self._colors['css'][15] = rgb_to_hex(tuple(self._colors['data'][15]))
+        # logger.error('\n\nself._colors after recalculate\n{}\n\n'.format(self._colors))
         self._do_init_pairs()
         self._update_colors()
 
@@ -418,6 +440,7 @@ class PyRadioTheme(object):
 
         if a_theme == 'dark' or a_theme == 'default':
             self._colors['transparency'] = 2
+            self._colors['color_factor'] = 0
             self._colors['data'] = {1: (192, 192, 192), 2: (0, 0, 0), 3: (0, 128, 0), 4: (0, 0, 0), 5: (135, 0, 135), 6: (0, 0, 0), 7: (0, 128, 0), 8: (0, 0, 0), 9: (0, 128, 0), 10: (128, 128, 0), 11: (95, 135, 255), 12: (0, 255, 255), 14: (192, 192, 192), 13: (0, 0, 0), 15: (26, 26, 26)}
             if not no_curses:
                 if curses.COLORS > 16:
@@ -432,6 +455,7 @@ class PyRadioTheme(object):
         elif a_theme == 'dark_16_colors':
             ''' info '''
             self._colors['transparency'] = 2
+            self._colors['color_factor'] = 0
             self._colors['Name'] = 'dark_16_colors'
             self._colors['Path'] = ''
             self.applied_theme_name = 'dark_16_colors'
@@ -445,6 +469,7 @@ class PyRadioTheme(object):
             ''' info '''
             self._colors['Name'] = 'light'
             self._colors['transparency'] = 0
+            self._colors['color_factor'] = 0
             self._colors['Path'] = ''
             self.applied_theme_name = 'light'
             self._colors['data'] = {1: (0, 0, 0), 2: (255,255, 255), 3: (128, 0, 0), 8: (192, 192, 192), 9: (0, 0, 128), 4: (192, 192, 192), 5: (128, 0, 128), 6: (192, 192, 192), 7: (0, 0, 128), 12: (0, 0, 128), 11: (0, 0, 128), 10: (128, 0, 128), 13: (255, 255, 255), 14: (128, 0, 0), 15: (230, 230, 230)}
@@ -456,6 +481,7 @@ class PyRadioTheme(object):
             ''' info '''
             self._colors['Name'] = 'light_16_colors'
             self._colors['transparency'] = 0
+            self._colors['color_factor'] = 0
             self._colors['Path'] = ''
             self.applied_theme_name = 'light_16_colors'
             self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (255, 0, 0), 8: (255, 255, 255), 9: (0, 0, 255), 4: (255, 255, 255), 5: (255, 0, 255), 6: (255, 255, 255), 7: (0, 0, 255), 12: (0, 0, 255), 11: (0, 0, 255), 10: (255, 0, 255), 13: (255, 255,255), 14: (255, 0, 0), 15: (230, 230, 230)}
@@ -468,6 +494,7 @@ class PyRadioTheme(object):
             ''' info '''
             self._colors['Name'] = 'black_on_white'
             self._colors['transparency'] = 0
+            self._colors['color_factor'] = 0.2
             self._colors['Path'] = ''
             self.applied_theme_name = 'black_on_white'
             self._colors['data'] = {1: (128, 128, 128), 2: (255, 255, 255), 3: (0, 0, 0), 8: (255, 255, 255), 9: (138, 138, 138), 4: (255, 255, 255), 5: (128, 128, 128), 6: (0, 0, 0), 7: (128, 128, 128), 12: (0, 255, 255), 11: (138, 138, 138), 10: (138, 138, 138), 14: (0, 0, 0), 13: (255, 255, 255), 15: (229, 229, 229)}
@@ -479,6 +506,7 @@ class PyRadioTheme(object):
             ''' info '''
             self._colors['Name'] = 'white_on_black'
             self._colors['transparency'] = 2
+            self._colors['color_factor'] = 0.2
             self._colors['Path'] = ''
             self.applied_theme_name = 'white_on_black'
             self._colors['data'] = {1: (158, 158, 158), 2: (38, 38, 38), 3: (238, 238, 238), 8: (28, 28, 28), 9: (218, 218, 218), 4: (38, 38, 38), 5: (158, 158, 158), 6: (38, 38, 38), 7: (218, 218, 218), 12: (218, 218, 218), 11: (138, 138, 138), 10: (158, 158, 158), 13: (0, 0, 0), 14: (169, 169, 169), 15: (52, 52, 52)}
@@ -529,6 +557,7 @@ class PyRadioTheme(object):
             self._colors['css'] = {}
             for k in self._colors['data'].keys():
                 self._colors['css'][k] = rgb_to_hex(self._colors['data'][k])
+            # logger.error('colors\n{}'.format(self._colors))
 
         self.applied_theme_name = self._colors['Name']
         return ret
@@ -650,9 +679,31 @@ class PyRadioThemeReadWrite(object):
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('theme names = {}'.format(names))
-        self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 2}
+        self._temp_colors = { 'data': {}, 'css': {}, 'transparency': 2, 'color_factor': 0}
         for name in names.keys():
-            if name != 'transparency':
+            if name == 'transparency':
+                self._temp_colors['transparency'] = 2
+                try:
+                    self._temp_colors['transparency'] = int(names[name][0])
+                except (ValueError, TypeError):
+                    self._temp_colors['transparency'] = 2
+                if not self._temp_colors['transparency'] in range(0,3):
+                    self._temp_colors['transparency'] = 2
+                # logger.error('\n\nset transparency: {}\n\n'.format(self._temp_colors['transparency']))
+            elif name == 'Color Factor':
+                try:
+                    num = float(names[name][0])
+                    if 0.00 <= num <= 0.20:
+                        self._temp_colors['color_factor'] = num
+                    else:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug(f'Theme Color Factor is off-limits: 0.0 <= {num} <= 0.20; reseting to 0.0')
+                        self._temp_colors['color_factor'] = 0.0
+                except ValueError:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(f'Theme Color Factor is invalid: {names[name][0]}; reseting to 0.0')
+                    self._temp_colors['color_factor'] = 0.0
+            else:
                 try:
                     self._temp_colors['css'][self._param_to_color_id[name][0]] = names[name][0]
                 except KeyError:
@@ -663,15 +714,6 @@ class PyRadioThemeReadWrite(object):
                 if len(self._param_to_color_id[name]) == 2:
                     self._temp_colors['css'][self._param_to_color_id[name][1]] = names[name][1]
                     self._temp_colors['data'][self._param_to_color_id[name][1]] = hex_to_rgb(names[name][1])
-            elif name == 'transparency':
-                self._temp_colors['transparency'] = 2
-                try:
-                    self._temp_colors['transparency'] = int(names[name][0])
-                except (ValueError, TypeError):
-                    self._temp_colors['transparency'] = 2
-                if not self._temp_colors['transparency'] in range(0,3):
-                    self._temp_colors['transparency'] = 2
-                # logger.error('\n\nset transparency: {}\n\n'.format(self._temp_colors['transparency']))
 
         if self._theme_is_incomplete():
             if logger.isEnabledFor(logging.ERROR):
@@ -682,6 +724,7 @@ class PyRadioThemeReadWrite(object):
         if len(names['Messages Border']) == 2:
             self._temp_colors['css'][15] = names['Messages Border'][-1]
             self._temp_colors['data'][15] = hex_to_rgb(self._temp_colors['css'][15])
+            self._temp_colors['color_factor'] = 0
             self._cnf.has_border_background = True
             if logger.isEnabledFor(logging.INFO):
                 logger.info('read_theme(): color15 = {}'.format(self._temp_colors['css'][15]))
@@ -703,7 +746,15 @@ class PyRadioThemeReadWrite(object):
     def _calculate_fifteenth_color(self):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Stations background color: {}'.format(self._temp_colors['css'][2]))
-        self._temp_colors['data'][15] = calculate_fifteenth_color(self._temp_colors['data'], self._cnf.opts['calculated_color_factor'][1])
+        # logger.error('tmp_colors\n{}'.format(self._temp_colors))
+        if self._temp_colors['color_factor'] == 0:
+            fact = self._cnf.opts['calculated_color_factor'][1]
+        else:
+            fact = self._temp_colors['color_factor']
+        self._temp_colors['data'][15] = calculate_fifteenth_color(
+                self._temp_colors['data'],
+                fact
+                )
         self._temp_colors['css'][15] = rgb_to_hex(tuple(self._temp_colors['data'][15]))
 
     def _theme_is_incomplete(self, some_colors=None):

@@ -891,6 +891,9 @@ class PyRadioStations(object):
     def get_playlist_history_item(self, item_id=-1):
         return self._ps.item(item_id)
 
+    def dup_to_playlist_history(self):
+        self._ps.duplicate()
+
     def add_to_playlist_history(self, station_path='',
             station_file_name='',
             station_title='',
@@ -1364,6 +1367,7 @@ class PyRadioConfig(PyRadioStations):
     )
 
     use_calculated_colors = False
+    enable_calculated_colors = True
     has_border_background  = False
 
     start_colors_at = 0
@@ -2985,6 +2989,10 @@ class PyRadioPlaylistStack(object):
                     logger.debug('PyRadioPlaylistStack: Removing duplicate entry...')
                 return True
         return False
+
+    def duplicate(self):
+        it = self._p[-1]
+        self._p.append(it)
 
     def add(self, station_path='',
             station_file_name='',

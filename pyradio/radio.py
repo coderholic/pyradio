@@ -402,6 +402,8 @@ class PyRadio(object):
 
     _open_dir_win = None
 
+    _function_to_repeat = None
+
     def ll(self, msg):
         logger.error('DE ==========')
         logger.error('DE ===> {}'.format(msg))
@@ -1481,8 +1483,10 @@ class PyRadio(object):
             ''' show force http indication '''
             w_header = self._cnf.station_title
             if self._cnf.browsing_station_service:
-                if self._cnf._online_browser.page > 0:
-                    w_header += ' - p. {}'.format(self._cnf._online_browser.page+1)
+                ''' fix for #240 '''
+                if self._cnf._online_browser:
+                    if self._cnf._online_browser.page > 0:
+                        w_header += ' - p. {}'.format(self._cnf._online_browser.page+1)
             w_conn = http_conn[self.player.force_http][0]
             if self._cnf.dirty_playlist:
                 align += 1
@@ -4263,6 +4267,7 @@ ____Using |fallback| theme.''')
                 self._theme_selector.show()
 
     def _toggle_claculated_colors(self):
+        self._cnf.enable_calculated_colors = not self._cnf.enable_calculated_colors
         self._cnf.use_calculated_colors = not self._cnf.use_calculated_colors
         self._update_calculated_colors()
 
@@ -5850,8 +5855,23 @@ ____Using |fallback| theme.''')
     def _open_radio_browser(self):
         self._reset_status_bar_right()
         if not self._cnf.browsing_station_service:
-            self._cnf.browsing_station_service = True
-            self.playSelectionBrowser(a_url='api.radio-browser.info')
+            ret = 0
+            if self._cnf.dirty_playlist:
+                if self._cnf.auto_save_playlist:
+                    ''' save playlist and open playlist '''
+                    ret = self.saveCurrentPlaylist()
+                    if ret != 0:
+                        if self._cnf.browsing_station_service:
+                            self._cnf.removed_playlist_history_item()
+                else:
+                    ''' ask to save playlist '''
+                    ret = 1
+                    self._cnf.dup_to_playlist_history()
+                    self._function_to_repeat = self._open_radio_browser
+                    self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE)
+            if ret == 0:
+                self._cnf.browsing_station_service = True
+                self.playSelectionBrowser(a_url='api.radio-browser.info')
 
     def search_radio_browser_headless(self, index):
         #if self._cnf.headless and self._cnf.online_browser:
@@ -8086,6 +8106,8 @@ ____Using |fallback| theme.''')
                             self._open_playlist()
                         else:
                             self._goto_history_back_handler()
+                            if self._function_to_repeat:
+                                self._function_to_repeat()
                     else:
                         if self._cnf.browsing_station_service:
                             self._cnf.removed_playlist_history_item()
@@ -8094,6 +8116,8 @@ ____Using |fallback| theme.''')
                         self._open_playlist()
                     else:
                         self._goto_history_back_handler()
+                        if self._function_to_repeat:
+                            self._function_to_repeat()
                 elif char in (curses.KEY_EXIT, ord('q'), 27):
                     self.bodyWin.nodelay(True)
                     char = self.bodyWin.getch()
@@ -8103,6 +8127,7 @@ ____Using |fallback| theme.''')
                         if self._cnf.browsing_station_service:
                             self._cnf.removed_playlist_history_item()
                         self.refreshBody()
+            self._function_to_repeat = None
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:

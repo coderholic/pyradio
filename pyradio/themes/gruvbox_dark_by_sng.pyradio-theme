@@ -23,11 +23,18 @@ Extra Func          #dadada
 # Text color for URL
 # (background color will come from Stations)
 PyRadio URL         #5f8700
+#
+# Luminance Color Factor
+# The factor to lighten or darken Stations background
+# color, to get a calculated color used as background
+# for secondary windows
+# Valid values: 0 - 0.2
+Color Factor        0.06
 
 # Message window border foreground and background.
 # The background color can be left unset.
 # Please refer to the following link for more info
-# https://github.com/coderholic/pyradio#-alculated-colors
+# https://github.com/coderholic/pyradio/blob/master/docs/themes.md#secondary-windows-background
 #
 Messages Border     #5f8700
 
