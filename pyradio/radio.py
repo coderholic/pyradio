@@ -4680,6 +4680,8 @@ ____Using |fallback| theme.''')
                         self._cnf.removed_playlist_history_item()
             else:
                 ''' ask to save playlist '''
+                self._function_to_repeat = self._check_to_open_playlist
+                self._cnf.dup_to_playlist_history()
                 self._print_save_modified_playlist(self.ws.ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE)
         else:
             self._open_playlist(a_url)
@@ -8125,9 +8127,10 @@ ____Using |fallback| theme.''')
                     if char == -1:
                         ''' ESCAPE '''
                         if self._cnf.browsing_station_service:
-                            self._cnf.removed_playlist_history_item()
+                            self._cnf.remove_from_playlist_history()
                         self.refreshBody()
             self._function_to_repeat = None
+            self._cnf.remove_playlist_history_duplicates()
             return
 
         elif self.ws.operation_mode == self.ws.PLAYLIST_DIRTY_RELOAD_CONFIRM_MODE:
