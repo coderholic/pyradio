@@ -50,7 +50,10 @@ a:visited{color: SaddleBrown;}
 <li><a href="#secondary-windows-background">Secondary windows background</a>
 <ul>
 <li><a href="#theme-defined-secondary-windows-color">Theme defined secondary windows color</a></li>
-<li><a href="#calculated-secondary-windows-color">Calculated secondary windows color</a></li>
+<li><a href="#calculated-secondary-windows-color">Calculated secondary windows color</a>
+<ul>
+<li><a href="#optional-calculated-color-in-a-theme">Optional Calculated Color in a Theme</a></li>
+</ul></li>
 </ul></li>
 <li><a href="#alternative-main-window-border-color">Alternative Main Window border color</a></li>
 <li><a href="#user-themes">User themes</a>
@@ -225,7 +228,7 @@ This is just a recomenration, though; just get a color that combines well with e
 </ol>
 <p>This information is actually relevant to creating a new <strong>PyRadio</strong> theme, but it’s very important in order to understand how the calculated background color works.</p>
 <h4 id="calculated-secondary-windows-color">Calculated secondary windows color</h4>
-<p><strong>PyRadio</strong> will use the same background color for all windows by default, provided that the theme used does not define a “<em>Messages Border</em>” background color.</p>
+<p><strong>PyRadio</strong> will use the same background color for all windows by default, provided that the theme used does not define a “<em>Messages Border</em>” <strong>background color</strong>.</p>
 <p>In order to use a “<em>Messages Border</em>” background color different than the “<em>Stations background</em>” color, when “<em>Messages Border</em>” background color is not defined in the selected theme, a config option is available; “<strong>Calculated color</strong>”.</p>
 <p>This config option takes a value that’s between 0 and 0.2.</p>
 <p>If it is 0, no color change will occur.</p>
@@ -233,13 +236,24 @@ This is just a recomenration, though; just get a color that combines well with e
 <p>This is how this works: <strong>PyRadio</strong> will calculate the “<em>Stations background</em>” color perceived brightness, which will indicate whether the color is dark or light. Then depending on that, will add or subtract <strong>factor</strong> percent from its luminance value.</p>
 <p>Finally, a check will be made to see if this color is close to “<em>Messages Border</em>” foreground color, and re-adjusted as possible.</p>
 <p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> When a calculated background color is used, pressing “<strong>~</strong>” (<strong>tilde</strong>) will toggle it on and off. This setting will be valid until <strong>PyRadio</strong> terminates, or a new theme is loaded.</p>
+<h5 id="optional-calculated-color-in-a-theme">Optional Calculated Color in a Theme</h5>
+<p>Another way to use a different background color for secondary windows, is to provide one in the actual theme file. For example:</p>
+<pre># Luminance Color Factor
+# The factor to lighten or darken Stations background
+# color, to get a calculated color used as background
+# for secondary windows
+# Valid values: 0 - 0.2
+Color Factor        0.05</pre>
+<p>In this case, the value provided (i.e. 0.05) will be used the same way as the config oprion <strong>Calculated color</strong>.</p>
+<p>In fact, if both a theme and a config factor value is provided, the value provided by the theme will be used.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> If the “<strong>Messages Border</strong>” theme option provides both a foreground and a background, both the <em>calculated</em> values provided will be ignored.</p>
 <h3 id="alternative-main-window-border-color">Alternative Main Window border color</h3>
 <p>It is also possible to change the <strong>Main Window</strong> border color. This is a feature that has been requested and implemented, but not used by default.</p>
 <p>To provide an alternative border color, one would just add the following to a theme file:</p>
 <pre># Border color for the Main Window
 # (background color will come from Stations)
 Border              #69a9a7</pre>
-<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This color will be used <strong>only</strong> when the trerminal supports more than 16 colors. This is because <strong>Pyradio</strong> already uses colors 0-15, and this border color will be declaread as color No 16.</p>
+<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:</strong> This color will be used <strong>only</strong> when the terminal supports more than 16 colors. This is because <strong>Pyradio</strong> already uses colors 0-15, and this border color will be declared as color No 16.</p>
 <h3 id="user-themes">User themes</h3>
 <p>Users can easiliy create their own themes, using for example <a target="_blank" href="https://www.cssportal.com/css3-color-names/">CSS color names</a> as a resource, and</p>
 <ol type="1">

@@ -115,7 +115,7 @@ and much more...
     - psutil
     - rich
     - python-dateutil
-    - netifaces (optional)
+    - netifaces
 * MPV, MPlayer or VLC installed and in your path
 * MKVToolNix (cli files) to insert tags, chapters and cover to recordings (optional, if MPV or VLC is to be used, but mandatory in the case of MPlayer)
 

@@ -9,6 +9,7 @@
     * [Secondary windows background](#secondary-windows-background)
         * [Theme defined secondary windows color](#theme-defined-secondary-windows-color)
         * [Calculated secondary windows color](#calculated-secondary-windows-color)
+            * [Optional Calculated Color in a Theme](#optional-calculated-color-in-a-theme)
     * [Alternative Main Window border color](#alternative-main-window-border-color)
     * [User themes](#user-themes)
         * [Converting old themes](#converting-old-themes)
@@ -216,7 +217,7 @@ This information is actually relevant to creating a new **PyRadio** theme, but i
 
 #### Calculated secondary windows color
 
-**PyRadio** will use the same background color for all windows by default, provided that the theme used does not define a "*Messages Border*" background color.
+**PyRadio** will use the same background color for all windows by default, provided that the theme used does not define a "*Messages Border*" **background color**.
 
 In order to use a "*Messages Border*" background color different than the "*Stations background*" color, when "*Messages Border*" background color is not defined in the selected theme, a config option is available; "**Calculated color**".
 
@@ -232,6 +233,25 @@ Finally, a check will be made to see if this color is close to "*Messages Border
 
 **Note:** When a calculated background color is used, pressing "**~**" (**tilde**) will toggle it on and off. This setting will be valid until **PyRadio** terminates, or a new theme is loaded.
 
+##### Optional Calculated Color in a Theme
+
+Another way to use a different background color for secondary windows, is to provide one in the actual theme file. For example:
+
+```
+# Luminance Color Factor
+# The factor to lighten or darken Stations background
+# color, to get a calculated color used as background
+# for secondary windows
+# Valid values: 0 - 0.2
+Color Factor        0.05
+```
+
+In this case, the value provided (i.e. 0.05) will be used the same way as the config oprion **Calculated color**.
+
+In fact, if both a theme and a config factor value is provided, the value provided by the theme will be used.
+
+**Note:** If the "**Messages Border**" theme option provides both a foreground and a background, both the *calculated* values provided will be ignored.
+
 ### Alternative Main Window border color
 
 It is also possible to change the **Main Window** border color. This is a feature that has been requested and implemented, but not used by default.
@@ -244,7 +264,7 @@ To provide an alternative border color, one would just add the following to a th
 Border              #69a9a7
 ```
 
-**Note:** This color will be used **only** when the trerminal supports more than 16 colors. This is because **Pyradio** already uses colors 0-15, and this border color will be declaread as color No 16.
+**Note:** This color will be used **only** when the terminal supports more than 16 colors. This is because **Pyradio** already uses colors 0-15, and this border color will be declared as color No 16.
 
 ### User themes
 
