@@ -246,7 +246,7 @@ Another way to use a different background color for secondary windows, is to pro
 Color Factor        0.05
 ```
 
-In this case, the value provided (i.e. 0.05) will be used the same way as the config oprion **Calculated color**.
+In this case, the value provided (i.e. 0.05) will be used the same way as the config option **Calculated color**.
 
 In fact, if both a theme and a config factor value is provided, the value provided by the theme will be used.
 

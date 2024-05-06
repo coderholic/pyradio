@@ -1,25 +1,34 @@
-2024-04-30 s-n-g
-    * version 0.9.3.5 (BUG FIX)
-    * Config Window: do not use hardcoded values when loading default params
-    * Config Window: do not change transparency settings when themes are not
-      being used
-    * Config Window: do not toggle transparency when repeatedly pressing r / d
-    * Config Window: when r / d (revert to saved / default params) is typed,
-      correctly load the corresponding theme
-    * Config Window: preserve theming config options when a terminal that does
-      not support color change is used and config is saved
-    * suppress list of files moved when migrating to XDG dirs
-    * if both XDG_DATA_HOME and XDG_STATE_HOME directories already exist,
-      xdg_compliant will be set to True, even if not set in the configuration
-      file (it means an XDG migration has been performed in the past; using the
-      non-XDG dirs will lead to data loss)
-    * adding config option console_theme; this way eiter thr dark or the light
-      theme can be used if PyRadio is executed in a Linux Virtual Console or
-      using a terminal that cannot change colors * if PyRadio is executed in a
-      Linux Virtual Console, do not open html files,
-      display list of dirs when \o is pressed and desktop notifications will
-      not be issued
-    * updating packagers info page
+2024-05-06 s-n-g
+    * version 0.9.3.5
+    * Config Window changes:
+        * when r / d (revert to saved / default params) is typed,
+          correctly load the corresponding theme
+        * do not use hardcoded values when loading default params
+        * do not toggle transparency when repeatedly pressing r / d
+        * do not change transparency settings when themes are not being used
+        * fixing cursor positioning for PgDn
+    * XDD compliant operation changes:
+        * if both XDG_DATA_HOME and XDG_STATE_HOME directories already exist,
+          xdg_compliant will be set to True, even if not set in the
+          configuration file (it means an XDG migration has been performed
+          in the past; using the non-XDG dirs will lead to data loss)
+        * suppress list of files moved when migrating to XDG dirs
+    * Theming changes:
+        * preserve theming config options when a terminal that does not
+          support color change is used and config is saved
+        * adding "Color Factor" parameter to themes
+    * Linux Vistual Console
+        * adding config option console_theme; this way either the dark
+          or the light theme can be used when on the console
+        * detect execution on the Virtual Console
+        * do not open HTML help
+        * display list of directories when \o is pressed
+        * do not issue desktop notifications
+        * clear console at exit
+    * fixing #240 - AttributeError: NoneType object has no attribute page
+    * actually open playlists list ('o') or RabioBrowser ('O'), after a
+      dirty palylist save query has been performed
+    * updating Windows Media Players links
     * updating docs
 
 2024-04-23 s-n-g

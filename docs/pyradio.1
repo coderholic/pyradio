@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2024 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "April 2024" pyradio
+.TH pyradio 1 "May 2024" pyradio
 
 .SH Name
 .PP
@@ -1336,7 +1336,7 @@ This information is actually relevant to creating a new \fBpyradio\fR theme, but
 
 \fBpyradio\fR will use the same background color for all windows by default, provided that the theme used does not define a \fIMessages Border\fR background color.
 
-In order to use a \fIMessages Border\fR background color different than the \fIStations background\fR color, when \fIMessages Border\fR background color is not defined in the selected theme, a config option is available; \fBCalculated color\fR".
+In order to use a \fIMessages Border\fR background color different than the \fIStations background\fR color, when \fIMessages Border\fR background color is not defined in the selected theme, a config option is available; "\fBCalculated color\fR".
 
 This config option takes a value that's between 0 and 0.2.
 
@@ -1349,11 +1349,38 @@ This is how this works: \fBpyradio\fR will calculate the \fIStations background\
 Finally, a check will be made to see if this color is close to \fIMessages Border\fR foreground color, and re-adjusted as possible.
 
 
+.RE
+
+\fBOptional Calculated Color in a Theme\fR
+.RS 3
+
+Another way to use a different background color for secondary windows, is to provide one in the actual theme file. For example:
+
+.RS 3
+\fI# Luminance Color Factor
+.br
+# The factor to lighten or darken Stations background
+.br
+# color, to get a calculated color used as background
+.br
+# for secondary windows
+.br
+# Valid values: 0 - 0.2
+.br
+Color Factor        0.05\fR
+.RE
+
+In this case, the value provided (i.e. 0.05) will be used the same way as the config option "\fBCalculated color\fR".
+
+In fact, if both a theme and a config factor value is provided, the value provided by the theme will be used.
+
+.RE
+.IP \fBNote\fR
+If the "\fBMessages Border\fR" theme option provides both a foreground and a background, both the calculated values provided will be ignored.
+
 .IP \fBNote\fR
 When a calculated background color is used, pressing \fI~\fR (\fItilde\fR) will toggle it on and off. This setting will be valid until \fBpyradio\fR terminates, or a new theme is loaded.
 
-.RE
-.RE
 .RE
 .PP
 \fBUser themes\fR
