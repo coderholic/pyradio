@@ -1378,6 +1378,8 @@ class PyRadioConfig(PyRadioStations):
 
     _linux_resource_opener = None
 
+    need_to_fix_desktop_file_icon = False
+
     def __init__(self, user_config_dir=None, headless=False):
         # keep old recording / new recording dir
         self.rec_dirs = ()
@@ -2084,6 +2086,7 @@ class PyRadioConfig(PyRadioStations):
         self.xdg.ensure_paths_exist()
 
     def _read_config(self, distro_config=False):
+        xdg_compliant_read_from_file = False
         if distro_config:
             file_to_read = path.join(path.dirname(__file__), 'config')
         else:
@@ -2271,6 +2274,7 @@ class PyRadioConfig(PyRadioStations):
                     not platform.startswith('win') and \
                     sp[1].lower() == 'true':
                 self.xdg_compliant = True
+                xdg_compliant_read_from_file = True
             elif sp[0] == 'resource_opener' and \
                     not (platform.startswith('win') or \
                         platform.startswith('dar')):
@@ -2356,6 +2360,16 @@ class PyRadioConfig(PyRadioStations):
             if path.exists(d_dir) and path.exists(s_dir):
                 print('[magenta]XDG Dirs[/magenta] found; enabling [magenta]XDG Base compliant[/magenta] operation')
                 self.xdg_compliant = True
+                self.need_to_fix_desktop_file_icon = True
+
+        if self.need_to_fix_desktop_file_icon and \
+                not distro_config and \
+                not xdg_compliant_read_from_file:
+            with open(file_to_read, 'a', encoding='utf-8') as f:
+                f.write('\n')
+                f.write('# Both XDG_DATA_HOME and XDG_STATE_HOME exist\n')
+                f.write('# This will only be read by fix_pyradio_desktop_file\n')
+                f.write('xdg_compliant = True')
 
     def _make_sure_dirs_exist(self):
         if self.opts['recording_dir'][1] == '':

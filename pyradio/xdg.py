@@ -45,6 +45,7 @@ class XdgMigrate(object):
 
     def __init__(self, config=None):
         self.home_dir = path.expanduser('~')
+        self._desktop_file = path.join(self.home_dir, '.local', 'share', 'applications', 'pyradio.desktop')
         self.other_dir = path.join(self.home_dir, 'pyradio-not-migrated')
         if config is None:
             # test values
@@ -56,12 +57,16 @@ class XdgMigrate(object):
             else:
                 self.old_registers_dir = path.join(self.home_dir, '.config', 'pyradio', '.registers')
             self.new_registers_dir = path.join(self.state_dir, 'registers')
+            self._need_to_fix_desktop_file = config.need_to_fix_desktop_file_icon
+            self._icon_location = path.join(self.home_dir, '.config', 'data', 'pyradio.png')
         else:
             self.data_dir = config.data_dir
             self.state_dir = config.state_dir
             self.path_to_scan = config.stations_dir
             self.old_registers_dir = config.xdg._old_dirs[config.xdg.REGISTERS]
             self.new_registers_dir = config.xdg._new_dirs[config.xdg.REGISTERS]
+            self._need_to_fix_desktop_file = True
+            self._icon_location = path.join(config.data_dir, 'pyradio.png')
         self._get_files()
 
     def _print_file(self, an_item, max_length):
@@ -139,6 +144,10 @@ class XdgMigrate(object):
                 '> Nothing to copy to "state" dir',
                 '> Nothing to copy to "pytadio-not-migrated" dir',
             )
+
+        ''' update Deskto file '''
+        self._update_desktop_file()
+
         go_on = False
         move_registers = False
         for n in self.files_to_data, self.files_to_state, self.files_to_other:
@@ -214,6 +223,22 @@ class XdgMigrate(object):
             self._remove_old_files_on_success()
             if to_console and self._verbose:
                 input('Press ENTER to continue... ')
+
+    def _update_desktop_file(self):
+        if path.exists(self._desktop_file) and \
+                self._need_to_fix_desktop_file:
+            try:
+                  with open(self._desktop_file, 'r', encoding='utf-8') as d:
+                      lines = d.readlines()
+            except:
+                return
+            for i, l in enumerate(lines):
+                if l.startswith('Icon='):
+                    sp = l.split('=')
+                    if sp[1].strip() != self._icon_location:
+                        lines[i] = 'Icon=' + self._icon_location + '\n'
+                        with open(self._desktop_file, 'w', encoding='utf-8') as d:
+                            d.writelines(lines)
 
     def _print_error_wit_ask_enter(self):
         print('[red]Error:[/red] moving files to [green]XDG[/green] directories failed...\nCleaning up...')

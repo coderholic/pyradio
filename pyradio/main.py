@@ -375,40 +375,45 @@ If nothing else works, try the following command:
                 print('Error in config path: "[red]{}[/red]"\n      This directory cannot be used by [magenta]PyRadio[/magenta]!'.format(args.config_dir))
                 sys.exit(1)
 
-    if not system().lower().startswith('darwin') and \
-            not system().lower().startswith('win'):
-        # if args.generate_systemd_service_files:
-        #     create_systemd_service_files()
-        #     sys.exit()
-        # elif args.terminal:
-        if args.terminal:
-            try:
-                from urllib.request import urlretrieve
-            except:
-                from urllib import urlretrieve
-            try:
-                r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_pyradio_desktop_file')
-            except:
-                print('Cannot contact github...')
-                sys.exit(1)
-            if int(r[1]['content-length']) < 1000:
-                print('Cannot contact github...')
-                sys.exit(1)
-            script = r[0]
-            # script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
-            chmod(script , 0o766)
-            if args.terminal_param:
-                command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '-" + args.terminal_param + "'" + '"'
-                command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '" + args.terminal_param.replace('\\', '') + "'" + '"'
-                # print(command)
-                subprocess.call(command, shell=True)
-            else:
-                subprocess.call('bash -c "' + script + ' -t ' + args.terminal + '"', shell=True)
-            remove(r[0])
-            sys.exit()
-
     with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
         read_config(pyradio_config)
+
+        if not system().lower().startswith('darwin') and \
+                not system().lower().startswith('win'):
+            # if args.generate_systemd_service_files:
+            #     create_systemd_service_files()
+            #     sys.exit()
+            # elif args.terminal:
+
+            if args.terminal:
+                import subprocess
+                r = None
+                script = None
+                script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
+                if script is None:
+                    try:
+                        from urllib.request import urlretrieve
+                    except:
+                        from urllib import urlretrieve
+                    try:
+                        r = urlretrieve('https://raw.githubusercontent.com/coderholic/pyradio/master/devel/fix_pyradio_desktop_file')
+                    except:
+                        print('Cannot contact github...')
+                        sys.exit(1)
+                    if int(r[1]['content-length']) < 1000:
+                        print('Cannot contact github...')
+                        sys.exit(1)
+                    script = r[0]
+                chmod(script , 0o766)
+                if args.terminal_param:
+                    command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '-" + args.terminal_param + "'" + '"'
+                    command = 'bash -c "' + script + ' -t ' + args.terminal + " -p '" + args.terminal_param.replace('\\', '') + "'" + '"'
+                    subprocess.call(command, shell=True)
+                else:
+                    subprocess.call('bash -c "' + script + ' -t ' + args.terminal + '"', shell=True)
+                if r is not None:
+                    remove(r[0])
+                sys.exit()
 
         if args.write_theme:
             if args.write_theme[0]:
