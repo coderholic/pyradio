@@ -6,7 +6,7 @@ import subprocess
 import argparse
 import shutil
 from argparse import ArgumentParser, SUPPRESS as SUPPRESS
-from os import path, getenv, environ, remove, chmod, makedirs
+from os import path, getenv, environ, remove, chmod, makedirs, rmdir
 from sys import platform, version_info, executable
 from contextlib import contextmanager
 from platform import system
@@ -389,7 +389,7 @@ If nothing else works, try the following command:
                 import subprocess
                 r = None
                 script = None
-                script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
+                 #script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
                 if script is None:
                     try:
                         from urllib.request import urlretrieve
@@ -985,6 +985,17 @@ def read_config(pyradio_config):
     #     print('{0}: {1}'.format(n, pyradio_config.opts[n]))
     if pyradio_config.xdg_compliant:
         pyradio_config.migrate_xdg()
+
+    ''' check if ~/pyradio-recordings is created
+        but is not used and should be deleted
+    '''
+    chk = path.join(path.expanduser('~'), 'pyradio-recordings')
+    if path.exists(chk):
+        if pyradio_config.recording_dir != chk:
+            try:
+                rmdir(chk)
+            except (FileNotFoundError, OSError):
+                pass
 
 def save_config(pyradio_config):
     ret = pyradio_config.save_config(from_command_line=True)
