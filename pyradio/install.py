@@ -16,7 +16,7 @@ from shutil import which
 ''' This is PyRadio version this
     install.py was released for
 '''
-PyRadioInstallPyReleaseVersion = '0.9.3.5'
+PyRadioInstallPyReleaseVersion = '0.9.3.6'
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
