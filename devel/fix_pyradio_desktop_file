@@ -46,6 +46,8 @@ the terminal \"my_term\" is \"-S\", execute as follows:
 }
 
 function get_data_dir(){
+    local CHK_XDG_DATA_DIR
+    local CHK_XDG_STATE_DIR
     SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
     CFG_FILE=$(dirname $"$SCRIPT_DIR")"/pyradio/config"
     if [ -e "$CFG_FILE" ]
@@ -54,14 +56,18 @@ function get_data_dir(){
     fi
     if [ -z "$XDG" ]
     then
-        XDG="$(sed 's/[A-Z]/\l&/' "${XDG_CONFIG_HOME-"$HOME"/.config}"/pyradio/config | grep 'xdg_compliant = true')"
+        CHK_XDG_DATA_DIR=${XDG_DATA_HOME-"$HOME"/.local/share/pyradio}
+        CHK_XDG_STATE_DIR=${XDG_DATA_HOME-"$HOME"/.local/state/pyradio}
+        if [ -e ${CHK_XDG_DATA_DIR} ] && [ -e "${CHK_XDG_STATE_DIR}" ]
+        then
+            XDG=true
+        fi
     fi
     if [ -z "$XDG" ]
     then
         DATA_DIR=~/.config/pyradio/data
     else
-        DATA_DIR="$XDG_DATA_HOME"
-        [ -z "$DATA_DIR" ] && DATA_DIR=~/.local/share/pyradio
+        DATA_DIR="${XDG_DATA_HOME-"$HOME"/.local/share/pyradio}"
     fi
     mkdir -p "$DATA_DIR" 2>/dev/null
 }

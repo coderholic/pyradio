@@ -2362,15 +2362,6 @@ class PyRadioConfig(PyRadioStations):
                 self.xdg_compliant = True
                 self.need_to_fix_desktop_file_icon = True
 
-        if self.need_to_fix_desktop_file_icon and \
-                not distro_config and \
-                not xdg_compliant_read_from_file:
-            with open(file_to_read, 'a', encoding='utf-8') as f:
-                f.write('\n')
-                f.write('# Both XDG_DATA_HOME and XDG_STATE_HOME exist\n')
-                f.write('# This will only be read by fix_pyradio_desktop_file\n')
-                f.write('xdg_compliant = True')
-
     def _make_sure_dirs_exist(self):
         if self.opts['recording_dir'][1] == '':
             self.opts['recording_dir'][1] = path.join(path.expanduser('~'), 'pyradio-recordings')

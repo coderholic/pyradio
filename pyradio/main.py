@@ -389,7 +389,7 @@ If nothing else works, try the following command:
                 import subprocess
                 r = None
                 script = None
-                 #script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
+                # script = '/home/spiros/projects/my-gits/pyradio/devel/fix_pyradio_desktop_file'
                 if script is None:
                     try:
                         from urllib.request import urlretrieve
