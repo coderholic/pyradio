@@ -107,16 +107,21 @@ class PyRadioConfigWindow(object):
 
     load_default_or_saved_parameters = False
 
-    def __init__(self, parent, config,
-                 toggle_transparency_function,
-                 update_transparency_function,
-                 show_theme_selector_function,
-                 save_parameters_function,
-                 reset_parameters_function,
-                 show_port_number_invalid,
-                 parameters_editing_error=None,
-                 global_functions=None
-        ):
+    def __init__(
+            self,
+            parent,
+            recording_function,
+            config,
+            toggle_transparency_function,
+            update_transparency_function,
+            show_theme_selector_function,
+            save_parameters_function,
+            reset_parameters_function,
+            show_port_number_invalid,
+            parameters_editing_error=None,
+            global_functions=None
+            ):
+        self._is_recording = recording_function
         self.parameters_editing_error = parameters_editing_error
         self._local_functions = {
             ord('j'): self._go_down,
@@ -723,7 +728,8 @@ class PyRadioConfigWindow(object):
                  1  cancel saving config
                  2  cancel a dirty config (not active currently)
                  3  open online browser config
-                 4 open recording dir selection window
+                 4  open recording dir selection window
+                 5  show recording is on error message
         '''
         if self.too_small:
             return 1, []
@@ -761,6 +767,8 @@ class PyRadioConfigWindow(object):
             return -1, []
 
         elif val[0] == 'recording_dir':
+            if self._is_recording() > 0:
+                return 5, []
             return self.n_u.INSERT_RECORDINGS_DIR_MODE, []
 
         elif val[0] == 'radiobrowser':

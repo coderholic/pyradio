@@ -1112,6 +1112,19 @@ press |F8| to get to the player installation window.
 '''
 ),
 
+    'M_REC_IS_ON_NO_DIR': ('Recording is active',
+r'''
+|PyRadio| is currently recording a station!
+
+Changing the |Recording Directory| while recording a
+station is not allowed.
+
+Please stop the playback of the station (effectively
+stopping the recording) and try again.
+
+'''
+),
+
     'M_RESOURCE_OPENER': ('Resource Opener Help',
 r'''A |Resource Opener| is a program used to open files passed to it
 as arguments.

@@ -3860,12 +3860,16 @@ class PyRadioChapters(object):
                 '--attachment-name', 'cover',
                 '--attach-file', cover_file
                 ])
+        logger.error('\n\nopts = {}\n\n'.format(opts))
+        logger.error(f'{self._output_file = }')
+        logger.error(f'{self._mkv_file = }')
         opts.extend([
             '-o', self._output_file,
             self._mkv_file
             ])
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('merge options = {}'.format(opts))
+        logger.error('\n\nopts = {}\n\n'.format(opts))
         p = subprocess.Popen(
                 opts, shell=False,
                 stdout=subprocess.PIPE,

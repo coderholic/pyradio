@@ -4306,6 +4306,7 @@ ____Using |fallback| theme.''')
         if self._config_win is None:
             self._config_win = PyRadioConfigWindow(
                 self.outerBodyWin,
+                lambda: self.player.recording > 0 and self.player.isPlaying(),
                 self._cnf,
                 self._toggle_transparency,
                 self._update_transparency,
@@ -6837,7 +6838,7 @@ ____Using |fallback| theme.''')
                 msg = ( 'Error saving config. Press any key to exit...',
                         'Config saved successfully!!!',
                         'Config saved - Restarting playback (parameters changed)')
-                if ret not in (2, 3):
+                if ret not in (2, 3, 5):
                     self.ws.close_window()
                     self.bodyWin.box()
                     self._print_body_header()
@@ -6969,6 +6970,14 @@ ____Using |fallback| theme.''')
                 # elif ret ==2:
                 #     ''' cancel a dirty config '''
 
+                elif ret == 5:
+                    ''' recording is on
+                        cannot open recording dir selection window
+                    '''
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Cannot open Recording Selector Window; recording is on!')
+                    self._open_simple_message_by_key('M_REC_IS_ON_NO_DIR')
+                    return
                 else:
                     ''' restore transparency, if necessary '''
                     if self._config_win._config_options['use_transparency'][1] != self._config_win._saved_config_options['use_transparency'][1]:
