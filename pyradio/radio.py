@@ -752,6 +752,14 @@ class PyRadio(object):
                 lambda: self.ws.previous_operation_mode
         )
 
+        ''' keep resource opener from Opener Selection window.
+            This way, reopening the Opener Seletion window
+            while on Config Window, before saving the configuration
+            file, will show the opener previously entered,
+            instead of the saved one
+        '''
+        self._tmp_resource_opener = self._cnf.resource_opener
+
     def __del__(self):
         self.transientWin = None
 
@@ -5544,7 +5552,7 @@ ____Using |fallback| theme.''')
     def _open_resource_opener_select_win(self):
         if self._insert_resource_opener_win is None:
             self._insert_resource_opener_win = PyRadioResourceOpener(
-                opener=self._cnf.resource_opener,
+                opener=self._tmp_resource_opener,
                 parent=self.outerBodyWin,
                 global_functions=self._global_functions,
             )
@@ -6746,6 +6754,10 @@ ____Using |fallback| theme.''')
                 self._station_select_win = None
                 self._browser_config_win = None
             ret, ret_list = self._config_win.keypress(char)
+            # logger.error('\n\n')
+            # logger.error(f'{ret = }')
+            # logger.error(f'{ret_list = }')
+            # logger.error('\n\n')
             if ret == self.ws.INSERT_RECORDINGS_DIR_MODE:
                 self._open_redordings_dir_select_win()
             elif ret == self.ws.INSERT_RESOURCE_OPENER:
@@ -6984,6 +6996,9 @@ ____Using |fallback| theme.''')
                     self._config_win._saved_config_options['dirty_config'][1] = False
                     self._cnf.dirty_config = False
                 ''' clean up '''
+                if ret == 1:
+                    ''' canceled '''
+                    self._tmp_resource_opener = self._cnf.resource_opener
                 self._player_select_win = None
                 self._encoding_select_win = None
                 self._playlist_select_win = None
@@ -7311,6 +7326,7 @@ ____Using |fallback| theme.''')
                 # logger.error('\nret\t\t{0}\nnew_dir\t\t"{1}"\nMove dir\t{2}'.format(ret, new_dir, self._asked_to_move_recordings_dir))
                 # logger.error('\nRecordings Directory Selected\n\n')
                 self._config_win._config_options['resource_opener'][1] = new_opener
+                self._tmp_resource_opener = new_opener
                 # logger.info('\n    self._config_win._config_options : "{}"'.format(self._config_win._config_options['recording_dir'][1]))
                 # logger.info('\n    self._config_win._saved_config_options : "{}"'.format(self._config_win._saved_config_options['recording_dir'][1]))
                 # logger.info('\n    self.xdg._new_dirs[RECORDINGS] : "{}"'.format(self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
