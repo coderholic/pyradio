@@ -1,0 +1,47 @@
+# Amber Theme by Zane Godden
+# Source: https://github.com/mechatour/hyprland_amber_gold/blob/main/.config/pyradio/themes/amber.pyradio-theme
+
+
+# Main foreground and background
+Stations            #FFBF00 #121107
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      #9D7122
+
+# Status bar foreground and background
+Status Bar          #121107 #FFBF00
+
+# Normal cursor foreground and background
+Normal Cursor       #121107 #FFBF00
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       #121107 #E2AE00
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         #FFBF00 #121107
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          #FFBF00
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         #E2AE00
+
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#secondary-windows-background
+#
+Messages Border     #E2AE00 #121107
+
+# Theme Transparency
+# Values are:
+#   0: No transparency
+#   1: Theme is transparent
+#   2: Obey config setting (default)
+transparency        0

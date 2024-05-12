@@ -1,0 +1,47 @@
+# Theme by Zane Godden
+# Source: https://github.com/mechatour/hyprland_dotfiles/blob/main/.config/pyradio/themes/dracula.pyradio-theme
+
+
+# Main foreground and background
+Stations            #bd93f9 #282a36
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      #f8f8f2
+
+# Status bar foreground and background
+Status Bar          #282a36 #bd93f9
+
+# Normal cursor foreground and background
+Normal Cursor       #282a36 #bd93f9
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       #f1fa8c #bd93f9
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+Edit Cursor         #fbf1f2 #bfb9c6
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          #fbf1f2
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         #f8f8f2
+
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#secondary-windows-background
+#
+Messages Border     #f8f8f2
+
+# Theme Transparency
+# Values are:
+#   0: No transparency
+#   1: Theme is transparent
+#   2: Obey config setting (default)
+transparency        0 

@@ -55,8 +55,12 @@ Four themes by the [Catppuccin community](https://github.com/catppuccin).
 A clasic theme by [The OpenBSD Guy](https://github.com/OpenBSDGuy), originally created on [OpenBSD](https://www.openbsd.org/).
 - **cupcake_by_edunfelt** and  **fairyflossy_by_edunfelt** \
 Two themes by [edunfelt](https://github.com/edunfelt) inspired by the [base16](https://github.com/base16-project) project.
+- **dracula_by_Plyply99** \
+A theme based of the Dracula theme by [Plyply99](https://github.com/Plyply99).
 - **gruvbox_dark_by_sng** and **gruvbox_light_by_sng** \
 Two themes based on the [gruvbox](https://github.com/morhetz/gruvbox) theme.
+- **hyprland_amber_gold** and **hyprland_dracula** \
+Two themes by [mechatour](https://github.com/mechatour), from [hyprland_amber_gold](https://github.com/mechatour/hyprland_amber_gold) and [hyprland_dotfiles]([https://github.com/mechatour/hyprland_dotfiles).
 - **minima_by_ben_chile** \
 A theme by user [ben_chile](https://forum.maboxlinux.org/u/ben_chile) created on the [Mabox Linux](https://maboxlinux.org) Forum.
 - **pastel_based_by_sng** \

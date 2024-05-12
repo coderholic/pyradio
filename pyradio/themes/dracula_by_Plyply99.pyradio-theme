@@ -1,0 +1,45 @@
+# Main foreground and background
+Stations            #F8F8F2 #282A36
+
+# Playing station text color
+# (background color will come from Stations)
+Active Station      #50FA7B
+
+# Status bar foreground and background
+Status Bar          #BD93F9 #282A36
+
+# Normal cursor foreground and background
+Normal Cursor       #FFB86C #2f313f
+
+# Cursor foreground and background
+# when cursor on playing station
+Active Cursor       #50FA7B #2f313f
+
+# Cursor foreground and background
+# This is the Line Editor cursor
+# Edit Cursor         #BD93F9 #282A36
+Edit Cursor         #282A36 #FFB86C
+
+# Text color for extra function indication
+# and jump numbers within the status bar
+# (background color will come from Stations)
+Extra Func          #FFB86C
+
+# Text color for URL
+# (background color will come from Stations)
+PyRadio URL         #BD93F9
+
+# Message window border foreground and background.
+# The background color can be left unset.
+# Please refer to the following link for more info
+# https://github.com/coderholic/pyradio#secondary-windows-background
+#
+Messages Border     #50FA7B #2f313f
+
+# Theme Transparency
+# Values are:
+#   0: No transparency
+#   1: Theme is transparent
+#   2: Obey config setting (default)
+transparency        2
+
