@@ -443,7 +443,7 @@ def get_a_linux_resource_opener():
                 return [which_str] + a_prog[1].split(' ')
             else:
                 return [which_str]
-        return None
+    return None
 
 def open_cache_dir():
     c = PyRadioCache()

@@ -1281,9 +1281,12 @@ class PyRadioResourceOpener(object):
         self._parent_win = parent
         self.initial_enabled = [True, False, True]
         self._title = ' Select Resource Opener '
-        self._global_functions = global_functions
-        if self._global_functions is None:
+        if global_functions is None:
             self._global_functions = {}
+        else:
+            self._global_functions = dict(global_functions)
+        self._global_functions[ord('d')] = self._revert_to_default
+        # self._global_functions[ord('s')] = self._get_result
 
     def __del__(self):
         try:
@@ -1332,7 +1335,7 @@ class PyRadioResourceOpener(object):
         tmp = self._widgets[0].string.strip().split(' ')
         if tmp[0] == 'auto':
             self._error_string = ''
-            self._widgets[-2].enabled = False
+            self._widgets[-2].enabled = True
         else:
             w_file = find_executable_basename(tmp[0])
             stripped_string = self._widgets[0].string.strip()
@@ -1475,13 +1478,17 @@ class PyRadioResourceOpener(object):
             self._win.addstr(14 + adjust_line_Y, 23, 'Cancel operation.', curses.color_pair(5))
 
 
-            self._win.addstr(15 + adjust_line_Y, 5, 's', curses.color_pair(4))
+            self._win.addstr(15 + adjust_line_Y, 5, 'd', curses.color_pair(4))
+            self._win.addstr(15 + adjust_line_Y, 23, 'Revert to default (', curses.color_pair(5))
+            self._win.addstr(r'\d', curses.color_pair(4))
+            self._win.addstr(' in Line Editor).', curses.color_pair(5))
+            self._win.addstr(16 + adjust_line_Y, 5, 's', curses.color_pair(4))
             self._win.addstr(' / ', curses.color_pair(5))
             self._win.addstr('q', curses.color_pair(4))
-            self._win.addstr(15 + adjust_line_Y, 23, 'Exeute / Cancel operation (not in Line Editor).', curses.color_pair(5))
+            self._win.addstr(16 + adjust_line_Y, 23, 'Exeute / Cancel operation (not in Line Editor).', curses.color_pair(5))
 
-            self._win.addstr(16 + adjust_line_Y, 5, '?', curses.color_pair(4))
-            self._win.addstr(16 + adjust_line_Y, 23, 'Help or Line editor help.', curses.color_pair(5))
+            self._win.addstr(17 + adjust_line_Y, 5, '?', curses.color_pair(4))
+            self._win.addstr(17 + adjust_line_Y, 23, 'Help or Line editor help.', curses.color_pair(5))
 
         adjust_line_Y -= 1
         if self.maxY > 22 + adjust_line_Y and self.maxX > 76:
@@ -1574,7 +1581,7 @@ class PyRadioResourceOpener(object):
             self.focus = focus
         # logger.error('pp o self.focus = {}'.format(self.focus))
 
-    def _get_result(self, ret):
+    def _get_result(self):
         tmp = self._widgets[0].string.strip().split(' ')
         if tmp[0] == 'auto':
              return 1, 'auto'
@@ -1584,6 +1591,13 @@ class PyRadioResourceOpener(object):
         ''' commanting this to preserve full path '''
         # tmp[0] = w_file
         return 1, ' '.join(tmp)
+
+    def _revert_to_default(self):
+        self._widgets[0].string = 'auto'
+        self._widgets[0].keep_restore_data()
+        self._widgets[0].show(self._win, opening=True)
+        self._widgets[-2].enabled = True
+        return 0, None
 
     def keypress(self, char):
         """ Returns:
@@ -1624,13 +1638,16 @@ class PyRadioResourceOpener(object):
                     self._focus_next()
                 elif self._focus == 1:
                     # ok, execute
-                    return self._get_result(ret)
+                    return self._get_result()
                 elif self._focus == 2:
                     # cancel
                     return -1, None
             elif char == ord('s') and self._focus > 0:
                 # s, execute
-                return self._get_result(ret)
+                return self._get_result()
+            elif char == ord('d') and self._focus > 0:
+                # d, revert to default
+                return self._revert_to_default()
             elif self._focus == 0:
                 """
                  Returns:

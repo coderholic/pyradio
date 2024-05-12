@@ -46,7 +46,7 @@ A theme for light terminal background settings.
 Furthermore, a number of themes (these are actual files saved in the **themes** installation directory) are also available:
 
 - **AM_by_amski1** \
-A simple green on dark theme, created for Window.
+A simple green on dark theme, created for Windows.
 - **blue-by-boxer** \
 A reddish on blue theme by user **Boxer** at [Mabox Forum](https://forum.maboxlinux.org/).
 - **catppuccin-frappe**, **catppuccin-latte**, **catppuccin-macchiato** and **catppuccin-mocha** \

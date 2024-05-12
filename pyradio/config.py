@@ -1860,6 +1860,8 @@ class PyRadioConfig(PyRadioStations):
             Popen([which('open'), a_dir])
         else:
             xdg_open_path = self._linux_resource_opener if self._linux_resource_opener else get_a_linux_resource_opener()
+            if isinstance(xdg_open_path, str):
+                xdg_open_path = xdg_open_path.split(' ')
             if xdg_open_path:
                 try:
                     Popen(
