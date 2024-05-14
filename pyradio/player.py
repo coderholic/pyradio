@@ -3738,6 +3738,7 @@ class PyRadioChapters(object):
             encoding='urf-8'
             ):
         # cover_dir is the data dir
+        self._mkvmerge_is_done = False
         self._cnf = config
         self._playlist = os.path.basename(self._cnf.station_path)[:-4]
         self._chapters_time_function = chapter_time
@@ -3828,6 +3829,10 @@ class PyRadioChapters(object):
                     logger.info('mkvmerge not found!')
 
     def write_chapters_to_file_thread(self, input_file):
+        if self._mkvmerge_is_done:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Already execute mkvmerge; terminating')
+            return
         opts = []
         self._tag_file = input_file[:-4] + '.xml'
         # remove tmp_ from begining of filename
@@ -3835,11 +3840,21 @@ class PyRadioChapters(object):
         opts = [self.mkvmerge,
                 '--global-tags', self._tag_file,
                 ]
+        self._output_file = None
+        self._mkv_file = None
         if self.create_chapter_file(input_file):
             if len(self._list) > 1:
                 opts.extend([
                     '--chapters', self._chapters_file,
                     ])
+        if self._output_file is None:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('Output file is None... Quiting mkvmerge')
+            return
+        elif self._mkv_file is None:
+            if logger.isEnabledFor(logging.INFO):
+                logger.info('MKV file is None... Quiting mkvmerge')
+            return
         t_dir_dir = os.path.dirname(self._tag_file)
         cover_file = None
         for n in (
@@ -3860,9 +3875,6 @@ class PyRadioChapters(object):
                 '--attachment-name', 'cover',
                 '--attach-file', cover_file
                 ])
-        logger.error('\n\nopts = {}\n\n'.format(opts))
-        logger.error(f'{self._output_file = }')
-        logger.error(f'{self._mkv_file = }')
         opts.extend([
             '-o', self._output_file,
             self._mkv_file
@@ -3881,6 +3893,7 @@ class PyRadioChapters(object):
         if p.returncode == 0:
             if logger.isEnabledFor(logging.INFO):
                 logger.info('MKV merge successful!')
+            self._mkvmerge_is_done = True
             for n in self._chapters_file, self._tag_file, self._mkv_file:
                 try:
                     os.remove(n)
