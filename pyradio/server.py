@@ -299,6 +299,7 @@ div[id^='a_']:hover { underline: none;}
                     <button id="vs" onclick="js_send_simple_command('/html/volumesave', 1500);" type="button" class="btn btn-success">Save<br>Volume</button>
                     <button id="mute" onclick="js_send_simple_command('/html/mute', 1500);" type="button" class="btn btn-warning">Mute<br>Player</button>
                     <button id="recording" onclick="js_send_simple_command('/html/trec', 1500);" type="button" class="btn btn-danger">REC<br>Disabled</button>
+                    <!-- <button id="recondig" onclick="js_send_simple_command('/html/reconfig', 1500);" type="button" class="btn btn-success">Re-read<br>Config</button> -->
                 </div>
             </div>
             <div class="col-xs-4 col-lg-4">
@@ -915,7 +916,8 @@ Restricted Commands (Main mode only)
 /rb_page              /grb         get RadioBrowser searh results page number
 /rb_first_page        /frb         load RadioBrowser first results page
 /rb_next_page         /nrb         load RadioBrowser next results page
-/rb_previous_page     /prb         load RadioBrowser previous results page''',
+/rb_previous_page     /prb         load RadioBrowser previous results page
+/reconfig                          force a headless instance to read config''',
         '/quit': 'PyRadio Remote Service exiting!\nCheers!',
         '/volumeup': 'Volume increased!',
         '/volumedown': 'Volume decreased!',
@@ -1243,6 +1245,19 @@ Restricted Commands (Main mode only)
                 self.send_song_title(self.song_title())
             else:
                 self._send_text(self._text['/'])
+
+        elif self._path in ('/reconfig', ):
+            ''' no html command '''
+            if not self._is_html:
+                if self._cnf.headless:
+                    if self.can_send_command():
+                        received = self._commands['/text_reconfig']()
+                        # logger.error('received = "{}"'.format(received))
+                        self._send_text(received)
+                    else:
+                        self._send_text(self._text['/perm'])
+                else:
+                    self._send_text('Command not applicable in non-headless operation!')
 
         elif self._path in ('/i', '/info'):
             if self._is_html:

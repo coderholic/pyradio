@@ -500,6 +500,7 @@ class PyRadio(object):
             '/title': self._html_song_title,
             '/html_info': self._html_info,
             '/text_info': self._text_info,
+            '/text_reconfig': self._text_reconfig,
             '/html_is_stopped': self._html_is_player_stopped,
             '/html_is_radio_browser': self._html_is_radio_browser,
             '/html_init': self._html_init_song_title,
@@ -780,6 +781,11 @@ class PyRadio(object):
                     self._saved_colors[i] = curses.color_content(i)
                 except:
                     return
+
+    def _text_reconfig(self, html=False):
+        self._cnf.re_read_config()
+        if not html:
+            return 'User config file read'
 
     def _text_info(self):
         out = []

@@ -2084,6 +2084,9 @@ class PyRadioConfig(PyRadioStations):
         self.config_opts = deepcopy(self.opts)
         # for n in self.config_opts.items():
         #     logger.error('  {}: {}'.format(*n))
+        self.re_read_config()
+
+    def re_read_config(self):
         self._read_config()
         self.xdg.ensure_paths_exist()
 
