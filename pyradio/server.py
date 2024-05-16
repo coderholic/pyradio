@@ -933,8 +933,8 @@ Restricted Commands (Main mode only)
         '/list': 'Listing stations from playlist',
         '/idle': 'Player is idle; operation not applicable...',
         '/error': 'Error in parameter',
-        '/perm': 'Operation not permitted (not in Normal Mode)',
-        '/perm_html': '<div class="alert alert-danger">Operation not permitted (not in <b>Normal Mode</b>)</div>',
+        '/perm': 'Operation not permitted (not in Main Mode)',
+        '/perm_html': '<div class="alert alert-danger">Operation not permitted (not in <b>Main Mode</b>)</div>',
         '/log': 'Stations logging toggled',
         '/like': 'Station tagged (liked)',
     }
@@ -1250,11 +1250,8 @@ Restricted Commands (Main mode only)
                 # logger.error('received = "{}"'.format(received))
                 self._send_raw(received)
             else:
-                if self.can_send_command():
-                    received = self._commands['/text_info']()
-                    self._send_text(received)
-                else:
-                    self._send_text(self._text['/perm'])
+                received = self._commands['/text_info']()
+                self._send_text(received)
 
         elif self._path in ('/next', '/n'):
             if self._is_html:

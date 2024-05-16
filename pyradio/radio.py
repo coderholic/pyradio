@@ -807,6 +807,19 @@ class PyRadio(object):
         else:
             out.append('  Status: Idle')
         out.append('  Selection (id={0}): "{1}"'.format(self.selection+1, self.stations[self.selection][0]))
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            if self._cnf.headless:
+                out.append(
+                        '\nPyRadio is NOT in Main Mode!'
+                        "\nPlease attach the program's session to a terminal and take appropriate action"
+                        "\n to close the opened window, effectively putting PyRadio in Main Mode"
+                        )
+            else:
+                out.append(
+                        '\nPyRadio is NOT in Main Mode!'
+                        "\nPlease get to the program's terminal and take appropriate action to close the"
+                        "\nopened window, effectively putting PyRadio in Main Mode"
+                        )
         return '\n'.join(out)
 
 
@@ -846,6 +859,19 @@ class PyRadio(object):
             out.append('<tr><td>Status:</td><td>Idle</span></td></tr>')
             out.append('<tr><td>Selection:</td><td>{}</span></td></tr>'.format(self.stations[self.selection][0]))
         out.append('</tbody></table>')
+        if self.ws.operation_mode != self.ws.NORMAL_MODE:
+            if self._cnf.headless:
+                out.append(r'''<p><br><b>PyRadio</b> is <span style="font-weight: bold; color: Red;">NOT</span>
+ in <span style="font-weight: bold; color: Green;">Main Mode</span>!</p>
+<p>Please attach the program's session to a terminal and take appropriate action to close the opened window,
+effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Green;">Main Mode</span>
+ </p>''')
+            else:
+                out.append(r'''<p><br><b>PyRadio</b> is <span style="font-weight: bold; color: Red;">NOT</span>
+ in <span style="font-weight: bold; color: Green;">Main Mode</span>!</p>
+<p>Please get to the program's terminal and take appropriate action to close the opened window,
+effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Green;">Main Mode</span>
+ </p>''')
         out.append('</div>')
         return '\n'.join(out)
 
@@ -5269,7 +5295,7 @@ ____Using |fallback| theme.''')
     def _html_check_op_mode(self):
         if self.ws.window_mode == self.ws.NORMAL_MODE:
             return None
-        return '<div class="alert alert-danger">Operation not permitted (not in <b>Normal Mode</b>)</div>'
+        return '<div class="alert alert-danger">Operation not permitted (not in <b>Main Mode</b>)</div>'
 
     def _html_play_next_station(self):
         self._reset_status_bar_right()
