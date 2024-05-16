@@ -3812,27 +3812,22 @@ class PyRadioChapters(object):
         self._chapters_file = None
 
     def write_chapters_to_file(self, input_file):
-        logger.error('input_file: "{}"'.format(input_file))
-        if input_file is None or input_file == '':
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('empty input file provided! Exiting!')
-        else:
-            if self.HAS_MKVTOOLNIX:
+        if not self._mkvmerge_is_done:
+            if input_file is None or input_file == '':
                 if logger.isEnabledFor(logging.INFO):
-                    logger.info('starting mkvmerge!')
-                    logger.info('input_file: "{}"'.format(input_file))
-                threading.Thread(
-                        target=self.write_chapters_to_file_thread(input_file)
-                    )
+                    logger.info('empty input file provided! Exiting!')
             else:
-                if logger.isEnabledFor(logging.INFO):
-                    logger.info('mkvmerge not found!')
+                if self.HAS_MKVTOOLNIX:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('starting mkvmerge!\ninput_file: "{}"'.format(input_file))
+                    threading.Thread(
+                            target=self.write_chapters_to_file_thread(input_file)
+                        )
+                else:
+                    if logger.isEnabledFor(logging.INFO):
+                        logger.info('mkvmerge not found!')
 
     def write_chapters_to_file_thread(self, input_file):
-        if self._mkvmerge_is_done:
-            if logger.isEnabledFor(logging.INFO):
-                logger.info('Already execute mkvmerge; terminating')
-            return
         opts = []
         self._tag_file = input_file[:-4] + '.xml'
         # remove tmp_ from begining of filename
@@ -3881,7 +3876,6 @@ class PyRadioChapters(object):
             ])
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('merge options = {}'.format(opts))
-        logger.error('\n\nopts = {}\n\n'.format(opts))
         p = subprocess.Popen(
                 opts, shell=False,
                 stdout=subprocess.PIPE,
@@ -3892,7 +3886,7 @@ class PyRadioChapters(object):
         # logger.error('outs = "{0}", err = "{1}"'.format(outs, err))
         if p.returncode == 0:
             if logger.isEnabledFor(logging.INFO):
-                logger.info('MKV merge successful!')
+                logger.info('mkvmerge was successful!')
             self._mkvmerge_is_done = True
             for n in self._chapters_file, self._tag_file, self._mkv_file:
                 try:
@@ -3902,7 +3896,7 @@ class PyRadioChapters(object):
             return True
         else:
             if logger.isEnabledFor(logging.ERROR):
-                logger.error('MKV merge failed with error:\n{}'.format(err))
+                logger.error('mkvmerge failed with error:\n{}'.format(err))
             return False
 
     def _remove_starting_tmp_string(self, a_string):
