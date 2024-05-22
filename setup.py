@@ -32,6 +32,7 @@ meta = dict(
     entry_points={
         'console_scripts': [
             'pyradio = pyradio.main:shell',
+            'pyradio-client = pyradio.main:run_client'
         ]
     },
     install_requires=install_requires,

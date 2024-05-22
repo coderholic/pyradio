@@ -30,12 +30,12 @@ try:
 except:
     HAVE_PSUTIL = False
 
-from . player import PlayerCache
+from .player import PlayerCache
 from .config import HAS_REQUESTS, HAS_DNSPYTHON
 from .common import *
 from .window_stack import Window_Stack
 from .config_window import *
-from .log import Log
+from .log import Log, fix_chars
 from .edit import PyRadioSearch, PyRadioEditor, PyRadioRenameFile, \
     PyRadioConnectionType, PyRadioServerWindow, PyRadioBuffering, \
     PyRadioRecordingDir, PyRadioResourceOpener, PyRadioOpenDir
@@ -503,7 +503,7 @@ class PyRadio(object):
             '/text_reconfig': self._text_reconfig,
             '/html_is_stopped': self._html_is_player_stopped,
             '/html_is_radio_browser': self._html_is_radio_browser,
-            '/html_init': self._html_init_song_title,
+            '/html_init': self._html_song_title,
             '/volume': self._get_text_volume,
             '/set_volume': self._set_text_volume,
             '/html_open_radio_browser': self._open_html_rb,
@@ -783,9 +783,17 @@ class PyRadio(object):
                     return
 
     def _text_reconfig(self, html=False):
-        self._cnf.re_read_config()
-        if not html:
-            return 'User config file read'
+        if self.player.currently_recording:
+            if not html:
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Currently recording a station; config file not read')
+                return 'Currently recording a station; config file not read'
+        else:
+            if not html:
+                self._cnf.re_read_config()
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('User config file read')
+                return 'User config file read'
 
     def _text_info(self):
         out = []
@@ -809,7 +817,7 @@ class PyRadio(object):
             # logger.error('self.log.song_title: {}'.format(self.log.song_title))
             # logger.error('============================')
             if self.stations[self.playing][0] not in self.log.song_title:
-                out.append('    Title: {}'.format(self.log.song_title))
+                out.append('    Title: {}'.format(fix_chars(self.log.song_title)))
         else:
             out.append('  Status: Idle')
         out.append('  Selection (id={0}): "{1}"'.format(self.selection+1, self.stations[self.selection][0]))
@@ -940,9 +948,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
              else:
                  return 'Player is Idle!'
 
-    def _html_init_song_title(self):
-        self._html_song_title()
-
     def _html_song_title(self):
         if self._remote_control_server:
             title = self.log.song_title
@@ -956,7 +961,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 else:
                     title = 'No Title'
             # return title
-            self._remote_control_server.send_song_title(title)
+            self._remote_control_server.send_song_title(fix_chars(title))
 
     def restore_colors(self):
         if self._cnf.use_themes:
@@ -2463,6 +2468,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         if url:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('+++ downloading icon...')
+                logger.error('\n\n{}\n\n'.format(self._station_images))
             file_to_write = self._station_images[0] if url.endswith('.jpg') else self._station_images[1]
             if stop():
                 if logger.isEnabledFor(logging.DEBUG):
@@ -6870,7 +6876,7 @@ ____Using |fallback| theme.''')
                 msg = ( 'Error saving config. Press any key to exit...',
                         'Config saved successfully!!!',
                         'Config saved - Restarting playback (parameters changed)')
-                if ret not in (2, 3, 5):
+                if ret not in (2, 3, 5, 6):
                     self.ws.close_window()
                     self.bodyWin.box()
                     self._print_body_header()
@@ -7010,6 +7016,19 @@ ____Using |fallback| theme.''')
                         logger.debug('Cannot open Recording Selector Window; recording is on!')
                     self._open_simple_message_by_key('M_REC_IS_ON_NO_DIR')
                     return
+
+                elif ret == 6:
+                    ''' recording is on
+                        cannot open recording dir selection window
+                    '''
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Cannot open Recording Selector Window; recording is on in a headless instance!')
+                    self._open_simple_message_by_key(
+                            'M_REC_IS_ON_NO_DIR_HEADLESS',
+                            ret_list[0]
+                            )
+                    return
+
                 else:
                     ''' restore transparency, if necessary '''
                     if self._config_win._config_options['use_transparency'][1] != self._config_win._saved_config_options['use_transparency'][1]:

@@ -24,6 +24,7 @@ cli = [
 
 [project.scripts]
 pyradio = "pyradio.main:shell"
+pyradio-client = "pyradio.main:run_client"
 
 [project.urls]
 "Homepage" = "https://github.com/coderholic/pyradio"

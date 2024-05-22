@@ -35,7 +35,7 @@ if platform.lower().startswith('win'):
 
 def fix_chars(s):
     out = [s]
-    from_str = ('\r', '\n', '\\"', "\\'")
+    from_str = ('\r', '\n', r'\"', r"\'")
     to_str = ('' , '', '"', "'")
     for n in range(len(to_str)):
         out.append(out[-1].replace(from_str[n], to_str[n]))

@@ -597,24 +597,26 @@ div[id^='a_']:hover { underline: none;}
     }
 
     function js_set_title(a_tag, a_title, the_command=''){
+        var b_title = a_title.replaceAll(String.fromCharCode(92), "");
+        // console.log("b_title = ", b_title)
         // console.log("    ", last_title);
-        // console.log("a_title.length < last_title.length :", a_title.length < last_title.length);
-        // console.log("last_title.includes(a_title) :", last_title.includes(a_title));
+        // console.log("b_title.length < last_title.length :", b_title.length < last_title.length);
+        // console.log("last_title.includes(b_title) :", last_title.includes(b_title));
         if ( a_tag === "#song_title" ){
-            if ( a_title.length < last_title.length && last_title.includes(a_title.substring(0, a_title.length - 4)) ){
-                // console.log("----", a_title)
+            if ( b_title.length < last_title.length && last_title.includes(b_title.substring(0, b_title.length - 4)) ){
+                // console.log("----", b_title)
                 return;
             }
         } else if ( a_tag === "#msg_text" ){
             if ( the_command !== "" && the_command != "/html/info" ) {
-                a_title = a_title.replace("alert ", "text-center alert ");
+                b_title = b_title.replace("alert ", "text-center alert ");
             }
         }
 
-        // console.log("++++", a_title)
-        $(a_tag).html(a_title);
+        // console.log("++++", b_title)
+        $(a_tag).html(b_title);
         if ( a_tag === "#song_title" ){
-            last_title = a_title;
+            last_title = b_title;
             // console.log("set ", last_title)
         }
     }
@@ -912,7 +914,7 @@ Restricted Commands (Main mode only)
 /list_rb              /lrb         list RadioBrowser search items
 /search_rb/[x]        /srb/[x]     execute RadioBrowser search item x
                                      (x comes from /lrb - execute default
-                                      search item if not specified)
+                                      search item if x not specified)
 /rb_page              /grb         get RadioBrowser searh results page number
 /rb_first_page        /frb         load RadioBrowser first results page
 /rb_next_page         /nrb         load RadioBrowser next results page
@@ -1258,6 +1260,8 @@ Restricted Commands (Main mode only)
                         self._send_text(self._text['/perm'])
                 else:
                     self._send_text('Command not applicable in non-headless operation!')
+            else:
+                self._send_raw('')
 
         elif self._path in ('/i', '/info'):
             if self._is_html:

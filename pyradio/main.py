@@ -24,6 +24,7 @@ from .common import StationsChanges
 from .schedule import PyRadioScheduleList
 from .install import get_a_linux_resource_opener
 from .html_help import is_graphical_environment_running
+from .client import client
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
@@ -67,13 +68,25 @@ class MyArgParser(ArgumentParser):
         print(self._add_colors(self.format_help()))
 
     def _add_colors(self, txt):
-        t = txt.replace('show this help', 'Show this help').replace('usage:', '• Usage:').replace('options:', '• General options:').replace('[', '|').replace(']', '||')
+        t = txt.replace(
+        'show this help',
+        'Show this help').replace(
+        'usage:', '• Usage:').replace(
+        'options:', '• General options:').replace(
+        '[', '|').replace(
+        ']', '||')
         x = re.sub(r'([^a-zZ-Z0-9])(--*[^ ,\t|]*)', r'\1[red]\2[/red]', t)
         t = re.sub(r'([A-Z_][A-Z_]+)', r'[green]\1[/green]', x)
         x = re.sub('([^"]pyradio)', r'[magenta]\1[/magenta]', t, flags=re.I)
         t = re.sub(r'(player_name:[a-z:_]+)', r'[plum2]\1[/plum2]', x)
         x = re.sub(r'(•.*:)', r'[orange_red1]\1[/orange_red1]', t)
-        t = x.replace('mpv', '[green]mpv[/green]').replace('mplayer', '[green]mplayer[/green]').replace('vlc', '[green]vlc[/green]')
+        t = x.replace(
+        'mpv', '[green]mpv[/green]').replace(
+        'mplayer', '[green]mplayer[/green]').replace(
+        'vlc', '[green]vlc[/green]').replace(
+        'Curses based Internet Radio Player',
+        '[magenta]Curses based Internet Radio Player[/magenta]'
+        )
         return '[bold]' + t.replace('||', r']').replace('|', r'\[').replace('• ', '') + '[/bold]'
 
 @contextmanager
@@ -101,8 +114,7 @@ Please install the module (named "python-netifaces" or
                     print('Failed to remove Lock file: "[red]{}[/red]"'.format(lfile))
                 else:
                     print('Lock file not found: "[red]{}[/red]"'.format(lfile))
-            if headless:
-                cf.remove_remote_control_server_report_file()
+            cf.remove_remote_control_server_report_file()
         except:
             pass
         if cf.dirty_config:
@@ -224,9 +236,9 @@ If nothing else works, try the following command:
         sys.exit()
 
     requested_player = ''
-    # parser = ArgumentParser(description='Curses based Internet radio player')
+    # parser = ArgumentParser(description='Curses based Internet Radio Player')
     parser = MyArgParser(
-        description='Curses based Internet radio player'
+        description='Curses based Internet Radio Player'
     )
     if not system().lower().startswith('win'):
         parser.add_argument('-c', '--config-dir', default='',
@@ -349,8 +361,12 @@ If nothing else works, try the following command:
 
     if system().lower().startswith('win'):
         parser.add_argument('--headless', default=None, help=SUPPRESS)
-        parser.add_argument('--address', help=SUPPRESS)
-        parser.add_argument('-fd', '--free-dead-headless-server', action='store_true', help=SUPPRESS)
+        gr_remote = parser.add_argument_group('• Remote Constol Server')
+        gr_remote.add_argument('--address', action='store_true',
+                                help='Show remote control server address.')
+        gr_remote.add_argument('--free-dead-headless-server', action='store_true', help=SUPPRESS)
+        gr_remote.add_argument('-fd', '--free-dead-remote-control-server', action='store_true',
+                                 help='Use this if you cannot start a new remote control server (you get a message that it is already running).')
     else:
         gr_headless = parser.add_argument_group('• Headless operation')
         gr_headless.add_argument('--headless', default=None, metavar=('IP_AND_PORT', ),
@@ -359,6 +375,7 @@ If nothing else works, try the following command:
                                 help='Show remote control server address.')
         gr_headless.add_argument('-fd', '--free-dead-headless-server', action='store_true',
                                  help='Use this if your headless server has terminated unexpectedly, and you cannot start a new one (you get a message that it is already running).')
+        gr_headless.add_argument('--free-dead-remote-control-server', action='store_true', help=SUPPRESS)
         # gr_headless.add_argument('-gss', '--generate-systemd-service-files', action='store_true',
         #                          help='Create systemd service files to enable / disable headless operation using tmux or screen.')
     args = parser.parse_args()
@@ -432,8 +449,16 @@ If nothing else works, try the following command:
                 print('Error: Headless Server already running...\n')
                 return
 
-        if args.free_dead_headless_server:
-            ff = path.join(pyradio_config.state_dir, 'server-headless.txt')
+        if platform.startswith('win'):
+            fd = args.free_dead_remote_control_server
+        else:
+            fd = args.free_dead_headless_server
+
+        if fd:
+            if platform.startswith('win'):
+                ff = path.join(pyradio_config.state_dir, 'server.txt')
+            else:
+                ff = path.join(pyradio_config.state_dir, 'server-headless.txt')
             if path.exists(ff):
                 try:
                     remove(ff)
@@ -731,10 +756,17 @@ If nothing else works, try the following command:
 
         if args.address:
             disp = []
-            paths = (
-                    path.join(pyradio_config.state_dir, 'server-headless.txt'),
-                    path.join(pyradio_config.state_dir, 'server.txt')
-            )
+            if sys.platform.startswith('win'):
+                paths = ('', path.join(
+                    getenv('APPDATA'),
+                    'pyradio', 'data',
+                    'server.txt'
+                    ))
+            else:
+                paths = (
+                        path.join(pyradio_config.state_dir, 'server-headless.txt'),
+                        path.join(pyradio_config.state_dir, 'server.txt')
+                )
             tok = ('Headless server', 'Server')
             out = '''  {0}
     Text address: http://{1}
@@ -749,9 +781,9 @@ If nothing else works, try the following command:
                     except:
                         pass
             if disp:
-                print('PyRadio Remote Control Server\n' +  ''.join(disp))
+                print('[magenta]PyRadio Remote Control Server[/magenta]\n' +  ''.join(disp))
             else:
-                print('No PyRadio remote control servers running\n')
+                print('No [magenta]PyRadio[/magenta] Remote Control Servers running\n')
             return
 
         if args.no_themes:
@@ -1132,6 +1164,9 @@ def pad_string(a_string, width):
         return cjkslices(a_string, width)
     diff = width - st_len
     return a_string + ' ' * diff
+
+def run_client():
+    client()
 
 if __name__ == '__main__':
     shell()

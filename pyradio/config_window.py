@@ -14,6 +14,7 @@ from .encodings import *
 from .themes import *
 from .server import IPsWithNumbers
 from .simple_curses_widgets import SimpleCursesLineEdit, SimpleCursesHorizontalPushButtons, SimpleCursesMenu
+from .client import PyRadioClient
 import logging
 import locale
 locale.setlocale(locale.LC_ALL, '')    # set your locale
@@ -730,6 +731,8 @@ class PyRadioConfigWindow(object):
                  3  open online browser config
                  4  open recording dir selection window
                  5  show recording is on error message
+                 6  show headless recording is on error message
+                 7  show headless communication error
         '''
         if self.too_small:
             return 1, []
@@ -769,6 +772,29 @@ class PyRadioConfigWindow(object):
         elif val[0] == 'recording_dir':
             if self._is_recording() > 0:
                 return 5, []
+            client = PyRadioClient(
+                    server_file=path.join(
+                        self._cnf.state_dir, 'server-headless.txt'
+                        )
+                    )
+            ret = client.is_recording()
+            ''' Return recording to file status
+                Return value:
+                    -2 : Error
+                    -1 : request timeout
+                     0 : not recording
+                     1 : recording a file
+                     2 : No files found
+            '''
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f'headless client returned: {ret}')
+            if ret == 1:
+                return 6, [client.server_ip + ':' + client.server_port]
+            elif ret < 0:
+                return 7, [
+                        client.server_ip + ':' + client.server_port,
+                        client.last_reply
+                        ]
             return self.n_u.INSERT_RECORDINGS_DIR_MODE, []
 
         elif val[0] == 'radiobrowser':

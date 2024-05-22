@@ -169,7 +169,7 @@ Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-a]
                [-scv PNG_FILE] [-srt] [-ach] [--headless IP_AND_PORT]
                [--address] [-fd]
 
-Curses based Internet radio player
+Curses based Internet Radio Player
 
 General options:
   -h, --help            Show this help message and exit

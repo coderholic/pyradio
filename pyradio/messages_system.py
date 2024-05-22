@@ -72,6 +72,7 @@ class PyRadioMessagesSystem(object):
             'M_PLAYLIST_SAVE_ERR_2'
             'M_SCHEDULE_INFO',
             'M_SCHEDULE_ERROR',
+            'M_REC_IS_ON_NO_DIR_HEADLESS',
             )
 
     _two_arg_list = (
@@ -1115,6 +1116,20 @@ press |F8| to get to the player installation window.
     'M_REC_IS_ON_NO_DIR': ('Recording is active',
 r'''
 |PyRadio| is currently recording a station!
+
+Changing the |Recording Directory| while recording a
+station is not allowed.
+
+Please stop the playback of the station (effectively
+stopping the recording) and try again.
+
+'''
+),
+
+    'M_REC_IS_ON_NO_DIR_HEADLESS': ('Recording is active',
+r'''
+A |headless PyRadio| instance at |{}| is
+currently recording a station!
 
 Changing the |Recording Directory| while recording a
 station is not allowed.

@@ -124,6 +124,7 @@ function uninstall_sudo(){
     sudo echo 'Uninstalling PyRadio'
     echo -n '  ** Removing executable ... '
     sudo rm -f `which pyradio 2>/dev/null` 2>/dev/null
+    sudo rm -f `which pyradio-client 2>/dev/null` 2>/dev/null
     if [ -d /usr/share/doc/pyradio ]
     then
         sudo rm -rf /usr/share/doc/pyradio 2>/dev/null

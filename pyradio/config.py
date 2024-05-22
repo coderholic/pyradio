@@ -2360,6 +2360,8 @@ class PyRadioConfig(PyRadioStations):
         if not platform.startswith('win')  and \
                 not self.xdg_compliant and \
                 distro_config:
+            # d_dir = path.join(XdgDirs.get_xdg_dir('XDG_DATA_HOME'), 'pyradio')
+            # s_dir = path.join(XdgDirs.get_xdg_dir('XDG_STATE_HOME'), 'pyradio')
             d_dir = XdgDirs.get_xdg_dir('XDG_DATA_HOME')
             s_dir = XdgDirs.get_xdg_dir('XDG_STATE_HOME')
             if path.exists(d_dir) and path.exists(s_dir):

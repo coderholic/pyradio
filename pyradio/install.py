@@ -1277,7 +1277,7 @@ class PyRadioUpdateOnWindows(PyRadioUpdate):
 
 if __name__ == '__main__':
     parser = MyArgParser(
-        description='Curses based Internet radio player',
+        description='Curses based Internet Radio Player',
         epilog='When executed without an argument, it installs PyRadio (stable release).'
     )
     # parser = ArgumentParser(description='PyRadio update / uninstall tool',
