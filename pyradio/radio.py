@@ -425,9 +425,9 @@ class PyRadio(object):
                  record=False):
         temp_dir = gettempdir()
         self._station_images = (
-            join(temp_dir, 'station.jpg'),
-            join(temp_dir, 'station.png'),
-            join(temp_dir, 'station-icon.raw'),
+            join(pyradio_config.stations_images_dir, 'station.jpg'),
+            join(pyradio_config.stations_images_dir, 'station.png'),
+            join(pyradio_config.stations_images_dir, 'station-icon.raw'),
         )
         self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
         self._request_recording = record
@@ -2256,6 +2256,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             self.playing = self._last_played_station_id
         else:
             self._remove_station_images()
+            self._cnf.notification_image_file = None
             if self._cnf.enable_notifications and \
                     self._cnf.use_station_icon and \
                     not platform.startswith('win'):
@@ -2265,6 +2266,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     self.log.write(msg='Downloading icon...')
                     self._download_station_image(
                         self.stations[self.selection][3]['image'],
+                        self.stations[self.selection][0],
                         lambda: self.stop_update_notification_thread
                     )
             # if self._cnf.browsing_station_service:
@@ -2458,18 +2460,39 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
             help_msg=True, suffix=self._status_suffix, counter=''
         )
 
-    def _download_station_image(self, url, stop):
+    def _download_station_image(self, url, station_name, stop):
         threading.Thread(
             target=self._thread_download_station_image,
-            args=(url, stop),
+            args=(url, station_name, self._notification_icon, stop),
         ).start()
 
-    def _thread_download_station_image(self, url, stop):
+    def _notification_icon(self, a_name):
+        if path.exists(a_name):
+            self._cnf.notification_image_file = a_name
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Notification image: "{}"'.format(self._cnf.notification_image_file))
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Notification image is invalid; reverting to default...')
+
+
+    def _thread_download_station_image(
+            self,
+            url,
+            station_name,
+            update_icon_name_function,
+            stop
+            ):
         if url:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('+++ downloading icon...')
-                logger.error('\n\n{}\n\n'.format(self._station_images))
-            file_to_write = self._station_images[0] if url.endswith('.jpg') else self._station_images[1]
+            template_image = self._station_images[0] if url.endswith('.jpg') else self._station_images[1]
+            file_to_write = template_image.replace('station.', station_name.replace(' ', '_') + '.')
+            if path.exists(file_to_write):
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('+++ icon download: aleready downloaded...')
+                update_icon_name_function(file_to_write)
+                return
             if stop():
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon download: asked to stop. Stopping...')
@@ -2503,6 +2526,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     self._remove_station_images()
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon downloaded...')
+                update_icon_name_function(file_to_write)
             else:
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.debug('+++ icon downloaded, but already exists...')

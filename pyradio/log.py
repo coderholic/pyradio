@@ -88,7 +88,9 @@ class Log(object):
         self.width = None
         self._get_startup_window_title()
         self._enable_notifications = int(self._cnf.enable_notifications)
-        self._repeat_notification = RepeatDesktopNotification(lambda: self._enable_notifications)
+        self._repeat_notification = RepeatDesktopNotification(
+                self._cnf, lambda: self._enable_notifications
+                )
         self._get_icon_path()
 
     def __del__(self):
@@ -372,7 +374,7 @@ class Log(object):
 
 
     def _get_icon_path(self):
-        self.icon_path = None
+        self.icon_path = self._cnf.notification_image_file
         if self.icon_path is None:
             if platform_system().lower().startswith('win'):
                 the_path = (
@@ -422,6 +424,7 @@ class Log(object):
                 self._desktop_notification_thread = None
                 return
 
+            self._get_icon_path()
             if platform.lower().startswith('win'):
                 if HAS_WIN10TOAST:
                     d_title, d_msg = self._get_desktop_notification_data(msg)
@@ -727,7 +730,8 @@ class Log(object):
 
 class RepeatDesktopNotification(object):
 
-    def __init__(self, timeout):
+    def __init__(self, config, timeout):
+        self._cnf = config
         self._a_lock = self._start_time = None
         self.timeout = timeout
 
@@ -835,16 +839,17 @@ class RepeatDesktopNotification(object):
             if 'MSG' in notification_command[i]:
                 notification_command[i] = notification_command[i].replace('MSG', d_msg)
             if 'ICON' in notification_command[i]:
-                if platform.lower().startswith('win'):
-                    icon = self.icon_path
-                else:
-                    temp_dir = gettempdir()
-                    ic = (
-                        join(temp_dir, 'station.jpg'),
-                        join(temp_dir, 'station.png'),
-                        self.icon_path
-                    )
-                    icon = [x for x in ic if exists(x)][0]
+                # if platform.lower().startswith('win'):
+                #     icon = self.icon_path
+                # else:
+                #     ic = (
+                #         join(self._cnf.stations_images_dir, 'station.jpg'),
+                #         join(self._cnf.stations_images_dir, 'station.png'),
+                #         self.icon_path
+                #     )
+                #     logger.error('\n\nic\n{}\n'.format(ic))
+                #     icon = [x for x in ic if exists(x)][0]
+                icon = self.icon_path
                 notification_command[i] = notification_command[i].replace('ICON', icon)
         return notification_command
 

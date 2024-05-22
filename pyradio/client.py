@@ -157,7 +157,6 @@ class PyRadioClient(object):
                         path.join(state_dir, 'server-headless.txt'),
                         path.join(state_dir, 'server.txt')
                         )
-            print(f'{self._files}')
 
     def print_addresses(self):
         self._get_files()

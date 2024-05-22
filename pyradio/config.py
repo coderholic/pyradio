@@ -1380,6 +1380,8 @@ class PyRadioConfig(PyRadioStations):
 
     need_to_fix_desktop_file_icon = False
 
+    notification_image_file = None
+
     def __init__(self, user_config_dir=None, headless=False):
         # keep old recording / new recording dir
         self.rec_dirs = ()
@@ -2089,6 +2091,50 @@ class PyRadioConfig(PyRadioStations):
     def re_read_config(self):
         self._read_config()
         self.xdg.ensure_paths_exist()
+        self.create_stations_images_dir()
+
+    def create_stations_images_dir(self, to_console=False):
+        if int(self.enable_notifications) >= 0:
+            try:
+                makedirs(self.stations_images_dir, exist_ok = True)
+            except:
+                if to_console:
+                    print('[red]Error[/red]: Cannot create fir: "{}"\n'.format(self.stations_images_dir))
+                    return False
+
+
+            src_dir = path.join(
+                    getenv(
+                        'XDG_CONFIG_HOME',
+                        path.join(path.expanduser('~'), '.config')),
+                    'pyradio', 'data', 'stations-logos'
+                    )
+            if path.exists(src_dir) and \
+                    src_dir != self.stations_images_dir:
+                try:
+                    # Copy files, remove directories is source
+                    for item in listdir(src_dir):
+                        src_path = path.join(src_dir, item)
+                        dst_path = path.join(self.stations_images_dir, item)
+                        if path.isfile(src_path):
+                            copyfile(src_path, dst_path)
+                        elif path.isdir(src_path):
+                            remove_tree(src_path)  # Remove directory instead of copying it
+
+                    # Check if any directories were left after removing them in the first loop
+                    for item in listdir(src_dir):
+                        src_path = path.join(src_dir, item)
+                        if path.isfile(src_path):
+                            remove(src_path)
+                        elif path.isdir(src_path):
+                            remove_tree(src_path)
+
+                    # Remove the source directory itself
+                    remove_tree(src_dir)
+                except Exception as e:
+                    # If an error occurs, we do not care :)
+                    pass
+        return True
 
     def _read_config(self, distro_config=False):
         xdg_compliant_read_from_file = False
@@ -2368,6 +2414,8 @@ class PyRadioConfig(PyRadioStations):
                 print('[magenta]XDG Dirs[/magenta] found; enabling [magenta]XDG Base compliant[/magenta] operation')
                 self.xdg_compliant = True
                 self.need_to_fix_desktop_file_icon = True
+        ''' do this here to get XDG state '''
+        self.stations_images_dir = path.join(self.data_dir, 'stations-logos')
 
     def _make_sure_dirs_exist(self):
         if self.opts['recording_dir'][1] == '':
