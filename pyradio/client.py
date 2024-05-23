@@ -106,24 +106,14 @@ class PyRadioClient(object):
                     '(headless)' if self._type == 0 else ''
                     )
         if self._last_reply:
-            # out = None
-            # ss = self._last_reply.splitlines()
-            # for n in range(0, len(ss)):
-            #     if ss[n] == '':
-            #         out = ss[n+1:]
-            #         break
-            # if out:
-            #     if self._type == -1:
-            #         return '\n'.join(out)
-            #     else:
-            #         return server_id + '\n' +  '\n'.join(out)
-            return server_id + '\n' + self._last_reply if server_id else self._last_reply
-
+            if 'retry: ' in self._last_reply:
+                self._last_reply = 'Command executed\n'
+            return server_id + self._last_reply if server_id else self._last_reply
         # empty reply
         if self._type == -1:
-            return 'Command executed'
+            return 'Command executed\n'
         else:
-            return server_id + '\nCommand Executed'
+            return server_id + 'Command Executed\n'
 
     def _get_files(self):
         if self._files is None:

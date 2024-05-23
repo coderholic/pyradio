@@ -1289,6 +1289,7 @@ class PyRadioConfig(PyRadioStations):
     opts['enable_mouse'] = ['Enable mouse support: ', False]
     opts['enable_notifications'] = ['Enable notifications: ', '-1']
     opts['use_station_icon'] = ['    Use station icon: ', True]
+    opts['remove_station_icons'] = ['    Remove cached icons: ', True]
     opts['recording_dir'] = ['Recordings dir: ', '']
     opts['resource_opener'] = ['Resource Opener: ', 'auto']
     opts['conn_title'] = ['Connection Options: ', '']
@@ -1519,6 +1520,15 @@ class PyRadioConfig(PyRadioStations):
     @use_station_icon.setter
     def use_station_icon(self, val):
         self.opts['use_station_icon'][1] = val
+        self.opts['dirty_config'][1] = True
+
+    @property
+    def remove_station_icons(self):
+        return self.opts['remove_station_icons'][1]
+
+    @remove_station_icons.setter
+    def remove_station_icons(self, val):
+        self.opts['remove_station_icons'][1] = val
         self.opts['dirty_config'][1] = True
 
     @property
@@ -2094,15 +2104,16 @@ class PyRadioConfig(PyRadioStations):
         self.create_stations_images_dir()
 
     def create_stations_images_dir(self, to_console=False):
-        if int(self.enable_notifications) >= 0:
+        if int(self.enable_notifications) >= 0 and \
+                self.use_station_icon and \
+                not sys.platform.startswith('win'):
             try:
                 makedirs(self.stations_images_dir, exist_ok = True)
             except:
                 if to_console:
                     print('[red]Error[/red]: Cannot create fir: "{}"\n'.format(self.stations_images_dir))
                     return False
-
-
+            # move old dir if necessary
             src_dir = path.join(
                     getenv(
                         'XDG_CONFIG_HOME',
@@ -2236,6 +2247,11 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['use_station_icon'][1] = False
                 else:
                     self.opts['use_station_icon'][1] = True
+            elif sp[0] == 'remove_station_icons':
+                if sp[1].lower() == 'false':
+                    self.opts['remove_station_icons'][1] = False
+                else:
+                    self.opts['remove_station_icons'][1] = True
             elif sp[0] == 'confirm_station_deletion':
                 if sp[1].lower() == 'false':
                     self.opts['confirm_station_deletion'][1] = False

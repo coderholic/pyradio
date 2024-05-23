@@ -78,6 +78,16 @@ enable_notifications = -1
 # Default value: True
 use_station_icon = True
 
+# Cached Station Icons Handling
+# If use_station_incon is True, stations' icons will be saved under the
+# DATA_DIR, in a folder called staions-logos.
+# If this option is True (the default), all files under this folder will be
+# deleted at program exit. Otherwise, all downloaded logos will remain in the
+# folder for future use.
+#
+# Default value: True
+remove_station_icons = True
+
 # Connection timeout
 # PyRadio will wait for this number of seconds to get a station/server message
 # indicating that playback has actually started. If this does not happen

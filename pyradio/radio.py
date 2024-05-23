@@ -2091,6 +2091,7 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 self._remote_control_server = None
         self.restore_colors()
         self._remove_station_images()
+        self._remove_icons()
 
     def _wait_for_threads(self):
         self.log._stop_desktop_notification_thread = True
@@ -2230,6 +2231,17 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     remove(n)
                 except:
                     pass
+
+    def _remove_icons(self):
+        ''' remove the stations-logos directory '''
+        if int(self._cnf.enable_notifications) >= 0 and \
+                self._cnf.use_station_icon and \
+                self._cnf.remove_station_icons and \
+                not sys.platform.startswith('win'):
+            if self._cnf.stations_images_dir:
+                if path.exists(self._cnf.stations_images_dir):
+                    from shutil import rmtree
+                    rmtree(self._cnf.stations_images_dir, ignore_errors=True)
 
     def playSelection(self, restart=False):
         ''' start playback using current selection
@@ -2474,7 +2486,6 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
         else:
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('Notification image is invalid; reverting to default...')
-
 
     def _thread_download_station_image(
             self,
@@ -7016,6 +7027,8 @@ ____Using |fallback| theme.''')
                             else:
                                 if logger.isEnabledFor(logging.DEBUG):
                                     logger.debug('Asked to move recordings but source and target are the same\nsource: {0}\ntarget: {1}'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS], self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
+
+                        self._cnf.create_stations_images_dir()
 
                     elif ret == 1:
                         ''' config not modified '''
