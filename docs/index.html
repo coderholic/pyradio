@@ -209,6 +209,26 @@ a:visited{color: SaddleBrown;}
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
 
+2024-05-24 s-n-g
+    * version 0.9.3.7
+    * introducing the pyradio-client program
+    * adding three more System Themes
+    * do not allow to change the Recording Directory while recording
+      is on either in this instance or a headless instance
+    * fix PyRadioOpenDir: always open dir
+    * PyRadioRecordingDir: adding key 'd' to revert to deault
+    * fixing default opener detection
+    * if a linux opener is enetered but config not saved, and opener
+      window is opened again, display the one entered instead of the
+      saved opener
+    * fix stop mkvmerge recursive execution
+    * Remote Control Server: adding a warning to the info response,
+      if PyRadio is not in Main Mode
+    * Remote Control Server: introducing the /reconfig command
+    * Desktop Notifications: stations icons are now being cached
+    * config: adding parameter remove_station_icons, to remove
+      downloaded files on program exit
+
 2024-05-10 s-n-g
     * version 0.9.3.6
     * fixing #241 - pyradio-recordings folder keeps showing in home directory

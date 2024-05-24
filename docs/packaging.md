@@ -8,6 +8,7 @@
     * [distro name (must do)](#distro-name-(must-do))
     * [XDG Base Directory Specification Compliance](#xdg-base-directory-specification-compliance)
     * [Desktop Notifications (optional)](#desktop-notifications-(optional))
+        * [Desktop Notification Icons (optional)](#desktop-notification-icons-(optional))
     * [Desktop File location](#desktop-file-location)
     * [pyradio/\_\_pycache\_\_](#pyradio/\_\_pycache\_\_)
 * [Recordings Directory](#recordings-directory)
@@ -49,13 +50,17 @@ In order to accomplice that, you just have to change the **distro** configuratio
 
 Once you are in the sources top level directory (typically "*pyradio*"), you execute the command:
 
-    sed -i 's/distro = None/distro = YOUR DISTRO NAME/' pyradio/config
+```
+sed -i 's/distro = None/distro = YOUR DISTRO NAME/' pyradio/config
+```
 
 Then you go on to produce the package as you would normally do.
 
 For example, an **Arch Linux** packager would use this command:
 
-    sed -i 's/distro = None/distro = Arch Linux/' pyradio/config
+```
+sed -i 's/distro = None/distro = Arch Linux/' pyradio/config
+```
 
 The distro name you insert here will appear in **PyRadio**'s "*Configuration Window*". In addition to that it will appear in the log file, so that I know where the package came from while debugging.
 
@@ -69,19 +74,36 @@ By default, all **PyRadio** configuration, operational and state files are store
 
 If you want to comply to this specification, just execute the following command from the sources top level directory (typically "*pyradio*"):
 
-    sed -i 's/xdg_compliant = False/xdg_compliant = True/' pyradio/config
+```
+sed -i 's/xdg_compliant = False/xdg_compliant = True/' pyradio/config
+```
 
 ### Desktop Notifications (optional)
 
 If you want to enable [Desktop Notifications](index.md#desktop-notifications), do a
 
-    sed -i 's/enable_notifications = -1/enable_notifications = 0/' pyradio/config
+```
+sed -i 's/enable_notifications = -1/enable_notifications = 0/' pyradio/config
+```
 
 to display titles whenever they are received, or
 
-    sed -i 's/enable_notifications = -1/enable_notifications = 60/' pyradio/config
-
+```
+sed -i 's/enable_notifications = -1/enable_notifications = 60/' pyradio/config
+```
 to have notifications every 60 seconds, for example. You can use any value here, starting from 30 to 300 (meaning every 30 seconds up to 5 minutes), using a step of 30.
+
+#### Desktop Notification Icons (optional)
+
+**PyRadio** will download stations logos (icons) in the "*logos*" cache directory.
+
+This directory will be deleted at program exit, by default.
+
+If you want to keep the downloaded icons, do a
+
+```
+sed -i 's/remove_station_icons  = True/remove_station_icons   = False/' pyradio/config
+```
 
 ### Desktop File location
 
@@ -123,7 +145,9 @@ This means that your users will eventaually have to **manually** move the files 
 
 If this is acceptable for you, and you have a way to inform your users about it, go no and
 
-    sed -i 's|recording_dir = default|recording_dir = ~/whatever|' config
+```
+sed -i 's|recording_dir = default|recording_dir = ~/whatever|' config
+```
 
 In any other case, I would suggest you leave this parameter as is and let the user select customize their setup.
 
@@ -147,7 +171,9 @@ Most Linux distros will probably have *xdg-open* (from *xdg-utils* package) inst
 
 In case a different *resource opener* is to be used, one can declare it like so:
 
-    sed -i 's/resource_opener = auto/resource_opener = MY_RESOURCE_OPENER/' config
+```
+sed -i 's/resource_opener = auto/resource_opener = MY_RESOURCE_OPENER/' config
+```
 
 This will instruct **PyRadio** to use the file **MY_RESOURCE_OPENER** as a *resource opener*.
 
