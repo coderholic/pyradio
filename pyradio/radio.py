@@ -425,9 +425,9 @@ class PyRadio(object):
                  record=False):
         temp_dir = gettempdir()
         self._station_images = (
-            join(pyradio_config.stations_images_dir, 'station.jpg'),
-            join(pyradio_config.stations_images_dir, 'station.png'),
-            join(pyradio_config.stations_images_dir, 'station-icon.raw'),
+            join(pyradio_config.logos_dir, 'station.jpg'),
+            join(pyradio_config.logos_dir, 'station.png'),
+            join(pyradio_config.logos_dir, 'station-icon.raw'),
         )
         self._message_system_default_operation_mode = self.ws.MESSAGING_MODE
         self._request_recording = record
@@ -2233,15 +2233,15 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                     pass
 
     def _remove_icons(self):
-        ''' remove the stations-logos directory '''
+        ''' remove the logos directory '''
         if int(self._cnf.enable_notifications) >= 0 and \
                 self._cnf.use_station_icon and \
                 self._cnf.remove_station_icons and \
                 not sys.platform.startswith('win'):
-            if self._cnf.stations_images_dir:
-                if path.exists(self._cnf.stations_images_dir):
+            if self._cnf.logos_dir:
+                if path.exists(self._cnf.logos_dir):
                     from shutil import rmtree
-                    rmtree(self._cnf.stations_images_dir, ignore_errors=True)
+                    rmtree(self._cnf.logos_dir, ignore_errors=True)
 
     def playSelection(self, restart=False):
         ''' start playback using current selection
@@ -7028,7 +7028,6 @@ ____Using |fallback| theme.''')
                                 if logger.isEnabledFor(logging.DEBUG):
                                     logger.debug('Asked to move recordings but source and target are the same\nsource: {0}\ntarget: {1}'.format(self._cnf.xdg._old_dirs[self._cnf.xdg.RECORDINGS], self._cnf.xdg._new_dirs[self._cnf.xdg.RECORDINGS]))
 
-                        self._cnf.create_stations_images_dir()
 
                     elif ret == 1:
                         ''' config not modified '''

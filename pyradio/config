@@ -79,8 +79,7 @@ enable_notifications = -1
 use_station_icon = True
 
 # Cached Station Icons Handling
-# If use_station_incon is True, stations' icons will be saved under the
-# DATA_DIR, in a folder called staions-logos.
+# If use_station_incon is True, stations' icons will be cached in the logos folder.
 # If this option is True (the default), all files under this folder will be
 # deleted at program exit. Otherwise, all downloaded logos will remain in the
 # folder for future use.

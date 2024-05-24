@@ -394,8 +394,6 @@ If nothing else works, try the following command:
 
     with pyradio_config_file(user_config_dir, args.headless) as pyradio_config:
         read_config(pyradio_config)
-        if not pyradio_config.create_stations_images_dir(True):
-            return
 
         if not system().lower().startswith('darwin') and \
                 not system().lower().startswith('win'):

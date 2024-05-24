@@ -138,6 +138,7 @@ for afile in index.md \
     packaging.md \
     themes.md \
     headless.md \
+    client.md \
     rec-dir.md
 do
     echo -ne '.'
@@ -157,6 +158,8 @@ do
         echo '% PyRadio RadioBrowser Implementation' > tmp.md
     elif [ "$afile" = "desktop-notification.md" ];then
         echo '% PyRadio Desktop Notifications' > tmp.md
+    elif [ "$afile" = "client.md" ];then
+        echo '% PyRadio Remote Control Client' > tmp.md
     elif [ "$afile" = "server.md" ];then
         echo '% PyRadio Remote Control Server' > tmp.md
     elif [ "$afile" = "linux.md" ];then

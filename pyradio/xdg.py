@@ -299,9 +299,10 @@ class XdgDirs(object):
     STATE = 4
     CACHE = 5
     RECORDINGS = 6
+    LOGOS = 7
 
-    _old_dirs = [None, None, None, None, None, None, None]
-    _new_dirs = [None, None, None, None, None, None, None]
+    _old_dirs = [None, None, None, None, None, None, None, None]
+    _new_dirs = [None, None, None, None, None, None, None, None]
 
     ''' function to execute when the directory has been
         moved inside the target directory, instead of
@@ -378,6 +379,8 @@ class XdgDirs(object):
             self._old_dirs[self.RECORDINGS] = path.join(self._old_dirs[self.STATIONS], 'recordings')
         if self._new_dirs[self.RECORDINGS] is None:
             self._new_dirs[self.RECORDINGS] = path.join(path.expanduser('~'), 'pyradio-recordings')
+        self._old_dirs[self.LOGOS] = path.join(self._old_dirs[self.CACHE], 'logos')
+        self._new_dirs[self.LOGOS] = path.join(self._new_dirs[self.CACHE], 'logos')
 
     def log_dirs(self):
         out = ['\n']
@@ -419,10 +422,15 @@ class XdgDirs(object):
                       self.registers_dir,
                       self.data_dir,
                       self.state_dir,
+                      self.logos_dir,
                       ):
             if not path.exists(a_dir):
+                if a_dir == self.log_dirs and \
+                        platform.startswith('win'):
+                    # do not create logos dir on windows
+                    continue
                 try:
-                    makedirs(a_dir)
+                    makedirs(a_dir, exist_ok=True)
                 except:
                     print('Error: Cannot create directory: "{}"'.format(a_dir))
                     sys.exit(1)
@@ -461,6 +469,10 @@ class XdgDirs(object):
     @property
     def cache_dir(self):
         return self._new_dirs[self.CACHE]
+
+    @property
+    def logos_dir(self):
+        return self._new_dirs[self.LOGOS]
 
     @property
     def state_dir(self):

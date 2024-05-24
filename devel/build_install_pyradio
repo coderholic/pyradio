@@ -136,6 +136,7 @@ function uninstall_sudo(){
     sudo rm -f /usr/share/man/man1/pyradio.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio.1.gz 2>/dev/null
     sudo rm -f /usr/share/man/man1/pyradio_rb.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio_rb.1.gz 2>/dev/null
     sudo rm -f /usr/share/man/man1/pyradio_server.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio_server.1.gz 2>/dev/null
+    sudo rm -f /usr/share/man/man1/pyradio-client.1.gz 2>/dev/null || sudo rm -f /usr/local/share/man/man1/pyradio-client.1.gz 2>/dev/null
     echo done
 #set -x
     remove_paths
@@ -486,10 +487,12 @@ then
     gzip -k pyradio_rb.1
     gzip -k pyradio_rec.1
     gzip -k pyradio_server.1
+    gzip -k pyradio-client.1
     mkdir -p ~/.local/share/man/man1 2>/dev/null
     mv -f pyradio.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio.1.gz ~/.local/local/share/man/man1
     mv -f pyradio_rb.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio_rb.1.gz ~/.local/local/share/man/man1
     mv -f pyradio_server.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio_server.1.gz ~/.local/local/share/man/man1
+    mv -f pyradio-client.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio-client.1.gz ~/.local/local/share/man/man1
     mv -f pyradio_rec.1.gz ~/.local/share/man/man1 2>/dev/null || mv -f pyradio_rec.1.gz ~/.local/local/share/man/man1
     DOC=~/.local/share/doc/pyradio
     mkdir -p "$DOC" 2>/dev/null

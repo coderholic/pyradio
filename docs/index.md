@@ -110,6 +110,7 @@ To ensure the correct operation, please take these actions:
     * [Session unlocking](#session-unlocking)
 * [Update notification](#update-notification)
 * [Remote Control Server](#remote-control-server)
+    * [Remote Control Client](#remote-control-client)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
 * [Packaging PyRadio](#packaging-pyradio)
@@ -1148,6 +1149,12 @@ If so, a notification message will be displayed, informing the user about it and
 For more information, please refer to [the relevant page](server.md).
 
 If you'd like to set up a "headless" **PyRadio** operation for your linux box, please refer to the [Headless](headless.md) page.
+
+### Remote Control Client
+
+**PyRadio** comes with its own client, which will make it easier to communicate with the **Remote Control Server**.
+
+For more information, please refer to [the relevant page](client.md).
 
 ## Debug mode
 

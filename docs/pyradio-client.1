@@ -1,0 +1,85 @@
+.TH pyradio-client 1 "May 2024" pyradio
+
+.SH Name
+.PP
+pyradio-client \- a Remote Control Client for PyRadio
+
+.SH \fBRemote\ Control\ Client
+.P
+\f[B]PyRadio\f[R] comes with a client to be used in conjunction with the
+\f[B]Remote Control Server\f[R] provided by the program, using the
+server\[cq]s text command set.
+.PP
+The \f[B]client\f[R] is created with maximum ease in mind; the user does
+not even have to provide the IP and PORT.
+.SH Command line parameters
+The following is the output of the \[lq]\f[B]pyradio-client -h\f[R]\[rq]
+command:
+.P
+\fIUsage: \fBpyradio-client\fI [\fB-h\fI] [\fB--address\fI] [\fB-s\fI SERVER_AND_PORT] [\fB-r\fI]
+                      [\fB-t\fI TIMEOUT] [command]
+
+PyRadio Remote Control Client
+
+General options:
+  \fB-h\fI, \fB--help\fI            Show this help message and exit
+  \fB--address\fI             List available servers
+
+Server Parameters:
+  \fB-s\fI SERVER_AND_PORT, \fB--server_and_port\fI SERVER_AND_PORT
+                        Set the servers\[aq]s IP and PORT (format: IP:PORT)
+  \fB-r\fI, \fB--reverse-detection\fI
+                        Reverse server detection (when no server IP and PORT
+                        specified); detect headless server last, instead of
+                        headless server first
+  \fB-t\fI TIMEOUT, \fB--timeout\fI TIMEOUT
+                        Set the timeout (default = 1.0)
+  command               The command to send to the server
+.EE
+.SH How it works
+The client will auto-detect the \f[B]PyRadio Servers\f[R] running on the
+system, when the \[lq]\f[I]-s\f[R]\[rq] command line parameter is not
+used.
+.PP
+The auto-detection functionality is based on parsing the
+\[lq]\f[I]server files\f[R]\[rq] (residing in the STATE directory).
+.PP
+If both a \f[B]headless\f[R] and a \f[B]normal\f[R] instance of
+\f[B]PyRadio\f[R] are detected, the \f[B]headless\f[R] server will be
+used to send the requested command, unless the \[lq]\f[I]-r\f[R]\[rq]
+(\[lq]\f[I]\[en]reverse-detection\f[R]\[rq]) command line parameter is
+used.
+.IP \fBNote:
+A \f[B]normal\f[R] server is a server started by a \f[B]PyRadio\f[R]
+instance which is executed on a real terminal, without the
+\[lq]\f[I]\[en]\[en]headless\f[R]\[rq] command line parameter.
+.PP
+A list of available commands will be displayed when no command has been
+specified.
+.PP
+A list of detected servers (and their address) can be obtained
+using the command:
+.IP
+.EX
+\fI$ pyradio-client --addr
+
+PyRadio Remote Control Server
+  Headless server: 127.0.0.1:11111
+  Server: 127.0.0.1:9998
+.EE
+.PP
+Then, the \f[B]address\f[R] reported can be used to contact a specific
+server:
+.IP
+.EX
+\fIpyradio-client -s 127.0.0.1:9998 i
+.EE
+.PP
+The previous command will get the info page of the \f[B]normal\f[R]
+instance of a server.
+
+.SH See also
+
+    pyradio_server(1)
+
+    pyradio(1)

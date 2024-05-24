@@ -839,16 +839,6 @@ class RepeatDesktopNotification(object):
             if 'MSG' in notification_command[i]:
                 notification_command[i] = notification_command[i].replace('MSG', d_msg)
             if 'ICON' in notification_command[i]:
-                # if platform.lower().startswith('win'):
-                #     icon = self.icon_path
-                # else:
-                #     ic = (
-                #         join(self._cnf.stations_images_dir, 'station.jpg'),
-                #         join(self._cnf.stations_images_dir, 'station.png'),
-                #         self.icon_path
-                #     )
-                #     logger.error('\n\nic\n{}\n'.format(ic))
-                #     icon = [x for x in ic if exists(x)][0]
                 icon = self.icon_path
                 notification_command[i] = notification_command[i].replace('ICON', icon)
         return notification_command
