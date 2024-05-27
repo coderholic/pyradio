@@ -161,7 +161,7 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 ## Command line options
 
 ```
-Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-a]
+Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER]
                [-l] [-lt] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R] [-V]
                [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
                [--no-themes] [--write-theme IN_THEME OUT_THEME,]
@@ -185,7 +185,6 @@ General options:
                         Use specified player. A comma-separated list can be
                         used to specify detection order. Supported players:
                         mpv, mplayer, vlc.
-  -a, --add             Add station to list.
   -l, --list            List of available stations in a playlist.
   -lt, --log-titles     Log titles to file.
   -sd, --show-config-dir

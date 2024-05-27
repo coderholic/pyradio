@@ -252,8 +252,6 @@ If nothing else works, try the following command:
             help='Use specified player. '
             'A comma-separated list can be used to specify detection order. '
             'Supported players: mpv, mplayer, vlc.')
-    parser.add_argument('-a', '--add', action='store_true',
-                        help='Add station to list.')
     parser.add_argument('-l', '--list', action='store_true',
                         help='List of available stations in a playlist.')
 
@@ -808,25 +806,6 @@ If nothing else works, try the following command:
             is_last_playlist=is_last_playlist)
         if ret < 0:
             print_playlist_selection_error(args.stations, pyradio_config, ret)
-
-        # No need to parse the file if we add station
-        # Actually we do need to do so now, so that we
-        # handle 2-column vs. 3 or 4-column playlists
-        if args.add:
-            if sys.version_info < (3, 0):
-                params = raw_input("Enter the name: "), raw_input("Enter the url: "), raw_input("Enter the encoding (leave empty for '" + pyradio_config.default_encoding + "'): ", raw_input("Enter the icon url: "))
-            else:
-                params = input("Enter the name: "), input("Enter the url: "), input("Enter the encoding (leave empty for '" + pyradio_config.default_encoding + "'): ", raw_input("Enter the icon url: "))
-            msg = ('name', 'url')
-            for i, a_param in enumerate(params):
-                if i < 2:
-                    if a_param.strip() == '':
-                        print('** Error: No {} entered. Aborting...'.format(msg[i]))
-                        return
-            ret = pyradio_config.append_station(params, args.stations)
-            if ret < 0:
-                print_playlist_selection_error(args.stations, pyradio_config, ret)
-            return
 
         if args.list:
             console = Console()
