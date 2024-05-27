@@ -10,7 +10,7 @@ from rich import print
 
 def format_list(a_string):
     print(a_string.replace(
-    '[', '\[').replace(']', ']').replace(
+    r'[', r'\[').replace(']', ']').replace(
     '/x,y', '/[green]x[/green],[blue]y[/blue]').replace(
     '/x', '/[green]x[/green]').replace(
     '[x]', '[[green]x[/green]]').replace(
@@ -96,12 +96,12 @@ class PyRadioClient(object):
         server_id = ''
         if self._type >= 0:
             if self._last_command:
-                server_id = 'Server found: [green]{}[/green]:[green]{}[/green] {}\n'.format(
+                server_id = 'Server: [green]{}[/green]:[green]{}[/green] {}\n'.format(
                         self._host, self._port,
                         '([blue]headless[/blue])' if self._type == 0 else ''
                         )
             else:
-                server_id = 'Server found: {}:{} {}\n'.format(
+                server_id = 'Server: {}:{} {}\n'.format(
                         self._host, self._port,
                     '(headless)' if self._type == 0 else ''
                     )

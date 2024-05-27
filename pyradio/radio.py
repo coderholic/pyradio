@@ -1670,8 +1670,8 @@ effectively putting <b>PyRadio</b> in <span style="font-weight:bold; color: Gree
                 ''' return empty line '''
                 return line
 
-            self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
             try:
+                self.bodyWin.hline(lineNum, 0, ' ', self.bodyMaxX, col)
                 # logger.error('line: "{}"'.format(line))
                 self.bodyWin.addstr(lineNum, 0, line, col)
                 if column_num > 0:
@@ -4334,10 +4334,13 @@ ____Using |fallback| theme.''')
         if self.ws.operation_mode == self.ws.THEME_MODE:
             self._theme_selector.transparent = self._cnf.use_transparency
             logger.error('self._theme_selector.transparent = {}\n=========================='.format(self._theme_selector.transparent))
-        self.headWin.refresh()
-        self.outerBodyWin.refresh()
-        self.bodyWin.refresh()
-        self.footerWin.refresh()
+        if not self._limited_height_mode and \
+                not self._limited_width_mode:
+            self.headWin.refresh()
+            self.outerBodyWin.refresh()
+            self.bodyWin.refresh()
+        if self.footerWin:
+            self.footerWin.refresh()
         if self._config_win:
             self._config_win._config_options['use_transparency'][1] = self._cnf.use_transparency
             if not changed_from_config_window:
@@ -9196,10 +9199,15 @@ ____Using |fallback| theme.''')
 
     def _can_display_help_msg(self, msg):
         ''' len("Press ? for help") = 16 '''
-        if msg is None:
+        if (not self._limited_height_mode and \
+                not self._limited_width_mode) or \
+                msg is None:
             ret = False
         else:
-            ret = self.outerBodyMaxX - len(msg) - 16 > 10 if msg else True
+            if self.outerBodyWin:
+                ret = self.outerBodyMaxX - len(msg) - 16 > 10 if msg else True
+            else:
+                ret = False
         # if logger.isEnabledFor(logging.DEBUG):
         #     logger.debug('Display "Press ? for help": {}'.format(ret))
         return ret

@@ -346,10 +346,8 @@ class RadioBrowser(PyRadioStationsBrowser):
 
     def __init__(self,
                  config,
-                 config_encoding,
                  session=None,
                  search=None,
-                 pyradio_info=None,
                  search_return_function=None,
                  message_function=None,
                  cannot_delete_function=None):
@@ -372,10 +370,10 @@ class RadioBrowser(PyRadioStationsBrowser):
             self._session = session
         else:
             self._session = requests.Session()
-        self._pyradio_info = pyradio_info.strip()
+        self._pyradio_info = self._cnf.user_agent_string
         if self._pyradio_info:
-            self._headers['User-Agent'] = self._pyradio_info.replace(' ', '/')
-        self._config_encoding = config_encoding
+            self._headers['User-Agent'] = self._pyradio_info
+        self._config_encoding = self._cnf.default_encoding
         self._message_function = message_function
         self._search_return_function = search_return_function
         self._cannot_delete_function = cannot_delete_function

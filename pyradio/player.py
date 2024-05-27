@@ -2509,16 +2509,8 @@ class MpvPlayer(Player):
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('--input-ipc-server is not supported.')
             newerMpv = False
-        if playList:
-            if newerMpv:
-                opts = [self.PLAYER_CMD, '--no-video', '--quiet', '--playlist=' + self._url_to_use(streamUrl), '--input-ipc-server=' + self.mpvsocket]
-            else:
-                opts = [self.PLAYER_CMD, '--no-video', '--quiet', '--playlist=' + self._url_to_use(streamUrl), '--input-unix-socket=' + self.mpvsocket]
-        else:
-            if newerMpv:
-                opts = [self.PLAYER_CMD, '--no-video', '--quiet', self._url_to_use(streamUrl), '--input-ipc-server=' + self.mpvsocket]
-            else:
-                opts = [self.PLAYER_CMD, '--no-video', '--quiet', self._url_to_use(streamUrl), '--input-unix-socket=' + self.mpvsocket]
+        logger.error('\n\nself._cnf.user_agent_string = {}\n\n'.format(self._cnf.user_agent_string))
+        opts = [self.PLAYER_CMD, '--no-video', '--quiet']
 
         if self._cnf.buffering_data:
             opts.extend(self._cnf.buffering_data)
@@ -2560,6 +2552,27 @@ class MpvPlayer(Player):
             opts.append('--stream-record=' + self.recording_filename)
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug('---=== Starting Recording: "{}" ===---',format(self.recording_filename))
+
+        # ##################################################################
+        # if streamUrl == r'https://player-culturaam.stream.uol.com.br/live/culturaam.m3u8' or \
+        #         streamUrl == r'http://player-culturaam.stream.uol.com.br/live/culturaam.m3u8':
+        #     opts.append(r'--http-header-fields="User-Agent: PyRadio,Referer: https://cultura.uol.com.br/aovivo/67_ao-vivo-radio-cultura-brasil.html"')
+        # ##################################################################
+
+        if playList:
+            if newerMpv:
+                        opts.append('--input-ipc-server=' + self.mpvsocket)
+                        opts.append('--playlist=' + self._url_to_use(streamUrl))
+            else:
+                        opts.append('--input-unix-socket=' + self.mpvsocket)
+                        opts.append('--playlist=' + self._url_to_use(streamUrl))
+        else:
+            if newerMpv:
+                        opts.append('--input-ipc-server=' + self.mpvsocket)
+                        opts.append(self._url_to_use(streamUrl))
+            else:
+                        opts.append('--input-unix-socket=' + self.mpvsocket)
+                        opts.append(self._url_to_use(streamUrl))
 
         ''' check if buffering '''
         self.buffering = self._player_is_buffering(opts, self.buffering_tokens)

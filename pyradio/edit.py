@@ -557,7 +557,7 @@ class PyRadioEditor(object):
                 self._line_editor[ed].show(self._win, opening=False)
 
             if self._focus == 1:
-                ''' Tip: Press \p before pasting here '''
+                ''' Tip: Press \\p before pasting here '''
                 self._win.addstr(6, self.maxX - 41, 'Tip: ', curses.color_pair(4))
                 self._win.addstr('Press ', curses.color_pair(5))
                 self._win.addstr(r'\p', curses.color_pair(4))
@@ -568,7 +568,7 @@ class PyRadioEditor(object):
                 self._win.addstr('Group Header', curses.color_pair(4))
                 self._win.refresh()
             elif self._focus == 2:
-                ''' Tip: Press \p before pasting here '''
+                ''' Tip: Press \\p before pasting here '''
                 self._win.addstr(9, self.maxX - 41, 'Tip: ', curses.color_pair(4))
                 self._win.addstr('Press ', curses.color_pair(5))
                 self._win.addstr(r'\p', curses.color_pair(4))

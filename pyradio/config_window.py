@@ -1189,7 +1189,7 @@ class ExtraParametersEditor(object):
         self._widgets[0]._use_paste_mode = True
         self._widgets[0]._mode_changed = self._show_alternative_modes
         self._widgets[0].set_global_functions(self._global_functions)
-        ''' enables direct insersion of ? and \ '''
+        ''' enables direct insersion of ? and \\ '''
         self._widgets[0]._paste_mode = False
         self._line_editor = self._widgets[0]
 

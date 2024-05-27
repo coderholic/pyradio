@@ -1185,8 +1185,6 @@ class PyRadioStations(object):
     def open_browser(self, url, search_return_function, message_function, cannot_delete_function):
         self._online_browser = probeBrowsers(url)(
             self,
-            self.default_encoding,
-            pyradio_info=self.info,
             search_return_function=search_return_function,
             message_function=message_function,
             cannot_delete_function=cannot_delete_function
@@ -1819,6 +1817,7 @@ class PyRadioConfig(PyRadioStations):
         '''
         ret = None
         self.info = " PyRadio {0} ".format(version)
+        self.user_agent_string = r'PyRadio/{}'.format(version)
         ''' git_description can be set at build time
             if so, revision will be shown along with the version
         '''
