@@ -791,7 +791,7 @@ If nothing else works, try the following command:
         if args.use_player != '':
             requested_player = args.use_player
 
-        if args.list is False and args.add is False:
+        if not args.list:
             print('Reading playlist...')
         sys.stdout.flush()
         is_last_playlist = False

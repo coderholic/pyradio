@@ -1419,23 +1419,23 @@ ___|{}___
 ),
 
     'M_SCHEDULE_EDIT_HELP': ('Schedule Editor Help',
-r'''Tab|, |L| / |Sh-Tab|, |H        |*| Go to next / previous field.
-j|, |Up| / |k|, |Down               |*| Go to next / previous field vertivally.
-                                    |*| Go to next / previous field (when
-                                    |*| applicable). Also, change counter value.
-Space                               |*| Toggle check buttons.
-n                                   |*| Set current date and time to section.
-0|-|9                               |*| Add hours to |Start| or |Stop| section.
-t| / |f                             |*| Copy date/time |t|o/|f|rom complementary field.
-i                                   |*| Validate entry and show dates.
-Enter                               |*| Perform search / cancel (on push buttons).
-s                                   |*| Perform search (not on Line editor).
-Esc                                 |*| Cancel operation.
+r'''Tab|, |L| / |Sh-Tab|, |H        |*|Go to next / previous field.
+j|, |Up| / |k|, |Down               |*|Go to next / previous field vertivally.
+                                    |*|Go to next / previous field (when
+                                    |*|applicable). Also, change counter value.
+Space                               |*|Toggle check buttons.
+n                                   |*|Set current date and time to section.
+0|-|9                               |*|Add hours to |Start| or |Stop| section.
+t| / |f                             |*|Copy date/time |t|o/|f|rom complementary field.
+i                                   |*|Validate entry and show dates.
+Enter                               |*|Perform search / cancel (on push buttons).
+s                                   |*|Perform search (not on Line editor).
+Esc                                 |*|Cancel operation.
 
 %Global functions
--|/|+| or |,|/|.                    |*| Change volume.
-m| / |v                             |*| |M|ute player / Save |v|olume (not in vlc).
-W| / |w                             |*| Toggle title log / like a station'''
+-|/|+| or |,|/|.                    |*|Change volume.
+m| / |v                             |*||M|ute player / Save |v|olume (not in vlc).
+W| / |w                             |*|Toggle title log / like a station'''
 ),
 
         }
@@ -1819,6 +1819,7 @@ W| / |w                             |*| Toggle title log / like a station'''
             else:
                 if l:
                     self._pad.addstr(l.replace('_', ' '), col)
+                # logger.error('adding: "{}"'.format(l))
 
     def _populate_pad(self, l):
         self._pad.erase()

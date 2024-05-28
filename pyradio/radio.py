@@ -732,7 +732,7 @@ class PyRadio(object):
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
             # ord('d'): self._html_song_title,
-            # ord('b'): self._show_schedule_editor,
+            ord('b'): self._show_schedule_editor,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -6756,7 +6756,7 @@ ____Using |fallback| theme.''')
                 self.refreshBody()
             elif ret == 2:
                 ''' Show Help  '''
-                self._open_simple_message_by_key('M_SCHEDULE_EDIT_HELP')
+                self._open_message_win_by_key('M_SCHEDULE_EDIT_HELP')
             elif ret == 4:
                 ''' Schedule > Select Playlist '''
                 self.ws.operation_mode = self.ws.SCHEDULE_PLAYLIST_SELECT_MODE
