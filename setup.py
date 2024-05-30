@@ -14,10 +14,6 @@ def read(filename):
             ret = f.read()
     return ret
 
-install_requires = []
-if version_info < (2, 7):
-    install_requires.append('argparse')
-
 meta = dict(
     name=__project__,
     version=version,
@@ -35,7 +31,7 @@ meta = dict(
             'pyradio-client = pyradio.main:run_client'
         ]
     },
-    install_requires=install_requires,
+    install_requires=[],
     test_suite = 'tests',
 )
 
