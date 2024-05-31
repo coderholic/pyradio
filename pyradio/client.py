@@ -45,6 +45,7 @@ class PyRadioClient(object):
         self._last_reply = None
         self._timeout = timeout
         self._type = -1
+        self._discovered = True
 
         if host and port:
             self._host = host
@@ -54,6 +55,7 @@ class PyRadioClient(object):
                     is_recording()
                 are happy  '''
             self._file = host
+            self._discovered = False
         elif server_file:
             if path.exists(server_file):
                 self._file = server_file
@@ -93,22 +95,20 @@ class PyRadioClient(object):
 
     @property
     def last_reply(self):
-        server_id = ''
-        if self._type >= 0:
-            if self._last_command:
-                server_id = 'Server: [green]{}[/green]:[green]{}[/green] {}\n'.format(
-                        self._host, self._port,
-                        '([blue]headless[/blue])' if self._type == 0 else ''
-                        )
-            else:
-                server_id = 'Server: {}:{} {}\n'.format(
-                        self._host, self._port,
-                    '(headless)' if self._type == 0 else ''
-                    )
         if self._last_reply:
+            if self._last_command == 'title':
+                try:
+                    return self._last_reply.split('<b>')[1][:-6]
+                except IndexError:
+                    return 'Error retrieving title!'
+            elif self._last_command in ('i', 'info') and \
+                    self._discovered:
+                out = self._last_reply.splitlines()
+                out.insert(1, '  Server: ' + self._host + ':' + self._port)
+                self._last_reply = '\n'.join(out)
             if 'retry: ' in self._last_reply:
                 self._last_reply = 'Command executed\n'
-            return server_id + self._last_reply if server_id else self._last_reply
+            return self._last_reply
         # empty reply
         if self._type == -1:
             return 'Command executed\n'
@@ -196,8 +196,9 @@ class PyRadioClient(object):
             0 : all ok
             1 : error
         '''
-        if command is None:
-            command = ''
+        self._last_command = command
+        if self._last_command is None:
+            self._last_command = ''
         try:
             response = requests.get(
                     'http://' + self._host + ':' + self._port + '/' + command,
