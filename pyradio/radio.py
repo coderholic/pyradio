@@ -817,7 +817,7 @@ class PyRadio(object):
             # logger.error('self.log.song_title: {}'.format(self.log.song_title))
             # logger.error('============================')
             if self.stations[self.playing][0] not in self.log.song_title:
-                out.append('    Title: {}'.format(fix_chars(self.log.song_title)))
+                out.append('    Title: "{}"'.format(fix_chars(self.log.song_title)))
         else:
             out.append('  Status: Idle')
         out.append('  Selection (id={0}): "{1}"'.format(self.selection+1, self.stations[self.selection][0]))
@@ -3719,6 +3719,7 @@ ____Using |fallback| theme.''')
             Parameters:
                 a_url:  this should be an online service url
         '''
+        self._cnf.renamed_stations = []
         self._cnf.save_station_position(self.startPos, self.selection, self.playing)
         self._set_active_stations()
         self._update_status_bar_right()
@@ -7211,7 +7212,9 @@ ____Using |fallback| theme.''')
                             self._station_editor.new_station[0]
                         )
                         self._cnf.dirty_playlist = True
+                    self._cnf.renamed_stations.append([self.stations[self.selection][0], ''])
                     self.stations[self.selection] = self._station_editor.new_station
+                    self._cnf.renamed_stations[-1][-1] = self.stations[self.selection][0]
                     if self.selection == self.playing:
                         self._last_played_station = self._station_editor.new_station
                 else:
@@ -8315,6 +8318,10 @@ ____Using |fallback| theme.''')
             self._update_status_bar_right()
             icy_data_name = self.player.icy_data('icy-name')
             if char == ord('r') and self.stations[self.playing][0] != icy_data_name:
+                self._cnf.renamed_stations.append([
+                    self.stations[self.playing][0],
+                    icy_data_name
+                ])
                 self._cnf.stations_history.rename_station(
                     self._cnf.station_title,
                     self.stations[self.playing][0],

@@ -166,6 +166,8 @@ class PyRadioStations(object):
 
     show_no_themes_message = True
 
+    renamed_stations = []
+
     def __init__(self, stationFile='', user_config_dir=None):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -857,6 +859,25 @@ class PyRadioStations(object):
                 logger.debug('Cannot rename playlist file...')
             return -2
         self.dirty_playlist = False
+        if self.renamed_stations:
+            for n in self.renamed_stations:
+                chk_referer_file = path.join(self.stations_dir, n[0] + '.referer.txt')
+                if path.exists(chk_referer_file):
+                    new_referer_file = path.join(self.stations_dir, n[1] + '.referer.txt')
+                    try:
+                        rename(chk_referer_file, new_referer_file)
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('referer file renamed from "{}" to "{}"'.format(
+                                path.basename(chk_referer_file),
+                                path.basename(new_referer_file)
+                                ))
+                    except:
+                        pass
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('failed to rename referer file from "{}" to "{}"'.format(
+                                path.basename(chk_referer_file),
+                                path.basename(new_referer_file)
+                                ))
         return 0
 
     def _format_playlist_row(self, a_row):

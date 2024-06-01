@@ -1411,7 +1411,7 @@ Restricted Commands (Main mode only)
                                 self._commands['/jump'](ret)
                                 self._send_raw('<div class="alert alert-success">Playing <b>{}</b></div>'.format(self.lists()[0][-1][ret-1][0]))
                             else:
-                                self._send_text(' Playing station: {}'.format(self.lists()[0][-1][ret-1][0]))
+                                self._send_text(' Playing station: "{}"'.format(self.lists()[0][-1][ret-1][0]))
                                 self._commands['/jump'](ret)
                     has_error = False
             else:

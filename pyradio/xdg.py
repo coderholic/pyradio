@@ -120,6 +120,9 @@ class XdgMigrate(object):
         flag_files.extend([x[0] for x in self.files_to_state])
 
         self.files_to_other = [[x, self._replace_dir_in_path(x, self.other_dir) ] for x in files_in_path if x not in flag_files]
+        for n in range(len(self.files_to_other)-1, -1, -1):
+            if self.files_to_other[0][0].endswith('.referer.txt'):
+                self.files_to_other.pop(n)
 
     def _get_max_length(self):
         to_print = []

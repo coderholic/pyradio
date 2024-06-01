@@ -101,19 +101,21 @@ class PyRadioClient(object):
                     return self._last_reply.split('<b>')[1][:-6]
                 except IndexError:
                     return 'Error retrieving title!'
-            elif self._last_command in ('i', 'info') and \
-                    self._discovered:
-                out = self._last_reply.splitlines()
-                out.insert(1, '  Server: ' + self._host + ':' + self._port)
-                self._last_reply = '\n'.join(out)
+            elif self._last_command in ('i', 'info'):
+                if self._discovered:
+                    out = self._last_reply.splitlines()
+                    out.insert(1, '  Server: ' + self._host + ':' + self._port)
+                    self._last_reply = '\n'.join(out) + '\n'
+                if 'Title: ' in self._last_reply:
+                    self._last_reply = re.sub(r'Title: "([^"]*)"', r'Title: "[red3]\1[/red3]"', self._last_reply)
+                self._last_reply = self._last_reply.replace(r'PyRadio', r'[magenta]PyRadio[/magenta]')
+                self._last_reply = self._last_reply.replace(r'headless', r'[blue]headless[/blue]')
             if 'retry: ' in self._last_reply:
                 self._last_reply = 'Command executed\n'
             return self._last_reply
         # empty reply
         if self._type == -1:
             return 'Command executed\n'
-        else:
-            return server_id + 'Command Executed\n'
 
     def _get_files(self):
         if self._files is None:

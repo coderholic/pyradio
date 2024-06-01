@@ -82,6 +82,8 @@ To ensure the correct operation, please take these actions:
     * [Global encoding declaration](#global-encoding-declaration)
 * [Player detection / selection](#player-detection-/-selection)
     * [Changing player mid-session](#changing-player-mid-session)
+    * [Specifying a station's Referer URL](#specifying-a-station's-referer-url)
+        * [A note of caution](#a-note-of-caution)
     * [Extra Player Parameters](#extra-player-parameters)
         * [Using the Configuration Window](#using-the-configuration-window)
 * [Player connection protocol](#player-connection-protocol)
@@ -746,6 +748,28 @@ Pressing "**\\m**" will bring up the "*Switch Media Player*" window, where a dif
 If **recording is on** while using the previously activated player, it will remain on with the newly activated one. This actually means that the recording will stop when the old player is stopped and resumed when the new player is activated (creating a new recorder file). There is just one exception to that; selecting **VLC** is not possible on **Windows**, since **VLC** does not support recording on this platform.
 
 **Note:** The activated player will not be saved; **PyRadio** will still use the player defined at its config next time it is executed.
+
+### Specifying a station's Referer URL
+
+Although **PyRadio** is meant to be a readio station player, it can also be used to listen to video stations transmitting m3u8 playlists (HTTP Live Streaming or HLS).
+
+The thing with these transmissions is that usually a **Referer URL** has to be provided so that the connection does not fail.
+
+**PyRadio** now does support the declaration of a **Referer URL** for individual stations; it does it in an "anorthodox" way, but it is possible.
+
+So, let us imagine that a station called "*My video station*" has been added to a playlist. The user tries to play it but it fails; the referer URL is missing.
+
+To rectify the situation, a file containing the referer URL would have to be saved in the config directory: its name must be the name of the station as it is in the playlist, followed by the "**.referer.txt**" extension.
+
+In our example above, the file will have to be named:
+
+**"My video station.referer.txt"**
+
+#### A note of caution
+
+If such a file has been created for a station, please do not rename the station in the playlist manually; the "link" to the referer file will be lost.
+
+Rename the station using **PyRadio** rename functionality and save the playlist instead; the referer file will be renamed as well.
 
 ### Extra Player Parameters
 

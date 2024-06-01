@@ -837,6 +837,37 @@ Pressing "\fI\\m\fR" will bring up the "\fBSwitch Media Player\fR" window, where
 .IP \fBNote\fR
 The activated player will not be saved; **PyRadio** will still use the player defined at its config next time it is executed.
 
+
+
+
+
+.SH Specifying a station's Referer URL
+
+Although \fBpyradio\fR is meant to be a readio station player, it can also be used to listen to video stations transmitting m3u8 playlists (HTTP Live Streaming or HLS).
+
+The thing with these transmissions is that usually a \fBReferer URL\fR has to be provided so that the connection does not fail.
+
+\fBpyradio\fR now does support the declaration of a \fBReferer URL\fR for individual stations; it does it in an "anorthodox" way, but it is possible.
+
+So, let us imagine that a station called "\fIMy video station\fR" has been added to a playlist. The user tries to play it but it fails; the referer URL is missing.
+
+To rectify the situation, a file containing the referer URL would have to be saved in the config directory: its name must be the name of the station as it is in the playlist, followed by the "\fB.referer.txt\fR" extension.
+
+In our example above, the file will have to be named:
+
+.RS
+"\fIMy video station.referer.txt\fR"
+.RE
+
+\fBA note of caution\fR
+.RS
+If such a file has been created for a station, please do not rename the station in the playlist manually; the "link" to the referer file will be lost.
+
+Rename the station using \fBpyradio\fR rename functionality and save the playlist instead; the referer file will be renamed as well.
+.RE
+
+
+
 .SH Extra Player Parameters
 
 All three supported players can accept a significant number of "\fIcommand line parameters\fR", which are well documented and accessible through man pages (on linux and macOs) or the documentation (on Windows).
