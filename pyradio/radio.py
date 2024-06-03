@@ -233,6 +233,7 @@ class SelectPlayer(object):
             self._win.refresh()
 
     def keypress(self, char):
+        # select player keypress
         if char in (
             ord('j'), curses.KEY_DOWN,
             ord('k'), curses.KEY_UP
@@ -6190,6 +6191,9 @@ ____Using |fallback| theme.''')
             elif char in range(48, 58) or char in range(97, 123):
                 self._cnf.register_to_open = chr(char).lower()
                 self._update_status_bar_right(status_suffix='')
+            # elif char == ord('*'):
+            #     # open favorites
+            #     self._update_status_bar_right(status_suffix='')
             else:
                 self._update_status_bar_right(status_suffix='')
                 return

@@ -84,6 +84,7 @@ To ensure the correct operation, please take these actions:
     * [Changing player mid-session](#changing-player-mid-session)
     * [Specifying a station's Referer URL](#specifying-a-station's-referer-url)
         * [A note of caution](#a-note-of-caution)
+        * [Note about MPlayer](#note-about-mplayer)
     * [Extra Player Parameters](#extra-player-parameters)
         * [Using the Configuration Window](#using-the-configuration-window)
 * [Player connection protocol](#player-connection-protocol)
@@ -751,7 +752,7 @@ If **recording is on** while using the previously activated player, it will rema
 
 ### Specifying a station's Referer URL
 
-Although **PyRadio** is meant to be a readio station player, it can also be used to listen to video stations transmitting m3u8 playlists (HTTP Live Streaming or HLS).
+Although **PyRadio** is meant to be a radio station player, it can also be used to listen to video stations transmitting m3u8 playlists (HTTP Live Streaming or HLS).
 
 The thing with these transmissions is that usually a **Referer URL** has to be provided so that the connection does not fail.
 
@@ -770,6 +771,25 @@ In our example above, the file will have to be named:
 If such a file has been created for a station, please do not rename the station in the playlist manually; the "link" to the referer file will be lost.
 
 Rename the station using **PyRadio** rename functionality and save the playlist instead; the referer file will be renamed as well.
+
+#### Note about MPlayer
+
+This will unfortunately not work with **MPlayer**.
+
+It seems it will not use the **Referer** provided, as shown in the following part of the command execution output:
+
+```
+[tcp @ 0x7f4a42c7fa60]Successfully connected to XX.XX.XXX.XX port 443
+[https @ 0x7f4a42c7fa60]request: GET /live/XXXXXXXX.m3u8 HTTP/1.1
+User-Agent: Lavf/60.16.100
+Accept: */*
+Range: bytes=0-
+Connection: close
+Host: XXXXXX-XXXXXXXXX.XXXXXX.XXX.XXX.XX
+Icy-MetaData: 1
+
+[https @ 0x7f4a42c7fa60]HTTP error 403 Forbidden
+```
 
 ### Extra Player Parameters
 

@@ -843,7 +843,7 @@ The activated player will not be saved; **PyRadio** will still use the player de
 
 .SH Specifying a station's Referer URL
 
-Although \fBpyradio\fR is meant to be a readio station player, it can also be used to listen to video stations transmitting m3u8 playlists (HTTP Live Streaming or HLS).
+Although \fBpyradio\fR is meant to be a radio station player, it can also be used to listen to video stations transmitting m3u8 playlists (HTTP Live Streaming or HLS).
 
 The thing with these transmissions is that usually a \fBReferer URL\fR has to be provided so that the connection does not fail.
 
@@ -866,6 +866,31 @@ If such a file has been created for a station, please do not rename the station 
 Rename the station using \fBpyradio\fR rename functionality and save the playlist instead; the referer file will be renamed as well.
 .RE
 
+\fBNote\fR
+.RS 2
+
+This will unfortunately not work with \fBMPlayer\fR.
+
+It seems it will not use the \fIReferer\fR provided, as shown in the following part of the command execution output:
+
+\fI[tcp @ 0x7f4a42c7fa60]Successfully connected to XX.XX.XXX.XX port 443
+.br
+[https @ 0x7f4a42c7fa60]request: GET /live/XXXXXXXX.m3u8 HTTP/1.1
+.br
+\fBUser-Agent: Lavf/60.16.100\fI
+.br
+Accept: */*
+.br
+Range: bytes=0-
+.br
+Connection: close
+.br
+Host: XXXXXX-XXXXXXXXX.XXXXXX.XXX.XXX.XX
+.br
+Icy-MetaData: 1
+
+[https @ 0x7f4a42c7fa60]\fBHTTP error 403 Forbidden\fR
+.RE
 
 
 .SH Extra Player Parameters
