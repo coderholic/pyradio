@@ -1,4 +1,8 @@
 2024-06-04 s-n-g
+    * version 0.9.3.9
+    * fixing a crash when adding a station to favorites
+
+2024-06-04 s-n-g
     * version 0.9.3.8
     * pressing "*" will add the selected station to favorites
     * adding the possibility to declare a "Referer URL" for a station

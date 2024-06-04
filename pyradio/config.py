@@ -4071,7 +4071,7 @@ class FavoritesManager:
             updated = True
         if updated:
             ret = self._write_csv(items)
-            return ret[0], msg if msg else ret
+            return ret[0], msg if msg else ret[1]
         return 1, '___Already in favorites!___'
 
     # def remove(self, an_item):
