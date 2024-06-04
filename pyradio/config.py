@@ -168,6 +168,8 @@ class PyRadioStations(object):
 
     renamed_stations = []
 
+    favorites = None
+
     def __init__(self, stationFile='', user_config_dir=None):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -180,6 +182,7 @@ class PyRadioStations(object):
         self.player_params_file = path.join(self.data_dir, 'player-params.json')
         self.schedule_file = path.join(self.data_dir, 'schedule.json')
         self.themes_dir = path.join(self.stations_dir, 'themes')
+        self.favorites_path = path.join(self.stations_dir, 'favorites.csv')
         try:
             makedirs(self.themes_dir, exist_ok = True)
         except:
@@ -206,6 +209,11 @@ class PyRadioStations(object):
             if path.exists(rb_config):
                 new_rb_config = path.join(self.stations_dir, 'radio-browser.conf')
                 rename(rb_config, new_rb_config)
+
+    def add_to_favorites(self, an_item):
+        if self.favorites is None:
+            self.favorites = FavoritesManager(self.favorites_path)
+        return self.favorites.add(an_item)
 
     def _move_to_data(self):
         if not path.exists(self.data_dir):
@@ -4019,4 +4027,88 @@ transparency        0
                     in_theme = True
         return lines
 
+
+class FavoritesManager:
+    def __init__(self, a_file):
+        self.file_path = a_file
+
+    def add(self, an_item):
+        ''' Returns:
+                -2 : Error saving file
+                -1 : Invalid item
+                 0 : Item added
+                 1 : Item already in favorites
+        '''
+        items = self._read_csv()
+        url = an_item[1]
+        updated = False
+        write_it = True
+
+        for i, item in enumerate(an_item):
+            if item is None:
+                if i in range(0, 2):
+                    return -1, '___Station is invalid!___'
+                an_item[i] = ''
+            if an_item[0] == '' or \
+                    an_item[1] == '':
+                return -1, '___Station is invalid!___'
+        if isinstance(an_item[-1], dict):
+            an_item[-1] = an_item[-1]['image']
+        msg = None
+        for i, item in enumerate(items):
+            if item[1] == url:
+                if item == an_item:
+                    return 1, '___Already in favorites!___'
+                if item[0] != an_item[0] or \
+                        item[2] != an_item[2] or \
+                        item[3] != an_item[3]:
+                    items[i] = an_item
+                    msg = '___Station updated!___'
+                    updated = True
+                    break
+        if not updated:
+            items.append(an_item)
+            updated = True
+        if updated:
+            ret = self._write_csv(items)
+            return ret[0], msg if msg else ret
+        return 1, '___Already in favorites!___'
+
+    # def remove(self, an_item):
+    #     items = self._read_csv()
+    #     name = an_item[0]
+    #     url = an_item[1]
+    #     new_items = [item for item in items if item[0] != name and item[1] != url]
+
+    #     if len(new_items) != len(items):
+    #         self._write_csv(new_items)
+
+    def _read_csv(self):
+        items = []
+        if path.exists(self.file_path):
+            try:
+                with open(self.file_path, mode='r', newline='') as file:
+                    reader = csv.reader(file)
+                    for row in reader:
+                        if not row[0].startswith('#'):
+                            while len(row) < 4:
+                                row.append('')
+                            name, url, enc, icon = [s.strip() for s in row]
+                            items.append([name, url, enc, icon])
+            except:
+                return []
+        return items
+
+    def _write_csv(self, items):
+        ''' Returns:
+                -2 : Error saving file
+                 0 : Item added
+        '''
+        try:
+            with open(self.file_path, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerows(items)
+        except:
+            return -2, '___Error writing favorites!___'
+        return 0, '___Added to favorites!___'
 

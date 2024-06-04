@@ -118,6 +118,7 @@ Enter|, |Right|, |l                 |*|  Play selected station.
 i                                   |*|  Display station |i|nfo (when playing).
 r                                   |*|  Select and play a random station.
 Space|, |Left|, |h                  |*|  Stop / start playing selected station.
+*                                   |*|  Add station to favorites.
 Esc|, |q                            |*|  Quit.
 
 !Volume management

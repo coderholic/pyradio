@@ -1,3 +1,12 @@
+2024-06-04 s-n-g
+    * version 0.9.3.8
+    * pressing "*" will add the selected station to favorites
+    * adding the possibility to declare a "Referer URL" for a station
+    * pyradio-client: /title will actually report the song title
+    * pyradio-client: beautifying output
+    * removing more python 2 code
+    * updating docs
+
 2024-05-24 s-n-g
     * version 0.9.3.7
     * introducing the pyradio-client program

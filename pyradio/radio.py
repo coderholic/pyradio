@@ -733,7 +733,7 @@ class PyRadio(object):
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
             # ord('d'): self._html_song_title,
-            ord('b'): self._show_schedule_editor,
+            # ord('b'): self._show_schedule_editor,
         }
 
         self._remote_control_server = self._remote_control_server_thread = None
@@ -6191,9 +6191,6 @@ ____Using |fallback| theme.''')
             elif char in range(48, 58) or char in range(97, 123):
                 self._cnf.register_to_open = chr(char).lower()
                 self._update_status_bar_right(status_suffix='')
-            # elif char == ord('*'):
-            #     # open favorites
-            #     self._update_status_bar_right(status_suffix='')
             else:
                 self._update_status_bar_right(status_suffix='')
                 return
@@ -8572,7 +8569,24 @@ ____Using |fallback| theme.''')
                 return
 
             if self.ws.operation_mode == self.ws.NORMAL_MODE:
-                if char == ord('|'):
+                if char == ord('*'):
+                    if self._cnf.station_path == self._cnf.favorites_path:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Favorites: Cannot add to myself :)')
+                    else:
+                        if self.stations:
+                            ret, msg = self._cnf.add_to_favorites(self.stations[self.selection])
+                            self._show_notification_with_delay(
+                                    txt=msg,
+                                    mode_to_set=self.ws.operation_mode,
+                                    callback_function=self.refreshBody)
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('Favorites: ' + msg.replace('_', ''))
+                        else:
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('Favorites: Nothing to add')
+
+                elif char == ord('|'):
                     self._toggle_recording()
 
                 elif char == curses.ascii.BEL:

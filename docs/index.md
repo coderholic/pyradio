@@ -99,6 +99,7 @@ To ensure the correct operation, please take these actions:
     * [How it works](#how-it-works)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
+* [Favorites playlist](#favorites-playlist)
 * [PyRadio Themes](#pyradio-themes)
 * [Recording stations](#recording-stations)
 * [Mouse support](#mouse-support)
@@ -164,14 +165,13 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 ## Command line options
 
 ```
-Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER]
-               [-l] [-lt] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R] [-V]
-               [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
-               [--no-themes] [--write-theme IN_THEME OUT_THEME,]
-               [--terminal TERMINAL] [--terminal-param TERMINAL_PARAM] [-oc]
-               [-sc] [-cc] [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE]
-               [-scv PNG_FILE] [-srt] [-ach] [--headless IP_AND_PORT]
-               [--address] [-fd]
+Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-l]
+               [-lt] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R] [-V] [-ls]
+               [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes] [--no-themes]
+               [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
+               [--terminal-param TERMINAL_PARAM] [-oc] [-sc] [-cc] [-gc] [-r]
+               [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt] [-ach]
+               [--headless IP_AND_PORT] [--address] [-fd]
 
 Curses based Internet Radio Player
 
@@ -300,6 +300,7 @@ Headless operation:
     -/+ or ,/.        Change volume                                    [Valid]                            [Valid]
     m                 Mute / unmute player                             [Valid]                            [Valid]
     v                 Save volume (not applicable for vlc)             [Valid]                            [Valid]
+    *                 Add station to favorites                         -                                  -
     o s R             Open / Save / Reload playlist                    -                                  -
     a A               Add / append a new station                       -                                  -
     e                 Edit current station                             -                                  -
@@ -756,7 +757,7 @@ Although **PyRadio** is meant to be a radio station player, it can also be used 
 
 The thing with these transmissions is that usually a **Referer URL** has to be provided so that the connection does not fail.
 
-**PyRadio** now does support the declaration of a **Referer URL** for individual stations; it does it in an "anorthodox" way, but it is possible.
+**PyRadio** now does support the declaration of a **Referer URL** for individual stations; it does it in an "anorthodox" way, but it is available and it works.
 
 So, let us imagine that a station called "*My video station*" has been added to a playlist. The user tries to play it but it fails; the referer URL is missing.
 
@@ -1002,6 +1003,14 @@ To **paste** the *unnamed* register to a playlist or register, one would press:
 * "**\\p**" while editing a playlist or register. This would open the "*Paste selection*" window.
 
 * "**\\p**" in the "*Playlist Selection* or the "*Registers*" window.
+
+## Favorites playlist
+
+Pressing "*" (asterisk) in **Main Mode** will add the selected station to the **favorites** playlist.
+
+If the station is already there, it will either be updated if its name has been changed, for example, or will be ignored, to avoid creating duplicate entries.
+
+The **favorites** playlist, residing in the configuration folder, is a normal playlist in any other respect, which can be subsequently opened, edited, deleted even, as any other playlist.
 
 ## PyRadio Themes
 

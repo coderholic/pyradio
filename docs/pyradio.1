@@ -2,7 +2,7 @@
 .\" Copyright (C) 2018-2024 Spiros Georgaras <sng@hellug.gr>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH pyradio 1 "May 2024" pyradio
+.TH pyradio 1 "June 2024" pyradio
 
 .SH Name
 .PP
@@ -838,16 +838,13 @@ Pressing "\fI\\m\fR" will bring up the "\fBSwitch Media Player\fR" window, where
 The activated player will not be saved; **PyRadio** will still use the player defined at its config next time it is executed.
 
 
-
-
-
 .SH Specifying a station's Referer URL
 
 Although \fBpyradio\fR is meant to be a radio station player, it can also be used to listen to video stations transmitting m3u8 playlists (HTTP Live Streaming or HLS).
 
 The thing with these transmissions is that usually a \fBReferer URL\fR has to be provided so that the connection does not fail.
 
-\fBpyradio\fR now does support the declaration of a \fBReferer URL\fR for individual stations; it does it in an "anorthodox" way, but it is possible.
+\fBpyradio\fR now does support the declaration of a \fBReferer URL\fR for individual stations; it does it in an "anorthodox" way, but it is available and it works.
 
 So, let us imagine that a station called "\fIMy video station\fR" has been added to a playlist. The user tries to play it but it fails; the referer URL is missing.
 
@@ -1171,6 +1168,14 @@ To \fBpaste\fR the \fIunnamed\fR register to a playlist or register, one would p
 "\fB\\p\fR" in the "\fIPlaylist Selection\fR or the "\fIRegisters\fR" window.
 
 .RE
+
+.SH Favorites playlist
+
+Pressing "\fI*\fR" in \fBMain Mode\fR will add the selected station to the \fBfavorites\fR playlist.
+
+If the station is already there, it will either be updated if its name has been changed, for example, or will be ignored, to avoid creating duplicate entries.
+
+The \fBfavorites\fR playlist, residing in the configuration folder, is a normal playlist in any other respect, which can be subsequently opened, edited, deleted even, as any other playlist.
 
 .SH Pyradio Themes
 .PP

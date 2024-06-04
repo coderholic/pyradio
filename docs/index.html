@@ -147,6 +147,7 @@ a:visited{color: SaddleBrown;}
 </ul></li>
 <li><a href="#displaying-station-info">Displaying Station Info</a></li>
 <li><a href="#copying-and-pasting---registers">Copying and pasting - Registers</a></li>
+<li><a href="#favorites-playlist">Favorites playlist</a></li>
 <li><a href="#pyradio-themes">PyRadio Themes</a></li>
 <li><a href="#recording-stations">Recording stations</a></li>
 <li><a href="#mouse-support">Mouse support</a></li>
@@ -213,6 +214,15 @@ a:visited{color: SaddleBrown;}
 <!-- Changelog -->
 <h2 id="changelog">Changelog <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <pre style="height: 200px;">
+
+2024-06-04 s-n-g
+    * version 0.9.3.8
+    * pressing "*" will add the selected station to favorites
+    * adding the possibility to declare a "Referer URL" for a station
+    * pyradio-client: /title will actually report the song title
+    * pyradio-client: beautifying output
+    * removing more python 2 code
+    * updating docs
 
 2024-05-24 s-n-g
     * version 0.9.3.7
@@ -1303,14 +1313,13 @@ a:visited{color: SaddleBrown;}
 <p>The best way to install <strong>PyRadio</strong> is via a distribution package, if one exists (<em>Arch Linux</em> and derivatives can install <a target="_blank" href="https://aur.archlinux.org/packages/?K=pyradio">any of these packages</a> from the AUR, <em>FreeBSD</em> users will find it in the <a target="_blank" href="https://www.freshports.org/audio/py-pyradio/">ports</a>, etc.).</p>
 <p>In any other case, and since <strong>PyRadio</strong> is currently not available via pip, you will have to <a href="build.html">build it from source</a>.</p>
 <h2 id="command-line-options">Command line options <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
-<pre>Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER]
-               [-l] [-lt] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R] [-V]
-               [-ls] [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes]
-               [--no-themes] [--write-theme IN_THEME OUT_THEME,]
-               [--terminal TERMINAL] [--terminal-param TERMINAL_PARAM] [-oc]
-               [-sc] [-cc] [-gc] [-r] [-or] [-lr] [-mkv MKV_FILE]
-               [-scv PNG_FILE] [-srt] [-ach] [--headless IP_AND_PORT]
-               [--address] [-fd]
+<pre>Usage: pyradio [-h] [-c CONFIG_DIR] [-p [STATION_NUMBER]] [-u PLAYER] [-l]
+               [-lt] [-sd] [-od] [-pc] [-d] [-ul] [-us] [-U] [-R] [-V] [-ls]
+               [-s PLAYLIST] [-tlp] [-t THEME] [--show-themes] [--no-themes]
+               [--write-theme IN_THEME OUT_THEME,] [--terminal TERMINAL]
+               [--terminal-param TERMINAL_PARAM] [-oc] [-sc] [-cc] [-gc] [-r]
+               [-or] [-lr] [-mkv MKV_FILE] [-scv PNG_FILE] [-srt] [-ach]
+               [--headless IP_AND_PORT] [--address] [-fd]
 
 Curses based Internet Radio Player
 
@@ -1436,6 +1445,7 @@ Space             -                                                -            
 -/+ or ,/.        Change volume                                    [Valid]                            [Valid]
 m                 Mute / unmute player                             [Valid]                            [Valid]
 v                 Save volume (not applicable for vlc)             [Valid]                            [Valid]
+*                 Add station to favorites                         -                                  -
 o s R             Open / Save / Reload playlist                    -                                  -
 a A               Add / append a new station                       -                                  -
 e                 Edit current station                             -                                  -
@@ -1770,7 +1780,7 @@ Station2,Station2_URL,iso-8859-7</pre>
 <h3 id="specifying-a-stations-referer-url">Specifying a station’s Referer URL</h3>
 <p>Although <strong>PyRadio</strong> is meant to be a radio station player, it can also be used to listen to video stations transmitting m3u8 playlists (HTTP Live Streaming or HLS).</p>
 <p>The thing with these transmissions is that usually a <strong>Referer URL</strong> has to be provided so that the connection does not fail.</p>
-<p><strong>PyRadio</strong> now does support the declaration of a <strong>Referer URL</strong> for individual stations; it does it in an “anorthodox” way, but it is possible.</p>
+<p><strong>PyRadio</strong> now does support the declaration of a <strong>Referer URL</strong> for individual stations; it does it in an “anorthodox” way, but it is available and it works.</p>
 <p>So, let us imagine that a station called “<em>My video station</em>” has been added to a playlist. The user tries to play it but it fails; the referer URL is missing.</p>
 <p>To rectify the situation, a file containing the referer URL would have to be saved in the config directory: its name must be the name of the station as it is in the playlist, followed by the “<strong>.referer.txt</strong>” extension.</p>
 <p>In our example above, the file will have to be named:</p>
@@ -1974,6 +1984,10 @@ volume=50</pre>
 <li><p>“<strong>\p</strong>” while editing a playlist or register. This would open the “<em>Paste selection</em>” window.</p></li>
 <li><p>“<strong>\p</strong>” in the “<em>Playlist Selection</em> or the”<em>Registers</em>” window.</p></li>
 </ul>
+<h2 id="favorites-playlist">Favorites playlist <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
+<p>Pressing “*” (asterisk) in <strong>Main Mode</strong> will add the selected station to the <strong>favorites</strong> playlist.</p>
+<p>If the station is already there, it will either be updated if its name has been changed, for example, or will be ignored, to avoid creating duplicate entries.</p>
+<p>The <strong>favorites</strong> playlist, residing in the configuration folder, is a normal playlist in any other respect, which can be subsequently opened, edited, deleted even, as any other playlist.</p>
 <h2 id="pyradio-themes">PyRadio Themes <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></span></h2>
 <p><strong>PyRadio</strong> supports <strong>CSS themes</strong>; it comes with a number of predefined ones and can use external programs that can provide automatically created and updated themes.</p>
 <p>To set a theme you just press “<strong>t</strong>” and</p>
