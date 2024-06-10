@@ -1416,6 +1416,7 @@ class PyRadioConfig(PyRadioStations):
 
     def __init__(self, user_config_dir=None, headless=False):
         # keep old recording / new recording dir
+        self._user_config_dir = user_config_dir
         self.rec_dirs = ()
         self._first_read = True
         self._headless = headless
@@ -1444,7 +1445,6 @@ class PyRadioConfig(PyRadioStations):
 
         self._session_lock_file = ''
         self._get_lock_file()
-        self._user_config_dir = user_config_dir
         if user_config_dir is None:
             self.xdg.migrate(self.locked or self.headless)
 
@@ -2327,6 +2327,7 @@ class PyRadioConfig(PyRadioStations):
                 self._distro = sp[1].strip()
             elif sp[0] == 'xdg_compliant' and \
                     not platform.startswith('win') and \
+                    self._user_config_dir is None and \
                     sp[1].lower() == 'true':
                 self.xdg_compliant = True
                 xdg_compliant_read_from_file = True
