@@ -1444,6 +1444,7 @@ class PyRadioConfig(PyRadioStations):
 
         self._session_lock_file = ''
         self._get_lock_file()
+        self._user_config_dir = user_config_dir
         if user_config_dir is None:
             self.xdg.migrate(self.locked or self.headless)
 
@@ -2407,6 +2408,7 @@ class PyRadioConfig(PyRadioStations):
 
         ''' detect previous XDG Base installation '''
         if not platform.startswith('win')  and \
+                self._user_config_dir is None and \
                 not self.xdg_compliant and \
                 distro_config:
             # d_dir = path.join(XdgDirs.get_xdg_dir('XDG_DATA_HOME'), 'pyradio')

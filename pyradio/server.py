@@ -8,8 +8,6 @@ import requests
 from time import sleep
 from .simple_curses_widgets import SimpleCursesLineEdit
 
-PY2 = version_info[0] == 2
-
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
@@ -1007,10 +1005,7 @@ Restricted Commands (Main mode only)
             error_func(e)
             return
         try:
-            if PY2:
-                server.listen(5)  # max backlog of connections
-            else:
-                server.listen()  # max backlog of connections
+            server.listen()  # max backlog of connections
         except (OSError, socket.error) as e:
             logger.error('Remote Control Server error: "{}"'.format(e))
             server.close()
@@ -1796,19 +1791,8 @@ Restricted Commands (Main mode only)
         if not msg:
             return
         f_msg = 'retry: 150\nevent: /html/title\ndata: <b>' + msg + '</b>\n\n'
-        if PY2:
-            b_msg = f_msg
-            txt = '''HTTP/1.1 200 OK
-Content-Type: text/event-stream
-Cache-Control: no-cache
-Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=1, max=1000
-Content-Length: {}
-
-'''.format(len(b_msg))
-        else:
-            b_msg = f_msg.encode('utf-8')
-            txt = '''HTTP/1.1 200 OK
+        b_msg = f_msg.encode('utf-8')
+        txt = '''HTTP/1.1 200 OK
 Content-Type: text/event-stream; charset=UTF-8
 Cache-Control: no-cache
 Connection: keep-alive, Keep-Alive
@@ -1831,18 +1815,8 @@ Content-Length: {}
         if msg.startswith('retry: '):
             return
         f_msg = msg + '\n'
-        if PY2:
-            b_msg = f_msg
-            txt = '''HTTP/1.1 200 OK
-Content-Type: text/txt; charset=utf-8
-Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=1, max=1000
-Content-Length: {}
-
-'''.format(len(b_msg))
-        else:
-            b_msg = f_msg.encode('utf-8')
-            txt = '''HTTP/1.1 200 OK
+        b_msg = f_msg.encode('utf-8')
+        txt = '''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=UTF-8
 Connection: keep-alive, Keep-Alive
 Keep-Alive: timeout=1, max=1000
@@ -1866,18 +1840,8 @@ Content-Length: {}
             self._send_html(put_script=put_script)
             return
         f_msg = msg + '\n'
-        if PY2:
-            b_msg = f_msg
-            txt = '''HTTP/1.1 200 OK
-Content-Type: text/txt; charset=UTF-8
-Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=1, max=1000
-Content-Length: {}
-
-'''.format(len(b_msg))
-        else:
-            b_msg = f_msg.encode('utf-8')
-            txt = '''HTTP/1.1 200 OK
+        b_msg = f_msg.encode('utf-8')
+        txt = '''HTTP/1.1 200 OK
 Content-Type: text/txt; charset=UTF-8
 Connection: keep-alive, Keep-Alive
 Keep-Alive: timeout=1, max=1000
@@ -1894,18 +1858,8 @@ Content-Length: {}
         f_msg = self._html + '\n'
         if put_script:
             f_msg = self._insert_html_script(f_msg)
-        if PY2:
-            b_msg = f_msg
-            txt = '''HTTP/1.1 200 OK
-Content-Type: text/html; charset=UTF-8
-Connection: keep-alive, Keep-Alive
-Keep-Alive: timeout=1, max=1000
-Content-Length: {}
-
-'''.format(len(b_msg))
-        else:
-            b_msg = f_msg.encode('utf-8')
-            txt = '''HTTP/1.1 200 OK
+        b_msg = f_msg.encode('utf-8')
+        txt = '''HTTP/1.1 200 OK
 Content-Type: text/html; charset=UTF-8
 Connection: keep-alive, Keep-Alive
 Keep-Alive: timeout=1, max=1000
