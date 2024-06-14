@@ -1,0 +1,25 @@
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#  ██████╗ ██████╗ ██╗      ██████╗ ██████╗ ███████╗
+# ██╔════╝██╔═══██╗██║     ██╔═══██╗██╔══██╗██╔════╝
+# ██║     ██║   ██║██║     ██║   ██║██████╔╝███████╗
+# ██║     ██║   ██║██║     ██║   ██║██╔══██╗╚════██║
+# ╚██████╗╚██████╔╝███████╗╚██████╔╝██║  ██║███████║
+#  ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
+#                                                  
+#	| Gruvbox colors
+#	| Created by s-n-g(pyradio developer)
+#	| Modified by far
+#
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+Stations            #bdae93 #504945
+Active Station      #ebdbb2
+Status Bar          #dadada #a89984
+Normal Cursor       #504945 #928374
+Active Cursor       #dadada #a89984
+Extra Func          #dadada
+PyRadio URL         #d5c4a1
+Messages Border     #d5c4a1
+Edit Cursor         #ffffff #fb4933
+transparency        1
