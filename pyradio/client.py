@@ -198,6 +198,8 @@ class PyRadioClient(object):
             0 : all ok
             1 : error
         '''
+        if command is None:
+            command = ''
         self._last_command = command
         if self._last_command is None:
             self._last_command = ''
