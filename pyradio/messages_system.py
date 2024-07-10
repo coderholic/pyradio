@@ -73,6 +73,7 @@ class PyRadioMessagesSystem(object):
             'M_SCHEDULE_INFO',
             'M_SCHEDULE_ERROR',
             'M_REC_IS_ON_NO_DIR_HEADLESS',
+            'M_SCHEDULE_INFO',
             )
 
     _two_arg_list = (

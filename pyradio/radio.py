@@ -732,6 +732,7 @@ class PyRadio(object):
             curses.KEY_PREVIOUS: self._play_previous_station,
             curses.ascii.SO: self._play_next_station,
             curses.KEY_NEXT: self._play_next_station,
+            ord('#'): self._resize_with_number_sign,
             # ord('d'): self._html_song_title,
             # ord('b'): self._show_schedule_editor,
         }
@@ -6012,20 +6013,6 @@ ____Using |fallback| theme.''')
                     callback_function=self.refreshBody)
             return
 
-        # if char == ord('1'):
-        #     logger.error('self._cnf.recording_dir = "/home/spiros/pyradio-mkvs"')
-        #     self._cnf.recording_dir = '/home/spiros/home-at-homepc/00000'
-        #     return
-
-        if char in (ord('#'), curses.KEY_RESIZE):
-            self._i_am_resizing = True
-            self._normal_mode_resize()
-            if not self._limited_width_mode:
-                if not self._limited_height_mode:
-                    self._do_display_notify()
-            self._i_am_resizing = False
-            return
-
         if self.ws.operation_mode == self.ws.MESSAGING_MODE:
             ret = self._messaging_win.keypress(char)
             if ret:
@@ -6780,10 +6767,11 @@ ____Using |fallback| theme.''')
                 self.ws.operation_mode = self.ws.SCHEDULE_STATION_SELECT_MODE
                 if self._schedule_station_select_win is None:
                     self._schedule_station_select_win = PyRadioSelectStation(
-                        self.bodyWin,
-                        self._cnf.stations_dir,
-                        self._simple_schedule.playlist,
-                        self._simple_schedule.station,
+                        parent=self.bodyWin,
+                        config_path=self._cnf.stations_dir,
+                        registers_dir=self._cnf.registers_dir,
+                        default_playlist=self._simple_schedule.playlist,
+                        default_station=self._simple_schedule.station,
                         is_from_schedule=True,
                         global_functions=self._global_functions
                     )
@@ -9093,6 +9081,15 @@ ____Using |fallback| theme.''')
 
                 # else:
                 #     self._update_status_bar_right(status_suffix='')
+
+    def _resize_with_number_sign(self):
+        logger.error('\n\nresize with number sign\n\n')
+        self._i_am_resizing = True
+        self._normal_mode_resize()
+        if not self._limited_width_mode:
+            if not self._limited_height_mode:
+                self._do_display_notify()
+        self._i_am_resizing = False
 
     def _jump_and_play_selection(self, jumpnr=None):
         self._jump_to_jumpnr('', jumpnr)

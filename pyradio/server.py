@@ -1775,7 +1775,7 @@ Restricted Commands (Main mode only)
                                         )
                                     else:
                                         self._send_text(
-                                            self._list_stations(playlist_name, out)
+                                            self._list_stations(playlist_name, out).replace(r'<b>', '').replace(r'</b>', '')
                                         )
                                 else:
                                     if self._is_html:
@@ -1979,7 +1979,7 @@ Content-Length: {}
                     else:
                         out.append(n[0])
                 else:
-                    out.append(n[0])
+                        out.append(n[0])
             p_name = basename(self.playlist_in_editor()[:-4])
         else:
             out = stations

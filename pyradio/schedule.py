@@ -232,9 +232,9 @@ class PyRadioScheduleList(object):
             if in_date[-4] == 'day':
                 ll = list(rrule(DAILY, count=count, dtstart=start_date))
             elif in_date[-4] == 'week':
-                ll = list(rrule(WEEKLY, dtstart=in_date[0], count=count))
+                ll = list(rrule(WEEKLY, dtstart=in_date[1], count=count))
             elif in_date[-4] == 'month':
-                ll = list(rrule(MONTHLY, dtstart=in_date[0], count=count))
+                ll = list(rrule(MONTHLY, dtstart=in_date[1], count=count))
             elif in_date[-4] in days.keys():
                 ll = list(rrule(WEEKLY, count=count, wkst=SU, byweekday=(days[in_date[-4]],), dtstart=start_date))
 

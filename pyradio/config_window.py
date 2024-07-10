@@ -3179,8 +3179,16 @@ class PyRadioSelectStation(PyRadioSelectPlaylist):
 
     _default_playlist = ''
 
-    def __init__(self, parent, config_path, registers_dir, default_playlist, default_station,
-                 global_functions=None, is_from_schedule=False):
+    def __init__(
+            self,
+            parent,
+            config_path,
+            registers_dir,
+            default_playlist,
+            default_station,
+            global_functions=None,
+            is_from_schedule=False
+        ):
         self._default_playlist = default_playlist
         self._orig_default_playlist = default_playlist
         if logger.isEnabledFor(logging.INFO):
