@@ -2782,6 +2782,20 @@ class PyRadioConfig(PyRadioStations):
                     copyfile(self.player_params_file, self.player_params_file + '.restore')
                 except:
                     pass
+            # fix self.saved_params (remove profiles)
+            profiles_params_changed = False
+            for a_key in self.saved_params.keys():
+                the_id = self.saved_params[a_key][0]
+                the_profile = self.saved_params[a_key][self.saved_params[a_key][0]]
+                # logger.error('\n\na_key = {0}\nthe_id = {1}\nthe_profile = {2}\n\n'.format(a_key, the_id, the_profile))
+                for i in range(len(self.saved_params[a_key])-1, 0, -1):
+                    if self.saved_params[a_key][i].startswith('profile:'):
+                        if self.saved_params[a_key][i] != the_profile:
+                            del self.saved_params[a_key][i]
+                            profiles_params_changed = True
+                    self.saved_params[a_key][0] = self.saved_params[a_key].index(the_profile)
+            if profiles_params_changed and logger.isEnabledFor(logging.DEBUG):
+                logger.debug('reduced saved params = {}'.format(self.saved_params))
             try:
                 with open(self.player_params_file, 'w', encoding='utf-8') as jf:
                     jf.write(json.dumps(self.saved_params))
