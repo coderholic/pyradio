@@ -133,7 +133,7 @@ Parameter **recording_dir** in the config will point to the directory to save re
 
 It may seem like a good idea to change it to something meaningful but there is a catch.
 
-**PyRadio 0.9.3** (and newer) will nornaly use the *default* location, which is *~/pyradio-recordings*. Furthermore, it will move the pre-0.9.3 default recordings dir (~/.config/pyradio/recordings) and titles log (from *~/.config/pyradio*) to this new default location.
+**PyRadio 0.9.3** (and newer) will nornaly use the *default* location, which is *~/pyradio-recordings*. Furthermore, it will move the pre-0.9.3 default recordings dir, i.e. *~/.config/pyradio/recordings* and titles log(from *~/.config/pyradio*, to this new default location.
 
 If you, the packager, provide a different default **recording_dir** in the package config file, your users will probably end up in the following situation:
 

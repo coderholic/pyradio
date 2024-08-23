@@ -179,8 +179,6 @@ class PyRadioStations(object):
             self.xdg.build_paths()
         self.xdg.ensure_paths_exist()
         self.root_path = path.join(path.dirname(__file__), 'stations.csv')
-        self.player_params_file = path.join(self.data_dir, 'player-params.json')
-        self.schedule_file = path.join(self.data_dir, 'schedule.json')
         self.themes_dir = path.join(self.stations_dir, 'themes')
         self.favorites_path = path.join(self.stations_dir, 'favorites.csv')
         try:
@@ -2393,20 +2391,6 @@ class PyRadioConfig(PyRadioStations):
             self.opts['dirty_config'][1] = True
 
         self._make_sure_dirs_exist()
-        if not distro_config:
-            if path.exists(self.player_params_file + '.restore'):
-                try:
-                    copyfile(self.player_params_file + '.restore', self.player_params_file)
-                except:
-                    pass
-            if path.exists(self.player_params_file):
-                try:
-                    with open(self.player_params_file, 'r', encoding='utf-8') as jf:
-                        self.params = json.load(jf)
-                except:
-                    pass
-            self._first_read = False
-
         ''' detect previous XDG Base installation '''
         if not platform.startswith('win')  and \
                 self._user_config_dir is None and \
@@ -2420,6 +2404,27 @@ class PyRadioConfig(PyRadioStations):
                 print('[magenta]XDG Dirs[/magenta] found; enabling [magenta]XDG Base compliant[/magenta] operation')
                 self.xdg_compliant = True
                 self.need_to_fix_desktop_file_icon = True
+
+        # do this here to get proper extra parameters config filepath if XDG is on
+        self.player_params_file = path.join(self.data_dir, 'player-params.json')
+        if not distro_config:
+            if path.exists(self.player_params_file + '.restore'):
+                try:
+                    copyfile(self.player_params_file + '.restore', self.player_params_file)
+                except:
+                    pass
+            if path.exists(self.player_params_file):
+                try:
+                    with open(self.player_params_file, 'r', encoding='utf-8') as jf:
+                        self.params = json.load(jf)
+                except:
+                    pass
+            self._first_read = False
+            logger.error('\n\nfile = {0}\nplayer extra params = {1}\n\n'.format(self.player_params_file, self.params))
+
+        # do this here to get proper schedule config filepath if XDG is on
+        self.schedule_file = path.join(self.data_dir, 'schedule.json')
+
 
     def _make_sure_dirs_exist(self):
         if self.opts['recording_dir'][1] == '':

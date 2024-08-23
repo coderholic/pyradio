@@ -184,7 +184,7 @@ Finally, include the file produced in your report.
 
 ## Packaging PyRadio
 
-If you are a packager and would like to produce a package for your distribution please do follow [this mini guide](docs/packagers-info.md).
+If you are a packager and would like to produce a package for your distribution please do follow [this mini guide](docs/packaging.md).
 
 ## TODO
 
