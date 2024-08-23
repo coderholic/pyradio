@@ -2464,6 +2464,8 @@ class MpvPlayer(Player):
         if os.path.exists(mpvsocket):
             os.system('rm ' + mpvsocket + ' 2>/dev/null');
 
+        max_vol = 130
+
         commands = {
                 'volume_up':   b'{ "command": ["cycle", "volume", "up"], "request_id": 1000 }\n',
                 'volume_down': b'{ "command": ["cycle", "volume", "down"], "request_id": 1001 }\n',
@@ -2714,7 +2716,9 @@ class MpvPlayer(Player):
 
     def _volume_up(self):
         ''' increase mpv's volume '''
-        self._send_mpv_command('volume_up')
+        self.get_volume()
+        if self.volume < self.max_vol:
+            self._send_mpv_command('volume_up')
         self._display_mpv_volume_value()
 
     def _volume_down(self):
@@ -2722,7 +2726,7 @@ class MpvPlayer(Player):
         self.get_volume()
         if self.volume > 0:
             self._send_mpv_command('volume_down')
-            self._display_mpv_volume_value()
+        self._display_mpv_volume_value()
 
     def _format_title_string(self, title_string):
         ''' format mpv's title '''
