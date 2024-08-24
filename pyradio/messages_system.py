@@ -839,11 +839,29 @@ Enter|, |Space|,                    |*|
 Right|, |l                          |*| Select default station.
 /| / |n| / |N                       |*| Search, go to next / previous result.
 r                                   |*| Revert to saved value.
-Esc|, |q|, |Left|, |h                  |*| Canel.
+Esc|, |q|, |Left|, |h               |*| Canel.
 %Global functions (with \ on Line editor)
 -|/|+| or |,|/|.                    |*| Change volume.
 m| / |v                             |*| |M|ute player / Save |v|olume (not in vlc).
 W| / |w                             |*| Toggle title log / like a station.'''
+),
+
+    'H_CONFIG_PLAYER': ('Player Selection Help',
+r'''TAB|                             |*| Move selection to |Extra Parameters| column.
+Up|, |j|, |Down|, |k|               |*| Change player selection.
+Enter|, |Space|,                    |*|
+Right|, |l                          |*| Enable / disable player.
+^U| / |^D|                          |*| Move player |u|p or |d|own.
+r|                                  |*| Revert to saved values.
+s|                                  |*| Accept changes (player and parameters).
+|                                   |*| |Notice|: Changes will be saved only after pressing
+|                                   |*| ________"|s|" in the main |Configurationw Window|.
+Esc|, |q|, |Left|, |h               |*| Canel.
+%Global functions (with \ on Line editor)
+-|/|+| or |,|/|.                    |*| Change volume.
+m| / |v                             |*| |M|ute player / Save |v|olume (not in vlc).
+W| / |w                             |*| Toggle title log / like a station.
+'''
 ),
 
     'H_CONFIG_PLAYLIST': ('Playlist Selection Help',
