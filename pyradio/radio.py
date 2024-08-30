@@ -6036,6 +6036,15 @@ ____Using |fallback| theme.''')
         # # logger.error('\n\nbackup params\n{}\n\n'.format(self._cnf.backup_player_params))
         # if char == curses.KEY_RESIZE:
         #     logger.error('\n\nRESIZE\n\n')
+        if char in (curses.KEY_RESIZE, ):
+            self._i_am_resizing = True
+            self._normal_mode_resize()
+            if not self._limited_width_mode:
+                if not self._limited_height_mode:
+                    self._do_display_notify()
+            self._i_am_resizing = False
+            return
+
         self._curses_key_resize = char == curses.KEY_RESIZE
 
         if self._system_asked_to_terminate:
